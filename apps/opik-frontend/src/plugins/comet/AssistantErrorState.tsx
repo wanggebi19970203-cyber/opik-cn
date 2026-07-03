@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertCircle, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { SLACK_LINK } from "@/shared/SupportHub/SupportHubSubMenu";
 import { cn } from "@/lib/utils";
 import { AssistantSurfaceVariant } from "@/types/assistant-sidebar";
@@ -14,6 +15,7 @@ interface AssistantErrorStateProps {
 const CollapsedError: React.FC<
   Pick<AssistantErrorStateProps, "onToggle" | "retryCount">
 > = ({ onToggle, retryCount }) => {
+  const { t } = useTranslation("common");
   const hasRetriedAndFailed = retryCount > 0;
 
   return (
@@ -21,28 +23,31 @@ const CollapsedError: React.FC<
       type="button"
       className="flex size-full flex-col items-center border-l bg-primary-foreground pt-3"
       onClick={onToggle}
-      title="Expand sidebar"
+      title={t("buttons.expandSidebar")}
     >
       <AlertCircle className="size-4 shrink-0 text-destructive" />
       <span className="mt-2 text-xs text-muted-foreground [writing-mode:vertical-lr]">
         {hasRetriedAndFailed
-          ? "Assistant is currently unavailable"
-          : "Unable to load assistant"}
+          ? t("messages.assistantUnavailable")
+          : t("messages.unableToLoadAssistant")}
       </span>
     </button>
   );
 };
 
-const CloseButton: React.FC<{ onClick?: () => void }> = ({ onClick }) => (
-  <button
-    type="button"
-    className="absolute right-2 top-2 flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
-    onClick={onClick}
-    title="Collapse sidebar"
-  >
-    <X className="size-4" />
-  </button>
-);
+const CloseButton: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
+  const { t } = useTranslation("common");
+  return (
+    <button
+      type="button"
+      className="absolute right-2 top-2 flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
+      onClick={onClick}
+      title={t("buttons.collapseSidebar")}
+    >
+      <X className="size-4" />
+    </button>
+  );
+};
 
 type ExpandedErrorProps = Pick<
   AssistantErrorStateProps,
@@ -59,57 +64,63 @@ const EscalatedError: React.FC<ExpandedErrorProps> = ({
   variant,
   onRetry,
   onToggle,
-}) => (
-  <div className={expandedCardClass(variant)}>
-    {variant === "sidebar" && <CloseButton onClick={onToggle} />}
-    <AlertCircle className="size-5 text-destructive" />
-    <div className="text-sm font-medium text-foreground">
-      Assistant is currently unavailable
-    </div>
-    <p className="text-xs text-muted-foreground">
-      Please try again later or{" "}
-      <a
-        href={SLACK_LINK}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-primary underline underline-offset-2 hover:text-primary-hover"
+}) => {
+  const { t } = useTranslation("common");
+  return (
+    <div className={expandedCardClass(variant)}>
+      {variant === "sidebar" && <CloseButton onClick={onToggle} />}
+      <AlertCircle className="size-5 text-destructive" />
+      <div className="text-sm font-medium text-foreground">
+        {t("messages.assistantUnavailable")}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {t("messages.pleaseTryAgainLaterOr")}{" "}
+        <a
+          href={SLACK_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-primary underline underline-offset-2 hover:text-primary-hover"
+        >
+          {t("messages.getHelpOnSlack")}
+        </a>
+      </p>
+      <button
+        type="button"
+        className="mt-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        onClick={onRetry}
       >
-        get help on Slack
-      </a>
-    </p>
-    <button
-      type="button"
-      className="mt-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-      onClick={onRetry}
-    >
-      retry
-    </button>
-  </div>
-);
+        {t("buttons.retry")}
+      </button>
+    </div>
+  );
+};
 
 const FirstRetryError: React.FC<ExpandedErrorProps> = ({
   variant,
   onRetry,
   onToggle,
-}) => (
-  <div className={expandedCardClass(variant)}>
-    {variant === "sidebar" && <CloseButton onClick={onToggle} />}
-    <AlertCircle className="size-5 text-destructive" />
-    <div className="text-sm font-medium text-foreground">
-      Unable to load assistant
+}) => {
+  const { t } = useTranslation("common");
+  return (
+    <div className={expandedCardClass(variant)}>
+      {variant === "sidebar" && <CloseButton onClick={onToggle} />}
+      <AlertCircle className="size-5 text-destructive" />
+      <div className="text-sm font-medium text-foreground">
+        {t("messages.unableToLoadAssistant")}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {t("messages.tryAgainLaterOr")}{" "}
+        <button
+          type="button"
+          className="inline text-xs text-primary underline underline-offset-2 hover:text-primary-hover"
+          onClick={onRetry}
+        >
+          {t("buttons.retryNow")}
+        </button>
+      </p>
     </div>
-    <p className="text-xs text-muted-foreground">
-      Try again later or{" "}
-      <button
-        type="button"
-        className="inline text-xs text-primary underline underline-offset-2 hover:text-primary-hover"
-        onClick={onRetry}
-      >
-        retry now
-      </button>
-    </p>
-  </div>
-);
+  );
+};
 
 const AssistantErrorState: React.FC<AssistantErrorStateProps> = ({
   variant,

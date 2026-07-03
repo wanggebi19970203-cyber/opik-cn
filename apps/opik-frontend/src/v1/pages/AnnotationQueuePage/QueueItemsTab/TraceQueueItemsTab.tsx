@@ -1,4 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 import {
   JsonParam,
   NumberParam,
@@ -81,7 +83,7 @@ import { useDynamicColumnsCache } from "@/hooks/useDynamicColumnsCache";
 import SelectBox, { SelectBoxProps } from "@/shared/SelectBox/SelectBox";
 import { useTruncationEnabled } from "@/contexts/server-sync-provider";
 
-const TRACE_COLUMNS: ColumnData<Trace>[] = [
+const getTraceColumns = (t: TFunction): ColumnData<Trace>[] => [
   {
     id: COLUMN_ID_ID,
     label: "ID",
@@ -91,12 +93,12 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "name",
-    label: "Name",
+    label: t("annotationQueue.columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("annotationQueue.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -105,7 +107,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("annotationQueue.columns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -114,7 +116,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "input",
-    label: "Input",
+    label: t("annotationQueue.columns.input"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -124,7 +126,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "output",
-    label: "Output",
+    label: t("annotationQueue.columns.output"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -134,7 +136,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("annotationQueue.columns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationCell as never,
     statisticDataFormater: formatDuration,
@@ -142,7 +144,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("annotationQueue.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
     accessorFn: (row) =>
       isObject(row.metadata)
@@ -152,14 +154,14 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("annotationQueue.columns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: t("annotationQueue.columns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -168,7 +170,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: t("annotationQueue.columns.totalInputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.prompt_tokens)
@@ -177,7 +179,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: t("annotationQueue.columns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.completion_tokens)
@@ -186,7 +188,7 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("annotationQueue.columns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
     size: 160,
@@ -196,13 +198,13 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "llm_span_count",
-    label: "LLM calls count",
+    label: t("annotationQueue.columns.llmCallsCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row: Trace) => get(row, "llm_span_count", "-"),
   },
   {
     id: "thread_id",
-    label: "Thread ID",
+    label: t("annotationQueue.columns.threadId"),
     type: COLUMN_TYPE.string,
     cell: LinkCell as never,
     customMeta: {
@@ -211,34 +213,34 @@ const TRACE_COLUMNS: ColumnData<Trace>[] = [
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: t("annotationQueue.columns.errors"),
     statisticKey: "error_count",
     type: COLUMN_TYPE.errors,
     cell: ErrorCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("annotationQueue.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_COMMENTS_ID,
-    label: "Comments",
+    label: t("annotationQueue.columns.comments"),
     type: COLUMN_TYPE.string,
     cell: CommentsCell as never,
   },
 ];
 
-const TRACE_FILTER_COLUMNS: ColumnData<Trace>[] = [
+const getTraceFilterColumns = (t: TFunction): ColumnData<Trace>[] => [
   {
     id: COLUMN_ID_ID,
     label: "ID",
     type: COLUMN_TYPE.string,
   },
-  ...TRACE_COLUMNS,
+  ...getTraceColumns(t),
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("annotationQueue.columns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
@@ -292,6 +294,7 @@ type TraceQueueItemsTabProps = {
 const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const truncationEnabled = useTruncationEnabled();
 
@@ -413,18 +416,18 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
             options: (annotationQueue.feedback_definition_names ?? [])
               .sort()
               .map((key) => ({ value: key, label: key })),
-            placeholder: "Select score",
+            placeholder: t("annotationQueue.filters.selectScore"),
           },
         },
       },
     }),
-    [annotationQueue.feedback_definition_names],
+    [annotationQueue.feedback_definition_names, t],
   );
 
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? "There are no items in this queue yet"
-    : "No search results";
+    ? t("annotationQueue.emptyState.noItemsToReview")
+    : t("annotationQueue.empty.noSearchResults");
 
   const rows: Trace[] = useMemo(() => data?.content ?? [], [data]);
 
@@ -515,7 +518,7 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
 
   const columns = useMemo(() => {
     const convertedColumns = convertColumnDataToColumn<Trace, Trace>(
-      TRACE_COLUMNS,
+      getTraceColumns(t),
       {
         columnsOrder,
         selectedColumns,
@@ -550,6 +553,7 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
     scoresColumnsOrder,
     annotationQueue.id,
     handleThreadIdClick,
+    t,
   ]);
 
   const sortConfig = useMemo(
@@ -573,13 +577,13 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Feedback scores",
+        title: t("annotationQueue.columnSections.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
       },
     ];
-  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
+  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder, t]);
 
   if (isPending) {
     return <Loader />;
@@ -608,12 +612,12 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by ID"
+            placeholder={t("annotationQueue.search.byId")}
             className="w-[320px]"
             dimension="sm"
           />
           <FiltersButton
-            columns={TRACE_FILTER_COLUMNS}
+            columns={getTraceFilterColumns(t)}
             config={filtersConfig as never}
             filters={filters}
             onChange={setFilters}
@@ -631,7 +635,7 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
             setType={setHeight}
           />
           <ColumnsButton
-            columns={TRACE_COLUMNS}
+            columns={getTraceColumns(t)}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}

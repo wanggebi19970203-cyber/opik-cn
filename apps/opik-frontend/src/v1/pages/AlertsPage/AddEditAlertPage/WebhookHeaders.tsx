@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn, useFieldArray } from "react-hook-form";
 import get from "lodash/get";
 import { Plus, X } from "lucide-react";
@@ -16,6 +17,7 @@ type WebhookHeadersProps = {
 };
 
 const WebhookHeaders: React.FC<WebhookHeadersProps> = ({ form }) => {
+  const { t } = useTranslation();
   const {
     fields: headerFields,
     append: appendHeader,
@@ -28,11 +30,9 @@ const WebhookHeaders: React.FC<WebhookHeadersProps> = ({ form }) => {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <Label>Headers (optional)</Label>
+        <Label>{t("alerts.headers.label")}</Label>
         <Description>
-          Specify custom HTTP headers to include with each webhook request. Use
-          them for authentication, content type specification, or any other
-          required metadata.
+          {t("alerts.headers.description")}
         </Description>
       </div>
 
@@ -128,7 +128,7 @@ const WebhookHeaders: React.FC<WebhookHeadersProps> = ({ form }) => {
         onClick={() => appendHeader({ key: "", value: "" })}
       >
         <Plus className="mr-1 size-4" />
-        Add header
+        {t("alerts.headers.addHeader")}
       </Button>
     </div>
   );

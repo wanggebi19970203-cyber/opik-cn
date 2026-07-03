@@ -1,0 +1,784 @@
+---
+description: 本地设置和运行 Opik 开发环境的综合指南
+headline: 本地开发设置 | Opik 文档
+og:description: 有效配置您的本地 Opik 环境。学习为您的工作流程选择最佳开发模式，并获取详细说明。
+og:site_name: Opik 文档
+og:title: 本地开发设置 - Opik
+title: 本地开发设置
+---
+
+本指南提供设置本地 Opik 开发环境的详细说明。我们提供多种针对不同工作流程优化的开发模式。
+
+## 快速开始
+
+选择最适合您开发需求的方式：
+
+| 开发模式 | 使用场景 | 命令 | 速度 |
+|---------|----------|------|------|
+| **Docker 模式** | 测试完整堆栈，最接近生产环境 | `./opik.sh --build` | 慢 |
+| **本地进程模式** | 快速后端 + 前端开发 | `scripts/dev-runner.sh` | 快 |
+| **仅后端模式** | 仅后端开发 | `scripts/dev-runner.sh --be-only-restart` | 快 |
+| **基础设施模式** | 手动 IDE 开发 | `./opik.sh --infra --port-mapping` | 中等 |
+
+<Tip>
+**处理多个分支？** Opik 支持[多工作树开发](#multi-worktree-support) - 同时运行多个环境并自动端口隔离。
+</Tip>
+
+## 前置条件
+
+### 必需工具
+
+- **Docker** 和 **Docker Compose** - 用于运行基础设施服务
+- **Java 25** 和 **Maven** - 用于后端开发
+- **Node.js 18+** 和 **npm** - 用于前端开发
+- **Python 3.10+** 和 **pip** - 用于 SDK 开发
+
+### 验证安装
+
+```bash
+# 检查 Docker
+docker --version
+docker compose version
+
+# 检查 Java 和 Maven
+java -version
+mvn -version
+
+# 检查 Node.js 和 npm
+node --version
+npm --version
+
+# 检查 Python
+python --version
+```
+
+## 开发模式
+
+### 1. Docker 模式（完整堆栈）
+
+**最适合**：测试完整系统、集成测试，或需要最接近生产环境时。
+
+#### 工作原理
+
+`opik.sh` 脚本管理 Docker Compose 配置文件以启动不同组合的服务：
+- 基础设施：MySQL、ClickHouse、Redis、MinIO、ZooKeeper
+- 后端：Java 后端应用程序
+- 前端：React 应用程序
+- 可选：Guardrails 服务
+
+#### 在 Docker 中启动 Opik
+
+```bash
+# 构建并启动所有服务（首次推荐）
+./opik.sh --build
+
+# 不重新构建启动（如果没有代码更改）
+./opik.sh
+
+# 启用端口映射（调试有用）
+./opik.sh --build --port-mapping
+
+# 启用调试日志
+./opik.sh --build --debug
+```
+
+#### 可用配置文件
+
+```bash
+# 仅基础设施（MySQL、Redis、ClickHouse、ZooKeeper、MinIO）
+./opik.sh --infra --port-mapping
+
+# 基础设施 + 后端服务
+./opik.sh --backend --port-mapping
+
+# 除后端外所有服务（用于本地后端开发）
+./opik.sh --local-be --port-mapping
+
+# 添加 guardrails 服务
+./opik.sh --build --guardrails
+```
+
+#### 管理 Docker 服务
+
+```bash
+# 检查服务健康状态
+./opik.sh --verify
+
+# 查看系统状态
+./opik.sh --info
+
+# 停止所有服务并清理
+./opik.sh --stop
+
+# 重新构建特定服务
+docker compose -f deployment/docker-compose/docker-compose.yaml build backend
+```
+
+#### 访问服务
+
+- **UI**: http://localhost:5173
+- **后端 API**: http://localhost:8080
+- **MySQL**: localhost:3306
+- **ClickHouse**: localhost:8123
+- **Redis**: localhost:6379
+
+### 2. 本地进程模式（快速开发）
+
+**最适合**：快速后端和前端开发，支持即时代码重载。
+
+#### 工作原理
+
+`dev-runner.sh` 脚本：
+1. 在 Docker 中启动基础设施服务（MySQL、Redis、ClickHouse 等）
+2. 构建后端并作为本地进程运行
+3. 使用 Vite 开发服务器作为本地进程运行前端
+4. 自动运行数据库迁移
+
+#### 启动开发环境
+
+```bash
+# 完全重启（停止、构建、启动）- 默认
+scripts/dev-runner.sh
+
+# 或显式指定
+scripts/dev-runner.sh --restart
+
+# 不重新构建启动（如果没有依赖更改更快）
+scripts/dev-runner.sh --start
+
+# 停止所有服务
+scripts/dev-runner.sh --stop
+
+# 检查状态
+scripts/dev-runner.sh --verify
+
+# 查看日志
+scripts/dev-runner.sh --logs
+```
+
+#### 调试模式
+
+```bash
+# 启用详细日志
+scripts/dev-runner.sh --restart --debug
+
+# 或设置环境变量
+DEBUG_MODE=true scripts/dev-runner.sh --restart
+```
+
+#### 服务详情
+
+**后端进程**：
+- 端口：8080（默认，可能因[多工作树支持](#multi-worktree-support)而异）
+- 日志：`/tmp/opik-<worktree-id>-backend.log`
+- PID 文件：`/tmp/opik-<worktree-id>-backend.pid`
+- 为本地前端启用 CORS
+- 从 `apps/opik-backend` 自动构建
+
+**前端进程**：
+- 端口：5174（默认，可能因[多工作树支持](#multi-worktree-support)而异）
+- 日志：`/tmp/opik-<worktree-id>-frontend.log`
+- PID 文件：`/tmp/opik-<worktree-id>-frontend.pid`
+- 启用热重载
+- 将 API 调用代理到后端
+
+**基础设施（Docker）**：
+- 与 Docker 模式相同的服务
+- 映射端口供本地访问（多工作树支持时可能偏移）
+
+<Tip>
+环境启动时会显示端口分配。使用多工作树支持时，端口可能与默认值不同。
+</Tip>
+
+#### 访问服务
+
+- **UI**: http://localhost:5174（本地 Vite 开发服务器，端口可能不同）
+- **后端 API**: http://localhost:8080（端口可能不同）
+- **基础设施**：与 Docker 模式相同的端口（可能偏移）
+
+#### SDK 配置
+
+启动后，配置 SDK 使用您的本地实例：
+
+```bash
+opik configure --use_local
+```
+
+**重要**：您必须手动编辑 `~/.opik.config` 以从 URL 中移除 `/api`：
+
+```ini
+[opik]
+# 从：
+url_override = http://localhost:8080/api/
+
+# 改为：
+url_override = http://localhost:8080
+workspace = default
+```
+
+或使用环境变量：
+```bash
+export OPIK_URL_OVERRIDE='http://localhost:8080'
+export OPIK_WORKSPACE='default'
+```
+
+<Note>
+如果使用[多工作树支持](#multi-worktree-support)，请将 `8080` 替换为您的实际后端端口（环境启动时显示）。
+</Note>
+
+### 3. 仅后端模式（后端开发）
+
+**最适合**：专注于后端开发，不需要修改前端代码时。
+
+#### 工作原理
+
+此模式：
+1. 在 Docker 中启动基础设施服务
+2. 在 Docker 中启动前端（预构建）
+3. 将后端作为本地进程运行，支持热重载
+
+Docker 中的前端将 API 调用代理到您的本地后端进程。
+
+#### 启动仅后端模式
+
+```bash
+# 完全重启（停止、构建后端、启动）
+scripts/dev-runner.sh --be-only-restart
+
+# 不重新构建启动
+scripts/dev-runner.sh --be-only-start
+
+# 停止服务
+scripts/dev-runner.sh --be-only-stop
+
+# 检查状态
+scripts/dev-runner.sh --be-only-verify
+```
+
+#### 服务详情
+
+**后端进程**（本地）：
+- 端口：8080
+- 日志：`/tmp/opik-backend.log`
+- 自动构建并支持热重载
+
+**前端**（Docker）：
+- 端口：5173（Docker 容器）
+- 预构建镜像
+- 代理到 localhost:8080
+
+**基础设施**（Docker）：
+- 所有基础设施服务
+
+#### 访问服务
+
+- **UI**: http://localhost:5173（Docker 前端）
+- **后端 API**: http://localhost:8080（本地进程）
+
+#### SDK 配置
+
+配置 SDK 无需手动编辑要求：
+
+```bash
+opik configure --use_local
+# 使用 URL: http://localhost:5173
+```
+
+或使用环境变量：
+```bash
+export OPIK_URL_OVERRIDE='http://localhost:5173/api'
+export OPIK_WORKSPACE='default'
+```
+
+### 4. 仅基础设施模式
+
+**最适合**：SDK 开发、集成测试，或只需要数据库时。
+
+```bash
+# 仅启动基础设施服务
+./opik.sh --infra --port-mapping
+
+# 验证基础设施正在运行
+./opik.sh --infra --verify
+
+# 停止基础设施
+./opik.sh --infra --stop
+```
+
+这将为您提供：
+- MySQL 端口 3306
+- ClickHouse 端口 8123
+- Redis 端口 6379
+- MinIO 端口 9000
+
+## 多工作树支持
+
+Opik 支持从不同的 git 工作树同时运行多个开发环境。当您需要处理多个功能或并排比较分支时，这很有用。
+
+### 工作原理
+
+每个工作树自动获得：
+1. **唯一端口分配** - 所有服务使用偏移端口以避免冲突
+2. **隔离的 Docker 容器** - 每个工作树独立的容器命名空间
+3. **独立的日志和 PID 文件** - 工作树之间互不干扰
+
+端口偏移量（0-99）根据项目路径的 MD5 哈希确定性计算，确保重启后端口分配一致。
+
+### 端口分配
+
+| 服务 | 基础端口 | 带偏移（例如 42） |
+|------|----------|-------------------|
+| 后端 | 8080 | 8122 |
+| 前端 | 5174 | 5216 |
+| MySQL | 3306 | 3348 |
+| Redis | 6379 | 6421 |
+| ClickHouse HTTP | 8123 | 8165 |
+| ClickHouse Native | 9000 | 9042 |
+| Python 后端 | 8000 | 8042 |
+| Zookeeper | 2181 | 2223 |
+| MinIO API | 9001 | 9043 |
+| MinIO 控制台 | 9090 | 9132 |
+
+### 运行多个工作树
+
+```bash
+# 终端 1：主分支
+cd ~/opik
+scripts/dev-runner.sh --restart
+# 基于 ~/opik 的哈希访问端口
+
+# 终端 2：功能分支
+cd ~/opik-worktrees/feature-xyz
+scripts/dev-runner.sh --restart
+# 基于 ~/opik-worktrees/feature-xyz 的哈希访问不同端口
+```
+
+### 手动端口覆盖
+
+如果需要特定端口（例如使用标准端口或避免冲突）：
+
+```bash
+# 使用标准端口（偏移 0）
+OPIK_PORT_OFFSET=0 scripts/dev-runner.sh --restart
+
+# 使用特定偏移
+OPIK_PORT_OFFSET=10 scripts/dev-runner.sh --restart
+```
+
+### 端口冲突检测
+
+脚本在启动前自动检查端口冲突：
+
+```bash
+# 如果端口被占用，您将看到：
+[ERROR] 端口 8122（后端）已被使用
+
+检测到端口冲突！另一个进程正在使用一个或多个必需端口。
+这可能由以下原因引起：
+  - 另一个 Opik 实例从不同工作树运行
+  - 上次运行遗留的容器
+  - 其他服务使用相同端口
+
+解决方案：
+  1. 停止其他 Opik 实例：./scripts/dev-runner.sh --stop
+  2. 使用不同的端口偏移：export OPIK_PORT_OFFSET=<0-99>
+  3. 检查运行中的进程：lsof -i :8122
+```
+
+### Docker 容器命名
+
+容器以工作树项目名称为前缀：
+
+- 主仓库：`opik-opik-mysql-1`、`opik-opik-backend-1`
+- 工作树：`opik-feature-xyz-mysql-1`、`opik-feature-xyz-backend-1`
+
+### 工作树的 SDK 配置
+
+配置 SDK 使用工作树的后端端口（环境启动时显示）：
+
+```bash
+# 配置 SDK（使用启动时显示的后端端口）
+export OPIK_URL_OVERRIDE='http://localhost:8080'  # 或您的工作树端口
+export OPIK_WORKSPACE='default'
+```
+
+或编辑 `~/.opik.config`：
+```ini
+[opik]
+url_override = http://localhost:8122
+workspace = default
+```
+
+## Windows 开发
+
+所有脚本都有 PowerShell 等效版本，适用于 Windows 开发者。
+
+### Docker 模式（Windows）
+
+```powershell
+# 构建并启动所有服务
+.\opik.ps1 --build
+
+# 不同配置文件
+.\opik.ps1 --infra --port-mapping
+.\opik.ps1 --backend --port-mapping
+.\opik.ps1 --local-be --port-mapping
+
+# 管理服务
+.\opik.ps1 --verify
+.\opik.ps1 --stop
+```
+
+### 本地进程模式（Windows）
+
+```powershell
+# 完全重启
+scripts\dev-runner.ps1
+
+# 特定命令
+scripts\dev-runner.ps1 --restart
+scripts\dev-runner.ps1 --start
+scripts\dev-runner.ps1 --stop
+scripts\dev-runner.ps1 --verify
+
+# 仅后端模式
+scripts\dev-runner.ps1 --be-only-restart
+
+# 调试模式
+scripts\dev-runner.ps1 --restart --debug
+```
+
+#### Windows 特定说明
+
+- 日志位置：`$env:TEMP` 目录
+- PID 文件：`$env:TEMP` 目录
+- 使用 `Get-Content -Wait` 代替 `tail -f` 进行日志跟踪
+- 配置文件：`$env:USERPROFILE\.opik.config`
+
+## 常见开发任务
+
+### 构建组件
+
+```bash
+# 仅构建后端
+scripts/dev-runner.sh --build-be
+
+# 仅构建前端
+scripts/dev-runner.sh --build-fe
+
+# 后端代码检查
+scripts/dev-runner.sh --lint-be
+
+# 前端代码检查
+scripts/dev-runner.sh --lint-fe
+```
+
+### 数据库迁移
+
+```bash
+# 仅运行迁移
+scripts/dev-runner.sh --migrate
+
+# 这将：
+# 1. 如果未运行则启动基础设施
+# 2. 如果需要则构建后端
+# 3. 运行 MySQL 迁移
+# 4. 运行 ClickHouse 迁移
+```
+
+如果迁移失败，您可能需要清理：
+
+```bash
+# 停止所有服务
+scripts/dev-runner.sh --stop  # 或 ./opik.sh --stop
+
+# 移除 Opik Docker 卷（警告：数据丢失 - 删除 Opik 数据库）
+./opik.sh --clean
+
+# 重启
+scripts/dev-runner.sh --restart
+```
+
+### 查看日志
+
+```bash
+# 显示最近日志（最后 20 行）
+scripts/dev-runner.sh --logs
+
+# 实时跟踪日志
+tail -f /tmp/opik-backend.log
+tail -f /tmp/opik-frontend.log
+
+# Windows 上
+Get-Content -Wait $env:TEMP\opik-backend.log
+Get-Content -Wait $env:TEMP\opik-frontend.log
+```
+
+### 使用 Docker 服务
+
+```bash
+# 查看所有 Opik 容器
+docker ps --filter "name=opik-"
+
+# 查看 Docker 服务日志
+docker logs -f opik-backend-1
+docker logs -f opik-frontend-1
+docker logs -f opik-clickhouse-1
+
+# 在容器中执行命令
+docker exec -it opik-mysql-1 mysql -u root -p
+docker exec -it opik-clickhouse-1 clickhouse-client
+
+# 重启特定 Docker 服务
+docker restart opik-backend-1
+```
+
+## 故障排除
+
+### 服务无法启动
+
+```bash
+# 检查 Docker 是否运行
+docker info
+
+# 检查端口冲突（环境启动时显示端口）
+lsof -i :5174  # 前端（默认）
+lsof -i :8080  # 后端（默认）
+lsof -i :3306  # MySQL（默认）
+lsof -i :8123  # ClickHouse（默认）
+
+# Windows 上
+Get-NetTCPConnection -LocalPort 5174
+Get-NetTCPConnection -LocalPort 8080
+```
+
+<Tip>
+如果有来自其他工作树的端口冲突，您可以覆盖端口偏移：
+```bash
+OPIK_PORT_OFFSET=0 scripts/dev-runner.sh --restart
+```
+</Tip>
+
+### 构建失败
+
+```bash
+# 清理后端构建
+cd apps/opik-backend
+mvn clean
+mvn spotless:apply  # 修复格式问题
+mvn clean install
+
+# 清理前端构建
+cd apps/opik-frontend
+rm -rf node_modules
+npm install
+npm run lint
+```
+
+### 数据库连接问题
+
+```bash
+# 检查 MySQL 是否可访问
+docker exec -it opik-mysql-1 mysql -u root -p
+
+# 检查 ClickHouse 是否可访问
+docker exec -it opik-clickhouse-1 clickhouse-client
+
+# 或通过 HTTP
+echo 'SELECT version()' | curl -H 'X-ClickHouse-User: opik' -H 'X-ClickHouse-Key: opik' 'http://localhost:8123/' -d @-
+```
+
+### 进程管理问题
+
+```bash
+# 终止卡住的后端进程
+pkill -f "opik-backend.*jar"
+
+# 终止卡住的前端进程
+pkill -f "vite.*opik-frontend"
+
+# Windows 上
+Get-Process | Where-Object {$_.Path -like "*opik-backend*"} | Stop-Process -Force
+Get-Process | Where-Object {$_.Path -like "*opik-frontend*"} | Stop-Process -Force
+```
+
+### 完全重启
+
+```bash
+# 完全清理并重启
+scripts/dev-runner.sh --stop
+./opik.sh --clean  # 警告：删除 Opik 数据
+scripts/dev-runner.sh --restart
+```
+
+## 开发工作流程示例
+
+### 后端功能开发
+
+```bash
+# 1. 启动仅后端模式（后端工作最快）
+scripts/dev-runner.sh --be-only-restart
+
+# 2. 在 apps/opik-backend 中进行更改
+
+# 3. 重新构建并重启后端
+scripts/dev-runner.sh --build-be
+scripts/dev-runner.sh --be-only-start
+
+# 4. 通过 http://localhost:5173 的 UI 测试更改
+```
+
+### 前端功能开发
+
+```bash
+# 1. 启动本地进程模式
+scripts/dev-runner.sh --restart
+
+# 2. 在 apps/opik-frontend 中进行更改
+# 前端自动热重载
+
+# 3. 在 http://localhost:5174 查看更改
+```
+
+### 全栈功能开发
+
+```bash
+# 1. 启动本地进程模式
+scripts/dev-runner.sh --restart
+
+# 2. 对后端和前端进行更改
+# 前端更改热重载
+# 后端更改需要重新构建：
+
+scripts/dev-runner.sh --build-be
+# 后端自动重启
+
+# 3. 在 http://localhost:5174 测试
+```
+
+### SDK 开发
+
+```bash
+# 1. 仅启动基础设施
+./opik.sh --infra --port-mapping
+
+# 2. 如果需要单独启动后端
+cd apps/opik-backend
+mvn clean install
+java -jar target/opik-backend-*.jar server config.yml
+
+# 3. 配置 SDK
+opik configure --use_local
+
+# 4. 测试 SDK 更改
+cd sdks/python
+pip install -e .
+pytest tests/e2e
+```
+
+### 集成测试
+
+```bash
+# 1. 启动完整 Docker 堆栈
+./opik.sh --build
+
+# 2. 针对完整环境运行测试
+cd tests_end_to_end
+pytest tests/
+
+# 3. 清理
+./opik.sh --stop
+```
+
+## 性能提示
+
+1. **使用本地进程模式**获得最快的开发周期
+2. **使用仅后端模式**如果不修改前端
+3. **使用 `--start` 代替 `--restart`**当依赖未更改时
+4. **仅在需要时启用调试模式** - 它会增加日志详细程度
+5. **保持 Docker 镜像更新** - 定期使用 `--build` 重新构建
+
+## 最佳实践
+
+1. **提交前始终运行代码检查**：
+   ```bash
+   scripts/dev-runner.sh --lint-be
+   scripts/dev-runner.sh --lint-fe
+   ```
+
+2. **提交前在本地测试迁移**：
+   ```bash
+   scripts/dev-runner.sh --migrate
+   ```
+
+3. **定期清理**以释放磁盘空间：
+   ```bash
+   # 清理 Opik Docker 资源（警告：数据丢失 - 删除 Opik 数据库）
+   ./opik.sh --clean  # 删除 Opik 容器和卷
+   
+   # 或清理悬空的 Docker 容器、网络、镜像（影响所有项目）
+   docker system prune
+   ```
+
+4. **使用调试模式进行故障排除**：
+   ```bash
+   scripts/dev-runner.sh --restart --debug
+   ```
+
+5. **报告问题前检查服务状态**：
+   ```bash
+   scripts/dev-runner.sh --verify
+   ./opik.sh --verify
+   ```
+
+## IDE 配置
+
+Opik 为 Cursor、Codex 和 Claude Code 等编辑器提供 AI 编码规则和配置。这些存储在 `.agents/` 中，可以使用 Makefile 同步到您选择的编辑器。
+
+### 设置
+
+```bash
+# 对于 Cursor 用户 - 创建 .agents/ 的 .cursor 符号链接
+make cursor
+
+# 对于 Codex 用户 - 创建 .codex 符号链接并生成 Codex 兼容的 AGENTS 文件
+make codex
+
+# 对于 Claude Code 用户 - 同步规则到 .claude/ 并生成 .mcp.json
+make claude
+```
+
+`make codex` 保持 `.codex` 链接到 `.agents` 并生成 `AGENTS.override.md` 加 `.agents/generated/codex/rules/*.md`，以便 Codex 可以消费从 `.mdc` 文件派生的规则内容。
+
+### 目录结构
+
+```
+.agents/
+├── rules/                    # AI 编码规则（.mdc 文件）
+│   ├── *.mdc                 # 根级规则（git、clean-code 等）
+│   ├── apps/                 # 应用特定规则
+│   │   ├── opik-backend/     # Java 后端规则
+│   │   └── opik-frontend/    # React 前端规则
+│   └── sdks/                 # SDK 特定规则
+├── commands/                 # 斜杠命令
+└── mcp.json                  # MCP 服务器配置
+```
+
+### Git 钩子
+
+安装 pre-commit 钩子以在提交前自动运行代码检查：
+
+```bash
+# 安装钩子
+make hooks
+
+# 移除钩子
+make hooks-remove
+```
+
+## 后续步骤
+
+- [后端开发指南](backend.mdx) - 深入了解后端开发
+- [前端开发指南](frontend.mdx) - 深入了解前端开发
+- [Python SDK 开发指南](python-sdk.mdx) - SDK 贡献指南
+- [测试指南](overview.mdx#testing) - 运行和编写测试

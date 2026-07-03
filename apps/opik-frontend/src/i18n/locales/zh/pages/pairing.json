@@ -1,0 +1,15 @@
+{
+  "pairing": {
+    "title": "配对",
+    "description": "连接设备进行测试",
+    "status": {
+      "connected": "已连接",
+      "disconnected": "已断开",
+      "pairing": "配对中..."
+    },
+    "page": {
+      "noPairingData": "URL中无配对数据。",
+      "invalidPairingLink": "此配对链接无效。"
+    }
+  }
+}

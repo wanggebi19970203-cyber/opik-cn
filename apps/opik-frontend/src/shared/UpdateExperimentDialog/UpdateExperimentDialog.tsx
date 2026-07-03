@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import CodeMirror from "@uiw/react-codemirror";
 import { jsonLanguage } from "@codemirror/lang-json";
 import {
@@ -34,6 +35,7 @@ export function UpdateExperimentDialog({
   latestName,
   latestConfiguration,
 }: UpdateExperimentDialogProps) {
+  const { t } = useTranslation();
   const [showInvalidJSON, setShowInvalidJSON] = useBooleanTimeoutState({});
   const theme = useCodemirrorTheme({
     editable: true,
@@ -85,11 +87,11 @@ export function UpdateExperimentDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Edit experiment</DialogTitle>
+          <DialogTitle>{t("common.experiment.editExperiment")}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto">
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("common.experiment.name")}</Label>
             <Input
               id="name"
               type="text"
@@ -99,7 +101,7 @@ export function UpdateExperimentDialog({
           </div>
 
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="configuration">Configuration</Label>
+            <Label htmlFor="configuration">{t("common.experiment.configuration")}</Label>
             <div className="max-h-52 overflow-y-auto rounded-md">
               <CodeMirror
                 theme={theme}
@@ -121,20 +123,20 @@ export function UpdateExperimentDialog({
           </div>
           {showInvalidJSON && (
             <Alert variant="destructive">
-              <AlertTitle>Configuration field is not valid</AlertTitle>
+              <AlertTitle>{t("common.experiment.configurationNotValid")}</AlertTitle>
             </Alert>
           )}
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("common.experiment.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"
             onClick={handleUpdate}
             disabled={!isValid || !hasChanges}
           >
-            Update experiment
+            {t("common.experiment.updateExperiment")}
           </Button>
         </DialogFooter>
       </DialogContent>

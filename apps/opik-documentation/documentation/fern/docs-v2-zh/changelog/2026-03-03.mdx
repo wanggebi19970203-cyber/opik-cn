@@ -1,0 +1,93 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## OpenClaw 原生可观测性集成 Opik
+
+我们发布了 `opik-openclaw`，一个原生 OpenClaw 插件，由 Opik 驱动，为你的 Agents 提供全栈可观测性。这为增长最快的开源 Agent 框架带来了企业级追踪、评估和监控。
+
+**你将获得：**
+
+- **完整 Trace 捕获** - 每次 LLM 调用、工具执行、内存召回、上下文组装和 Agent 委托都记录完整的输入/输出对、token 计数、延迟和成本
+- **端到端对话线程** - 从初始消息经过多步推理、工具调用到最终响应追踪请求，即使 Agent 跨子 Agent 或定时心跳链式调用
+- **真实成本可见性** - 每请求、每模型的成本分解，让你准确看到 token 去向并相应优化
+- **使用 LLM-as-a-Judge 的自动化评估** - 设置幻觉检测、答案相关性和上下文精确度指标，在你的 traces 上自动运行
+
+两分钟开始：使用 `openclaw plugins install @opik/opik-openclaw` 安装插件，配置 API 密钥，traces 立即开始流动。适用于 Opik Cloud 和自托管实例。
+
+👉 [访问 GitHub 仓库](https://github.com/comet-ml/opik-openclaw)
+
+## 扩展的模型和 Provider 支持
+
+我们扩大了你可以在平台上使用的模型和 Provider 范围，为你构建和评估 LLM 应用提供更多灵活性。
+
+**新增内容：**
+
+- **Gemini 3.1 支持** - Google Gemini 3.1 现在作为支持的模型在平台上可用
+- **Claude Sonnet 4.6 作为默认模型** - Claude Sonnet 4.6 现在是默认的 Anthropic 模型，开箱即用带来更好的性能
+- **OpenRouter 原生体验** - OpenRouter 在 Opik UI 中现在有更原生的开箱即用体验。`openrouter/free` 可直接选择，`openrouter/*` 路由模型包括 `/auto` 在模型选择中受支持并优先显示
+- **更新的默认模型** - Python SDK 已更新，退役旧的 gpt-4* 默认值，改用更新的模型
+- **OpenAI TTS 追踪** - 你现在可以追踪 OpenAI 文本转语音模型调用（audio.speech），具有完整的追踪支持
+- **LLM-as-a-Judge 的 OpenAI 兼容 Provider** - 运行 LLM-as-a-Judge 评估指标时可使用任何 OpenAI 兼容 Provider，为你选择评估模型提供更多灵活性
+
+## SDK 改进
+
+我们继续扩展 TypeScript 和 Python SDK 的功能，使通过编程方式将 Opik 集成到工作流中变得更加容易。
+
+**新增内容：**
+
+- **G-Eval 指标（TypeScript）** - G-Eval 评估指标现在在 TypeScript SDK 中可用，支持直接从 TypeScript 项目进行结构化的基于 LLM 的评估
+- **标注队列支持（TypeScript）** - 从 TypeScript SDK 以编程方式管理和交互标注队列
+- **对话线程搜索（TypeScript）** - 使用 TypeScript SDK 中新的 `searchThreads` 功能以编程方式搜索对话线程
+- **离线消息持久化（Python）** - 当 Python SDK 与 Opik 服务器失去连接时，遥测消息现在会持久化到本地 SQLite 数据库中，连接恢复后自动重放——确保网络中断期间不丢失数据
+- **OTEL 集成文档扩展** - 我们发布了[OpenTelemetry 集成文档](/v1/integrations/overview)的重大扩展，包括新页面和针对多个框架和 Provider 的更新指南，重点在 TypeScript
+
+## 优化工作室和优化器 SDK
+
+我们使优化工作室更加强大和灵活，新增指标、持久化功能，以及优化器 SDK 的重大更新。
+
+**新增内容：**
+
+- **JSONPath 支持和数值相似度指标** - 优化工作室现在支持 JSONPath 表达式用于从复杂输出中提取值，以及新的数值相似度指标用于比较数值结果
+- **原生 MCP/工具优化** - v3.x 优化器 SDK 现在包含完全原生的 [MCP 和工具优化](/v1/agent_optimization/algorithms/tool_optimization)支持，包括远程 MCP 支持和改进的工具签名处理
+- **多指标优化** - 多指标优化现在在 span 数据上工作，包含成本、速度和质量权衡场景的可用示例
+- **更强的采样和 Agent 优化** - 自 v3 SDK 首次发布以来，我们添加了更强的采样控制、完整的 Agent 优化（包括多 prompt 支持），以及优化器循环中更精细的 prompt 控制
+- **优化器 SDK 3.1.0** - 优化器 SDK 已更新至 3.1.0 版本，包含上述所有改进，并退役了旧的 gpt-4* 模型引用
+
+## 平台功能和用户体验改进
+
+我们进行了多项改进，使你的日常工作流更加顺畅和直观。
+
+**改进内容：**
+
+- **更新的默认列** - 所有表格的默认列已刷新，默认展示最相关的信息
+- **相对时间格式** - 时间列现在显示相对时间戳（如"2 小时前"），便于快速了解
+- **智能对话线程标签页默认** - 有对话线程的项目现在自动默认到对话线程标签页，更快到达正确视图
+- **一致的破坏性操作** - 破坏性菜单选项现在视觉上统一为红色文本和分隔线，意图更清晰
+- **反馈评分精度** - 反馈评分现在四舍五入到小数点后 2 位，悬停时显示完整精度
+- **工作区颜色映射** - 配置工作区级别颜色映射，确保项目间视觉样式一致
+- **对话线程中的图像附件** - 直接在对话线程视图中查看图像附件，审查对话时提供更好上下文
+- **批量标签操作** - 跨 traces、spans 和其他实体批量添加或移除标签，加快组织速度
+- **内联反馈定义创建** - 直接从标注队列表单创建新的反馈定义，无需离开工作流
+- **数据集项描述** - 数据集项现在支持描述字段，便于记录和标注评估数据
+- **[改造的 MCP 服务器](https://github.com/comet-ml/opik-mcp)** - Opik MCP 服务器已改造以符合当前 MCP 标准，添加了远程 MCP 支持、改进的认证行为，以及扩展的原生功能，包括 prompt 和数据集工作流
+
+## Prompt 版本标签
+
+我们引入了 prompt 版本标签，为你提供跨平台标记和组织 prompt 版本的轻量方式。
+
+**新增内容：**
+
+- **比较视图中的版本标签** - 在 prompt 比较视图中轻松查看和并排比较带标签的 prompt 版本
+- **Python SDK 支持** - 从 Python SDK 以编程方式创建、管理和检索 prompt 版本标签
+- **通过提交检索 Prompts** - 新的 API 端点让你通过提交引用检索 prompts，实现与版本控制工作流的更紧密集成
+
+👉 [Prompt 版本文档](/v1/prompt_engineering/prompt_management#prompt-version-tags)
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.10.10...1.10.23)
+
+_发布版本_: `1.10.11`, `1.10.12`, `1.10.13`, `1.10.14`, `1.10.15`, `1.10.16`, `1.10.17`, `1.10.18`, `1.10.19`, `1.10.20`, `1.10.21`, `1.10.22`, `1.10.23`

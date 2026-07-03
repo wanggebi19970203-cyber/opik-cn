@@ -7,6 +7,7 @@ import { Separator } from "@/ui/separator";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import { cn } from "@/lib/utils";
 import { DropdownOption } from "@/types/shared";
+import { useTranslation } from "react-i18next";
 
 export type ProjectDashboardViewOption = DropdownOption<string> & {
   icon: React.ComponentType<{ className?: string }>;
@@ -29,6 +30,7 @@ export const BuiltInViewItem: React.FC<BuiltInViewItemProps> = ({
   onSelect,
   onDuplicate,
 }) => {
+  const { t } = useTranslation("pages/dashboards");
   const Icon = option.icon;
 
   return (
@@ -47,12 +49,12 @@ export const BuiltInViewItem: React.FC<BuiltInViewItemProps> = ({
               {option.label}
             </span>
             <Tag variant="pink" size="sm" className="shrink-0">
-              Built-in
+              {t("projectViews.builtIn")}
             </Tag>
           </div>
           {canCreate && (
             <div className="shrink-0 opacity-0 group-hover:opacity-100">
-              <TooltipWrapper content="Duplicate">
+              <TooltipWrapper content={t("projectViews.duplicate")}>
                 <Button
                   variant="minimal"
                   size="icon-xs"
@@ -99,6 +101,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
   onDuplicate,
   onDelete,
 }) => {
+  const { t } = useTranslation("pages/dashboards");
   const Icon = option.icon;
   const showActions = canCreate || canEdit || canDelete;
   const showSecondarySeparator = (canEdit || canCreate) && canDelete;
@@ -122,7 +125,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
           {showActions && (
             <div className="flex shrink-0 items-center gap-1.5 rounded-sm p-0.5 opacity-0 group-hover:opacity-100">
               {canEdit && (
-                <TooltipWrapper content="Edit">
+                <TooltipWrapper content={t("projectViews.edit")}>
                   <Button
                     variant="minimal"
                     size="icon-xs"
@@ -137,7 +140,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
                 </TooltipWrapper>
               )}
               {canCreate && (
-                <TooltipWrapper content="Duplicate">
+                <TooltipWrapper content={t("projectViews.duplicate")}>
                   <Button
                     variant="minimal"
                     size="icon-xs"
@@ -155,7 +158,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
                 <Separator orientation="vertical" className="h-2.5" />
               )}
               {canDelete && (
-                <TooltipWrapper content="Delete">
+                <TooltipWrapper content={t("projectViews.delete")}>
                   <Button
                     variant="minimal"
                     size="icon-xs"

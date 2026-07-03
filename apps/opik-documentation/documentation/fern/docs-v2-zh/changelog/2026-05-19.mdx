@@ -1,0 +1,55 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+## 客户端 Prompt 缓存（Python 和 TypeScript SDK）
+
+`client.get_prompt()` 和 `client.get_chat_prompt()` 现在在进程内缓存结果，因此热路径中的重复调用完全跳过网络往返。固定提交被无限期缓存；最新版本查找使用 5 分钟 TTL，在后台刷新，因此你的代码始终获得合理的新鲜值而不会阻塞。
+
+**新增内容：**
+
+- **自动缓存** — 首次获取时缓存结果；后续调用从内存中即时返回
+- **可配置 TTL** — 设置 `OPIK_PROMPT_CACHE_TTL_SECONDS` 以调整新鲜度窗口（默认：300 秒）
+- **需要时绕过** — 传递 `no_cache=True` / `noCache: true` 强制从后端实时获取
+- **Prompt 元数据注入 traces** — 当你在 `@track` 上下文中获取 prompt 时，prompt ID 和提交会自动记录在 trace 元数据中，让你知道推理时使用了哪个版本
+- **TypeScript SDK** — 相同的缓存和元数据注入在 TypeScript 客户端中可用
+
+```python
+# 首次调用后缓存——后续调用无额外延迟
+prompt = client.get_prompt("my-system-prompt")
+
+# 强制获取最新值，绕过缓存
+prompt = client.get_prompt("my-system-prompt", no_cache=True)
+```
+
+## `opik connect` CLI 改进
+
+`opik connect` 和 `opik endpoint` CLI 命令已重新组织，提供更好的错误体验：
+
+- **格式化错误输出** — 配置问题现在显示带标签的卡片（原因 / 工作区 / URL / 配置 / 修复 / 文档），让你准确看到问题所在和修复方法，无需阅读堆栈跟踪
+- **首次运行自动配置** — 如果没有 `~/.opik.config` 文件，`opik connect` 现在会提供自动运行 `opik configure` 的选项（在非交互/无头环境中跳过）
+- **即时断开** — 停止本地运行器会话现在会立即通知后端，UI 中的连接状态会立即更新，而不是等待超时
+
+## Bug 修复和改进
+
+- **Playground：Gemma 4 不再泄露推理痕迹** — Gemma 4 模型的内部思考输出之前出现在 Playground 响应顶部；现在已抑制，只显示最终模型响应
+- **Playground：更新了 Gemini 和 Vertex AI 的默认模型** — Provider 下拉菜单之前默认为已弃用的模型别名，在选择器中不可选；两个 Provider 现在默认为当前推荐模型
+- **Google ADK 集成：重新修补已修复** — `OpikADKOtelTracer` 之前在每个请求上都会杀死所有活动的 OpenTelemetry spans 并重新修补 ADK 导出器；修补器现在是幂等的，并保留用户配置的 OTel 管道
+- **环境：自动创建的环境获得不同颜色** — 从 trace 数据摄取自动创建的环境现在从调色板中分配颜色（按名称哈希确定性分配），不再全部看起来相同
+- **环境：内联验证错误** — 创建或编辑环境时，后端错误（重复名称、无效值）现在内联显示在字段下方；对话框保持打开，你不会丢失输入
+- **环境：SDK 在更新时保留环境** — 调用 `span.end()`、`span.update()`、`trace.end()` 或 `trace.update()` 不再清除创建时设置的 `environment` 字段
+- **实验："Item source" 列** — 实验表中之前标记为"Test suite"的列现在称为"Item source"，显示反映实际来源（数据集、trace、手动等）的动态图标
+- **数据集版本复制不再丢弃项** — 当数据集版本被复制且存储的项计数与实际 ClickHouse 行数发生偏移时，某些项可能被静默丢失；复制现在使用实时计数，消除了差异
+- **自托管引导跳过不再循环** — 在没有演示数据的部署（自托管 Docker Compose、自托管 EKS）上点击"跳过"之前会启动 5 分钟的轮询循环；现在直接路由到主页
+- **CSV 数据集上传始终可用** — 数据集 UI 中的 CSV 上传按钮现在始终显示；之前在自托管 Docker Compose 和某些暂存环境中隐藏，即使该功能完全正常工作
+
+## 性能改进
+
+- **数据集流式传输使用更少的后端 CPU** — 解决了一个查询模式，导致 MySQL 读取器在每次 `/datasets/items/stream` 调用时扫描所有数据集版本；在高请求量下这会将数据库 CPU 推到 80-99%，现在使用直接主键查找
+- **工作区选择器加载更快** — 工作区下拉菜单现在获取更轻量的摘要端点，减少拥有多个工作区的用户每次页面加载时的后端查询数量
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.0.31...2.0.37)
+
+_发布版本_: `2.0.32`, `2.0.33`, `2.0.34`, `2.0.35`, `2.0.36`, `2.0.37`

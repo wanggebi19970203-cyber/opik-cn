@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { Input } from "@/ui/input";
@@ -33,13 +34,13 @@ const isHttpUrl = (value: string): boolean => {
   }
 };
 
-const validateMediaUrl = (url: string): { valid: boolean; error?: string } => {
+const validateMediaUrl = (url: string): { valid: boolean; errorKey?: string } => {
   if (!isHttpUrl(url)) {
     // Allow template variables like {{image}} or {{video}}, {{audio}}
     if (url.match(/^\{\{.+\}\}$/)) {
       return { valid: true };
     }
-    return { valid: false, error: "Please enter a valid HTTP or HTTPS URL" };
+    return { valid: false, errorKey: "addMediaPopover.invalidUrlError" };
   }
   return { valid: true };
 };
@@ -54,6 +55,8 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
   promptVariables = [],
   children,
 }) => {
+  const { t } = useTranslation("prompt");
+  const { t: tCommon } = useTranslation("common");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [newItem, setNewItem] = useState<string>("");
@@ -63,23 +66,23 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
 
   const title = useMemo(() => {
     if (type === "image") {
-      return "Add image";
+      return t("addMediaPopover.addImage");
     }
     if (type === "video") {
-      return "Add video";
+      return t("addMediaPopover.addVideo");
     }
-    return "Add audio";
-  }, [type]);
+    return t("addMediaPopover.addAudio");
+  }, [type, t]);
 
   const placeholder = useMemo(() => {
     if (type === "image") {
-      return "Enter image URL or template variable";
+      return t("addMediaPopover.enterImageUrl");
     }
     if (type === "video") {
-      return "Enter video URL or template variable";
+      return t("addMediaPopover.enterVideoUrl");
     }
-    return "Enter audio URL or template variable";
-  }, [type]);
+    return t("addMediaPopover.enterAudioUrl");
+  }, [type, t]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -102,10 +105,10 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
 
     if (items.length >= resolvedMaxItems) {
       const typeLabel =
-        type === "image" ? "images" : type === "video" ? "videos" : "audios";
+        type === "image" ? tCommon("media.images") : type === "video" ? tCommon("media.videos") : tCommon("media.audios");
       toast({
-        title: "Maximum limit reached",
-        description: `You can only add up to ${resolvedMaxItems} ${typeLabel}`,
+        title: t("addMediaPopover.maximumLimitReached"),
+        description: t("addMediaPopover.maximumLimitDescription", { count: resolvedMaxItems, type: typeLabel }),
         variant: "destructive",
       });
       return;
@@ -113,8 +116,8 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
 
     if (items.includes(trimmed)) {
       toast({
-        title: "Error",
-        description: `This ${type} already exists`,
+        title: tCommon("providers.error"),
+        description: t("addMediaPopover.alreadyExists", { type }),
         variant: "destructive",
       });
       return;
@@ -123,8 +126,8 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
     const validation = validateMediaUrl(trimmed);
     if (!validation.valid) {
       toast({
-        title: "Invalid URL",
-        description: validation.error,
+        title: tCommon("providers.invalidUrl"),
+        description: validation.errorKey ? t(validation.errorKey) : undefined,
         variant: "destructive",
       });
       return;
@@ -159,12 +162,12 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
               />
             </div>
             <Button type="button" variant="default" onClick={handleAddItem}>
-              Add
+              {tCommon("media.add")}
             </Button>
           </div>
           {promptVariables.length > 0 && (
             <p className="comet-body-xs text-light-slate">
-              Available variables:{" "}
+              {t("addMediaPopover.availableVariables")}{" "}
               <PromptVariablesList
                 variables={promptVariables}
                 onVariableClick={handleVariableClick}

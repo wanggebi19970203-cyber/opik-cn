@@ -26,9 +26,9 @@ public record Dataset(
                 Dataset.View.Public.class, Dataset.View.Write.class}) UUID id,
         @JsonView({Dataset.View.Public.class, Dataset.View.Write.class}) @NotBlank String name,
         @JsonView({Dataset.View.Public.class,
-                Dataset.View.Write.class}) @Schema(description = "Project ID. Takes precedence over project_name when both are provided.") @Nullable UUID projectId,
+                Dataset.View.Write.class}) @Schema(description = "项目ID。同时提供 project_name 时，以 project_id 为准。") @Nullable UUID projectId,
         @JsonView({
-                Dataset.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "For project scope, specify either project_id or project_name. If project_name is provided and the project does not exist, it will be created. Ignored when project_id is provided. If neither is provided, the dataset is created at workspace level.") @Nullable String projectName,
+                Dataset.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "项目范围：指定 project_id 或 project_name 之一。如果提供了 project_name 但项目不存在，将自动创建。提供 project_id 时忽略此参数。如果两者都未提供，数据集将在工作区级别创建。") @Nullable String projectName,
         @JsonView({Dataset.View.Public.class, Dataset.View.Write.class}) DatasetType type,
         @JsonView({Dataset.View.Public.class, Dataset.View.Write.class}) Visibility visibility,
         @JsonView({Dataset.View.Public.class, Dataset.View.Write.class}) Set<String> tags,
@@ -55,7 +55,7 @@ public record Dataset(
         @JsonView({
                 Dataset.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) @Nullable DatasetStatus status,
         @JsonView({
-                Dataset.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Summary of the latest version of this dataset") @Nullable DatasetVersionSummary latestVersion) {
+                Dataset.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "此数据集最新版本的摘要") @Nullable DatasetVersionSummary latestVersion) {
 
     public static class View {
 

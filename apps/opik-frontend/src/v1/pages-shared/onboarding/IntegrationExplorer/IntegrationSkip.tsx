@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { ChevronsRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -12,8 +13,10 @@ type IntegrationSkipProps = {
 
 const IntegrationSkip: React.FunctionComponent<IntegrationSkipProps> = ({
   className,
-  label = "Skip & explore platform",
+  label,
 }) => {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t('integrationExplorer.skipAndExplore');
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
@@ -26,7 +29,7 @@ const IntegrationSkip: React.FunctionComponent<IntegrationSkipProps> = ({
       data-fs-element="QuickstartSkipExplorePlatform"
     >
       <Link to="/$workspaceName/home" params={{ workspaceName }}>
-        {label}
+        {displayLabel}
         <ChevronsRight className="ml-1.5 size-3.5" />
       </Link>
     </Button>

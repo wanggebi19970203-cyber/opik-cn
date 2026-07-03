@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import OpikLeaf from "@/icons/opik-leaf.svg?react";
 import OpikLeafDark from "@/icons/opik-leaf-dark.svg?react";
@@ -9,21 +10,6 @@ import { Button } from "@/ui/button";
 import AssertionField from "./AssertionField";
 
 type AssertionsVariant = "item" | "global";
-
-const VARIANT_CONFIG: Record<
-  AssertionsVariant,
-  { title: string; description: string }
-> = {
-  item: {
-    title: "Assertions",
-    description: "Define the conditions for this test to pass.",
-  },
-  global: {
-    title: "Global assertions",
-    description:
-      "Define the global conditions all items in this test suite must pass.",
-  },
-};
 
 interface AssertionsFieldProps {
   variant: AssertionsVariant;
@@ -44,8 +30,9 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
   onChangeEditable,
   onRemoveEditable,
   onAdd,
-  placeholder = "e.g. Response should be factually accurate",
+  placeholder,
 }) => {
+  const { t } = useTranslation("common");
   const { themeMode } = useTheme();
   const LeafIcon = themeMode === THEME_MODE.DARK ? OpikLeafDark : OpikLeaf;
 
@@ -59,7 +46,18 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
     prevCountRef.current = editableAssertions.length;
   }, [editableAssertions.length]);
 
-  const { title, description } = VARIANT_CONFIG[variant];
+  const variantConfig = {
+    item: {
+      title: t("assertionsField.assertions"),
+      description: t("assertionsField.defineConditionsForTest"),
+    },
+    global: {
+      title: t("assertionsField.globalAssertions"),
+      description: t("assertionsField.defineGlobalConditions"),
+    },
+  };
+
+  const { title, description } = variantConfig[variant];
   const hasReadOnly = readOnlyAssertions.length > 0;
   const hasEditable = editableAssertions.length > 0;
 
@@ -76,7 +74,7 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
               onClick={onAdd}
             >
               <Plus className="mr-0.5 size-3" />
-              Assertion
+              {t("assertionsField.assertion")}
             </button>
           )}
         </div>
@@ -87,7 +85,7 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
           <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-border bg-background p-4">
             <LeafIcon className="size-8" />
             <span className="comet-body-xs text-muted-slate">
-              No assertions added yet
+              {t("assertionsField.noAssertionsAddedYet")}
             </span>
             <Button
               type="button"
@@ -96,7 +94,7 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
               className="h-auto px-0"
               onClick={onAdd}
             >
-              Add assertion
+              {t("assertionsField.addAssertion")}
             </Button>
           </div>
         )}
@@ -107,7 +105,7 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
               <AssertionField
                 key={index}
                 ref={index === 0 ? firstFieldRef : undefined}
-                placeholder={placeholder}
+                placeholder={placeholder ?? t("assertionsField.assertionPlaceholder")}
                 value={assertion}
                 onChange={(e) => onChangeEditable(index, e.target.value)}
                 onRemove={() => onRemoveEditable(index)}

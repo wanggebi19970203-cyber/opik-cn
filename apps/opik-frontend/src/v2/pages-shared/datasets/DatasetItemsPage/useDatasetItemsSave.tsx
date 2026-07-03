@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Blocks, Code2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import useDatasetItemChangesMutation from "@/api/datasets/useDatasetItemChangesMutation";
 import { ToastAction } from "@/ui/toast";
@@ -32,6 +33,7 @@ const useDatasetItemsSave = ({
   hasNoVersion,
   clearDraft,
 }: UseDatasetItemsSaveParams) => {
+  const { t } = useTranslation("datasets");
   const [addVersionDialogOpen, setAddVersionDialogOpen] = useState(false);
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
@@ -48,15 +50,14 @@ const useDatasetItemsSave = ({
   const showSuccessToast = useCallback(
     (versionId?: string) => {
       toast({
-        title: "New version created",
-        description:
-          "Your changes have been saved as a new version. You can now use it to run experiments in the SDK or the Playground.",
+        title: t("datasetItemsSave.newVersionCreated"),
+        description: t("datasetItemsSave.newVersionCreatedDescription"),
         actions: [
           <ToastAction
             variant="link"
             size="sm"
             className="comet-body-s-accented gap-1.5 px-0"
-            altText="Run experiment in the SDK"
+            altText={t("datasetItemsSave.runExperimentInSdk")}
             key="sdk"
             onClick={() =>
               navigateToExperiment({
@@ -66,13 +67,13 @@ const useDatasetItemsSave = ({
             }
           >
             <Code2 className="size-4" />
-            Run experiment in the SDK
+            {t("datasetItemsSave.runExperimentInSdk")}
           </ToastAction>,
           <ToastAction
             variant="link"
             size="sm"
             className="comet-body-s-accented gap-1.5 px-0"
-            altText="Run experiment in the Playground"
+            altText={t("datasetItemsSave.runExperimentInPlayground")}
             key="playground"
             onClick={() =>
               loadPlayground({
@@ -83,7 +84,7 @@ const useDatasetItemsSave = ({
             }
           >
             <Blocks className="size-4" />
-            Run experiment in the Playground
+            {t("datasetItemsSave.runExperimentInPlayground")}
           </ToastAction>,
         ],
       });

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronsRight } from "lucide-react";
@@ -106,6 +107,7 @@ const AnswerButton: React.FC<AnswerButtonProps> = ({ option }) => {
 const Skip: React.FC = () => {
   const { handleSkip, currentStep } = useOnboarding();
   const stepIdentifier = currentStep || "unknown";
+  const { t } = useTranslation("onboarding");
 
   return (
     <Button
@@ -115,7 +117,7 @@ const Skip: React.FC = () => {
       id={`onboarding-step-${stepIdentifier}-skip`}
       data-fs-element={`onboarding-step-${stepIdentifier}-skip`}
     >
-      Skip
+      {t("skip")}
       <ChevronsRight className="ml-1 size-4" />
     </Button>
   );
@@ -124,6 +126,7 @@ const Skip: React.FC = () => {
 const StartExploring: React.FC = () => {
   const { handleSkip, currentStep } = useOnboarding();
   const stepIdentifier = currentStep || "unknown";
+  const { t } = useTranslation("onboarding");
 
   return (
     <Button
@@ -133,7 +136,7 @@ const StartExploring: React.FC = () => {
       id={`onboarding-step-${stepIdentifier}-start-exploring`}
       data-fs-element={`onboarding-step-${stepIdentifier}-start-exploring`}
     >
-      Start exploring Opik
+      {t("startExploringOpik")}
       <ChevronsRight className="ml-1 size-4" />
     </Button>
   );
@@ -142,6 +145,7 @@ const StartExploring: React.FC = () => {
 const BackButton: React.FC = () => {
   const { handleBack, currentStep } = useOnboarding();
   const stepIdentifier = currentStep || "unknown";
+  const { t } = useTranslation("onboarding");
 
   return (
     <div className="flex justify-start">
@@ -153,7 +157,7 @@ const BackButton: React.FC = () => {
         data-fs-element={`onboarding-step-${stepIdentifier}-back`}
       >
         <ChevronLeft className="mr-1 size-4" />
-        Back
+        {t("back")}
       </Button>
     </div>
   );

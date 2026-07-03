@@ -9,6 +9,7 @@ import {
 import isNil from "lodash/isNil";
 import isNumber from "lodash/isNumber";
 import { formatNumericData } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 import { TransformedData } from "@/types/projects";
 import useChartConfig from "@/hooks/useChartConfig";
@@ -99,6 +100,7 @@ const MetricContainerChart = ({
   isAggregateTotal = false,
   customEmptyState,
 }: MetricContainerChartProps) => {
+  const { t } = useTranslation("dashboards");
   const { data: response, isPending } = useProjectMetric(
     {
       projectId,
@@ -194,7 +196,7 @@ const MetricContainerChart = ({
     customEmptyState || (
       <NoData
         className="h-[var(--chart-height)] min-h-32 text-light-slate"
-        message="No data to show"
+        message={t("chart.noDataToShow")}
       />
     )
   ) : (

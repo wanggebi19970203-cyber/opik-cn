@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import sortBy from "lodash/sortBy";
 import isFunction from "lodash/isFunction";
 import { FlaskConical, ListTree } from "lucide-react";
@@ -25,6 +26,7 @@ type CompareExperimentsViewerProps = {
 const CompareExperimentsViewer: React.FunctionComponent<
   CompareExperimentsViewerProps
 > = ({ experimentItem, openTrace, sectionIdx }) => {
+  const { t } = useTranslation();
   const isTraceExist = traceExist(experimentItem);
   const isTraceVisible = traceVisible(experimentItem);
   const experimentId = experimentItem.experiment_id;
@@ -62,8 +64,8 @@ const CompareExperimentsViewer: React.FunctionComponent<
       return (
         <div className="mt-64">
           <NoData
-            title="No related trace found"
-            message="It looks like it was deleted or not created"
+            title={t("compareExperiments.viewer.noRelatedTrace")}
+            message={t("compareExperiments.viewer.traceDeletedMessage")}
             className="min-h-24 text-center"
           />
         </div>
@@ -93,7 +95,7 @@ const CompareExperimentsViewer: React.FunctionComponent<
           </div>
         </TooltipWrapper>
         {isTraceExist && isTraceVisible && (
-          <TooltipWrapper content="Click to open original trace">
+          <TooltipWrapper content={t("compareExperiments.viewer.openTraceTooltip")}>
             <Button
               size="sm"
               variant="outline"
@@ -101,7 +103,7 @@ const CompareExperimentsViewer: React.FunctionComponent<
               className="shrink-0"
             >
               <ListTree className="mr-2 size-4 shrink-0" />
-              Trace
+              {t("compareExperiments.viewer.trace")}
             </Button>
           </TooltipWrapper>
         )}

@@ -57,7 +57,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Dashboards", description = "Workspace Dashboard resources")
+@Tag(name = "Dashboards", description = "工作区仪表盘资源")
 public class DashboardsResource {
 
     private final @NonNull DashboardService service;
@@ -67,8 +67,8 @@ public class DashboardsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @POST
-    @Operation(operationId = "createDashboard", summary = "Create dashboard", description = "Create a new dashboard in a workspace", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createDashboard", summary = "创建仪表盘", description = "在工作区创建新仪表盘", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/dashboards/{dashboardId}", schema = @Schema(implementation = String.class))}, content = @Content(schema = @Schema(implementation = Dashboard.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_CREATE)
@@ -92,9 +92,9 @@ public class DashboardsResource {
 
     @GET
     @Path("/{dashboardId}")
-    @Operation(operationId = "getDashboardById", summary = "Get dashboard by id", description = "Get dashboard by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Dashboard resource", content = @Content(schema = @Schema(implementation = Dashboard.class))),
-            @ApiResponse(responseCode = "404", description = "Dashboard not found")
+    @Operation(operationId = "getDashboardById", summary = "根据ID获取仪表盘", description = "根据ID获取仪表盘", responses = {
+            @ApiResponse(responseCode = "200", description = "仪表盘资源", content = @Content(schema = @Schema(implementation = Dashboard.class))),
+            @ApiResponse(responseCode = "404", description = "仪表盘未找到")
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_VIEW)
     @JsonView(Dashboard.View.Public.class)
@@ -110,15 +110,15 @@ public class DashboardsResource {
     }
 
     @GET
-    @Operation(operationId = "findDashboards", summary = "Find dashboards", description = "Find dashboards in a workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Dashboard page", content = @Content(schema = @Schema(implementation = DashboardPage.class)))
+    @Operation(operationId = "findDashboards", summary = "查找仪表盘", description = "在工作区查找仪表盘", responses = {
+            @ApiResponse(responseCode = "200", description = "仪表盘分页", content = @Content(schema = @Schema(implementation = DashboardPage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_VIEW)
     @JsonView(Dashboard.View.Public.class)
     public Response findDashboards(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter dashboards by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤仪表盘（部分匹配，不区分大小写）") String name,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
@@ -140,10 +140,10 @@ public class DashboardsResource {
 
     @PATCH
     @Path("/{dashboardId}")
-    @Operation(operationId = "updateDashboard", summary = "Update dashboard", description = "Update dashboard by id. Partial updates are supported - only provided fields will be updated.", responses = {
-            @ApiResponse(responseCode = "200", description = "Updated dashboard", content = @Content(schema = @Schema(implementation = Dashboard.class))),
-            @ApiResponse(responseCode = "404", description = "Dashboard not found"),
-            @ApiResponse(responseCode = "409", description = "Conflict - dashboard with this name already exists")
+    @Operation(operationId = "updateDashboard", summary = "更新仪表盘", description = "根据ID更新仪表盘。支持部分更新 - 仅更新提供的字段。", responses = {
+            @ApiResponse(responseCode = "200", description = "仪表盘已更新", content = @Content(schema = @Schema(implementation = Dashboard.class))),
+            @ApiResponse(responseCode = "404", description = "仪表盘未找到"),
+            @ApiResponse(responseCode = "409", description = "冲突 - 该名称的仪表盘已存在")
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_EDIT)
     @JsonView(Dashboard.View.Public.class)
@@ -165,8 +165,8 @@ public class DashboardsResource {
 
     @DELETE
     @Path("/{dashboardId}")
-    @Operation(operationId = "deleteDashboard", summary = "Delete dashboard", description = "Delete dashboard by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")
+    @Operation(operationId = "deleteDashboard", summary = "删除仪表盘", description = "根据ID删除仪表盘", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_DELETE)
     public Response deleteDashboard(@PathParam("dashboardId") UUID id) {
@@ -182,8 +182,8 @@ public class DashboardsResource {
 
     @POST
     @Path("/delete-batch")
-    @Operation(operationId = "deleteDashboardsBatch", summary = "Delete dashboards", description = "Delete dashboards batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "deleteDashboardsBatch", summary = "删除仪表盘", description = "批量删除仪表盘", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_DELETE)
     public Response deleteDashboardsBatch(

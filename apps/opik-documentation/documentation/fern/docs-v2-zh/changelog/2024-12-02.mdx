@@ -1,0 +1,17 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 为每个表格新增 `created_by` 列，用于指示记录的创建者
+- 在用户菜单中遮蔽 API 密钥
+
+**SDK**：
+
+- 实现 trace 的后台批量发送，加速 trace 创建请求的处理
+- 更新 OpenAI 集成以跟踪 LLM 调用的成本
+- 更新 `prompt.format` 方法，在使用错误参数调用时抛出错误
+- 更新 `Opik` 方法，使其接受 `api_key` 参数作为位置参数
+- 改进了 `hallucination` 指标的提示词模板
+- 引入新的 `opik_check_tls_certificate` 配置选项，用于禁用 TLS 证书检查

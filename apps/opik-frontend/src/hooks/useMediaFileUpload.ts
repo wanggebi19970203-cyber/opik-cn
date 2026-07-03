@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import {
   convertFileToBase64,
@@ -39,7 +40,7 @@ export const useMediaFileUpload = ({
 
     if (!countValidation.valid) {
       toast({
-        title: "Maximum limit reached",
+        title: i18next.t("common.messages.maxLimitReached"),
         description: countValidation.error,
         variant: "destructive",
       });
@@ -51,7 +52,7 @@ export const useMediaFileUpload = ({
 
     if (!sizeValidation.valid) {
       toast({
-        title: "File too large",
+        title: i18next.t("common.hooks.useMediaFileUpload.fileTooLarge"),
         description: sizeValidation.error,
         variant: "destructive",
       });
@@ -74,8 +75,8 @@ export const useMediaFileUpload = ({
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to process file(s). Please try again.",
+        title: i18next.t("common.hooks.useMediaFileUpload.error"),
+        description: i18next.t("common.hooks.useMediaFileUpload.failedToProcessFiles"),
         variant: "destructive",
       });
       console.error("File conversion error:", error);

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import OpenAIIcon from "@/icons/integrations/openai.svg?react";
 import AnthropicIcon from "@/icons/integrations/anthropic.svg?react";
 import OpenRouterIcon from "@/icons/integrations/open_router.svg?react";
@@ -37,7 +38,7 @@ export const PROVIDERS: PROVIDERS_TYPE = {
     icon: OpikIcon,
     apiKeyName: "OPIK_FREE_MODEL_API_KEY",
     defaultModel: PROVIDER_MODEL_TYPE.OPIK_FREE_MODEL,
-    description: "Free model provided by Opik - no API key required",
+    description: i18next.t("common.constants.providers.opikFreeDescription"),
     readOnly: true,
   },
   [PROVIDER_TYPE.OPEN_AI]: {
@@ -92,19 +93,17 @@ export const PROVIDERS: PROVIDERS_TYPE = {
     icon: OllamaIcon,
     apiKeyName: "OLLAMA_API_KEY",
     defaultModel: "",
-    description:
-      "Run open-source LLMs locally with Ollama. Connect to your local or cloud Ollama instance.",
+    description: i18next.t("common.constants.providers.ollamaDescription"),
     apiKeyURL: "https://github.com/ollama/ollama",
     defaultUrl: "http://localhost:11434/v1",
   },
   [PROVIDER_TYPE.CUSTOM]: {
-    label: "vLLM / Custom provider",
+    label: i18next.t("common.constants.providers.customLabel"),
     value: PROVIDER_TYPE.CUSTOM,
     icon: CustomIcon,
     apiKeyName: "CUSTOM_PROVIDER_API_KEY",
     defaultModel: "",
-    description:
-      "You can configure any OpenAI API-compatible provider (vLLM, \nOllama, etc.) using the standardized OpenAI API interface.",
+    description: i18next.t("common.constants.providers.customDescription"),
   },
 };
 

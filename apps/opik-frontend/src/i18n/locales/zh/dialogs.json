@@ -1,0 +1,44 @@
+{
+  "dialogs": {
+    "delete": {
+      "title": "删除{{item}}",
+      "description": "删除{{item}}将同时移除所有关联数据。此操作无法撤销。确定要继续吗？",
+      "confirmText": "删除",
+      "cancelText": "取消"
+    },
+    "reset": {
+      "title": "重置{{item}}",
+      "description": "这将重置所有更改。此操作无法撤销。",
+      "confirmText": "重置",
+      "cancelText": "取消"
+    },
+    "unsavedChanges": {
+      "title": "未保存的更改",
+      "description": "您有未保存的更改。确定要离开吗？",
+      "confirmText": "离开",
+      "cancelText": "留下",
+      "saveAndLeaveText": "保存并离开"
+    },
+    "confirm": {
+      "title": "确认操作",
+      "description": "确定要继续吗？",
+      "confirmText": "确认",
+      "cancelText": "取消"
+    },
+    "create": {
+      "title": "创建{{item}}",
+      "confirmText": "创建",
+      "cancelText": "取消"
+    },
+    "edit": {
+      "title": "编辑{{item}}",
+      "confirmText": "保存",
+      "cancelText": "取消"
+    },
+    "duplicate": {
+      "title": "复制{{item}}",
+      "confirmText": "复制",
+      "cancelText": "取消"
+    }
+  }
+}

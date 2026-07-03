@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Pin, PinOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +70,7 @@ const FilterManagerPopover: React.FC<FilterManagerPopoverProps> = ({
   onUnpinChip,
   onRequestOpenChip,
 }) => {
+  const { t } = useTranslation("common");
   const [searchText, setSearchText] = useState("");
   const pendingChipIdRef = useRef<string | null>(null);
 
@@ -117,7 +119,7 @@ const FilterManagerPopover: React.FC<FilterManagerPopoverProps> = ({
           <SearchInput
             searchText={searchText}
             setSearchText={setSearchText}
-            placeholder="Search"
+            placeholder={t("filterManagerPopover.search")}
             dimension="sm"
             variant="ghost"
           />
@@ -127,11 +129,11 @@ const FilterManagerPopover: React.FC<FilterManagerPopoverProps> = ({
           {visiblePinned.length > 0 && (
             <>
               <DropdownMenuLabel className="text-light-slate">
-                Pinned
+                {t("filterManagerPopover.pinned")}
               </DropdownMenuLabel>
               {visiblePinned.map((def) => {
                 const isActive = chipHasAppliedValue(def, values[def.id]);
-                const tooltip = isActive ? "Unpin and clear filter" : "Unpin";
+                const tooltip = isActive ? t("filterManagerPopover.unpinAndClearFilter") : t("filterManagerPopover.unpin");
                 return (
                   <TooltipWrapper key={def.id} content={tooltip}>
                     <DropdownMenuItem
@@ -145,7 +147,7 @@ const FilterManagerPopover: React.FC<FilterManagerPopoverProps> = ({
                     >
                       <span className="truncate text-foreground">
                         {def.label}
-                        {isActive && " (active)"}
+                        {isActive && ` ${t("filterManagerPopover.active")}`}
                       </span>
                       <span className="flex size-4 shrink-0 items-center justify-center text-light-slate transition-colors group-hover:text-foreground">
                         <Pin className="size-4 group-hover:hidden" />
@@ -176,7 +178,7 @@ const FilterManagerPopover: React.FC<FilterManagerPopoverProps> = ({
 
           {!hasResults && (
             <div className="comet-body-s flex h-32 w-full items-center justify-center text-muted-slate">
-              No search results
+              {t("filterManagerPopover.noSearchResults")}
             </div>
           )}
         </div>

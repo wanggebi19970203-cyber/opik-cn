@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v1/constants/explainers";
 import ExplainerDescription from "@/shared/ExplainerDescription/ExplainerDescription";
@@ -7,6 +8,8 @@ import PageBodyStickyContainer from "@/shared/PageBodyStickyContainer/PageBodySt
 import GeneralDatasetsTab from "./GeneralDatasetsTab/GeneralDatasetsTab";
 
 const ExperimentsPage: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <PageBodyScrollContainer>
       <PageBodyStickyContainer
@@ -14,7 +17,7 @@ const ExperimentsPage: React.FC = () => {
         direction="horizontal"
         limitWidth
       >
-        <h1 className="comet-title-l truncate break-words">Experiments</h1>
+        <h1 className="comet-title-l truncate break-words">{t("experiments.title")}</h1>
       </PageBodyStickyContainer>
       <PageBodyStickyContainer direction="horizontal" limitWidth>
         <ExplainerDescription

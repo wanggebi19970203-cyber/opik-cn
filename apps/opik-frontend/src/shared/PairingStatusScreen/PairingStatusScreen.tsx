@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
 import opikLogoUrl from "/images/opik-logo.png";
@@ -27,66 +28,64 @@ export interface PairingStatusScreenProps {
   expectedBaseUrl?: string | null;
 }
 
-function getCopy(props: PairingStatusScreenProps): {
+function getCopy(props: PairingStatusScreenProps, t: (key: string) => string): {
   headline: string;
   subtitle: string;
 } {
   if (props.status === "loading") {
     const headline =
       props.runnerVariant === "endpoint"
-        ? "Connecting your agent"
+        ? t("common.shared.connectingYourAgent")
         : props.runnerVariant === "connect"
-          ? "Connecting to your codebase"
-          : "Connecting";
+          ? t("common.shared.connectingToCodebase")
+          : t("common.shared.connecting");
     return {
       headline,
-      subtitle: "Finalizing the pairing — this only takes a moment.",
+      subtitle: t("common.shared.finalizingPairing"),
     };
   }
 
   if (props.status === "success") {
     const headline =
       props.runnerVariant === "endpoint"
-        ? "Your agent is connected to Opik"
-        : "Opik is connected to your codebase";
+        ? t("common.shared.agentConnectedToOpik")
+        : t("common.shared.opikConnectedToCodebase");
     return {
       headline,
-      subtitle: "Pairing successful — you can safely close this tab.",
+      subtitle: t("common.shared.pairingSuccessful"),
     };
   }
 
   switch (props.errorKind) {
     case "tampered_link":
       return {
-        headline: "This pairing link can't be trusted",
-        subtitle:
-          "The link appears to have been modified. Run the CLI command again.",
+        headline: t("common.shared.pairingLinkNotTrusted"),
+        subtitle: t("common.shared.linkModified"),
       };
     case "expired_link":
       return {
-        headline: "This pairing link has expired",
-        subtitle: "Run the CLI command again to generate a fresh link.",
+        headline: t("common.shared.pairingLinkExpired"),
+        subtitle: t("common.shared.runCliAgain"),
       };
     case "unreachable":
       return {
-        headline: "Couldn't reach Opik",
-        subtitle: "Check your connection and try again.",
+        headline: t("common.shared.couldNotReachOpik"),
+        subtitle: t("common.shared.checkConnection"),
       };
     case "insecure_context":
       return {
-        headline: "Secure connection required",
-        subtitle: "Pairing requires HTTPS. Open the link on a secure page.",
+        headline: t("common.shared.secureConnectionRequired"),
+        subtitle: t("common.shared.pairingRequiresHttps"),
       };
     case "v1_workspace":
       return {
-        headline: "Workspace upgrade required",
-        subtitle:
-          "Opik Connect requires Opik 2.0. Please upgrade your workspace to continue.",
+        headline: t("common.shared.workspaceUpgradeRequired"),
+        subtitle: t("common.shared.opikConnectRequiresUpgrade"),
       };
     default:
       return {
-        headline: "This pairing link is invalid",
-        subtitle: "Run the CLI command again to generate a fresh link.",
+        headline: t("common.shared.pairingLinkInvalid"),
+        subtitle: t("common.shared.runCliAgain"),
       };
   }
 }
@@ -109,7 +108,8 @@ function safeHttpHref(raw: string | null | undefined): string | null {
 export const PairingStatusScreen: React.FC<PairingStatusScreenProps> = (
   props,
 ) => {
-  const { headline, subtitle } = getCopy(props);
+  const { t } = useTranslation();
+  const { headline, subtitle } = getCopy(props, t);
   const { themeMode } = useTheme();
 
   const showWorkspaceContext =
@@ -123,7 +123,7 @@ export const PairingStatusScreen: React.FC<PairingStatusScreenProps> = (
 
   return (
     <main
-      aria-label="Pairing status"
+      aria-label={t("common.shared.pairingStatus")}
       className="flex min-h-screen flex-col items-center justify-center p-6"
     >
       <img
@@ -137,15 +137,15 @@ export const PairingStatusScreen: React.FC<PairingStatusScreenProps> = (
         {showWorkspaceContext && (
           <div className="mt-6 flex flex-col items-center gap-2">
             <p className="comet-body-s text-muted-slate">
-              The CLI tried to pair using these Opik settings:
+              {t("common.shared.cliTriedPairingWith")}
             </p>
             <dl
-              aria-label="Pairing context"
+              aria-label={t("common.shared.pairingStatus")}
               className="comet-body-s grid grid-cols-[auto_1fr] items-center gap-x-6 gap-y-1.5 rounded-md border border-border bg-soft-background px-5 py-3 text-left"
             >
               {props.expectedBaseUrl ? (
                 <>
-                  <dt className="text-muted-slate">Opik URL</dt>
+                  <dt className="text-muted-slate">{t("common.shared.opikUrl")}</dt>
                   <dd className="break-all font-medium">
                     {safeBaseUrlHref ? (
                       <a
@@ -167,13 +167,13 @@ export const PairingStatusScreen: React.FC<PairingStatusScreenProps> = (
               ) : null}
               {props.expectedWorkspace ? (
                 <>
-                  <dt className="text-muted-slate">Workspace</dt>
+                  <dt className="text-muted-slate">{t("common.shared.workspace")}</dt>
                   <dd className="font-medium">{props.expectedWorkspace}</dd>
                 </>
               ) : null}
               {props.expectedProject ? (
                 <>
-                  <dt className="text-muted-slate">Project</dt>
+                  <dt className="text-muted-slate">{t("common.shared.project")}</dt>
                   <dd className="break-all font-medium">
                     {props.expectedProject}
                   </dd>

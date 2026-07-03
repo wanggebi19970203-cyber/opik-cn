@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import { Button, ButtonProps } from "@/ui/button";
 import { DetailsActionSectionValue, DetailsActionSection } from "./types";
@@ -22,19 +23,19 @@ const formatCounter = (
 const configMap = {
   [DetailsActionSection.Annotate]: {
     icon: null,
-    tooltip: "Annotate",
+    tooltipKey: "tracing.annotate.title",
   },
   [DetailsActionSection.Annotations]: {
     icon: <PenLine className="size-3.5" />,
-    tooltip: "Feedback scores",
+    tooltipKey: "tracing.annotate.feedbackScores",
   },
   [DetailsActionSection.Comments]: {
     icon: <MessageSquareMore className="size-3.5" />,
-    tooltip: "Comments",
+    tooltipKey: "tracing.annotate.comments",
   },
   [DetailsActionSection.AIAssistants]: {
     icon: <Sparkles className="size-3.5" />,
-    tooltip: "AI-powered trace analysis",
+    tooltipKey: "tracing.aiAssistant.debugWithOpikAssist",
   },
 };
 
@@ -62,10 +63,12 @@ const DetailsActionSectionToggle: React.FC<DetailsActionSectionToggleProps> = ({
   hotkey,
   buttonSize = "sm",
 }) => {
+  const { t } = useTranslation();
   const showFullActionLabel = isLargeLayout(layoutSize);
+  const tooltipLabel = tooltipContent || t(configMap[type].tooltipKey);
 
   return (
-    <TooltipWrapper content={tooltipContent || configMap[type].tooltip}>
+    <TooltipWrapper content={tooltipLabel}>
       <div>
         <Button
           variant={variant}
@@ -79,7 +82,7 @@ const DetailsActionSectionToggle: React.FC<DetailsActionSectionToggleProps> = ({
         >
           {configMap[type].icon}
           {showFullActionLabel && (
-            <div className="pl-1">{configMap[type].tooltip}</div>
+            <div className="pl-1">{tooltipLabel}</div>
           )}
           {Boolean(count) && <div>{formatCounter(layoutSize, count)}</div>}
           {hotkey && (

@@ -1,5 +1,7 @@
 import React from "react";
 import { Book, Inbox, Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
 
@@ -9,7 +11,7 @@ type EditActionProps = {
 };
 
 const EditAction: React.FunctionComponent<EditActionProps> = ({
-  label = "Configure",
+  label = i18n.t("common:dashboard.configure"),
   onClick,
 }) => (
   <Button
@@ -62,8 +64,8 @@ type DashboardWidgetEmptyStateComponent =
 const DashboardWidgetEmptyState: DashboardWidgetEmptyStateComponent =
   Object.assign(
     ({
-      title = "No data",
-      message = "There is no data to display for this widget",
+      title = i18n.t("common:dashboard.noData"),
+      message = i18n.t("common:dashboard.noDataMessage"),
       icon,
       action,
       className,

@@ -1,0 +1,49 @@
+---
+headline: 标注追踪 | Opik 文档
+og:description: 学习如何在 Opik 中有效标注追踪，以提高可观测性并获得对应用的更深入见解。
+og:site_name: Opik 文档
+og:title: 使用 Opik 标注追踪以增强可观测性
+title: 标注追踪
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div
+  style={{
+    position: "relative",
+    paddingBottom: "56.25%", // 16:9 aspect ratio
+    height: 0,
+    overflow: "hidden",
+    maxWidth: "100%",
+    marginBottom: "20px",
+  }}
+>
+  <iframe
+    src="https://www.loom.com/embed/c61ce69e245840489dd90b25489493a8?sid=37e03eeb-e709-4182-9889-f80d113dade2"
+    frameborder="0"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+    }}
+  />
+</div>
+
+## 通过追踪标注构建反馈循环
+
+本视频演示如何向 LLM [追踪](/v1/tracing/log_traces)添加人工反馈和标注，创建强大的反馈循环以实现持续改进。您将学习如何将[追踪](/v1/tracing/log_traces)标记为高质量或低质量，添加特定的[反馈分数](/v1/tracing/annotate_traces)，以及构建用于未来[评估](/v1/evaluation/overview)和微调的标注示例[数据集](/v1/evaluation/manage_datasets)。标注弥合了原始追踪数据与可操作见解之间的差距，用于模型改进。
+
+## 关键亮点
+
+- **轻松添加反馈**：使用[反馈分数](/v1/tracing/annotate_traces)部分和钢笔图标，直接在 Opik UI 中向[追踪](/v1/tracing/log_traces)添加人工标注
+- **自定义反馈定义**：在配置 → 反馈定义中创建分类或数值反馈[指标](/v1/evaluation/metrics/overview)，以匹配您的特定评估需求
+- **灵活的评分选项**：根据准确性、相关性或语气等[指标](/v1/evaluation/metrics/overview)定义自定义类别（通过/失败、质量评级）或滑动量表（0-1）
+- **智能过滤**：按[反馈分数](/v1/tracing/annotate_traces)过滤[追踪](/v1/tracing/log_traces)，快速识别高性能或有问题的输出以进行针对性分析
+- **[数据集](/v1/evaluation/manage_datasets)创建**：将标注的[追踪](/v1/tracing/log_traces)直接转换为[数据集](/v1/evaluation/manage_datasets)，用于训练数据收集和模型改进工作流
+- **内置[指标](/v1/evaluation/metrics/overview)库**：开箱即用地访问预构建指标，如[答案相关性](/v1/evaluation/metrics/answer_relevance)、[Levenshtein 距离](/v1/evaluation/metrics/heuristic_metrics)和[幻觉](/v1/evaluation/metrics/hallucination)检测
+- **LLM 作为评判者**：使用自动化的基于 LLM 的[评估](/v1/evaluation/metrics/g_eval)，其中第二个 LLM 评估主模型的响应
+- **模式识别**：标注有助于识别性能模式、创建训练数据，并在用户和开发者之间建立反馈循环

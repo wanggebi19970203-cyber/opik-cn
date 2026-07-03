@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { BugPlay, Hammer, Hash } from "lucide-react";
 import { Card } from "@/ui/card";
 import { Skeleton } from "@/ui/skeleton";
@@ -36,6 +37,7 @@ const SignalsStatsCards: React.FC<SignalsStatsCardsProps> = ({
   isPending,
   hasData,
 }) => {
+  const { t } = useTranslation("pages/signals");
   if (isPending) {
     return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -52,17 +54,17 @@ const SignalsStatsCards: React.FC<SignalsStatsCardsProps> = ({
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <StatCard
         icon={Hash}
-        label="Affected traces"
+        label={t("signals.stats.affectedTraces")}
         value={hasData ? tracesAffected : dash}
       />
       <StatCard
         icon={BugPlay}
-        label="Open issues"
+        label={t("signals.stats.openIssues")}
         value={hasData ? openIssues : dash}
       />
       <StatCard
         icon={Hammer}
-        label="Resolved this week"
+        label={t("signals.stats.resolvedThisWeek")}
         value={hasData ? resolved : dash}
       />
     </div>

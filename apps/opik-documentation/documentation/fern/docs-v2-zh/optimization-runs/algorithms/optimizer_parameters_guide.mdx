@@ -1,0 +1,261 @@
+---
+title: "优化器参数指南"
+subtitle: "所有优化器特定参数及其用例的完整参考"
+description: "每个优化器所有可用参数的综合指南，包括使用建议和最佳实践。"
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/algorithms/overview
+---
+
+本指南提供所有优化器特定参数、其用例以及有效调优的最佳实践的完整参考。
+
+## 基础优化器参数
+
+所有优化器都继承自 `BaseOptimizer`，并支持这些通用参数：
+
+### 核心参数
+
+- **`model`** (str)：要使用的 LLM 模型（例如，"openai/gpt-4"、"anthropic/claude-3-sonnet"）
+- **`project_name`** (str, 可选)：用于跟踪实验的 Opik 项目名称
+- **`seed`** (int, 默认: 42)：用于可重复性的随机种子
+
+### 模型参数（通过 **kwargs）
+
+- **`temperature`** (float, 默认: 0.1)：LLM 调用的采样温度
+- **`max_tokens`** (int, 默认: 5000)：每个 LLM 响应的最大 token 数
+- **`top_p`** (float, 可选)：Top-p 采样参数
+- **`frequency_penalty`** (float, 可选)：重复的频率惩罚
+- **`presence_penalty`** (float, 可选)：重复的存在惩罚
+
+### 通用 optimize_prompt 参数
+
+所有优化器在其 `optimize_prompt()` 方法中支持这些参数：
+
+- **`dataset`** (Dataset)：用于分析和生成改进的训练数据集
+- **`validation_dataset`** (Dataset, 可选)：用于评估和排序候选提示词的验证数据集。提供时，优化器使用 `dataset` 理解故障模式和生成改进，然后在 `validation_dataset` 上评估候选以选择最佳提示词。这有助于防止过拟合。如果未提供，同一数据集用于训练和验证。
+- **`metric`** (Callable)：要优化的指标函数
+- **`experiment_config`** (dict, 可选)：可选的配置元数据
+- **`n_samples`** (int, float, 百分比字符串, 或 "all"/"full"/`None`, 可选)：每次评估使用的数据集项数（提供验证数据集时使用验证数据集）。使用计数（如 `50`）、分数（如 `0.1`）、百分比（如 `"10%"`），或 `"all"`/`"full"`/`None` 表示完整数据集。
+- **`n_samples_minibatch`** (int, 可选)：可选的内部循环小批量样本数（默认为 `n_samples`）。
+- **`n_samples_strategy`** (str, 可选)：子采样的采样策略（默认：`"random_sorted"`）。
+- **`project_name`** (str, 默认: "Optimization")：用于记录的 Opik 项目名称
+- **`optimization_id`** (str, 可选)：可选的 UUIDv7 字符串，用于优化运行
+
+## 优化器特定参数
+
+### EvolutionaryOptimizer
+
+**用途**：使用遗传算法通过变异和选择来进化提示词。
+
+**特定参数：**
+- **`population_size`** (int, 默认: 20)：每代中提示词变体的数量
+- **`num_generations`** (int, 默认: 10)：进化的代数
+- **`mutation_rate`** (float, 默认: 0.1)：变异每个提示词的概率
+- **`crossover_rate`** (float, 默认: 0.8)：组合两个提示词的概率
+- **`elite_size`** (int, 默认: 2)：代间保留的最佳提示词数量
+- **`tournament_size`** (int, 默认: 3)：选择锦标赛的大小
+- **`mutation_strategies`** (list, 默认: ["word_substitution", "phrase_addition", "phrase_deletion"])：可用的变异策略
+
+**用例：**
+- 当您想探索多样化的提示词变体时
+- 对于受益于创意提示词生成的任务
+- 当您有足够的计算资源进行多代进化时
+
+**参数调优：**
+- **种群大小**：复杂任务使用较大种群（50-100），简单任务使用较小种群（10-20）
+- **代数**：彻底探索使用更多代（20-50），快速结果使用较少代（5-10）
+- **变异率**：更多探索使用较高速率（0.2-0.3），优化使用较低速率（0.05-0.1）
+
+### FewShotBayesianOptimizer
+
+**用途**：使用贝叶斯优化技术优化少样本示例。
+
+**特定参数：**
+- **`min_examples`** (int, 默认: 2)：最少少样本示例数
+- **`max_examples`** (int, 默认: 8)：最多少样本示例数
+- **`n_trials`** (int, 默认: 10)：优化试验次数（通过 optimize_prompt 中的 kwargs 传递）
+- **`n_threads`** (int, 默认: 8)：并行评估线程数
+
+**用例：**
+- 受益于少样本学习的任务
+- 当您有包含清晰示例的良好数据集时
+- 资源有限的快速优化
+
+**参数调优：**
+- **最小/最大示例数**：简单任务从 2-4 开始，复杂任务 6-8
+- **线程数**：增加以加快评估（受 API 速率限制）
+- **试验次数**：彻底优化使用更多试验（50-100），快速结果使用较少（10-30）
+
+### MetaPromptOptimizer
+
+**用途**：使用元提示通过 LLM 驱动的分析迭代优化提示词。
+
+**特定参数：**
+- **`prompts_per_round`** (int, 默认: 4)：每轮生成的候选提示词数
+- **`enable_context`** (bool, 默认: True)：生成候选时是否包含数据集/任务上下文
+- **`num_task_examples`** (int, 默认: 5)：作为上下文包含的数据集示例数
+- **`model_parameters`** (dict, 可选)：优化器推理模型的 LiteLLM 参数（如 `temperature`、`max_tokens`）
+
+**优化参数（通过 optimize_prompt kwargs）：**
+- **`max_trials`** (int, 默认: 10)：所有轮次的候选评估总数
+
+**用例：**
+- 通用提示词改进
+- 当您需要 LLM 驱动的提示词优化时
+- 提示词措辞和结构非常重要的任务
+
+**参数调优：**
+- **模型**：使用更强大的模型（gpt-4o、claude-3.5-sonnet）以获得更好的提示词建议
+- **每轮提示词数**：更多候选（6-8）用于探索，较少（2-4）用于集中优化
+- **最大试验次数**：更多试验用于彻底优化，较少用于快速改进
+
+### HRPO（层次反射提示词优化器）
+
+**用途**：HRPO（层次反射提示词优化器）使用层次根因分析，通过批量分析故障、综合发现和解决已识别的故障模式来系统地改进提示词。
+
+**特定参数：**
+- **`reasoning_model`** (str)：用于根因分析和提示词改进的模型（例如，"openai/gpt-4o"）
+- **`n_threads`** (int, 默认: 12)：并行评估线程数
+- **`max_parallel_batches`** (int, 默认: 5)：并行分析的最大批次数
+- **`batch_size`** (int, 默认: 25)：每批用于根因分析的测试用例数
+- **`seed`** (int, 默认: 42)：用于可重复性的随机种子
+- **`verbose`** (int, 默认: 1)：控制内部日志/进度条（0=关闭，1=开启）
+
+**优化参数（通过 optimize_prompt kwargs）：**
+- **`n_trials`** (int, 默认: 3)：优化试验（迭代）次数
+- **`max_retries`** (int, 默认: 2)：如果提示词改进失败，每个故障模式的最大重试次数
+
+**用例：**
+- 需要基于理解故障模式进行系统优化的复杂提示词
+- 理解提示词为何失败对改进至关重要的任务
+- 需要单独识别和解决的多样化故障模式场景
+- 当您有足够的评估数据进行批量分析时（建议：50+ 测试用例）
+
+**参数调优：**
+- **推理模型**：使用更强大的模型（gpt-4o、claude-3.5-sonnet）以获得更好的根因分析
+- **批大小**：多样化数据集使用较大批次（30-50），集中分析使用较小批次（15-25）
+- **最大并行批次数**：API 速率限制良好时增加（8-10）以加快分析，配额有限时减少（2-3）
+- **试验次数**：彻底优化使用更多试验（5-7），快速改进使用较少（2-3）
+
+### GepaOptimizer
+
+**用途**：封装 GEPA 包，用于带反射的单轮系统提示词优化。
+
+**特定参数：**
+- **`verbose`** (int, 默认: 1)：详细程度级别（0=关闭，1=开启，2=调试）
+
+反射在内部处理；没有单独的 `reflection_model` 参数需要设置。
+
+**优化参数（通过 optimize_prompt kwargs）：**
+- **`max_metric_calls`** (int)：GEPA 使用的有效指标预算（`max_trials × evaluated_samples`）。Opik 包装器仍在此预算之外运行自己的基线/最终重新评分，因此在规划 API 使用量时要考虑这些额外评估。
+- **`reflection_minibatch_size`** (int, 默认: 3)：GEPA 在运行反射步骤之前必须评估的最小*唯一*提示词数。如果小批量大小大于可用候选，则完全跳过反射。
+- **`candidate_selection_strategy`** (str, 默认: "pareto")：选择候选的策略（"pareto"、"current_best" 或 "epsilon_greedy"）
+- **运行时警告**：当 `reflection_minibatch_size` 超过当前指标预算（`max_trials`）可评估的候选数时，优化器会发出警告。如果看到此消息，请减少小批量或增加预算。
+
+**用例：**
+- 具有清晰输入-输出对的单轮任务
+- 当您需要反射驱动的提示词改进时
+- 系统提示词优化是主要目标的任务
+
+**参数调优：**
+- **最大指标调用次数**：更高预算（100+）以获得更好结果，更低（20-50）用于快速优化
+- **反射模型**：使用更强大的模型（gpt-4、claude-3）以获得更好的反射
+- **小批量大小**：较大批次（5-10）提高效率，较小批次（2-3）用于彻底反射
+
+### ParameterOptimizer
+
+**用途**：使用贝叶斯优化调优 LLM 调用参数（temperature、top_p 等），不更改提示词。
+
+**特定参数：**
+- **`default_n_trials`** (int, 默认: 20)：默认优化试验次数
+- **`n_threads`** (int, 默认: 4)：并行评估线程数
+- **`local_search_ratio`** (float, 默认: 0.3)：用于在最佳参数周围进行局部搜索的试验比例
+- **`local_search_scale`** (float, 默认: 0.2)：局部搜索范围的缩放因子
+
+**优化参数（通过 optimize_parameter kwargs）：**
+- **`parameter_space`** (ParameterSearchSpace | dict)：定义要优化的参数及其范围
+- **`n_trials`** (int, 可选)：优化试验次数（覆盖 default_n_trials）
+- **`sampler`** (optuna.samplers.BaseSampler, 可选)：自定义 Optuna 采样器
+- **`callbacks`** (list, 可选)：用于自定义日志/监控的 Optuna 回调
+- **`timeout`** (float, 可选)：最大优化时间（秒）
+
+**用例：**
+- 在不更改提示词的情况下微调模型行为
+- 优化 temperature、top_p、frequency_penalty 和其他采样参数
+- 为特定任务找到最佳模型参数
+- A/B 测试不同的参数配置
+
+**参数调优：**
+- **试验次数**：彻底优化使用更多试验（50-100），快速调优使用较少（10-30）
+- **局部搜索比例**：更高比例（0.4-0.5）用于优化，更低（0.1-0.2）用于探索
+- **局部搜索缩放**：更大范围（0.3-0.5）用于更广泛的局部搜索，更小（0.1-0.2）用于微调
+- **线程数**：增加以加快评估（受 API 速率限制）
+
+## 参数选择指南
+
+### 任务复杂度评估
+
+**简单任务**（单个提示词，清晰的输入-输出）：
+- 使用 `FewShotBayesianOptimizer` 或 `MetaPromptOptimizer`
+- 较低的参数值（更少迭代，更小种群）
+- 专注于提示词清晰度和示例选择
+
+**参数调优**（不更改提示词优化模型行为）：
+- 使用 `ParameterOptimizer` 调优 temperature、top_p 和其他采样参数
+- 使用集中的参数空间进行快速优化
+- 当提示词已很好但模型行为需要调整时最佳
+
+**复杂任务**（多步骤，工具使用，代理工作流）：
+- 使用 `MiproOptimizer` 或 `EvolutionaryOptimizer`
+- 较高的参数值（更多代，广泛探索）
+- 考虑工具集成和多代理协调
+
+### 资源约束
+
+**计算资源有限：**
+- 使用 `FewShotBayesianOptimizer`，降低 `n_iterations`
+- 使用 `MetaPromptOptimizer`，减少 `max_trials`
+- 使用 `MiproOptimizer`，设置 `auto="light"`
+
+**计算资源充足：**
+- 使用 `EvolutionaryOptimizer`，增大 `population_size` 和更多 `num_generations`
+- 使用 `MiproOptimizer`，设置 `auto="heavy"`
+- 使用 `GepaOptimizer`，提高 `max_metric_calls`
+
+### 模型选择指南
+
+**评估模型：**
+- 探索使用更快的模型（gpt-3.5-turbo、claude-3-haiku）
+- 最终优化使用更强大的模型（gpt-4、claude-3-sonnet）
+
+**推理/反射模型：**
+- 始终使用更强大的模型（gpt-4、claude-3-sonnet）以获得更好的建议
+- 考虑为推理和评估使用不同的模型
+
+## 最佳实践
+
+### 参数调优策略
+
+1. **从默认值开始**：从默认参数值开始
+2. **增量调整**：根据结果进行小幅调整
+3. **监控收敛**：跟踪优化进度并相应调整
+4. **资源管理**：平衡优化质量与计算成本
+
+### 常见陷阱
+
+1. **过度优化**：过多迭代可能导致过拟合。使用 `validation_dataset` 检测提示词何时停止泛化。
+2. **探索不足**：过少迭代可能错过最优解
+3. **模型不匹配**：为任务复杂度使用不合适的模型
+4. **参数冲突**：相互冲突的参数值
+5. **训练和验证使用相同数据集**：没有单独的验证数据集，您无法判断改进是否泛化。将数据拆分为 70/30 或 80/20。
+
+### 性能优化
+
+1. **并行处理**：有效使用 `n_threads` 以加快评估
+2. **缓存**：在可用时利用内置缓存机制
+3. **提前停止**：使用改进阈值避免不必要的计算
+4. **资源监控**：在优化期间跟踪内存和 API 使用情况
+
+## 后续步骤
+
+1. 探索特定的[优化器](/v1/agent_optimization/algorithms/overview)了解算法详情。
+2. 参阅 [FAQ](/v1/agent_optimization/faq) 了解常见问题和故障排除。
+3. 参阅 [API 参考](/v1/agent_optimization/advanced/api_reference)了解详细配置选项。

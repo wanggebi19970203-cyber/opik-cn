@@ -1,5 +1,6 @@
 import { z } from "zod";
 import uniq from "lodash/uniq";
+import i18next from "i18next";
 import {
   LLMJudgeObject,
   EVALUATORS_RULE_SCOPE,
@@ -30,13 +31,13 @@ import {
 
 const RuleNameSchema = z
   .string({
-    required_error: "Rule name is required",
+    required_error: i18next.t("common:validation.ruleNameRequired"),
   })
-  .min(1, { message: "Rule name is required" });
+  .min(1, { message: i18next.t("common:validation.ruleNameRequired") });
 
 const ProjectIdsSchema = z
   .array(z.string())
-  .min(1, { message: "At least one project is required" });
+  .min(1, { message: i18next.t("common:validation.atLeastOneProjectRequired") });
 
 const SamplingRateSchema = z.number();
 
@@ -76,7 +77,7 @@ export const FiltersSchema = z
       if (!filter.field || filter.field.trim().length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Field is required",
+          message: i18next.t("common:validation.fieldRequired"),
           path: [index, "field"],
         });
       }
@@ -85,7 +86,7 @@ export const FiltersSchema = z
       if (!filter.operator || filter.operator.trim().length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Operator is required",
+          message: i18next.t("common:validation.operatorRequired"),
           path: [index, "operator"],
         });
       }
@@ -100,7 +101,7 @@ export const FiltersSchema = z
         if (valueString.length === 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Value is required for this operator",
+            message: i18next.t("common:validation.valueRequiredForOperator"),
             path: [index, "value"],
           });
         }
@@ -117,7 +118,7 @@ export const FiltersSchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Key is required for dictionary fields",
+          message: i18next.t("common:validation.keyRequiredForDictionaryFields"),
           path: [index, "key"],
         });
       }
@@ -136,15 +137,15 @@ export const FiltersSchema = z
 const LLMJudgeBaseSchema = z.object({
   model: z
     .string({
-      required_error: "Model is required",
+      required_error: i18next.t("common:validation.modelRequired"),
     })
-    .min(1, { message: "Model is required" }),
+    .min(1, { message: i18next.t("common:validation.modelRequired") }),
   config: z.object({
     temperature: z.number().optional(),
     seed: z
       .number()
       .int()
-      .min(0, { message: "Seed must be a non-negative integer" })
+      .min(0, { message: i18next.t("common:validation.seedMustBeNonNegativeInteger") })
       .optional()
       .nullable(),
     custom_parameters: z.record(z.string(), z.unknown()).optional().nullable(),
@@ -154,7 +155,7 @@ const LLMJudgeBaseSchema = z.object({
     z.object({
       id: z.string(),
       content: z.union([
-        z.string().min(1, { message: "Message is required" }),
+        z.string().min(1, { message: i18next.t("common:validation.messageRequired") }),
         z
           .array(
             z.union([
@@ -173,7 +174,7 @@ const LLMJudgeBaseSchema = z.object({
               }),
             ]),
           )
-          .min(1, { message: "Message is required" }),
+          .min(1, { message: i18next.t("common:validation.messageRequired") }),
       ]),
       role: z.nativeEnum(LLM_MESSAGE_ROLE),
     }),
@@ -184,7 +185,7 @@ const LLMJudgeBaseSchema = z.object({
       z.object({
         name: z
           .string()
-          .min(1, { message: "Score definition name is required" }),
+          .min(1, { message: i18next.t("common:validation.scoreDefinitionNameRequired") }),
         type: z.nativeEnum(LLM_SCHEMA_TYPE),
         description: z.string(),
         unsaved: z
@@ -192,7 +193,7 @@ const LLMJudgeBaseSchema = z.object({
           .optional()
           .default(false)
           .refine((value) => !value, {
-            message: "Changes not saved",
+            message: i18next.t("common:validation.changesNotSaved"),
           }),
       }),
     )
@@ -202,7 +203,7 @@ const LLMJudgeBaseSchema = z.object({
 
         return schemaNames.length === uniq(schemaNames).length;
       },
-      { message: "All score definition names should be unique" },
+      { message: i18next.t("common:validation.allScoreDefinitionNamesShouldBeUnique") },
     ),
 });
 
@@ -211,13 +212,13 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
     z.string(),
     z
       .string()
-      .min(1, { message: "Key is required" })
+      .min(1, { message: i18next.t("common:validation.keyRequired") })
       // Allow the standard JSONPath form (input/output/metadata.[...]) OR a reserved
       // bare sentinel like `spans` — see RESERVED_TRACE_EVALUATOR_VARIABLES. The
       // backend's OnlineScoringEngine substitutes the sentinel with the JSON-
       // serialized spans list at render time.
       .regex(/^(input|output|metadata)(\.|$)|^spans$/, {
-        message: `Key is invalid, it should be "input", "output", "metadata" (e.g. "input.message" or just "input" for the whole object), or the reserved word "spans" to inject the trace's spans list`,
+        message: i18next.t("common:validation.traceVariableKeyInvalid"),
       }),
   ),
 }).superRefine((data, ctx) => {
@@ -237,7 +238,7 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          "The selected model does not support media input. Please choose a model with vision capabilities or remove images from messages.",
+          i18next.t("common:validation.modelDoesNotSupportMediaInput"),
         path: ["model"],
       });
     } else {
@@ -245,7 +246,7 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            "The selected model does not support image input. Please choose a model with vision capabilities or remove images from messages.",
+            i18next.t("common:validation.modelDoesNotSupportImageInput"),
           path: ["model"],
         });
       }
@@ -253,7 +254,7 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            "The selected model does not support video input. Please choose a model with video capabilities or remove videos from messages.",
+            i18next.t("common:validation.modelDoesNotSupportVideoInput"),
           path: ["model"],
         });
       }
@@ -266,9 +267,9 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
     z.string(),
     z
       .string()
-      .min(1, { message: "Key is required" })
+      .min(1, { message: i18next.t("common:validation.keyRequired") })
       .regex(/^(input|output|metadata)(\.|$)/, {
-        message: `Key is invalid, it should be "input", "output", "metadata", and follow this format: "input.[PATH]" For example: "input.message" or just "input" for the whole object`,
+        message: i18next.t("common:validation.spanVariableKeyInvalid"),
       }),
   ),
 }).superRefine((data, ctx) => {
@@ -288,7 +289,7 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          "The selected model does not support media input. Please choose a model with vision capabilities or remove images from messages.",
+          i18next.t("common:validation.modelDoesNotSupportMediaInput"),
         path: ["model"],
       });
     } else {
@@ -296,7 +297,7 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            "The selected model does not support image input. Please choose a model with vision capabilities or remove images from messages.",
+            i18next.t("common:validation.modelDoesNotSupportImageInput"),
           path: ["model"],
         });
       }
@@ -304,7 +305,7 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            "The selected model does not support video input. Please choose a model with video capabilities or remove videos from messages.",
+            i18next.t("common:validation.modelDoesNotSupportVideoInput"),
           path: ["model"],
         });
       }
@@ -323,7 +324,7 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
   if (contextCount < 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "At least one message should contain the {{context}} variable",
+      message: i18next.t("common:validation.atLeastOneMessageShouldContainContext"),
       path: ["messages", data.messages.length - 1, "content"],
     });
   }
@@ -331,7 +332,7 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
   if (contextCount > 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Only one message can contain the {{context}} variable.",
+      message: i18next.t("common:validation.onlyOneMessageCanContainContext"),
       path: ["messages", data.messages.length - 1, "content"],
     });
   }
@@ -344,7 +345,7 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
         if (match !== "{{context}}") {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: `Template variable ${match} is not allowed. Only {{context}} is supported.`,
+            message: i18next.t("common:validation.templateVariableNotAllowed", { variable: match }),
             path: ["messages", index, "content"],
           });
         }
@@ -356,9 +357,9 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
 export const BasePythonCodeFormSchema = z.object({
   metric: z
     .string({
-      required_error: "Code is required",
+      required_error: i18next.t("common:validation.codeIsRequired"),
     })
-    .min(1, { message: "Code is required" }),
+    .min(1, { message: i18next.t("common:validation.codeIsRequired") }),
 });
 
 export const PythonCodeDetailsTraceFormSchema = BasePythonCodeFormSchema.extend(
@@ -367,14 +368,14 @@ export const PythonCodeDetailsTraceFormSchema = BasePythonCodeFormSchema.extend(
       z.string(),
       z
         .string()
-        .min(1, { message: "Key is required" })
+        .min(1, { message: i18next.t("common:validation.keyRequired") })
         // Allow the standard JSONPath form (input/output/metadata.[...]) OR a
         // reserved bare sentinel like `spans` — see
         // RESERVED_TRACE_EVALUATOR_VARIABLES. The Python scorer opts into the
         // SpanService fetch when the arguments map carries the `spans` key and
         // injects a List<Span> as the matching kwarg.
         .regex(/^(input|output|metadata)(\.|$)|^spans$/, {
-          message: `Key is invalid, it should be "input", "output", "metadata" (e.g. "input.message" or just "input" for the whole object), or the reserved word "spans" to inject the trace's spans list`,
+          message: i18next.t("common:validation.traceVariableKeyInvalid"),
         }),
     ),
     parsingArgumentsError: z.boolean().optional(),
@@ -388,9 +389,9 @@ export const PythonCodeDetailsSpanFormSchema = BasePythonCodeFormSchema.extend({
     z.string(),
     z
       .string()
-      .min(1, { message: "Key is required" })
+      .min(1, { message: i18next.t("common:validation.keyRequired") })
       .regex(/^(input|output|metadata)(\.|$)/, {
-        message: `Key is invalid, it should be "input", "output", "metadata", and follow this format: "input.[PATH]" For example: "input.message" or just "input" for the whole object`,
+        message: i18next.t("common:validation.spanVariableKeyInvalid"),
       }),
   ),
   parsingArgumentsError: z.boolean().optional(),

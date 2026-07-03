@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import useLocalStorageState from "use-local-storage-state";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -69,6 +70,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
   filters,
   setFilters,
 }) => {
+  const { t } = useTranslation("tracing");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const traceSpans = useMemo(() => spans ?? [], [spans]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,7 +84,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
   const hasSearch = Boolean(search && search.length);
   const hasFilter = Boolean(filters.length);
   const hasSearchOrFilter = hasSearch || hasFilter;
-  const title = !hasSearchOrFilter ? "Trace" : "Results";
+  const title = !hasSearchOrFilter ? t("treeToolbar.trace") : t("treeToolbar.results");
 
   const spansFilterForTrace = useMemo(
     () => [
@@ -230,7 +232,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
         <div className="sticky top-0 z-10 flex flex-row items-center justify-between gap-2 bg-background pb-2 pl-6 pr-4 pt-4">
           <div className="flex h-8 items-center gap-1">
             <div className="comet-title-xs">{title} -</div>
-            <TooltipWrapper content="View all spans of this trace in table view">
+            <TooltipWrapper content={t("treeToolbar.viewAllSpans")}>
               <Link
                 to={`/$workspaceName/projects/$projectId/traces`}
                 params={{ workspaceName, projectId }}
@@ -241,7 +243,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
                 }}
               >
                 <Button variant="link" className="comet-body-s px-0" asChild>
-                  <span>{filteredSpanCount} spans</span>
+                  <span>{t("treeToolbar.spansCount", { count: filteredSpanCount })}</span>
                 </Button>
               </Link>
             </TooltipWrapper>
@@ -256,7 +258,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
               <>
                 <SpanDetailsButton config={config} onConfigChange={setConfig} />
                 <TooltipWrapper
-                  content={isAllExpanded ? "Collapse all" : "Expand all"}
+                  content={isAllExpanded ? t("treeToolbar.collapseAll") : t("treeToolbar.expandAll")}
                 >
                   <Button
                     onClick={toggleExpandAll}
@@ -276,7 +278,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
                   setFilters([]);
                 }}
               >
-                Clear
+                {t("treeToolbar.clear")}
               </Button>
             )}
           </div>
@@ -289,7 +291,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
             onRowIdChange={onSelectRow}
           />
         ) : (
-          <NoData message="No results" icon={null} />
+          <NoData message={t("treeToolbar.noResults")} icon={null} />
         )}
       </div>
     </div>

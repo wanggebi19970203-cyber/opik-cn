@@ -5,6 +5,7 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import isNumber from "lodash/isNumber";
 import { Separator } from "@/ui/separator";
+import { useTranslation } from "react-i18next";
 
 import {
   getCategoricFeedbackScoreValuesMap,
@@ -66,6 +67,8 @@ const NumericScoreContent = ({
   label: string;
   value: number | string;
 }) => {
+  const { t } = useTranslation("common");
+
   return (
     <div className="flex flex-col gap-1">
       <Header color={color} label={label} />
@@ -89,7 +92,7 @@ const NumericScoreContent = ({
           <Separator />
           <div className="flex h-6 items-center gap-1.5 px-2">
             <span className="comet-body-xs min-w-0 flex-1 truncate text-muted-slate">
-              Average
+              {t("multiValueFeedbackScore.average")}
             </span>
             <TooltipWrapper
               content={isNumber(value) ? String(value) : undefined}
@@ -114,6 +117,7 @@ const CategoricalScoreContent = ({
   label: string;
   valueByAuthor: FeedbackScoreValueByAuthorMap;
 }) => {
+  const { t } = useTranslation("common");
   const scoreValuesMap = getCategoricFeedbackScoreValuesMap(valueByAuthor);
 
   return (
@@ -128,9 +132,9 @@ const CategoricalScoreContent = ({
                 <span className="comet-body-xs-accented truncate text-foreground">
                   {value}
                 </span>
-                <span className="comet-body-xs-accented shrink-0 text-foreground">
-                  {users.length} {users.length === 1 ? "user" : "users"}
-                </span>
+                  <span className="comet-body-xs-accented shrink-0 text-foreground">
+                    {users.length} {users.length === 1 ? t("multiValueFeedbackScore.user") : t("multiValueFeedbackScore.users")}
+                  </span>
               </div>
               <div className="flex flex-col pl-2">
                 {users.map((user) => (

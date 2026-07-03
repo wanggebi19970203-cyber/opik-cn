@@ -35,6 +35,7 @@ import ColumnsButton from "@/shared/ColumnsButton/ColumnsButton";
 import FiltersButton from "@/shared/FiltersButton/FiltersButton";
 import SearchInput from "@/shared/SearchInput/SearchInput";
 import { Separator } from "@/ui/separator";
+import { useTranslation } from "react-i18next";
 import PromptVersionsMetadataAutocomplete from "@/v2/pages/PromptPage/CommitsTab/PromptVersionsMetadataAutocomplete";
 import {
   RESOURCE_TYPE,
@@ -160,6 +161,7 @@ export const FILTER_COLUMNS: ColumnData<PromptVersion>[] = [
 ];
 
 const CommitsTab = ({ prompt }: CommitsTabInterface) => {
+  const { t } = useTranslation("pages/prompt");
   const [page, setPage] = useState(1);
   const [size, setSize] = useLocalStorageState<number>(PAGINATION_SIZE_KEY, {
     defaultValue: 10,
@@ -218,7 +220,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
     );
 
   const versions = useMemo(() => data?.content ?? [], [data?.content]);
-  const noDataText = "There are no commits yet";
+  const noDataText = t("commits.noCommitsYet");
 
   const handleRowClick = useCallback(
     (row: PromptVersion) => {
@@ -313,7 +315,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
           <SearchInput
             searchText={searchText}
             setSearchText={handleSearchTextChange}
-            placeholder="Search in prompt or commit message"
+            placeholder={t("commits.searchPlaceholder")}
             className="w-[320px]"
             dimension="sm"
           />

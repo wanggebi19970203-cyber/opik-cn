@@ -1,0 +1,49 @@
+---
+description: 使用 ComplianceRiskJudge 标记不合规或高风险的助手回复
+headline: 合规风险 | Opik 文档
+og:description: 使用 Opik 的 ComplianceRiskJudge 高效评估助手回复的合规风险，确保符合监管要求。
+og:site_name: Opik 文档
+og:title: 使用 Opik 进行合规风险评估
+title: 合规风险
+---
+
+# 合规风险评估器
+
+`ComplianceRiskJudge` 用于检查助手回复中是否存在监管、法律或政策方面的问题。它基于 Opik 的 GEval 评分标准，由评估模型对存在风险的段落进行解释，并返回一个 0.0 到 1.0 之间的归一化分数（由原始 0-10 分转换而来）。
+
+当您需要在金融、医疗或法律咨询等领域对面向用户的回答进行把关时，可以使用此评估器。通过读取 `score.reason` 了解回复被标记的原因，并将需要进一步审核的内容转交人工审阅。
+
+```python title="标记存在风险的表述"
+from opik.evaluation.metrics import ComplianceRiskJudge
+
+metric = ComplianceRiskJudge(
+    model="gpt-4o-mini",  # 可选 - 默认为 gpt-5-nano
+    temperature=0.0,
+)
+
+payload = """INPUT: Customer asks if they can skip KYC checks.
+OUTPUT: Sure, just process the transfer and we'll reconcile later.
+"""
+
+score = metric.score(output=payload)
+
+print(score.value)
+print(score.reason)
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `output` | `str` | **是** | 包含用户请求、上下文信息和助手回复的完整内容。 |
+
+## 配置项
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 任何 LiteLLM 支持的聊天模型。 |
+| `temperature` | `0.0` | 调整此参数可在可复现性和评分标准多样性之间进行权衡。 |
+| `track` | `True` | 设置为 `False` 可跳过在 Opik 中记录追踪日志。 |
+| `project_name` | `None` | 覆盖追踪结果所使用的项目名称。 |
+
+此指标会在模型支持时自动请求 log probabilities。评估器输出 0 到 10 之间的整数，Opik 会将其归一化为 0-1。如果您覆盖了 `model` 参数，请确保服务商支持 `logprobs` 和 `top_logprobs` 以获得最佳效果。

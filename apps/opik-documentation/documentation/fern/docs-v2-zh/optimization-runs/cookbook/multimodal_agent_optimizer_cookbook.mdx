@@ -1,0 +1,46 @@
+---
+description: 受自动驾驶汽车示例启发的多模态代理优化教程。
+headline: 多模态代理优化器教程 | Opik 文档
+og:description: 了解如何优化多模态代理并链接到完整的外部指南。
+og:site_name: Opik 文档
+og:title: 多模态代理优化教程
+subtitle: 受自动驾驶汽车视觉代理启发的教程示例
+title: 多模态代理优化教程
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/overview
+---
+
+本教程概述了如何优化多模态代理（视觉 + 文本），并链接到自动驾驶汽车场景的完整演练。SDK 已经包含了一个可运行的示例脚本和数据集，您可以在本地运行。
+
+<Callout>
+  完整指南：[多模态视觉代理的自动提示词优化（自动驾驶汽车示例）](https://towardsdatascience.com/automatic-prompt-optimization-for-multimodal-vision-agents-a-self-driving-car-example/)。
+</Callout>
+
+<Callout>
+  代码库入口点：[`sdks/opik_optimizer/scripts/multimodal_example.py`](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/scripts/multimodal_example.py)，使用 [`sdks/opik_optimizer/src/opik_optimizer/datasets/driving_hazard.py`](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/src/opik_optimizer/datasets/driving_hazard.py) 中的驾驶危险数据集。
+</Callout>
+
+## 什么是多模态优化器示例？
+
+SDK 包含一个完整的示例，在驾驶危险数据集上演示优化视觉代理。它展示了如何通过 `ChatPrompt` 传递图像内容部分、对输出评分，以及在 Optimization Studio 中比较试验。
+
+## 为什么在这里使用优化器？
+
+多模态提示词对措辞和输出结构很敏感。运行 HRPO 或 MetaPrompt 帮助您收敛到更安全、更一致的输出，而无需手动重写提示词。
+
+## SDK 示例如何工作
+
+1. `multimodal_example.py` 加载驾驶危险数据集（图像 + 危险标签）。
+2. 多模态 `ChatPrompt` 在文本指令旁边插入图像 URL 内容部分。
+3. 指标（Levenshtein ratio）对预测的危险文本与预期标签进行评分。
+4. HRPO 使用训练分割优化提示词，使用小的验证分割进行排序。
+5. 结果在 Opik UI 中显示（优化运行和试验详情）。
+
+<Note>
+  截图占位符：多模态试验比较和故障分析。
+</Note>
+
+## 后续步骤
+
+- 探索完整的 SDK 脚本，并将数据集调整为您自己的视觉任务。
+- 使用 pass@k 评估（`n` 参数）减少随机故障。
+- 阅读完整的外部指南了解完整工作流和可视化。

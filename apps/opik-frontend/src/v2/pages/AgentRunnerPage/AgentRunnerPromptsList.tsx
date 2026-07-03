@@ -1,4 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Skeleton } from "@/ui/skeleton";
 import useProjectPromptsList from "@/api/prompts/useProjectPromptsList";
@@ -31,6 +32,7 @@ const AgentRunnerPromptsList = forwardRef<
   AgentRunnerPromptsListHandle,
   AgentRunnerPromptsListProps
 >(({ projectId }, ref) => {
+  const { t } = useTranslation("pages/agent-playground");
   const { data, isLoading } = useProjectPromptsList(
     {
       projectId,
@@ -79,7 +81,7 @@ const AgentRunnerPromptsList = forwardRef<
     return (
       <div className="rounded-md border border-dashed border-border bg-soft-background px-4 py-6 text-center">
         <p className="comet-body-s text-muted-slate">
-          No prompts in this project yet.
+          {t("promptsList.noPrompts")}
         </p>
       </div>
     );

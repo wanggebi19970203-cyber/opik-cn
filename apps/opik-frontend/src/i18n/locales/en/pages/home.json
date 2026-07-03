@@ -1,0 +1,104 @@
+{
+  "home": {
+    "title": "Home",
+    "description": "Welcome to Opik",
+    "welcomeBack": "Welcome back to Opik",
+    "welcomeBanner": {
+      "title": "Welcome to Opik",
+      "description": "Opik helps you build safer, more reliable AI systems through advanced tracing, experiment management, evaluation, and real-time monitoring",
+      "getStarted": "Get started"
+    },
+    "gettingStarted": "Getting started",
+    "recentActivity": "Recent activity",
+    "quickActions": {
+      "title": "Quick actions",
+      "createProject": "Create project",
+      "createDataset": "Create dataset",
+      "viewDocs": "View documentation"
+    },
+    "stats": {
+      "projects": "Projects",
+      "traces": "Traces",
+      "datasets": "Datasets",
+      "experiments": "Experiments"
+    },
+    "costOverview": {
+      "title": "Cost overview",
+      "totalEstimatedSpend": "Total estimated spend",
+      "comparesTooltip": "Compares the total cost between the current and previous periods.",
+      "docsDescription": "Check our documentation to learn more about the cost.",
+      "noCostsAvailable": "No costs available",
+      "noDataDescription": "No data found for your current filters. This may happen if there are no LLM calls in the selected time range. Try adjusting your filters to explore available data"
+    },
+    "evaluation": {
+      "title": "Evaluation",
+      "testSuite": "Test suite",
+      "itemCount": "Item count",
+      "passRate": "Pass rate",
+      "feedbackScores": "Feedback scores",
+      "created": "Created",
+      "noExperiments": "There are no experiments yet",
+      "createNewExperiment": "Create new experiment",
+      "allExperiments": "All experiments"
+    },
+    "getStarted": {
+      "title": "Get started",
+      "logATrace": "Log a trace",
+      "runAnExperiment": "Run an experiment",
+      "setAGuardrail": "Set a guardrail",
+      "tryOutPlayground": "Try out playground",
+      "frameworkInstructions": "Select a framework and follow the instructions to integrate Comet with your code, or explore our ready-to-run examples on the right"
+    },
+    "metricsOverview": {
+      "unlockYourMetrics": "Unlock your metrics!",
+      "integrateProject": "Integrate your project with Opik to evaluate your AI.",
+      "metricsWillAppear": "Metrics will appear here once data starts flowing.",
+      "getStarted": "Get started",
+      "logFirstMetrics": "Log your first project metrics to see them here",
+      "noMetricsDescription": "No metrics found for your current filters. This may happen if there are no traces or metrics in the selected range. Try adjusting your filters to explore available data",
+      "noMetricsAvailable": "No metrics available",
+      "comparesTooltip": "Compares the average value of {{metricName}} between the current and previous periods.",
+      "docsDescription": "Check our documentation to learn more about the {{metricName}}."
+    },
+    "observability": {
+      "title": "Observability",
+      "project": "Project",
+      "lastUpdated": "Last updated",
+      "avgFeedbackScores": "Avg feedback scores",
+      "traceCount": "Trace count",
+      "noProjects": "There are no projects yet",
+      "createNewProject": "Create new project",
+      "allProjects": "All projects"
+    },
+    "optimizationRuns": {
+      "title": "Optimization runs",
+      "testSuite": "Test suite",
+      "optimizer": "Optimizer",
+      "bestScore": "Best score",
+      "status": "Status",
+      "trials": "Trials",
+      "created": "Created",
+      "noOptimizationRuns": "There are no optimization runs yet",
+      "createNewOptimization": "Create new optimization",
+      "allOptimizationRuns": "All optimization runs"
+    },
+    "projectSelector": {
+      "filterProjects": "Filter projects",
+      "search": "Search",
+      "presentingLatest": "Presenting the latest {{count}} projects, sorted by recent activity.",
+      "noSearchResults": "No search results",
+      "allProjects": "All projects"
+    },
+    "guardrails": {
+      "sensitivity": "Sensitivity",
+      "restrictedPersonalData": "Restricted personal data",
+      "restrictedTopics": "Restricted topics",
+      "topicPlaceholder": "Topic 1, topic 2...",
+      "useCommaToSeparate": "Use a comma to separate topics",
+      "configureGuardrailCode": "2. Use the following code to configure your guardrail",
+      "setAGuardrail": "Set a guardrail",
+      "guardrailsDescription": "Guardrails help you protect your application from risks inherent in LLMs. Use them to check the inputs and outputs of your LLM calls, and detect issues like off-topic answers or leaking sensitive information.",
+      "learnGuardrailsDocs": "Learn how to configure your guardrails in our docs."
+    }
+  }
+}

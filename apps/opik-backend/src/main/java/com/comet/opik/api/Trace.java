@@ -33,7 +33,7 @@ public record Trace(
         @JsonView({
                 Trace.View.Public.class, Trace.View.Write.class}) UUID id,
         @JsonView({
-                Trace.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "If null, the default project is used") String projectName,
+                Trace.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "如果为null，则使用默认项目") String projectName,
         @JsonView({Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) UUID projectId,
         @JsonView({Trace.View.Public.class, Trace.View.Write.class}) String name,
         @JsonView({Trace.View.Public.class, Trace.View.Write.class}) @NotNull @InRange Instant startTime,
@@ -55,7 +55,7 @@ public record Trace(
         @JsonView({
                 Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) List<FeedbackScore> feedbackScores,
         @JsonView({
-                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Aggregated feedback scores from all spans in this trace, averaged by score name") List<FeedbackScore> spanFeedbackScores,
+                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "此追踪中所有Span的聚合反馈评分，按评分名称取平均值") List<FeedbackScore> spanFeedbackScores,
         @JsonView({
                 Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) List<Comment> comments,
         @JsonView({
@@ -65,9 +65,9 @@ public record Trace(
         @JsonView({
                 Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) int spanCount,
         @JsonView({
-                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Duration in milliseconds as a decimal number to support sub-millisecond precision") Double duration,
+                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "持续时间（毫秒），十进制数以支持亚毫秒精度") Double duration,
         @JsonView({Trace.View.Public.class,
-                Trace.View.Write.class}) @Schema(description = "Time to first token in milliseconds") @PositiveOrZero Double ttft,
+                Trace.View.Write.class}) @Schema(description = "首token时间（毫秒）") @PositiveOrZero Double ttft,
         @JsonView({Trace.View.Public.class, Trace.View.Write.class}) String threadId,
         @JsonView({
                 Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) VisibilityMode visibilityMode,
@@ -76,9 +76,9 @@ public record Trace(
         @JsonView({
                 Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) boolean hasToolSpans,
         @JsonView({
-                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "List of unique provider names from all spans in this trace, sorted alphabetically") List<String> providers,
+                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "此追踪中所有Span的唯一提供商名称列表，按字母顺序排序") List<String> providers,
         @JsonView({
-                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Experiment associated with this trace") ExperimentItemReference experiment,
+                Trace.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "与此追踪关联的实验") ExperimentItemReference experiment,
         @JsonView({Trace.View.Public.class, Trace.View.Write.class}) Source source,
         @JsonView({Trace.View.Public.class,
                 Trace.View.Write.class}) @Size(max = 150, message = "cannot exceed 150 characters") String environment) {

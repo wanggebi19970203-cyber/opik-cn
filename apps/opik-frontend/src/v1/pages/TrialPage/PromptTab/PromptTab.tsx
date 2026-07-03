@@ -7,6 +7,7 @@ import toLower from "lodash/toLower";
 import find from "lodash/find";
 import get from "lodash/get";
 import isEqual from "lodash/isEqual";
+import { useTranslation } from "react-i18next";
 
 import { CellContext } from "@tanstack/react-table";
 import { COLUMN_TYPE, ColumnData } from "@/types/shared";
@@ -74,10 +75,10 @@ type PromptTabRow = (CompareConfig | ComparePromptConfig) & {
   rowType: "prompt" | "config";
 };
 
-export const DEFAULT_COLUMNS: ColumnData<PromptTabRow>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<PromptTabRow>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("promptTab.name"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -93,6 +94,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
   experiments,
   isPending,
 }) => {
+  const { t } = useTranslation("trial");
   const [search = "", setSearch] = useQueryParam("searchConfig", StringParam, {
     updateType: "replaceIn",
   });
@@ -111,7 +113,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
 
   const columns = useMemo(() => {
     const retVal = convertColumnDataToColumn<PromptTabRow, PromptTabRow>(
-      DEFAULT_COLUMNS,
+      getDefaultColumns(t),
       {},
     );
 
@@ -152,7 +154,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
     });
 
     return retVal;
-  }, [experimentsIds, onlyDiff, experiments]);
+  }, [experimentsIds, onlyDiff, experiments, t]);
 
   const flattenExperimentMetadataMap = useMemo(() => {
     return experiments.reduce<
@@ -232,10 +234,10 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
   }, [rows, search, onlyDiff, isCompare]);
 
   const noDataText = search
-    ? "No search results"
+    ? t("promptTab.noSearchResults")
     : isCompare
-      ? "These trials have no prompt"
-      : "This trial has no prompt";
+      ? t("promptTab.noPromptMultiple")
+      : t("promptTab.noPromptSingle");
 
   const resizeConfig = useMemo(
     () => ({
@@ -261,7 +263,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("promptTab.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -271,7 +273,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">Show differences only</Label>
+                <Label htmlFor="show-doff-only">{t("promptTab.showDifferencesOnly")}</Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

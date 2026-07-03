@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ExternalLink, Plus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -33,6 +34,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
   workspaceName,
   canUsePlayground,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -120,23 +122,23 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
 
   const displayValue = useMemo(() => {
     if (!datasetId) {
-      return "Select metrics";
+      return t("playground.metricSelector.selectMetrics");
     }
     if (rules.length === 0) {
-      return "Select metrics";
+      return t("playground.metricSelector.selectMetrics");
     }
     if (isAllSelected) {
-      return "All selected";
+      return t("playground.metricSelector.allSelected");
     }
     if (selectedRules.length === 0) {
-      return "Select metrics";
+      return t("playground.metricSelector.selectMetrics");
     }
     return selectedRules.map((rule) => rule.name).join(", ");
   }, [isAllSelected, selectedRules, rules.length, datasetId]);
 
   const tooltipContent = useMemo(() => {
     if (!datasetId && rules.length > 0) {
-      return "Select a test suite first to choose metrics";
+      return t("playground.metricSelector.selectTestSuiteFirst");
     }
     if (datasetId && selectedRules.length > 0) {
       return selectedRules.map((rule) => rule.name).join(", ");
@@ -209,7 +211,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
           <SearchInput
             searchText={search}
             setSearchText={setSearch}
-            placeholder="Search"
+            placeholder={t("playground.metricSelector.search")}
             variant="ghost"
           />
           <Separator className="mt-1" />
@@ -218,12 +220,11 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
           {hasNoRules ? (
             <div className="flex min-h-[120px] flex-col items-center justify-center px-4 py-2 text-center">
               <div className="comet-body-s-accented pb-1 text-foreground">
-                No metrics available
+                {t("playground.metricSelector.noMetricsAvailable")}
               </div>
               {canUsePlayground && canUpdateOnlineEvaluationRules && (
                 <div className="comet-body-s text-muted-slate">
-                  Create an online evaluation rule for the Playground project to
-                  generate metrics for your outputs.
+                  {t("playground.metricSelector.noMetricsAvailableDesc")}
                 </div>
               )}
             </div>
@@ -245,7 +246,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                     </div>
                   </TooltipWrapper>
                   <div className="flex shrink-0 items-center justify-center rounded">
-                    <TooltipWrapper content="Open in a new tab">
+                    <TooltipWrapper content={t("playground.metricSelector.openInNewTab")}>
                       <Button
                         type="button"
                         variant="minimal"
@@ -273,7 +274,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
             </>
           ) : (
             <div className="flex h-20 items-center justify-center text-muted-foreground">
-              No metrics found
+              {t("playground.metricSelector.noMetricsFound")}
             </div>
           )}
         </div>
@@ -292,7 +293,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                   onCheckedChange={(checked) => handleSelectAll(checked)}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="comet-body-s truncate">Select all</div>
+                  <div className="comet-body-s truncate">{t("playground.metricSelector.selectAll")}</div>
                 </div>
               </div>
             </>
@@ -307,7 +308,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                 }}
               >
                 <Plus className="size-3.5 shrink-0" />
-                Add new
+                {t("playground.metricSelector.addNew")}
               </ListAction>
             </>
           )}

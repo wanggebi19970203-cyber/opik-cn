@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import LoadableSelectBox from "@/shared/LoadableSelectBox/LoadableSelectBox";
@@ -118,6 +119,7 @@ type ProjectsSelectBoxProps =
   | MultiSelectProjectsProps;
 
 const ProjectsSelectBox: React.FC<ProjectsSelectBoxProps> = (props) => {
+  const { t } = useTranslation("online-evaluation");
   const {
     className,
     disabled,
@@ -148,16 +150,16 @@ const ProjectsSelectBox: React.FC<ProjectsSelectBoxProps> = (props) => {
     ? {
         options,
         value: props.value,
-        placeholder: "Select projects",
+        placeholder: t("projectsSelectBox.selectProjects"),
         onChange: props.onValueChange,
         multiselect: true as const,
         showSelectAll: props.showSelectAll,
-        selectAllLabel: props.selectAllLabel || "All projects",
+        selectAllLabel: props.selectAllLabel || t("projectsSelectBox.allProjects"),
       }
     : {
         options,
         value: props.value,
-        placeholder: "Select a project",
+        placeholder: t("projectsSelectBox.selectAProject"),
         onChange: props.onValueChange,
         multiselect: false as const,
       };
@@ -202,7 +204,7 @@ const ProjectsSelectBox: React.FC<ProjectsSelectBoxProps> = (props) => {
       isClearable={isClearable}
       onClear={handleClear}
       disabled={disabled}
-      clearTooltip="Clear project selection"
+      clearTooltip={t("projectsSelectBox.clearProjectSelection")}
       buttonSize="icon"
     >
       {selectBox}

@@ -49,7 +49,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Agent Configs", description = "Agent configuration management")
+@Tag(name = "Agent Configs", description = "智能体配置管理")
 public class AgentConfigsResource {
 
     private final @NonNull AgentConfigService agentConfigService;
@@ -57,12 +57,12 @@ public class AgentConfigsResource {
     @POST
     @Path("/blueprints")
     @JsonView(AgentConfig.View.Write.class)
-    @Operation(operationId = "createAgentConfig", summary = "Create optimizer config with initial blueprint", description = "Creates a new optimizer config with initial blueprint. Fails if the project already has a config.", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createAgentConfig", summary = "创建带初始蓝图的优化器配置", description = "创建带初始蓝图的新优化器配置。如果项目已有配置则失败。", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/agent-configs/blueprints/{blueprint_id}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "400", description = "Bad Request (e.g. MASK type not allowed)", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict (config already exists)", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "400", description = "错误请求（例如不允许MASK类型）", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突（配置已存在）", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response createAgentConfig(
             @RequestBody(content = @Content(schema = @Schema(implementation = AgentConfigCreate.class))) @NotNull @Valid AgentConfigCreate request,
@@ -86,11 +86,11 @@ public class AgentConfigsResource {
     @POST
     @Path("/blueprints/projects/{project_id}/masks/{mask_id}")
     @JsonView(AgentConfig.View.Write.class)
-    @Operation(operationId = "createBlueprintFromMask", summary = "Create blueprint from mask", description = "Creates a new blueprint by applying a mask's changes on top of the latest blueprint for the project.", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createBlueprintFromMask", summary = "从掩码创建蓝图", description = "通过在项目最新蓝图上应用掩码的更改来创建新蓝图。", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/agent-configs/blueprints/{blueprint_id}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "404", description = "Not Found (no config or mask not found)", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "404", description = "未找到（无配置或掩码未找到）", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response createBlueprintFromMask(
             @PathParam("project_id") UUID projectId,
@@ -114,11 +114,11 @@ public class AgentConfigsResource {
 
     @POST
     @Path("/blueprints/remove-keys")
-    @Operation(operationId = "removeConfigKeys", summary = "Remove configuration parameters", description = "Removes configuration parameters by creating a new blueprint that closes the specified keys. Returns 204 if no changes were needed (idempotent).", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "removeConfigKeys", summary = "移除配置参数", description = "通过创建关闭指定键的新蓝图来移除配置参数。如果无需更改则返回204（幂等）。", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/agent-configs/blueprints/{blueprint_id}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "204", description = "No changes needed (no config or keys already removed)"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "204", description = "无需更改（无配置或键已被移除）"),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response removeConfigKeys(
             @RequestBody(content = @Content(schema = @Schema(implementation = AgentConfigRemoveValues.class))) @NotNull @Valid AgentConfigRemoveValues request,
@@ -151,11 +151,11 @@ public class AgentConfigsResource {
     @PATCH
     @Path("/blueprints")
     @JsonView(AgentConfig.View.Write.class)
-    @Operation(operationId = "updateAgentConfig", summary = "Add blueprint to existing config", description = "Adds a new blueprint to an existing optimizer config. Fails if the project has no config yet.", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "updateAgentConfig", summary = "向现有配置添加蓝图", description = "向现有优化器配置添加新蓝图。如果项目尚无配置则失败。", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/agent-configs/blueprints/{blueprint_id}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "404", description = "Not Found (no config for project)", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "404", description = "未找到（项目无配置）", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response updateAgentConfig(
             @RequestBody(content = @Content(schema = @Schema(implementation = AgentConfigCreate.class))) @NotNull @Valid AgentConfigCreate request,
@@ -178,10 +178,10 @@ public class AgentConfigsResource {
     @GET
     @Path("/blueprints/latest/projects/{project_id}")
     @JsonView(AgentConfig.View.Public.class)
-    @Operation(operationId = "getLatestBlueprint", summary = "Retrieve latest blueprint", description = "Retrieves the latest blueprint for a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Blueprint retrieved", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getLatestBlueprint", summary = "获取最新蓝图", description = "获取项目的最新蓝图", responses = {
+            @ApiResponse(responseCode = "200", description = "蓝图已获取", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getLatestBlueprint(
             @PathParam("project_id") UUID projectId,
@@ -197,10 +197,10 @@ public class AgentConfigsResource {
     @GET
     @Path("/blueprints/{blueprint_id}")
     @JsonView(AgentConfig.View.Public.class)
-    @Operation(operationId = "getBlueprintById", summary = "Retrieve blueprint by ID", description = "Retrieves a specific blueprint by its ID", responses = {
-            @ApiResponse(responseCode = "200", description = "Blueprint retrieved", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getBlueprintById", summary = "根据ID获取蓝图", description = "根据ID获取特定蓝图", responses = {
+            @ApiResponse(responseCode = "200", description = "蓝图已获取", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getBlueprintById(
             @PathParam("blueprint_id") UUID blueprintId,
@@ -216,10 +216,10 @@ public class AgentConfigsResource {
     @GET
     @Path("/blueprints/projects/{project_id}/names/{name}")
     @JsonView(AgentConfig.View.Public.class)
-    @Operation(operationId = "getBlueprintByName", summary = "Retrieve blueprint by name", description = "Retrieves a specific blueprint by its name within a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Blueprint retrieved", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getBlueprintByName", summary = "根据名称获取蓝图", description = "根据项目内的名称获取特定蓝图", responses = {
+            @ApiResponse(responseCode = "200", description = "蓝图已获取", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getBlueprintByName(
             @PathParam("name") String name,
@@ -236,10 +236,10 @@ public class AgentConfigsResource {
     @GET
     @Path("/blueprints/environments/{env_name}/projects/{project_id}")
     @JsonView(AgentConfig.View.Public.class)
-    @Operation(operationId = "getBlueprintByEnv", summary = "Retrieve blueprint by environment", description = "Retrieves the blueprint associated with a specific environment", responses = {
-            @ApiResponse(responseCode = "200", description = "Blueprint retrieved", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getBlueprintByEnv", summary = "根据环境获取蓝图", description = "获取与特定环境关联的蓝图", responses = {
+            @ApiResponse(responseCode = "200", description = "蓝图已获取", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getBlueprintByEnv(
             @PathParam("env_name") String envName,
@@ -256,10 +256,10 @@ public class AgentConfigsResource {
     @GET
     @Path("/blueprints/{blueprint_id}/deltas")
     @JsonView(AgentConfig.View.Public.class)
-    @Operation(operationId = "getDeltaById", summary = "Retrieve delta by blueprint ID", description = "Retrieves only the changes (delta) introduced in a specific blueprint", responses = {
-            @ApiResponse(responseCode = "200", description = "Delta retrieved", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getDeltaById", summary = "根据蓝图ID获取增量", description = "仅获取特定蓝图引入的更改（增量）", responses = {
+            @ApiResponse(responseCode = "200", description = "增量已获取", content = @Content(schema = @Schema(implementation = AgentBlueprint.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getDeltaById(@PathParam("blueprint_id") UUID blueprintId) {
 
@@ -272,10 +272,10 @@ public class AgentConfigsResource {
 
     @POST
     @Path("/blueprints/environments")
-    @Operation(operationId = "createOrUpdateEnvs", summary = "Create or update environments", description = "Creates or updates environment-to-blueprint mappings", responses = {
-            @ApiResponse(responseCode = "204", description = "Environments updated"),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "createOrUpdateEnvs", summary = "创建或更新环境", description = "创建或更新环境到蓝图的映射", responses = {
+            @ApiResponse(responseCode = "204", description = "环境已更新"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response createOrUpdateEnvs(
             @RequestBody(content = @Content(schema = @Schema(implementation = AgentConfigEnvUpdate.class))) @NotNull @Valid AgentConfigEnvUpdate request) {
@@ -289,10 +289,10 @@ public class AgentConfigsResource {
 
     @PUT
     @Path("/blueprints/environments/{env_name}/projects/{project_id}")
-    @Operation(operationId = "setEnvByBlueprintName", summary = "Set environment by blueprint name", description = "Sets an environment to point to a blueprint identified by name", responses = {
-            @ApiResponse(responseCode = "204", description = "Environment updated"),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "setEnvByBlueprintName", summary = "根据蓝图名称设置环境", description = "将环境指向按名称标识的蓝图", responses = {
+            @ApiResponse(responseCode = "204", description = "环境已更新"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response setEnvByBlueprintName(
             @PathParam("env_name") String envName,
@@ -309,9 +309,9 @@ public class AgentConfigsResource {
 
     @DELETE
     @Path("/blueprints/environments/{env_name}/projects/{project_id}")
-    @Operation(operationId = "deleteEnv", summary = "Delete environment", description = "Soft-deletes an environment by setting its ended_at timestamp", responses = {
-            @ApiResponse(responseCode = "204", description = "Environment deleted"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "deleteEnv", summary = "删除环境", description = "通过设置ended_at时间戳软删除环境", responses = {
+            @ApiResponse(responseCode = "204", description = "环境已删除"),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response deleteEnv(
             @PathParam("env_name") String envName,
@@ -327,10 +327,10 @@ public class AgentConfigsResource {
     @GET
     @Path("/blueprints/history/projects/{project_id}")
     @JsonView(AgentConfig.View.History.class)
-    @Operation(operationId = "getBlueprintHistory", summary = "Get blueprint history", description = "Retrieves paginated blueprint history for a project", responses = {
-            @ApiResponse(responseCode = "200", description = "History retrieved", content = @Content(schema = @Schema(implementation = AgentBlueprint.BlueprintPage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getBlueprintHistory", summary = "获取蓝图历史", description = "获取项目的分页蓝图历史", responses = {
+            @ApiResponse(responseCode = "200", description = "历史已获取", content = @Content(schema = @Schema(implementation = AgentBlueprint.BlueprintPage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getBlueprintHistory(
             @PathParam("project_id") UUID projectId,

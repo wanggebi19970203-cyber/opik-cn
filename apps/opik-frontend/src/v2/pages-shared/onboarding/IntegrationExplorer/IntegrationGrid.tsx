@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { BookOpen, Plus } from "lucide-react";
 import { useTheme } from "@/contexts/theme-provider";
@@ -17,6 +18,7 @@ type IntegrationGridProps = {
 const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
   className,
 }) => {
+  const { t } = useTranslation();
   const {
     activeTab,
     searchText,
@@ -58,7 +60,7 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
       <>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <h3 className="comet-body-s mb-2 text-muted-slate">
-            No search results
+            {t("onboarding.integrationExplorer.noSearchResults")}
           </h3>
 
           <Button
@@ -72,7 +74,7 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
               source ? `-${source}` : ""
             }`}
           >
-            Request integration
+            {t("onboarding.integrationExplorer.requestIntegration")}
           </Button>
         </div>
 
@@ -132,8 +134,8 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
           rel="noopener noreferrer"
         >
           <IntegrationCard
-            title="View all integrations"
-            description="Discover 60+ ways to integrate"
+            title={t("onboarding.integrationExplorer.viewAllIntegrations")}
+            description={t("onboarding.integrationExplorer.discoverIntegrations")}
             icon={
               <div className="flex size-[40px] items-center justify-center rounded-lg bg-primary/10">
                 <BookOpen className="size-5 text-primary" />
@@ -147,7 +149,7 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
         </a>
 
         <IntegrationCard
-          title="Request integration"
+          title={t("onboarding.integrationExplorer.requestIntegration")}
           iconClassName="min-w-0 min-h-10"
           className="justify-center"
           icon={<Plus className="size-4" />}

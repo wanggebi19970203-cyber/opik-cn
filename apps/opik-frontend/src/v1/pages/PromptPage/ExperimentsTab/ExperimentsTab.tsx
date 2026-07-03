@@ -10,6 +10,7 @@ import {
 } from "use-query-params";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
+import { useTranslation } from "react-i18next";
 
 import Loader from "@/shared/Loader/Loader";
 import SearchInput from "@/shared/SearchInput/SearchInput";
@@ -113,6 +114,7 @@ interface ExperimentsTabProps {
 }
 
 const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [search = "", setSearch] = useQueryParam("search", StringParam, {
     updateType: "replaceIn",
@@ -168,7 +170,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("experiments:experiments.columns.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
@@ -176,7 +178,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "prompt",
-        label: "Prompt commit",
+        label: t("experiments:experiments.columns.promptCommit"),
         type: COLUMN_TYPE.list,
         accessorFn: (row) => get(row, ["prompt_versions"], []),
         cell: MultiResourceCell as never,
@@ -192,13 +194,13 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("experiments:experiments.columns.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
       },
       {
         id: COLUMN_DATASET_ID,
-        label: "Test suite",
+        label: t("experiments:experiments.columns.testSuite"),
         type: COLUMN_TYPE.string,
         cell: ResourceCell as never,
         customMeta: {
@@ -209,7 +211,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "dataset_version",
-        label: "Test suite version",
+        label: t("experiments:experiments.columns.datasetVersion"),
         type: COLUMN_TYPE.string,
         iconType: "version" as const,
         accessorFn: (row: GroupedExperiment) =>
@@ -218,18 +220,18 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("experiments:experiments.columns.created"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("experiments:experiments.columns.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "duration.p50",
-        label: "Avg duration",
+        label: t("experiments:experiments.columns.durationAvg"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p50,
         cell: DurationCell as never,
@@ -240,7 +242,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "duration.p90",
-        label: "Duration (p90)",
+        label: t("experiments:experiments.columns.durationP90"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p90,
         cell: DurationCell as never,
@@ -251,7 +253,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "duration.p99",
-        label: "Duration (p99)",
+        label: t("experiments:experiments.columns.durationP99"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p99,
         cell: DurationCell as never,
@@ -262,18 +264,18 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "trace_count",
-        label: "Trace count",
+        label: t("experiments:experiments.columns.traceCount"),
         type: COLUMN_TYPE.number,
         cell: TraceCountCell as never,
         aggregatedCell: TextCell.Aggregation as never,
         customMeta: {
           aggregationKey: "trace_count",
-          tooltip: "View experiment traces",
+          tooltip: t("experiments:experiments.viewExperimentTraces"),
         },
       },
       {
         id: "total_estimated_cost",
-        label: "Total estimated cost",
+        label: t("experiments:experiments.columns.totalEstimatedCost"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -283,7 +285,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "total_estimated_cost_avg",
-        label: "Avg cost",
+        label: t("experiments:experiments.columns.costPerTraceAvg"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -293,7 +295,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "pass_rate",
-        label: "Pass rate",
+        label: t("experiments:experiments.columns.passRate"),
         type: COLUMN_TYPE.number,
         iconType: "pass_rate",
         accessorFn: (row) => row.pass_rate,
@@ -305,7 +307,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Feedback scores",
+        label: t("experiments:experiments.columns.feedbackScores"),
         type: COLUMN_TYPE.numberDictionary,
         accessorFn: transformExperimentScores,
         cell: FeedbackScoreListCell as never,
@@ -319,20 +321,20 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("experiments:experiments.columns.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell as never,
       },
       {
         id: "tags",
-        label: "Tags",
+        label: t("experiments:experiments.columns.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags" as const,
         cell: ListCell as never,
       },
       {
         id: COLUMN_METADATA_ID,
-        label: "Configuration",
+        label: t("experiments:experiments.columns.configuration"),
         type: COLUMN_TYPE.dictionary,
         accessorFn: (row) =>
           isObject(row.metadata)
@@ -341,7 +343,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
         cell: CodeCell as never,
       },
     ];
-  }, []);
+  }, [t]);
 
   const { isFeedbackScoresPending, dynamicScoresColumns } =
     useExperimentsFeedbackScores();
@@ -428,8 +430,8 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? "No experiments have used this prompt yet"
-    : "No search results";
+    ? t("prompt:experiments.noExperimentsYet")
+    : t("prompt:experiments.noSearchResults");
 
   const hasGroups = Boolean(groups.length);
 
@@ -468,7 +470,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("prompt:experiments.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>

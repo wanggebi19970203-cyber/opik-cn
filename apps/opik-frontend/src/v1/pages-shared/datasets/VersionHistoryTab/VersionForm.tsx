@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,6 +28,7 @@ const VersionForm: React.FC<VersionFormProps> = ({
   onSubmit,
   immutableTags = [],
 }) => {
+  const { t } = useTranslation("datasets");
   const form = useForm<VersionFormData>({
     resolver: zodResolver(versionFormSchema),
     defaultValues: {
@@ -47,11 +49,11 @@ const VersionForm: React.FC<VersionFormProps> = ({
           name="versionNote"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Version note (optional)</FormLabel>
+              <FormLabel>{t("datasets.versionForm.versionNote")}</FormLabel>
               <FormControl>
                 <Textarea
                   {...field}
-                  placeholder="Describe what changed in this version"
+                  placeholder={t("datasets.versionForm.versionNotePlaceholder")}
                   className="min-h-32 resize-none"
                 />
               </FormControl>
@@ -64,7 +66,7 @@ const VersionForm: React.FC<VersionFormProps> = ({
           name="tags"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tags</FormLabel>
+              <FormLabel>{t("datasets.versionForm.tags")}</FormLabel>
               <FormControl>
                 <TagListRenderer
                   tags={field.value}

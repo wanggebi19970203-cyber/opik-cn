@@ -4,6 +4,7 @@ import useLocalStorageState from "use-local-storage-state";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import PageEmptyState from "@/shared/PageEmptyState/PageEmptyState";
 import { buildDocsUrl } from "@/v2/lib/utils";
@@ -180,6 +181,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const AlertsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/alerts");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const navigate = useNavigate();
@@ -212,6 +214,18 @@ const AlertsPage: React.FunctionComponent = () => {
     },
   );
 
+  const translatedColumns: ColumnData<Alert>[] = DEFAULT_COLUMNS.map((col) => ({
+    ...col,
+    label: t(`alerts.columns.${col.id}`),
+  }));
+
+  const translatedFilterColumns: ColumnData<Alert>[] = FILTERS_COLUMNS.map(
+    (col) => ({
+      ...col,
+      label: t(`alerts.columns.${col.id}`),
+    }),
+  );
+
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const filtersConfig = useMemo(
@@ -223,7 +237,7 @@ const AlertsPage: React.FunctionComponent = () => {
               value: type,
               label: ALERT_TYPE_LABELS[type],
             })),
-            placeholder: "Select type",
+            placeholder: t("alerts.selectType"),
           },
         },
       } as Record<string, { keyComponentProps: Record<string, unknown> }>,
@@ -254,7 +268,7 @@ const AlertsPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? "There are no alerts yet" : "No search results";
+  const noDataText = noData ? t("alerts.empty.title") : t("alerts.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -287,7 +301,7 @@ const AlertsPage: React.FunctionComponent = () => {
   const columns = useMemo(() => {
     return [
       ...(canUpdateAlerts ? [generateSelectColumDef<Alert>()] : []),
-      ...convertColumnDataToColumn<Alert, Alert>(DEFAULT_COLUMNS, {
+      ...convertColumnDataToColumn<Alert, Alert>(translatedColumns, {
         columnsOrder,
         selectedColumns,
         sortableColumns: sortableBy,
@@ -335,11 +349,11 @@ const AlertsPage: React.FunctionComponent = () => {
   return (
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-1 flex min-h-7 items-center justify-between">
-        <h1 className="comet-body-accented">Alerts</h1>
+        <h1 className="comet-body-accented">{t("alerts.title")}</h1>
         {canUpdateAlerts && (
           <Button variant="default" size="xs" onClick={handleNewAlertClick}>
             <Plus className="mr-1 size-4" />
-            Create alert
+            {t("alerts.create")}
           </Button>
         )}
       </div>
@@ -347,12 +361,10 @@ const AlertsPage: React.FunctionComponent = () => {
         <PageEmptyState
           lightImageUrl={emptyAlertsLightUrl}
           darkImageUrl={emptyAlertsDarkUrl}
-          title="No alerts yet"
-          description={
-            "Monitor important events in your project and get notified when something needs your attention."
-          }
+          title={t("alerts.empty.title")}
+          description={t("alerts.empty.description")}
           primaryActionLabel={
-            canUpdateAlerts ? "Create your first alert" : undefined
+            canUpdateAlerts ? t("alerts.empty.action") : undefined
           }
           onPrimaryAction={canUpdateAlerts ? handleNewAlertClick : undefined}
           docsUrl={buildDocsUrl("/production/alerts/alerts")}
@@ -369,12 +381,12 @@ const AlertsPage: React.FunctionComponent = () => {
                 <SearchInput
                   searchText={search!}
                   setSearchText={setSearch}
-                  placeholder="Search by name"
+                  placeholder={t("alerts.searchPlaceholder")}
                   className="w-[320px]"
                   dimension="sm"
                 ></SearchInput>
                 <FiltersButton
-                  columns={FILTERS_COLUMNS}
+                  columns={translatedFilterColumns}
                   filters={filters}
                   onChange={setFilters}
                   config={filtersConfig}
@@ -389,7 +401,7 @@ const AlertsPage: React.FunctionComponent = () => {
                   </>
                 )}
                 <ColumnsButton
-                  columns={DEFAULT_COLUMNS}
+                  columns={translatedColumns}
                   selectedColumns={selectedColumns}
                   onSelectionChange={setSelectedColumns}
                   order={columnsOrder}
@@ -416,7 +428,7 @@ const AlertsPage: React.FunctionComponent = () => {
                 <DataTableNoData title={noDataText}>
                   {noData && canUpdateAlerts && (
                     <Button variant="link" onClick={handleNewAlertClick}>
-                      Create alert
+                      {t("alerts.create")}
                     </Button>
                   )}
                 </DataTableNoData>

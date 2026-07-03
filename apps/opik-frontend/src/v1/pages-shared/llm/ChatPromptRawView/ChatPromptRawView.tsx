@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
 import { jsonLanguage } from "@codemirror/lang-json";
@@ -111,6 +112,7 @@ const ChatPromptRawView: React.FC<ChatPromptRawViewProps> = ({
   onRawValueChange,
   onValidationChange,
 }) => {
+  const { t } = useTranslation("prompt");
   const theme = useCodemirrorTheme({
     editable: true,
   });
@@ -147,14 +149,11 @@ const ChatPromptRawView: React.FC<ChatPromptRawViewProps> = ({
       </div>
       {!isValid && (
         <p className="mt-2 text-sm text-destructive" role="alert">
-          Message format is invalid.
+          {t("chatPromptRawView.messageFormatInvalid")}
         </p>
       )}
       <Description>
-        Edit the raw JSON representation of chat messages. Must be a valid JSON
-        array with at least one object. Each object must have a &quot;role&quot;
-        field (system/user/assistant) and a &quot;content&quot; field (string or
-        array of objects).
+        {t("chatPromptRawView.editRawJsonDescription")}
       </Description>
     </>
   );

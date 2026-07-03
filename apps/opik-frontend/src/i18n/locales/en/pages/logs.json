@@ -1,0 +1,140 @@
+{
+  "logs": {
+    "title": "Logs",
+    "description": "View and analyze traces and spans",
+    "empty": {
+      "title": "No traces yet",
+      "description": "Traces will appear here once your agent starts receiving requests."
+    },
+    "columns": {
+      "id": "ID",
+      "name": "Name",
+      "status": "Status",
+      "duration": "Duration",
+      "startTime": "Start time",
+      "feedbackScores": "Feedback scores"
+    },
+    "actions": {
+      "view": "View trace",
+      "copyId": "Copy trace ID",
+      "addToDataset": "Add to dataset",
+      "addToQueue": "Add to queue"
+    },
+    "filters": {
+      "search": "Search traces",
+      "status": "Status",
+      "duration": "Duration",
+      "tags": "Tags"
+    },
+    "threads": {
+      "columns": {
+        "firstMessage": "First message",
+        "lastMessage": "Last message",
+        "messageCount": "Message count",
+        "totalTokens": "Total tokens",
+        "totalInputTokens": "Total input tokens",
+        "totalOutputTokens": "Total output tokens",
+        "estimatedCost": "Estimated cost",
+        "createdBy": "Created by",
+        "comments": "Comments",
+        "threadId": "Thread ID",
+        "annotationQueueId": "Annotation queue ID"
+      },
+      "filters": {
+        "searchByAnything": "Search by anything",
+        "searchFirstMessage": "Search first message",
+        "searchLastMessage": "Search last message",
+        "enterThreadId": "Enter thread ID",
+        "enterAnnotationQueueId": "Enter annotation queue ID",
+        "typeATag": "Type a tag\u2026",
+        "addTag": "Add tag",
+        "selectScore": "Select score"
+      },
+      "empty": {
+        "title": "No threads yet",
+        "description": "Threads will appear here once your agent starts receiving requests.",
+        "quickstartGuide": "Quickstart guide",
+        "viewDocs": "View docs"
+      },
+      "refreshTooltip": "Refresh threads list",
+      "countLabel": "Threads",
+      "feedbackScores": "Feedback scores",
+      "deleteThreads": "Delete threads",
+      "deleteDescription": "Deleting threads will also remove all linked traces and their data. This action cannot be undone. Are you sure you want to continue?",
+      "deleteConfirm": "Delete threads",
+      "manageTags": "Manage tags",
+      "evaluate": "Evaluate",
+      "exportDisabled": "Export functionality is disabled for this installation",
+      "delete": "Delete"
+    },
+    "tracesSpans": {
+      "columns": {
+        "input": "Input",
+        "output": "Output",
+        "errors": "Errors",
+        "totalTokens": "Total tokens",
+        "totalInputTokens": "Total input tokens",
+        "totalOutputTokens": "Total output tokens",
+        "estimatedCost": "Estimated cost",
+        "metadata": "Metadata",
+        "spanCount": "Span count",
+        "llmCallsCount": "LLM calls count",
+        "threadId": "Thread ID",
+        "experiment": "Experiment",
+        "createdBy": "Created by",
+        "comments": "Comments",
+        "guardrails": "Guardrails",
+        "provider": "Provider"
+      },
+      "filters": {
+        "searchByAnything": "Search by anything",
+        "searchInput": "Search input",
+        "searchOutput": "Search output",
+        "searchName": "Search name",
+        "withErrors": "With errors",
+        "traceName": "Trace name",
+        "spanName": "Span name",
+        "traceId": "Trace ID",
+        "spanId": "Span ID",
+        "threadId": "Thread ID",
+        "enterTraceId": "Enter trace ID",
+        "enterSpanId": "Enter span ID",
+        "enterThreadId": "Enter thread ID",
+        "enterProvider": "Enter provider",
+        "enterAnnotationQueueId": "Enter annotation queue ID",
+        "typeATag": "Type a tag\u2026",
+        "addTag": "Add tag",
+        "errorType": "Error type",
+        "selectErrorType": "Select error type",
+        "traceFeedbackScores": "Trace feedback scores",
+        "spanFeedbackScores": "Span feedback scores",
+        "selectScore": "Select score",
+        "selectSpanScore": "Select span score",
+        "customFilter": "Custom filter",
+        "guardrails": "Guardrails",
+        "failed": "Failed",
+        "passed": "Passed",
+        "annotationQueueId": "Annotation queue ID",
+        "cost": "Cost",
+        "tokens": "Tokens",
+        "inputTokens": "Input tokens",
+        "outputTokens": "Output tokens",
+        "llmCallsCount": "LLM calls count"
+      },
+      "empty": {
+        "quickstartGuide": "Quickstart guide",
+        "viewDocs": "View docs"
+      },
+      "refreshTooltip": {
+        "traces": "Refresh traces list",
+        "spans": "Refresh spans list"
+      },
+      "countLabel": {
+        "traces": "Traces",
+        "spans": "Spans"
+      },
+      "feedbackScores": "Feedback scores",
+      "failed": "failed"
+    }
+  }
+}

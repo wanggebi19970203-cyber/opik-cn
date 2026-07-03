@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Loader from "@/shared/Loader/Loader";
 import NoDataView from "./NoDataView";
 import GetStartedView from "./GetStartedView/GetStartedView";
@@ -10,6 +11,7 @@ import { Info } from "lucide-react";
 import SMEFlowProvider, { useSMEFlow, WORKFLOW_STATUS } from "./SMEFlowContext";
 
 const SMEFlowContent: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const {
     annotationQueue,
     currentView,
@@ -23,7 +25,7 @@ const SMEFlowContent: React.FunctionComponent = () => {
   if (isLoading || isItemsLoading) {
     return (
       <Loader
-        message="Loading annotation queue..."
+        message={t("sme.annotationView.loadingAnnotationQueue")}
         className="min-h-96 w-full"
       />
     );
@@ -59,7 +61,7 @@ const SMEFlowContent: React.FunctionComponent = () => {
                   onClick={() => setCurrentView(WORKFLOW_STATUS.INITIAL)}
                 >
                   <Info className="mr-1.5 size-3.5 shrink-0" />
-                  Read instructions
+                  {t("sme.annotationView.readInstructions")}
                 </Button>
               }
             />

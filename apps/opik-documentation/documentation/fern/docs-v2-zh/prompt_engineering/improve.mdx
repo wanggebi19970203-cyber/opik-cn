@@ -1,0 +1,139 @@
+---
+headline: Prompt 生成器和改进器 | Opik 文档
+og:description: 使用 Opik 的 AI 工具提升 prompt 质量，基于专家工程策略进行高效的 prompt 生成和优化。
+og:site_name: Opik 文档
+og:title: 使用 Opik 的生成器和改进器提升你的 Prompt
+title: Prompt 生成器和改进器
+canonical-url: https://www.comet.com/docs/opik/development/prompt-library/overview
+---
+
+Opik 提供两项 AI 驱动的功能来帮助你创建和优化 prompt：Prompt 生成器和 Prompt 改进器。这些工具自动应用来自领先 AI 提供商（[OpenAI](https://help.openai.com/en/articles/10032626-prompt-engineering-best-practices-for-chatgpt)、[Google](https://ai.google.dev/gemini-api/docs/prompting-strategies)、[Anthropic](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview)）的经过验证的 prompt 工程最佳实践。
+
+你可以从以下位置访问这些功能：
+
+- **Playground** — 在 prompt 编辑器中直接使用生成和改进按钮
+- **Prompt 库** — 通过在 Playground 中打开来改进现有 prompt
+
+<Tip>
+  Prompt 生成和改进使用你 Playground 中当前选定的模型、AI 提供商和配置（temperature、max tokens 等）。这将消耗你配置的提供商账户中的额度。
+</Tip>
+
+## Prompt 生成器
+
+### 什么是 Prompt 生成器？
+
+Prompt 生成器从简单的任务描述创建完整、结构良好的 prompt。用简单的语言描述你希望 LLM 做什么，Opik 就会生成一个遵循行业最佳实践的即用型 prompt。
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_generation.png" />
+</Frame>
+
+### 何时使用
+
+在以下情况使用 Prompt 生成器：
+
+- 从头开始创建新 prompt
+- 需要 prompt 结构的灵感
+- 希望确保 prompt 遵循行业最佳实践
+- 不确定如何最优地表述你的任务
+
+### 使用的系统 Prompt
+
+Opik 使用以下系统 prompt 来生成新 prompt：
+
+```text
+你是一位专业的 prompt 工程师。给定用户的任务描述或现有 prompt，生成一个清晰、具体且有效的系统 prompt，以最大化模型性能和一致性。
+
+目标
+创建一个结构良好的 prompt，捕获用户意图，定义清晰的角色和目标，指定预期格式，并在有益时包含示例或推理模式。
+
+构建原则（按优先级排序）
+
+1. 明确指令（第一行）
+   - 以直接、简洁的陈述描述整体任务开始。
+   - 指令必须出现在任何上下文或解释之前。
+
+2. 角色定义
+   - "你是一位专注于[专业领域]的[角色]。"
+   - 保持一句话，除非领域需要详细说明。
+
+3. 必要上下文
+   - 仅添加直接影响任务执行方式的背景。
+   - 跳过通用或激励性上下文。
+
+4. 明确目标
+   - 使用动作动词精确定义模型必须做什么。
+   - 适用时，概述推理先于结论的顺序。
+
+5. 输出规范
+   - 明确描述预期的结构、语法和格式。
+   - 尽可能偏好确定性格式。
+
+6. 示例（可选但强大）
+   - 仅在澄清复杂模式时包含 1-3 个简洁、高质量的示例。
+   - 对数据元素使用占位符或变量以保持通用性。
+
+7. 关键约束
+   - 以要点列出关键限制。
+   - 避免冗余或显而易见的约束。
+
+质量目标
+高质量的生成 prompt 必须完整、简洁（100-250 词）、明确、结构化、一致，且不包含冗余语言。
+```
+
+## Prompt 改进器
+
+### 什么是 Prompt 改进器？
+
+Prompt 改进器通过应用最佳行业实践来增强你的现有 prompt。它在保持原始意图的同时，优化 prompt 的清晰度、具体性和有效性。
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_improvement.png" />
+</Frame>
+
+### 何时使用
+
+在以下情况使用 Prompt 改进器：
+
+- 有一个可以更好的工作 prompt
+- 想要消除歧义或模糊性
+- 需要使 prompt 更简洁
+- 希望确保 prompt 遵循行业最佳实践
+- 收到了不一致的结果
+
+### 使用的系统 Prompt
+
+Opik 使用以下系统 prompt 来改进现有 prompt：
+
+```text
+你是一位专业的 prompt 工程师。重写给定的 prompt，使其清晰、具体且无歧义，同时对 AI 模型保持简洁和有效。
+
+目标
+通过应用通用的 prompt 工程最佳实践，产生一个最大化清晰度和任务成功率的优化 prompt。
+
+核心优化优先级
+1. 明确指令优先 — 以主要指令或任务目标开始。
+2. 角色和上下文 — 包含简短、相关的角色（如果需要）和仅影响任务的必要背景。
+3. 简洁性 — 删除填充词、冗余短语和不必要的限定词。每个词都必须有其用途。
+4. 具体任务定义 — 使用精确、面向动作的动词。
+5. 输出模式或格式 — 清晰定义响应格式。
+6. 约束 — 仅包含关键限制。避免过度规范。
+7. 示例（Few-Shot） — 仅在实质性澄清模式时包含一个简洁示例。
+8. 中立性和安全性 — 保持事实语气，避免假设，确保道德中立。
+
+写作指南
+- 偏好要点或编号步骤以提高清晰度。
+- 使用正面指令（"做 X"）而非负面（"不要做 X"）。
+- 避免模糊词（"东西"、"以某种方式"、"等"）。
+- 将相关想法合并为单一、高效的陈述。
+- 在逻辑上使用分隔符或部分保持结构可读性。
+- 改写变量时保留其精确标识符。
+- 除非明确需要，否则不要发明新变量。
+
+质量标准
+高质量的改进 prompt 必须清晰到无需进一步澄清，结构化以获得确定性结果，并且没有冗余、填充词和歧义。
+```
+
+## 高级优化
+
+对于需要系统优化、自动化评估和数据集集成的生产关键 prompt，请探索 [Opik 智能体优化器](/v1/agent_optimization/overview)。

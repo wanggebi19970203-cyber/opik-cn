@@ -1,0 +1,142 @@
+---
+description: 了解如何使用 MetaPrompt Optimizer 通过系统分析和迭代优化来改进和优化您的 LLM 提示词。
+headline: MetaPrompt | Opik 文档
+og:description: 使用 MetaPrompt 的优化器系统地优化您的提示词，以获得精确有效的 LLM 建议。
+og:site_name: Opik 文档
+og:title: 使用 Opik 增强提示词效果
+subtitle: 通过系统分析优化和改进 LLM 提示词。
+title: MetaPrompt Optimizer
+---
+
+MetaPrompter 是一个专门用于元提示词优化的优化器。它专注于通过系统分析和优化提示词模板、指令和示例来提高提示词的结构和效果。
+
+<Note>
+  `MetaPromptOptimizer` 是一个很好的选择，当您有一个初始指令提示词并希望通过 LLM 驱动的建议迭代优化其措辞、结构和清晰度时。它擅长通用提示词改进，适用于提示词的核心思路合理但措辞可以优化的情况，或者当您想探索推理模型建议的变体时。
+</Note>
+
+## 工作原理
+
+`MetaPromptOptimizer` 通过使用"推理" LLM 来评估和改进您的初始提示词，从而自动化提示词优化过程。以下是概念性说明：
+
+<Frame>
+  <img src="/img/agent_optimization/metaprompt_optimizer.png" alt="MetaPrompt Optimizer" />
+</Frame>
+
+<Tip>
+  该优化器是开源的，您可以在 [Opik 仓库](https://github.com/comet-ml/opik/tree/main/sdks/opik_optimizer/src/opik_optimizer/algorithms/meta_prompt_optimizer) 中查看代码。
+</Tip>
+
+
+## 快速开始
+
+您可以按照以下步骤使用 `MetaPromptOptimizer` 来优化提示词：
+
+```python maxLines=1000
+from opik_optimizer import MetaPromptOptimizer
+from opik.evaluation.metrics import LevenshteinRatio
+from opik_optimizer import datasets, ChatPrompt
+
+# Initialize optimizer
+optimizer = MetaPromptOptimizer(
+    model="openai/gpt-4",
+    model_parameters={
+        "temperature": 0.1,
+        "max_tokens": 5000
+    },
+    n_threads=8,
+    seed=42
+)
+
+# Prepare dataset
+dataset = datasets.hotpot(count=300)
+
+# Define metric and task configuration (see docs for more options)
+def levenshtein_ratio(dataset_item, llm_output):
+    return LevenshteinRatio().score(reference=dataset_item['answer'], output=llm_output)
+
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "Provide an answer to the question."},
+        {"role": "user", "content": "{question}"}
+    ]
+)
+
+# Run optimization
+results = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    n_samples=100
+)
+
+# Access results
+results.display()
+```
+
+## 配置选项
+
+### 优化器参数
+
+优化器具有以下参数：
+
+<ParamField path="model" type="str" optional={true} default="openai/gpt-5-nano">用于优化器内部推理/生成调用的 LiteLLM 模型名称</ParamField>
+<ParamField path="model_parameters" type="dict[str, typing.Any] | None" optional={true}>可选的 LiteLLM 参数字典，用于优化器内部 LLM 调用。常用参数：temperature、max_tokens、max_completion_tokens、top_p。</ParamField>
+<ParamField path="prompts_per_round" type="int" optional={true} default="4">每轮优化生成的候选提示词数量</ParamField>
+<ParamField path="enable_context" type="bool" optional={true} default="True">在推理改进时是否包含任务特定的上下文</ParamField>
+<ParamField path="n_threads" type="int" optional={true} default="12">用于提示词评估的并行线程数</ParamField>
+<ParamField path="verbose" type="int" optional={true} default="1">控制内部日志/进度条（0=关闭，1=开启）</ParamField>
+<ParamField path="seed" type="int" optional={true} default="42">用于可重现性的随机种子</ParamField>
+
+### `optimize_prompt` 参数
+
+`optimize_prompt` 方法具有以下参数：
+
+<ParamField path="prompt" type="ChatPrompt">要优化的 ChatPrompt。可以包含系统/用户/助手消息、工具和模型配置。</ParamField>
+<ParamField path="dataset" type="Dataset">包含评估示例的 Opik 数据集。评估期间，每个项目都会传递给提示词。</ParamField>
+<ParamField path="metric" type="Callable">评估函数，接受 (dataset_item, llm_output) 并返回分数 (float)。分数越高表示性能越好。</ParamField>
+<ParamField path="experiment_config" type="dict | None" optional={true}>可选的元数据字典，用于记录 Opik 实验。有助于跟踪实验参数和上下文。</ParamField>
+<ParamField path="n_samples" type="int | float | str | None" optional={true}>每次评估使用的数据集项目数。使用计数（如 `50`）、分数（如 `0.1`）、百分比（如 "10%"）或 "all"/"full"/None 表示完整数据集。</ParamField>
+<ParamField path="n_samples_minibatch" type="int | None" optional={true}>可选的内部循环小批量样本数（默认为 n_samples）。</ParamField>
+<ParamField path="n_samples_strategy" type="str | None" optional={true}>子采样的采样策略（默认："random_sorted"）。</ParamField>
+<ParamField path="auto_continue" type="bool" optional={true} default="False">如果为 True，优化器可能会在达到 max_trials 后继续运行，如果仍在发现改进。</ParamField>
+<ParamField path="agent_class" type="type[opik_optimizer.optimizable_agent.OptimizableAgent] | None" optional={true}>用于提示词执行的自定义代理类。如果为 None，则使用默认的基于 LiteLLM 的代理。必须继承自 OptimizableAgent。</ParamField>
+<ParamField path="project_name" type="str" optional={true} default="Optimization">用于记录跟踪和实验的 Opik 项目名称。默认："Optimization"</ParamField>
+<ParamField path="max_trials" type="int" optional={true} default="10">跨所有轮次要评估的最大提示词总数。优化器在达到此限制时停止。</ParamField>
+<ParamField path="mcp_config" type="opik_optimizer.mcp_utils.mcp_workflow.MCPExecutionConfig | None" optional={true}>可选的 MCP（模型上下文协议）执行配置，用于使用外部工具的提示词。启用工具调用工作流。默认：None</ParamField>
+<ParamField path="candidate_generator" type="collections.abc.Callable[..., list[opik_optimizer.api_objects.chat_prompt.ChatPrompt]] | None" optional={true}>可选的自定义函数，用于生成候选提示词。覆盖默认的元推理生成器。应返回 list[ChatPrompt]。</ParamField>
+<ParamField path="candidate_generator_kwargs" type="dict[str, typing.Any] | None" optional={true}>传递给 candidate_generator 的可选 kwargs。</ParamField>
+<ParamField path="args" type="Any" />
+<ParamField path="kwargs" type="Any" />
+
+
+### 模型支持
+
+使用 `MetaPromptOptimizer` 时需要考虑两个模型：
+- `MetaPromptOptimizer.model`：用于推理和候选生成的模型。
+- `ChatPrompt.model`：用于评估提示词的模型。
+
+`model` 参数接受任何 LiteLLM 支持的模型字符串（如 `"gpt-4o"`、`"azure/gpt-4"`、`"anthropic/claude-3-opus"`、`"gemini/gemini-1.5-pro"`）。您还可以使用 `model_parameters` 参数传递额外的模型参数：
+
+```python
+optimizer = MetaPromptOptimizer(
+    model="anthropic/claude-3-opus-20240229",
+    model_parameters={
+        "temperature": 0.7,
+        "max_tokens": 4096
+    }
+)
+```
+
+## MCP 工具调用支持
+
+MetaPrompt Optimizer 是目前唯一支持 **MCP（模型上下文协议）工具调用优化** 的优化器。这意味着您可以优化包含 MCP 工具和函数调用的提示词。
+
+<Note>
+  MCP 工具调用优化是一项专门功能，允许优化器理解和优化通过模型上下文协议使用外部工具和函数的提示词。这对于需要工具使用的复杂代理工作流特别有用。
+</Note>
+
+有关工具优化的全面信息，请参阅[工具优化指南](/development/optimization-runs/algorithms/tool_optimization)。
+
+## 研究与参考
+
+- [Meta-Prompting for Language Models](https://arxiv.org/abs/2401.12954)

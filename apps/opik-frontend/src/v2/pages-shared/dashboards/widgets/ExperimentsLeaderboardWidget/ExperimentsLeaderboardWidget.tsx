@@ -1,4 +1,5 @@
 import React, { memo, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 import { keepPreviousData } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -68,6 +69,7 @@ const NAME_COLUMN_ID = "name";
 const ExperimentsLeaderboardWidget: React.FunctionComponent<
   DashboardWidgetComponentProps
 > = ({ sectionId, widgetId, preview = false }) => {
+  const { t } = useTranslation("dashboards");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const readOnly = useDashboardStore(selectReadOnly);
 
@@ -276,9 +278,7 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
             ? {
                 prefixIcon: (
                   <TooltipWrapper
-                    content={`Ranking metric (${
-                      rankingDirection ? "higher is better" : "lower is better"
-                    })`}
+                    content={t(rankingDirection ? "leaderboard.rankingMetricHigher" : "leaderboard.rankingMetricLower")}
                   >
                     <Trophy className="mr-1 size-3.5 shrink-0 text-yellow-500" />
                   </TooltipWrapper>
@@ -297,7 +297,7 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
       allColumns.push(
         mapColumnDataFields<Experiment, Experiment>({
           id: RANK_COLUMN_ID,
-          label: "Rank",
+          label: t("leaderboard.rank"),
           type: COLUMN_TYPE.number,
           header: RankingHeader as never,
           cell: RankingCell as never,
@@ -313,7 +313,7 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
     allColumns.push(
       mapColumnDataFields<Experiment, Experiment>({
         id: NAME_COLUMN_ID,
-        label: "Name",
+        label: t("leaderboard.name"),
         type: COLUMN_TYPE.string,
         cell: ResourceCell as never,
         sortable: sortableColumns?.includes("name") || false,
@@ -431,12 +431,12 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
     if (noData) {
       return (
         <DashboardWidget.EmptyState
-          title="No data available"
-          message="No experiments match the current filters"
+          title={t("leaderboard.noDataAvailable")}
+          message={t("leaderboard.noExperimentsMatch")}
           action={
             !preview && !readOnly ? (
               <DashboardWidget.EmptyState.EditAction
-                label="Configure widget"
+                label={t("leaderboard.configureWidget")}
                 onClick={handleEdit}
               />
             ) : undefined

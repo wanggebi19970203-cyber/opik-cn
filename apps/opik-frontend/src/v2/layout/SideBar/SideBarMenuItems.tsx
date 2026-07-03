@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useActiveProjectId } from "@/store/AppStore";
 import usePluginsStore from "@/store/PluginsStore";
 import { Separator } from "@/ui/separator";
@@ -16,6 +17,7 @@ interface SideBarMenuItemsProps {
 }
 
 const SideBarMenuItems: React.FC<SideBarMenuItemsProps> = ({ expanded }) => {
+  const { t } = useTranslation();
   const activeProjectId = useActiveProjectId();
   const AssistantSidebar = usePluginsStore((state) => state.AssistantSidebar);
   const ollieEnabled = useIsFeatureEnabled(FeatureToggleKeys.OLLIE_ENABLED);
@@ -45,6 +47,7 @@ const SideBarMenuItems: React.FC<SideBarMenuItemsProps> = ({ expanded }) => {
     showHomePage: projectHomepageEnabled,
     showOlliePage: !!AssistantSidebar && ollieEnabled,
     showDiagnostics: !!AssistantSidebar && ollieEnabled && agentInsightsEnabled,
+    t,
   });
 
   const renderItems = (items: MenuItem[]) => {

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { highlightCode, classHighlighter } from "@lezer/highlight";
 import { jsonLanguage } from "@codemirror/lang-json";
 import { cn } from "@/lib/utils";
@@ -7,6 +8,7 @@ import { PrettyLLMMessageCodeBlockProps } from "./types";
 
 const PrettyLLMMessageCodeBlock: React.FC<PrettyLLMMessageCodeBlockProps> =
   React.memo(({ code, label = "JSON", className }) => {
+    const { t } = useTranslation();
     const lines = useMemo(() => {
       const tree = jsonLanguage.parser.parse(code);
       const result: React.ReactNode[][] = [[]];
@@ -49,8 +51,8 @@ const PrettyLLMMessageCodeBlock: React.FC<PrettyLLMMessageCodeBlockProps> =
           <div className="text-xs text-muted-foreground">{label}</div>
           <CopyButton
             text={code}
-            message="Code copied to clipboard"
-            tooltipText="Copy code"
+            message={t("common:llmMessages.codeCopiedToClipboard")}
+            tooltipText={t("common:llmMessages.copyCode")}
             size="icon-2xs"
             className="p-0"
           />

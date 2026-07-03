@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
 import { jsonLanguage } from "@codemirror/lang-json";
+import { useTranslation } from "react-i18next";
 
 import SliderInputControl from "@/shared/SliderInputControl/SliderInputControl";
 import PromptModelSettingsTooltipContent from "@/v1/pages-shared/llm/PromptModelSettings/providerConfigs/PromptModelConfigsTooltipContent";
@@ -21,6 +22,7 @@ interface CustomModelConfigProps {
 }
 
 const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
+  const { t } = useTranslation();
   const theme = useCodemirrorTheme({ editable: true });
 
   const handleExtraBodyParametersChange = useCallback(
@@ -47,9 +49,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           max={1}
           step={0.01}
           defaultValue={DEFAULT_CUSTOM_CONFIGS.TEMPERATURE}
-          label="Temperature"
+          label={t("promptEngineering:modelConfigs.temperature")}
           tooltip={
-            <PromptModelSettingsTooltipContent text="Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive." />
+            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.temperatureTooltip")} />
           }
         />
       )}
@@ -63,9 +65,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           max={10000}
           step={1}
           defaultValue={DEFAULT_CUSTOM_CONFIGS.MAX_COMPLETION_TOKENS}
-          label="Max output tokens"
+          label={t("promptEngineering:modelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelSettingsTooltipContent text="The maximum number of tokens to generate shared between the prompt and completion. The exact limit varies by model. (One token is roughly 4 characters for standard English text)." />
+            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.maxOutputTokensTooltip")} />
           }
         />
       )}
@@ -79,9 +81,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           max={1}
           step={0.01}
           defaultValue={DEFAULT_CUSTOM_CONFIGS.TOP_P}
-          label="Top P"
+          label={t("promptEngineering:modelConfigs.topP")}
           tooltip={
-            <PromptModelSettingsTooltipContent text="Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered" />
+            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.topPTooltip")} />
           }
         />
       )}
@@ -95,9 +97,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           max={1}
           step={0.01}
           defaultValue={DEFAULT_CUSTOM_CONFIGS.FREQUENCY_PENALTY}
-          label="Frequency penalty"
+          label={t("promptEngineering:modelConfigs.frequencyPenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text="How much to penalize new tokens based on their existing frequency in the text so far. Decreases the model's likelihood to repeat the same line verbatim" />
+            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.frequencyPenaltyTooltip")} />
           }
         />
       )}
@@ -111,9 +113,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           max={1}
           step={0.01}
           defaultValue={DEFAULT_CUSTOM_CONFIGS.PRESENCE_PENALTY}
-          label="Presence penalty"
+          label={t("promptEngineering:modelConfigs.presencePenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text="How much to penalize new tokens based on whether they appear in the text so far. Increases the model's likelihood to talk about new topics" />
+            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.presencePenaltyTooltip")} />
           }
         />
       )}
@@ -126,9 +128,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
         max={10}
         step={0.1}
         defaultValue={DEFAULT_CUSTOM_CONFIGS.THROTTLING}
-        label="Throttling (seconds)"
+        label={t("promptEngineering:modelConfigs.throttling")}
         tooltip={
-          <PromptModelSettingsTooltipContent text="Minimum time in seconds between consecutive requests to avoid rate limiting" />
+          <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.throttlingTooltip")} />
         }
       />
 
@@ -143,18 +145,18 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
         max={20}
         step={1}
         defaultValue={DEFAULT_CUSTOM_CONFIGS.MAX_CONCURRENT_REQUESTS}
-        label="Max concurrent requests"
+        label={t("promptEngineering:modelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelSettingsTooltipContent text="Maximum number of requests that can run simultaneously. Set to 1 for sequential execution, higher values for parallel processing" />
+          <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.maxConcurrentRequestsTooltip")} />
         }
       />
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="custom_parameters" className="flex items-center gap-1">
-          Extra body parameters (Optional)
+          {t("promptEngineering:modelConfigs.extraBodyParameters")}
           <TooltipWrapper
             content={
-              <PromptModelSettingsTooltipContent text="Provider-specific JSON parameters sent with each request" />
+              <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.extraBodyParametersTooltip")} />
             }
           >
             <Info className="ml-1 size-4 text-light-slate" />
@@ -177,7 +179,7 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
             }}
           />
         </div>
-        {showInvalidJSON && <FormErrorSkeleton>Invalid JSON</FormErrorSkeleton>}
+        {showInvalidJSON && <FormErrorSkeleton>{t("promptEngineering:modelConfigs.invalidJson")}</FormErrorSkeleton>}
       </div>
     </div>
   );

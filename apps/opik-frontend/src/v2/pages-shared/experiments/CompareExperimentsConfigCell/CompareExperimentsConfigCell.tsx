@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import isUndefined from "lodash/isUndefined";
 import { CellContext } from "@tanstack/react-table";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -23,6 +24,7 @@ type CustomMeta = {
 const CompareExperimentsConfigCell: React.FC<
   CellContext<CompareConfig, unknown>
 > = (context) => {
+  const { t } = useTranslation("experiments");
   const { custom } = context.column.columnDef.meta ?? {};
   const { onlyDiff } = (custom ?? {}) as CustomMeta;
   const experimentId = context.column?.id;
@@ -38,7 +40,7 @@ const CompareExperimentsConfigCell: React.FC<
 
   const renderContent = () => {
     if (isUndefined(data)) {
-      return <span className="px-1.5 py-2.5 text-light-slate">No value</span>;
+      return <span className="px-1.5 py-2.5 text-light-slate">{t("noValue")}</span>;
     }
 
     return (

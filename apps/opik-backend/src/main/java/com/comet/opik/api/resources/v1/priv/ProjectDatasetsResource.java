@@ -44,7 +44,7 @@ import static com.comet.opik.api.Dataset.DatasetPage;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project related resources")
+@Tag(name = "Projects", description = "项目相关资源")
 public class ProjectDatasetsResource {
 
     private final @NonNull DatasetService service;
@@ -53,8 +53,8 @@ public class ProjectDatasetsResource {
     private final @NonNull SortingFactoryDatasets sortingFactory;
 
     @GET
-    @Operation(operationId = "findDatasetsByProject", summary = "Find datasets by project", description = "Find datasets scoped to a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset page", content = @Content(schema = @Schema(implementation = DatasetPage.class)))
+    @Operation(operationId = "findDatasetsByProject", summary = "按项目查找数据集", description = "查找指定项目下的数据集", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集分页", content = @Content(schema = @Schema(implementation = DatasetPage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_VIEW)
     @JsonView(Dataset.View.Public.class)
@@ -64,7 +64,7 @@ public class ProjectDatasetsResource {
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
             @QueryParam("with_experiments_only") boolean withExperimentsOnly,
             @QueryParam("with_optimizations_only") boolean withOptimizationsOnly,
-            @QueryParam("name") @Schema(description = "Filter datasets by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤数据集（部分匹配，不区分大小写）") String name,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
 

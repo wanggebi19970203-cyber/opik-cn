@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -27,6 +28,7 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
   currentValue,
   onConfirm,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const handleConfirm = () => {
@@ -36,14 +38,13 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
 
     if (!newValue) {
       toast({
-        title: "Data truncation disabled",
-        description:
-          "Pagination has been limited to prevent performance issues with large data.",
+        title: t("settings.workspacePreferences.truncationToggle.toastDisabledTitle"),
+        description: t("settings.workspacePreferences.truncationToggle.toastDisabledDescription"),
       });
     } else {
       toast({
-        title: "Data truncation enabled",
-        description: "Full pagination options are now available.",
+        title: t("settings.workspacePreferences.truncationToggle.toastEnabledTitle"),
+        description: t("settings.workspacePreferences.truncationToggle.toastEnabledDescription"),
       });
     }
   };
@@ -55,12 +56,12 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle>
-            {isDisabling ? "Disable" : "Enable"} data truncation?
+            {isDisabling ? t("settings.workspacePreferences.truncationToggle.disableTitle") : t("settings.workspacePreferences.truncationToggle.enableTitle")}
           </DialogTitle>
           <DialogDescription>
             {isDisabling
-              ? `Disabling truncation will display full content in tables. This may slow performance and limit pagination to ${TRUNCATION_DISABLED_MAX_PAGE_SIZE} items per page.`
-              : "Truncating large data improves performance and enables full pagination options. You can change this anytime."}
+              ? t("settings.workspacePreferences.truncationToggle.disableDescription", { limit: TRUNCATION_DISABLED_MAX_PAGE_SIZE })
+              : t("settings.workspacePreferences.truncationToggle.enableDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -68,21 +69,20 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
           <Alert variant="destructive" size="sm">
             <AlertTriangle />
             <AlertTitle size="sm" className="text-destructive">
-              Performance impact
+              {t("settings.workspacePreferences.truncationToggle.performanceImpactTitle")}
             </AlertTitle>
             <AlertDescription size="sm" className="text-foreground">
-              Large amounts of data may cause slower page loading and increased
-              memory usage.
+              {t("settings.workspacePreferences.truncationToggle.performanceImpactDescription")}
             </AlertDescription>
           </Alert>
         )}
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("settings.workspacePreferences.cancel")}</Button>
           </DialogClose>
           <Button variant="default" onClick={handleConfirm}>
-            {isDisabling ? "Disable truncation" : "Enable truncation"}
+            {isDisabling ? t("settings.workspacePreferences.truncationToggle.disableButton") : t("settings.workspacePreferences.truncationToggle.enableButton")}
           </Button>
         </DialogFooter>
       </DialogContent>

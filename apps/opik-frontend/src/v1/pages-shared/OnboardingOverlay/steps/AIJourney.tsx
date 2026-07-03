@@ -1,19 +1,22 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import OnboardingStep from "../OnboardingStep";
 
-const options = [
-  "Just getting started",
-  "Exploring ideas and experimenting",
-  "Testing a working prototype",
-  "Running a live application in production",
-];
-
 const AIJourney: React.FC = () => {
+  const { t } = useTranslation("onboarding");
+
+  const options = [
+    t("journeyOptions.justGettingStarted"),
+    t("journeyOptions.exploringIdeas"),
+    t("journeyOptions.testingPrototype"),
+    t("journeyOptions.runningInProduction"),
+  ];
+
   return (
     <OnboardingStep>
       <OnboardingStep.BackButton />
       <OnboardingStep.Title>
-        Where are you in your AI journey?
+        {t("aiJourneyQuestion")}
       </OnboardingStep.Title>
 
       <OnboardingStep.AnswerList>

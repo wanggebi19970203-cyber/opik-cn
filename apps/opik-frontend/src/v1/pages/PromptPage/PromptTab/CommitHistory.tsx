@@ -1,6 +1,7 @@
 import { GitCommitVertical } from "lucide-react";
 import copy from "clipboard-copy";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 import { formatDate } from "@/lib/date";
 import React, { useState } from "react";
@@ -24,6 +25,7 @@ const CommitHistory = ({
   onRestoreVersionClick,
   latestVersionId,
 }: CommitHistoryProps) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [hoveredVersionId, setHoveredVersionId] = useState<string | null>(null);
 
@@ -31,7 +33,7 @@ const CommitHistory = ({
     await copy(versionId);
 
     toast({
-      description: "Commit successfully copied to clipboard",
+      description: t("prompt:promptTab.commitCopiedToClipboard"),
     });
   };
 

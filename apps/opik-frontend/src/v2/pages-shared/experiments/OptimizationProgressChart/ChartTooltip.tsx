@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import isNumber from "lodash/isNumber";
 
 import { AggregatedCandidate } from "@/types/optimizations";
@@ -27,11 +28,12 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
   chartData,
   isTestSuite,
 }) => {
+  const { t } = useTranslation("experiments");
   const chartPoint = chartData.find(
     (d) => d.candidateId === hoveredTrial.candidateId,
   );
   const status = chartPoint?.status ?? "passed";
-  const scoreLabel = isTestSuite ? "Pass rate" : "Score";
+  const scoreLabel = isTestSuite ? t("passRate") : t("chartTooltip.score");
   const percentageDisplay = isNumber(candidate.score)
     ? formatAsPercentage(candidate.score)
     : "-";
@@ -41,7 +43,7 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
       : "";
 
   const rows: { label: string; value: string }[] = [
-    { label: "Status", value: status },
+    { label: t("chartTooltip.status"), value: status },
     {
       label: scoreLabel,
       value: `${percentageDisplay}${fractionDisplay}`,
@@ -49,13 +51,13 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
   ];
   if (candidate.latencyP50 != null) {
     rows.push({
-      label: "Latency",
+      label: t("chartTooltip.latency"),
       value: formatAsDuration(candidate.latencyP50),
     });
   }
   if (candidate.runtimeCost != null) {
     rows.push({
-      label: "Runtime cost",
+      label: t("chartTooltip.runtimeCost"),
       value: formatAsCurrency(candidate.runtimeCost),
     });
   }
@@ -75,7 +77,7 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
       <div className="grid items-start gap-1.5">
         <div className="mb-1 max-w-full overflow-hidden border-b px-2 pt-0.5">
           <div className="comet-body-xs-accented mb-0.5 truncate">
-            Trial #{candidate.trialNumber}
+            {t("trialNumber", { number: candidate.trialNumber })}
           </div>
         </div>
         <div className="grid gap-1.5">

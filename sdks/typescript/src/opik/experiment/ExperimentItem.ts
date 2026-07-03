@@ -5,7 +5,7 @@ import {
 } from "@/rest_api/api";
 
 /**
- * References to a dataset item and trace in an experiment.
+ * 实验中数据集条目和追踪的引用。
  */
 export class ExperimentItemReferences {
   public readonly datasetItemId: string;
@@ -30,7 +30,7 @@ export class ExperimentItemReferences {
 }
 
 /**
- * Content of an experiment item including evaluation data and feedback scores.
+ * 实验条目的内容，包括评估数据和反馈分数。
  */
 export class ExperimentItemContent {
   public readonly id?: string;
@@ -57,10 +57,10 @@ export class ExperimentItemContent {
   }
 
   /**
-   * Creates an ExperimentItemContent from a REST API ExperimentItemCompare object.
+   * 从 REST API ExperimentItemCompare 对象创建 ExperimentItemContent。
    *
-   * @param value The REST API ExperimentItemCompare object
-   * @returns A new ExperimentItemContent instance
+   * @param value REST API ExperimentItemCompare 对象
+   * @returns 新的 ExperimentItemContent 实例
    */
   public static fromRestExperimentItemCompare(
     value: ExperimentItemCompare

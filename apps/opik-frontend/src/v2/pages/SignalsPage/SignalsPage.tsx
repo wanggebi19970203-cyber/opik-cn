@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpenCheck, Radar, Settings2 } from "lucide-react";
@@ -39,6 +40,7 @@ const maxUpdatedAt = (issues: AgentInsightsIssue[]): number =>
   }, 0);
 
 const SignalsPage: React.FC = () => {
+  const { t } = useTranslation("pages/signals");
   const projectId = useActiveProjectId()!;
   const { workspaceName } = useParams({ strict: false }) as {
     workspaceName: string;
@@ -178,12 +180,12 @@ const SignalsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {lastScan ? (
               <span className="comet-body-xs text-muted-slate">
-                Last scan: {formatDate(lastScan)}
+                {t("signals.page.lastScan", { date: formatDate(lastScan) })}
               </span>
             ) : (
               !hasData && (
                 <span className="comet-body-xs text-muted-slate">
-                  No runs yet
+                  {t("signals.page.noRunsYet")}
                 </span>
               )
             )}
@@ -197,20 +199,22 @@ const SignalsPage: React.FC = () => {
                     onClick={handleRunDiagnostic}
                   >
                     <Radar className="mr-1.5 size-3.5" />
-                    Run diagnostic
+                    {t("signals.page.runDiagnostic")}
                   </Button>
                   <Separator orientation="vertical" className="h-5" />
                 </>
               )}
-              <TooltipWrapper content="Resolved issues">
+              <TooltipWrapper content={t("signals.page.resolvedIssues")}>
                 <Button
                   variant="outline"
                   size="xs"
                   onClick={() => setShowResolved(true)}
-                  aria-label="Resolved issues"
+                  aria-label={t("signals.page.resolvedIssues")}
                 >
                   <BookOpenCheck className="size-3.5 lg:mr-1.5" />
-                  <span className="hidden lg:inline">Resolved issues</span>
+                  <span className="hidden lg:inline">
+                    {t("signals.page.resolvedIssues")}
+                  </span>
                 </Button>
               </TooltipWrapper>
             </div>
@@ -241,12 +245,12 @@ const SignalsPage: React.FC = () => {
           >
             <ArrowLeft className="size-4 shrink-0" />
             <h1 className="truncate break-words text-base font-medium tracking-normal">
-              Resolved issues
+              {t("signals.page.resolvedIssues")}
             </h1>
           </Button>
         ) : (
           <h1 className="truncate break-words text-base font-medium tracking-normal text-foreground-secondary">
-            Diagnostics
+            {t("signals.page.diagnostics")}
           </h1>
         )}
         {!showResolved && (isActive || hasData) && (
@@ -257,16 +261,18 @@ const SignalsPage: React.FC = () => {
                   isJobEnabled ? "bg-[var(--color-emerald)]" : "bg-chart-red"
                 }`}
               />
-              {isJobEnabled ? "Auto • Daily" : "Manual"}
+              {isJobEnabled
+                ? t("signals.page.autoDaily")
+                : t("signals.page.manual")}
             </span>
             {canConfigure &&
               (isJobEnabled ? (
-                <TooltipWrapper content="Settings">
+                <TooltipWrapper content={t("signals.page.settings")}>
                   <Button
                     variant="ghost"
                     size="icon-2xs"
                     onClick={() => setSettingsOpen(true)}
-                    aria-label="Diagnostics settings"
+                    aria-label={t("signals.page.diagnostics")}
                     className="text-foreground"
                   >
                     <Settings2 className="size-3" />
@@ -279,7 +285,7 @@ const SignalsPage: React.FC = () => {
                   disabled={updateJobMutation.isPending}
                   className="ml-1.5"
                 >
-                  Turn on auto-diagnostic
+                  {t("signals.page.turnOnAutoDiagnostic")}
                 </Button>
               ))}
           </div>

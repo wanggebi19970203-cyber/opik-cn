@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import { useUnifiedMedia } from "@/hooks/useUnifiedMedia";
 import { MediaProvider } from "@/shared/PrettyLLMMessage/llmMessages";
@@ -19,6 +20,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
   isLoading,
   search,
 }) => {
+  const { t } = useTranslation("tracing");
   const { media, transformedInput, transformedOutput } = useUnifiedMedia(data);
 
   const hasMetadata = Boolean(data.metadata);
@@ -29,12 +31,12 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
       <div className="flex flex-col gap-2">
         <AttachmentsList media={media} />
         {isLoading ? (
-          <CollapsibleSection title="Input" disabled bodyClassName="p-2">
+          <CollapsibleSection title={t("detailsTab.input")} disabled bodyClassName="p-2">
             <Loader />
           </CollapsibleSection>
         ) : (
           <CodeBlock
-            title="Input"
+            title={t("detailsTab.input")}
             data={transformedInput}
             prettifyConfig={{ fieldType: "input" }}
             preserveKey="syntax-highlighter-trace-sidebar-input"
@@ -44,12 +46,12 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
           />
         )}
         {isLoading ? (
-          <CollapsibleSection title="Output" disabled bodyClassName="p-2">
+          <CollapsibleSection title={t("detailsTab.output")} disabled bodyClassName="p-2">
             <Loader />
           </CollapsibleSection>
         ) : (
           <CodeBlock
-            title="Output"
+            title={t("detailsTab.output")}
             data={transformedOutput}
             prettifyConfig={{ fieldType: "output" }}
             preserveKey="syntax-highlighter-trace-sidebar-output"
@@ -61,7 +63,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
         <EventsList data={data} isLoading={isLoading} search={search} />
         {hasMetadata && (
           <CodeBlock
-            title="Metadata"
+            title={t("detailsTab.metadata")}
             withSearch
             data={data.metadata}
             search={search}
@@ -70,7 +72,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
         )}
         {hasTokenUsage && (
           <CodeBlock
-            title="Token usage"
+            title={t("detailsTab.tokenUsage")}
             data={data.usage as object}
             withSearch
             search={search}

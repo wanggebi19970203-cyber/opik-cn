@@ -1,0 +1,14 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 新增从界面删除实验的选项
+- 更新了没有 trace 的项目空状态
+- 移除了反馈评分组件中原因图标的提示延迟
+
+**SDK：**
+
+- 在 `opik.Opik` 客户端中引入了新的 `get_or_create_dataset` 方法。如果数据集不存在，此方法将创建一个新数据集。
+- 向数据集插入条目时，重复条目现在会被静默忽略，而不是被写入。

@@ -1,0 +1,214 @@
+---
+headline: 本地部署 | Opik 文档
+og:description: 使用 Docker Compose 配置本地 Opik 部署，快速上手。适用于测试环境，不适用于生产环境。
+og:site_name: Opik 文档
+og:title: Opik 本地部署 - 自托管指南
+subtitle: 描述如何使用 Docker Compose 在本地运行 Opik
+title: 本地部署
+---
+
+> **重要提示：** 如果您正在使用或计划使用 Opik 或 Comet 企业版，请联系 Sales@comet.com 以获取正确的部署文档。
+
+要在本地运行 Opik，我们推荐使用 [Docker Compose](https://docs.docker.com/compose/)。它易于设置，几分钟内即可开始使用，**但**不适用于生产部署。如果您希望在生产环境中运行 Opik，建议使用 [Kubernetes Helm chart](/self-host/kubernetes)。
+
+在运行安装之前，请确保已安装 Docker 和 Docker Compose：
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+<Note>
+  如果您使用 Mac 或 Windows，`docker` 和 `docker compose` 都包含在 [Docker
+  Desktop](https://docs.docker.com/desktop/) 安装中。
+</Note>
+
+## 安装
+
+要安装 Opik，您需要克隆 Opik 代码库并运行以下命令：
+
+<Tabs>
+ <Tab value="Linux / Mac" title="Linux / Mac">
+```bash
+# 克隆 Opik 代码库
+git clone https://github.com/comet-ml/opik.git
+
+# 进入 opik 文件夹
+
+cd opik
+
+# 启动 Opik 平台
+
+./opik.sh
+
+```
+
+Opik 现在可以通过 [http://localhost:5173](http://localhost:5173) 访问
+</Tab>
+<Tab value="Windows" title="Windows">
+
+```powershell
+# 克隆 Opik 代码库
+git clone https://github.com/comet-ml/opik.git
+
+# 进入 opik 文件夹
+cd opik
+
+# 启动 Opik 平台
+powershell -ExecutionPolicy ByPass -c ".\opik.ps1"
+```
+
+Opik 现在可以通过 [http://localhost:5173](http://localhost:5173) 访问
+
+</Tab>
+</Tabs>
+
+<Tip>
+要将 Opik Python SDK 与本地 Opik 实例一起使用，您需要运行：
+
+```bash
+pip install opik
+
+opik configure --use_local
+```
+
+或在 Python 中：
+
+```python
+import opik
+
+opik.configure(use_local=True)
+```
+
+这将创建一个 `~/.opik.config` 文件，用于存储本地 Opik 实例的 URL。
+
+</Tip>
+
+所有记录到 Opik 平台的数据将存储在 `~/opik` 目录中，这意味着您可以随时启动和停止 Opik 平台而不会丢失任何数据。
+
+## 停止 Opik 平台
+
+您可以通过运行以下命令来停止 Opik 服务器：
+
+<Tabs>
+ <Tab value="Linux / Mac" title="Linux / Mac">
+
+```bash
+# 确保在克隆的 Opik 代码库根目录下运行此命令
+./opik.sh --stop
+```
+
+</Tab>
+ <Tab value="Windows" title="Windows">
+
+```powershell
+# 确保在克隆的 Opik 代码库根目录下运行此命令
+powershell -ExecutionPolicy ByPass -c ".\opik.ps1 --stop"
+```
+
+</Tab>
+</Tabs>
+
+**注意：** 您可以安全地停止 Opik 平台而不会丢失任何数据。
+
+## 升级和重启 Opik 平台
+
+要升级或重启 Opik 平台，只需再次运行 `opik` 脚本：
+
+<Tabs>
+ <Tab value="Linux / Mac" title="Linux / Mac">
+
+```bash
+# 确保在克隆的 Opik 代码库根目录下运行此命令
+./opik.sh
+```
+
+</Tab>
+ <Tab value="Windows" title="Windows">
+
+```powershell
+# 确保在克隆的 Opik 代码库根目录下运行此命令
+powershell -ExecutionPolicy ByPass -c ".\opik.ps1"
+```
+
+</Tab>
+</Tabs>
+
+<Tip>
+  由于 Docker Compose 部署使用挂载卷，升级 Opik 时您的数据**_不会_**丢失。
+  您也可以安全地启动和停止 Opik 平台而不会丢失任何数据。
+</Tip>
+
+## 高级配置 - Docker Compose
+
+直接使用 Docker Compose 而不是使用 `opik.sh` 或 `opik.ps1` 脚本可以为您提供一些额外的选项。
+
+### 使用 Docker Compose 启动 Opik
+
+除了使用 `opik.sh` 或 `opik.ps1` 脚本外，您还可以直接使用服务配置文件运行 `docker compose` 命令：
+
+```bash
+# 进入 opik/deployment/docker-compose 目录
+cd opik/deployment/docker-compose
+
+# 启动完整的 Opik 平台（等同于 ./opik.sh）
+docker compose --profile opik up --detach
+
+# 仅启动基础设施服务（等同于 ./opik.sh --infra）
+docker compose up --detach
+
+# 启动基础设施 + 后端服务（等同于 ./opik.sh --backend）
+docker compose --profile backend up --detach
+```
+
+### 卸载 Opik
+
+要移除 Opik，您可以使用脚本或手动删除容器和卷：
+
+```bash
+# 使用脚本（推荐）
+./opik.sh --stop
+
+# 或手动删除容器和卷
+cd deployment/docker-compose
+docker compose --profile opik down --volumes
+```
+
+<Warning>
+  删除卷将删除 Opik 平台中存储的所有数据，且无法恢复。除非您确定不需要 Opik 平台中存储的任何数据，否则不建议执行此操作。
+</Warning>
+
+### 运行特定版本的 Opik
+
+您可以通过设置 `OPIK_VERSION` 环境变量来运行特定版本的 Opik：
+
+```bash
+OPIK_VERSION=latest
+
+./opik.sh
+```
+
+### 从源代码构建 Opik 平台
+
+您也可以使用提供的脚本从源代码构建 Opik 平台：
+
+```bash
+# 克隆 Opik 代码库
+git clone https://github.com/comet-ml/opik.git
+
+# 进入 opik 目录
+cd opik
+
+# 从源代码构建 Opik 平台
+./opik.sh --build
+```
+
+这将构建前端和后端 Docker 镜像并启动 Opik 平台。
+
+## 故障排除
+
+如果在运行 `docker compose` 时遇到以下错误
+
+```bash
+java.lang.Throwable: Code: 139. DB::Exception: No macro 'shard' in config while processing substitutions in '/clickhouse/tables/{shard}/opik/automation_rule_evaluator_logs' at '20' or macro is not supported here. (NO_ELEMENTS_IN_CONFIG) (version 24.3.6.48 (official build))
+```
+
+请确保从 `deployment/docker-compose` 文件夹获取最新文件

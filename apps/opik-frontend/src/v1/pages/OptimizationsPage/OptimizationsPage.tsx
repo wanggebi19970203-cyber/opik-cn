@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCw } from "lucide-react";
 import useLocalStorageState from "use-local-storage-state";
 import { RowSelectionState } from "@tanstack/react-table";
@@ -56,28 +57,28 @@ const COLUMNS_ORDER_KEY = "optimizations-columns-order-v1";
 export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   {
     id: "dataset_name",
-    label: "Dataset name",
+    label: "optimizations.columns.datasetName",
     type: COLUMN_TYPE.string,
     cell: DatasetNameCell as never,
     size: 200,
   },
   {
     id: "created_at",
-    label: "Start time",
+    label: "optimizations.columns.startTime",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     size: 140,
   },
   {
     id: "status",
-    label: "Status",
+    label: "optimizations.columns.status",
     type: COLUMN_TYPE.string,
     cell: OptimizationStatusCell as never,
     size: 120,
   },
   {
     id: "pass_rate",
-    label: "Pass rate",
+    label: "optimizations.columns.passRate",
     type: COLUMN_TYPE.numberDictionary,
     size: 200,
     accessorFn: (row) => row.best_objective_score,
@@ -85,7 +86,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "accuracy",
-    label: "Accuracy",
+    label: "optimizations.columns.accuracy",
     type: COLUMN_TYPE.numberDictionary,
     size: 200,
     accessorFn: (row) =>
@@ -94,7 +95,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "latency",
-    label: "Latency",
+    label: "optimizations.columns.latency",
     type: COLUMN_TYPE.duration,
     size: 180,
     accessorFn: (row) => row.best_duration,
@@ -102,7 +103,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "cost",
-    label: "Cost",
+    label: "optimizations.columns.cost",
     type: COLUMN_TYPE.cost,
     size: 180,
     accessorFn: (row) => row.best_cost,
@@ -110,7 +111,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "opt_cost",
-    label: "Opt. cost",
+    label: "optimizations.columns.optCost",
     type: COLUMN_TYPE.cost,
     size: 120,
     accessorFn: (row) => row.total_optimization_cost,
@@ -121,7 +122,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
 export const FILTER_COLUMNS = [
   {
     id: COLUMN_DATASET_ID,
-    label: "Test suite",
+    label: "optimizations.filters.testSuite",
     type: COLUMN_TYPE.string,
     disposable: true,
   },
@@ -158,6 +159,7 @@ const actionsColumn = generateActionsColumDef({
 });
 
 const OptimizationsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("optimizations");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
   const resetDialogKeyRef = useRef(0);
@@ -209,9 +211,8 @@ const OptimizationsPage: React.FunctionComponent = () => {
 
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? "There are no optimizations yet\n" +
-      "Optimizations help improve your LLM application's performance, accuracy, and overall user experience"
-    : "No search results";
+    ? t("empty.title") + "\n" + t("empty.pageDescription")
+    : t("empty.noSearchResults", "No search results");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY,
@@ -317,7 +318,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
         <h1 className="comet-title-l truncate break-words">
-          Optimization Studio
+          {t("title")}
         </h1>
       </div>
       <ExplainerDescription
@@ -326,14 +327,14 @@ const OptimizationsPage: React.FunctionComponent = () => {
       {canUseOptimizationStudio && <StudioTemplates />}
       <div className="pt-6">
         <h2 className="comet-title-s sticky top-0 z-10 truncate break-words bg-soft-background pb-3 pt-2">
-          Optimization runs
+          {t("optimizationRuns")}
         </h2>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
           <div className="flex items-center gap-2">
             <SearchInput
               searchText={search!}
               setSearchText={setSearch}
-              placeholder="Search by dataset name"
+              placeholder={t("searchPlaceholder")}
               className="w-[320px]"
               dimension="sm"
             ></SearchInput>
@@ -354,7 +355,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
                 <Separator orientation="vertical" className="mx-2 h-4" />
               </>
             )}
-            <TooltipWrapper content="Refresh optimizations list">
+            <TooltipWrapper content={t("refreshTooltip")}>
               <Button
                 variant="outline"
                 size="icon-sm"
@@ -387,7 +388,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
             <DataTableNoData title={noDataText}>
               {noData && canUseOptimizationStudio && (
                 <Button variant="link" onClick={handleNewOptimizationClick}>
-                  Create new optimization
+                  {t("empty.action")}
                 </Button>
               )}
             </DataTableNoData>

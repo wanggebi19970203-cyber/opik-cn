@@ -1,0 +1,22 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- Opik playground 现已公开预览
+  <Frame>
+    <img src="/img/changelog/2024-12-16/playground.png" />
+  </Frame>
+- 现在可以在从界面更新提示词时查看提示词差异
+- trace 和 span 中的错误现在会在界面中显示
+- 在 trace 侧边栏中显示 agent 图
+- 发布了 [Kong AI Gateway](/v1/production/gateway) 的新插件
+
+**SDK**：
+
+- 新增对传递给装饰函数的 Pydantic 模型序列化的支持
+- 实现了 `get_experiment_by_id` 和 `get_experiment_by_name` 方法
+- 使用 `evaluate` 方法时，评分指标现在会被记录到 trace 中
+- 新增与 [aisuite](/v1/integrations/aisuite) 的集成
+- 新增与 [Haystack](/v1/integrations/haystack) 的集成

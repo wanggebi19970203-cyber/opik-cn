@@ -1,5 +1,6 @@
 import { CommentItem } from "@/types/comment";
 import React, { createContext, useContext, useState } from "react";
+import { useTranslation } from "react-i18next";
 import UserCommentAvatar from "./UserCommentAvatar";
 import {
   DropdownMenu,
@@ -81,6 +82,7 @@ type MenuProps = {
   children: React.ReactNode;
 };
 const Menu: React.FC<MenuProps> = ({ children }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { isEditMode, userName, comment } = useUserCommentContext();
 
@@ -107,7 +109,7 @@ const Menu: React.FC<MenuProps> = ({ children }) => {
             isEditMode && "opacity-0 hover:opacity-0 group-hover:opacity-0",
           )}
         >
-          <span className="sr-only">Actions menu</span>
+          <span className="sr-only">{t("common:comments.actionsMenu")}</span>
           <MoreHorizontal />
         </Button>
       </DropdownMenuTrigger>
@@ -119,6 +121,7 @@ const Menu: React.FC<MenuProps> = ({ children }) => {
 };
 
 const MenuEditItem = () => {
+  const { t } = useTranslation();
   const { setIsEditMode } = useUserCommentContext();
 
   const handleOnEdit = () => {
@@ -128,7 +131,7 @@ const MenuEditItem = () => {
   return (
     <DropdownMenuItem onClick={handleOnEdit}>
       <Pencil className="mr-2 size-4" />
-      Edit
+      {t("common:buttons.edit")}
     </DropdownMenuItem>
   );
 };
@@ -137,6 +140,7 @@ type MenuDeleteItemProps = {
   onDelete: (commentId: string) => void;
 };
 const MenuDeleteItem: React.FC<MenuDeleteItemProps> = ({ onDelete }) => {
+  const { t } = useTranslation();
   const { comment } = useUserCommentContext();
 
   const handleOnDelete = () => {
@@ -146,7 +150,7 @@ const MenuDeleteItem: React.FC<MenuDeleteItemProps> = ({ onDelete }) => {
   return (
     <DropdownMenuItem onClick={handleOnDelete}>
       <Trash className="mr-2 size-4" />
-      Delete
+      {t("common:buttons.delete")}
     </DropdownMenuItem>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Play } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PromptWithLatestVersion, PromptVersion } from "@/types/prompts";
 import { Button } from "@/ui/button";
@@ -25,6 +26,7 @@ const TryInPlaygroundButton: React.FC<TryInPlaygroundButtonProps> = ({
   activeVersion,
   ButtonComponent = Button,
 }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -58,16 +60,16 @@ const TryInPlaygroundButton: React.FC<TryInPlaygroundButtonProps> = ({
         }}
       >
         <Play className="mr-1.5 size-3.5" />
-        Try in the Playground
+        {t("prompt:tryInPlayground")}
       </ButtonComponent>
       <ConfirmDialog
         key={resetKeyRef.current}
         open={Boolean(open)}
         setOpen={setOpen}
         onConfirm={handleLoadPlayground}
-        title="Load prompt"
-        description="Loading this prompt into the Playground will replace any unsaved changes. This action cannot be undone."
-        confirmText="Load prompt"
+        title={t("prompt:loadPrompt")}
+        description={t("prompt:loadPromptDescription")}
+        confirmText={t("prompt:loadPrompt")}
       />
     </>
   );

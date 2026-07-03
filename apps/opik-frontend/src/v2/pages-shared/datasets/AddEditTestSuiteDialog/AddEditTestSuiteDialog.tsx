@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
@@ -26,6 +27,7 @@ type AddEditTestSuiteDialogProps = {
 const AddEditTestSuiteDialog: React.FunctionComponent<
   AddEditTestSuiteDialogProps
 > = ({ dataset, open, setOpen, onDatasetCreated, hideUpload, csvRequired }) => {
+  const { t } = useTranslation("datasets");
   const form = useDatasetForm({
     dataset,
     open,
@@ -65,7 +67,7 @@ const AddEditTestSuiteDialog: React.FunctionComponent<
           <div className="mb-4 flex gap-4">
             <div className="flex flex-1 flex-col gap-1">
               <Label htmlFor="runsPerItem" className="comet-body-s-accented">
-                Default runs per item
+                {t("testSuite.defaultRunsPerItem")}
               </Label>
               <Input
                 id="runsPerItem"
@@ -85,7 +87,7 @@ const AddEditTestSuiteDialog: React.FunctionComponent<
             </div>
             <div className="flex flex-1 flex-col gap-1">
               <Label htmlFor="passThreshold" className="comet-body-xs-accented">
-                Default pass threshold
+                {t("testSuite.defaultPassThreshold")}
               </Label>
               <Input
                 id="passThreshold"
@@ -119,7 +121,7 @@ const AddEditTestSuiteDialog: React.FunctionComponent<
                 setAssertions((prev) => prev.filter((_, i) => i !== index));
               }}
               onAdd={() => setAssertions((prev) => [...prev, ""])}
-              placeholder="e.g. Response should be factually accurate and cite sources"
+              placeholder={t("testSuite.assertionPlaceholder")}
             />
           </div>
         </>

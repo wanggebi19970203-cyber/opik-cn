@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Tag } from "@/ui/tag";
 import { Separator } from "@/ui/separator";
@@ -11,16 +12,17 @@ type AssertionResultsTableProps = {
 export const AssertionResultsTable: React.FC<AssertionResultsTableProps> = ({
   assertions,
 }) => {
+  const { t } = useTranslation("experiments");
   if (assertions.length === 0) return null;
 
   return (
     <div className="flex max-h-full flex-col rounded-md border border-border px-2 py-1.5">
       <div className="grid grid-cols-2 items-center p-1">
         <span className="comet-body-xs-accented text-foreground">
-          Assertions
+          {t('assertions')}
         </span>
         <span className="comet-body-xs-accented px-2 text-foreground">
-          Result
+          {t('result')}
         </span>
       </div>
       <Separator className="my-1" />
@@ -38,7 +40,7 @@ export const AssertionResultsTable: React.FC<AssertionResultsTableProps> = ({
               <div className="flex flex-col gap-0.5 px-2 pb-1 pt-0.5">
                 <div>
                   <Tag variant={a.passed ? "green" : "red"}>
-                    {a.passed ? "Passed" : "Failed"}
+                    {a.passed ? t('passed') : t('failed')}
                   </Tag>
                 </div>
                 {a.reason && (

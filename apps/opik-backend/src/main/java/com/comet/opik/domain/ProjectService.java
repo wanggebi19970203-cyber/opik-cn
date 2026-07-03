@@ -129,9 +129,9 @@ class ProjectServiceImpl implements ProjectService {
 
     private static final String PROJECT_ALREADY_EXISTS = "Project already exists";
 
-    // recordLastUpdatedTrace populates projects.last_updated_trace_at from the trace timestamp, so sorting by last
-    // trace reads it straight from MySQL instead of querying ClickHouse. Projects without traces have it NULL, so we
-    // fall back to last_updated_at, matching the previous behavior while keeping this a single DB query.
+    // recordLastUpdatedTrace 从追踪时间戳填充 projects.last_updated_trace_at，因此按最后追踪排序
+    // 可直接从 MySQL 读取而无需查询 ClickHouse。没有追踪记录的项目该字段为 NULL，因此回退到
+    // last_updated_at，既保持了之前的行为，又只需单次数据库查询。
     private static final String LAST_UPDATED_TRACE_AT_SORT = "COALESCE(last_updated_trace_at, last_updated_at)";
     private static final Map<String, String> SORTING_FIELD_MAPPING = Map.of(
             SortableFields.LAST_UPDATED_TRACE_AT, LAST_UPDATED_TRACE_AT_SORT);
@@ -321,13 +321,13 @@ class ProjectServiceImpl implements ProjectService {
             Optional<Project> project = repository.fetch(id, workspaceId);
 
             if (project.isEmpty()) {
-                // Void return
+                // 空返回值
                 return null;
             }
 
             repository.delete(id, workspaceId);
 
-            // Void return
+            // 空返回值
             return null;
         });
     }
@@ -553,9 +553,9 @@ class ProjectServiceImpl implements ProjectService {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             String userName = ctx.get(RequestContext.USER_NAME);
 
-            return checkIfNeededToCreateProjectsWithContext(workspaceId, userName, projectNames) // create projects if needed
+            return checkIfNeededToCreateProjectsWithContext(workspaceId, userName, projectNames) // 按需创建项目
                     .then(Mono.fromCallable(() -> getAllProjectsByName(workspaceId, projectNames))
-                            .subscribeOn(Schedulers.boundedElastic())); // get all project itemIds
+                            .subscribeOn(Schedulers.boundedElastic())); // 获取所有项目ID
         });
     }
 
@@ -686,13 +686,13 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public UUID validateProjectIdentifier(UUID projectId, String projectName, String workspaceId) {
-        // Verify project visibility
+        // 验证项目可见性
         if (projectId != null) {
             return get(projectId).id();
         }
 
-        // If the project name is provided, find the project by name, then verify visibility so that
-        // public (unauthenticated) requests cannot reach non-public projects by name.
+        // 如果提供了项目名称，按名称查找项目，然后验证可见性，以确保
+        // 公开（未认证）请求无法通过名称访问非公开项目。
         return findByNames(workspaceId, List.of(projectName))
                 .stream()
                 .findFirst()

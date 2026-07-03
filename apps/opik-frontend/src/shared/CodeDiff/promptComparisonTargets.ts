@@ -9,6 +9,8 @@
  * resolve targets the same way.
  */
 
+import i18next from "i18next";
+
 export type PromptComparisonTarget = {
   /** Stable id of the target candidate (used as the Select value). */
   id: string;
@@ -36,6 +38,11 @@ export type ComparisonCandidate = {
 export const BASELINE_TARGET_LABEL = "Baseline";
 export const PARENT_TARGET_LABEL = "Parent";
 
+export const getBaselineTargetLabel = (): string =>
+  i18next.t("codeDiff.baseline");
+export const getParentTargetLabel = (): string =>
+  i18next.t("codeDiff.parent");
+
 /**
  * A candidate usually has a single parent, shown simply as "Parent" (matching
  * the Figma design). Evolutionary crossover can produce multiple parents, so we
@@ -43,7 +50,7 @@ export const PARENT_TARGET_LABEL = "Parent";
  * identical "Parent" options.
  */
 export const buildParentTargetLabel = (trialNumber: number): string =>
-  `${PARENT_TARGET_LABEL} (Trial #${trialNumber})`;
+  i18next.t("codeDiff.parentTrial", { trialNumber });
 
 type BuildTargetsParams<T extends ComparisonCandidate> = {
   /** The candidate whose prompt is being compared. */
@@ -86,7 +93,7 @@ export const buildPromptComparisonTargets = <T extends ComparisonCandidate>({
 
   const baseline = candidates.find((c) => c.stepIndex === 0);
   if (baseline) {
-    pushTarget(baseline, BASELINE_TARGET_LABEL);
+    pushTarget(baseline, getBaselineTargetLabel());
   }
 
   const hasMultipleParents = candidate.parentCandidateIds.length > 1;
@@ -97,7 +104,7 @@ export const buildPromptComparisonTargets = <T extends ComparisonCandidate>({
         parent,
         hasMultipleParents
           ? buildParentTargetLabel(parent.trialNumber)
-          : PARENT_TARGET_LABEL,
+          : getParentTargetLabel(),
       );
     }
   });

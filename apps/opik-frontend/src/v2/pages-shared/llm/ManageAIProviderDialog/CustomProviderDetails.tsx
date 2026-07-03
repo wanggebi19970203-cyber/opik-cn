@@ -14,6 +14,7 @@ import { Switch } from "@/ui/switch";
 import { PROVIDERS } from "@/constants/providers";
 import { PROVIDER_TYPE } from "@/types/providers";
 import CustomHeadersField from "./CustomHeadersField";
+import { useTranslation } from "react-i18next";
 
 type CustomProviderDetailsProps = {
   form: UseFormReturn<AIProviderFormType>;
@@ -24,6 +25,8 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
   form,
   isEdit = false,
 }) => {
+  const { t } = useTranslation("llm");
+
   return (
     <div className="flex flex-col gap-4 pb-4">
       <p className="comet-body-s text-muted-slate">
@@ -38,7 +41,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">Provider name</Label>
+                <Label htmlFor="providerName">{t("llm:customProvider.providerName")}</Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -53,9 +56,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
                 </FormControl>
                 <FormMessage />
                 <Description>
-                  {
-                    'A unique identifier for this provider instance (e.g., "ollama", "vLLM", "LM-Studio").'
-                  }
+                  {t("llm:customProvider.providerNameDescription")}
                 </Description>
               </FormItem>
             );
@@ -101,11 +102,11 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">API key</Label>
+              <Label htmlFor="apiKey">{t("llm:customProvider.apiKey")}</Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
-                  placeholder="API key"
+                  placeholder={t("llm:customProvider.apiKey")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -145,11 +146,11 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">Models list</Label>
+              <Label htmlFor="models">{t("llm:customProvider.modelsList")}</Label>
               <FormControl>
                 <Input
                   id="models"
-                  placeholder="Models list"
+                  placeholder={t("llm:customProvider.modelsList")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -159,7 +160,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Comma-separated list of available models. Example:{" "}
+                {t("llm:customProvider.modelsDescription")}{" "}
                 {`"gpt-4o, gpt-4o-mini, llama-3.1-70b"`}
               </Description>
             </FormItem>
@@ -172,11 +173,11 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
       <CustomHeadersField
         form={form}
         name="queryParams"
-        label="Query parameters (optional)"
-        keyPlaceholder="Parameter name"
-        valuePlaceholder="Parameter value"
-        addButtonLabel="Add query parameter"
-        description="Appended to every outgoing request URL. Some gateways require a version parameter such as api-version=2024-08-01-preview."
+        label={t("llm:customProvider.queryParameters")}
+        keyPlaceholder={t("llm:customProvider.parameterName")}
+        valuePlaceholder={t("llm:customProvider.parameterValue")}
+        addButtonLabel={t("llm:customProvider.addQueryParameter")}
+        description={t("llm:customProvider.queryParametersDescription")}
       />
 
       <FormField
@@ -188,7 +189,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
           return (
             <FormItem>
               <Label htmlFor="authHeaderName">
-                Auth header name (optional)
+                {t("llm:customProvider.authHeaderName")}
               </Label>
               <FormControl>
                 <Input
@@ -224,7 +225,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
                 onCheckedChange={field.onChange}
               />
               <Label htmlFor="suppressDefaultAuth">
-                Suppress default Authorization header
+                {t("llm:customProvider.suppressDefaultAuth")}
               </Label>
             </div>
             <Description>

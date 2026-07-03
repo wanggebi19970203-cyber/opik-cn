@@ -1,9 +1,10 @@
+import i18next from "i18next";
 import { z, RefinementCtx } from "zod";
 import { ALERT_EVENT_TYPE, ALERT_TYPE } from "@/types/alerts";
 
 export const HeaderSchema = z.object({
-  key: z.string().min(1, { message: "Header key is required" }),
-  value: z.string().min(1, { message: "Header value is required" }),
+  key: z.string().min(1, { message: i18next.t("common.validation.headerKeyRequired") }),
+  value: z.string().min(1, { message: i18next.t("common.validation.headerValueRequired") }),
 });
 
 export const FeedbackScoreConditionSchema = z.object({
@@ -28,10 +29,10 @@ const SIMPLE_THRESHOLD_TRIGGERS = new Set<ALERT_EVENT_TYPE>([
 ]);
 
 const CONDITION_REQUIRED_FIELDS = [
-  ["threshold", "Threshold is required"],
-  ["window", "Window is required"],
-  ["name", "Feedback score name is required"],
-  ["operator", "Operator is required"],
+  ["threshold", i18next.t("common.validation.thresholdIsRequired")],
+  ["window", i18next.t("common.validation.windowIsRequired")],
+  ["name", i18next.t("common.validation.feedbackScoreNameRequired")],
+  ["operator", i18next.t("common.validation.operatorRequired")],
 ] as const;
 
 const addRequired = (
@@ -55,7 +56,7 @@ const validateNumeric = (
   if (isNaN(parseFloat(value))) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Threshold must be a valid number",
+      message: i18next.t("common.validation.thresholdMustBeValidNumber"),
       path,
     });
   }
@@ -75,7 +76,7 @@ export const TriggerSchema = z
       if (!data.groups?.length) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "At least one condition is required",
+          message: i18next.t("common.validation.atLeastOneConditionRequired"),
           path: ["groups"],
         });
         return;
@@ -84,7 +85,7 @@ export const TriggerSchema = z
         if (!group.conditions?.length) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "At least one condition is required",
+            message: i18next.t("common.validation.atLeastOneConditionRequired"),
             path: ["groups", gi, "conditions"],
           });
           return;
@@ -112,27 +113,27 @@ export const TriggerSchema = z
         ctx,
         data.threshold,
         ["threshold"],
-        "Threshold is required",
+        i18next.t("common.validation.thresholdIsRequired"),
       );
       if (thresholdPresent) {
         validateNumeric(ctx, data.threshold!, ["threshold"]);
       }
-      addRequired(ctx, data.window, ["window"], "Window is required");
+      addRequired(ctx, data.window, ["window"], i18next.t("common.validation.windowIsRequired"));
     }
   });
 
 export const AlertFormSchema = z
   .object({
     name: z
-      .string({ required_error: "Alert name is required" })
-      .min(1, { message: "Alert name is required" }),
+      .string({ required_error: i18next.t("common.validation.alertNameRequired") })
+      .min(1, { message: i18next.t("common.validation.alertNameRequired") }),
     enabled: z.boolean().default(true),
     alertType: z.nativeEnum(ALERT_TYPE).default(ALERT_TYPE.general),
     routingKey: z.string().optional(),
     url: z
-      .string({ required_error: "Endpoint URL is required" })
-      .min(1, { message: "Endpoint URL is required" })
-      .url({ message: "Please enter a valid URL" }),
+      .string({ required_error: i18next.t("common.validation.endpointUrlRequired") })
+      .min(1, { message: i18next.t("common.validation.endpointUrlRequired") })
+      .url({ message: i18next.t("common.validation.pleaseEnterValidUrl") }),
     secretToken: z.string().optional(),
     headers: z.array(HeaderSchema).default([]),
     triggers: z.array(TriggerSchema).default([]),
@@ -142,7 +143,7 @@ export const AlertFormSchema = z
       return data.triggers.length > 0;
     },
     {
-      message: "At least one trigger must be selected",
+      message: i18next.t("common.validation.atLeastOneTriggerMustBeSelected"),
       path: ["triggers"],
     },
   )
@@ -155,7 +156,7 @@ export const AlertFormSchema = z
       return true;
     },
     {
-      message: "Routing key is required for PagerDuty integration",
+      message: i18next.t("common.validation.routingKeyRequiredForPagerDuty"),
       path: ["routingKey"],
     },
   );

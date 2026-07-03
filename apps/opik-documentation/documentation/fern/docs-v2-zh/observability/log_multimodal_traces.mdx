@@ -1,0 +1,329 @@
+---
+headline: 记录媒体与附件 | Opik 文档
+og:description: 通过使用 Python SDK 的 Attachment 类型记录图片、视频和音频文件，在 Opik 中捕获多模态追踪数据
+og:site_name: Opik 文档
+og:title: 使用 Opik 记录媒体与附件
+title: 记录媒体与附件
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/log_multimodal_traces
+---
+
+Opik 支持多模态追踪，允许您不仅跟踪 LLM 的文本输入和输出，还可以跟踪图片、视频、音频以及任何其他媒体。
+
+<Frame>
+  <img src="/img/tracing/attachments.png" />
+</Frame>
+
+## 记录附件
+
+在 Python SDK 中，您可以使用 `Attachment` 类型将文件添加到追踪中。附件可以是图片、视频、音频文件或您想要记录到 Opik 的任何其他文件。
+
+每个附件由以下字段组成：
+
+- `data`：文件路径、原始字节或文件的 base64 编码字符串
+- `file_name`：附件的可选名称（使用没有文件路径的原始字节时为必填）
+- `content_type`：文件的内容类型，格式为 MIME 类型
+
+这些附件可以使用 `opik_context.update_current_span` 和 `opik_context.update_current_trace` 方法记录到您的追踪和 span 中：
+
+### 使用文件路径
+
+记录附件最常见的方式是提供文件路径：
+
+```python wordWrap
+from opik import opik_context, track, Attachment
+
+@track
+def my_llm_agent(input):
+    # LLM chain code
+    # ...
+
+    # Update the trace with a file path
+    opik_context.update_current_trace(
+        attachments=[
+            Attachment(
+                data="<path to the image>",
+                content_type="image/png",
+            )
+        ]
+    )
+
+    return "World!"
+
+print(my_llm_agent("Hello!"))
+```
+
+### 使用原始字节（类文件数据）
+
+您也可以直接将原始字节传递给附件。当您在内存中有文件内容（例如来自 API 响应、生成的内容或流数据）且不想先将其写入磁盘时，这很有用：
+
+```python wordWrap
+from opik import opik_context, track, Attachment
+
+@track
+def process_image(image_bytes: bytes):
+    # Process the image
+    # ...
+
+    # Log the raw bytes as an attachment
+    opik_context.update_current_trace(
+        attachments=[
+            Attachment(
+                data=image_bytes,  # Raw bytes
+                file_name="processed_image.png",  # Required for bytes
+                content_type="image/png",
+            )
+        ]
+    )
+
+    return "Image processed!"
+
+# Example: Reading a file into memory and logging it
+with open("image.png", "rb") as f:
+    image_data = f.read()
+
+print(process_image(image_data))
+```
+
+<Note>
+使用原始字节时，Opik 会自动创建临时文件用于上传，并在附件上传后清理该文件。如果您未指定 `content_type`，Opik 将尝试从 `file_name` 推断，或默认使用 `application/octet-stream`。
+</Note>
+
+### 从 HTTP 响应记录图片
+
+一个常见的用例是记录从外部 API 或 URL 获取的图片：
+
+```python wordWrap
+import httpx
+from opik import opik_context, track, Attachment
+
+@track
+def analyze_remote_image(image_url: str):
+    # Fetch image from URL
+    response = httpx.get(image_url)
+    image_bytes = response.content
+    content_type = response.headers.get("content-type", "image/jpeg")
+
+    # Log the fetched image as an attachment
+    opik_context.update_current_trace(
+        attachments=[
+            Attachment(
+                data=image_bytes,
+                file_name="remote_image.jpg",
+                content_type=content_type,
+            )
+        ]
+    )
+
+    # Process the image...
+    return "Image analyzed!"
+
+# Analyze an image from a URL
+result = analyze_remote_image("https://example.com/image.jpg")
+```
+
+### 记录生成的内容
+
+您还可以记录动态生成的内容，如图表或报告：
+
+```python wordWrap
+from opik import opik_context, track, Attachment
+import json
+
+@track
+def generate_report(data: dict):
+    # Generate a JSON report
+    report_bytes = json.dumps(data, indent=2).encode("utf-8")
+
+    opik_context.update_current_trace(
+        attachments=[
+            Attachment(
+                data=report_bytes,
+                file_name="report.json",
+                content_type="application/json",
+            )
+        ]
+    )
+
+    return "Report generated!"
+```
+
+### 直接使用 Opik 客户端
+
+您也可以直接使用 Opik 客户端通过文件路径和原始字节记录附件：
+
+```python wordWrap
+import opik
+from opik import Attachment
+
+client = opik.Opik()
+
+# Create a trace
+trace = client.trace(
+    name="my-trace",
+    input={"query": "Process this data"},
+    project_name="my-project",
+)
+
+# Log attachment with file path
+span_with_file = client.span(
+    trace_id=trace.id,
+    name="file-attachment-span",
+    attachments=[
+        Attachment(
+            data="/path/to/document.pdf",
+            content_type="application/pdf",
+        )
+    ],
+)
+
+# Log attachment with raw bytes
+binary_data = b"Hello, this is binary content!"
+span_with_bytes = client.span(
+    trace_id=trace.id,
+    name="bytes-attachment-span",
+    attachments=[
+        Attachment(
+            data=binary_data,
+            file_name="data.bin",
+            content_type="application/octet-stream",
+        )
+    ],
+)
+
+client.flush()
+```
+
+附件将上传到 Opik 平台，可以在 UI 中预览和下载。
+
+<Frame>
+  <img src="/img/tracing/attachments.png" />
+</Frame>
+
+<Note>
+为了在 UI 中预览附件，您需要为附件提供支持的内容类型。我们支持以下内容类型：
+
+- 图片：`image/jpeg`、`image/png`、`image/gif` 和 `image/svg+xml`
+- 视频：`video/mp4` 和 `video/webm`
+- 音频：`audio/wav`、`audio/vorbis` 和 `audio/x-wav`
+- 文本：`text/plain` 和 `text/markdown`
+- PDF：`application/pdf`
+- 其他：`application/json` 和 `application/octet-stream`
+
+</Note>
+
+## 以编程方式管理附件
+
+您还可以使用 [`AttachmentClient`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/AttachmentClient.html) 以编程方式管理附件：
+
+```python wordWrap
+import opik
+
+opik_client = opik.Opik()
+attachment_client = opik_client.get_attachment_client()
+
+# Get list of attachments
+attachments_details = attachment_client.get_attachment_list(
+    project_name="my-project",
+    entity_id="some-trace-uuid-7",
+    entity_type="trace"
+)
+
+# Download an attachment
+attachment_data = attachment_client.download_attachment(
+    project_name="my-project",
+    entity_type="trace",
+    entity_id="some-trace-uuid-7",
+    file_name="report.pdf",
+    mime_type="application/pdf"
+)
+
+# Upload a new attachment
+attachment_client.upload_attachment(
+    project_name="my-project",
+    entity_type="trace", 
+    entity_id="some-trace-uuid-7",
+    file_path="/path/to/document.pdf"
+)
+```
+
+## 预览 base64 编码的图片和图片 URL
+
+Opik 会自动检测记录到平台中的 base64 编码图片和 URL，一旦检测到图片，我们将隐藏字符串以使内容更易读，并在 UI 中显示图片。这在追踪视图、数据集视图和实验视图中均受支持。
+
+例如，如果您使用 OpenAI SDK，将图片作为 URL 传递给模型，Opik 将自动检测并在 UI 中显示图片：
+
+```python wordWrap
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# Make sure to wrap the OpenAI client to enable Opik tracing
+client = track_openai(OpenAI())
+
+response = client.chat.completions.create(
+  model="gpt-4o-mini",
+  messages=[
+    {
+      "role": "user",
+      "content": [
+        {"type": "text", "text": "What's in this image?"},
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+          },
+        },
+      ],
+    }
+  ],
+  max_tokens=300,
+)
+
+print(response.choices[0])
+```
+
+<Frame>
+  <img src="/img/tracing/image_trace.png" />
+</Frame>
+
+## 嵌入式附件
+
+当您将 base64 编码的媒体直接嵌入到追踪/span 的 `input`、`output` 或 `metadata` 字段中时，Opik 会自动优化存储和检索以提高性能。
+
+### 工作原理
+
+对于大于 250KB 的 base64 编码内容，Opik 会自动提取并单独存储。这是透明进行的——您无需更改代码。
+
+当您稍后检索追踪或 span 时，默认情况下会自动包含附件。当您不需要附件数据以进行更快的查询时，请使用 `strip_attachments=true` 参数。
+
+### 大小限制
+
+Opik Cloud 支持每个字段最大 **100MB** 的嵌入式附件。此限制适用于 `input`、`output` 或 `metadata` 字段中的单个字符串值。
+
+<Note>
+Base64 编码会使文件大小增加约 33%。例如，75MB 的视频在 base64 编码后约为 100MB。
+</Note>
+
+如果您需要处理更大的文件：
+
+1. **使用 Attachment API** - 使用 `AttachmentClient` 单独上传文件（推荐用于大于 50MB 的文件）。参见[以编程方式管理附件](#managing-attachments-programmatically)
+
+2. **联系我们** - 如果您需要更高的限制，请[联系我们](https://www.comet.com/site/about-us/contact-us/)
+
+3. **自托管 Opik** - 配置您自己的限制。参见[自托管指南](/v1/self-host/overview)
+
+### 最佳实践
+
+- 直接嵌入较小的文件——Opik 可以高效处理
+- 对于大于 50MB 的文件，使用 Attachment API 以获得更好的性能
+- 在查询时如果不需要附件数据，使用 `strip_attachments=true`
+
+## 下载附件
+
+您可以通过两种方式下载附件：
+
+1. **从 UI**：将鼠标悬停在附件上，然后点击下载图标
+2. **以编程方式**：使用上面示例中所示的 `AttachmentClient`
+
+<Tip>
+如果您希望我们支持其他图片格式，请在 [Github](https://github.com/comet-ml/opik/issues/new/choose) 上告诉我们。
+</Tip>

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/ui/button";
 import { AutoGrowTextarea } from "@/ui/auto-grow-textarea";
 import { Label } from "@/ui/label";
+import { useTranslation } from "react-i18next";
 
 type SaveVersionDialogProps = {
   open: boolean;
@@ -27,6 +28,7 @@ const SaveVersionDialog: React.FC<SaveVersionDialogProps> = ({
   isSaving = false,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const [changeDescription, setChangeDescription] = useState("");
 
   useEffect(() => {
@@ -54,25 +56,25 @@ const SaveVersionDialog: React.FC<SaveVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Save new version of {promptName}</DialogTitle>
+          <DialogTitle>{t("saveVersionDialog.title", { name: promptName })}</DialogTitle>
         </DialogHeader>
         <div className="space-y-1.5 pb-4">
-          <Label htmlFor="versionNotes">Version notes</Label>
+          <Label htmlFor="versionNotes">{t("saveVersionDialog.versionNotes")}</Label>
           <AutoGrowTextarea
             id="versionNotes"
             dimension="sm"
             className="comet-body-s"
             value={changeDescription}
             onChange={setChangeDescription}
-            placeholder="Describe what changed in this version"
+            placeholder={t("saveVersionDialog.versionNotesPlaceholder")}
           />
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("saveVersionDialog.cancel")}</Button>
           </DialogClose>
           <Button type="submit" disabled={isSaving} onClick={handleSave}>
-            Save version
+            {t("saveVersionDialog.saveVersion")}
           </Button>
         </DialogFooter>
       </DialogContent>

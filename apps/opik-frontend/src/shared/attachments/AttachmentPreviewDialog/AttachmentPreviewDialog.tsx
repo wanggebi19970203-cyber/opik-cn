@@ -1,5 +1,6 @@
 import React from "react";
 import ReactPlayer from "react-player/lazy";
+import { useTranslation } from "react-i18next";
 
 import { ATTACHMENT_TYPE } from "@/types/attachments";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
@@ -22,6 +23,7 @@ const AttachmentPreviewDialog: React.FC<AttachmentPreviewProps> = ({
   name,
   url,
 }) => {
+  const { t } = useTranslation("common");
   const containerClassName = () => {
     switch (type) {
       case ATTACHMENT_TYPE.VIDEO:
@@ -84,7 +86,7 @@ const AttachmentPreviewDialog: React.FC<AttachmentPreviewProps> = ({
             className="max-h-[80vh] max-w-full"
             preload="auto"
           >
-            Your browser does not support embedded videos.
+            {t("media.browserVideoNotSupported")}
           </video>
         </div>
       );

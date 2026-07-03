@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { DATASET_ITEM_SOURCE, DatasetItemColumn } from "@/types/datasets";
 import useTestSuiteDraftStore, {
@@ -108,15 +109,18 @@ const AddTestSuiteItemPanel: React.FC<AddTestSuiteItemPanelProps> = ({
   onClose,
   columns,
   onOpenSettings,
-}) => (
-  <AddItemPanelWrapper
-    panelId="test-suite-item-panel"
-    formId={ADD_SUITE_ITEM_FORM_ID}
-    title="Add test case"
-    open={open}
-    onClose={onClose}
-    initialWidth={0.4}
-  >
+}) => {
+  const { t } = useTranslation("datasets");
+
+  return (
+    <AddItemPanelWrapper
+      panelId="test-suite-item-panel"
+      formId={ADD_SUITE_ITEM_FORM_ID}
+      title={t("testSuiteItem.addTestCase")}
+      open={open}
+      onClose={onClose}
+      initialWidth={0.4}
+    >
     {({ tags, setHasUnsavedChanges }) => (
       <TestSuiteItemFormContent
         columns={columns}
@@ -127,6 +131,7 @@ const AddTestSuiteItemPanel: React.FC<AddTestSuiteItemPanelProps> = ({
       />
     )}
   </AddItemPanelWrapper>
-);
+  );
+};
 
 export default AddTestSuiteItemPanel;

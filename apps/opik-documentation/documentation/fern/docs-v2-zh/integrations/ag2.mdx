@@ -1,0 +1,180 @@
+---
+description: 从这里开始将 Opik 集成到您的 AG2 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: AG2 | Opik 文档
+og:description: 使用 AG2 构建高级 AI 代理，促进多代理协作并高效处理复杂任务。
+og:site_name: Opik 文档
+og:title: AG2 框架 - 使用 Opik 构建 AI 代理
+title: 使用 Opik 实现 AG2 可观测性
+---
+
+[AG2](https://ag2.ai/) 是一个用于构建 AI 代理并促进多个代理协作解决任务的开源编程框架。
+
+AG2 的主要优势在于其多代理对话模式和自主工作流，使其非常适合需要具有不同角色和能力的专业代理之间协作的复杂任务。
+
+<Frame>
+  <img src="/img/tracing/ag2_integration.png" alt="AG2 追踪" />
+</Frame>
+
+## 快速开始
+
+要使用 AG2 与 Opik 的集成，您需要安装以下软件包：
+
+```bash
+pip install -U "ag2[openai]" opik opentelemetry-sdk opentelemetry-instrumentation-openai opentelemetry-instrumentation-threading opentelemetry-exporter-otlp
+```
+
+此外，您需要设置以下环境变量来配置 OpenTelemetry 集成：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果您使用的是 Opik Cloud，则需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您希望将数据记录到不同的工作区，也可以将 `Comet-Workspace` 参数更新为其他值。
+        </Tip>
+    </Tab>
+    <Tab value="企业部署" title="企业部署">
+        如果您使用的是企业部署版本的 Opik，则需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您希望将数据记录到不同的工作区，也可以将 `Comet-Workspace` 参数更新为其他值。
+        </Tip>
+    </Tab>
+    <Tab value="自托管实例" title="自托管实例">
+
+    如果您是自托管 Opik，则需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 AG2 中使用 Opik
+
+以下示例展示了如何在 AG2 中使用 Opik 集成：
+
+```python
+## 首先配置 OpenTelemetry
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+from opentelemetry.instrumentation.threading import ThreadingInstrumentor
+
+
+def setup_telemetry():
+    """使用 HTTP 导出器配置 OpenTelemetry"""
+    # 创建包含服务名称和其他元数据的资源
+    resource = Resource.create(
+        {
+            "service.name": "ag2-demo",
+            "service.version": "1.0.0",
+            "deployment.environment": "development",
+        }
+    )
+
+    # 使用资源创建 TracerProvider
+    provider = TracerProvider(resource=resource)
+
+    # 使用 OTLPSpanExporter 创建 BatchSpanProcessor
+    processor = BatchSpanProcessor(OTLPSpanExporter())
+    provider.add_span_processor(processor)
+
+    # 设置 TracerProvider
+    trace.set_tracer_provider(provider)
+
+    tracer = trace.get_tracer(__name__)
+
+    # 检测 OpenAI 调用
+    OpenAIInstrumentor().instrument(tracer_provider=provider)
+
+    # AG2 在后台线程中调用 OpenAI，传播上下文以便所有 span 都在同一个追踪中
+    ThreadingInstrumentor().instrument()
+
+    return tracer, provider
+
+
+# 1. 导入我们的代理类
+from autogen import ConversableAgent, LLMConfig
+
+# 2. 为 OpenAI 的 GPT-4o mini 定义 LLM 配置
+#    使用 OPENAI_API_KEY 环境变量
+llm_config = LLMConfig(api_type="openai", model="gpt-4o-mini")
+
+# 3. 在父 span 上下文中创建我们的 LLM 代理
+with llm_config:
+    my_agent = ConversableAgent(
+        name="helpful_agent",
+        system_message="You are a poetic AI assistant, respond in rhyme.",
+    )
+
+
+def main(message):
+    response = my_agent.run(message=message, max_turns=2, user_input=True)
+
+    # 5. 自动迭代聊天并输出到控制台
+    response.process()
+
+    # 6. 打印聊天内容
+    print(response.messages)
+
+    return response.messages
+
+
+if __name__ == "__main__":
+    tracer, provider = setup_telemetry()
+
+    # 4. 使用提示词运行代理
+    with tracer.start_as_current_span(my_agent.name) as agent_span:
+        message = "In one sentence, what's the big deal about AI?"
+
+        agent_span.set_attribute("input", message)  # 手动记录问题
+
+        response = main(message)
+
+        # 手动记录响应
+        agent_span.set_attribute("output", response)
+
+    # 强制刷新所有 span 以确保它们被导出
+    provider = trace.get_tracer_provider()
+    provider.force_flush()
+```
+
+## 进一步改进
+
+如果您希望我们改进此集成，请在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。

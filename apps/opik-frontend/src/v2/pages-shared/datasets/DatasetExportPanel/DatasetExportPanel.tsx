@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
@@ -18,6 +19,7 @@ import ExportJobItem from "./ExportJobItem";
 import { isJobLoading } from "./utils";
 
 const DatasetExportPanel: React.FC = () => {
+  const { t } = useTranslation("datasets");
   const activeJobs = useActiveExportJobs();
   const hasActiveJobs = useHasActiveExportJobs();
   const isPanelExpanded = useIsPanelExpanded();
@@ -56,13 +58,13 @@ const DatasetExportPanel: React.FC = () => {
 
   const getStatusText = () => {
     if (pendingCount > 0) {
-      return "Preparing download";
+      return t("exportPanel.preparingDownload");
     }
     if (completedCount > 0) {
-      return "Download ready";
+      return t("exportPanel.downloadReady");
     }
     // Fallback for failed-only or mixed states
-    return "Preparing download";
+    return t("exportPanel.preparingDownload");
   };
 
   const removeAllJobs = () => {
@@ -134,10 +136,10 @@ const DatasetExportPanel: React.FC = () => {
         open={showCloseConfirm}
         setOpen={setShowCloseConfirm}
         onConfirm={handleConfirmClose}
-        title="Close export panel?"
-        description="You have exports that are still being prepared. Closing this panel will hide the progress and you won't be notified when they complete."
-        confirmText="Close anyway"
-        cancelText="Keep open"
+        title={t("exportPanel.closeExportPanel")}
+        description={t("exportPanel.closeExportPanelDescription")}
+        confirmText={t("exportPanel.closeAnyway")}
+        cancelText={t("exportPanel.keepOpen")}
       />
     </Card>
   );

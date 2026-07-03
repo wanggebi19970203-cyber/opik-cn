@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { PanelLeft } from "lucide-react";
 import { useOpikWorkspaceName } from "@/store/AppStore";
 import { Button } from "@/ui/button";
@@ -23,6 +24,7 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
   canToggle,
   onToggle,
 }) => {
+  const { t } = useTranslation();
   useActiveProjectInitializer();
 
   const isProjectRoute = useRouterState({
@@ -52,7 +54,7 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
         >
           {logo}
           {canToggle && !expanded && (
-            <TooltipWrapper content="Expand sidebar" side="right">
+            <TooltipWrapper content={t("navigation.sidebar.expandSidebar")} side="right">
               <Button
                 variant="outline"
                 size="icon-4xs"
@@ -62,7 +64,7 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
                   onToggle();
                 }}
                 className="absolute bottom-[-9px] right-[-9px] z-10 text-foreground-secondary shadow-sm"
-                aria-label="Expand sidebar"
+                aria-label={t("navigation.sidebar.expandSidebar")}
               >
                 <PanelLeft />
               </Button>
@@ -70,13 +72,13 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
           )}
         </Link>
         {canToggle && expanded && (
-          <TooltipWrapper content="Collapse sidebar" side="right">
+          <TooltipWrapper content={t("navigation.sidebar.collapseSidebar")} side="right">
             <Button
               variant="minimal"
               size="icon-xs"
               onClick={onToggle}
               className="text-light-slate duration-100 animate-in fade-in"
-              aria-label="Collapse sidebar"
+              aria-label={t("navigation.sidebar.collapseSidebar")}
             >
               <PanelLeft />
             </Button>

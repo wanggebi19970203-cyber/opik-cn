@@ -1,0 +1,149 @@
+{
+  "settings": {
+    "title": "Configuration",
+    "description": "Manage workspace settings and preferences",
+    "searchPlaceholder": "Search by name",
+    "sections": {
+      "general": "General",
+      "feedback": "Feedback definitions",
+      "environments": "Environments",
+      "providers": "AI Providers",
+      "preferences": "Workspace preferences"
+    },
+    "actions": {
+      "menuLabel": "Actions menu",
+      "edit": "Edit",
+      "clone": "Clone",
+      "delete": "Delete"
+    },
+    "feedback": {
+      "title": "Feedback definitions",
+      "description": "Define custom feedback metrics for evaluation",
+      "create": "Create feedback definition",
+      "edit": "Edit feedback definition",
+      "delete": "Delete feedback definition",
+      "empty": {
+        "title": "No feedback definitions yet",
+        "description": "Create a feedback definition to start evaluating your agent.",
+        "action": "Add feedback definition"
+      },
+      "columns": {
+        "name": "Feedback score",
+        "description": "Description",
+        "type": "Type",
+        "values": "Values",
+        "created_at": "Created",
+        "created_by": "Created by"
+      },
+      "confirmDialog": {
+        "deleteSingle": {
+          "title": "Delete feedback definition",
+          "description": "This action can't be undone. Existing scored traces won't be affected. Are you sure you want to continue?",
+          "confirmText": "Delete feedback definition"
+        },
+        "deleteBatch": {
+          "title": "Delete feedback definitions",
+          "description": "This action can't be undone. Existing scored traces won't be affected. Are you sure you want to continue?",
+          "confirmText": "Delete feedback definitions"
+        }
+      },
+      "fields": {
+        "name": "Name",
+        "type": "Type",
+        "range": "Range"
+      }
+    },
+    "providers": {
+      "title": "AI Providers",
+      "description": "Configure AI model providers",
+      "add": "Add configuration",
+      "addProvider": "Add provider",
+      "noProvidersTitle": "No AI providers yet",
+      "noSearchResults": "No search results",
+      "noProvidersDescription": "Configure AI providers to use the playground and online scoring.",
+      "readOnlyLabel": "Read-only provider",
+      "columns": {
+        "name": "Name",
+        "base_url": "URL",
+        "created_at": "Created",
+        "provider": "Provider"
+      },
+      "confirmDialog": {
+        "delete": {
+          "title": "Delete configuration",
+          "description": "This configuration is shared across the workspace. Deleting it will remove access for everyone. This action can't be undone. Are you sure you want to proceed?",
+          "confirmText": "Delete configuration"
+        }
+      },
+      "fields": {
+        "name": "Provider name",
+        "apiKey": "API Key",
+        "baseUrl": "Base URL"
+      }
+    },
+    "environments": {
+      "title": "Environments",
+      "create": "Create environment",
+      "noEnvironmentsTitle": "No environments yet",
+      "noEnvironmentsDescription": "Create an environment to organize traces by deployment stage (development, staging, production, …).",
+      "addEnvironment": "Add environment",
+      "atLimitTooltip": "A workspace can have up to {{limit}} environments. Delete an existing one to create a new environment.",
+      "columns": {
+        "name": "Name",
+        "description": "Description",
+        "created_at": "Created",
+        "created_by": "Created by"
+      },
+      "confirmDialog": {
+        "deleteSingle": {
+          "title": "Delete environment",
+          "description": "This action can't be undone. Existing traces and spans will keep their environment value. Are you sure you want to continue?",
+          "confirmText": "Delete environment"
+        },
+        "deleteBatch": {
+          "title": "Delete environments",
+          "description": "This action can't be undone. Existing traces and spans will keep their environment values. Are you sure you want to continue?",
+          "confirmText": "Delete environments"
+        }
+      }
+    },
+    "workspacePreferences": {
+      "threadTimeout": {
+        "name": "Thread online scoring rule cooldown period",
+        "notSet": "Not set",
+        "dialogTitle": "Edit thread online scoring rule cooldown period",
+        "dialogDescription": "Set how long to wait after the last activity in a thread before running thread-level online scoring rules. This gives conversations time to settle before automatic evaluation.",
+        "formLabel": "Cooldown period",
+        "selectPlaceholder": "Select timeout duration",
+        "validationError": "Please select a valid timeout duration (maximum 7 days)",
+        "invalidDuration": "Invalid duration",
+        "updateButton": "Update cooldown period",
+        "toastTitle": "Thread cooldown period updated",
+        "toastDescription": "Thread online scoring rules will wait {{duration}} after the last activity before evaluating threads.",
+        "goToProjects": "Go to projects"
+      },
+      "truncationToggle": {
+        "name": "Data truncation in tables",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "enableTitle": "Enable data truncation?",
+        "disableTitle": "Disable data truncation?",
+        "enableDescription": "Truncating large data improves performance and enables full pagination options. You can change this anytime.",
+        "disableDescription": "Disabling truncation will display full content in tables. This may slow performance and limit pagination to {{limit}} items per page.",
+        "performanceImpactTitle": "Performance impact",
+        "performanceImpactDescription": "Large amounts of data may cause slower page loading and increased memory usage.",
+        "enableButton": "Enable truncation",
+        "disableButton": "Disable truncation",
+        "toastDisabledTitle": "Data truncation disabled",
+        "toastDisabledDescription": "Pagination has been limited to prevent performance issues with large data.",
+        "toastEnabledTitle": "Data truncation enabled",
+        "toastEnabledDescription": "Full pagination options are now available."
+      },
+      "columns": {
+        "name": "Preference",
+        "value": "Value"
+      },
+      "cancel": "Cancel"
+    }
+  }
+}

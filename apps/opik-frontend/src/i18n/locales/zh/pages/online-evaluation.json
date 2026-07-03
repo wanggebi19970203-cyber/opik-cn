@@ -1,0 +1,144 @@
+{
+  "onlineEvaluation": {
+    "title": "在线评估",
+    "description": "实时监控和评估模型性能",
+    "empty": {
+      "title": "暂无在线评估",
+      "description": "创建规则自动评分模型输出。\n定义标准，实时评估响应，跟踪质量变化。",
+      "action": "创建您的第一条规则"
+    },
+    "fields": {
+      "name": "规则名称",
+      "metric": "指标",
+      "sampling": "采样率"
+    },
+    "columns": {
+      "name": "名称",
+      "id": "ID",
+      "projects": "项目",
+      "lastUpdated": "最后更新",
+      "createdBy": "创建者",
+      "created": "创建时间",
+      "samplingRate": "采样率",
+      "scope": "范围",
+      "status": "状态"
+    },
+    "actions": {
+      "view": "查看规则",
+      "run": "立即运行",
+      "enable": "启用规则",
+      "disable": "禁用规则",
+      "createRule": "创建规则",
+      "showLogs": "查看日志",
+      "clone": "克隆"
+    },
+    "search": {
+      "byId": "按 ID 搜索"
+    },
+    "noData": {
+      "noRulesYet": "暂无规则",
+      "noSearchResults": "无搜索结果"
+    },
+    "confirmDialog": {
+      "deleteSingle": {
+        "title": "删除评估规则",
+        "description": "删除在线评估规则将停止对所有新 Trace 的评分。已评分的 Trace 不受影响。此操作无法撤销。确定要继续吗？\n\n提示：如需暂停评分而不删除，请禁用该规则。",
+        "confirmText": "删除评估规则"
+      },
+      "deleteBatch": {
+        "title": "删除评估规则",
+        "description": "删除在线评估规则将停止对所有新 Trace 的评分。已评分的 Trace 不受影响。此操作无法撤销。确定要继续吗？\n\n提示：如需暂停评分而不删除，请禁用这些规则。",
+        "confirmText": "删除评估规则"
+      }
+    },
+    "addEditRule": {
+      "editTitle": "编辑规则",
+      "cloneTitle": "克隆评估规则",
+      "createTitle": "创建新规则",
+      "updateSubmit": "更新规则",
+      "createSubmit": "创建规则",
+      "nameLabel": "名称",
+      "namePlaceholder": "规则名称",
+      "scopeLabel": "范围",
+      "scopeTooltip": "选择评估规则是对整个线程评分、对每个单独的 Trace 评分还是对每个 Span 评分。线程级规则评估整个对话，Trace 级规则一次评估一个模型响应，Span 级规则评估 Trace 中的各个操作。",
+      "selectScopePlaceholder": "选择范围",
+      "enableRule": "启用规则",
+      "enableRuleDescription": "启用或禁用此评估规则",
+      "typeLabel": "类型",
+      "llmAsJudge": "LLM-as-judge",
+      "codeMetric": "代码指标",
+      "codeMetricDisabledTooltip": "代码指标无法更新。此环境不支持此功能",
+      "cancel": "取消",
+      "goToProject": "前往项目",
+      "loseChangesTitle": "您即将丢失更改",
+      "loseChangesDescription": "如果更改评估范围，当前规则设置（包括提示词、模型和变量映射）将被重置。\n确定要继续吗？",
+      "resetAndContinue": "重置并继续"
+    },
+    "pythonCodeRule": {
+      "pythonCodeLabel": "Python 代码",
+      "variablesDescription": "所有变量均基于代码片段自动添加。它们从 `score` 方法中提取，且为必填项。",
+      "variablesError": "代码解析错误。无法提取变量。"
+    },
+    "ruleFiltering": {
+      "filteringAndSampling": "筛选与采样",
+      "traceExplainer": "应用筛选和采样以选择哪些 Trace 将被此规则评估",
+      "threadExplainer": "使用采样率控制此规则对线程的应用频率",
+      "spanExplainer": "应用筛选和采样以选择哪些 Span 将被此规则评估",
+      "samplingDescription": "使用采样率控制此规则的应用频率。您还可以添加筛选条件以根据属性选择特定的{{entityType}}。如果未定义任何条件，规则将评估所有{{entityType}}。",
+      "filtersLabel": "筛选条件",
+      "addFilter": "添加筛选",
+      "samplingRateLabel": "采样率",
+      "samplingRateTooltip": "评估的 Trace 百分比",
+      "isEmpty": "为空",
+      "isNotEmpty": "不为空",
+      "selectScore": "选择分数"
+    },
+    "evaluateButton": {
+      "noRulesTooltip": "此项目未分配在线评估规则",
+      "evaluate": "评估"
+    },
+    "noRulesPage": {
+      "title": "自动化您的评分",
+      "description": "自动化规则是一种预定义逻辑，基于设定标准实时对 LLM 输出进行评分，确保高效且一致的性能评估。",
+      "readDocumentation": "阅读文档",
+      "createFirstRule": "创建您的第一条规则"
+    },
+    "projectsSelectBox": {
+      "selectProjects": "选择项目",
+      "allProjects": "所有项目",
+      "selectAProject": "选择一个项目",
+      "clearProjectSelection": "清除项目选择"
+    },
+    "ruleEnabledCell": {
+      "enabled": "已启用",
+      "disabled": "已禁用"
+    },
+    "ruleRowActions": {
+      "actionsMenu": "操作菜单",
+      "edit": "编辑",
+      "clone": "克隆",
+      "delete": "删除",
+      "deleteTitle": "删除评估规则",
+      "deleteDescription": "删除在线评估规则将停止对所有新 Trace 的评分。已评分的 Trace 不受影响。此操作无法撤销。确定要继续吗？\n\n提示：如需暂停评分而不删除，请禁用该规则。",
+      "deleteConfirmText": "删除评估规则"
+    },
+    "rulesActionsPanel": {
+      "deleteTooltip": "删除",
+      "deleteTitle": "删除评估规则",
+      "deleteDescription": "删除在线评估规则将停止对所有新 Trace 的评分。已评分的 Trace 不受影响。此操作无法撤销。确定要继续吗？\n\n提示：如需暂停评分而不删除，请禁用这些规则。",
+      "deleteConfirmText": "删除评估规则"
+    },
+    "runEvaluationDialog": {
+      "title": "运行在线评估规则",
+      "description": "选择要应用于所选{{entityLabel}}的在线评估规则。每条规则将根据其配置生成新的分数。",
+      "createNewRule": "创建新规则",
+      "noRulesMessage": "此项目未分配在线评估规则",
+      "noRulesDescription": "创建新规则，或在在线评估页面分配现有规则",
+      "showPrompt": "显示提示词",
+      "hidePrompt": "隐藏提示词",
+      "cancel": "取消",
+      "evaluating": "评估中...",
+      "evaluateEntity": "评估{{entityLabel}}"
+    }
+  }
+}

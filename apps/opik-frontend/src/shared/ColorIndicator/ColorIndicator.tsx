@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
@@ -38,6 +39,7 @@ const ColorIndicator: React.FC<ColorIndicatorProps> = ({
   className,
   readOnly = false,
 }) => {
+  const { t } = useTranslation("common");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { updateColor, previewColor, setPreviewColor } =
     useUpdateColorMapping();
@@ -94,7 +96,7 @@ const ColorIndicator: React.FC<ColorIndicatorProps> = ({
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipPortal>
-          <TooltipContent>Click to change color</TooltipContent>
+          <TooltipContent>{t("shared.clickToChangeColor")}</TooltipContent>
         </TooltipPortal>
       </Tooltip>
       <PopoverContent

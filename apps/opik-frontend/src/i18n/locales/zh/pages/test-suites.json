@@ -1,0 +1,49 @@
+{
+  "testSuites": {
+    "title": "数据集",
+    "description": "数据集是用于评估 LLM 应用的输入和预期输出的集合。",
+    "readMore": "了解更多",
+    "searchPlaceholder": "按名称搜索",
+    "selectType": "选择类型",
+    "create": "创建测试套件",
+    "edit": "编辑测试套件",
+    "delete": "删除测试套件",
+    "empty": {
+      "title": "暂无数据集",
+      "description": "创建您的第一个测试套件开始使用。",
+      "action": "创建您的第一个测试套件",
+      "noSearchResults": "无搜索结果"
+    },
+    "fields": {
+      "name": "测试套件名称",
+      "dataset": "数据集",
+      "metrics": "指标"
+    },
+    "columns": {
+      "name": "名称",
+      "type": "类型",
+      "id": "ID",
+      "description": "描述",
+      "itemCount": "项目数",
+      "tags": "标签",
+      "mostRecentExperiment": "最近实验",
+      "mostRecentOptimization": "最近优化",
+      "lastUpdated": "最后更新",
+      "created": "创建时间",
+      "createdBy": "创建者",
+      "dataset": "数据集",
+      "metrics": "指标",
+      "lastRun": "最后运行",
+      "status": "状态"
+    },
+    "actions": {
+      "view": "查看测试套件",
+      "run": "运行测试套件",
+      "results": "查看结果"
+    },
+    "columnsPage": {
+      "testSuite": "测试套件",
+      "dataset": "数据集"
+    }
+  }
+}

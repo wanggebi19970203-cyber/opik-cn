@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import get from "lodash/get";
+import i18next from "i18next";
 import api, { DATASETS_REST_ENDPOINT } from "@/api/api";
 import { DatasetVersion } from "@/types/datasets";
 import { useToast } from "@/ui/use-toast";
@@ -39,18 +40,18 @@ const useEditDatasetVersionMutation = () => {
         Array.isArray(errors) && errors.length > 0
           ? errors.join("; ")
           : get(error, ["response", "data", "message"], error.message) ||
-            "Failed to update version. Please try again.";
+            i18next.t("common:messages.failedToUpdateVersion");
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });
     },
     onSuccess: (_, { datasetId }) => {
       toast({
-        title: "Version updated",
-        description: "The version has been updated successfully.",
+        title: i18next.t("common:messages.versionUpdated"),
+        description: i18next.t("common:messages.versionUpdatedDescription"),
       });
 
       queryClient.invalidateQueries({

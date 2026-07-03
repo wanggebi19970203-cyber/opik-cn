@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ColumnPinningState } from "@tanstack/react-table";
 
 import { convertColumnDataToColumn } from "@/lib/table";
@@ -57,6 +58,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 };
 
 const AIProvidersTab = () => {
+  const { t } = useTranslation();
   const {
     permissions: { canUpdateAIProviders },
   } = usePermissions();
@@ -121,9 +123,9 @@ const AIProvidersTab = () => {
   };
 
   const getNoDataLabel = () => {
-    if (search !== "") return "No search results";
-    if (!canUpdateAIProviders) return "No AI providers configured yet.";
-    return "Configure AI providers to use the playground and online scoring.";
+    if (search !== "") return t("settings.providers.noSearchResults");
+    if (!canUpdateAIProviders) return t("settings.providers.noProvidersTitle");
+    return t("settings.providers.noProvidersDescription");
   };
 
   if (isPending) {
@@ -141,12 +143,12 @@ const AIProvidersTab = () => {
           searchText={search}
           setSearchText={setSearch}
           className="w-[320px]"
-          placeholder="Search by name"
+          placeholder={t("settings.searchPlaceholder")}
           dimension="sm"
         />
         {canUpdateAIProviders && (
           <Button onClick={handleAddConfigurationClick} size="sm">
-            Add configuration
+            {t("settings.providers.add")}
           </Button>
         )}
       </div>
@@ -159,7 +161,7 @@ const AIProvidersTab = () => {
           <DataTableNoData title={getNoDataLabel()}>
             {search === "" && canUpdateAIProviders && (
               <Button variant="link" onClick={handleAddConfigurationClick}>
-                Add configuration
+                {t("settings.providers.add")}
               </Button>
             )}
           </DataTableNoData>

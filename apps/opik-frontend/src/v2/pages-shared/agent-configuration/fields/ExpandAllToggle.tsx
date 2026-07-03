@@ -1,5 +1,6 @@
 import React from "react";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -14,7 +15,8 @@ const ExpandAllToggle: React.FC<ExpandAllToggleProps> = ({
   controller,
   size = "icon-2xs",
 }) => {
-  const label = controller.allExpanded ? "Collapse all" : "Expand all";
+  const { t } = useTranslation("agent-optimization");
+  const label = controller.allExpanded ? t("agentOptimization.expandAllToggle.collapseAll") : t("agentOptimization.expandAllToggle.expandAll");
   const onClick = () =>
     controller.allExpanded ? controller.collapseAll() : controller.expandAll();
   const Icon = controller.allExpanded ? FoldVertical : UnfoldVertical;

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 import { FormErrorSkeleton } from "@/ui/form";
 import { PopoverClearFooter } from "@/shared/filter-chips/chips/PopoverClearFooter";
 import FilterOperatorSelect, {
@@ -30,12 +31,15 @@ interface TimeChipPopoverContentProps {
   onClear: () => void;
 }
 
-const OPERATOR_OPTIONS: FilterOperatorOption<TimeChipMode>[] = [
-  { value: "exactly", label: "Is" },
-  { value: "before", label: "Is before" },
-  { value: "after", label: "Is after" },
-  { value: "between", label: "Is between" },
-];
+const useOperatorOptions = (): FilterOperatorOption<TimeChipMode>[] => {
+  const { t } = useTranslation("common");
+  return [
+    { value: "exactly", label: t("timeChip.is") },
+    { value: "before", label: t("timeChip.isBefore") },
+    { value: "after", label: t("timeChip.isAfter") },
+    { value: "between", label: t("timeChip.isBetween") },
+  ];
+};
 
 const START_OF_DAY: SimpleTime = { hour: 0, minute: 0 };
 const END_OF_DAY: SimpleTime = { hour: 23, minute: 59 };
@@ -101,6 +105,9 @@ const TimeChipPopoverContent: React.FC<TimeChipPopoverContentProps> = ({
   onApply,
   onClear,
 }) => {
+  const { t } = useTranslation("common");
+  const operatorOptions = useOperatorOptions();
+
   const [mode, setMode] = useState<TimeChipMode>(
     value?.mode ?? TIME_DEFAULT_MODE,
   );
@@ -176,12 +183,12 @@ const TimeChipPopoverContent: React.FC<TimeChipPopoverContentProps> = ({
   const draftHint = (() => {
     const incomplete = (s: Slot) => Boolean(s.date) !== Boolean(s.time);
     if (incomplete(slotA) || (mode === "between" && incomplete(slotB))) {
-      return "Enter a time to apply";
+      return t("timeChip.enterTimeToApply");
     }
     if (mode === "between") {
       const aReady = Boolean(slotA.date && slotA.time);
       const bReady = Boolean(slotB.date && slotB.time);
-      if (aReady !== bReady) return "Complete the range to apply";
+      if (aReady !== bReady) return t("timeChip.completeRangeToApply");
     }
     return null;
   })();
@@ -191,7 +198,7 @@ const TimeChipPopoverContent: React.FC<TimeChipPopoverContentProps> = ({
       <FilterOperatorSelect
         fieldLabel={fieldLabel}
         value={mode}
-        options={OPERATOR_OPTIONS}
+        options={operatorOptions}
         onChange={handleModeChange}
         onCloseAutoFocus={handleOperatorMenuClose}
       />
@@ -199,7 +206,7 @@ const TimeChipPopoverContent: React.FC<TimeChipPopoverContentProps> = ({
       {mode === "between" ? (
         <>
           <SlotRow
-            label="Start"
+            label={t("timeChip.start")}
             slot={slotA}
             autoFocus
             dateInputRef={dateInputARef}
@@ -208,7 +215,7 @@ const TimeChipPopoverContent: React.FC<TimeChipPopoverContentProps> = ({
           />
           <div className="flex flex-col gap-1">
             <SlotRow
-              label="End"
+              label={t("timeChip.end")}
               slot={slotB}
               invalid={isRangeInverted}
               dateInputRef={dateInputBRef}
@@ -217,7 +224,7 @@ const TimeChipPopoverContent: React.FC<TimeChipPopoverContentProps> = ({
             />
             {isRangeInverted && (
               <FormErrorSkeleton className="comet-body-xs pl-[39px]">
-                End must be after start
+                {t("timeChip.endMustBeAfterStart")}
               </FormErrorSkeleton>
             )}
           </div>

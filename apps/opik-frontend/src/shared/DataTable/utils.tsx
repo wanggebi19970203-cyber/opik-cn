@@ -11,6 +11,7 @@ import {
 import { ChevronDown, ChevronUp } from "lucide-react";
 import isString from "lodash/isString";
 import get from "lodash/get";
+import i18n from "@/i18n";
 
 import { Checkbox } from "@/ui/checkbox";
 import { Button } from "@/ui/button";
@@ -220,7 +221,7 @@ export const generateSelectColumDef = <TData,>(meta?: {
           onCheckedChange={(value) =>
             context.table.toggleAllPageRowsSelected(!!value)
           }
-          aria-label="Select all"
+          aria-label={i18n.t("common:table.selectAll")}
         />
       </HeaderWrapper>
     ),
@@ -247,7 +248,7 @@ export const generateSelectColumDef = <TData,>(meta?: {
               shiftCheckboxClickHandler(event, context, previousSelectedRowID);
               previousSelectedRowID = context.row.id;
             }}
-            aria-label="Select row"
+            aria-label={i18n.t("common:table.selectRow")}
           />
         </CellWrapper>
       );
@@ -326,7 +327,7 @@ export const renderCustomRow = <TData,>(
               });
             }}
           >
-            Load {DEFAULT_ITEMS_PER_GROUP} more items
+            {i18n.t("common:table.loadMoreItems", { count: DEFAULT_ITEMS_PER_GROUP })}
           </Button>
         </td>
       </tr>
@@ -345,7 +346,7 @@ export const renderCustomRow = <TData,>(
       <tr key={rowId} className="border-b">
         <td colSpan={row.getAllCells().length}>
           <div className="comet-body-s flex h-11 items-center justify-center gap-1 text-light-slate">
-            We’ve encountered an error fetching your data
+            {i18n.t("common:messages.fetchDataError")}
             {isString(error) && (
               <ExplainerIcon description={error}></ExplainerIcon>
             )}
@@ -387,7 +388,7 @@ export const generateDataRowCellDef = <
             disabled={!context.row.getCanSelect()}
             onCheckedChange={(value) => context.row.toggleSelected(!!value)}
             onClick={(event) => checkboxClickHandler(event, context)}
-            aria-label="Select row"
+            aria-label={i18n.t("common:table.selectRow")}
           />
           <div className="min-w-1 max-w-full">
             {flexRender(
@@ -440,7 +441,7 @@ export const generateGroupedRowCellDef = <TData, TValue>(
               disabled={!row.getCanSelect()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
               onClick={(event) => checkboxClickHandler(event, context)}
-              aria-label="Select row"
+              aria-label={i18n.t("common:table.selectRow")}
             />
             <Button
               variant="minimal"

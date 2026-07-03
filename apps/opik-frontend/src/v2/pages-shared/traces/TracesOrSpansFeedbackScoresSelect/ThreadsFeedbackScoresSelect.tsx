@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import sortBy from "lodash/sortBy";
 
 import { TRACE_DATA_TYPE } from "@/hooks/useTracesOrSpansList";
@@ -20,9 +21,11 @@ const ThreadsFeedbackScoresSelect: React.FC<
   projectId,
   value,
   onValueChange,
-  placeholder = "Select score",
+  placeholder,
   className,
 }) => {
+  const { t } = useTranslation("tracing");
+  const resolvedPlaceholder = placeholder ?? t("feedbackScoresSelect.selectScore");
   const { data: feedbackScoresNames } = useThreadsFeedbackScoresNames({
     projectId,
   });
@@ -42,7 +45,7 @@ const ThreadsFeedbackScoresSelect: React.FC<
       value={value}
       onChange={onValueChange}
       options={options}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       className={className}
     />
   );

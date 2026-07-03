@@ -26,17 +26,17 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @jakarta.inject.Inject)
-@Tag(name = "Redirect", description = "Redirects for SDK generated links")
+@Tag(name = "重定向", description = "SDK生成链接的重定向")
 public class RedirectResource {
 
     private final @NonNull RedirectService redirectService;
 
     @GET
     @Path("/projects")
-    @Operation(operationId = "projectsRedirect", summary = "Create project redirect url", description = "Create project redirect url", responses = {
-            @ApiResponse(responseCode = "303", description = "Redirect"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "projectsRedirect", summary = "创建项目重定向URL", description = "创建项目重定向URL", responses = {
+            @ApiResponse(responseCode = "303", description = "重定向"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     public Response projectsRedirect(@QueryParam("trace_id") @NotNull UUID traceId,
             @QueryParam("workspace_name") String workspaceName,
@@ -50,10 +50,10 @@ public class RedirectResource {
 
     @GET
     @Path("/datasets")
-    @Operation(operationId = "datasetsRedirect", summary = "Create dataset redirect url", description = "Create dataset redirect url", responses = {
-            @ApiResponse(responseCode = "303", description = "Redirect"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "datasetsRedirect", summary = "创建数据集重定向URL", description = "创建数据集重定向URL", responses = {
+            @ApiResponse(responseCode = "303", description = "重定向"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     public Response datasetsRedirect(@QueryParam("dataset_id") @NotNull UUID datasetId,
             @QueryParam("workspace_name") String workspaceName,
@@ -67,10 +67,10 @@ public class RedirectResource {
 
     @GET
     @Path("/experiments")
-    @Operation(operationId = "experimentsRedirect", summary = "Create experiment redirect url", description = "Create experiment redirect url", responses = {
-            @ApiResponse(responseCode = "303", description = "Redirect"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "experimentsRedirect", summary = "创建实验重定向URL", description = "创建实验重定向URL", responses = {
+            @ApiResponse(responseCode = "303", description = "重定向"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     public Response experimentsRedirect(@QueryParam("dataset_id") @NotNull UUID datasetId,
             @QueryParam("experiment_id") @NotNull UUID experimentId,
@@ -84,10 +84,10 @@ public class RedirectResource {
 
     @GET
     @Path("/optimizations")
-    @Operation(operationId = "optimizationsRedirect", summary = "Create optimization redirect url", description = "Create optimization redirect url", responses = {
-            @ApiResponse(responseCode = "303", description = "Redirect"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "optimizationsRedirect", summary = "创建优化重定向URL", description = "创建优化重定向URL", responses = {
+            @ApiResponse(responseCode = "303", description = "重定向"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     public Response optimizationsRedirect(@QueryParam("dataset_id") @NotNull UUID datasetId,
             @QueryParam("optimization_id") @NotNull UUID optimizationId,

@@ -1,0 +1,164 @@
+---
+description: 开始将 Opik 集成到基于 Anannas AI 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Anannas AI | Opik 文档
+og:description: 了解如何使用 OpenAI SDK 封装器将 Anannas AI 与 Opik 集成，记录所有 LLM 调用以实现全面可观测性。
+og:site_name: Opik 文档
+og:title: 将 Anannas AI 与 Opik 集成实现统一 LLM 访问
+title: 使用 Opik 对 Anannas AI 进行可观测性监控
+---
+
+[Anannas AI](https://anannas.ai) 是一个统一推理网关，通过兼容 OpenAI 的 API 提供对 500+ 模型的访问（包括 OpenAI、Anthropic、Mistral、Gemini、DeepSeek 等）。
+
+## 网关概述
+
+Anannas AI 提供统一接口，通过单一兼容 OpenAI 的 API 访问数百个 LLM 模型，使您可以轻松切换不同提供商和模型，无需修改代码。
+
+**核心特性：**
+- **500+ 模型**：单一 API 访问 OpenAI、Anthropic、Mistral、Gemini、DeepSeek 等提供商的模型
+- **兼容 OpenAI 的 API**：可直接替代 OpenAI SDK，使用标准请求/响应格式
+- **提供商健康监控**：在出现故障或性能下降时自动进行故障转移路由
+- **低开销**：约 0.48ms 延迟开销，5% 加价
+- **BYOK 支持**：企业部署可使用自有密钥
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=anannas&utm_campaign=opik) 提供 Opik 平台的托管版本。[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=anannas&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=anannas&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云托管 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Anannas AI
+
+您需要一个 Anannas AI API 密钥。可从 [Anannas AI](https://anannas.ai) 获取。
+
+将其设置为环境变量：
+
+```bash
+export ANANNAS_API_KEY="YOUR_ANANNAS_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "ANANNAS_API_KEY" not in os.environ:
+    os.environ["ANANNAS_API_KEY"] = getpass.getpass("Enter your Anannas AI API key: ")
+```
+
+## 记录 LLM 调用
+
+由于 Anannas AI 提供兼容 OpenAI 的 API，我们可以使用 [Opik OpenAI SDK 封装器](/integrations/openai) 自动将 Anannas AI 调用记录为 Opik 中的生成记录。
+
+### 简单调用示例
+
+```python
+import os
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 Anannas AI 的 base URL 创建 OpenAI 客户端
+client = OpenAI(
+    api_key=os.environ["ANANNAS_API_KEY"],
+    base_url="https://api.anannas.ai/v1"
+)
+
+# 使用 Opik 追踪封装客户端
+client = track_openai(client, project_name="anannas-integration-demo")
+
+# 发起聊天补全请求
+response = client.chat.completions.create(
+    model="anthropic/claude-3-5-sonnet",  # 可使用 500+ 模型中的任意一个
+    messages=[
+        {"role": "system", "content": "You are a knowledgeable AI assistant."},
+        {"role": "user", "content": "What are some interesting facts about tropical fruits?"}
+    ]
+)
+
+# 打印助手回复
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 配合 `@track` 装饰器使用
+
+如果您的 LLM 流程包含多个步骤，可以使用 `@track` 装饰器记录每个步骤的追踪信息。如果在某个步骤中调用了 Anannas AI，该 LLM 调用将与对应的步骤关联：
+
+```python
+import os
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 Anannas AI 的 base URL 创建并封装 OpenAI 客户端
+client = OpenAI(
+    api_key=os.environ["ANANNAS_API_KEY"],
+    base_url="https://api.anannas.ai/v1"
+)
+client = track_openai(client)
+
+@track
+def summarize_text(text: str):
+    response = client.chat.completions.create(
+        model="openai/gpt-4o",
+        messages=[
+            {"role": "system", "content": "You create concise summaries of text content."},
+            {"role": "user", "content": f"Please summarize this text:\n{text}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def analyze_sentiment(summary: str):
+    response = client.chat.completions.create(
+        model="openai/gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You perform sentiment analysis on text."},
+            {"role": "user", "content": f"What is the sentiment of this summary:\n{summary}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track(project_name="anannas-integration-demo")
+def analyze_text(text: str):
+    # 第一次 LLM 调用：总结文本
+    summary = summarize_text(text)
+    
+    # 第二次 LLM 调用：分析摘要的情感倾向
+    sentiment = analyze_sentiment(summary)
+    
+    return {
+        "summary": summary,
+        "sentiment": sentiment
+    }
+
+# 使用示例
+text_to_analyze = "Anannas AI provides a unified gateway to access hundreds of LLM models with built-in observability and automatic fallback routing."
+result = analyze_text(text_to_analyze)
+```
+
+追踪信息将显示带有层级 span 的嵌套 LLM 调用。
+
+## 进一步改进
+
+如果您对 Anannas AI 集成有任何改进建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

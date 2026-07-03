@@ -1,0 +1,289 @@
+---
+headline: 快速开始 | Opik 文档
+og:description: 有效评估您的 AI 模型。学习使用 Opik 的 TypeScript SDK 在 15 分钟内创建数据集并分析结果。
+og:site_name: Opik 文档
+og:title: AI 评估快速入门指南 - Opik
+title: 快速开始
+---
+
+**仅需 15 分钟**，学习如何使用 Opik 的 TypeScript SDK 评估您的 AI 模型。本指南将带您完成创建数据集、定义评估任务以及使用内置指标分析结果的全过程——帮助您开始对 AI 系统做出数据驱动的决策。
+
+<Tip>
+  在 Opik 2.0 中，数据集和实验是项目级别的，而非工作区级别的。请向 `getOrCreateDataset()` 和 `evaluate()` 传递 `projectName` 参数，以关联到正确的项目。
+</Tip>
+
+## 完整示例
+
+💡 **复制、粘贴并运行**以下完整示例：
+
+1. 创建用于 AI 评估的结构化数据集
+2. 使用 OpenAI 最新模型定义评估任务
+3. 使用内置指标运行评估并分析结果
+
+```typescript
+import { config } from "dotenv";
+import { evaluate, EvaluationTask, Opik, ExactMatch } from "opik";
+import OpenAI from "openai";
+
+// Load environment variables from .env file
+config();
+
+// Initialize the OpenAI client
+const client = new OpenAI();
+
+// Create an Opik client
+const opik = new Opik();
+
+// define the type for DatasetItem
+type DatasetItem = {
+  input: string;
+  expected_output: string;
+  metadata: {
+    category: string;
+    difficulty: string;
+    version: number;
+  };
+};
+
+// Retrieve the existing dataset by name
+const retrievedDataset = await opik.getOrCreateDataset<DatasetItem>(
+  "testDataset",
+  "Evaluation dataset",
+  "my-project"
+);
+
+// Add items to a dataset
+const itemsToAdd = [
+  {
+    input: "What is machine learning?",
+    expected_output:
+      "Machine learning is a type of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed.",
+    metadata: { category: "AI basics", difficulty: "beginner", version: 1 },
+  },
+];
+await retrievedDataset.insert(itemsToAdd);
+
+// Define a task that takes a dataset item and returns a result
+const llmTask: EvaluationTask<DatasetItem> = async (datasetItem) => {
+  const { input } = datasetItem;
+
+  const response = await client.responses.create({
+    model: "gpt-5-nano",
+    instructions: "You are a coding assistant that talks like a pirate",
+    input,
+  });
+
+  return { output: response.output_text };
+};
+
+// Run evaluation
+const result = await evaluate({
+  dataset: retrievedDataset,
+  task: llmTask,
+  scoringMetrics: [new ExactMatch()],
+  experimentName: "My First Evaluation",
+  projectName: "my-project",
+
+  // map the output of the task and dataset item data to the expected metric inputs
+  scoringKeyMapping: {
+    expected: "expected_output",
+  },
+});
+
+console.log(`Experiment ID: ${result.experimentId}`);
+console.log(`Experiment Name: ${result.experimentName}`);
+console.log(`Total test cases: ${result.testResults.length}`);
+```
+
+## 分步详解
+
+### 1. 环境配置
+
+```typescript
+import { config } from "dotenv";
+import { evaluate, EvaluationTask, Opik, ExactMatch } from "opik";
+import OpenAI from "openai";
+
+// Load environment variables from .env file
+config();
+
+// Initialize the OpenAI client
+const client = new OpenAI();
+
+// Create an Opik client
+const opik = new Opik();
+```
+
+本节导入必要的依赖并配置评估环境。`dotenv` 包从 `.env` 文件中安全加载您的 API 密钥：
+
+```
+OPENAI_API_KEY=your_openai_api_key
+OPIK_API_KEY=your_opik_api_key
+OPIK_PROJECT_NAME=your_opik_project_name
+OPIK_WORKSPACE=your_opik_workspace
+```
+
+### 2. 构建结构化评估数据集
+
+```typescript
+// Create an Opik client
+const opik = new Opik();
+
+// define the type for DatasetItem
+type DatasetItem = {
+  input: string;
+  expected_output: string;
+  metadata: {
+    category: string;
+    difficulty: string;
+    version: number;
+  };
+};
+
+// Retrieve the existing dataset by name
+const retrievedDataset = await opik.getOrCreateDataset<DatasetItem>(
+  "testDataset",
+  "Evaluation dataset",
+  "my-project"
+);
+
+// Add items to a dataset
+const itemsToAdd = [
+  {
+    input: "What is machine learning?",
+    expected_output:
+      "Machine learning is a type of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed.",
+    metadata: { category: "AI basics", difficulty: "beginner", version: 1 },
+  },
+];
+await retrievedDataset.insert(itemsToAdd);
+```
+
+本节创建具有完整 TypeScript 支持的评估数据集：
+
+- **初始化客户端**：连接到 Opik 评估平台
+- **定义数据结构**：使用 TypeScript 类型定义数据集项，获得完整的 IDE 自动补全支持
+- **检索或创建**：使用 `getOrCreateDataset` 无缝处理已有数据集或创建新数据集
+- **添加评估项**：使用输入、预期输出和丰富的元数据构建测试用例，便于筛选和分析
+
+> 📌 **最佳实践**：为每个条目添加描述性元数据，以便在 Opik UI 中进行强大的筛选和分析。
+
+### 3. 定义评估任务
+
+```typescript
+// Define a task that takes a dataset item and returns a result
+const llmTask: EvaluationTask<DatasetItem> = async (datasetItem) => {
+  const { input } = datasetItem;
+
+  const response = await client.responses.create({
+    model: "gpt-5-nano", // Use any model you need to evaluate
+    instructions: "You are a coding assistant that talks like a pirate",
+    input,
+  });
+
+  return { output: response.output_text };
+};
+```
+
+您的评估任务：
+
+- **接收数据集项**：自动处理数据集中的每个条目
+- **集成任意 API**：支持 OpenAI、Anthropic、自定义模型或任何 API
+- **返回结构化输出**：将结果打包为可直接评估的格式
+
+### 4. 运行评估
+
+```typescript
+// Run evaluation with a built-in ExactMatch metric
+const result = await evaluate({
+  dataset: retrievedDataset,
+  task: llmTask,
+  scoringMetrics: [new ExactMatch()], // Use multiple metrics for comprehensive evaluation
+  experimentName: "My First Evaluation",
+  projectName: "my-project",
+
+  // map the output of the task and dataset item data to the expected metric inputs
+  scoringKeyMapping: {
+    expected: "expected_output",
+  },
+});
+
+console.log(`Experiment URL: ${result.resultUrl}`); // Direct link to view results
+```
+
+这个函数调用包含：
+
+- 我们创建的数据集
+- 定义的 LLM 任务
+- 内置的 `ExactMatch` 指标，用于精确比较输出
+- 实验名称
+- 将数据集字段与指标输入关联的键映射
+
+## 预期输出
+
+运行此代码后，您将获得一个评估结果对象，包含：
+
+- `experimentId`：评估实验的唯一标识符
+- `experimentName`：您提供的实验名称
+- `testResults`：每个数据集项的结果数组
+  - `testCase`：包含输入数据和输出
+  - `scoreResults`：每个指标的评分数组
+- `resultUrl`：在 Opik 平台中查看详细结果的链接
+
+```typescript
+{
+  "experimentId": "01975908-818f-765a-abv6-08d179c15610",
+  "experimentName": "My First Evaluation",
+  "testResults": [
+    {
+      "testCase": {
+        "traceId": "01975908-82dc-73fd-862d-dd51152ddse1",
+        "datasetItemId": "01975908-810c-7663-b7a3-e3ae94484ca9",
+        "scoringInputs": {
+          "input": "What is machine learning?",
+          "metadata": {
+            "category": "AI basics",
+            "difficulty": "beginner",
+            "version": 1
+          },
+          "expected_output": "Machine learning is a type of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed.",
+          "id": "01975908-810c-7663-b7a3-e3ae43884ca9",
+          "output": "Arrr, machine learnin' be a way for computers to learn from data, akin to teachin' a parrot new tricks! Instead of givin' exact instructions, ye feed the machine lots o' examples, and it figures out how to make decisions on its own. It be useful for predictin' things, findin' patterns, and even speakin' like a fine pirate! 🏴‍☠️",
+          "expected": "Machine learning is a type of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed."
+        },
+        "taskOutput": {
+          "output": "Arrr, machine learnin' be a way for computers to learn from data, akin to teachin' a parrot new tricks! Instead of givin' exact instructions, ye feed the machine lots o' examples, and it figures out how to make decisions on its own. It be useful for predictin' things, findin' patterns, and even speakin' like a fine pirate! 🏴‍☠️"
+        }
+      },
+      "scoreResults": [
+        {
+          "name": "exact_match",
+          "value": 0,
+          "reason": "Exact match: No match"
+        }
+      ]
+    }
+  ],
+  "resultUrl": "https://comet.com/opik/api/v1/session/redirect/experiments/?experiment_id=01975908-818f-765a-abv6-08d179c15610&dataset_id=01975908-810c-7663-b7a3-e3ae94484ca9&path=aHR0cHM6Ly9kZXYuY29tZXQuY29tL29dfWsvYXBp"
+}
+```
+
+## 故障排除与最佳实践
+
+### API 密钥问题
+
+```
+Error: Unauthorized: Invalid API key
+```
+
+- 确保您已正确设置 `.env` 文件
+- 验证您的 API 密钥有效且具有正确的权限
+
+### 指标输入映射
+
+```
+Error: Metric 'ExactMatch' is skipped, missing required arguments: expected. Available arguments: output.
+```
+
+- 检查您的 `scoringKeyMapping` 是否正确映射到数据集结构
+- 确认所有指标所需的输入已通过任务输出或映射提供

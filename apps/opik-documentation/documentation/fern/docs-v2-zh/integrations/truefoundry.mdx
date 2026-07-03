@@ -1,0 +1,163 @@
+---
+description: 从这里开始将 TrueFoundry 与 Opik 集成，获得企业级 MLOps 平台能力和 LLM 网关功能。
+headline: TrueFoundry | Opik 文档
+og:description: 了解如何使用 OpenAI SDK 包装器将 TrueFoundry 与 Opik 集成，记录所有 LLM 调用以实现全面可观测性。
+og:site_name: Opik 文档
+og:title: 将 TrueFoundry 与 Opik 集成用于企业级 MLOps
+title: 使用 Opik 实现 TrueFoundry 可观测性
+---
+
+[TrueFoundry](https://www.truefoundry.com/) 是一个企业级 MLOps 平台，提供统一的界面来部署和管理 ML 模型，包括 LLM。它提供模型部署、监控、A/B 测试和成本优化等功能。
+
+## 网关概述
+
+TrueFoundry 提供企业级功能来管理和监控 LLM 部署，包括：
+
+- **统一的 OpenAI 兼容端点**：通过 TrueFoundry 路由到任何支持的模型（OpenAI、Anthropic、自托管等）
+- **端到端追踪**：完整的请求/响应日志，包含系统消息、token 分类（提示、完成、总计）、每次调用延迟以及按模型和环境的成本分析
+- **生产级控制**：速率限制、按用户/团队配额、预算警报和支出上限、具有 RBAC 的作用域 API 密钥
+- **数据主权**：VPC 和本地部署选项，满足合规和数据隐私要求
+- **多云支持**：跨 AWS、Azure、GCP 和本地基础设施部署
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=truefoundry&utm_campaign=opik) 提供 Opik 平台的托管版本。[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=truefoundry&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=truefoundry&utm_campaign=opik) 了解更多信息。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 TrueFoundry
+
+您需要 TrueFoundry API 端点和凭据。可以从 TrueFoundry 控制面板获取。
+
+将配置设置为环境变量：
+
+```bash
+export TRUEFOUNDRY_API_KEY="YOUR_TRUEFOUNDRY_API_KEY"
+export TRUEFOUNDRY_BASE_URL="YOUR_TRUEFOUNDRY_BASE_URL"
+```
+
+或以编程方式设置：
+
+```python
+import os
+import getpass
+
+if "TRUEFOUNDRY_API_KEY" not in os.environ:
+    os.environ["TRUEFOUNDRY_API_KEY"] = getpass.getpass("Enter your TrueFoundry API key: ")
+
+if "TRUEFOUNDRY_BASE_URL" not in os.environ:
+    os.environ["TRUEFOUNDRY_BASE_URL"] = input("Enter your TrueFoundry base URL: ")
+```
+
+## 记录 LLM 调用
+
+由于 TrueFoundry 为 LLM 部署提供 OpenAI 兼容 API，我们可以使用 [Opik OpenAI SDK 包装器](/integrations/openai) 自动将 TrueFoundry 调用作为生成记录到 Opik 中。
+
+### 简单 LLM 调用
+
+```python
+import os
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# Create an OpenAI client with TrueFoundry's base URL
+client = OpenAI(
+    api_key=os.environ["TRUEFOUNDRY_API_KEY"],
+    base_url=os.environ["TRUEFOUNDRY_BASE_URL"]
+)
+
+# Wrap the client with Opik tracking
+client = track_openai(client, project_name="truefoundry-integration-demo")
+
+# Make a chat completion request
+response = client.chat.completions.create(
+    model="your-deployed-model-name",
+    messages=[
+        {"role": "system", "content": "You are a knowledgeable AI assistant."},
+        {"role": "user", "content": "What is the largest city in France?"}
+    ]
+)
+
+# Print the assistant's reply
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 与 `@track` 装饰器配合使用
+
+如果您的 LLM 管道中有多个步骤，可以使用 `@track` 装饰器记录每个步骤的追踪。如果在其中一个步骤中调用了 TrueFoundry，该 LLM 调用将与对应步骤关联：
+
+```python
+import os
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# Create and wrap the OpenAI client with TrueFoundry's base URL
+client = OpenAI(
+    api_key=os.environ["TRUEFOUNDRY_API_KEY"],
+    base_url=os.environ["TRUEFOUNDRY_BASE_URL"]
+)
+client = track_openai(client)
+
+@track
+def generate_response(prompt: str):
+    response = client.chat.completions.create(
+        model="your-deployed-model-name",
+        messages=[
+            {"role": "system", "content": "You are a knowledgeable AI assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def refine_response(initial_response: str):
+    response = client.chat.completions.create(
+        model="your-deployed-model-name",
+        messages=[
+            {"role": "system", "content": "You enhance and polish text responses."},
+            {"role": "user", "content": f"Please improve this response: {initial_response}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track(project_name="truefoundry-integration-demo")
+def generate_and_refine(prompt: str):
+    # First LLM call: Generate initial response
+    initial = generate_response(prompt)
+    
+    # Second LLM call: Refine the response
+    refined = refine_response(initial)
+    
+    return refined
+
+# Example usage
+result = generate_and_refine("Explain quantum computing in simple terms.")
+```
+
+追踪将显示具有层级跨度的嵌套 LLM 调用。
+
+## 改进建议
+
+如果您对 TrueFoundry 集成有任何改进建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

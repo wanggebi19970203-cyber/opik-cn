@@ -1,0 +1,69 @@
+{
+  "trial": {
+    "title": "试用",
+    "description": "体验 Opik 功能",
+    "features": {
+      "tracing": "追踪",
+      "evaluation": "评估",
+      "datasets": "数据集"
+    },
+    "tabs": {
+      "results": "结果",
+      "configuration": "配置"
+    },
+    "evaluationResults": "评估结果",
+    "configurationTab": {
+      "name": "名称",
+      "searchByName": "按名称搜索",
+      "showDifferencesOnly": "仅显示差异",
+      "noSearchResults": "无搜索结果",
+      "noConfigMultiple": "这些试用没有配置",
+      "noConfigSingle": "此试用没有配置"
+    },
+    "promptTab": {
+      "name": "名称",
+      "searchByName": "按名称搜索",
+      "showDifferencesOnly": "仅显示差异",
+      "noSearchResults": "无搜索结果",
+      "noPromptMultiple": "这些试用没有提示词",
+      "noPromptSingle": "此试用没有提示词",
+      "prompt": "提示词",
+      "examples": "示例"
+    },
+    "trialDetails": {
+      "trial": "试用",
+      "trialNumber": "试用 #{{number}}",
+      "dataset": "数据集",
+      "optimizationLogs": "优化日志",
+      "status": {
+        "baseline": "基线",
+        "passed": "通过",
+        "pruned": "淘汰"
+      }
+    },
+    "trialItemsTab": {
+      "evaluationTask": "评估任务",
+      "optimizationScores": "优化评分",
+      "testSuiteItemId": "测试套件项目ID",
+      "testSuite": "测试套件",
+      "selectScore": "选择评分",
+      "noData": "所选试用没有数据",
+      "all": "全部",
+      "passed": "通过",
+      "failed": "失败"
+    },
+    "trialPassedCell": {
+      "yes": "是",
+      "no": "否",
+      "threshold": "阈值: {{value}}"
+    },
+    "columns": {
+      "name": "名称"
+    },
+    "sectionHeaders": {
+      "testSuite": "测试套件",
+      "evaluationTask": "评估任务",
+      "optimizationsScores": "优化评分"
+    }
+  }
+}

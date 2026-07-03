@@ -1,0 +1,190 @@
+{
+  "alerts": {
+    "title": "Alerts",
+    "description": "Configure and manage alerts for monitoring",
+    "create": "Create alert",
+    "edit": "Edit alert",
+    "delete": "Delete alert",
+    "createNew": "Create a new alert",
+    "update": "Update alert",
+    "empty": {
+      "title": "No alerts yet",
+      "description": "Monitor important events in your project and get notified when something needs your attention.",
+      "action": "Create your first alert"
+    },
+    "noSearchResults": "No search results",
+    "searchPlaceholder": "Search by name",
+    "selectType": "Select type",
+    "loading": {
+      "updating": "Updating alert...",
+      "creating": "Creating alert..."
+    },
+    "confirmDialog": {
+      "deleteSingle": {
+        "title": "Delete alert",
+        "description": "Are you sure you want to delete this alert? This action cannot be undone.",
+        "confirmText": "Delete alert"
+      },
+      "deleteBatch": {
+        "title": "Delete alerts",
+        "description": "Are you sure you want to delete these alerts? This action cannot be undone.",
+        "confirmText": "Delete alerts"
+      },
+      "unsavedChanges": {
+        "title": "You have unsaved changes",
+        "description": "If you leave now, your changes will be lost. Are you sure you want to continue?",
+        "confirmText": "Leave without saving",
+        "cancelText": "Stay on page"
+      }
+    },
+    "fields": {
+      "name": "Name",
+      "enabled": "Enable alert",
+      "enabledDescription": "Enable to send automatic notifications to the specified URL for selected events.",
+      "cancel": "Cancel"
+    },
+    "columns": {
+      "id": "ID",
+      "name": "Name",
+      "alert_type": "Destination",
+      "webhook_url": "Endpoint",
+      "triggers": "Events",
+      "created_by": "Created by",
+      "status": "Status",
+      "created_at": "Created",
+      "last_updated_at": "Last updated"
+    },
+    "page": {
+      "createNewAlert": "Create new alert",
+      "noAlertsYet": "There are no alerts yet",
+      "noSearchResults": "No search results",
+      "searchPlaceholder": "Search by name",
+      "selectType": "Select type"
+    },
+    "actions": {
+      "menuLabel": "Actions menu",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "webhook": {
+      "title": "Webhook settings",
+      "description": "Configure how the platform sends notifications to your system.",
+      "destination": "Destination",
+      "routingKey": "Routing Key",
+      "routingKeyDescription": "PagerDuty routing key for an integration on a service or on a global ruleset",
+      "routingKeyPlaceholder": "Enter routing key",
+      "endpointUrl": "Endpoint URL",
+      "endpointUrlDescription": "Destination URL where the platform will send webhook notifications. This endpoint should be active and able to receive and process incoming POST requests.",
+      "advancedSettings": "Advanced webhook settings",
+      "secretToken": "Secret token (optional)",
+      "secretTokenDescription": "Add to securely verify that incoming webhook requests come from the platform."
+    },
+    "headers": {
+      "label": "Headers (optional)",
+      "description": "Specify custom HTTP headers to include with each webhook request. Use them for authentication, content type specification, or any other required metadata.",
+      "addHeader": "Add header"
+    },
+    "triggers": {
+      "title": "Triggers",
+      "description": "Choose which platform events will trigger the alert.",
+      "addTrigger": "Add trigger",
+      "missingTrigger": "Missing a trigger? Open a",
+      "githubTicket": "GitHub ticket",
+      "toLetUsKnow": "to let us know!",
+      "emptyTitle": "No triggers selected yet",
+      "emptyDescription": "Choose one or more events to decide when this webhook should be activated",
+      "inTheLast": "In the last",
+      "selectTimeWindow": "Select time window"
+    },
+    "thresholdLabels": {
+      "trace_cost": "Total cost exceeds (USD)",
+      "trace_errors": "Trace errors count exceeds",
+      "trace_latency": "Average latency exceeds (seconds)",
+      "default": "Threshold exceeds"
+    },
+    "feedbackConditions": {
+      "whenAverage": "When average",
+      "orWhenAverage": "Or when average",
+      "addCondition": "Add condition",
+      "removeGroup": "Remove group",
+      "removeCondition": "Remove condition",
+      "addOrGroup": "Add OR group",
+      "addAndCondition": "Add AND condition",
+      "cantRemove": "Can't remove — every alert needs at least one group with at least one condition."
+    },
+    "testWebhook": {
+      "title": "Test alert configuration",
+      "description": "Send a test notification to your configured endpoint to verify that the webhook is set up correctly and receiving events as expected.",
+      "testConnection": "Test connection",
+      "goToDocs": "Go to docs",
+      "testTrigger": "Test trigger",
+      "successConnection": "Webhook connection test successful!",
+      "successTrigger": "Webhook test successful for \"{{label}}\"!",
+      "failureTitle": "Webhook test failed",
+      "triggerNotFound": "Trigger not found",
+      "endpointRequired": "Endpoint URL is required",
+      "validUrlRequired": "Please enter a valid URL",
+      "routingKeyRequired": "Routing key is required for PagerDuty integration"
+    },
+    "triggerTypes": {
+      "trace_errors": {
+        "title": "Trace errors threshold",
+        "description": "Triggered when the number of trace errors exceeds the specified threshold in selected projects."
+      },
+      "trace_guardrails_triggered": {
+        "title": "Guardrail triggered",
+        "description": "Triggered when a guardrail event occurs in any trace within the selected projects."
+      },
+      "trace_feedback_score": {
+        "title": "Trace feedback score threshold",
+        "description": "Triggered when the average feedback score for traces exceeds the specified threshold in selected projects."
+      },
+      "trace_thread_feedback_score": {
+        "title": "Thread feedback score threshold",
+        "description": "Triggered when the average feedback score for threads exceeds the specified threshold in selected projects."
+      },
+      "prompt_created": {
+        "title": "New prompt added",
+        "description": "Triggered when a new prompt is created or saved in the workspace's prompt library."
+      },
+      "prompt_committed": {
+        "title": "New prompt version created",
+        "description": "Triggered when a new commit (version) is added to any prompt in the workspace's prompt library."
+      },
+      "prompt_deleted": {
+        "title": "Prompt deleted",
+        "description": "Triggered when a prompt is removed from the workspace's prompt library."
+      },
+      "experiment_finished": {
+        "title": "Experiment finished",
+        "description": "Triggered when an experiment completes in the workspace."
+      },
+      "trace_cost": {
+        "title": "Cost threshold",
+        "description": "Triggered when total trace cost exceeds the specified threshold in the selected projects."
+      },
+      "trace_latency": {
+        "title": "Latency threshold",
+        "description": "Triggered when average trace latency exceeds the specified threshold in the selected projects."
+      }
+    },
+    "windowOptions": {
+      "300": "5 mins",
+      "900": "15 mins",
+      "1800": "30 mins",
+      "3600": "1 hour",
+      "21600": "6 hours",
+      "43200": "12 hours",
+      "86400": "24 hours",
+      "604800": "7 days",
+      "1296000": "15 days",
+      "2592000": "30 days"
+    },
+    "validation": {
+      "endpointRequired": "Endpoint URL is required",
+      "validUrlRequired": "Please enter a valid URL",
+      "routingKeyRequired": "Routing key is required for PagerDuty integration",
+      "webhookTestFailed": "Webhook test failed"
+    }
+  }
+}

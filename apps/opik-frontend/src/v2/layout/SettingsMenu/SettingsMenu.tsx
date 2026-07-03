@@ -1,5 +1,5 @@
 import { Check, Settings } from "lucide-react";
-
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { useThemeOptions } from "@/hooks/useThemeOptions";
 import SupportHubSubMenu from "@/shared/SupportHub/SupportHubSubMenu";
 
 const SettingsMenu = () => {
+  const { t } = useTranslation();
   const { theme, themeOptions, CurrentIcon, handleThemeSelect } =
     useThemeOptions();
 
@@ -24,7 +25,7 @@ const SettingsMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon-sm">
           <Settings className="size-4" />
-          <span className="sr-only">Settings</span>
+          <span className="sr-only">{t("navigation.settings.settings")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -33,7 +34,7 @@ const SettingsMenu = () => {
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="flex cursor-pointer items-center">
               <CurrentIcon className="mr-2 size-4" />
-              <span>Theme</span>
+              <span>{t("navigation.settings.theme")}</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>

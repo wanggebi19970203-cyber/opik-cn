@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import get from "lodash/get";
+import i18next from "i18next";
 import api, { AUTOMATIONS_KEY } from "@/api/api";
 import { AxiosError } from "axios";
 import { useToast } from "@/ui/use-toast";
@@ -73,8 +74,12 @@ const useManualEvaluationMutation = () => {
             : "Spans";
 
       toast({
-        title: "Evaluation queued",
-        description: `The selected ${entityLabel} have been queued for scoring. Processing time may vary based on how many ${entityLabel} you selected. You can view the results in the ${capitalizedEntityLabel} table, the Metrics tab, and in each ${variables.entityType}'s details view.`,
+        title: i18next.t("common:messages.evaluationQueued"),
+        description: i18next.t("common:messages.evaluationQueuedDescription", {
+          entityLabel,
+          capitalizedEntityLabel,
+          entityType: variables.entityType,
+        }),
       });
     },
     onError: (error: AxiosError) => {
@@ -85,8 +90,8 @@ const useManualEvaluationMutation = () => {
       );
 
       toast({
-        title: "Error",
-        description: `Failed to trigger evaluation: ${message}`,
+        title: i18next.t("common:labels.error"),
+        description: `${i18next.t("common:messages.failedToTriggerEvaluation")}: ${message}`,
         variant: "destructive",
       });
     },

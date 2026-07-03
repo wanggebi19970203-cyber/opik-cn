@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import filter from "lodash/filter";
 import uniq from "lodash/uniq";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -37,6 +38,8 @@ const GroupsContent = <TColumnData,>({
   className,
   hideSorting = false,
 }: GroupsContentProps<TColumnData>) => {
+  const { t } = useTranslation();
+
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -97,7 +100,7 @@ const GroupsContent = <TColumnData,>({
 
   const renderGroups = () => {
     return groups.map((group, index) => {
-      const prefix = index === 0 ? "By" : "And";
+      const prefix = index === 0 ? t("common.groups.by") : t("common.groups.and");
 
       return (
         <GroupRow

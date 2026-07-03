@@ -1,0 +1,359 @@
+---
+description: 了解如何使用参数优化器在不更改提示词的情况下，使用贝叶斯优化找到最优的 LLM 调用参数（temperature、top_p 等）。
+headline: 参数 | Opik 文档
+og:description: 使用 Opik 的 ParameterOptimizer 有效调优 LLM 调用参数，确保在不更改提示词的情况下获得最佳性能。
+og:site_name: Opik 文档
+og:title: 使用 Opik 优化参数 - 增强 LLM 性能
+subtitle: 使用贝叶斯技术优化 temperature 和 top_p 等 LLM 参数。
+title: '参数优化器：贝叶斯参数调优'
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/algorithms/parameter_optimizer
+---
+
+`ParameterOptimizer` 使用贝叶斯优化来调优 LLM 调用参数，如 temperature、top_p、frequency_penalty 和其他采样参数。与其他修改提示词本身的优化器不同，此优化器保持您的提示词不变，专注于为您的特定任务找到最佳参数配置。
+
+<Note>
+  **何时使用：**在不更改提示词的情况下优化 LLM 参数（temperature、top_p）。当您有良好的提示词但需要调优模型行为时最佳。
+
+  **关键权衡：**需要定义参数搜索空间；不修改提示词文本；使用两阶段贝叶斯搜索。
+</Note>
+
+<Info>
+  对 `ParameterOptimizer` 有疑问？我们的[优化器和 SDK FAQ](/v1/agent_optimization/faq)回答了常见问题，包括何时使用此优化器、`default_n_trials` 和 `local_search_ratio` 等参数如何工作，以及如何定义自定义参数搜索空间。
+</Info>
+
+## 工作原理
+
+此优化器使用 [Optuna](https://optuna.org/)（一个超参数优化框架）来搜索最佳 LLM 参数：
+
+1.  **基线评估**：首先使用当前参数（或默认参数）评估您的提示词，以建立基线分数。
+
+2.  **参数空间定义**：您使用 `ParameterSearchSpace` 定义要优化的参数及其有效范围。例如：
+    - `temperature`：0.0 到 2.0 之间的浮点数
+    - `top_p`：0.0 到 1.0 之间的浮点数
+    - `frequency_penalty`：-2.0 到 2.0 之间的浮点数
+
+3.  **全局搜索阶段**：
+    - Optuna 使用贝叶斯优化（默认 TPESampler）探索整个参数空间。
+    - 尝试各种参数组合以找到有希望的区域。
+    - 使用指定指标针对数据集评估每个组合。
+
+4.  **局部搜索阶段**（可选）：
+    - 全局搜索后，专注于找到的最佳参数区域。
+    - 在最佳参数周围进行细粒度优化。
+    - 由 `local_search_ratio` 和 `local_search_scale` 控制。
+
+5.  **参数重要性分析**：
+    - 计算哪些参数对性能影响最大。
+    - 使用 FANOVA 重要性（需要 scikit-learn）或回退到基于相关性的敏感性分析。
+
+6.  **结果**：返回找到的最佳参数配置，以及详细的优化历史和参数重要性排名。
+
+优化器智能地平衡探索（尝试多样化参数）和利用（优化有希望的配置），以高效找到最佳设置。
+
+<Tip>
+  此优化器的核心依赖于稳健的评估，其中每个参数配置都使用您的 `metric` 针对 `dataset` 进行评估。了解 Opik 的评估平台是有效使用的关键：
+  - [评估概述](/v1/evaluation/overview)
+  - [评估提示词](/v1/evaluation/evaluate_prompt)
+  - [指标概述](/v1/evaluation/metrics/overview)
+</Tip>
+
+## 配置选项
+
+### 基本配置
+
+```python
+from opik_optimizer import ParameterOptimizer
+from opik_optimizer.algorithms.parameter_optimizer.parameter_search_space import (
+    ParameterSearchSpace,
+)
+
+optimizer = ParameterOptimizer(
+    model="openai/gpt-4",
+    default_n_trials=20,    # Number of optimization trials
+    n_threads=4,            # Parallel evaluation threads
+    seed=42
+)
+```
+
+### 高级配置
+
+```python
+optimizer = ParameterOptimizer(
+    model="openai/gpt-4",
+    default_n_trials=50,        # More trials for thorough optimization
+    n_threads=8,                # More parallel threads
+    local_search_ratio=0.3,     # 30% of trials for local refinement
+    local_search_scale=0.2,     # Scale of local search range
+    seed=42,
+    verbose=1                   # Verbosity level (0=off, 1=info, 2=debug)
+)
+```
+
+关键参数包括：
+
+- `model`：用于使用不同参数配置进行评估的 LLM。
+- `default_n_trials`：默认优化试验次数（可在 `optimize_parameter` 中覆盖）。
+- `n_threads`：用于评估的并行线程数（与 API 速率限制平衡）。
+- `local_search_ratio`：用于在最佳参数周围进行局部搜索的试验比例（0.0-1.0）。
+- `local_search_scale`：局部搜索范围的缩放因子（0.0 = 无局部搜索，更高 = 更广范围）。
+- `seed`：用于可重复性的随机种子。
+- `verbose`：日志级别（0=仅警告，1=信息，2=调试）。
+
+## 使用示例
+
+### 基本示例
+
+```python
+from opik_optimizer import ParameterOptimizer, ChatPrompt
+from opik_optimizer.algorithms.parameter_optimizer.parameter_search_space import (
+    ParameterSearchSpace,
+)
+from opik.evaluation.metrics import LevenshteinRatio
+from opik_optimizer import datasets
+
+# Initialize optimizer
+optimizer = ParameterOptimizer(
+    model="openai/gpt-4o-mini",
+    default_n_trials=30,
+    n_threads=8,
+    seed=42
+)
+
+# Prepare dataset
+dataset = datasets.hotpot(count=300)
+
+# Define metric
+def levenshtein_ratio(dataset_item, llm_output):
+    return LevenshteinRatio().score(reference=dataset_item["answer"], output=llm_output)
+
+# Define prompt (this stays unchanged)
+prompt = ChatPrompt(
+    project_name="parameter-optimization",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "{question}"}
+    ]
+)
+
+# Define parameter search space
+parameter_space = ParameterSearchSpace(
+    parameters=[
+        {
+            "name": "temperature",
+            "distribution": "float",
+            "low": 0.0,
+            "high": 2.0
+        },
+        {
+            "name": "top_p",
+            "distribution": "float",
+            "low": 0.1,
+            "high": 1.0
+        }
+    ]
+)
+
+# Run optimization
+results = optimizer.optimize_parameter(
+    prompt=prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    parameter_space=parameter_space,
+    n_samples=100
+)
+
+# Access results
+results.display()
+print(f"Best temperature: {results.details['optimized_parameters']['temperature']}")
+print(f"Best top_p: {results.details['optimized_parameters']['top_p']}")
+print(f"Parameter importance: {results.details['parameter_importance']}")
+```
+
+### 使用自定义参数的高级示例
+
+```python
+# Optimize more parameters including model selection
+parameter_space = ParameterSearchSpace(
+    parameters=[
+        {
+            "name": "temperature",
+            "distribution": "float",
+            "low": 0.0,
+            "high": 1.5,
+            "step": 0.05  # Optional: quantize values
+        },
+        {
+            "name": "top_p",
+            "distribution": "float",
+            "low": 0.5,
+            "high": 1.0
+        },
+        {
+            "name": "frequency_penalty",
+            "distribution": "float",
+            "low": -1.0,
+            "high": 1.0
+        },
+        {
+            "name": "presence_penalty",
+            "distribution": "float",
+            "low": -1.0,
+            "high": 1.0
+        },
+        {
+            "name": "model",
+            "distribution": "categorical",
+            "choices": ["openai/gpt-4o-mini", "openai/gpt-4o", "openai/gpt-4-turbo"]
+        }
+    ]
+)
+
+# Run with more trials and custom Optuna sampler
+import optuna
+
+results = optimizer.optimize_parameter(
+    prompt=prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    parameter_space=parameter_space,
+    n_trials=100,  # Override default_n_trials
+    n_samples=150,
+    sampler=optuna.samplers.TPESampler(seed=42, n_startup_trials=20)
+)
+```
+
+## 参数搜索空间
+
+`ParameterSearchSpace` 定义要优化的参数及其有效范围。它支持：
+
+### 浮点参数
+
+```python
+{
+    "name": "temperature",
+    "distribution": "float",
+    "low": 0.0,
+    "high": 2.0,
+    "step": 0.1,      # Optional: quantize to 0.1 increments
+    "log": False      # Optional: use log scale for sampling
+}
+```
+
+### 整数参数
+
+```python
+{
+    "name": "max_tokens",
+    "distribution": "int",
+    "low": 100,
+    "high": 4000,
+    "step": 100,      # Optional: sample in steps of 100
+    "log": False      # Optional: use log scale
+}
+```
+
+### 分类参数
+
+```python
+{
+    "name": "model",
+    "distribution": "categorical",
+    "choices": ["gpt-4o-mini", "gpt-4o", "claude-3-haiku"]
+}
+```
+
+### 布尔参数
+
+```python
+{
+    "name": "stream",
+    "distribution": "bool"
+}
+```
+
+### 针对嵌套参数
+
+您可以优化 `model_parameters` 中的嵌套参数：
+
+```python
+{
+    "name": "model_parameters.response_format.type",
+    "distribution": "categorical",
+    "choices": ["text", "json_object"]
+}
+```
+
+## 模型支持
+
+ParameterOptimizer 支持通过 LiteLLM 可用的所有模型。这提供了与 OpenAI、Azure OpenAI、Anthropic、Google 等提供商的广泛兼容性，包括本地托管的模型。
+
+### 使用 LiteLLM 模型字符串的配置示例
+
+```python
+optimizer = ParameterOptimizer(
+    model="openai/gpt-4o-mini",  # Using OpenAI via LiteLLM
+    default_n_trials=30,
+    n_threads=8
+)
+```
+
+## 最佳实践
+
+1. **从简单开始**
+   - 从 1-2 个关键参数开始（例如，temperature、top_p）
+   - 了解其影响后再添加更多参数
+   - 过多参数会增加搜索空间和试验需求
+
+2. **定义合理的范围**
+   - 根据领域知识使用更紧的范围
+   - temperature：事实性任务 0.0-1.0，创意任务 0.5-1.5
+   - top_p：大多数任务 0.8-1.0
+
+3. **试验预算**
+   - 2-3 个参数从 20-30 次试验开始
+   - 4+ 个参数增加到 50-100 次试验
+   - 监控收敛 - 如果改进达到平台期则停止
+
+4. **局部搜索**
+   - 使用 `local_search_ratio=0.3`（默认）进行优化
+   - 如果全局搜索快速找到好的区域，增加到 0.4-0.5
+   - 减少到 0.1-0.2 以进行更多探索
+
+5. **并行评估**
+   - 根据 API 速率限制设置 `n_threads`
+   - 更多线程 = 更快优化但可能达到限制
+   - 平衡速度与成本和速率限制约束
+
+6. **参数重要性**
+   - 检查结果中的 `parameter_importance`
+   - 未来的优化专注于高影响参数
+   - 考虑固定低影响参数以减少搜索空间
+
+7. **验证**
+   - **注意**：虽然 ParameterOptimizer 接受 `validation_dataset` 参数，但由于优化器的内部实现，它不会提高性能，我们不建议使用它
+   - 而是在优化完成后在保留的测试数据集上使用 `evaluate_prompt()`
+   - 这确认了优化的参数泛化到未见过的数据
+   - 示例：
+     ```python
+     # After optimization
+     from opik.evaluation import evaluate_prompt
+     
+     test_dataset = client.get_dataset(name="test-set")
+     test_results = evaluate_prompt(
+         prompt=result.prompt,
+         dataset=test_dataset,
+         scoring_metrics=[my_metric],
+         project_name="my-project",
+     )
+     print(f"Test score: {test_results.mean_scores}")
+     ```
+
+## 研究和参考
+
+- [Optuna：超参数优化框架](https://optuna.org/)
+
+## 后续步骤
+
+1. 探索特定的[优化器](/v1/agent_optimization/algorithms/overview)了解算法详情。
+2. 参阅 [FAQ](/v1/agent_optimization/faq) 了解常见问题和故障排除。
+3. 参阅 [API 参考](/v1/agent_optimization/advanced/api_reference)了解详细配置选项。

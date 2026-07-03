@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { COLUMN_TYPE } from "@/types/shared";
 import { Filter, FilterOperator } from "@/types/filters";
 import { BREAKDOWN_FIELD } from "@/types/dashboard";
@@ -6,15 +7,15 @@ import { BREAKDOWN_FIELD } from "@/types/dashboard";
  * Display labels for group by fields.
  */
 export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
-  [BREAKDOWN_FIELD.NONE]: "No grouping",
-  [BREAKDOWN_FIELD.TAGS]: "Tags",
-  [BREAKDOWN_FIELD.METADATA]: "Metadata",
-  [BREAKDOWN_FIELD.NAME]: "Name",
-  [BREAKDOWN_FIELD.ERROR_INFO]: "Has error",
-  [BREAKDOWN_FIELD.ERROR_TYPE]: "Error type",
-  [BREAKDOWN_FIELD.MODEL]: "Model",
-  [BREAKDOWN_FIELD.PROVIDER]: "Provider",
-  [BREAKDOWN_FIELD.TYPE]: "Span type",
+  [BREAKDOWN_FIELD.NONE]: i18next.t("dashboards.breakdown.fields.noGrouping"),
+  [BREAKDOWN_FIELD.TAGS]: i18next.t("dashboards.breakdown.fields.tags"),
+  [BREAKDOWN_FIELD.METADATA]: i18next.t("dashboards.breakdown.fields.metadata"),
+  [BREAKDOWN_FIELD.NAME]: i18next.t("dashboards.breakdown.fields.name"),
+  [BREAKDOWN_FIELD.ERROR_INFO]: i18next.t("dashboards.breakdown.fields.hasError"),
+  [BREAKDOWN_FIELD.ERROR_TYPE]: i18next.t("dashboards.breakdown.fields.errorType"),
+  [BREAKDOWN_FIELD.MODEL]: i18next.t("dashboards.breakdown.fields.model"),
+  [BREAKDOWN_FIELD.PROVIDER]: i18next.t("dashboards.breakdown.fields.provider"),
+  [BREAKDOWN_FIELD.TYPE]: i18next.t("dashboards.breakdown.fields.spanType"),
 };
 
 /**
@@ -22,8 +23,8 @@ export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
  */
 export const BREAKDOWN_GROUP_NAMES = {
   OTHERS: "__others__",
-  OTHERS_DISPLAY: "Others",
-  UNKNOWN: "Unknown",
+  OTHERS_DISPLAY: i18next.t("dashboards.breakdown.others"),
+  UNKNOWN: i18next.t("dashboards.breakdown.unknown"),
 };
 
 /**

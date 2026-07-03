@@ -1,0 +1,90 @@
+{
+  "actions": {
+    "create": {
+      "project": "创建项目",
+      "dataset": "创建数据集",
+      "experiment": "创建实验",
+      "prompt": "创建提示词",
+      "testSuite": "创建测试套件",
+      "view": "创建视图",
+      "dashboard": "创建仪表盘",
+      "alert": "创建告警",
+      "rule": "创建规则",
+      "queue": "创建标注队列"
+    },
+    "delete": {
+      "project": "删除项目",
+      "projects": "删除项目",
+      "dataset": "删除数据集",
+      "experiment": "删除实验",
+      "prompt": "删除提示词",
+      "prompts": "删除提示词",
+      "testSuite": "删除测试套件",
+      "view": "删除视图",
+      "optimizations": "删除优化运行",
+      "alerts": "删除告警"
+    },
+    "edit": {
+      "project": "编辑项目",
+      "dataset": "编辑数据集",
+      "experiment": "编辑实验",
+      "prompt": "编辑提示词",
+      "view": "编辑视图"
+    },
+    "duplicate": {
+      "view": "复制视图",
+      "prompt": "复制提示词"
+    },
+    "compare": {
+      "experiments": "比较实验",
+      "prompts": "比较提示词",
+      "commits": "比较提交"
+    },
+    "export": {
+      "dataset": "导出数据集",
+      "traces": "导出追踪",
+      "results": "导出结果"
+    },
+    "import": {
+      "dataset": "导入数据集"
+    },
+    "run": {
+      "experiment": "运行实验",
+      "evaluation": "运行评估",
+      "now": "立即运行",
+      "again": "重新运行"
+    },
+    "annotate": {
+      "start": "开始标注",
+      "resume": "继续标注"
+    },
+    "copy": {
+      "url": "复制URL",
+      "id": "复制ID",
+      "code": "复制代码",
+      "prompt": "复制提示词"
+    },
+    "view": {
+      "details": "查看详情",
+      "logs": "查看日志",
+      "history": "查看历史"
+    },
+    "add": {
+      "widget": "添加组件",
+      "firstWidget": "添加您的第一个组件",
+      "item": "添加项目",
+      "items": "添加项目"
+    },
+    "save": {
+      "changes": "保存更改"
+    },
+    "back": {
+      "toPrompts": "返回提示词列表"
+    },
+    "clearAll": "清除全部",
+    "addFilter": "添加筛选",
+    "addGroup": "添加分组",
+    "exportAsCsv": "导出为 CSV",
+    "exportAsJson": "导出为 JSON"
+  }
+}

@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useRouter } from "@tanstack/react-router";
 import {
   AssistantSidebarBridge,
@@ -269,6 +270,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   surface = "sidebar",
   onWidthChange,
 }) => {
+  const { t } = useTranslation();
   const {
     backendUrl,
     probeUrl,
@@ -466,7 +468,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
       // Radix's DismissableLayer sets pointer-events:none on the body when a
       // modal dialog is open — this keeps the iframe clickable.
       style={{ pointerEvents: "auto" }}
-      title="Assistant"
+      title={t("common.labels.assistant")}
       allow="clipboard-write"
     />
   );

@@ -1,5 +1,6 @@
 import React from "react";
 import isArray from "lodash/isArray";
+import { useTranslation } from "react-i18next";
 
 import { detectConfigValueType } from "@/lib/configuration-renderer";
 import PromptDiff from "@/shared/CodeDiff/PromptDiff";
@@ -19,6 +20,7 @@ const DiffSection: React.FunctionComponent<DiffSectionProps> = ({
   baselineValue,
   currentValue,
 }) => {
+  const { t } = useTranslation("experiments");
   const type = detectConfigValueType(label, currentValue ?? baselineValue);
   const baseStr = formatValue(baselineValue);
   const currStr = formatValue(currentValue);
@@ -34,17 +36,17 @@ const DiffSection: React.FunctionComponent<DiffSectionProps> = ({
         <span className="comet-body-s-accented">{label}</span>
         {isAdded && (
           <Tag variant="green" size="sm">
-            Added
+            {t('added')}
           </Tag>
         )}
         {isRemoved && (
           <Tag variant="red" size="sm">
-            Removed
+            {t('removed')}
           </Tag>
         )}
         {!isAdded && !isRemoved && (
           <Tag variant="orange" size="sm">
-            Changed
+            {t('changed')}
           </Tag>
         )}
       </div>

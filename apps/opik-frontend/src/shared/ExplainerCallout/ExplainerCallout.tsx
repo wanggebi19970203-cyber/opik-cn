@@ -1,5 +1,6 @@
 import React from "react";
 import { ExternalLink, Info, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Alert, AlertDescription, AlertTitle } from "@/ui/alert";
 import { Button } from "@/ui/button";
@@ -22,6 +23,7 @@ const ExplainerCallout: React.FC<ExplainerCalloutProps> = ({
   Icon = Info,
   isDismissable = true,
 }) => {
+  const { t } = useTranslation();
   const [isShown, setIsShown] = useLocalStorageState<boolean>(
     `explainer-callout-${id}`,
     {
@@ -44,7 +46,7 @@ const ExplainerCallout: React.FC<ExplainerCalloutProps> = ({
         {docLink && (
           <Button variant="link" size="3xs" asChild>
             <a href={docLink} target="_blank" rel="noreferrer">
-              Read more
+              {t("common.explainer.readMore")}
               <ExternalLink className="ml-0.5 size-3 shrink-0" />
             </a>
           </Button>

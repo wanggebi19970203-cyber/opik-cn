@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import { z } from "zod";
 import { capitalizeFirstLetter } from "@/lib/utils";
@@ -20,7 +21,7 @@ const isEmail = (value: string): boolean =>
 const extractServerMessage = (error: unknown): string => {
   const axiosError = error as AxiosError<{ msg: string }>;
   return capitalizeFirstLetter(
-    axiosError?.response?.data?.msg || "Invite request failed",
+    axiosError?.response?.data?.msg || i18next.t("common:comet.inviteRequestFailed"),
   );
 };
 
@@ -94,7 +95,7 @@ export function useInviteUsersMutation() {
     mutationKey: ["workspace", "invite-users"],
     mutationFn: inviteUsersRequest,
     onSuccess: (_, variables) => {
-      toast({ description: "Invite sent successfully" });
+      toast({ description: i18next.t("common:comet.inviteSentSuccessfully") });
       queryClient.invalidateQueries({
         queryKey: ["workspace-members", { workspaceId: variables.workspaceId }],
       });
@@ -118,7 +119,7 @@ export function useInviteUsersMutation() {
       });
     },
     onError: (error) => {
-      const message = extractServerMessage(error) || "Invite request failed";
+      const message = extractServerMessage(error) || i18next.t("common:comet.inviteRequestFailed");
       toast({ description: message, variant: "destructive" });
     },
   });

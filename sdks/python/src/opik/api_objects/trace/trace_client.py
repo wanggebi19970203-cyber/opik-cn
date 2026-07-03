@@ -25,7 +25,7 @@ class Trace:
         environment: Optional[str] = None,
     ):
         """
-        A Trace object. This object should not be created directly, instead use :meth:`opik.Opik.trace` to create a new trace.
+        Trace 对象。不应直接创建此对象，请使用 :meth:`opik.Opik.trace` 来创建新的 trace。
         """
         self.id = id
         self._streamer = message_streamer
@@ -46,25 +46,23 @@ class Trace:
         thread_id: Optional[str] = None,
     ) -> None:
         """
-        End the trace and update its attributes.
+        结束 trace 并更新其属性。
 
-        This method is similar to the `update` method, but it automatically computes
-        the end time if not provided.
+        此方法与 `update` 方法类似，但它会自动计算结束时间（如果未提供）。
 
-        Note: with batching enabled, calling this shortly after trace creation may
-        cause data loss. An alternative is to re-send a full payload via
-        ``client.trace()`` with the same ID — the backend will overwrite the
-        previous value. See https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
+        注意：启用批处理后，在 trace 创建后不久调用此方法可能会导致数据丢失。
+        替代方案是通过 ``client.trace()`` 使用相同的 ID 重新发送完整的数据负载，
+        后端会覆盖之前的值。参见 https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
 
         Args:
-            end_time: The end time of the trace. If not provided, the current time will be used.
-            metadata: Additional metadata to be associated with the trace.
-            input: The input data for the trace.
-            output: The output data for the trace.
-            tags: A list of tags to be associated with the trace.
-            error_info: The dictionary with error information (typically used when the trace function has failed).
-            thread_id: Used to group multiple traces into a thread.
-                The identifier is user-defined and has to be unique per project.
+            end_time: trace 的结束时间。如果未提供，将使用当前时间。
+            metadata: 与 trace 关联的额外元数据。
+            input: trace 的输入数据。
+            output: trace 的输出数据。
+            tags: 与 trace 关联的标签列表。
+            error_info: 包含错误信息的字典（通常在 trace 函数失败时使用）。
+            thread_id: 用于将多个 trace 分组到一个线程中。
+                该标识符由用户定义，且在每个项目中必须唯一。
 
         Returns:
             None
@@ -100,22 +98,21 @@ class Trace:
         thread_id: Optional[str] = None,
     ) -> None:
         """
-        Update the trace attributes.
+        更新 trace 的属性。
 
-        Note: with batching enabled, calling this shortly after trace creation may
-        cause data loss. An alternative is to re-send a full payload via
-        ``client.trace()`` with the same ID — the backend will overwrite the
-        previous value. See https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
+        注意：启用批处理后，在 trace 创建后不久调用此方法可能会导致数据丢失。
+        替代方案是通过 ``client.trace()`` 使用相同的 ID 重新发送完整的数据负载，
+        后端会覆盖之前的值。参见 https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
 
         Args:
-            end_time: The end time of the trace.
-            metadata: Additional metadata to be associated with the trace.
-            input: The input data for the trace.
-            output: The output data for the trace.
-            tags: A list of tags to be associated with the trace.
-            error_info: The dictionary with error information (typically used when the trace function has failed).
-            thread_id: Used to group multiple traces into a thread.
-                The identifier is user-defined and has to be unique per project.
+            end_time: trace 的结束时间。
+            metadata: 与 trace 关联的额外元数据。
+            input: trace 的输入数据。
+            output: trace 的输出数据。
+            tags: 与 trace 关联的标签列表。
+            error_info: 包含错误信息的字典（通常在 trace 函数失败时使用）。
+            thread_id: 用于将多个 trace 分组到一个线程中。
+                该标识符由用户定义，且在每个项目中必须唯一。
 
         Returns:
             None
@@ -181,33 +178,34 @@ class Trace:
         attachments: Optional[List[attachment.Attachment]] = None,
     ) -> span.Span:
         """
-        Create a new span within the trace.
+        在 trace 中创建一个新的 span。
 
         Args:
-            id: The ID of the span should be in UUIDv7 format. If not provided, a new ID will be generated.
-            parent_span_id: The ID of the parent span, if any.
-            name: The name of the span.
-            type: The type of the span. Defaults to "general".
-            start_time: The start time of the span. If not provided, the current time will be used.
-            end_time: The end time of the span.
-            metadata: Additional metadata to be associated with the span.
-            input: The input data for the span.
-            output: The output data for the span.
-            tags: A list of tags to be associated with the span.
-            usage: Usage data for the span. In order for input, output and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionally to the original usage on the top level of the dict): prompt_tokens, completion_tokens and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The name of LLM (in this case `type` parameter should be == `llm`)
-            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our GitHub - https://github.com/comet-ml/opik.
-                If your provider is not in the list, you can still specify it, but the cost tracking will not be available
-            error_info: The dictionary with error information (typically used when the span function has failed).
-            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
-            attachments: The list of attachments to be uploaded to the span.
+            id: span 的 ID 应为 UUIDv7 格式。如果未提供，将自动生成新的 ID。
+            parent_span_id: 父 span 的 ID（如果存在）。
+            name: span 的名称。
+            type: span 的类型。默认为 "general"。
+            start_time: span 的开始时间。如果未提供，将使用当前时间。
+            end_time: span 的结束时间。
+            metadata: 与 span 关联的额外元数据。
+            input: span 的输入数据。
+            output: span 的输出数据。
+            tags: 与 span 关联的标签列表。
+            usage: span 的用量数据。为了使输入、输出和总 token 数在 UI 中可见，
+                usage 必须包含 OpenAI 格式的键（可以在字典顶层额外传递）：
+                prompt_tokens、completion_tokens 和 total_tokens。
+                如果未找到 OpenAI 格式的键，Opik 会尝试在识别用量格式时自动计算
+                （可在 opik.LLMProvider 枚举中查看支持哪些提供商的格式），但不保证成功。
+            model: LLM 的名称（此时 `type` 参数应为 == `llm`）。
+            provider: LLM 的提供商。可在 `opik.LLMProvider` 枚举中找到 Opik 官方支持成本跟踪的提供商。
+                如果您的提供商不在列表中，请在我们的 GitHub 上提交 issue - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍然可以指定它，但成本跟踪功能将不可用。
+            error_info: 包含错误信息的字典（通常在 span 函数失败时使用）。
+            total_cost: span 的成本（以美元计）。此值优先于 Opik 根据用量计算的成本。
+            attachments: 要上传到 span 的附件列表。
 
         Returns:
-            span.Span: The created span object.
+            span.Span: 创建的 span 对象。
         """
         return span.span_client.create_span(
             trace_id=self.id,
@@ -243,13 +241,13 @@ class Trace:
         reason: Optional[str] = None,
     ) -> None:
         """
-        Log a feedback score for the trace.
+        为 trace 记录反馈分数。
 
         Args:
-            name: The name of the feedback score.
-            value: The value of the feedback score.
-            category_name: The category name for the feedback score.
-            reason: The reason for the feedback score.
+            name: 反馈分数的名称。
+            value: 反馈分数的值。
+            category_name: 反馈分数的类别名称。
+            reason: 反馈分数的原因。
 
         Returns:
             None
@@ -286,29 +284,30 @@ def update_trace(
     environment: Optional[str] = None,
 ) -> None:
     """
-    Update an existing trace with new information.
-    This function sends an UpdateTraceMessage to the provided message_streamer,
-    allowing you to update various fields of a trace, such as its end time,
-    metadata, input, output, tags, error information and thread association.
+    使用新信息更新现有的 trace。
+    此函数向提供的 message_streamer 发送 UpdateTraceMessage，
+    允许更新 trace 的各种字段，如结束时间、元数据、输入、输出、标签、错误信息和线程关联。
 
     Args:
-        trace_id: The unique identifier of the trace to update.
-        project_name: The name of the project associated with the trace.
-        message_streamer: The message streamer used to send the update.
-        end_time: The end time of the trace. Defaults to None.
-        metadata: Additional metadata for the trace. Defaults to None.
-        input: Input data associated with the trace. Defaults to None.
-        output: Output data associated with the trace. Defaults to None.
-        tags: List of tags to associate with the trace. Defaults to None.
-        error_info: Error information related to the trace. Defaults to None.
-        thread_id : The thread ID associated with the trace. Defaults to None.
-        source: The source of the update. This can be either "sdk", "experiment", "optimization".
+        trace_id: 要更新的 trace 的唯一标识符。
+        project_name: 与 trace 关联的项目名称。
+        message_streamer: 用于发送更新消息的消息流处理器。
+        end_time: trace 的结束时间。默认为 None。
+        metadata: trace 的额外元数据。默认为 None。
+        input: 与 trace 关联的输入数据。默认为 None。
+        output: 与 trace 关联的输出数据。默认为 None。
+        tags: 与 trace 关联的标签列表。默认为 None。
+        error_info: 与 trace 相关的错误信息。默认为 None。
+        thread_id: 与 trace 关联的线程 ID。默认为 None。
+        source: 更新的来源。可以是 "sdk"、"experiment" 或 "optimization"。
+
     Returns:
         None
-    Usage Notes:
-        - This function does not return a value; it sends an update message to the message streamer.
-        - All parameters except trace_id, project_name and message_streamer are optional.
-        - Only the fields provided will be updated in the trace.
+
+    使用说明：
+        - 此函数不返回值；它向消息流处理器发送更新消息。
+        - 除 trace_id、project_name 和 message_streamer 外，所有参数都是可选的。
+        - 只有提供的字段才会在 trace 中更新。
     """
     update_trace_message = messages.UpdateTraceMessage(
         trace_id=trace_id,

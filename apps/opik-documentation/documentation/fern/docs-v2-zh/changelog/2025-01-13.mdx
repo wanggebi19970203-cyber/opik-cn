@@ -1,0 +1,20 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- playground 现在支持数据集，允许您快速在多个样本上评估提示词
+- 更新了 playground 中支持的模型
+- 更新了快速入门指南以包含所有支持的集成
+- 修复了带有文本输入的 trace 无法添加到数据集的问题
+- 新增在界面中编辑数据集描述的功能
+- 发布了[在线评估](/v1/production/rules)规则 - 您现在可以定义 LLM as a Judge 指标，自动对所有或部分生产 trace 进行评分。
+
+![在线评估](/img/changelog/2025-01-13/online_evaluation.gif)
+
+**SDK**：
+
+- 新增与 [CrewAI](/v1/integrations/crewai) 的集成
+- 发布了新的 `evaluate_prompt` 方法，简化简单提示词模板的评估
+- 在 Python SDK 中添加了 Sentry，以便我们更容易地

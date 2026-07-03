@@ -21,6 +21,7 @@ import ExplainerDescription from "@/shared/ExplainerDescription/ExplainerDescrip
 import { useToast } from "@/ui/use-toast";
 import { ToastAction } from "@/ui/toast";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { useTranslation } from "react-i18next";
 
 type AddEditProjectDialogProps = {
   project?: Project;
@@ -33,6 +34,7 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { toast } = useToast();
@@ -50,8 +52,12 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
 
   const isEdit = Boolean(project);
   const isValid = Boolean(name.length);
-  const title = isEdit ? "Edit project" : "Create a new project";
-  const buttonText = isEdit ? "Update project" : "Create project";
+  const title = isEdit
+    ? t("projects:projects.dialog.editTitle")
+    : t("projects:projects.dialog.createTitle");
+  const buttonText = isEdit
+    ? t("projects:projects.dialog.updateButton")
+    : t("projects:projects.dialog.createButton");
 
   const onProjectCreated = useCallback(
     (projectData?: { id?: string }) => {
@@ -66,11 +72,11 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
             variant="link"
             size="sm"
             className="px-0"
-            altText="Log traces to your project"
+            altText={t("projects:projects.dialog.logTracesLink")}
             key="Log traces to your project"
           >
             <a href={explainer.docLink} target="_blank" rel="noreferrer">
-              Log traces to your project
+              {t("projects:projects.dialog.logTracesLink")}
             </a>
           </ToastAction>,
         ],
@@ -135,20 +141,24 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
           />
         )}
         <div className="flex flex-col gap-2 pb-4">
-          <Label htmlFor="projectName">Name</Label>
+          <Label htmlFor="projectName">
+            {t("projects:projects.dialog.nameLabel")}
+          </Label>
           <Input
             id="projectName"
-            placeholder="Project name"
+            placeholder={t("projects:projects.fields.name")}
             disabled={isEdit}
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
         </div>
         <div className="flex flex-col gap-2 pb-4">
-          <Label htmlFor="projectDescription">Description</Label>
+          <Label htmlFor="projectDescription">
+            {t("projects:projects.dialog.descriptionLabel")}
+          </Label>
           <Textarea
             id="projectDescription"
-            placeholder="Project description"
+            placeholder={t("projects:projects.fields.description")}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             maxLength={255}
@@ -156,7 +166,9 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">
+              {t("projects:projects.dialog.cancel")}
+            </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button type="submit" disabled={!isValid} onClick={submitHandler}>

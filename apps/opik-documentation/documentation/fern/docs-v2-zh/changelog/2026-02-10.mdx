@@ -1,0 +1,52 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## SDK 改进
+
+我们显著扩展了 Python 和 TypeScript SDK 的功能，使通过编程方式将 Opik 集成到工作流中变得更加容易。
+
+**新增内容：**
+
+- **标注队列支持** - Python 和 TypeScript SDK 现在都支持标注队列，允许你以编程方式管理和交互标注工作流
+- **数据集版本管理** - 两个 SDK 现在都提供完整的数据集版本管理支持，为你提供对数据生命周期和实验可重现性的更好控制
+- **数据集过滤（TypeScript）** - 直接从 TypeScript SDK 过滤数据集项，实现更高效的数据检索
+- **Opik 查询语言（TypeScript）** - TypeScript SDK 现在支持 Opik 查询语言（OQL），实现强大灵活的数据查询
+- **反馈评分记录（TypeScript）** - 直接从 TypeScript SDK 记录反馈评分以追踪模型质量指标
+- **对话线程搜索（TypeScript）** - 使用新的 `searchThreads` 功能以编程方式搜索对话线程
+
+👉 [标注队列](/v1/evaluation/annotation_queues#managing-queues-programmatically) | [Opik 查询语言](/v1/reference/typescript-sdk/opik-query-language) | [数据集版本管理](/v1/reference/typescript-sdk/evaluation/datasets#working-with-dataset-versions)
+
+## LLM Provider 和集成更新
+
+我们扩展了 LLM Provider 支持并改进了集成，为你的 AI 工作流提供更多灵活性。
+
+**新增内容：**
+
+- **Ollama Provider 支持** - Ollama 现在作为原生 Provider 在 Playground 中可用，支持在 Opik 中直接进行本地 LLM 推理
+- **Claude Opus 4.6 支持** - 完全支持 Anthropic 最新的 Claude Opus 4.6 模型
+- **LangChain 工具描述** - LangChain 集成现在自动提取工具描述并添加到工具 spans 中，提供对你 Agent 工具使用的更好可见性
+
+👉 [AI Provider 文档](/v1/administration/workspace-settings/ai_providers)
+
+## 产品和用户体验改进
+
+我们进行了多项改进，使你的日常工作流更加顺畅和直观。
+
+**改进内容：**
+
+- **统一日志视图** - Traces、对话线程和 Spans 现在合并到单个日志标签页中，提供所有可观测性数据的统一视图
+- **对话线程中的图像附件** - 直接在对话线程视图中查看图像附件，审查对话时提供更好的上下文
+- **内联反馈定义创建** - 直接从标注队列表单创建新的反馈定义，无需离开工作流
+- **改进的表格加载** - 增强了表格的加载状态用户体验，处理大型数据集时体验更顺畅
+- **扩展的反馈评分** - 实验项侧边栏中的反馈评分部分现在默认展开，便于快速访问
+- **组织和工作区选择器** - 侧边栏和面包屑中的新组织和工作区选择器，使在不同上下文之间导航更加容易
+- **Playground Prompt 元数据** - Opik Playground 生成的 traces 现在包含 prompt 元数据，改善可追溯性
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.9.101...1.10.10)
+
+_发布版本_: `1.9.102`, `1.9.103`, `1.9.104`, `1.10.0`, `1.10.1`, `1.10.2`, `1.10.3`, `1.10.4`, `1.10.5`, `1.10.6`, `1.10.7`, `1.10.8`, `1.10.9`, `1.10.10`

@@ -1,5 +1,6 @@
 import React from "react";
 import { Info } from "lucide-react";
+import i18n from "@/i18n";
 import {
   useDashboardStore,
   selectPreviewWidget,
@@ -26,7 +27,7 @@ const DashboardWidgetPreviewHeader: React.FunctionComponent<
 
   const { title, subtitle, generatedTitle } = previewWidget;
   const displayTitle = title || generatedTitle || "";
-  const titlePlaceholder = generatedTitle || "Enter widget title";
+  const titlePlaceholder = generatedTitle || i18n.t("common:dashboard.enterWidgetTitle");
 
   const handleTitleChange = (newTitle: string) => {
     updatePreviewWidget({ title: newTitle });
@@ -54,7 +55,7 @@ const DashboardWidgetPreviewHeader: React.FunctionComponent<
       />
       <InlineEditableText
         value={subtitle || ""}
-        placeholder="Click to add a description"
+        placeholder={i18n.t("common:dashboard.clickToAddDescription")}
         defaultValue=""
         onChange={handleSubtitleChange}
       />

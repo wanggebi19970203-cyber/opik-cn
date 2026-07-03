@@ -1,4 +1,5 @@
 import PrettyLLMMessage from "@/shared/PrettyLLMMessage";
+import i18next from "i18next";
 import {
   FormatCombiner,
   FormatMapper,
@@ -51,15 +52,15 @@ const generateMessageId = (index: number, prefix: string = "msg"): string => {
 
 const getImageName = (url: string, index: number): string => {
   if (url.startsWith("data:")) {
-    return `Image ${index + 1}`;
+    return i18next.t("llmMapper.image", { index: index + 1 });
   }
   try {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
     const filename = pathname.split("/").pop();
-    return filename || `Image ${index + 1}`;
+    return filename || i18next.t("llmMapper.image", { index: index + 1 });
   } catch {
-    return `Image ${index + 1}`;
+    return i18next.t("llmMapper.image", { index: index + 1 });
   }
 };
 
@@ -136,7 +137,7 @@ const formatAsToolResult = (
   return {
     blockType: "code",
     component: PrettyLLMMessage.CodeBlock,
-    props: { code: formattedContent, label: name || "Tool result" },
+    props: { code: formattedContent, label: name || i18next.t("llmMapper.toolResult") },
   };
 };
 

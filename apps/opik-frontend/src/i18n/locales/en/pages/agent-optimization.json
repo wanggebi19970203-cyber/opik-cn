@@ -1,0 +1,70 @@
+{
+  "agentOptimization": {
+    "title": "Agent Optimization",
+    "description": "Optimize your AI agents",
+    "features": {
+      "algorithms": "Algorithms",
+      "experiments": "Experiments",
+      "results": "Results"
+    },
+    "editPanel": {
+      "newConfiguration": "New agent configuration",
+      "fromVersion": "From {{name}}",
+      "addVersionNotes": "Add version notes",
+      "compareWith": "Compare {{name}}",
+      "currentChanges": "current changes",
+      "editFields": "Edit fields",
+      "showDiff": "Show diff",
+      "backToEdit": "Back to edit",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saveNewVersion": "Save new version"
+    },
+    "editView": {
+      "unsavedChangesTitle": "You have unsaved changes",
+      "unsavedChangesDescription": "If you leave now, your changes will be lost. Are you sure you want to continue?",
+      "leaveWithoutSaving": "Leave without saving",
+      "stayOnPage": "Stay on page",
+      "original": "{{name}} (original)",
+      "currentChanges": "Current changes",
+      "modified": "Modified",
+      "restoreField": "Restore field",
+      "removeField": "Remove field",
+      "addField": "Add field"
+    },
+    "newFieldEditor": {
+      "string": "String",
+      "integer": "Integer",
+      "float": "Float",
+      "boolean": "Boolean",
+      "chatPrompt": "Chat prompt",
+      "textPrompt": "Text prompt",
+      "fieldNamePatternError": "Use letters, digits and underscore; start with a letter or underscore",
+      "fieldNameExistsError": "A field with this name already exists",
+      "promptEmptyError": "Prompt must not be empty",
+      "addAtLeastOneMessage": "Add at least one message",
+      "messagesEmptyError": "Messages must not be empty",
+      "fieldNamePlaceholder": "field_name",
+      "removeField": "Remove field",
+      "enterPromptTemplate": "Enter prompt template",
+      "initialValue": "Initial value"
+    },
+    "expandAllToggle": {
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all"
+    },
+    "chatMessages": {
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "message": "Message"
+    },
+    "diffTable": {
+      "key": "Key",
+      "showDifferencesOnly": "Show differences only",
+      "noDifferences": "There are no differences between {{base}} and {{diff}}"
+    },
+    "diffCell": {
+      "empty": "(empty)"
+    }
+  }
+}

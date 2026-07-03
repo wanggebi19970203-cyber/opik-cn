@@ -9,21 +9,21 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RateLimited {
 
-    String GENERAL_EVENTS = "general_events"; // User limit
-    String WORKSPACE_EVENTS = "workspace_events"; // Workspace limit
-    String SINGLE_TRACING_OPS = "singleTracingOps"; // Single tracing operations limit
+    String GENERAL_EVENTS = "general_events"; // 用户限制
+    String WORKSPACE_EVENTS = "workspace_events"; // 工作区限制
+    String SINGLE_TRACING_OPS = "singleTracingOps"; // 单次追踪操作限制
 
     /**
-     * Define the custom bucket name for the rate limit.
+     * 定义速率限制的自定义桶名称。
      *
-     * @return the bucket names
+     * @return 桶名称
      * <br>
-     * To define custom bucket names, use the following format:
+     * 要定义自定义桶名称，请使用以下格式：
      * <br>
-     * - for simple bucket names: "bucketName"
-     * - for bucket names with placeholders: "bucketName:{placeholder}"
+     * - 简单桶名称："bucketName"
+     * - 带占位符的桶名称："bucketName:{placeholder}"
      * <br>
-     * The placeholders are replaced with the actual values from the request context. Currently, the following placeholders are supported:
+     * 占位符会被请求上下文中的实际值替换。目前支持以下占位符：
      * <br>
      * - {workspaceId}
      * - {apiKey}

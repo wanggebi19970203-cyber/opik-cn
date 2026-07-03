@@ -40,7 +40,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project related resources")
+@Tag(name = "Projects", description = "项目相关资源")
 public class ProjectAlertsResource {
 
     private final @NonNull AlertService alertService;
@@ -49,9 +49,9 @@ public class ProjectAlertsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @GET
-    @Operation(operationId = "findAlertsByProject", summary = "Find alerts by project", description = "Find alerts scoped to a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Alerts page", content = @Content(schema = @Schema(implementation = Alert.AlertPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findAlertsByProject", summary = "按项目查找告警", description = "查找指定项目范围内的告警", responses = {
+            @ApiResponse(responseCode = "200", description = "告警分页", content = @Content(schema = @Schema(implementation = Alert.AlertPage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @JsonView(Alert.View.Public.class)
     public Response find(

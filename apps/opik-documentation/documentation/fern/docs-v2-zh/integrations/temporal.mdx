@@ -1,0 +1,90 @@
+---
+description: 配置 Temporal Python OpenTelemetry 追踪并导出到 Opik。
+headline: Temporal | Opik 文档
+og:description: Temporal Python SDK 使用 TracingInterceptor；本指南说明必要的设置和 Opik 端点模式。
+og:site_name: Opik 文档
+og:title: Temporal 集成 - Opik
+title: 使用 Opik 实现 Temporal 可观测性
+---
+
+[Temporal](https://temporal.io/) Python SDK 通过 `TracingInterceptor` 与 OpenTelemetry 集成。
+
+## 适用场景
+
+如果你的 Temporal Python 客户端/工作流工作者需要向 Opik 发送追踪 span，请使用本指南。
+
+## Opik OTLP 端点模式
+
+完整的端点/请求头详情请参阅 [Opik OpenTelemetry 概述](/integrations/opentelemetry)。
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需请求头：`Authorization`、`Comet-Workspace`
+        可选请求头：`projectName`
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需请求头：`Authorization`、`Comet-Workspace`
+        可选请求头：`projectName`
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+        必需请求头：默认无
+        可选请求头：`projectName`，如已启用认证则包含认证请求头
+    </Tab>
+</Tabs>
+
+## 示例（Temporal Python SDK 拦截器）
+
+目的：
+挂载 Temporal 的 OTEL 拦截器，使客户端和工作者能够发送工作流/活动的 span。
+
+适用场景：
+使用 Temporal Python SDK 并具有自定义客户端/工作者引导代码时。
+
+所需输入：
+- Temporal 客户端和工作者配置
+- 在需要的位置将拦截器挂载到两个路径
+- OTEL 端点/请求头环境变量
+
+可选输入：
+- 显式资源/服务名称属性
+- 基于收集器的增强/采样
+
+最小有效配置：
+
+```python
+from temporalio.client import Client
+from temporalio.worker import Worker
+from temporalio.contrib.opentelemetry import TracingInterceptor
+
+tracing_interceptor = TracingInterceptor()
+
+# 在异步上下文中：
+# client = await Client.connect("localhost:7233", interceptors=[tracing_interceptor])
+# worker = Worker(client, task_queue="my-task-queue", workflows=[...], activities=[...], interceptors=[tracing_interceptor])
+```
+
+## 验证
+
+1. 使用 `TracingInterceptor` 启动工作者和客户端。
+2. 执行一个包含至少一个活动的工作流。
+3. 确认工作流/活动的 span 已发送到预期的 Opik 项目中。
+
+## 参考资料
+
+- [Temporal Python SDK OpenTelemetry 支持](https://github.com/temporalio/sdk-python?tab=readme-ov-file#opentelemetry-support)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)

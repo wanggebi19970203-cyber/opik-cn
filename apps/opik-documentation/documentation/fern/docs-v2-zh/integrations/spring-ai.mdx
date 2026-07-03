@@ -1,0 +1,298 @@
+---
+description: 从这里开始将 Opik 集成到基于 Spring AI 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Spring AI | Opik 文档
+og:description: 使用 Spring AI 构建智能应用，将 AI 模型和功能无缝集成到 Spring 生态系统中。
+og:site_name: Opik 文档
+og:title: 简化 Spring 中的 AI 集成 - Opik
+title: 使用 Opik 实现 Spring AI（Java）的可观测性
+---
+
+Spring AI 是一个旨在简化 AI 和机器学习功能集成到 Spring 应用中的框架。它提供了基于 Spring 的熟悉编程模型，用于与 AI 模型、向量存储和 AI 驱动的功能进行交互，使得在 Spring 生态系统中构建智能应用更加便捷。
+
+Spring AI 的主要优势在于其与 Spring 框架的无缝集成，开发者可以在构建 AI 驱动的应用时充分利用 Spring 的依赖注入、配置管理和测试能力。
+
+## 快速入门
+
+要使用 Spring AI 与 Opik 的集成，你需要安装 Spring AI 和所需的 OpenTelemetry 包。
+最简单的入门方式是使用 [OPIK SpringAI starter](https://github.com/comet-ml/opik-springai-demo) 项目。
+
+### 前置条件
+
+在运行演示应用之前，请确保已安装以下内容：
+
+- **Java 21** 或更高版本
+- **Maven 3.6+** 用于依赖管理和构建
+- **OpenAI API Key**（仅适用于 Opik Cloud）- 在 [OpenAI Platform](https://platform.openai.com/) 注册
+- **OPIK API Key** - 在 [Comet OPIK](https://www.comet.com/opik) 注册
+
+### 安装步骤
+
+#### 1. 克隆仓库
+```bash
+git clone git@github.com:comet-ml/opik-springai-demo.git
+cd opik-springai-demo
+```
+
+#### 2. 验证 Java 安装
+```bash
+java --version
+```
+确保已安装 Java 21 或更高版本。
+
+#### 3. 验证 Maven 安装
+```bash
+mvn --version
+```
+
+#### 4. 安装依赖
+```bash
+mvn clean install
+```
+
+## 环境配置
+
+应用需要设置以下环境变量：
+
+#### 必需变量
+
+- **OPENAI_API_KEY**：你的 OpenAI API 密钥
+- **OTEL_EXPORTER_OTLP_ENDPOINT**：OPIK OpenTelemetry 端点
+- **OTEL_EXPORTER_OTLP_HEADERS**：OPIK 的授权头
+
+根据你的 Opik 部署方式配置环境变量：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果你使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将 traces 记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            你也可以将 `Comet-Workspace` 参数更新为其他值，
+            以便将数据记录到不同的工作区。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        如果你使用 Opik 的企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将 traces 记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            你也可以将 `Comet-Workspace` 参数更新为其他值，
+            以便将数据记录到不同的工作区。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+
+    如果你使用自托管的 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将 traces 记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+        环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 Spring AI 中使用 Opik
+
+在 `application.yaml` 中为 Spring AI 设置 OpenTelemetry 检测：
+
+```yaml
+spring:
+  application:
+    name: spring-ai-opik-demo
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+server:
+  port: 8085
+
+# 启用 OpenTelemetry 追踪
+management:
+  tracing:
+    sampling:
+      probability: 1.0 # 采样所有 traces
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+          headers: ${OTEL_EXPORTER_OTLP_HEADERS}
+
+# 禁用通过 OpenTelemetry 导出 metrics 和 logs，以避免对 OpenTelemetry 收集器造成额外负载
+otel:
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+```
+
+你的 Spring AI 代码现在将自动向 Opik 发送 traces：
+
+```java
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * Service class responsible for handling chat-related operations.
+ * Provides functionality to interact with an underlying LLM chat client.
+ */
+@Service
+public class ChatService {
+
+    private static final String TAGS_KEY = "opik.tags";
+    private static final String METADATA_PREFIX = "opik.metadata.";
+
+    private final Tracer tracer;
+    private final ChatClient chatClient;
+
+    public ChatService(ChatClient.Builder chatClientBuilder, Tracer tracer) {
+        this.chatClient = chatClientBuilder.build();
+        this.tracer = tracer;
+    }
+
+    public String askQuestion(@NonNull String question) {
+        return chatClient
+                .prompt(new Prompt(question))
+                .call()
+                .content();
+    }
+
+    public String askQuestion(@NonNull String question, List<String> tags, Map<String, String> metadata) {
+
+        Span span = tracer.currentSpan();
+        if (Objects.nonNull(span)) {
+            setTags(span, tags);
+            setMetadata(span, metadata);
+        }
+
+        return chatClient
+                .prompt(new Prompt(question))
+                .call()
+                .content();
+    }
+
+    private void setTags(@NonNull Span span, List<String> tags) {
+        if (!CollectionUtils.isEmpty(tags)) {
+            span.tagOfStrings(TAGS_KEY, tags);
+        }
+    }
+
+    private void setMetadata(@NonNull Span span, Map<String, String> metadata) {
+        if ( !CollectionUtils.isEmpty(metadata) ) {
+            // populate metadata
+            metadata.forEach((String k, String v) ->
+                    span.tag(METADATA_PREFIX + k, v));
+        }
+    }
+}
+```
+
+## 运行演示应用
+
+克隆 [OPIK SpringAI starter](https://github.com/comet-ml/opik-springai-demo) 仓库后，
+你可以使用以下方法之一运行演示应用：
+
+### 方法一：使用 Maven Spring Boot 插件
+```bash
+export OTEL_EXPORTER_OTLP_HEADERS='Comet-Workspace=default,projectName=otel-springai-test' \
+export OPENAI_API_KEY=sk-proj-your-api-key \
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+mvn spring-boot:run
+```
+
+### 方法二：使用 JAR 文件
+```bash
+mvn clean package
+
+export OTEL_EXPORTER_OTLP_HEADERS='Comet-Workspace=default,projectName=otel-springai-test' \
+export OPENAI_API_KEY=sk-proj-your-api-key \
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+java -jar target/spring-ai-demo-opik-0.0.1-SNAPSHOT.jar
+```
+
+### 方法三：开发模式（自动重载）
+```bash
+export OTEL_EXPORTER_OTLP_HEADERS='Comet-Workspace=default,projectName=otel-springai-test' \
+export OPENAI_API_KEY=sk-proj-your-api-key \
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.devtools.restart.enabled=true"
+```
+
+应用将在 `http://localhost:8085` 上启动。
+
+## 使用 REST API 测试演示应用
+
+启动后，你可以向应用端点发送请求与聊天机器人交互：
+
+```bash
+curl --get --data-urlencode "question=How to integrate Spring AI with OpenAI for building chatbots?" http://localhost:8085/api/chat/ask-me
+```
+
+或者向 `/api/chat/ask-enhanced` 端点发送 POST 请求，在请求体中包含 TAGS 和 METADATA：
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What are the benefits of using Spring AI?",
+    "tags": ["spring", "ai", "tutorial"],
+    "metadata": {
+      "userId": "user123",
+      "sessionId": "session456",
+      "category": "educational"
+    }
+  }' \
+  http://localhost:8085/api/chat/ask-enhanced
+```
+
+运行演示应用后，你可以在 Opik 中查看 traces，导航到 **Projects** 页面的 **Traces** 标签页。
+
+![Opik Traces 页面](/img/tracing/springai_opentelemetry_integration.png)
+
+## 进一步改进
+
+如果你对 Spring AI 集成有任何问题或建议，请在我们的 GitHub 仓库上[提交 issue](https://github.com/comet-ml/opik/issues/new/choose)。

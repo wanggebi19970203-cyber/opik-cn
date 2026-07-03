@@ -1,0 +1,73 @@
+{
+  "projects": {
+    "title": "项目",
+    "description": "管理项目和追踪实验",
+    "create": "创建项目",
+    "edit": "编辑项目",
+    "delete": "删除项目",
+    "empty": {
+      "title": "暂无项目",
+      "description": "创建您的第一个项目开始使用。",
+      "action": "创建您的第一个项目"
+    },
+    "fields": {
+      "name": "项目名称",
+      "description": "项目描述"
+    },
+    "actions": {
+      "view": "查看项目",
+      "settings": "项目设置"
+    },
+    "page": {
+      "searchPlaceholder": "按名称搜索",
+      "noDataText": "暂无项目",
+      "noSearchResults": "无搜索结果",
+      "createProject": "创建项目"
+    },
+    "dialog": {
+      "createTitle": "创建新项目",
+      "editTitle": "编辑项目",
+      "updateButton": "更新项目",
+      "createButton": "创建项目",
+      "cancel": "取消",
+      "nameLabel": "名称",
+      "descriptionLabel": "描述",
+      "logTracesLink": "记录追踪到您的项目"
+    },
+    "table": {
+      "name": "名称",
+      "id": "ID",
+      "avgDuration": "平均时长",
+      "durationP90": "时长 (p90)",
+      "durationP99": "时长 (p99)",
+      "totalCost": "总费用",
+      "traceCount": "追踪数量",
+      "threadCount": "线程数量",
+      "errors": "错误",
+      "avgTotalTokens": "平均总 token 数",
+      "avgInputTokens": "平均输入 token 数",
+      "avgOutputTokens": "平均输出 token 数",
+      "avgFeedbackScores": "平均反馈评分",
+      "guardrails": "护栏",
+      "guardrailsFailed": "{{count}} 个失败",
+      "lastUpdated": "最后更新",
+      "created": "创建时间",
+      "createdBy": "创建者",
+      "description": "描述"
+    },
+    "rowActions": {
+      "actionsMenu": "操作菜单",
+      "edit": "编辑",
+      "delete": "删除",
+      "deleteTitle": "删除项目",
+      "deleteDescription": "删除项目将同时移除所有追踪及其数据。此操作无法撤销。确定要继续吗？",
+      "deleteConfirm": "删除项目"
+    },
+    "actionsPanel": {
+      "deleteTitle": "删除项目",
+      "deleteDescription": "删除项目将同时移除所有追踪及其数据。此操作无法撤销。确定要继续吗？",
+      "deleteConfirm": "删除项目",
+      "deleteTooltip": "删除"
+    }
+  }
+}

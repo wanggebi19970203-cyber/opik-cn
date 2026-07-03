@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -58,6 +59,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   defaultValues,
   onSubmit,
 }) => {
+  const { t } = useTranslation("datasets");
   const form = useForm<SettingsFormType>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -95,7 +97,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
         <DialogHeader>
-          <DialogTitle>Test settings</DialogTitle>
+          <DialogTitle>{t("testSuiteSettings.title")}</DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="flex flex-col">
@@ -122,7 +124,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                     htmlFor="runs-per-item"
                     className="comet-body-xs-accented"
                   >
-                    Default runs per item
+                    {t("testSuiteSettings.defaultRunsPerItem")}
                   </Label>
                   <Input
                     id="runs-per-item"
@@ -140,7 +142,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                     onKeyDown={runsInput.onKeyDown}
                   />
                   <span className="comet-body-xs text-light-slate">
-                    Sets how many times each item runs.
+                    {t("testSuiteSettings.runsPerItemDescription")}
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col gap-1">
@@ -148,7 +150,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                     htmlFor="pass-threshold"
                     className="comet-body-xs-accented"
                   >
-                    Default pass threshold
+                    {t("testSuiteSettings.defaultPassThreshold")}
                   </Label>
                   <Input
                     id="pass-threshold"
@@ -166,7 +168,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                     onKeyDown={thresholdInput.onKeyDown}
                   />
                   <span className="comet-body-xs text-light-slate">
-                    Define how many runs must succeed.
+                    {t("testSuiteSettings.passThresholdDescription")}
                   </span>
                 </div>
               </div>
@@ -175,9 +177,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("testSuiteSettings.cancel")}</Button>
           </DialogClose>
-          <Button type="submit">Save</Button>
+          <Button type="submit">{t("testSuiteSettings.save")}</Button>
         </DialogFooter>
       </form>
     </Form>

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -685,12 +686,14 @@ const buildSharedDynamicChips = ({
   scoreOptions,
   feedbackScoresLabel,
   isGuardrailsEnabled,
+  t,
 }: {
   projectId: string;
   type: TRACE_DATA_TYPE;
   scoreOptions: ChipOptionsResult;
   feedbackScoresLabel: string;
   isGuardrailsEnabled: boolean;
+  t: (key: string) => string;
 }): Record<string, ChipDefinition> => {
   const entityType: "spans" | "traces" =
     type === TRACE_DATA_TYPE.spans ? "spans" : "traces";
@@ -698,31 +701,31 @@ const buildSharedDynamicChips = ({
     tags: {
       id: "tags",
       field: "tags",
-      label: "Tags",
+      label: t("logs.filters.tags"),
       kind: "query-builder",
       columnType: COLUMN_TYPE.list,
       operators: TAGS_OPERATORS,
       defaultOperator: "contains",
       value: {
-        placeholder: "Type a tag…",
+        placeholder: t("logs.tracesSpans.filters.typeATag"),
         options: chipOptions(useTagsOptions, {
           projectId,
           entityType,
           logsSource: LOGS_SOURCE.sdk,
         }),
       },
-      addLabel: "Add tag",
+      addLabel: t("logs.tracesSpans.filters.addTag"),
     },
     error_type: {
       id: "error_type",
       field: "error_type",
-      label: "Error type",
+      label: t("logs.tracesSpans.filters.errorType"),
       kind: "query-builder",
       columnType: COLUMN_TYPE.string,
       operators: ["contains", "=", "not_contains", "starts_with", "ends_with"],
       defaultOperator: "contains",
       value: {
-        placeholder: "Select error type",
+        placeholder: t("logs.tracesSpans.filters.selectErrorType"),
         options: chipOptions(useErrorTypeOptions, {
           projectId,
           type,
@@ -739,7 +742,7 @@ const buildSharedDynamicChips = ({
       operators: FEEDBACK_SCORE_OPERATORS,
       defaultOperator: ">=",
       key: {
-        placeholder: "Select score",
+        placeholder: t("logs.tracesSpans.filters.selectScore"),
         options: chipOptionsValue(scoreOptions),
       },
       value: { type: "numeric", decimals: 2, placeholder: "0" },
@@ -747,7 +750,7 @@ const buildSharedDynamicChips = ({
     metadata: {
       id: "metadata",
       field: COLUMN_METADATA_ID,
-      label: "Metadata",
+      label: t("logs.tracesSpans.columns.metadata"),
       kind: "query-builder",
       columnType: COLUMN_TYPE.dictionary,
       operators: DICTIONARY_OPERATORS,
@@ -767,7 +770,7 @@ const buildSharedDynamicChips = ({
     custom: {
       id: "custom",
       field: COLUMN_CUSTOM_ID,
-      label: "Custom filter",
+      label: t("logs.tracesSpans.filters.customFilter"),
       kind: "query-builder",
       columnType: COLUMN_TYPE.dictionary,
       operators: DICTIONARY_OPERATORS,
@@ -793,11 +796,17 @@ const buildSharedDynamicChips = ({
     chips.guardrails = {
       id: "guardrails",
       field: "guardrails",
-      label: "Guardrails",
+      label: t("logs.tracesSpans.filters.guardrails"),
       kind: "single-select",
       options: [
-        { value: GuardrailResult.FAILED, label: "Failed" },
-        { value: GuardrailResult.PASSED, label: "Passed" },
+        {
+          value: GuardrailResult.FAILED,
+          label: t("logs.tracesSpans.filters.failed"),
+        },
+        {
+          value: GuardrailResult.PASSED,
+          label: t("logs.tracesSpans.filters.passed"),
+        },
       ],
       columnType: COLUMN_TYPE.category,
       operator: "=",
@@ -821,8 +830,39 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
   projectId,
   projectName,
 }) => {
+  const { t } = useTranslation("pages/logs");
   const { open: openQuickstart } = useOpenQuickStartDialog();
   const truncationEnabled = useTruncationEnabled();
+
+  const tracesColumnLabelMap: Record<string, string> = useMemo(
+    () => ({
+      name: t("logs.columns.name"),
+      start_time: t("logs.columns.startTime"),
+      end_time: t("logs.columns.startTime").replace(
+        t("logs.columns.startTime").split(" ")[0],
+        "End",
+      ),
+      input: t("logs.tracesSpans.columns.input"),
+      output: t("logs.tracesSpans.columns.output"),
+      error_info: t("logs.tracesSpans.columns.errors"),
+      duration: t("logs.columns.duration"),
+      tags: t("logs.filters.tags"),
+      total_tokens: t("logs.tracesSpans.columns.totalTokens"),
+      prompt_tokens: t("logs.tracesSpans.columns.totalInputTokens"),
+      completion_tokens: t("logs.tracesSpans.columns.totalOutputTokens"),
+      total_estimated_cost: t("logs.tracesSpans.columns.estimatedCost"),
+      metadata: t("logs.tracesSpans.columns.metadata"),
+      span_count: t("logs.tracesSpans.columns.spanCount"),
+      llm_span_count: t("logs.tracesSpans.columns.llmCallsCount"),
+      thread_id: t("logs.tracesSpans.columns.threadId"),
+      experiment: t("logs.tracesSpans.columns.experiment"),
+      created_by: t("logs.tracesSpans.columns.createdBy"),
+      comments: t("logs.tracesSpans.columns.comments"),
+      guardrails: t("logs.tracesSpans.columns.guardrails"),
+      provider: t("logs.tracesSpans.columns.provider"),
+    }),
+    [t],
+  );
 
   const {
     dateRange,
@@ -986,19 +1026,20 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         projectId,
         type: TRACE_DATA_TYPE.traces,
         scoreOptions: traceScoreOptions,
-        feedbackScoresLabel: "Trace feedback scores",
+        feedbackScoresLabel: t("logs.tracesSpans.filters.traceFeedbackScores"),
         isGuardrailsEnabled,
+        t,
       }),
       span_feedback_scores: {
         id: "span_feedback_scores",
         field: COLUMN_SPAN_FEEDBACK_SCORES_ID,
-        label: "Span feedback scores",
+        label: t("logs.tracesSpans.filters.spanFeedbackScores"),
         kind: "query-builder",
         columnType: COLUMN_TYPE.numberDictionary,
         operators: FEEDBACK_SCORE_OPERATORS,
         defaultOperator: ">=",
         key: {
-          placeholder: "Select span score",
+          placeholder: t("logs.tracesSpans.filters.selectSpanScore"),
           options: chipOptionsValue(spanScoreOptions),
         },
         value: { type: "numeric", decimals: 2, placeholder: "0" },
@@ -1009,7 +1050,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       ...dynamicChips,
     };
     return compact(TRACE_CHIP_ORDER.map((id) => byId[id]));
-  }, [isGuardrailsEnabled, projectId, traceScoreOptions, spanScoreOptions]);
+  }, [isGuardrailsEnabled, projectId, traceScoreOptions, spanScoreOptions, t]);
 
   const spanChipDefinitions = useMemo<ChipDefinition[]>(() => {
     const dynamicChips: Record<string, ChipDefinition> = {
@@ -1026,8 +1067,9 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         projectId,
         type: TRACE_DATA_TYPE.spans,
         scoreOptions: spanScoreOptions,
-        feedbackScoresLabel: "Feedback scores",
+        feedbackScoresLabel: t("logs.tracesSpans.feedbackScores"),
         isGuardrailsEnabled,
+        t,
       }),
     };
     const byId: Record<string, ChipDefinition> = {
@@ -1035,7 +1077,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       ...dynamicChips,
     };
     return compact(SPAN_CHIP_ORDER.map((id) => byId[id]));
-  }, [isGuardrailsEnabled, projectId, spanScoreOptions]);
+  }, [isGuardrailsEnabled, projectId, spanScoreOptions, t]);
 
   const chipDefinitions =
     type === TRACE_DATA_TYPE.traces
@@ -1560,22 +1602,35 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
               accessorFn: (row: BaseTraceData) =>
                 row.guardrails_validations || [],
               cell: GuardrailsCell as never,
-              statisticDataFormater: (value: number) => `${value} failed`,
+              statisticDataFormater: (value: number) =>
+                `${value} ${t("logs.tracesSpans.failed")}`,
             },
           ]
         : []),
       // Note: metadataColumnsData is NOT added here - it goes in columnSections instead
     ];
-  }, [type, handleThreadIdClick, isGuardrailsEnabled, addTagFilter]);
+  }, [type, handleThreadIdClick, isGuardrailsEnabled, addTagFilter, t]);
+
+  const translatedColumnData = useMemo(
+    () =>
+      columnData.map((col) => ({
+        ...col,
+        label: tracesColumnLabelMap[col.id] ?? col.label,
+      })),
+    [columnData, tracesColumnLabelMap],
+  );
 
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<Trace | Span>(),
-      ...convertColumnDataToColumn<BaseTraceData, Span | Trace>(columnData, {
-        columnsOrder,
-        selectedColumns,
-        sortableColumns: sortableBy,
-      }),
+      ...convertColumnDataToColumn<BaseTraceData, Span | Trace>(
+        translatedColumnData,
+        {
+          columnsOrder,
+          selectedColumns,
+          sortableColumns: sortableBy,
+        },
+      ),
       ...convertColumnDataToColumn<BaseTraceData, Span | Trace>(
         scoresColumnsData,
         {
@@ -1595,7 +1650,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     ];
   }, [
     sortableBy,
-    columnData,
+    translatedColumnData,
     columnsOrder,
     selectedColumns,
     scoresColumnsData,
@@ -1658,7 +1713,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       onOrderChange: (order: string[]) => void;
     }[] = [
       {
-        title: "Feedback scores",
+        title: t("logs.tracesSpans.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
@@ -1672,7 +1727,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
 
     if (allMetadataColumns.length > 0) {
       sections.push({
-        title: "Metadata",
+        title: t("logs.tracesSpans.columns.metadata"),
         columns: allMetadataColumns,
         order: metadataColumnsOrder,
         onOrderChange: setMetadataColumnsOrder,
@@ -1687,6 +1742,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     metadataColumnsData,
     metadataColumnsOrder,
     setMetadataColumnsOrder,
+    t,
   ]);
 
   return (
@@ -1706,7 +1762,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             size="icon-xs"
           />
           <ColumnsButton
-            columns={columnData}
+            columns={translatedColumnData}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}
@@ -1737,9 +1793,11 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
           />
           <Separator orientation="vertical" className="mx-2 h-6" />
           <RefreshButton
-            tooltip={`Refresh ${
-              type === TRACE_DATA_TYPE.traces ? "traces" : "spans"
-            } list`}
+            tooltip={
+              type === TRACE_DATA_TYPE.traces
+                ? t("logs.tracesSpans.refreshTooltip.traces")
+                : t("logs.tracesSpans.refreshTooltip.spans")
+            }
             size="icon-xs"
             isFetching={isFetching}
             onRefresh={() => {
@@ -1757,7 +1815,11 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         <MetricsSummary
           projectId={projectId}
           entityType={type === TRACE_DATA_TYPE.traces ? "traces" : "spans"}
-          countLabel={type === TRACE_DATA_TYPE.traces ? "Traces" : "Spans"}
+          countLabel={
+            type === TRACE_DATA_TYPE.traces
+              ? t("logs.tracesSpans.countLabel.traces")
+              : t("logs.tracesSpans.countLabel.spans")
+          }
           filters={effectiveFilters}
           intervalStart={intervalStart}
           intervalEnd={intervalEnd}
@@ -1805,7 +1867,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
               <SearchInput
                 searchText={search as string}
                 setSearchText={setSearch}
-                placeholder="Search by anything"
+                placeholder={t("logs.tracesSpans.filters.searchByAnything")}
                 className="w-[200px] shrink-0"
                 dimension="xs"
               />
@@ -1819,10 +1881,14 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         isEmpty={showEmptyState}
         emptyState={
           <DataTableEmptyContent
-            title={`No ${type} yet`}
-            description={`${
-              type === TRACE_DATA_TYPE.spans ? "Spans" : "Traces"
-            } will appear here once your agent starts receiving requests.`}
+            title={
+              type === TRACE_DATA_TYPE.spans ? `No spans yet` : `No traces yet`
+            }
+            description={
+              type === TRACE_DATA_TYPE.spans
+                ? "Spans will appear here once your agent starts receiving requests."
+                : "Traces will appear here once your agent starts receiving requests."
+            }
             lightImageUrl={emptyLogsLightUrl}
             darkImageUrl={emptyLogsDarkUrl}
           >
@@ -1831,7 +1897,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
                 onClick={openQuickstart}
                 className="comet-body-s underline underline-offset-4 hover:text-primary"
               >
-                Quickstart guide
+                {t("logs.tracesSpans.empty.quickstartGuide")}
               </button>
               <a
                 href={buildDocsUrl("/tracing/advanced/log_traces")}
@@ -1839,7 +1905,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
                 rel="noreferrer"
                 className="comet-body-s inline-flex items-center gap-1 underline underline-offset-4 hover:text-primary"
               >
-                View docs
+                {t("logs.tracesSpans.empty.viewDocs")}
                 <ExternalLink className="size-3" />
               </a>
             </div>

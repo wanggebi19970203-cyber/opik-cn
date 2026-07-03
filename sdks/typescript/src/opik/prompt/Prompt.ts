@@ -12,16 +12,16 @@ export interface PromptData extends BasePromptData {
 }
 
 /**
- * Domain object representing a versioned text prompt template.
- * Provides immutable access to prompt properties and template formatting.
- * Integrates with backend for persistence and version management.
+ * 表示版本化文本提示词模板的领域对象。
+ * 提供对提示词属性和模板格式化的不可变访问。
+ * 与后端集成以实现持久化和版本管理。
  */
 export class Prompt extends BasePrompt {
   public readonly prompt: string;
 
   /**
-   * Creates a new Prompt instance.
-   * All operations work seamlessly without requiring manual configuration.
+   * 创建新的 Prompt 实例。
+   * 所有操作无需手动配置即可无缝运行。
    */
   constructor(data: PromptData);
   /** @deprecated Passing an opik client is deprecated. */
@@ -62,20 +62,20 @@ export class Prompt extends BasePrompt {
   }
 
   /**
-   * Returns the template string for this text prompt.
-   * Alias for the `prompt` property for consistency with ChatPrompt.
+   * 返回此文本提示词的模板字符串。
+   * 与 ChatPrompt 保持一致的 `prompt` 属性别名。
    */
   get template(): string {
     return this.prompt;
   }
 
   /**
-   * Formats prompt template by substituting variables.
-   * Validates that all template placeholders are provided (for Mustache templates).
+   * 通过替换变量来格式化提示词模板。
+   * 验证是否提供了所有模板占位符（适用于 Mustache 模板）。
    *
-   * @param variables - Object with values to substitute into template
-   * @returns Formatted prompt text with variables substituted
-   * @throws PromptValidationError if template processing or validation fails
+   * @param variables - 包含要替换到模板中的值的对象
+   * @returns 替换变量后的已格式化提示词文本
+   * @throws 若模板处理或验证失败则抛出 PromptValidationError
    *
    * @example
    * ```typescript
@@ -85,13 +85,13 @@ export class Prompt extends BasePrompt {
    *   type: "mustache"
    * }, client);
    *
-   * // Valid - all placeholders provided
+   * // 有效 - 提供了所有占位符
    * prompt.format({ name: "Alice", score: 95 });
-   * // Returns: "Hello Alice, your score is 95"
+   * // 返回: "Hello Alice, your score is 95"
    *
-   * // Invalid - missing 'score' placeholder
+   * // 无效 - 缺少 'score' 占位符
    * prompt.format({ name: "Alice" });
-   * // Throws: PromptValidationError
+   * // 抛出: PromptValidationError
    * ```
    */
   format(variables: PromptVariables): string {
@@ -99,14 +99,14 @@ export class Prompt extends BasePrompt {
   }
 
   /**
-   * Static factory method to create Prompt from backend API response.
+   * 从后端 API 响应创建 Prompt 的静态工厂方法。
    *
-   * @param name - Name of the prompt
-   * @param apiResponse - REST API PromptVersionDetail response
-   * @param opik - OpikClient instance
-   * @param promptPublicData - Optional PromptPublic data containing description and tags
-   * @returns Prompt instance constructed from response data
-   * @throws PromptValidationError if response structure invalid
+   * @param name - 提示词的名称
+   * @param apiResponse - REST API PromptVersionDetail 响应
+   * @param opik - OpikClient 实例
+   * @param promptPublicData - 可选的 PromptPublic 数据，包含描述和标签
+   * @returns 从响应数据构造的 Prompt 实例
+   * @throws 若响应结构无效则抛出 PromptValidationError
    */
   static fromApiResponse(
     promptData: OpikApi.PromptPublic,
@@ -171,29 +171,29 @@ export class Prompt extends BasePrompt {
   }
 
   /**
-   * Restores a specific version by creating a new version with content from the specified version.
-   * The version must be obtained from the backend (e.g., via getVersions()).
-   * Returns a new Prompt instance with the restored content as the latest version.
+   * 通过从指定版本创建新版本来恢复特定版本。
+   * 版本必须从后端获取（例如通过 getVersions()）。
+   * 返回一个新的 Prompt 实例，其内容为恢复的最新版本。
    *
-   * @param version - PromptVersion object to restore (must be from backend)
-   * @returns Promise resolving to a new Prompt instance with the restored version
-   * @throws OpikApiError if REST API call fails
+   * @param version - 要恢复的 PromptVersion 对象（必须来自后端）
+   * @returns 解析为包含恢复版本的新 Prompt 实例的 Promise
+   * @throws 若 REST API 调用失败则抛出 OpikApiError
    *
    * @example
    * ```typescript
    * const prompt = await client.getPrompt({ name: "my-prompt" });
    *
-   * // Get all versions
+   * // 获取所有版本
    * const versions = await prompt.getVersions();
    *
-   * // Restore a specific version
+   * // 恢复特定版本
    * const targetVersion = versions.find(v => v.commit === "abc123de");
    * if (targetVersion) {
    *   const restoredPrompt = await prompt.useVersion(targetVersion);
    *   console.log(`Restored to commit: ${restoredPrompt.commit}`);
    *   console.log(`New template: ${restoredPrompt.prompt}`);
    *
-   *   // Continue using the restored prompt
+   *   // 继续使用恢复的提示词
    *   const formatted = restoredPrompt.format({ name: "World" });
    * }
    * ```
@@ -214,12 +214,12 @@ export class Prompt extends BasePrompt {
   }
 
   /**
-   * Synchronize the prompt with the backend.
+   * 将提示词与后端同步。
    *
-   * Creates or updates the prompt on the Opik server. If the sync fails,
-   * a warning is logged and the same (unsynced) instance is returned.
+   * 在 Opik 服务器上创建或更新提示词。如果同步失败，
+   * 会记录警告并返回相同的（未同步的）实例。
    *
-   * @returns Promise resolving to a new synced Prompt instance, or this instance if sync fails
+   * @returns 解析为新的已同步 Prompt 实例的 Promise，如果同步失败则返回此实例
    */
   async syncWithBackend(): Promise<Prompt> {
     try {
@@ -243,22 +243,21 @@ export class Prompt extends BasePrompt {
   }
 
   /**
-   * Get a Prompt at a specific version.
+   * 获取特定版本的 Prompt。
    *
-   * Accepts either the sequential version identifier (e.g. `"v3"`) — preferred —
-   * or a commit hash for backwards compatibility. Inputs matching `/^v\d+$/`
-   * are treated as version numbers; anything else is treated as a commit.
+   * 接受顺序版本标识符（如 `"v3"`）（推荐）或用于向后兼容的提交哈希。
+   * 匹配 `/^v\d+$/` 的输入被视为版本号；其他内容被视为提交。
    *
-   * @param version - Sequential version (`"v<N>"`) or commit hash
-   *   (commit input is **deprecated** — pass a `"v<N>"` identifier instead).
-   * @returns Prompt instance representing that version, or null if not found
+   * @param version - 顺序版本（`"v<N>"`）或提交哈希
+   *   （提交输入已**弃用** — 请改用 `"v<N>"` 标识符）。
+   * @returns 表示该版本的 Prompt 实例，如果未找到则返回 null
    *
    * @example
    * ```typescript
-   * // Preferred
+   * // 推荐
    * const v3 = await prompt.getVersion("v3");
    *
-   * // @deprecated — commit-shaped input
+   * // @deprecated — 提交格式输入
    * const byCommit = await prompt.getVersion("abc123de");
    * ```
    */

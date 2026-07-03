@@ -60,7 +60,7 @@ function loadFromEnv(): Partial<OpikConfig> {
       : undefined,
     holdUntilFlush: parseBooleanFlag(process.env.OPIK_HOLD_UNTIL_FLUSH),
     trackDisable: parseBooleanFlag(process.env.OPIK_TRACK_DISABLE),
-    // parseInt returns NaN for non-numeric strings; `|| 1` converts NaN→1 before Math.max enforces the minimum
+    // parseInt 对非数字字符串返回 NaN；`|| 1` 在 Math.max 强制最小值之前将 NaN 转换为 1
     promptCacheTtlSeconds: process.env.OPIK_PROMPT_CACHE_TTL_SECONDS
       ? Math.max(1, parseInt(process.env.OPIK_PROMPT_CACHE_TTL_SECONDS, 10) || 1)
       : undefined,
@@ -126,9 +126,8 @@ export function validateConfig(config: OpikConfig) {
     throw new Error("OPIK_URL_OVERRIDE is not set");
   }
 
-  // When tracking is disabled, the SDK never sends data, so backend
-  // credentials are not required. Skip the cloud credential checks so an
-  // instrumented app can run without an API key or a local deployment.
+  // 当禁用追踪时，SDK 不会发送数据，因此不需要后端凭据。
+  // 跳过云端凭据检查，使已埋点的应用可以在没有 API 密钥或本地部署的情况下运行。
   if (config.trackDisable) {
     return config;
   }

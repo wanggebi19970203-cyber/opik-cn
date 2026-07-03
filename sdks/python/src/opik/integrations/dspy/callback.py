@@ -20,12 +20,14 @@ SpanOrTraceData = Union[span.SpanData, trace.TraceData]
 
 class OpikCallback(dspy_callback.BaseCallback):
     """
-    Callback for DSPy Opik logging.
+    DSPy Opik 日志记录的回调类。
+
+    用于将 DSPy 模块的执行过程记录到 Opik 平台，支持追踪模块调用、
+    LM 请求和工具调用的完整执行链路。
 
     Args:
-        project_name: The name of the Opik project to log data.
-        log_graph: If True, will log a mermaid diagram for each
-            module
+        project_name: 用于记录数据的 Opik 项目名称。
+        log_graph: 如果为 True，将为每个模块记录 Mermaid 图表。
     """
 
     def __init__(
@@ -35,7 +37,7 @@ class OpikCallback(dspy_callback.BaseCallback):
     ):
         self._map_call_id_to_span_data: Dict[str, span.SpanData] = {}
         self._map_call_id_to_trace_data: Dict[str, trace.TraceData] = {}
-        # Store (lm_instance, expected_messages) for extracting usage and verifying correct history entry
+        # 存储 (lm_instance, expected_messages) 用于提取使用量并验证正确的历史记录条目
         self._map_call_id_to_lm_info: Dict[str, Tuple[Any, Optional[Any]]] = {}
 
         self._origins_metadata: Dict[str, Any] = {"created_from": "dspy"}
@@ -50,6 +52,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         return opik.get_global_client()
 
     def _skip_tracking(self) -> bool:
+        """检查是否应跳过追踪。"""
         return not tracing_runtime_config.is_tracing_active()
 
     def on_module_start(
@@ -61,7 +64,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         if self._skip_tracking():
             return
 
-        # First we check the callback's context
+        # 首先检查回调的上下文
         if (current_span_data := self._context_storage.top_span_data()) is not None:
             self._attach_span_to_existing_span(
                 call_id=call_id,
@@ -76,7 +79,7 @@ class OpikCallback(dspy_callback.BaseCallback):
                 instance=instance,
                 inputs=inputs,
             )
-        # Callback's context is empty, we check opik's context
+        # 回调上下文为空，检查 Opik 的上下文
         elif (current_span_data := opik_context.get_current_span_data()) is not None:
             self._attach_span_to_existing_span(
                 call_id=call_id,
@@ -92,7 +95,7 @@ class OpikCallback(dspy_callback.BaseCallback):
                 inputs=inputs,
             )
         else:
-            # Both callback's and opik's context are empty
+            # 回调上下文和 Opik 上下文均为空，启动新的追踪
             self._start_trace(
                 call_id=call_id,
                 instance=instance,
@@ -106,6 +109,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         instance: Any,
         inputs: Dict[str, Any],
     ) -> None:
+        """将新的 span 附加到现有的 span 下。"""
         project_name = helpers.resolve_child_span_project_name(
             parent_project_name=current_span_data.project_name,
             child_project_name=context_storage.resolve_project_name(
@@ -132,6 +136,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         instance: Any,
         inputs: Dict[str, Any],
     ) -> None:
+        """将新的 span 附加到现有的 trace 下。"""
         project_name = helpers.resolve_child_span_project_name(
             current_trace_data.project_name,
             context_storage.resolve_project_name(self._project_name, "OpikCallback"),
@@ -150,6 +155,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         self._start_span(call_id=call_id, span_data=span_data)
 
     def _start_span(self, call_id: str, span_data: span.SpanData) -> None:
+        """启动一个新的 span。"""
         self._map_call_id_to_span_data[call_id] = span_data
         self._set_current_context_data(span_data)
 
@@ -165,6 +171,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         instance: Any,
         inputs: Dict[str, Any],
     ) -> None:
+        """启动一个新的 trace。"""
         trace_data = trace.TraceData(
             name=instance.__class__.__name__,
             input=inputs,
@@ -188,6 +195,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         outputs: Optional[Any],
         exception: Optional[Exception] = None,
     ) -> None:
+        """模块执行结束时的回调。"""
         self._end_span(
             call_id=call_id,
             exception=exception,
@@ -196,6 +204,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         self._end_trace(call_id=call_id)
 
     def _end_trace(self, call_id: str) -> None:
+        """结束追踪。"""
         if trace_data := self._map_call_id_to_trace_data.pop(call_id, None):
             if tracing_runtime_config.is_tracing_active():
                 trace_data.init_end_time()
@@ -214,31 +223,32 @@ class OpikCallback(dspy_callback.BaseCallback):
         actual_model: Optional[str] = None,
         total_cost: Optional[float] = None,
     ) -> None:
+        """结束 span 并记录输出、异常和使用量信息。"""
         if span_data := self._map_call_id_to_span_data.pop(call_id, None):
             if exception:
                 error_info = error_info_collector.collect(exception)
                 span_data.update(error_info=error_info)
 
-            # Prepare the update dict
+            # 准备更新字典
             update_kwargs: Dict[str, Any] = {
                 "output": {"output": outputs},
                 "usage": usage,
                 "total_cost": total_cost,
             }
 
-            # Handle LLM routers like OpenRouter that return the actual serving provider/model
+            # 处理返回实际服务提供商/模型的 LLM 路由器（如 OpenRouter）
             if extra_metadata is None:
                 extra_metadata = {}
 
-            # Update provider if actual provider differs (e.g., OpenRouter -> Hyperbolic)
+            # 当实际提供商不同时更新提供商（例如 OpenRouter -> Hyperbolic）
             if (
                 actual_provider is not None
                 and span_data.provider is not None
                 and span_data.provider.lower() != actual_provider.lower()
             ):
-                # Store the original provider (e.g., "openrouter") in metadata
+                # 将原始提供商（如 "openrouter"）存储在元数据中
                 extra_metadata["llm_router"] = span_data.provider
-                # Update to the actual provider for accurate cost tracking
+                # 更新为实际提供商以实现准确的成本追踪
                 update_kwargs["provider"] = actual_provider.lower()
 
             if (
@@ -246,12 +256,12 @@ class OpikCallback(dspy_callback.BaseCallback):
                 and span_data.model is not None
                 and span_data.model != actual_model
             ):
-                # Store the original model (e.g., "@preset/qwen") in metadata
+                # 将原始模型（如 "@preset/qwen"）存储在元数据中
                 extra_metadata["original_model"] = span_data.model
-                # Update to the actual model for accurate cost tracking
+                # 更新为实际模型以实现准确的成本追踪
                 update_kwargs["model"] = actual_model
 
-            # Only set metadata if we have something to add
+            # 仅在有内容需要添加时设置元数据
             if extra_metadata:
                 update_kwargs["metadata"] = extra_metadata
 
@@ -259,12 +269,13 @@ class OpikCallback(dspy_callback.BaseCallback):
             if tracing_runtime_config.is_tracing_active():
                 self._opik_client.__internal_api__span__(**span_data.as_parameters)
 
-            # remove span data from context
+            # 从上下文中移除 span 数据
             self._context_storage.pop_span_data(ensure_id=span_data.id)
 
     def _collect_common_span_data(
         self, instance: Any, inputs: Dict[str, Any]
     ) -> span.SpanData:
+        """收集通用的 span 数据。"""
         current_callback_context_data = self._get_current_context_data()
         assert current_callback_context_data is not None
 
@@ -302,6 +313,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         instance: Any,
         inputs: Dict[str, Any],
     ) -> None:
+        """语言模型调用开始时的回调。"""
         span_data = self._collect_common_span_data(instance, inputs)
 
         provider, model = instance.model.split(r"/", 1)
@@ -313,7 +325,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         )
         self._map_call_id_to_span_data[call_id] = span_data
 
-        # Store LM instance and expected messages for extracting usage
+        # 存储 LM 实例和预期消息用于提取使用量
         self._map_call_id_to_lm_info[call_id] = (
             instance,
             inputs.get("messages"),
@@ -327,9 +339,10 @@ class OpikCallback(dspy_callback.BaseCallback):
         outputs: Optional[Dict[str, Any]],
         exception: Optional[Exception] = None,
     ) -> None:
+        """语言模型调用结束时的回调。"""
         lm_info = self._extract_lm_info_from_history(call_id)
 
-        # Add cache_hit to span metadata only when we have a definitive value
+        # 仅在有确定值时将 cache_hit 添加到 span 元数据
         extra_metadata = (
             {"cache_hit": lm_info.cache_hit} if lm_info.cache_hit is not None else None
         )
@@ -351,6 +364,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         instance: Any,
         inputs: Dict[str, Any],
     ) -> None:
+        """工具调用开始时的回调。"""
         span_data = self._collect_common_span_data(instance, inputs)
         self._map_call_id_to_span_data[call_id] = span_data
         self._set_current_context_data(span_data)
@@ -361,6 +375,7 @@ class OpikCallback(dspy_callback.BaseCallback):
         outputs: Optional[Dict[str, Any]],
         exception: Optional[Exception] = None,
     ) -> None:
+        """工具调用结束时的回调。"""
         self._end_span(
             call_id=call_id,
             exception=exception,
@@ -368,10 +383,11 @@ class OpikCallback(dspy_callback.BaseCallback):
         )
 
     def flush(self) -> None:
-        """Sends pending Opik data to the backend"""
+        """将待处理的 Opik 数据发送到后端。"""
         self._opik_client.flush()
 
     def _set_current_context_data(self, value: SpanOrTraceData) -> None:
+        """设置当前上下文数据。"""
         if isinstance(value, span.SpanData):
             self._context_storage.add_span_data(value)
         elif isinstance(value, trace.TraceData):
@@ -380,27 +396,28 @@ class OpikCallback(dspy_callback.BaseCallback):
             raise ValueError(f"Invalid context type: {type(value)}")
 
     def _get_current_context_data(self) -> Optional[SpanOrTraceData]:
+        """获取当前上下文数据。"""
         if span_data := self._context_storage.top_span_data():
             return span_data
         return self._context_storage.get_trace_data()
 
     def _extract_lm_info_from_history(self, call_id: str) -> LMHistoryInfo:
         """
-        Extract token usage, cache status, actual provider, and cost from the LM's history.
+        从 LM 的历史记录中提取 token 使用量、缓存状态、实际提供商和成本。
 
-        DSPy stores usage information in the LM's history after each call.
-        We verify the history entry matches our expected messages to handle
-        potential race conditions with concurrent LM calls.
+        DSPy 在每次调用后将使用信息存储在 LM 的历史记录中。
+        我们验证历史记录条目与预期消息是否匹配，以处理并发 LM 调用
+        可能产生的竞态条件。
 
-        For routers like OpenRouter, the response contains the actual provider
-        that served the request (e.g., "Novita", "Together"), which differs from
-        the router name used in the model string (e.g., "openrouter").
+        对于 OpenRouter 等路由器，响应包含实际提供服务的提供商
+        （如 "Novita"、"Together"），这与模型字符串中使用的路由器名称
+        （如 "openrouter"）不同。
 
-        The cost field is provided by providers like OpenRouter and includes
-        accurate pricing for all token types (reasoning, cache, multimodal).
+        成本字段由 OpenRouter 等提供商提供，包含所有 token 类型
+        （推理、缓存、多模态）的准确定价。
 
         Returns:
-            LMHistoryInfo containing usage, cache_hit, actual_provider, and total_cost.
+            LMHistoryInfo: 包含 usage、cache_hit、actual_provider 和 total_cost。
         """
         lm_info = self._map_call_id_to_lm_info.pop(call_id, None)
         if lm_info is None:
@@ -416,12 +433,13 @@ class OpikCallback(dspy_callback.BaseCallback):
         return extract_lm_info_from_history(lm_instance, expected_messages)
 
     def _get_opik_metadata(self, instance: Any) -> Dict[str, Any]:
+        """获取 Opik 元数据，可选包含模块的 Mermaid 图表。"""
         graph = None
         if self.log_graph and isinstance(instance, dspy.Module):
             try:
                 graph = build_mermaid_graph_from_module(instance)
             except Exception:
-                LOGGER.warning("Unable to generate graph from DSPy module")
+                LOGGER.warning("无法从 DSPy 模块生成图表")
 
         if graph:
             return {

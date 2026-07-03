@@ -3,6 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import isEmpty from "lodash/isEmpty";
 import isNumber from "lodash/isNumber";
 import uniq from "lodash/uniq";
+import { useTranslation } from "react-i18next";
 
 import DashboardWidget from "@/shared/Dashboard/DashboardWidget/DashboardWidget";
 import {
@@ -227,6 +228,7 @@ function transformUngroupedExperimentsToChartData(
 const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
   DashboardWidgetComponentProps
 > = ({ sectionId, widgetId, preview = false }) => {
+  const { t } = useTranslation("dashboards");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const readOnly = useDashboardStore(selectReadOnly);
 
@@ -366,7 +368,10 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
   const hasMoreThanLimit = !hasGroups && totalExperiments > experimentsListSize;
 
   const warningMessage = hasMoreThanLimit
-    ? `Showing first ${experimentsListSize} of ${totalExperiments} experiments`
+    ? t("feedbackScores.showingFirstN", {
+        count: experimentsListSize,
+        total: totalExperiments,
+      })
     : undefined;
 
   const isRadarOrBar =
@@ -443,17 +448,17 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
         feedbackScores && feedbackScores.length > 0;
 
       const emptyMessage = hasFeedbackScoresFilter
-        ? "No data available for selected metrics"
-        : "Configure filters to display experiment metrics";
+        ? t("feedbackScores.noDataForMetrics")
+        : t("feedbackScores.configureFiltersMessage");
 
       return (
         <DashboardWidget.EmptyState
-          title="No data available"
+          title={t("feedbackScores.noDataAvailable")}
           message={emptyMessage}
           action={
             !preview && !readOnly ? (
               <DashboardWidget.EmptyState.EditAction
-                label="Configure widget"
+                label={t("feedbackScores.configureWidget")}
                 onClick={handleEdit}
               />
             ) : undefined

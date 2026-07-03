@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import uniq from "lodash/uniq";
 
 import useTracesOrSpansList, {
@@ -33,6 +34,7 @@ const ErrorTypeAutocomplete: React.FC<ErrorTypeAutocompleteProps> = ({
   onValueChange,
   type = TRACE_DATA_TYPE.traces,
 }) => {
+  const { t } = useTranslation("tracing");
   const isProjectId = Boolean(projectId);
 
   const { data, isPending } = useTracesOrSpansList(
@@ -71,7 +73,7 @@ const ErrorTypeAutocomplete: React.FC<ErrorTypeAutocompleteProps> = ({
       items={items}
       hasError={hasError}
       isLoading={isProjectId ? isPending : false}
-      placeholder="Select error type"
+      placeholder={t("errorTypeAutocomplete.selectErrorType")}
     />
   );
 };

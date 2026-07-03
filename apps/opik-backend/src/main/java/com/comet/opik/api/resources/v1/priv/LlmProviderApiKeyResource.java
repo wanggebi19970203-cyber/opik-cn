@@ -47,15 +47,15 @@ import static com.comet.opik.infrastructure.EncryptionUtils.maskApiKey;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "LlmProviderKey", description = "LLM Provider Key")
+@Tag(name = "LlmProviderKey", description = "LLM 提供商密钥")
 public class LlmProviderApiKeyResource {
 
     private final @NonNull LlmProviderApiKeyService llmProviderApiKeyService;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @GET
-    @Operation(operationId = "findLlmProviderKeys", summary = "Find LLM Provider's ApiKeys", description = "Find LLM Provider's ApiKeys", responses = {
-            @ApiResponse(responseCode = "200", description = "LLMProviderApiKey resource", content = @Content(schema = @Schema(implementation = ProviderApiKey.ProviderApiKeyPage.class)))
+    @Operation(operationId = "findLlmProviderKeys", summary = "查找 LLM 提供商 API 密钥", description = "查找 LLM 提供商 API 密钥", responses = {
+            @ApiResponse(responseCode = "200", description = "LLM 提供商 API 密钥资源", content = @Content(schema = @Schema(implementation = ProviderApiKey.ProviderApiKeyPage.class)))
     })
     @JsonView({ProviderApiKey.View.Public.class})
     public Response find() {
@@ -85,9 +85,9 @@ public class LlmProviderApiKeyResource {
 
     @GET
     @Path("{id}")
-    @Operation(operationId = "getLlmProviderApiKeyById", summary = "Get LLM Provider's ApiKey by id", description = "Get LLM Provider's ApiKey by id", responses = {
-            @ApiResponse(responseCode = "200", description = "LLMProviderApiKey resource", content = @Content(schema = @Schema(implementation = ProviderApiKey.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getLlmProviderApiKeyById", summary = "根据ID获取 LLM 提供商 API 密钥", description = "根据ID获取 LLM 提供商 API 密钥", responses = {
+            @ApiResponse(responseCode = "200", description = "LLM 提供商 API 密钥资源", content = @Content(schema = @Schema(implementation = ProviderApiKey.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @JsonView({ProviderApiKey.View.Public.class})
     public Response getById(@PathParam("id") UUID id) {
 
@@ -106,11 +106,11 @@ public class LlmProviderApiKeyResource {
 
     @POST
     @RequiredPermissions(WorkspaceUserPermission.AI_PROVIDER_UPDATE)
-    @Operation(operationId = "storeLlmProviderApiKey", summary = "Store LLM Provider's ApiKey", description = "Store LLM Provider's ApiKey", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "storeLlmProviderApiKey", summary = "存储 LLM 提供商 API 密钥", description = "存储 LLM 提供商 API 密钥", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/proxy/api_key/{apiKeyId}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "401", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "禁止访问", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response saveApiKey(
             @RequestBody(content = @Content(schema = @Schema(implementation = ProviderApiKey.class))) @JsonView(ProviderApiKey.View.Write.class) @Valid ProviderApiKey providerApiKey,
@@ -129,11 +129,11 @@ public class LlmProviderApiKeyResource {
     @PATCH
     @Path("{id}")
     @RequiredPermissions(WorkspaceUserPermission.AI_PROVIDER_UPDATE)
-    @Operation(operationId = "updateLlmProviderApiKey", summary = "Update LLM Provider's ApiKey", description = "Update LLM Provider's ApiKey", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "updateLlmProviderApiKey", summary = "更新 LLM 提供商 API 密钥", description = "更新 LLM 提供商 API 密钥", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "401", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "禁止访问", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response updateApiKey(@PathParam("id") UUID id,
             @RequestBody(content = @Content(schema = @Schema(implementation = ProviderApiKeyUpdate.class))) @Valid ProviderApiKeyUpdate providerApiKeyUpdate) {
@@ -150,8 +150,8 @@ public class LlmProviderApiKeyResource {
     @POST
     @Path("/delete")
     @RequiredPermissions(WorkspaceUserPermission.AI_PROVIDER_UPDATE)
-    @Operation(operationId = "deleteLlmProviderApiKeysBatch", summary = "Delete LLM Provider's ApiKeys", description = "Delete LLM Provider's ApiKeys batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
+    @Operation(operationId = "deleteLlmProviderApiKeysBatch", summary = "批量删除 LLM 提供商 API 密钥", description = "批量删除 LLM 提供商 API 密钥", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     public Response deleteApiKeys(
             @NotNull @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @Valid BatchDelete batchDelete) {

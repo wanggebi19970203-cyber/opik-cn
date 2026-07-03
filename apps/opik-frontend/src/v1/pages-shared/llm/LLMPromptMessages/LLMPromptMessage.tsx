@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, CopyPlus, GripHorizontal, Trash } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
@@ -124,6 +125,7 @@ const LLMPromptMessage = forwardRef<
     },
     ref,
   ) => {
+    const { t } = useTranslation("prompt");
     const [isHoldActionsVisible, setIsHoldActionsVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { id, role, content } = message;
@@ -263,7 +265,7 @@ const LLMPromptMessage = forwardRef<
                   />
                 )}
                 {!hideRemoveButton && (
-                  <TooltipWrapper content="Delete a message">
+                  <TooltipWrapper content={t("llmPromptMessage.deleteMessageTooltip")}>
                     <Button
                       variant="outline"
                       size="icon-sm"
@@ -275,7 +277,7 @@ const LLMPromptMessage = forwardRef<
                     </Button>
                   </TooltipWrapper>
                 )}
-                <TooltipWrapper content="Duplicate a message">
+                <TooltipWrapper content={t("llmPromptMessage.duplicateMessageTooltip")}>
                   <Button
                     variant="outline"
                     size="icon-sm"
@@ -315,7 +317,7 @@ const LLMPromptMessage = forwardRef<
                     theme={codeMirrorPromptTheme}
                     value={localText}
                     onChange={handleContentChange}
-                    placeholder="Type your message"
+                    placeholder={t("llmPromptMessage.typeYourMessage")}
                     editable={!disabled}
                     basicSetup={{
                       foldGutter: false,

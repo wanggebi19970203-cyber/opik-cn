@@ -28,17 +28,17 @@ import static com.comet.opik.utils.ValidationUtils.NULL_OR_NOT_BLANK;
 public record Experiment(
         @JsonView({
                 Experiment.View.Public.class, Experiment.View.Write.class}) UUID id,
-        /* We need to ensure that datasetName is not null or blank for public write views.
-        But at the same time allow it to be null for public read views. Otherwise, generated client
-        classes for the Python SDK will throw a validation error in case if the dataset associated with the experiment
-        was deleted. See: https://comet-ml.atlassian.net/browse/OPIK-4632 */
+        /* 需要确保 datasetName 在公开写视图中不为 null 或空白。
+        但同时允许在公开读视图中为 null。否则，Python SDK 生成的客户端类
+        在实验关联的数据集被删除时会抛出验证错误。
+        参见：https://comet-ml.atlassian.net/browse/OPIK-4632 */
         @JsonView({Experiment.View.Public.class,
                 Experiment.View.Write.class}) @NotBlank @Schema(nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED) String datasetName,
         @JsonView({Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) UUID datasetId,
         @JsonView({Experiment.View.Public.class,
-                Experiment.View.Write.class}) @Schema(description = "Project ID. Takes precedence over project_name when both are provided.") UUID projectId,
+                Experiment.View.Write.class}) @Schema(description = "项目ID。同时提供 project_name 时，以 project_id 为准。") UUID projectId,
         @JsonView({Experiment.View.Public.class,
-                Experiment.View.Write.class}) @Schema(description = "Project name. Creates project if it doesn't exist. Ignored when project_id is provided.") @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") String projectName,
+                Experiment.View.Write.class}) @Schema(description = "项目名称。如果项目不存在则自动创建。提供 project_id 时忽略此参数。") @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") String projectName,
         @JsonView({Experiment.View.Public.class, Experiment.View.Write.class}) String name,
         @Schema(implementation = JsonListString.class) @JsonView({Experiment.View.Public.class,
                 Experiment.View.Write.class}) JsonNode metadata,
@@ -75,17 +75,17 @@ public record Experiment(
                 Experiment.View.Write.class}) @Schema(deprecated = true) PromptVersionLink promptVersion,
         @JsonView({Experiment.View.Public.class, Experiment.View.Write.class}) List<PromptVersionLink> promptVersions,
         @JsonView({Experiment.View.Public.class,
-                Experiment.View.Write.class}) @Schema(description = "ID of the dataset version this experiment is linked to. If not provided at creation, experiment will be automatically linked to the latest version.") UUID datasetVersionId,
+                Experiment.View.Write.class}) @Schema(description = "此实验关联的数据集版本ID。创建时未提供，实验将自动关联到最新版本。") UUID datasetVersionId,
         @JsonView({
-                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Summary of the dataset version this experiment is linked to.") DatasetVersionSummary datasetVersionSummary,
+                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "此实验关联的数据集版本摘要。") DatasetVersionSummary datasetVersionSummary,
         @JsonView({
-                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Pass rate for test suite experiments (0.0-1.0). Null for regular experiments.") BigDecimal passRate,
+                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "测试套件实验的通过率（0.0-1.0）。常规实验为 null。") BigDecimal passRate,
         @JsonView({
-                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Number of items that passed for test suite experiments. Null for regular experiments.") Long passedCount,
+                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "测试套件实验中通过的条目数。常规实验为 null。") Long passedCount,
         @JsonView({
-                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Total number of items for test suite experiments. Null for regular experiments.") Long totalCount,
+                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "测试套件实验的条目总数。常规实验为 null。") Long totalCount,
         @JsonView({
-                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Per-assertion average pass rates for test suite experiments. Null for regular experiments.") List<AssertionScoreAverage> assertionScores) {
+                Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "测试套件实验中每个断言的平均通过率。常规实验为 null。") List<AssertionScoreAverage> assertionScores) {
 
     @Builder(toBuilder = true)
     public record ExperimentPage(
@@ -108,7 +108,7 @@ public record Experiment(
             Experiment.View.Public.class, Experiment.View.Write.class}) @NotNull UUID id,
             @JsonView({Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) String commit,
             @JsonView({
-                    Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "sequential version number in the format v<N>; null for masks") String versionNumber,
+                    Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "顺序版本号，格式为 v<N>；蒙版版本为 null") String versionNumber,
             @JsonView({Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) UUID promptId,
             @JsonView({
                     Experiment.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) String promptName) {

@@ -1,0 +1,75 @@
+{
+  "forms": {
+    "fields": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter name",
+        "required": "Name is required"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Enter description"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "Enter email",
+        "required": "Email is required",
+        "invalid": "Invalid email format"
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter password",
+        "required": "Password is required",
+        "tooShort": "Password is too short"
+      },
+      "url": {
+        "label": "URL",
+        "placeholder": "Enter URL",
+        "required": "URL is required",
+        "invalid": "Invalid URL format"
+      },
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "Enter API key"
+      },
+      "model": {
+        "label": "Model",
+        "placeholder": "Select a model"
+      },
+      "dataset": {
+        "label": "Dataset",
+        "placeholder": "Select a dataset"
+      },
+      "metric": {
+        "label": "Metric",
+        "placeholder": "Select metric"
+      },
+      "algorithm": {
+        "label": "Algorithm",
+        "placeholder": "Select algorithm"
+      },
+      "prompt": {
+        "label": "Prompt",
+        "placeholder": "Enter prompt"
+      },
+      "systemPrompt": {
+        "label": "System prompt",
+        "placeholder": "Enter system prompt"
+      },
+      "userMessage": {
+        "label": "User message",
+        "placeholder": "Type your message"
+      }
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalid": "Invalid value",
+      "tooLong": "Value is too long",
+      "tooShort": "Value is too short",
+      "min": "Value must be at least {{min}}",
+      "max": "Value must be at most {{max}}",
+      "pattern": "Invalid format",
+      "enterValidDate": "Enter valid date"
+    }
+  }
+}

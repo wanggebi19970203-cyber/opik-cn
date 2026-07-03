@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import SelectBox from "@/shared/SelectBox/SelectBox";
 import CopyButton from "@/shared/CopyButton/CopyButton";
 
@@ -39,6 +40,8 @@ const SyntaxHighlighter: React.FC<SyntaxHighlighterProps> = ({
   transparent,
   fullHeight,
 }) => {
+  const { t } = useTranslation();
+
   const { mode, setMode } = useSyntaxHighlighterMode(
     prettifyConfig,
     preserveKey,
@@ -73,9 +76,9 @@ const SyntaxHighlighter: React.FC<SyntaxHighlighterProps> = ({
 
   const copyButton = (
     <CopyButton
-      message="Successfully copied code"
+      message={t("common:messages.codeCopied")}
       text={code.message}
-      tooltipText="Copy code"
+      tooltipText={t("common:buttons.copyCode")}
     />
   );
 

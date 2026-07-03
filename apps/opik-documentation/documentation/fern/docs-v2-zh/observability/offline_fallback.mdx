@@ -1,0 +1,204 @@
+---
+headline: 离线回退与消息重放 | Opik 文档
+og:description: 在网络中断期间使用 Opik 的离线回退保护您的追踪数据。了解失败的消息如何自动存储并在连接恢复后重放
+og:site_name: Opik 文档
+og:title: 离线回退与消息重放 - Opik Python SDK
+title: 离线回退与消息重放
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/offline_fallback
+---
+
+# 离线回退与消息重放
+
+Opik Python SDK 包含一个内置的离线回退机制，可在网络中断期间保护您的追踪数据。当 SDK 无法连接到 Opik 服务器时，消息会自动持久化到本地 SQLite 数据库。连接恢复后，所有存储的消息将透明地重放到服务器，无需更改应用程序代码。
+
+<Note>
+离线回退功能仅在 Python SDK 中可用，默认启用，无需配置。
+</Note>
+
+## 工作原理
+
+该功能完全在后台运行，分为三个阶段：
+
+**1. 检测** — 一个轻量级后台线程使用 (`OpikConnectionMonitor`) 定期 ping Opik 服务器上的 `/is-alive/ping` 端点。当 ping 失败或消息发送遇到连接错误时，SDK 将连接标记为不可用。
+
+**2. 存储** — 当连接不可用时，每条新消息都会立即写入本地 SQLite 数据库（存储在系统临时目录中），而不是通过网络发送。如果连接断开时有消息正在传输中，它将被重新标记为失败并添加到同一存储中。
+
+**3. 重放** — 当 `OpikConnectionMonitor` 检测到服务器再次可达时，`ReplayManager` 线程会以可配置的批次读取所有存储的消息，并将其重新注入 SDK 的正常处理管道。之后，它们会像任何其他消息一样被传递到服务器。
+
+```
+Application code
+      │
+      ▼
+ Opik SDK client
+      │
+      ├─ Connection OK? ──Yes──▶ Send to REST API ──Success──▶ Done
+      │                                           └─Failure──▶ Write to SQLite
+      │
+      └─ Connection down? ───▶ Write to SQLite as "failed"
+                                       │
+                                 ConnectionMonitor
+                                 detects recovery
+                                       │
+                                       ▼
+                                 ReplayManager reads
+                                 failed messages in
+                                 batches and resubmits
+```
+
+SQLite 数据库在 SDK 关闭时会自动清理。服务器确认收到后，已传递的消息会立即从数据库中删除。
+
+## 支持的消息类型
+
+所有产生以下消息类型的 SDK 操作都受到离线回退的保护：
+
+| 操作 | 存储的消息类型 |
+| --- | --- |
+| `client.trace()` | `CreateTraceMessage` / `CreateTraceBatchMessage` |
+| `trace.update()` | `UpdateTraceMessage` |
+| `trace.span()` / `client.span()` | `CreateSpanMessage` / `CreateSpansBatchMessage` |
+| `span.update()` | `UpdateSpanMessage` |
+| `client.log_traces_feedback_scores()` | `AddTraceFeedbackScoresBatchMessage` |
+| `client.log_spans_feedback_scores()` | `AddSpanFeedbackScoresBatchMessage` |
+| `client.log_threads_feedback_scores()` | `AddThreadsFeedbackScoresBatchMessage` |
+| 护栏评估 | `GuardrailBatchMessage` |
+| `experiment.insert()` | `CreateExperimentItemsBatchMessage` |
+| 文件附件 | `CreateAttachmentMessage` |
+
+## 配置
+
+离线回退开箱即用，具有合理的默认值。您可以使用环境变量或 `~/.opik.config` 文件调整其行为。
+
+### 环境变量
+
+在启动应用程序之前设置这些：
+
+```bash
+# How often (seconds) to ping the server to check connectivity (default: 10)
+export OPIK_CONNECTION_MONITOR_PING_INTERVAL=10
+
+# Timeout (seconds) for each connectivity ping (default: 5)
+export OPIK_CONNECTION_MONITOR_CHECK_TIMEOUT=5
+
+# Number of failed messages to replay in one batch after recovery (default: 50)
+export OPIK_REPLAY_BATCH_SIZE=50
+
+# Delay (seconds) between replay batches to control throughput (default: 0.5)
+export OPIK_REPLAY_BATCH_REPLAY_DELAY=0.5
+
+# How often (seconds) the replay manager thread checks connection state (default: 0.3)
+export OPIK_REPLAY_TICK_INTERVAL=0.3
+```
+
+### 配置文件
+
+将参数添加到 `~/.opik.config` 文件的 `[opik]` 部分：
+
+```toml
+[opik]
+url_override = https://www.comet.com/opik/api
+api_key = <your-api-key>
+
+# Offline fallback tuning
+connection_monitor_ping_interval = 10
+connection_monitor_check_timeout = 5
+replay_batch_size = 50
+replay_batch_replay_delay = 0.5
+replay_tick_interval = 0.3
+```
+
+## 配置参考
+
+| 参数 | 环境变量 | 默认值 | 描述 |
+| --- | --- | --- | --- |
+| `connection_monitor_ping_interval` | `OPIK_CONNECTION_MONITOR_PING_INTERVAL` | `10` | 服务器健康检查 ping 之间的秒数。较低的值会以略多的网络流量为代价更快地检测中断。 |
+| `connection_monitor_check_timeout` | `OPIK_CONNECTION_MONITOR_CHECK_TIMEOUT` | `5` | 在将服务器视为不可达之前等待 ping 响应的秒数。 |
+| `replay_batch_size` | `OPIK_REPLAY_BATCH_SIZE` | `50` | 单个批次中重放的存储消息数量。在内存受限的环境中减小此值。 |
+| `replay_batch_replay_delay` | `OPIK_REPLAY_BATCH_REPLAY_DELAY` | `0.5` | 重放批次之间的暂停秒数。增大此值以减少恢复期间对服务器的负载。 |
+| `replay_tick_interval` | `OPIK_REPLAY_TICK_INTERVAL` | `0.3` | 重放管理器循环迭代之间的秒数。较低的值使 SDK 更快地响应连接恢复。 |
+
+## 针对您的环境进行调优
+
+### 高流量应用程序
+
+如果您的应用程序每秒记录许多追踪，中断期间可能会积累大量积压。要在恢复后快速重放，请增大批次大小并减少批次间延迟：
+
+```bash
+export OPIK_REPLAY_BATCH_SIZE=200
+export OPIK_REPLAY_BATCH_REPLAY_DELAY=0.1
+```
+
+### 内存受限环境
+
+要限制在重放期间从数据库读取消息时使用的内存量：
+
+```bash
+export OPIK_REPLAY_BATCH_SIZE=10
+export OPIK_REPLAY_BATCH_REPLAY_DELAY=1.0
+```
+
+### 慢速或不可靠的网络
+
+如果连接间歇性中断，请减小 ping 间隔，以便 SDK 在中断开始后更快地停止尝试发送消息：
+
+```bash
+export OPIK_CONNECTION_MONITOR_PING_INTERVAL=5
+export OPIK_CONNECTION_MONITOR_CHECK_TIMEOUT=3
+```
+
+### 快速恢复检测
+
+要最小化服务器再次可用与重放开始之间的延迟：
+
+```bash
+export OPIK_CONNECTION_MONITOR_PING_INTERVAL=5
+export OPIK_REPLAY_TICK_INTERVAL=0.1
+```
+
+## 恢复时间估计
+
+连接恢复后重放积压的近似时间为：
+
+```
+replay_time ≈ ceil(failed_messages / replay_batch_size) × replay_batch_replay_delay
+```
+
+**示例：** 500 条存储的消息，使用默认设置（`batch_size=50`，`delay=0.5 s`）：
+
+```
+ceil(500 / 50) × 0.5 = 10 × 0.5 = 5 seconds
+```
+
+## 优雅降级
+
+如果本地 SQLite 数据库本身变得不可用（例如，临时目录不可写），SDK 会记录警告并继续运行，但没有离线回退。在后续中断期间追踪数据将丢失，但应用程序不会崩溃。
+
+<Warning>
+确保系统临时目录可被运行 SDK 的进程写入。在大多数系统上，这是 `/tmp` 或 `tempfile.gettempdir()` 返回的路径。
+</Warning>
+
+## 故障排除
+
+### 恢复后消息未重放
+
+1. **验证连接性** — 运行 `opik healthcheck` 以确认 SDK 可以连接到服务器。
+2. **检查 ping 间隔** — SDK 可能需要 `connection_monitor_ping_interval` 秒才能检测到服务器已恢复。使用默认的 10 秒，请在服务器恢复后至少等待 10-15 秒再得出重放未发生的结论。
+3. **调用 `client.flush()`** — 显式刷新客户端会触发立即重放尝试，并等待所有待处理的消息被传递。
+
+### 大量积压重放时间过长
+
+增大 `OPIK_REPLAY_BATCH_SIZE` 并减小 `OPIK_REPLAY_BATCH_REPLAY_DELAY`，如上面的高流量调优部分所示。
+
+### 日志中的数据库错误
+
+如果您看到类似 `"Some network resiliency features were disabled"` 的日志消息，则 SQLite 数据库无法初始化。检查临时目录是否可写以及是否有足够的磁盘空间。
+
+### 启用调试日志
+
+要查看详细的重放活动，请在导入 `opik` 之前启用调试日志：
+
+```bash
+export OPIK_FILE_LOGGING_LEVEL=DEBUG
+export OPIK_LOGGING_FILE=/tmp/opik-debug.log
+```
+
+然后检查 `/tmp/opik-debug.log` 中来自 `replay_manager` 和 `db_manager` 的条目。

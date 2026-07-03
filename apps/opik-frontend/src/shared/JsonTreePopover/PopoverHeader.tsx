@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans, useTranslation } from "react-i18next";
 
 interface PopoverHeaderProps {
   searchQuery: string;
@@ -13,13 +14,20 @@ const PopoverHeader: React.FC<PopoverHeaderProps> = ({
   searchTerm,
   isArrayAccess,
 }) => {
+  const { t } = useTranslation();
+
   if (!searchQuery.trim()) {
     return (
       <div className="border-b px-4 py-3">
-        <h4 className="comet-body-xs-accented">Select a variable</h4>
+        <h4 className="comet-body-xs-accented">{t("common:jsonTree.selectVariable")}</h4>
         <p className="comet-body-xs mt-1 text-light-slate">
-          Start typing to filter, use <span className="font-mono">.</span> for
-          objects, <span className="font-mono">[</span> for arrays
+          <Trans
+            i18nKey="common:jsonTree.startTypingToFilter"
+            components={{
+              1: <span className="font-mono">.</span>,
+              3: <span className="font-mono">[</span>,
+            }}
+          />
         </p>
       </div>
     );
@@ -29,22 +37,22 @@ const PopoverHeader: React.FC<PopoverHeaderProps> = ({
     if (!pathToExpand) {
       return (
         <>
-          Filtering: <span className="font-mono">{searchQuery}</span>
+          {t("common:jsonTree.filtering")} <span className="font-mono">{searchQuery}</span>
         </>
       );
     }
 
     return (
       <>
-        {isArrayAccess ? "Array" : "Path"}:{" "}
+        {isArrayAccess ? t("common:jsonTree.array") : t("common:jsonTree.path")}{" "}
         <span className="font-mono">{pathToExpand}</span>
         {isArrayAccess && !searchTerm && (
-          <span className="text-light-slate"> → select an index</span>
+          <span className="text-light-slate"> → {t("common:jsonTree.selectAnIndex")}</span>
         )}
         {searchTerm && (
           <span className="text-light-slate">
             {" "}
-            → {isArrayAccess ? "index" : "filtering by"} &quot;{searchTerm}
+            → {isArrayAccess ? t("common:jsonTree.index") : t("common:jsonTree.filteringBy")} &quot;{searchTerm}
             &quot;
           </span>
         )}
@@ -54,14 +62,17 @@ const PopoverHeader: React.FC<PopoverHeaderProps> = ({
 
   const renderHint = () => {
     if (isArrayAccess) {
-      return "Type an index number to filter array elements";
+      return t("common:jsonTree.typeIndexToFilter");
     }
 
     return (
-      <>
-        Type <span className="font-mono">.</span> to expand into nested fields,{" "}
-        <span className="font-mono">[</span> for arrays
-      </>
+      <Trans
+        i18nKey="common:jsonTree.typeToExpand"
+        components={{
+          1: <span className="font-mono">.</span>,
+          3: <span className="font-mono">[</span>,
+        }}
+      />
     );
   };
 

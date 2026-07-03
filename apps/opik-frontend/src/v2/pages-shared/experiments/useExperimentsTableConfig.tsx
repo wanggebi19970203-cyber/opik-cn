@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ColumnSort,
   RowSelectionState,
@@ -94,6 +95,7 @@ export const useExperimentsTableConfig = <
   setSortedColumns,
   datasetTypeMap,
 }: UseExperimentsTableConfigProps<T>) => {
+  const { t } = useTranslation("experiments");
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     `${storageKeyPrefix}-selected-columns-v2`,
     {
@@ -237,7 +239,7 @@ export const useExperimentsTableConfig = <
           countAggregationKey: "experiment_count",
           explainer: {
             id: "group-experiments",
-            description: `Some of the experiments didn’t match any group`,
+            description: t("someExperimentsDidntMatchGroup"),
           },
         },
       } as ColumnData<T>;
@@ -256,7 +258,7 @@ export const useExperimentsTableConfig = <
               countAggregationKey: "experiment_count",
               explainer: {
                 id: "group-experiments",
-                description: `Some experiments reference a dataset that has been deleted`,
+                description: t("someExperimentsReferenceDeletedDataset"),
               },
             },
           } as ColumnData<T>;
@@ -275,7 +277,7 @@ export const useExperimentsTableConfig = <
               countAggregationKey: "experiment_count",
               explainer: {
                 id: "group-experiments",
-                description: `Some experiments reference a project that has been deleted`,
+                description: t("someExperimentsReferenceDeletedProject"),
               },
             },
           } as ColumnData<T>;
@@ -408,7 +410,7 @@ export const useExperimentsTableConfig = <
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Feedback scores",
+        title: t("columns.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,

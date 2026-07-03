@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AxiosError, HttpStatusCode } from "axios";
 import get from "lodash/get";
 
@@ -52,6 +53,7 @@ const AddEditTestSuiteDialog = ({
   hideUpload,
   csvRequired = false,
 }: AddEditTestSuiteDialogProps) => {
+  const { t } = useTranslation("datasets");
   const { toast } = useToast();
 
   const { mutate: createMutate } = useDatasetCreateMutation();
@@ -100,9 +102,9 @@ const AddEditTestSuiteDialog = ({
     name.length > 0 &&
     (isEdit || hideUpload || !csvRequired || hasValidUploadFile);
 
-  const typeLabel = type === DATASET_TYPE.TEST_SUITE ? "test suite" : "dataset";
-  const title = isEdit ? "Edit" : "Create new";
-  const buttonText = isEdit ? "Update" : "Create new";
+  const typeLabel = type === DATASET_TYPE.TEST_SUITE ? t("datasets.addEditDialog.typeLabelTestSuite") : t("datasets.addEditDialog.typeLabelDataset");
+  const title = isEdit ? t("datasets.addEditDialog.editTitle") : t("datasets.addEditDialog.createTitle");
+  const buttonText = isEdit ? t("datasets.addEditDialog.updateButton") : t("datasets.addEditDialog.createButton");
 
   const fileSizeLimit = FILE_SIZE_LIMIT_IN_MB;
 
@@ -113,17 +115,17 @@ const AddEditTestSuiteDialog = ({
         const handlers = {
           onSuccess: () => {
             toast({
-              title: `${label} upload accepted`,
-              description: `Your ${label} file is being processed in the background. Items will appear automatically when ready. If you don't see them, try refreshing the page.`,
+              title: t("datasets.addEditDialog.uploadAccepted", { format: label }),
+              description: t("datasets.addEditDialog.uploadAcceptedDescription", { format: label }),
             });
           },
           onError: (error: unknown) => {
             console.error(`Error uploading ${label} file:`, error);
             toast({
-              title: `Error uploading ${label} file`,
+              title: t("datasets.addEditDialog.uploadError", { format: label }),
               description: getApiErrorMessage(
                 error,
-                `Failed to upload ${label} file`,
+                t("datasets.addEditDialog.uploadErrorDescription", { format: label }),
               ),
               variant: "destructive",
             });
@@ -179,11 +181,11 @@ const AddEditTestSuiteDialog = ({
         get(error, ["message"]);
 
       if (statusCode === HttpStatusCode.Conflict) {
-        setNameError("This name already exists");
+        setNameError(t("datasets.addEditDialog.nameAlreadyExists"));
       } else {
         toast({
-          title: "Error saving",
-          description: errorMessage || `Failed to ${action}`,
+          title: t("datasets.addEditDialog.errorSaving"),
+          description: errorMessage || t("datasets.addEditDialog.failedToSave"),
           variant: "destructive",
         });
         setOpen(false);
@@ -272,10 +274,10 @@ const AddEditTestSuiteDialog = ({
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="testSuiteName">Name</Label>
+            <Label htmlFor="testSuiteName">{t("datasets.addEditDialog.name")}</Label>
             <Input
               id="testSuiteName"
-              placeholder="Name"
+              placeholder={t("datasets.addEditDialog.namePlaceholder")}
               value={name}
               className={
                 nameError &&
@@ -301,10 +303,10 @@ const AddEditTestSuiteDialog = ({
             </span>
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="testSuiteDescription">Description</Label>
+            <Label htmlFor="testSuiteDescription">{t("datasets.addEditDialog.description")}</Label>
             <Textarea
               id="testSuiteDescription"
-              placeholder="Description"
+              placeholder={t("datasets.addEditDialog.descriptionPlaceholder")}
               className="min-h-20"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -313,7 +315,7 @@ const AddEditTestSuiteDialog = ({
           </div>
           {!isEdit && !hideUpload && (
             <div className="flex flex-col gap-2 pb-4">
-              <Label>Upload a CSV or JSON file</Label>
+              <Label>{t("datasets.addEditDialog.uploadLabel")}</Label>
               <DatasetUploadDescription
                 fileSizeLimit={fileSizeLimit}
                 docsUrl={buildDocsUrl("/evaluation/manage_datasets")}
@@ -330,7 +332,7 @@ const AddEditTestSuiteDialog = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("datasets.addEditDialog.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"
@@ -345,10 +347,10 @@ const AddEditTestSuiteDialog = ({
         open={confirmOpen}
         setOpen={setConfirmOpen}
         onCancel={submitHandler}
-        title="File can't be uploaded"
-        description={`This file cannot be uploaded because it does not pass validation. If you continue, the ${typeLabel} will be created without any items. You can add items manually later, or go back and upload a valid file.`}
-        cancelText={`Create empty ${typeLabel}`}
-        confirmText="Go back"
+        title={t("datasets.addEditDialog.fileCantBeUploaded")}
+        description={t("datasets.addEditDialog.fileCantBeUploadedDescription", { typeLabel })}
+        cancelText={t("datasets.addEditDialog.createEmpty", { typeLabel })}
+        confirmText={t("datasets.addEditDialog.goBack")}
       />
     </Dialog>
   );

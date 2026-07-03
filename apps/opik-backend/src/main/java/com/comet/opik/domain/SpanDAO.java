@@ -162,9 +162,9 @@ public class SpanDAO {
             """;
 
     /**
-     * This query handles the insertion of a new span into the database in two cases:
-     * 1. When the span does not exist in the database.
-     * 2. When the span exists in the database but the provided span has different values for the fields such as end_time, input, output, metadata and tags.
+     * 此查询处理将新span插入数据库的两种情况：
+     * 1. 当span在数据库中不存在时。
+     * 2. 当span在数据库中存在，但提供的span在end_time、input、output、metadata和tags等字段上有不同的值时。
      **/
     private static final String INSERT = """
             INSERT INTO spans (
@@ -347,9 +347,9 @@ public class SpanDAO {
             """;
 
     /***
-     * Handles the update of a span when the span already exists in the database.
+     * 处理当span已存在于数据库中时的更新操作。
      ***/
-    //TODO: refactor to implement proper conflict resolution
+    //TODO: 重构以实现正确的冲突解决
     private static final String UPDATE = """
             INSERT INTO spans (
             	id,
@@ -420,15 +420,15 @@ public class SpanDAO {
             """;
 
     /**
-     * This query is used when updates are processed before inserts, and the span does not exist in the database.
+     * 此查询用于当更新在插入之前处理，且span在数据库中不存在时的情况。
      * <p>
-     * The query will insert/update a new span with the provided values such as end_time, input, output, metadata, tags etc.
-     * In case the values are not provided, the query will use the default values such value are interpreted in other queries as null.
+     * 该查询将使用提供的值（如end_time、input、output、metadata、tags等）插入/更新新span。
+     * 如果未提供某些值，查询将使用默认值，这些值在其他查询中被解释为null。
      * <p>
-     * This happens because the query is used in a patch endpoint which allows partial updates, so the query will update only the provided fields.
-     * The remaining fields will be updated/inserted once the POST arrives with the all mandatory fields to create the trace.
+     * 这种情况发生是因为该查询用于支持部分更新的patch端点，因此查询只会更新提供的字段。
+     * 其余字段将在POST请求携带所有必需字段创建trace时更新/插入。
      */
-    //TODO: refactor to implement proper conflict resolution
+    //TODO: 重构以实现正确的冲突解决
     private static final String PARTIAL_INSERT = """
             INSERT INTO spans (
                 id, project_id, workspace_id, trace_id, parent_span_id, name, type,
@@ -600,7 +600,7 @@ public class SpanDAO {
             ;
             """;
 
-    // Query to get target project_ids from spans (executed separately to reduce table scans)
+    // 从span中获取目标project_id的查询（单独执行以减少表扫描）
     private static final String SELECT_TARGET_PROJECTS_FOR_SPANS = """
             SELECT DISTINCT project_id
             FROM spans
@@ -809,15 +809,15 @@ public class SpanDAO {
             """;
 
     /**
-     * Two-phase, wide-column-deferred span page query.
+     * 两阶段、宽列延迟的span分页查询。
      * <p>
-     * Phase 1 ({@code page_ids}) paginates on the light, deduped id + sort-key set only — wide text columns
-     * (input/output/metadata) are dropped from the scanned {@code spans_deduped} CTE unless the sort targets them
-     * ({@code sort_needs_wide}). Phase 2 ({@code page_wide}) re-reads the full rows, including wide columns, for just
-     * the page ids. The custom {@code sort_fields} are rendered into both the {@code page_ids} ORDER BY (so pagination
-     * picks the right page) and the final ORDER BY (so the page is returned in order); {@code page_wide}'s own order is
-     * immaterial since it is id-bounded and {@code LIMIT 1 BY id}. Field exclusion ({@code exclude_fields}) and
-     * truncation are layered on top without dropping the sort key.
+     * 第一阶段（{@code page_ids}）仅在轻量级的、去重的id + 排序键集合上进行分页——宽文本列
+     * （input/output/metadata）从扫描的{@code spans_deduped} CTE中移除，除非排序目标包含它们
+     * （{@code sort_needs_wide}）。第二阶段（{@code page_wide}）仅为页面id重新读取完整行，包括宽列。
+     * 自定义{@code sort_fields}被渲染到{@code page_ids} ORDER BY（以便分页选择正确的页面）
+     * 和最终的ORDER BY（以便页面按顺序返回）中；{@code page_wide}自身的顺序无关紧要，
+     * 因为它受id约束且使用{@code LIMIT 1 BY id}。字段排除（{@code exclude_fields}）
+     * 和截断分层在顶部，不会丢弃排序键。
      */
     private static final String SELECT_BY_PROJECT_ID = """
             WITH <if(span_id_prefilter)>span_id_prefilter AS (
@@ -1197,9 +1197,9 @@ public class SpanDAO {
             ;
             """;
 
-    // Lightweight pre-delete count for observability. Omits the experiment_items exclusion subquery
-    // to avoid the join cost; this makes it an upper-bound ceiling with >99% precision in practice
-    // (very few traces are linked to experiments).
+    // 用于可观测性的轻量级预删除计数。省略experiment_items排除子查询
+    // 以避免连接开销；这使其成为精度>99%的上限估计
+    // （实际上很少有trace与实验关联）。
     private static final String COUNT_FOR_RETENTION = """
             SELECT count() FROM spans
             WHERE workspace_id IN :workspace_ids
@@ -1405,12 +1405,11 @@ public class SpanDAO {
             ;
             """;
 
-    // Split-B: per-project span-feedback-score aggregates.
-    // - Mirrors the trace-side SELECT_FEEDBACK_SCORES_STATS pattern but at span granularity.
-    // - filters_present gates an embedded spans_final filter resolution (must stay in sync with
-    //   the spans_final CTE inside SELECT_SPANS_STATS).
-    // - has_legacy_scores gates the legacy feedback_scores table UNION branch.
-    // - Skips the rich tuple groupArray of the listing CTEs — only `value` is projected.
+    // Split-B: 按项目的span反馈分数聚合。
+    // - 镜像trace端的SELECT_FEEDBACK_SCORES_STATS模式，但在span粒度上。
+    // - filters_present控制嵌入的spans_final过滤器解析（必须与SELECT_SPANS_STATS内的spans_final CTE保持同步）。
+    // - has_legacy_scores控制旧版feedback_scores表的UNION分支。
+    // - 跳过列表CTE的丰富元组groupArray——只投影`value`。
     private static final String SELECT_SPAN_FEEDBACK_SCORES_STATS = """
             <if(filters_present)>
             WITH feedback_scores_deduped AS (
@@ -1682,8 +1681,8 @@ public class SpanDAO {
                     ;
                     """;
 
-    // ESTIMATED COST CHANGE
-    // 1.1 - Added cached tokens for OpenAI
+    // 预估成本变更
+    // 1.1 - 为OpenAI添加了缓存token
     private static final String ESTIMATED_COST_VERSION = "1.1";
 
     private final @NonNull ConnectionFactory connectionFactory;
@@ -1721,8 +1720,8 @@ public class SpanDAO {
 
             Statement statement = connection.createStatement(template.render());
 
-            // Captured once per batch so every row whose client did not provide lastUpdatedAt gets
-            // the same timestamp — matches the prior server-side now64(6) semantics.
+            // 每批次捕获一次，以便客户端未提供lastUpdatedAt的每行获得相同的时间戳
+            // ——与之前的服务器端now64(6)语义匹配。
             Instant nowForBatch = Instant.now();
 
             int i = 0;
@@ -1758,18 +1757,17 @@ public class SpanDAO {
 
                 statement.bind("usage" + i, UsageUtils.sanitizeUsage(span.usage()));
 
-                // Format the timestamp client-side so the SQL contains a plain string literal in the
-                // last_updated_at cell. Fall back to "now" when the client did not provide a value —
-                // matches the column's DEFAULT now64(6) but avoids the function call in the tuple
-                // that would trip the FORMAT Values fast-path. See OPIK-5694.
+                // 在客户端格式化时间戳，以便SQL在last_updated_at单元格中包含纯字符串字面量。
+                // 当客户端未提供值时回退到"now"——与列的DEFAULT now64(6)匹配，但避免了
+                // 元组中会触发FORMAT Values快速路径的函数调用。参见OPIK-5694。
                 statement.bind("last_updated_at" + i, ClickHouseDateTimeFormat.formatMicros(
                         span.lastUpdatedAt() != null ? span.lastUpdatedAt() : nowForBatch));
 
                 TruncationUtils.bindTruncationThreshold(statement, "truncation_threshold" + i, configuration);
 
-                // BULK_INSERT writes the cost cell directly into Decimal128(12) (no toDecimal128
-                // wrap), so the driver must emit an unquoted numeric literal — bind the
-                // BigDecimal itself rather than its String form. See OPIK-5694.
+                // BULK_INSERT直接将成本单元格写入Decimal128(12)（不使用toDecimal128包装），
+                // 因此驱动程序必须发出无引号的数字字面量——绑定BigDecimal本身而非其字符串形式。
+                // 参见OPIK-5694。
                 BigDecimal cost = span.totalEstimatedCost() != null ? span.totalEstimatedCost() : calculateCost(span);
                 statement.bind("total_estimated_cost" + i, cost);
                 statement.bind("total_estimated_cost_version" + i,
@@ -2007,11 +2005,11 @@ public class SpanDAO {
                 .ifPresent(errorInfo -> statement.bind("error_info", JsonUtils.readTree(errorInfo).toString()));
 
         if (spanUpdate.totalEstimatedCost() != null) {
-            // Update with new manually set cost
+            // 使用新手动设置的成本更新
             statement.bind("total_estimated_cost", spanUpdate.totalEstimatedCost().toString());
             statement.bind("total_estimated_cost_version", "");
         } else if (!isManualCostExist && isUpdateCostRecalculationAvailable(spanUpdate)) {
-            // Calculate estimated cost only in case Span doesn't have manually set cost
+            // 仅在Span没有手动设置成本时计算预估成本
             BigDecimal estimatedCost = CostService.calculateCost(spanUpdate.model(), spanUpdate.provider(),
                     spanUpdate.usage(), spanUpdate.metadata());
             statement.bind("total_estimated_cost", estimatedCost.toString());
@@ -2060,7 +2058,7 @@ public class SpanDAO {
         Optional.ofNullable(spanUpdate.errorInfo())
                 .ifPresent(errorInfo -> template.add("error_info", JsonUtils.readTree(errorInfo).toString()));
 
-        // If we have manual cost in update OR if we can calculate it and user didn't set manual cost before
+        // 如果更新中有手动成本，或者我们可以计算它且用户之前没有设置手动成本
         boolean shouldRecalculateEstimatedCost = !isManualCostExist && isUpdateCostRecalculationAvailable(spanUpdate);
         if (spanUpdate.totalEstimatedCost() != null || shouldRecalculateEstimatedCost) {
             template.add("total_estimated_cost", "total_estimated_cost");
@@ -2151,8 +2149,8 @@ public class SpanDAO {
     }
 
     /**
-     * Get target project IDs from spans for the given span IDs.
-     * This is executed as a separate query to reduce spans table scans in the main query.
+     * 根据给定的span ID获取span的目标项目ID。
+     * 作为单独查询执行，以减少主查询中的spans表扫描。
      */
     private Mono<List<UUID>> getTargetProjectIdsForSpans(Set<UUID> ids) {
         return Mono.deferContextual(ctx -> {
@@ -2371,7 +2369,7 @@ public class SpanDAO {
     }
 
     private BigDecimal calculateCost(Span span) {
-        // Later we could just use span.model(), but now it's still located inside metadata
+        // 以后可以直接使用span.model()，但现在它仍然位于metadata中
         String model = StringUtils.isNotBlank(span.model())
                 ? span.model()
                 : Optional.ofNullable(span.metadata())
@@ -2474,7 +2472,7 @@ public class SpanDAO {
                 .filter(Predicate.not(Set::isEmpty))
                 .ifPresent(exclude -> {
 
-                    // We need to keep the columns used for sorting in the select clause so that they are available when applying sorting.
+                    // 我们需要在select子句中保留用于排序的列，以便在应用排序时可用。
                     Set<String> sortingFields = Optional.ofNullable(spanSearchCriteria.sortingFields())
                             .stream()
                             .flatMap(List::stream)
@@ -2486,9 +2484,9 @@ public class SpanDAO {
                             .filter(field -> !sortingFields.contains(field))
                             .collect(Collectors.toSet());
 
-                    // check feedback_scores as well because it's a special case:
-                    // skip exclusion when sorting or filtering by feedback scores,
-                    // since the feedback score CTEs are needed for those operations
+                    // 同时检查feedback_scores，因为这是一个特殊情况：
+                    // 当按反馈分数排序或过滤时跳过排除，
+                    // 因为这些操作需要反馈分数CTE
                     if (fields.contains(SpanField.FEEDBACK_SCORES.getValue())
                             && sortingFields.stream().noneMatch(this::isFeedBackScoresField)
                             && !hasFeedbackScoreFilters(template)) {
@@ -2556,7 +2554,7 @@ public class SpanDAO {
         Optional.ofNullable(spanSearchCriteria.lastReceivedSpanId())
                 .ifPresent(lastReceivedSpanId -> template.add("last_received_span_id", lastReceivedSpanId));
 
-        // Bind UUID bounds for time-based filtering
+        // 绑定基于时间过滤的UUID边界
         Optional.ofNullable(spanSearchCriteria.uuidFromTime())
                 .ifPresent(uuid_from_time -> template.add("uuid_from_time", uuid_from_time));
         Optional.ofNullable(spanSearchCriteria.uuidToTime())
@@ -2567,14 +2565,12 @@ public class SpanDAO {
     }
 
     /**
-     * Determines whether to activate the span_id_prefilter CTE for narrowing feedback_scores
-     * and comments scans. Uses template attributes already computed by newFindTemplate to avoid
-     * redundant toAnalyticsDbFilters calls.
+     * 确定是否激活span_id_prefilter CTE以缩小feedback_scores和comments扫描范围。
+     * 使用newFindTemplate已计算的模板属性，避免冗余的toAnalyticsDbFilters调用。
      *
-     * <p>Only activates for filters that narrow beyond what time-range alone provides:
-     * uuidFromTime/uuidToTime are excluded because the if/else fallback applies them directly
-     * to feedback_scores; lastReceivedSpanId is excluded because it's a pagination cursor,
-     * not a semantic filter.
+     * <p>仅针对超出时间范围本身提供的过滤器激活：
+     * uuidFromTime/uuidToTime被排除，因为if/else回退会直接将其应用于feedback_scores；
+     * lastReceivedSpanId被排除，因为它是分页游标，而非语义过滤器。
      */
     private boolean shouldUseSpanIdPrefilter(SpanSearchCriteria criteria, ST template) {
         boolean hasFeedbackScoreFilters = hasFeedbackScoreFilters(template);
@@ -2606,7 +2602,7 @@ public class SpanDAO {
         Optional.ofNullable(spanSearchCriteria.lastReceivedSpanId())
                 .ifPresent(lastReceivedSpanId -> statement.bind("last_received_span_id", lastReceivedSpanId));
 
-        // Bind UUID bounds for time-based filtering
+        // 绑定基于时间过滤的UUID边界
         Optional.ofNullable(spanSearchCriteria.uuidFromTime())
                 .ifPresent(uuid_from_time -> statement.bind("uuid_from_time", uuid_from_time));
         Optional.ofNullable(spanSearchCriteria.uuidToTime())
@@ -2658,9 +2654,9 @@ public class SpanDAO {
 
     @WithSpan
     public Mono<ProjectStats> getStats(@NonNull SpanSearchCriteria searchCriteria) {
-        // Split into a span-aggregation query and a span-feedback-scores aggregation query, run in
-        // parallel on separate connections. Same pattern as TraceDAO.getStats — eliminates the
-        // per-span JOIN against feedback_scores_agg and the groupArray-of-tuples materialisation.
+        // 分为span聚合查询和span反馈分数聚合查询，在独立连接上并行运行。
+        // 与TraceDAO.getStats相同的模式——消除了每个span对feedback_scores_agg的JOIN
+        // 以及groupArray-of-tuples的物化。
         return makeMonoContextAware((userName, workspaceId) -> workspacesService.hasLegacyScores(workspaceId)
                 .flatMap(hasLegacyScores -> {
 
@@ -2825,7 +2821,7 @@ public class SpanDAO {
     }
 
     /**
-     * Counts previous-day spans grouped by workspace, project and user.
+     * 按工作区、项目和用户分组统计前一天的span数量。
      */
     @WithSpan
     public Flux<UsageByWorkspaceProjectUserResponse.WorkspaceProjectUserCount> countSpansBreakdownPerWorkspace(
@@ -2871,8 +2867,8 @@ public class SpanDAO {
                 spanUpdate.metadata()).compareTo(BigDecimal.ZERO) > 0;
     }
 
-    // Bind the usage map as parallel key/value arrays for the Map(String, Int64) CAST. UsageUtils
-    // drops null token counts (a null value would fail the CAST with CANNOT_CONVERT_TYPE, code 70).
+    // 将usage映射绑定为并行的键/值数组，用于Map(String, Int64)转换。UsageUtils
+    // 丢弃null token计数（null值会导致CAST失败，错误码CANNOT_CONVERT_TYPE, code 70）。
     private static void bindUsage(Statement statement, Map<String, Integer> usage) {
         var sanitized = UsageUtils.sanitizeUsage(usage);
         statement.bind("usage_keys", sanitized.keySet().toArray(String[]::new));
@@ -2881,7 +2877,7 @@ public class SpanDAO {
 
     private void bindCost(Span span, Statement statement, String index) {
         if (span.totalEstimatedCost() != null) {
-            // Cost is set manually by the user
+            // 成本由用户手动设置
             statement.bind("total_estimated_cost" + index, span.totalEstimatedCost().toString());
             statement.bind("total_estimated_cost_version" + index, "");
         } else {
@@ -3008,21 +3004,21 @@ public class SpanDAO {
     }
 
     private JsonNode getMetadataWithProvider(Row row, Set<SpanField> exclude, String provider) {
-        // Parse base metadata from database
+        // 从数据库解析基础metadata
         JsonNode baseMetadata = Optional
                 .ofNullable(getValue(exclude, SpanField.METADATA, row, "metadata", String.class))
                 .filter(str -> !str.isBlank())
                 .map(JsonUtils::getJsonNodeFromStringWithFallback)
                 .orElse(null);
 
-        // Inject provider as first field in metadata
+        // 将provider作为第一个字段注入metadata
         return JsonUtils.prependField(
                 baseMetadata, SpanField.PROVIDER.getValue(), provider);
     }
 
     /**
-     * Bulk delete spans for data retention enforcement (applyToPast=true).
-     * Deletes spans whose trace_id is in [lowerBound, cutoffId) and not linked to experiments.
+     * 批量删除span以执行数据保留策略（applyToPast=true）。
+     * 删除trace_id在[lowerBound, cutoffId)范围内且未关联到实验的span。
      */
     public Mono<Long> deleteForRetention(@NonNull List<String> workspaceIds, @NonNull UUID cutoffId,
             @NonNull UUID lowerBound) {
@@ -3048,10 +3044,9 @@ public class SpanDAO {
     }
 
     /**
-     * Lightweight pre-delete count for observability.
-     * Counts spans in [lowerBound, cutoffId) without the experiment_items exclusion subquery
-     * to avoid join cost. This is an upper-bound ceiling with >99% precision (very few traces
-     * are linked to experiments in practice).
+     * 用于可观测性的轻量级预删除计数。
+     * 统计[lowerBound, cutoffId)范围内的span，不包含experiment_items排除子查询
+     * 以避免连接开销。这是精度>99%的上限估计（实际上很少有trace与实验关联）。
      */
     public Mono<Long> countForRetention(@NonNull List<String> workspaceIds, @NonNull UUID cutoffId,
             @NonNull UUID lowerBound) {
@@ -3075,8 +3070,8 @@ public class SpanDAO {
     }
 
     /**
-     * Bulk delete spans for data retention enforcement (applyToPast=false).
-     * Each workspace has its own lower bound.
+     * 批量删除span以执行数据保留策略（applyToPast=false）。
+     * 每个工作区有自己的下界。
      */
     public Mono<Long> deleteForRetentionBounded(@NonNull Map<String, UUID> workspaceMinIds,
             @NonNull UUID cutoffId, @NonNull UUID lowerBound) {
@@ -3122,17 +3117,17 @@ public class SpanDAO {
     }
 
     /**
-     * Result of the velocity estimation query: spans/week and the oldest span timestamp.
+     * 速度估计查询的结果：每周span数和最旧span的时间戳。
      */
     public record VelocityEstimate(long spansPerWeek, Instant oldestSpanTime) {
     }
 
     /**
-     * Estimate the span velocity (spans/week) for a workspace in the catch-up range.
-     * Also returns the oldest span timestamp to use as the catch-up cursor start.
+     * 估计工作区在追赶范围内的span速度（span/周）。
+     * 同时返回最旧span的时间戳，用作追赶游标的起始位置。
      *
-     * @return velocity estimate with oldest span time, or empty Mono if no data exists
-     * @throws io.r2dbc.spi.R2dbcException with code 158 (TOO_MANY_ROWS) for huge workspaces
+     * @return 包含最旧span时间的速度估计，如果没有数据则返回空Mono
+     * @throws io.r2dbc.spi.R2dbcException 对于大型工作区，错误码158（TOO_MANY_ROWS）
      */
     public Mono<VelocityEstimate> estimateVelocityForRetention(@NonNull String workspaceId, @NonNull UUID cutoffId) {
         log.debug("Estimating retention velocity for workspace '{}'", workspaceId);

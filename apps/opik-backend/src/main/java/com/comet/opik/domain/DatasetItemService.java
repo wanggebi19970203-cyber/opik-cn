@@ -99,46 +99,46 @@ public interface DatasetItemService {
             List<ExperimentsComparisonFilter> filters);
 
     /**
-     * Apply delta changes to a dataset version, creating a new version with the changes.
+     * 对数据集版本应用增量变更，创建包含变更的新版本。
      * <p>
-     * This operation:
+     * 此操作：
      * <ul>
-     *   <li>Validates baseVersion exists and belongs to the dataset</li>
-     *   <li>Checks if baseVersion equals the latest version (unless override is true)</li>
-     *   <li>Fetches items from baseVersion</li>
-     *   <li>Applies delta: adds new items, updates edited items, removes deleted items</li>
-     *   <li>Creates a new version record with provided metadata</li>
-     *   <li>Updates 'latest' tag to point to the new version</li>
+     *   <li>验证 baseVersion 存在且属于该数据集</li>
+     *   <li>检查 baseVersion 是否等于最新版本（除非 override 为 true）</li>
+     *   <li>从 baseVersion 获取条目</li>
+     *   <li>应用增量：添加新条目、更新已编辑条目、移除已删除条目</li>
+     *   <li>使用提供的元数据创建新版本记录</li>
+     *   <li>更新 'latest' 标签指向新版本</li>
      * </ul>
      *
-     * @param datasetId the dataset ID
-     * @param changes the delta changes to apply (added, edited, deleted items plus metadata)
-     * @param override if true, force create version even if baseVersion is stale
-     * @return Mono emitting the newly created version
-     * @throws NotFoundException if dataset or baseVersion not found
-     * @throws ClientErrorException with 409 status if baseVersion is stale and override is false
+     * @param datasetId 数据集 ID
+     * @param changes 要应用的增量变更（添加、编辑、删除的条目及元数据）
+     * @param override 如果为 true，即使 baseVersion 已过期也强制创建版本
+     * @return 发出新创建版本的 Mono
+     * @throws NotFoundException 如果数据集或 baseVersion 未找到
+     * @throws ClientErrorException 如果 baseVersion 已过期且 override 为 false，返回 409 状态
      */
     Mono<DatasetVersion> applyDeltaChanges(UUID datasetId, DatasetItemChanges changes, boolean override);
 
     /**
-     * Saves dataset items, routing to either versioned or legacy storage based on configuration.
+     * 保存数据集条目，根据配置路由到版本化或传统存储。
      * <p>
-     * When dataset versioning is enabled:
+     * 当数据集版本控制启用时：
      * <ul>
-     *   <li>Resolves dataset ID from batch (creates dataset if needed)</li>
-     *   <li>If batchGroupId is null: Mutates the latest version by appending items (backwards compatibility)</li>
-     *   <li>If batchGroupId is provided: Creates a new version with batch grouping (multiple batches can share the same version)</li>
-     *   <li>If no versions exist, creates the first version regardless of batchGroupId</li>
-     *   <li>Returns the DatasetVersion (newly created or mutated)</li>
+     *   <li>从批次解析数据集 ID（如需要则创建数据集）</li>
+     *   <li>如果 batchGroupId 为空：通过追加条目修改最新版本（向后兼容）</li>
+     *   <li>如果提供了 batchGroupId：使用批次分组创建新版本（多个批次可共享同一版本）</li>
+     *   <li>如果不存在版本，则忽略 batchGroupId 创建第一个版本</li>
+     *   <li>返回 DatasetVersion（新创建或已修改的）</li>
      * </ul>
-     * When versioning is disabled (legacy mode):
+     * 当版本控制禁用时（传统模式）：
      * <ul>
-     *   <li>Saves items to the legacy dataset_items table</li>
-     *   <li>Returns empty Mono</li>
+     *   <li>将条目保存到传统 dataset_items 表</li>
+     *   <li>返回空 Mono</li>
      * </ul>
      *
-     * @param batch the batch of items to save (must include datasetId or datasetName, may include batchGroupId)
-     * @return Mono emitting the DatasetVersion when versioning is enabled, or empty when disabled
+     * @param batch 要保存的条目批次（必须包含 datasetId 或 datasetName，可包含 batchGroupId）
+     * @return 当版本控制启用时发出 DatasetVersion 的 Mono，禁用时为空
      */
     Mono<DatasetVersion> save(DatasetItemBatch batch);
 
@@ -187,7 +187,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
         log.info("Creating dataset items from '{}' traces for dataset '{}'", traceIds.size(), datasetId);
 
-        // Verify dataset exists
+        // 验证数据集是否存在
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
@@ -197,10 +197,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
                         .orElseThrow(() -> new NotFoundException("Dataset not found: '%s'".formatted(datasetId)));
             })).subscribeOn(Schedulers.boundedElastic());
         }).flatMap(dataset -> {
-            // Enrich traces with metadata
+            // 使用元数据丰富 trace
             return traceEnrichmentService.enrichTraces(traceIds, enrichmentOptions)
                     .flatMap(enrichedTraces -> {
-                        // Convert enriched traces to dataset items
+                        // 将丰富的 trace 转换为数据集条目
                         List<DatasetItem> datasetItems = enrichedTraces.entrySet().stream()
                                 .map(entry -> DatasetItem.builder()
                                         .id(idGenerator.generateId())
@@ -212,7 +212,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                         .build())
                                 .toList();
 
-                        // Save dataset items - route to versioned or legacy based on toggle
+                        // 保存数据集条目 - 根据开关路由到版本化或传统存储
                         if (featureFlags.isDatasetVersioningEnabled()) {
                             log.info("Creating dataset items from traces with versioning for dataset '{}'", datasetId);
                             return saveItemsWithVersion(
@@ -221,7 +221,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                     .then(Mono.just(0L));
                         }
 
-                        // Legacy: save to legacy table
+                        // 传统方式：保存到传统表
                         DatasetItemBatch batch = DatasetItemBatch.builder().datasetId(datasetId).items(datasetItems)
                                 .build();
                         return saveBatch(batch, datasetId);
@@ -240,7 +240,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
         log.info("Creating dataset items from '{}' spans for dataset '{}'", spanIds.size(), datasetId);
 
-        // Verify dataset exists
+        // 验证数据集是否存在
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
@@ -250,10 +250,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
                         .orElseThrow(() -> new NotFoundException("Dataset not found: '%s'".formatted(datasetId)));
             })).subscribeOn(Schedulers.boundedElastic());
         }).flatMap(dataset -> {
-            // Enrich spans with metadata
+            // 使用元数据丰富 span
             return spanEnrichmentService.enrichSpans(spanIds, enrichmentOptions)
                     .flatMap(enrichedSpans -> {
-                        // Convert enriched spans to dataset items
+                        // 将丰富的 span 转换为数据集条目
                         List<DatasetItem> datasetItems = enrichedSpans.entrySet().stream()
                                 .map(entry -> DatasetItem.builder()
                                         .id(idGenerator.generateId())
@@ -265,7 +265,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                         .build())
                                 .toList();
 
-                        // Save dataset items - route to versioned or legacy based on toggle
+                        // 保存数据集条目 - 根据开关路由到版本化或传统存储
                         if (featureFlags.isDatasetVersioningEnabled()) {
                             log.info("Creating dataset items from spans with versioning for dataset '{}'", datasetId);
                             return saveItemsWithVersion(
@@ -274,7 +274,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                     .then(Mono.just(0L));
                         }
 
-                        // Legacy: save to legacy table
+                        // 传统方式：保存到传统表
                         DatasetItemBatch batch = DatasetItemBatch.builder().datasetId(datasetId).items(datasetItems)
                                 .build();
                         return saveBatch(batch, datasetId);
@@ -288,19 +288,19 @@ class DatasetItemServiceImpl implements DatasetItemService {
             return data;
         }
 
-        // For test suites, use only the input value as top-level data
+        // 对于测试套件，仅使用 input 值作为顶层数据
         var inputNode = data.get("input");
         if (inputNode == null || inputNode.isNull()) {
             return Map.of();
         }
 
-        // Object inputs: unwrap fields as top-level keys (existing behavior)
+        // 对象输入：将字段展开为顶层键（现有行为）
         if (inputNode.isObject()) {
             return JsonUtils.convertValue(inputNode, new TypeReference<Map<String, JsonNode>>() {
             });
         }
 
-        // Non-object inputs (array, string, number, boolean): wrap under "input" key
+        // 非对象输入（数组、字符串、数字、布尔值）：包装在 "input" 键下
         return Map.of("input", inputNode);
     }
 
@@ -391,10 +391,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 return patchItemWithVersion(id, item, workspaceId, userName);
             }
 
-            // Legacy mode: get from draft table and update
+            // 传统模式：从草稿表获取并更新
             return get(id)
                     .flatMap(existingItem -> {
-                        // Build patched item by merging provided fields with existing item
+                        // 通过合并提供的字段与现有条目构建修补后的条目
                         var builder = existingItem.toBuilder();
                         applyPatchFields(builder, item);
                         DatasetItem patchedItem = builder.build();
@@ -412,19 +412,19 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
     private Mono<Long> patchItemWithVersion(UUID datasetItemId, DatasetItem patchData,
             String workspaceId, String userName) {
-        // Resolve which dataset contains this item
+        // 解析哪个数据集包含此条目
         return versionDao.resolveDatasetIdFromItemId(datasetItemId)
                 .switchIfEmpty(Mono.defer(() -> {
                     log.warn("Item '{}' not found in versioned table", datasetItemId);
                     return Mono.error(failWithNotFound("Dataset item not found"));
                 }))
                 .flatMap(datasetId -> {
-                    // Ensure dataset is migrated if lazy migration is enabled
+                    // 如果启用了延迟迁移，确保数据集已迁移
                     return ensureLazyMigration(datasetId, workspaceId)
                             .thenReturn(datasetId);
                 })
                 .flatMap(datasetId -> {
-                    // Get the latest version (using overload that takes workspaceId)
+                    // 获取最新版本（使用接受 workspaceId 的重载方法）
                     Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
 
                     if (latestVersion.isEmpty()) {
@@ -435,7 +435,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     UUID baseVersionId = latestVersion.get().id();
                     UUID newVersionId = idGenerator.generateId();
 
-                    // Get the existing item from the latest version
+                    // 从最新版本获取现有条目
                     return versionDao.getItemByDatasetItemId(datasetId, baseVersionId, datasetItemId)
                             .switchIfEmpty(Mono.defer(() -> {
                                 log.warn("Item '{}' not found in dataset '{}' version '{}'",
@@ -443,14 +443,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                 return Mono.error(failWithNotFound("Dataset item not found"));
                             }))
                             .flatMap(existingItem -> {
-                                // Apply patch to the existing item
+                                // 将补丁应用到现有条目
                                 DatasetItem patchedItem = applyPatchToItem(existingItem, patchData, userName);
 
                                 log.info("Creating version with single item edit for dataset '{}', baseVersion='{}'",
                                         datasetId, baseVersionId);
 
                                 DatasetItem patchedItemWithId = patchedItem.toBuilder()
-                                        .id(existingItem.id()) // Preserve the original row ID
+                                        .id(existingItem.id()) // 保留原始行 ID
                                         .build();
 
                                 return applyEditDeleteWithLiveCount(datasetId, baseVersionId, newVersionId,
@@ -459,18 +459,18 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                             log.info("Applied patch delta to dataset '{}': itemsTotal '{}'",
                                                     datasetId, itemsTotal);
 
-                                            // Create version metadata
+                                            // 创建版本元数据
                                             return createVersionFromDelta(
                                                     datasetId,
                                                     newVersionId,
                                                     itemsTotal.intValue(),
                                                     baseVersionId,
-                                                    null, // No tags
+                                                    null, // 无标签
                                                     "Updated 1 item",
-                                                    null, // Inherit evaluators from base version
-                                                    null, // Inherit execution policy from base version
-                                                    false, // Don't clear execution policy
-                                                    null, // No batch group ID
+                                                    null, // 从基础版本继承评估器
+                                                    null, // 从基础版本继承执行策略
+                                                    false, // 不清除执行策略
+                                                    null, // 无批次组 ID
                                                     workspaceId,
                                                     userName)
                                                     .thenReturn(itemsTotal);
@@ -480,8 +480,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Applies patch fields from patchData to a builder.
-     * Only non-null fields from patchData are applied.
+     * 将 patchData 中的补丁字段应用到构建器。
+     * 仅应用 patchData 中的非空字段。
      */
     private void applyPatchFields(DatasetItem.DatasetItemBuilder builder, DatasetItem patchData) {
         Optional.ofNullable(patchData.data()).ifPresent(builder::data);
@@ -492,7 +492,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Applies patch data to an item, returning a new DatasetItem with the changes.
+     * 将补丁数据应用到条目，返回包含变更的新 DatasetItem。
      */
     private DatasetItem applyPatchToItem(DatasetItem existingItem, DatasetItem patchData, String userName) {
         var builder = existingItem.toBuilder()
@@ -517,7 +517,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 return batchUpdateWithVersion(batchUpdate, workspaceId, userName);
             }
 
-            // Legacy: bulk update in legacy table
+            // 传统方式：在传统表中批量更新
             log.info("Batch updating items in legacy table, idsSize='{}', filtersSize='{}'",
                     batchUpdate.ids() != null ? batchUpdate.ids().size() : 0,
                     batchUpdate.filters() != null ? batchUpdate.filters().size() : 0);
@@ -528,18 +528,17 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Batch updates items and creates a new version with the edits.
+     * 批量更新条目并创建包含编辑的新版本。
      * <p>
-     * This operation is used when dataset versioning is enabled.
-     * It fetches items matching the criteria from the latest version,
-     * applies the updates, and creates a new version with the edited items.
+     * 此操作在数据集版本控制启用时使用。
+     * 它从最新版本获取匹配条件的条目，应用更新，并创建包含已编辑条目的新版本。
      */
     private Mono<Void> batchUpdateWithVersion(DatasetItemBatchUpdate batchUpdate, String workspaceId, String userName) {
-        // Determine the dataset ID
+        // 确定数据集 ID
         UUID datasetId;
 
         if (batchUpdate.datasetId() != null) {
-            // Use the explicitly provided dataset ID (required for filter-based updates)
+            // 使用显式提供的数据集 ID（基于过滤器的更新必须提供）
             datasetId = batchUpdate.datasetId();
             log.info("Using provided dataset ID '{}' for batch update by filters with versioning", datasetId);
 
@@ -553,14 +552,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             workspaceId, userName));
         }
 
-        // This should not happen due to validation, but handle it gracefully
+        // 由于验证逻辑，此情况不应发生，但做优雅处理
         log.error("Batch update with versioning requires either IDs or dataset ID with filters");
         return Mono.error(new BadRequestException(
                 "Batch update requires either item IDs or dataset ID with filters"));
     }
 
     /**
-     * Batch updates items by IDs and creates a new version.
+     * 按 ID 批量更新条目并创建新版本。
      */
     private Mono<Void> batchUpdateByIdsWithVersioning(UUID datasetId, DatasetItemBatchUpdate batchUpdate,
             String workspaceId, String userName) {
@@ -568,20 +567,20 @@ class DatasetItemServiceImpl implements DatasetItemService {
         int updateSize = batchUpdate.ids().size();
         log.info("Batch updating '{}' items by IDs with versioning for dataset '{}'", updateSize, datasetId);
 
-        // Ensure dataset is migrated if lazy migration is enabled
+        // 如果启用了延迟迁移，确保数据集已迁移
         return ensureLazyMigration(datasetId, workspaceId)
                 .then(Mono.defer(() -> {
-                    // Get the latest version
+                    // 获取最新版本
                     return getLatestVersionOrError(datasetId, workspaceId)
                             .flatMap(latestVersion -> {
                                 UUID baseVersionId = latestVersion.id();
                                 UUID newVersionId = idGenerator.generateId();
 
-                                // UUIDs for the updated-item INSERT...SELECT. Generated first so they
-                                // sort before the unchanged-item UUIDs (which are generated below).
+                                // 用于更新条目 INSERT...SELECT 的 UUID。先生成以便它们
+                                // 排在未更改条目 UUID（在下方生成）之前。
                                 List<UUID> updateUuids = generateUuidPool(idGenerator, updateSize);
 
-                                // Perform batch update
+                                // 执行批量更新
                                 return versionDao
                                         .batchUpdateItems(datasetId, baseVersionId, newVersionId,
                                                 batchUpdate,
@@ -596,9 +595,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     "Batch updated '{}' items by IDs for dataset '{}', baseVersion='{}'",
                                                     updatedCount, datasetId, baseVersionId);
 
-                                            // OPIK-6390: pass the just-updated IDs as the "deleted" slot of
-                                            // applyDelta so they're excluded from the unchanged-items copy.
-                                            // The helper sizes the UUID pool from a live ClickHouse count.
+                                            // OPIK-6390: 将刚更新的 ID 作为 applyDelta 的"已删除"槽位传入，
+                                            // 使它们从未更改条目的复制中排除。
+                                            // 辅助方法根据实时 ClickHouse 计数确定 UUID 池大小。
                                             return applyEditDeleteWithLiveCount(datasetId, baseVersionId,
                                                     newVersionId, List.of(), batchUpdate.ids(), workspaceId)
                                                     .flatMap(unchangedCount -> createVersionMetadata(
@@ -615,28 +614,27 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Batch updates items by filters and creates a new version.
+     * 按过滤器批量更新条目并创建新版本。
      */
     private Mono<Void> batchUpdateByFiltersWithVersioning(UUID datasetId, DatasetItemBatchUpdate batchUpdate,
             String workspaceId, String userName) {
 
         log.info("Batch updating items by filters with versioning for dataset '{}'", datasetId);
 
-        // Ensure dataset is migrated if lazy migration is enabled
+        // 如果启用了延迟迁移，确保数据集已迁移
         return ensureLazyMigration(datasetId, workspaceId)
                 .then(Mono.defer(() -> {
-                    // Get the latest version
+                    // 获取最新版本
                     return getLatestVersionOrError(datasetId, workspaceId)
                             .flatMap(latestVersion -> {
                                 UUID baseVersionId = latestVersion.id();
                                 UUID newVersionId = idGenerator.generateId();
 
-                                // OPIK-6390: size both UUID pools from a live ClickHouse count of the
-                                // base version rather than the (drift-prone) MySQL items_total. The
-                                // exact base count is an upper bound on both the matching (update)
-                                // and non-matching (copy) row counts, so no headroom multiplier is
-                                // needed; the defensive arrayElement fallback in COPY_VERSION_ITEMS
-                                // covers any residual mismatch without data loss.
+                                // OPIK-6390: 从基础版本的实时 ClickHouse 计数中调整两个 UUID 池的大小，
+                                // 而非使用（易漂移的）MySQL items_total。精确的基础计数是匹配（更新）
+                                // 和不匹配（复制）行数的上限，因此不需要余量乘数；
+                                // COPY_VERSION_ITEMS 中的防御性 arrayElement 回退
+                                // 可以覆盖任何残余的不匹配而不会丢失数据。
                                 return versionDao
                                         .countRowsInVersion(datasetId, baseVersionId, Set.of(), null, workspaceId)
                                         .flatMap(baseRowCount -> {
@@ -648,7 +646,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     "Generated separate UUID pools for filter-based update: updateSize='{}', copySize='{}'",
                                                     updateUuids.size(), copyUuids.size());
 
-                                            // Perform batch update
+                                            // 执行批量更新
                                             return versionDao
                                                     .batchUpdateItems(datasetId, baseVersionId, newVersionId,
                                                             batchUpdate,
@@ -664,11 +662,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                                 "Batch updated '{}' items by filters for dataset '{}', baseVersion='{}'",
                                                                 updatedCount, datasetId, baseVersionId);
 
-                                                        // Copy unchanged items (those NOT matching the filters)
-                                                        // Special case: empty filters list means "select all" - no unchanged items to copy
+                                                        // 复制未更改的条目（不匹配过滤器的条目）
+                                                        // 特殊情况：空过滤器列表表示"全选" - 没有未更改的条目需要复制
                                                         if (batchUpdate.filters() != null
                                                                 && batchUpdate.filters().isEmpty()) {
-                                                            // Empty filters means all items were updated - nothing to copy
+                                                            // 空过滤器表示所有条目都已更新 - 无需复制
                                                             log.info(
                                                                     "Empty filters (select all) - skipping copy of unchanged items");
                                                             return createVersionMetadata(
@@ -677,7 +675,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                                     workspaceId, userName);
                                                         }
 
-                                                        // Copy unchanged items using copyVersionItems (exclude matching filters)
+                                                        // 使用 copyVersionItems 复制未更改的条目（排除匹配过滤器的）
                                                         return versionDao
                                                                 .copyVersionItems(datasetId, baseVersionId,
                                                                         datasetId, newVersionId,
@@ -697,7 +695,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Shared helper: Gets the latest version or returns an error if none exists.
+     * 共享辅助方法：获取最新版本，如果不存在则返回错误。
      */
     private Mono<DatasetVersion> getLatestVersionOrError(UUID datasetId, String workspaceId) {
         Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
@@ -711,7 +709,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Shared helper: Creates version metadata after a successful batch update.
+     * 共享辅助方法：在成功的批量更新后创建版本元数据。
      */
     private Mono<Void> createVersionMetadata(UUID datasetId, UUID newVersionId, UUID baseVersionId,
             long updatedCount, long unchangedCount, boolean isFilterBased,
@@ -721,7 +719,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
         log.info("Applied batch update delta to dataset '{}': updated='{}', unchanged='{}', total='{}', type='{}'",
                 datasetId, updatedCount, unchangedCount, itemsTotal, isFilterBased ? "filter" : "ids");
 
-        // Create version metadata
+        // 创建版本元数据
         String changeDescription = createChangeDescription(updatedCount, isFilterBased);
 
         return createVersionFromDelta(
@@ -729,19 +727,19 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 newVersionId,
                 (int) itemsTotal,
                 baseVersionId,
-                null, // No tags
+                null, // 无标签
                 changeDescription,
-                null, // Inherit evaluators from base version
-                null, // Inherit execution policy from base version
-                false, // Don't clear execution policy
-                null, // No batch group ID
+                null, // 从基础版本继承评估器
+                null, // 从基础版本继承执行策略
+                false, // 不清除执行策略
+                null, // 无批次组 ID
                 workspaceId,
                 userName)
                 .then();
     }
 
     /**
-     * Creates a human-readable change description for version metadata.
+     * 为版本元数据创建人类可读的变更描述。
      */
     private String createChangeDescription(long count, boolean isFilterBased) {
         if (count == 1) {
@@ -821,7 +819,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     .switchIfEmpty(Mono.just(PageColumns.empty()));
         }
 
-        // Versioning toggle is OFF: use legacy table
+        // 版本控制开关关闭：使用传统表
         return dao.getOutputColumns(datasetId, experimentIds)
                 .map(columns -> PageColumns.builder().columns(columns).build())
                 .switchIfEmpty(Mono.just(PageColumns.empty()));
@@ -834,10 +832,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
             return Mono.just(0L);
         }
 
-        // Create a batch with the items
+        // 创建包含条目的批次
         DatasetItemBatch batch = DatasetItemBatch.builder().datasetId(datasetId).items(items).build();
 
-        // Route to versioned or legacy based on toggle
+        // 根据开关路由到版本化或传统存储
         if (featureFlags.isDatasetVersioningEnabled()) {
             log.info("Saving batch with versioning for dataset '{}', itemCount '{}'", datasetId, items.size());
             return saveItemsWithVersion(batch, datasetId, null)
@@ -845,7 +843,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     .defaultIfEmpty((long) items.size());
         }
 
-        // Legacy: save to legacy table
+        // 传统方式：保存到传统表
         return saveBatch(batch, datasetId);
     }
 
@@ -927,21 +925,21 @@ class DatasetItemServiceImpl implements DatasetItemService {
             String userName = ctx.get(RequestContext.USER_NAME);
 
             if (!featureFlags.isDatasetVersioningEnabled()) {
-                // Legacy: delete from legacy table
+                // 传统方式：从传统表删除
                 log.info("Deleting items from legacy table. datasetId='{}', itemIdsSize='{}', filtersSize='{}'",
                         datasetId, ids != null ? ids.size() : 0, filters != null ? filters.size() : 0);
                 return dao.delete(ids, datasetId, filters).then();
             }
 
             if (batchGroupId == null) {
-                // No batch_group_id: mutate the latest version (backwards compatibility)
+                // 没有 batch_group_id：修改最新版本（向后兼容）
                 log.info(
                         "Mutating latest version with delete (no batch_group_id). datasetId='{}', itemIdsSize='{}', filtersSize='{}'",
                         datasetId, ids != null ? ids.size() : 0, filters != null ? filters.size() : 0);
                 return deleteItemsWithVersion(ids, datasetId, filters, workspaceId, userName, null);
             }
 
-            // batch_group_id provided: create new version with batch grouping
+            // 提供了 batch_group_id：使用批次分组创建新版本
             log.info(
                     "Creating version with batch grouping for delete. batchGroupId='{}', datasetId='{}', itemIdsSize='{}', filtersSize='{}'",
                     batchGroupId, datasetId, ids != null ? ids.size() : 0, filters != null ? filters.size() : 0);
@@ -952,63 +950,63 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Deletes items and creates a new version without the deleted items.
+     * 删除条目并创建不包含已删除条目的新版本。
      * <p>
-     * This operation is used when dataset versioning is enabled. Instead of deleting from
-     * a legacy table, it creates a new version with the items excluded.
+     * 此操作在数据集版本控制启用时使用。不是从传统表中删除，
+     * 而是创建排除条目的新版本。
      * <ul>
-     *   <li>Resolves the dataset ID (from the provided datasetId or by querying the items)</li>
-     *   <li>Gets the latest version for the dataset</li>
-     *   <li>If no versions exist, falls back to legacy delete</li>
-     *   <li>Otherwise, applies a delta with the deletions to create a new version</li>
+     *   <li>解析数据集 ID（从提供的 datasetId 或通过查询条目）</li>
+     *   <li>获取数据集的最新版本</li>
+     *   <li>如果不存在版本，则回退到传统删除</li>
+     *   <li>否则，应用包含删除的增量以创建新版本</li>
      * </ul>
      */
     private Mono<Void> deleteItemsWithVersion(Set<UUID> ids, UUID datasetId, List<DatasetItemFilter> filters,
             String workspaceId, String userName, UUID batchGroupId) {
-        // Case 1: Deleting by item IDs
+        // 情况 1：按条目 ID 删除
         if (CollectionUtils.isNotEmpty(ids)) {
             return deleteByItemIdsWithVersion(ids, workspaceId, userName, batchGroupId);
         }
 
-        // Case 2: Deleting by datasetId with filters
+        // 情况 2：按 datasetId 和过滤器删除
         if (datasetId != null) {
             return deleteByDatasetIdWithVersion(datasetId, filters, workspaceId, userName, batchGroupId);
         }
 
-        // No valid input
+        // 无有效输入
         return Mono.empty();
     }
 
     /**
-     * Deletes items by datasetId with optional filters, creating a new version.
+     * 按 datasetId 和可选过滤器删除条目，创建新版本。
      * <p>
-     * Uses an efficient SQL-based approach that copies items NOT matching the filters
-     * to the new version, avoiding the need to load all item IDs into memory.
+     * 使用高效的基于 SQL 的方法，将不匹配过滤器的条目复制到新版本，
+     * 避免将所有条目 ID 加载到内存中。
      */
     private Mono<Void> deleteByDatasetIdWithVersion(UUID datasetId, List<DatasetItemFilter> filters,
             String workspaceId, String userName, UUID batchGroupId) {
-        // Derive createVersion from batchGroupId: null means mutate latest, non-null means create new
+        // 从 batchGroupId 派生 createVersion：null 表示修改最新版本，非 null 表示创建新版本
         boolean createVersion = batchGroupId != null;
         log.info(
                 "Deleting items by datasetId '{}' with versioning, filtersSize='{}', batchGroupId='{}', createVersion='{}'",
                 datasetId, filters != null ? filters.size() : 0, batchGroupId, createVersion);
 
-        // Verify dataset exists
+        // 验证数据集是否存在
         datasetService.findById(datasetId, workspaceId, null);
 
-        // Ensure dataset is migrated if lazy migration is enabled
+        // 如果启用了延迟迁移，确保数据集已迁移
         return ensureLazyMigration(datasetId, workspaceId)
                 .then(Mono.defer(() -> {
-                    // Get the latest version (using overload that takes workspaceId)
+                    // 获取最新版本（使用接受 workspaceId 的重载方法）
                     Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
 
                     if (latestVersion.isEmpty()) {
-                        // No versions exist - fall back to legacy delete
+                        // 不存在版本 - 回退到传统删除
                         log.info("No versions exist for dataset '{}', falling back to legacy delete", datasetId);
                         return dao.delete(null, datasetId, filters).then();
                     }
 
-                    // Handle in-place mutation for filter-based deletions when createVersion=false
+                    // 当 createVersion=false 时处理基于过滤器的就地修改
                     if (!createVersion) {
                         log.info("Mutating latest version '{}' for dataset '{}' (createVersion=false)",
                                 latestVersion.get().id(), datasetId);
@@ -1018,28 +1016,28 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                 userName);
                     }
 
-                    // Create a new version with deletions
+                    // 创建包含删除的新版本
                     UUID baseVersionId = latestVersion.get().id();
                     UUID newVersionId = idGenerator.generateId();
 
-                    // OPIK-6390: pull the base row count from ClickHouse so the copy pool and the
-                    // computed deletedCount are both grounded in real data, not items_total drift.
+                    // OPIK-6390: 从 ClickHouse 获取基础行数，使复制池和
+                    // 计算的 deletedCount 都基于真实数据，而非 items_total 漂移。
                     return versionDao
                             .countRowsInVersion(datasetId, baseVersionId, Set.of(), null, workspaceId)
                             .flatMap(baseRowCount -> {
                                 int baseItemsCount = baseRowCount.intValue();
 
-                                // Empty filters = delete all (copy nothing to new version)
+                                // 空过滤器 = 删除全部（不复制到新版本）
                                 Mono<Long> copyMono;
                                 if (filters == null || filters.isEmpty()) {
                                     log.info("Empty filters = delete all. Creating empty version '{}' for dataset '{}'",
                                             newVersionId, datasetId);
                                     copyMono = Mono.just(0L);
                                 } else {
-                                    // Generate UUID pool for the copy operation (worst case = all items copied)
+                                    // 为复制操作生成 UUID 池（最坏情况 = 复制所有条目）
                                     List<UUID> uuids = generateUuidPool(idGenerator, baseItemsCount);
 
-                                    // Use efficient filter-based copy - copies items NOT matching the filters
+                                    // 使用高效的基于过滤器的复制 - 复制不匹配过滤器的条目
                                     copyMono = versionDao.copyVersionItems(datasetId, baseVersionId,
                                             datasetId, newVersionId,
                                             filters, uuids);
@@ -1054,7 +1052,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     datasetId, baseVersionId, newVersionId, deletedCount,
                                                     newVersionItemCount);
 
-                                            // Create version metadata
+                                            // 创建版本元数据
                                             String changeDescription = deletedCount == 1
                                                     ? "Deleted 1 item"
                                                     : "Deleted " + deletedCount + " items";
@@ -1064,11 +1062,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     newVersionId,
                                                     newVersionItemCount.intValue(),
                                                     baseVersionId,
-                                                    null, // No tags
+                                                    null, // 无标签
                                                     changeDescription,
-                                                    null, // Inherit evaluators from base version
-                                                    null, // Inherit execution policy from base version
-                                                    false, // Don't clear execution policy
+                                                    null, // 从基础版本继承评估器
+                                                    null, // 从基础版本继承执行策略
+                                                    false, // 不清除执行策略
                                                     batchGroupId,
                                                     workspaceId,
                                                     userName);
@@ -1079,11 +1077,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Deletes items by item IDs, creating a new version or mutating the latest version.
+     * 按条目 ID 删除条目，创建新版本或修改最新版本。
      */
     private Mono<Void> deleteByItemIdsWithVersion(Set<UUID> ids, String workspaceId, String userName,
             UUID batchGroupId) {
-        // Derive createVersion from batchGroupId: null means mutate latest, non-null means create new
+        // 从 batchGroupId 派生 createVersion：null 表示修改最新版本，非 null 表示创建新版本
         boolean createVersion = batchGroupId != null;
         log.info("Deleting '{}' items by IDs with versioning, batchGroupId='{}', createVersion='{}'",
                 ids.size(), batchGroupId, createVersion);
@@ -1097,35 +1095,35 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Deletes items by dataset_item_id values within a known dataset.
+     * 在已知数据集中按 dataset_item_id 值删除条目。
      */
     private Mono<Void> deleteByDatasetItemIdsInDataset(Set<UUID> datasetItemIds, UUID datasetId,
             String workspaceId, String userName, UUID batchGroupId, boolean createVersion) {
         log.info("Deleting '{}' items from dataset '{}' with versioning, batchGroupId='{}', createVersion='{}'",
                 datasetItemIds.size(), datasetId, batchGroupId, createVersion);
 
-        // Ensure dataset is migrated if lazy migration is enabled
+        // 如果启用了延迟迁移，确保数据集已迁移
         return ensureLazyMigration(datasetId, workspaceId)
                 .then(Mono.defer(() -> {
-                    // Get the latest version (use overload that takes workspaceId since we're in reactive context)
+                    // 获取最新版本（使用接受 workspaceId 的重载方法，因为我们在响应式上下文中）
                     Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
 
                     if (latestVersion.isEmpty()) {
-                        // No versions exist
+                        // 不存在版本
                         if (!createVersion) {
-                            // createVersion=false: Nothing to mutate, just return empty (idempotent delete)
+                            // createVersion=false：没有要修改的内容，直接返回空（幂等删除）
                             log.info("No versions exist for dataset '{}', nothing to delete (createVersion=false)",
                                     datasetId);
                             return Mono.empty();
                         }
-                        // createVersion=true: Fall back to legacy delete
+                        // createVersion=true：回退到传统删除
                         log.info("No versions exist for dataset '{}', falling back to legacy delete", datasetId);
                         return dao.delete(datasetItemIds, null, null).then();
                     }
 
                     UUID latestVersionId = latestVersion.get().id();
 
-                    // If createVersion=false, mutate the latest version instead of creating a new one
+                    // 如果 createVersion=false，修改最新版本而非创建新版本
                     if (!createVersion) {
                         log.info("Mutating latest version '{}' for dataset '{}' (createVersion=false)",
                                 latestVersionId, datasetId);
@@ -1134,7 +1132,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                 userName);
                     }
 
-                    // createVersion=true: Create a new version with deletions
+                    // createVersion=true：创建包含删除的新版本
                     UUID newVersionId = idGenerator.generateId();
                     log.info("Creating new version for dataset '{}' with '{}' items deleted",
                             datasetId, datasetItemIds.size());
@@ -1145,7 +1143,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Creates a new version with the specified items deleted (excluded from the new version).
+     * 创建已删除指定条目（从新版本中排除）的新版本。
      */
     private Mono<Void> createVersionWithDeletion(UUID datasetId, UUID baseVersionId, UUID newVersionId,
             Set<UUID> deletedIds, UUID batchGroupId,
@@ -1156,17 +1154,17 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 .flatMap(itemsTotal -> {
                     log.info("Applied deletion delta to dataset '{}': itemsTotal '{}'", datasetId, itemsTotal);
 
-                    // Create version metadata
+                    // 创建版本元数据
                     return createVersionFromDelta(
                             datasetId,
                             newVersionId,
                             itemsTotal.intValue(),
                             baseVersionId,
-                            null, // No tags
-                            null, // No change description (auto-generated)
-                            null, // Inherit evaluators from base version
-                            null, // Inherit execution policy from base version
-                            false, // Don't clear execution policy
+                            null, // 无标签
+                            null, // 无变更描述（自动生成）
+                            null, // 从基础版本继承评估器
+                            null, // 从基础版本继承执行策略
+                            false, // 不清除执行策略
                             batchGroupId,
                             workspaceId,
                             userName);
@@ -1199,30 +1197,30 @@ class DatasetItemServiceImpl implements DatasetItemService {
             int page, int size, @NonNull DatasetItemSearchCriteria datasetItemSearchCriteria) {
 
         if (StringUtils.isNotBlank(datasetItemSearchCriteria.versionHashOrTag())) {
-            // Fetch versioned (immutable) items from dataset_item_versions table
+            // 从 dataset_item_versions 表获取版本化（不可变）条目
             log.info("Finding versioned dataset items by '{}', page '{}', size '{}'", datasetItemSearchCriteria, page,
                     size);
 
             return Mono.deferContextual(ctx -> {
                 String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
-                // Resolve version hash/tag to version ID
+                // 将版本哈希/标签解析为版本 ID
                 UUID versionId = versionService.resolveVersionId(workspaceId,
                         datasetItemSearchCriteria.datasetId(),
                         datasetItemSearchCriteria.versionHashOrTag());
                 log.info("Resolved version '{}' to version ID '{}' for dataset '{}'",
                         datasetItemSearchCriteria.versionHashOrTag(), versionId, datasetItemSearchCriteria.datasetId());
 
-                // For versioned items, hasDraft is always false (concept doesn't apply to immutable versions)
+                // 对于版本化条目，hasDraft 始终为 false（此概念不适用于不可变版本）
                 return versionDao.getItems(datasetItemSearchCriteria, page, size, versionId)
                         .defaultIfEmpty(DatasetItemPage.empty(page, sortingFactory.getSortableFields()));
             });
         } else if (featureFlags.isDatasetVersioningEnabled()) {
-            // Versioning toggle is ON
+            // 版本控制开关已开启
             return Mono.deferContextual(ctx -> {
                 String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
-                // If experimentIds are present, fetch items using experiment-specific versions
+                // 如果存在 experimentIds，使用实验特定版本获取条目
                 if (CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds())) {
                     log.info(
                             "Finding dataset items with experiment items by '{}', page '{}', size '{}' (using experiment-specific versions)",
@@ -1232,13 +1230,13 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             workspaceId);
                 }
 
-                // Otherwise, fetch items from the latest version
+                // 否则，从最新版本获取条目
                 log.info("Finding latest version dataset items by '{}', page '{}', size '{}'",
                         datasetItemSearchCriteria, page, size);
                 return getItemsFromLatestVersion(datasetItemSearchCriteria, page, size, workspaceId);
             });
         } else {
-            // Versioning toggle is OFF: fetch items from dataset_items table
+            // 版本控制开关已关闭：从 dataset_items 表获取条目
             log.info("Finding draft dataset items by '{}', page '{}', size '{}'",
                     datasetItemSearchCriteria, page, size);
 
@@ -1252,7 +1250,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
         Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(criteria.datasetId(), workspaceId);
 
         if (latestVersion.isEmpty()) {
-            // No versions exist yet - fall back to legacy items
+            // 尚不存在版本 - 回退到传统条目
             log.info("No versions found for dataset '{}', falling back to draft items", criteria.datasetId());
             return dao.getItems(criteria, page, size)
                     .defaultIfEmpty(DatasetItemPage.empty(page, sortingFactory.getSortableFields()));
@@ -1266,12 +1264,12 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Helper method to get the fallback version ID for a dataset.
-     * Returns the latest version ID if it exists, otherwise returns empty.
+     * 获取数据集回退版本 ID 的辅助方法。
+     * 如果存在则返回最新版本 ID，否则返回空。
      *
-     * @param datasetId The dataset ID
-     * @param workspaceId The workspace ID
-     * @return Optional containing the fallback version ID, or empty if no versions exist
+     * @param datasetId 数据集 ID
+     * @param workspaceId 工作空间 ID
+     * @return 包含回退版本 ID 的 Optional，如果不存在版本则为空
      */
     private Optional<UUID> getFallbackVersionId(UUID datasetId, String workspaceId) {
         Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
@@ -1285,13 +1283,13 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Helper method to get experiment items stats using the legacy DAO.
-     * This is used as a fallback when versioning is disabled or no versions exist yet.
+     * 使用传统 DAO 获取实验条目统计的辅助方法。
+     * 当版本控制禁用或尚不存在版本时作为回退使用。
      *
-     * @param datasetId The dataset ID
-     * @param experimentIds The experiment IDs
-     * @param filters The filters to apply
-     * @return Mono containing the project stats
+     * @param datasetId 数据集 ID
+     * @param experimentIds 实验 ID
+     * @param filters 要应用的过滤器
+     * @return 包含项目统计的 Mono
      */
     private Mono<ProjectStats> getExperimentItemsStatsFromLegacyDao(UUID datasetId,
             Set<UUID> experimentIds,
@@ -1306,10 +1304,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
             int page, int size, String workspaceId) {
         Optional<UUID> fallbackVersionId = getFallbackVersionId(criteria.datasetId(), workspaceId);
 
-        // When the dataset no longer exists (e.g. test suite deleted), version records are gone from MySQL.
-        // Use an empty string as a harmless placeholder: test suite experiments always carry their own explicit
-        // dataset_version_id in ClickHouse, so the empty fallback is never used for matching, and assertion_results
-        // are still returned correctly via the versioned query.
+        // 当数据集不再存在时（例如测试套件已删除），版本记录从 MySQL 中消失。
+        // 使用空字符串作为无害占位符：测试套件实验始终在 ClickHouse 中携带自己的显式
+        // dataset_version_id，因此空回退永远不会用于匹配，assertion_results
+        // 仍通过版本化查询正确返回。
         String resolvedFallbackVersionId = fallbackVersionId.map(UUID::toString).orElseGet(() -> {
             log.info(
                     "No versions found for dataset '{}', using empty string as fallback version to query experiment items",
@@ -1332,18 +1330,18 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 experimentIds, filters);
 
         if (!featureFlags.isDatasetVersioningEnabled()) {
-            // Feature toggle OFF - use legacy DAO
+            // 功能开关关闭 - 使用传统 DAO
             log.debug("Dataset versioning disabled, using legacy DAO for stats");
             return getExperimentItemsStatsFromLegacyDao(datasetId, experimentIds, filters);
         }
 
-        // Feature toggle ON - use versioned DAO with experiment-specific versions
+        // 功能开关开启 - 使用带实验特定版本的版本化 DAO
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             Optional<UUID> fallbackVersionId = getFallbackVersionId(datasetId, workspaceId);
 
             if (fallbackVersionId.isEmpty()) {
-                // No versions exist yet - fall back to legacy DAO
+                // 尚不存在版本 - 回退到传统 DAO
                 log.info("No versions found for dataset '{}', falling back to legacy DAO for stats", datasetId);
                 return getExperimentItemsStatsFromLegacyDao(datasetId, experimentIds, filters);
             }
@@ -1371,20 +1369,20 @@ class DatasetItemServiceImpl implements DatasetItemService {
             log.info("Applying delta changes for dataset '{}', baseVersion '{}', override '{}'",
                     datasetId, changes.baseVersion(), override);
 
-            // OPIK-6696: copy_from_dataset_id and copy_from_version_id must be set together. Shares the
-            // rule and error text with DatasetItemBatchValidator (the DatasetItemBatch endpoint).
+            // OPIK-6696: copy_from_dataset_id 和 copy_from_version_id 必须一起设置。
+            // 与 DatasetItemBatchValidator（DatasetItemBatch 端点）共享规则和错误文本。
             if (!DatasetItemBatchValidator.isCopyFromPairConsistent(changes.copyFromDatasetId(),
                     changes.copyFromVersionId())) {
                 return Mono.error(new BadRequestException(DatasetItemBatchValidator.COPY_FROM_PAIR_MESSAGE));
             }
 
-            // Verify dataset exists (using explicit workspaceId since we're in reactive context)
+            // 验证数据集是否存在（使用显式 workspaceId，因为我们在响应式上下文中）
             datasetService.findById(datasetId, workspaceId, null);
 
-            // The baseVersion is the version ID directly (not a hash or tag)
+            // baseVersion 直接是版本 ID（不是哈希或标签）
             UUID baseVersionId = changes.baseVersion();
 
-            // No base version: create the first version (metadata only, no item delta)
+            // 没有基础版本：创建第一个版本（仅元数据，无条目增量）
             if (baseVersionId == null) {
                 if (!override) {
                     return Mono.error(new BadRequestException(
@@ -1415,12 +1413,12 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 });
             }
 
-            // Verify the base version exists (throws NotFoundException otherwise).
-            // OPIK-6390: no longer reads items_total here — UUID-pool sizing now comes from a live
-            // ClickHouse count below.
+            // 验证基础版本是否存在（否则抛出 NotFoundException）。
+            // OPIK-6390: 不再在此处读取 items_total — UUID 池大小现在来自下方的实时
+            // ClickHouse 计数。
             versionService.getVersionById(workspaceId, datasetId, baseVersionId);
 
-            // Check if baseVersion is the latest (unless override is set)
+            // 检查 baseVersion 是否是最新版本（除非设置了 override）
             if (!override && !versionService.isLatestVersion(workspaceId, datasetId, baseVersionId)) {
                 log.warn("Version conflict: baseVersion '{}' is not the latest for dataset '{}'",
                         changes.baseVersion(), datasetId);
@@ -1432,11 +1430,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                 .build()));
             }
 
-            // Generate new version ID
+            // 生成新版本 ID
             UUID newVersionId = idGenerator.generateId();
             log.info("Generated new version ID '{}' for dataset '{}'", newVersionId, datasetId);
 
-            // Prepare added items (synchronous - no merging needed)
+            // 准备添加的条目（同步 - 无需合并）
             List<DatasetItem> addedItems = prepareAddedItems(changes, datasetId);
             Set<UUID> deletedIds = changes.deletedIds() != null ? changes.deletedIds() : Set.of();
 
@@ -1446,40 +1444,39 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
 
-            // OPIK-6696: when copy-from coordinates are supplied, the COPY (and supporting reads:
-            // pool sizing, edit-via-SELECT-INSERT) all run against the (dataset, version) pair the
-            // caller supplied instead of the destination's just-minted prior version. For migrate
-            // this is source v_i — stable and fully replicated, avoiding the multi-replica
-            // read-after-write window.
+            // OPIK-6696: 当提供 copy-from 坐标时，COPY（和支持读取：
+            // 池大小调整、通过 SELECT-INSERT 编辑）都针对调用者提供的
+            // (dataset, version) 对运行，而非目标刚创建的先前版本。对于迁移
+            // 这是源 v_i — 稳定且完全复制，避免多副本写后读窗口。
             CopyFromCoordinates copyFrom = resolveAndValidateCopyFrom(workspaceId, changes.copyFromDatasetId(),
                     changes.copyFromVersionId(), datasetId, baseVersionId);
             UUID copyDatasetId = copyFrom.datasetId();
             UUID copyVersionId = copyFrom.versionId();
 
-            // OPIK-6390: size the unchanged-UUID pool from a live ClickHouse count instead of the
-            // MySQL items_total, which can drift below the actual row count and silently truncate
-            // the copy. Excludes the same ids the subsequent applyDelta excludes from the COPY.
+            // OPIK-6390: 从实时 ClickHouse 计数中调整未更改 UUID 池的大小，而非使用
+            // MySQL items_total，后者可能漂移到实际行数以下并静默截断复制。
+            // 排除后续 applyDelta 从 COPY 中排除的相同 ID。
             Set<UUID> excludedFromCopy = new HashSet<>(deletedIds);
             excludedFromCopy.addAll(editedDatasetItemIds);
 
             return versionDao.countRowsInVersion(copyDatasetId, copyVersionId, excludedFromCopy, null, workspaceId)
                     .flatMap(unchangedCount -> {
 
-                        // Generate UUIDs for all items in the correct order for ClickHouse's ORDER BY id DESC
-                        // Since UUIDv7 is time-ordered (later = larger) and we sort DESC (largest first),
-                        // we need to generate UUIDs in reverse order of desired appearance:
-                        // 1. Unchanged items first (smallest UUIDs) - will appear LAST
-                        // 2. Edited items second (middle UUIDs) - will appear in MIDDLE
-                        // 3. Added items last (largest UUIDs) - will appear FIRST
+                        // 为所有条目生成 UUID，按 ClickHouse 的 ORDER BY id DESC 正确排序
+                        // 由于 UUIDv7 是时间有序的（越大 = 越新）且我们按 DESC 排序（最大的在前），
+                        // 我们需要按期望出现的逆序生成 UUID：
+                        // 1. 未更改条目优先（最小的 UUID）- 将出现在最后
+                        // 2. 已编辑条目其次（中间的 UUID）- 将出现在中间
+                        // 3. 添加的条目最后（最大的 UUID）- 将出现在最前
 
-                        // However, we reverse the unchanged UUID pool to maintain original order
+                        // 但是，我们反转未更改 UUID 池以保持原始顺序
                         List<UUID> unchangedUuids = generateUnchangedUuidsReversed(unchangedCount.intValue());
                         List<UUID> editedUuids = generateUuidPool(idGenerator, editedItemEdits.size());
                         List<UUID> addedUuids = generateUuidPool(idGenerator, addedItems.size());
 
                         List<DatasetItem> addedItemsWithIds = withAssignedRowIds(addedItems, addedUuids);
 
-                        // Validate tag limits on all items being inserted or edited
+                        // 验证所有待插入或编辑条目的标签限制
                         Stream.concat(
                                 addedItemsWithIds.stream().map(DatasetItem::tags),
                                 editedItemEdits.stream().map(DatasetItemEdit::tags))
@@ -1493,15 +1490,15 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     .build());
                                 });
 
-                        // Edit items via INSERT...SELECT (merge happens in SQL, not Java).
-                        // OPIK-6696: reads source rows from copy-from coords, inserts into datasetId.
+                        // 通过 INSERT...SELECT 编辑条目（合并在 SQL 中完成，而非 Java）。
+                        // OPIK-6696: 从 copy-from 坐标读取源行，插入到 datasetId。
                         Mono<Long> editedCountMono = versionDao.editItemsViaSelectInsert(
                                 copyDatasetId, copyVersionId,
                                 datasetId, newVersionId,
                                 editedItemEdits, editedUuids);
 
-                        // Apply delta for added items + copy unchanged (exclude edited + deleted).
-                        // OPIK-6696: COPY reads from copy-from coords, writes into datasetId/newVersionId.
+                        // 为添加的条目应用增量 + 复制未更改的（排除已编辑 + 已删除的）。
+                        // OPIK-6696: COPY 从 copy-from 坐标读取，写入 datasetId/newVersionId。
                         return editedCountMono
                                 .flatMap(editedCount -> versionDao.applyDelta(datasetId, newVersionId,
                                         addedItemsWithIds, List.of(), deletedIds, unchangedUuids,
@@ -1520,7 +1517,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                             changes.evaluators(),
                                             changes.executionPolicy(),
                                             Boolean.TRUE.equals(changes.clearExecutionPolicy()),
-                                            null, // No batch group ID
+                                            null, // 无批次组 ID
                                             workspaceId,
                                             userName);
                                 });
@@ -1529,8 +1526,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Prepares added items by setting their stable IDs.
-     * For new items, we generate a new stable ID.
+     * 通过设置稳定 ID 来准备添加的条目。
+     * 对于新条目，我们生成新的稳定 ID。
      */
     private List<DatasetItem> prepareAddedItems(DatasetItemChanges changes, UUID datasetId) {
         if (changes.addedItems() == null || changes.addedItems().isEmpty()) {
@@ -1539,9 +1536,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
         return changes.addedItems().stream()
                 .map(item -> {
-                    // Generate new stable ID for new items
+                    // 为新条目生成新的稳定 ID
                     UUID stableId = idGenerator.generateId();
-                    // Set datasetItemId (stable ID) but leave id null - it will be assigned later in this method
+                    // 设置 datasetItemId（稳定 ID）但将 id 留空 - 它将在此方法后面分配
                     return item.toBuilder()
                             .id(null)
                             .datasetItemId(stableId)
@@ -1556,7 +1553,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     public Mono<DatasetVersion> save(@NonNull DatasetItemBatch batch) {
 
         if (!featureFlags.isDatasetVersioningEnabled()) {
-            // Legacy: save to legacy table
+            // 传统方式：保存到传统表
             log.info("Saving items to legacy table for dataset '{}'", batch.datasetId());
             return verifyDatasetExistsAndSave(batch).then(Mono.empty());
         }
@@ -1570,12 +1567,12 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     UUID batchGroupId = batch.batchGroupId();
 
                     if (batchGroupId == null) {
-                        // No batch_group_id: mutate the latest version (backwards compatibility)
+                        // 没有 batch_group_id：修改最新版本（向后兼容）
                         log.info("Mutating latest version for dataset '{}' (no batch_group_id)", datasetId);
                         return mutateLatestVersionWithInsert(batch, datasetId, workspaceId, userName);
                     }
 
-                    // batch_group_id provided: create new version with batch grouping
+                    // 提供了 batch_group_id：使用批次分组创建新版本
                     log.info("Creating version with batch grouping for dataset '{}', batch_group_id: '{}'", datasetId,
                             batchGroupId);
                     return handleGroupedInsertion(batchGroupId, batch, datasetId, workspaceId, userName);
@@ -1583,25 +1580,25 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Mutates the latest version by inserting/updating items.
-     * Used when batchGroupId is null (backwards compatibility).
+     * 通过插入/更新条目来修改最新版本。
+     * 当 batchGroupId 为空时使用（向后兼容）。
      */
     private Mono<DatasetVersion> mutateLatestVersionWithInsert(DatasetItemBatch batch, UUID datasetId,
             String workspaceId, String userName) {
         log.info("Mutating latest version for dataset '{}' with '{}' items", datasetId, batch.items().size());
 
-        // Get the latest version
+        // 获取最新版本
         Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
 
         if (latestVersion.isEmpty()) {
-            // No versions exist - create the first version
+            // 不存在版本 - 创建第一个版本
             log.info("No versions exist for dataset '{}', creating first version", datasetId);
             return saveItemsWithVersion(batch, datasetId, null)
                     .contextWrite(c -> c.put(RequestContext.WORKSPACE_ID, workspaceId)
                             .put(RequestContext.USER_NAME, userName));
         }
 
-        // Version exists - insert items directly into it
+        // 版本存在 - 直接向其中插入条目
         UUID latestVersionId = latestVersion.get().id();
         log.info("Inserting '{}' items into existing version '{}'", batch.items().size(), latestVersionId);
 
@@ -1609,23 +1606,23 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Shared method to insert items into an existing version.
-     * Handles validation, classification of new vs updated items, and count updates.
-     * Used by mutateLatestVersionWithInsert and handleGroupedInsertion.
+     * 向现有版本插入条目的共享方法。
+     * 处理验证、新条目与更新条目的分类以及计数更新。
+     * 由 mutateLatestVersionWithInsert 和 handleGroupedInsertion 使用。
      *
-     * @param batch the batch of items to insert
-     * @param datasetId the dataset ID
-     * @param versionId the version ID to insert into
-     * @param workspaceId the workspace ID
-     * @param userName the username
-     * @return Mono emitting the updated dataset version
+     * @param batch 要插入的条目批次
+     * @param datasetId 数据集 ID
+     * @param versionId 要插入的版本 ID
+     * @param workspaceId 工作空间 ID
+     * @param userName 用户名
+     * @return 发出更新后的数据集版本的 Mono
      */
     private Mono<DatasetVersion> insertItemsIntoVersion(DatasetItemBatch batch, UUID datasetId, UUID versionId,
             String workspaceId, String userName) {
-        // Validate and prepare items
+        // 验证并准备条目
         List<DatasetItem> validatedItems = addIdIfAbsent(batch);
 
-        // Ensure all items have datasetItemId set (use id field if datasetItemId is null)
+        // 确保所有条目都设置了 datasetItemId（如果 datasetItemId 为空则使用 id 字段）
         List<DatasetItem> normalizedItems = validatedItems.stream()
                 .map(item -> {
                     if (item.datasetItemId() == null) {
@@ -1639,11 +1636,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 .toList();
 
         return Mono.deferContextual(ctx -> {
-            // Validate spans and traces
+            // 验证 span 和 trace
             return validateSpans(workspaceId, normalizedItems)
                     .then(validateTraces(workspaceId, normalizedItems))
                     .then(Mono.defer(() -> {
-                        // Get existing item IDs to determine which are new vs updates
+                        // 获取现有条目 ID 以确定哪些是新的 vs 更新
                         return versionDao.getItemIdsAndHashes(datasetId, versionId)
                                 .collectList()
                                 .flatMap(existingItems -> {
@@ -1651,7 +1648,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                             .map(DatasetItemIdAndHash::itemId)
                                             .collect(Collectors.toSet());
 
-                                    // Classify items as new or updates
+                                    // 将条目分类为新的或更新
                                     int newItemsCount = 0;
                                     int updatedItemsCount = 0;
 
@@ -1670,7 +1667,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                     log.info("Inserting into version '{}': new='{}', updated='{}'",
                                             versionId, finalNewItemsCount, finalUpdatedItemsCount);
 
-                                    // Insert items directly into the existing version
+                                    // 直接向现有版本插入条目
                                     return versionDao
                                             .insertItems(datasetId, versionId, normalizedItems, workspaceId, userName)
                                             .then(Mono.fromCallable(() -> {
@@ -1685,14 +1682,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Updates version counts after inserting items into an existing version.
-     * Extracted to reduce complexity and improve testability.
+     * 在向现有版本插入条目后更新版本计数。
+     * 提取出来以降低复杂度并提高可测试性。
      *
-     * @param versionId The version ID to update
-     * @param workspaceId The workspace ID
-     * @param newItemsCount Number of new items inserted
-     * @param updatedItemsCount Number of items updated
-     * @param userName The user performing the update
+     * @param versionId 要更新的版本 ID
+     * @param workspaceId 工作空间 ID
+     * @param newItemsCount 插入的新条目数量
+     * @param updatedItemsCount 更新的条目数量
+     * @param userName 执行更新的用户
      */
     private void updateVersionCountsForInsert(UUID versionId, String workspaceId, int newItemsCount,
             int updatedItemsCount, String userName) {
@@ -1702,7 +1699,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     .orElseThrow(() -> new NotFoundException(
                             "Version not found: '%s'".formatted(versionId)));
 
-            // Only increment total by new items (not updates)
+            // 仅按新条目（非更新）增加总数
             int newTotal = currentVersion.itemsTotal() + newItemsCount;
             int newAdded = currentVersion.itemsAdded() + newItemsCount;
             int newModified = currentVersion.itemsModified() + updatedItemsCount;
@@ -1714,14 +1711,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Updates version counts after deleting items from an existing version.
-     * Extracted to reduce complexity and improve testability.
+     * 在从现有版本删除条目后更新版本计数。
+     * 提取出来以降低复杂度并提高可测试性。
      *
-     * @param versionId The version ID to update
-     * @param workspaceId The workspace ID
-     * @param currentVersion The current version before deletion
-     * @param deletedCount Number of items deleted
-     * @param userName The user performing the update
+     * @param versionId 要更新的版本 ID
+     * @param workspaceId 工作空间 ID
+     * @param currentVersion 删除前的当前版本
+     * @param deletedCount 删除的条目数量
+     * @param userName 执行更新的用户
      */
     private void updateVersionCountsForDelete(UUID versionId, String workspaceId, DatasetVersion currentVersion,
             int deletedCount, String userName) {
@@ -1740,9 +1737,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Creates a new version with batch_group_id by reusing existing version creation logic.
-     * This delegates to either createFirstVersion or createVersionWithDelta, then associates
-     * the batch_group_id with the created version.
+     * 通过复用现有版本创建逻辑，使用 batch_group_id 创建新版本。
+     * 此方法委托给 createFirstVersion 或 createVersionWithDelta，
+     * 然后将 batch_group_id 与创建的版本关联。
      */
     private Mono<DatasetVersion> saveItemsWithVersion(DatasetItemBatch batch, UUID datasetId, UUID batchGroupId) {
         if (batch.items() == null || batch.items().isEmpty()) {
@@ -1750,7 +1747,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
             return Mono.empty();
         }
 
-        // Validate UUID versions and add IDs if absent
+        // 验证 UUID 版本并在缺失时添加 ID
         List<DatasetItem> validatedItems = addIdIfAbsent(batch);
 
         return Mono.deferContextual(ctx -> {
@@ -1760,31 +1757,31 @@ class DatasetItemServiceImpl implements DatasetItemService {
             log.info("Saving items with version for dataset '{}', itemCount '{}', batchGroupId '{}'",
                     datasetId, batch.items().size(), batchGroupId);
 
-            // Validate span and trace workspaces before proceeding
+            // 在继续之前验证 span 和 trace 工作空间
             return validateSpans(workspaceId, validatedItems)
                     .then(Mono.defer(() -> validateTraces(workspaceId, validatedItems)))
                     .then(Mono.defer(() -> {
-                        // Verify dataset exists
+                        // 验证数据集是否存在
                         datasetService.findById(datasetId, workspaceId, null);
 
-                        // Ensure dataset is migrated if lazy migration is enabled
+                        // 如果启用了延迟迁移，确保数据集已迁移
                         return ensureLazyMigration(datasetId, workspaceId);
                     }))
                     .then(Mono.defer(() -> {
 
-                        // Get the latest version (if exists) - using overload that takes workspaceId
+                        // 获取最新版本（如果存在）- 使用接受 workspaceId 的重载方法
                         Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId,
                                 workspaceId);
 
                         if (latestVersion.isEmpty()) {
-                            // No versions exist yet - create the first version with all items as "added"
+                            // 尚不存在版本 - 创建第一个版本，所有条目为"已添加"
                             return createFirstVersion(datasetId, validatedItems, batchGroupId, workspaceId,
                                     userName);
                         }
 
-                        // Versions exist - apply delta on top of the latest. OPIK-6696: if the caller
-                        // supplied copy-from coordinates, the COPY of unchanged rows will read from that
-                        // (dataset, version) pair instead of the destination's just-minted prior version.
+                        // 版本存在 - 在最新版本之上应用增量。OPIK-6696：如果调用者
+                        // 提供了 copy-from 坐标，未更改行的 COPY 将从该
+                        // (dataset, version) 对读取，而非目标刚创建的先前版本。
                         UUID baseVersionId = latestVersion.get().id();
                         return createVersionWithDelta(datasetId, baseVersionId, validatedItems, batchGroupId,
                                 workspaceId, userName, batch.copyFromDatasetId(), batch.copyFromVersionId());
@@ -1798,9 +1795,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
         UUID newVersionId = idGenerator.generateId();
 
-        // All items are "added" for the first version
-        // Set datasetItemId as the stable ID for each item
-        // Use datasetItemId if already set, otherwise use id, otherwise generate new
+        // 对于第一个版本，所有条目都是"已添加"
+        // 为每个条目设置 datasetItemId 作为稳定 ID
+        // 如果已设置则使用 datasetItemId，否则使用 id，否则生成新的
         List<DatasetItem> addedItems = items.stream()
                 .map(item -> {
                     UUID stableId = item.id() != null ? item.id() : idGenerator.generateId();
@@ -1811,28 +1808,28 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 })
                 .toList();
 
-        // Use applyDelta with no base version items (empty copy)
-        // We need a special path since there's no base version
+        // 使用 applyDelta，没有基础版本条目（空复制）
+        // 我们需要特殊路径，因为没有基础版本
         return versionDao.insertItems(datasetId, newVersionId, addedItems, workspaceId, userName)
                 .flatMap(itemsTotal -> {
                     log.info("Inserted '{}' items for first version of dataset '{}'", itemsTotal, datasetId);
 
-                    // Determine change description based on whether this is a batch operation
+                    // 根据是否为批操作确定变更描述
                     String changeDescription = batchGroupId != null
                             ? "Auto-created from SDK batch operation"
                             : null;
 
-                    // Create version metadata (first version - all items are "added")
+                    // 创建版本元数据（第一个版本 - 所有条目为"已添加"）
                     return createVersionFromDelta(
                             datasetId,
                             newVersionId,
                             itemsTotal.intValue(),
-                            null, // No base version for first version
-                            null, // No tags
+                            null, // 首个版本无基础版本
+                            null, // 无标签
                             changeDescription,
-                            null, // No evaluators for first version
-                            null, // No execution policy for first version
-                            false, // Don't clear execution policy
+                            null, // 首个版本无评估器
+                            null, // 首个版本无执行策略
+                            false, // 不清除执行策略
                             batchGroupId,
                             workspaceId,
                             userName);
@@ -1842,11 +1839,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
     private record CopyFromCoordinates(UUID datasetId, UUID versionId) {
     }
 
-    // OPIK-6696: resolves the source the carry-forward COPY (and supporting reads) runs against — the
-    // caller-supplied (dataset, version) pair when provided, otherwise the destination's prior version.
-    // When the caller supplies coordinates, validates they resolve to a real workspace-scoped version on
-    // the named dataset, throwing NotFound otherwise — without this a bogus or cross-workspace pair would
-    // silently produce a version with all incoming items classified as adds and zero carry-forwards.
+    // OPIK-6696: 解析延续 COPY（和支持读取）运行的源 — 调用者提供的
+    // (dataset, version) 对（如果提供），否则为目标的先前版本。
+    // 当调用者提供坐标时，验证它们解析为命名数据集上的真实工作空间范围版本，
+    // 否则抛出 NotFound — 没有这个，虚假或跨工作空间的对会静默生成
+    // 所有传入条目分类为添加且零延续的版本。
     private CopyFromCoordinates resolveAndValidateCopyFrom(String workspaceId, UUID copyFromDatasetId,
             UUID copyFromVersionId, UUID fallbackDatasetId, UUID fallbackVersionId) {
 
@@ -1867,10 +1864,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
             List<DatasetItem> items, UUID batchGroupId, String workspaceId, String userName,
             UUID copyFromDatasetId, UUID copyFromVersionId) {
 
-        // OPIK-6696: when copy-from coordinates are supplied, the COPY of unchanged rows and the
-        // classification SELECT both read from that (dataset, version) pair instead of the
-        // destination's just-minted prior version. For migrate this is source v_i — stable, fully
-        // replicated, free of the multi-replica read-after-write window.
+        // OPIK-6696: 当提供 copy-from 坐标时，未更改行的 COPY 和分类 SELECT
+        // 都从该 (dataset, version) 对读取，而非目标刚创建的先前版本。
+        // 对于迁移这是源 v_i — 稳定、完全复制、无多副本写后读窗口。
         CopyFromCoordinates copyFrom = resolveAndValidateCopyFrom(workspaceId, copyFromDatasetId, copyFromVersionId,
                 datasetId, baseVersionId);
         UUID copyDatasetId = copyFrom.datasetId();
@@ -1882,7 +1878,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
         UUID newVersionId = idGenerator.generateId();
 
-        // Get existing item IDs from the copy-from version to determine adds vs edits
+        // 从 copy-from 版本获取现有条目 ID 以确定添加 vs 编辑
         return versionDao.getItemIdsAndHashes(copyDatasetId, copyVersionId)
                 .collectList()
                 .flatMap(existingItems -> {
@@ -1890,21 +1886,21 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             .map(DatasetItemIdAndHash::itemId)
                             .collect(Collectors.toSet());
 
-                    // Classify incoming items as added or edited
+                    // 将传入条目分类为添加或编辑
                     List<DatasetItem> addedItems = new ArrayList<>();
                     List<DatasetItem> editedItems = new ArrayList<>();
 
                     for (DatasetItem item : items) {
-                        // Try datasetItemId first, then fall back to id for backwards compatibility
+                        // 首先尝试 datasetItemId，然后回退到 id 以保持向后兼容性
                         UUID stableId = item.datasetItemId() != null ? item.datasetItemId() : item.id();
                         if (stableId != null && existingItemIds.contains(stableId)) {
-                            // Existing item - treat as edit
+                            // 现有条目 - 视为编辑
                             editedItems.add(item.toBuilder()
                                     .datasetItemId(stableId)
                                     .datasetId(datasetId)
                                     .build());
                         } else {
-                            // New item - treat as add
+                            // 新条目 - 视为添加
                             UUID newItemId = stableId != null ? stableId : idGenerator.generateId();
                             addedItems.add(item.toBuilder()
                                     .datasetItemId(newItemId)
@@ -1916,7 +1912,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     log.info("Classified items: added='{}', edited='{}' for dataset '{}'",
                             addedItems.size(), editedItems.size(), datasetId);
 
-                    // Calculate unchanged items: items in copy-from version that are NOT being edited
+                    // 计算未更改条目：copy-from 版本中未被编辑的条目
                     Set<UUID> editedItemIds = editedItems.stream()
                             .map(DatasetItem::datasetItemId)
                             .collect(Collectors.toSet());
@@ -1924,36 +1920,36 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             .filter(item -> !editedItemIds.contains(item.itemId()))
                             .count();
 
-                    // Generate UUIDs for unchanged, added, and edited items
+                    // 为未更改、添加和编辑的条目生成 UUID
                     List<UUID> unchangedUuids = generateUnchangedUuidsReversed(unchangedItemCount);
                     List<UUID> addedUuids = generateUuidPool(idGenerator, addedItems.size());
 
-                    // Assign row IDs to added items
+                    // 为新增条目分配行 ID
                     List<DatasetItem> addedItemsWithIds = withAssignedRowIds(addedItems, addedUuids);
 
-                    // Apply delta changes - no deletions in PUT flow. COPY reads from copy-from coords.
+                    // 应用增量变更 - PUT 流程中无删除。COPY 从 copy-from 坐标读取。
                     return versionDao.applyDelta(datasetId, newVersionId,
                             addedItemsWithIds, editedItems, Set.of(), unchangedUuids,
                             Set.of(), copyDatasetId, copyVersionId)
                             .flatMap(itemsTotal -> {
                                 log.info("Applied delta to dataset '{}': itemsTotal '{}'", datasetId, itemsTotal);
 
-                                // Determine change description based on whether this is a batch operation
-                                String changeDescription = batchGroupId != null
-                                        ? "Auto-created from SDK batch operation"
-                                        : null;
+                    // 根据是否为批操作确定变更描述
+                    String changeDescription = batchGroupId != null
+                            ? "Auto-created from SDK batch operation"
+                            : null;
 
-                                // Create version metadata
-                                return createVersionFromDelta(
+                    // 创建版本元数据
+                    return createVersionFromDelta(
                                         datasetId,
                                         newVersionId,
                                         itemsTotal.intValue(),
                                         baseVersionId,
-                                        null, // No tags
+                                        null, // 无标签
                                         changeDescription,
-                                        null, // Inherit evaluators from base version
-                                        null, // Inherit execution policy from base version
-                                        false, // Don't clear execution policy
+                                        null, // 从基础版本继承评估器
+                                        null, // 从基础版本继承执行策略
+                                        false, // 不清除执行策略
                                         batchGroupId,
                                         workspaceId,
                                         userName);
@@ -1962,19 +1958,19 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-    * Canonical method to create a dataset version from delta changes.
-    * All other createVersionFromDelta overloads delegate to this method.
+    * 从增量变更创建数据集版本的规范方法。
+    * 所有其他 createVersionFromDelta 重载都委托给此方法。
     *
-    * @param datasetId the dataset ID
-    * @param newVersionId the new version ID
-    * @param itemsTotal total number of items in the new version
-    * @param baseVersionId base version ID (null for first version)
-    * @param tags version tags (null if not specified)
-    * @param changeDescription description of changes (null for auto-generated)
-    * @param batchGroupId batch group ID (null if not a batch operation)
-    * @param workspaceId workspace ID
-    * @param userName user name
-    * @return Mono emitting the created DatasetVersion
+    * @param datasetId 数据集 ID
+    * @param newVersionId 新版本 ID
+    * @param itemsTotal 新版本中的条目总数
+    * @param baseVersionId 基础版本 ID（第一个版本为 null）
+    * @param tags 版本标签（未指定为 null）
+    * @param changeDescription 变更描述（自动生成为 null）
+    * @param batchGroupId 批次组 ID（非批操作为 null）
+    * @param workspaceId 工作空间 ID
+    * @param userName 用户名
+    * @return 发出创建的 DatasetVersion 的 Mono
     */
     private Mono<DatasetVersion> createVersionFromDelta(
             UUID datasetId,
@@ -2017,8 +2013,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Generate UUIDs for unchanged items, reversed to maintain their original order.
-     * This is necessary because ClickHouse sorts by id DESC, and UUIDv7 is time-ordered.
+     * 为未更改条目生成 UUID，反转以保持其原始顺序。
+     * 这是必要的，因为 ClickHouse 按 id DESC 排序，而 UUIDv7 是时间有序的。
      */
     private List<UUID> generateUnchangedUuidsReversed(int count) {
         List<UUID> uuids = generateUuidPool(idGenerator, count);
@@ -2028,20 +2024,18 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * OPIK-6390 helper: applies a delta that only edits and/or deletes items, sizing the
-     * unchanged-UUID pool from a live ClickHouse count of the base version (excluding the
-     * stable IDs being edited or deleted). Replaces the previous use of
-     * {@code DatasetVersion.itemsTotal()}, which can drift below the actual row count.
+     * OPIK-6390 辅助方法：应用仅编辑和/或删除条目的增量，从基础版本的实时
+     * ClickHouse 计数中调整未更改 UUID 池的大小（排除正在编辑或删除的稳定 ID）。
+     * 替换了之前使用的 {@code DatasetVersion.itemsTotal()}，后者可能漂移到实际行数以下。
      *
-     * <p>Callers that also INSERT new items (the full add/edit/delete flow in
-     * {@code applyDeltaChanges}) keep their inline orchestration because they need to run
-     * {@code editItemsViaSelectInsert} separately and combine its row count with the
-     * {@code applyDelta} result.
+     * <p>同时 INSERT 新条目的调用者（{@code applyDeltaChanges} 中的完整添加/编辑/删除流程）
+     * 保持其内联编排，因为它们需要单独运行 {@code editItemsViaSelectInsert}
+     * 并将其行数与 {@code applyDelta} 结果组合。
      *
-     * @param editedItems items to re-insert in the new version with the same stable id
-     * @param deletedIds stable IDs to drop from the new version (callers that did an upstream
-     *        batch update pass the updated IDs here so they're excluded from the copy)
-     * @return total row count in the new version (passed through from applyDelta)
+     * @param editedItems 要在新版本中以相同稳定 ID 重新插入的条目
+     * @param deletedIds 要从新版本中删除的稳定 ID（执行上游批更新的调用者
+     *        在此处传递更新的 ID，以便从复制中排除）
+     * @return 新版本中的总行数（从 applyDelta 传递）
      */
     private Mono<Long> applyEditDeleteWithLiveCount(
             UUID datasetId, UUID baseVersionId, UUID newVersionId,
@@ -2057,7 +2051,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
         return versionDao.countRowsInVersion(datasetId, baseVersionId, excludedFromCopy, null, workspaceId)
                 .flatMap(unchangedCount -> {
                     List<UUID> unchangedUuids = generateUnchangedUuidsReversed(unchangedCount.intValue());
-                    // Same-dataset copy (no copy-from override) — source = target = (datasetId, baseVersionId).
+                    // 同数据集复制（无 copy-from 覆盖）— 源 = 目标 = (datasetId, baseVersionId)。
                     return versionDao.applyDelta(datasetId, newVersionId,
                             List.of(), // no added items in this flow
                             editedItems,
@@ -2069,12 +2063,12 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Assigns row IDs to a list of dataset items.
-     * Creates new DatasetItem instances with the specified UUIDs as their row IDs.
+     * 为数据集条目列表分配行 ID。
+     * 创建以指定 UUID 作为行 ID 的新 DatasetItem 实例。
      *
-     * @param items the items to assign row IDs to
-     * @param uuids the UUIDs to use as row IDs (must have same size as items)
-     * @return new list with items containing assigned row IDs
+     * @param items 要分配行 ID 的条目
+     * @param uuids 用作行 ID 的 UUID（必须与条目大小相同）
+     * @return 包含已分配行 ID 条目的新列表
      */
     private List<DatasetItem> withAssignedRowIds(List<DatasetItem> items, List<UUID> uuids) {
         return IntStream.range(0, items.size())
@@ -2085,24 +2079,24 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Deletes items from an existing version (subsequent batches with same batch_group_id).
-     * Similar to appendItemsToVersion for inserts, but removes items instead.
-     * Note: Only supports deletion by explicit item IDs. Filter-based deletions cannot be batched
-     * because the client doesn't know which items will be deleted.
+     * 从现有版本删除条目（具有相同 batch_group_id 的后续批次）。
+     * 类似于插入的 appendItemsToVersion，但改为移除条目。
+     * 注意：仅支持通过显式条目 ID 删除。基于过滤器的删除无法批处理，
+     * 因为客户端不知道哪些条目将被删除。
      */
     private Mono<Void> deleteItemsFromExistingVersion(
             Set<UUID> ids, UUID datasetId, UUID versionId, String workspaceId, String userName) {
 
         log.info("Deleting items from existing version '{}' for dataset '{}'", versionId, datasetId);
 
-        // Only explicit IDs are supported for batched deletions
+        // 批量删除仅支持显式 ID
         if (CollectionUtils.isEmpty(ids)) {
             log.warn("Batched deletion requires explicit item IDs. Filters are not supported for batched deletions.");
             return Mono.empty();
         }
 
         return Mono.defer(() -> {
-            // Get current version to update counts
+            // 获取当前版本以更新计数
             DatasetVersion currentVersion = versionService.getVersionById(workspaceId, datasetId, versionId);
 
             log.info(
@@ -2111,7 +2105,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
 
             log.info("deleteItemsFromExistingVersion: attempting to remove '{}' items", ids.size());
 
-            // Remove items from the version
+            // 从版本中移除条目
             return versionDao.removeItemsFromVersion(datasetId, versionId, ids, workspaceId)
                     .flatMap(deletedCount -> {
                         log.info("deleteItemsFromExistingVersion: removeItemsFromVersion returned deletedCount='{}'",
@@ -2122,7 +2116,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             return Mono.<Void>empty();
                         }
 
-                        // Update version counts in MySQL
+                        // 在 MySQL 中更新版本计数
                         return Mono.fromCallable(() -> {
                             updateVersionCountsForDelete(versionId, workspaceId, currentVersion,
                                     deletedCount.intValue(), userName);
@@ -2136,9 +2130,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Deletes items from an existing version using filters.
-     * This is used for filter-based deletions when createVersion=false.
-     * Null or empty filter list means "delete all" (no filters = match everything).
+     * 使用过滤器从现有版本删除条目。
+     * 当 createVersion=false 时用于基于过滤器的删除。
+     * 空或空过滤器列表表示"删除全部"（无过滤器 = 匹配所有）。
      */
     private Mono<Void> deleteItemsFromExistingVersionByFilters(UUID datasetId, UUID versionId,
             List<DatasetItemFilter> filters, String workspaceId, String userName) {
@@ -2148,14 +2142,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 versionId, datasetId);
 
         return Mono.defer(() -> {
-            // Get current version to update counts
+            // 获取当前版本以更新计数
             DatasetVersion currentVersion = versionService.getVersionById(workspaceId, datasetId, versionId);
 
             log.info(
                     "deleteItemsFromExistingVersionByFilters: currentVersion itemsTotal='{}', itemsDeleted='{}', versionId='{}'",
                     currentVersion.itemsTotal(), currentVersion.itemsDeleted(), versionId);
 
-            // Remove items matching filters from the version
+            // 从版本中移除匹配过滤器的条目
             return versionDao.removeItemsFromVersionByFilters(datasetId, versionId, filters, workspaceId)
                     .flatMap(deletedCount -> {
                         log.info(
@@ -2167,7 +2161,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             return Mono.<Void>empty();
                         }
 
-                        // Update version counts in MySQL
+                        // 在 MySQL 中更新版本计数
                         return Mono.fromCallable(() -> {
                             updateVersionCountsForDelete(versionId, workspaceId, currentVersion,
                                     deletedCount.intValue(), userName);
@@ -2181,11 +2175,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Resolves the dataset ID that owns the given stable dataset item IDs.
-     * Validates that all items belong to the same dataset.
+     * 解析拥有给定稳定数据集条目 ID 的数据集 ID。
+     * 验证所有条目属于同一数据集。
      *
-     * @param itemIds stable dataset_item_id values
-     * @return Mono emitting the resolved datasetId, or empty if none found
+     * @param itemIds 稳定的 dataset_item_id 值
+     * @return 发出解析的 datasetId 的 Mono，如果未找到则为空
      */
     private Mono<UUID> resolveDatasetIdFromItemIds(Set<UUID> itemIds) {
         return versionDao.resolveDatasetIdsFromItemIds(itemIds)
@@ -2213,23 +2207,23 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Handles grouped deletion operations using batch_group_id.
-     * If a version exists for the batch_group_id, appends deletions to it.
-     * Otherwise, creates a new version with the deletions.
-     * Maps incoming row IDs to stable dataset_item_ids before processing.
+     * 使用 batch_group_id 处理分组删除操作。
+     * 如果 batch_group_id 存在版本，则将删除追加到该版本。
+     * 否则，创建包含删除的新版本。
+     * 在处理前将传入的行 ID 映射到稳定的 dataset_item_ids。
      *
-     * @param batchGroupId the batch group ID
-     * @param ids          the item IDs to delete (maybe UI row IDs)
-     * @param datasetId    the resolved dataset ID
-     * @param filters      optional filters
-     * @param workspaceId  the workspace ID
-     * @param userName     the username
-     * @return Mono completing when deletion is done
+     * @param batchGroupId 批次组 ID
+     * @param ids          要删除的条目 ID（可能是 UI 行 ID）
+     * @param datasetId    解析的数据集 ID
+     * @param filters      可选过滤器
+     * @param workspaceId  工作空间 ID
+     * @param userName     用户名
+     * @return 删除完成时完成的 Mono
      */
     private Mono<Void> handleGroupedDeletion(UUID batchGroupId, Set<UUID> ids, UUID datasetId,
             List<DatasetItemFilter> filters, String workspaceId, String userName) {
 
-        // For filter-based deletions, ids is null - skip mapping and proceed directly
+        // 对于基于过滤器的删除，ids 为空 - 跳过映射并直接继续
         if (ids == null) {
             return proceedWithGroupedDeletion(batchGroupId, Set.of(), datasetId, filters, workspaceId, userName);
         }
@@ -2246,7 +2240,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Proceeds with grouped deletion after row IDs have been mapped to dataset_item_ids.
+     * 在行 ID 映射到 dataset_item_ids 后继续进行分组删除。
      */
     private Mono<Void> proceedWithGroupedDeletion(UUID batchGroupId, Set<UUID> datasetItemIds, UUID datasetId,
             List<DatasetItemFilter> filters, String workspaceId, String userName) {
@@ -2254,14 +2248,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalVersion -> {
                     if (optionalVersion.isPresent()) {
-                        // Version exists - this is a subsequent batch of deletions
+                        // 版本存在 - 这是后续的删除批次
                         var existingVersion = optionalVersion.get();
                         log.info("Deleting '{}' items from existing version '{}' for batch_group_id '{}'",
                                 datasetItemIds.size(), existingVersion.id(), batchGroupId);
                         return deleteItemsFromExistingVersion(datasetItemIds, datasetId,
                                 existingVersion.id(), workspaceId, userName);
                     } else {
-                        // No version with this batch_group_id - create new version with deletions
+                        // 没有此 batch_group_id 的版本 - 创建包含删除的新版本
                         log.info("Creating new version with batch_group_id '{}' for dataset '{}' with '{}' deletions",
                                 batchGroupId, datasetId, datasetItemIds.size());
                         return deleteItemsWithVersion(datasetItemIds, datasetId, filters, workspaceId, userName,
@@ -2271,16 +2265,16 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Handles grouped insertion operations using batch_group_id.
-     * If a version exists for the batch_group_id, appends items to it.
-     * Otherwise, creates a new version with the items.
+     * 使用 batch_group_id 处理分组插入操作。
+     * 如果 batch_group_id 存在版本，则将条目追加到该版本。
+     * 否则，创建包含条目的新版本。
      *
-     * @param batchGroupId the batch group ID
-     * @param batch the batch of items to insert
-     * @param datasetId the dataset ID
-     * @param workspaceId the workspace ID
-     * @param userName the username
-     * @return Mono emitting the dataset version
+     * @param batchGroupId 批次组 ID
+     * @param batch 要插入的条目批次
+     * @param datasetId 数据集 ID
+     * @param workspaceId 工作空间 ID
+     * @param userName 用户名
+     * @return 发出数据集版本的 Mono
      */
     private Mono<DatasetVersion> handleGroupedInsertion(UUID batchGroupId, DatasetItemBatch batch,
             UUID datasetId, String workspaceId, String userName) {
@@ -2288,13 +2282,13 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalVersion -> {
                     if (optionalVersion.isPresent()) {
-                        // Version exists - append items to it
+                        // 版本存在 - 将条目追加到该版本
                         var existingVersion = optionalVersion.get();
                         log.info("Appending '{}' items to existing version '{}' for batch_group_id '{}'",
                                 batch.items().size(), existingVersion.id(), batchGroupId);
                         return insertItemsIntoVersion(batch, datasetId, existingVersion.id(), workspaceId, userName);
                     } else {
-                        // No version with this batch_group_id - create new one
+                        // 没有此 batch_group_id 的版本 - 创建新版本
                         log.info("Creating new version with batch_group_id '{}' for dataset '{}'",
                                 batchGroupId, datasetId);
                         return saveItemsWithVersion(batch, datasetId, batchGroupId)
@@ -2306,15 +2300,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
     }
 
     /**
-     * Ensures a dataset is migrated to the versioning system if lazy migration is enabled.
+     * 如果启用了延迟迁移，确保数据集已迁移到版本控制系统。
      * <p>
-     * This method checks if lazy migration is enabled in the configuration. If so, it calls
-     * the migration service to ensure the dataset has been migrated before proceeding
-     * with the CRUD operation.
+     * 此方法检查配置中是否启用了延迟迁移。如果是，则调用迁移服务
+     * 确保数据集在继续 CRUD 操作之前已迁移。
      *
-     * @param datasetId   the dataset ID to ensure is migrated
-     * @param workspaceId the workspace ID
-     * @return a Mono that completes when the dataset is ensured to be migrated (or immediately if lazy migration is disabled)
+     * @param datasetId   要确保迁移的数据集 ID
+     * @param workspaceId 工作空间 ID
+     * @return 当数据集确保已迁移时完成的 Mono（如果延迟迁移禁用则立即完成）
      */
     private Mono<Void> ensureLazyMigration(UUID datasetId, String workspaceId) {
         if (!config.getDatasetVersioningMigration().isLazyEnabled()) {

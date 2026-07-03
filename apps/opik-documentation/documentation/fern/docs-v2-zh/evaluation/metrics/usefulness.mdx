@@ -1,0 +1,104 @@
+---
+description: 介绍 Usefulness 指标
+headline: Usefulness | Opik 文档
+og:description: 使用 Opik 的指标评估 LLM 回答的有用性，评分范围从 0.0 到 1.0，实现精确评估。
+og:site_name: Opik 文档
+og:title: 使用 Opik 指标评估有用性
+title: Usefulness
+---
+
+# Usefulness
+
+Usefulness 指标用于评估 LLM 回答相对于输入的有用程度。该指标使用语言模型来评估回答的有用性，并提供 0.0 到 1.0 之间的分数，数值越高表示有用性越强。除分数外，还会提供关于评分依据的详细说明。
+
+## 如何使用 Usefulness 指标
+
+你可以按以下方式使用 `Usefulness` 指标：
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import Usefulness
+
+metric = Usefulness()
+
+result = metric.score(
+    input="How can I optimize the performance of my Python web application?",
+    output="To optimize your Python web application's performance, focus on these key areas:\n1. Database optimization: Use connection pooling, index frequently queried fields, and cache common queries\n2. Caching strategy: Implement Redis or Memcached for session data and frequently accessed content\n3. Asynchronous operations: Use async/await for I/O-bound operations to handle more concurrent requests\n4. Code profiling: Use tools like cProfile to identify bottlenecks in your application\n5. Load balancing: Distribute traffic across multiple server instances for better scalability",
+)
+
+print(result.value) # 0.0 到 1.0 之间的浮点数
+print(result.reason) # 评分说明
+
+````
+
+```typescript title="TypeScript" language="typescript"
+import { Usefulness } from 'opik';
+
+const metric = new Usefulness();
+
+const result = await metric.score({
+    input: "How can I optimize the performance of my Python web application?",
+    output: "To optimize your Python web application's performance, focus on these key areas:\n1. Database optimization: Use connection pooling, index frequently queried fields, and cache common queries\n2. Caching strategy: Implement Redis or Memcached for session data and frequently accessed content\n3. Asynchronous operations: Use async/await for I/O-bound operations to handle more concurrent requests\n4. Code profiling: Use tools like cProfile to identify bottlenecks in your application\n5. Load balancing: Distribute traffic across multiple server instances for better scalability",
+});
+
+console.log(result.value);  // 0.0 到 1.0 之间的浮点数
+console.log(result.reason);  // 评分说明
+````
+
+</CodeBlocks>
+
+Python 中的 `ascore` 方法和 TypeScript 中的 `score` 方法（始终为异步）均支持异步评分。
+
+## 理解评分
+
+Usefulness 分数范围为 0.0 到 1.0：
+
+- 分数接近 1.0 表示回答非常有用，能够以相关且准确的信息直接回应输入问题
+- 分数接近 0.0 表示回答有用性较低，可能偏离主题、不完整或未能有效回应输入问题
+
+每个分数都附带详细的说明（`result.reason`），帮助理解该评分的依据。
+
+## Usefulness 提示词
+
+Opik 使用 LLM 作为评判者来评估有用性，为此我们提供了用于生成 LLM 提示词的模板。默认情况下，使用 `gpt-4o` 模型来评估回答，但你可以通过设置 `model` 参数将其更改为 [LiteLLM](https://docs.litellm.ai/docs/providers) 支持的任何模型。你可以在[为 LLM 评判指标自定义模型](/evaluation/metrics/custom_model)部分了解更多关于自定义模型的信息。
+
+模板如下：
+
+```
+You are an impartial judge tasked with evaluating the quality and usefulness of AI-generated responses.
+
+Your evaluation should consider the following key factors:
+- Helpfulness: How well does it solve the user's problem?
+- Relevance: How well does it address the specific question?
+- Accuracy: Is the information correct and reliable?
+- Depth: Does it provide sufficient detail and explanation?
+- Creativity: Does it offer innovative or insightful perspectives when appropriate?
+- Level of detail: Is the amount of detail appropriate for the question?
+
+###EVALUATION PROCESS###
+
+1. **ANALYZE** the user's question and the AI's response carefully
+2. **EVALUATE** how well the response meets each of the criteria above
+3. **CONSIDER** the overall effectiveness and usefulness of the response
+4. **PROVIDE** a clear, objective explanation for your evaluation
+5. **SCORE** the response on a scale from 0.0 to 1.0:
+   - 1.0: Exceptional response that excels in all criteria
+   - 0.8: Excellent response with minor room for improvement
+   - 0.6: Good response that adequately addresses the question
+   - 0.4: Fair response with significant room for improvement
+   - 0.2: Poor response that barely addresses the question
+   - 0.0: Completely inadequate or irrelevant response
+
+###OUTPUT FORMAT###
+
+Your evaluation must be provided as a JSON object with exactly two fields:
+- "score": A float between 0.0 and 1.0
+- "reason": A brief, objective explanation justifying your score based on the criteria above
+
+Now, please evaluate the following:
+
+User Question: {input}
+AI Response: {output}
+
+Provide your evaluation in the specified JSON format.
+```

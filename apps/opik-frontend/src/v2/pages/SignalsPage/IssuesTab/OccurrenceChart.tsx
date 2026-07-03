@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import LineChart from "@/shared/Charts/LineChart/LineChart";
 import { ChartConfig } from "@/ui/chart";
 import { formatDate } from "@/lib/date";
@@ -8,14 +9,14 @@ type OccurrenceChartProps = {
   data: AgentInsightsIssueDetail[];
 };
 
-const config: ChartConfig = {
-  count: {
-    label: "Occurrences",
-    color: "var(--color-primary)",
-  },
-};
-
 const OccurrenceChart: React.FC<OccurrenceChartProps> = ({ data }) => {
+  const { t } = useTranslation("pages/signals");
+  const config: ChartConfig = {
+    count: {
+      label: t("signals.occurrenceChart.label"),
+      color: "var(--color-primary)",
+    },
+  };
   const chartData = useMemo(
     () => data.map((point) => ({ time: point.report_day, count: point.count })),
     [data],

@@ -1,0 +1,44 @@
+---
+description: 验证智能体是否完成了其分配的目标
+headline: 智能体任务完成 | Opik 文档
+og:description: 使用 AgentTaskCompletionJudge 有效评估智能体性能，确保多步骤任务中的目标得以实现。
+og:site_name: Opik 文档
+og:title: 使用 Opik 进行智能体任务完成评估
+title: 智能体任务完成
+---
+
+# 智能体任务完成评判器
+
+`AgentTaskCompletionJudge` 会审查智能体的运行记录（通常是所发生事件的自然语言摘要），并判断高层目标是否达成。这对于多步骤智能体特别有用，因为在这类场景中无法仅从最终响应推断任务是否成功。
+
+```python title="智能体是否完成了任务？"
+from opik.evaluation.metrics import AgentTaskCompletionJudge
+
+metric = AgentTaskCompletionJudge()
+
+payload = """TASK: Extract company name, address, and tax ID from the invoice.
+OUTCOME: Agent retrieved company name and address but failed to extract the tax ID.
+"""
+
+score = metric.score(output=payload)
+
+print(score.value)  # 归一化后的 0.0–1.0 值
+print(score.reason)
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `output` | `str` | **是** | 描述任务、证据和结果的载荷，供评判器使用。 |
+
+## 配置选项
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 对于复杂工作流，可切换到更强大的评估模型。 |
+| `temperature` | `0.0` | 如需更具创意的反馈，可适当提高此值。 |
+| `track` | `True` | 切换评估日志记录。 |
+| `project_name` | `None` | 覆盖日志记录的项目名称。 |
+
+评估器返回 0 到 10 之间的整数；Opik 会将其除以 10，使 `score.value` 落在 0.0–1.0 范围内，而 `score.reason` 则总结哪些子任务已完成或被遗漏。

@@ -5,10 +5,10 @@ import { DatasetVersionPublic } from "@/rest_api/api";
 import stringify from "fast-json-stable-stringify";
 
 /**
- * A read-only view of a specific dataset version.
- * Provides access to dataset items as they existed at a particular version.
+ * 特定数据集版本的只读视图。
+ * 提供对特定版本时存在的数据集条目的访问。
  *
- * @template T The type of custom data stored in dataset items
+ * @template T 数据集条目中存储的自定义数据类型
  */
 export class DatasetVersion<T extends DatasetItemData = DatasetItemData> {
   public readonly datasetName: string;
@@ -29,116 +29,116 @@ export class DatasetVersion<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Alias for datasetName (compatibility with Dataset interface).
+   * datasetName 的别名（与 Dataset 接口兼容）。
    */
   get name(): string {
     return this.datasetName;
   }
 
   /**
-   * Alias for datasetId (compatibility with Dataset interface).
+   * datasetId 的别名（与 Dataset 接口兼容）。
    */
   get id(): string {
     return this.datasetId;
   }
 
   /**
-   * Gets the version ID.
+   * 获取版本 ID。
    */
   get versionId(): string | undefined {
     return this.versionInfo.id;
   }
 
   /**
-   * Gets the version hash.
+   * 获取版本哈希。
    */
   get versionHash(): string | undefined {
     return this.versionInfo.versionHash;
   }
 
   /**
-   * Gets the version name (e.g., "v1", "v2").
+   * 获取版本名称（如 "v1"、"v2"）。
    */
   get versionName(): string | undefined {
     return this.versionInfo.versionName;
   }
 
   /**
-   * Gets the tags associated with this version.
+   * 获取与此版本关联的标签。
    */
   get tags(): string[] | undefined {
     return this.versionInfo.tags;
   }
 
   /**
-   * Indicates whether this is the latest version.
+   * 指示是否为最新版本。
    */
   get isLatest(): boolean | undefined {
     return this.versionInfo.isLatest;
   }
 
   /**
-   * Gets the total number of items in this version.
+   * 获取此版本中的条目总数。
    */
   get itemsTotal(): number | undefined {
     return this.versionInfo.itemsTotal;
   }
 
   /**
-   * Gets the number of items added since the previous version.
+   * 获取自上一版本以来添加的条目数量。
    */
   get itemsAdded(): number | undefined {
     return this.versionInfo.itemsAdded;
   }
 
   /**
-   * Gets the number of items modified since the previous version.
+   * 获取自上一版本以来修改的条目数量。
    */
   get itemsModified(): number | undefined {
     return this.versionInfo.itemsModified;
   }
 
   /**
-   * Gets the number of items deleted since the previous version.
+   * 获取自上一版本以来删除的条目数量。
    */
   get itemsDeleted(): number | undefined {
     return this.versionInfo.itemsDeleted;
   }
 
   /**
-   * Gets the change description for this version.
+   * 获取此版本的变更描述。
    */
   get changeDescription(): string | undefined {
     return this.versionInfo.changeDescription;
   }
 
   /**
-   * Gets the creation timestamp.
+   * 获取创建时间戳。
    */
   get createdAt(): Date | undefined {
     return this.versionInfo.createdAt;
   }
 
   /**
-   * Gets the creator of this version.
+   * 获取此版本的创建者。
    */
   get createdBy(): string | undefined {
     return this.versionInfo.createdBy;
   }
 
   /**
-   * Returns the full version info object.
+   * 返回完整的版本信息对象。
    */
   getVersionInfo(): DatasetVersionPublic {
     return this.versionInfo;
   }
 
   /**
-   * Retrieve a fixed number of dataset items from this version.
+   * 从此版本中检索固定数量的数据集条目。
    *
-   * @param nbSamples The number of samples to retrieve. If not set - all items are returned
-   * @param lastRetrievedId Optional ID of the last retrieved item for pagination
-   * @returns A list of objects representing the dataset items
+   * @param nbSamples 要检索的样本数量。如果未设置 - 返回所有条目
+   * @param lastRetrievedId 可选的上次最后获取条目的 ID，用于分页
+   * @returns 表示数据集条目的对象列表
    */
   public async getItems(
     nbSamples?: number,
@@ -154,10 +154,10 @@ export class DatasetVersion<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Convert the dataset version items to a JSON string.
+   * 将数据集版本条目转换为 JSON 字符串。
    *
-   * @param keysMapping Optional dictionary that maps dataset item field names to output JSON keys
-   * @returns A JSON string representation of all items in this version
+   * @param keysMapping 可选的字典，用于将数据集条目字段名映射到输出 JSON 键
+   * @returns 此版本中所有条目的 JSON 字符串表示
    */
   public async toJson(
     keysMapping: Record<string, string> = {}

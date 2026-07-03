@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Select,
@@ -55,6 +56,7 @@ const PromptModelSelect = ({
   onDeleteProvider,
   disabled = false,
 }: PromptModelSelectProps) => {
+  const { t } = useTranslation("prompt");
   const resetDialogKeyRef = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -149,7 +151,7 @@ const PromptModelSelect = ({
     if (hasNoProviders) {
       return (
         <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-          No configured providers
+          {t("promptModelSelect.noConfiguredProviders")}
         </div>
       );
     }
@@ -157,7 +159,7 @@ const PromptModelSelect = ({
     if (hasNoResults) {
       return (
         <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-          No search results
+          {t("promptModelSelect.noSearchResults")}
         </div>
       );
     }
@@ -283,7 +285,7 @@ const PromptModelSelect = ({
           })}
         >
           <SelectValue
-            placeholder="Select an LLM model"
+            placeholder={t("promptModelSelect.selectAnLlmModel")}
             data-testid="select-a-llm-model"
           >
             <div className="flex items-center gap-2">
@@ -312,7 +314,7 @@ const PromptModelSelect = ({
               <Input
                 ref={inputRef}
                 className="outline-0"
-                placeholder="Search model"
+                placeholder={t("promptModelSelect.searchModel")}
                 value={filterValue}
                 variant="ghost"
                 onChange={(e) => setFilterValue(e.target.value)}
@@ -330,7 +332,7 @@ const PromptModelSelect = ({
                   }}
                 >
                   <Settings2 className="size-3.5 shrink-0" />
-                  Manage AI providers
+                  {t("promptModelSelect.manageAiProviders")}
                 </ListAction>
               </>
             )}

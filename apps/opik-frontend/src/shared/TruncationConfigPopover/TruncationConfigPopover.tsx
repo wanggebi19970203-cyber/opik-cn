@@ -1,6 +1,7 @@
 import React from "react";
 import { ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/ui/hover-card";
 import { Button } from "@/ui/button";
 import useAppStore from "@/store/AppStore";
@@ -18,6 +19,7 @@ const TruncationConfigPopover: React.FC<TruncationConfigPopoverProps> = ({
   children,
   message,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
@@ -48,7 +50,7 @@ const TruncationConfigPopover: React.FC<TruncationConfigPopoverProps> = ({
               rel="noopener noreferrer"
               className="flex items-center gap-1"
             >
-              <span>Manage table truncation</span>
+              <span>{t("common.table.manageTableTruncation")}</span>
               <ExternalLink className="size-3" />
             </Link>
           </Button>

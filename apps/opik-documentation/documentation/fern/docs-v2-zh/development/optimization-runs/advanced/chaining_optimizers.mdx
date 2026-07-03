@@ -1,0 +1,73 @@
+---
+description: 依次运行多个优化器，平衡探索与精调。
+headline: 优化器链式调用 | Opik 文档
+og:description: 学习通过链式调用 MetaPrompt 和 Parameter 优化器来优化工作流，提升项目性能和精调效果。
+og:site_name: Opik 文档
+og:title: 优化器链式调用 - Opik
+title: 优化器链式调用
+---
+
+某些项目可以通过连续运行两个或多个优化器来获益。例如，使用 MetaPrompt 改进措辞，然后使用 Parameter 优化器精调采样参数。本指南介绍了链式调用的适用场景、权衡考量，以及在各阶段之间传递 prompt 和元数据的 API。
+
+## 策略模式
+
+| 流水线 | 使用场景 | 优点 | 缺点 | 复杂度 |
+| --- | --- | --- | --- | --- |
+| HRPO → Parameter | 现有长/复杂 prompt 场景：HRPO 的反思分析发现失败模式；Parameter 优化器随后在改进后的 prompt 上精调参数。 | 非常适合具有大量现有复杂性的遗留 prompt。有助于生成可解释的变更日志。 | 需要具有丰富 `reason` 字符串的指标；两个阶段会增加成本。 | 中等 |
+| Evolutionary → Few-Shot Bayesian | 冷启动场景：先探索多种 prompt 架构，然后让 Few-Shot Bayesian 为获胜结构选择最佳示例组合。 | 高多样性后接精确的示例选择。 | Evolutionary 运行成本较高；Bayesian 阶段依赖精心策划的数据集。 | 高 |
+| MetaPrompt → Parameter | 基线 prompt 需要润色加采样参数调整。 | 配置简单，见效快；可在一小时内完成。 | 对失败模式的洞察不如反思式流水线。 | 低 |
+| Evolutionary → Parameter | 寻找新颖 prompt，然后通过调整 temperature/top_p 来优化成本/延迟。 | 平衡创意性与生产就绪性。 | 两个重量级优化循环；确保预算有余量。 | 高 |
+
+## 示例流水线
+
+```python
+from opik_optimizer import MetaPromptOptimizer, ParameterOptimizer, ChatPrompt
+from opik_optimizer.parameter_optimizer import ParameterSearchSpace
+
+meta = MetaPromptOptimizer(model="openai/gpt-4o")
+parameter = ParameterOptimizer(model="openai/gpt-4o")
+
+meta_result = meta.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=metric,
+    max_trials=4,
+)
+
+# 复用第一阶段的优化后 prompt
+optimized_prompt = prompt.with_messages(meta_result.prompt)
+
+search_space = ParameterSearchSpace(parameters=[
+    {"name": "temperature", "distribution": "float", "low": 0.1, "high": 0.9},
+    {"name": "top_p", "distribution": "float", "low": 0.7, "high": 1.0},
+])
+
+final_result = parameter.optimize_parameter(
+    prompt=optimized_prompt,
+    dataset=dataset,
+    metric=metric,
+    parameter_space=search_space,
+    max_trials=20,
+)
+```
+
+## 检查清单
+
+- **在各阶段之间冻结数据集和指标**，以保持比较的公平性。
+- **一致使用验证数据集** - 如果在第一阶段提供了 `validation_dataset`，请在后续阶段使用相同的划分，以确保公平比较并避免过拟合。
+- **记录流水线元数据**（例如 `experiment_config={"pipeline": "hierarchical_then_param"}`），以便仪表板展示数据血缘。
+- **预算 token** - 链式调用会使成本倍增；从较小的 `n_samples` 开始，待结果有前景后再增加。
+- **复用 OptimizationResult** - 每个优化器都返回 `OptimizationResult`，因此可以直接将 `result.prompt`（以及 `result.details`、`result.history`）传递到下一阶段，无需重建状态。
+
+## 自动化技巧
+
+- 使用 Makefile 或 CI 工作流来运行阶段 1 → 阶段 2，并设置清晰的检查点。
+- 将中间 prompt 与元数据（优化器、得分、数据集）一起存储在版本控制中。
+- 使用 `final_result.history` 生成摘要报告通知相关方。
+
+## 相关文档
+
+- [优化 prompt](/development/optimization-runs/optimization/optimize_prompts)
+- [Few-Shot Bayesian 优化器](/development/optimization-runs/algorithms/fewshot_bayesian_optimizer)
+- [HRPO（分层反思式 Prompt 优化器）](/development/optimization-runs/algorithms/hierarchical_adaptive_optimizer)
+- [Parameter 优化器](/development/optimization-runs/algorithms/parameter_optimizer)

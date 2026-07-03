@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { StringParam, useQueryParam } from "use-query-params";
 import sortBy from "lodash/sortBy";
 
@@ -25,6 +26,7 @@ import { getScoreDisplayName } from "@/lib/feedback-scores";
 import { generateAnnotationQueueIdFilter } from "@/lib/filters";
 
 const AnnotationQueuePage: React.FunctionComponent = () => {
+  const { t } = useTranslation("annotation-queue");
   const [tab = "items", setTab] = useQueryParam("tab", StringParam);
 
   const annotationQueueId = useAnnotationQueueIdFromURL();
@@ -123,17 +125,20 @@ const AnnotationQueuePage: React.FunctionComponent = () => {
               id={annotationQueue.project_id}
               name={
                 annotationQueue.scope === ANNOTATION_QUEUE_SCOPE.TRACE
-                  ? "Go to traces"
-                  : "Go to threads"
+                  ? t("navigation.goToTraces")
+                  : t("navigation.goToThreads")
               }
               search={annotationQueueSearch}
-              tooltipContent={`View all ${annotationQueue.scope}s for this queue`}
+              tooltipContent={annotationQueue.scope === ANNOTATION_QUEUE_SCOPE.TRACE
+                ? t("navigation.viewAllTraces")
+                : t("navigation.viewAllThreads")
+              }
             />
           )}
           {annotationQueue?.project_id && (
             <NavigationTag
               id={annotationQueue.project_id}
-              name={`Go to ${annotationQueue.project_name}`}
+              name={t("navigation.goToProject", { name: annotationQueue.project_name })}
               resource={RESOURCE_TYPE.project}
             />
           )}
@@ -152,10 +157,10 @@ const AnnotationQueuePage: React.FunctionComponent = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="underline">
             <TabsTrigger variant="underline" value="items">
-              Queue items
+              {t("tabs.queueItems")}
             </TabsTrigger>
             <TabsTrigger variant="underline" value="configuration">
-              Configuration
+              {t("tabs.configuration")}
             </TabsTrigger>
           </TabsList>
         </PageBodyStickyContainer>

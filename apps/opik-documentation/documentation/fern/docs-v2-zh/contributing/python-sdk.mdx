@@ -1,0 +1,129 @@
+---
+headline: Python SDK | Opik 文档
+og:description: 了解如何为 Opik Python SDK 做贡献，使开发者能够在 Python 应用中无缝集成。
+og:site_name: Opik 文档
+og:title: 为 Opik Python SDK 做贡献
+title: Python SDK
+canonical-url: https://www.comet.com/docs/opik/contributing/guides/python-sdk
+---
+
+# 为 Opik Python SDK 做贡献
+
+Opik Python SDK 是我们平台的关键组件，允许开发者将 Opik 无缝集成到他们的 Python 应用中。SDK 源代码位于主 `comet-ml/opik` 仓库的 `sdks/python` 目录中。
+
+<Tip>
+  在开始之前，请查阅我们的通用[贡献概述](/v1/contributing/overview)和[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。
+</Tip>
+
+## 入门指南
+
+<Steps>
+  ### 1. 本地搭建 Opik
+  要开发和测试 Python SDK 功能，你需要一个运行中的本地 Opik 实例：
+
+  <Tabs>
+    <Tab title="Linux/Mac">
+    ```bash
+    # 从仓库根目录
+    ./opik.sh --port-mapping
+
+    # 配置 Python SDK 指向本地 Opik 部署
+    opik configure --use_local
+    ```
+    </Tab>
+    <Tab title="Windows">
+    ```powershell
+    # 从仓库根目录
+    .\opik.ps1 --port-mapping
+
+    # 配置 Python SDK 指向本地 Opik 部署
+    opik configure --use_local
+    ```
+    </Tab>
+  </Tabs>
+
+  **注意：** `--port-mapping` 标志会暴露所有服务端口（包括 MySQL 3306、ClickHouse 8123、Redis 6379），这对调试很有用。Python SDK 通过前端服务中的 API 网关（nginx）路由流量。
+
+  你的本地 Opik 服务器将在 `http://localhost:5173` 可访问。
+
+  <Tip title="Windows 用户">
+    - 确保 Python `Scripts` 目录（例如 `C:\Users\<name>\AppData\Local\Programs\Python<version>\Scripts\`）在系统 PATH 中，以便安装后 `opik` CLI 命令可以正常工作。添加后请重启终端。
+    - 强烈建议使用 Python 虚拟环境：
+      ```powershell
+      # 创建虚拟环境
+      py -m venv my-opik-env
+      
+      # 激活它（示例路径）
+      cd my-opik-env\Scripts && .\activate.bat
+      
+      # 以可编辑模式安装 SDK（根据当前位置调整到 sdks/python 的路径）
+      pip install -e ../../sdks/python 
+      
+      # 配置 SDK 使用你的本地 Opik 实例
+      opik configure --use_local
+      ```
+  </Tip>
+
+### 2. 安装 SDK 进行开发
+
+导航到 `sdks/python` 目录（或使用虚拟环境设置中的路径）并以可编辑模式安装 SDK：
+
+```bash
+pip install -e .
+```
+
+### 3. 查阅编码指南
+
+熟悉我们的 [Python SDK 编码指南](https://github.com/comet-ml/opik/blob/main/sdks/python/README.md)。这将涵盖风格、约定和其他重要方面。
+
+### 4. 实现你的更改
+
+在 `sdks/python` 目录中进行你想要的代码更改、添加或 bug 修复。
+
+### 5. 测试你的更改
+
+测试至关重要。对于大多数 SDK 贡献，你应该运行单元测试和端到端（e2e）测试：
+
+```bash
+cd sdks/python # 确保你在此目录中
+
+# 安装测试特定的需求
+pip install -r tests/test_requirements.txt
+
+# 安装单元测试需求
+pip install -r tests/unit/test_requirements.txt
+
+# 安装 pre-commit 用于 linting 检查（可选但推荐）
+pip install pre-commit
+
+# 运行单元测试
+python3 -m pytest -vv tests/unit/
+
+# 运行 e2e 测试
+python3 -m pytest -vv tests/e2e/
+```
+
+如果你对特定集成（如 OpenAI、Anthropic）进行了更改：
+
+1. 安装集成特定的需求：`pip install -r tests/integrations/openai/requirements.txt`（以 OpenAI 为例）。
+2. 为集成配置必要的 API 密钥作为环境变量或按你的测试设置。
+3. 运行特定集成测试：`python3 -m pytest tests/integrations/openai/`（以 OpenAI 为例）。
+
+### 6. 运行 Linter
+
+确保你的代码符合我们的 linting 标准：
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+make precommit-sdks
+```
+
+### 7. 更新文档（如适用）
+
+如果你的更改影响公开方法、参数或文档字符串，请同时更新文档。请参阅[文档贡献指南](/v1/contributing/guides/documentation)了解如何更新 Python SDK 参考文档（Sphinx）。
+
+### 8. 提交拉取请求
+
+一旦所有测试和检查通过，并且相关文档已更新，提交你的更改并向 `comet-ml/opik` 仓库的 `main` 分支发起拉取请求。清晰描述你的更改并链接到任何相关 issue。
+
+</Steps>

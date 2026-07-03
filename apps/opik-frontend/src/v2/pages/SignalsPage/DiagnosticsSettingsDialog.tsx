@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -25,6 +26,7 @@ const DiagnosticsSettingsDialog: React.FC<DiagnosticsSettingsDialogProps> = ({
   projectId,
   enabled,
 }) => {
+  const { t } = useTranslation();
   const [on, setOn] = useState(enabled);
   const updateMutation = useUpdateAgentInsightsJobMutation();
 
@@ -48,18 +50,17 @@ const DiagnosticsSettingsDialog: React.FC<DiagnosticsSettingsDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Diagnostics settings</DialogTitle>
+          <DialogTitle>{t("signals.diagnosticsSettings.title")}</DialogTitle>
         </DialogHeader>
 
         <div className="flex items-center gap-3 py-2">
           <Switch checked={on} onCheckedChange={setOn} />
           <div className="flex flex-col gap-0.5">
             <span className="comet-body-s text-foreground">
-              Daily diagnostics on
+              {t("signals.diagnosticsSettings.dailyDiagnosticsOn")}
             </span>
             <span className="comet-body-s text-light-slate">
-              Turn off to pause automated diagnostics. You can reactivate at any
-              time.
+              {t("signals.diagnosticsSettings.dailyDiagnosticsDescription")}
             </span>
           </div>
         </div>
@@ -67,25 +68,25 @@ const DiagnosticsSettingsDialog: React.FC<DiagnosticsSettingsDialogProps> = ({
         <Separator />
 
         <div className="flex flex-col gap-1 py-2">
-          <span className="comet-body-s-accented text-foreground">Billing</span>
+          <span className="comet-body-s-accented text-foreground">{t("signals.diagnosticsSettings.billing")}</span>
           <span className="comet-body-s text-muted-slate">
-            Runs on your Ollie tokens.{" "}
+            {t("signals.diagnosticsSettings.billingDescription")}{" "}
             {/* TODO: wire to the Ollie/Comet billing page */}
             <button
               type="button"
               className="text-foreground underline underline-offset-2 hover:text-primary"
             >
-              View billing
+              {t("signals.diagnosticsSettings.viewBilling")}
             </button>
           </span>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("signals.diagnosticsSettings.cancel")}
           </Button>
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
-            Save changes
+            {t("signals.diagnosticsSettings.saveChanges")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -8,6 +8,7 @@ import { cn, updateTextAreaHeight } from "@/lib/utils";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { Info } from "lucide-react";
 import React, { useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { PiiSupportedEntities } from "@/types/guardrails";
 import { PIIEntitiesLabelMap } from "@/constants/guardrails";
 
@@ -20,9 +21,10 @@ type ThresholdProps = {
 const Threshold: React.FC<ThresholdProps> = ({
   id,
   value,
-  label = "Sensitivity",
+  label,
   onChange,
 }) => {
+  const { t } = useTranslation("tracing");
   return (
     <SliderInputControl
       value={value}
@@ -31,7 +33,7 @@ const Threshold: React.FC<ThresholdProps> = ({
       min={0}
       max={1}
       step={0.01}
-      label={label}
+      label={label ?? t("guardrail.sensitivity")}
       defaultValue={0}
       resetDisabled
     />
@@ -59,9 +61,10 @@ type RestrictedListProps = {
 };
 const RestrictedList: React.FC<RestrictedListProps> = ({
   value,
-  label = "Restricted personal data",
+  label,
   onChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const onCheckedChange = (checked: CheckedState, label: string) => {
     const newList = checked
       ? [...value, label]
@@ -72,7 +75,7 @@ const RestrictedList: React.FC<RestrictedListProps> = ({
 
   return (
     <div className="grid w-full">
-      <p className="comet-body-s-accented flex h-10 items-center">{label}</p>
+      <p className="comet-body-s-accented flex h-10 items-center">{label ?? t("guardrail.restrictedPersonalData")}</p>
       {RESTRICTED_LABEL_LIST.map((label) => (
         <Label
           key={label}
@@ -100,9 +103,10 @@ type TopicsListProps = {
 const TopicsList: React.FC<TopicsListProps> = ({
   id,
   value,
-  label = "Restricted topics",
+  label,
   onChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -123,17 +127,17 @@ const TopicsList: React.FC<TopicsListProps> = ({
 
   return (
     <div className="grid w-full gap-1">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>{label ?? t("guardrail.restrictedTopics")}</Label>
       <Textarea
         id={id}
         ref={callbackTextareaRef}
-        placeholder="Topic 1, topic 2..."
+        placeholder={t("guardrail.topicPlaceholder")}
         onChange={onTextareaChange}
         value={textareaValue}
         className="min-h-[70px] resize-none overflow-hidden"
       />
       <p className="comet-body-s text-light-slate">
-        Use a comma to separate topics
+        {t("guardrail.commaSeparator")}
       </p>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,7 @@ const INTEGRATIONS = [
 const WelcomeWizardDialog: React.FunctionComponent<
   WelcomeWizardDialogProps
 > = ({ open, onClose }) => {
+  const { t } = useTranslation("common");
   const { mutate: submitWizard, isPending } = useWelcomeWizardSubmitMutation();
   const { toast } = useToast();
   const [showCustomIntegration, setShowCustomIntegration] = useState(false);
@@ -126,7 +128,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
       };
       submitWizard(submission, {
         onSuccess: () => {
-          toast({ description: "Welcome wizard submitted successfully!" });
+          toast({ description: t("welcomeWizard.submitSuccess") });
           onClose();
         },
       });
@@ -148,10 +150,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Welcome to Opik 🚀</DialogTitle>
+          <DialogTitle>{t("welcomeWizard.title")}</DialogTitle>
           <DialogDescription>
-            We&apos;re moving fast! Tell us who you are so we can share the most
-            relevant guides and updates with you.
+            {t("welcomeWizard.description")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -164,14 +165,14 @@ const WelcomeWizardDialog: React.FunctionComponent<
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Your Role</FormLabel>
+                  <FormLabel>{t("welcomeWizard.yourRole")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select your role" />
+                        <SelectValue placeholder={t("welcomeWizard.selectYourRole")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -193,7 +194,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
               render={() => (
                 <FormItem>
                   <div className="mb-4">
-                    <FormLabel>Integrations you use</FormLabel>
+                    <FormLabel>{t("welcomeWizard.integrationsYouUse")}</FormLabel>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     {INTEGRATIONS.map((item) => (
@@ -244,9 +245,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
                 name="customIntegration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Specify other integration</FormLabel>
+                    <FormLabel>{t("welcomeWizard.specifyOtherIntegration")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter integration name" {...field} />
+                      <Input placeholder={t("welcomeWizard.enterIntegrationName")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -260,9 +261,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Email{" "}
+                    {t("welcomeWizard.email")}{" "}
                     <span className="text-xs text-muted-foreground">
-                      (optional)
+                      ({t("common:common.labels.optional")})
                     </span>
                   </FormLabel>
                   <FormControl>
@@ -290,7 +291,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel className="font-normal">
-                      Join beta programs and get early access
+                      {t("welcomeWizard.joinBetaProgram")}
                     </FormLabel>
                   </div>
                 </FormItem>
@@ -300,7 +301,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
             <div className="space-y-2">
               <Button type="submit" disabled={isPending} className="w-full">
                 {isPending && <Loader className="mr-2 size-4 animate-spin" />}
-                Submit
+                {t("common:common.buttons.submit")}
               </Button>
               <Button
                 type="button"
@@ -308,7 +309,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
                 onClick={handleDismiss}
                 className="w-full text-sm text-muted-foreground"
               >
-                Skip and go to Opik
+                {t("welcomeWizard.skipAndGoToOpik")}
               </Button>
             </div>
           </form>

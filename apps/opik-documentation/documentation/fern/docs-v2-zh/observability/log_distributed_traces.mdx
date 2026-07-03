@@ -1,0 +1,95 @@
+---
+headline: 记录分布式追踪 | Opik 文档
+og:description: 了解如何使用 Opik 的内置多服务追踪支持在复杂 LLM 应用程序中跟踪分布式追踪
+og:site_name: Opik 文档
+og:title: 使用 Opik 记录分布式追踪
+title: 记录分布式追踪
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/log_distributed_traces
+---
+
+在处理复杂的 LLM 应用程序时，通常需要跨多个服务跟踪追踪。Opik 在使用函数装饰器集成时开箱即用地支持分布式追踪，其机制类似于 OpenTelemetry 实现分布式追踪的方式。
+
+在本指南中，我们假设您有一个由两个服务组成的简单 LLM 应用程序：客户端和服务器。我们将假设客户端将创建追踪和 span，而服务器将添加嵌套 span。为此，`trace_id` 和 `span_id` 将在请求头中从客户端传递到服务器。
+
+![分布式追踪](/img/tracing/distributed_tracing.svg)
+
+Python SDK 包含一些辅助函数，使在客户端获取头信息和在服务器中接收头信息变得更容易：
+
+```python title="client.py"
+from opik import track, opik_context
+
+@track()
+def my_client_function(prompt: str) -> str:
+    headers = {}
+
+    # Update the headers to include Opik Trace ID and Span ID
+    headers.update(opik_context.get_distributed_trace_headers())
+
+    # Make call to backend service
+    response = requests.post("http://.../generate_response", headers=headers, json={"prompt": prompt})
+    return response.json()
+```
+
+在服务器端，您可以将头信息传递给您的装饰函数：
+
+```python title="server.py"
+from opik import track
+from fastapi import FastAPI, Request
+
+@track()
+def my_llm_application():
+    pass
+
+app = FastAPI()  # Or Flask, Django, or any other framework
+
+
+@app.post("/generate_response")
+def generate_llm_response(request: Request) -> str:
+    return my_llm_application(opik_distributed_trace_headers=request.headers)
+```
+
+<Note>
+`opik_distributed_trace_headers` 参数由 `track` 装饰器添加到每个被装饰的函数中，是一个包含 `opik_trace_id` 和 `opik_parent_span_id` 键的字典。
+</Note>
+
+## 使用 distributed_headers 上下文管理器
+
+作为将 `opik_distributed_trace_headers` 作为参数传递的替代方案，您可以使用 `distributed_headers()` 上下文管理器来更明确地控制分布式头信息处理。这种方法提供自动清理、错误处理和可选的数据刷新。
+
+```python title="server.py"
+from opik import track
+from opik.decorator.context_manager import distributed_headers
+from fastapi import FastAPI, Request
+
+@track()
+def my_llm_application():
+    pass
+
+app = FastAPI()  # Or Flask, Django, or any other framework
+
+
+@app.post("/generate_response")
+def generate_llm_response(request: Request) -> str:
+    # Extract distributed headers from the request
+    headers = {
+        "opik_trace_id": request.headers.get("opik_trace_id"),
+        "opik_parent_span_id": request.headers.get("opik_parent_span_id"),
+    }
+
+    # Use the context manager to handle distributed headers
+    with distributed_headers(headers, flush=False):
+        result = my_llm_application()
+
+    return result
+```
+
+`distributed_headers()` 上下文管理器接受两个参数：
+
+- `headers`：包含分布式追踪头信息的字典（`opik_trace_id` 和 `opik_parent_span_id`）
+- `flush`（可选）：是否在根 span 处理后刷新 Opik 客户端数据。默认为 `False`。如果您想确保立即传输数据，请设置为 `True`。
+
+<Note>
+上下文管理器会自动使用提供的头信息创建根 span，处理执行过程中发生的任何错误，并在完成时清理上下文。
+</Note>
+
+有关更多详细信息和示例，请参阅 [distributed_headers 上下文管理器 API 参考](https://www.comet.com/docs/opik/python-sdk-reference/context_manager/distributed_headers.html)。

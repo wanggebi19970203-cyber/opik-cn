@@ -36,6 +36,7 @@ import {
 } from "@/lib/dashboard/utils";
 import { Dashboard, DASHBOARD_TYPE } from "@/types/dashboard";
 import { useDashboardStore } from "@/store/DashboardStore";
+import { useTranslation } from "react-i18next";
 
 export type ProjectDashboardViewDialogMode = "create" | "edit" | "clone";
 
@@ -46,21 +47,6 @@ interface ProjectDashboardViewDialogProps {
   setOpen: (open: boolean) => void;
   onCreateSuccess?: (dashboardId: string) => void;
 }
-
-const MODE_CONFIG = {
-  create: {
-    title: "Create view",
-    buttonText: "Create view",
-  },
-  edit: {
-    title: "Edit view",
-    buttonText: "Rename view",
-  },
-  clone: {
-    title: "Duplicate view",
-    buttonText: "Duplicate view",
-  },
-} as const;
 
 const FormSchema = z.object({
   name: z
@@ -79,8 +65,22 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
   setOpen,
   onCreateSuccess,
 }) => {
+  const { t } = useTranslation("pages/dashboards");
   const { toast } = useToast();
-  const config = MODE_CONFIG[mode];
+  const config = {
+    create: {
+      title: t("projectViews.createView"),
+      buttonText: t("projectViews.createView"),
+    },
+    edit: {
+      title: t("projectViews.editView"),
+      buttonText: t("projectViews.renameView"),
+    },
+    clone: {
+      title: t("projectViews.duplicateView"),
+      buttonText: t("projectViews.duplicateView"),
+    },
+  }[mode];
 
   const { mutate: createMutate, isPending: isCreating } =
     useInsightsViewCreateMutation({ skipDefaultError: true });
@@ -104,18 +104,18 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
     (toastMode: ProjectDashboardViewDialogMode) => {
       const toastConfigs = {
         create: {
-          title: "View created",
-          description: "Start customizing it by adding widgets",
-          actionLabel: "Add your first widget",
+          title: t("projectViews.viewCreated"),
+          description: t("projectViews.viewCreatedDescription"),
+          actionLabel: t("projectViews.addYourFirstWidget"),
         },
         clone: {
-          title: "View created",
-          description: "Start customizing it by adding or editing widgets",
-          actionLabel: "Add a widget",
+          title: t("projectViews.viewCreated"),
+          description: t("projectViews.viewCreatedCloneDescription"),
+          actionLabel: t("projectViews.addAWidget"),
         },
         edit: {
-          title: "View updated",
-          description: "Your changes have been saved.",
+          title: t("projectViews.viewUpdated"),
+          description: t("projectViews.viewUpdatedDescription"),
           actionLabel: null,
         },
       } as const;
@@ -148,7 +148,7 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
           : undefined,
       });
     },
-    [toast],
+    [toast, t],
   );
 
   const handleMutationError = useCallback(
@@ -163,17 +163,17 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
       if (statusCode === HttpStatusCode.Conflict) {
         form.setError("name", {
           type: "server",
-          message: "This name already exists",
+          message: t("projectViews.nameAlreadyExists"),
         });
       } else {
         toast({
-          title: "Error saving view",
-          description: message || "Failed to save view",
+          title: t("projectViews.errorSavingView"),
+          description: message || t("projectViews.failedToSaveView"),
           variant: "destructive",
         });
       }
     },
-    [form, toast],
+    [form, toast, t],
   );
 
   const onSubmit = useCallback(
@@ -245,13 +245,12 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
           <DialogTitle>{config.title}</DialogTitle>
           {mode === "create" && (
             <DialogDescription>
-              Create a view to track performance and quality for this project.
-              Widgets will use the current project automatically.
+              {t("projectViews.createDescription")}
             </DialogDescription>
           )}
           {mode === "clone" && dashboard && (
             <DialogDescription>
-              {`Create a copy of ${dashboard.name} to customize it without affecting the original.`}
+              {t("projectViews.cloneDescription", { name: dashboard.name })}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -270,11 +269,11 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
 
                 return (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t("projectViews.name")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="View name"
+                        placeholder={t("projectViews.viewNamePlaceholder")}
                         className={cn({
                           "border-destructive": Boolean(
                             validationErrors?.message,
@@ -299,7 +298,7 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={isPending}>
-              Cancel
+              {t("projectViews.cancel")}
             </Button>
           </DialogClose>
 

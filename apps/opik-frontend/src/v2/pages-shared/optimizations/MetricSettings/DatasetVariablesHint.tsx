@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 
@@ -11,16 +12,17 @@ const DatasetVariablesHint: React.FC<DatasetVariablesHintProps> = ({
   datasetVariables,
   onSelect,
 }) => {
+  const { t } = useTranslation("optimizations");
   if (datasetVariables.length === 0) {
     return null;
   }
 
   return (
     <p className="text-xs text-light-slate">
-      Available:{" "}
+      {t("optimizations.metricConfigs.datasetVariablesAvailable")}{" "}
       {datasetVariables.map((variable, index) => (
         <span key={variable}>
-          <TooltipWrapper content="Click to use">
+          <TooltipWrapper content={t("optimizations.metricConfigs.clickToUse")}>
             <Button
               variant="minimal"
               size="3xs"

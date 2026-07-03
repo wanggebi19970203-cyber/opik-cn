@@ -1,0 +1,80 @@
+---
+description: 对结合文本、图像和其他模态的提示词运行优化。
+headline: 优化多模态 | Opik 文档
+og:description: 优化你的多模态智能体，使用 Opik 的优化器有效处理文本、图像和视频，实现无缝集成。
+og:site_name: Opik 文档
+og:title: 使用 Opik 优化多模态性能
+title: 优化多模态提示词
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/optimize_multimodal
+---
+
+多模态智能体通常需要同时处理文本指令、图像、音频、视频和结构化输出。Opik 的优化器可以与 LiteLLM 支持的任何非文本模态模型配合工作（GPT-4o、Gemini、Claude 3.5 Sonnet vision 等）。确保优化器的 `model` 和你的 `ChatPrompt.model` 都接受你计划优化的模态。否则，运行将失败或静默忽略媒体。
+
+### 优化器多模态支持
+
+使用能够将 OpenAI 风格的内容部分（字符串或结构化部分数组如 `{ type: "text" | "image_url" }`）转发到多模态 LLM 的优化器。当前支持：
+
+| 优化器 | 多模态（文本+图像） | 说明 |
+|---|---|---|
+| HRPO（分层反思提示词优化器） | ✓ | 确保优化器 `model` 和 `ChatPrompt.model` 都支持多模态。 |
+| MetaPrompt Optimizer | ✓ | 使用内容部分；评估需要支持多模态的模型。 |
+| Evolutionary Optimizer | ✓ | 使用内容部分；评估需要支持多模态的模型。 |
+| Few-shot Bayesian Optimizer | ✓ | 使用内容部分；评估需要支持多模态的模型。 |
+| Parameter Optimizer | ✓ | 仅调优参数，但支持多模态提示词评估。 |
+| GEPA Optimizer | ✓ | 使用内容部分；评估需要支持多模态的模型。 |
+
+另请参见：[评估多模态](/v1/evaluation/evaluate_multimodal)了解模型系列指导和内容块格式。
+
+## 数据集设计
+
+- 将图像、音频或视频引用存储为数据集项中的签名 URL（例如 `metadata["image_url"]`、`metadata["audio_url"]` 或 `metadata["video_url"]`）。
+- 在资产旁包含文本描述，以便指标在可能的情况下无需下载大文件即可运行。
+- 用模态信息标记行（`metadata["modality"] = "image+text"`）以便在分析期间筛选。
+
+## 提示词结构
+
+```python
+from opik_optimizer import ChatPrompt
+
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "Analyze the provided image and answer the question."},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Question: {question}"},
+                {"type": "image_url", "image_url": {"url": "{image_url}"}},
+            ],
+        },
+    ],
+    model="openai/gpt-4o-mini"
+)
+```
+
+- 描述预期的输出模式（JSON、Markdown 表格等）以减少歧义。
+
+## 指标
+
+- 尽可能通过比较文本描述复用现有文本指标。
+- 对于视觉特定评分，从你的指标函数调用外部模型，但缓存结果以控制成本。
+- 记录提及模态的原因："Image not described" 或 "Chart incorrectly transcribed"。
+- 在可能的情况下，用轻量级人工审查或确定性检查增强自动化指标——LLM-as-a-judge 信号对多模态任务可能有噪声。
+
+## 运行优化
+
+- 从 MetaPrompt 开始进行措辞改进。对于冷启动探索，将 Evolutionary → Few-Shot Bayesian 配对以发现新结构和示例选择。
+- 使用 HRPO 捕获反复出现的多模态失败（例如缺少图表描述）并高亮有问题的数据集行。
+- 监控 token 使用量，因为多模态提示词发送更大的负载；预算紧张时选择 `gpt-4o-mini` 等模型。
+- 所有提示词优化器都可以转发多模态内容部分，但如果所选模型不支持该模态，评估将失败。为优化器生成和提示词评估都使用支持多模态的模型。
+
+## 验证
+
+- 在仪表板中抽查与关联媒体一起生成的输出。
+- 确认数据集资产 URL 在优化期间保持有效。
+- 分享结果时，包含缩略图或示例输出，以便审查者了解变更。
+
+## 相关指南
+
+- [定义数据集](/v1/agent_optimization/optimization/define_datasets)
+- [定义指标](/v1/agent_optimization/optimization/define_metrics)
+- [多模态视觉智能体的自动提示词优化（自动驾驶示例）](https://towardsdatascience.com/automatic-prompt-optimization-for-multimodal-vision-agents-a-self-driving-car-example/)

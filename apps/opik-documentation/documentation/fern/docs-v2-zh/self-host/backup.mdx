@@ -1,0 +1,411 @@
+---
+headline: 高级 ClickHouse 备份 | Opik 文档
+og:description: 了解如何在 Opik 的 Kubernetes 部署中为 ClickHouse 实现基于 SQL 的备份和专用备份工具，以确保数据保护和恢复。
+og:site_name: Opik 文档
+og:title: 高级 ClickHouse 备份选项 - Opik
+subtitle: Opik Kubernetes 部署中 ClickHouse 备份选项的综合指南
+title: 高级 ClickHouse 备份
+---
+
+# ClickHouse 备份指南
+
+本指南介绍了 Opik Kubernetes 部署中 ClickHouse 可用的两种备份选项：
+
+1. **基于 SQL 的备份** - 使用 ClickHouse 原生的 `BACKUP` 命令配合 S3
+2. **ClickHouse 备份工具** - 使用专用的 `clickhouse-backup` 工具
+
+## 概述
+
+ClickHouse 备份对于数据保护和灾难恢复至关重要。Opik 提供了两种不同的备份方式，各有优势：
+
+- **基于 SQL 的备份**：简单，使用 ClickHouse 内置的备份功能
+- **ClickHouse 备份工具**：更高级，提供压缩和增量备份等附加功能
+
+## 选项 1：基于 SQL 的备份（默认）
+
+这是默认的备份方法，使用 ClickHouse 原生的 `BACKUP` 命令直接将备份创建到 S3 兼容存储。
+
+### 功能特性
+
+- 使用 ClickHouse 内置的 `BACKUP ALL EXCEPT DATABASE system` 命令
+- 直接上传到 S3，使用带时间戳的备份名称
+- 通过 CronJob 配置备份计划
+- 支持 AWS S3 和 S3 兼容存储（如 MinIO）
+
+### 配置
+
+#### 基础设置
+
+#### 使用 AWS S3 凭证
+
+创建包含 S3 凭证的 Kubernetes Secret：
+
+```bash
+kubectl create secret generic clickhouse-backup-secret \
+  --from-literal=access_key_id=YOUR_ACCESS_KEY \
+  --from-literal=access_key_secret=YOUR_SECRET_KEY
+```
+
+然后配置备份：
+
+```yaml
+clickhouse:
+  backup:
+    enabled: true
+    bucketURL: "https://your-bucket.s3.region.amazonaws.com"
+    secretName: "clickhouse-backup-secret"
+    schedule: "0 0 * * *"
+```
+
+#### 使用 IAM 角色（AWS EKS）
+
+对于 AWS EKS 集群，可以使用 IAM 角色代替访问密钥：
+
+```yaml
+clickhouse:
+  serviceAccount:
+    create: true
+    name: "opik-clickhouse"
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT:role/clickhouse-backup-role"
+  backup:
+    enabled: true
+    bucketURL: "https://your-bucket.s3.region.amazonaws.com"
+    schedule: "0 0 * * *"
+```
+
+**所需 IAM 策略：**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::your-bucket", "arn:aws:s3:::your-bucket/*"]
+    }
+  ]
+}
+```
+
+**信任关系策略：**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT:oidc-provider/oidc.eks.REGION.amazonaws.com/id/OIDCPROVIDERID"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.REGION.amazonaws.com/id/OIDCPROVIDERID:sub": "system:serviceaccount:YOUR_NAMESPACE:opik-clickhouse",
+          "oidc.eks.REGION.amazonaws.com/id/OIDCPROVIDERID:aud": "sts.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+```
+
+#### 自定义备份命令
+
+如果需要，可以自定义备份命令：
+
+```yaml
+clickhouse:
+  backup:
+    enabled: true
+    bucketURL: "https://your-bucket.s3.region.amazonaws.com"
+    command:
+      - /bin/bash
+      - "-cx"
+      - |-
+        export backupname=backup$(date +'%Y%m%d%H%M')
+        echo "BACKUP ALL EXCEPT DATABASE system TO S3('${CLICKHOUSE_BACKUP_BUCKET}/${backupname}/', '$ACCESS_KEY', '$SECRET_KEY');" > /tmp/backQuery.sql
+        clickhouse-client -h clickhouse-opik-clickhouse --send_timeout 600000 --receive_timeout 600000 --port 9000 --queries-file=/tmp/backQuery.sql
+```
+
+### 备份流程
+
+基于 SQL 的备份流程：
+
+1. 创建带时间戳的备份名称（格式：`backupYYYYMMDDHHMM`）
+2. 执行 `BACKUP ALL EXCEPT DATABASE system TO S3(...)` 命令
+3. 将除 `system` 数据库外的所有数据库上传到 S3
+4. 使用 ClickHouse 原生备份格式
+
+### 恢复流程
+
+从基于 SQL 的备份恢复：
+
+```bash
+# 连接到 ClickHouse
+kubectl exec -it deployment/clickhouse-opik-clickhouse -- clickhouse-client
+
+# 从 S3 备份恢复
+RESTORE ALL FROM S3('https://your-bucket.s3.region.amazonaws.com/backup202401011200/', 'ACCESS_KEY', 'SECRET_KEY');
+```
+
+## 选项 2：ClickHouse 备份工具
+
+ClickHouse 备份工具提供更高级的备份功能，包括压缩、增量备份和更好的恢复能力。
+
+### 功能特性
+
+- 高级备份管理，支持压缩
+- 增量备份支持
+- REST API 用于备份操作
+- 更好的恢复能力
+- 备份元数据和验证
+
+### 配置
+
+#### 启用备份服务器
+
+```yaml
+clickhouse:
+  backupServer:
+    enabled: true
+    image: "altinity/clickhouse-backup:2.6.23"
+    port: 7171
+    env:
+      LOG_LEVEL: "info"
+      ALLOW_EMPTY_BACKUPS: true
+      API_LISTEN: "0.0.0.0:7171"
+      API_CREATE_INTEGRATION_TABLES: true
+```
+
+#### 配置 S3 存储
+
+为备份工具设置 S3 配置：
+
+```yaml
+clickhouse:
+  backupServer:
+    enabled: true
+    env:
+      S3_BUCKET: "your-backup-bucket"
+      S3_ACCESS_KEY: "your-access-key" # 使用角色时可忽略
+      S3_SECRET_KEY: "your-secret-key"
+      S3_REGION: "us-west-2"
+      S3_ENDPOINT: "https://s3.us-west-2.amazonaws.com" # 可选：用于 S3 兼容存储
+```
+
+#### 使用 Kubernetes Secrets
+
+使用 Kubernetes Secrets 存储敏感数据：
+
+（使用 IAM 角色时可忽略）
+
+```bash
+kubectl create secret generic clickhouse-backup-tool-secret \
+  --from-literal=S3_ACCESS_KEY=YOUR_ACCESS_KEY \
+  --from-literal=S3_SECRET_KEY=YOUR_SECRET_KEY
+```
+
+```yaml
+clickhouse:
+  backupServer:
+    enabled: true
+    env:
+      S3_BUCKET: "your-backup-bucket"
+      S3_REGION: "us-west-2"
+    envFrom:
+      - secretRef:
+          name: "clickhouse-backup-tool-secret"
+```
+
+### 使用备份工具
+
+#### 创建备份
+
+```bash
+# 端口转发以访问备份服务器
+kubectl port-forward svc/chi-opik-clickhouse-cluster-0-0 7171:7171
+
+# 创建备份
+curl -X POST "http://localhost:7171/backup/create?name=backup-$(date +%Y%m%d-%H%M%S)"
+
+# 列出可用备份
+curl "http://localhost:7171/backup/list"
+```
+
+#### 上传备份到 S3
+
+```bash
+# 上传备份到 S3
+curl -X POST "http://localhost:7171/backup/upload/backup-20240101-120000"
+```
+
+#### 下载和恢复
+
+```bash
+# 从 S3 下载备份
+curl -X POST "http://localhost:7171/backup/download/backup-20240101-120000"
+
+# 恢复备份
+curl -X POST "http://localhost:7171/backup/restore/backup-20240101-120000"
+```
+
+### 使用 CronJob 自动化备份
+
+可以创建自定义 CronJob 来自动化备份工具：
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clickhouse-backup-tool-job
+spec:
+  schedule: "0 2 * * *" # 每天凌晨 2 点
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup-tool
+              image: altinity/clickhouse-backup:2.6.23
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  BACKUP_NAME="backup-$(date +%Y%m%d-%H%M%S)"
+                  curl -X POST "http://clickhouse-opik-clickhouse:7171/backup/create?name=$BACKUP_NAME"
+                  sleep 30
+                  curl -X POST "http://clickhouse-opik-clickhouse:7171/backup/upload/$BACKUP_NAME"
+          restartPolicy: OnFailure
+```
+
+## 功能对比
+
+| 功能特性 | 基于 SQL 的备份 | ClickHouse 备份工具 |
+| ----------------------- | ---------------- | ---------------------- |
+| **配置复杂度** | 简单 | 中等 |
+| **压缩支持** | 否 | 是 |
+| **增量备份** | 否 | 是 |
+| **备份验证** | 基础 | 高级 |
+| **REST API** | 否 | 是 |
+| **恢复灵活性** | 基础 | 高级 |
+| **资源占用** | 低 | 中等 |
+| **S3 兼容性** | 原生 | 原生 |
+
+## 最佳实践
+
+### 通用建议
+
+1. **测试恢复**：定期测试备份恢复流程
+2. **监控备份任务**：设置备份任务失败的监控告警
+3. **保留策略**：实施备份保留策略
+4. **跨区域备份**：考虑跨区域备份复制以实现灾难恢复
+
+### 安全性
+
+1. **访问控制**：尽可能使用 IAM 角色而非访问密钥
+2. **加密**：为备份存储启用 S3 服务端加密
+3. **网络安全**：可用时使用 VPC 端点访问 S3
+
+### 性能优化
+
+1. **调度时间**：在低流量时段运行备份
+2. **资源限制**：为备份任务设置适当的资源限制
+3. **存储类型**：使用适当的 S3 存储类型以优化成本
+
+## 故障排查
+
+### 常见问题
+
+#### 备份任务失败
+
+```bash
+# 查看备份任务日志
+kubectl logs -l app=clickhouse-backup
+
+# 查看 CronJob 状态
+kubectl get cronjobs
+kubectl describe cronjob clickhouse-backup
+```
+
+#### S3 访问问题
+
+```bash
+# 测试 S3 连通性
+kubectl exec -it deployment/clickhouse-opik-clickhouse -- \
+  clickhouse-client --query "SELECT * FROM system.disks WHERE name='s3'"
+```
+
+#### 备份工具 API 问题
+
+```bash
+# 查看备份服务器日志
+kubectl logs -l app=clickhouse-backup-server
+
+# 测试 API 连通性
+kubectl port-forward svc/clickhouse-opik-clickhouse 7171:7171
+curl "http://localhost:7171/backup/list"
+```
+
+### 监控
+
+设置备份操作的监控：
+
+```yaml
+# Prometheus 告警示例
+- alert: ClickHouseBackupFailed
+  expr: increase(kube_job_status_failed{job_name=~".*clickhouse-backup.*"}[5m]) > 0
+  for: 0m
+  labels:
+    severity: warning
+  annotations:
+    summary: "ClickHouse 备份任务失败"
+    description: "ClickHouse 备份任务 {{ $labels.job_name }} 已失败"
+```
+
+## 备份方法迁移
+
+### 从基于 SQL 的备份迁移到 ClickHouse 备份工具
+
+1. 启用备份服务器：
+
+   ```yaml
+   clickhouse:
+     backupServer:
+       enabled: true
+   ```
+
+2. 使用工具创建初始备份
+3. 禁用基于 SQL 的备份：
+   ```yaml
+   clickhouse:
+     backup:
+       enabled: false
+   ```
+
+### 从 ClickHouse 备份工具迁移到基于 SQL 的备份
+
+1. 禁用备份服务器：
+
+   ```yaml
+   clickhouse:
+     backupServer:
+       enabled: false
+   ```
+
+2. 启用基于 SQL 的备份：
+   ```yaml
+   clickhouse:
+     backup:
+       enabled: true
+   ```
+
+## 获取支持
+
+如需 ClickHouse 备份方面的帮助：
+
+- [ClickHouse 备份文档](https://github.com/Altinity/clickhouse-backup)
+- [ClickHouse 备份命令参考](https://clickhouse.com/docs/operations/backup)
+- [Opik 社区支持](https://github.com/comet-ml/opik/issues)

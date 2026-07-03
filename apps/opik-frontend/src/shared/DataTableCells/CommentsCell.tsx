@@ -1,5 +1,6 @@
 import React from "react";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { CommentItems } from "@/types/comment";
@@ -22,6 +23,7 @@ const CommentsCellContent: React.FC<CommentsCellContentProps> = ({
   commentsList,
   isSmall,
 }) => {
+  const { t } = useTranslation();
   const commentsCount = commentsList.length;
   const isLocalComments = isLocalCommentCheck(commentsList[0]?.created_by);
 
@@ -57,7 +59,7 @@ const CommentsCellContent: React.FC<CommentsCellContentProps> = ({
       {!isLocalComments && (
         <UserCommentAvatarList className="mt-0.5" commentsList={commentsList} />
       )}
-      <div className="truncate">{commentsCount} comments</div>
+      <div className="truncate">{commentsCount} {t("common:labels.comments")}</div>
     </div>
   );
 };

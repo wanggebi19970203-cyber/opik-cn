@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Download, Loader2 } from "lucide-react";
 import FileSaver from "file-saver";
 import { json2csv } from "json-2-csv";
@@ -30,6 +31,8 @@ const ExportToButton: React.FC<ExportToButtonProps> = ({
   buttonVariant = "outline",
   buttonSize = "icon-sm",
 }) => {
+  const { t } = useTranslation("common");
+  const { t: tActions } = useTranslation("actions");
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const { toast } = useToast();
@@ -45,10 +48,10 @@ const ExportToButton: React.FC<ExportToButtonProps> = ({
         const message = get(
           error,
           ["response", "data", "message"],
-          get(error, "message", "Failed to fetch data for export"),
+          get(error, "message", t("messages.exportError")),
         );
         toast({
-          title: "Export failed",
+          title: t("messages.exportError"),
           description: message,
           variant: "destructive",
         });
@@ -112,7 +115,7 @@ const ExportToButton: React.FC<ExportToButtonProps> = ({
 
   return (
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
-      <TooltipWrapper content={disabled ? tooltipContent : "Export"}>
+      <TooltipWrapper content={disabled ? tooltipContent : t("buttons.export")}>
         <DropdownMenuTrigger asChild>
           {disabled && tooltipContent ? (
             <span className="inline-block cursor-not-allowed">
@@ -128,13 +131,13 @@ const ExportToButton: React.FC<ExportToButtonProps> = ({
           onClick={exportCSVHandler}
           disabled={disabled || loading}
         >
-          Export as CSV
+          {tActions("exportAsCsv")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={exportJSONHandler}
           disabled={disabled || loading}
         >
-          Export as JSON
+          {tActions("exportAsJson")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

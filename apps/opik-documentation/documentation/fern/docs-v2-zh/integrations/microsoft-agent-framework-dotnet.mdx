@@ -1,0 +1,206 @@
+---
+description: 从这里开始将 Opik 集成到基于 Microsoft Agent Framework 的 .NET 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Microsoft Agent Framework | Opik 文档
+og:description: 使用 Microsoft Agent Framework 构建和部署 AI 智能体，支持多语言和高级编排能力。
+og:site_name: Opik 文档
+og:title: 用于 AI 开发的 Microsoft Agent Framework - Opik
+title: 使用 Opik 实现 Microsoft Agent Framework (.NET) 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/microsoft-agent-framework-dotnet
+---
+
+[Microsoft Agent Framework](https://github.com/microsoft/agent-framework) 是一个综合性多语言框架，用于构建、编排和部署 AI 智能体及多智能体工作流，同时支持 Python 和 .NET 实现。
+
+该框架提供了从简单聊天智能体到复杂多智能体工作流的完整能力，包括基于图的编排、内置 OpenTelemetry 集成用于分布式追踪和监控，以及灵活的中间件系统用于请求/响应处理。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=agent-framework-dotnet&utm_campaign=opik) 提供托管版本的 Opik 平台，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=agent-framework-dotnet&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=agent-framework-dotnet&utm_campaign=opik)。
+
+<Frame>
+  <img src="/img/tracing/microsoft-agent-framework-dotnet_integration.png" alt="Microsoft Agent Framework .NET 追踪" />
+</Frame>
+
+## 快速开始
+
+要将 Microsoft Agent Framework .NET 集成与 Opik 一起使用，你需要安装 Agent Framework 和所需的 OpenTelemetry 包：
+
+```bash
+# Agent Framework（2 个包）
+dotnet add package Microsoft.Agents.AI --prerelease
+dotnet add package Microsoft.Extensions.AI.OpenAI --prerelease
+
+# 宿主（1 个包）
+dotnet add package Microsoft.Extensions.Hosting
+
+# OpenTelemetry（3 个包）
+dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol
+dotnet add package OpenTelemetry.Extensions.Hosting
+dotnet add package OpenTelemetry.Instrumentation.Http
+```
+
+你还需要配置你的 OpenAI API key：
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+此外，你需要设置以下环境变量来配置 OpenTelemetry 将数据发送到 Opik：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果你使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel/v1/traces
+        export OTEL_EXPORTER_OTLP_HEADERS="Authorization=<your-api-key>,Comet-Workspace=default"
+        export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，你可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS="Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>"
+            ```
+
+            你也可以将 `Comet-Workspace` 参数更新为不同的值，以将数据记录到不同的工作空间。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        如果你使用 Opik 的企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel/v1/traces
+        export OTEL_EXPORTER_OTLP_HEADERS="Authorization=<your-api-key>,Comet-Workspace=default"
+        export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，你可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS="Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>"
+            ```
+
+            你也可以将 `Comet-Workspace` 参数更新为不同的值，以将数据记录到不同的工作空间。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+
+    如果你自托管 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel/v1/traces
+    export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+    ```
+
+    <Tip>
+        要将追踪记录到特定项目，你可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS="projectName=<your-project-name>"
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 Microsoft Agent Framework (.NET) 中使用 Opik
+
+Microsoft Agent Framework 内置了 OpenTelemetry 检测功能。你需要配置 OpenTelemetry SDK 使用 HTTP/Protobuf 协议并导出到 Opik。以下是一个完整示例：
+
+```csharp
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using OpenAI;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+#pragma warning disable OPENAI001
+
+const string SourceName = "AgentFramework";
+
+// 创建带有 OpenTelemetry 配置的宿主
+var builder = Host.CreateApplicationBuilder(args);
+
+// 配置 OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(serviceName: "agent-framework-demo", serviceVersion: "1.0.0"))
+    .WithTracing(tracing => tracing
+        .AddSource(SourceName)                      // 我们的自定义 span
+        .AddSource("*Microsoft.Extensions.AI")      // 聊天客户端遥测
+        .AddSource("*Microsoft.Extensions.Agents*") // 智能体遥测
+        .AddHttpClientInstrumentation()             // HTTP 调用
+        .AddOtlpExporter());                        // 自动读取 OTEL_EXPORTER_OTLP_* 环境变量
+
+var host = builder.Build();
+await host.StartAsync();
+
+// 创建带检测的聊天客户端
+// 注意：OpenAI SDK 需要显式 API key，但你可以从环境变量读取
+var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") 
+    ?? throw new InvalidOperationException("OPENAI_API_KEY 环境变量是必需的");
+
+using var instrumentedChatClient = new OpenAIClient(apiKey)
+    .GetChatClient("gpt-4o-mini")
+    .AsIChatClient()                    // 转换为 Microsoft.Extensions.AI.IChatClient
+    .AsBuilder()
+    .UseOpenTelemetry(                  // 在聊天客户端上启用遥测
+        sourceName: SourceName,
+        configure: (cfg) => cfg.EnableSensitiveData = true)
+    .Build();
+
+// 创建带检测的智能体
+var agent = new ChatClientAgent(
+    instrumentedChatClient,
+    name: "Assistant",
+    instructions: "You are a helpful assistant.")
+    .AsBuilder()
+    .UseOpenTelemetry(SourceName)       // 在智能体上启用遥测
+    .Build();
+
+// 运行智能体 - 遥测是自动的！
+Console.WriteLine(await agent.RunAsync("Write a haiku about AI agents."));
+
+// 确保追踪被刷新
+var tracerProvider = host.Services.GetService<TracerProvider>();
+tracerProvider?.ForceFlush();
+await Task.Delay(2000);
+
+await host.StopAsync();
+```
+
+<Note>
+**重要**：.NET OpenTelemetry SDK 需要显式设置 `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf` 以使用 HTTP 和 Protocol Buffers。如果未设置，默认使用 gRPC，而 Opik 的端点不支持 gRPC。
+
+你也可以通过编程方式配置：
+```csharp
+.AddOtlpExporter(options =>
+{
+    options.Protocol = OtlpExportProtocol.HttpProtobuf;
+})
+```
+</Note>
+
+框架将自动：
+- 为智能体执行创建追踪
+- 记录输入提示和输出
+- 跟踪 token 使用量和性能指标
+- 捕获任何错误或异常
+
+## 进一步改进
+
+如果你希望我们改进此集成，只需在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。
+
+## 参考
+
+有关 Microsoft Agent Framework OpenTelemetry 集成的更多信息，请参阅：
+- [Agent Framework OpenTelemetry 示例](https://github.com/microsoft/agent-framework/tree/main/dotnet/samples/02-agents/AgentOpenTelemetry)
+- [OpenTelemetry .NET 文档](https://opentelemetry.io/docs/languages/net/)

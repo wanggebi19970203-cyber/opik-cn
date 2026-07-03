@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @jakarta.inject.Inject)
-@Tag(name = "System usage", description = "System usage related resource")
+@Tag(name = "System usage", description = "系统使用情况相关资源")
 public class UsageResource {
 
     private final @NonNull TraceService traceService;
@@ -40,8 +40,8 @@ public class UsageResource {
 
     @GET
     @Path("/workspace-trace-counts")
-    @Operation(operationId = "getTracesCountForWorkspaces", summary = "Get traces count on previous day for all available workspaces", description = "Get traces count on previous day for all available workspaces", responses = {
-            @ApiResponse(responseCode = "200", description = "TraceCountResponse resource", content = @Content(schema = @Schema(implementation = TraceCountResponse.class)))})
+    @Operation(operationId = "getTracesCountForWorkspaces", summary = "获取所有可用工作区前一天的追踪记录数量", description = "获取所有可用工作区前一天的追踪记录数量", responses = {
+            @ApiResponse(responseCode = "200", description = "追踪记录计数响应资源", content = @Content(schema = @Schema(implementation = TraceCountResponse.class)))})
     public Response getTracesCountForWorkspaces() {
         return traceService.countTracesPerWorkspace()
                 .map(tracesCountResponse -> Response.ok(tracesCountResponse).build())
@@ -50,8 +50,8 @@ public class UsageResource {
 
     @GET
     @Path("/workspace-span-counts")
-    @Operation(operationId = "getSpansCountForWorkspaces", summary = "Get spans count on previous day for all available workspaces", description = "Get spans count on previous day for all available workspaces", responses = {
-            @ApiResponse(responseCode = "200", description = "SpanCountResponse resource", content = @Content(schema = @Schema(implementation = SpansCountResponse.class)))})
+    @Operation(operationId = "getSpansCountForWorkspaces", summary = "获取所有可用工作区前一天的跨度记录数量", description = "获取所有可用工作区前一天的跨度记录数量", responses = {
+            @ApiResponse(responseCode = "200", description = "跨度记录计数响应资源", content = @Content(schema = @Schema(implementation = SpansCountResponse.class)))})
     public Response getSpansCountForWorkspaces() {
         return spanService.countSpansPerWorkspace()
                 .map(spansCountResponse -> Response.ok(spansCountResponse).build())
@@ -60,8 +60,8 @@ public class UsageResource {
 
     @GET
     @Path("/workspace-span-counts-breakdown")
-    @Operation(operationId = "getSpansCountBreakdownForWorkspaces", summary = "Get spans count on previous day grouped by workspace, project and user", description = "Get spans count on previous day grouped by workspace, project and user", responses = {
-            @ApiResponse(responseCode = "200", description = "UsageByWorkspaceProjectUserResponse resource", content = @Content(schema = @Schema(implementation = UsageByWorkspaceProjectUserResponse.class)))})
+    @Operation(operationId = "getSpansCountBreakdownForWorkspaces", summary = "获取按工作区、项目和用户分组的前一天跨度记录数量", description = "获取按工作区、项目和用户分组的前一天跨度记录数量", responses = {
+            @ApiResponse(responseCode = "200", description = "按工作区、项目和用户的使用量响应资源", content = @Content(schema = @Schema(implementation = UsageByWorkspaceProjectUserResponse.class)))})
     public Response getSpansCountBreakdownForWorkspaces() {
         return spanService.getSpanBreakdownPerWorkspace()
                 .map(breakdownResponse -> Response.ok(breakdownResponse).build())
@@ -70,8 +70,8 @@ public class UsageResource {
 
     @GET
     @Path("/bi-traces")
-    @Operation(operationId = "getTracesBiInfo", summary = "Get traces information for BI events", description = "Get traces information for BI events per user per workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Traces BiInformationResponse resource", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
+    @Operation(operationId = "getTracesBiInfo", summary = "获取BI事件的追踪记录信息", description = "按用户和工作区获取BI事件的追踪记录信息", responses = {
+            @ApiResponse(responseCode = "200", description = "追踪记录BI信息响应资源", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
     public Response getTracesBiInfo() {
         return traceService.getTraceBIInformation()
                 .map(traceBiInfoResponse -> Response.ok(traceBiInfoResponse).build())
@@ -80,8 +80,8 @@ public class UsageResource {
 
     @GET
     @Path("/bi-experiments")
-    @Operation(operationId = "getExperimentBiInfo", summary = "Get experiments information for BI events", description = "Get experiments information for BI events per user per workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiments BiInformationResponse resource", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
+    @Operation(operationId = "getExperimentBiInfo", summary = "获取BI事件的实验信息", description = "按用户和工作区获取BI事件的实验信息", responses = {
+            @ApiResponse(responseCode = "200", description = "实验BI信息响应资源", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
     public Response getExperimentBiInfo() {
         return experimentService.getExperimentBIInformation()
                 .map(experimentBiInfoResponse -> Response.ok(experimentBiInfoResponse).build())
@@ -90,16 +90,16 @@ public class UsageResource {
 
     @GET
     @Path("/bi-datasets")
-    @Operation(operationId = "getDatasetBiInfo", summary = "Get datasets information for BI events", description = "Get datasets information for BI events per user per workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Datasets BiInformationResponse resource", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
+    @Operation(operationId = "getDatasetBiInfo", summary = "获取BI事件的数据集信息", description = "按用户和工作区获取BI事件的数据集信息", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集BI信息响应资源", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
     public Response getDatasetBiInfo() {
         return Response.ok(datasetService.getDatasetBIInformation()).build();
     }
 
     @GET
     @Path("/bi-spans")
-    @Operation(operationId = "getSpansBiInfo", summary = "Get spans information for BI events", description = "Get spans information for BI events per user per workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Spans BiInformationResponse resource", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
+    @Operation(operationId = "getSpansBiInfo", summary = "获取BI事件的跨度记录信息", description = "按用户和工作区获取BI事件的跨度记录信息", responses = {
+            @ApiResponse(responseCode = "200", description = "跨度记录BI信息响应资源", content = @Content(schema = @Schema(implementation = BiInformationResponse.class)))})
     public Response getSpansBiInfo() {
         return spanService.getSpanBIInformation()
                 .map(spanBiInfoResponse -> Response.ok(spanBiInfoResponse).build())

@@ -1,11 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
 import { Button } from "@/ui/button";
 import { CreateDatasetMode } from "@/v2/pages-shared/datasets/CreateDatasetSidebar/CreateDatasetSidebar";
-import { CREATE_ENTITY_OPTIONS } from "@/v2/pages-shared/datasets/CreateEntityMenu";
+import { getCreateEntityOptions } from "@/v2/pages-shared/datasets/CreateEntityMenu";
 
 type DatasetEmptyStateProps = {
   title: string;
@@ -26,7 +27,9 @@ const DatasetEmptyState: React.FC<DatasetEmptyStateProps> = ({
   canCreate,
   onSelect,
 }) => {
+  const { t } = useTranslation("datasets");
   const { themeMode } = useTheme();
+  const createEntityOptions = getCreateEntityOptions(t);
   const imageUrl = themeMode === THEME_MODE.DARK ? darkImageUrl : lightImageUrl;
 
   return (
@@ -40,7 +43,7 @@ const DatasetEmptyState: React.FC<DatasetEmptyStateProps> = ({
         </div>
         {canCreate && (
           <div className="flex flex-col gap-3">
-            {CREATE_ENTITY_OPTIONS.map(
+            {createEntityOptions.map(
               ({
                 mode,
                 Icon,
@@ -68,7 +71,7 @@ const DatasetEmptyState: React.FC<DatasetEmptyStateProps> = ({
         )}
         <Button variant="outline" size="sm" className="self-start" asChild>
           <a href={docsUrl} target="_blank" rel="noreferrer">
-            View docs
+            {t("emptyState.viewDocs")}
             <ExternalLink className="ml-1.5 size-3.5" />
           </a>
         </Button>

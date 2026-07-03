@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { MoreHorizontal, Pencil, Copy, ArrowUpDown, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/ui/button";
@@ -48,6 +49,7 @@ const DashboardWidgetActionsMenu: React.FunctionComponent<
   hideDelete = false,
   onOpenChange,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -124,20 +126,20 @@ const DashboardWidgetActionsMenu: React.FunctionComponent<
           {!hideEdit && (
             <DropdownMenuItem onClick={handleEdit}>
               <Pencil className="mr-2 size-4" />
-              Edit widget
+              {t("common:dashboard.editWidget")}
             </DropdownMenuItem>
           )}
           {!hideDuplicate && (
             <DropdownMenuItem onClick={handleDuplicate}>
               <Copy className="mr-2 size-4" />
-              Duplicate widget
+              {t("common:dashboard.duplicateWidget")}
             </DropdownMenuItem>
           )}
           {showMove && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <ArrowUpDown className="mr-2 size-4" />
-                Move to section
+                {t("common:dashboard.moveToSection")}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {availableSections.map((section) => (
@@ -161,7 +163,7 @@ const DashboardWidgetActionsMenu: React.FunctionComponent<
           {!hideDelete && (
             <DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
               <Trash className="mr-2 size-4" />
-              Delete widget
+              {t("common:dashboard.deleteWidget")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -171,9 +173,9 @@ const DashboardWidgetActionsMenu: React.FunctionComponent<
         open={deleteDialogOpen}
         setOpen={handleDeleteDialogOpenChange}
         onConfirm={handleConfirmDelete}
-        title="Delete widget?"
-        description="Are you sure you want to delete this widget? This action cannot be undone."
-        confirmText={`Delete ${widgetTitle}`}
+        title={t("common:dashboard.deleteWidgetTitle")}
+        description={t("common:dashboard.deleteWidgetDescription")}
+        confirmText={t("common:dashboard.deleteWidgetName", { name: widgetTitle })}
         confirmButtonVariant="destructive"
       />
     </>

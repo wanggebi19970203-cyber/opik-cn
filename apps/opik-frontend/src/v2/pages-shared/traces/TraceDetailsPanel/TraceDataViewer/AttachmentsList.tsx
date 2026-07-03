@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import uniqBy from "lodash/uniqBy";
 import { UnifiedMediaItem } from "@/hooks/useUnifiedMedia";
 import CollapsibleSection from "@/v2/pages-shared/traces/TraceDetailsPanel/CollapsibleSection";
@@ -12,6 +13,7 @@ type AttachmentsListProps = {
 };
 
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ media }) => {
+  const { t } = useTranslation("tracing");
   const [previewData, setPreviewData] = useState<AttachmentPreviewData | null>(
     null,
   );
@@ -32,7 +34,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ media }) => {
   const hasAttachments = previewDataArray.length > 0;
   return hasAttachments ? (
     <CollapsibleSection
-      title="Attachments"
+      title={t("detailsTab.attachments")}
       forceMount={false}
       bodyClassName="p-3"
     >

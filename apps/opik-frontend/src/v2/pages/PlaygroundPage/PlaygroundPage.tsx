@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 
 import { Separator } from "@/ui/separator";
@@ -74,6 +75,7 @@ const renderPlaygroundLoadingSkeleton = () => (
 );
 
 const PlaygroundPage = () => {
+  const { t } = useTranslation("pages/playground");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const { data: activeProject } = useProjectById(
@@ -155,7 +157,7 @@ const PlaygroundPage = () => {
     description: datasetId
       ? "Your experiment is currently running. Leaving now will interrupt the execution and may result in incomplete experiment items. Are you sure you want to leave?"
       : "Your prompt is currently running. Leaving now will interrupt the execution and may result in incomplete traces. Are you sure you want to leave?",
-    confirmText: "Leave anyway",
+    confirmText: t("playground.leaveExperiment.confirmText"),
     cancelText: "Stay and wait",
   });
 

@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import i18next from "i18next";
 import {
   getUserPermissionValue,
   updatePermissionByType,
@@ -55,8 +56,8 @@ const useManageUsersRolePopover = (
     const checkboxOptions = [
       {
         key: ManagementPermissionsNames.INVITE_USERS,
-        label: "Invite Users (IU)",
-        text: "Invite users to workspace",
+        label: i18next.t("comet.inviteUsersIU"),
+        text: i18next.t("comet.inviteUsersToWorkspace"),
         value: ManagementPermissionsNames.INVITE_USERS,
         checked: !!getUserPermissionValue(
           permissions,
@@ -76,15 +77,15 @@ const useManageUsersRolePopover = (
         {
           key: `${ManagementPermissionsNames.MANAGEMENT}-${WORKSPACE_OWNER_VALUE}`,
           value: WORKSPACE_OWNER_VALUE,
-          label: "Workspace Owner",
-          text: "Full permissions to all workspace resources",
+          label: i18next.t("comet.workspaceOwnerLabel"),
+          text: i18next.t("comet.workspaceOwnerDescription"),
           controlType: "radio" as const,
         },
         {
           key: `${ManagementPermissionsNames.MANAGEMENT}-${WORKSPACE_MEMBER_VALUE}`,
           value: WORKSPACE_MEMBER_VALUE,
-          label: "Workspace Member",
-          text: "Limited permissions. You can give customized ones",
+          label: i18next.t("comet.workspaceMemberLabel"),
+          text: i18next.t("comet.workspaceMemberDescription"),
           controlType: "radio" as const,
           list: wsManagementPermissionValue
             ? null

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Loader from "@/shared/Loader/Loader";
 import { StringParam, useQueryParams } from "use-query-params";
 import useAppStore from "@/store/AppStore";
@@ -8,6 +9,7 @@ import useDatasetItemByName from "@/api/datasets/useDatasetItemByName";
 import { Button } from "@/ui/button";
 
 const RedirectDatasets = () => {
+  const { t } = useTranslation();
   const [query] = useQueryParams({
     id: StringParam,
     name: StringParam,
@@ -42,12 +44,12 @@ const RedirectDatasets = () => {
     return (
       <NoData
         icon={<div className="comet-title-m mb-1 text-foreground">404</div>}
-        title="This test suite could not be found"
-        message="The test suite you're looking for doesn't exist or has been deleted."
+        title={t("redirectDatasets.testSuiteNotFound")}
+        message={t("redirectDatasets.testSuiteNotFoundMessage")}
       >
         <div className="pt-5">
           <Link to="/$workspaceName/home" params={{ workspaceName }}>
-            <Button>Back to Home</Button>
+            <Button>{t("redirectDatasets.backToHome")}</Button>
           </Link>
         </div>
       </NoData>
@@ -55,7 +57,7 @@ const RedirectDatasets = () => {
   }
 
   if (!query.id && !query.name) {
-    return <NoData message="No test suite params set" />;
+    return <NoData message={t("redirectDatasets.noTestSuiteParams")} />;
   }
 
   return <Loader />;

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 
 import useAppStore from "@/store/AppStore";
@@ -18,9 +19,11 @@ type DatasetSelectBoxProps = {
 const DatasetSelectBox: React.FC<DatasetSelectBoxProps> = ({
   value,
   onValueChange,
-  placeholder = "Select a test suite",
+  placeholder,
   className,
 }) => {
+  const { t } = useTranslation("experiments");
+  const resolvedPlaceholder = placeholder ?? t("selectTestSuite");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [isLoadedMore, setIsLoadedMore] = useState(false);
   const { data, isLoading } = useDatasetsList(
@@ -49,7 +52,7 @@ const DatasetSelectBox: React.FC<DatasetSelectBoxProps> = ({
     <LoadableSelectBox
       options={options}
       value={value}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       onChange={onValueChange}
       onLoadMore={
         total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore

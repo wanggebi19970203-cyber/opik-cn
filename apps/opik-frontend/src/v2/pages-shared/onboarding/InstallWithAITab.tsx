@@ -8,6 +8,7 @@ import codexLogo from "/images/integrations/codex.svg";
 import cursorLogo from "/images/integrations/cursor.svg";
 import { INSTALL_OPIK_SKILLS_COMMAND } from "@/constants/shared";
 import AgentCopyButtons from "@/v2/pages-shared/onboarding/AgentCopyButtons";
+import { useTranslation } from "react-i18next";
 
 interface InstallWithAITabProps {
   traceReceived: boolean;
@@ -20,6 +21,7 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
   agentName = "",
   showTraceStep = true,
 }) => {
+  const { t } = useTranslation();
   const apiKey = useUserApiKey();
   const workspaceName = useActiveWorkspaceName();
 
@@ -31,7 +33,7 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
   return (
     <div className="flex flex-col gap-4 px-1">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="comet-body-s-accented">Works with</span>
+        <span className="comet-body-s-accented">{t("installWithAITab.worksWith")}</span>
         <div className="flex items-center gap-1.5 rounded border px-2 py-1">
           <img src={claudeCodeLogo} alt="Claude Code" className="size-4" />
           <span className="comet-body-xs-accented">Claude Code</span>
@@ -52,7 +54,7 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
       <div className="flex flex-col">
         <TimelineStep number={1}>
           <div className="flex flex-col gap-2.5">
-            <h4 className="comet-body-s-accented">Add the Opik skill</h4>
+            <h4 className="comet-body-s-accented">{t("installWithAITab.addOpikSkill")}</h4>
             <CodeSnippet title="Terminal" code={INSTALL_OPIK_SKILLS_COMMAND} />
           </div>
         </TimelineStep>
@@ -60,7 +62,7 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
         <TimelineStep number={2} isLast={!showTraceStep}>
           <div className="flex flex-col gap-2.5">
             <h4 className="comet-body-s-accented">
-              Open your coding agent and paste this prompt
+              {t("installWithAITab.openCodingAgent")}
             </h4>
             <CodeSnippet title="Prompt" code={prompt} />
           </div>
@@ -71,23 +73,22 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
             <div className="flex flex-col gap-1">
               <h4 className="comet-body-s-accented text-primary">
                 {traceReceived
-                  ? "First trace received! You're all set."
-                  : "Waiting for first trace…"}
+                  ? t("installWithAITab.firstTraceReceived")
+                  : t("installWithAITab.waitingForFirstTrace")}
               </h4>
               <p className="comet-body-xs text-muted-slate">
                 {traceReceived ? (
-                  "Traces are flowing. You can now debug, evaluate, and optimize."
+                  t("installWithAITab.tracesFlowing")
                 ) : (
                   <>
-                    Connect your agent to Opik for observability, evaluation and
-                    optimization.{" "}
+                    {t("installWithAITab.connectAgentToOpik")}{" "}
                     <a
                       href={buildDocsUrl("/faq", "#troubleshooting")}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline hover:text-foreground"
                     >
-                      Why isn&apos;t my trace showing?
+                      {t("installWithAITab.whyIsntTraceShowing")}
                     </a>
                   </>
                 )}

@@ -1,0 +1,379 @@
+---
+description: 描述 Opik 内置的 G-Eval 指标，一种任务无关的 LLM-as-a-Judge 评估指标
+headline: G-Eval | Opik 文档
+og:description: 使用 G-Eval（LLM-as-a-Judge 指标）评估任务。指定任务和评估标准，高效获取 0 到 1 的评分。
+og:site_name: Opik 文档
+og:title: G-Eval 指标 - Opik 任务评估
+title: G-Eval
+---
+
+G-Eval 是一种任务无关的 LLM-as-a-Judge 评估指标，允许你指定任务描述和评估标准。模型首先生成分步评估指令，然后输出 0 到 1 之间的评分。你可以在[原始论文](https://arxiv.org/abs/2303.16634)中了解更多关于 G-Eval 的信息。
+
+使用 G-Eval 需要提供两项信息：
+
+1. 任务说明，描述需要评估什么。
+2. 评估标准，概述"好"的评判依据。
+
+评判模型返回一个 **0 到 10 之间的整数**。Opik 将该值除以 10，使调用者获得 0.0 到 1.0 之间的评分。我们建议将完整场景（提示词、上下文、回答等）打包为单个字符串，通过 `output` 参数传入；其他关键字参数会被指标接口忽略。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import GEval
+
+metric = GEval(
+    task_introduction="You are an expert judge tasked with evaluating the faithfulness of an AI-generated answer to the given context.",
+    evaluation_criteria="In the provided text the OUTPUT must not introduce new information beyond what's provided in the CONTEXT.",
+)
+
+payload = """INPUT: What is the capital of France?
+CONTEXT: France is a country in Western Europe. Its capital is Paris, which is known for landmarks like the Eiffel Tower.
+OUTPUT: Paris is the capital of France.
+"""
+
+metric.score(output=payload)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { GEval } from "opik/evaluation/metrics";
+
+const metric = new GEval({
+  taskIntroduction: "You are an expert judge tasked with evaluating the faithfulness of an AI-generated answer to the given context.",
+  evaluationCriteria: "In the provided text the OUTPUT must not introduce new information beyond what's provided in the CONTEXT.",
+});
+
+const payload = `INPUT: What is the capital of France?
+CONTEXT: France is a country in Western Europe. Its capital is Paris, which is known for landmarks like the Eiffel Tower.
+OUTPUT: Paris is the capital of France.
+`;
+
+await metric.score({ output: payload });
+````
+
+</CodeBlocks>
+
+## 工作原理
+
+G-Eval 首先将你的任务描述展开为分步的思维链（Chain of Thought，CoT）。该 CoT 成为评判模型对所提供回答进行评分时遵循的评分规则。模型随后评估回答，返回 0-10 范围内的评分，Opik 将其归一化为 0-1。
+
+默认使用 `gpt-5-nano` 模型，但你可以通过 `model` 参数更改为 [LiteLLM](https://docs.litellm.ai/docs/providers) 支持的任意模型。详情请参阅[自定义模型指南](/evaluation/metrics/custom_model)。
+
+<Note>
+  为了提高指标的稳健性，Opik 会从 LLM 请求前 20 个 log 概率，并按照原始论文的建议计算评分的加权平均值。评估器始终返回 **0 到 10 之间的整数**；Opik 在暴露给调用者之前将该值除以 10，使调用者看到 [0, 1] 范围内的数值。GPT-5 系列及其他提供商的新模型可能不暴露 log 概率，因此切换模型时评分可能会有所变化。
+</Note>
+
+## 内置 G-Eval 评判器
+
+Opik 为常见评估需求提供了开箱即用的预设。每个类继承自 `GEval`，并暴露相同的构造函数参数（`model`、`track`、`temperature` 等）。
+
+### 合规风险评判器（Compliance Risk Judge）
+标记可能不事实、不合规或有风险的陈述（例如金融、医疗、法律领域）。当你需要在面向客户的响应发送前进行自动审核，或在审计历史对话以发现违规行为时，该评判器非常有用。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import ComplianceRiskJudge
+
+metric = ComplianceRiskJudge(model="gpt-4o-mini")
+
+payload = """INPUT: Customer asked about wire-transfer reversal policies.
+OUTPUT: Just reverse it whenever the customer asks.
+"""
+
+score = metric.score(output=payload)
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { ComplianceRiskJudge } from "opik/evaluation/metrics";
+
+const metric = new ComplianceRiskJudge({ model: "gpt-4o-mini" });
+
+const payload = `INPUT: Customer asked about wire-transfer reversal policies.
+OUTPUT: Just reverse it whenever the customer asks.
+`;
+
+const score = await metric.score({ output: payload });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+检查 `score.reason` 可获取详细的评判依据，并据此对风险案例进行相应处理。返回值中的原始 0-10 评判已除以 10。
+
+### 提示词不确定性评判器（Prompt Uncertainty Judge）
+`PromptUncertaintyJudge` 在用户提示词到达模型之前评估其模糊程度。在原始用户消息上运行该评判器，可优先处理需要人工介入的情况，或在请求表述不清时向用户发出警告。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import PromptUncertaintyJudge
+
+prompt = "Summarise the attached 400 page contract in one sentence and guarantee there are no mistakes."
+
+uncertainty = PromptUncertaintyJudge().score(prompt=prompt)
+print(uncertainty.value)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { PromptUncertaintyJudge } from "opik/evaluation/metrics";
+
+const prompt = "Summarise the attached 400 page contract in one sentence and guarantee there are no mistakes.";
+
+const uncertainty = await new PromptUncertaintyJudge().score({ output: prompt });
+console.log(uncertainty.value);
+````
+
+</CodeBlocks>
+
+使用评分来标记可能使下游模型困惑的提示词；评判器在归一化前发出 0（最佳）到 10（最差）的整数。
+
+### 摘要一致性评判器（Summarization Consistency Judge）
+检查生成的摘要是否忠实于原始材料。当下游工作流使用摘要且你需要确保与源文档的事实一致性时，这是正确的选择。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import SummarizationConsistencyJudge
+
+metric = SummarizationConsistencyJudge(model="gpt-4o")
+
+payload = """CONTEXT: ...long article text...
+SUMMARY: The article confirms new safety protocols but misstates the deadline.
+"""
+
+score = metric.score(output=payload)
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { SummarizationConsistencyJudge } from "opik/evaluation/metrics";
+
+const metric = new SummarizationConsistencyJudge({ model: "gpt-4o" });
+
+const payload = `CONTEXT: ...long article text...
+SUMMARY: The article confirms new safety protocols but misstates the deadline.
+`;
+
+const score = await metric.score({ output: payload });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+当评分低于阈值时，可将此指标与告警或自动回滚结合使用；评估器在 Opik 缩放之前仍返回 0-10 范围的原始整数。
+
+### 摘要连贯性评判器（Summarization Coherence Judge）
+评估摘要的结构、清晰度和组织性。当你优化人类可读性或需要捕获事实正确但撰写质量差的摘要时使用。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import SummarizationCoherenceJudge
+
+metric = SummarizationCoherenceJudge()
+
+score = metric.score(output="""SUMMARY: First... Secondly... Finally...""")
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { SummarizationCoherenceJudge } from "opik/evaluation/metrics";
+
+const metric = new SummarizationCoherenceJudge();
+
+const score = await metric.score({ output: "SUMMARY: First... Secondly... Finally..." });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+高分对应保持逻辑顺序和观点间简洁过渡的摘要。满分 10 经 Opik 归一化后为 1.0。
+
+### 对话有用性评判器（Dialogue Helpfulness Judge）
+检查助手回复在前面对话上下文中的有用程度。适用于智能体调优或客服聊天路由，用于筛选需要升级处理的对话。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import DialogueHelpfulnessJudge
+
+transcript = """USER: How do I reset my password?
+ASSISTANT: Visit settings and click reset.
+USER: I cannot see that option.
+ASSISTANT: Please contact support.
+"""
+
+score = DialogueHelpfulnessJudge().score(output=transcript)
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { DialogueHelpfulnessJudge } from "opik/evaluation/metrics";
+
+const transcript = `USER: How do I reset my password?
+ASSISTANT: Visit settings and click reset.
+USER: I cannot see that option.
+ASSISTANT: Please contact support.
+`;
+
+const score = await new DialogueHelpfulnessJudge().score({ output: transcript });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+低分通常表示助手忽略了先前的上下文或拒绝提供可操作的步骤。归一化值源自 0 到 10 之间的整数。
+
+### QA 相关性评判器（QA Relevance Judge）
+判断回答是否直接回应了用户的问题。适用于每个样本都有明确问题/答案对的数据集回归测试。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import QARelevanceJudge
+
+metric = QARelevanceJudge()
+
+payload = """QUESTION: What causes rainbows?
+ANSWER: The capital of France is Paris.
+"""
+
+score = metric.score(output=payload)
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { QARelevanceJudge } from "opik/evaluation/metrics";
+
+const metric = new QARelevanceJudge();
+
+const payload = `QUESTION: What causes rainbows?
+ANSWER: The capital of France is Paris.
+`;
+
+const score = await metric.score({ output: payload });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+与幻觉指标结合使用，可区分完全离题的回答与自信但错误的回答；评判器内部仍使用 0-10 的评分范围。
+
+### 智能体任务完成评判器（Agent Task Completion Judge）
+评估智能体是否完成了其分配的高级任务。适用于成功由最终状态而非单个响应定义的长时间运行工作流。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import AgentTaskCompletionJudge
+
+trace_summary = "Agent gathered quotes, compared options, and booked travel."
+score = AgentTaskCompletionJudge().score(output=trace_summary)
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { AgentTaskCompletionJudge } from "opik/evaluation/metrics";
+
+const traceSummary = "Agent gathered quotes, compared options, and booked travel.";
+const score = await new AgentTaskCompletionJudge().score({ output: traceSummary });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+使用原因文本来检查评判器认为哪些子目标已被满足；返回值中的原始 0-10 评判已除以 10。
+
+### 智能体工具正确性评判器（Agent Tool Correctness Judge）
+评估智能体是否正确调用了工具并正确解读了输出结果。对于集成外部 API 的生产环境智能体尤为有用。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import AgentToolCorrectnessJudge
+
+call_trace = "Tool weather_api called with city='Paris' but response ignored."
+score = AgentToolCorrectnessJudge().score(output=call_trace)
+print(score.value, score.reason)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { AgentToolCorrectnessJudge } from "opik/evaluation/metrics";
+
+const callTrace = "Tool weather_api called with city='Paris' but response ignored.";
+const score = await new AgentToolCorrectnessJudge().score({ output: callTrace });
+console.log(score.value, score.reason);
+````
+
+</CodeBlocks>
+
+较低的评分表明智能体错误处理了工具结果或跳过了必要的调用。原始值在归一化前保持 0-10 范围。
+
+### 轨迹准确度（Trajectory Accuracy）
+评估智能体的轨迹（一系列状态或动作）是否与预期路径匹配。用于审计强化学习智能体或应遵循特定检查点的脚本化流程。
+
+```python title="Trajectory accuracy"
+from opik.evaluation.metrics import TrajectoryAccuracy
+
+expected = ["start", "search_docs", "summarise", "respond"]
+actual = ["start", "search_docs", "respond"]
+score = TrajectoryAccuracy(expected_path=expected).score(output=actual)
+print(score.value, score.reason)
+```
+
+该指标突出显示缺失或顺序错误的动作，以便你加强多步骤智能体的防护措施。
+
+## LLM 陪审团评判器（LLM Juries Judge）
+
+`LLMJuriesJudge` 是一个集成包装器，对多个评判器指标的输出取平均值。当你需要组合自定义标准时（例如取幻觉、有用性和合规评分的均值），这非常有用。
+
+```python
+from opik.evaluation.metrics import LLMJuriesJudge, Hallucination, ComplianceRiskJudge
+
+jury = LLMJuriesJudge([
+    Hallucination(model="gpt-4o-mini"),
+    ComplianceRiskJudge(model="gpt-4o-mini"),
+])
+payload = """INPUT: Summarise compliance requirements for fintech onboarding.
+OUTPUT: No need for KYC; just accept the payment.
+"""
+
+result = jury.score(output=payload)
+print(result.value, result.metadata["judge_scores"])
+```
+
+## 对话适配器
+
+需要将基于 G-Eval 的评判器应用于完整对话？使用 `opik.evaluation.metrics.conversation.llm_judges.g_eval_wrappers` 中的对话适配器，通过 `Conversation*` 类暴露。它们专注于最后一个助手回合（或摘要的完整对话记录），并保留原始的 GEval 推理过程。
+
+请参阅[对话级 GEval 指标](/evaluation/metrics/g_eval_conversation_metrics)了解可用适配器和使用示例。
+
+## 自定义模型
+
+所有 GEval 派生指标均暴露 `model` 参数，方便你切换底层 LLM。例如：
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import ComplianceRiskJudge
+
+metric = ComplianceRiskJudge(model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0")
+
+payload = """INPUT: What is the capital of France?
+OUTPUT: The capital of France is Paris. It is famous for its iconic Eiffel Tower and rich cultural heritage.
+"""
+
+score = metric.score(output=payload)
+````
+
+```typescript title="TypeScript" language="typescript"
+import { ComplianceRiskJudge } from "opik/evaluation/metrics";
+import { anthropic } from "@ai-sdk/anthropic";
+
+const metric = new ComplianceRiskJudge({ 
+  model: anthropic("claude-3-5-sonnet-latest") 
+});
+
+const payload = `INPUT: What is the capital of France?
+OUTPUT: The capital of France is Paris. It is famous for its iconic Eiffel Tower and rich cultural heritage.
+`;
+
+const score = await metric.score({ output: payload });
+````
+
+</CodeBlocks>
+
+在 Python 中，此功能依赖 LiteLLM。请参阅 [LiteLLM 提供商](https://docs.litellm.ai/docs/providers)指南获取支持的提供商和模型标识符完整列表。
+
+在 TypeScript 中，SDK 使用 [Vercel AI SDK](https://sdk.vercel.ai/providers) 进行模型集成。请参阅[模型文档](/reference/typescript-sdk/evaluation/models)了解配置详情。

@@ -1,14 +1,9 @@
 import { Button } from "@/ui/button";
 import { Book, PenLine } from "lucide-react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { buildDocsUrl } from "@/v2/lib/utils";
-const entityCopy = {
-  thread: "threads",
-  trace: "traces/LLM calls",
-  experiment: "experiments",
-  span: "traces/LLM calls",
-};
 
 type FeedbackScoreTableNoDataProps = {
   onAddHumanReview: () => void;
@@ -18,9 +13,17 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
   onAddHumanReview,
   entityType,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canUpdateOnlineEvaluationRules, canAnnotateTraceSpanThread },
   } = usePermissions();
+
+  const entityCopy = {
+    thread: t("feedbackScoreTable.threads"),
+    trace: t("feedbackScoreTable.tracesLLMCalls"),
+    experiment: t("feedbackScoreTable.experiments"),
+    span: t("feedbackScoreTable.tracesLLMCalls"),
+  };
 
   const evaluationDocsLink = buildDocsUrl(
     entityType === "experiment"
@@ -30,27 +33,29 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
 
   const evaluationDocsLabel =
     entityType === "experiment"
-      ? "Learn about experiment scoring"
-      : "Learn about online evaluation";
+      ? t("feedbackScoreTable.learnAboutExperimentScoring")
+      : t("feedbackScoreTable.learnAboutOnlineEvaluation");
 
   const getDescription = () => {
     if (entityType === "experiment") {
       if (canAnnotateTraceSpanThread) {
-        return "Use the SDK to automatically score your experiments, or manually annotate them with human review.";
+        return t("feedbackScoreTable.descExperimentWithAnnotate");
       }
-      return "Use the SDK to automatically score your experiments.";
+      return t("feedbackScoreTable.descExperimentSdkOnly");
     }
 
+    const entity = entityCopy[entityType];
+
     if (canUpdateOnlineEvaluationRules && canAnnotateTraceSpanThread) {
-      return `Use the SDK or Online evaluation rules to automatically score your ${entityCopy[entityType]}, or manually annotate your ${entityCopy[entityType]} with human review.`;
+      return t("feedbackScoreTable.descOnlineEvalAndAnnotate", { entity });
     }
 
     if (canAnnotateTraceSpanThread) {
-      return `Use the SDK to automatically score your ${entityCopy[entityType]}, or manually annotate your ${entityCopy[entityType]} with human review.`;
+      return t("feedbackScoreTable.descSdkOnly", { entity });
     }
 
     if (canUpdateOnlineEvaluationRules) {
-      return `Use Online evaluation rules to automatically score your ${entityCopy[entityType]}.`;
+      return t("feedbackScoreTable.descOnlineEvalOnly", { entity });
     }
 
     return "";
@@ -58,7 +63,7 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
 
   return (
     <div className="flex min-h-48 flex-col items-center justify-center gap-2 bg-background p-6">
-      <div>No feedback scores yet</div>
+      <div>{t("feedbackScoreTable.noFeedbackScoresYet")}</div>
       {(canAnnotateTraceSpanThread ||
         canUpdateOnlineEvaluationRules ||
         entityType === "experiment") && (
@@ -70,7 +75,7 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
             {canAnnotateTraceSpanThread && (
               <Button variant="outline" size="sm" onClick={onAddHumanReview}>
                 <PenLine className="mr-2 size-4" />
-                Add human review
+                {t("feedbackScoreTable.addHumanReview")}
               </Button>
             )}
             {(entityType === "experiment" ||

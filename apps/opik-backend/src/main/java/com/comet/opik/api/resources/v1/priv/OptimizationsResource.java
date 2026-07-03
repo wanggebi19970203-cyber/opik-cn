@@ -57,7 +57,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Optimizations", description = "Optimization resources")
+@Tag(name = "Optimizations", description = "优化资源")
 public class OptimizationsResource {
 
     private final @NonNull OptimizationService optimizationService;
@@ -66,8 +66,8 @@ public class OptimizationsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @PUT
-    @Operation(operationId = "upsertOptimization", summary = "Upsert optimization", description = "Upsert optimization", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "upsertOptimization", summary = "创建或更新优化", description = "创建或更新优化", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/optimizations/{id}", schema = @Schema(implementation = String.class))})})
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
@@ -88,9 +88,9 @@ public class OptimizationsResource {
     }
 
     @GET
-    @Operation(operationId = "findOptimizations", summary = "Find optimizations", description = "Find optimizations", responses = {
-            @ApiResponse(responseCode = "200", description = "Optimizations resource", content = @Content(schema = @Schema(implementation = Optimization.OptimizationPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findOptimizations", summary = "查询优化列表", description = "查询优化列表", responses = {
+            @ApiResponse(responseCode = "200", description = "优化资源", content = @Content(schema = @Schema(implementation = Optimization.OptimizationPage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @JsonView(Optimization.View.Public.class)
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_VIEW)
@@ -98,8 +98,8 @@ public class OptimizationsResource {
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
             @QueryParam("dataset_id") UUID datasetId,
-            @QueryParam("name") @Schema(description = "Filter optimizations by name (partial match, case insensitive)") String name,
-            @QueryParam("dataset_name") @Schema(description = "Filter optimizations by dataset name (partial match)") String datasetName,
+            @QueryParam("name") @Schema(description = "按名称过滤优化（部分匹配，不区分大小写）") String name,
+            @QueryParam("dataset_name") @Schema(description = "按数据集名称过滤优化（部分匹配）") String datasetName,
             @QueryParam("dataset_deleted") Boolean datasetDeleted,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("filters") String filters) {
@@ -129,9 +129,9 @@ public class OptimizationsResource {
 
     @GET
     @Path("/{id}")
-    @Operation(operationId = "getOptimizationById", summary = "Get optimization by id", description = "Get optimization by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Optimization resource", content = @Content(schema = @Schema(implementation = Optimization.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getOptimizationById", summary = "根据ID获取优化", description = "根据ID获取优化", responses = {
+            @ApiResponse(responseCode = "200", description = "优化资源", content = @Content(schema = @Schema(implementation = Optimization.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @JsonView(Optimization.View.Public.class)
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_VIEW)
     public Response get(@PathParam("id") UUID id) {
@@ -144,8 +144,8 @@ public class OptimizationsResource {
     }
 
     @POST
-    @Operation(operationId = "createOptimization", summary = "Create optimization", description = "Create optimization", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createOptimization", summary = "创建优化", description = "创建优化", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/optimizations/{id}", schema = @Schema(implementation = String.class))})})
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
@@ -156,7 +156,7 @@ public class OptimizationsResource {
         log.info("Creating optimization with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
                 optimization.id(), optimization.name(), optimization.datasetName(), workspaceId);
 
-        // For Studio optimizations, inject the API key from the request header
+        // 对于 Studio 优化，从请求头注入 API 密钥
         var optimizationToCreate = optimization;
         if (optimization.studioConfig() != null) {
             var opikApiKey = requestContext.get().getHeaders().getFirst(RequestContext.OPIK_API_KEY);
@@ -180,8 +180,8 @@ public class OptimizationsResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteOptimizationsById", summary = "Delete optimizations by id", description = "Delete optimizations by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")})
+    @Operation(operationId = "deleteOptimizationsById", summary = "根据ID删除优化", description = "根据ID删除优化", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_DELETE)
     public Response deleteOptimizationsById(
             @RequestBody(content = @Content(schema = @Schema(implementation = DeleteIdsHolder.class))) @NotNull @Valid DeleteIdsHolder request) {
@@ -195,8 +195,8 @@ public class OptimizationsResource {
 
     @PUT
     @Path("/{id}")
-    @Operation(operationId = "updateOptimizationsById", summary = "Update optimization by id", description = "Update optimization by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")})
+    @Operation(operationId = "updateOptimizationsById", summary = "根据ID更新优化", description = "根据ID更新优化", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
     public Response updateOptimizationsById(@PathParam("id") UUID id,
             @RequestBody(content = @Content(schema = @Schema(implementation = OptimizationUpdate.class))) @NotNull OptimizationUpdate request) {
@@ -211,12 +211,12 @@ public class OptimizationsResource {
         return Response.noContent().build();
     }
 
-    // ==================== Studio Endpoints ====================
+    // ==================== Studio 端点 ====================
 
     @GET
     @Path("/studio/{id}/cancel")
-    @Operation(operationId = "cancelStudioOptimizations", summary = "Cancel Studio optimizations", description = "Cancel Studio optimizations by id", responses = {
-            @ApiResponse(responseCode = "501", description = "Not Implemented")})
+    @Operation(operationId = "cancelStudioOptimizations", summary = "取消Studio优化", description = "根据ID取消Studio优化", responses = {
+            @ApiResponse(responseCode = "501", description = "未实现")})
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
     public Response cancelStudioOptimization(@PathParam("id") UUID id) {
         log.info("Cancel Studio optimization endpoint called for id '{}' - not yet implemented", id);
@@ -225,9 +225,9 @@ public class OptimizationsResource {
 
     @GET
     @Path("/studio/{id}/logs")
-    @Operation(operationId = "getStudioOptimizationLogs", summary = "Get Studio optimization logs", description = "Get presigned S3 URL for downloading optimization logs", responses = {
-            @ApiResponse(responseCode = "200", description = "Logs response", content = @Content(schema = @Schema(implementation = OptimizationStudioLog.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getStudioOptimizationLogs", summary = "获取Studio优化日志", description = "获取用于下载优化日志的S3预签名URL", responses = {
+            @ApiResponse(responseCode = "200", description = "日志响应", content = @Content(schema = @Schema(implementation = OptimizationStudioLog.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_VIEW)
     public Response studioGetLogs(@PathParam("id") UUID id) {

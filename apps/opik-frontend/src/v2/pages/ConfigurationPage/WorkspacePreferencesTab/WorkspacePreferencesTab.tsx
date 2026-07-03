@@ -1,7 +1,9 @@
 import { useMemo, useCallback } from "react";
 import { useQueryParam } from "use-query-params";
+import { useTranslation } from "react-i18next";
 
 import { convertColumnDataToColumn } from "@/lib/table";
+import { ColumnData } from "@/types/shared";
 import DataTable from "@/shared/DataTable/DataTable";
 import { generateActionsColumDef } from "@/shared/DataTable/utils";
 import Loader from "@/shared/Loader/Loader";
@@ -28,6 +30,7 @@ import { EditThreadTimeoutFormValues } from "./EditThreadTimeoutForm";
 import EditTruncationToggleDialog from "./EditTruncationToggleDialog";
 
 const WorkspacePreferencesTab: React.FC = () => {
+  const { t } = useTranslation("pages/settings");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { data: workspaceConfig, isPending } = useWorkspaceConfig({
     workspaceName: workspaceName,
@@ -57,17 +60,21 @@ const WorkspacePreferencesTab: React.FC = () => {
   const data = useMemo(
     () => [
       {
-        name: "Thread online scoring rule cooldown period",
-        value: formatIso8601Duration(threadTimeoutValue) ?? "Not set",
+        name: t("settings.workspacePreferences.threadTimeout.name"),
+        value:
+          formatIso8601Duration(threadTimeoutValue) ??
+          t("settings.workspacePreferences.threadTimeout.notSet"),
         type: WORKSPACE_PREFERENCE_TYPE.THREAD_TIMEOUT,
       },
       {
-        name: "Data truncation in tables",
-        value: truncationToggleValue ? "Enabled" : "Disabled",
+        name: t("settings.workspacePreferences.truncationToggle.name"),
+        value: truncationToggleValue
+          ? t("settings.workspacePreferences.truncationToggle.enabled")
+          : t("settings.workspacePreferences.truncationToggle.disabled"),
         type: WORKSPACE_PREFERENCE_TYPE.TRUNCATION_TOGGLE,
       },
     ],
-    [threadTimeoutValue, truncationToggleValue],
+    [threadTimeoutValue, truncationToggleValue, t],
   );
 
   const getPreferencesDialogConfig = useCallback(
@@ -138,11 +145,17 @@ const WorkspacePreferencesTab: React.FC = () => {
     [mergeConfigUpdate],
   );
 
+  const translatedColumns: ColumnData<WorkspacePreference>[] =
+    WORKSPACE_PREFERENCES_DEFAULT_COLUMNS.map((col) => ({
+      ...col,
+      label: t(`settings.workspacePreferences.columns.${col.id}`),
+    }));
+
   const columns = useMemo(() => {
     const baseColumns = convertColumnDataToColumn<
       WorkspacePreference,
       WorkspacePreference
-    >(WORKSPACE_PREFERENCES_DEFAULT_COLUMNS, {});
+    >(translatedColumns, {});
 
     if (canConfigureWorkspaceSettings) {
       return [

@@ -1,6 +1,6 @@
 /**
- * Error system for the Opik SDK.
- * This module exports all error classes and utilities for error handling.
+ * Opik SDK 的错误系统。
+ * 本模块导出所有错误类及错误处理工具。
  */
 export * from "./BaseError";
 export * from "./types";

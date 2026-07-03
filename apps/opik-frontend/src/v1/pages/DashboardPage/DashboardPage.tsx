@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "@tanstack/react-router";
 
 import {
@@ -19,6 +20,7 @@ import DashboardContent from "@/v1/pages-shared/dashboards/DashboardContent/Dash
 import { usePermissions } from "@/contexts/PermissionsContext";
 
 const DashboardPage: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const { dashboardId } = useParams({ strict: false }) as {
     dashboardId: string;
   };
@@ -64,7 +66,7 @@ const DashboardPage: React.FunctionComponent = () => {
   if (!dashboard) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">Dashboard not found</p>
+        <p className="text-muted-foreground">{t("common.messages.dashboardNotFound")}</p>
       </div>
     );
   }

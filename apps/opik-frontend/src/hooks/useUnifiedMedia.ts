@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import i18next from "i18next";
 import { Span, Trace } from "@/types/traces";
 import { ATTACHMENT_TYPE, ParsedMediaData } from "@/types/attachments";
 import { MINE_TYPE_TO_ATTACHMENT_TYPE_MAP } from "@/constants/attachments";
@@ -266,7 +267,7 @@ export const useUnifiedMedia = (
           const errorObj =
             error instanceof Error
               ? error
-              : new Error("Async media detection failed");
+              : new Error(i18next.t("common.hooks.useUnifiedMedia.asyncMediaDetectionFailed"));
           console.warn("Async media detection failed:", errorObj);
           setAsyncMediaState({
             media: [],

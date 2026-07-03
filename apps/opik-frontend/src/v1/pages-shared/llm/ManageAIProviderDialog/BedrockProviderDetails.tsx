@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import { Label } from "@/ui/label";
 import EyeInput from "@/shared/EyeInput/EyeInput";
@@ -20,6 +21,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
   form,
   isEdit = false,
 }) => {
+  const { t } = useTranslation("prompt");
   return (
     <div className="flex flex-col gap-4 pb-4">
       {!isEdit && (
@@ -31,11 +33,11 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">Provider name</Label>
+                <Label htmlFor="providerName">{t("bedrockProviderDetails.providerName")}</Label>
                 <FormControl>
                   <Input
                     id="providerName"
-                    placeholder="Bedrock us-east-1"
+                    placeholder={t("bedrockProviderDetails.providerNamePlaceholder")}
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     disabled={isEdit}
@@ -46,8 +48,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
                 </FormControl>
                 <FormMessage />
                 <Description>
-                  A unique identifier for this provider instance (e.g.,
-                  &quot;Bedrock us-east-1&quot;).
+                  {t("bedrockProviderDetails.providerNameDescription")}
                 </Description>
               </FormItem>
             );
@@ -62,7 +63,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="url">URL</Label>
+              <Label htmlFor="url">{t("bedrockProviderDetails.url")}</Label>
               <FormControl>
                 <Input
                   id="url"
@@ -88,11 +89,11 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">API key</Label>
+              <Label htmlFor="apiKey">{t("bedrockProviderDetails.apiKey")}</Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
-                  placeholder="API key"
+                  placeholder={t("bedrockProviderDetails.apiKeyPlaceholder")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -102,7 +103,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Click{" "}
+                {t("bedrockProviderDetails.clickHere")}{" "}
                 <Button
                   variant="link"
                   size="sm"
@@ -114,11 +115,10 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
                     target="_blank"
                     rel="noreferrer"
                   >
-                    here
+                    {t("bedrockProviderDetails.here")}
                   </a>
                 </Button>{" "}
-                for instructions on how to create a service account and assign
-                the correct permissions.
+                {t("bedrockProviderDetails.apiKeyDescription")}
               </Description>
             </FormItem>
           );
@@ -132,11 +132,11 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">Models list</Label>
+              <Label htmlFor="models">{t("bedrockProviderDetails.modelsList")}</Label>
               <FormControl>
                 <Input
                   id="models"
-                  placeholder="Models list"
+                  placeholder={t("bedrockProviderDetails.modelsListPlaceholder")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -146,7 +146,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Comma separated list of available models. Example:
+                {t("bedrockProviderDetails.modelsListDescription")}
                 {`"openai.gpt-oss-20b-1:0,mistral.ministral-3-3b-instruct"`}
               </Description>
             </FormItem>

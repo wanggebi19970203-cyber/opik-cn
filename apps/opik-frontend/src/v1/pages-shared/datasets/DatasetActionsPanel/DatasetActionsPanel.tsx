@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Dataset } from "@/types/datasets";
@@ -15,6 +16,7 @@ type DatasetActionsPanelProps = {
 const DatasetActionsPanel: React.FunctionComponent<
   DatasetActionsPanelProps
 > = ({ datasets, entityName }) => {
+  const { t } = useTranslation("datasets");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !datasets?.length;
@@ -34,12 +36,12 @@ const DatasetActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deleteDatasetsHandler}
-        title={`Delete ${entityName}`}
-        description={`Deleting these ${entityName} will also remove all their items. Any experiments linked to them will be moved to a 'Deleted test suites' group. This action cannot be undone. Are you sure you want to continue?`}
-        confirmText={`Delete ${entityName}`}
+        title={t("rowActions.deleteTitle", { entityName })}
+        description={t("rowActions.deleteDescription", { entityName })}
+        confirmText={t("rowActions.deleteConfirmText", { entityName })}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("rowActions.delete")}>
         <Button
           variant="outline"
           size="icon-sm"

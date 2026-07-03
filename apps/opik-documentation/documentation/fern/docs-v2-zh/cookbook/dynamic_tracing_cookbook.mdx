@@ -1,0 +1,236 @@
+---
+---
+
+```python
+import time
+import random
+from typing import Dict, Any, List
+from contextlib import contextmanager
+
+import opik
+
+```
+
+ # 动态追踪控制实战手册
+
+
+
+ 本实战手册演示如何使用 Opik 的动态追踪控制功能
+
+ 来优化性能并在生产中实施灵活的追踪策略。
+
+
+
+ ## 您将学到什么：
+
+ - 在运行时启用/禁用追踪而无需更改代码
+
+ - 基于用户属性实施条件追踪
+
+ - 为高吞吐量系统创建采样策略
+
+ - 测量和优化追踪性能影响
+
+ - 动态控制集成跟踪
+
+
+
+ ## 前提条件：
+
+ ```bash
+
+ pip install opik
+
+ ```
+
+ ## 设置和导入
+
+
+
+ 首先，让我们导入必要的库并设置环境。
+
+
+```python
+print(f"Opik version: {opik.__version__}")
+print(f"Initial tracing state: {opik.is_tracing_active()}") # the opposite of the track_disable
+
+```
+
+ ## 1. 基本运行时控制
+
+
+
+ 最简单的用例是在运行时切换追踪的开和关。
+
+
+```python
+print(f"Current tracing state: {opik.is_tracing_active()}")
+
+opik.set_tracing_active(False)
+print(f"After disabling: {opik.is_tracing_active()}")
+
+opik.set_tracing_active(True)
+print(f"After enabling: {opik.is_tracing_active()}")
+
+```
+
+ ## 2. 上下文感知追踪
+
+
+
+ 创建一个用于临时追踪控制的上下文管理器。
+
+
+```python
+@contextmanager
+def tracing_enabled(enabled: bool):
+    """Context manager for temporary tracing control."""
+    original_state = opik.is_tracing_active()
+    try:
+        opik.set_tracing_active(enabled)
+        yield
+    finally:
+        opik.set_tracing_active(original_state)
+
+print(f"Before context: {opik.is_tracing_active()}")
+
+with tracing_enabled(False):
+    print(f"Inside context (disabled): {opik.is_tracing_active()}")
+    # ny traced functions here won't create spans
+
+print(f"After context: {opik.is_tracing_active()}")
+
+```
+
+ ## 3. 条件追踪策略
+
+
+
+ 实施不同的策略来决定何时启用追踪（参见第 4 部分了解连接）
+
+
+```python
+class TracingStrategy:
+    """Base class for tracing strategies."""
+
+    def should_trace(self, **kwargs) -> bool:
+        """Determine if tracing should be enabled for this request."""
+        raise NotImplementedError
+
+
+class UserTierStrategy(TracingStrategy):
+    """Trace only premium users."""
+
+    def __init__(self, premium_tiers: List[str] = None):
+        self.premium_tiers = premium_tiers or ["premium", "enterprise"]
+
+    def should_trace(self, user_tier: str = None, **kwargs) -> bool:
+        return user_tier in self.premium_tiers
+
+
+class SamplingStrategy(TracingStrategy):
+    """Trace a percentage of requests."""
+
+    def __init__(self, sample_rate: float = 0.1):
+        self.sample_rate = sample_rate
+
+    def should_trace(self, **kwargs) -> bool:
+        return random.random() < self.sample_rate
+
+
+class DebugModeStrategy(TracingStrategy):
+    """Trace when in debug mode or for specific users."""
+
+    def __init__(self, debug_users: List[str] = None):
+        self.debug_users = debug_users or []
+        self.debug_mode = False
+
+    def should_trace(self, user_id: str = None, **kwargs) -> bool:
+        return self.debug_mode or (user_id in self.debug_users)
+
+    def enable_debug(self):
+        self.debug_mode = True
+
+    def disable_debug(self):
+        self.debug_mode = False
+
+strategies = {
+    "premium_only": UserTierStrategy(),
+    "10_percent_sample": SamplingStrategy(0.1),
+    "debug_mode": DebugModeStrategy(["debug_user_1", "debug_user_2"]),
+}
+
+```
+
+ ## 4. 智能请求处理器
+
+
+
+ 创建一个使用追踪策略的请求处理器。
+
+
+```python
+@opik.track(name="user_query")
+def handle_user_query(query: str, user_id: str, user_tier: str) -> Dict[str, Any]:
+    """Simulate handling a user query with LLM processing."""
+    time.sleep(0.01)
+    
+    if user_tier in ["premium", "enterprise"]:
+        response = f"Premium response to: {query}"
+        tokens_used = random.randint(150, 300)
+    else:
+        response = f"Basic response to: {query}"
+        tokens_used = random.randint(50, 100)
+    
+    return {
+        "query": query,
+        "response": response,
+        "user_id": user_id,
+        "user_tier": user_tier,
+        "tokens_used": tokens_used,
+        "processing_time_ms": random.randint(100, 500)
+    }
+
+
+
+class SmartRequestHandler:
+    """Request handler with configurable tracing strategy."""
+
+    def __init__(self, strategy: TracingStrategy):
+        self.strategy = strategy
+
+    def handle_request(
+        self, query: str, user_id: str, user_tier: str
+    ) -> Dict[str, Any]:
+        """Handle request with conditional tracing."""
+
+        should_trace = self.strategy.should_trace(
+            user_id=user_id, user_tier=user_tier, query=query
+        )
+
+        opik.set_tracing_active(should_trace)
+
+
+        response_and_metadata = handle_user_query(query, user_id, user_tier)
+
+        return {
+            "traced": should_trace,
+            "result": response_and_metadata,
+        }
+
+
+print("=== Testing Premium-Only Strategy ===")
+handler = SmartRequestHandler(UserTierStrategy())
+
+requests = [
+    ("What is AI?", "user1", "free"),
+    ("Explain ML", "user2", "premium"),
+    ("How does it work?", "user3", "free"),
+    ("Advanced question", "user4", "enterprise"),
+]
+
+for query, user_id, tier in requests:
+    result = handler.handle_request(query, user_id, tier)
+    print(f"User {user_id} ({tier}): Traced = {result['traced']}")
+
+```

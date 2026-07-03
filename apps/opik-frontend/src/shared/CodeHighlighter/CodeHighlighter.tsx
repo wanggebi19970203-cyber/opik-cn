@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
@@ -33,6 +34,7 @@ const CodeHighlighter: React.FunctionComponent<CodeHighlighterProps> = ({
   hideCopy = false,
   transparent = false,
 }) => {
+  const { t } = useTranslation("common");
   const theme = useCodemirrorTheme({ transparent });
   const LineHighlightExtension = useCodemirrorLineHighlight({
     lines: highlightedLines,
@@ -48,9 +50,9 @@ const CodeHighlighter: React.FunctionComponent<CodeHighlighterProps> = ({
       {!hideCopy && (
         <div className="absolute right-2 top-0.5 z-10">
           <CopyButton
-            message="Successfully copied code"
+            message={t("codeBlock.codeCopied")}
             text={copyData || data}
-            tooltipText="Copy code"
+            tooltipText={t("codeBlock.copyCode")}
           />
         </div>
       )}

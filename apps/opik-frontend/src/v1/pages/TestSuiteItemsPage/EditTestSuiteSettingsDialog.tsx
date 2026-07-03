@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -41,15 +42,16 @@ import {
 } from "@/constants/test-suites";
 import { extractAssertions } from "@/lib/assertion-converters";
 
-const settingsSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string(),
-  runsPerItem: z.number().min(1).max(MAX_RUNS_PER_ITEM),
-  passThreshold: z.number().min(1),
-  assertions: z.array(z.object({ value: z.string() })),
-});
+const createSettingsSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, t("editTestSuite.nameRequired")),
+    description: z.string(),
+    runsPerItem: z.number().min(1).max(MAX_RUNS_PER_ITEM),
+    passThreshold: z.number().min(1),
+    assertions: z.array(z.object({ value: z.string() })),
+  });
 
-type SettingsFormType = z.infer<typeof settingsSchema>;
+type SettingsFormType = z.infer<ReturnType<typeof createSettingsSchema>>;
 
 interface EditTestSuiteSettingsDialogProps {
   open: boolean;
@@ -65,6 +67,8 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   defaultValues,
   onSubmit,
 }) => {
+  const { t } = useTranslation("test-suite-items");
+  const settingsSchema = useMemo(() => createSettingsSchema(t), [t]);
   const form = useForm<SettingsFormType>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
@@ -102,7 +106,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
         <DialogHeader>
-          <DialogTitle>Edit test suite</DialogTitle>
+          <DialogTitle>{t("editTestSuite.dialogTitle")}</DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="flex flex-col">
@@ -111,11 +115,11 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
               name="name"
               render={({ field }) => (
                 <FormItem className="pb-4">
-                  <Label>Name</Label>
+                  <Label>{t("editTestSuite.name")}</Label>
                   <FormControl>
                     <Input
                       dimension="sm"
-                      placeholder="Enter test suite name"
+                      placeholder={t("editTestSuite.namePlaceholder")}
                       {...field}
                     />
                   </FormControl>
@@ -129,10 +133,10 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
               name="description"
               render={({ field }) => (
                 <FormItem className="pb-4">
-                  <Label>Description</Label>
+                  <Label>{t("editTestSuite.description")}</Label>
                   <FormControl>
                     <TextareaAutosize
-                      placeholder="Dataset description"
+                      placeholder={t("editTestSuite.descriptionPlaceholder")}
                       className={cn(TEXT_AREA_CLASSES, "min-h-0 resize-none")}
                       minRows={2}
                       maxRows={6}
@@ -159,7 +163,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                   htmlFor="runs-per-item"
                   className="comet-body-xs-accented"
                 >
-                  Default runs per item
+                  {t("editTestSuite.defaultRunsPerItem")}
                 </Label>
                 <Input
                   id="runs-per-item"
@@ -182,7 +186,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                   htmlFor="pass-threshold"
                   className="comet-body-xs-accented"
                 >
-                  Default pass threshold
+                  {t("editTestSuite.defaultPassThreshold")}
                 </Label>
                 <Input
                   id="pass-threshold"
@@ -216,9 +220,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("editTestSuite.cancel")}</Button>
           </DialogClose>
-          <Button type="submit">Update test suite</Button>
+          <Button type="submit">{t("editTestSuite.updateTestSuite")}</Button>
         </DialogFooter>
       </form>
     </Form>

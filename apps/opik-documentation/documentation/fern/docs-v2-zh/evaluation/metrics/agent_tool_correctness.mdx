@@ -1,0 +1,43 @@
+---
+description: 评估代理是否正确调用和解释了工具
+headline: 代理工具正确性 | Opik 文档
+og:description: 评估代理工具使用准确性，以增强 API 交互并提升生产环境中的诊断能力。
+og:site_name: Opik 文档
+og:title: 使用 Opik 进行代理工具正确性评估
+title: 代理工具正确性
+---
+
+# 代理工具正确性评估器
+
+`AgentToolCorrectnessJudge` 检查代理是否使用正确的参数调用了正确的工具，并准确解释了输出结果。对于诊断编排 API、数据库或内部服务的生产代理而言，该工具具有重要价值。
+
+```python title="检查工具使用情况"
+from opik.evaluation.metrics import AgentToolCorrectnessJudge
+
+payload = """TOOL weather_api(city='Paris') -> 12°C and raining.
+AGENT: Responded "Sunny and warm".
+"""
+
+metric = AgentToolCorrectnessJudge()
+score = metric.score(output=payload)
+
+print(score.value)   # 归一化后的 0.0–1.0 分数
+print(score.reason)
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `output` | `str` | **是** | 描述任务、工具调用和观察到的行为的载荷。 |
+
+## 配置选项
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 分析较长的轨迹时可升级为更大的评估模型。 |
+| `temperature` | `0.0` | 保持较低值以确保评分可重复性。 |
+| `track` | `True` | 控制 Opik 跟踪功能。 |
+| `project_name` | `None` | 覆盖日志记录目标。 |
+
+评估器输出 0 到 10 之间的整数（由 Opik 缩放至 0–1）；读取 `score.reason` 可定位错误调用、缺失验证或误解输出的具体问题。

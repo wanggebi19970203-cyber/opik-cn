@@ -1,0 +1,164 @@
+---
+description: 了解如何使用 HRPO（分层反射式提示词优化器）通过对失败模式进行系统性根因分析和针对性改进来优化提示词。
+headline: HRPO | Opik 文档
+og:description: 了解 HRPO（分层反射式提示词优化器）如何通过系统性分析来识别并解决特定失败模式，从而提升提示词优化效果。
+og:site_name: Opik 文档
+og:title: HRPO（分层反射式提示词优化器） - Opik
+subtitle: 基于分层根因分析的针对性提示词改进
+title: HRPO（分层反射式提示词优化器）
+---
+
+`HRPO`（分层反射式提示词优化器）使用分层根因分析来识别和解决提示词中的特定失败模式。它分析评估结果、识别失败模式中的规律，并生成针对性的改进方案以系统性地解决每种失败模式。
+
+<Note>
+  在代码中使用 `HRPO` 类（例如 `from opik_optimizer import HRPO`）。底层模块名称仍使用
+  `hierarchical_reflective_optimizer` 以保持向后兼容性。
+</Note>
+
+<Note>
+  `HRPO` 适用于您有一个复杂提示词，希望基于理解其*失败原因*来进行优化的场景。与生成大量随机变体的优化器不同，
+  该优化器会系统性地分析失败、识别根因，并进行精准改进以解决每个具体问题。
+</Note>
+
+## 工作原理
+
+HRPO（分层反射式提示词优化器）由 Opik 团队开发，用于改进可能已经经过几轮手动提示词工程的提示词。它专注于识别提示词失败的原因，然后更新提示词以解决这些问题。
+
+由于数据集可能很大，我们将分析拆分为多个批次并行处理，然后综合所有批次的分析结果以识别提示词的核心问题。
+
+<Frame>
+  <img src="/img/agent_optimization/hierarchical_reflective_optimizer.png" alt="HRPO（分层反射式提示词优化器）" />
+</Frame>
+
+<Tip>
+该优化器是开源的，您可以在 [Opik 仓库](https://github.com/comet-ml/opik/tree/main/sdks/opik_optimizer/src/opik_optimizer/algorithms/hierarchical_reflective_optimizer) 中查看根因分析代码和提示词。
+</Tip>
+
+## 快速开始
+
+您可以使用 `HRPO` 来优化提示词：
+
+```python maxLines=1000
+from opik_optimizer import HRPO, ChatPrompt, datasets
+from opik.evaluation.metrics.score_result import ScoreResult
+
+# 1. 定义评估数据集
+dataset = datasets.hotpot(count=300)  # 或使用您自己的数据集
+
+# 2. 配置评估指标（必须返回原因！）
+def answer_quality_metric(dataset_item, llm_output):
+    reference = dataset_item.get("answer", "")
+
+    # 您的评分逻辑
+    is_correct = reference.lower() in llm_output.lower()
+    score = 1.0 if is_correct else 0.0
+
+    # 重要：提供详细的推理说明
+    if is_correct:
+        reason = f"Output contains the correct answer: '{reference}'"
+    else:
+        reason = f"Output does not contain expected answer '{reference}'. Output was too vague or incorrect."
+
+    return ScoreResult(
+        name="answer_quality",
+        value=score,
+        reason=reason  # 对根因分析至关重要！
+    )
+
+# 3. 定义初始提示词
+initial_prompt = ChatPrompt(
+    project_name="reflective_optimization",
+    messages=[
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that answers questions accurately."
+        },
+        {
+            "role": "user",
+            "content": "Question: {question}\n\nProvide a concise answer."
+        }
+    ]
+)
+
+# 4. 初始化 HRPO
+optimizer = HRPO(
+    model="gpt-4o",
+    n_threads=8,
+    max_parallel_batches=5,
+    seed=42,
+    model_parameters={"temperature": 0.7}
+)
+
+# 5. 运行优化
+optimization_result = optimizer.optimize_prompt(
+    prompt=initial_prompt,
+    dataset=dataset,
+    metric=answer_quality_metric,
+    n_samples=100,
+    max_trials=5,
+    max_retries=2
+)
+
+# 6. 查看结果
+optimization_result.display()
+```
+
+
+## 配置选项
+
+### 优化器参数
+
+优化器具有以下参数：
+
+
+<ParamField path="model" type="str" optional={true} defaultValue="openai/gpt-5-nano">用于优化器内部推理/生成调用的 LiteLLM 模型名称</ParamField>
+<ParamField path="n_threads" type="int" optional={true} defaultValue="12" />
+<ParamField path="verbose" type="int" optional={true} defaultValue="1">控制内部日志/进度条（0=关闭，1=开启）。</ParamField>
+<ParamField path="seed" type="int" optional={true} defaultValue="42">用于可复现性的随机种子（默认：42）</ParamField>
+<ParamField path="max_parallel_batches" type="int" optional={true} defaultValue="5" />
+<ParamField path="batch_size" type="int" optional={true} defaultValue="25" />
+<ParamField path="convergence_threshold" type="float" optional={true} defaultValue="0.01" />
+<ParamField path="model_parameters" type="dict[str, typing.Any] | None" optional={true}>可选的 LiteLLM 参数字典，用于优化器的内部 LLM 调用。</ParamField>
+
+### `optimize_prompt` 参数
+
+`optimize_prompt` 方法具有以下参数：
+
+<ParamField path="prompt" type="ChatPrompt" />
+<ParamField path="dataset" type="Dataset">Opik 数据集名称或 Opik 数据集对象</ParamField>
+<ParamField path="metric" type="Callable">指标函数，该函数应有两个参数：</ParamField>
+<ParamField path="experiment_config" type="dict | None" optional={true} />
+<ParamField path="n_samples" type="int | float | str | None" optional={true}>每次评估使用的数据集条目数。可使用数量（如 `50`）、分数（如 `0.1`）、百分比（如 "10%"），或使用 "all"/"full"/None 表示完整数据集。</ParamField>
+<ParamField path="n_samples_minibatch" type="int | None" optional={true>可选的内部循环小批量采样数量（默认为 n_samples）。</ParamField>
+<ParamField path="n_samples_strategy" type="str | None" optional={true}>子采样策略（默认："random_sorted"）。</ParamField>
+<ParamField path="auto_continue" type="bool" optional={true} defaultValue="False" />
+<ParamField path="agent_class" type="type[opik_optimizer.optimizable_agent.OptimizableAgent] | None" optional={true} />
+<ParamField path="project_name" type="str" optional={true} defaultValue="Optimization" />
+<ParamField path="max_trials" type="int" optional={true} defaultValue="5" />
+<ParamField path="max_retries" type="int" optional={true} defaultValue="2" />
+<ParamField path="kwargs" type="Any" />
+
+### 模型支持
+
+使用 `HRPO` 时需要考虑两个模型：
+- `HRPO.model`：用于根因分析和失败模式综合的模型。
+- `ChatPrompt.model`：用于评估提示词的模型。
+
+`model` 参数接受任何 LiteLLM 支持的模型字符串（例如 `"gpt-4o"`、`"azure/gpt-4"`、
+`"anthropic/claude-3-opus"`、`"gemini/gemini-1.5-pro"`）。您还可以使用 `model_parameters` 参数传递额外的模型参数：
+
+```python
+optimizer = HRPO(
+    model="anthropic/claude-3-opus-20240229",
+    model_parameters={
+        "temperature": 0.7,
+        "max_tokens": 4096
+    }
+)
+```
+
+## 后续步骤
+
+1. 探索具体的[优化器](/development/optimization-runs/algorithms/overview)以了解算法详情。
+2. 参阅[常见问题](/development/optimization-runs/faq)以了解常见问题和故障排除。
+3. 参阅 [API 参考](/development/optimization-runs/advanced/api_reference)以获取详细的配置选项。

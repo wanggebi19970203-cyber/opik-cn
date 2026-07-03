@@ -1,0 +1,112 @@
+{
+  "navigation": {
+    "menu": {
+      "home": "首页",
+      "ollie": "Opik 连接",
+      "logs": "日志",
+      "diagnostics": "诊断",
+      "dashboards": "仪表盘",
+      "prompts": "提示词库",
+      "agent_runner": "Agent 工作台",
+      "playground": "提示词工作台",
+      "optimizations": "优化运行",
+      "optimizationStudio": "优化工作台",
+      "test_suites": "测试套件",
+      "datasets": "数据集",
+      "experiments": "实验",
+      "annotation_queues": "标注队列",
+      "online_evaluation": "在线评估",
+      "alerts": "告警",
+      "workspace": "工作空间",
+      "configuration": "配置",
+      "projects": "项目"
+    },
+    "sidebar": {
+      "expandSidebar": "展开侧边栏",
+      "collapseSidebar": "收起侧边栏"
+    },
+    "languageSwitcher": {
+      "language": "语言"
+    },
+    "debug": {
+      "copiedVersion": "已复制 Opik 版本号",
+      "opikVersion": "OPIK 版本"
+    },
+    "settings": {
+      "settings": "设置",
+      "theme": "主题"
+    },
+    "network": {
+      "rttTooltip": "到后端服务器的往返时间 (RTT)",
+      "connectedToBackend": "已连接后端服务器",
+      "notConnectedToBackend": "未连接后端服务器",
+      "connectedToNetwork": "已连接网络",
+      "notConnectedToNetwork": "未连接网络"
+    },
+    "errorBoundary": {
+      "somethingWentWrong": "出了点问题",
+      "errorMessage1": "对此给您带来的不便深表歉意。此错误已被记录。如有紧急问题，请直接<contactLink>联系我们</contactLink>。",
+      "errorMessage2": "您也可以在我们的 <githubLink>GitHub 仓库</githubLink> 提交功能需求，或加入 <slackLink>Slack 社区</slackLink> 获取帮助。",
+      "continue": "继续"
+    },
+    "groups": {
+      "observability": "可观测性",
+      "development": "开发",
+      "evaluation": "评估",
+      "production": "生产",
+      "promptEngineering": "提示词工程",
+      "optimization": "优化"
+    },
+    "breadcrumbs": {
+      "home": "首页",
+      "projects": "项目",
+      "project": "项目",
+      "datasets": "数据集",
+      "dataset": "数据集",
+      "experiments": "实验",
+      "experiment": "实验",
+      "prompts": "提示词",
+      "prompt": "提示词",
+      "playground": "工作台",
+      "settings": "设置",
+      "configuration": "配置",
+      "newAlert": "新建告警"
+    },
+    "noAccess": {
+      "accessDenied": "访问被拒绝",
+      "noPermissionsForResource": "您没有权限在此工作空间中查看{{resource}}。",
+      "noPermissionsAlerts": "您没有权限在此工作空间中管理告警。",
+      "noPermissionsOptimization": "您没有权限在此工作空间中启动新的优化运行。",
+      "noPermissionsPlayground": "您没有权限在此工作空间中使用工作台。",
+      "goToHome": "返回首页",
+      "goBack": "返回",
+      "thisResource": "此资源",
+      "resourceDashboards": "仪表盘",
+      "resourceTestSuites": "测试套件",
+      "resourceExperiments": "实验",
+      "resourceOptimizationRuns": "优化运行"
+    },
+    "projectSelector": {
+      "loading": "加载中…",
+      "project": "项目",
+      "selectProject": "选择项目",
+      "switchProject": "切换项目",
+      "openProjectSelector": "打开项目选择器",
+      "projects": "项目",
+      "newProject": "新建项目",
+      "deleteProject": "删除项目",
+      "deleteProjectDescription": "删除项目将同时移除所有追踪及其数据。此操作无法撤销。确定要继续吗？",
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "backToProject": {
+      "backToName": "返回 {{name}}",
+      "backToProject": "返回项目",
+      "selectProjectHint": "请在项目页面选择一个项目"
+    },
+    "githubStar": {
+      "star": "Star",
+      "gitHubStar": "GitHub star {{count}}"
+    }
+  }
+}

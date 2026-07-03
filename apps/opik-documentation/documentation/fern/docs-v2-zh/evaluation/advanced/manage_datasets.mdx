@@ -1,0 +1,777 @@
+---
+headline: 管理数据集 | Opik 文档
+og:description: 使用数据集评估您的 LLM。学习如何通过 Python SDK、TypeScript SDK 或 Traces 表创建和管理数据集。
+og:site_name: Opik 文档
+og:title: 使用 Opik 高效管理数据集
+subtitle: 指导您完成创建和管理数据集的流程
+title: 管理数据集
+---
+
+<Note>
+  在 Opik 2.0 中，数据集是项目级别的。创建数据集时请确保指定 `project_name`，以便数据集与正确的项目关联。
+</Note>
+
+数据集可用于跟踪您希望评估 LLM 的测试用例。每个数据集由任意键值对组成的字典构成。入门时，我们建议设置 `input` 和可选的 `expected_output` 字段。这些数据集可以通过以下方式创建：
+
+- Python SDK：您可以使用 Python SDK 创建数据集并向其添加数据项。
+- TypeScript SDK：您可以使用 TypeScript SDK 创建数据集并向其添加数据项。
+- Traces 表：您可以将现有的已记录追踪（例如来自生产环境应用）添加到数据集。
+- Opik UI：您可以手动创建数据集并向其添加数据项。
+
+创建数据集后，您可以在其上运行实验。每个实验将使用评估指标，根据数据集中的测试用例评估 LLM 应用，并将结果报告回数据集。
+
+## 通过 UI 创建数据集
+
+创建数据集最简单、最快速的方式是直接在 Opik UI 中操作。
+这对于从 CSV 文件快速引导数据集非常理想，无需编写任何代码。
+
+步骤：
+
+1. 在 Opik UI 中导航至 **Evaluation > Datasets**。
+2. 点击 **Create new dataset**。
+3. 在弹出的模态框中：
+   - 提供名称和可选的描述
+   - 可选地，上传包含数据的 CSV 文件
+4. 点击 **Create dataset**。
+
+<Frame>
+  <img src="/img/evaluation/create_dataset.png" />
+</Frame>
+
+如果您需要创建超过 1,000 行的数据集，[可以使用 SDK](/evaluation/advanced/manage_datasets#creating-a-dataset-using-the-sdk)。
+
+<Tip>
+  UI 数据集创建有一些限制：
+    * 文件大小限制为 1,000 行。
+    * CSV 本身不支持嵌套 JSON 结构。
+
+对于需要丰富元数据、复杂模式或编程控制的数据集，请使用 SDK（参见下一节）。
+
+</Tip>
+
+<Note>
+  使用 CSV 文件创建数据集时，会创建数据集的第一个版本 (v1)。
+  所有后续修改将自动创建新版本。
+</Note>
+
+## 理解数据集版本控制
+
+Opik 中的数据集版本控制为您的数据创建**不可变快照**。每次修改数据集——无论是添加、编辑还是删除数据项——都会自动创建新版本。这确保了完整的可复现性，提供所有变更的审计跟踪，并允许轻松回滚到任何先前的状态。
+
+每个数据集版本包含：
+
+- **版本名称**：自动生成的顺序名称（v1、v2、v3 等）
+- **变更描述**：描述变更内容的可选说明
+- **标签**：用于分类版本的标签（例如 `production`、`baseline`）
+- **数据项统计**：添加、修改和删除的数据项计数
+- **时间戳和作者**：版本创建时间和创建者
+
+版本一旦创建，其数据就无法更改——任何修改都会创建新版本。恢复先前版本也会创建一个包含相同数据的*新*版本，保留完整的版本时间线。
+
+<Note>
+  特殊的 `latest` 标签始终指向最新版本。
+  在未指定版本的情况下运行实验时，默认使用 `latest`。
+</Note>
+
+## 使用草稿模式（UI）
+
+在 Opik UI 中修改数据集时，所有修改首先进入**草稿状态**。这为您提供了一个暂存区域，以便在提交为新版本之前审查更改。草稿仅对您可见，"使用 AI 扩展"生成的 AI 样本也会进入草稿供审查。
+
+当数据集有未保存的草稿更改时，数据集名称旁边会出现橙色的 **"Draft"** 标签，工具栏中会出现 **Save changes** / **Discard changes** 按钮。数据项会显示彩色边框：绿色表示新添加的数据项，琥珀色表示已修改的数据项。
+
+<Frame>
+  <img src="/img/evaluation/dataset_draft_mode.png" />
+</Frame>
+
+### 保存或丢弃更改
+
+要将草稿提交为新版本：
+1. 点击工具栏中的 **Save changes**
+2. 输入描述变更内容的**版本说明**
+3. 可选地添加**标签**以分类此版本
+4. 点击 **Save**
+
+<Frame>
+  <img src="/img/evaluation/save_version_dialog.png" />
+</Frame>
+
+要放弃草稿，请点击 **Discard changes** 并确认。如果您尝试在有未保存更改时离开页面，Opik 会显示警告以防止意外丢失工作。
+
+<Tip>
+  使用草稿模式将相关更改批量合并为一个有良好文档记录的版本。
+</Tip>
+
+## 版本历史
+
+要查看数据集变更的完整时间线，请导航到您的数据集并点击 **Version history** 标签页。该表格显示每个版本的名称、变更摘要（添加/修改/删除的数据项）、版本说明、标签、数据项计数和创建时间戳。
+
+<Frame>
+  <img src="/img/evaluation/version_history_tab.png" />
+</Frame>
+
+在此视图中，您可以：
+- **查看数据项**：点击版本行并选择 **View items** 以查看该时间点的确切数据
+- **恢复**：点击 **⋮** 菜单并选择 **Restore this version** 以创建包含该数据的新版本
+- **编辑元数据**：点击 **⋮** 菜单并选择 **Edit** 以更新版本说明或标签（数据本身保持不可变）
+
+<Note>
+  恢复版本会创建一个包含相同数据的**新**版本。
+  不会丢失或覆盖任何历史记录。
+</Note>
+
+### 通过 SDK 管理数据集和版本标签
+
+`Dataset` 对象提供 `get_tags()` 方法来读取当前标签，但尚未提供专用的设置方法。要以编程方式写入标签——例如驱动 `env:prod` / `env:stage` 提升工作流——请使用 Opik 客户端上暴露的 REST 客户端。
+
+根据您希望标签作用的范围，有两种标签接口：
+
+- **数据集级别标签**应用于整个数据集，并在版本之间持久存在。使用 `update_dataset` ——这会**替换**现有标签列表。
+- **版本级别标签**应用于特定数据集版本。使用 `update_dataset_version` ——这是**累加的**（它会添加到版本的现有标签中）。
+
+```python {pytest_codeblocks_skip=true}
+import opik
+
+client = opik.Opik()
+dataset = client.get_or_create_dataset(name="my-eval", project_name="my-project")
+
+# Read current dataset-level tags
+print(dataset.get_tags())
+
+# Set dataset-level tags (replaces the existing list)
+client.rest_client.datasets.update_dataset(
+    id=dataset.id,
+    name=dataset.name,
+    tags=["env:prod"],
+)
+
+# Add tags to a specific version (additive)
+client.rest_client.datasets.update_dataset_version(
+    id=dataset.id,
+    version_hash=dataset.version_hash,
+    tags_to_add=["env:prod"],
+)
+```
+
+<Note>
+  `client.rest_client` 是对公共 REST API 的轻量封装。底层端点是稳定的，但 Python 封装本身不保证在 SDK 版本间向后兼容。一等公民的 `Dataset.set_tags()` / `Dataset.add_version_tags()` 辅助方法已在路线图上——此代码片段是当前支持的临时路径。
+</Note>
+
+然后您可以通过 [`get_items(filter_string=...)`](#querying-dataset-items) 使用 `tags contains` 运算符按这些标签过滤数据集数据项。
+
+## 向数据集添加追踪
+
+构建评估数据集最强大的方式之一是将生产追踪转换为数据集数据项。这使您能够利用 LLM 应用的真实交互来创建评估测试用例。
+
+### 通过 UI 添加追踪
+
+要从 Opik UI 向数据集添加追踪：
+
+1. 导航到追踪页面
+2. 选择一个或多个要添加到数据集的追踪
+3. 点击工具栏中的 **Add to dataset** 按钮
+4. 在出现的对话框中：
+   - 选择现有数据集或创建新数据集
+   - 选择要包含的追踪元数据：
+     - **嵌套 Span**：包含追踪内的所有子 Span
+     - **标签**：包含追踪标签
+     - **反馈分数**：包含附加到追踪的任何反馈分数
+     - **评论**：包含添加到追踪的评论
+     - **使用指标**：包含 token 使用量和成本信息
+     - **元数据**：包含自定义元数据字段
+5. 点击数据集名称以添加选定的追踪
+
+<Frame>
+  <img src="/img/evaluation/add_traces_to_dataset.png" alt="添加追踪到数据集模态框" />
+</Frame>
+
+<Tip>
+  默认情况下，所有元数据选项都是启用的。您可以取消选中不需要的任何选项。追踪的输入和输出始终包含在内。
+</Tip>
+
+### 添加到数据集的内容
+
+当您向数据集添加追踪时，会创建以下结构：
+
+- **input**：追踪的输入数据
+- **expected_output**：追踪的输出数据（存储为 `expected_output` 用于评估目的）
+- **spans**（可选）：包含输入、输出和元数据的嵌套 Span 数组
+- **tags**（可选）：与追踪关联的标签数组
+- **feedback_scores**（可选）：包含名称、值和来源的反馈分数数组
+- **comments**（可选）：包含文本和 ID 的评论数组
+- **usage**（可选）：token 使用量和成本信息
+- **metadata**（可选）：自定义元数据字段
+
+这种丰富的结构使您能够：
+- 通过包含嵌套 Span 来评估复杂的多步骤工作流
+- 基于标签和元数据进行过滤和分析
+- 使用现有反馈分数作为评估的真实标准
+- 通过评论和注释保留上下文
+
+## 使用 SDK 创建数据集
+
+<Tip>
+  在 Opik 2.0 中，数据集是项目级别的。请指定 `project_name` 将数据集与正确的项目关联。
+</Tip>
+
+您可以使用 `get_or_create_dataset` 方法创建数据集并向其记录数据项：
+
+<CodeBlocks>
+```typescript title="TypeScript SDK" language="typescript"
+import { Opik } from "opik";
+
+// Create a dataset
+const client = new Opik();
+const dataset = await client.getOrCreateDataset("My dataset", "Evaluation dataset", "my-project");
+```
+
+```python title="Python SDK" language="python"
+from opik import Opik
+
+# Create a dataset
+client = Opik()
+dataset = client.get_or_create_dataset(name="My dataset", project_name="my-project")
+```
+
+</CodeBlocks>
+
+如果具有给定名称的数据集已存在，则返回现有数据集。
+
+### 插入数据项
+
+#### 插入字典数据项
+
+您可以使用 `insert` 方法向数据集插入数据项：
+
+<CodeBlocks>
+```typescript title="TypeScript" language="typescript"
+import { Opik } from "opik";
+const client = new Opik();
+const dataset = await client.getOrCreateDataset("My dataset", "Evaluation dataset", "my-project");
+
+dataset.insert([
+  { user_question: "Hello, world!", expected_output: { assistant_answer: "Hello, world!" } },
+  { user_question: "What is the capital of France?", expected_output: { assistant_answer: "Paris" } },
+]);
+```
+
+```python title="Python" language="python"
+import opik
+
+# Get or create a dataset
+client = opik.Opik()
+dataset = client.get_or_create_dataset(name="My dataset", project_name="my-project")
+
+# Add dataset items to it
+dataset.insert([
+    {"user_question": "Hello, world!", "expected_output": {"assistant_answer": "Hello, world!"}},
+    {"user_question": "What is the capital of France?", "expected_output": {"assistant_answer": "Paris"}},
+])
+```
+
+</CodeBlocks>
+
+<Tip>
+  使用 Python SDK 时，Opik 会自动对插入数据集的数据项进行去重。这意味着您可以多次插入同一数据项而不会在数据集中产生重复。结合 `get or create dataset` 方法，您可以以"发出即忘"的方式管理数据集。
+</Tip>
+
+<Note>
+  使用 SDK 插入数据项时，会自动创建新的数据集版本。
+  如果您在单个 `insert()` 调用中分多批插入数据项，它们会被归入一个版本。
+</Note>
+
+数据项插入后，您可以在 Opik UI 中查看它们：
+
+<Frame>
+  <img src="/img/evaluation/dataset_items_page.png" />
+</Frame>
+
+#### 从 JSONL 文件插入数据项
+
+您也可以从 JSONL 文件插入数据项：
+
+<CodeBlocks>
+  ```python title="Python" language="python"
+  import opik
+
+  client = opik.Opik()
+  dataset = client.get_or_create_dataset(name="My dataset", project_name="my-project")
+
+dataset.read_jsonl_from_file("path/to/file.jsonl")
+
+```
+</CodeBlocks>
+
+#### 从 Pandas DataFrame 插入数据项
+
+您也可以从 Pandas DataFrame 插入数据项：
+
+<CodeBlocks>
+```python title="Python" language="python"
+import opik
+
+client = opik.Opik()
+dataset = client.get_or_create_dataset(name="My dataset", project_name="my-project")
+
+dataset.insert_from_pandas(dataframe=df)
+
+# You can also specify an optional keys_mapping parameter
+dataset.insert_from_pandas(dataframe=df, keys_mapping={"Expected output": "expected_output"})
+```
+
+</CodeBlocks>
+
+### 删除数据项
+
+您可以使用 `delete` 方法删除数据集中的数据项：
+
+<CodeBlocks>
+  ```typescript title="TypeScript" language="typescript"
+  import { Opik } from "opik";
+
+  // Get or create a dataset
+  client = new Opik();
+  dataset = await client.getDataset("My dataset")
+
+  await dataset.delete(["123", "456"])
+
+  // Or to delete all items
+  await dataset.clear()
+  ```
+
+  ```python title="Python" language="python"
+  from opik import Opik
+
+  # Get or create a dataset
+  client = Opik()
+  dataset = client.get_dataset(name="My dataset")
+
+  dataset.delete(items_ids=["123", "456"])
+
+  # Or to delete all items
+  dataset.clear()
+  ```
+</CodeBlocks>
+
+<Note>
+  删除数据项会创建数据集的新版本。被删除的数据项在之前的版本中仍可通过版本历史访问，确保您永远不会永久丢失数据。
+</Note>
+
+## 从 Opik 下载数据集
+
+您可以使用 `get_dataset` 方法从 Opik 下载数据集：
+
+<CodeBlocks>
+  ```typescript title="TypeScript" language="typescript"
+  import { Opik } from "opik";
+
+  const client = new Opik();
+  const dataset = await client.getDataset("My dataset");
+
+  const items = await dataset.getItems();
+  console.log(items);
+  ```
+
+  ```python title="Python" language="python"
+  from opik import Opik
+
+  client = Opik()
+  dataset = client.get_dataset(name="My dataset")
+
+  # Get items as list of DatasetItem objects
+  items = dataset.get_items()
+
+  # Convert to a Pandas DataFrame
+  dataset.to_pandas()
+
+  # Convert to a JSON array
+  dataset.to_json()
+  ```
+</CodeBlocks>
+
+## 以编程方式过滤数据集
+
+您可以使用 `get_items()` 方法上的 `filter_string` 参数或在使用 `evaluate_prompt()` 运行评估时过滤数据集数据项。这使您能够处理数据的特定子集。
+
+### 基本过滤
+
+<CodeBlocks>
+  ```python title="Python" language="python"
+  from opik import Opik
+
+  client = Opik()
+  dataset = client.get_dataset(name="my_dataset")
+
+  # Get filtered items
+  failed_items = dataset.get_items(filter_string='tags contains "failed"')
+
+  ```
+</CodeBlocks>
+
+### 过滤语法
+
+过滤字符串使用 Opik 查询语言 (OQL) 语法。支持的列包括：
+
+| 列 | 类型 | 描述 |
+|--------|------|-------------|
+| `id` | String | 数据集数据项的唯一标识符 |
+| `source` | String | 数据集数据项的来源 |
+| `trace_id` | String | 关联的追踪 ID |
+| `span_id` | String | 关联的 Span ID |
+| `data` | Dictionary | 使用点表示法访问嵌套字段（例如 `data.category`） |
+| `tags` | List | 使用 "contains" 运算符（例如 `tags contains "test"`） |
+| `created_at` | DateTime | ISO 8601 格式（例如 `created_at >= "2024-01-01T00:00:00Z"`） |
+| `last_updated_at` | DateTime | ISO 8601 格式 |
+| `created_by` | String | 创建数据项的用户 |
+| `last_updated_by` | String | 最后更新数据项的用户 |
+
+### 过滤示例
+
+<CodeBlocks>
+  ```python title="Python" language="python"
+  from opik import Opik
+
+  client = Opik()
+  dataset = client.get_dataset(name="my_dataset")
+
+  # Filter by tag
+  failed_items = dataset.get_items(filter_string='tags contains "failed"')
+
+  # Filter by data field
+  finance_items = dataset.get_items(filter_string='data.category = "finance"')
+
+  # Filter by date
+  recent_items = dataset.get_items(
+      filter_string='created_at >= "2024-06-01T00:00:00Z"'
+  )
+
+  # Multiple conditions
+  filtered_items = dataset.get_items(
+      filter_string='tags contains "production" AND data.difficulty = "hard"'
+  )
+  ```
+</CodeBlocks>
+
+## 使用数据集版本运行实验
+
+当您运行实验时，Opik 会自动将其链接到所使用的特定数据集版本。这确保了完整的可复现性——您始终可以知道任何实验使用了哪些数据。
+
+### 自动版本关联
+
+每个实验都会记录它使用的数据集版本：
+
+- 从 UI 或 SDK 运行且未指定版本时，使用 `latest` 版本
+- 实验结果页面显示关联的数据集版本
+- 您可以点击版本以查看被评估的确切数据
+
+此关联是永久性的。即使您后来修改了数据集，您的实验结果仍链接到最初使用的版本。
+
+### 在 Playground 中选择特定版本
+
+从 Playground 运行实验时：
+
+1. 打开 Playground 并配置您的提示词
+2. 在数据集选择器中，选择您的数据集
+3. 会出现一个嵌套下拉菜单，显示可用版本
+4. 选择您要使用的特定版本，或选择 `latest` 获取最新版本
+
+<Frame>
+  <img src="/img/evaluation/dataset_version_select.png" />
+</Frame>
+
+<Tip>
+  比较实验或运行 A/B 测试时，请使用相同的数据集版本
+  以隔离更改的影响。这确保结果差异是由您的提示词或模型更改引起的，而不是数据变化。
+</Tip>
+
+### 在 SDK 中选择特定版本
+
+以编程方式运行实验时，您可以通过向 `evaluate()` 传递 `DatasetVersion` 对象来指定要使用的数据集版本：
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik import Opik
+from opik.evaluation import evaluate
+
+client = Opik()
+dataset = client.get_dataset(name="My dataset")
+
+# Run experiment on the latest version (default behavior)
+result = evaluate(
+    experiment_name="baseline-experiment",
+    dataset=dataset,
+    task=my_task_function,
+    scoring_metrics=[my_metric],
+    project_name="my-project",
+)
+
+# Run experiment on a specific version
+v1_view = dataset.get_version_view("v1")
+result = evaluate(
+    experiment_name="v1-experiment",
+    dataset=v1_view,  # Pass the DatasetVersion object
+    task=my_task_function,
+    scoring_metrics=[my_metric],
+    project_name="my-project",
+)
+```
+
+```typescript title="TypeScript" language="typescript"
+import { Opik, evaluate } from "opik";
+
+const client = new Opik();
+const dataset = await client.getDataset("My dataset");
+
+// Run experiment on the latest version (default)
+const result = await evaluate({
+  experimentName: "baseline-experiment",
+  dataset: dataset,
+  task: myTaskFunction,
+  scoringMetrics: [myMetric],
+  projectName: "my-project",
+});
+
+// Run experiment on a specific version
+const v2 = await dataset.getVersionView("v2");
+const pinnedResult = await evaluate({
+  experimentName: "pinned-experiment",
+  dataset: v2,
+  task: myTaskFunction,
+  scoringMetrics: [myMetric],
+  projectName: "my-project",
+});
+```
+</CodeBlocks>
+
+### 以编程方式操作数据集版本
+
+SDK 提供了用于检查和操作数据集版本的方法：
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik import Opik
+
+client = Opik()
+dataset = client.get_dataset(name="My dataset")
+
+# Get the current (latest) version name
+current_version = dataset.get_current_version_name()
+print(f"Current version: {current_version}")  # e.g., "v3"
+
+# Get detailed version info (returns DatasetVersionPublic)
+version_info = dataset.get_version_info()
+print(f"Version ID: {version_info.id}")
+print(f"Version name: {version_info.version_name}")
+print(f"Items total: {version_info.items_total}")
+print(f"Created at: {version_info.created_at}")
+
+# Get a read-only view of a specific version
+v1_view = dataset.get_version_view("v1")
+
+# Access version metadata
+print(f"Version: {v1_view.version_name}")
+print(f"Items in v1: {v1_view.items_total}")
+print(f"Items added: {v1_view.items_added}")
+print(f"Items modified: {v1_view.items_modified}")
+print(f"Items deleted: {v1_view.items_deleted}")
+
+# Get items from a specific version
+v1_items = v1_view.get_items()
+
+# Export version data
+v1_df = v1_view.to_pandas()
+v1_json = v1_view.to_json()
+```
+
+```typescript title="TypeScript" language="typescript"
+import { Opik } from "opik";
+
+const client = new Opik();
+const dataset = await client.getDataset("My dataset");
+
+// Get the current (latest) version name
+const currentVersion = await dataset.getCurrentVersionName();
+console.log(`Current version: ${currentVersion}`); // e.g., "v3"
+
+// Get detailed version info (returns DatasetVersionPublic)
+const versionInfo = await dataset.getVersionInfo();
+console.log(`Version ID: ${versionInfo?.id}`);
+console.log(`Version name: ${versionInfo?.versionName}`);
+console.log(`Items total: ${versionInfo?.itemsTotal}`);
+console.log(`Created at: ${versionInfo?.createdAt}`);
+
+// Get a read-only view of a specific version
+const v1View = await dataset.getVersionView("v1");
+
+// Access version metadata
+console.log(`Version: ${v1View.versionName}`);
+console.log(`Items in v1: ${v1View.itemsTotal}`);
+console.log(`Items added: ${v1View.itemsAdded}`);
+console.log(`Items modified: ${v1View.itemsModified}`);
+console.log(`Items deleted: ${v1View.itemsDeleted}`);
+
+// Get items from a specific version
+const v1Items = await v1View.getItems();
+
+// Export version data as JSON
+const v1Json = await v1View.toJson();
+```
+</CodeBlocks>
+
+<Note>
+  `DatasetVersion` 是只读视图。您无法通过 `DatasetVersion` 对象插入、更新或删除数据项。所有变更操作必须通过 `Dataset` 对象完成。
+</Note>
+
+## 使用 AI 扩展数据集
+
+数据集扩展允许您使用 AI 基于现有数据集生成额外的合成样本。当您拥有较小时数据集并希望创建更多样化的测试用例以提高评估覆盖范围时，这尤其有用。
+
+AI 会分析现有数据中的模式并生成遵循相似结构同时引入变化的新样本。这帮助您：
+
+- **增加数据集大小**以实现更全面的评估
+- **创建边缘情况**和您可能未曾考虑的变化
+- **提高模型鲁棒性**通过测试多样化的输入
+- **扩展评估规模**无需手动创建数据
+
+### 如何扩展数据集
+
+要使用 AI 扩展数据集：
+
+1. **在 Opik UI 中导航到您的数据集**（Evaluation > Datasets > [您的数据集]）
+2. **点击数据集视图中的"Expand with AI"按钮**
+3. **配置扩展设置**：
+   - **模型**：选择用于生成的 LLM 模型（支持 GPT-4、GPT-5、Claude 和其他模型）
+   - **样本数量**：指定要生成的新样本数量（1-100）
+   - **保留字段**：选择从原始数据中保持不变的字段
+   - **变化指令**：提供关于如何变化数据的具体指导（例如，"创建测试边缘情况的变化"或"生成不同复杂度级别的示例"）
+   - **自定义提示词**：可选地提供自定义提示词模板替代自动生成的模板
+4. **开始扩展** - AI 将分析您的数据并生成新样本
+5. **审查结果** - 生成的样本会添加到您的**草稿**中。您可以在保存创建新版本之前审查、编辑或删除它们
+
+<Frame>
+  <img src="/img/evaluation/dataset_expansion_modal.png" />
+</Frame>
+
+### 配置选项
+
+**样本数量**：从较小的数量开始（10-20），在生成更大批次之前审查质量。
+
+**保留字段**：使用此选项在允许其他字段变化的同时保持某些字段的一致性。例如，在变化 `input` 和 `expected_output` 的同时保留 `category` 字段。
+
+**变化指令**：提供具体指导，例如：
+
+- "创建具有不同难度级别的变化"
+- "生成边缘情况和错误场景"
+- "添加具有不同输入格式的示例"
+- "包含多语言变化"
+
+### 最佳实践
+
+- **从小规模开始**：先生成 10-20 个样本评估质量，然后再扩大规模
+- **审查生成内容**：始终审查 AI 生成的样本的准确性和相关性
+- **使用变化指令**：提供关于所需变化类型的清晰指导
+- **保留关键字段**：使用字段保留来维护重要的分类或元数据
+- **迭代和优化**：使用自定义提示词选项为您的特定需求微调生成
+
+<Tip>
+  当您的原始数据集中至少有 5-10 个高质量示例时，数据集扩展效果最佳。AI 使用这些示例来理解模式并生成相似但多样化的内容。
+</Tip>
+
+## 管理数据集数据项标签
+
+标签是组织、分类和过滤数据集数据项的强大方式。您可以使用标签来：
+
+- **分类测试用例**按类型、难度或领域（例如 `edge-case`、`production`、`multilingual`）
+- **跟踪数据来源**数据项的来源（例如 `user-feedback`、`synthetic`、`real-world`）
+- **标记审查状态**在数据集策划期间（例如 `needs-review`、`validated`、`archived`）
+- **过滤用于评估**在数据的特定子集上运行实验
+- **组织工作流**通过为不同阶段或团队标记数据项
+
+每个数据集数据项可以有多个标签。
+
+### 向数据集数据项添加标签
+
+#### 向单个数据项添加标签
+
+要向单个数据集数据项添加标签：
+
+1. **在 Opik UI 中导航到您的数据集**（Evaluation > Datasets > [您的数据集]）
+2. **点击任何数据集数据项**以打开详情面板
+3. **在标签部分**，点击 **"+" 按钮**
+4. **输入标签名称**并按 Enter
+5. 标签将立即添加并保存
+
+您可以通过点击详情面板中任何标签旁边的 **"×" 图标**来删除标签。
+
+#### 向多个数据项添加标签（批量操作）
+
+要同时向多个数据集数据项添加相同标签：
+
+1. **在 Opik UI 中导航到您的数据集**
+2. **选择多个数据项**通过点击每个数据项旁边的复选框
+3. **点击工具栏中的"Add tags"按钮**（选择数据项时可见）
+4. **在出现的对话框中输入标签名称**
+5. **点击"Add tag"**将标签应用到所有选定的数据项
+
+当您想要对一组相关测试用例进行分类或标记来自同一数据来源的数据项时，这尤其有用。
+
+<Tip>
+  标签区分大小写，支持字母数字字符、连字符和下划线。为标签选择一致的命名约定以便于过滤。
+</Tip>
+
+### 按标签过滤数据集数据项
+
+为数据集数据项添加标签后，您可以过滤它们以处理特定子集：
+
+1. **在 Opik UI 中导航到您的数据集**
+2. **点击搜索栏旁边的"Filters"按钮**
+3. **从列下拉菜单中选择"Tags"**
+4. **选择"contains"作为运算符**
+5. **输入您要过滤的标签名称**
+6. **关闭对话框**以应用过滤器
+
+数据集数据项表将更新为仅显示符合过滤条件的数据项。您可以：
+
+- **查看过滤后的数据项**以专注于特定类别
+- **在过滤后的子集上运行实验**通过使用过滤视图
+- **导出过滤后的数据**用于特定测试用例组
+- **与其他过滤器组合**以创建复杂查询
+
+过滤器保存在 URL 中，因此您可以为数据集的特定过滤视图添加书签或分享。
+
+## 批量操作
+
+Opik 支持批量操作以高效管理大型数据集。这些操作帮助您一次处理多个数据项，无需繁琐的逐个选择。
+
+### 全选功能
+
+当处理跨多页的数据集时：
+
+1. **使用表头中的复选框选择当前页的数据项**
+2. 会出现一个横幅，提供**"Select all items"**选项以跨所有页面选择
+3. 点击以选择符合当前过滤条件的所有数据项
+
+<Frame>
+  <img src="/img/evaluation/dataset_bulk_select.png" />
+</Frame>
+
+这也适用于过滤视图——如果您应用了过滤器，"Select all" 只选择符合该过滤器的数据项。
+
+### 可用的批量操作
+
+选择数据项后，工具栏会显示可用操作：
+
+- **Add tags**：向所有选定的数据项应用一个或多个标签
+- **Delete**：删除选定的数据项（创建一个移除了这些数据项的新版本）
+- **Export**：将选定的数据项下载为 CSV 或 JSON
+
+### 处理指示器
+
+对于大型批量操作：
+
+- 加载指示器会显示"Your dataset is still processing..."
+- 操作在后台运行——您可以继续浏览
+- 处理完成时会出现成功消息
+
+<Tip>
+  对于非常大的数据集，批量操作会分批处理。在处理期间 UI 保持响应，长时间运行的操作会显示进度指示器。
+</Tip>

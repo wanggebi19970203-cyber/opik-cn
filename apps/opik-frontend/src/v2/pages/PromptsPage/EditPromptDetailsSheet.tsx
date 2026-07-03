@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Sheet, SheetContent, SheetTopBar } from "@/ui/sheet";
@@ -24,6 +25,7 @@ const EditPromptDetailsSheet: React.FC<EditPromptDetailsSheetProps> = ({
   setOpen,
   prompt,
 }) => {
+  const { t } = useTranslation("pages/prompts");
   const [name, setName] = useState(prompt.name ?? "");
   const [description, setDescription] = useState(prompt.description ?? "");
 
@@ -74,16 +76,16 @@ const EditPromptDetailsSheet: React.FC<EditPromptDetailsSheetProps> = ({
       <SheetContent
         side="right"
         className="flex w-full max-w-none flex-col p-0 sm:max-w-[520px]"
-        header={<SheetTopBar variant="form" title="Edit prompt" />}
+        header={<SheetTopBar variant="form" title={t("edit")} />}
         blockOverlayClose={isDirty}
       >
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 pb-6">
           <div className="space-y-1.5">
-            <Label htmlFor="editPromptName">Name</Label>
+            <Label htmlFor="editPromptName">{t("common.name")}</Label>
             <Input
               id="editPromptName"
               dimension="sm"
-              placeholder="Prompt name"
+              placeholder={t("fields.name")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="comet-body-s"
@@ -91,14 +93,14 @@ const EditPromptDetailsSheet: React.FC<EditPromptDetailsSheetProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="editPromptDescription">Description</Label>
+            <Label htmlFor="editPromptDescription">{t("common.description")}</Label>
             <AutoGrowTextarea
               id="editPromptDescription"
               dimension="sm"
               className="comet-body-s"
               value={description}
               onChange={setDescription}
-              placeholder="Add optional description"
+              placeholder={t("common.addOptionalDescription")}
             />
           </div>
         </div>
@@ -110,7 +112,7 @@ const EditPromptDetailsSheet: React.FC<EditPromptDetailsSheetProps> = ({
             onClick={() => setOpen(false)}
             disabled={isSaving}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             size="sm"
@@ -118,7 +120,7 @@ const EditPromptDetailsSheet: React.FC<EditPromptDetailsSheetProps> = ({
             disabled={!isValid || !isDirty || isSaving}
             onClick={handleSave}
           >
-            {isSaving ? "Saving…" : "Save changes"}
+            {isSaving ? t("editSheet.saving") : t("editSheet.saveChanges")}
           </Button>
         </div>
       </SheetContent>

@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { CheckCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Separator } from "@/ui/separator";
 
@@ -10,6 +11,7 @@ interface AssertionsListTooltipContentProps {
 export const AssertionsListTooltipContent: React.FC<
   AssertionsListTooltipContentProps
 > = ({ assertions }) => {
+  const { t } = useTranslation("experiments");
   if (assertions.length === 0) {
     return null;
   }
@@ -21,7 +23,7 @@ export const AssertionsListTooltipContent: React.FC<
           <CheckCheck className="size-3 text-foreground" />
         </div>
         <span className="comet-body-xs-accented text-foreground">
-          Assertions
+          {t('assertions')}
         </span>
       </div>
       <Separator className="my-1" />

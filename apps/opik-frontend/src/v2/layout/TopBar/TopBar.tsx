@@ -5,6 +5,7 @@ import AppDebugInfo from "@/v2/layout/AppDebugInfo/AppDebugInfo";
 import SettingsMenu from "../SettingsMenu/SettingsMenu";
 import { Button } from "@/ui/button";
 import OllieOwl from "@/icons/ollie-owl.svg?react";
+import LanguageSwitcher from "@/v2/layout/Header/LanguageSwitcher";
 
 type TopBarProps = {
   showOllieToggle?: boolean;
@@ -25,6 +26,7 @@ const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <AppDebugInfo />
         {UpgradeButton && <UpgradeButton />}
         {UserMenu ? <UserMenu /> : <SettingsMenu />}

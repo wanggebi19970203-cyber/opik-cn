@@ -1,0 +1,17 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 更新了实验页面，使分析每个实验的结果更加便捷。列现在根据来源（数据集、评估任务等）进行组织，输出键现在显示在多列中以便于查看
+  <Frame>
+    <img src="/img/changelog/2024-12-09/experiment_items_table.png" />
+  </Frame>
+- 提升了实验的性能，实验条目加载更快
+- 为项目添加了描述
+
+**SDK**：
+
+- 为使用 LangChain 发起的 OpenAI 调用添加成本跟踪
+- 修复了调用 `get_or_create_dataset` 时的超时问题

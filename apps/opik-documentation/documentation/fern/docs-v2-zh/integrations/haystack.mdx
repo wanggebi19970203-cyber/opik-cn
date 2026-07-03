@@ -1,0 +1,198 @@
+---
+description: 从这里开始将Opik集成到基于Haystack的生成式AI应用中，实现端到端的LLM可观测性、单元测试和优化。
+headline: Haystack | Opik文档
+og:description: 学习如何将Opik与Haystack集成，将所有调用记录为跟踪，提升您的LLM应用和搜索系统性能。
+og:site_name: Opik文档
+og:title: 将Opik与Haystack集成 - Opik
+title: 使用Opik实现Haystack可观测性
+---
+
+[Haystack](https://docs.haystack.deepset.ai/docs/intro) 是一个开源框架，用于构建生产就绪的LLM应用、检索增强生成管道和先进的搜索系统，能够智能地处理大型文档集合。
+
+本指南将展示如何将Opik与Haystack集成，使所有Haystack调用都被记录为Opik中的跟踪。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=haystack&utm_campaign=opik) 提供Opik平台的托管版本，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=haystack&utm_campaign=opik) 并获取您的API密钥。
+
+> 您也可以在本地运行Opik平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=haystack&utm_campaign=opik)。
+
+Opik与Haystack集成，为所有Haystack管道记录跟踪。
+
+## 快速开始
+
+### 安装
+
+首先，确保您已安装 `opik` 和 `haystack-ai`：
+
+```bash
+pip install opik haystack-ai
+```
+
+### 配置Opik
+
+根据您的部署类型配置Opik Python SDK。详细说明请参阅 [Python SDK配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置Haystack
+
+使用Haystack需要配置OpenAI API密钥。如果您使用其他提供商，可以替换为相应的API密钥。您可以在[此页面查找或创建OpenAI API密钥](https://platform.openai.com/settings/organization/api-keys)。
+
+可以设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或在代码中设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 创建Haystack管道
+
+在此示例中，我们将创建一个简单的管道，使用提示模板将文本翻译成德语。
+
+要启用Opik跟踪，我们需要：
+
+1. 通过设置环境变量 `HAYSTACK_CONTENT_TRACING_ENABLED=true` 在Haystack中启用内容跟踪
+2. 将 `OpikConnector` 组件添加到管道
+
+注意：`OpikConnector` 组件是一个特殊组件，会自动将管道的跟踪记录为Opik跟踪，它不应连接到任何其他组件。
+
+```python
+import os
+
+os.environ["HAYSTACK_CONTENT_TRACING_ENABLED"] = "true"
+
+from haystack import Pipeline
+from haystack.components.builders import ChatPromptBuilder
+from haystack.components.generators.chat import OpenAIChatGenerator
+from haystack.dataclasses import ChatMessage
+
+from opik.integrations.haystack import OpikConnector
+
+pipe = Pipeline()
+
+# Add the OpikConnector component to the pipeline
+pipe.add_component("tracer", OpikConnector("Chat example"))
+
+# Continue building the pipeline
+pipe.add_component("prompt_builder", ChatPromptBuilder())
+pipe.add_component("llm", OpenAIChatGenerator(model="gpt-3.5-turbo"))
+
+pipe.connect("prompt_builder.prompt", "llm.messages")
+
+messages = [
+    ChatMessage.from_system(
+        "Always respond in German even if some input data is in other languages."
+    ),
+    ChatMessage.from_user("Tell me about {{location}}"),
+]
+
+response = pipe.run(
+    data={
+        "prompt_builder": {
+            "template_variables": {"location": "Berlin"},
+            "template": messages,
+        }
+    }
+)
+
+trace_id = response["tracer"]["trace_id"]
+print(f"Trace ID: {trace_id}")
+print(response["llm"]["replies"][0])
+```
+
+跟踪现在已记录到Opik平台：
+
+<Frame>
+  <img src="/img/cookbook/haystack_trace_cookbook.png" />
+</Frame>
+
+## 成本跟踪
+
+`OpikConnector` 自动跟踪Haystack管道中使用的所有支持的LLM模型的代币使用量和成本。
+
+成本信息会自动捕获并显示在Opik UI中，包括：
+
+- 代币使用详情
+- 基于模型定价的每请求成本
+- 总跟踪成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看支持的模型和提供商完整列表。
+</Tip>
+
+<Tip>
+
+为确保跟踪正确记录，请在运行管道前确保将环境变量 `HAYSTACK_CONTENT_TRACING_ENABLED` 设置为 `true`。
+
+</Tip>
+
+## 高级用法
+
+### 确保跟踪被记录
+
+默认情况下，`OpikConnector` 会在每个组件后以线程阻塞方式将跟踪刷新到Opik平台。因此，您可以通过将环境变量 `HAYSTACK_OPIK_ENFORCE_FLUSH` 设置为 `false` 来禁用在每个组件后刷新数据。
+
+**注意**：禁用此功能可能导致数据丢失，如果程序在数据发送到Opik之前崩溃。请确保在程序退出前显式调用 `flush()` 方法：
+
+```python
+from haystack.tracing import tracer
+
+tracer.actual_tracer.flush()
+```
+
+### 获取跟踪ID
+
+如果您想向跟踪添加额外信息，需要获取跟踪ID。您可以通过管道响应中的 `tracer` 键获取：
+
+```python
+response = pipe.run(
+    data={
+        "prompt_builder": {
+            "template_variables": {"location": "Berlin"},
+            "template": messages,
+        }
+    }
+)
+
+trace_id = response["tracer"]["trace_id"]
+print(f"Trace ID: {trace_id}")
+```
+
+### 更新已记录的跟踪
+
+`OpikConnector` 在管道运行响应中返回记录的跟踪ID。您可以使用此ID更新跟踪的反馈分数或其他元数据：
+
+```python
+import opik
+
+response = pipe.run(
+    data={
+        "prompt_builder": {
+            "template_variables": {"location": "Berlin"},
+            "template": messages,
+        }
+    }
+)
+
+# Get the trace ID from the pipeline run response
+trace_id = response["tracer"]["trace_id"]
+
+# Log the feedback score
+opik_client = opik.Opik()
+opik_client.log_traces_feedback_scores([
+    {"id": trace_id, "name": "user-feedback", "value": 0.5}
+])
+```

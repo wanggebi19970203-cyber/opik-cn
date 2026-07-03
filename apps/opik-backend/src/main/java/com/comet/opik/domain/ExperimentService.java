@@ -267,7 +267,7 @@ public class ExperimentService {
         return experiments.stream()
                 .flatMap(experiment -> {
 
-                    // to be deprecated soon
+                    // 即将废弃
                     var promptVersion = Optional.ofNullable(experiment.promptVersion())
                             .map(PromptVersionLink::id)
                             .stream();
@@ -430,7 +430,7 @@ public class ExperimentService {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
                     Set<UUID> promptVersionIds = getPromptVersionIds(experiment);
 
-                    // Get dataset version if experiment has a version ID
+                    // 如果实验有版本ID，则获取数据集版本
                     Mono<Optional<DatasetVersion>> versionMono = experiment.datasetVersionId() != null
                             ? Mono.fromCallable(() -> Optional.ofNullable(
                                     datasetVersionService.findByIds(List.of(experiment.datasetVersionId()), workspaceId)
@@ -440,7 +440,7 @@ public class ExperimentService {
                                     .subscribeOn(Schedulers.boundedElastic())
                             : Mono.just(Optional.empty());
 
-                    // Get project if experiment has a project ID
+                    // 如果实验有项目ID，则获取项目
                     Mono<Optional<Project>> projectMono = experiment.projectId() != null
                             ? Mono.fromCallable(
                                     () -> projectService.findByIds(workspaceId, Set.of(experiment.projectId()))
@@ -474,7 +474,7 @@ public class ExperimentService {
     private Set<UUID> getPromptVersionIds(Experiment experiment) {
         if (hasPromptVersionLinks(experiment)) {
 
-            // to be deprecated soon
+            // 即将废弃
             var promptVersion = Optional.ofNullable(experiment.promptVersion())
                     .map(PromptVersionLink::id)
                     .map(Set::of)
@@ -500,12 +500,12 @@ public class ExperimentService {
                 .flatMap(resolvedExperiment -> datasetService
                         .getOrCreateDataset(resolvedExperiment.datasetName(), resolvedExperiment.projectId())
                         .flatMap(datasetId -> {
-                            // Case 1: Feature toggle OFF - skip version resolution (legacy behavior)
+                            // 情况1：功能开关关闭 - 跳过版本解析（旧版行为）
                             if (!featureFlags.isDatasetVersioningEnabled()) {
                                 return processExperimentCreation(resolvedExperiment, id, name, datasetId, null);
                             }
 
-                            // Case 2: Feature toggle ON - resolve version and link experiment
+                            // 情况2：功能开关开启 - 解析版本并关联实验
                             return resolveDatasetVersion(resolvedExperiment, datasetId)
                                     .flatMap(resolved -> {
                                         var experimentWithVersion = resolvedExperiment.toBuilder()
@@ -531,14 +531,14 @@ public class ExperimentService {
     }
 
     /**
-     * Processes experiment creation by validating prompt versions (if present) and persisting the experiment.
-     * This logic is shared between versioned and unversioned experiment creation flows.
+     * 处理实验创建，验证提示词版本（如果存在）并持久化实验。
+     * 此逻辑在版本化和非版本化实验创建流程中共享。
      *
-     * @param experiment the experiment to create (with datasetVersionId already resolved)
-     * @param id the experiment ID
-     * @param name the experiment name
-     * @param datasetId the dataset ID
-     * @return Mono emitting the created experiment ID
+     * @param experiment 要创建的实验（datasetVersionId 已解析）
+     * @param id 实验ID
+     * @param name 实验名称
+     * @param datasetId 数据集ID
+     * @return 返回创建的实验ID的Mono
      */
     private Mono<UUID> processExperimentCreation(Experiment experiment, UUID id, String name, UUID datasetId,
             ExecutionPolicy executionPolicy) {
@@ -568,22 +568,22 @@ public class ExperimentService {
     }
 
     /**
-     * Resolves the dataset version ID for an experiment using 2-tier logic.
+     * 使用两层逻辑解析实验的数据集版本ID。
      * <p>
-     * This method should only be called when the feature toggle is ON.
-     * The resolution logic is:
-     * 1. If experiment.datasetVersionId is explicitly provided, validate and use it
-     * 2. Otherwise, use the latest version ID (always available after migration)
+     * 此方法仅在功能开关开启时调用。
+     * 解析逻辑如下：
+     * 1. 如果显式提供了 experiment.datasetVersionId，则验证并使用它
+     * 2. 否则，使用最新版本ID（迁移后始终可用）
      *
-     * @param experiment the experiment being created
-     * @param datasetId the dataset ID
-     * @return Mono emitting the resolved version ID
+     * @param experiment 正在创建的实验
+     * @param datasetId 数据集ID
+     * @return 返回解析后的版本ID的Mono
      */
     private Mono<ResolvedVersion> resolveDatasetVersion(Experiment experiment, UUID datasetId) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
-            // Case 1: Version ID explicitly provided - validate and use it
+            // 情况1：显式提供了版本ID - 验证并使用它
             if (experiment.datasetVersionId() != null) {
                 log.info("Validating explicitly provided dataset version ID '{}' for experiment on dataset '{}'",
                         experiment.datasetVersionId(), datasetId);
@@ -611,7 +611,7 @@ public class ExperimentService {
                         });
             }
 
-            // Case 2: No version specified - use latest version
+            // 情况2：未指定版本 - 使用最新版本
             return Mono.fromCallable(() -> datasetVersionService.getLatestVersion(datasetId, workspaceId))
                     .subscribeOn(Schedulers.boundedElastic())
                     .flatMap(latestVersion -> {
@@ -681,13 +681,12 @@ public class ExperimentService {
         eventBus.post(new ExperimentCreated(
                 partialExperiment.id(),
                 partialExperiment.datasetId(),
-                // The createdAt field is not exactly the one persisted in the DB, but it doesn't matter:
-                // - The experiment.createdAt field in ClickHouse has precision 9,
-                // whereas for dataset.lastCreatedExperimentAt in MySQL has precision 6.
-                // - It's approximated enough for the event.
-                // - At the moment of writing this comment, the dataset.lastCreatedExperimentAt field is only used
-                // to optionally sort the datasets returned by the find datasets endpoint. There are no other usages
-                // in the UI or elsewhere.
+                // createdAt 字段并非完全与数据库中持久化的值一致，但这并不重要：
+                // - ClickHouse 中的 experiment.createdAt 字段精度为9，
+                // 而 MySQL 中的 dataset.lastCreatedExperimentAt 字段精度为6。
+                // - 对于事件来说，这个近似值已经足够精确。
+                // - 在编写此注释时，dataset.lastCreatedExperimentAt 字段仅用于
+                // 可选地对 find datasets 端点返回的数据集进行排序，UI 或其他地方没有其他用途。
                 partialExperiment.createdAt(),
                 workspaceId,
                 userName,

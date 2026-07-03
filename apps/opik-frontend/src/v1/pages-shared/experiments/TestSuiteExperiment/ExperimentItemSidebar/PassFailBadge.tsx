@@ -1,23 +1,18 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Tag } from "@/ui/tag";
 import { RunStatus } from "@/types/test-suites";
 
-const STATUS_CONFIG: Record<
-  RunStatus,
-  { label: string; variant: "green" | "red" | "gray" }
-> = {
-  [RunStatus.PASSED]: {
-    label: "Passed",
-    variant: "green",
-  },
-  [RunStatus.FAILED]: {
-    label: "Failed",
-    variant: "red",
-  },
-  [RunStatus.SKIPPED]: {
-    label: "Skipped",
-    variant: "gray",
-  },
+const STATUS_VARIANT_MAP: Record<RunStatus, "green" | "red" | "gray"> = {
+  [RunStatus.PASSED]: "green",
+  [RunStatus.FAILED]: "red",
+  [RunStatus.SKIPPED]: "gray",
+};
+
+const STATUS_I18N_KEY: Record<RunStatus, string> = {
+  [RunStatus.PASSED]: "passed",
+  [RunStatus.FAILED]: "failed",
+  [RunStatus.SKIPPED]: "skipped",
 };
 
 type PassFailBadgeProps = {
@@ -25,11 +20,10 @@ type PassFailBadgeProps = {
 };
 
 const PassFailBadge: React.FC<PassFailBadgeProps> = ({ status }) => {
+  const { t } = useTranslation("experiments");
   if (!status) return null;
 
-  const config = STATUS_CONFIG[status];
-
-  return <Tag variant={config.variant}>{config.label}</Tag>;
+  return <Tag variant={STATUS_VARIANT_MAP[status]}>{t(STATUS_I18N_KEY[status])}</Tag>;
 };
 
 export default PassFailBadge;

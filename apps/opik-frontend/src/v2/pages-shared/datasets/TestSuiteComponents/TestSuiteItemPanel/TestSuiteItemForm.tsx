@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import TextareaAutosize from "react-textarea-autosize";
 import CodeMirror from "@uiw/react-codemirror";
@@ -30,14 +31,15 @@ interface TestSuiteItemFormProps {
 }
 
 const DescriptionSection: React.FC = () => {
+  const { t } = useTranslation("datasets");
   const { register } = useFormContext<TestSuiteItemFormValues>();
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">Description</h3>
+      <h3 className="comet-body-s-accented mb-2">{t("testSuiteItemForm.description")}</h3>
       <TextareaAutosize
         {...register("description")}
-        placeholder="Describe this test case..."
+        placeholder={t("testSuiteItemForm.descriptionPlaceholder")}
         className={cn(TEXT_AREA_CLASSES, "min-h-0 resize-none")}
         minRows={1}
       />
@@ -46,6 +48,7 @@ const DescriptionSection: React.FC = () => {
 };
 
 const DataSection: React.FC = () => {
+  const { t } = useTranslation("datasets");
   const theme = useCodemirrorTheme({ editable: true });
   const { control } = useFormContext<TestSuiteItemFormValues>();
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -56,16 +59,16 @@ const DataSection: React.FC = () => {
       if (typeof parsed === "object" && parsed !== null) {
         setJsonError(null);
       } else {
-        setJsonError("Must be a JSON object");
+        setJsonError(t("testSuiteItemForm.mustBeJsonObject"));
       }
     } catch {
-      setJsonError("Invalid JSON");
+      setJsonError(t("testSuiteItemForm.invalidJson"));
     }
   }
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">Data</h3>
+      <h3 className="comet-body-s-accented mb-2">{t("testSuiteItemForm.data")}</h3>
       <Controller
         control={control}
         name="data"

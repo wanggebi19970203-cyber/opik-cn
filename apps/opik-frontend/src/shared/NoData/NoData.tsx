@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,10 +14,13 @@ type NoDataProps = {
 const NoData: React.FunctionComponent<NoDataProps> = ({
   icon = <Ban className="text-muted-slate" />,
   title,
-  message = "No Data",
+  message,
   className,
   children,
 }) => {
+  const { t } = useTranslation("common");
+  const resolvedMessage = message ?? t("messages.noData");
+
   return (
     <div
       className={cn(
@@ -28,8 +32,8 @@ const NoData: React.FunctionComponent<NoDataProps> = ({
       {title && (
         <h3 className="comet-body-accented mb-1 text-foreground">{title}</h3>
       )}
-      {message && (
-        <div className="comet-body-small text-muted-slate">{message}</div>
+      {resolvedMessage && (
+        <div className="comet-body-small text-muted-slate">{resolvedMessage}</div>
       )}
       {children}
     </div>

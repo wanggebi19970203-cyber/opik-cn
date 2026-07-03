@@ -1,0 +1,194 @@
+---
+description: 从这里开始将 Opik 集成到您的 Pydantic AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Pydantic AI | Opik 文档
+og:description: 使用 Pydantic AI 的类型安全数据验证与 Opik 集成，构建可靠的 AI 应用，实现结构化响应。
+og:site_name: Opik 文档
+og:title: 使用 Pydantic 构建 AI 应用 - Opik
+title: Pydantic AI 可观测性 - Opik
+---
+
+[Pydantic AI](https://ai.pydantic.dev/) 是一个 Python 代理框架，专为使用生成式 AI 构建生产级应用而设计。
+
+Pydantic AI 的主要优势在于集成了 Pydantic 的类型安全数据验证，确保 AI 应用中的响应结构化且可靠。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=pydantic-ai&utm_campaign=opik) 提供了 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=pydantic-ai&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，详情请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=pydantic-ai&utm_campaign=opik)。
+
+## 快速入门
+
+### 安装
+
+要使用 Pydantic AI 与 Opik 的集成，您需要安装 Pydantic AI 和 logfire：
+
+```bash
+pip install --upgrade pydantic-ai logfire 'logfire[httpx]'
+```
+
+### 配置 Pydantic AI
+
+使用 Pydantic AI 之前，您需要配置 LLM 提供商的 API 密钥。本示例使用 OpenAI，您可以在[这些页面中查找或创建 API 密钥](https://platform.openai.com/settings/organization/api-keys)：
+
+您可以通过环境变量设置：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过编程方式设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+### 配置 OpenTelemetry
+
+您需要设置以下环境变量，以确保数据被记录到 Opik：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果您使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        export OTEL_METRICS_EXPORTER=none
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+            ```bash
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您想将数据记录到不同的工作区，也可以更新 `Comet-Workspace` 参数。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        如果您使用 Opik 的企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        export OTEL_METRICS_EXPORTER=none
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您想将数据记录到不同的工作区，也可以更新 `Comet-Workspace` 参数。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+
+    如果您自托管 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    export OTEL_METRICS_EXPORTER=none
+    ```
+
+    <Tip>
+        要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 Pydantic AI 中使用 Opik
+
+要追踪您的 Pydantic AI 代理，需要配置 logfire，因为 Pydantic AI 使用该框架来启用追踪功能。
+
+```python
+import logfire
+
+logfire.configure(
+    send_to_logfire=False,
+)
+logfire.instrument_pydantic_ai()
+```
+
+## 实际示例
+
+完成所有配置后，您可以创建并运行 Pydantic AI 代理：
+
+```python
+import nest_asyncio
+from pydantic_ai import Agent
+
+# 在 Jupyter notebooks 中启用异步支持
+nest_asyncio.apply()
+
+# 创建一个简单的代理
+agent = Agent(
+    "openai:gpt-4o",
+    system_prompt="Be concise, reply with one sentence.",
+)
+
+# 运行代理
+result = agent.run_sync('Where does "hello world" come from?')
+print(result.output)
+```
+
+<Frame>
+  <img src="/img/cookbook/pydantic-ai_trace_cookbook.png" alt="Pydantic AI 追踪" />
+</Frame>
+
+## 记录会话线程
+
+您可以通过在根 Logfire span 上设置 `thread_id` 作为 span 属性，将多个代理调用分组到一个会话线程中。Opik 的 OTEL 摄取功能会识别此属性并将其直接映射到追踪的 `thread_id` 字段：
+
+```python
+# Logfire 封装了 OTEL - thread_id 自动成为 span 属性
+with logfire.span("chat_turn", thread_id=thread_id):
+    result = agent.run_sync("What is machine learning?")
+```
+
+## 与 `@track` 结合使用
+
+如果将代理调用包装在 `@track` 装饰的函数中（例如，为了捕获带有独立输入/输出的清晰入口点），Pydantic AI / logfire 的 span 和 `@track` span 通常会分布在两个独立的追踪中，因为 logfire 生成 OpenTelemetry span，而 `@track` 保持自己的上下文。
+
+在 logfire 的 tracer provider 上注册 `OpikSpanProcessor`，可以将它们合并到单个追踪中。该处理器会自动将 OpenTelemetry span 链接到活动的 `@track` span，无需头部传播或每次调用的额外配置：
+
+```python
+import opik
+import logfire
+from pydantic_ai import Agent
+from opik.integrations.otel import OpikSpanProcessor
+
+logfire.configure(
+    send_to_logfire=False,
+    additional_span_processors=[OpikSpanProcessor()],
+)
+logfire.instrument_pydantic_ai()
+
+agent = Agent("openai:gpt-4o")
+
+@opik.track
+def run(question: str) -> str:
+    return agent.run_sync(question).output
+
+run('Where does "hello world" come from?')
+```
+
+结果是一个以 `run` 入口点为根、`agent run` / 模型 span 嵌套在下方的单一追踪。有关通用机制，请参阅[将 OpenTelemetry span 链接到现有 Opik 追踪](/integrations/opentelemetry-python-sdk#linking-opentelemetry-spans-to-an-existing-opik-trace)。
+
+## 进一步改进
+
+如果您希望我们改进此集成，请在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。

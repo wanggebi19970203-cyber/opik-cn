@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FilterManagerPopover, {
@@ -52,6 +53,7 @@ const FilterChipBar: React.FC<FilterChipBarProps> = ({
   onOpenChipIdChange,
   prefix,
 }) => {
+  const { t } = useTranslation();
   const appliedCount = useMemo(() => {
     let count = 0;
     for (const def of chipsPinned) {
@@ -149,7 +151,7 @@ const FilterChipBar: React.FC<FilterChipBarProps> = ({
         trigger={
           <ChipShell isOpen={managerOpen} className="pr-2">
             <ListFilter className="size-3 shrink-0" />
-            <span>All filters</span>
+            <span>{t("common.labels.allFilters")}</span>
           </ChipShell>
         }
       />
@@ -164,7 +166,7 @@ const FilterChipBar: React.FC<FilterChipBarProps> = ({
             "focus-visible:ring-2 focus-visible:ring-primary-active/40",
           )}
         >
-          Clear all ({appliedCount})
+          {t("common.messages.clearAll")} ({appliedCount})
         </button>
       )}
     </div>

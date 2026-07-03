@@ -1,0 +1,139 @@
+---
+headline: 生产监控 | Opik 文档
+og:description: 使用 Opik 监控你的生产 LLM 应用。每日和每小时评估反馈分数、trace 数量和 token 使用量以获得最佳洞察。
+og:site_name: Opik 文档
+og:title: 使用 Opik 进行生产监控：优化性能
+subtitle: 描述如何使用 Opik 在生产环境中监控 LLM 应用
+title: 生产监控
+canonical-url: https://www.comet.com/docs/opik/tracing/dashboards/production_monitoring
+---
+
+Opik 从设计之初就支持高吞吐量的 trace，使其成为监控生产 LLM 应用的理想工具。
+
+你可以使用任何项目中的 **Insights** 标签查看反馈分数、trace 数量、延迟和成本随时间的变化。内置的项目概览通过统计卡片和时间序列图表提供一目了然的健康检查。更多详情请参阅[仪表板](/v1/production/dashboards)。
+
+<Frame>
+  <img src="/img/production/dashboard_example.png" alt="项目概览 — 内置 Insights 视图" />
+</Frame>
+
+除了查看分数随时间的变化，你还可以从 trace 表中查看项目中所有 trace 的平均反馈分数。
+
+## 记录反馈分数
+
+要监控 LLM 应用的性能，你可以使用 [Python SDK 和 UI](/v1/tracing/annotate_traces) 记录反馈分数。
+
+### 定义在线评估指标
+
+你可以在 Opik 平台中定义 LLM as a Judge 指标，它将自动对你的全部或部分生产 trace 进行评分。你可以在[在线评估](/v1/production/rules)部分找到关于如何定义 LLM as a Judge 指标的更多信息。
+
+一旦规则定义完成，Opik 将对项目中的所有 trace 进行评分，并允许你跟踪这些反馈分数随时间的变化。
+
+<Tip>
+  除了允许你定义 LLM as a Judge 指标外，Opik 还将很快允许你定义 Python 指标，为你提供对反馈分数的更多控制。
+</Tip>
+
+### 在 trace 旁手动记录反馈分数
+
+反馈分数可以在记录 trace 时一起记录：
+
+```python
+from opik import track, opik_context
+
+@track
+def llm_chain(input_text):
+    # LLM chain 代码
+    # ...
+
+    # 更新 trace
+    opik_context.update_current_trace(
+        feedback_scores=[
+            {"name": "user_feedback", "value": 1.0, "reason": "回复有帮助且准确。"}
+        ]
+    )
+```
+
+### 使用反馈分数更新 trace
+
+你也可以在 trace 记录后使用反馈分数更新它们。为此，我们首先使用搜索 API 获取所有 trace，然后更新我们要标注的 trace 的反馈分数。
+
+#### 使用搜索 API 获取 trace
+
+你可以使用 [`Opik.search_traces`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_traces) 方法获取要标注的所有 trace。
+
+```python
+import opik
+
+opik_client = opik.Opik()
+
+traces = opik_client.search_traces(
+    project_name="Default Project"
+)
+```
+
+<Tip>
+
+`search_traces` 方法允许你根据任何 trace 属性获取 trace，你可以在 [search traces 文档](/v1/tracing/export_data)中了解更多关于不同搜索参数的信息。
+
+</Tip>
+
+#### 更新反馈分数
+
+获取要标注的 trace 后，你可以使用 [`Opik.log_traces_feedback_scores`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.log_traces_feedback_scores) 方法更新反馈分数。
+
+```python
+for trace in traces:
+    opik_client.log_traces_feedback_scores(
+        scores=[
+            {
+                "id": trace.id,
+                "name": "user_feedback",
+                "value": 1.0,
+                "reason": "回复有帮助且准确。",
+                "project_name": "Default Project"
+            }
+        ],
+    )
+```
+
+你现在可以在 Opik 仪表板中查看反馈分数并跟踪变化。
+
+### 更新 trace 内容
+
+#### 获取 trace 内容
+
+你可以使用 [`Opik.get_trace_content(id: str)`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_trace_content) 查看 trace 的内容，通过 ID 查找 trace。Trace ID 可以使用 [`Opik.search_traces()`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_traces) 方法或在项目 > 'My-project' 视图中的 ID 列找到。
+
+```python
+from opik import Opik
+
+TRACE_ID = 'EXAMPLE-ID' # UUIDv7 标识符
+
+opik_client = Opik()
+trace_content = opik_client.get_trace_content(id = TRACE_ID)
+```
+
+这将返回一个 [`TracePublic`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/TracePublic.html#opik.rest_api.types.trace_public.TracePublic) 对象，一个包含找到的 trace 所有数据的 pydantic 模型对象。
+
+#### 按 ID 更新 trace
+
+你可以首先使用 [`opik.Opik.trace()`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.trace) 重新实例化 trace，然后使用 [`Trace.update()`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/Trace.html#opik.api_objects.trace.Trace.update) 更新任何 trace 属性。有关如何获取 trace ID 的指南，请参见上文。
+
+```python
+from opik import Opik
+
+TRACE_ID = 'EXAMPLE-ID' # UUIDv7 标识符
+
+opik_client = Opik()
+trace = opik_client.trace(id = TRACE_ID)
+trace.update(output = updated_output)
+```
+
+可用作参数的 trace 属性如下：
+
+- end_time：trace 的结束时间。
+- metadata：与 trace 关联的附加元数据。
+- input：trace 的输入数据。
+- output：trace 的输出数据。
+- tags：与 trace 关联的标签列表。
+- error_info：包含错误信息的字典（通常在 trace 函数失败时使用）。
+- thread_id：用于将多个 trace 分组到一个线程中。标识符由用户定义，每个项目中必须唯一。

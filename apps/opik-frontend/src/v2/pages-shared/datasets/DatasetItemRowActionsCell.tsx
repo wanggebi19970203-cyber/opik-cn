@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 
@@ -23,6 +24,7 @@ type CustomMeta = {
 export const DatasetItemRowActionsCell: React.FC<
   CellContext<DatasetItem, unknown>
 > = (context) => {
+  const { t } = useTranslation("datasets");
   const datasetItem = context.row.original;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [dontAskAgain] = useDatasetItemDeletePreference();
@@ -62,7 +64,7 @@ export const DatasetItemRowActionsCell: React.FC<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("rowActions.actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -70,13 +72,13 @@ export const DatasetItemRowActionsCell: React.FC<
           {setActiveRowId && (
             <DropdownMenuItem onClick={handleEditClick}>
               <Pencil className="mr-2 size-4" />
-              Edit
+              {t("rowActions.edit")}
             </DropdownMenuItem>
           )}
           {setActiveRowId && <DropdownMenuSeparator />}
           <DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
             <Trash className="mr-2 size-4" />
-            Delete
+            {t("rowActions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

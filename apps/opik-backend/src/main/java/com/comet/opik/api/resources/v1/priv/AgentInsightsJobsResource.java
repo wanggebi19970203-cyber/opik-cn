@@ -36,17 +36,17 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 @Timed
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Agent Insights Jobs", description = "Per-(workspace, project) Agent Insights report configuration")
+@Tag(name = "Agent Insights Jobs", description = "按（工作区，项目）的智能体洞察报告配置")
 public class AgentInsightsJobsResource {
 
     private final @NonNull AgentInsightsJobService service;
 
     @POST
     @Path("/{projectId}")
-    @Operation(operationId = "createAgentInsightsJob", summary = "Create Agent Insights job", description = "Creates the Agent Insights job for a project. 409 if one already exists.", responses = {
-            @ApiResponse(responseCode = "201", description = "Job created", headers = @Header(name = "Location", description = "URI of the created job", schema = @Schema(type = "string")), content = @Content(schema = @Schema(implementation = AgentInsightsJob.class))),
-            @ApiResponse(responseCode = "404", description = "Project not found"),
-            @ApiResponse(responseCode = "409", description = "Job already exists")
+    @Operation(operationId = "createAgentInsightsJob", summary = "创建智能体洞察任务", description = "为项目创建智能体洞察任务。如果已存在则返回409。", responses = {
+            @ApiResponse(responseCode = "201", description = "任务已创建", headers = @Header(name = "Location", description = "已创建任务的URI", schema = @Schema(type = "string")), content = @Content(schema = @Schema(implementation = AgentInsightsJob.class))),
+            @ApiResponse(responseCode = "404", description = "项目未找到"),
+            @ApiResponse(responseCode = "409", description = "任务已存在")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response create(@PathParam("projectId") @NotNull UUID projectId, @Context UriInfo uriInfo) {
@@ -57,9 +57,9 @@ public class AgentInsightsJobsResource {
 
     @GET
     @Path("/{projectId}")
-    @Operation(operationId = "getAgentInsightsJob", summary = "Get Agent Insights job", description = "Returns the Agent Insights job for the (workspace, project), or 404 if none exists.", responses = {
-            @ApiResponse(responseCode = "200", description = "Job", content = @Content(schema = @Schema(implementation = AgentInsightsJob.class))),
-            @ApiResponse(responseCode = "404", description = "Job not found")
+    @Operation(operationId = "getAgentInsightsJob", summary = "获取智能体洞察任务", description = "返回（工作区，项目）的智能体洞察任务，如果不存在则返回404。", responses = {
+            @ApiResponse(responseCode = "200", description = "任务", content = @Content(schema = @Schema(implementation = AgentInsightsJob.class))),
+            @ApiResponse(responseCode = "404", description = "任务未找到")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response get(@PathParam("projectId") @NotNull UUID projectId) {
@@ -70,9 +70,9 @@ public class AgentInsightsJobsResource {
 
     @PATCH
     @Path("/{projectId}")
-    @Operation(operationId = "updateAgentInsightsJob", summary = "Update Agent Insights job", description = "Partially updates the Agent Insights job for a project (e.g. status; never deletes). Returns the updated job, or 404 if none exists.", responses = {
-            @ApiResponse(responseCode = "200", description = "Job updated", content = @Content(schema = @Schema(implementation = AgentInsightsJob.class))),
-            @ApiResponse(responseCode = "404", description = "Job not found")
+    @Operation(operationId = "updateAgentInsightsJob", summary = "更新智能体洞察任务", description = "部分更新项目的智能体洞察任务（例如状态；不会删除）。返回更新后的任务，如果不存在则返回404。", responses = {
+            @ApiResponse(responseCode = "200", description = "任务已更新", content = @Content(schema = @Schema(implementation = AgentInsightsJob.class))),
+            @ApiResponse(responseCode = "404", description = "任务未找到")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response update(@PathParam("projectId") @NotNull UUID projectId,
@@ -84,9 +84,9 @@ public class AgentInsightsJobsResource {
 
     @POST
     @Path("/{projectId}/trigger")
-    @Operation(operationId = "triggerAgentInsightsJob", summary = "Trigger Agent Insights job", description = "Triggers an immediate report run for an existing job (over the last 24h). Fire-and-forget; returns 202. 404 if none exists.", responses = {
-            @ApiResponse(responseCode = "202", description = "Run accepted"),
-            @ApiResponse(responseCode = "404", description = "Job not found")
+    @Operation(operationId = "triggerAgentInsightsJob", summary = "触发智能体洞察任务", description = "为现有任务触发立即报告运行（过去24小时）。即发即忘；返回202。如果不存在则返回404。", responses = {
+            @ApiResponse(responseCode = "202", description = "运行已接受"),
+            @ApiResponse(responseCode = "404", description = "任务未找到")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response trigger(@PathParam("projectId") @NotNull UUID projectId) {

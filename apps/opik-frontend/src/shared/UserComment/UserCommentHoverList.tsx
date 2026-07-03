@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import isFunction from "lodash/isFunction";
 import UserComment from "./UserComment";
 import { CommentItems } from "@/types/comment";
@@ -19,6 +20,7 @@ const UserCommentHoverList: React.FC<UserCommentHoverListProps> = ({
   className,
   children,
 }) => {
+  const { t } = useTranslation();
   const {
     permissions: { canAnnotateTraceSpanThread },
   } = usePermissions();
@@ -82,7 +84,7 @@ const UserCommentHoverList: React.FC<UserCommentHoverListProps> = ({
                 size="sm"
                 onClick={handleOnReply}
               >
-                Reply <ArrowRight className="size-3.5" />
+                {t("common:comments.reply")} <ArrowRight className="size-3.5" />
               </Button>
             </div>
           )}

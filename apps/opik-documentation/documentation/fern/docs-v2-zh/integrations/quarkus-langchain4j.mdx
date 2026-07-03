@@ -1,0 +1,62 @@
+---
+description: 配置 Quarkus LangChain4j OpenTelemetry 导出器，将追踪数据发送到 Opik。
+headline: Quarkus LangChain4j | Opik 文档
+og:description: Quarkus LangChain4j 使用 Quarkus OTEL 属性；本指南映射了 Opik 所需的和可选的设置。
+og:site_name: Opik 文档
+og:title: Quarkus LangChain4j 集成 - Opik
+title: 使用 Opik 对 Quarkus LangChain4j 进行可观测性监控
+---
+
+[Quarkus LangChain4j](https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html) 在 `application.properties` 中使用 Quarkus OpenTelemetry 配置。
+
+## 适用场景
+
+如果你的应用使用 Quarkus + LangChain4j，并且希望将 OTEL 追踪数据发送到 Opik，请使用本指南。
+
+## Opik OTLP 端点模式
+
+有关端点/请求头的完整详情，请参阅 [Opik OpenTelemetry 概述](/integrations/opentelemetry)。
+
+- 云端端点：`https://www.comet.com/opik/api/v1/private/otel`
+- 企业版端点：`https://<comet-deployment-url>/opik/api/v1/private/otel`
+- 自托管端点：`http://localhost:5173/api/v1/private/otel`
+
+## 配置示例（`application.properties`）
+
+目的：
+配置 Quarkus OTEL 追踪导出器，直接指向 Opik。
+
+适用场景：
+使用 Quarkus 原生 OTEL 导出器设置。
+
+必填字段：
+- `quarkus.otel.enabled=true`
+- `quarkus.otel.traces.enabled=true`
+- `quarkus.otel.exporter.otlp.traces.endpoint`
+- `quarkus.otel.exporter.otlp.traces.protocol=http/protobuf`
+
+可选字段：
+- `quarkus.otel.exporter.otlp.traces.headers`（强烈建议设置 `projectName`）
+- `quarkus.application.name`（用于 `service.name` 属性标注）
+
+最小有效配置：
+
+```properties
+quarkus.otel.enabled=true
+quarkus.otel.traces.enabled=true
+quarkus.otel.exporter.otlp.traces.endpoint=https://www.comet.com/opik/api/v1/private/otel
+quarkus.otel.exporter.otlp.traces.protocol=http/protobuf
+quarkus.otel.exporter.otlp.traces.headers=Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>
+```
+
+## 验证步骤
+
+1. 启用 OTEL 后启动你的 Quarkus 应用。
+2. 触发一个使用 LangChain4j 的端点/操作。
+3. 确认带有你配置的 `service.name` 和项目请求头的 Span 已到达 Opik。
+
+## 参考资料
+
+- [Quarkus OpenTelemetry 指南](https://quarkus.io/guides/opentelemetry)
+- [Quarkus LangChain4j 文档](https://docs.quarkiverse.io/quarkus-langchain4j/dev/index.html)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)

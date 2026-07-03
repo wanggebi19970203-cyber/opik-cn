@@ -6,6 +6,7 @@ import { DEFAULT_PROJECT_NAME, Project } from "@/types/projects";
 import useProjectBatchDeleteMutation from "@/api/projects/useProjectBatchDeleteMutation";
 import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
+import { useTranslation } from "react-i18next";
 
 type ProjectsActionsPanelsProps = {
   projects: Project[];
@@ -14,6 +15,7 @@ type ProjectsActionsPanelsProps = {
 const ProjectsActionsPanel: React.FunctionComponent<
   ProjectsActionsPanelsProps
 > = ({ projects }) => {
+  const { t } = useTranslation("pages/projects");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const deletableProjects = useMemo(
@@ -37,12 +39,12 @@ const ProjectsActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deleteProjectsHandler}
-        title="Delete projects"
-        description="Deleting projects will also remove all the traces and their data. This action can’t be undone. Are you sure you want to continue?"
-        confirmText="Delete projects"
+        title={t("actionsPanel.deleteTitle")}
+        description={t("actionsPanel.deleteDescription")}
+        confirmText={t("actionsPanel.deleteConfirm")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("actionsPanel.deleteTooltip")}>
         <Button
           variant="outline"
           size="icon-sm"

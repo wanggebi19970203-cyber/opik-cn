@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import ExplainerDescription from "@/shared/ExplainerDescription/ExplainerDescription";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
@@ -16,20 +17,21 @@ const OptimizationsNewHeader: React.FC<OptimizationsNewHeaderProps> = ({
   onSubmit,
   onCancel,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
   return (
     <>
       <div className="mb-2 flex items-center justify-between">
-        <h1 className="comet-title-xs">Optimize a prompt</h1>
+        <h1 className="comet-title-xs">{t("optimizations.newPage.title")}</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onCancel}>
-            Cancel
+            {t("optimizations.newPage.cancel")}
           </Button>
           <Button
             size="sm"
             onClick={onSubmit}
             disabled={isSubmitting || !isFormValid}
           >
-            {isSubmitting ? "Starting..." : "Optimize prompt"}
+            {isSubmitting ? t("optimizations.newPage.starting") : t("optimizations.newPage.optimizePrompt")}
           </Button>
         </div>
       </div>

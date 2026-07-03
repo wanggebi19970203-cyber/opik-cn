@@ -3,6 +3,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 import capitalize from "lodash/capitalize";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import useFeedbackDefinitionsList from "@/api/feedback-definitions/useFeedbackDefinitionsList";
 import AddEditFeedbackDefinitionDialog from "@/v2/pages-shared/datasets/AddEditFeedbackDefinitionDialog/AddEditFeedbackDefinitionDialog";
@@ -112,6 +113,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const FeedbackDefinitionsTab: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/settings");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const newFeedbackDefinitionDialogKeyRef = useRef(0);
@@ -174,11 +176,17 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
     return feedbackDefinitions.filter((row) => rowSelection[row.id]);
   }, [rowSelection, feedbackDefinitions]);
 
+  const translatedColumns: ColumnData<FeedbackDefinition>[] =
+    DEFAULT_COLUMNS.map((col) => ({
+      ...col,
+      label: t(`settings.feedback.columns.${col.id}`),
+    }));
+
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<FeedbackDefinition>(),
       ...convertColumnDataToColumn<FeedbackDefinition, FeedbackDefinition>(
-        DEFAULT_COLUMNS,
+        translatedColumns,
         {
           columnsOrder,
           selectedColumns,
@@ -211,21 +219,21 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="comet-title-xs">Feedback definitions</h2>
+        <h2 className="comet-title-xs">{t("settings.feedback.title")}</h2>
         <Button
           variant="default"
           size="xs"
           onClick={handleNewFeedbackDefinitionClick}
         >
           <Plus className="mr-1 size-4" />
-          Create feedback definition
+          {t("settings.feedback.create")}
         </Button>
       </div>
       <div className="mb-4 flex items-center justify-between gap-8">
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search by name"
+          placeholder={t("settings.searchPlaceholder")}
           className="w-[320px]"
           dimension="sm"
         ></SearchInput>
@@ -255,14 +263,14 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
         noData={
           noData ? (
             <DataTableEmptyContent
-              title="No feedback definitions yet"
-              description="Create a feedback definition to start evaluating your agent."
+              title={t("settings.feedback.empty.title")}
+              description={t("settings.feedback.empty.description")}
             >
               <button
                 onClick={handleNewFeedbackDefinitionClick}
                 className="comet-body-s underline underline-offset-4 hover:text-primary"
               >
-                Add feedback definition
+                {t("settings.feedback.empty.action")}
               </button>
             </DataTableEmptyContent>
           ) : (

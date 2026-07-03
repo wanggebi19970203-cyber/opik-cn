@@ -5,6 +5,7 @@ import { json2csv } from "json-2-csv";
 import isObject from "lodash/isObject";
 import isEmpty from "lodash/isEmpty";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -64,6 +65,7 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
   annotationQueue,
   disabled = false,
 }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -249,9 +251,8 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
         const data = await getData();
         if (data.length === 0) {
           toast({
-            title: "No data to export",
-            description:
-              "There are no items in the annotation queue to export.",
+            title: t("annotationQueue.export.noDataTitle"),
+            description: t("annotationQueue.export.noDataDescription"),
             variant: "default",
           });
           return;
@@ -265,7 +266,7 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
           get(error, "message", "Failed to fetch data for export"),
         );
         toast({
-          title: "Export failed",
+          title: t("annotationQueue.export.failedTitle"),
           description: message,
           variant: "destructive",
         });
@@ -326,8 +327,8 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
   );
 
   const tooltipContent = !isExportEnabled
-    ? "Export functionality is disabled for this installation"
-    : "Export annotated data";
+    ? t("annotationQueue.export.disabledTooltip")
+    : t("annotationQueue.export.tooltip");
 
   const isButtonDisabled = disabled || loading || !isExportEnabled;
 
@@ -338,7 +339,7 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
       ) : (
         <Download className="mr-1.5 size-3.5" />
       )}
-      Export queue
+      {t("annotationQueue.export.button")}
     </Button>
   );
 
@@ -362,13 +363,13 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
           onClick={exportCSVHandler}
           disabled={disabled || loading || !isExportEnabled}
         >
-          As CSV
+          {t("annotationQueue.export.asCsv")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={exportJSONHandler}
           disabled={disabled || loading || !isExportEnabled}
         >
-          As JSON
+          {t("annotationQueue.export.asJson")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

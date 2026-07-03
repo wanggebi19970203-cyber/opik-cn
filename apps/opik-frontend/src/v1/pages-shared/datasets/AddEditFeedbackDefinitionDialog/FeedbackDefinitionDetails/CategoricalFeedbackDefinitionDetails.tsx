@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import sortBy from "lodash/sortBy";
 import isNumber from "lodash/isNumber";
 import { Plus, X } from "lucide-react";
@@ -42,6 +43,7 @@ const categoryFieldsToDetails = (
 const CategoricalFeedbackDefinitionDetails: React.FunctionComponent<
   CategoricalFeedbackDefinitionDetailsProps
 > = ({ onChange, details }) => {
+  const { t } = useTranslation("datasets");
   const [categories, setCategories] = useState<CategoryField[]>(
     details?.categories
       ? sortBy(
@@ -66,13 +68,13 @@ const CategoricalFeedbackDefinitionDetails: React.FunctionComponent<
   return (
     <>
       <div className="flex flex-col gap-4">
-        <Label>Categories</Label>
+        <Label>{t("datasets.feedbackDefinition.categories")}</Label>
       </div>
       {categories.map((category, index) => {
         return (
           <div className="flex flex-row items-center gap-4" key={index}>
             <Input
-              placeholder="Name"
+              placeholder={t("datasets.feedbackDefinition.namePlaceholder")}
               value={category.name}
               onChange={(event) => {
                 setCategories((prevCategories) => {
@@ -141,7 +143,7 @@ const CategoricalFeedbackDefinitionDetails: React.FunctionComponent<
             ]);
           }}
         >
-          <Plus className="mr-2 size-4" /> Add category
+          <Plus className="mr-2 size-4" /> {t("datasets.feedbackDefinition.addCategory")}
         </Button>
       </div>
     </>

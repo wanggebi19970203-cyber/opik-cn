@@ -1,4 +1,5 @@
 import { z } from "zod";
+import i18next from "i18next";
 import { COLUMN_TYPE } from "@/types/shared";
 
 const FilterSchema = z.object({
@@ -18,7 +19,7 @@ export const FiltersArraySchema = z
       if (!filter.field || filter.field.trim().length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Field is required",
+          message: i18next.t("common:validation.fieldRequired"),
           path: [index, "field"],
         });
       }
@@ -26,7 +27,7 @@ export const FiltersArraySchema = z
       if (!filter.operator || filter.operator.trim().length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Operator is required",
+          message: i18next.t("common:validation.operatorRequired"),
           path: [index, "operator"],
         });
       }
@@ -40,7 +41,7 @@ export const FiltersArraySchema = z
         if (valueString.length === 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Value is required for this operator",
+            message: i18next.t("common:validation.valueRequiredForOperator"),
             path: [index, "value"],
           });
         }
@@ -53,7 +54,7 @@ export const FiltersArraySchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Key is required for dictionary fields",
+          message: i18next.t("common:validation.keyRequiredForDictionaryFields"),
           path: [index, "key"],
         });
       }

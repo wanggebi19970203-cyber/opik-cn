@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import usePluginsStore from "@/store/PluginsStore";
 import { formatLocalTimeAsUtc, parseUtcTimeToLocalDate } from "@/lib/date";
@@ -34,6 +35,7 @@ export default function SettingsDialog({
   customPrompt,
   onSave,
 }: SettingsDialogProps) {
+  const { t } = useTranslation("pages/project-home");
   const [localEnabled, setLocalEnabled] = useState(enabled);
   const [timeDate, setTimeDate] = useState<Date | undefined>(() =>
     parseUtcTimeToLocalDate(scheduleTime),
@@ -64,7 +66,7 @@ export default function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg sm:max-w-[580px]">
         <DialogHeader>
-          <DialogTitle>Daily briefing settings</DialogTitle>
+          <DialogTitle>{t("dailyBriefing.settingsDialog.title")}</DialogTitle>
           <DialogDescription asChild className="pt-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
@@ -77,20 +79,19 @@ export default function SettingsDialog({
                   {localEnabled ? (
                     <>
                       <p className="font-medium text-foreground">
-                        Daily briefing active
+                        {t("dailyBriefing.settingsDialog.active")}
                       </p>
                       <p className="text-light-slate">
-                        Turn off to pause automated reports. You can reactivate
-                        at any time.
+                        {t("dailyBriefing.settingsDialog.activeDescription")}
                       </p>
                     </>
                   ) : (
                     <>
                       <p className="font-medium text-foreground">
-                        Daily briefing is paused
+                        {t("dailyBriefing.settingsDialog.paused")}
                       </p>
                       <p className="text-light-slate">
-                        Turn on to resume automated reports.
+                        {t("dailyBriefing.settingsDialog.pausedDescription")}
                       </p>
                     </>
                   )}
@@ -101,7 +102,7 @@ export default function SettingsDialog({
 
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <p className="font-medium text-foreground">Scheduled for</p>
+                  <p className="font-medium text-foreground">{t("dailyBriefing.settingsDialog.scheduledFor")}</p>
                   <TimeInput
                     date={timeDate}
                     setDate={setTimeDate}
@@ -111,12 +112,12 @@ export default function SettingsDialog({
 
                 <div className="flex flex-col gap-1">
                   <p className="font-medium text-foreground">
-                    Custom instructions
+                    {t("dailyBriefing.settingsDialog.customInstructions")}
                   </p>
                   <Textarea
                     value={localCustomPrompt}
                     onChange={(e) => setLocalCustomPrompt(e.target.value)}
-                    placeholder="Add custom instructions to tailor the report"
+                    placeholder={t("dailyBriefing.settingsDialog.customInstructionsPlaceholder")}
                     rows={4}
                     maxLength={5000}
                     className="min-h-0"
@@ -125,9 +126,9 @@ export default function SettingsDialog({
                 </div>
 
                 <div className="flex flex-col gap-1 py-2">
-                  <p className="font-medium text-foreground">Billing</p>
+                  <p className="font-medium text-foreground">{t("dailyBriefing.settingsDialog.billing")}</p>
                   <p className="text-foreground">
-                    Runs on your Ollie tokens. {BillingLink && <BillingLink />}
+                    {t("dailyBriefing.settingsDialog.billingDescription")} {BillingLink && <BillingLink />}
                   </p>
                 </div>
               </div>
@@ -136,9 +137,9 @@ export default function SettingsDialog({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("dailyBriefing.settingsDialog.cancel")}
           </Button>
-          <Button onClick={handleSave}>Save changes</Button>
+          <Button onClick={handleSave}>{t("dailyBriefing.settingsDialog.saveChanges")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -16,6 +16,7 @@ import IntegrationTabs from "../IntegrationTabs/IntegrationTabs";
 import { useUserApiKey } from "@/store/AppStore";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import useActiveProjectName from "@/hooks/useActiveProjectName";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -32,6 +33,7 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
   integrationList = QUICKSTART_INTEGRATIONS,
   onRunCodeCallback,
 }) => {
+  const { t } = useTranslation();
   const [integrationIndex, setIntegrationIndex] = useState<number>(0);
   const integration = integrationList[integrationIndex];
   const apiKey = useUserApiKey();
@@ -61,7 +63,7 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
   const renderMobileFrameworkSelector = () => (
     <div className="flex flex-col gap-1">
       <label className="comet-body-s-accented px-0.5 pb-0.5">
-        Select framework
+        {t("integrationExplorer.selectFramework")}
       </label>
       <Select value={integration.label} onValueChange={handleFrameworkSelect}>
         <SelectTrigger className="w-full">
@@ -83,7 +85,7 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
 
   const renderDesktopFrameworkSelector = () => (
     <>
-      <IntegrationTabs.Title>Select framework</IntegrationTabs.Title>
+      <IntegrationTabs.Title>{t("integrationExplorer.selectFramework")}</IntegrationTabs.Title>
       <IntegrationTabs>
         {integrationList.map((item, index) => (
           <IntegrationTabs.Item
@@ -102,7 +104,7 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
           target="_blank"
           rel="noreferrer"
         >
-          Explore all integrations
+          {t("integrationExplorer.exploreAllIntegrations")}
           <ExternalLink className="ml-2 size-4 shrink-0" />
         </a>
       </Button>

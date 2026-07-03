@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
 import CodeBlockWithHeader from "@/shared/CodeBlockWithHeader/CodeBlockWithHeader";
 import CodeSectionTitle from "@/shared/CodeSectionTitle/CodeSectionTitle";
@@ -29,6 +30,7 @@ const IntegrationTemplate: React.FC<IntegrationTemplateProps> = ({
   onRunCodeCallback,
   projectName,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { isPhonePortrait } = useIsPhone();
 
@@ -82,11 +84,11 @@ const IntegrationTemplate: React.FC<IntegrationTemplateProps> = ({
   const renderRunCodeSection = () => (
     <div>
       <CodeSectionTitle>
-        2. Run the following code to get started
+        {t('integrationExplorer.runCodeToGetStarted')}
       </CodeSectionTitle>
       {isPhonePortrait ? (
         <CodeBlockWithHeader
-          title="Python"
+          title={t('integrationExplorer.python')}
           copyText={canExecuteCode ? undefined : codeWithConfigToCopy}
         >
           {renderCodeSection()}

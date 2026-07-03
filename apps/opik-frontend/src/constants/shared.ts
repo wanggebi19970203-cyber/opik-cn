@@ -6,22 +6,32 @@ import {
   ROW_HEIGHT,
 } from "@/types/shared";
 
-export const DEMO_PROJECT_NAME = "Opik Demo Agent Observability";
+import i18next from "i18next";
+
+export const DEMO_PROJECT_NAME = i18next.t(
+  "common.constants.shared.demoProjectName",
+);
 export const SNIPPET_PROJECT_NAME = "my-ai-project";
 export const PROJECT_NAME_PLACEHOLDER = "PROJECT_NAME_PLACEHOLDER";
 export const PLAYGROUND_PROJECT_NAME = "playground";
-export const USER_FEEDBACK_NAME = "User feedback";
+export const USER_FEEDBACK_NAME = i18next.t(
+  "common.constants.shared.userFeedbackName",
+);
 export const PIP_INSTALL_OPIK_COMMAND = "pip install opik";
 export const INSTALL_OPIK_SKILLS_COMMAND =
   "npx skills add comet-ml/opik-skills -g --all";
-export const INSTALL_OPIK_SECTION_TITLE =
-  "1. Install Opik using pip from the command line";
+export const INSTALL_OPIK_SECTION_TITLE = i18next.t(
+  "common.constants.shared.installOpikSectionTitle",
+);
 // Default copy for the install step in onboarding integration dialogs.
 // Integrations can override via `installTitle` / `installDescription`.
 export const INSTALL_OPIK_DEFAULT_TITLE = `${INSTALL_OPIK_SECTION_TITLE}.`;
-export const INSTALL_OPIK_DEFAULT_DESCRIPTION =
-  "Install Opik from the command line using pip.";
-export const INSTALL_SDK_SECTION_TITLE = "2. Install the SDK";
+export const INSTALL_OPIK_DEFAULT_DESCRIPTION = i18next.t(
+  "common.constants.shared.installOpikDefaultDescription",
+);
+export const INSTALL_SDK_SECTION_TITLE = i18next.t(
+  "common.constants.shared.installSdkSectionTitle",
+);
 
 export const TRUNCATION_DISABLED_MAX_PAGE_SIZE = 10;
 

@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import get from "lodash/get";
@@ -64,6 +65,7 @@ import {
 
 const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
   (_, ref) => {
+    const { t } = useTranslation("dashboards");
     const workspaceName = useAppStore((state) => state.activeWorkspaceName);
     const widgetData = useDashboardStore(
       (state) => state.previewWidget!,
@@ -244,13 +246,13 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
     const columnSections = useMemo(
       () => [
         {
-          title: "Configuration",
+          title: t("leaderboard.configurationSection"),
           columns: dynamicMetadataColumns,
           order: metadataColumnsOrder,
           onOrderChange: handleMetadataColumnsOrderChange,
         },
         {
-          title: "Feedback scores",
+          title: t("leaderboard.feedbackScoresSection"),
           columns: dynamicScoresColumns,
           order: scoresColumnsOrder,
           onOrderChange: handleScoresColumnsOrderChange,
@@ -271,9 +273,9 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
         <div className="space-y-4">
           {hasRuntimeExperiments ? (
             <FormItem>
-              <FormLabel>Data source</FormLabel>
+              <FormLabel>{t("feedbackScores.dataSourceLabel")}</FormLabel>
               <Description>
-                Experiments are provided by the page context.
+                {t("feedbackScores.dataSourceDescription")}
               </Description>
             </FormItem>
           ) : (
@@ -292,7 +294,7 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
                   const validationErrors = get(formState.errors, ["maxRows"]);
                   return (
                     <FormItem>
-                      <FormLabel>Max experiments</FormLabel>
+                      <FormLabel>{t("feedbackScores.maxExperimentsLabel")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -311,8 +313,7 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
                         />
                       </FormControl>
                       <Description>
-                        Limit how many experiments are loaded (max{" "}
-                        {MAX_MAX_EXPERIMENTS}).
+                        {t("feedbackScores.maxExperimentsDescription", { max: MAX_MAX_EXPERIMENTS })}
                       </Description>
                       <FormMessage />
                     </FormItem>
@@ -323,7 +324,7 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
           )}
 
           <ColumnsSection
-            label="Columns"
+            label={t("leaderboard.columnsLabel")}
             columns={PREDEFINED_COLUMNS}
             selectedColumns={selectedColumns}
             onSelectionChange={handleSelectedColumnsChange}

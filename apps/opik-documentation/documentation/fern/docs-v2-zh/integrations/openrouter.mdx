@@ -1,0 +1,80 @@
+---
+description: 从这里开始将 Opik 集成到基于 OpenRouter 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: OpenRouter | Opik 文档
+og:description: 了解如何使用 OpenAI SDK 将 Opik 与 OpenRouter 集成，通过统一接口无缝访问 AI 模型。
+og:site_name: Opik 文档
+og:title: 轻松集成 OpenRouter 与 Opik
+title: 使用 Opik 实现 OpenRouter 可观测性
+---
+
+本指南介绍如何使用 OpenAI SDK 将 Opik 与 OpenRouter 集成。OpenRouter 提供统一的 API 接口，通过单一的 OpenAI 兼容接口访问数百个 AI 模型。
+
+## 快速开始
+
+首先，确保已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+您还需要一个 OpenRouter API 密钥，可从 [OpenRouter](https://openrouter.ai/) 获取。
+
+## 跟踪 OpenRouter API 调用
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 OpenRouter 基础 URL 初始化 OpenAI 客户端
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key="YOUR_OPENROUTER_API_KEY"
+)
+client = track_openai(client)
+
+# OpenRouter 排行榜的可选请求头
+headers = {
+    "HTTP-Referer": "YOUR_SITE_URL",  # 可选。用于排名的网站 URL
+    "X-Title": "YOUR_SITE_NAME"  # 可选。用于排名的网站标题
+}
+
+response = client.chat.completions.create(
+    model="openai/gpt-4",  # 可以使用 OpenRouter 上提供的任何模型
+    extra_headers=headers,
+    messages=[
+        {"role": "user", "content": "Hello, world!"}
+    ],
+    temperature=0.7,
+    max_tokens=100
+)
+
+print(response.choices[0].message.content)
+```
+
+## 可用模型
+
+OpenRouter 提供多种模型访问，包括来自不同供应商的众多开源模型。
+
+- [OpenAI 模型](https://openrouter.ai/openai)（GPT-4o、o1、o3-mini）
+- [Anthropic 模型](https://openrouter.ai/anthropic)（Opus、Sonnet、Haiku）
+- [Google 模型](https://openrouter.ai/google)（Gemini Pro、Flash、Flash Thinking）
+- 以及众多开源模型
+
+完整的可用模型列表请参阅 [OpenRouter 文档](https://openrouter.ai/models)。
+
+## 支持的方法
+
+OpenRouter 支持以下方法：
+
+### Chat Completions
+
+- `client.chat.completions.create()`：适用于所有模型
+- 提供标准的聊天补全功能
+- 兼容 OpenAI SDK 接口
+
+### 结构化输出
+
+- `client.beta.chat.completions.parse()`：仅兼容 OpenAI 模型
+- 对于非 OpenAI 模型，请参阅 OpenRouter 的[结构化输出文档](https://openrouter.ai/docs/features/structured-outputs)
+
+有关可用方法、参数和最佳实践的详细信息，请参阅 [OpenRouter API 文档](https://openrouter.ai/docs)。

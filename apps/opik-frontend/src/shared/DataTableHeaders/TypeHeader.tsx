@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { HeaderContext } from "@tanstack/react-table";
 import { Checkbox } from "@/ui/checkbox";
 import HeaderWrapper from "@/shared/DataTableHeaders/HeaderWrapper";
@@ -6,6 +7,7 @@ import useSortableHeader from "@/shared/DataTableHeaders/useSortableHeader";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 const TypeHeader = <TData,>(context: HeaderContext<TData, unknown>) => {
+  const { t } = useTranslation();
   const { column } = context;
   const { header, headerCheckbox, explainer } = column.columnDef.meta ?? {};
 
@@ -43,12 +45,12 @@ const TypeHeader = <TData,>(context: HeaderContext<TData, unknown>) => {
           onCheckedChange={(value) =>
             context.table.toggleAllPageRowsSelected(!!value)
           }
-          aria-label="Select all"
+          aria-label={t("common:actions.selectAll")}
         />
       )}
-      <TooltipWrapper content={isTruncated ? header : null}>
+      <TooltipWrapper content={isTruncated ? t(header ?? "") : null}>
         <span ref={textRef} className="truncate" onMouseEnter={checkTruncation}>
-          {header}
+          {t(header ?? "")}
         </span>
       </TooltipWrapper>
       {explainer && <ExplainerIcon {...explainer} />}

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Split } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -28,8 +29,9 @@ const CompareExperimentsButton: React.FunctionComponent<
   variant = "default",
   className,
   showIcon = true,
-  tooltipContent = "Compare experiments",
+  tooltipContent,
 }) => {
+  const { t } = useTranslation("pages/compare-experiments");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -47,7 +49,7 @@ const CompareExperimentsButton: React.FunctionComponent<
             EXPLAINER_ID.what_does_it_mean_to_compare_my_experiments
           ]}
         />
-        <TooltipWrapper content={tooltipContent}>
+        <TooltipWrapper content={tooltipContent || t("compareExperiments.title")}>
           <Button
             size={size}
             variant={variant}
@@ -58,7 +60,7 @@ const CompareExperimentsButton: React.FunctionComponent<
             }}
           >
             {showIcon && <Split className="mr-1.5 size-3.5" />}
-            Compare
+            {t("compareExperiments.title")}
           </Button>
         </TooltipWrapper>
       </div>

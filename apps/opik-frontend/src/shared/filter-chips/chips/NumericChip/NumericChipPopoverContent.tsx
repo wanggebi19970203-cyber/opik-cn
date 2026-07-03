@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FormErrorSkeleton } from "@/ui/form";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
 import { PopoverClearFooter } from "@/shared/filter-chips/chips/PopoverClearFooter";
@@ -28,12 +29,15 @@ interface NumericChipPopoverContentProps {
   onClear: () => void;
 }
 
-const OPERATOR_OPTIONS: FilterOperatorOption<NumericChipMode>[] = [
-  { value: "exactly", label: "Is" },
-  { value: "atLeast", label: "Is at least" },
-  { value: "atMost", label: "Is at most" },
-  { value: "between", label: "Is between" },
-];
+const useOperatorOptions = (): FilterOperatorOption<NumericChipMode>[] => {
+  const { t } = useTranslation("common");
+  return [
+    { value: "exactly", label: t("numericChip.is") },
+    { value: "atLeast", label: t("numericChip.isAtLeast") },
+    { value: "atMost", label: t("numericChip.isAtMost") },
+    { value: "between", label: t("numericChip.isBetween") },
+  ];
+};
 
 const pickFirstEmptyValue = (
   mode: NumericChipMode,
@@ -61,6 +65,9 @@ const NumericChipPopoverContent: React.FC<NumericChipPopoverContentProps> = ({
   onApply,
   onClear,
 }) => {
+  const { t } = useTranslation("common");
+  const operatorOptions = useOperatorOptions();
+
   const [mode, setMode] = useState<NumericChipMode>(
     value?.mode ?? NUMERIC_DEFAULT_MODE,
   );
@@ -174,7 +181,7 @@ const NumericChipPopoverContent: React.FC<NumericChipPopoverContentProps> = ({
       <FilterOperatorSelect
         fieldLabel={definition.label}
         value={mode}
-        options={OPERATOR_OPTIONS}
+        options={operatorOptions}
         onChange={handleModeChange}
         onCloseAutoFocus={handleOperatorMenuClose}
       />
@@ -183,7 +190,7 @@ const NumericChipPopoverContent: React.FC<NumericChipPopoverContentProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex gap-2">
             <NumericInputField
-              label="From"
+              label={t("numericChip.from")}
               value={fromDraft}
               format={format}
               hasError={betweenError}
@@ -193,7 +200,7 @@ const NumericChipPopoverContent: React.FC<NumericChipPopoverContentProps> = ({
               onBlur={(event) => padDraftOnBlur("from", event)}
             />
             <NumericInputField
-              label="To"
+              label={t("numericChip.to")}
               value={toDraft}
               format={format}
               hasError={betweenError}
@@ -204,7 +211,7 @@ const NumericChipPopoverContent: React.FC<NumericChipPopoverContentProps> = ({
           </div>
           {betweenError && (
             <FormErrorSkeleton className="comet-body-xs">
-              From value must be less than or equal to To value
+              {t("numericChip.fromValueMustBeLessThanOrEqualToToValue")}
             </FormErrorSkeleton>
           )}
         </div>

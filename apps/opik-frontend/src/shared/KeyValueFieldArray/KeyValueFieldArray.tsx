@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrayPath,
   FieldArray,
@@ -41,12 +42,17 @@ function KeyValueFieldArray<T extends FieldValues>({
   name,
   label,
   description,
-  keyPlaceholder = "Key",
-  valuePlaceholder = "Value",
-  addButtonLabel = "Add",
+  keyPlaceholder,
+  valuePlaceholder,
+  addButtonLabel,
   showColumnHeaders = false,
   newItem,
 }: KeyValueFieldArrayProps<T>) {
+  const { t } = useTranslation("common");
+  const resolvedKeyPlaceholder = keyPlaceholder ?? t("labels.key");
+  const resolvedValuePlaceholder = valuePlaceholder ?? t("labels.value");
+  const resolvedAddButtonLabel = addButtonLabel ?? t("buttons.add");
+
   const { fields, append, remove } = useFieldArray<T, ArrayPath<T>>({
     control: form.control,
     name,
@@ -62,10 +68,10 @@ function KeyValueFieldArray<T extends FieldValues>({
       {showColumnHeaders && fields.length > 0 && (
         <div className="flex items-center">
           <div className="flex-1">
-            <Label className="comet-body-s-accented">Key</Label>
+            <Label className="comet-body-s-accented">{t("labels.key")}</Label>
           </div>
           <div className="flex-1">
-            <Label className="comet-body-s-accented">Value</Label>
+            <Label className="comet-body-s-accented">{t("labels.value")}</Label>
           </div>
           <div className="w-10"></div>
         </div>
@@ -100,7 +106,7 @@ function KeyValueFieldArray<T extends FieldValues>({
                     <FormItem className="flex-1">
                       <FormControl>
                         <Input
-                          placeholder={keyPlaceholder}
+                          placeholder={resolvedKeyPlaceholder}
                           className={cn({
                             "border-destructive": Boolean(keyError),
                           })}
@@ -119,7 +125,7 @@ function KeyValueFieldArray<T extends FieldValues>({
                     <FormItem className="flex-1">
                       <FormControl>
                         <Input
-                          placeholder={valuePlaceholder}
+                          placeholder={resolvedValuePlaceholder}
                           className={cn({
                             "border-destructive": Boolean(valueError),
                           })}
@@ -155,7 +161,7 @@ function KeyValueFieldArray<T extends FieldValues>({
         onClick={() => append(newItem())}
       >
         <Plus className="mr-1.5 size-3.5" />
-        {addButtonLabel}
+        {resolvedAddButtonLabel}
       </Button>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash, Tag } from "lucide-react";
 import slugify from "slugify";
 
@@ -37,6 +38,7 @@ const ThreadsActionsPanel: React.FunctionComponent<
   projectName,
   projectId,
 }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean | number>(false);
 
@@ -79,9 +81,9 @@ const ThreadsActionsPanel: React.FunctionComponent<
         open={open === 2}
         setOpen={setOpen}
         onConfirm={deleteThreadsHandler}
-        title="Delete threads"
-        description="Deleting threads will also remove all linked traces and their data. This action cannot be undone. Are you sure you want to continue?"
-        confirmText="Delete threads"
+        title={t("tracing.actions.deleteThread")}
+        description={t("tracing.actions.deleteThreadDescription")}
+        confirmText={t("tracing.actions.deleteThread")}
         confirmButtonVariant="destructive"
       />
       {canLogTraceSpanThread && (
@@ -111,7 +113,7 @@ const ThreadsActionsPanel: React.FunctionComponent<
         dataType="threads"
       />
       {canLogTraceSpanThread && (
-        <TooltipWrapper content="Manage tags">
+        <TooltipWrapper content={t("tracing.actions.manageTags")}>
           <Button
             variant="outline"
             size="icon-sm"
@@ -139,11 +141,11 @@ const ThreadsActionsPanel: React.FunctionComponent<
         generateFileName={generateFileName}
         tooltipContent={
           !isExportEnabled
-            ? "Export functionality is disabled for this installation"
+            ? t("tracing.actions.exportDisabled")
             : undefined
         }
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("tracing.actions.delete")}>
         <Button
           variant="outline"
           size="icon-sm"

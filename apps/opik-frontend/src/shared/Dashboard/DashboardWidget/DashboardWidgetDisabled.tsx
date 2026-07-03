@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import DashboardWidget from "./DashboardWidget";
 import { DashboardWidget as DashboardWidgetType } from "@/types/dashboard";
 import { useDashboardStore, selectReadOnly } from "@/store/DashboardStore";
@@ -11,6 +12,7 @@ interface DashboardWidgetDisabledProps {
 const DashboardWidgetDisabled: React.FunctionComponent<
   DashboardWidgetDisabledProps
 > = ({ widget, disabledMessage }) => {
+  const { t } = useTranslation();
   const readOnly = useDashboardStore(selectReadOnly);
 
   return (
@@ -23,7 +25,7 @@ const DashboardWidgetDisabled: React.FunctionComponent<
       />
       <DashboardWidget.Content>
         <DashboardWidget.DisabledState
-          title="Widget not available"
+          title={t("common:dashboard.widgetNotAvailable")}
           message={disabledMessage}
         />
       </DashboardWidget.Content>

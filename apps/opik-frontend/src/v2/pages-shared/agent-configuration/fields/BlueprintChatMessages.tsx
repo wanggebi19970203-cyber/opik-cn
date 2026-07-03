@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import capitalize from "lodash/capitalize";
 import { CopyPlus, GripHorizontal, Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   closestCenter,
   DndContext,
@@ -80,6 +81,7 @@ const SortableMessage: React.FC<SortableMessageProps> = ({
   onDuplicateMessage,
   tone,
 }) => {
+  const { t } = useTranslation("agent-optimization");
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: message.id });
 
@@ -144,7 +146,7 @@ const SortableMessage: React.FC<SortableMessageProps> = ({
           {editable && (
             <div className="ml-auto flex items-center gap-0.5">
               {onDuplicateMessage && (
-                <TooltipWrapper content="Duplicate">
+                <TooltipWrapper content={t("agentOptimization.chatMessages.duplicate")}>
                   <Button
                     variant="minimal"
                     size="icon-2xs"
@@ -155,7 +157,7 @@ const SortableMessage: React.FC<SortableMessageProps> = ({
                 </TooltipWrapper>
               )}
               {onDeleteMessage && canDelete && (
-                <TooltipWrapper content="Delete">
+                <TooltipWrapper content={t("agentOptimization.chatMessages.delete")}>
                   <Button
                     variant="minimal"
                     size="icon-2xs"
@@ -208,6 +210,7 @@ const BlueprintChatMessages: React.FC<BlueprintChatMessagesProps> = ({
   onReorder,
   tone,
 }) => {
+  const { t } = useTranslation("agent-optimization");
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -250,7 +253,7 @@ const BlueprintChatMessages: React.FC<BlueprintChatMessagesProps> = ({
           className="w-fit"
         >
           <Plus className="mr-1 size-3" />
-          Message
+          {t("agentOptimization.chatMessages.message")}
         </Button>
       )}
     </div>

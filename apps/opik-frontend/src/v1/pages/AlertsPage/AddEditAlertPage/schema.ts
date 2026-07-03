@@ -1,9 +1,10 @@
 import { z } from "zod";
+import i18next from "i18next";
 import { ALERT_EVENT_TYPE, ALERT_TYPE } from "@/types/alerts";
 
 export const HeaderSchema = z.object({
-  key: z.string().min(1, { message: "Header key is required" }),
-  value: z.string().min(1, { message: "Header value is required" }),
+  key: z.string().min(1, { message: i18next.t("common:validation.headerKeyRequired") }),
+  value: z.string().min(1, { message: i18next.t("common:validation.headerValueRequired") }),
 });
 
 export const FeedbackScoreConditionSchema = z.object({
@@ -33,7 +34,7 @@ export const TriggerSchema = z
       if (!data.conditions || data.conditions.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "At least one condition is required",
+          message: i18next.t("common:validation.atLeastOneConditionRequired"),
           path: ["conditions"],
         });
       } else {
@@ -42,7 +43,7 @@ export const TriggerSchema = z
           if (!condition.threshold || condition.threshold.trim() === "") {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Threshold is required",
+              message: i18next.t("common:validation.thresholdIsRequired"),
               path: ["conditions", index, "threshold"],
             });
           } else {
@@ -50,7 +51,7 @@ export const TriggerSchema = z
             if (isNaN(thresholdNum)) {
               ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Threshold must be a valid number",
+                message: i18next.t("common:validation.thresholdMustBeValidNumber"),
                 path: ["conditions", index, "threshold"],
               });
             }
@@ -59,7 +60,7 @@ export const TriggerSchema = z
           if (!condition.window || condition.window.trim() === "") {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Window is required",
+              message: i18next.t("common:validation.windowIsRequired"),
               path: ["conditions", index, "window"],
             });
           }
@@ -67,7 +68,7 @@ export const TriggerSchema = z
           if (!condition.name || condition.name.trim() === "") {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Feedback score name is required",
+              message: i18next.t("common:validation.feedbackScoreNameRequired"),
               path: ["conditions", index, "name"],
             });
           }
@@ -75,7 +76,7 @@ export const TriggerSchema = z
           if (!condition.operator || condition.operator.trim() === "") {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Operator is required",
+              message: i18next.t("common:validation.operatorRequired"),
               path: ["conditions", index, "operator"],
             });
           }
@@ -93,7 +94,7 @@ export const TriggerSchema = z
       if (!data.threshold || data.threshold.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Threshold is required",
+          message: i18next.t("common:validation.thresholdIsRequired"),
           path: ["threshold"],
         });
       } else {
@@ -101,7 +102,7 @@ export const TriggerSchema = z
         if (isNaN(thresholdNum)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Threshold must be a valid number",
+            message: i18next.t("common:validation.thresholdMustBeValidNumber"),
             path: ["threshold"],
           });
         }
@@ -110,7 +111,7 @@ export const TriggerSchema = z
       if (!data.window || data.window.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Window is required",
+          message: i18next.t("common:validation.windowIsRequired"),
           path: ["window"],
         });
       }
@@ -120,15 +121,15 @@ export const TriggerSchema = z
 export const AlertFormSchema = z
   .object({
     name: z
-      .string({ required_error: "Alert name is required" })
-      .min(1, { message: "Alert name is required" }),
+      .string({ required_error: i18next.t("common:validation.alertNameRequired") })
+      .min(1, { message: i18next.t("common:validation.alertNameRequired") }),
     enabled: z.boolean().default(true),
     alertType: z.nativeEnum(ALERT_TYPE).default(ALERT_TYPE.general),
     routingKey: z.string().optional(),
     url: z
-      .string({ required_error: "Endpoint URL is required" })
-      .min(1, { message: "Endpoint URL is required" })
-      .url({ message: "Please enter a valid URL" }),
+      .string({ required_error: i18next.t("common:validation.endpointUrlRequired") })
+      .min(1, { message: i18next.t("common:validation.endpointUrlRequired") })
+      .url({ message: i18next.t("common:validation.pleaseEnterValidUrl") }),
     secretToken: z.string().optional(),
     headers: z.array(HeaderSchema).default([]),
     triggers: z.array(TriggerSchema).default([]),
@@ -138,7 +139,7 @@ export const AlertFormSchema = z
       return data.triggers.length > 0;
     },
     {
-      message: "At least one trigger must be selected",
+      message: i18next.t("common:validation.atLeastOneTriggerMustBeSelected"),
       path: ["triggers"],
     },
   )
@@ -151,7 +152,7 @@ export const AlertFormSchema = z
       return true;
     },
     {
-      message: "Routing key is required for PagerDuty integration",
+      message: i18next.t("common:validation.routingKeyRequiredForPagerDuty"),
       path: ["routingKey"],
     },
   );

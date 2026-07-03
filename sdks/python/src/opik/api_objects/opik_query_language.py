@@ -1,6 +1,5 @@
 """
-This file contains the OQL parser and validator. It is currently limited in scope to only support
-simple filters without "or" operators.
+此文件包含 OQL 解析器和验证器。目前范围有限，仅支持不带 "or" 运算符的简单过滤器。
 """
 
 import json
@@ -17,10 +16,10 @@ STRING_OPERATORS = [
     ">",
     "<",
 ]
-# Operators supported by backend FieldType.STRING_STATE_DB. Mirrors
-# ANALYTICS_DB_OPERATOR_MAP in FilterQueryBuilder.java: STRING_STATE_DB has
-# entries only for CONTAINS, NOT_CONTAINS, STARTS_WITH, ENDS_WITH, EQUAL and
-# NOT_EQUAL — > and < resolve to a null operator and produce a 400.
+# 后端 FieldType.STRING_STATE_DB 支持的运算符。对应
+# FilterQueryBuilder.java 中的 ANALYTICS_DB_OPERATOR_MAP：STRING_STATE_DB 仅包含
+# CONTAINS、NOT_CONTAINS、STARTS_WITH、ENDS_WITH、EQUAL 和 NOT_EQUAL 的条目
+# — > 和 < 会解析为空运算符并产生 400 错误。
 STRING_STATE_DB_OPERATORS = [
     "=",
     "!=",
@@ -65,31 +64,31 @@ ENUM_OPERATORS = ["=", "!=", "in", "not_in"]
 
 
 class OQLConfig(ABC):
-    """Abstract base class for OQL configuration."""
+    """OQL 配置的抽象基类。"""
 
     @property
     @abstractmethod
     def columns(self) -> Dict[str, str]:
-        """Return the supported columns and their types."""
+        """返回支持的列及其类型。"""
         pass
 
     @property
     @abstractmethod
     def supported_operators(self) -> Dict[str, List[str]]:
-        """Return the supported operators for each column."""
+        """返回每列支持的运算符。"""
         pass
 
     @property
     def dictionary_fields(self) -> List[str]:
-        """Return fields that support nested key access via dot notation."""
+        """返回支持通过点表示法进行嵌套键访问的字段。"""
         return ["usage", "feedback_scores", "metadata"]
 
 
 class TraceOQLConfig(OQLConfig):
-    """OQL configuration for trace filtering.
+    """用于 trace 过滤的 OQL 配置。
 
-    Based on backend's TraceField enum.
-    See: apps/opik-backend/src/main/java/com/comet/opik/api/filter/TraceField.java
+    基于后端的 TraceField 枚举。
+    参见：apps/opik-backend/src/main/java/com/comet/opik/api/filter/TraceField.java
     """
 
     @property
@@ -167,10 +166,10 @@ class TraceOQLConfig(OQLConfig):
 
 
 class SpanOQLConfig(OQLConfig):
-    """OQL configuration for span filtering.
+    """用于 span 过滤的 OQL 配置。
 
-    Based on backend's SpanField enum.
-    See: apps/opik-backend/src/main/java/com/comet/opik/api/filter/SpanField.java
+    基于后端的 SpanField 枚举。
+    参见：apps/opik-backend/src/main/java/com/comet/opik/api/filter/SpanField.java
     """
 
     @property
@@ -234,10 +233,10 @@ class SpanOQLConfig(OQLConfig):
 
 
 class ThreadOQLConfig(OQLConfig):
-    """OQL configuration for thread filtering.
+    """用于线程过滤的 OQL 配置。
 
-    Based on backend's TraceThreadField enum.
-    See: apps/opik-backend/src/main/java/com/comet/opik/api/filter/TraceThreadField.java
+    基于后端的 TraceThreadField 枚举。
+    参见：apps/opik-backend/src/main/java/com/comet/opik/api/filter/TraceThreadField.java
     """
 
     @property
@@ -285,18 +284,18 @@ class ThreadOQLConfig(OQLConfig):
 
 
 class DatasetItemOQLConfig(OQLConfig):
-    """OQL configuration for dataset item filtering.
+    """用于数据集项目过滤的 OQL 配置。
 
-    Based on backend's DatasetItemField enum and FilterQueryBuilder.
-    See: apps/opik-backend/src/main/java/com/comet/opik/api/filter/DatasetItemField.java
+    基于后端的 DatasetItemField 枚举和 FilterQueryBuilder。
+    参见：apps/opik-backend/src/main/java/com/comet/opik/api/filter/DatasetItemField.java
     """
 
     @property
     def columns(self) -> Dict[str, str]:
-        # Maps to DatasetItemField enum values and their FieldType
+        # 映射到 DatasetItemField 枚举值及其 FieldType
         return {
             "id": "string",  # FieldType.STRING
-            "data": "map",  # FieldType.MAP - supports nested key access
+            "data": "map",  # FieldType.MAP - 支持嵌套键访问
             "full_data": "string",  # FieldType.STRING - toString(data)
             "source": "string",  # FieldType.STRING
             "trace_id": "string",  # FieldType.STRING
@@ -327,12 +326,12 @@ class DatasetItemOQLConfig(OQLConfig):
 
     @property
     def dictionary_fields(self) -> List[str]:
-        # Fields that support nested key access via dot notation (data.key_name)
+        # 支持通过点表示法进行嵌套键访问的字段（data.key_name）
         return ["data"]
 
 
 class PromptVersionOQLConfig(OQLConfig):
-    """OQL configuration for prompt version filtering."""
+    """用于提示词版本过滤的 OQL 配置。"""
 
     @property
     def columns(self) -> Dict[str, str]:
@@ -351,8 +350,8 @@ class PromptVersionOQLConfig(OQLConfig):
 
     @property
     def supported_operators(self) -> Dict[str, List[str]]:
-        # All string-typed fields here are backend FieldType.STRING_STATE_DB,
-        # which does not support > / < — see STRING_STATE_DB_OPERATORS.
+        # 这里所有字符串类型字段都是后端 FieldType.STRING_STATE_DB，
+        # 不支持 > / < — 参见 STRING_STATE_DB_OPERATORS。
         return {
             "id": STRING_STATE_DB_OPERATORS,
             "commit": STRING_STATE_DB_OPERATORS,
@@ -380,20 +379,20 @@ _DEFAULT_CONFIG = TraceOQLConfig()
 
 class OpikQueryLanguage:
     """
-    This method implements a parser that can be used to convert a filter string into a list of filters that the BE expects.
+    此方法实现了一个解析器，可用于将过滤字符串转换为后端期望的过滤器列表。
 
-    For example, this class allows you to convert the query string: `input contains "hello"` into
-    `[{'field': 'input', 'operator': 'contains', 'value': 'hello'}]` as expected by the BE.
+    例如，此类允许您将查询字符串 `input contains "hello"` 转换为
+    后端期望的 `[{'field': 'input', 'operator': 'contains', 'value': 'hello'}]`。
 
-    When converting a query string into another format, a common approach is:
-    1. First convert the string into a series of tokens using a tokenizer
-    2. Convert the list of tokens into an Abstract Syntax Tree (AST) using a parser
-    3. Traverse the AST and convert it into the desired format using a formatter
+    将查询字符串转换为另一种格式的常见方法是：
+    1. 首先使用分词器将字符串转换为一系列标记
+    2. 使用解析器将标记列表转换为抽象语法树（AST）
+    3. 遍历 AST 并使用格式化器将其转换为所需格式
 
-    Due to the simple nature of the queries we currently support (no support for and/or operators, etc.), we have
-    combined the tokenizer and formatter steps into a single parse method.
+    由于我们当前支持的查询性质简单（不支持 and/or 运算符等），
+    我们已将分词器和格式化器步骤合并为单个 parse 方法。
 
-    The parse method works by iterating over the string character by character and extracting / validating the tokens.
+    parse 方法通过逐字符迭代字符串并提取/验证标记来工作。
     """
 
     def __init__(self, query_string: Optional[str], config: Optional[OQLConfig] = None):
@@ -409,52 +408,47 @@ class OpikQueryLanguage:
     @classmethod
     def for_traces(cls, query_string: Optional[str]) -> "OpikQueryLanguage":
         """
-        Creates a parser for filtering traces using OQL syntax. Returns an
-        OpikQueryLanguage instance preconfigured with TraceOQLConfig that validates
-        trace-specific fields. Empty or None query_string yields no filters;
-        malformed queries raise ValueError during parsing.
+        创建一个使用 OQL 语法过滤 trace 的解析器。返回一个预配置了 TraceOQLConfig 的
+        OpikQueryLanguage 实例，用于验证 trace 特定字段。空或 None 的 query_string 不产生过滤器；
+        格式错误的查询在解析期间引发 ValueError。
         """
         return cls(query_string, TraceOQLConfig())
 
     @classmethod
     def for_spans(cls, query_string: Optional[str]) -> "OpikQueryLanguage":
         """
-        Creates a parser for filtering spans using OQL syntax. Returns an
-        OpikQueryLanguage instance preconfigured with SpanOQLConfig that validates
-        span-specific fields. Empty or None query_string yields no filters;
-        malformed queries raise ValueError during parsing.
+        创建一个使用 OQL 语法过滤 span 的解析器。返回一个预配置了 SpanOQLConfig 的
+        OpikQueryLanguage 实例，用于验证 span 特定字段。空或 None 的 query_string 不产生过滤器；
+        格式错误的查询在解析期间引发 ValueError。
         """
         return cls(query_string, SpanOQLConfig())
 
     @classmethod
     def for_threads(cls, query_string: Optional[str]) -> "OpikQueryLanguage":
         """
-        Creates a parser for filtering trace threads using OQL syntax. Returns an
-        OpikQueryLanguage instance preconfigured with ThreadOQLConfig that validates
-        thread-specific fields. Empty or None query_string yields no filters;
-        malformed queries raise ValueError during parsing.
+        创建一个使用 OQL 语法过滤 trace 线程的解析器。返回一个预配置了 ThreadOQLConfig 的
+        OpikQueryLanguage 实例，用于验证线程特定字段。空或 None 的 query_string 不产生过滤器；
+        格式错误的查询在解析期间引发 ValueError。
         """
         return cls(query_string, ThreadOQLConfig())
 
     @classmethod
     def for_dataset_items(cls, query_string: Optional[str]) -> "OpikQueryLanguage":
         """
-        Creates a parser for filtering dataset items using OQL syntax. Use this when working with
-        dataset views or filtering items within a dataset. Returns an OpikQueryLanguage instance
-        preconfigured with DatasetItemOQLConfig that validates dataset-specific fields like input,
-        expected_output, and item metadata. Empty or None query_string yields no filters; malformed
-        queries raise ValueError during parsing.
+        创建一个使用 OQL 语法过滤数据集项目的解析器。在处理数据集视图或过滤数据集中的项目时使用。
+        返回一个预配置了 DatasetItemOQLConfig 的 OpikQueryLanguage 实例，
+        用于验证数据集特定字段（如 input、expected_output 和项目元数据）。
+        空或 None 的 query_string 不产生过滤器；格式错误的查询在解析期间引发 ValueError。
         """
         return cls(query_string, DatasetItemOQLConfig())
 
     @classmethod
     def for_prompt_versions(cls, query_string: Optional[str]) -> "OpikQueryLanguage":
         """
-        Creates a parser for filtering prompt versions using OQL syntax. Use this when searching
-        or filtering prompt version history. Returns an OpikQueryLanguage instance preconfigured
-        with PromptVersionOQLConfig that validates prompt version fields like tags, template,
-        commit, metadata, and created_at. Empty or None query_string yields no filters; malformed
-        queries raise ValueError during parsing.
+        创建一个使用 OQL 语法过滤提示词版本的解析器。在搜索或过滤提示词版本历史时使用。
+        返回一个预配置了 PromptVersionOQLConfig 的 OpikQueryLanguage 实例，
+        用于验证提示词版本字段（如 tags、template、commit、metadata 和 created_at）。
+        空或 None 的 query_string 不产生过滤器；格式错误的查询在解析期间引发 ValueError。
         """
         return cls(query_string, PromptVersionOQLConfig())
 
@@ -487,7 +481,7 @@ class OpikQueryLanguage:
 
     def _is_valid_escaped_key_char(self, quote_type: str, start: int) -> bool:
         if self.query_string[self._cursor] != quote_type:
-            # Check this isn't the end of the string (means we missed the closing quote)
+            # 检查这不是字符串的结尾（意味着我们漏掉了关闭引号）
             if self._cursor + 2 >= len(self.query_string):
                 raise ValueError(
                     "Missing closing quote for: " + self.query_string[start - 1 :]
@@ -495,12 +489,12 @@ class OpikQueryLanguage:
 
             return True
 
-        # Check if it's an escaped quote (doubled quote)
+        # 检查是否是转义引号（双引号）
         if (
             self._cursor + 1 < len(self.query_string)
             and self.query_string[self._cursor + 1] == quote_type
         ):
-            # Skip the second quote
+            # 跳过第二个引号
             self._cursor += 1
             return True
 
@@ -516,13 +510,13 @@ class OpikQueryLanguage:
         return connector
 
     def _parse_field(self) -> Dict[str, Any]:
-        # Skip whitespace
+        # 跳过空白字符
         self._skip_whitespace()
 
         columns = self._config.columns
         dictionary_fields = self._config.dictionary_fields
 
-        # Parse the field name
+        # 解析字段名称
         start = self._cursor
         while self._cursor < len(self.query_string) and self._is_valid_field_char(
             self.query_string[self._cursor]
@@ -530,15 +524,15 @@ class OpikQueryLanguage:
             self._cursor += 1
         field = self.query_string[start : self._cursor]
 
-        # Parse the key if it exists
+        # 如果存在则解析键
         if (
             self._cursor < len(self.query_string)
             and self.query_string[self._cursor] == "."
         ):
-            # Skip the "."
+            # 跳过 "."
             self._cursor += 1
 
-            # Check if the key is quoted
+            # 检查键是否被引号包围
             is_quoted_key, quote_type = self._check_escaped_key()
 
             start = self._cursor
@@ -552,15 +546,15 @@ class OpikQueryLanguage:
 
             key = self.query_string[start : self._cursor]
 
-            # If escaped key, skip the closing quote
+            # 如果是转义键，跳过关闭引号
             if is_quoted_key:
                 key = key.replace(
                     quote_type * 2, quote_type
-                )  # Replace doubled quotes with single quotes
+                )  # 将双引号替换为单引号
                 self._cursor += 1
 
-            # Special handling for usage.X fields (trace/span specific)
-            # These are treated as flat fields, not dictionary access
+            # 对 usage.X 字段的特殊处理（trace/span 特定）
+            # 这些被视为扁平字段，而不是字典访问
             if field == "usage":
                 composite_field = f"usage.{key}"
                 if composite_field in columns:
@@ -574,7 +568,7 @@ class OpikQueryLanguage:
                         f"When querying usage, {key} is not supported, only usage.total_tokens, usage.prompt_tokens and usage.completion_tokens are supported."
                     )
 
-            # Keys are only supported for dictionary fields
+            # 键仅支持字典字段
             if field not in dictionary_fields:
                 raise ValueError(
                     f"Field {field}.{key} is not supported, only the fields {list(columns.keys())} are supported."
@@ -582,25 +576,22 @@ class OpikQueryLanguage:
             elif field in columns:
                 return {"field": field, "key": key, "type": columns[field]}
             else:
-                # defaults to string
+                # 默认为字符串
                 return {"field": field, "key": key, "type": "string"}
 
         elif field in columns:
             return {"field": field, "key": "", "type": columns[field]}
         else:
-            # defaults to string
+            # 默认为字符串
             return {"field": field, "key": "", "type": "string"}
 
     def _parse_operator(self, parsed_field: str) -> Dict[str, Any]:
-        # Skip whitespace
+        # 跳过空白字符
         self._skip_whitespace()
 
         supported_operators = self._config.supported_operators
 
-        if parsed_field not in supported_operators:
-            parsed_field = "default"
-
-        # Parse the operator
+        # 解析运算符
         if self.query_string[self._cursor] == "=":
             operator = "="
             self._cursor += 1
@@ -655,7 +646,7 @@ class OpikQueryLanguage:
             self._cursor += 1
             start = self._cursor
 
-            # TODO: replace with new quote parser used in field parser
+            # TODO: 替换为字段解析器中使用的新引号解析器
             while (
                 self._cursor < len(self.query_string)
                 and self.query_string[self._cursor] != '"'
@@ -664,7 +655,7 @@ class OpikQueryLanguage:
 
             value = self.query_string[start : self._cursor]
 
-            # Add 1 to skip the closing quote and return the value
+            # 加 1 以跳过关闭引号并返回值
             self._cursor += 1
             return {"value": value}
         elif (
@@ -695,7 +686,7 @@ class OpikQueryLanguage:
             raise ValueError(
                 f"Expected array value starting with '(' for in/not_in operator, got: {self.query_string[self._cursor :]!r}"
             )
-        self._cursor += 1  # skip '('
+        self._cursor += 1  # 跳过 '('
 
         items: List[str] = []
         while True:
@@ -736,10 +727,10 @@ class OpikQueryLanguage:
         expressions = []
 
         while True:
-            # Parse fields
+            # 解析字段
             parsed_field = self._parse_field()
 
-            # Parse operators
+            # 解析运算符
             parsed_operator = self._parse_operator(parsed_field["field"])
 
             operator_name = parsed_operator.get("operator", "")

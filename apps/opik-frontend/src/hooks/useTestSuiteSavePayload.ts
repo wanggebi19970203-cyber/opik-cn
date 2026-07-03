@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import i18next from "i18next";
 import useTestSuiteDraftStore from "@/store/TestSuiteDraftStore";
 import { packAssertions } from "@/lib/assertion-converters";
 import {
@@ -56,7 +57,7 @@ export function useTestSuiteSavePayload({
 
       if (!suite) {
         throw new Error(
-          "Test suite data not available. Please refresh and try again.",
+          i18next.t("common.hooks.useTestSuiteSavePayload.testSuiteDataNotAvailable"),
         );
       }
 

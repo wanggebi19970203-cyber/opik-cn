@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { FilePen, Loader2 } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 
@@ -36,8 +37,10 @@ const VersionHistoryTimeline: React.FC<VersionHistoryTimelineProps> = ({
   hasNextPage = false,
   isFetchingNextPage = false,
   onLoadMore,
-  emptyTitle = "No version history",
+  emptyTitle,
 }) => {
+  const { t } = useTranslation("tracing");
+  const resolvedEmptyTitle = emptyTitle ?? t("versionHistory.noVersionHistory");
   const { ref: sentinelRef, inView } = useInView();
 
   useEffect(() => {
@@ -47,7 +50,7 @@ const VersionHistoryTimeline: React.FC<VersionHistoryTimelineProps> = ({
   }, [inView, hasNextPage, isFetchingNextPage, onLoadMore]);
 
   if (items.length === 0) {
-    return <DataTableNoData title={emptyTitle} />;
+    return <DataTableNoData title={resolvedEmptyTitle} />;
   }
 
   return (

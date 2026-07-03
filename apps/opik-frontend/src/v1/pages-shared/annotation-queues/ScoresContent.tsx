@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import {
   FeedbackDefinition,
@@ -36,9 +37,30 @@ export const DEFAULT_COLUMNS: ColumnData<FeedbackDefinition>[] = [
   },
 ];
 
+const getTranslatedColumns = (t: (key: string) => string): ColumnData<FeedbackDefinition>[] => [
+  {
+    id: "name",
+    label: t("common.annotationQueues.feedbackOption"),
+    type: COLUMN_TYPE.numberDictionary,
+    cell: FeedbackOptionCell as never,
+  },
+  {
+    id: "description",
+    label: t("common.labels.description"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "values",
+    label: t("common.annotationQueues.availableValues"),
+    type: COLUMN_TYPE.string,
+    cell: FeedbackDefinitionsValueCell as never,
+  },
+];
+
 const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   // Extract repeated checks into well-named variables
@@ -74,7 +96,7 @@ const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
       definitions.push({
         id: "comments",
         name: "Comments",
-        description: "Text field for open feedback or additional notes.",
+        description: t("common.annotationQueues.commentsDescription"),
         type: FEEDBACK_DEFINITION_TYPE.categorical,
         created_at: "",
         last_updated_at: "",
@@ -88,16 +110,17 @@ const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
   }, [data?.content, hasFeedbackDefinitions, hasComments, annotationQueue]);
 
   const columns = useMemo(() => {
+    const translatedColumns = getTranslatedColumns(t);
     // If only Comments row is shown, hide "Available values" column
     const columnsToShow = hasOnlyComments
-      ? DEFAULT_COLUMNS.filter((col) => col.id !== "values")
-      : DEFAULT_COLUMNS;
+      ? translatedColumns.filter((col) => col.id !== "values")
+      : translatedColumns;
 
     return convertColumnDataToColumn<FeedbackDefinition, FeedbackDefinition>(
       columnsToShow,
       {},
     );
-  }, [hasOnlyComments]);
+  }, [hasOnlyComments, t]);
 
   // Only hide the table if comments are disabled AND there are no feedback definitions
   if (!hasComments && !hasFeedbackDefinitions) {

@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { CellContext } from "@tanstack/react-table";
 import { MoreHorizontal, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import useWorkspace from "@/plugins/comet/useWorkspace";
 const WorkspaceMemberActionsCell = (
   context: CellContext<WorkspaceMember, unknown>,
 ) => {
+  const { t } = useTranslation("common");
   const row = context.row.original;
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState(false);
@@ -42,12 +44,12 @@ const WorkspaceMemberActionsCell = (
     resetKeyRef.current = resetKeyRef.current + 1;
   }, []);
 
-  const displayName = row.userName || row.email || "User";
+  const displayName = row.userName || row.email || t("labels.user");
 
   const menuButton = (
     <Button variant="ghost" size="icon" className="size-8">
       <MoreHorizontal className="size-4" />
-      <span className="sr-only">Actions menu</span>
+      <span className="sr-only">{t("labels.actionsMenu")}</span>
     </Button>
   );
 
@@ -58,7 +60,7 @@ const WorkspaceMemberActionsCell = (
       variant="destructive"
     >
       <Trash className="mr-2 size-4" />
-      Delete
+      {t("buttons.delete")}
     </DropdownMenuItem>
   );
 
@@ -74,16 +76,16 @@ const WorkspaceMemberActionsCell = (
         open={open}
         setOpen={setOpen}
         onConfirm={deleteUserHandler}
-        title="Remove user from workspace"
-        description={`Are you sure you want to remove ${displayName} from this workspace?`}
-        confirmText="Remove user"
+        title={t("dialogs.removeUserFromWorkspace")}
+        description={t("dialogs.removeUserConfirmation", { displayName })}
+        confirmText={t("buttons.removeUser")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>{menuButton}</DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           {isInvitedByEmail ? (
-            <TooltipWrapper content="Cannot remove users invited by email">
+            <TooltipWrapper content={t("messages.cannotRemoveEmailInvitees")}>
               <div className="w-full">{deleteMenuItem}</div>
             </TooltipWrapper>
           ) : (

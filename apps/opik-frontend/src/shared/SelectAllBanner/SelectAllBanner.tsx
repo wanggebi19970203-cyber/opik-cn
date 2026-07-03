@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/ui/button";
 
@@ -15,6 +16,7 @@ const SelectAllBanner: React.FC<SelectAllBannerProps> = ({
   onSelectAll,
   onClearSelection,
 }) => {
+  const { t } = useTranslation("common");
   const isAllSelected = selectedCount === totalCount;
 
   return (
@@ -27,19 +29,25 @@ const SelectAllBanner: React.FC<SelectAllBannerProps> = ({
         )}
         <span className="comet-body-s text-foreground">
           {isAllSelected ? (
-            <>
-              All <b>{totalCount}</b> items are selected
-            </>
+            <Trans
+              i18nKey="emptyStates.allItemsSelected"
+              ns="common"
+              values={{ count: totalCount }}
+            />
           ) : (
             <>
-              All <b>{selectedCount}</b> items on this page are selected.{" "}
+              <Trans
+                i18nKey="emptyStates.pageItemsSelected"
+                ns="common"
+                values={{ count: selectedCount }}
+              />{" "}
               <Button
                 variant="link"
                 size="sm"
                 onClick={onSelectAll}
                 className="h-auto p-0"
               >
-                Select all {totalCount} items?
+                {t("emptyStates.selectAllItems", { count: totalCount })}
               </Button>
             </>
           )}
@@ -51,7 +59,7 @@ const SelectAllBanner: React.FC<SelectAllBannerProps> = ({
         onClick={onClearSelection}
         className="h-auto p-0"
       >
-        Clear selection
+        {t("emptyStates.clearSelection")}
       </Button>
     </div>
   );

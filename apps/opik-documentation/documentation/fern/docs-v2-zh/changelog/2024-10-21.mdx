@@ -1,0 +1,47 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 新增从界面下载 trace 和 LLM 调用为 CSV 文件的选项：
+  <Frame>
+    <img src="/img/changelog/2024-10-21/download_traces.png" />
+  </Frame>
+- 引入新的快速入门指南帮助您开始使用：
+  <Frame>
+    <img src="/img/changelog/2024-10-21/quickstart_guide.png" />
+  </Frame>
+- 更新数据集以支持更灵活的数据模式，现在可以插入任意键值对的条目，不再限于 `input` 和 `expected_output`。更多信息请参阅下方 SDK 部分。
+- 多项小型用户体验改进（项目更信息丰富的空状态、更新的图标、实验页面的反馈标签页等）。
+- 修复 `\t` 字符导致 trace 页面 YAML 代码块损坏的问题。
+
+**SDK**：
+
+- 数据集现在支持更灵活的数据模式，我们支持插入任意键值对的条目：
+
+  ```python wordWrap
+  import opik
+
+  client = opik.Opik()
+  dataset = client.get_or_create_dataset(name="Demo Dataset")
+  dataset.insert([
+      {
+          "user_question": "Hello, what can you do ?",
+          "expected_output": {
+              "assistant_answer": "I am a chatbot assistant that can answer questions and help you with your queries!"
+          }
+      },
+      {
+          "user_question": "What is the capital of France?",
+          "expected_output": {
+              "assistant_answer": "Paris"
+          }
+      },
+  ])
+  ```
+
+- 基于 LiteLLM 集成发布了 WatsonX、Gemini 和 Groq 集成。
+- [Hallucination](/v1/integrations/overview) 指标中的 `context` 字段现在是可选的。
+- LLM as a Judge 指标现在支持通过指定 `model` 参数来自定义 LLM 提供商。更多信息请参阅[自定义 LLM as a Judge 指标](/v1/evaluation/metrics/overview#customizing-llm-as-a-judge-metrics)部分。
+- 修复使用 `update_current_span` 和 `update_current_trace` 方法更新反馈评分时的问题。详情请参阅此 Github issue。

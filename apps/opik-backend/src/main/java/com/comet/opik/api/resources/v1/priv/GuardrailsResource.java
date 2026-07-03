@@ -35,14 +35,14 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @jakarta.inject.Inject)
-@Tag(name = "Guardrails", description = "Guardrails related resources")
+@Tag(name = "Guardrails", description = "护栏相关资源")
 public class GuardrailsResource {
     private final @NonNull GuardrailsService guardrailsService;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @POST
-    @Operation(operationId = "createGuardrails", summary = "Create guardrails for traces in a batch", description = "Batch guardrails for traces", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content")})
+    @Operation(operationId = "createGuardrails", summary = "批量创建追踪护栏", description = "批量创建追踪护栏", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     @RateLimited
     public Response createGuardrails(
             @RequestBody(content = @Content(schema = @Schema(implementation = GuardrailBatch.class))) @NotNull @Valid @JsonView(Guardrail.View.Write.class) GuardrailBatch batch) {

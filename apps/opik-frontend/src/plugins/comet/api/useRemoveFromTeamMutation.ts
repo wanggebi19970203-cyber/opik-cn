@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import { WORKSPACE_USERS_ROLES_QUERY_KEY } from "./useWorkspaceUsersRoles";
 
@@ -16,7 +17,7 @@ const extractServerMessage = (error: unknown): string => {
   return (
     axiosError?.response?.data?.message ||
     axiosError?.response?.data?.msg ||
-    "Failed to remove user from team"
+    i18next.t("common:comet.failedToRemoveUserFromTeam")
   );
 };
 
@@ -37,7 +38,7 @@ export function useRemoveFromTeamMutation() {
     mutationKey: ["workspace", "remove-from-team"],
     mutationFn: removeFromTeamRequest,
     onSuccess: (_, variables) => {
-      toast({ description: "User removed from team successfully" });
+      toast({ description: i18next.t("common:comet.userRemovedFromTeamSuccessfully") });
       queryClient.invalidateQueries({
         queryKey: ["workspace-members", { workspaceId: variables.teamId }],
       });

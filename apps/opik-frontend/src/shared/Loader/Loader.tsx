@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/ui/spinner";
 
@@ -8,9 +9,12 @@ type LoaderProps = {
 };
 
 const Loader: React.FunctionComponent<LoaderProps> = ({
-  message = "Loading",
+  message,
   className = "min-h-96",
 }) => {
+  const { t } = useTranslation("common");
+  const resolvedMessage = message ?? t("buttons.loading");
+
   return (
     <div
       className={cn(
@@ -18,8 +22,8 @@ const Loader: React.FunctionComponent<LoaderProps> = ({
         className,
       )}
     >
-      <Spinner className={cn(message && "mb-2")} />
-      {message}
+      <Spinner className={cn(resolvedMessage && "mb-2")} />
+      {resolvedMessage}
     </div>
   );
 };

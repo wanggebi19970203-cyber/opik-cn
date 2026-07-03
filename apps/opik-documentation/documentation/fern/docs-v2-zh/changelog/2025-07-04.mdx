@@ -1,0 +1,45 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+## Agent 优化器 1.0 发布！
+
+Opik Agent 优化器现在支持完整的 Agent 系统，而不仅仅是单个 prompts。
+
+支持 LangGraph、Google ADK、PydanticAI 等框架，此版本带来了简化的 API、评估模型自定义以及标准化接口，以简化优化工作流。[在文档中了解更多。](/v1/agent_optimization/overview)
+
+## 对话线程级别改进
+
+添加了**对话线程级别的反馈、标签和评论**：你现在可以直接在对话线程级别添加专家反馈评分，使领域专家能够审查完整的 Agent 对话、标记风险，并更有效地与开发团队协作。添加了对对话线程级别标签和评论的支持，以简化工作流并改善上下文共享。
+
+<Frame>
+  <img src="/img/changelog/2025-07-04/Thread-level_human_feedback.png" />
+</Frame>
+
+## 用户体验改进
+
+- 我们重新设计了 **Opik 主页**，提供更简洁、更直观的首次使用体验，包含聚焦的价值主张、关键指标的直接访问以及精致的外观。演示数据也已升级，以更有效地向新用户展示 Opik 的功能。此外，我们还添加了**跨项目比较能力**，用于指标和成本控制，允许你跨多个项目进行基准测试并监控性能和开支。
+
+<Frame>
+  <img src="/img/changelog/2025-07-04/Home_Page_1.png" />
+</Frame>
+
+<Frame>
+  <img src="/img/changelog/2025-07-04/Home_Page_2.png" />
+</Frame>
+
+- **改进的错误可视化**：增强了 span 级别错误在项目中的展示方式。错误现在会冒泡到项目视图，并提供快速访问详细错误日志和变化统计的快捷方式，以便更好地调试和追踪错误。
+
+- **改进的侧边栏快捷键**：更新了侧边栏快捷键，以便在项目和详情视图之间更高效地进行键盘导航。
+
+## SDK、集成和文档
+
+- 在指标类中添加了 **Langchain** 支持，允许将 Langchain 作为模型代理与 LiteLLM 一起使用，实现灵活的 LLM Judge 自定义。
+- 添加了对 **Gemini 2.5** 模型系列的支持。
+- 更新了美化模式以支持 **Dify** 和 **LangGraph + OpenAI** 响应。
+- 添加了 **OpenAI Agents 集成教程**（[链接](/v1/integrations/openai_agents)）。
+- 添加了如何将 **Huggingface 数据集导入 Opik** 的教程
+
+👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.7.37...1.7.42)
+
+_发布版本_: `1.7.37`, `1.7.38`, `1.7.39`, `1.7.40`, `1.7.41`, `1.7.42`

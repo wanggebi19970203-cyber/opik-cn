@@ -1,0 +1,350 @@
+---
+description: 从这里开始将 Opik 集成到基于 LlamaIndex 的 GenAI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Llama Index | Opik 文档
+og:description: 使用 LlamaIndex 构建强大的 LLM 应用，轻松连接、结构化和查询您的多样化数据源。
+og:site_name: Opik 文档
+og:title: 'Llama Index: 使用 Opik 框架构建 LLM 应用'
+title: 使用 Opik 实现 LlamaIndex 可观测性
+---
+
+[LlamaIndex](https://github.com/run-llama/llama_index) 是一个用于构建 LLM 应用的灵活数据框架：
+
+    LlamaIndex 是一个"数据框架"，帮助您构建 LLM 应用。它提供以下工具：
+
+    - 提供数据连接器，用于摄取您现有的数据源和数据格式（API、PDF、文档、SQL 等）。
+    - 提供数据结构化方式（索引、图），使数据能够轻松与 LLM 配合使用。
+    - 提供高级的检索/查询接口：输入任何 LLM 输入提示，获取检索到的上下文和知识增强输出。
+    - 支持与外部应用框架的轻松集成（例如 LangChain、Flask、Docker、ChatGPT 等）。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=llamaindex&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=llamaindex&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=llamaindex&utm_campaign=opik) 了解更多信息。
+
+## 快速开始
+
+### 安装
+
+要使用 Opik 与 LlamaIndex 的集成，您需要安装 `opik` 和 `llama_index` 包。可以使用 pip 安装：
+
+```bash
+pip install opik llama-index llama-index-agent-openai llama-index-llms-openai llama-index-callbacks-opik
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration) 了解详细说明：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 LlamaIndex
+
+要使用 LlamaIndex，您需要配置 LLM 提供商的 API 密钥。在本示例中，我们将使用 OpenAI。您可以在[这些页面中查找或创建您的 API 密钥](https://platform.openai.com/settings/organization/api-keys)：
+
+您可以将它们设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或者通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 使用 Opik 集成
+
+要使用 Opik 与 LlamaIndex 的集成，您可以使用 LlamaIndex 包中的 `set_global_handler` 函数设置全局追踪器：
+
+```python
+from llama_index.core import global_handler, set_global_handler
+
+set_global_handler("opik")
+opik_callback_handler = global_handler
+```
+
+设置完成后，所有 LlamaIndex 运行都将被追踪并记录到 Opik。
+
+或者，您可以直接配置回调处理器以获得更多控制：
+
+```python
+from llama_index.core import Settings
+from llama_index.core.callbacks import CallbackManager
+from opik.integrations.llama_index import LlamaIndexCallbackHandler
+
+# 基本设置
+opik_callback = LlamaIndexCallbackHandler()
+
+# 或带可选参数
+opik_callback = LlamaIndexCallbackHandler(
+    project_name="my-llamaindex-project",  # 设置自定义项目名称
+    skip_index_construction_trace=True     # 跳过索引构建追踪
+)
+
+Settings.callback_manager = CallbackManager([opik_callback])
+```
+
+`skip_index_construction_trace` 参数在您只想追踪查询操作而不追踪索引构建阶段时非常有用（特别是对于大型文档集或预构建的索引）。
+
+## 示例
+
+为了展示集成效果，我们将创建一个新的查询引擎，使用 Paul Graham 的文章作为数据源。
+
+**第一步：**
+配置 Opik 集成：
+
+```python
+import os
+from llama_index.core import global_handler, set_global_handler
+
+# 设置项目名称以便更好地组织
+os.environ["OPIK_PROJECT_NAME"] = "llamaindex-integration-demo"
+
+set_global_handler("opik")
+opik_callback_handler = global_handler
+```
+
+**第二步：**
+下载示例数据：
+
+```python
+import os
+import requests
+
+# 如果目录不存在则创建
+os.makedirs('./data/paul_graham/', exist_ok=True)
+
+# 使用 requests 下载文件
+url = 'https://raw.githubusercontent.com/run-llama/llama_index/main/docs/examples/data/paul_graham/paul_graham_essay.txt'
+response = requests.get(url)
+with open('./data/paul_graham/paul_graham_essay.txt', 'wb') as f:
+    f.write(response.content)
+```
+
+**第三步：**
+
+配置 OpenAI API 密钥：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+**第四步：**
+
+现在我们可以加载数据、创建索引和查询引擎：
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+documents = SimpleDirectoryReader("./data/paul_graham").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+response = query_engine.query("What did the author do growing up?")
+print(response)
+```
+
+由于已设置与 Opik 的集成，所有追踪都将记录到 Opik 平台：
+
+<Frame>
+  <img src="/img/cookbook/llamaIndex_cookbook.png" />
+</Frame>
+
+## 与 @track 装饰器配合使用
+
+LlamaIndex 集成与 Opik 的 `@track` 装饰器无缝协作。当您在被追踪的函数中调用 LlamaIndex 操作时，LlamaIndex 追踪将自动作为子 span 附加到现有追踪中。
+
+```python
+import opik
+from llama_index.core import global_handler, set_global_handler
+from llama_index.llms.openai import OpenAI
+from llama_index.core.llms import ChatMessage
+
+# 配置 Opik 集成
+set_global_handler("opik")
+opik_callback_handler = global_handler
+
+@opik.track()
+def my_llm_application(user_query: str):
+    """使用 LlamaIndex 处理用户查询"""
+    llm = OpenAI(model="gpt-3.5-turbo")
+    messages = [
+        ChatMessage(role="system", content="You are a helpful assistant."),
+        ChatMessage(role="user", content=user_query),
+    ]
+    
+    response = llm.chat(messages)
+    return response.message.content
+
+# 调用被追踪的函数
+result = my_llm_application("What is the capital of France?")
+print(result)
+```
+
+在此示例中，Opik 将为 `my_llm_application` 函数创建一个追踪，所有 LlamaIndex 操作（如 LLM 聊天调用）将作为嵌套 span 出现在此追踪中，为您提供应用执行的完整视图。
+
+## 与手动追踪创建配合使用
+
+您也可以使用 `opik.start_as_current_trace()` 手动创建追踪，并将 LlamaIndex 操作嵌套其中：
+
+```python
+import opik
+from llama_index.core import global_handler, set_global_handler
+from llama_index.llms.openai import OpenAI
+from llama_index.core.llms import ChatMessage
+
+# 配置 Opik 集成
+set_global_handler("opik")
+opik_callback_handler = global_handler
+
+# 创建手动追踪
+with opik.start_as_current_trace(name="user_query_processing"):
+    llm = OpenAI(model="gpt-3.5-turbo")
+    messages = [
+        ChatMessage(role="user", content="Explain quantum computing in simple terms"),
+    ]
+    
+    response = llm.chat(messages)
+    print(response.message.content)
+```
+
+当您想要更多控制追踪命名，并希望将多个 LlamaIndex 操作归组到单个追踪下时，这种方法非常有用。
+
+## 追踪 LlamaIndex 工作流
+
+LlamaIndex 工作流是用于 LLM 应用的多步骤处理管道。要在 Opik 中追踪工作流执行，您可以手动装饰工作流步骤，并使用 `opik.start_as_current_span()` 包装工作流执行。
+
+### 基本工作流追踪
+
+您可以使用 `@opik.track()` 装饰工作流步骤，并使用 `opik.start_as_current_span()` 追踪工作流执行：
+
+```python
+import opik
+from llama_index.core.workflow import Workflow, StartEvent, StopEvent, step, Event
+from llama_index.core import Settings
+from llama_index.core.callbacks import CallbackManager
+from llama_index.core import global_handler, set_global_handler
+
+# 为步骤中的 LLM 调用配置 Opik 集成
+set_global_handler("opik")
+
+class QueryEvent(Event):
+    """用于在工作流中传递查询的事件。"""
+    query: str
+
+class MyRAGWorkflow(Workflow):
+    """带有追踪步骤的简单 RAG 工作流。"""
+    
+    @step
+    @opik.track()
+    async def retrieve_context(self, ev: StartEvent) -> QueryEvent:
+        """为查询检索相关上下文。"""
+        query = ev.get("query", "")
+        # 您的检索逻辑在此
+        context = f"Context for: {query}"
+        return QueryEvent(query=f"{context} | {query}")
+    
+    @step
+    @opik.track()
+    async def generate_response(self, ev: QueryEvent) -> StopEvent:
+        """使用上下文生成最终响应。"""
+        # 您的生成逻辑在此
+        result = f"Response based on: {ev.query}"
+        return StopEvent(result=result)
+
+# 创建工作流实例
+workflow = MyRAGWorkflow()
+
+# 使用 start_as_current_span 追踪工作流执行
+with opik.start_as_current_span(
+    name="rag_workflow_execution",
+    input={"query": "What are the key features?"},
+    project_name="llama-index-workflows"
+) as span:
+    result = await workflow.run(query="What are the key features?")
+    span.update(output={"result": result})
+    
+print(result)
+opik.flush_tracker()  # 确保所有追踪已发送
+```
+
+在此示例中：
+- 每个工作流步骤都使用 `@opik.track()` 装饰以创建 span
+- `@step` 装饰器放在 `@opik.track()` 之前，以确保 LlamaIndex 能够正确发现工作流步骤
+- `opik.start_as_current_span()` 追踪整体工作流执行
+- 步骤中的 LLM 调用通过全局 Opik 处理器自动追踪
+- 所有工作流步骤作为嵌套 span 出现在工作流追踪中
+
+<Tip>
+如果您确定工作流是顶级调用，并且只想创建追踪而不需要额外的 span，可以使用 `opik.start_as_current_trace()` 代替 `opik.start_as_current_span()`。然而，`start_as_current_span()` 更灵活，因为它在独立和嵌套上下文中都能工作。
+</Tip>
+
+### 最佳实践
+
+1. **装饰所有工作流步骤**，使用 `@opik.track()` 将每个步骤捕获为 span
+2. **装饰器顺序很重要**：将 `@step` 放在 `@opik.track()` 之前，以便 LlamaIndex 的工作流引擎能够正确发现和执行步骤
+3. **使用 `opik.start_as_current_span()`** 包装工作流执行 - 它在独立和嵌套上下文中都能工作
+4. **配置全局处理器**以自动追踪步骤中的 LLM 调用
+5. **使用描述性名称**命名 span，以便于调试
+6. **始终调用 `opik.flush_tracker()`** 确保所有追踪已发送
+7. **在 span 更新中包含输入/输出**以获得更好的调试体验
+
+## 流式响应中的 Token 使用量
+
+当使用 OpenAI 模型的流式聊天响应（例如 `llm.stream_chat()`）时，您需要通过配置 `stream_options` 参数显式启用 token 使用量追踪：
+
+```python
+from llama_index.llms.openai import OpenAI
+from llama_index.core.llms import ChatMessage
+from llama_index.core import global_handler, set_global_handler
+
+# 配置 Opik 集成
+set_global_handler("opik")
+
+# 配置 OpenAI LLM，使用 stream_options 包含使用量信息
+llm = OpenAI(
+    model="gpt-3.5-turbo",
+    additional_kwargs={
+        "stream_options": {"include_usage": True}
+    }
+)
+
+messages = [
+    ChatMessage(role="user", content="Tell me a short joke")
+]
+
+# 现在 token 使用量将在流式响应中被追踪
+response = llm.stream_chat(messages)
+for chunk in response:
+    print(chunk.delta, end="", flush=True)
+```
+
+<Note>
+如果不设置 `stream_options={'include_usage': True}`，OpenAI 模型的流式响应将不会在 Opik 追踪中包含 token 使用量信息。这是 OpenAI 流式 API 的要求。
+</Note>
+
+## 成本追踪
+
+Opik 与 LlamaIndex 的集成自动追踪 LlamaIndex 应用中使用的所有支持的 LLM 模型的 token 使用量和成本。
+
+成本信息会自动捕获并显示在 Opik UI 中，包括：
+- Token 使用量详情
+- 基于模型定价的每请求成本
+- 总追踪成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面上查看支持的模型和提供商的完整列表。
+</Tip>

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 
 import api, {
   AGENT_INSIGHTS_ISSUES_KEY,
@@ -43,9 +44,9 @@ const useTriggerAgentInsightsJobMutation = () => {
       queryClient.invalidateQueries({ queryKey: [AGENT_INSIGHTS_JOB_KEY] });
       queryClient.invalidateQueries({ queryKey: [AGENT_INSIGHTS_ISSUES_KEY] });
       toast({
-        title: "Diagnostic started",
+        title: i18next.t("common:messages.diagnosticStarted"),
         description:
-          "We're analysing the last 24h of traces. New issues will appear here once the run completes.",
+          i18next.t("common:messages.diagnosticStartedDescription"),
       });
     },
     onError: (error: AxiosError) => handleMutationError(toast, error),

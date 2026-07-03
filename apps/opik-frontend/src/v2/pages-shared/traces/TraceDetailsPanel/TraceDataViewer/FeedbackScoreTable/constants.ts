@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { COLUMN_TYPE, ColumnData } from "@/types/shared";
 import { ExpandingFeedbackScoreRow } from "./types";
 import SourceCell from "./cells/SourceCell";
@@ -103,7 +104,7 @@ export const NON_CONFIGURABLE_COLUMNS: ColumnData<ExpandingFeedbackScoreRow>[] =
   [
     {
       id: FeedbackScoreTableColumns.KEY,
-      label: "Key",
+      label: i18next.t("common:labels.key"),
       type: COLUMN_TYPE.string,
       size: 100,
       cell: NameCell as never,
@@ -113,35 +114,35 @@ export const NON_CONFIGURABLE_COLUMNS: ColumnData<ExpandingFeedbackScoreRow>[] =
 export const CONFIGURABLE_COLUMNS: ColumnData<ExpandingFeedbackScoreRow>[] = [
   {
     id: FeedbackScoreTableColumns.SOURCE,
-    label: "Source",
+    label: i18next.t("feedbackScoreTable.source"),
     type: COLUMN_TYPE.string,
     size: 100,
     cell: SourceCell as never,
   },
   {
     id: FeedbackScoreTableColumns.TYPE,
-    label: "Type",
+    label: i18next.t("common:labels.type"),
     type: COLUMN_TYPE.string,
     size: 100,
     cell: TypeCell as never,
   },
   {
     id: FeedbackScoreTableColumns.VALUE,
-    label: "Score",
+    label: i18next.t("feedbackScoreTable.score"),
     type: COLUMN_TYPE.string,
     cell: ValueCell as never,
     size: 100,
   },
   {
     id: FeedbackScoreTableColumns.REASON,
-    label: "Reason",
+    label: i18next.t("common:labels.reason"),
     type: COLUMN_TYPE.string,
     cell: ReasonCell as never,
     size: 100,
   },
   {
     id: FeedbackScoreTableColumns.CREATED_BY,
-    label: "Scored by",
+    label: i18next.t("feedbackScoreTable.scoredBy"),
     type: COLUMN_TYPE.string,
     cell: AuthorCell as never,
     size: 100,

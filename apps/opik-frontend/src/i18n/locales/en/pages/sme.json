@@ -1,0 +1,89 @@
+{
+  "sme": {
+    "title": "SME Flow",
+    "description": "Subject Matter Expert workflow",
+    "steps": {
+      "review": "Review",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "itemsSidebar": {
+      "queueItems": "Queue items",
+      "allScored": "All scored",
+      "remaining": "{{count}} remaining",
+      "toReview": "To review",
+      "processed": "Processed",
+      "completed": "Completed",
+      "reviewed": "Reviewed",
+      "inReview": "In review"
+    },
+    "annotationView": {
+      "updateNext": "Update + next",
+      "updateComplete": "Update + complete",
+      "submitComplete": "Submit + complete",
+      "submitNext": "Submit + next",
+      "previousItem": "Previous item",
+      "nextItem": "Next item",
+      "submitAndContinue": "Submit and continue",
+      "previous": "Previous",
+      "next": "Next",
+      "of": "of",
+      "loadingAnnotationQueue": "Loading annotation queue...",
+      "readInstructions": "Read instructions"
+    },
+    "commentAndScoreViewer": {
+      "comment": "Comment",
+      "addCommentPlaceholder": "Add a comment...",
+      "feedbackScores": "Feedback scores",
+      "alreadyScoredByOthers": "This item has already been scored by the required number of annotators",
+      "beingReviewedByOther": "This item is currently being reviewed by another annotator"
+    },
+    "traceDataViewer": {
+      "trace": "Trace",
+      "traceLabel": "Trace:",
+      "toolCalls": "Tool calls",
+      "input": "Input",
+      "output": "Output",
+      "metadata": "Metadata",
+      "viewTrace": "View trace",
+      "viewToolCalls": "View tool calls"
+    },
+    "completionView": {
+      "allItemsCompleted": "All items completed!",
+      "allAnnotationsComplete": "All annotations in this queue are complete. Your feedback has been saved and will help improve our AI models.",
+      "canCloseTab": "You can close this tab.",
+      "reviewAnnotations": "Review annotations",
+      "reviewAnnotationsAriaLabel": "Review annotations"
+    },
+    "getStartedView": {
+      "welcomeTo": "Welcome to {{name}}",
+      "invitedToReview": "You've been invited to review examples of AI responses in this queue and share your feedback.",
+      "resumeAnnotating": "Resume annotating",
+      "startAnnotating": "Start annotating",
+      "reviewAnnotations": "Review annotations",
+      "allItemsProcessed": "All items in this annotation queue have already been processed and do not require additional annotation.",
+      "instructions": "Instructions",
+      "feedbackOptions": "Feedback options",
+      "feedbackOptionsDescription": "Here are the types of feedback you can give when reviewing responses, along with the possible values for each."
+    },
+    "returnToAnnotationQueue": {
+      "returnToAnnotationQueue": "Return to annotation queue",
+      "returnToAnnotationQueueAriaLabel": "Return to annotation queue",
+      "unsavedChanges": "Unsaved changes",
+      "unsavedChangesDescription": "You have unsaved changes to your annotations. If you leave now, your changes will be lost.",
+      "leaveWithoutSaving": "Leave without saving",
+      "stayOnPage": "Stay on page"
+    },
+    "noDataView": {
+      "error": "Error",
+      "unableToLoadAnnotationQueue": "Unable to load annotation queue. The queue may not exist or you may not have access to it.",
+      "queueNotAvailable": "Queue not available",
+      "checkQueueLinkOrContactAdmin": "Please check the queue link or contact your administrator for access.",
+      "unableToLoadItems": "Unable to load items in this annotation queue. This is usually a temporary issue.",
+      "itemsFailedToLoad": "Items failed to load",
+      "tryAgainOrContactAdmin": "Please try again. If the problem persists, contact your administrator.",
+      "noAnnotationQueueSelected": "No annotation queue selected",
+      "toBeginSmeEvaluation": "To begin SME evaluation, please access this page through an annotation queue link."
+    }
+  }
+}

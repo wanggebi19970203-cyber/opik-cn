@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Wand2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { PromptWithLatestVersion, PromptVersion } from "@/types/prompts";
 import { Button } from "@/ui/button";
@@ -17,6 +18,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
   prompt,
   activeVersion,
 }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -37,7 +39,9 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
 
   return (
     <>
-      <TooltipWrapper content="Opens the prompt in the Playground for improvement">
+      <TooltipWrapper
+        content={t("prompt:promptImprovement.improvePromptDescription")}
+      >
         <Button
           variant="secondary"
           size="sm"
@@ -52,7 +56,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
           }}
         >
           <Wand2 className="mr-1.5 size-3.5" />
-          Improve prompt
+          {t("prompt:promptImprovement.improvePrompt")}
         </Button>
       </TooltipWrapper>
       <ConfirmDialog
@@ -60,9 +64,9 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
         open={Boolean(open)}
         setOpen={setOpen}
         onConfirm={handleLoadPlayground}
-        title="Load prompt"
-        description="Loading this prompt into the Playground will replace any unsaved changes. This action cannot be undone."
-        confirmText="Load prompt"
+        title={t("prompt:loadPrompt")}
+        description={t("prompt:loadPromptDescription")}
+        confirmText={t("prompt:loadPrompt")}
       />
     </>
   );

@@ -1,0 +1,310 @@
+---
+description: 从这里开始将 Opik 集成到您的 OpenAI 生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: OpenAI | Opik 文档
+og:description: 了解如何使用 track_openai 方法在 Opik 项目中无缝跟踪和评估 OpenAI API 调用。
+og:site_name: Opik 文档
+og:title: 将 OpenAI 与 Opik 集成以实现高效跟踪
+title: 使用 Opik 实现 OpenAI (Python) 的可观测性
+---
+
+<Tip>
+  如果您正在使用 OpenAI 的 Agents 框架，我们建议改用 [OpenAI Agents 集成](/integrations/openai_agents)。
+</Tip>
+
+本指南介绍如何将 Opik 与 OpenAI Python SDK 集成。通过使用 opik 提供的 `track_openai` 方法，您可以轻松地在 Opik 项目中跟踪和评估 OpenAI API 调用，Opik 会自动记录输入提示词、使用的模型、token 用量以及生成的响应。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=openai&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=openai&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=openai&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云托管 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 OpenAI
+
+要配置 OpenAI，您需要拥有 OpenAI API Key。您可以在[此页面查找或创建您的 OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)。
+
+可以将其设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或者通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，您需要使用 `track_openai` 包装 OpenAI 客户端。使用包装后的客户端进行调用时，所有调用都将被记录到 Opik：
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+import os
+
+os.environ["OPIK_PROJECT_NAME"] = "openai-integration-demo"
+
+client = OpenAI()
+openai_client = track_openai(client)
+
+prompt = """
+Write a short two sentence story about Opik.
+"""
+
+completion = openai_client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+print(completion.choices[0].message.content)
+```
+
+<Frame>
+  <img src="/img/cookbook/openai_trace_cookbook.png" />
+</Frame>
+
+## 高级用法
+
+### 与 `@track` 装饰器配合使用
+
+如果您的 LLM 管道包含多个步骤，可以使用 `@track` 装饰器记录每个步骤的 trace。如果在某个步骤中调用了 OpenAI，该 LLM 调用将关联到对应的步骤：
+
+```python
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+os.environ["OPIK_PROJECT_NAME"] = "openai-integration-demo"
+
+client = OpenAI()
+openai_client = track_openai(client)
+
+@track
+def generate_story(prompt):
+    res = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}]
+    )
+    return res.choices[0].message.content
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    res = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}]
+    )
+    return res.choices[0].message.content
+
+@track
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+# 执行多步骤管道
+generate_opik_story()
+```
+
+现在可以在 UI 中查看 trace，层级化的 span 展示了不同步骤之间的关系：
+
+<Frame>
+  <img src="/img/cookbook/openai_trace_decorator_cookbook.png" />
+</Frame>
+
+### 设置 provider 名称
+
+OpenAI SDK 常被用作其他 OpenAI 兼容 API（如 Together、OpenRouter、vLLM、DeepSeek 等）的客户端。在这种情况下，每个 LLM span 上记录的 provider 默认为客户端的 base URL 主机名，这通常不够直观。您可以通过向 `track_openai` 传递 `provider` 参数来覆盖它：
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 指向 OpenAI 兼容 provider 的 OpenAI 客户端
+client = OpenAI(api_key="<DeepSeek API Key>", base_url="https://api.deepseek.com")
+
+# 在每个 LLM span 上记录 "deepseek" 作为 provider
+client = track_openai(client, provider="deepseek")
+```
+
+`provider` 接受任意字符串，或使用 `opik.LLMProvider` 枚举中 Opik 可识别的 provider 之一以支持成本跟踪：
+
+```python
+from opik import LLMProvider
+from opik.integrations.openai import track_openai
+
+client = track_openai(client, provider=LLMProvider.ANTHROPIC)
+```
+
+<Tip>
+  设置 `provider` 仅更改 span 上的 provider 标签。Token 用量始终使用 OpenAI 用量格式解析，因为 `track_openai` 是为 OpenAI 请求/响应模式设计的。
+</Tip>
+
+## 使用 Azure OpenAI
+
+OpenAI 集成还支持 Azure OpenAI 服务。要使用 Azure OpenAI，请使用 Azure 配置初始化客户端，然后像标准 OpenAI 客户端一样与 `track_openai` 配合使用：
+
+```python
+from opik.integrations.openai import track_openai
+from openai import AzureOpenAI
+
+# 从环境变量 AZURE_OPENAI_API_KEY 获取 API Key
+azure_client = AzureOpenAI(
+    # https://learn.microsoft.com/azure/ai-services/openai/reference#rest-api-versioning
+    api_version="2023-07-01-preview",
+    # https://learn.microsoft.com/azure/cognitive-services/openai/how-to/create-resource?pivots=web-portal#create-a-resource
+    azure_endpoint="https://example-endpoint.openai.azure.com",
+)
+azure_client = track_openai(azure_client)
+
+completion = azure_client.chat.completions.create(
+    model="deployment-name",  # 例如 gpt-35-instant
+    messages=[
+        {
+            "role": "user",
+            "content": "How do I output all files in a directory using Python?",
+        },
+    ],
+)
+```
+
+## 成本跟踪
+
+`track_openai` 包装器会自动跟踪所有受支持的 OpenAI 模型的 token 用量和成本。
+
+成本信息会自动捕获并显示在 Opik UI 中，包括：
+
+- Token 用量详情
+- 基于 OpenAI 定价的每请求成本
+- 总 trace 成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看支持的模型和 provider 完整列表。
+</Tip>
+
+## 使用 `thread_id` 将 trace 分组为对话线程
+
+Opik 中的线程是通过唯一的 `thread_id` 分组在一起的 trace 集合。
+
+`thread_id` 可以作为参数传递给 OpenAI 客户端，用于将所有 trace 分组到同一线程中。
+
+```python
+import openai
+
+from opik.integrations.openai import track_openai
+
+client = openai.OpenAI()
+wrapped_client = track_openai(
+    openai_client=client,
+    project_name="opik_args demo",
+)
+messages = [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "What is Opik?"},
+]
+
+_ = wrapped_client.responses.create(
+    model="gpt-4o-mini",
+    input=messages,
+    opik_args={"trace": {"thread_id": "f174a"}}
+)
+```
+
+有关记录聊天对话的更多信息，请参阅[记录对话](/tracing/advanced/log_chat_conversations)部分。
+
+## 视频生成 (Sora)
+
+`track_openai` 包装器还支持 OpenAI 的视频生成 API (Sora)。当您生成视频时，Opik 会自动跟踪视频创建过程，并在您通过客户端 API 下载视频时将其作为附件记录。
+
+```python
+import os
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+os.environ["OPIK_PROJECT_NAME"] = "openai-video-demo"
+
+client = OpenAI()
+tracked_client = track_openai(client)
+
+
+@track
+def generate_video(prompt: str) -> dict:
+    """Generate a video using OpenAI's Sora model."""
+    # 创建视频并等待完成
+    video = tracked_client.videos.create_and_poll(
+        model="sora-2",
+        prompt=prompt,
+    )
+
+    result = {"id": video.id, "status": video.status}
+
+    # 如果生成成功则下载视频
+    # 如果 OpenAI 审核拒绝了您的请求 - 您会在 create_and_poll span 输出中看到
+    if video.status == "completed":
+        content = tracked_client.videos.download_content(video_id=video.id)
+        content.write_to_file("output_video.mp4")
+        result["output_path"] = "output_video.mp4"
+
+    return result
+
+
+# 生成视频
+generate_video("A golden retriever playing in the snow")
+```
+
+Trace 将显示完整的视频生成工作流程，包括视频创建、轮询、下载以及作为附件的生成视频：
+
+<Frame>
+  <img src="/img/tracing/openai_video_integration.png" />
+</Frame>
+
+<Tip>
+  `videos.retrieve` 方法被有意排除在跟踪之外，因为 `poll` 方法内部会进行大量 retrieve 调用，这会在 trace 中产生过多噪声。如果您需要跟踪 retrieve 调用（例如不使用 `poll` 而是手动检查进度），可以自行装饰该方法：
+
+  ```python
+  tracked_client.videos.retrieve = opik.track(name="videos.retrieve")(
+      tracked_client.videos.retrieve
+  )
+  ```
+</Tip>
+
+## 支持的 OpenAI 方法
+
+`track_openai` 包装器支持以下 OpenAI 方法：
+
+- `openai_client.chat.completions.create()`，包括对 stream=True 模式的支持。
+- `openai_client.beta.chat.completions.parse()`
+- `openai_client.beta.chat.completions.stream()`
+- `openai_client.responses.create()`
+- `openai_client.videos.create()`
+- `openai_client.videos.create_and_poll()`
+- `openai_client.videos.poll()`
+- `openai_client.videos.download_content()`
+- `openai_client.videos.list()`
+- `openai_client.videos.delete()`
+
+如果您希望跟踪其他 OpenAI 方法，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

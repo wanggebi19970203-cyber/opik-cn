@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import EvaluateButton from "@/v2/pages-shared/automations/EvaluateButton/EvaluateButton";
 import RunEvaluationDialog from "@/v2/pages-shared/automations/RunEvaluationDialog/RunEvaluationDialog";
@@ -21,6 +22,7 @@ const Inner: React.FC<{ experiment: Experiment; projectId: string }> = ({
   experiment,
   projectId,
 }) => {
+  const { t } = useTranslation("pages/compare-experiments");
   const {
     open,
     setOpen,
@@ -45,7 +47,7 @@ const Inner: React.FC<{ experiment: Experiment; projectId: string }> = ({
       <EvaluateButton
         isNoRules={!rules?.length}
         disabled={isFetching}
-        label="Evaluate"
+        label={t("compareExperiments.actions.evaluate")}
         onClick={handleClick}
       />
     </>

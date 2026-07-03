@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import ConfiguredCodeHighlighter from "@/v2/pages-shared/onboarding/ConfiguredCodeHighlighter/ConfiguredCodeHighlighter";
 import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
 import {
@@ -17,6 +18,7 @@ const GuardrailConfigCode: React.FC<GuardrailConfigCodeProps> = ({
   codeList,
   projectName,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <div className="comet-body-s text-foreground-secondary">
@@ -24,7 +26,7 @@ const GuardrailConfigCode: React.FC<GuardrailConfigCodeProps> = ({
       </div>
       <CodeHighlighter data={PIP_INSTALL_OPIK_COMMAND} />
       <div className="comet-body-s mt-4 text-foreground-secondary">
-        2. Use the following code to configure your guardrail
+        2. {t("tracing.guardrailConfig.configureGuardrail")}
       </div>
       <ConfiguredCodeHighlighter
         projectName={projectName}

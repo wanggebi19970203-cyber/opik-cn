@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useIsPhone } from "@/hooks/useIsPhone";
 import CodeSectionTitle from "@/shared/CodeSectionTitle/CodeSectionTitle";
 import CodeBlockWithHeader from "@/shared/CodeBlockWithHeader/CodeBlockWithHeader";
@@ -10,6 +11,7 @@ type InstallOpikSectionProps = {
 };
 
 const InstallOpikSection: React.FC<InstallOpikSectionProps> = ({ title }) => {
+  const { t } = useTranslation();
   const { isPhonePortrait } = useIsPhone();
 
   return (
@@ -17,7 +19,7 @@ const InstallOpikSection: React.FC<InstallOpikSectionProps> = ({ title }) => {
       <CodeSectionTitle>{title}</CodeSectionTitle>
       {isPhonePortrait ? (
         <CodeBlockWithHeader
-          title="Terminal"
+          title={t("common.installer.terminal")}
           copyText={PIP_INSTALL_OPIK_COMMAND}
         >
           <CodeHighlighter data={PIP_INSTALL_OPIK_COMMAND} />

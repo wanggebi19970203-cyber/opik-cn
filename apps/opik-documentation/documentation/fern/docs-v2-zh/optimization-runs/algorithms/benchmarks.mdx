@@ -1,0 +1,66 @@
+---
+description: 比较常见数据集上的算法性能，了解如何在本地运行基准测试套件。
+headline: 基准测试 | Opik 文档
+og:description: 使用 Opik 的数据集和脚本评估优化器性能。学习如何有效重现最新的基准测试结果。
+og:site_name: Opik 文档
+og:title: 使用 Opik 进行优化算法基准测试
+title: 优化器基准测试
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/algorithms/benchmarks
+---
+
+我们定期使用共享数据集评估每个优化器，以便您做出明智的权衡。此页面总结了最新结果，并解释了如何使用公共基准测试脚本重现它们。
+
+## 数据集和指标
+
+每次运行使用由学术界常用的开源语料库支持的 Opik 数据集：
+
+| 数据集 | 描述 | 主要指标 |
+| --- | --- | --- |
+| Arc ([ai2_arc](https://huggingface.co/datasets/allenai/ai2_arc)) | 多选科学问题。 | LevenshteinRatio，准确率。 |
+| GSM8K ([gsm8k](https://huggingface.co/datasets/openai/gsm8k)) | 小学数学应用题。 | 精确匹配，自定义数学验证器。 |
+| MedHallu ([medhallu](https://huggingface.co/datasets/UTAustin-AIHealth/MedHallu)) | 带幻觉检查的医学问答。 | 幻觉，AnswerRelevance。 |
+| RagBench ([ragbench](https://huggingface.co/datasets/wandb/ragbench-sentence-relevance-balanced/discussions)) | 面向检索的问题。 | AnswerRelevance，上下文基础。 |
+
+以下结果在非多跳运行中使用 `openai/gpt-5-nano` 进行评估。如果您选择不同的模型、指标、代理配置或提示词种子，分数将会改变。
+
+## 最新结果
+
+| 排名 | 算法/优化器         | 平均分数 | Arc        | GSM8K      | RagBench     |
+|------|-----------------------------|------------|------------|------------|--------------|
+| 1    | HRPO                        | **67.83%** | **92.70%** | 28.00%     | 82.80%       |
+| 2    | Few-Shot Bayesian           | 59.17%     | 28.09%     | **59.26%** | 90.15%       |
+| 3    | Evolutionary                | 52.51%     | 40.00%     | 25.53%     | **92.00%**   |
+| 4    | MetaPrompt                  | 38.75%     | 25.00%     | 26.93%     | 64.31%       |
+| 5    | GEPA                        | 32.27%     | 6.55%      | 26.08%     | 64.17%       |
+| 6    | 基线（无优化）  | 11.85%     | 1.69%      | 24.06%     | 9.81%        |
+
+<Info>
+  这些是方向性数据。某些优化器每次试验比其他优化器使用更多 LLM/工具调用（例如，HRPO 层次反射提示词优化器批量处理多个分析），因此即使试验预算匹配，成本和运行时间也不具可比性。在选择单一优化器之前，请使用您自己的数据集、模型和成本约束重新运行套件。
+</Info>
+
+## 在本地运行基准测试
+
+1. 安装依赖项（最好在虚拟环境中）：
+   ```bash
+   pip install -r sdks/opik_optimizer/benchmarks/requirements.txt
+   ```
+2. 配置提供商密钥（例如，`OPENAI_API_KEY`）。
+3. 执行运行器：
+   ```bash
+   python sdks/opik_optimizer/benchmarks/run_benchmark.py \
+     --model openai/gpt-5-nano \
+     --output results.json
+   ```
+4. 检查 JSON 或将其加载到笔记本中，与发布的表格进行比较。
+
+脚本启动 `sdks/opik_optimizer/benchmarks/config.py` 中定义的数据集，使用一致的试验预算运行每个优化器，并将运行记录到 Opik 以便您查看跟踪。请注意，生产使用应包含单独的验证数据集以防止过拟合——请参阅[定义数据集](/v1/agent_optimization/optimization/define_datasets)获取指导。
+
+<Tip>
+  在寻找超越合成基准测试的生产级示例？请查看[代理优化演示](https://github.com/comet-ml/agent-optimizations-demos)仓库。它包含端到端场景（LangGraph、RAG、支持机器人），并展示了不同优化器在实际工作负载中的表现。
+</Tip>
+
+## 后续步骤
+
+- 在[算法概述](/v1/agent_optimization/algorithms/overview)中了解每个优化器的工作原理。
+- 自定义基准测试配置（数据集、指标、预算）以反映您的生产工作负载。
+- 通过 [GitHub](https://github.com/comet-ml/opik/tree/main/sdks/opik_optimizer/benchmarks) 分享结果或贡献改进。

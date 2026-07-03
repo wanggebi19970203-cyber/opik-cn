@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -120,6 +121,7 @@ const MetricContainerChart = ({
   hideXAxis,
   hideYAxis,
 }: MetricContainerChartProps) => {
+  const { t } = useTranslation("dashboards");
   const { data: response, isPending } = useProjectMetric(
     {
       projectId,
@@ -222,7 +224,7 @@ const MetricContainerChart = ({
         customEmptyState || (
           <NoData
             className="h-[var(--chart-height)] min-h-32 text-light-slate"
-            message="No data to show"
+            message={t("chart.noDataToShow")}
           />
         )
       );

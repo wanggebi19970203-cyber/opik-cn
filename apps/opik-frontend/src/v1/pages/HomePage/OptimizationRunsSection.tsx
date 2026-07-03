@@ -6,6 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
+import { useTranslation } from "react-i18next";
 
 import DataTable from "@/shared/DataTable/DataTable";
 import DataTableNoData from "@/shared/DataTableNoData/DataTableNoData";
@@ -52,7 +53,7 @@ export const COLUMNS = convertColumnDataToColumn<Optimization, Optimization>(
     },
     {
       id: "dataset",
-      label: "Test suite",
+      label: "home.optimizationRuns.testSuite",
       type: COLUMN_TYPE.string,
       cell: ResourceCell as never,
       customMeta: {
@@ -63,7 +64,7 @@ export const COLUMNS = convertColumnDataToColumn<Optimization, Optimization>(
     },
     {
       id: "optimizer",
-      label: "Optimizer",
+      label: "home.optimizationRuns.optimizer",
       type: COLUMN_TYPE.string,
       accessorFn: (row) => {
         const metadataVal = get(row.metadata ?? {}, OPTIMIZATION_OPTIMIZER_KEY);
@@ -79,7 +80,7 @@ export const COLUMNS = convertColumnDataToColumn<Optimization, Optimization>(
     },
     {
       id: "objective_name",
-      label: "Best score",
+      label: "home.optimizationRuns.bestScore",
       type: COLUMN_TYPE.numberDictionary,
       accessorFn: (row) => getBestOptimizationScore(row),
       cell: FeedbackScoreTagCell as never,
@@ -87,18 +88,18 @@ export const COLUMNS = convertColumnDataToColumn<Optimization, Optimization>(
     },
     {
       id: "status",
-      label: "Status",
+      label: "home.optimizationRuns.status",
       type: COLUMN_TYPE.string,
       cell: OptimizationStatusCell as never,
     },
     {
       id: "num_trials",
-      label: "Trials",
+      label: "home.optimizationRuns.trials",
       type: COLUMN_TYPE.number,
     },
     {
       id: "created_at",
-      label: "Created",
+      label: "home.optimizationRuns.created",
       type: COLUMN_TYPE.time,
       cell: TimeCell as never,
       sortable: true,
@@ -113,6 +114,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 };
 
 const OptimizationRunsSection: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const {
@@ -134,7 +136,7 @@ const OptimizationRunsSection: React.FunctionComponent = () => {
   );
 
   const optimizations = useMemo(() => data?.content ?? [], [data?.content]);
-  const noDataText = "There are no optimization runs yet";
+  const noDataText = t("home.optimizationRuns.noOptimizationRuns");
 
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
     Record<string, number>
@@ -176,7 +178,7 @@ const OptimizationRunsSection: React.FunctionComponent = () => {
   return (
     <div className="pb-4 pt-2">
       <h2 className="comet-title-s sticky top-0 z-10 truncate break-words bg-soft-background pb-3 pt-2">
-        Optimization runs
+        {t("home.optimizationRuns.title")}
       </h2>
       <DataTable
         columns={COLUMNS}
@@ -188,7 +190,7 @@ const OptimizationRunsSection: React.FunctionComponent = () => {
           <DataTableNoData title={noDataText}>
             {canUseOptimizationStudio && (
               <Button variant="link" onClick={handleNewOptimizationClick}>
-                Create new optimization
+                {t("home.optimizationRuns.createNewOptimization")}
               </Button>
             )}
           </DataTableNoData>
@@ -197,7 +199,7 @@ const OptimizationRunsSection: React.FunctionComponent = () => {
       <div className="flex justify-end pt-1">
         <Link to="/$workspaceName/optimizations" params={{ workspaceName }}>
           <Button variant="ghost" className="flex items-center gap-1 pr-0">
-            All optimization runs <ArrowRight className="size-4" />
+            {t("home.optimizationRuns.allOptimizationRuns")} <ArrowRight className="size-4" />
           </Button>
         </Link>
       </div>

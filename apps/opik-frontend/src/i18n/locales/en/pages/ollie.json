@@ -1,0 +1,11 @@
+{
+  "ollie": {
+    "title": "Opik Connect",
+    "description": "Connect your codebase to Opik",
+    "features": {
+      "codebase": "Codebase analysis",
+      "integration": "Integration guide",
+      "monitoring": "Real-time monitoring"
+    }
+  }
+}

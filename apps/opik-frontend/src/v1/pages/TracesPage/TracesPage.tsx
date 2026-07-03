@@ -11,6 +11,7 @@ import Loader from "@/shared/Loader/Loader";
 import { Button } from "@/ui/button";
 import { Construction } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useIsFeatureEnabled } from "@/contexts/feature-toggles-provider";
 import SetGuardrailDialog from "../HomePageShared/SetGuardrailDialog";
 import { FeatureToggleKeys } from "@/types/feature-toggles";
@@ -18,6 +19,7 @@ import useProjectTabs from "@/v1/pages/TracesPage/useProjectTabs";
 import { PROJECT_TAB } from "@/constants/traces";
 
 const TracesPage = () => {
+  const { t } = useTranslation();
   const projectId = useProjectIdFromURL();
   const [isGuardrailsDialogOpened, setIsGuardrailsDialogOpened] =
     useState<boolean>(false);
@@ -58,19 +60,19 @@ const TracesPage = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="underline">
             <TabsTrigger variant="underline" value={PROJECT_TAB.logs}>
-              Logs
+              {t("tracing.tabs.logs")}
             </TabsTrigger>
             <TabsTrigger variant="underline" value={PROJECT_TAB.insights}>
-              Insights
+              {t("tracing.tabs.insights")}
             </TabsTrigger>
             <TabsTrigger variant="underline" value={PROJECT_TAB.evaluators}>
-              Online evaluation
+              {t("tracing.tabs.onlineEvaluation")}
             </TabsTrigger>
             <TabsTrigger
               variant="underline"
               value={PROJECT_TAB.annotationQueues}
             >
-              Annotation queues
+              {t("tracing.tabs.annotationQueues")}
             </TabsTrigger>
           </TabsList>
         </PageBodyStickyContainer>
@@ -116,7 +118,7 @@ const TracesPage = () => {
                 onClick={openGuardrailsDialog}
               >
                 <Construction className="mr-1.5 size-3.5" />
-                Set a guardrail
+                {t("tracing.tabs.setGuardrail")}
               </Button>
             </div>
           )}

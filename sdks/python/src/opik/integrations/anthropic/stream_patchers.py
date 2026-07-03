@@ -1,3 +1,9 @@
+"""Anthropic 流式响应补丁模块。
+
+为 Anthropic SDK 的各种流式响应对象（Stream、MessageStream、Beta 版本等）
+打补丁，使其支持 Opik 追踪。通过替换迭代器方法来捕获流式数据并记录追踪信息。
+"""
+
 import anthropic
 import logging
 import functools
@@ -16,6 +22,7 @@ from anthropic.lib.streaming import _messages
 
 LOGGER = logging.getLogger(__name__)
 
+# 保存原始的迭代器方法引用，用于后续装饰
 original_stream_iter_method = anthropic.Stream.__iter__
 original_async_stream_aiter_method = anthropic.AsyncStream.__aiter__
 
@@ -27,6 +34,7 @@ original_async_message_stream_manager_aenter_method = (
     anthropic.AsyncMessageStreamManager.__aenter__
 )
 
+# 尝试导入 Beta 版本的流式模块（可能在旧版 SDK 中不可用）
 try:
     from anthropic.lib.streaming._beta_messages import (
         BetaAsyncMessageStream,
@@ -63,8 +71,9 @@ def patch_sync_stream(
     trace_to_end: Optional[trace.TraceData],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> anthropic.Stream:
-    """
-    Used in the following cases
+    """为同步 Stream 对象打补丁以支持追踪。
+
+    适用场景：
     ```
     stream = client.messages.create(stream=True)
     for event in stream:
@@ -82,6 +91,7 @@ def patch_sync_stream(
                 error_info: Optional[ErrorInfoDict] = None
 
                 for item in dunder_iter_func(self):
+                    # 累积流式事件以构建完整消息
                     accumulated_message = _messages.accumulate_event(
                         event=item, current_snapshot=accumulated_message
                     )
@@ -95,6 +105,7 @@ def patch_sync_stream(
                 error_info = error_info_collector.collect(exception)
                 raise exception
             finally:
+                # 仅对已标记的追踪实例执行回调，避免重复记录
                 if not hasattr(self, "opik_tracked_instance"):
                     return
 
@@ -110,6 +121,7 @@ def patch_sync_stream(
 
         return wrapper
 
+    # 替换类级别的 __iter__ 方法（Python 解释器从类而非实例查找 dunder 方法）
     anthropic.Stream.__iter__ = Stream__iter__decorator(original_stream_iter_method)
 
     stream.opik_tracked_instance = True
@@ -125,8 +137,9 @@ def patch_async_stream(
     trace_to_end: Optional[trace.TraceData],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> anthropic.Stream:
-    """
-    Used in the following cases
+    """为异步 AsyncStream 对象打补丁以支持追踪。
+
+    适用场景：
     ```
     astream = async_client.messages.create(stream=True)
     async for event in astream:
@@ -144,6 +157,7 @@ def patch_async_stream(
                 error_info: Optional[ErrorInfoDict] = None
 
                 async for item in dunder_aiter_func(self):
+                    # 累积流式事件以构建完整消息
                     accumulated_message = _messages.accumulate_event(
                         event=item, current_snapshot=accumulated_message
                     )
@@ -189,9 +203,9 @@ def patch_sync_message_stream_manager(
     trace_to_end: Optional[trace.TraceData],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> anthropic.MessageStreamManager:
-    """
-    User flow that caused this non-trivial patching:
+    """为同步 MessageStreamManager 打补丁以支持追踪。
 
+    触发此补丁的用户代码流程：
     ```
     stream_manager = anthropic_client.messages.stream(...)
 
@@ -202,13 +216,12 @@ def patch_sync_message_stream_manager(
         stream.get_final_message()
     ```
 
-    `stream` method returns an object (stream_manager), that creates a MessageStream object in the context
-    manager. MessageStream class has it's own public API (e.g. get_final_message), so we can't replace it with our generator.
-    We need to patch __iter__ method of MessageStream, so that when it returns a generator object, we
-    wrap it.
+    `stream` 方法返回一个 stream_manager 对象，该对象在上下文管理器中创建
+    MessageStream 对象。MessageStream 类有自己的公共 API（如 get_final_message），
+    因此不能用自定义生成器替换。需要修补 MessageStream 的 __iter__ 方法，
+    以便在返回生成器对象时进行包装。
 
-    In addition, its possible that generator is used multiple times. We are making sure, that we execute our
-    logging logic only once.
+    此外，生成器可能被多次使用，需要确保追踪逻辑只执行一次。
     """
 
     def MessageStream__iter__decorator(dunder_iter_func: Callable) -> Callable:
@@ -234,6 +247,7 @@ def patch_sync_message_stream_manager(
 
                 delattr(self, "opik_tracked_instance")
 
+                # 获取最终累积的完整消息作为输出
                 accumulated_output = (
                     self.get_final_message() if error_info is None else None
                 )
@@ -253,6 +267,7 @@ def patch_sync_message_stream_manager(
         def wrapper(self: anthropic.MessageStreamManager) -> anthropic.MessageStream:
             result: anthropic.MessageStream = dunder_enter_func(self)
 
+            # 将追踪标记从 Manager 传递到内部的 Stream 对象
             if hasattr(self, "opik_tracked_instance"):
                 result.opik_tracked_instance = True
                 result.span_to_end = self.span_to_end
@@ -262,9 +277,8 @@ def patch_sync_message_stream_manager(
 
         return wrapper
 
-    # We are decorating class methods instead of instance methods because
-    # python interpreter often (if not always) looks for dunder methods for in classes, not instances, by .
-    # Decorating an instance method will not work, original method will always be called.
+    # 装饰类方法而非实例方法，因为 Python 解释器通常从类中查找 dunder 方法，
+    # 装饰实例方法无效，原始方法始终会被调用。
     anthropic.MessageStreamManager.__enter__ = MessageStreamManager__enter__decorator(
         original_message_stream_manager_enter_method
     )
@@ -285,9 +299,9 @@ def patch_async_message_stream_manager(
     trace_to_end: Optional[trace.TraceData],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> anthropic.AsyncMessageStreamManager:
-    """
-    User flow that caused this non-trivial patching:
+    """为异步 AsyncMessageStreamManager 打补丁以支持追踪。
 
+    触发此补丁的用户代码流程：
     ```
     async_stream_manager = async_anthropic_client.messages.stream(...)
 
@@ -298,7 +312,7 @@ def patch_async_message_stream_manager(
         await stream.get_final_message()
     ```
 
-    For more details see patch_sync_message_stream_manager docstring
+    更多细节请参见 patch_sync_message_stream_manager 的文档字符串。
     """
 
     def AsyncMessageStream__aiter__decorator(dunder_aiter_func: Callable) -> Callable:
@@ -324,6 +338,7 @@ def patch_async_message_stream_manager(
 
                 delattr(self, "opik_tracked_instance")
 
+                # 获取最终累积的完整消息作为输出
                 accumulated_output = (
                     await self.get_final_message() if error_info is None else None
                 )
@@ -347,6 +362,7 @@ def patch_async_message_stream_manager(
         ) -> anthropic.AsyncMessageStream:
             result: anthropic.AsyncMessageStream = await dunder_aenter_func(self)
 
+            # 将追踪标记从 Manager 传递到内部的 Stream 对象
             if hasattr(self, "opik_tracked_instance"):
                 result.opik_tracked_instance = True
                 result.span_to_end = self.span_to_end
@@ -356,9 +372,8 @@ def patch_async_message_stream_manager(
 
         return wrapper
 
-    # We are decorating class methods instead of instance methods because
-    # python interpreter often (if not always) looks for dunder methods for in classes, not instances, by .
-    # Decorating an instance method will not work, original method will always be called.
+    # 装饰类方法而非实例方法，因为 Python 解释器通常从类中查找 dunder 方法，
+    # 装饰实例方法无效，原始方法始终会被调用。
     anthropic.AsyncMessageStreamManager.__aenter__ = (
         AsyncMessageStreamManager__aenter__decorator(
             original_async_message_stream_manager_aenter_method
@@ -381,9 +396,9 @@ def patch_sync_beta_message_stream_manager(
     trace_to_end: Optional[trace.TraceData],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> BetaMessageStreamManager:
-    """
-    Patches `client.beta.messages.stream(...)` sync context manager.
+    """为 Beta 版同步 MessageStreamManager 打补丁以支持追踪。
 
+    适用场景：
     ```
     with client.beta.messages.stream(...) as stream:
         for event in stream:
@@ -463,9 +478,9 @@ def patch_async_beta_message_stream_manager(
     trace_to_end: Optional[trace.TraceData],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> BetaAsyncMessageStreamManager:
-    """
-    Patches `client.beta.messages.stream(...)` async context manager.
+    """为 Beta 版异步 AsyncMessageStreamManager 打补丁以支持追踪。
 
+    适用场景：
     ```
     async with client.beta.messages.stream(...) as stream:
         async for event in stream:

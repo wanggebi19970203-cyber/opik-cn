@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -60,19 +61,19 @@ const getRowId = (d: EvaluatorsRule) => d.id;
 const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "onlineEvaluation.columns.name",
     type: COLUMN_TYPE.string,
     sortable: true,
   },
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: "onlineEvaluation.columns.id",
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "projects",
-    label: "Projects",
+    label: "onlineEvaluation.columns.projects",
     type: COLUMN_TYPE.string,
     accessorFn: (row) =>
       row.projects && row.projects.length > 0
@@ -81,30 +82,30 @@ const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "onlineEvaluation.columns.lastUpdated",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "onlineEvaluation.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "onlineEvaluation.columns.created",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "sampling_rate",
-    label: "Sampling rate",
+    label: "onlineEvaluation.columns.samplingRate",
     type: COLUMN_TYPE.number,
     accessorFn: (row) => `${round(row.sampling_rate * 100, 1)}%`,
   },
   {
     id: "type",
-    label: "Scope",
+    label: "onlineEvaluation.columns.scope",
     type: COLUMN_TYPE.category,
     cell: TagCell as never,
     accessorFn: (row) => capitalizeFirstLetter(getUIRuleScope(row.type)),
@@ -112,7 +113,7 @@ const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
   },
   {
     id: "enabled",
-    label: "Status",
+    label: "onlineEvaluation.columns.status",
     type: COLUMN_TYPE.string,
     cell: StatusCell as never,
   },
@@ -152,6 +153,7 @@ const COLUMNS_SORT_KEY = "workspace-rules-columns-sort";
 const PAGINATION_SIZE_KEY = "workspace-rules-pagination-size";
 
 export const OnlineEvaluationPage: React.FC = () => {
+  const { t } = useTranslation("online-evaluation");
   const {
     permissions: { canUpdateOnlineEvaluationRules },
   } = usePermissions();
@@ -222,7 +224,7 @@ export const OnlineEvaluationPage: React.FC = () => {
     [data?.sortable_by],
   );
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? `There are no rules yet` : "No search results";
+  const noDataText = noData ? t("noData.noRulesYet") : t("noData.noSearchResults");
 
   // Backend now enriches projects (ID + name pairs) from projectIds
   const rows: EvaluatorsRule[] = useMemo(() => data?.content ?? [], [data]);
@@ -397,7 +399,7 @@ export const OnlineEvaluationPage: React.FC = () => {
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
         <h1 className="comet-title-l truncate break-words">
-          Online evaluation
+          {t("title")}
         </h1>
       </div>
       <ExplainerDescription
@@ -409,7 +411,7 @@ export const OnlineEvaluationPage: React.FC = () => {
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by ID"
+            placeholder={t("search.byId")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -436,7 +438,7 @@ export const OnlineEvaluationPage: React.FC = () => {
           ></ColumnsButton>
           {canUpdateOnlineEvaluationRules && (
             <Button variant="default" size="sm" onClick={handleNewRuleClick}>
-              Create new rule
+              {t("actions.createRule")}
             </Button>
           )}
         </div>

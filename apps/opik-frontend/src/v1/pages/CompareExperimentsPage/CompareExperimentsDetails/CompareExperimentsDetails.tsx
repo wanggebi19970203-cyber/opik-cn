@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import sortBy from "lodash/sortBy";
 import isNumber from "lodash/isNumber";
 import { CircleCheck, Database } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import useBreadcrumbsStore from "@/store/BreadcrumbsStore";
 import { Experiment } from "@/types/datasets";
@@ -31,6 +32,7 @@ type CompareExperimentsDetailsProps = {
 const CompareExperimentsDetails: React.FunctionComponent<
   CompareExperimentsDetailsProps
 > = ({ experiments, experimentsIds }) => {
+  const { t } = useTranslation("compare-experiments");
   const setBreadcrumbParam = useBreadcrumbsStore((state) => state.setParam);
 
   const isCompare = experimentsIds.length > 1;
@@ -39,7 +41,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
   const title = !isCompare
     ? experiment?.name
-    : `Compare (${experimentsIds.length})`;
+    : t("compareExperiments.details.compareCount", { count: experimentsIds.length });
 
   useEffect(() => {
     title && setBreadcrumbParam("compare", "Compare", title);
@@ -83,9 +85,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
       return (
         <div className="flex h-11 items-center gap-2">
-          <span className="text-nowrap">Baseline of</span>
+          <span className="text-nowrap">{t("compareExperiments.details.baselineOf")}</span>
           <ExperimentTag experimentName={experiment?.name} />
-          <span className="text-nowrap">compared against</span>
+          <span className="text-nowrap">{t("compareExperiments.details.comparedAgainst")}</span>
           {tag}
         </div>
       );
@@ -117,7 +119,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
               style={{ color: "var(--color-yellow)" }}
             />
             <span className="comet-body-s-accented truncate text-muted-slate">
-              {experiment.dataset_name || "Deleted test suite"}
+              {experiment.dataset_name || t("compareExperiments.details.deletedTestSuite")}
             </span>
           </Tag>
         )}
@@ -125,7 +127,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
           experiment.prompt_versions.length > 0 && (
             <NavigationTag
               id={experiment.prompt_versions[0].prompt_id}
-              name={`Go to ${experiment.prompt_versions[0].prompt_name}`}
+              name={t("compareExperiments.details.goToPrompt", { name: experiment.prompt_versions[0].prompt_name })}
               resource={RESOURCE_TYPE.prompt}
             />
           )}
@@ -133,9 +135,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
           <NavigationTag
             resource={RESOURCE_TYPE.traces}
             id={experiment.project_id}
-            name="Go to traces"
+            name={t("compareExperiments.details.goToTraces")}
             search={experimentTracesSearch}
-            tooltipContent="View all traces for this experiment"
+            tooltipContent={t("compareExperiments.details.viewAllTraces")}
           />
         )}
         {!isCompare &&
@@ -161,7 +163,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
                   }`}
                 />
                 <div className="comet-body-s-accented truncate text-muted-slate">
-                  {Math.round(experiment.pass_rate * 100)}% pass rate
+                  {t("compareExperiments.details.passRate", { rate: Math.round(experiment.pass_rate * 100) })}
                 </div>
               </Tag>
             </TooltipWrapper>

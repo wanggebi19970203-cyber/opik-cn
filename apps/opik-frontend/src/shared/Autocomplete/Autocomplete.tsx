@@ -3,6 +3,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import debounce from "lodash/debounce";
 import isFunction from "lodash/isFunction";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import {
@@ -35,11 +36,14 @@ const AutoComplete = <T extends string>({
   items,
   hasError,
   isLoading,
-  emptyMessage = "No items found",
-  placeholder = "Search...",
+  emptyMessage,
+  placeholder,
   delay = 300,
   className,
 }: Props<T>) => {
+  const { t } = useTranslation("common");
+  const resolvedEmptyMessage = emptyMessage ?? t("selectBox.noItems");
+  const resolvedPlaceholder = placeholder ?? t("placeholders.search");
   const [open, setOpen] = useState(false);
   const [localValue, setLocalValue] = useState<T | undefined>(
     value || ("" as T),
@@ -152,7 +156,7 @@ const AutoComplete = <T extends string>({
                   showClearButton && "pr-7",
                   className,
                 )}
-                placeholder={placeholder}
+                placeholder={resolvedPlaceholder}
               />
             </CommandPrimitive.Input>
           </PopoverAnchor>
@@ -198,7 +202,7 @@ const AutoComplete = <T extends string>({
                   ))}
                 </CommandGroup>
               ) : null}
-              {!isLoading ? <CommandEmpty>{emptyMessage}</CommandEmpty> : null}
+              {!isLoading ? <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty> : null}
             </CommandList>
           </PopoverContent>
         </Command>

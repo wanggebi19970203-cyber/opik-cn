@@ -1,0 +1,422 @@
+---
+description: 了解如何为 Opik Agent Optimizer 配置不同的 LLM 提供商，如 OpenAI、Anthropic、Gemini、Azure 和 Ollama。
+headline: 配置 LLM 提供商 | Opik 文档
+og:description: 在 Opik 中配置 LLM 提供商，增强你的 ChatPrompt 和 Optimizer，利用 100+ 选项实现最佳性能。
+og:site_name: Opik 文档
+og:title: 配置 LLM 提供商 - Opik
+subtitle: 在 Opik Optimizer 中使用任何 LLM 提供商
+title: 配置 LLM 提供商
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/configure_models
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是按项目划分作用域的。创建数据集和运行实验时请务必指定 `project_name`，以确保它们关联到正确的项目。
+</Note>
+
+Opik Agent Optimizer 底层使用 [LiteLLM](https://docs.litellm.ai/)，通过统一接口为你提供 100+ LLM 提供商的访问。本指南展示如何为你的 **ChatPrompt**（运行提示词的模型）和 **优化器**（改进提示词的模型）配置不同的提供商。
+
+## 理解两种模型类型
+
+使用 Opik Optimizer 时，有两种不同的模型需要配置：
+
+| 模型类型 | 用途 | 建议 |
+|------------|---------|----------------|
+| **ChatPrompt 模型** | 在评估期间执行你的提示词的模型 | 使用与生产应用相同的模型 |
+| **优化器模型** | 分析失败并生成改进提示词的模型 | 使用可用的最强大模型以获得最佳效果 |
+
+```python
+from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+# ChatPrompt model - this is the model your prompt runs on
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "{question}"}
+    ],
+    model="gemini/gemini-2.0-flash"  # Your production model
+)
+
+# Optimizer model - this is the model that improves your prompt
+optimizer = MetaPromptOptimizer(
+    model="openai/gpt-4o"  # Use a powerful model for optimization
+)
+```
+
+## LiteLLM 模型格式
+
+所有模型使用 LiteLLM 格式：`provider/model-name`
+
+```python
+# Examples of the LiteLLM model format
+model="openai/gpt-4o"                          # OpenAI
+model="anthropic/claude-3-5-sonnet-20241022"   # Anthropic
+model="gemini/gemini-2.0-flash"                # Google Gemini
+model="azure/my-deployment-name"               # Azure OpenAI
+model="ollama/llama3"                          # Ollama (local)
+model="openrouter/google/gemini-2.0-flash"     # OpenRouter
+```
+
+## 提供商配置
+
+<Tabs>
+  <Tab value="openai" title="OpenAI">
+    ### OpenAI
+
+    **环境变量：**
+    ```bash
+    export OPENAI_API_KEY="sk-..."
+    ```
+
+    **可用模型：**
+    - `openai/gpt-4o` - 最强大的模型
+    - `openai/gpt-4o-mini` - 快速且经济
+    - `openai/gpt-4-turbo` - 上一代
+    - `openai/o1` - 推理模型
+    - `openai/o3-mini` - 高效推理模型
+
+    **示例：**
+    ```python
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="openai/gpt-4o-mini"
+    )
+
+    optimizer = MetaPromptOptimizer(model="openai/gpt-4o")
+    ```
+  </Tab>
+
+  <Tab value="anthropic" title="Anthropic">
+    ### Anthropic (Claude)
+
+    **环境变量：**
+    ```bash
+    export ANTHROPIC_API_KEY="sk-ant-..."
+    ```
+
+    **可用模型：**
+    - `anthropic/claude-3-5-sonnet-20241022` - 速度和能力的最佳平衡
+    - `anthropic/claude-3-opus-20240229` - 最强大
+    - `anthropic/claude-3-haiku-20240307` - 最快
+
+    **示例：**
+    ```python
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="anthropic/claude-3-5-sonnet-20241022"
+    )
+
+    optimizer = MetaPromptOptimizer(model="anthropic/claude-3-5-sonnet-20241022")
+    ```
+  </Tab>
+
+  <Tab value="gemini" title="Google Gemini">
+    ### Google Gemini
+
+    **环境变量：**
+    ```bash
+    export GOOGLE_API_KEY="..."
+    # or
+    export GEMINI_API_KEY="..."
+    ```
+
+    <Tip>
+      从 [Google AI Studio](https://aistudio.google.com/apikey) 获取你的 API 密钥。
+    </Tip>
+
+    **可用模型：**
+    - `gemini/gemini-2.0-flash` - 最新快速模型
+    - `gemini/gemini-1.5-pro` - 最强大
+    - `gemini/gemini-1.5-flash` - 快速高效
+    - `gemini/gemini-1.5-flash-8b` - 轻量级模型
+
+    **示例：**
+    ```python
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="gemini/gemini-2.0-flash"
+    )
+
+    optimizer = MetaPromptOptimizer(model="gemini/gemini-1.5-pro")
+    ```
+
+    **完整 Gemini 示例：**
+    ```python
+    import os
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+    from opik.evaluation.metrics import LevenshteinRatio
+    import opik
+
+    # Set your API key
+    os.environ["GOOGLE_API_KEY"] = "your-api-key-here"
+
+    # Initialize Opik client and create dataset
+    client = opik.Opik()
+    dataset = client.get_or_create_dataset(name="gemini-optimization-demo", project_name="my-project")
+    dataset.insert([
+        {"question": "What is machine learning?", "answer": "Machine learning is a subset of AI that enables systems to learn from data."},
+        {"question": "What is Python?", "answer": "Python is a high-level programming language known for its readability."},
+    ])
+
+    # Define metric
+    def answer_quality(dataset_item, llm_output):
+        metric = LevenshteinRatio()
+        return metric.score(reference=dataset_item["answer"], output=llm_output)
+
+    # Configure prompt with Gemini
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "Answer the question concisely."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="gemini/gemini-2.0-flash"
+    )
+
+    # Configure optimizer (can use same or different provider)
+    optimizer = MetaPromptOptimizer(
+        model="gemini/gemini-1.5-pro",
+        n_threads=4
+    )
+
+    # Run optimization
+    result = optimizer.optimize_prompt(
+        prompt=prompt,
+        dataset=dataset,
+        metric=answer_quality,
+        max_trials=5,
+        n_samples=2
+    )
+
+    result.display()
+    ```
+  </Tab>
+
+  <Tab value="azure" title="Azure OpenAI">
+    ### Azure OpenAI
+
+    **环境变量：**
+    ```bash
+    export AZURE_API_KEY="..."
+    export AZURE_API_BASE="https://your-resource.openai.azure.com"
+    export AZURE_API_VERSION="2024-02-15-preview"
+    ```
+
+    **模型格式：**
+    ```python
+    # Use your deployment name
+    model="azure/your-deployment-name"
+    ```
+
+    **示例：**
+    ```python
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="azure/gpt-4o-deployment"  # Your Azure deployment name
+    )
+
+    optimizer = MetaPromptOptimizer(model="azure/gpt-4o-deployment")
+    ```
+  </Tab>
+
+  <Tab value="ollama" title="Ollama（本地）">
+    ### Ollama（本地模型）
+
+    **设置：**
+    1. 从 [ollama.ai](https://ollama.ai) 安装 Ollama
+    2. 拉取模型：`ollama pull llama3`
+    3. Ollama 默认运行在 `http://localhost:11434`
+
+    **环境变量（可选）：**
+    ```bash
+    export OLLAMA_API_BASE="http://localhost:11434"
+    ```
+
+    **可用模型：**
+    - `ollama/llama3` - Meta 的 Llama 3
+    - `ollama/mistral` - Mistral 7B
+    - `ollama/codellama` - 代码专用 Llama
+    - `ollama/phi3` - Microsoft Phi-3
+
+    **示例：**
+    ```python
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="ollama/llama3"
+    )
+
+    # Note: Local models may be slower for optimization
+    optimizer = MetaPromptOptimizer(model="ollama/llama3")
+    ```
+  </Tab>
+
+  <Tab value="openrouter" title="OpenRouter">
+    ### OpenRouter
+
+    OpenRouter 通过单一 API 提供对多个提供商的访问。
+
+    **环境变量：**
+    ```bash
+    export OPENROUTER_API_KEY="sk-or-..."
+    ```
+
+    **模型格式：**
+    ```python
+    # Format: openrouter/provider/model
+    model="openrouter/google/gemini-2.0-flash"
+    model="openrouter/anthropic/claude-3-5-sonnet"
+    model="openrouter/meta-llama/llama-3-70b-instruct"
+    ```
+
+    **示例：**
+    ```python
+    from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "{question}"}
+        ],
+        model="openrouter/google/gemini-2.0-flash"
+    )
+
+    optimizer = MetaPromptOptimizer(model="openrouter/anthropic/claude-3-5-sonnet")
+    ```
+  </Tab>
+</Tabs>
+
+## 环境变量参考
+
+| 提供商 | 环境变量 | 获取方式 |
+|----------|---------------------|------------|
+| OpenAI | `OPENAI_API_KEY` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| Anthropic | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
+| Google Gemini | `GOOGLE_API_KEY` 或 `GEMINI_API_KEY` | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| Azure OpenAI | `AZURE_API_KEY`、`AZURE_API_BASE`、`AZURE_API_VERSION` | Azure Portal |
+| OpenRouter | `OPENROUTER_API_KEY` | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| Ollama | 无需（本地） | [ollama.ai](https://ollama.ai) |
+
+## 模型参数
+
+你可以传递额外参数来控制模型行为：
+
+```python
+from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+# Configure model parameters for the ChatPrompt
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "{question}"}
+    ],
+    model="openai/gpt-4o-mini",
+    model_parameters={
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "top_p": 0.9
+    }
+)
+
+# Configure model parameters for the Optimizer
+optimizer = MetaPromptOptimizer(
+    model="openai/gpt-4o",
+    model_parameters={
+        "temperature": 0.1,  # Lower temperature for more consistent optimization
+        "max_tokens": 4096
+    }
+)
+```
+
+## 混合使用提供商
+
+你可以为 ChatPrompt 和优化器使用不同的提供商：
+
+```python
+from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+# Use a cost-effective model for prompt evaluation
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "{question}"}
+    ],
+    model="gemini/gemini-2.0-flash"  # Fast and affordable
+)
+
+# Use a powerful model for optimization reasoning
+optimizer = MetaPromptOptimizer(
+    model="openai/gpt-4o"  # Best reasoning capabilities
+)
+```
+
+<Tip>
+  **建议：** 即使你的生产应用使用较小的模型，也建议为优化器使用强大的模型如 `gpt-4o` 或 `claude-3-5-sonnet`。优化器仅在开发期间运行，因此与你将获得的质量提升相比，成本是微不足道的。
+</Tip>
+
+## 故障排除
+
+<AccordionGroup>
+  <Accordion title="AuthenticationError: Invalid API key">
+    确保你的 API 密钥在环境中正确设置：
+    ```bash
+    # Check if the key is set
+    echo $OPENAI_API_KEY
+    
+    # Set it if missing
+    export OPENAI_API_KEY="sk-..."
+    ```
+  </Accordion>
+
+  <Accordion title="Model not found">
+    验证模型名称遵循 LiteLLM 格式 `provider/model-name`：
+    ```python
+    # Correct
+    model="openai/gpt-4o"
+    model="gemini/gemini-2.0-flash"
+    
+    # Incorrect
+    model="gpt-4o"  # Missing provider prefix
+    model="google/gemini-2.0-flash"  # Wrong provider name (use 'gemini')
+    ```
+  </Accordion>
+
+  <Accordion title="速率限制错误">
+    如果遇到速率限制，请尝试：
+    - 减少优化器中的 `n_threads`
+    - 使用具有更高速率限制的模型
+    - 在 API 调用之间添加延迟
+  </Accordion>
+</AccordionGroup>
+
+## 后续步骤
+
+- 了解[优化概念](/v1/agent_optimization/optimization/concepts)
+- 探索不同的[优化算法](/v1/agent_optimization/algorithms/overview)
+- 查看 [API 参考](/v1/agent_optimization/advanced/api_reference)
+
+<Info>
+  获取支持的提供商和模型的完整列表，请参见 [LiteLLM 文档](https://docs.litellm.ai/docs/providers)。
+</Info>

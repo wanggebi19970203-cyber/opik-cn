@@ -1,6 +1,7 @@
 import asyncLib from "async";
 import { v7 } from "uuid";
 import pick from "lodash/pick";
+import i18next from "i18next";
 
 import {
   LogExperiment,
@@ -287,7 +288,7 @@ const createLogPlaygroundProcessor = ({
     try {
       await createBatchSpans(spans);
     } catch {
-      onError(new Error("There has been an error with logging spans"));
+      onError(new Error(i18next.t("common:messages.errorLoggingSpans")));
     }
   });
 
@@ -296,7 +297,7 @@ const createLogPlaygroundProcessor = ({
       await createBatchTraces(traces);
       onCreateTraces(traces, traceMappings);
     } catch {
-      onError(new Error("There has been an error with logging traces"));
+      onError(new Error(i18next.t("common:messages.errorLoggingTraces")));
     }
   });
 
@@ -306,7 +307,7 @@ const createLogPlaygroundProcessor = ({
         await createBatchExperimentItems(experimentItems);
       } catch {
         onError(
-          new Error("There has been an error with logging experiment items"),
+          new Error(i18next.t("common:messages.errorLoggingExperimentItems")),
         );
       }
     },
@@ -317,7 +318,7 @@ const createLogPlaygroundProcessor = ({
       await createExperiment(e);
       experimentRegistry.push(e);
     } catch {
-      onError(new Error("There has been an error with logging experiments"));
+      onError(new Error(i18next.t("common:messages.errorLoggingExperiments")));
     }
   }, CREATE_EXPERIMENT_CONCURRENCY_RATE);
 
@@ -342,7 +343,7 @@ const createLogPlaygroundProcessor = ({
         onExperimentItemsComplete?.(experimentIds);
       } catch {
         onError(
-          new Error("There has been an error with finishing experiments"),
+          new Error(i18next.t("common:messages.errorFinishingExperiments")),
         );
       }
     }

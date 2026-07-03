@@ -16,10 +16,10 @@ ObservationDataT = TypeVar("ObservationDataT", bound="ObservationData")
 @dataclasses.dataclass(kw_only=True)
 class ObservationData:
     """
-    Base class for TraceData and SpanData containing common attributes and methods.
+    TraceData 和 SpanData 的基类，包含通用属性和方法。
 
-    This class uses Python 3.10's kw_only=True feature to allow optional parameters
-    to be defined in the parent class while child classes can have required parameters.
+    此类使用 Python 3.10 的 kw_only=True 特性，允许在父类中定义可选参数，
+    而子类可以有必需参数。
     """
 
     name: Optional[str] = None
@@ -40,17 +40,16 @@ class ObservationData:
 
     def update(self: ObservationDataT, **new_data: Any) -> ObservationDataT:
         """
-        Updates the attributes of the object with the provided key-value pairs. This method checks if
-        an attribute exists before updating it and merges the data appropriately for specific
-        keywords like metadata, output, input, attachments, and tags. If a key doesn't correspond
-        to an attribute of the object or the provided value is None, the update is skipped.
+        使用提供的键值对更新对象的属性。此方法在更新前检查属性是否存在，
+        并为特定关键字（如 metadata、output、input、attachments 和 tags）适当地合并数据。
+        如果键不对应于对象的属性或提供的值为 None，则跳过更新。
 
         Args:
-            **new_data: Key-value pairs of attributes to update. Keys should match existing
-                attributes on the object, and values that are None will not update.
+            **new_data: 要更新的属性键值对。键应与对象上的现有属性匹配，
+                值为 None 的将不会更新。
 
         Returns:
-            The updated object instance (preserves the actual subclass type).
+            更新后的对象实例（保留实际的子类类型）。
         """
         for key, value in new_data.items():
             if value is None:
@@ -91,12 +90,12 @@ class ObservationData:
         return self
 
     def init_end_time(self: ObservationDataT) -> ObservationDataT:
-        """Initialize the end_time to the current timestamp."""
+        """将 end_time 初始化为当前时间戳。"""
         self.end_time = datetime_helpers.local_timestamp()
         return self
 
     def _update_attachments(self, attachments: List[attachment.Attachment]) -> None:
-        """Merge new attachments with existing ones."""
+        """将新附件与现有附件合并。"""
         if self.attachments is None:
             self.attachments = attachments
         else:

@@ -8,7 +8,7 @@ const OptimizationsPageGuard = () => {
 
   return (
     <NoAccessPageGuard
-      resourceName="optimization runs"
+      resourceNameKey="navigation.noAccess.resourceOptimizationRuns"
       canViewPage={canViewOptimizationRuns}
     />
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { Tag } from "@/ui/tag";
 import {
@@ -26,9 +27,10 @@ const ProviderGrid: React.FC<ProviderGridProps> = ({
   onSelectProvider,
   disabled = false,
 }) => {
+  const { t } = useTranslation("prompt");
   return (
     <div className="flex flex-col gap-2">
-      <Label>Provider</Label>
+      <Label>{t("providerGrid.provider")}</Label>
       <div className="grid grid-cols-2 gap-3">
         {options.map((option) => {
           const Icon = PROVIDERS[option.providerType]?.icon;
@@ -68,7 +70,7 @@ const ProviderGrid: React.FC<ProviderGridProps> = ({
                       size="sm"
                       className="h-5 shrink-0 leading-5"
                     >
-                      Configured
+                      {t("providerGrid.configured")}
                     </Tag>
                   )}
                 </div>

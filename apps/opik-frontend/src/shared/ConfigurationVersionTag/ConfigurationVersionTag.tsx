@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { GitCommitVertical, Layers } from "lucide-react";
 import { Tag } from "@/ui/tag";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -14,6 +15,7 @@ const ConfigurationVersionTag: React.FC<ConfigurationVersionTagProps> = ({
   maskId,
   variant = "default",
 }) => {
+  const { t } = useTranslation("common");
   const hasMask = Boolean(maskId);
 
   const getTagVariant = () => {
@@ -38,7 +40,7 @@ const ConfigurationVersionTag: React.FC<ConfigurationVersionTagProps> = ({
 
   if (hasMask) {
     return (
-      <TooltipWrapper content="This configuration has been modified by the opik connect">
+      <TooltipWrapper content={t("shared.configModifiedByOpikConnect")}>
         {tag}
       </TooltipWrapper>
     );

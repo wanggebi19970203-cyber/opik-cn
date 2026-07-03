@@ -1,10 +1,12 @@
 import { DATASET_TYPE } from "@/types/datasets";
 import { COLUMN_NAME_ID } from "@/types/shared";
 
-export const TYPE_LABELS: Record<string, string> = {
-  [DATASET_TYPE.TEST_SUITE]: "Test suite",
-  [DATASET_TYPE.DATASET]: "Dataset",
-};
+export const getTypeLabels = (
+  t: (key: string) => string,
+): Record<string, string> => ({
+  [DATASET_TYPE.TEST_SUITE]: t("testSuites.columnsPage.testSuite"),
+  [DATASET_TYPE.DATASET]: t("testSuites.columnsPage.dataset"),
+});
 
 export const DEFAULT_SELECTED_COLUMNS: string[] = [
   COLUMN_NAME_ID,

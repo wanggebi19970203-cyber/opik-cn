@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -16,6 +17,7 @@ type QueueItemActionsPanelProps = {
 const QueueItemActionsPanel: React.FunctionComponent<
   QueueItemActionsPanelProps
 > = ({ items, annotationQueueId }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !items?.length || !annotationQueueId;
@@ -38,12 +40,12 @@ const QueueItemActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deleteItemsHandler}
-        title="Remove from queue"
-        description="Removing annotation queue items will remove them from the queue. This action can't be undone. Are you sure you want to continue?"
-        confirmText="Remove items"
+        title={t("annotationQueue.queueItemActions.removeFromQueue")}
+        description={t("annotationQueue.queueItemActions.removeDescription")}
+        confirmText={t("annotationQueue.queueItemActions.removeItems")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Remove selected items from queue">
+      <TooltipWrapper content={t("annotationQueue.queueItemActions.removeSelectedTooltip")}>
         <Button
           variant="outline"
           size="icon-sm"

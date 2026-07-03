@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FileTerminal, Plus } from "lucide-react";
 import isFunction from "lodash/isFunction";
 
@@ -37,6 +38,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
   filterByTemplateStructure,
   disabled = false,
 }) => {
+  const { t } = useTranslation("prompt");
   const [open, setOpen] = useState(false);
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [isLoadedMore, setIsLoadedMore] = useState(false);
@@ -90,26 +92,26 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
     () =>
       asNewOption ? (
         <div className="flex w-full items-center text-foreground">
-          <span className="truncate">Save as a new prompt</span>
+          <span className="truncate">{t("addNewPromptVersionDialog.saveAsNew")}</span>
         </div>
       ) : (
         <div className="flex w-full items-center text-light-slate">
           <FileTerminal className="mr-2 size-4" />
           <span className="truncate font-normal">
             {filterByTemplateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT
-              ? "Load chat prompt"
-              : "Load a prompt"}
+              ? t("promptsSelectBox.loadChatPrompt")
+              : t("promptsSelectBox.loadPrompt")}
           </span>
         </div>
       ),
-    [asNewOption, filterByTemplateStructure],
+    [asNewOption, filterByTemplateStructure, t],
   );
 
-  let searchPlaceholder = "Search";
+  let searchPlaceholder = t("common.placeholders.search");
   if (filterByTemplateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT) {
-    searchPlaceholder = "Search chat prompt";
+    searchPlaceholder = t("promptsSelectBox.searchChatPrompt");
   } else if (filterByTemplateStructure === PROMPT_TEMPLATE_STRUCTURE.TEXT) {
-    searchPlaceholder = "Search text prompt";
+    searchPlaceholder = t("promptsSelectBox.searchTextPrompt");
   }
 
   const actionPanel = useMemo(() => {
@@ -123,7 +125,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
           }}
         >
           <Plus className="size-3.5 shrink-0" />
-          Save as new
+          {t("addNewPromptVersionDialog.saveAsNew")}
         </ListAction>
       </>
     ) : undefined;
@@ -134,7 +136,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
       isClearable={isClearable}
       onClear={() => onValueChange(undefined)}
       disabled={disabled}
-      clearTooltip="Remove prompt selection"
+      clearTooltip={t("promptsSelectBox.removePromptSelection")}
       buttonSize="icon-sm"
     >
       <LoadableSelectBox

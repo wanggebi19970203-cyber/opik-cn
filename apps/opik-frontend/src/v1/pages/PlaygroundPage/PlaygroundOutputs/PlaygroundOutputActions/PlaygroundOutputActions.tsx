@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Pause, Play } from "lucide-react";
 
@@ -82,6 +83,7 @@ const PlaygroundOutputActions = ({
   total,
   isLoadingTotal,
 }: PlaygroundOutputActionsProps) => {
+  const { t } = useTranslation();
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
   const [ruleDialogProjectId, setRuleDialogProjectId] = useState<
     string | undefined
@@ -112,12 +114,12 @@ const PlaygroundOutputActions = ({
       ...dataFilterColumns,
       {
         id: "tags",
-        label: "Tags",
+        label: t("playground.outputTable.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags" as const,
       },
     ];
-  }, [datasetColumns]);
+  }, [t, datasetColumns]);
 
   // Fetch playground project - always fetch to show metric selector
   const {
@@ -256,7 +258,7 @@ const PlaygroundOutputActions = ({
   const renderActionButton = () => {
     if (isRunning) {
       const stopRunningPromptMessage =
-        promptCount === 1 ? "Stop a running prompt" : "Stop running prompts";
+        promptCount === 1 ? t("playground.header.stopPrompt") : t("playground.header.stopTooltip");
 
       return (
         <TooltipWrapper
@@ -270,7 +272,7 @@ const PlaygroundOutputActions = ({
             onClick={stopAll}
           >
             <Pause className="mr-1 size-4" />
-            Stop all
+            {t("playground.header.stopAll")}
           </Button>
         </TooltipWrapper>
       );
@@ -313,36 +315,36 @@ const PlaygroundOutputActions = ({
 
     const getTooltipMessage = () => {
       if (!isDisabledButton) {
-        return promptCount === 1 ? "Run your prompt" : "Run your prompts";
+        return promptCount === 1 ? t("playground.header.runTooltipSingle") : t("playground.header.runTooltip");
       }
 
       if (!canUsePlayground) {
-        return "Playground project does not exist and you don't have permission to create it";
+        return t("playground.runDisabled.noPermission");
       }
 
       if (hasMediaCompatibilityIssues) {
-        return "Some prompts contain media but the selected model doesn't support media input. Please change the model or remove media from the messages";
+        return t("playground.runDisabled.mediaNotSupported");
       }
 
       if (isDatasetRemoved) {
-        return "Your test suite has been removed. Select another one";
+        return t("playground.runDisabled.datasetRemoved");
       }
 
       if (isDatasetEmpty) {
-        return "Selected test suite is empty";
+        return t("playground.runDisabled.datasetEmpty");
       }
 
       if (!allPromptsHaveModels) {
         return promptCount === 1
-          ? "Please select an LLM model for your prompt"
-          : "Please select an LLM model for your prompts";
+          ? t("playground.runDisabled.selectModelSingle")
+          : t("playground.runDisabled.selectModel");
       }
 
       if (!allMessagesNotEmpty) {
-        return "Some messages are empty. Please add some text to proceed";
+        return t("playground.runDisabled.emptyMessages");
       }
 
-      return "Action is disabled";
+      return t("playground.runDisabled.actionDisabled");
     };
 
     const tooltipKey = shouldTooltipAppear
@@ -354,10 +356,10 @@ const PlaygroundOutputActions = ({
     const isSubsetSelected = hasActiveFilters || isPaginationActive;
 
     const runLabel = isSubsetSelected
-      ? "Run selection"
+      ? t("playground.header.runSelection")
       : promptCount > 1 || (datasetId && datasetItems.length > 1)
-        ? "Run all"
-        : "Run";
+        ? t("playground.header.runAll")
+        : t("playground.header.run");
 
     return (
       <TooltipWrapper
@@ -430,10 +432,10 @@ const PlaygroundOutputActions = ({
                 <NavigationTag
                   resource={RESOURCE_TYPE.experiment}
                   id={plainDatasetId}
-                  name={
+                    name={
                     createdExperiments.length === 1
-                      ? "Go to experiment"
-                      : "Go to experiments"
+                      ? t("playground.header.goToExperiment")
+                      : t("playground.header.goToExperiments")
                   }
                   className="h-8"
                   search={{
@@ -441,8 +443,8 @@ const PlaygroundOutputActions = ({
                   }}
                   tooltipContent={
                     createdExperiments.length === 1
-                      ? "Your run was stored in this experiment. Explore your results to find insights."
-                      : "Your run was stored in experiments. Explore comparison results to get insights."
+                      ? t("playground.header.experimentTooltip")
+                      : t("playground.header.experimentsTooltip")
                   }
                 />
               </div>
@@ -454,14 +456,14 @@ const PlaygroundOutputActions = ({
                   <NavigationTag
                     resource={RESOURCE_TYPE.traces}
                     id={playgroundProject.id}
-                    name="Go to traces"
+                    name={t("playground.header.goToTraces")}
                     className="h-8"
                     search={{
                       traces_filters: generateExperimentIdFilter(
                         createdExperiments[0].id,
                       ),
                     }}
-                    tooltipContent="View all traces for this experiment"
+                    tooltipContent={t("playground.header.viewAllTracesForExperiment")}
                   />
                 </div>
               )}

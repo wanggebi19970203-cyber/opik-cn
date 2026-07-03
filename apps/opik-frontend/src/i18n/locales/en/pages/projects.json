@@ -1,0 +1,73 @@
+{
+  "projects": {
+    "title": "Projects",
+    "description": "Manage your projects and track experiments",
+    "create": "Create project",
+    "edit": "Edit project",
+    "delete": "Delete project",
+    "empty": {
+      "title": "No projects yet",
+      "description": "Get started by creating your first project.",
+      "action": "Create your first project"
+    },
+    "fields": {
+      "name": "Project name",
+      "description": "Project description"
+    },
+    "actions": {
+      "view": "View project",
+      "settings": "Project settings"
+    },
+    "page": {
+      "searchPlaceholder": "Search by name",
+      "noDataText": "There are no projects yet",
+      "noSearchResults": "No search results",
+      "createProject": "Create project"
+    },
+    "dialog": {
+      "createTitle": "Create a new project",
+      "editTitle": "Edit project",
+      "updateButton": "Update project",
+      "createButton": "Create project",
+      "cancel": "Cancel",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "logTracesLink": "Log traces to your project"
+    },
+    "table": {
+      "name": "Name",
+      "id": "ID",
+      "avgDuration": "Avg duration",
+      "durationP90": "Duration (p90)",
+      "durationP99": "Duration (p99)",
+      "totalCost": "Total cost",
+      "traceCount": "Trace count",
+      "threadCount": "Thread count",
+      "errors": "Errors",
+      "avgTotalTokens": "Avg total tokens",
+      "avgInputTokens": "Avg input tokens",
+      "avgOutputTokens": "Avg output tokens",
+      "avgFeedbackScores": "Avg feedback scores",
+      "guardrails": "Guardrails",
+      "guardrailsFailed": "{{count}} failed",
+      "lastUpdated": "Last updated",
+      "created": "Created",
+      "createdBy": "Created by",
+      "description": "Description"
+    },
+    "rowActions": {
+      "actionsMenu": "Actions menu",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete project",
+      "deleteDescription": "Deleting a project will also remove all the traces and their data. This action can't be undone. Are you sure you want to continue?",
+      "deleteConfirm": "Delete project"
+    },
+    "actionsPanel": {
+      "deleteTitle": "Delete projects",
+      "deleteDescription": "Deleting projects will also remove all the traces and their data. This action can't be undone. Are you sure you want to continue?",
+      "deleteConfirm": "Delete projects",
+      "deleteTooltip": "Delete"
+    }
+  }
+}

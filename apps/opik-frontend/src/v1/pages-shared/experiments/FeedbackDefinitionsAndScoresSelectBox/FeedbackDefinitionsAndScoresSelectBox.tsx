@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import LoadableSelectBox from "@/shared/LoadableSelectBox/LoadableSelectBox";
 import useFeedbackDefinitionsList from "@/api/feedback-definitions/useFeedbackDefinitionsList";
@@ -52,6 +53,7 @@ const FeedbackDefinitionsAndScoresSelectBox: React.FC<
   FeedbackDefinitionsAndScoresSelectBoxProps
 > = (props) => {
   const { className, disabled, scoreSource, entityIds, placeholder } = props;
+  const { t } = useTranslation("experiments");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [isLoadedMore, setIsLoadedMore] = useState(false);
 
@@ -169,7 +171,7 @@ const FeedbackDefinitionsAndScoresSelectBox: React.FC<
     ? {
         options,
         value: props.value,
-        placeholder: placeholder || "Select scores",
+        placeholder: placeholder || t('selectScores'),
         onChange: props.onChange,
         multiselect: true as const,
         showSelectAll: props.showSelectAll,
@@ -177,7 +179,7 @@ const FeedbackDefinitionsAndScoresSelectBox: React.FC<
     : {
         options,
         value: props.value,
-        placeholder: placeholder || "Select score",
+        placeholder: placeholder || t('selectScore'),
         onChange: props.onChange,
         multiselect: false as const,
       };

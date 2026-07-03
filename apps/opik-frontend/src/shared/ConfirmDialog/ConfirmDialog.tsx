@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button, ButtonProps } from "@/ui/button";
 import {
   Dialog,
@@ -29,10 +30,15 @@ const ConfirmDialog: React.FunctionComponent<ConfirmDialogProps> = ({
   onCancel,
   title,
   description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   confirmButtonVariant = "default",
 }) => {
+  const { t } = useTranslation("common");
+
+  const resolvedConfirmText = confirmText ?? t("dialogs.confirmText");
+  const resolvedCancelText = cancelText ?? t("dialogs.cancelText");
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
@@ -43,7 +49,7 @@ const ConfirmDialog: React.FunctionComponent<ConfirmDialogProps> = ({
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" onClick={onCancel}>
-              {cancelText}
+              {resolvedCancelText}
             </Button>
           </DialogClose>
           <DialogClose asChild>
@@ -52,7 +58,7 @@ const ConfirmDialog: React.FunctionComponent<ConfirmDialogProps> = ({
               variant={confirmButtonVariant}
               onClick={onConfirm}
             >
-              {confirmText}
+              {resolvedConfirmText}
             </Button>
           </DialogClose>
         </DialogFooter>

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Control,
   FieldPath,
@@ -47,9 +48,10 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
   projectId,
   filterType,
   onFiltersChange,
-  label = "Filters",
+  label,
   className = "",
 }: ProjectWidgetFiltersSectionProps<T>) => {
+  const { t } = useTranslation("dashboards");
   const { field: controllerField } = useController({
     control,
     name: fieldName,
@@ -125,7 +127,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
           keyComponentProps: {
             projectId,
             type: dataType,
-            placeholder: "Select score",
+            placeholder: t("filters.selectScore"),
           },
         },
         error_type: {
@@ -204,8 +206,8 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
       config={filtersConfig}
       filters={filters}
       onChange={setFilters}
-      label={label}
-      description="Use filters to target specific traces, or leave empty to apply to all."
+      label={label ?? t("filters.title")}
+      description={t("filters.filterTracesDescription")}
       className={className}
       errors={errors}
     />

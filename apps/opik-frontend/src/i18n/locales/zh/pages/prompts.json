@@ -1,0 +1,86 @@
+{
+  "prompts": {
+    "title": "提示词库",
+    "description": "管理和版本控制您的提示词",
+    "create": "创建提示词",
+    "edit": "编辑提示词",
+    "delete": "删除提示词",
+    "empty": {
+      "title": "暂无提示词",
+      "description": "创建您的第一个提示词开始使用。",
+      "action": "创建您的第一个提示词",
+      "manageDescription": "在代码库之外管理您的提示词。进行版本控制，无需重新部署即可更新，并保留每次更改的完整历史记录。",
+      "createTextPrompt": "创建文本提示词",
+      "textPromptDescription": "从一个简单的带变量替换的提示词开始。",
+      "createChatPrompt": "创建对话提示词",
+      "chatPromptDescription": "从一个基于消息的对话式AI提示词开始。",
+      "viewDocs": "查看文档"
+    },
+    "fields": {
+      "name": "提示词名称",
+      "content": "提示词内容",
+      "description": "描述",
+      "version": "版本"
+    },
+    "columns": {
+      "name": "名称",
+      "description": "描述",
+      "versions": "版本",
+      "lastUpdated": "最后更新",
+      "created": "创建时间",
+      "type": "类型",
+      "tags": "标签",
+      "createdBy": "创建者"
+    },
+    "actions": {
+      "view": "查看提示词",
+      "edit": "编辑提示词",
+      "duplicate": "复制提示词",
+      "versions": "查看版本",
+      "compare": "比较版本",
+      "actionsMenu": "操作菜单"
+    },
+    "noData": {
+      "noPrompts": "暂无提示词",
+      "noResults": "无搜索结果"
+    },
+    "common": {
+      "name": "名称",
+      "description": "描述",
+      "addOptionalDescription": "添加可选描述",
+      "cancel": "取消"
+    },
+    "dropdown": {
+      "prompt": "提示词",
+      "textPrompt": "文本提示词",
+      "textPromptDescription": "简单的带变量替换的提示词。",
+      "chatPrompt": "对话提示词",
+      "chatPromptDescription": "基于消息的对话式AI提示词。"
+    },
+    "createSheet": {
+      "newChatPrompt": "新建对话提示词",
+      "newTextPrompt": "新建文本提示词",
+      "creating": "创建中…"
+    },
+    "editSheet": {
+      "saving": "保存中…",
+      "saveChanges": "保存更改"
+    },
+    "deleteDialog": {
+      "title": "删除 {{name}}",
+      "description": "删除提示词将同时移除所有关联的提交。此操作无法撤销。确定要继续吗？",
+      "confirmText": "删除提示词"
+    },
+    "batchDelete": {
+      "title": "删除提示词",
+      "description": "删除这些提示词将同时移除所有关联的提交。此操作无法撤销。确定要继续吗？",
+      "confirmText": "删除提示词",
+      "tooltip": "删除"
+    },
+    "promptType": {
+      "text": "文本",
+      "chat": "对话"
+    },
+    "searchPlaceholder": "按名称搜索"
+  }
+}

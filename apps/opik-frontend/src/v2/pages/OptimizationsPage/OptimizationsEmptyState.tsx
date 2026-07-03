@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   BotMessageSquare,
   SquareDashedMousePointer,
@@ -50,6 +51,7 @@ const ActionCard: React.FC<ActionCardConfig> = ({
 const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
   onOptimizeViaSdkClick,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
   const { themeMode } = useTheme();
   const navigateToStudio = useNavigateToOptimizationStudio();
   const imageUrl =
@@ -61,25 +63,25 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
     {
       icon: BotMessageSquare,
       iconClassName: "text-chart-blue",
-      title: "Run a demo example",
+      title: t("optimizations.emptyState.runDemoExample"),
       description:
-        "Start with a pre-configured optimization example for a support chatbot.",
+        t("optimizations.emptyState.runDemoExampleDesc"),
       onClick: () => navigateToStudio("opik-chatbot"),
     },
     {
       icon: SquareDashedMousePointer,
       iconClassName: "text-chart-purple",
-      title: "Start an optimization run",
+      title: t("optimizations.emptyState.startOptimizationRun"),
       description:
-        "Create a custom optimization workflow to test and improve your prompts.",
+        t("optimizations.emptyState.startOptimizationRunDesc"),
       onClick: () => navigateToStudio(),
     },
     {
       icon: FileSliders,
       iconClassName: "text-chart-burgundy",
-      title: "Optimize via SDK",
+      title: t("optimizations.emptyState.optimizeViaSdk"),
       description:
-        "Generate starter code for running a custom optimization programmatically.",
+        t("optimizations.emptyState.optimizeViaSdkDesc"),
       onClick: onOptimizeViaSdkClick,
     },
   ];
@@ -88,11 +90,10 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
     <div className="flex min-h-full flex-1 items-center justify-center gap-16 px-6">
       <div className="flex w-full max-w-[480px] flex-col gap-4">
         <h2 className="comet-title-s text-foreground">
-          No optimization runs yet
+          {t("optimizations.empty.title")}
         </h2>
         <p className="comet-body-s text-muted-slate">
-          Try different prompt versions and see what performs best. Optimization
-          runs help you improve accuracy, consistency, and user experience.
+          {t("optimizations.empty.pageDescription")}
         </p>
         <div className="flex flex-col gap-2">
           {actionCards.map((card) => (
@@ -108,7 +109,7 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
               target="_blank"
               rel="noreferrer"
             >
-              View docs
+              {t("optimizations.emptyState.viewDocs")}
               <ExternalLink className="ml-1.5 size-3.5" />
             </a>
           </Button>

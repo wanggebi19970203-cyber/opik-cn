@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import sortBy from "lodash/sortBy";
 import groupBy from "lodash/groupBy";
 import isFunction from "lodash/isFunction";
@@ -43,6 +44,7 @@ const SingleExperimentSection: React.FC<SingleExperimentSectionProps> = ({
   openTrace,
   sectionIdx,
 }) => {
+  const { t } = useTranslation("experiments");
   const [activeRunIndex, setActiveRunIndex] = useState(0);
 
   const sortedItems = useMemo(
@@ -75,8 +77,8 @@ const SingleExperimentSection: React.FC<SingleExperimentSectionProps> = ({
       return (
         <div className="mt-16 flex-1">
           <NoData
-            title="No related trace found"
-            message="It looks like it was deleted or not created"
+            title={t("noRelatedTraceFound")}
+            message={t("traceNotFoundMessage")}
             className="min-h-24 text-center"
           />
         </div>
@@ -160,6 +162,7 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
   experimentsIds,
   runSummariesByExperiment,
 }) => {
+  const { t } = useTranslation("experiments");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const itemsByExperiment = useMemo(
@@ -177,7 +180,7 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
     <ResizablePanel defaultSize={35} className="min-w-72">
       <div className="h-full overflow-auto pr-6 pt-4">
         <div className="flex items-center justify-between pb-4">
-          <h4 className="comet-body-accented">Item context</h4>
+          <h4 className="comet-body-accented">{t("itemContext")}</h4>
           {datasetId && (
             <Link
               to="/$workspaceName/test-suites/$suiteId/items"
@@ -191,28 +194,28 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
                 className="flex cursor-pointer items-center gap-1.5"
               >
                 <Database className="size-3" />
-                View evaluation item
+                {t("viewEvaluationItem")}
               </Tag>
             </Link>
           )}
         </div>
         {description && (
           <div className="pb-4">
-            <h4 className="comet-body-s-accented px-0.5 pb-0.5">Description</h4>
+            <h4 className="comet-body-s-accented px-0.5 pb-0.5">{t("description")}</h4>
             <div className="rounded-md border border-border px-3 py-2">
               <p className="comet-body-s truncate">{description}</p>
             </div>
           </div>
         )}
         <div>
-          <h4 className="comet-body-s-accented px-0.5 pb-0.5">Data</h4>
+          <h4 className="comet-body-s-accented px-0.5 pb-0.5">{t("dataLabel")}</h4>
           {data ? (
             <SyntaxHighlighter
               data={data}
               preserveKey="eval-suite-sidebar-context"
             />
           ) : (
-            <NoData title="No data" className="min-h-24" />
+            <NoData title={t("data")} className="min-h-24" />
           )}
         </div>
       </div>
@@ -235,8 +238,8 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
         const items = itemsByExperiment[expId] ?? [];
         const defaultName =
           experimentsIds.length > 1
-            ? `Experiment ${idx + 1}`
-            : "Experiment results";
+            ? t("experimentNumber", { number: idx + 1 })
+            : t("experimentResults");
         const name = experimentNameMap[expId] ?? defaultName;
         const status = runSummariesByExperiment?.[expId]?.status;
 

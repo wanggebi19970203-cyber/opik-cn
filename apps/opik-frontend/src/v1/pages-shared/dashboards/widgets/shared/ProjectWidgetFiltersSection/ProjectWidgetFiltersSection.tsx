@@ -7,6 +7,7 @@ import {
   useFormState,
 } from "react-hook-form";
 import isArray from "lodash/isArray";
+import { useTranslation } from "react-i18next";
 
 import { Filter } from "@/types/filters";
 import { ColumnData } from "@/types/shared";
@@ -46,9 +47,11 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
   projectId,
   filterType,
   onFiltersChange,
-  label = "Filters",
+  label,
   className = "",
 }: ProjectWidgetFiltersSectionProps<T>) => {
+  const { t } = useTranslation("dashboards");
+  const defaultLabel = label || t("filters.title");
   const { field: controllerField } = useController({
     control,
     name: fieldName,
@@ -86,7 +89,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
             rootKeys: ["metadata"],
             projectId,
             type: dataType,
-            placeholder: "key",
+            placeholder: t("filters.keyPlaceholder"),
             excludeRoot: true,
           },
         },
@@ -101,7 +104,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
             rootKeys: ["input", "output"],
             projectId,
             type: dataType,
-            placeholder: "key",
+            placeholder: t("filters.keyPlaceholder"),
             excludeRoot: false,
           },
           validateFilter: (filter: Filter) => {
@@ -124,7 +127,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
           keyComponentProps: {
             projectId,
             type: dataType,
-            placeholder: "Select score",
+            placeholder: t("filters.selectScore"),
           },
         },
         error_type: {
@@ -142,7 +145,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
         ...(isSpanMetric ? getSpanTypeFilterConfig(isGuardrailsEnabled) : {}),
       },
     }),
-    [projectId, dataType, isGuardrailsEnabled, isSpanMetric],
+    [projectId, dataType, isGuardrailsEnabled, isSpanMetric, t],
   );
 
   useEffect(() => {
@@ -194,8 +197,8 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
       config={filtersConfig}
       filters={filters}
       onChange={setFilters}
-      label={label}
-      description="Use filters to target specific traces, or leave empty to apply to all."
+      label={defaultLabel}
+      description={t("filters.filterTracesDescription")}
       className={className}
       errors={errors}
     />

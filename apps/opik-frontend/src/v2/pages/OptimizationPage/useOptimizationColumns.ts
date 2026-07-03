@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMemo } from "react";
 
 import {
@@ -63,14 +64,14 @@ export const useOptimizationColumns = ({
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Trial #",
+        label: i18next.t("common.optimization.trialNumber"),
         type: COLUMN_TYPE.string,
         size: 100,
         cell: TrialNumberCell as never,
       },
       {
         id: "step",
-        label: "Step",
+        label: i18next.t("common.optimization.step"),
         type: COLUMN_TYPE.string,
         size: 100,
         accessorFn: (row) => row.stepIndex,
@@ -78,7 +79,7 @@ export const useOptimizationColumns = ({
       },
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: i18next.t("common.labels.id"),
         type: COLUMN_TYPE.string,
       },
       {
@@ -95,7 +96,7 @@ export const useOptimizationColumns = ({
       },
       {
         id: "runtime_cost",
-        label: "Runtime cost",
+        label: i18next.t("common.optimization.runtimeCost"),
         type: COLUMN_TYPE.cost,
         size: 160,
         accessorFn: (row) => row.runtimeCost,
@@ -106,7 +107,7 @@ export const useOptimizationColumns = ({
       },
       {
         id: "latency",
-        label: "Latency",
+        label: i18next.t("common.optimization.latency"),
         type: COLUMN_TYPE.duration,
         size: 160,
         accessorFn: (row) => row.latencyP50,
@@ -117,7 +118,7 @@ export const useOptimizationColumns = ({
       },
       {
         id: "prompt",
-        label: "Prompt",
+        label: i18next.t("common.labels.prompt"),
         type: COLUMN_TYPE.string,
         size: 280,
         accessorFn: (row) => row.experimentIds?.[0],
@@ -129,14 +130,14 @@ export const useOptimizationColumns = ({
       },
       {
         id: "trace_count",
-        label: "Trial items",
+        label: i18next.t("common.optimization.trialItems"),
         type: COLUMN_TYPE.number,
         size: 80,
         accessorFn: (row) => row.totalDatasetItemCount,
       },
       {
         id: "trial_status",
-        label: "Status",
+        label: i18next.t("common.labels.status"),
         type: COLUMN_TYPE.string,
         size: 120,
         accessorFn: () => undefined,
@@ -151,7 +152,7 @@ export const useOptimizationColumns = ({
       },
       {
         id: "created_at",
-        label: "Created",
+        label: i18next.t("common.labels.created"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
         customMeta: {

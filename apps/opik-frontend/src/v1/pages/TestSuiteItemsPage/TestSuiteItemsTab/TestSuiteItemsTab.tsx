@@ -9,6 +9,7 @@ import {
 } from "use-query-params";
 import useLocalStorageState from "use-local-storage-state";
 import { keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import DataTable from "@/shared/DataTable/DataTable";
 import DataTablePagination from "@/shared/DataTablePagination/DataTablePagination";
@@ -147,6 +148,7 @@ function TestSuiteItemsTab({
   suiteAssertions,
   onOpenSettings,
 }: TestSuiteItemsTabProps): React.ReactElement | null {
+  const { t } = useTranslation("test-suite-items");
   const {
     permissions: { canEditDatasets },
   } = usePermissions();
@@ -293,14 +295,14 @@ function TestSuiteItemsTab({
     defaultValue: {},
   });
 
-  const itemLabel = isTestSuite ? "suite items" : "dataset items";
+  const itemLabel = isTestSuite ? t("itemsTab.suiteItems") : t("itemsTab.datasetItems");
 
   const noDataText = useMemo(() => {
     if (isDraftMode && deletedIds.size > 0) {
-      return `All ${itemLabel} on this page have been deleted`;
+      return t("itemsTab.allDeletedOnPage", { itemLabel });
     }
-    return `There are no ${itemLabel} yet`;
-  }, [isDraftMode, deletedIds.size, itemLabel]);
+    return t("itemsTab.noItemsYet", { itemLabel });
+  }, [isDraftMode, deletedIds.size, itemLabel, t]);
 
   const handleSearchChange = useCallback(
     (newSearch: string | null) => {
@@ -540,13 +542,13 @@ function TestSuiteItemsTab({
       <div className="mb-4 flex items-center justify-between gap-8">
         <div className="flex items-center gap-2">
           <TooltipWrapper
-            content={isDraftMode ? "Save changes to search" : undefined}
+            content={isDraftMode ? t("itemsTab.saveChangesToSearch") : undefined}
           >
             <div>
               <SearchInput
                 searchText={search ?? ""}
                 setSearchText={handleSearchChange}
-                placeholder="Search"
+                placeholder={t("itemsTab.search")}
                 className="w-[320px]"
                 dimension="sm"
                 disabled={isDraftMode}
@@ -554,7 +556,7 @@ function TestSuiteItemsTab({
             </div>
           </TooltipWrapper>
           <TooltipWrapper
-            content={isDraftMode ? "Save changes to filter" : undefined}
+            content={isDraftMode ? t("itemsTab.saveChangesToFilter") : undefined}
           >
             <div>
               <FiltersButton
@@ -600,7 +602,7 @@ function TestSuiteItemsTab({
               size="sm"
               onClick={handleNewDatasetItemClick}
             >
-              Add suite item
+              {t("itemsTab.addSuiteItem")}
             </Button>
           )}
         </div>
@@ -611,12 +613,12 @@ function TestSuiteItemsTab({
           iconClassName="animate-spin"
           title={
             isTestSuite
-              ? "Your suite is still loading"
-              : "Your dataset is still loading"
+              ? t("itemsTab.suiteStillLoading")
+              : t("itemsTab.datasetStillLoading")
           }
-          description={`Some results or counts may update as more data becomes available. You can continue exploring while the full ${
-            isTestSuite ? "suite" : "dataset"
-          } loads.`}
+          description={t("itemsTab.loadingDescription", {
+            type: isTestSuite ? t("itemsTab.suiteItems") : t("itemsTab.datasetItems"),
+          })}
           className="mb-4"
         />
       )}
@@ -625,10 +627,10 @@ function TestSuiteItemsTab({
           icon={Check}
           title={
             isTestSuite
-              ? "Your suite fully loaded"
-              : "Your dataset fully loaded"
+              ? t("itemsTab.suiteFullyLoaded")
+              : t("itemsTab.datasetFullyLoaded")
           }
-          description="All items are now available."
+          description={t("itemsTab.allItemsAvailable")}
           className="mb-4"
         />
       )}
@@ -665,7 +667,7 @@ function TestSuiteItemsTab({
                 target="_blank"
                 rel="noreferrer"
               >
-                Check our documentation
+                {t("itemsTab.checkDocumentation")}
               </a>
             </Button>
           </DataTableNoData>
@@ -673,7 +675,7 @@ function TestSuiteItemsTab({
       />
       <div className="flex justify-end py-4">
         <TooltipWrapper
-          content={isDraftMode ? "Save changes to navigate pages" : undefined}
+          content={isDraftMode ? t("itemsTab.saveChangesToNavigate") : undefined}
         >
           <div>
             <DataTablePagination

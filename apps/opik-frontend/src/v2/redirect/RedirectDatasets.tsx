@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { StringParam, useQueryParams } from "use-query-params";
 import { Link, useNavigate } from "@tanstack/react-router";
 
@@ -10,6 +11,7 @@ import useDatasetById from "@/api/datasets/useDatasetById";
 import { Button } from "@/ui/button";
 
 const RedirectDatasets: React.FC = () => {
+  const { t } = useTranslation();
   const [query] = useQueryParams({
     id: StringParam,
     name: StringParam,
@@ -64,19 +66,19 @@ const RedirectDatasets: React.FC = () => {
   ]);
 
   if (!query.id && !query.name) {
-    return <NoData message="No test suite params set" />;
+    return <NoData message={t("messages.noTestSuiteParamsSet")} />;
   }
 
   if (!isPending && !dataset) {
     return (
       <NoData
         icon={<div className="comet-title-m mb-1 text-foreground">404</div>}
-        title="This test suite could not be found"
-        message="The test suite you're looking for doesn't exist or has been deleted."
+        title={t("messages.testSuiteNotFound")}
+        message={t("messages.testSuiteNotFoundDescription")}
       >
         <div className="pt-5">
           <Link to="/$workspaceName/home" params={{ workspaceName }}>
-            <Button>Back to Home</Button>
+            <Button>{t("buttons.backToHome")}</Button>
           </Link>
         </div>
       </NoData>

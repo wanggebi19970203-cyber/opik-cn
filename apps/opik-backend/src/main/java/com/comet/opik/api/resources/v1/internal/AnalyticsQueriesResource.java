@@ -35,13 +35,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletionException;
 
 /**
- * Internal, authenticated endpoint that runs Ollie-generated read-only SQL against ClickHouse, bounded to the
- * caller's workspace and the requested project. Authentication is required only to derive the bounding
- * {@code workspace_id} ({@code project_id} comes from the body). Gated behind the {@code agentInsightsEnabled}
- * toggle: when off it returns {@code 501 Not Implemented} and performs no ClickHouse access.
+ * 内部认证端点，对ClickHouse执行Ollie生成的只读SQL查询，限定在调用者的工作区和请求的项目范围内。认证仅用于确定
+ * {@code workspace_id}（{@code project_id}来自请求体）。受{@code agentInsightsEnabled}
+ * 开关控制：关闭时返回{@code 501 Not Implemented}且不访问ClickHouse。
  *
- * <p>The caller's final query must return exactly one column named {@code result}, produced via
- * {@code toJSONString(...)}.
+ * <p>调用者的最终查询必须恰好返回一个名为{@code result}的列，通过{@code toJSONString(...)}生成。
  */
 @Path("/v1/internal/analytics-queries")
 @Produces(MediaType.APPLICATION_JSON)
@@ -49,7 +47,7 @@ import java.util.concurrent.CompletionException;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "System analytics queries", description = "Internal endpoint to run Agent Insights free-form SQL")
+@Tag(name = "系统分析查询", description = "运行Agent Insights自由形式SQL的内部端点")
 public class AnalyticsQueriesResource {
 
     private final @NonNull FreeFormSqlQueryService freeFormSqlQueryService;
@@ -58,11 +56,11 @@ public class AnalyticsQueriesResource {
 
     @POST
     @Path("/projects/{projectId}")
-    @Operation(operationId = "executeAnalyticsQuery", summary = "Execute Agent Insights free-form SQL", description = "Runs Ollie-generated read-only SQL bounded to the caller's workspace and the requested project. Returns 501 when the Agent Insights toggle is off.", responses = {
-            @ApiResponse(responseCode = "200", description = "Query results", content = @Content(schema = @Schema(implementation = AnalyticsQueryResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "501", description = "Agent Insights queries are not enabled")})
+    @Operation(operationId = "executeAnalyticsQuery", summary = "执行Agent Insights自由形式SQL", description = "在调用者的工作区和请求的项目范围内执行Ollie生成的只读SQL查询。当Agent Insights开关关闭时返回501。", responses = {
+            @ApiResponse(responseCode = "200", description = "查询结果", content = @Content(schema = @Schema(implementation = AnalyticsQueryResponse.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "501", description = "Agent Insights查询未启用")})
     @RateLimited
     public Response executeQuery(@PathParam("projectId") @NotNull UUID projectId,
             @RequestBody(content = @Content(schema = @Schema(implementation = AnalyticsQueryRequest.class))) @NotNull @Valid AnalyticsQueryRequest request) {
@@ -73,11 +71,11 @@ public class AnalyticsQueriesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Executing Agent Insights free-form SQL for workspace '{}', project '{}'", workspaceId, projectId);
+        log.info("为工作区 '{}'、项目 '{}' 执行Agent Insights自由形式SQL", workspaceId, projectId);
 
-        // The service stays async (ClickHouse v2 client); terminate here, the last responsible moment, since Dropwizard
-        // is not reactive. join() wraps any failure in CompletionException — unwrap so the mapped WebApplicationException
-        // (and its HTTP status) reaches the JAX-RS exception handling unchanged.
+        // 服务保持异步（ClickHouse v2客户端）；在此处终止，这是最后的责任时刻，因为Dropwizard
+        // 不是响应式的。join()将任何失败包装在CompletionException中——解包以便映射的WebApplicationException
+        // （及其HTTP状态）能原样传递到JAX-RS异常处理。
         try {
             AnalyticsQueryResponse response = freeFormSqlQueryService
                     .executeQuery(workspaceId, projectId, request.query())

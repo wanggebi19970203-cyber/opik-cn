@@ -1,4 +1,5 @@
 import { History } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { formatDate } from "@/lib/date";
 import TooltipWrapper from "../TooltipWrapper/TooltipWrapper";
 import capitalize from "lodash/capitalize";
@@ -10,6 +11,7 @@ interface DateTagProps {
 }
 
 const DateTag = ({ date, resource }: DateTagProps) => {
+  const { t } = useTranslation("common");
   const { label } = RESOURCE_MAP[resource];
 
   if (!date) {
@@ -17,7 +19,7 @@ const DateTag = ({ date, resource }: DateTagProps) => {
   }
 
   return (
-    <TooltipWrapper content={`${capitalize(label)} creation time`}>
+    <TooltipWrapper content={t("shared.resourceCreationTime", { label: capitalize(label) })}>
       <div className="comet-body-s flex h-6 shrink-0 items-center text-foreground">
         <History className="mx-1 size-3.5 shrink-0 text-muted-slate" />
         <span className="truncate">{formatDate(date)}</span>

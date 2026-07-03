@@ -7,6 +7,7 @@ import {
 import { Button } from "@/ui/button";
 import { MoreHorizontal, Trash } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 import useAnnotationQueueDeleteItemsMutation from "@/api/annotation-queues/useAnnotationQueueDeleteItemsMutation";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -21,6 +22,7 @@ type CustomMeta = {
 const QueueItemRowActionsCell: React.FC<
   CellContext<Thread | Trace, unknown>
 > = (context) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const { custom } = context.column.columnDef.meta ?? {};
   const { annotationQueueId } = (custom ?? {}) as CustomMeta;
 
@@ -51,15 +53,15 @@ const QueueItemRowActionsCell: React.FC<
         open={open === 1}
         setOpen={setOpen}
         onConfirm={deleteItemHandler}
-        title="Remove from queue"
-        description="Removing annotation queue items will remove them from the queue. This action can't be undone. Are you sure you want to continue?"
-        confirmText="Remove item"
+        title={t("annotationQueue.queueItemActions.removeFromQueue")}
+        description={t("annotationQueue.queueItemActions.removeDescription")}
+        confirmText={t("annotationQueue.queueItemActions.removeItem")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5 ">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("annotationQueue.queueItemActions.actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -72,7 +74,7 @@ const QueueItemRowActionsCell: React.FC<
             variant="destructive"
           >
             <Trash className="mr-2 size-4" />
-            Remove from queue
+            {t("annotationQueue.queueItemActions.removeFromQueue")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

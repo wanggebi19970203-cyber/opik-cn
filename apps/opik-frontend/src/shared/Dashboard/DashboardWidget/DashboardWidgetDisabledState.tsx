@@ -1,5 +1,6 @@
 import React from "react";
 import { LockKeyhole } from "lucide-react";
+import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 
 interface DashboardWidgetDisabledStateProps {
@@ -11,8 +12,8 @@ interface DashboardWidgetDisabledStateProps {
 const DashboardWidgetDisabledState: React.FunctionComponent<
   DashboardWidgetDisabledStateProps
 > = ({
-  title = "Widget not available",
-  message = "You don't have permission to view this widget",
+  title = i18n.t("common:dashboard.widgetNotAvailable"),
+  message = i18n.t("common:dashboard.noPermission"),
   icon,
 }) => {
   return (

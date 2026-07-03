@@ -4,6 +4,7 @@ import { jsonLanguage } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
 import { Code2, MessageSquare, Plus } from "lucide-react";
 import isEqual from "fast-deep-equal";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -75,6 +76,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
   type: promptType,
   onSetActiveVersionId,
 }) => {
+  const { t } = useTranslation();
   const isChatPrompt = templateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT;
 
   const [previewMode, setPreviewMode] = useState<PROMPT_PREVIEW_MODE>(
@@ -212,7 +214,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[720px]">
         <DialogHeader>
-          <DialogTitle>Edit prompt</DialogTitle>
+          <DialogTitle>{t("prompt:editPrompt.title")}</DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
           <ExplainerDescription
@@ -222,7 +224,9 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
           {isChatPrompt ? (
             <div className="flex flex-col gap-2 pb-4">
               <div className="mt-3 flex items-center justify-between gap-0.5">
-                <Label htmlFor="promptTemplate">Chat messages</Label>
+                <Label htmlFor="promptTemplate">
+                  {t("prompt:compare.chatMessages")}
+                </Label>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -248,12 +252,12 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                   {showRawView ? (
                     <>
                       <MessageSquare className="mr-1.5 size-3.5" />
-                      Message view
+                      {t("prompt:promptTemplateView.messageView")}
                     </>
                   ) : (
                     <>
                       <Code2 className="mr-1.5 size-3.5" />
-                      Raw view
+                      {t("prompt:promptTemplateView.rawView")}
                     </>
                   )}
                 </Button>
@@ -283,13 +287,10 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                     type="button"
                   >
                     <Plus className="mr-2 size-4" />
-                    Message
+                    {t("prompt:llmPromptMessages.message")}
                   </Button>
                   <p className="comet-body-s mt-2 text-light-slate">
-                    Use mustache syntax to reference dataset variables in your
-                    prompt. Example: {"{"}
-                    {"{"}question{"}}"}
-                    {"}"}.
+                    {t("prompt:textPromptEditor.mustacheSyntaxHint")}
                   </p>
                 </>
               )}
@@ -297,7 +298,9 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
           ) : (
             <div className="flex flex-col gap-2 pb-4">
               <div className="mt-3 flex items-center justify-between gap-0.5">
-                <Label htmlFor="promptTemplate">Prompt</Label>
+                <Label htmlFor="promptTemplate">
+                  {t("prompt:compare.prompt")}
+                </Label>
                 <ToggleGroup
                   type="single"
                   value={previewMode}
@@ -310,20 +313,20 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                     value={PROMPT_PREVIEW_MODE.write}
                     aria-label="Write"
                   >
-                    Write
+                    {t("prompt:textPromptEditor.editView")}
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value={PROMPT_PREVIEW_MODE.prettyView}
                     aria-label="Pretty view"
                   >
-                    Pretty view
+                    {t("prompt:textPromptEditor.prettyView")}
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value={PROMPT_PREVIEW_MODE.diff}
                     aria-label="Preview changes"
                     disabled={!templateHasChanges}
                   >
-                    Preview changes
+                    {t("prompt:compare.pretty")}
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
@@ -360,13 +363,13 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                     audiosHaveChanges) && (
                     <div className="flex flex-col gap-3 rounded-md border p-4">
                       <div className="comet-body-s-accented text-muted-foreground">
-                        Media comparison
+                        {t("prompt:editPrompt.mediaComparison")}
                       </div>
                       {imagesHaveChanges && (
                         <div className="flex gap-6">
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="comet-body-xs text-muted-foreground">
-                              Images before:
+                              {t("prompt:editPrompt.imagesBefore")}
                             </div>
                             <MediaTagsList
                               type="image"
@@ -376,7 +379,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                           </div>
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="comet-body-xs text-muted-foreground">
-                              Images after:
+                              {t("prompt:editPrompt.imagesAfter")}
                             </div>
                             <MediaTagsList
                               type="image"
@@ -390,7 +393,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                         <div className="flex gap-6">
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="comet-body-xs text-muted-foreground">
-                              Videos before:
+                              {t("prompt:editPrompt.videosBefore")}
                             </div>
                             <MediaTagsList
                               type="video"
@@ -400,7 +403,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                           </div>
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="comet-body-xs text-muted-foreground">
-                              Videos after:
+                              {t("prompt:editPrompt.videosAfter")}
                             </div>
                             <MediaTagsList
                               type="video"
@@ -414,7 +417,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                         <div className="flex gap-6">
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="comet-body-xs text-muted-foreground">
-                              Audios before:
+                              {t("prompt:editPrompt.audiosBefore")}
                             </div>
                             <MediaTagsList
                               type="audio"
@@ -424,7 +427,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                           </div>
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="comet-body-xs text-muted-foreground">
-                              Audios after:
+                              {t("prompt:editPrompt.audiosAfter")}
                             </div>
                             <MediaTagsList
                               type="audio"
@@ -444,7 +447,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
             <>
               {currentImages.length > 0 && (
                 <div className="flex flex-col gap-2 pb-4">
-                  <Label>Images</Label>
+                  <Label>{t("prompt:textPromptEditor.images")}</Label>
                   <MediaTagsList
                     type="image"
                     items={currentImages}
@@ -455,7 +458,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
               )}
               {currentVideos.length > 0 && (
                 <div className="flex flex-col gap-2 pb-4">
-                  <Label>Videos</Label>
+                  <Label>{t("prompt:textPromptEditor.videos")}</Label>
                   <MediaTagsList
                     type="video"
                     items={currentVideos}
@@ -466,7 +469,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
               )}
               {currentAudios.length > 0 && (
                 <div className="flex flex-col gap-2 pb-4">
-                  <Label>Audios</Label>
+                  <Label>{t("prompt:textPromptEditor.audios")}</Label>
                   <MediaTagsList
                     type="audio"
                     items={currentAudios}
@@ -478,7 +481,9 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
             </>
           )}
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="promptMetadata">Commit message</Label>
+            <Label htmlFor="promptMetadata">
+              {t("prompt:editPrompt.versionNotes")}
+            </Label>
             <Textarea
               className="comet-code min-h-20"
               id="promptMetadata"
@@ -489,7 +494,9 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
           <div className="flex flex-col gap-2 border-t border-border pb-4">
             <Accordion type="multiple">
               <AccordionItem value="metadata">
-                <AccordionTrigger>Metadata</AccordionTrigger>
+                <AccordionTrigger>
+                  {t("prompt:compare.metadata")}
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="rounded-md">
                     <CodeMirror
@@ -510,7 +517,11 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
               </AccordionItem>
               {showInvalidJSON && (
                 <Alert variant="destructive">
-                  <AlertTitle>Metadata field is not valid</AlertTitle>
+                  <AlertTitle>
+                    {t(
+                      "prompt:addNewPromptVersionDialog.metadataFieldNotValid",
+                    )}
+                  </AlertTitle>
                 </Alert>
               )}
             </Accordion>
@@ -518,14 +529,14 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("prompt:editPrompt.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"
             disabled={!isValid}
             onClick={handleClickEditPrompt}
           >
-            Create new commit
+            {t("prompt:editPrompt.createNewVersion")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { Checkbox } from "@/ui/checkbox";
 import SliderInputControl from "@/shared/SliderInputControl/SliderInputControl";
@@ -18,6 +19,7 @@ const HierarchicalReflectiveOptimizerConfigs = ({
   configs,
   onChange,
 }: HierarchicalReflectiveOptimizerConfigsProps) => {
+  const { t } = useTranslation("optimizations");
   return (
     <div className="flex w-72 flex-col gap-6">
       <SliderInputControl
@@ -33,8 +35,8 @@ const HierarchicalReflectiveOptimizerConfigs = ({
         defaultValue={
           DEFAULT_HIERARCHICAL_REFLECTIVE_OPTIMIZER_CONFIGS.CONVERGENCE_THRESHOLD
         }
-        label="Convergence threshold"
-        tooltip="Threshold for determining when optimization has converged. Lower values require more precision (0-1)"
+        label={t("optimizations.algorithmConfigs.convergenceThreshold")}
+        tooltip={t("optimizations.algorithmConfigs.convergenceThresholdTooltip")}
       />
 
       <div className="space-y-2">
@@ -50,7 +52,7 @@ const HierarchicalReflectiveOptimizerConfigs = ({
             }
           />
           <Label htmlFor="verbose" className="cursor-pointer text-sm">
-            Verbose
+            {t("optimizations.algorithmConfigs.verbose")}
           </Label>
           <ExplainerIcon {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_verbose]} />
         </div>
@@ -66,8 +68,8 @@ const HierarchicalReflectiveOptimizerConfigs = ({
         max={1000}
         step={1}
         defaultValue={DEFAULT_HIERARCHICAL_REFLECTIVE_OPTIMIZER_CONFIGS.SEED}
-        label="Seed"
-        tooltip="Random seed for reproducibility. Use the same seed to get consistent results across runs."
+        label={t("optimizations.algorithmConfigs.seed")}
+        tooltip={t("optimizations.algorithmConfigs.seedTooltip")}
       />
     </div>
   );

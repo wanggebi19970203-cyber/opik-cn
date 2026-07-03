@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Control,
   FieldPath,
@@ -37,7 +38,7 @@ type ExperimentColumnData = {
 const EXPERIMENT_FILTER_COLUMNS: ColumnData<ExperimentColumnData>[] = [
   {
     id: EXPERIMENT_IDS_FILTER_FIELD,
-    label: "Experiments",
+    label: "filters.experimentsLabel",
     type: COLUMN_TYPE.string,
     disposable: true,
   },
@@ -49,13 +50,13 @@ const EXPERIMENT_FILTER_COLUMNS: ColumnData<ExperimentColumnData>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: "filters.tagsLabel",
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Configuration",
+    label: "filters.configurationLabel",
     type: COLUMN_TYPE.dictionary,
   },
 ];
@@ -69,13 +70,13 @@ const EXPERIMENT_GROUP_COLUMNS: ColumnData<ExperimentColumnData>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: "filters.tagsLabel",
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Configuration",
+    label: "filters.configurationLabel",
     type: COLUMN_TYPE.dictionary,
   },
 ];
@@ -103,6 +104,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
   projectId,
   className = "",
 }: ExperimentWidgetDataSectionProps<T>) => {
+  const { t } = useTranslation("dashboards");
   const { field: filtersField } = useController({
     control,
     name: filtersFieldName,
@@ -112,6 +114,24 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
     control,
     name: (groupsFieldName || "groups") as FieldPath<T>,
   });
+
+  const filterColumns = useMemo(
+    () =>
+      EXPERIMENT_FILTER_COLUMNS.map((col) => ({
+        ...col,
+        label: t(col.label),
+      })),
+    [t],
+  );
+
+  const groupColumns = useMemo(
+    () =>
+      EXPERIMENT_GROUP_COLUMNS.map((col) => ({
+        ...col,
+        label: t(col.label),
+      })),
+    [t],
+  );
 
   const dataConfig = useMemo(
     () => ({
@@ -141,7 +161,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
           },
           defaultOperator: "=" as FilterOperator,
           operators: [{ label: "=", value: "=" as FilterOperator }],
-          sortingMessage: "Last experiment created",
+          sortingMessage: t("filters.lastExperimentCreated"),
         },
         [COLUMN_METADATA_ID]: {
           keyComponent:
@@ -237,28 +257,28 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
   return (
     <div className={cn("flex flex-col", className)}>
       <FiltersSection
-        columns={EXPERIMENT_FILTER_COLUMNS as ColumnData<unknown>[]}
+        columns={filterColumns as ColumnData<unknown>[]}
         config={dataConfig}
         filters={filters}
         onChange={setFilters}
         className="mb-5"
-        label="Filter experiments"
-        description="Use filters to target specific experiments, or leave empty to apply to all."
+        label={t("filters.filterExperimentsLabel")}
+        description={t("filters.filterExperimentsDescription")}
         errors={parsedFilterErrors}
       />
 
       {groupsFieldName && (
         <GroupsAccordionSection
-          columns={EXPERIMENT_GROUP_COLUMNS as ColumnData<unknown>[]}
+          columns={groupColumns as ColumnData<unknown>[]}
           config={dataConfig}
           groups={groups || []}
           onChange={setGroups}
-          label="Group by"
+          label={t("filters.groupByLabel")}
           errors={parsedGroupErrors}
           className="w-full"
           hideSorting
           disabled={hasExperimentIdsFilter}
-          disabledTooltip="Groups are not available when filtering by specific experiments"
+          disabledTooltip={t("filters.groupsNotAvailable")}
         />
       )}
     </div>

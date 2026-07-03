@@ -1,0 +1,159 @@
+---
+headline: 评估多模态 trace | Opik 文档
+og:description: 使用 Opik 评估多模态 prompt。学习在 UI 或 SDK 中运行实验、自定义模型以及了解图像输入支持。
+og:site_name: Opik 文档
+og:title: 使用 Opik 评估多模态 Trace
+subtitle: 评估包含图像的 prompt
+title: 评估多模态 trace
+canonical-url: https://www.comet.com/docs/opik/evaluation/overview
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目范围的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+Opik 允许你评估结合文本和图像的多模态 prompt。你可以直接从 UI 或使用 SDK 运行这些实验。本页涵盖两种流程，说明哪些模型支持图像输入，并解释如何自定义模型检测。
+
+## UI 中的在线评估
+
+Opik UI 中的 LLM-as-a-Judge 实验在数据集行和 prompt 消息上都接受图像附件。配置评估时：
+
+1. 打开**评估 → LLM-as-a-Judge**并点击**新建评估**。
+2. 选择支持视觉的模型（例如 `gpt-4o` 或 `claude-3-5-sonnet`）。
+3. 在**数据集**行或 **Prompt** 构建器中添加图像 URL 或上传文件。
+4. 启动评估。当所选模型支持图像时，Opik 自动在 judge prompt 中保留图像。如果模型不支持图像，UI 会显示警告并将图像引用展平为文本占位符，以便运行仍能完成。
+
+所有多模态 trace 都出现在评估结果中，因此你可以准确检查 judge 模型接收到的内容。
+
+## 使用 SDK
+
+Python 和 TypeScript SDK 都接受 OpenAI 风格的消息负载。每条消息可以包含字符串或内容块列表。图像块使用 `image_url` 类型，可以指向 `https://` URL 或 `data:image/...;base64,` 负载。
+
+### Python 示例
+
+```python
+from opik import Opik
+from opik.evaluation import evaluate_prompt, metrics
+
+client = Opik()
+dataset = client.get_or_create_dataset("vision_captions", project_name="my-project")
+dataset.insert(
+    [
+        {
+            "input": {
+                "image_source": "https://example.com/cat.jpg",
+            },
+            "reference": "一只灰色的猫坐在沙发上",
+        },
+        {
+            "input": {
+                "image_source": "data:image/png;base64,iVBORw0KGgo...",  # base64 也可以
+            },
+            "reference": "一只橙色的猫在玩玩具",
+        },
+    ]
+)
+
+MESSAGES = [
+    {
+        "role": "system",
+        "content": "你是一个分析附件图像的助手。",
+    },
+    {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "描述以下图片。"},
+            {
+                "type": "image_url",
+                "image_url": {"url": "{{image_source}}", "detail": "high"},
+            },
+        ],
+    },
+]
+
+evaluate_prompt(
+    dataset=dataset,
+    messages=MESSAGES,
+    model="gpt-4o-mini",
+    scoring_metrics=[metrics.Equals()],  # 将输出与数据集的 `reference` 比较
+    project_name="my-project",
+)
+```
+
+评估器使用 LiteLLM 风格的模型标识符。Opik 识别流行的多模态模型系列（OpenAI GPT-4o、Anthropic Claude 3+、Google Gemini 1.5、Meta Llama 3.2 Vision、Mistral Pixtral 等），并将名称以 `-vision` 或 `-vl` 结尾的任何模型视为支持视觉的。`anthropic/` 等提供商前缀会自动去除。当模型未被识别为支持视觉时，Opik 会记录警告并在发起 API 调用前用占位符替换图像块。
+
+### TypeScript 说明
+
+TypeScript 对多模态评估的支持正在进行中。TypeScript SDK 将提供相同的消息结构和检测规则；我们将在实现完成后更新此部分并提供完整示例。
+
+## 自定义模型支持
+
+如果你正在试验新提供商，可以在运行时扩展注册表：
+
+```python
+from opik.evaluation.models import ModelCapabilities
+
+ModelCapabilities.add_vision_model("my-provider/sparrow-vision-beta")
+```
+
+该进程中任何后续评估都将把自定义模型视为支持视觉的。
+
+## FAQ
+
+### 如何确认模型是否支持图像？
+
+```python
+from opik.evaluation.models import ModelCapabilities
+
+ModelCapabilities.supports_vision("anthropic/claude-3-opus")
+```
+
+如果调用返回 `False`，Opik 将记录警告并展平图像块。数据以文本形式插入并截断到前 500 个字符以保持 prompt 可管理。
+
+### 可以使用哪些图像源？
+
+- 公开可访问的直接 `https://` URL。
+- Base64 数据 URL，如 `data:image/png;base64,iVBORw0...`。
+- 可选的 OpenAI `detail` 字段（`"low"`、`"high"`）在存在时会被保留和转发。
+
+### 这与 LangChain 集成是否兼容？
+
+是的。Opik 转发与 LangChain 期望的相同的 OpenAI 风格内容块，因此带有 `image_url` 字典的结构化消息继续有效。下面展示了一个简单的验证脚本：
+
+```python
+from langchain_core.messages import messages_to_dict
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
+from opik.evaluation.models.langchain.message_converters import convert_to_langchain_messages
+
+# 直接使用 LangChain 消息对象
+plain_messages = [
+    SystemMessage(content="你是一个助手。"),
+    HumanMessage(content="描述巴黎的天气。"),
+]
+
+convert_to_langchain_messages(messages_to_dict(plain_messages))
+
+# 使用带有多模态内容的 ChatPromptTemplate
+chat_prompt = ChatPromptTemplate.from_messages([
+    ("system", "你是一个有帮助的助手。"),
+    (
+        "user",
+        [
+            {"type": "text", "text": "描述以下图像。"},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": "https://python.langchain.com/img/phone_handoff.jpeg",
+                    "detail": "high",
+                },
+            },
+        ],
+    ),
+])
+
+rendered = chat_prompt.invoke({})
+messages = messages_to_dict(rendered.messages)
+
+convert_to_langchain_messages(messages)  # 往返验证
+```

@@ -1,51 +1,62 @@
 import React from "react";
 import { FallbackRender } from "@sentry/react";
-
+import { useTranslation, Trans } from "react-i18next";
 import somethingWentWrongImage from "/images/something-went-wrong.png";
 import { Button } from "@/ui/button";
 
 const SentryErrorFallback: FallbackRender = ({ resetError }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex size-full flex-col items-center justify-center gap-5 bg-[url('/images/circle-pattern.png')] bg-cover bg-center">
       <img
         src={somethingWentWrongImage}
-        alt="Something went wrong"
+        alt={t("navigation.errorBoundary.somethingWentWrong")}
         width="274px"
       />
 
-      <h2 className="comet-title-l">Something went wrong</h2>
+      <h2 className="comet-title-l">
+        {t("navigation.errorBoundary.somethingWentWrong")}
+      </h2>
 
       <div className="comet-body-s flex max-w-xl flex-col gap-4 text-center text-muted-slate">
         <p>
-          We are sorry for the inconvenience. This error has been reported. If
-          you have any urgent issues, please{" "}
-          <Button variant="link" size="sm" asChild className="inline px-0">
-            <a href="mailto:support@comet.com">contact us</a>
-          </Button>{" "}
-          directly.
+          <Trans
+            i18nKey="navigation.errorBoundary.errorMessage1"
+            components={{
+              contactLink: (
+                <Button variant="link" size="sm" asChild className="inline px-0">
+                  <a href="mailto:support@comet.com" />
+                </Button>
+              ),
+            }}
+          />
         </p>
         <p>
-          You can also submit feature requests to our{" "}
-          <Button variant="link" size="sm" asChild className="inline px-0">
-            <a
-              href="https://github.com/comet-ml/opik"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub repository
-            </a>
-          </Button>
-          , or join our{" "}
-          <Button variant="link" size="sm" asChild className="inline px-0">
-            <a href="https://chat.comet.com" target="_blank" rel="noreferrer">
-              Slack community
-            </a>
-          </Button>{" "}
-          to get help with bugs and questions.
+          <Trans
+            i18nKey="navigation.errorBoundary.errorMessage2"
+            components={{
+              githubLink: (
+                <Button variant="link" size="sm" asChild className="inline px-0">
+                  <a
+                    href="https://github.com/comet-ml/opik"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                </Button>
+              ),
+              slackLink: (
+                <Button variant="link" size="sm" asChild className="inline px-0">
+                  <a href="https://chat.comet.com" target="_blank" rel="noreferrer" />
+                </Button>
+              ),
+            }}
+          />
         </p>
       </div>
 
-      <Button onClick={resetError}>Continue</Button>
+      <Button onClick={resetError}>
+        {t("navigation.errorBoundary.continue")}
+      </Button>
     </div>
   );
 };

@@ -1,0 +1,131 @@
+{
+  "playground": {
+    "title": "Playground",
+    "description": "Test and experiment with prompts interactively",
+    "empty": {
+      "title": "No messages yet",
+      "description": "Start a conversation to test your prompt."
+    },
+    "fields": {
+      "systemPrompt": "System prompt",
+      "userMessage": "User message",
+      "model": "Model",
+      "temperature": "Temperature",
+      "maxTokens": "Max tokens"
+    },
+    "actions": {
+      "send": "Send",
+      "clear": "Clear conversation",
+      "reset": "Reset playground",
+      "save": "Save as prompt"
+    },
+    "header": {
+      "run": "Run",
+      "rerun": "Re-run",
+      "stopAll": "Stop all",
+      "runExperiment": "Run experiment",
+      "loading": "Loading...",
+      "resetTooltip": "Reset playground",
+      "stopTooltip": "Stop running prompts",
+      "runTooltip": "Run your prompts",
+      "rerunTooltip": "Re-run experiment on dataset",
+      "playgroundLogs": "Playground logs"
+    },
+    "runDisabled": {
+      "selectModel": "Please select an LLM model for your prompts",
+      "emptyMessages": "Some messages are empty. Please add some text to proceed",
+      "mediaNotSupported": "Some prompts contain media but the selected model doesn't support media input",
+      "datasetRemoved": "Your dataset has been removed. Select another one"
+    },
+    "prompt": {
+      "loadPrompt": "Load prompt",
+      "removePrompt": "Remove prompt",
+      "selectModel": "Please select an LLM model for this prompt",
+      "emptyMessage": "Message is empty. Please add some text to proceed",
+      "runTooltip": "Run this prompt"
+    },
+    "leaveExperiment": {
+      "title": "Leave experiment mode?",
+      "descriptionWithExperiments": "You'll return to prompt iteration mode. Your experiment results are saved and can be viewed anytime on the",
+      "descriptionSimple": "You'll return to prompt iteration mode.",
+      "experimentsPage": "Experiments",
+      "pageSuffix": "page.",
+      "confirmText": "Leave"
+    },
+    "resetConfirm": {
+      "title": "Reset playground",
+      "description": "Resetting the Playground will discard all unsaved prompts. This action can't be undone. Are you sure you want to continue?",
+      "confirmText": "Reset playground"
+    },
+    "metricSelector": {
+      "search": "Search",
+      "selectMetrics": "Select metrics",
+      "noMetricsAvailable": "No metrics available",
+      "noMetricsAvailableDesc": "Create an online evaluation rule for the Playground project to generate metrics for your outputs.",
+      "noMetricsFound": "No metrics found",
+      "selected": "selected",
+      "addNew": "Add new",
+      "openInNewTab": "Open in a new tab"
+    },
+    "outputs": {
+      "loading": "Loading...",
+      "noDatasetItems": "No dataset items",
+      "testSuiteLoading": "Test suite still loading",
+      "testSuiteLoadingDesc": "Experiments will run, but may not use the full test suite until loading completes.",
+      "testSuiteLoaded": "Test suite fully loaded",
+      "testSuiteLoadedDesc": "All items are now available."
+    },
+    "progress": {
+      "running": "Step 1: Gathering LLM output",
+      "evaluating": "Step 2: Evaluating assertions",
+      "progress": "Progress",
+      "completed": "completed"
+    },
+    "runExperiment": {
+      "title": "Run experiment",
+      "dataset": "Dataset",
+      "testSuite": "Test suite",
+      "datasetDescription": "Run prompts against a dataset. Results will be scored using selected metrics.",
+      "testSuiteDescription": "Run prompts against a test suite. Results will be scored using the assertions defined on the suite.",
+      "datasetSubmit": "Use dataset",
+      "testSuiteSubmit": "Use test suite",
+      "datasetEmptyTooltip": "Selected dataset is empty",
+      "testSuiteEmptyTooltip": "Selected test suite is empty",
+      "metrics": "Metrics",
+      "cancel": "Cancel",
+      "experimentRunning": "An experiment is already running"
+    },
+    "emptyDataset": {
+      "noDatasets": "No datasets yet",
+      "createDataset": "Create dataset",
+      "noTestSuites": "No test suites yet",
+      "createTestSuite": "Create test suite"
+    },
+    "outputCell": {
+      "openTrace": "Click to open original trace",
+      "outputLastRun": "Output (last run):"
+    },
+    "outputTable": {
+      "variables": "Variables",
+      "output": "Output",
+      "outputPrefix": "Output {{letter}}",
+      "tags": "Tags"
+    },
+    "navigationBlocker": {
+      "experimentInProgressTitle": "Experiment execution in progress",
+      "promptInProgressTitle": "Prompt execution in progress",
+      "experimentInProgressDescription": "Your experiment is currently running. Leaving now will interrupt the execution and may result in incomplete experiment items. Are you sure you want to leave?",
+      "promptInProgressDescription": "Your prompt is currently running. Leaving now will interrupt the execution and may result in incomplete traces. Are you sure you want to leave?",
+      "confirmText": "Leave anyway",
+      "cancelText": "Stay and wait"
+    },
+    "actionErrors": {
+      "error": "Error",
+      "timeout": "Timeout",
+      "assertionPollingTimeout": "Assertion evaluation polling timed out after 5 minutes",
+      "assertionPollingFailed": "Failed to poll assertion evaluation status",
+      "experimentPollingTimeout": "Experiment completion polling timed out after 5 minutes",
+      "experimentPollingFailed": "Failed to poll experiment completion status"
+    }
+  }
+}

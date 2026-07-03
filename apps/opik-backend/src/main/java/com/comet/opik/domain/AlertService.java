@@ -59,37 +59,118 @@ import static com.comet.opik.infrastructure.db.TransactionTemplateAsync.READ_ONL
 import static com.comet.opik.infrastructure.db.TransactionTemplateAsync.WRITE;
 import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 
+/**
+ * 告警服务接口，定义告警的增删改查及Webhook测试等操作。
+ * <p>
+ * 该接口由 {@link AlertServiceImpl} 实现。
+ */
 @ImplementedBy(AlertServiceImpl.class)
 public interface AlertService {
 
+    /**
+     * 创建告警
+     *
+     * @param alert 告警对象
+     * @return 告警ID
+     */
     UUID create(Alert alert);
 
+    /**
+     * 更新告警
+     *
+     * @param id    告警ID
+     * @param alert 告警对象
+     */
     void update(UUID id, Alert alert);
 
+    /**
+     * 分页查询告警列表（无项目过滤）
+     *
+     * @param page         页码
+     * @param size         每页大小
+     * @param sortingFields 排序字段列表
+     * @param filters      过滤条件列表
+     * @return 告警分页结果
+     */
     Alert.AlertPage find(int page, int size, List<SortingField> sortingFields, List<? extends Filter> filters);
 
+    /**
+     * 分页查询告警列表（支持项目过滤）
+     *
+     * @param page         页码
+     * @param size         每页大小
+     * @param sortingFields 排序字段列表
+     * @param filters      过滤条件列表
+     * @param projectId    项目ID（可为null）
+     * @return 告警分页结果
+     */
     Alert.AlertPage find(int page, int size, List<SortingField> sortingFields, List<? extends Filter> filters,
             UUID projectId);
 
+    /**
+     * 根据ID获取告警
+     *
+     * @param id 告警ID
+     * @return 告警对象
+     */
     Alert getById(UUID id);
 
+    /**
+     * 根据工作空间和事件类型获取所有告警
+     *
+     * @param workspaceId 工作空间ID
+     * @param eventTypes  事件类型集合
+     * @return 告警列表
+     */
     List<Alert> findAllByWorkspaceAndEventTypes(String workspaceId, Set<AlertEventType> eventTypes);
 
+    /**
+     * 根据ID和工作空间获取告警
+     *
+     * @param id          告警ID
+     * @param workspaceId 工作空间ID
+     * @return 告警对象
+     */
     Alert getByIdAndWorkspace(UUID id, String workspaceId);
 
+    /**
+     * 批量删除告警
+     *
+     * @param ids 告警ID集合
+     */
     void deleteBatch(Set<UUID> ids);
 
+    /**
+     * 测试Webhook连接
+     *
+     * @param alert 告警对象
+     * @return 测试结果
+     */
     WebhookTestResult testWebhook(Alert alert);
 
+    /**
+     * 获取Webhook示例
+     *
+     * @param alertType 告警类型
+     * @return Webhook示例对象
+     */
     WebhookExamples getWebhookExamples(AlertType alertType);
 }
 
+/**
+ * 告警服务实现类，提供告警的完整生命周期管理。
+ * <p>
+ * 包括告警的创建、更新、查询、删除，以及Webhook配置和测试功能。
+ */
 @Slf4j
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 class AlertServiceImpl implements AlertService {
 
+    /** 告警已存在错误信息 */
     private static final String ALERT_ALREADY_EXISTS = "Alert already exists";
+
+    /** 告警未找到错误信息 */
     private static final String ALERT_NOT_FOUND = "Alert not found";
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -100,6 +181,10 @@ class AlertServiceImpl implements AlertService {
     private final @NonNull SortingFactoryAlerts sortingFactory;
     private final @NonNull WebhookHttpClient webhookHttpClient;
 
+    /**
+     * 测试用载荷映射表，按事件类型存储对应的JSON测试数据。
+     * 用于Webhook测试时生成模拟的事件载荷。
+     */
     private final static EnumMap<AlertEventType, String> TEST_PAYLOAD = new EnumMap<>(Map.of(
             AlertEventType.TRACE_ERRORS,
             """
@@ -248,6 +333,7 @@ class AlertServiceImpl implements AlertService {
                     }
                     """));
 
+    /** 虚拟告警示例对象，用于生成Webhook测试载荷 */
     private static final Alert DUMMY_ALERT = Alert.builder()
             .id(UUID.fromString("01234567-89ab-cdef-0123-456789abcdef"))
             .name("Example Alert")
@@ -257,8 +343,18 @@ class AlertServiceImpl implements AlertService {
             .metadata(Map.of(ROUTING_KEY_METADATA_KEY, "example-routing-key"))
             .build();
 
+    /** Webhook示例缓存，按告警类型索引 */
     private static final Map<AlertType, WebhookExamples> WEBHOOK_EXAMPLES = prepareWebhookPayloadExamples();
 
+    /**
+     * 创建告警。
+     * <p>
+     * 验证告警配置的有效性，生成必要的ID，然后持久化告警及其关联的Webhook和触发器。
+     *
+     * @param alert 告警对象
+     * @return 创建的告警ID
+     * @throws EntityAlreadyExistsException 如果同名告警已存在
+     */
     @Override
     public UUID create(@NonNull Alert alert) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -273,14 +369,22 @@ class AlertServiceImpl implements AlertService {
                 .withError(this::newAlertConflict);
     }
 
-    //TODO: Now endpoint is used to update alert/webhook and create/update/delete triggers and trigger configs.
-    // Should be split into separate endpoints in the future
+    /**
+     * 更新告警。
+     * <p>
+     * 注意：当前接口同时用于更新告警/Webhook以及创建/更新/删除触发器和触发器配置，
+     * 未来应拆分为独立的接口。
+     *
+     * @param id    告警ID
+     * @param alert 更新后的告警对象
+     */
+    //TODO: 当前接口用于更新告警/Webhook以及创建/更新/删除触发器和触发器配置，未来应拆分为独立的接口
     @Override
     public void update(@NonNull UUID id, @NonNull Alert alert) {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
 
-        // Ensure the alert exists, will throw NotFoundException if not
+        // 确保告警存在，不存在则抛出NotFoundException
         var existingAlert = getById(id);
 
         validateNoProjectScopeConflict(alert);
@@ -291,25 +395,31 @@ class AlertServiceImpl implements AlertService {
                 .createdAt(existingAlert.createdAt())
                 .build();
 
-        // Prepare new updated alert with the same ID
+        // 准备更新后的告警对象（保留相同ID）
         var newAlert = prepareAlert(alert, userName, workspaceId);
 
         transactionTemplate.inTransaction(WRITE, handle -> {
-            // Delete existing alert and all its related entities (triggers, trigger configs, webhook)
+            // 删除现有告警及其所有关联实体（触发器、触发器配置、Webhook）
             deleteBatch(handle, Set.of(id));
 
-            // Save updated alert
+            // 保存更新后的告警
             saveAlert(handle, newAlert, workspaceId);
 
             return null;
         });
     }
 
+    /**
+     * 分页查询告警列表（无项目过滤）
+     */
     @Override
     public Alert.AlertPage find(int page, int size, List<SortingField> sortingFields, List<? extends Filter> filters) {
         return find(page, size, sortingFields, filters, null);
     }
 
+    /**
+     * 分页查询告警列表（支持项目过滤）
+     */
     @Override
     public Alert.AlertPage find(int page, int size, List<SortingField> sortingFields, List<? extends Filter> filters,
             UUID projectId) {
@@ -344,12 +454,24 @@ class AlertServiceImpl implements AlertService {
         });
     }
 
+    /**
+     * 根据ID获取告警（使用当前请求上下文的工作空间）
+     */
     @Override
     public Alert getById(@NonNull UUID id) {
         String workspaceId = requestContext.get().getWorkspaceId();
         return getByIdAndWorkspace(id, workspaceId);
     }
 
+    /**
+     * 根据工作空间和事件类型获取所有告警。
+     * <p>
+     * 结果会被缓存，缓存键为工作空间ID和事件类型的组合。
+     *
+     * @param workspaceId 工作空间ID
+     * @param eventTypes  事件类型集合
+     * @return 告警列表
+     */
     @Override
     @Cacheable(name = "alert_find_all_per_workspace", key = "$workspaceId +'-'+ $eventTypes", returnType = Alert.class, wrapperType = List.class)
     public List<Alert> findAllByWorkspaceAndEventTypes(String workspaceId, @NonNull Set<AlertEventType> eventTypes) {
@@ -365,6 +487,11 @@ class AlertServiceImpl implements AlertService {
         });
     }
 
+    /**
+     * 根据ID和工作空间获取告警
+     *
+     * @throws NotFoundException 如果告警不存在
+     */
     @Override
     public Alert getByIdAndWorkspace(@NonNull UUID id, @NonNull String workspaceId) {
         return transactionTemplate.inTransaction(READ_ONLY, handle -> {
@@ -380,6 +507,9 @@ class AlertServiceImpl implements AlertService {
         });
     }
 
+    /**
+     * 批量删除告警
+     */
     @Override
     public void deleteBatch(@NonNull Set<UUID> ids) {
         transactionTemplate.inTransaction(WRITE, handle -> {
@@ -388,6 +518,14 @@ class AlertServiceImpl implements AlertService {
         });
     }
 
+    /**
+     * 测试Webhook连接。
+     * <p>
+     * 构建测试载荷并发送Webhook请求，返回测试结果（成功/失败及状态码）。
+     *
+     * @param alert 告警对象
+     * @return Webhook测试结果
+     */
     @Override
     public WebhookTestResult testWebhook(@NonNull Alert alert) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -404,7 +542,7 @@ class AlertServiceImpl implements AlertService {
 
                     return WebhookTestResult.builder()
                             .status(WebhookTestResult.Status.SUCCESS)
-                            .statusCode(200) // Success defaults to 200
+                            .statusCode(200) // 成功时默认返回200
                             .requestBody(event.getJsonPayload())
                             .errorMessage(null)
                             .build();
@@ -413,7 +551,7 @@ class AlertServiceImpl implements AlertService {
                     log.error("Failed to send webhook: id='{}', type='{}', url='{}', error='{}'",
                             event.getId(), event.getEventType(), event.getUrl(), throwable.getMessage(), throwable);
 
-                    // Extract status code from RetryableHttpException if available
+                    // 从RetryableHttpException中提取状态码（如果可用）
                     int statusCode = (throwable instanceof RetryUtils.RetryableHttpException rhe)
                             ? rhe.getStatusCode()
                             : 0;
@@ -428,11 +566,23 @@ class AlertServiceImpl implements AlertService {
                 .block();
     }
 
+    /**
+     * 获取指定告警类型的Webhook示例
+     */
     @Override
     public WebhookExamples getWebhookExamples(@NonNull AlertType alertType) {
         return WEBHOOK_EXAMPLES.get(alertType);
     }
 
+    /**
+     * 将告警对象映射为Webhook事件。
+     * <p>
+     * 用于Webhook测试时生成模拟的事件数据。
+     *
+     * @param alert       告警对象
+     * @param workspaceId 工作空间ID
+     * @return Webhook事件对象
+     */
     private static WebhookEvent<Map<String, Object>> mapAlertToWebhookEvent(Alert alert, String workspaceId) {
         String eventId = Generators.timeBasedEpochGenerator().generate().toString();
         var eventType = CollectionUtils.isEmpty(alert.triggers())
@@ -471,16 +621,30 @@ class AlertServiceImpl implements AlertService {
                 .build();
     }
 
+    /**
+     * 在事务中批量删除告警
+     */
     private void deleteBatch(Handle handle, Set<UUID> ids) {
         String workspaceId = requestContext.get().getWorkspaceId();
         AlertDAO alertDAO = handle.attach(AlertDAO.class);
         alertDAO.delete(ids, workspaceId);
     }
 
+    /**
+     * 在新事务中保存告警
+     */
     private UUID saveAlert(Alert alert, String workspaceId) {
         return transactionTemplate.inTransaction(WRITE, handle -> saveAlert(handle, alert, workspaceId));
     }
 
+    /**
+     * 在现有事务中保存告警及其关联实体（Webhook、触发器、触发器配置）
+     *
+     * @param handle      事务句柄
+     * @param alert       告警对象
+     * @param workspaceId 工作空间ID
+     * @return 告警ID
+     */
     private UUID saveAlert(Handle handle, Alert alert, String workspaceId) {
 
         AlertDAO alertDAO = handle.attach(AlertDAO.class);
@@ -489,7 +653,7 @@ class AlertServiceImpl implements AlertService {
         WebhookDAO webhookDAO = handle.attach(WebhookDAO.class);
         webhookDAO.save(workspaceId, alert.webhook());
 
-        // Save triggers and their configs
+        // 保存触发器及其配置
         if (CollectionUtils.isNotEmpty(alert.triggers())) {
             AlertTriggerDAO alertTriggerDAO = handle.attach(AlertTriggerDAO.class);
             alertTriggerDAO.saveBatch(alert.triggers());
@@ -508,10 +672,23 @@ class AlertServiceImpl implements AlertService {
         return alert.id();
     }
 
+    /**
+     * 创建告警冲突异常
+     */
     private EntityAlreadyExistsException newAlertConflict() {
         return new EntityAlreadyExistsException(new ErrorMessage(HttpStatus.SC_CONFLICT, ALERT_ALREADY_EXISTS));
     }
 
+    /**
+     * 验证触发器配置中的group_index字段。
+     * <p>
+     * 规则：
+     * - group_index必须为非负数
+     * - scope:project类型的触发器配置不允许设置group_index（它作为全局前置条件，而非布尔表达式的一部分）
+     *
+     * @param alert 告警对象
+     * @throws BadRequestException 如果验证失败
+     */
     private static void validateGroupIndices(Alert alert) {
         if (alert.triggers() == null) {
             return;
@@ -537,6 +714,15 @@ class AlertServiceImpl implements AlertService {
         }
     }
 
+    /**
+     * 验证项目ID与scope:project触发器配置之间不存在冲突。
+     * <p>
+     * 规则：不能同时提供project_id和scope:project类型的触发器配置。
+     * 设置project_id即可，系统会自动创建scope配置。
+     *
+     * @param alert 告警对象
+     * @throws BadRequestException 如果同时存在冲突的配置
+     */
     private static void validateNoProjectScopeConflict(Alert alert) {
         if (alert.projectId() == null || alert.triggers() == null) {
             return;
@@ -551,6 +737,20 @@ class AlertServiceImpl implements AlertService {
         }
     }
 
+    /**
+     * 准备告警对象，生成必要的ID并设置默认值。
+     * <p>
+     * 处理内容：
+     * - 为告警和Webhook生成或验证UUID
+     * - 设置默认的enabled状态为true
+     * - 设置默认的alertType为GENERAL
+     * - 准备触发器及其配置
+     *
+     * @param alert       原始告警对象
+     * @param userName    当前用户名
+     * @param workspaceId 工作空间ID
+     * @return 准备好的告警对象
+     */
     private Alert prepareAlert(Alert alert, String userName, String workspaceId) {
 
         UUID id = alert.id() == null ? idGenerator.generateId() : alert.id();
@@ -562,13 +762,13 @@ class AlertServiceImpl implements AlertService {
         Webhook webhook = alert.webhook()
                 .toBuilder()
                 .id(webhookId)
-                .name("Webhook for alert " + alert.id()) // Not used by FE
+                .name("Webhook for alert " + alert.id()) // 前端未使用此字段
                 .createdBy(Optional.ofNullable(alert.createdBy()).orElse(userName))
-                .createdAt(alert.createdAt()) // will be null for new alert, and not null for update
+                .createdAt(alert.createdAt()) // 新建时为null，更新时不为null
                 .lastUpdatedBy(userName)
                 .build();
 
-        // Prepare triggers with generated IDs
+        // 准备触发器（生成ID）
         List<AlertTrigger> preparedTriggers = null;
         if (alert.triggers() != null) {
             preparedTriggers = alert.triggers().stream()
@@ -578,8 +778,8 @@ class AlertServiceImpl implements AlertService {
 
         return alert.toBuilder()
                 .id(id)
-                .enabled(alert.enabled() != null ? alert.enabled() : true) // Set default to true only when not explicitly provided
-                .alertType(alert.alertType() != null ? alert.alertType() : AlertType.GENERAL) // Set default to GENERAL when not provided
+                .enabled(alert.enabled() != null ? alert.enabled() : true) // 仅在未显式设置时默认为true
+                .alertType(alert.alertType() != null ? alert.alertType() : AlertType.GENERAL) // 未提供时默认为GENERAL
                 .webhook(webhook)
                 .triggers(preparedTriggers)
                 .createdBy(Optional.ofNullable(alert.createdBy()).orElse(userName))
@@ -588,6 +788,15 @@ class AlertServiceImpl implements AlertService {
                 .build();
     }
 
+    /**
+     * 准备触发器对象，生成ID并关联到告警。
+     *
+     * @param trigger  原始触发器对象
+     * @param userName 当前用户名
+     * @param alertId  关联的告警ID
+     * @param alert    告警对象（用于获取创建时间）
+     * @return 准备好的触发器对象
+     */
     private AlertTrigger prepareTrigger(AlertTrigger trigger, String userName, UUID alertId, Alert alert) {
         UUID triggerId = trigger.id() == null ? idGenerator.generateId() : trigger.id();
         IdGenerator.validateVersion(triggerId, "Alert Trigger");
@@ -604,10 +813,19 @@ class AlertServiceImpl implements AlertService {
                 .alertId(alertId)
                 .triggerConfigs(preparedConfigs)
                 .createdBy(Optional.ofNullable(trigger.createdBy()).orElse(userName))
-                .createdAt(alert.createdAt()) // will be null for new alert, and not null for update
+                .createdAt(alert.createdAt()) // 新建时为null，更新时不为null
                 .build();
     }
 
+    /**
+     * 准备触发器配置对象，生成ID并关联到触发器。
+     *
+     * @param config    原始触发器配置对象
+     * @param userName  当前用户名
+     * @param triggerId 关联的触发器ID
+     * @param alert     告警对象（用于获取创建时间）
+     * @return 准备好的触发器配置对象
+     */
     private AlertTriggerConfig prepareTriggerConfig(AlertTriggerConfig config, String userName, UUID triggerId,
             Alert alert) {
         UUID triggerConfigId = config.id() == null ? idGenerator.generateId() : config.id();
@@ -617,11 +835,18 @@ class AlertServiceImpl implements AlertService {
                 .id(triggerConfigId)
                 .alertTriggerId(triggerId)
                 .createdBy(Optional.ofNullable(config.createdBy()).orElse(userName))
-                .createdAt(alert.createdAt()) // will be null for new alert, and not null for update
+                .createdAt(alert.createdAt()) // 新建时为null，更新时不为null
                 .lastUpdatedBy(userName)
                 .build();
     }
 
+    /**
+     * 准备所有告警类型的Webhook载荷示例。
+     * <p>
+     * 遍历所有AlertType和EventType组合，为每种组合生成对应的Webhook示例数据。
+     *
+     * @return 按告警类型索引的Webhook示例映射
+     */
     private static Map<AlertType, WebhookExamples> prepareWebhookPayloadExamples() {
         Map<AlertType, WebhookExamples> result = new HashMap<>();
 

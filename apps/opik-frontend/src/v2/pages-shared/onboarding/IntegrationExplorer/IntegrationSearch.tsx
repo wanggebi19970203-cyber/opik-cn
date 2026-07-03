@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import SearchInput from "@/shared/SearchInput/SearchInput";
 import { useIntegrationExplorer } from "./IntegrationExplorerContext";
 import { cn } from "@/lib/utils";
@@ -9,16 +10,17 @@ type IntegrationSearchProps = {
 };
 
 const IntegrationSearch: React.FunctionComponent<IntegrationSearchProps> = ({
-  placeholder = "Search integration",
+  placeholder,
   className,
 }) => {
+  const { t } = useTranslation();
   const { searchText, setSearchText } = useIntegrationExplorer();
 
   return (
     <SearchInput
       searchText={searchText}
       setSearchText={setSearchText}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t("onboarding.integrationExplorer.searchPlaceholder")}
       className={cn("max-w-[240px]", className)}
       dimension="sm"
     />

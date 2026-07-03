@@ -1,0 +1,135 @@
+---
+description: 描述 Opik 提供的所有内置评估指标
+headline: 概览 | Opik 文档
+og:description: 探索 Opik 的评估指标，通过启发式方法和 LLM 作为评判者方法精确评估 LLM 行为。
+og:site_name: Opik 文档
+og:title: 评估指标概览 - Opik
+title: 概览
+---
+
+# 概览
+
+Opik 提供了一组内置评估指标，您可以自由组合使用这些指标来评估 LLM 的行为。这些指标分为两大类：
+
+1. **启发式指标** — 基于规则、统计或经典 NLP 算法的确定性检查。
+2. **LLM 作为评判者指标** — 将评分委托给 LLM，以便捕获语义、任务特定或对话级别的质量信号。
+
+当您需要可复现的检查时（如精确匹配、正则表达式验证或与参考的相似度评分），启发式指标是理想选择。当您需要更丰富的定性反馈时（如幻觉检测、有用性、摘要质量、合规风险等），LLM 作为评判者指标更为适用。
+
+## 内置指标
+
+### 启发式指标
+
+| 指标 | 描述 | 文档 |
+| --- | --- | --- |
+| BERTScore | 上下文嵌入相似度评分 | [BERTScore](/evaluation/metrics/heuristic_metrics#bertscore) |
+| ChrF | 字符 n-gram F-score（chrF / chrF++） | [ChrF](/evaluation/metrics/heuristic_metrics#chrf) |
+| Contains | 检查输出是否包含特定子字符串 | [Contains](/evaluation/metrics/heuristic_metrics#contains) |
+| Corpus BLEU | 计算多个输出的语料级 BLEU | [CorpusBLEU](/evaluation/metrics/heuristic_metrics#bleu) |
+| Equals | 检查输出是否与期望字符串精确匹配 | [Equals](/evaluation/metrics/heuristic_metrics#equals) |
+| GLEU | 评估候选句子的语法流畅性 | [GLEU](/evaluation/metrics/heuristic_metrics#gleu) |
+| IsJson | 验证输出是否可解析为 JSON | [IsJson](/evaluation/metrics/heuristic_metrics#isjson) |
+| JSDivergence | 标记分布之间的 Jensen-Shannon 相似度 | [JSDivergence](/evaluation/metrics/heuristic_metrics#jsdivergence) |
+| JSDistance | 原始 Jensen-Shannon 散度 | [JSDistance](/evaluation/metrics/heuristic_metrics#jsdistance) |
+| KLDivergence | 带平滑的 Kullback-Leibler 散度 | [KLDivergence](/evaluation/metrics/heuristic_metrics#kldivergence) |
+| Language Adherence | 验证输出语言代码 | [Language Adherence](/evaluation/metrics/heuristic_metrics#language-adherence) |
+| Levenshtein | 计算输出与参考之间的归一化 Levenshtein 距离 | [Levenshtein](/evaluation/metrics/heuristic_metrics#levenshteinratio) |
+| Readability | 报告 Flesch 阅读易读性和 FK 年级水平 | [Readability](/evaluation/metrics/heuristic_metrics#readability) |
+| RegexMatch | 检查输出是否匹配指定的正则表达式模式 | [RegexMatch](/evaluation/metrics/heuristic_metrics#regexmatch) |
+| ROUGE | 计算 ROUGE 变体（rouge1/2/L/Lsum/W） | [ROUGE](/evaluation/metrics/heuristic_metrics#rouge) |
+| Sentence BLEU | 计算单个输出对一个或多个参考的 BLEU 评分 | [SentenceBLEU](/evaluation/metrics/heuristic_metrics#bleu) |
+| Sentiment | 使用 VADER 进行情感评分 | [Sentiment](/evaluation/metrics/heuristic_metrics#sentiment) |
+| Spearman Ranking | Spearman 秩相关 | [Spearman Ranking](/evaluation/metrics/heuristic_metrics#spearman-ranking) |
+| Tone | 检测语气问题（如大喊大叫或消极情绪） | [Tone](/evaluation/metrics/heuristic_metrics#tone) |
+
+### 对话启发式指标
+
+| 指标 | 描述 | 文档 |
+| --- | --- | --- |
+| DegenerationC | 检测对话中的重复和退化模式 | [DegenerationC](/evaluation/metrics/conversation_threads_metrics#conversation-degeneration-metric) |
+| Knowledge Retention | 检查最后一条助手回复是否保留了用户在早期轮次中提供的信息 | [Knowledge Retention](/evaluation/metrics/conversation_threads_metrics#knowledge-retention-metric) |
+
+### LLM 作为评判者指标
+
+| 指标 | 描述 | 文档 |
+| --- | --- | --- |
+| Agent Task Completion Judge | 检查智能体是否完成了其分配的任务 | [Agent Task Completion](/evaluation/metrics/agent_task_completion) |
+| Agent Tool Correctness Judge | 评估智能体是否正确使用了工具 | [Agent Tool Correctness](/evaluation/metrics/agent_tool_correctness) |
+| Answer Relevance | 检查答案是否与问题保持相关 | [Answer Relevance](/evaluation/metrics/answer_relevance) |
+| Compliance Risk Judge | 识别不合规或高风险陈述 | [Compliance Risk](/evaluation/metrics/compliance_risk) |
+| Context Precision | 确保答案仅使用相关上下文 | [Context Precision](/evaluation/metrics/context_precision) |
+| Context Recall | 衡量答案对支撑上下文的召回程度 | [Context Recall](/evaluation/metrics/context_recall) |
+| Dialogue Helpfulness Judge | 评估助手回复在对话中的有用性 | [Dialogue Helpfulness](/evaluation/metrics/dialogue_helpfulness) |
+| G-Eval | 可通过自定义指令配置的任务无关评判者 | [G-Eval](/evaluation/metrics/g_eval) |
+| Hallucination | 使用 LLM 评判者检测无支撑或幻觉声明 | [Hallucination](/evaluation/metrics/hallucination) |
+| LLM Juries Judge | 对多个评判者指标的评分取平均值进行集成评分 | [LLM Juries](/evaluation/metrics/llm_juries) |
+| Meaning Match | 评估输出与真实值之间的语义等价性 | [Meaning Match](/evaluation/metrics/meaning_match) |
+| Moderation | 标记助手回复中的安全或策略违规 | [Moderation](/evaluation/metrics/moderation) |
+| Prompt Uncertainty Judge | 检测提示中可能使 LLM 困惑的歧义 | [Prompt Diagnostics](/evaluation/metrics/prompt_diagnostics) |
+| QA Relevance Judge | 判断答案是否直接回应了用户问题 | [QA Relevance](/evaluation/metrics/g_eval#qa-relevance-judge) |
+| Structured Output Compliance | 检查结构化回复的 JSON 或 schema 遵循情况 | [Structured Output](/evaluation/metrics/structure_output_compliance) |
+| Summarization Coherence Judge | 评估摘要的结构和连贯性 | [Summarization Coherence](/evaluation/metrics/summarization_coherence) |
+| Summarization Consistency Judge | 检查摘要是否忠实于原文 | [Summarization Consistency](/evaluation/metrics/summarization_consistency) |
+| Trajectory Accuracy | 评估智能体轨迹与预期步骤的吻合程度 | [Trajectory Accuracy](/evaluation/metrics/trajectory_accuracy) |
+| Usefulness | 评估答案对用户的有用程度 | [Usefulness](/evaluation/metrics/usefulness) |
+
+### 对话 LLM 作为评判者指标
+
+| 指标 | 描述 | 文档 |
+| --- | --- | --- |
+| Conversational Coherence | 评估对话滑动窗口中的连贯性 | [Conversational Coherence](/evaluation/metrics/conversation_threads_metrics#conversationalcoherencemetric) |
+| Session Completeness Quality | 检查用户目标在会话中是否得到满足 | [Session Completeness](/evaluation/metrics/conversation_threads_metrics#sessioncompletenessquality) |
+| User Frustration | 估计用户感到沮丧的可能性 | [User Frustration](/evaluation/metrics/conversation_threads_metrics#userfrustrationmetric) |
+
+
+## 自定义 LLM 作为评判者指标
+
+默认情况下，Opik 使用 OpenAI 的 GPT-5-nano 作为 LLM 来评估其他 LLM 的输出。但您可以通过指定不同的 `model` 参数轻松切换到其他 LLM 提供商。
+
+<CodeBlocks>
+```python title="Python" language="python"
+from opik.evaluation.metrics import Hallucination
+
+metric = Hallucination(model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0")
+
+metric.score(
+input="What is the capital of France?",
+output="The capital of France is Paris. It is famous for its iconic Eiffel Tower and rich cultural heritage.",
+)
+
+````
+
+```typescript title="TypeScript" language="typescript"
+import { Hallucination } from 'opik';
+import { openai } from '@ai-sdk/openai';
+
+// Using model ID string (simplest approach)
+const metric1 = new Hallucination({ model: 'gpt-4o' });
+const metric2 = new Hallucination({ model: 'claude-3-5-sonnet-latest' });
+const metric3 = new Hallucination({ model: 'gemini-2.0-flash' });
+
+// With generation parameters (temperature, seed, maxTokens)
+const metric4 = new Hallucination({
+  model: 'gpt-4o',
+  temperature: 0.3,
+  seed: 42
+});
+
+// Using custom LanguageModel instance for provider-specific configuration
+const customModel = openai('gpt-4o', {
+  structuredOutputs: true
+});
+const metric5 = new Hallucination({ model: customModel });
+
+// Score using the metric
+await metric4.score({
+    input: "What is the capital of France?",
+    output: "The capital of France is Paris. It is famous for its iconic Eiffel Tower and rich cultural heritage.",
+});
+````
+
+</CodeBlocks>
+
+对于 **Python**，此功能基于 LiteLLM 框架。您可以在 [LiteLLM 提供商](https://docs.litellm.ai/docs/providers) 指南中找到支持的 LLM 提供商完整列表及其配置方法。
+
+对于 **TypeScript**，SDK 与 Vercel AI SDK 集成。您可以使用模型 ID 字符串以简化配置，或使用 LanguageModel 实例进行高级配置。更多详情请参阅 [Models 文档](/reference/typescript-sdk/evaluation/models)。

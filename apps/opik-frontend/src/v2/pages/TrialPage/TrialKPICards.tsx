@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 
 import {
   MetricKPICard,
-  getMetricKPICardConfigs,
+  useMetricKPICardConfigs,
 } from "@/v2/pages-shared/experiments/KPICard/KPICard";
 import { Experiment } from "@/types/datasets";
 import {
@@ -73,7 +73,7 @@ const TrialKPICards: React.FunctionComponent<TrialKPICardsProps> = ({
     return aggregateExperimentMetrics(baselineExps, objectiveName);
   }, [allOptimizationExperiments, experiments, objectiveName]);
 
-  const configs = getMetricKPICardConfigs({ isTestSuite, objectiveName });
+  const configs = useMetricKPICardConfigs({ isTestSuite, objectiveName });
 
   return (
     <div className="grid grid-cols-3 gap-4">

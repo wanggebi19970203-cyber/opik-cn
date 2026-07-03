@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft } from "lucide-react";
@@ -97,6 +98,7 @@ const ManageAIProviderDialog: React.FC<ManageAIProviderDialogProps> = ({
   onDeleteProvider,
   configuredProvidersList,
 }) => {
+  const { t } = useTranslation("prompt");
   // Ensure providerKey is included in the list for proper grid highlighting
   const effectiveConfiguredProvidersList = useMemo(() => {
     if (configuredProvidersList) return configuredProvidersList;
@@ -176,14 +178,14 @@ const ManageAIProviderDialog: React.FC<ManageAIProviderDialogProps> = ({
   const isEdit = Boolean(providerKey || calculatedProviderKey);
 
   const title = isEdit
-    ? "Edit provider configuration"
-    : "Add provider configuration";
+    ? t("manageAIProviderDialog.editProviderConfiguration")
+    : t("manageAIProviderDialog.addProviderConfiguration");
 
   const buttonText = provider
     ? providerKey || calculatedProviderKey
-      ? "Update configuration"
-      : "Add provider"
-    : "Add provider";
+      ? t("manageAIProviderDialog.updateConfiguration")
+      : t("manageAIProviderDialog.addProvider")
+    : t("manageAIProviderDialog.addProvider");
 
   const customProviderName =
     selectedProviderType === PROVIDER_TYPE.CUSTOM ||
@@ -416,7 +418,7 @@ const ManageAIProviderDialog: React.FC<ManageAIProviderDialogProps> = ({
                     className="p-0"
                   >
                     <ChevronLeft className="mr-1 size-4" />
-                    Back
+                    {t("manageAIProviderDialog.back")}
                   </Button>
                 )}
               </div>
@@ -427,7 +429,7 @@ const ManageAIProviderDialog: React.FC<ManageAIProviderDialogProps> = ({
                     variant="destructive"
                     onClick={() => setConfirmOpen(true)}
                   >
-                    Delete configuration
+                    {t("manageAIProviderDialog.deleteConfiguration")}
                   </Button>
                 ) : (
                   <Button
@@ -435,7 +437,7 @@ const ManageAIProviderDialog: React.FC<ManageAIProviderDialogProps> = ({
                     onClick={handleCancel}
                     type="button"
                   >
-                    Cancel
+                    {t("manageAIProviderDialog.cancel")}
                   </Button>
                 )}
                 <Button
@@ -453,9 +455,9 @@ const ManageAIProviderDialog: React.FC<ManageAIProviderDialogProps> = ({
         open={confirmOpen}
         setOpen={setConfirmOpen}
         onConfirm={deleteProviderKeyHandler}
-        title="Delete configuration"
-        description="This configuration is shared across the workspace. Deleting it will remove access for everyone. This action can't be undone. Are you sure you want to proceed?"
-        confirmText="Delete configuration"
+        title={t("manageAIProviderDialog.deleteConfigurationTitle")}
+        description={t("manageAIProviderDialog.deleteConfigurationDescription")}
+        confirmText={t("manageAIProviderDialog.deleteConfigurationConfirm")}
         confirmButtonVariant="destructive"
       />
     </Dialog>

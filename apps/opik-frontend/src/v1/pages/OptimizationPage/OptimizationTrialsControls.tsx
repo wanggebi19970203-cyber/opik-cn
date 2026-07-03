@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCw } from "lucide-react";
 import { Button } from "@/ui/button";
 import { ColumnData, ROW_HEIGHT } from "@/types/shared";
@@ -28,9 +29,11 @@ const OptimizationTrialsControls: React.FC<OptimizationTrialsControlsProps> = ({
   columnsOrder,
   onColumnsOrderChange,
 }) => {
+  const { t } = useTranslation("pages/optimization");
+
   return (
     <div className="flex items-center gap-2">
-      <TooltipWrapper content="Refresh trials list">
+      <TooltipWrapper content={t("optimization.trials.refreshTooltip")}>
         <Button
           variant="outline"
           size="icon-sm"

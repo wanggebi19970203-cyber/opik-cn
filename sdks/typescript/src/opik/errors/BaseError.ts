@@ -1,8 +1,8 @@
 import { logger } from "@/utils/logger";
 
 /**
- * Base error class for all Opik SDK errors.
- * Provides standardized structure for error handling across the SDK.
+ * Opik SDK 所有错误的基类。
+ * 为 SDK 中的错误处理提供标准化结构。
  */
 export class OpikError extends Error {
   public readonly code: string;
@@ -26,12 +26,12 @@ export class OpikError extends Error {
 
     logger.error(this.message);
 
-    // Captures stack trace properly in TypeScript
+    // 在 TypeScript 中正确捕获堆栈跟踪
     Error.captureStackTrace?.(this, this.constructor);
   }
 
   /**
-   * Converts the error to a JSON object for serialization.
+   * 将错误转换为 JSON 对象以便序列化。
    */
   toJSON() {
     return {

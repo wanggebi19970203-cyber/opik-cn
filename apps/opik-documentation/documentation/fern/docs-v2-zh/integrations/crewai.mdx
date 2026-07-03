@@ -1,0 +1,228 @@
+---
+description: 从这里开始将 Opik 集成到基于 CrewAI 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: CrewAI | Opik 文档
+og:description: 使用 CrewAI 构建智能 AI 团队，并通过 Opik 的活动日志功能轻松监控其性能。
+og:site_name: Opik 文档
+og:title: 通过 Opik 集成提升 CrewAI 框架
+title: 使用 Opik 实现 CrewAI 可观测性
+---
+
+[CrewAI](https://www.crewai.com/) 是一个用于编排自主 AI 代理的前沿框架。
+
+> CrewAI 使您能够创建 AI 团队，每个代理具有特定的角色、工具和目标，协同工作以完成复杂任务。
+
+> 可以将其想象为组建您的梦之队——每个成员（代理）带来独特的技能和专业知识，无缝协作以实现您的目标。
+
+Opik 与 CrewAI 集成，可记录所有 CrewAI 活动的跟踪信息，包括经典的 Crew/Agent/Task 管道和新的 CrewAI Flows API。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=crewai&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=crewai&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=crewai&utm_campaign=opik)。
+
+<Frame>
+  <img src="/img/tracing/crewai/crewai_crew_kickoff_trace_example.png" />
+</Frame>
+
+## 快速开始
+
+### 安装
+
+首先，确保您已安装 `opik` 和 `crewai`：
+
+```bash
+pip install opik crewai crewai-tools
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 CrewAI
+
+要配置 CrewAI，您需要拥有 LLM 提供商的 API 密钥。在本示例中，我们将使用 OpenAI。您可以在[此页面查找或创建您的 OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)。
+
+您可以将其设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 记录 CrewAI 调用
+
+要记录 CrewAI 管道运行，您可以使用 [`track_crewai`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/crewai/track_crewai.html) 函数。这会将每个 CrewAI 调用记录到 Opik，包括您的代理执行的 LLM 调用。
+
+<Tip>
+  **CrewAI v1.0.0+ 需要 `crew` 参数**：为确保 CrewAI v1.0.0 及更高版本中 LLM 调用被正确记录，您必须将 Crew 实例传递给 `track_crewai(crew=your_crew)`。这是因为 CrewAI v1.0.0+ 更改了内部 LLM 提供商的处理方式。
+  
+  对于 CrewAI v0.x，`crew` 参数是可选的，因为 LLM 跟踪通过 LiteLLM 委托实现。
+</Tip>
+
+### 创建 CrewAI 项目
+
+第一步是创建我们的项目。我们将使用 CrewAI 文档中的示例：
+
+```python
+from crewai import Agent, Crew, Task, Process
+
+class YourCrewName:
+    def agent_one(self) -> Agent:
+        return Agent(
+            role="Data Analyst",
+            goal="Analyze data trends in the market",
+            backstory="An experienced data analyst with a background in economics",
+            verbose=True,
+        )
+
+    def agent_two(self) -> Agent:
+        return Agent(
+            role="Market Researcher",
+            goal="Gather information on market dynamics",
+            backstory="A diligent researcher with a keen eye for detail",
+            verbose=True,
+        )
+
+    def task_one(self) -> Task:
+        return Task(
+            name="Collect Data Task",
+            description="Collect recent market data and identify trends.",
+            expected_output="A report summarizing key trends in the market.",
+            agent=self.agent_one(),
+        )
+
+    def task_two(self) -> Task:
+        return Task(
+            name="Market Research Task",
+            description="Research factors affecting market dynamics.",
+            expected_output="An analysis of factors influencing the market.",
+            agent=self.agent_two(),
+        )
+
+    def crew(self) -> Crew:
+        return Crew(
+            agents=[self.agent_one(), self.agent_two()],
+            tasks=[self.task_one(), self.task_two()],
+            process=Process.sequential,
+            verbose=True,
+        )
+```
+
+### 使用 Opik 跟踪运行
+
+现在我们可以导入 Opik 的跟踪器并运行我们的 `crew`。**对于 CrewAI v1.0.0+，需要将 crew 实例传递给 `track_crewai`** 以确保 LLM 调用被记录：
+
+```python
+from opik.integrations.crewai import track_crewai
+
+# Create the crew
+my_crew = YourCrewName().crew()
+
+track_crewai(project_name="crewai-integration-demo", crew=my_crew)
+
+# Run the crew
+result = my_crew.kickoff()
+
+print(result)
+```
+
+每次运行现在都会被记录到 Opik 平台，包括所有代理活动和 LLM 调用。
+
+
+## 记录 CrewAI Flows
+
+Opik 同样支持 CrewAI Flows API。当您使用 `track_crewai` 启用跟踪时，Opik 会自动：
+
+- 跟踪 `Flow.kickoff()` 和 `Flow.kickoff_async()` 作为根 span/trace，包含输入和输出
+- 跟踪使用 `@start` 和 `@listen` 装饰的 flow 步骤方法作为嵌套 span
+- 捕获这些步骤中的所有 LLM 调用（通过 LiteLLM）及 token 使用情况
+- Flow 方法与其他 Opik 集成（如 OpenAI、Anthropic、LangChain）和 `@opik.track` 装饰器兼容。在 flow 步骤内创建的任何 span 都会正确附加到 flow 的 span 树中。
+
+示例：
+
+```python
+import litellm
+from crewai.flow.flow import Flow, start, listen
+from opik.integrations.crewai import track_crewai
+
+track_crewai(project_name="crewai-integration-demo")
+
+class ExampleFlow(Flow):
+    model = "gpt-4o-mini"
+
+    @start()
+    def generate_city(self):
+        response = litellm.completion(
+            model=self.model,
+            messages=[{"role": "user", "content": "Return the name of a random city."}],
+        )
+        return response["choices"][0]["message"]["content"]
+
+    @listen(generate_city)
+    def generate_fun_fact(self, random_city):
+        response = litellm.completion(
+            model=self.model,
+            messages=[{"role": "user", "content": f"Tell me a fun fact about {random_city}"}],
+        )
+        return response["choices"][0]["message"]["content"]
+
+flow = ExampleFlow()
+result = flow.kickoff()
+```
+
+## 成本跟踪
+
+`track_crewai` 集成会自动跟踪 CrewAI 代理执行期间使用的所有受支持 LLM 模型的 token 使用量和成本。
+
+成本信息会自动捕获并显示在 Opik UI 中，包括：
+
+- Token 使用详情
+- 基于模型定价的每次请求成本
+- 总跟踪成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看受支持的模型和提供商完整列表。
+</Tip>
+
+## 使用 `thread_id` 将跟踪分组到对话线程中
+
+Opik 中的线程是使用唯一 `thread_id` 分组的跟踪集合。
+
+`thread_id` 可以作为参数传递给 CrewAI crew，用于将所有跟踪分组到单个线程中。
+
+```python
+from crewai import Agent, Crew, Task, Process
+from opik.integrations.crewai import track_crewai
+
+# Define your crew (using the example from above)
+my_crew = YourCrewName().crew()
+
+# Enable tracking with the crew instance (required for v1.0.0+)
+track_crewai(project_name="crewai-integration-demo", crew=my_crew)
+
+# Pass thread_id via opik_args
+args_dict = {
+    "trace": {
+        "thread_id": "conversation-2",
+    },
+}
+
+result = my_crew.kickoff(opik_args=args_dict)
+```
+
+更多关于记录聊天对话的信息，请参阅[记录对话](/tracing/advanced/log_chat_conversations)部分。

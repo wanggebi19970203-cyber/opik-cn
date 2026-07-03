@@ -4,6 +4,7 @@ import useLocalStorageState from "use-local-storage-state";
 import { ColumnPinningState } from "@tanstack/react-table";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import DataTable from "@/shared/DataTable/DataTable";
 import DataTableNoData from "@/shared/DataTableNoData/DataTableNoData";
@@ -49,7 +50,7 @@ export const COLUMNS = convertColumnDataToColumn<Experiment, Experiment>(
     },
     {
       id: "dataset",
-      label: "Test suite",
+      label: "home.evaluation.testSuite",
       type: COLUMN_TYPE.string,
       cell: ResourceCell as never,
       customMeta: {
@@ -60,12 +61,12 @@ export const COLUMNS = convertColumnDataToColumn<Experiment, Experiment>(
     },
     {
       id: "trace_count",
-      label: "Item count",
+      label: "home.evaluation.itemCount",
       type: COLUMN_TYPE.number,
     },
     {
       id: "pass_rate",
-      label: "Pass rate",
+      label: "home.evaluation.passRate",
       type: COLUMN_TYPE.number,
       iconType: "pass_rate",
       accessorFn: (row) => row.pass_rate,
@@ -73,7 +74,7 @@ export const COLUMNS = convertColumnDataToColumn<Experiment, Experiment>(
     },
     {
       id: COLUMN_FEEDBACK_SCORES_ID,
-      label: "Feedback scores",
+      label: "home.evaluation.feedbackScores",
       type: COLUMN_TYPE.numberDictionary,
       accessorFn: transformExperimentScores,
       cell: FeedbackScoreListCell as never,
@@ -84,7 +85,7 @@ export const COLUMNS = convertColumnDataToColumn<Experiment, Experiment>(
     },
     {
       id: "created_at",
-      label: "Created",
+      label: "home.evaluation.created",
       type: COLUMN_TYPE.time,
       cell: TimeCell as never,
       sortable: true,
@@ -99,6 +100,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 };
 
 const EvaluationSection: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const {
@@ -120,7 +122,7 @@ const EvaluationSection: React.FC = () => {
   );
 
   const experiments = useMemo(() => data?.content ?? [], [data?.content]);
-  const noDataText = "There are no experiments yet";
+  const noDataText = t("home.evaluation.noExperiments");
 
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
     Record<string, number>
@@ -169,7 +171,7 @@ const EvaluationSection: React.FC = () => {
   return (
     <div className="pb-4 pt-2">
       <h2 className="comet-title-s sticky top-0 z-10 truncate break-words bg-soft-background pb-3 pt-2">
-        Evaluation
+        {t("home.evaluation.title")}
       </h2>
       <DataTable
         columns={COLUMNS}
@@ -181,7 +183,7 @@ const EvaluationSection: React.FC = () => {
           <DataTableNoData title={noDataText}>
             {canCreateExperiments && (
               <Button variant="link" onClick={handleNewExperimentClick}>
-                Create new experiment
+                {t("home.evaluation.createNewExperiment")}
               </Button>
             )}
           </DataTableNoData>
@@ -190,7 +192,7 @@ const EvaluationSection: React.FC = () => {
       <div className="flex justify-end pt-1">
         <Link to="/$workspaceName/experiments" params={{ workspaceName }}>
           <Button variant="ghost" className="flex items-center gap-1 pr-0">
-            All experiments <ArrowRight className="size-4" />
+            {t("home.evaluation.allExperiments")} <ArrowRight className="size-4" />
           </Button>
         </Link>
       </div>

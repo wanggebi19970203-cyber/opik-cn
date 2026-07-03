@@ -1,27 +1,27 @@
 import type * as OpikApi from "@/rest_api/api";
 
 /**
- * Supported template engine types for prompts
- * Re-exported from REST API with uppercase values for consistency
+ * 支持的提示词模板引擎类型
+ * 从 REST API 重新导出，使用大写值以保持一致性
  */
 export const PromptType = {
-  /** Mustache template syntax with {{variable}} placeholders */
+  /** Mustache 模板语法，使用 {{variable}} 占位符 */
   MUSTACHE: "mustache" as const,
-  /** Jinja2 template syntax with {% %} blocks and {{ }} variables */
+  /** Jinja2 模板语法，使用 {% %} 块和 {{ }} 变量 */
   JINJA2: "jinja2" as const,
-  /** Python template syntax with {variable} placeholders */
+  /** Python 模板语法，使用 {variable} 占位符 */
   PYTHON: "python" as const,
 } as const;
 
 export type PromptType = (typeof PromptType)[keyof typeof PromptType];
 
 /**
- * Template structure types for prompts
+ * 提示词的模板结构类型
  */
 export const PromptTemplateStructure = {
-  /** Text-based prompt with a single template string */
+  /** 基于文本的提示词，包含单个模板字符串 */
   Text: "text" as const,
-  /** Chat-based prompt with an array of messages */
+  /** 基于聊天的提示词，包含消息数组 */
   Chat: "chat" as const,
 } as const;
 
@@ -29,68 +29,66 @@ export type PromptTemplateStructure =
   (typeof PromptTemplateStructure)[keyof typeof PromptTemplateStructure];
 
 /**
- * Common options shared between text and chat prompts
- * Used internally for prompt creation logic
+ * 文本和聊天提示词之间共享的通用选项
+ * 内部用于提示词创建逻辑
  */
 export interface CommonPromptOptions {
-  /** Optional prompt ID (generated if not provided) */
+  /** 可选的提示词 ID（如果未提供则生成） */
   promptId?: string;
-  /** Optional description for the prompt */
+  /** 提示词的可选描述 */
   description?: string;
-  /** Optional metadata for tracking and filtering */
+  /** 用于跟踪和过滤的可选元数据 */
   metadata?: OpikApi.JsonNodeWrite;
-  /** Optional change description for version tracking */
+  /** 版本跟踪的可选变更描述 */
   changeDescription?: string;
-  /** Template engine type, defaults to mustache */
+  /** 模板引擎类型，默认为 mustache */
   type?: PromptType;
-  /** Optional tags for categorization */
+  /** 用于分类的可选标签 */
   tags?: string[];
 }
 
 /**
- * Configuration options for creating a new prompt
- * Extends REST API PromptWrite with renamed 'prompt' field
+ * 创建新提示词的配置选项
+ * 扩展 REST API PromptWrite，重命名 'prompt' 字段
  */
 export interface CreatePromptOptions extends CommonPromptOptions {
-  /** Name of the prompt (unique identifier) */
+  /** 提示词的名称（唯一标识符） */
   name: string;
-  /** Template text content with placeholders */
+  /** 包含占位符的模板文本内容 */
   prompt: string;
-  /** Optional project name to scope the prompt. If not provided, uses the client's configured project. */
+  /** 可选的项目名称，用于限定提示词范围。如果未提供，使用客户端配置的项目。 */
   projectName?: string;
 }
 
 /**
- * Options for retrieving a specific prompt version.
+ * 检索特定提示词版本的选项。
  *
- * `commit` and `version` are mutually exclusive. If neither is provided,
- * the latest version is returned.
+ * `commit` 和 `version` 互斥。如果两者都未提供，则返回最新版本。
  */
 export interface GetPromptOptions {
-  /** Name of the prompt to retrieve. */
+  /** 要检索的提示词名称。 */
   name: string;
-  /** @deprecated Use `version` instead. */
+  /** @deprecated 请使用 `version` 替代。 */
   commit?: string;
   /**
-   * Sequential version identifier, e.g. `"v3"`. Mutually exclusive with `commit`.
+   * 顺序版本标识符，如 `"v3"`。与 `commit` 互斥。
    */
   version?: string;
-  /** Optional project name to scope the lookup. */
+  /** 可选的项目名称，用于限定查找范围。 */
   projectName?: string;
   /**
-   * Optional environment name. Resolves to the version currently owned by that
-   * workspace environment. Mutually exclusive with `commit`.
+   * 可选的环境名称。解析为该工作区环境当前拥有的版本。与 `commit` 互斥。
    */
   environment?: string;
 }
 
 /**
- * Variables to be substituted into prompt template.
+ * 要替换到提示词模板中的变量。
  */
 export type PromptVariables = Record<string, unknown>;
 
 /**
- * Data structure for creating a PromptVersion instance
+ * 创建 PromptVersion 实例的数据结构
  */
 export interface PromptVersionData {
   name: string;
@@ -110,7 +108,7 @@ export interface PromptVersionData {
 // Chat prompt types
 
 /**
- * Content part for multimodal chat messages
+ * 多模态聊天消息的内容部分
  */
 export interface ContentPart {
   type: string;
@@ -118,7 +116,7 @@ export interface ContentPart {
 }
 
 /**
- * Text content part
+ * 文本内容部分
  */
 export interface TextContentPart extends ContentPart {
   type: "text";
@@ -126,7 +124,7 @@ export interface TextContentPart extends ContentPart {
 }
 
 /**
- * Image URL content part
+ * 图像 URL 内容部分
  */
 export interface ImageUrlContentPart extends ContentPart {
   type: "image_url";
@@ -138,7 +136,7 @@ export interface ImageUrlContentPart extends ContentPart {
 }
 
 /**
- * Video URL content part
+ * 视频 URL 内容部分
  */
 export interface VideoUrlContentPart extends ContentPart {
   type: "video_url";
@@ -153,12 +151,12 @@ export interface VideoUrlContentPart extends ContentPart {
 }
 
 /**
- * Message content can be a string or array of content parts
+ * 消息内容可以是字符串或内容部分数组
  */
 export type MessageContent = string | ContentPart[];
 
 /**
- * Chat message with role and content
+ * 包含角色和内容的聊天消息
  */
 export interface ChatMessage {
   role: string;
@@ -166,25 +164,25 @@ export interface ChatMessage {
 }
 
 /**
- * Modality name for supported content types
+ * 支持的内容类型的模态名称
  */
 export type ModalityName = "vision" | "video";
 
 /**
- * Mapping of modalities to whether they are supported
+ * 模态是否受支持的映射
  */
 export type SupportedModalities = Partial<Record<ModalityName, boolean>>;
 
 /**
- * Configuration options for creating a new chat prompt
+ * 创建新聊天提示词的配置选项
  */
 export interface CreateChatPromptOptions extends CommonPromptOptions {
-  /** Name of the prompt (unique identifier) */
+  /** 提示词的名称（唯一标识符） */
   name: string;
-  /** Array of chat messages with role and content */
+  /** 包含角色和内容的聊天消息数组 */
   messages: ChatMessage[];
-  /** Whether to validate template placeholders */
+  /** 是否验证模板占位符 */
   validatePlaceholders?: boolean;
-  /** Optional project name to scope the prompt. If not provided, uses the client's configured project. */
+  /** 可选的项目名称，用于限定提示词范围。如果未提供，使用客户端配置的项目。 */
   projectName?: string;
 }

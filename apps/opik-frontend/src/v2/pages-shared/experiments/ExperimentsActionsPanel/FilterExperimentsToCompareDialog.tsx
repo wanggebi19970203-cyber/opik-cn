@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import findIndex from "lodash/findIndex";
 
 import {
@@ -25,6 +26,7 @@ type FilterExperimentsToCompareDialogProps = {
 const FilterExperimentsToCompareDialog: React.FunctionComponent<
   FilterExperimentsToCompareDialogProps
 > = ({ experiments, open, setOpen }) => {
+  const { t } = useTranslation("experiments");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
@@ -78,13 +80,13 @@ const FilterExperimentsToCompareDialog: React.FunctionComponent<
               <Checkbox
                 checked={checked}
                 onCheckedChange={() => checkboxChangeHandler(e)}
-                aria-label="Select experiment"
+                aria-label={t("selectExperiment")}
                 className="mt-0.5"
               />
               <span className="comet-body-s-accented truncate">{e.name}</span>
             </div>
             <div className="comet-body-s truncate pl-6 text-light-slate">
-              Test suite: {e.dataset_name ?? "Deleted test suite"}
+              {t("testSuitePrefix")} {e.dataset_name ?? t("deletedTestSuite")}
             </div>
           </div>
         </label>
@@ -96,21 +98,21 @@ const FilterExperimentsToCompareDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Select experiments to compare</DialogTitle>
+          <DialogTitle>{t("selectExperimentsToCompare")}</DialogTitle>
         </DialogHeader>
         <div className="w-full overflow-hidden">
-          <ExplainerDescription description="You can only compare experiments that use the same test suite. Please make sure all the experiments use the same test suite." />
+          <ExplainerDescription description={t("compareExperimentsDescription")} />
           <div className="my-4 flex max-h-[400px] min-h-36 max-w-full flex-col justify-stretch gap-2.5 overflow-y-auto">
             {renderListItems()}
           </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("common:buttons.cancel")}</Button>
           </DialogClose>
           <DialogClose asChild>
             <Button type="submit" disabled={!isValid} onClick={compareHandler}>
-              Compare experiments
+              {t("compareExperiments")}
             </Button>
           </DialogClose>
         </DialogFooter>

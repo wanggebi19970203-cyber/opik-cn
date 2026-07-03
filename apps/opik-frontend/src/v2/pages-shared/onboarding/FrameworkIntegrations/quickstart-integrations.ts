@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { buildDocsUrl } from "@/v2/lib/utils";
 import pythonLogoUrl from "/images/integrations/python.png";
 import langChainLogoUrl from "/images/integrations/langchain.png";
@@ -42,9 +43,11 @@ export type FrameworkIntegration = {
   executionLogs: string[];
 };
 
-export const QUICKSTART_INTEGRATIONS: FrameworkIntegration[] = [
+const getQuickstartIntegrations = (): FrameworkIntegration[] => {
+  const t = i18next.getFixedT(null, "onboarding");
+  return [
   {
-    label: "Function decorators",
+    label: t("integrationExplorer.functionDecorators"),
     logo: pythonLogoUrl,
     colab:
       "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/quickstart_notebook.ipynb",
@@ -167,4 +170,8 @@ export const QUICKSTART_INTEGRATIONS: FrameworkIntegration[] = [
     code: dspyCode,
     executionLogs: integrationLogsMap.DSPy,
   },
-];
+  ];
+};
+
+/** @deprecated Use getQuickstartIntegrations() instead */
+export const QUICKSTART_INTEGRATIONS = getQuickstartIntegrations();

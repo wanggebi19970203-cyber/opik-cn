@@ -1,0 +1,70 @@
+{
+  "agentOptimization": {
+    "title": "Agent 优化",
+    "description": "优化您的 AI Agent",
+    "features": {
+      "algorithms": "算法",
+      "experiments": "实验",
+      "results": "结果"
+    },
+    "editPanel": {
+      "newConfiguration": "新建 Agent 配置",
+      "fromVersion": "来自 {{name}}",
+      "addVersionNotes": "添加版本备注",
+      "compareWith": "比较 {{name}}",
+      "currentChanges": "当前更改",
+      "editFields": "编辑字段",
+      "showDiff": "显示差异",
+      "backToEdit": "返回编辑",
+      "cancel": "取消",
+      "saving": "保存中…",
+      "saveNewVersion": "保存新版本"
+    },
+    "editView": {
+      "unsavedChangesTitle": "您有未保存的更改",
+      "unsavedChangesDescription": "如果现在离开，您的更改将会丢失。确定要继续吗？",
+      "leaveWithoutSaving": "不保存直接离开",
+      "stayOnPage": "留在当前页面",
+      "original": "{{name}} (原始版本)",
+      "currentChanges": "当前更改",
+      "modified": "已修改",
+      "restoreField": "恢复字段",
+      "removeField": "移除字段",
+      "addField": "添加字段"
+    },
+    "newFieldEditor": {
+      "string": "字符串",
+      "integer": "整数",
+      "float": "浮点数",
+      "boolean": "布尔值",
+      "chatPrompt": "对话提示词",
+      "textPrompt": "文本提示词",
+      "fieldNamePatternError": "使用字母、数字和下划线；以字母或下划线开头",
+      "fieldNameExistsError": "已存在同名字段",
+      "promptEmptyError": "提示词不能为空",
+      "addAtLeastOneMessage": "至少添加一条消息",
+      "messagesEmptyError": "消息不能为空",
+      "fieldNamePlaceholder": "field_name",
+      "removeField": "移除字段",
+      "enterPromptTemplate": "输入提示词模板",
+      "initialValue": "初始值"
+    },
+    "expandAllToggle": {
+      "collapseAll": "全部折叠",
+      "expandAll": "全部展开"
+    },
+    "chatMessages": {
+      "duplicate": "复制",
+      "delete": "删除",
+      "message": "消息"
+    },
+    "diffTable": {
+      "key": "键名",
+      "showDifferencesOnly": "仅显示差异",
+      "noDifferences": "{{base}} 和 {{diff}} 之间没有差异"
+    },
+    "diffCell": {
+      "empty": "(空)"
+    }
+  }
+}

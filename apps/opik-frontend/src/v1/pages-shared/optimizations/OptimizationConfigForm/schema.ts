@@ -1,4 +1,5 @@
 import { z } from "zod";
+import i18next from "i18next";
 import {
   OPTIMIZER_TYPE,
   METRIC_TYPE,
@@ -54,8 +55,8 @@ export const HierarchicalReflectiveOptimizerParamsSchema = z.object({
   model_parameters: z.record(z.unknown()).optional(),
   convergence_threshold: z
     .number()
-    .min(0, "Must be between 0 and 1")
-    .max(1, "Must be between 0 and 1")
+    .min(0, i18next.t("common:validation.mustBeBetween0And1"))
+    .max(1, i18next.t("common:validation.mustBeBetween0And1"))
     .optional(),
   verbose: z.boolean().optional(),
   seed: z.number().optional(),
@@ -63,30 +64,30 @@ export const HierarchicalReflectiveOptimizerParamsSchema = z.object({
 
 export const EqualsMetricParamsSchema = z.object({
   case_sensitive: z.boolean(),
-  reference_key: z.string().min(1, "Reference key is required"),
+  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
 });
 
 export const JsonSchemaValidatorMetricParamsSchema = z.object({
-  reference_key: z.string().min(1, "Reference key is required"),
+  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
   case_sensitive: z.boolean().optional(),
 });
 
 export const GEvalMetricParamsSchema = z.object({
-  task_introduction: z.string().min(1, "Task introduction is required"),
-  evaluation_criteria: z.string().min(1, "Evaluation criteria is required"),
+  task_introduction: z.string().min(1, i18next.t("common:validation.taskIntroductionRequired")),
+  evaluation_criteria: z.string().min(1, i18next.t("common:validation.evaluationCriteriaRequired")),
 });
 
 export const CodeMetricParamsSchema = z.object({
-  code: z.string().min(1, "Python code is required"),
+  code: z.string().min(1, i18next.t("common:validation.pythonCodeRequired")),
 });
 
 export const LevenshteinMetricParamsSchema = z.object({
   normalize: z.boolean().optional(),
-  reference_key: z.string().min(1, "Reference key is required"),
+  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
 });
 
 export const NumericalSimilarityMetricParamsSchema = z.object({
-  reference_key: z.string().min(1, "Reference key is required"),
+  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
 });
 
 const isMessageEmpty = (message: LLMMessage): boolean => {
@@ -107,7 +108,7 @@ const isMessageEmpty = (message: LLMMessage): boolean => {
 
 const BaseOptimizationConfigSchema = z.object({
   name: z.string().optional(),
-  datasetId: z.string().min(1, "Test suite is required"),
+  datasetId: z.string().min(1, i18next.t("common:validation.testSuiteRequired")),
   optimizerType: z.nativeEnum(OPTIMIZER_TYPE),
   optimizerParams: z.union([
     GepaOptimizerParamsSchema,
@@ -116,15 +117,15 @@ const BaseOptimizationConfigSchema = z.object({
   ]),
   messages: z
     .array(z.custom<LLMMessage>())
-    .min(1, "At least one message is required")
+    .min(1, i18next.t("common:validation.atLeastOneMessageRequired"))
     .refine((messages) => !messages.some(isMessageEmpty), {
-      message: "All messages must have content",
+      message: i18next.t("common:validation.allMessagesMustHaveContent"),
     }),
   // Accept any string, not just the static PROVIDER_MODEL_TYPE enum: models
   // now come from the backend registry and can include ids that weren't in
   // the FE enum at release time (see OPIK-5021). The enum itself is going
   // away in OPIK-5022.
-  modelName: z.string().min(1, "Model is required"),
+  modelName: z.string().min(1, i18next.t("common:validation.modelRequired")),
   modelConfig: z
     .object({
       temperature: z.number().optional(),
@@ -217,7 +218,7 @@ export const convertOptimizationStudioToFormData = (
     : defaultConfig;
 
   return {
-    name: optimization?.name || "Optimization studio run",
+    name: optimization?.name || i18next.t("common:validation.optimizationStudioRun"),
     datasetId: optimization?.dataset_id || "",
     optimizerType,
     optimizerParams:

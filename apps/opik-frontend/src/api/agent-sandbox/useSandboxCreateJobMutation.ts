@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import get from "lodash/get";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 
 import api, { AGENT_SANDBOX_KEY, LOCAL_RUNNERS_REST_ENDPOINT } from "@/api/api";
 import { CreateLocalRunnerJobRequest } from "@/types/agent-sandbox";
@@ -24,11 +25,11 @@ const useSandboxCreateJobMutation = () => {
       const message = get(
         error,
         ["response", "data", "message"],
-        error.message || "Unable to create sandbox job. Please try again.",
+        error.message || i18next.t("common:messages.unableToCreateSandboxJob"),
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

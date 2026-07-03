@@ -1,0 +1,454 @@
+{
+  "prompt": {
+    "title": "Prompt",
+    "description": "View and edit prompt details",
+    "tabs": {
+      "versions": "Versions",
+      "commits": "Commits",
+      "prompt": "Prompt",
+      "experiments": "Experiments"
+    }
+  },
+  "backToPrompts": "Back to prompts",
+  "tryInPlayground": "Try in the Playground",
+  "loadPrompt": "Load prompt",
+  "loadPromptDescription": "Loading this prompt into the Playground will replace any unsaved changes. This action cannot be undone.",
+  "commits": {
+    "manageVersionTags": "Manage version tags",
+    "compareCommits": "Compare commits",
+    "compare": "Compare",
+    "noCommitsYet": "There are no commits yet",
+    "searchPlaceholder": "Search in prompt or commit message",
+    "columns": {
+      "prompt": "Prompt",
+      "metadata": "Metadata",
+      "commitMessage": "Commit message",
+      "versionTags": "Version tags",
+      "createdAt": "Created at",
+      "createdBy": "Created by",
+      "promptCommit": "Prompt commit"
+    }
+  },
+  "compare": {
+    "pretty": "Pretty",
+    "noMetadata": "No metadata",
+    "compareVersions": "Compare {{base}} → {{diff}}",
+    "comparePrompts": "Compare prompts",
+    "chatMessages": "Chat messages",
+    "prompt": "Prompt",
+    "metadata": "Metadata"
+  },
+  "experiments": {
+    "noExperimentsYet": "No experiments have used this prompt yet",
+    "noSearchResults": "No search results",
+    "searchByName": "Search by name"
+  },
+  "editPrompt": {
+    "title": "Edit prompt",
+    "versionNotes": "Version notes",
+    "versionNotesPlaceholder": "Describe what changed in this version",
+    "cancel": "Cancel",
+    "createNewVersion": "Create new version",
+    "mediaComparison": "Media comparison",
+    "imagesBefore": "Images before:",
+    "imagesAfter": "Images after:",
+    "videosBefore": "Videos before:",
+    "videosAfter": "Videos after:",
+    "audiosBefore": "Audios before:",
+    "audiosAfter": "Audios after:"
+  },
+  "promptTab": {
+    "versionHistory": "Version history",
+    "loadInPlayground": "Load in Prompt playground",
+    "referenceInCode": "Reference prompt in code",
+    "edit": "Edit",
+    "prompt": "Prompt",
+    "metadata": "Metadata",
+    "loadPrompt": "Load prompt",
+    "loadPromptDescription": "Loading this prompt into the Playground will replace any unsaved changes. This action cannot be undone.",
+    "commitCopiedToClipboard": "Commit successfully copied to clipboard",
+    "commitHistory": "Commit history",
+    "copyCommit": "Copy commit",
+    "restoreThisVersion": "Restore this version",
+    "versionTagsList": "Version tags list",
+    "newVersionTag": "New version tag",
+    "addVersionTag": "Add version tag",
+    "versionTag": "version tag",
+    "deployTo": "Deploy to",
+    "noEnvironmentsConfigured": "No environments configured",
+    "currentlyVersion": "Currently v{{version}}",
+    "removedFromEnvironment": "Removed {{version}} from {{environment}}",
+    "deployedToEnvironment": "Deployed {{version}} to {{environment}}",
+    "removedFromAll": "Removed {{version}} from all environments",
+    "removeFromAll": "Remove from all",
+    "manageEnvironments": "Manage environments"
+  },
+  "restoreVersion": {
+    "title": "Restore Version",
+    "description": "Are you sure you want to restore version {{commit}}? This will create a new version with the same content.",
+    "restoring": "Restoring...",
+    "restore": "Restore"
+  },
+  "usePrompt": {
+    "useThisPrompt": "Use this {{kind}}{{suffix}}",
+    "creatingPrompt": "Creating a {{kind}}",
+    "gettingThisPrompt": "Getting this {{kind}}{{suffix}}",
+    "gettingPrompt": "Getting a {{kind}}"
+  },
+  "textPromptEditor": {
+    "prompt": "Prompt",
+    "editView": "Edit view",
+    "prettyView": "Pretty view",
+    "images": "Images",
+    "videos": "Videos",
+    "audios": "Audios",
+    "mustacheSyntaxHint": "Use mustache syntax to reference dataset variables in your prompt. Example: {{question}}."
+  },
+  "promptImprovement": {
+    "generatePrompt": "Generate prompt",
+    "improvePrompt": "Improve prompt",
+    "improvePromptDescription": "Opens the prompt in the Playground for improvement",
+    "improvePromptWithAi": "Improve this prompt with AI",
+    "improveButton": "Improve",
+    "savedImprovedVersion": "Saved improved version of {{name}}",
+    "regeneratePrompt": "Re-generate prompt",
+    "rerunImprovement": "Re-run improvement",
+    "useThisPrompt": "Use this prompt",
+    "generatePlaceholder": "What do you want your AI to do?",
+    "improvePlaceholder": "What do you want to improve (e.g., tone, length)",
+    "yourInitialPrompt": "Your initial prompt",
+    "initialPromptDescription": "This is your initial prompt. Optional instructions can guide improvements, or we'll optimize it automatically.",
+    "improvedPrompt": "Improved prompt",
+    "generatedPrompt": "Generated prompt",
+    "instructions": "Instructions",
+    "instructionsOptional": "Instructions (optional)",
+    "instructionsDescription": "Write your instructions in plain language. We'll turn them into a best-practice prompt that you can review and iterate on.",
+    "analyzingInstructions": "Analyzing your instructions...",
+    "definingStructure": "Defining the prompt structure...",
+    "scopingRole": "Scoping the role and perspective...",
+    "applyingBestPractices": "Applying best practices...",
+    "synthesizingPrompt": "Synthesizing the full prompt...",
+    "polishingOutput": "Polishing the output...",
+    "modelLabel": "Model",
+    "notConfigured": "not configured",
+    "generatedPromptDescription": "This is your generated prompt, created with the selected model ({{modelDisplayName}}) and parameters. It's editable.",
+    "generatedPromptPlaceholder": "The generated prompt will be shown here, ready for you to review and edit",
+    "anErrorOccurred": "An error occurred during generation",
+    "promptCutOff": "The generated prompt was cut off due to token limits. Please try increasing the max_tokens setting in the model configuration or use a shorter instruction.",
+    "noContentReturned": "The model did not return any content. Please try again or adjust your instructions.",
+    "failedToGenerate": "Failed to generate prompt",
+    "failedToImprove": "Failed to improve prompt"
+  },
+  "setupProvider": {
+    "addProviderConfiguration": "Add provider configuration",
+    "addProvider": "Add provider"
+  },
+  "promptsSelectBox": {
+    "loadChatPrompt": "Load chat prompt",
+    "loadPrompt": "Load a prompt",
+    "searchChatPrompt": "Search chat prompt",
+    "searchTextPrompt": "Search text prompt",
+    "removePromptSelection": "Remove prompt selection"
+  },
+  "chatPromptRawView": {
+    "messageFormatInvalid": "Message format is invalid.",
+    "editRawJsonDescription": "Edit the raw JSON representation of chat messages. Must be a valid JSON array with at least one object. Each object must have a \"role\" field (system/user/assistant) and a \"content\" field (string or array of objects)."
+  },
+  "llmJudgeScores": {
+    "addScore": "Add score"
+  },
+  "llmJudgeScore": {
+    "number": "Number",
+    "integer": "Integer",
+    "boolean": "Boolean",
+    "scoreNamePlaceholder": "Score name",
+    "scoreDescriptionPlaceholder": "Score description",
+    "editScoreTooltip": "Edit a score",
+    "doneEditingTooltip": "Done editing",
+    "doneEditing": "Done editing",
+    "deleteScoreTooltip": "Delete a score"
+  },
+  "addNewPromptVersionDialog": {
+    "saveToPromptLibrary": "Save to prompt library",
+    "updateExisting": "Update existing",
+    "saveAsNew": "Save as new",
+    "promptLabel": "Prompt",
+    "selectedPromptUpdated": "Selected prompt will be updated. You can view versions in the",
+    "promptLibrary": "Prompt library",
+    "commitMessage": "Commit message",
+    "nameLabel": "Name",
+    "promptNamePlaceholder": "Prompt name",
+    "newPromptCreatedIn": "A new prompt will be created in the",
+    "descriptionOptional": "Description (optional)",
+    "promptDescriptionPlaceholder": "Prompt description",
+    "metadataLabel": "Metadata",
+    "metadataFieldNotValid": "Metadata field is not valid",
+    "cancel": "Cancel",
+    "saveToLibrary": "Save to library"
+  },
+  "llmPromptMessage": {
+    "deleteMessageTooltip": "Delete a message",
+    "duplicateMessageTooltip": "Duplicate a message",
+    "typeYourMessage": "Type your message"
+  },
+  "llmPromptMessageActions": {
+    "configureModelFirst": "Configure model first",
+    "improvePromptWithAi": "Improve prompt with AI",
+    "generatePromptWithAi": "Generate prompt with AI",
+    "modelConfigurationRequired": "Model configuration required",
+    "modelConfigurationRequiredDescription": "Please configure a model and provider before improving the prompt. Select a model from the dropdown above.",
+    "copiedToClipboard": "Copied to clipboard",
+    "promptCopiedSuccessfully": "Prompt copied successfully",
+    "failedToCopy": "Failed to copy",
+    "couldNotCopyToClipboard": "Could not copy to clipboard",
+    "resetPrompt": "Reset prompt",
+    "loadPrompt": "Load prompt",
+    "resetPromptDescription": "Resetting the prompt will discard all unsaved changes. This action can't be undone. Are you sure you want to continue?",
+    "loadPromptDescription": "You have unsaved changes in your message field. Loading a new prompt will overwrite them with the prompt's content. This action cannot be undone.",
+    "discardChanges": "Discard changes",
+    "saveChanges": "Save changes",
+    "copyPrompt": "Copy prompt",
+    "generatePrompt": "Generate prompt",
+    "improvePrompt": "Improve prompt"
+  },
+  "llmPromptMessages": {
+    "variableSyntaxHint": "Use {{syntax}} syntax to reference dataset variables in your prompt:",
+    "clickToInsertIntoPrompt": "Click to insert into prompt",
+    "message": "Message"
+  },
+  "llmPromptMessagesVariables": {
+    "variableMapping": "Variable mapping ({{count}})",
+    "defaultDescription": "Detected variables in your prompt (e.g., {{variable1}}) will appear below. For each one, select a field from a recent trace to map it — including image fields like input.image_url or output.image_base64. These mappings auto-fill the variables during rule execution.",
+    "templateParsingError": "Template parsing error. The variables cannot be extracted."
+  },
+  "addMediaPopover": {
+    "addImage": "Add image",
+    "addVideo": "Add video",
+    "addAudio": "Add audio",
+    "enterImageUrl": "Enter image URL or template variable",
+    "enterVideoUrl": "Enter video URL or template variable",
+    "enterAudioUrl": "Enter audio URL or template variable",
+    "maximumLimitReached": "Maximum limit reached",
+    "maximumLimitDescription": "You can only add up to {{count}} {{type}}",
+    "alreadyExists": "This {{type}} already exists",
+    "availableVariables": "Available variables:",
+    "invalidUrlError": "Please enter a valid HTTP or HTTPS URL"
+  },
+  "mediaTagsList": {
+    "previewNotAvailable": "Preview not available",
+    "videoPreviewFailed": "Video preview failed",
+    "audioPreviewFailed": "Audio preview failed",
+    "imagePreview": "Image preview",
+    "browserVideoNotSupported": "Your browser does not support video playback.",
+    "browserAudioNotSupported": "Your browser does not support audio playback."
+  },
+  "promptMessageMediaSection": {
+    "addFile": "Add file..."
+  },
+  "promptMessagesReadonly": {
+    "showLess": "Show less",
+    "showMore": "Show more"
+  },
+  "promptModelSelect": {
+    "noConfiguredProviders": "No configured providers",
+    "noSearchResults": "No search results",
+    "selectAnLlmModel": "Select an LLM model",
+    "searchModel": "Search model",
+    "manageAiProviders": "Manage AI providers"
+  },
+  "providerGrid": {
+    "provider": "Provider",
+    "configured": "Configured"
+  },
+  "providerSelectionStep": {
+    "noProvidersAvailable": "No providers available for this environment"
+  },
+  "promptTemplateView": {
+    "chatMessages": "Chat messages",
+    "prompt": "Prompt",
+    "messageView": "Message view",
+    "rawView": "Raw view",
+    "prettyView": "Pretty view"
+  },
+  "promptVariablesList": {
+    "clickToInsert": "Click to insert"
+  },
+  "bedrockProviderDetails": {
+    "providerName": "Provider name",
+    "providerNamePlaceholder": "Bedrock us-east-1",
+    "providerNameDescription": "A unique identifier for this provider instance (e.g., \"Bedrock us-east-1\").",
+    "url": "URL",
+    "apiKey": "API key",
+    "apiKeyPlaceholder": "API key",
+    "clickHere": "Click",
+    "here": "here",
+    "apiKeyDescription": "for instructions on how to create a service account and assign the correct permissions.",
+    "modelsList": "Models list",
+    "modelsListPlaceholder": "Models list",
+    "modelsListDescription": "Comma separated list of available models. Example:"
+  },
+  "cloudAIProviderDetails": {
+    "apiKeyLabel": "{{providerName}}API Key",
+    "getYourApiKey": "Get your {{providerName}} API key",
+    "here": "here"
+  },
+  "customHeadersField": {
+    "customHeadersOptional": "Custom headers (optional)",
+    "headerNamePlaceholder": "Header name",
+    "headerValuePlaceholder": "Header value",
+    "addHeader": "Add header",
+    "defaultDescription": "Custom providers may require additional headers beyond the API key. Add them here as key-value pairs."
+  },
+  "customProviderDetails": {
+    "providerName": "Provider name",
+    "providerNameDescription": "A unique identifier for this provider instance (e.g., \"ollama\", \"vLLM\", \"LM-Studio\").",
+    "url": "URL",
+    "apiKey": "API key",
+    "apiKeyPlaceholder": "API key",
+    "apiKeyDescription": "Custom providers may not require an API key, depending on your server setup. Learn more in the",
+    "documentation": "documentation",
+    "modelsList": "Models list",
+    "modelsListPlaceholder": "Models list",
+    "modelsListDescription": "Comma separated list of available models. Example:"
+  },
+  "manageAIProviderDialog": {
+    "editProviderConfiguration": "Edit provider configuration",
+    "addProviderConfiguration": "Add provider configuration",
+    "updateConfiguration": "Update configuration",
+    "addProvider": "Add provider",
+    "back": "Back",
+    "deleteConfiguration": "Delete configuration",
+    "cancel": "Cancel",
+    "deleteConfigurationTitle": "Delete configuration",
+    "deleteConfigurationDescription": "This configuration is shared across the workspace. Deleting it will remove access for everyone. This action can't be undone. Are you sure you want to proceed?",
+    "deleteConfigurationConfirm": "Delete configuration"
+  },
+  "ollamaProviderDetails": {
+    "providerName": "Provider name",
+    "providerNameDescription": "A unique name for this Ollama instance (e.g., \"local\", \"cloud\", \"production\").",
+    "ollamaUrl": "Ollama URL",
+    "useDefaultUrl": "Use default URL",
+    "urlMustEndWith": "Important:",
+    "urlMustEndWithDescription": "URL must end with /v1 for OpenAI API compatibility. For local Ollama: http://localhost:11434/v1. For remote: http://ollama-test:11434/v1 or your server URL with /v1 suffix.",
+    "testingConnection": "Testing connection...",
+    "discoveringModels": "Discovering models...",
+    "connectedModelsFailed": "Connected (models failed)",
+    "connected": "Connected",
+    "connectionFailedRetry": "Connection failed (click to retry)",
+    "connect": "Connect",
+    "apiKeyOptional": "API key (optional)",
+    "apiKeyPlaceholder": "API key",
+    "apiKeyDescription": "Most Ollama instances don't require an API key. Only add one if your instance is configured with authentication.",
+    "modelsList": "Models list",
+    "modelsListPlaceholder": "llama3, mistral, codellama",
+    "modelsListDescription": "Comma-separated list of available models. Use \"Discover Models\" to auto-populate this field.",
+    "customHeadersDescription": "Optional custom headers for authentication or configuration.",
+    "urlRequired": "URL required",
+    "urlRequiredDescription": "Please enter the Ollama base URL first",
+    "connectionSuccessful": "Connection successful",
+    "connectedToOllama": "Connected to Ollama {{version}}",
+    "connectionFailed": "Connection failed",
+    "unableToConnect": "Unable to connect to Ollama",
+    "unableToConnectInstance": "Unable to connect to Ollama instance",
+    "modelsDiscovered": "Models discovered",
+    "foundModels": "Found {{count}} model(s)",
+    "noModelsFound": "No models found",
+    "noModelsDescription": "No models are available on this Ollama instance",
+    "failedToFetchModels": "Failed to fetch models",
+    "unableToRetrieveModels": "Unable to retrieve models from Ollama"
+  },
+  "vertexAIProviderDetails": {
+    "location": "Location",
+    "locationPlaceholder": "Location",
+    "apiKeyLabel": "{{providerName}} API Key",
+    "clickHere": "Click here",
+    "clickHereDescription": "for instructions on how to create a service account and assign the correct permissions."
+  },
+  "sharedModelConfigs": {
+    "frequencyPenalty": "Frequency penalty",
+    "presencePenalty": "Presence penalty",
+    "repetitionPenalty": "Repetition penalty",
+    "minP": "Min P",
+    "topA": "Top A",
+    "topK": "Top K",
+    "temperature": "Temperature",
+    "temperatureTooltip": "Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive.",
+    "temperatureReasoningTooltip": "Reasoning models require temperature = 1.0. This setting controls randomness in completions.",
+    "maxOutputTokens": "Max output tokens",
+    "maxOutputTokensTooltip": "The maximum number of tokens to generate shared between the prompt and completion. The exact limit varies by model. (One token is roughly 4 characters for standard English text).",
+    "topP": "Top P",
+    "topPTooltip": "Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered",
+    "throttling": "Throttling (seconds)",
+    "throttlingTooltip": "Minimum time in seconds between consecutive requests to avoid rate limiting",
+    "maxConcurrentRequests": "Max concurrent requests",
+    "maxConcurrentRequestsTooltip": "Maximum number of requests that can run simultaneously. Set to 1 for sequential execution, higher values for parallel processing",
+    "clearToUseTopP": "Clear to use Top P",
+    "clearToUseTemperature": "Clear to use Temperature",
+    "anthropicTemperatureTooltip": "Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive. Note: Anthropic models require using either Temperature OR Top P, not both.",
+    "anthropicTopPTooltip": "Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered. Note: Anthropic models require using either Temperature OR Top P, not both."
+  },
+  "anthropicModelConfigs": {
+    "thinkingEffort": "Thinking effort",
+    "thinkingEffortDescription": "Controls how much effort Claude puts into thinking before responding. Higher effort produces more thorough analysis but takes longer. Uses adaptive thinking mode.",
+    "selectThinkingEffort": "Select thinking effort"
+  },
+  "openAIModelConfigs": {
+    "reasoningEffort": "Reasoning effort",
+    "reasoningEffortDescription": "Controls how much effort the model puts into reasoning before responding. Higher effort may result in more thoughtful but slower responses.",
+    "selectReasoningEffort": "Select reasoning effort",
+    "frequencyPenalty": "Frequency penalty",
+    "frequencyPenaltyTooltip": "How much to penalize new tokens based on their existing frequency in the text so far. Decreases the model's likelihood to repeat the same line verbatim",
+    "presencePenalty": "Presence penalty",
+    "presencePenaltyTooltip": "How much to penalize new tokens based on whether they appear in the text so far. Increases the model's likelihood to talk about new topics"
+  },
+  "geminiModelConfigs": {
+    "thinkingLevel": "Thinking level",
+    "thinkingLevelDescription": "Controls the depth of reasoning the model performs before responding. Higher thinking level may result in more thorough but slower responses.",
+    "selectThinkingLevel": "Select thinking level"
+  },
+  "vertexAIModelConfigs": {
+    "thinkingLevel": "Thinking level",
+    "thinkingLevelDescription": "Controls the depth of reasoning the model performs before responding. Higher thinking level may result in more thorough but slower responses.",
+    "selectThinkingLevel": "Select thinking level"
+  },
+  "promptModelConfigs": {
+    "modelParameters": "Model parameters"
+  },
+  "customModelConfigs": {
+    "temperatureTooltip": "Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive.",
+    "maxOutputTokensTooltip": "The maximum number of tokens to generate shared between the prompt and completion. The exact limit varies by model. (One token is roughly 4 characters for standard English text).",
+    "topPTooltip": "Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered",
+    "frequencyPenaltyTooltip": "How much to penalize new tokens based on their existing frequency in the text so far. Decreases the model's likelihood to repeat the same line verbatim",
+    "presencePenaltyTooltip": "How much to penalize new tokens based on whether they appear in the text so far. Increases the model's likelihood to talk about new topics"
+  },
+  "openRouterModelConfigs": {
+    "maxTokens": "Max tokens",
+    "maxTokensTooltip": "The maximum number of tokens to generate shared between the prompt and completion. The exact limit varies by model. (One token is roughly 4 characters for standard English text).",
+    "topKTooltip": "This limits the model's choice of tokens at each step, making it choose from a smaller set. A value of 1 means the model will always pick the most likely next token, leading to predictable results. By default this setting is disabled, making the model to consider all choices.",
+    "frequencyPenaltyTooltip": "This setting aims to control the repetition of tokens based on how often they appear in the input. It tries to use less frequently those tokens that appear more in the input, proportional to how frequently they occur. Token penalty scales with the number of occurrences. Negative values will encourage token reuse.",
+    "presencePenaltyTooltip": "Adjusts how often the model repeats specific tokens already used in the input. Higher values make such repetition less likely, while negative values do the opposite. Token penalty does not scale with the number of occurrences. Negative values will encourage token reuse.",
+    "repetitionPenaltyTooltip": "Helps to reduce the repetition of tokens from the input. A higher value makes the model less likely to repeat tokens, but too high a value can make the output less coherent (often with run-on sentences that lack small words). Token penalty scales based on original token's probability.",
+    "minPTooltip": "Represents the minimum probability for a token to be considered, relative to the probability of the most likely token. (The value changes depending on the confidence level of the most probable token.) If your Min-P is set to 0.1, that means it will only allow for tokens that are at least 1/10th as probable as the best possible option.",
+    "topATooltip": "Consider only the top tokens with \"sufficiently high\" probabilities based on the probability of the most likely token. Think of it like a dynamic Top-P. A lower Top-A value focuses the choices based on the highest probability token but with a narrower scope. A higher Top-A value does not necessarily affect the creativity of the output, but rather refines the filtering process based on the maximum probability."
+  },
+  "saveVersionDialog": {
+    "title": "Save new version of {{name}}",
+    "versionNotes": "Version notes",
+    "versionNotesPlaceholder": "Describe what changed in this version",
+    "cancel": "Cancel",
+    "saveVersion": "Save version"
+  },
+  "setupProviderDialog": {
+    "title": "Add provider configuration",
+    "back": "Back",
+    "cancel": "Cancel",
+    "addProvider": "Add provider"
+  },
+  "promptTemplateEditor": {
+    "chatMessages": "Chat messages",
+    "prompt": "Prompt",
+    "placeholder": "Type your prompt...",
+    "variableSyntaxHint": "Use mustache syntax to reference test suite variables in your prompt. Example: {{example}}.",
+    "messageFormatInvalid": "Message format is invalid."
+  }
+}

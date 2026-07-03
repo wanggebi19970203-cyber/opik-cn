@@ -1,0 +1,165 @@
+---
+description: 从这里开始将 Opik 集成到基于 Microsoft Agent Framework 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Microsoft Agent Framework | Opik 文档
+og:description: 使用 Microsoft Agent Framework 构建和部署 AI 代理，支持多语言和高级编排功能。立即增强您的工作流程。
+og:site_name: Opik 文档
+og:title: Microsoft Agent Framework - Opik 集成
+title: 使用 Opik 实现 Microsoft Agent Framework (Python) 的可观测性
+---
+
+[Microsoft Agent Framework](https://github.com/microsoft/agent-framework) 是一个全面的多语言框架，用于构建、编排和部署 AI 代理及多代理工作流，同时支持 Python 和 .NET 实现。
+
+该框架提供了从简单聊天代理到复杂的基于图的编排多代理工作流的一切功能，内置 OpenTelemetry 集成用于分布式追踪和监控，以及灵活的中间件系统用于请求/响应处理。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=agent-framework&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=agent-framework&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=agent-framework&utm_campaign=opik) 了解更多信息。
+
+<Frame>
+  <img src="/img/tracing/microsoft-agent-framework_integration.png" alt="Microsoft Agent Framework 追踪" />
+</Frame>
+
+## 快速开始
+
+要使用 Microsoft Agent Framework 与 Opik 的集成，您需要安装 Agent Framework 和所需的 OpenTelemetry 包：
+
+```bash
+pip install --pre agent-framework opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
+```
+
+此外，您需要设置以下环境变量来配置 OpenTelemetry 将数据发送到 Opik：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果您使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您想将数据记录到不同的工作区，也可以将 `Comet-Workspace` 参数更新为其他值。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        如果您使用 Opik 的企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您想将数据记录到不同的工作区，也可以将 `Comet-Workspace` 参数更新为其他值。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+
+    如果您自托管 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+        环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 Microsoft Agent Framework 中使用 Opik
+
+Microsoft Agent Framework 内置了 OpenTelemetry 检测功能。配置好上述环境变量后，您可以开始创建代理，其追踪数据将自动发送到 Opik：
+
+```python
+import asyncio
+import os
+
+os.environ["ENABLE_OTEL"] = "True"
+os.environ["ENABLE_SENSITIVE_DATA"] = "True"
+
+from agent_framework.openai import OpenAIChatClient
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+
+def setup_telemetry():
+    """Configure OpenTelemetry with HTTP exporter"""
+    # Create a resource with service name and other metadata
+    resource = Resource.create(
+        {
+            "service.name": "agent-framework-demo",
+            "service.version": "1.0.0",
+            "deployment.environment": "development",
+        }
+    )
+
+    # Create TracerProvider with the resource
+    provider = TracerProvider(resource=resource)
+
+    # Create BatchSpanProcessor with OTLPSpanExporter
+    processor = BatchSpanProcessor(OTLPSpanExporter())
+    provider.add_span_processor(processor)
+
+    # Set the TracerProvider
+    trace.set_tracer_provider(provider)
+
+    tracer = trace.get_tracer(__name__)
+
+    return tracer, provider
+
+
+setup_telemetry()
+
+
+async def main():
+    # Initialize a chat agent with Azure OpenAI Responses
+    agent = OpenAIChatClient(model_id="gpt-4.1").create_agent(
+        name="HaikuBot",
+        instructions="You are an upbeat assistant that writes beautifully.",
+    )
+
+    # This will automatically create a trace in Opik
+    result = await agent.run("Write a haiku about Microsoft Agent Framework.")
+    print(result)
+
+
+asyncio.run(main())
+```
+
+该框架将自动：
+- 为代理执行创建追踪记录
+- 记录输入提示和输出
+- 跟踪令牌使用情况和性能指标
+- 捕获任何错误或异常
+
+## 进一步改进
+
+如果您希望我们改进此集成，只需在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。

@@ -1,0 +1,15 @@
+{
+  "pairing": {
+    "title": "Pairing",
+    "description": "Connect devices for testing",
+    "status": {
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "pairing": "Pairing..."
+    },
+    "page": {
+      "noPairingData": "No pairing data in URL.",
+      "invalidPairingLink": "This pairing link is invalid."
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   useDashboardStore,
   selectWidgetResolver,
@@ -6,6 +7,7 @@ import {
 } from "@/store/DashboardStore";
 
 const WidgetConfigPreview: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const widgetResolver = useDashboardStore(selectWidgetResolver);
   const previewWidget = useDashboardStore(selectPreviewWidget);
 
@@ -16,7 +18,7 @@ const WidgetConfigPreview: React.FunctionComponent = () => {
   if (!WidgetComponent || !previewWidget) {
     return (
       <div className="flex h-full min-h-0 flex-col gap-2">
-        <p className="comet-body-s-accented pl-0.5">Widget preview</p>
+        <p className="comet-body-s-accented pl-0.5">{t("common:dashboard.widgetPreview")}</p>
         <div className="flex flex-1 items-center justify-center rounded-md border bg-white p-4">
           <p className="text-center text-2xl font-black text-slate-300">
             &lt;preview&gt;
@@ -28,7 +30,7 @@ const WidgetConfigPreview: React.FunctionComponent = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <p className="comet-body-s-accented pl-0.5">Widget preview</p>
+      <p className="comet-body-s-accented pl-0.5">{t("common:dashboard.widgetPreview")}</p>
       <WidgetComponent preview />
     </div>
   );

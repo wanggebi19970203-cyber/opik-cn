@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import Autocomplete from "@/shared/Autocomplete/Autocomplete";
 import { filterTagsByQuery } from "./helpers";
@@ -21,6 +22,7 @@ const TagsAutocomplete: React.FC<TagsAutocompleteProps> = ({
   hasError,
   promptId,
 }) => {
+  const { t } = useTranslation();
   const { items: allTags, isLoading } = useTagsOptions({
     projectId,
     entityType,
@@ -39,7 +41,7 @@ const TagsAutocomplete: React.FC<TagsAutocompleteProps> = ({
       items={items}
       hasError={hasError}
       isLoading={isLoading}
-      placeholder="Select a recent tag"
+      placeholder={t("common.tags.selectRecentTag")}
     />
   );
 };

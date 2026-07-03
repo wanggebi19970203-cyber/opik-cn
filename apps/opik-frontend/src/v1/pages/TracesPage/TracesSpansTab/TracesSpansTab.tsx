@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -132,15 +133,15 @@ const parseSpanScoreName = (label: string): string => {
   return label.replace(SPAN_FEEDBACK_SCORE_SUFFIX, "");
 };
 
-const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
+const getSharedColumns = (t: (key: string) => string): ColumnData<BaseTraceData>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("tracing.tracesSpansTab.columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("tracing.tracesSpansTab.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -149,7 +150,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("tracing.tracesSpansTab.columns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -158,7 +159,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "input",
-    label: "Input",
+    label: t("tracing.tracesSpansTab.columns.input"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -168,7 +169,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "output",
-    label: "Output",
+    label: t("tracing.tracesSpansTab.columns.output"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -178,14 +179,14 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: t("tracing.tracesSpansTab.columns.errors"),
     statisticKey: "error_count",
     type: COLUMN_TYPE.errors,
     cell: ErrorCell as never,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("tracing.tracesSpansTab.columns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationCell as never,
     statisticDataFormater: formatDuration,
@@ -193,13 +194,13 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("tracing.tracesSpansTab.columns.tags"),
     type: COLUMN_TYPE.list,
     cell: ListCell as never,
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: t("tracing.tracesSpansTab.columns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -208,7 +209,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: t("tracing.tracesSpansTab.columns.totalInputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.prompt_tokens)
@@ -217,7 +218,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: t("tracing.tracesSpansTab.columns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.completion_tokens)
@@ -226,7 +227,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("tracing.tracesSpansTab.columns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_cost_estimated],
@@ -237,10 +238,10 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
 ];
 
-const METADATA_MAIN_COLUMN_DATA: ColumnData<BaseTraceData>[] = [
+const getMetadataMainColumnData = (t: (key: string) => string): ColumnData<BaseTraceData>[] => [
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("tracing.tracesSpansTab.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
     accessorFn: (row) =>
       isObject(row.metadata)
@@ -349,6 +350,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
   projectId,
   projectName,
 }) => {
+  const { t } = useTranslation();
   const truncationEnabled = useTruncationEnabled();
 
   const {
@@ -461,7 +463,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
               filter.value &&
               !CUSTOM_FILTER_VALIDATION_REGEXP.test(filter.key)
             ) {
-              return `Key is invalid, it should begin with "input", or "output" and follow this format: "input.[PATH]" For example: "input.message" `;
+              return t("tracing.tracesSpansTab.keyIsInvalid");
             }
           },
         },
@@ -470,7 +472,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
           keyComponentProps: {
             projectId,
             type,
-            placeholder: "Select score",
+            placeholder: t("tracing.tracesSpansTab.filterSelectScore"),
           },
         },
         ...(type === TRACE_DATA_TYPE.traces
@@ -480,7 +482,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
                 keyComponentProps: {
                   projectId,
                   type: TRACE_DATA_TYPE.spans,
-                  placeholder: "Select span score",
+                  placeholder: t("tracing.tracesSpansTab.filterSelectSpanScore"),
                 },
               },
               [COLUMN_EXPERIMENT_ID]: {
@@ -504,15 +506,15 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         [COLUMN_GUARDRAILS_ID]: {
           keyComponentProps: {
             options: [
-              { value: GuardrailResult.FAILED, label: "Failed" },
-              { value: GuardrailResult.PASSED, label: "Passed" },
+              { value: GuardrailResult.FAILED, label: t("tracing.tracesSpansTab.columns.failed") },
+              { value: GuardrailResult.PASSED, label: t("tracing.tracesSpansTab.columns.passed") },
             ],
-            placeholder: "Status",
+            placeholder: t("tracing.tracesSpansTab.filterStatus"),
           },
         },
       },
     }),
-    [projectId, type, isGuardrailsEnabled],
+    [projectId, type, isGuardrailsEnabled, t],
   );
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -651,8 +653,10 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
 
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? `There are no ${type === TRACE_DATA_TYPE.traces ? "traces" : "spans"} yet`
-    : "No search results";
+    ? type === TRACE_DATA_TYPE.traces
+      ? t("tracing.traceLogs.noTracesYet")
+      : t("tracing.tracesSpansTab.noSpansYet")
+    : t("tracing.actions.noSearchResults");
 
   const rows: Array<Span | Trace> = useMemo(
     () => data?.content ?? [],
@@ -895,33 +899,34 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
   );
 
   const columnData = useMemo(() => {
+    const sharedColumns = getSharedColumns(t);
     return [
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("tracing.tracesSpansTab.columns.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
         sortable: true,
       },
-      ...SHARED_COLUMNS,
+      ...sharedColumns,
       ...(type === TRACE_DATA_TYPE.traces
         ? [
             {
               id: "span_count",
-              label: "Span count",
+              label: t("tracing.tracesSpansTab.columns.spanCount"),
               type: COLUMN_TYPE.number,
               accessorFn: (row: BaseTraceData) => get(row, "span_count", "-"),
             },
             {
               id: "llm_span_count",
-              label: "LLM calls count",
+              label: t("tracing.tracesSpansTab.columns.llmCallsCount"),
               type: COLUMN_TYPE.number,
               accessorFn: (row: BaseTraceData) =>
                 get(row, "llm_span_count", "-"),
             },
             {
               id: "thread_id",
-              label: "Thread ID",
+              label: t("tracing.tracesSpansTab.columns.threadId"),
               type: COLUMN_TYPE.string,
               cell: LinkCell as never,
               customMeta: {
@@ -932,7 +937,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             },
             {
               id: COLUMN_EXPERIMENT_ID,
-              label: "Experiment",
+              label: t("tracing.tracesSpansTab.columns.experiment"),
               type: COLUMN_TYPE.string,
               cell: ResourceCell as never,
               customMeta: {
@@ -950,7 +955,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: "type",
-              label: "Type",
+              label: t("tracing.tracesSpansTab.columns.type"),
               type: COLUMN_TYPE.category,
               cell: SpanTypeCell as never,
             },
@@ -958,12 +963,12 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         : []),
       {
         id: "created_by",
-        label: "Created by",
+        label: t("tracing.tracesSpansTab.columns.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("tracing.tracesSpansTab.columns.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell as never,
       },
@@ -971,34 +976,34 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: COLUMN_GUARDRAILS_ID,
-              label: "Guardrails",
+              label: t("tracing.tracesSpansTab.columns.guardrails"),
               statisticKey: COLUMN_GUARDRAIL_STATISTIC_ID,
               type: COLUMN_TYPE.category,
               accessorFn: (row: BaseTraceData) =>
                 row.guardrails_validations || [],
               cell: GuardrailsCell as never,
-              statisticDataFormater: (value: number) => `${value} failed`,
+              statisticDataFormater: (value: number) => t("tracing.tracesSpansTab.failedCount", { count: value }),
             },
           ]
         : []),
-      // Note: metadataColumnsData is NOT added here - it goes in columnSections instead
     ];
-  }, [type, handleThreadIdClick, isGuardrailsEnabled]);
+  }, [type, handleThreadIdClick, isGuardrailsEnabled, t]);
 
   const filtersColumnData = useMemo(() => {
+    const sharedColumns = getSharedColumns(t);
     return [
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("tracing.tracesSpansTab.columns.id"),
         type: COLUMN_TYPE.string,
       },
-      ...SHARED_COLUMNS.flatMap((col) =>
+      ...sharedColumns.flatMap((col) =>
         col.id === "error_info"
           ? [
               col,
               {
                 id: "error_type",
-                label: "Error type",
+                label: t("tracing.tracesSpansTab.columns.errorType"),
                 type: COLUMN_TYPE.string,
               },
             ]
@@ -1008,22 +1013,22 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: "thread_id",
-              label: "Thread ID",
+              label: t("tracing.tracesSpansTab.columns.threadId"),
               type: COLUMN_TYPE.string,
             },
             {
               id: COLUMN_EXPERIMENT_ID,
-              label: "Experiment",
+              label: t("tracing.tracesSpansTab.columns.experiment"),
               type: COLUMN_TYPE.string,
             },
             {
               id: "annotation_queue_ids",
-              label: "Annotation queue ID",
+              label: t("tracing.tracesSpansTab.columns.annotationQueueId"),
               type: COLUMN_TYPE.list,
             },
             {
               id: "llm_span_count",
-              label: "LLM calls count",
+              label: t("tracing.tracesSpansTab.columns.llmCallsCount"),
               type: COLUMN_TYPE.number,
             },
           ]
@@ -1032,51 +1037,51 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: "type",
-              label: "Type",
+              label: t("tracing.tracesSpansTab.columns.type"),
               type: COLUMN_TYPE.category,
             },
             {
               id: "trace_id",
-              label: "Trace ID",
+              label: t("tracing.tracesSpansTab.columns.traceId"),
               type: COLUMN_TYPE.string,
             },
           ]
         : []),
       {
         id: COLUMN_METADATA_ID,
-        label: "Metadata",
+        label: t("tracing.tracesSpansTab.columns.metadata"),
         type: COLUMN_TYPE.dictionary,
       },
       {
         id: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Feedback scores",
+        label: t("tracing.tracesSpansTab.columns.feedbackScores"),
         type: COLUMN_TYPE.numberDictionary,
       },
       ...(type === TRACE_DATA_TYPE.traces
         ? [
             {
               id: COLUMN_SPAN_FEEDBACK_SCORES_ID,
-              label: "Span feedback scores",
+              label: t("tracing.tracesSpansTab.columns.spanFeedbackScores"),
               type: COLUMN_TYPE.numberDictionary,
             },
           ]
         : []),
       {
         id: COLUMN_CUSTOM_ID,
-        label: "Custom filter",
+        label: t("tracing.tracesSpansTab.columns.customFilter"),
         type: COLUMN_TYPE.dictionary,
       },
       ...(isGuardrailsEnabled
         ? [
             {
               id: COLUMN_GUARDRAILS_ID,
-              label: "Guardrails",
+              label: t("tracing.tracesSpansTab.columns.guardrails"),
               type: COLUMN_TYPE.category,
             },
           ]
         : []),
     ];
-  }, [type, isGuardrailsEnabled]);
+  }, [type, isGuardrailsEnabled, t]);
 
   const columns = useMemo(() => {
     return [
@@ -1095,7 +1100,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         },
       ),
       ...convertColumnDataToColumn<BaseTraceData, Span | Trace>(
-        [...METADATA_MAIN_COLUMN_DATA, ...metadataColumnsData],
+        [...getMetadataMainColumnData(t), ...metadataColumnsData],
         {
           columnsOrder: metadataColumnsOrder,
           selectedColumns,
@@ -1112,6 +1117,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     scoresColumnsOrder,
     metadataColumnsData,
     metadataColumnsOrder,
+    t,
   ]);
 
   const columnsToExport = useMemo(() => {
@@ -1161,6 +1167,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
   );
 
   const columnSections = useMemo(() => {
+    const metadataMainColumnData = getMetadataMainColumnData(t);
     const sections: {
       title: string;
       columns: typeof scoresColumnsData;
@@ -1168,7 +1175,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       onOrderChange: (order: string[]) => void;
     }[] = [
       {
-        title: "Feedback scores",
+        title: t("tracing.tracesSpansTab.feedbackScoresSection"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
@@ -1176,13 +1183,13 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     ];
 
     const allMetadataColumns = [
-      ...METADATA_MAIN_COLUMN_DATA,
+      ...metadataMainColumnData,
       ...metadataColumnsData,
     ];
 
     if (allMetadataColumns.length > 0) {
       sections.push({
-        title: "Metadata",
+        title: t("tracing.tracesSpansTab.columns.metadata"),
         columns: allMetadataColumns,
         order: metadataColumnsOrder,
         onOrderChange: setMetadataColumnsOrder,
@@ -1197,6 +1204,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     metadataColumnsData,
     metadataColumnsOrder,
     setMetadataColumnsOrder,
+    t,
   ]);
 
   return (
@@ -1211,7 +1219,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder={`Search ${type}...`}
+            placeholder={type === TRACE_DATA_TYPE.traces ? t("tracing.tracesSpansTab.searchTraces") : t("tracing.tracesSpansTab.searchSpans")}
             className="w-[320px]"
             dimension="sm"
           />
@@ -1240,9 +1248,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             maxDate={maxDate}
           />
           <TooltipWrapper
-            content={`Refresh ${
-              type === TRACE_DATA_TYPE.traces ? "traces" : "spans"
-            } list`}
+            content={type === TRACE_DATA_TYPE.traces ? t("tracing.tracesSpansTab.refreshTracesList") : t("tracing.tracesSpansTab.refreshSpansList")}
           >
             <Button
               variant="outline"

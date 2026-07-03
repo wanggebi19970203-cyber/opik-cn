@@ -1,0 +1,30 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 反馈评分现在在 trace 和 span 表格中显示为单独的列
+- 引入新的项目仪表板，可查看 trace 数量、反馈评分和 token 使用量随时间的变化。
+  <Frame>
+    <img src="/img/changelog/2024-11-25/project_dashboard.png" />
+  </Frame>
+- 项目统计信息现在显示在 trace 和 span 表头中，这对于跟踪平均反馈评分特别有用
+  <Frame>
+    <img src="/img/changelog/2024-11-25/project_statistics.png" />
+  </Frame>
+- 重新设计了实验条目侧边栏，使查看实验结果更加便捷
+  <Frame>
+    <img src="/img/changelog/2024-11-25/experiment_item_sidebar.png" />
+  </Frame>
+- 在界面中标注反馈评分现在感觉更快了
+- 支持除 CSV 外还以 JSON 文件格式导出 trace
+- 点击侧边栏外部时侧边栏现在会关闭
+- 实验页面中的数据集组现在按最后更新日期排序
+- 更新了 Windows 用户的滚动条样式
+
+**SDK**：
+
+- 通过添加重试逻辑提高了对连接问题的鲁棒性。
+- 更新了 OpenAI 集成以使用 `beta.chat.completions.parse` 跟踪结构化输出调用。
+- 修复了 `update_current_span` 和 `update_current_trace` 不支持更新 `output` 字段的问题。

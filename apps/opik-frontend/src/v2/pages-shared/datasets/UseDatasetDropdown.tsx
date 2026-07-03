@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Blocks, Code2, Play } from "lucide-react";
 import { Button } from "@/ui/button";
 import {
@@ -35,6 +36,7 @@ function UseDatasetDropdown({
   isEmpty = false,
   isTestSuite,
 }: UseDatasetDropdownProps) {
+  const { t } = useTranslation("datasets");
   const resetKeyRef = useRef(0);
   const resetDialogKeyRef = useRef(0);
   const [openExperimentDialog, setOpenExperimentDialog] = useState(false);
@@ -85,14 +87,14 @@ function UseDatasetDropdown({
           open={openConfirmDialog}
           setOpen={setOpenConfirmDialog}
           onConfirm={handleLoadPlayground}
-          title={`Load ${entityName} into playground`}
-          description={`Loading this ${entityName} into the Playground will replace any unsaved changes. This action cannot be undone.`}
-          confirmText={`Load ${entityName}`}
+          title={t("useDataset.loadIntoPlayground.title", { entityName })}
+          description={t("useDataset.loadIntoPlayground.description", { entityName })}
+          confirmText={t("useDataset.loadIntoPlayground.confirmText", { entityName })}
         />
       )}
       {disabled || isEmpty ? (
         <TooltipWrapper
-          content={isEmpty ? `This ${entityName} is empty` : "Run in"}
+          content={isEmpty ? t("useDataset.emptyTooltip", { entityName }) : t("useDataset.runIn")}
         >
           <span className="inline-flex">
             <Button variant="outline" size="icon-sm" disabled>
@@ -102,7 +104,7 @@ function UseDatasetDropdown({
         </TooltipWrapper>
       ) : (
         <DropdownMenu>
-          <TooltipWrapper content="Run in">
+          <TooltipWrapper content={t("useDataset.runIn")}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
@@ -125,10 +127,9 @@ function UseDatasetDropdown({
               >
                 <Blocks className="mr-2 mt-0.5 size-4 shrink-0 self-start" />
                 <div className="comet-body-s flex flex-col">
-                  <span>Open in Playground</span>
+                  <span>{t("useDataset.openInPlayground")}</span>
                   <span className="text-light-slate">
-                    Test prompts over your {entityName} and run evaluations
-                    interactively
+                    {t("useDataset.openInPlaygroundDescription", { entityName })}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -143,10 +144,9 @@ function UseDatasetDropdown({
               >
                 <Code2 className="mr-2 mt-0.5 size-4 shrink-0 self-start" />
                 <div className="comet-body-s flex flex-col">
-                  <span>Run an experiment</span>
+                  <span>{t("useDataset.runExperiment")}</span>
                   <span className="text-light-slate">
-                    Use this {entityName} to run an experiment using the Python
-                    SDK
+                    {t("useDataset.runExperimentDescription", { entityName })}
                   </span>
                 </div>
               </DropdownMenuItem>

@@ -1,0 +1,11 @@
+{
+  "contributing": {
+    "title": "Contributing",
+    "description": "Contribute to Opik",
+    "guides": {
+      "setup": "Development setup",
+      "testing": "Testing",
+      "pullRequest": "Pull request process"
+    }
+  }
+}

@@ -1,12 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import SelectBox from "@/shared/SelectBox/SelectBox";
 import { SORT_DIRECTION } from "@/types/sorting";
 import { DropdownOption } from "@/types/shared";
-
-const OPTIONS: DropdownOption<SORT_DIRECTION>[] = [
-  { label: "Ascending", value: SORT_DIRECTION.ASC },
-  { label: "Descending", value: SORT_DIRECTION.DESC },
-];
 
 export type SortDirectionSelectorProps = {
   direction: SORT_DIRECTION;
@@ -19,11 +15,17 @@ const SortDirectionSelector: React.FC<SortDirectionSelectorProps> = ({
   onSelect,
   disabled,
 }) => {
+  const { t } = useTranslation();
+  const options: DropdownOption<SORT_DIRECTION>[] = [
+    { label: t("common.sorting.ascending"), value: SORT_DIRECTION.ASC },
+    { label: t("common.sorting.descending"), value: SORT_DIRECTION.DESC },
+  ];
+
   return (
     <SelectBox
       value={direction}
-      options={OPTIONS}
-      placeholder="Sort direction"
+      options={options}
+      placeholder={t("common.sorting.sortDirection")}
       onChange={onSelect as never}
       disabled={disabled}
     />

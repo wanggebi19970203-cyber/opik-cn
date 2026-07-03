@@ -1,0 +1,49 @@
+---
+headline: Prompt Playground | Opik 文档
+og:description: 无需编写代码即可跨模型测试和比较提示词变体，并根据测试套件进行验证
+og:site_name: Opik 文档
+og:title: Prompt Playground — Opik
+title: Prompt Playground
+---
+
+Playground 让您无需编写代码即可测试提示词更改和比较模型。创建多个提示词变体，将它们并排运行，并根据测试套件验证结果——所有操作都在 Opik UI 中完成。
+
+<Frame>
+  <img src="/img/v2/prompt-engineering/playground.png" alt="Playground 中两个提示词变体针对测试套件运行，显示通过/失败结果" />
+</Frame>
+
+## 并排比较提示词变体
+
+Playground 中的每个变体都是独立的——拥有自己的模型、消息和配置。这意味着您可以在单个视图中测试提示词更改与当前版本的对比、在同一提示词上尝试不同模型，或试验温度和采样参数。
+
+支持的提供商包括 OpenAI、Anthropic、Gemini、OpenRouter、Vertex AI 和自定义端点。Claude 和 o1/o3 等推理模型还提供额外的控制选项，如思考强度。
+
+点击 **Run**（或按 **Shift+Enter**）即可同时执行所有变体。结果会实时流式显示，包括模型响应、token 使用量、延迟以及完整 trace 的链接。
+
+## 根据测试套件验证
+
+Playground 的真正强大之处在于将您的提示词变体运行在数据集或测试套件上。您无需手动检查少量输入，而是可以在完整的测试用例集上进行验证，查看哪个变体表现更佳。
+
+<Steps>
+  <Step title="绑定数据集或测试套件">
+    点击标题栏中的 **Test on Dataset**，选择数据集或测试套件。如果您使用模板变量（`{{variable_name}}`），它们会自动映射到数据集列。
+  </Step>
+  <Step title="运行实验">
+    点击 **Run experiment**，对数据集中的每个项目执行所有提示词变体。结果会显示在提示词下方的表格中，每个变体的输出并排展示。
+  </Step>
+  <Step title="查看结果">
+    使用测试套件时，每个输出会根据套件的评估规则进行评分，并显示为通过/失败。您可以点击任何结果查看完整 trace。
+
+    实验会自动保存——在 **Experiments** 标签页中可以随时比较它们。
+  </Step>
+</Steps>
+
+## 模板变量
+
+在提示词消息中使用 `{{variable_name}}` 语法创建动态模板。在标准模式下运行时，Playground 会要求您填写变量值。在数据集模式下，变量会自动映射到数据集列。
+
+## 下一步
+
+- [Prompt Library](/development/prompt-library/overview) — 在一个地方管理提示词和其余代理配置
+- [测试套件](/evaluation/advanced/building-test-suites) — 构建 playground 实验运行的测试用例
+- [实验](/evaluation/advanced/evaluate_your_llm) — 随时查看和比较实验结果

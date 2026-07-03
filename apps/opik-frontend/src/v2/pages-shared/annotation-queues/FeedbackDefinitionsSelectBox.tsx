@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import LoadableSelectBox from "@/shared/LoadableSelectBox/LoadableSelectBox";
 import useFeedbackDefinitionsList from "@/api/feedback-definitions/useFeedbackDefinitionsList";
@@ -51,6 +52,7 @@ type FeedbackDefinitionsSelectBoxProps =
 const FeedbackDefinitionsSelectBox: React.FC<
   FeedbackDefinitionsSelectBoxProps
 > = (props) => {
+  const { t } = useTranslation("annotation-queues");
   const {
     className,
     disabled,
@@ -115,7 +117,7 @@ const FeedbackDefinitionsSelectBox: React.FC<
     ? {
         options,
         value: props.value,
-        placeholder: "Select feedback definitions",
+        placeholder: t("annotationQueues.feedbackSelect.placeholderMulti"),
         onChange: props.onChange,
         multiselect: true as const,
         showSelectAll: props.showSelectAll,
@@ -123,7 +125,7 @@ const FeedbackDefinitionsSelectBox: React.FC<
     : {
         options,
         value: props.value,
-        placeholder: "Select a feedback definition",
+        placeholder: t("annotationQueues.feedbackSelect.placeholderSingle"),
         onChange: props.onChange,
         multiselect: false as const,
       };
@@ -134,7 +136,7 @@ const FeedbackDefinitionsSelectBox: React.FC<
         <Separator className="my-1" />
         <ListAction onClick={handleAddNewClick}>
           <Plus className="size-3.5 shrink-0" />
-          Add new
+          {t("annotationQueues.feedbackSelect.addNew")}
         </ListAction>
       </>
     ),

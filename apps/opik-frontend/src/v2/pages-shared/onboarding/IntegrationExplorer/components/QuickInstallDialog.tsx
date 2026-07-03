@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -20,6 +21,7 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
   open,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       onClose();
@@ -30,7 +32,7 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[720px] gap-2">
         <DialogHeader>
-          <DialogTitle>Quick install with AI assistants</DialogTitle>
+          <DialogTitle>{t("onboarding.integrationExplorer.quickInstallTitle")}</DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
@@ -39,8 +41,8 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
           <Separator className="my-6" />
           <HelpLinks
             onCloseParentDialog={onClose}
-            title="Need some help?"
-            description="Get help from your team or ours. Choose the option that works best for you."
+            title={t("onboarding.integrationExplorer.needSomeHelp")}
+            description={t("onboarding.integrationExplorer.needSomeHelpDescription")}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 import { CircleX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 
@@ -15,6 +16,7 @@ const ChipShell = forwardRef<HTMLElement, ChipShellProps>(
     { applied, isOpen, onClear, disabled, className, children, ...rest },
     ref,
   ) => {
+    const { t } = useTranslation("common");
     const hasClear = Boolean(onClear && !disabled);
     const showClearAffordance = Boolean(applied && !isOpen);
 
@@ -50,14 +52,14 @@ const ChipShell = forwardRef<HTMLElement, ChipShellProps>(
         className="group inline-flex items-center"
       >
         {bodyButton}
-        <TooltipWrapper content="Clear">
+        <TooltipWrapper content={t("common.buttons.clear")}>
           <button
             type="button"
             onClick={(event) => {
               event.stopPropagation();
               onClear?.("chip_x");
             }}
-            aria-label="Clear filter"
+            aria-label={t("common.singleSelectChip.clearFilter")}
             className={cn(
               "hidden h-6 items-center justify-center rounded-r-[20px] border border-l-0 border-secondary bg-primary-100/50 pl-1 pr-1.5 text-primary-active outline-none transition-colors",
               showClearAffordance && "group-hover:inline-flex",

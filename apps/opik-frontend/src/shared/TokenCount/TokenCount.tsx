@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Hash } from "lucide-react";
 import { cn, formatNumberInK } from "@/lib/utils";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -15,14 +16,20 @@ const TokenCount: React.FC<TokenCountProps> = ({
   showLabel,
   className,
   iconClassName,
-}) => (
-  <TooltipWrapper content={`${tokens.toLocaleString()} tokens`}>
-    <span className={cn("flex items-center gap-1", className)}>
-      <Hash className={cn("size-3", iconClassName)} />
-      {formatNumberInK(tokens)}
-      {showLabel ? " tokens" : ""}
-    </span>
-  </TooltipWrapper>
-);
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <TooltipWrapper
+      content={`${tokens.toLocaleString()} ${t("common.labels.tokens")}`}
+    >
+      <span className={cn("flex items-center gap-1", className)}>
+        <Hash className={cn("size-3", iconClassName)} />
+        {formatNumberInK(tokens)}
+        {showLabel ? ` ${t("common.labels.tokens")}` : ""}
+      </span>
+    </TooltipWrapper>
+  );
+};
 
 export default TokenCount;

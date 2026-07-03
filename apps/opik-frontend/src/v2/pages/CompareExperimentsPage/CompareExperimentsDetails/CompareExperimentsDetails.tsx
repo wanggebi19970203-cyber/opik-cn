@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import sortBy from "lodash/sortBy";
 import isNumber from "lodash/isNumber";
 import { CircleCheck, GitCommitVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import useBreadcrumbsStore from "@/store/BreadcrumbsStore";
 import BackButton from "@/shared/BackButton/BackButton";
@@ -35,6 +36,7 @@ type CompareExperimentsDetailsProps = {
 const CompareExperimentsDetails: React.FunctionComponent<
   CompareExperimentsDetailsProps
 > = ({ experiments, experimentsIds }) => {
+  const { t } = useTranslation("pages/compare-experiments");
   const setBreadcrumbParam = useBreadcrumbsStore((state) => state.setParam);
 
   const isCompare = experimentsIds.length > 1;
@@ -43,7 +45,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
   const title = !isCompare
     ? experiment?.name
-    : `Compare (${experimentsIds.length})`;
+    : t("compareExperiments.details.compareCount", { count: experimentsIds.length });
 
   useEffect(() => {
     title && setBreadcrumbParam("compare", "Compare", title);
@@ -85,9 +87,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
       return (
         <div className="mt-1 flex items-center gap-2">
-          <span className="text-nowrap">Baseline of</span>
+          <span className="text-nowrap">{t("compareExperiments.details.baselineOf")}</span>
           <ExperimentTag experimentName={experiment?.name} />
-          <span className="text-nowrap">compared against</span>
+          <span className="text-nowrap">{t("compareExperiments.details.comparedAgainst")}</span>
           {tag}
         </div>
       );
@@ -102,7 +104,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
         <div className="flex min-w-0 items-center gap-2">
           <BackButton
             to="/$workspaceName/projects/$projectId/experiments"
-            tooltip="Back to experiments"
+            tooltip={t("compareExperiments.details.backToExperiments")}
           />
           <h1 className="comet-body-accented truncate break-words">{title}</h1>
         </div>
@@ -126,7 +128,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
                 : RESOURCE_TYPE.dataset
             }
             prefix={
-              isTestSuiteExperiment(experiment) ? "Test suite" : "Dataset"
+              isTestSuiteExperiment(experiment) ? t("compareExperiments.details.testSuite") : t("compareExperiments.details.dataset")
             }
             suffix={
               experiment.dataset_version_summary?.version_name ? (
@@ -144,7 +146,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
               id={experiment.prompt_versions[0].prompt_id}
               name={experiment.prompt_versions[0].prompt_name}
               resource={RESOURCE_TYPE.prompt}
-              prefix="Prompt"
+              prefix={t("compareExperiments.details.prompt")}
             />
           )}
         {experiment?.project_id && (
@@ -152,7 +154,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
             projectId={experiment.project_id}
             logsSource={LOGS_SOURCE.experiment}
             sourceFilters={experimentSourceFilters}
-            title="Experiment logs"
+            title={t("compareExperiments.details.experimentLogs")}
           />
         )}
         {!isCompare &&
@@ -178,7 +180,7 @@ const CompareExperimentsDetails: React.FunctionComponent<
                   }`}
                 />
                 <div className="comet-body-s-accented truncate text-muted-slate">
-                  {Math.round(experiment.pass_rate * 100)}% pass rate
+                  {t("compareExperiments.details.passRate", { rate: Math.round(experiment.pass_rate * 100) })}
                 </div>
               </Tag>
             </TooltipWrapper>

@@ -1,0 +1,83 @@
+---
+headline: Helm Chart 迁移 | Opik 文档
+og:description: 了解如何从 Bitnami charts 和镜像迁移到 Opik 官方 Helm chart
+og:site_name: Opik 文档
+og:title: '从 Bitnami 迁移到 Opik Helm Chart'
+subtitle: 从 Bitnami charts 和镜像迁移的指南
+title: 从 Bitnami Charts 和镜像迁移
+---
+
+> **重要提示：** 如果您正在使用或计划使用 Opik 或 Comet 企业版，请联系 Sales@comet.com 以获取正确的部署文档。
+
+# 从 Bitnami Charts 和镜像迁移
+
+Opik 的 Helm chart 已从 Bitnami charts 和镜像迁移到官方 Docker 镜像和替代 Helm charts。此迁移提供更好的兼容性、安全性和可维护性。
+
+## 为什么要从 Bitnami 迁移？
+
+Bitnami 在 2025 年更改了其分发模式：
+
+- **免费的旧公共镜像已弃用**：版本化镜像被移至"遗留"的未维护仓库，不再提供安全更新
+- **加固镜像现在需要订阅**：访问维护的、安全的镜像需要付费订阅
+- **Bitnami charts 强依赖 Bitnami 镜像**：Bitnami charts 无法切换到官方镜像，造成对订阅模式的依赖
+
+通过迁移到官方 Docker 镜像和替代 Helm charts，我们确保：
+
+- **持续免费访问**：来自上游项目的官方镜像（例如 `mysql`、`redis`、`zookeeper`、`minio`）保持免费可用，并提供完整的版本支持
+- **安全更新**：直接获取来自官方维护者的安全补丁和更新
+- **生产稳定性**：能够为生产部署锁定特定版本
+- **长期可持续性**：减少对第三方商业服务的依赖
+- **社区标准**：官方镜像遵循行业最佳实践并被广泛采用，更容易找到文档和社区支持
+
+## 升级说明
+
+如果您从 **1.9.39** 或更早版本升级 Opik Helm chart，需要启用 chart 迁移：
+
+```yaml
+chartMigration:
+  enabled: true
+```
+
+<Warning>
+**重要提示：** 仅在首次进行从 Bitnami 迁移的升级时设置 `chartMigration.enabled: true`。迁移成功完成后，在后续升级中将其设置回 `false`。
+</Warning>
+
+### 迁移工作原理
+
+迁移是**无缝的**且**保留数据的**：
+
+1. **自动资源重建**：迁移作业会自动删除并重建与您的安装相关的 StatefulSets 和 Deployments
+2. **数据保留**：所有 PersistentVolumeClaims (PVCs) 都会被保留，确保不会丢失数据
+3. **零停机时间**：迁移作为升级前钩子执行，新资源会立即创建
+
+### 数据目录配置
+
+MySQL、MinIO 和 Zookeeper 默认配置为使用 Bitnami 数据路径，以确保无缝迁移：
+
+- **MySQL**：使用 `/bitnami/mysql/data` 数据目录
+- **MinIO**：使用 Bitnami 兼容路径
+- **Zookeeper**：使用 `/bitnami/zookeeper/data` 数据目录
+
+<Note>
+如果您最初在配置中覆盖了默认的 Bitnami 数据路径，请确保您的 `values.yaml` 与这些自定义路径匹配，以确保迁移能够访问您的现有数据。
+</Note>
+
+## 变更内容
+
+以下组件已迁移到使用官方 Docker 镜像：
+
+- **Zookeeper**：从 `bitnami/zookeeper` 迁移到官方 `zookeeper:3.9.4` 镜像，使用 [CloudPirates Zookeeper](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/zookeeper) chart
+- **MySQL**：从 Bitnami MySQL chart 迁移到 [comet-mysql-helm](https://github.com/comet-ml/comet-mysql-helm) chart，使用官方 `mysql:8.4.2` 镜像
+- **Redis**：从 Bitnami Redis chart 迁移到 [CloudPirates Redis](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/redis) chart，使用官方 `redis/redis-stack-server:7.2.0-v10` 镜像
+- **MinIO**：从 Bitnami MinIO chart 迁移到 [CloudPirates MinIO](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/minio) chart，使用官方 `minio/minio` 镜像
+
+## 迁移收益
+
+- **官方镜像**：使用官方 Docker 镜像提供更好的安全更新和社区支持
+- **简化配置**：降低 chart 依赖的复杂性
+- **更好的兼容性**：改进与现代 Kubernetes 版本的兼容性
+- **维护的 charts**：来自社区的积极维护和更新
+
+## 需要帮助？
+
+如果您在迁移过程中遇到问题，请查看[故障排除指南](/self-host/troubleshooting)或联系支持团队。

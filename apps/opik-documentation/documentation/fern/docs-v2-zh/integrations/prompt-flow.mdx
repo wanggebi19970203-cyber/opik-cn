@@ -1,0 +1,85 @@
+---
+description: 配置 Prompt Flow 追踪，使用与 Opik 部署模式兼容的 OpenTelemetry 端点设置。
+headline: Prompt Flow | Opik 文档
+og:description: Prompt Flow 通过自身的 API 控制追踪；Opik 导出通过 OTEL 端点设置进行配置。
+og:site_name: Opik 文档
+og:title: Prompt Flow 集成 - Opik
+title: 使用 Opik 实现 Prompt Flow 的可观测性
+---
+
+[Prompt Flow](https://microsoft.github.io/promptflow/) 通过 Prompt Flow API 启用追踪，并使用 OpenTelemetry 导出设置来处理出站遥测数据。
+
+## 适用场景
+
+当你的 Prompt Flow 项目已经使用了 Prompt Flow 追踪，并且希望将遥测数据导出到 Opik 时，请参考本指南。
+
+## Opik OTLP 端点模式
+
+完整的端点/请求头详情请参阅 [Opik OpenTelemetry 概述](/integrations/opentelemetry)。
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需请求头：`Authorization`、`Comet-Workspace`
+        可选请求头：`projectName`
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需请求头：`Authorization`、`Comet-Workspace`
+        可选请求头：`projectName`
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+        必需请求头：默认无
+        可选请求头：`projectName`，如已启用认证则需配置认证请求头
+    </Tab>
+</Tabs>
+
+## 示例（Prompt Flow 追踪 API）
+
+目的：
+启用 Prompt Flow 追踪并通过已配置的 OTLP 端点导出遥测数据。
+
+适用场景：
+使用 Prompt Flow 原生追踪 API 并希望通过 OTEL 设置导出追踪数据。
+
+必需输入：
+- 在代码中启用 Prompt Flow 追踪
+- 针对应 Opik 模式配置的 OTEL 端点/请求头环境变量
+
+可选输入：
+- 服务/资源元数据
+- 额外的 OTel 收集器路由或数据增强
+
+最小可行配置：
+
+```python
+from promptflow.tracing import start_trace
+
+start_trace()
+
+# Run prompt flow pipeline as usual.
+```
+
+## 验证
+
+1. 启用 `start_trace()` 运行一个流程。
+2. 确认遥测数据导出调用已发送至配置的 OTLP 端点。
+3. 验证追踪记录出现在预期的 Opik 项目中。
+
+## 参考资料
+
+- [Prompt Flow 追踪文档](https://microsoft.github.io/promptflow/how-to-guides/tracing/index.html)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)

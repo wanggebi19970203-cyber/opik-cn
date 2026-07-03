@@ -25,6 +25,7 @@ def _create_sync_next_wrapper(
     generations_aggregator: Callable,
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> Callable:
+    """创建同步流式迭代器的包装函数。"""
     @functools.wraps(original_next)
     def wrapper(
         self: litellm.litellm_core_utils.streaming_handler.CustomStreamWrapper,
@@ -76,6 +77,7 @@ def _create_async_next_wrapper(
     generations_aggregator: Callable,
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> Callable:
+    """创建异步流式迭代器的包装函数。"""
     @functools.wraps(original_anext)
     async def wrapper(
         self: litellm.litellm_core_utils.streaming_handler.CustomStreamWrapper,
@@ -129,6 +131,18 @@ def patch_stream(
     generations_aggregator: Callable[[List[StreamItem]], Optional[AggregatedResult]],
     finally_callback: generator_wrappers.FinishGeneratorCallback,
 ) -> litellm.litellm_core_utils.streaming_handler.CustomStreamWrapper:
+    """对 LiteLLM 流进行补丁，以支持 Opik 追踪。
+
+    参数:
+        stream: LiteLLM 流对象。
+        span_to_end: 需要结束的 span 数据。
+        trace_to_end: 需要结束的 trace 数据。
+        generations_aggregator: 流式响应聚合函数。
+        finally_callback: 流结束时的回调函数。
+
+    返回:
+        补丁后的流对象。
+    """
     litellm.litellm_core_utils.streaming_handler.CustomStreamWrapper.__next__ = (
         _create_sync_next_wrapper(
             _original_next, generations_aggregator, finally_callback

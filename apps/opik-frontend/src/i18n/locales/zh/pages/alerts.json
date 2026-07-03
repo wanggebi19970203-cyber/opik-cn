@@ -1,0 +1,190 @@
+{
+  "alerts": {
+    "title": "告警",
+    "description": "配置和管理监控告警",
+    "create": "创建告警",
+    "edit": "编辑告警",
+    "delete": "删除告警",
+    "createNew": "创建新告警",
+    "update": "更新告警",
+    "empty": {
+      "title": "暂无告警",
+      "description": "监控项目中的重要事件，当需要您关注时收到通知。",
+      "action": "创建您的第一个告警"
+    },
+    "noSearchResults": "无搜索结果",
+    "searchPlaceholder": "按名称搜索",
+    "selectType": "选择类型",
+    "loading": {
+      "updating": "正在更新告警...",
+      "creating": "正在创建告警..."
+    },
+    "confirmDialog": {
+      "deleteSingle": {
+        "title": "删除告警",
+        "description": "确定要删除此告警吗？此操作无法撤销。",
+        "confirmText": "删除告警"
+      },
+      "deleteBatch": {
+        "title": "删除告警",
+        "description": "确定要删除这些告警吗？此操作无法撤销。",
+        "confirmText": "删除告警"
+      },
+      "unsavedChanges": {
+        "title": "您有未保存的更改",
+        "description": "如果现在离开，您的更改将丢失。确定要继续吗？",
+        "confirmText": "离开而不保存",
+        "cancelText": "留在页面"
+      }
+    },
+    "fields": {
+      "name": "名称",
+      "enabled": "启用告警",
+      "enabledDescription": "启用后将自动向指定 URL 发送所选事件的通知。",
+      "cancel": "取消"
+    },
+    "columns": {
+      "id": "ID",
+      "name": "名称",
+      "alert_type": "目标",
+      "webhook_url": "端点",
+      "triggers": "事件",
+      "created_by": "创建者",
+      "status": "状态",
+      "created_at": "创建时间",
+      "last_updated_at": "最后更新"
+    },
+    "page": {
+      "createNewAlert": "创建新告警",
+      "noAlertsYet": "暂无告警",
+      "noSearchResults": "无搜索结果",
+      "searchPlaceholder": "按名称搜索",
+      "selectType": "选择类型"
+    },
+    "actions": {
+      "menuLabel": "操作菜单",
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "webhook": {
+      "title": "Webhook 设置",
+      "description": "配置平台如何向您的系统发送通知。",
+      "destination": "目标",
+      "routingKey": "路由密钥",
+      "routingKeyDescription": "用于服务或全局规则集上集成的 PagerDuty 路由密钥",
+      "routingKeyPlaceholder": "输入路由密钥",
+      "endpointUrl": "端点 URL",
+      "endpointUrlDescription": "平台将发送 Webhook 通知的目标 URL。此端点应处于活动状态，并能够接收和处理传入的 POST 请求。",
+      "advancedSettings": "高级 Webhook 设置",
+      "secretToken": "密钥令牌（可选）",
+      "secretTokenDescription": "添加以安全验证传入的 Webhook 请求来自平台。"
+    },
+    "headers": {
+      "label": "请求头（可选）",
+      "description": "指定每个 Webhook 请求中包含的自定义 HTTP 请求头。用于身份验证、内容类型规范或任何其他必需的元数据。",
+      "addHeader": "添加请求头"
+    },
+    "triggers": {
+      "title": "触发器",
+      "description": "选择哪些平台事件将触发此告警。",
+      "addTrigger": "添加触发器",
+      "missingTrigger": "缺少触发器？请提交",
+      "githubTicket": "GitHub 工单",
+      "toLetUsKnow": "告诉我们！",
+      "emptyTitle": "尚未选择触发器",
+      "emptyDescription": "选择一个或多个事件来决定何时激活此 Webhook",
+      "inTheLast": "在过去",
+      "selectTimeWindow": "选择时间窗口"
+    },
+    "thresholdLabels": {
+      "trace_cost": "总成本超过（美元）",
+      "trace_errors": "Trace 错误数量超过",
+      "trace_latency": "平均延迟超过（秒）",
+      "default": "阈值超过"
+    },
+    "feedbackConditions": {
+      "whenAverage": "当平均",
+      "orWhenAverage": "或当平均",
+      "addCondition": "添加条件",
+      "removeGroup": "移除分组",
+      "removeCondition": "移除条件",
+      "addOrGroup": "添加 OR 分组",
+      "addAndCondition": "添加 AND 条件",
+      "cantRemove": "无法移除 — 每个告警至少需要一个包含一个条件的分组。"
+    },
+    "testWebhook": {
+      "title": "测试告警配置",
+      "description": "向您配置的端点发送测试通知，以验证 Webhook 设置正确并按预期接收事件。",
+      "testConnection": "测试连接",
+      "goToDocs": "查看文档",
+      "testTrigger": "测试触发器",
+      "successConnection": "Webhook 连接测试成功！",
+      "successTrigger": "Webhook 测试成功（\"{{label}}\"）！",
+      "failureTitle": "Webhook 测试失败",
+      "triggerNotFound": "未找到触发器",
+      "endpointRequired": "端点 URL 为必填项",
+      "validUrlRequired": "请输入有效的 URL",
+      "routingKeyRequired": "PagerDuty 集成需要路由密钥"
+    },
+    "triggerTypes": {
+      "trace_errors": {
+        "title": "Trace 错误阈值",
+        "description": "当所选项目中 Trace 错误数量超过指定阈值时触发。"
+      },
+      "trace_guardrails_triggered": {
+        "title": "护栏触发",
+        "description": "当所选项目中任何 Trace 发生护栏事件时触发。"
+      },
+      "trace_feedback_score": {
+        "title": "Trace 反馈分数阈值",
+        "description": "当所选项目中 Trace 的平均反馈分数超过指定阈值时触发。"
+      },
+      "trace_thread_feedback_score": {
+        "title": "线程反馈分数阈值",
+        "description": "当所选项目中线程的平均反馈分数超过指定阈值时触发。"
+      },
+      "prompt_created": {
+        "title": "新增提示词",
+        "description": "当工作区的提示词库中创建或保存新提示词时触发。"
+      },
+      "prompt_committed": {
+        "title": "新增提示词版本",
+        "description": "当工作区提示词库中的任何提示词添加新提交（版本）时触发。"
+      },
+      "prompt_deleted": {
+        "title": "提示词已删除",
+        "description": "当提示词从工作区的提示词库中移除时触发。"
+      },
+      "experiment_finished": {
+        "title": "实验完成",
+        "description": "当工作区中的实验完成时触发。"
+      },
+      "trace_cost": {
+        "title": "成本阈值",
+        "description": "当所选项目中 Trace 总成本超过指定阈值时触发。"
+      },
+      "trace_latency": {
+        "title": "延迟阈值",
+        "description": "当所选项目中 Trace 平均延迟超过指定阈值时触发。"
+      }
+    },
+    "windowOptions": {
+      "300": "5 分钟",
+      "900": "15 分钟",
+      "1800": "30 分钟",
+      "3600": "1 小时",
+      "21600": "6 小时",
+      "43200": "12 小时",
+      "86400": "24 小时",
+      "604800": "7 天",
+      "1296000": "15 天",
+      "2592000": "30 天"
+    },
+    "validation": {
+      "endpointRequired": "端点 URL 为必填项",
+      "validUrlRequired": "请输入有效的 URL",
+      "routingKeyRequired": "PagerDuty 集成需要路由密钥",
+      "webhookTestFailed": "Webhook 测试失败"
+    }
+  }
+}

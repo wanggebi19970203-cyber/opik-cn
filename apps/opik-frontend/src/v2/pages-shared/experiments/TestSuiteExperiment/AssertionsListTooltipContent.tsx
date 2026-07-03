@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import { CheckCheck } from "lucide-react";
 
 import { Separator } from "@/ui/separator";
@@ -10,7 +11,9 @@ interface AssertionsListTooltipContentProps {
 
 export const AssertionsListTooltipContent: React.FC<
   AssertionsListTooltipContentProps
-> = ({ assertions, title = "Assertions" }) => {
+> = ({ assertions, title }) => {
+  const { t } = useTranslation("experiments");
+  const resolvedTitle = title ?? t("assertions");
   if (assertions.length === 0) {
     return null;
   }
@@ -21,7 +24,7 @@ export const AssertionsListTooltipContent: React.FC<
         <div className="flex size-4 items-center justify-center rounded bg-[#89DEFF]">
           <CheckCheck className="size-3 text-foreground" />
         </div>
-        <span className="comet-body-xs-accented text-foreground">{title}</span>
+        <span className="comet-body-xs-accented text-foreground">{resolvedTitle}</span>
       </div>
       <Separator className="my-1" />
       {assertions.map((assertion, index) => (

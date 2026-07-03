@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import isUndefined from "lodash/isUndefined";
 import { Database, ListChecks, MessageCircleWarning, Plus } from "lucide-react";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -73,6 +74,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
   setOpen,
   datasetType,
 }) => {
+  const { t } = useTranslation();
   const isTestSuiteMode = datasetType === DATASET_TYPE.TEST_SUITE;
   const entityName = isTestSuiteMode ? "test suite" : "dataset";
   const noSelectionExplainerId = isTestSuiteMode
@@ -203,11 +205,11 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
         ) : (
           <Database className="mb-1 size-5 text-muted-slate" />
         )}
-        <span className="comet-body-s-accented">No {entityName}s yet</span>
+        <span className="comet-body-s-accented">{t("tracing.addToDataset.noEntitiesYet", { entity: entityName })}</span>
         <span className="comet-body-xs text-muted-slate">
           {isTestSuiteMode
-            ? "Define test cases with assertions to evaluate your LLM application's performance."
-            : "Define inputs and expected outputs to evaluate your LLM application's performance."}
+            ? t("tracing.addToDataset.noTestSuitesDescription")
+            : t("tracing.addToDataset.noDatasetsDescription")}
         </span>
       </div>
     ),
@@ -234,15 +236,15 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
 
   const onItemsAdded = useCallback(
     (dataset: Dataset, hasTraces: boolean, hasSpans: boolean) => {
-      let itemType = "Items";
+      let itemType = t("tracing.addToDataset.items");
       if (hasTraces && !hasSpans) {
-        itemType = "Traces";
+        itemType = t("tracing.addToDataset.traces");
       } else if (hasSpans && !hasTraces) {
-        itemType = "Spans";
+        itemType = t("tracing.addToDataset.spans");
       }
 
       toast({
-        title: `${itemType} added to ${entityName}`,
+        title: t("tracing.addToDataset.itemsAddedToEntity", { itemType, entity: entityName }),
         description: EXPLAINERS_MAP[successToastExplainerId].description,
       });
     },
@@ -401,8 +403,8 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
 
   const renderAlert = () => {
     const text = noValidRows
-      ? `There are no rows that can be added as ${entityName} items. The input field is missing.`
-      : `Only rows with input fields will be added as ${entityName} items.`;
+      ? t("tracing.addToDataset.noValidRowsForEntity", { entity: entityName })
+      : t("tracing.addToDataset.partialValidRowsForEntity", { entity: entityName });
 
     if (noValidRows || partialValid) {
       return (
@@ -452,45 +454,45 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
       <AccordionItem value="metadata" className="border-t">
         <AccordionTrigger>
           {type === "trace"
-            ? "Trace metadata configuration"
-            : "Span metadata configuration"}
+            ? t("tracing.addToDataset.traceMetadataConfig")
+            : t("tracing.addToDataset.spanMetadataConfig")}
         </AccordionTrigger>
         <AccordionContent className="px-3">
           <div className="grid grid-cols-2 gap-3">
             {includeNestedSpans &&
               renderEnrichmentCheckbox(
                 "include-spans",
-                "Nested spans",
+                t("tracing.addToDataset.nestedSpans"),
                 enrichmentOptions.includeSpans,
                 "includeSpans",
               )}
             {renderEnrichmentCheckbox(
               `include-tags${type === "span" ? "-span" : ""}`,
-              "Tags",
+              t("tracing.addToDataset.tags"),
               enrichmentOptions.includeTags,
               "includeTags",
             )}
             {renderEnrichmentCheckbox(
               `include-feedback-scores${type === "span" ? "-span" : ""}`,
-              "Feedback scores",
+              t("tracing.addToDataset.feedbackScores"),
               enrichmentOptions.includeFeedbackScores,
               "includeFeedbackScores",
             )}
             {renderEnrichmentCheckbox(
               `include-comments${type === "span" ? "-span" : ""}`,
-              "Comments",
+              t("tracing.addToDataset.comments"),
               enrichmentOptions.includeComments,
               "includeComments",
             )}
             {renderEnrichmentCheckbox(
               `include-usage${type === "span" ? "-span" : ""}`,
-              "Usage metrics",
+              t("tracing.addToDataset.usageMetrics"),
               enrichmentOptions.includeUsage,
               "includeUsage",
             )}
             {renderEnrichmentCheckbox(
               `include-metadata${type === "span" ? "-span" : ""}`,
-              "Metadata",
+              t("tracing.addToDataset.metadata"),
               enrichmentOptions.includeMetadata,
               "includeMetadata",
             )}
@@ -505,7 +507,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg sm:max-w-screen-sm">
           <DialogHeader>
-            <DialogTitle>Add to {entityName}</DialogTitle>
+            <DialogTitle>{t("tracing.addToDataset.addToEntity", { entity: entityName })}</DialogTitle>
           </DialogHeader>
           <DialogAutoScrollBody>
             {!selectedDataset && (
@@ -516,7 +518,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
             )}
             <div className="my-2">
               <Label className="comet-body-s-accented mb-1">
-                Select a {entityName}
+                {t("tracing.addToDataset.selectEntity", { entity: entityName })}
               </Label>
               <LoadableSelectBox
                 value={selectedDataset?.id ?? ""}
@@ -529,7 +531,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                     ) : (
                       <Database className="size-4 shrink-0 text-muted-slate" />
                     )}
-                    <span>Select a {entityName}</span>
+                    <span>{t("tracing.addToDataset.selectEntity", { entity: entityName })}</span>
                   </div>
                 }
                 renderTitle={(option: DropdownOption<string>) => (
@@ -542,7 +544,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                     <span className="truncate">{option.label}</span>
                   </div>
                 )}
-                searchPlaceholder={`Search ${entityName}s`}
+                searchPlaceholder={t("tracing.addToDataset.searchEntities", { entity: entityName })}
                 isLoading={isPending}
                 disabled={noValidRows}
                 buttonClassName="w-full"
@@ -557,7 +559,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                         onClick={() => setOpenDialog(true)}
                       >
                         <Plus className="size-4 shrink-0" />
-                        <span className="comet-body-s">Add {entityName}</span>
+                        <span className="comet-body-s">{t("tracing.addToDataset.addEntity", { entity: entityName })}</span>
                       </div>
                     </>
                   ) : undefined
@@ -597,7 +599,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
               onClick={() => setOpen(false)}
               disabled={fetching}
             >
-              Cancel
+              {t("tracing.addToDataset.cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -607,7 +609,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
               }}
               disabled={!selectedDataset || noValidRows || fetching}
             >
-              Add to {entityName}
+              {t("tracing.addToDataset.addToEntity", { entity: entityName })}
             </Button>
           </DialogFooter>
         </DialogContent>

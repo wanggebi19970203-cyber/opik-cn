@@ -1,0 +1,950 @@
+---
+description: 配置自动化的 Webhook 通知，以便及时了解 Opik 工作空间中的事件，包括追踪错误、反馈评分和提示词变更。
+headline: 告警 | Opik 文档
+og:description: 在 Opik 中配置针对追踪错误和反馈评分等关键事件的自动化 Webhook 通知，以优化工作流程。
+og:site_name: Opik 文档
+og:title: 告警配置 - Opik
+title: 告警
+---
+
+<Note>
+  在 Opik 2.0 中，提示词、数据集和实验均以项目为作用域。提示词变更和反馈评分等告警事件现在与特定项目关联。
+</Note>
+
+告警允许您为 Opik 工作空间中的重要事件配置自动化的 Webhook 通知。当特定事件发生时——例如追踪错误、新的反馈评分或提示词变更——Opik 会向您配置的端点发送 HTTP POST 请求，并附带详细的事件数据。
+
+Opik 提供三种告警目标类型：
+- **Slack**：与 Slack 的原生集成，自动格式化消息
+- **PagerDuty**：与 PagerDuty 的原生集成，自动格式化事件
+- **通用**：适用于自定义 Webhook、无代码自动化平台或中间件服务
+
+<Frame>
+  <img src="/img/production/alerts_configuration.png" alt="Opik 中的告警配置" />
+</Frame>
+
+## 创建告警
+
+### 前置条件
+
+- 可以访问 Opik 配置页面
+- 拥有一个能够接收 HTTP POST 请求的 Webhook 端点
+- （可选）用于生产环境的带有有效 SSL 证书的 HTTPS 端点
+
+### 分步指南
+
+<Frame>
+  <img src="/img/production/create_alert_form.png" alt="创建告警表单" />
+</Frame>
+
+1. **导航至告警页面**
+   - 进入 配置 → 告警 标签页
+   - 点击"创建新告警"按钮
+
+2. **配置基本设置**
+   - **名称**：为告警指定一个描述性名称（例如"生产环境错误 Slack 通知"）
+   - **启用告警**：开启开关以立即激活告警
+
+3. **配置 Webhook 设置**
+   - **目标**：选择告警目标类型：
+     - **通用**：适用于自定义 Webhook、无代码自动化平台或中间件服务
+     - **Slack**：用于原生 Slack Webhook 集成（自动为 Slack 格式化消息）
+     - **PagerDuty**：用于原生 PagerDuty 集成（自动为 PagerDuty 格式化事件）
+   - **端点 URL**：输入您的 Webhook URL（必须以 `http://` 或 `https://` 开头）
+     - 对于 Slack：使用您的 Slack 传入 Webhook URL（例如 `https://hooks.slack.com/services/...`）
+     - 对于 PagerDuty：使用您的 PagerDuty Events API v2 集成 URL（例如 `https://events.pagerduty.com/v2/enqueue`）
+     - 对于通用类型：使用任何能够接收 POST 请求的 HTTP 端点
+
+4. **高级 Webhook 设置**（可选）
+   - **密钥令牌**：添加密钥令牌以验证 Webhook 的真实性（建议用于通用目标类型）
+   - **自定义请求头**：添加用于认证或路由的 HTTP 请求头
+     - 示例：`X-Custom-Auth: Bearer your-token-here`
+
+5. **添加触发器**
+   - 点击"添加触发器"以选择事件类型
+   - 从列表中选择一个或多个事件类型
+   - 配置可观测性事件的项目作用域（可选）
+   - 对于基于阈值的告警（错误、成本、延迟、反馈评分）：
+     - **阈值**：设置触发告警的阈值
+     - **运算符**：为反馈评分告警选择比较运算符（`>`、`<`）
+     - **窗口**：配置指标聚合的时间窗口（以秒为单位）
+     - **反馈评分名称**：选择要监控的反馈评分（仅适用于反馈评分告警）
+
+6. **测试配置**
+   - 点击"测试连接"以发送示例 Webhook
+   - 验证您的端点是否接收到测试载荷
+   - 在 Opik 界面中检查响应状态
+
+7. **创建告警**
+   - 点击"创建告警"以保存配置
+   - 告警将立即开始监控事件
+
+## 集成示例
+
+Opik 支持三种主要方式将告警与外部系统集成：
+
+1. **原生集成**（Slack、PagerDuty）：使用内置格式化功能，无需中间件
+2. **通用 Webhook**：将告警发送到自定义端点、无代码平台或中间件服务
+3. **中间件服务**（可选）：在转发到目标之前添加自定义逻辑、路由或转换
+
+### Slack 集成（原生）
+
+Opik 提供原生 Slack 集成，自动将告警消息格式化为 Slack 的 Block Kit 格式。
+
+#### 前置条件
+- [创建 Slack 应用并启用传入 Webhook](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+- 生成 Webhook URL（例如 `https://hooks.slack.com/services/T00000000/B00000000/XXXX`）
+
+#### 设置步骤
+
+1. **在 Slack 中**：
+   - 在您的工作空间中创建 Slack 应用
+   - 启用传入 Webhook
+   - 将 Webhook 添加到目标频道
+   - 复制 Webhook URL
+
+2. **在 Opik 中**：
+   - 进入 配置 → 告警 标签页
+   - 点击"创建新告警"
+   - 为告警指定描述性名称
+   - 选择 **Slack** 作为目标类型
+   - 在端点 URL 字段中粘贴您的 Slack Webhook URL
+   - 添加要监控的事件触发器
+   - 点击"测试连接"进行验证
+   - 点击"创建告警"
+
+Opik 会自动将所有告警载荷格式化为 Slack 兼容的消息，包含丰富的格式：
+- 告警名称和事件类型
+- 事件计数和详情
+- 相关元数据
+- 在 Opik 中查看详情的链接
+
+### PagerDuty 集成（原生）
+
+Opik 提供原生 PagerDuty 集成，自动将告警事件格式化为 PagerDuty Events API v2 格式。
+
+#### 前置条件
+- 具有创建集成权限的 PagerDuty 账户
+- 可以访问要接收告警的服务
+
+#### 设置步骤
+
+1. **在 PagerDuty 中**：
+   - 导航至 服务 → 选择您的服务 → 集成 标签页
+   - 点击"添加集成"
+   - 选择"Events API V2"
+   - 为集成指定名称（例如"Opik 告警"）
+   - 保存集成并复制集成密钥
+
+2. **在 Opik 中**：
+   - 进入 配置 → 告警 标签页
+   - 点击"创建新告警"
+   - 为告警指定描述性名称
+   - 选择 **PagerDuty** 作为目标类型
+   - 输入 PagerDuty Events API v2 端点：`https://events.pagerduty.com/v2/enqueue`
+   - 在 **路由密钥** 字段中输入您的 PagerDuty 集成密钥（选择 PagerDuty 作为目标时会显示此字段）
+   - 添加要监控的事件触发器
+   - 点击"测试连接"进行验证
+   - 点击"创建告警"
+
+Opik 会自动将所有告警载荷格式化为 PagerDuty 兼容的事件，包含：
+- 基于事件类型的严重级别
+- 详细的事件信息
+- 用于过滤和路由的自定义字段
+- 用于防止重复事件的去重键
+
+### 使用中间件服务的自定义集成（可选）
+
+对于更复杂的集成或自定义格式化需求，您可以使用中间件服务在将 Opik 的载荷发送到目标之前进行转换。此方法适用于任何目标类型（通用、Slack 或 PagerDuty）。
+
+#### 何时使用中间件
+
+- **自定义消息格式化**：转换载荷结构或添加自定义字段
+- **多目标路由**：根据事件类型将告警发送到不同的端点
+- **附加处理**：使用来自其他系统的数据丰富告警
+- **遗留系统**：将 Opik 告警适配到旧版 Webhook 格式
+
+#### Slack 自定义格式化中间件示例
+
+```python
+import requests
+
+def transform_to_slack(opik_payload):
+    event_type = opik_payload.get('eventType')
+    alert_name = opik_payload['payload']['alertName']
+    event_count = opik_payload['payload']['eventCount']
+    
+    # Custom formatting logic
+    return {
+        "blocks": [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"🚨 {alert_name}"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{event_count}* new `{event_type}` events"
+                }
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"View in Opik: https://www.comet.com/opik"
+                }
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Environment:*\nProduction"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Priority:*\nHigh"
+                    }
+                ]
+            }
+        ]
+    }
+
+@app.route('/opik-to-slack', methods=['POST'])
+def opik_to_slack():
+    opik_data = request.json
+    slack_payload = transform_to_slack(opik_data)
+    
+    # Forward to Slack
+    requests.post(
+        SLACK_WEBHOOK_URL,
+        json=slack_payload
+    )
+    
+    return {'status': 'success'}, 200
+```
+
+#### 中间件方案设置
+
+1. 将中间件服务部署到可公开访问的端点
+2. 在 Opik 中，创建目标类型为 **通用** 的告警
+3. 使用中间件服务 URL 作为端点 URL
+4. 配置中间件以转发到最终目标（Slack、PagerDuty 等）
+
+### 使用无代码自动化平台
+
+[n8n](https://n8n.io)、[Make.com](https://www.make.com) 和 [IFTTT](https://ifttt.com) 等无代码自动化工具提供了一种便捷方式，无需编写或部署代码即可将 Opik 告警连接到其他服务。这些平台可以接收来自 Opik 的 Webhook，应用过滤器或条件，并触发诸如发送 Slack 消息、在 Google Sheets 中记录数据或在 PagerDuty 中创建事件等操作。
+
+<Frame>
+  <img src="/img/production/no_code_automation_flow.png" alt="无代码自动化流程示例" />
+</Frame>
+
+**使用方法：**
+
+1. **创建新的工作流或场景**，并添加 **Webhook 触发器** 节点/模块
+2. **复制平台生成的 Webhook URL**
+3. **在 Opik 中**，创建目标类型为 **通用** 的告警，并粘贴来自自动化平台的 Webhook URL
+4. **通过验证 Authorization 请求头或包含密钥令牌参数来保护连接安全**
+5. **添加过滤器或路由逻辑**以处理来自 Opik 的不同 eventType 值（例如 trace:errors 或 trace:feedback_score）
+6. **串联所需的操作**，如通知、数据库更新或分析跟踪
+
+这些工具还提供内置监控、重试机制和可视化流程编辑器，适合希望安全高效地自动化 Opik 告警处理的技术和非技术用户。当您需要将告警路由到多个目标或应用复杂业务逻辑时，此方案非常适用。
+
+### 自定义仪表盘集成
+
+使用 **通用** 目标类型构建接收告警的自定义监控仪表盘：
+
+```python
+from fastapi import FastAPI, Request
+from datetime import datetime
+
+app = FastAPI()
+
+# In-memory storage (use a database in production)
+alert_history = []
+
+@app.post("/webhook")
+async def receive_webhook(request: Request):
+    data = await request.json()
+    
+    # Store alert
+    alert_history.append({
+        'timestamp': datetime.utcnow(),
+        'event_type': data.get('eventType'),
+        'alert_name': data['payload']['alertName'],
+        'event_count': data['payload']['eventCount'],
+        'data': data
+    })
+    
+    # Keep only last 1000 alerts
+    if len(alert_history) > 1000:
+        alert_history.pop(0)
+    
+    return {"status": "success"}
+
+@app.get("/dashboard")
+async def get_dashboard():
+    # Return aggregated statistics
+    return {
+        'total_alerts': len(alert_history),
+        'by_type': group_by_type(alert_history),
+        'recent_alerts': alert_history[-10:]
+    }
+```
+
+## 支持的事件类型
+
+Opik 支持十种告警事件类型：
+
+### 可观测性事件
+
+**追踪错误阈值超出**
+- **事件类型**：`trace:errors`
+- **触发条件**：在时间窗口内，追踪错误总数超过指定阈值
+- **项目作用域**：可配置为特定项目
+- **配置**：需要阈值（错误计数）和时间窗口（以秒为单位）
+- **载荷**：包含错误计数详情的指标告警载荷
+- **用例**：主动错误监控、检测错误峰值、防止系统降级
+
+**追踪反馈评分阈值超出**
+- **事件类型**：`trace:feedback_score`
+- **触发条件**：在时间窗口内，平均追踪反馈评分满足指定阈值条件
+- **项目作用域**：可配置为特定项目
+- **配置**：需要反馈评分名称、阈值、运算符（`>`、`<`）和时间窗口
+- **载荷**：包含平均反馈评分详情的指标告警载荷
+- **用例**：跟踪模型性能、监控用户满意度、检测质量下降
+
+**线程反馈评分阈值超出**
+- **事件类型**：`trace_thread:feedback_score`
+- **触发条件**：在时间窗口内，平均线程反馈评分满足指定阈值条件
+- **项目作用域**：可配置为特定项目
+- **配置**：需要反馈评分名称、阈值、运算符（`>`、`<`）和时间窗口
+- **载荷**：包含平均反馈评分详情的指标告警载荷
+- **用例**：监控对话质量、跟踪多轮交互、检测线程满意度问题
+
+**护栏触发**
+- **事件类型**：`trace:guardrails_triggered`
+- **触发条件**：追踪的护栏检查失败
+- **项目作用域**：可配置为特定项目
+- **载荷**：护栏结果对象数组
+- **用例**：安全监控、合规跟踪、PII 检测
+
+**成本阈值超出**
+- **事件类型**：`trace:cost`
+- **触发条件**：在时间窗口内，追踪总成本超过指定阈值
+- **项目作用域**：可配置为特定项目
+- **配置**：需要阈值（以货币单位计）和时间窗口（以秒为单位）
+- **载荷**：包含成本详情的指标告警载荷
+- **用例**：预算监控、成本控制、防止失控支出
+
+**延迟阈值超出**
+- **事件类型**：`trace:latency`
+- **触发条件**：在时间窗口内，平均追踪延迟超过指定阈值
+- **项目作用域**：可配置为特定项目
+- **配置**：需要阈值（以秒为单位）和时间窗口（以秒为单位）
+- **载荷**：包含延迟详情的指标告警载荷
+- **用例**：性能监控、SLA 合规、用户体验跟踪
+
+### 提示词工程事件
+
+**新增提示词**
+- **事件类型**：`prompt:created`
+- **触发条件**：在提示词库中创建新提示词
+- **项目作用域**：工作空间范围
+- **载荷**：包含元数据的提示词对象
+- **用例**：跟踪提示词库变更、审计提示词创建
+
+**创建新提示词版本**
+- **事件类型**：`prompt:committed`
+- **触发条件**：为提示词添加新版本（提交）
+- **项目作用域**：工作空间范围
+- **载荷**：包含模板和元数据的提示词版本对象
+- **用例**：监控提示词迭代、跟踪版本历史
+
+**删除提示词**
+- **事件类型**：`prompt:deleted`
+- **触发条件**：从提示词库中删除提示词
+- **项目作用域**：工作空间范围
+- **载荷**：已删除提示词对象数组
+- **用例**：审计提示词删除、维护提示词治理
+
+### 评估事件
+
+**实验完成**
+- **事件类型**：`experiment:finished`
+- **触发条件**：工作空间中的实验完成
+- **项目作用域**：工作空间范围
+- **载荷**：包含完成详情的实验对象数组
+- **用例**：自动化实验通知、跟踪评估完成
+
+### 希望我们支持更多事件类型？
+
+如果您需要更多事件类型以满足您的使用场景，请[在 GitHub 上创建 issue](https://github.com/comet-ml/opik/issues/new?title=Alert%20Event%20Request%3A%20%3Cevent-name%3E&labels=enhancement)告诉我们您希望监控什么。
+
+## Webhook 载荷结构
+
+所有 Webhook 事件遵循统一的载荷结构：
+
+```json
+{
+  "id": "webhook-event-id",
+  "eventType": "trace:errors",
+  "alertId": "alert-uuid",
+  "alertName": "Production Errors Alert",
+  "workspaceId": "workspace-uuid",
+  "createdAt": "2025-01-15T10:30:00Z",
+  "payload": {
+    "alertId": "alert-uuid",
+    "alertName": "Production Errors Alert",
+    "eventType": "trace:errors",
+    "eventIds": ["event-id-1", "event-id-2"],
+    "userNames": ["user@example.com"],
+    "eventCount": 2,
+    "aggregationType": "consolidated",
+    "message": "Alert 'Production Errors Alert': 2 trace:errors events aggregated",
+    "metadata": [
+      {
+        "id": "trace-uuid",
+        "name": "handle_query",
+        "project_id": "project-uuid",
+        "project_name": "Demo Project",
+        "start_time": "2025-01-15T10:29:45Z",
+        "end_time": "2025-01-15T10:29:50Z",
+        "input": {
+          "query": "User question"
+        },
+        "output": {
+          "response": "LLM response"
+        },
+        "error_info": {
+          "exception_type": "ValidationException",
+          "message": "Validation failed",
+          "traceback": "Full traceback..."
+        },
+        "metadata": {
+          "customer_id": "customer_123"
+        },
+        "tags": ["production"]
+      }
+    ]
+  }
+}
+```
+
+### 载荷字段
+
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `id` | string | 唯一的 Webhook 事件标识符 |
+| `eventType` | string | 事件类型（例如 `trace:errors`） |
+| `alertId` | string (UUID) | 告警配置标识符 |
+| `alertName` | string | 告警名称 |
+| `workspaceId` | string | 工作空间标识符 |
+| `createdAt` | string (ISO 8601) | Webhook 创建时间戳 |
+| `payload.eventIds` | array | 聚合的事件 ID 列表 |
+| `payload.userNames` | array | 与事件关联的用户 |
+| `payload.eventCount` | number | 聚合的事件数量 |
+| `payload.aggregationType` | string | 始终为 "consolidated" |
+| `payload.metadata` | array | 事件特定数据（因事件类型而异） |
+
+## 事件特定载荷
+
+### 追踪错误阈值超出载荷
+
+```json
+{
+  "metadata": {
+    "event_type": "TRACE_ERRORS",
+    "metric_name": "trace:errors",
+    "metric_value": "15",
+    "threshold": "10",
+    "window_seconds": "900",
+    "project_ids": "0198ec68-6e06-7253-a20b-d35c9252b9ba,0198ec68-6e06-7253-a20b-d35c9252b9bb",
+    "project_names": "Demo Project,Default Project"
+  }
+}
+```
+
+### 追踪反馈评分阈值超出载荷
+
+```json
+{
+  "metadata": {
+    "event_type": "TRACE_FEEDBACK_SCORE",
+    "metric_name": "trace:feedback_score",
+    "metric_value": "0.7500",
+    "threshold": "0.8000",
+    "window_seconds": "3600",
+    "project_ids": "0198ec68-6e06-7253-a20b-d35c9252b9ba,0198ec68-6e06-7253-a20b-d35c9252b9bb",
+    "project_names": "Demo Project,Default Project"
+  }
+}
+```
+
+### 线程反馈评分阈值超出载荷
+
+```json
+{
+  "metadata": {
+    "event_type": "TRACE_THREAD_FEEDBACK_SCORE",
+    "metric_name": "trace_thread:feedback_score",
+    "metric_value": "0.7500",
+    "threshold": "0.8000",
+    "window_seconds": "3600",
+    "project_ids": "0198ec68-6e06-7253-a20b-d35c9252b9ba,0198ec68-6e06-7253-a20b-d35c9252b9bb",
+    "project_names": "Demo Project,Default Project"
+  }
+}
+```
+
+### 提示词创建载荷
+
+```json
+{
+  "metadata": {
+    "id": "prompt-uuid",
+    "name": "Prompt Name",
+    "description": "Prompt description",
+    "tags": ["system", "assistant"],
+    "created_at": "2025-01-15T10:00:00Z",
+    "created_by": "user@example.com",
+    "last_updated_at": "2025-01-15T10:00:00Z",
+    "last_updated_by": "user@example.com"
+  }
+}
+```
+
+### 提示词版本创建载荷
+
+```json
+{
+  "metadata": {
+    "id": "version-uuid",
+    "prompt_id": "prompt-uuid",
+    "commit": "abc12345",
+    "template": "You are a helpful assistant. {{question}}",
+    "type": "mustache",
+    "metadata": {
+      "version": "1.0",
+      "model": "gpt-4"
+    },
+    "created_at": "2025-01-15T10:00:00Z",
+    "created_by": "user@example.com"
+  }
+}
+```
+
+### 提示词删除载荷
+
+```json
+{
+  "metadata": [
+    {
+      "id": "prompt-uuid",
+      "name": "Prompt Name",
+      "description": "Prompt description",
+      "tags": ["deprecated"],
+      "created_at": "2025-01-10T10:00:00Z",
+      "created_by": "user@example.com",
+      "last_updated_at": "2025-01-15T10:00:00Z",
+      "last_updated_by": "user@example.com",
+      "latest_version": {
+        "id": "version-uuid",
+        "commit": "abc12345",
+        "template": "Template content",
+        "type": "mustache",
+        "created_at": "2025-01-15T10:00:00Z",
+        "created_by": "user@example.com"
+      }
+    }
+  ]
+}
+```
+
+### 护栏触发载荷
+
+```json
+{
+  "metadata": [
+    {
+      "id": "guardrail-check-uuid",
+      "entity_id": "trace-uuid",
+      "project_id": "project-uuid",
+      "project_name": "Project Name",
+      "name": "PII",
+      "result": "failed",
+      "details": {
+        "detected_entities": ["EMAIL", "PHONE_NUMBER"],
+        "message": "PII detected in response: email and phone number"
+      }
+    }
+  ]
+}
+```
+
+### 实验完成载荷
+
+```json
+{
+  "metadata": [
+    {
+      "id": "experiment-uuid",
+      "name": "Experiment Name",
+      "dataset_id": "dataset-uuid",
+      "created_at": "2025-01-15T10:00:00Z",
+      "created_by": "user@example.com",
+      "last_updated_at": "2025-01-15T10:05:00Z",
+      "last_updated_by": "user@example.com",
+      "feedback_scores": [
+        {
+          "name": "accuracy",
+          "value": 0.92
+        },
+        {
+          "name": "latency",
+          "value": 1.5
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 成本阈值超出载荷
+
+```json
+{
+  "metadata": {
+    "event_type": "TRACE_COST",
+    "metric_name": "trace:cost",
+    "metric_value": "150.75",
+    "threshold": "100.00",
+    "window_seconds": "3600",
+    "project_ids": "0198ec68-6e06-7253-a20b-d35c9252b9ba,0198ec68-6e06-7253-a20b-d35c9252b9bb",
+    "project_names": "Demo Project,Default Project"
+  }
+}
+```
+
+### 延迟阈值超出载荷
+
+```json
+{
+  "metadata": {
+    "event_type": "TRACE_LATENCY",
+    "metric_name": "trace:latency",
+    "metric_value": "5250.5000",
+    "threshold": "5",
+    "window_seconds": "1800",
+    "project_ids": "0198ec68-6e06-7253-a20b-d35c9252b9ba,0198ec68-6e06-7253-a20b-d35c9252b9bb",
+    "project_names": "Demo Project,Default Project"
+  }
+}
+```
+
+## 保护 Webhook 安全
+
+### 使用密钥令牌
+
+在 Webhook 配置中添加密钥令牌，以验证传入请求来自 Opik：
+
+1. 生成安全的随机令牌（例如使用 `openssl rand -hex 32`）
+2. 将其添加到告警的"密钥令牌"字段
+3. Opik 会在 `Authorization` 请求头中发送它：`Authorization: Bearer your-secret-token`
+4. 在处理请求之前，在 Webhook 处理器中验证令牌
+
+### 验证示例（Python/Flask）
+
+```python
+from flask import Flask, request, abort
+import hmac
+
+app = Flask(__name__)
+SECRET_TOKEN = "your-secret-token-here"
+
+@app.route('/webhook', methods=['POST'])
+def handle_webhook():
+    # Verify the secret token
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        abort(401, 'Missing or invalid Authorization header')
+    
+    token = auth_header.split(' ', 1)[1]
+    if not hmac.compare_digest(token, SECRET_TOKEN):
+        abort(401, 'Invalid secret token')
+    
+    # Process the webhook
+    data = request.json
+    event_type = data.get('eventType')
+    
+    # Handle different event types
+    if event_type == 'trace:errors':
+        handle_trace_errors(data)
+    elif event_type == 'trace:feedback_score':
+        handle_feedback_score(data)
+    elif event_type == 'experiment:finished':
+        handle_experiment_finished(data)
+    
+    return {'status': 'success'}, 200
+```
+
+### 使用自定义请求头
+
+您可以添加自定义请求头用于额外的认证或路由：
+
+```python
+# In your webhook handler
+api_key = request.headers.get('X-API-Key')
+environment = request.headers.get('X-Environment')
+
+if api_key != EXPECTED_API_KEY:
+    abort(401, 'Invalid API key')
+
+# Route to different handlers based on environment
+if environment == 'production':
+    handle_production_webhook(data)
+else:
+    handle_staging_webhook(data)
+```
+
+## 故障排除
+
+### Webhook 未送达
+
+**检查端点可访问性：**
+- 确保您的端点可公开访问（如果使用云服务）
+- 验证防火墙规则允许传入连接
+- 使用 curl 测试端点：`curl -X POST -H "Content-Type: application/json" -d '{"test": "data"}' https://your-endpoint.com/webhook`
+
+**检查 Webhook 配置：**
+- 验证 URL 以 `http://` 或 `https://` 开头
+- 检查端点是否返回 2xx 状态码
+- 检查自定义请求头是否有语法错误
+
+**检查告警状态：**
+- 确保告警已启用
+- 验证至少配置了一个触发器
+- 检查项目作用域是否与您的事件匹配（对于可观测性事件）
+
+### Webhook 超时
+
+Opik 期望 Webhook 在配置的超时时间内响应（通常为 30 秒）。如果您的端点需要更长时间：
+
+**优化处理器：**
+- 立即返回 200 响应
+- 在后台异步处理 Webhook
+- 使用队列系统（例如 Celery、RabbitMQ）处理长时间运行的任务
+
+**异步处理示例：**
+```python
+from flask import Flask
+from threading import Thread
+
+app = Flask(__name__)
+
+def process_webhook_async(data):
+    # Long-running processing
+    send_to_slack(data)
+    update_dashboard(data)
+    log_to_database(data)
+
+@app.route('/webhook', methods=['POST'])
+def handle_webhook():
+    data = request.json
+    
+    # Start background processing
+    thread = Thread(target=process_webhook_async, args=(data,))
+    thread.start()
+    
+    # Return immediately
+    return {'status': 'accepted'}, 200
+```
+
+### 重复 Webhook
+
+如果收到重复的 Webhook：
+
+**检查重试配置：**
+- Opik 使用指数退避策略重试失败的 Webhook
+- 确保端点在成功时返回 2xx 状态码
+- 使用 Webhook 的 `id` 字段实现幂等性
+
+**幂等处理器示例：**
+```python
+processed_webhook_ids = set()
+
+@app.route('/webhook', methods=['POST'])
+def handle_webhook():
+    data = request.json
+    webhook_id = data.get('id')
+    
+    # Skip if already processed
+    if webhook_id in processed_webhook_ids:
+        return {'status': 'already_processed'}, 200
+    
+    # Process webhook
+    process_alert(data)
+    
+    # Mark as processed
+    processed_webhook_ids.add(webhook_id)
+    
+    return {'status': 'success'}, 200
+```
+
+### 事件未触发告警
+
+**检查事件类型匹配：**
+- 验证告警是否为此事件类型配置了触发器
+- 对于可观测性事件，检查项目作用域配置
+- 检查触发器配置中的项目 ID
+
+**检查工作空间上下文：**
+- 确保事件记录到正确的工作空间
+- 验证告警与事件在同一工作空间
+
+**检查告警评估：**
+- 查看后端日志中的告警评估消息
+- 确认事件正在发布到事件总线
+- 检查 Redis 中的告警桶（自托管部署）
+
+### SSL 证书错误
+
+如果在日志中看到 SSL 证书错误：
+
+**用于开发/测试：**
+- 使用正确配置的自签名证书
+- 或使用 HTTP 端点（不建议用于生产环境）
+
+**用于生产环境：**
+- 使用受信任 CA 颁发的有效 SSL 证书
+- 确保证书链完整
+- 检查证书过期日期
+- 使用 Let's Encrypt 等服务获取免费 SSL 证书
+
+## 架构与内部机制
+
+了解 Opik 的告警架构有助于故障排除和优化。
+
+### 告警工作原理
+
+Opik 告警系统监控工作空间中的特定事件，并将合并的 Webhook 通知发送到配置的端点。流程如下：
+
+1. **事件发生**：工作空间中发生事件（例如追踪错误、提示词创建、护栏触发、新反馈评分）
+2. **告警评估**：系统检查是否有匹配此事件类型的已启用告警，并评估阈值条件（对于基于指标的告警，如错误、成本、延迟和反馈评分）
+3. **事件聚合**：多个事件在短时间窗口内聚合（防抖）
+4. **Webhook 投递**：合并的 HTTP POST 请求发送到您的 Webhook URL
+5. **重试处理**：失败的请求使用指数退避策略自动重试
+
+#### 事件防抖
+
+为防止 Webhook 端点过载，Opik 会在短时间窗口（通常 30-60 秒）内聚合同一类型的多个事件，并作为单个合并的 Webhook 发送。这对于反馈评分等高频事件尤为有用。
+
+### 事件流
+
+```
+1. 事件发生（例如记录追踪错误）
+   ↓
+2. 服务将 AlertEvent 发布到 EventBus
+   ↓
+3. AlertEventListener 接收事件
+   ↓
+4. AlertEventEvaluationService 根据已配置的告警进行评估
+   ↓
+5. 匹配的事件添加到 AlertBucketService（Redis）
+   ↓
+6. AlertJob（每 5 秒运行一次）处理就绪的桶
+   ↓
+7. WebhookPublisher 发布到 Redis 流
+   ↓
+8. WebhookSubscriber 从流中消费
+   ↓
+9. WebhookHttpClient 发送 HTTP POST 请求
+   ↓
+10. 失败时使用指数退避重试
+```
+
+### 防抖机制
+
+Opik 使用基于 Redis 的桶来聚合事件：
+
+- **桶键格式**：`alert_bucket:{alertId}:{eventType}`
+- **窗口大小**：可配置（默认 30-60 秒）
+- **索引**：Redis 有序集，用于高效检索桶
+- **TTL**：桶在处理后自动过期
+
+这可以防止单个事件使 Webhook 端点过载，并降低高频事件的成本。
+
+### 重试策略
+
+失败的 Webhook 会自动重试：
+
+- **最大重试次数**：可配置（默认 3 次）
+- **初始延迟**：1 秒
+- **最大延迟**：60 秒
+- **退避策略**：带抖动的指数退避
+- **可重试错误**：5xx 状态码、网络错误
+- **不可重试错误**：4xx 状态码（429 除外）
+
+## 最佳实践
+
+### 告警设计
+
+**创建专注的告警：**
+- 为不同目的使用单独的告警（例如一个用于错误，一个用于反馈）
+- 配置项目作用域以避免测试项目的干扰
+- 使用描述性名称说明告警用途
+
+**优化工作流程：**
+- 将严重错误发送到 PagerDuty 或值班系统
+- 将反馈评分路由到分析平台
+- 将提示词变更发送到审计日志或 Slack 频道
+
+**充分测试：**
+- 启用告警前使用"测试连接"功能
+- 在端点日志中监控 Webhook 投递
+- 从小范围项目作用域开始，逐步扩展
+
+### Webhook 端点设计
+
+**优雅处理故障：**
+- 立即返回 2xx 状态码
+- 异步处理 Webhook
+- 在处理器中实现重试逻辑
+- 对永久性失败使用死信队列
+
+**实现安全性：**
+- 始终验证密钥令牌
+- 使用带有有效证书的 HTTPS 端点
+- 实现速率限制以防止滥用
+- 记录所有 Webhook 尝试以供审计
+
+**监控性能：**
+- 跟踪 Webhook 处理时间
+- 对处理器失败发出告警
+- 监控异步处理的队列长度
+- 设置死信队列监控
+
+### 扩展性考量
+
+**对于高流量工作空间：**
+- 使用事件防抖（内置功能）
+- 在处理器中实现批处理
+- 使用消息队列进行异步处理
+- 考虑使用无服务器函数（AWS Lambda、Cloud Functions）
+
+**对于多项目场景：**
+- 使用作用域配置创建项目特定的告警
+- 使用自定义请求头路由到不同的处理器
+- 在 Webhook 处理器中实现过滤
+- 考虑为不同事件类型使用单独的端点
+
+## 后续步骤
+
+- 为生产错误监控配置第一个告警
+- 设置 Slack 集成以接收团队通知
+- 探索[在线评估规则](/production/online-evaluation/rules)以实现自动化模型监控
+- 了解[护栏](/production/gateway-guardrails/guardrails)以实现主动风险检测
+- 查看[生产监控](/tracing/dashboards/production_monitoring)最佳实践

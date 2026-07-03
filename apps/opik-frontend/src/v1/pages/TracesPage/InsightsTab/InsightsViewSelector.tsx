@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChartLine, ChevronDown, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { Button } from "@/ui/button";
@@ -57,13 +58,13 @@ const getWidgetCount = (dashboard: Dashboard): number => {
   }
 };
 
-const formatDashboardDescription = (dashboard: Dashboard): string => {
+const formatDashboardDescription = (dashboard: Dashboard, t: (key: string, opts?: Record<string, unknown>) => string): string => {
   const widgetCount = getWidgetCount(dashboard);
   const lastUpdated = dashboard.last_updated_at
     ? formatDate(dashboard.last_updated_at)
     : "";
 
-  return [`${widgetCount} widget${widgetCount !== 1 ? "s" : ""}`, lastUpdated]
+  return [t("projectViews.widgetCount", { count: widgetCount }), lastUpdated]
     .filter(Boolean)
     .join(", ");
 };
@@ -79,10 +80,10 @@ const TEMPLATE_OPTIONS: InsightsViewOption[] = PROJECT_TEMPLATE_LIST.map(
   }),
 );
 
-const buildDashboardOption = (dashboard: Dashboard): InsightsViewOption => ({
+const buildDashboardOption = (dashboard: Dashboard, t: (key: string, opts?: Record<string, unknown>) => string): InsightsViewOption => ({
   value: dashboard.id,
   label: dashboard.name,
-  description: formatDashboardDescription(dashboard),
+  description: formatDashboardDescription(dashboard, t),
   icon: CUSTOM_VIEW_ICON,
   iconColor: CUSTOM_VIEW_ICON_COLOR,
   isBuiltIn: false,
@@ -94,6 +95,7 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
   onViewCreated,
   onViewDeleted,
 }) => {
+  const { t } = useTranslation();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [search, setSearch] = useState("");
   const resetDialogKeyRef = useRef(0);
@@ -132,8 +134,8 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
   );
 
   const allOptions = useMemo(
-    () => [...TEMPLATE_OPTIONS, ...dashboards.map(buildDashboardOption)],
-    [dashboards],
+    () => [...TEMPLATE_OPTIONS, ...dashboards.map((d) => buildDashboardOption(d, t))],
+    [dashboards, t],
   );
 
   const searchLower = search.toLowerCase();
@@ -147,7 +149,7 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
 
   const selectedIcon = selectedOption?.icon ?? CUSTOM_VIEW_ICON;
   const selectedIconColor = selectedOption?.iconColor ?? CUSTOM_VIEW_ICON_COLOR;
-  const selectedName = selectedOption?.label ?? "Select a view";
+  const selectedName = selectedOption?.label ?? t("projectViews.selectAView");
 
   const renderTrigger = () => (
     <TooltipWrapper content={selectedName}>
@@ -269,7 +271,7 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
             <SearchInput
               searchText={search}
               setSearchText={setSearch}
-              placeholder="Search"
+              placeholder={t("projectViews.search")}
               variant="ghost"
             />
           </div>
@@ -279,7 +281,7 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
             {!hasResults ? (
               <div className="flex min-h-24 flex-col items-center justify-center px-6 py-4">
                 <div className="comet-body-s text-center text-muted-slate">
-                  No search results
+                  {t("projectViews.noSearchResults")}
                 </div>
               </div>
             ) : (
@@ -323,7 +325,7 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
           <Separator className="my-1" />
           <ListAction onClick={handleCreateNew}>
             <Plus className="size-4 shrink-0" />
-            Add new
+            {t("projectViews.addNew")}
           </ListAction>
         </PopoverContent>
       </Popover>
@@ -341,9 +343,9 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
         open={deleteState.isOpen}
         setOpen={(open) => setDeleteState({ isOpen: open })}
         onConfirm={confirmDelete}
-        title="Delete view"
-        description="Are you sure you want to delete this view? This action cannot be undone."
-        confirmText="Delete"
+        title={t("projectViews.deleteView")}
+        description={t("projectViews.deleteViewDescription")}
+        confirmText={t("projectViews.deleteConfirm")}
         confirmButtonVariant="destructive"
       />
     </>

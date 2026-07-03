@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import isNumber from "lodash/isNumber";
+import { useTranslation } from "react-i18next";
 import GitHubIcon from "@/icons/github.svg?react";
 
 import useGitHubStarts from "@/api/external/useGitHubStarts";
@@ -14,6 +15,7 @@ export interface GitHubStarListItemProps {
 const GitHubStarListItem: React.FC<GitHubStarListItemProps> = ({
   expanded,
 }) => {
+  const { t } = useTranslation("navigation");
   const { data } = useGitHubStarts({});
 
   const starCount = useMemo(() => {
@@ -40,7 +42,9 @@ const GitHubStarListItem: React.FC<GitHubStarListItemProps> = ({
           <GitHubIcon className="size-3" />
           {expanded && (
             <>
-              <span className="comet-body-xs-accented">Star</span>
+              <span className="comet-body-xs-accented">
+                {t("githubStar.star")}
+              </span>
               <span className="rounded bg-chart-gray-light px-1 text-[10px] font-medium leading-4 text-chart-gray-dark">
                 {starCount}
               </span>
@@ -57,7 +61,7 @@ const GitHubStarListItem: React.FC<GitHubStarListItemProps> = ({
 
   return (
     <TooltipWrapper
-      content={`GitHub star ${starCount}`}
+      content={t("githubStar.gitHubStar", { count: starCount })}
       side="right"
       delayDuration={0}
     >

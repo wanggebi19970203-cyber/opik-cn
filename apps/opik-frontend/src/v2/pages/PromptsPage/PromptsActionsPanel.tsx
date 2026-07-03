@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -14,6 +15,7 @@ type PromptsActionsPanelsProps = {
 const PromptsActionsPanel: React.FunctionComponent<
   PromptsActionsPanelsProps
 > = ({ prompts }) => {
+  const { t } = useTranslation("pages/prompts");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !prompts?.length;
@@ -33,12 +35,12 @@ const PromptsActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deletePromptsHandler}
-        title="Delete prompts"
-        description="Deleting these prompts will also remove all associated commits. This action cannot be undone. Are you sure you want to continue?"
-        confirmText="Delete prompts"
+        title={t("batchDelete.title")}
+        description={t("batchDelete.description")}
+        confirmText={t("batchDelete.confirmText")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("batchDelete.tooltip")}>
         <Button
           variant="outline"
           size="icon-sm"

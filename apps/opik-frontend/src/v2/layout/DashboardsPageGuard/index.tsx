@@ -8,7 +8,7 @@ const DashboardsPageGuard = () => {
 
   return (
     <NoAccessPageGuard
-      resourceName="dashboards"
+      resourceNameKey="navigation.noAccess.resourceDashboards"
       canViewPage={canViewDashboards}
     />
   );

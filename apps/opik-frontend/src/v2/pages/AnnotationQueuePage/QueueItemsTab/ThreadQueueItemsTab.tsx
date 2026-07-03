@@ -14,6 +14,7 @@ import {
   RowSelectionState,
 } from "@tanstack/react-table";
 import isNumber from "lodash/isNumber";
+import { useTranslation } from "react-i18next";
 
 import {
   COLUMN_COMMENTS_ID,
@@ -69,10 +70,10 @@ import { generateAnnotationQueueIdFilter } from "@/lib/filters";
 import SelectBox, { SelectBoxProps } from "@/shared/SelectBox/SelectBox";
 import { useTruncationEnabled } from "@/contexts/server-sync-provider";
 
-const SHARED_COLUMNS: ColumnData<Thread>[] = [
+const getSharedColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: "first_message",
-    label: "First message",
+    label: t("annotationQueue.columns.firstMessage"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -82,7 +83,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "last_message",
-    label: "Last message",
+    label: t("annotationQueue.columns.lastMessage"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -92,40 +93,40 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "number_of_messages",
-    label: "Message count",
+    label: t("annotationQueue.columns.messageCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       isNumber(row.number_of_messages) ? `${row.number_of_messages}` : "-",
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("annotationQueue.columns.createdAt"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("annotationQueue.columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     sortable: true,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("annotationQueue.columns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationCell as never,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("annotationQueue.columns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("annotationQueue.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -134,7 +135,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("annotationQueue.columns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -143,7 +144,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
 ];
 
-const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
     label: "ID",
@@ -151,10 +152,10 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
     cell: IdCell as never,
     sortable: true,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: `${COLUMN_USAGE_ID}.total_tokens`,
-    label: "Total tokens",
+    label: t("annotationQueue.columns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -163,7 +164,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("annotationQueue.columns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_thread_cost_estimated],
@@ -171,27 +172,27 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("annotationQueue.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_COMMENTS_ID,
-    label: "Comments",
+    label: t("annotationQueue.columns.comments"),
     type: COLUMN_TYPE.string,
     cell: CommentsCell as never,
   },
 ];
 
-const FILTER_COLUMNS: ColumnData<Thread>[] = [
+const getFilterColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
     label: "ID",
     type: COLUMN_TYPE.string,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("annotationQueue.columns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
@@ -240,6 +241,7 @@ interface ThreadQueueItemsTabProps {
 const ThreadQueueItemsTab: React.FunctionComponent<
   ThreadQueueItemsTabProps
 > = ({ annotationQueue }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const truncationEnabled = useTruncationEnabled();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -330,7 +332,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
             options: (annotationQueue.feedback_definition_names ?? [])
               .sort()
               .map((key) => ({ value: key, label: key })),
-            placeholder: "Select score",
+            placeholder: t("annotationQueue.filters.selectScore"),
           },
         },
         ...getTagsFilterConfig({
@@ -419,7 +421,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
 
   const columns = useMemo(() => {
     const convertedColumns = convertColumnDataToColumn<Thread, Thread>(
-      DEFAULT_COLUMNS,
+      getDefaultColumns(t),
       {
         columnsOrder,
         selectedColumns,
@@ -443,6 +445,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
       }),
     ];
   }, [
+    t,
     sortableBy,
     columnsOrder,
     selectedColumns,
@@ -472,13 +475,13 @@ const ThreadQueueItemsTab: React.FunctionComponent<
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Feedback scores",
+        title: t("annotationQueue.columnSections.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
       },
     ];
-  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
+  }, [t, scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
 
   const isTableLoading = isPending || (isPlaceholderData && rows.length === 0);
 
@@ -493,12 +496,12 @@ const ThreadQueueItemsTab: React.FunctionComponent<
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by ID"
+            placeholder={t("annotationQueue.search.byId")}
             className="w-[320px]"
             dimension="sm"
           />
           <FiltersButton
-            columns={FILTER_COLUMNS}
+            columns={getFilterColumns(t)}
             filters={filters}
             onChange={setFilters}
             config={filtersConfig as never}
@@ -516,7 +519,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
             setType={setHeight}
           />
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={getDefaultColumns(t)}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}
@@ -541,8 +544,8 @@ const ThreadQueueItemsTab: React.FunctionComponent<
         columnPinning={DEFAULT_COLUMN_PINNING}
         noData={
           <DataTableEmptyContent
-            title="No items to review"
-            description="Add threads to this queue to start annotating."
+            title={t("annotationQueue.emptyState.noItemsToReview")}
+            description={t("annotationQueue.emptyState.addThreadsDescription")}
           >
             {annotationQueue.project_id && (
               <Link
@@ -554,7 +557,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
                 search={{ logsType: LOGS_TYPE.threads }}
                 className="comet-body-s inline-flex items-center gap-1 underline underline-offset-4 hover:text-primary"
               >
-                Go to threads
+                {t("annotationQueue.noItems.goToThreads")}
                 <ExternalLink className="size-3" />
               </Link>
             )}

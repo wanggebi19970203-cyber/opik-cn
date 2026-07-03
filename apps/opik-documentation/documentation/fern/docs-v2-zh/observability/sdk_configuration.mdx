@@ -1,0 +1,542 @@
+---
+headline: SDK 配置 | Opik 文档
+og:description: 有效配置 Python 和 TypeScript SDK。设置您的 API 密钥和实例 URL 以实现无缝路由和身份验证
+og:site_name: Opik 文档
+og:title: SDK 配置指南 - Opik
+title: SDK 配置
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/sdk_configuration
+---
+
+# SDK 配置
+
+本指南涵盖 Python 和 TypeScript SDK 的配置，包括基本设置、高级选项和调试功能。
+
+## 入门
+
+### Python SDK
+
+配置 Python SDK 的推荐方法是使用 `opik configure` 命令。这将提示您设置 API 密钥和 Opik 实例 URL（如适用）以确保正确的路由和身份验证。所有详细信息将保存到配置文件中。
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+
+如果您使用的是平台的云版本，可以通过运行以下命令配置 SDK：
+
+```python
+import opik
+
+opik.configure(use_local=False)
+```
+
+您也可以通过从命令行调用 [`configure`](https://www.comet.com/docs/opik/python-sdk-reference/cli.html) 来配置 SDK：
+
+```bash
+opik configure
+```
+
+    </Tab>
+    <Tab value="Self-hosting" title="自托管">
+
+如果您是自托管平台，可以通过运行以下命令配置 SDK：
+
+```python
+import opik
+
+opik.configure(use_local=True)
+```
+
+或从命令行：
+
+```bash
+opik configure --use_local
+```
+
+    </Tab>
+
+</Tabs>
+
+`configure` 方法将提示您输入必要的信息并将其保存到配置文件（`~/.opik.config`）。使用命令行版本时，您可以使用 `-y` 或 `--yes` 标志自动批准任何确认提示：
+
+```bash
+opik configure --yes
+```
+
+### TypeScript SDK
+
+对于 TypeScript SDK，配置通过环境变量、构造函数选项或配置文件完成。
+
+**安装：**
+
+```bash
+npm install opik
+```
+
+**基本配置：**
+
+您可以在 `.env` 文件中使用环境变量配置 Opik 客户端：
+
+```bash
+OPIK_API_KEY="your-api-key"
+OPIK_URL_OVERRIDE="https://www.comet.com/opik/api"
+OPIK_PROJECT_NAME="your-project-name"
+OPIK_WORKSPACE="your-workspace-name"
+```
+
+或直接将配置传递给构造函数：
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik({
+  apiKey: "<your-api-key>",
+  apiUrl: "https://www.comet.com/opik/api",
+  projectName: "<your-project-name>",
+  workspaceName: "<your-workspace-name>",
+});
+```
+
+## 配置方法
+
+两种 SDK 都支持多种配置方法，具有不同的优先级顺序。
+
+### 配置优先级
+
+**Python SDK：** 构造函数选项 → 环境变量 → 配置文件 → 默认值
+
+**TypeScript SDK：** 构造函数选项 → 环境变量 → 配置文件（`~/.opik.config`）→ 默认值
+
+### 环境变量
+
+两种 SDK 都支持环境变量进行配置。以下是可用选项的比较：
+
+| 配置 | Python 环境变量 | TypeScript 环境变量 | 描述 |
+| --- | --- | --- | --- |
+| API 密钥 | `OPIK_API_KEY` | `OPIK_API_KEY` | Opik Cloud 的 API 密钥 |
+| URL 覆盖 | `OPIK_URL_OVERRIDE` | `OPIK_URL_OVERRIDE` | Opik 服务器 URL |
+| 项目名称 | `OPIK_PROJECT_NAME` | `OPIK_PROJECT_NAME` | 项目名称 |
+| 工作区 | `OPIK_WORKSPACE` | `OPIK_WORKSPACE` | 工作区名称 |
+| 配置路径 | `OPIK_CONFIG_PATH` | `OPIK_CONFIG_PATH` | 自定义配置文件位置 |
+| 默认 LLM | `OPIK_DEFAULT_LLM` | N/A | Python 评估/模拟助手使用的默认模型 |
+| 禁用追踪 | `OPIK_TRACK_DISABLE` | `OPIK_TRACK_DISABLE` | 禁用追踪和 span 的追踪 |
+| 刷新超时 | `OPIK_DEFAULT_FLUSH_TIMEOUT` | N/A | 默认刷新超时（仅 Python） |
+| TLS 证书 | `OPIK_CHECK_TLS_CERTIFICATE` | N/A | 检查 TLS 证书（仅 Python） |
+| 批次延迟 | N/A | `OPIK_BATCH_DELAY_MS` | 批次延迟（毫秒）（仅 TypeScript） |
+| 保持直到刷新 | N/A | `OPIK_HOLD_UNTIL_FLUSH` | 保持数据直到手动刷新（仅 TypeScript） |
+| 控制台日志级别 | `OPIK_CONSOLE_LOGGING_LEVEL` | N/A | 控制台日志级别（仅 Python） |
+| 文件日志级别 | `OPIK_FILE_LOGGING_LEVEL` | N/A | 文件日志级别（仅 Python） |
+| 优化器日志级别 | `OPIK_OPTIMIZER_LOG_LEVEL` | N/A | Opik Optimizer SDK 日志级别（仅 Python） |
+| 日志级别 | N/A | `OPIK_LOG_LEVEL` | 日志级别（仅 TypeScript） |
+
+### 使用 .env 文件
+
+两种 SDK 都支持 `.env` 文件来管理环境变量。这是避免硬编码密钥并使配置更便于移植的好做法。
+
+**对于 Python 项目**，安装 `python-dotenv`：
+
+```shell
+pip install python-dotenv
+```
+
+**对于 TypeScript 项目**，SDK 会自动加载 `dotenv`。
+
+在项目根目录创建 `.env` 文件：
+
+```dotenv
+# Opik Configuration
+OPIK_API_KEY="YOUR_OPIK_API_KEY"
+OPIK_URL_OVERRIDE="https://www.comet.com/opik/api"
+OPIK_PROJECT_NAME="your-project-name"
+OPIK_WORKSPACE="your-workspace-name"
+OPIK_DEFAULT_LLM="openai/gpt-5-nano"
+
+# LLM Provider API Keys (if needed)
+OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+
+# Logging Configuration (see Debug Mode and Logging section below)
+OPIK_CONSOLE_LOGGING_LEVEL="WARNING"  # Python: Control console output (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+OPIK_FILE_LOGGING_LEVEL="DEBUG"       # Python: Enable file logging
+OPIK_LOG_LEVEL="DEBUG"                # TypeScript: Control log level
+```
+
+**Python 使用 .env 文件：**
+
+```python
+from dotenv import load_dotenv
+
+load_dotenv()  # Load before importing opik
+
+import opik
+
+# Your Opik code here
+```
+
+**TypeScript 使用 .env 文件：**
+
+TypeScript SDK 会自动加载 `.env` 文件，因此无需额外设置：
+
+```typescript
+import { Opik } from "opik";
+
+// Configuration is automatically loaded from .env
+const client = new Opik();
+```
+
+### 使用配置文件
+
+两种 SDK 都支持配置文件用于持久设置。
+
+#### Python SDK 配置文件
+
+Python SDK 使用 [TOML](https://github.com/toml-lang/toml) 格式。`configure` 方法会自动创建此文件，但您也可以手动创建：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+
+```toml
+[opik]
+url_override = https://www.comet.com/opik/api
+api_key = <API Key>
+workspace = <Workspace name>
+project_name = <Project Name>
+```
+
+    </Tab>
+    <Tab value="Self-hosting" title="自托管">
+
+```toml
+[opik]
+url_override = http://localhost:5173/api
+workspace = default
+project_name = <Project Name>
+```
+
+    </Tab>
+
+</Tabs>
+
+#### TypeScript SDK 配置文件
+
+TypeScript SDK 也支持与 Python SDK 相同的 `~/.opik.config` 文件格式。配置文件内部使用 INI 格式，但共享相同的结构：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+
+```ini
+[opik]
+url_override = https://www.comet.com/opik/api
+api_key = <API Key>
+workspace = <Workspace name>
+project_name = <Project Name>
+```
+
+    </Tab>
+    <Tab value="Self-hosting" title="自托管">
+
+```ini
+[opik]
+url_override = http://localhost:5173/api
+workspace = default
+project_name = <Project Name>
+```
+
+    </Tab>
+
+</Tabs>
+
+<Tip>
+默认情况下，两种 SDK 都会在主目录（`~/.opik.config`）中查找配置文件。您可以通过设置 `OPIK_CONFIG_PATH` 环境变量来指定不同的位置。
+</Tip>
+
+## 调试模式和日志记录
+
+两种 SDK 都提供调试功能，用于排查集成问题。
+
+### Python SDK 日志记录
+
+Python SDK 提供两个独立的日志通道，可以独立配置：
+
+- **控制台日志**：控制输出到控制台的日志（stdout/stderr）
+- **文件日志**：控制输出到文件的日志
+
+两个通道都支持以下日志级别：`DEBUG`、`INFO`（默认）、`WARNING`、`ERROR`、`CRITICAL`
+
+#### 控制控制台日志
+
+要控制控制台日志级别，请在导入 `opik` 之前设置 `OPIK_CONSOLE_LOGGING_LEVEL` 环境变量：
+
+```shell
+# Reduce console output to warnings and errors only
+export OPIK_CONSOLE_LOGGING_LEVEL="WARNING"
+```
+
+**控制台的可用日志级别：**
+
+- `DEBUG`：显示所有调试信息
+- `INFO`：显示信息性消息（默认）
+- `WARNING`：仅显示警告和错误
+- `ERROR`：仅显示错误和严重消息
+- `CRITICAL`：仅显示严重错误
+
+**与 .env 文件一起使用：**
+
+```dotenv
+# Console Logging (reduce noise)
+OPIK_CONSOLE_LOGGING_LEVEL="WARNING"
+```
+
+<Note>
+Opik SDK 管理自己的日志配置。通过 Python 标准的 `logging.getLogger("opik").setLevel()` 设置日志级别不起作用。始终使用 `OPIK_CONSOLE_LOGGING_LEVEL` 环境变量来控制控制台输出。
+</Note>
+
+#### 启用文件日志进行调试
+
+要启用带有文件日志的调试模式，请在导入 `opik` 之前设置这些环境变量：
+
+```shell
+export OPIK_FILE_LOGGING_LEVEL="DEBUG"
+export OPIK_LOGGING_FILE=".tmp/opik-debug-$(date +%Y%m%d).log"
+```
+
+**与 .env 文件一起使用：**
+
+```dotenv
+# File Logging (for debug)
+OPIK_FILE_LOGGING_LEVEL="DEBUG"
+OPIK_LOGGING_FILE=".tmp/opik-debug.log"
+```
+
+**结合控制台和文件日志的示例：**
+
+```dotenv
+# Opik Logging Configuration
+
+# Console: Show only warnings and errors
+OPIK_CONSOLE_LOGGING_LEVEL="WARNING"
+
+# File: Log everything for debugging
+OPIK_FILE_LOGGING_LEVEL="DEBUG"
+OPIK_LOGGING_FILE=".tmp/opik-debug.log"
+```
+
+然后在您的 Python 脚本中：
+
+```python
+from dotenv import load_dotenv
+
+load_dotenv()  # Load before importing opik
+
+import opik
+
+# Your Opik code here - console will be quiet, debug logs go to file
+```
+
+### TypeScript SDK 调试模式
+
+TypeScript SDK 使用结构化日志记录，具有可配置的级别：
+
+**可用日志级别：** `SILLY`、`TRACE`、`DEBUG`、`INFO`（默认）、`WARN`、`ERROR`、`FATAL`
+
+**启用调试日志：**
+
+```bash
+export OPIK_LOG_LEVEL="DEBUG"
+```
+
+**或在 .env 文件中：**
+
+```dotenv
+OPIK_LOG_LEVEL="DEBUG"
+```
+
+**编程控制：**
+
+```typescript
+import { setLoggerLevel, disableLogger } from "opik";
+
+// Set log level
+setLoggerLevel("DEBUG");
+
+// Disable logging entirely
+disableLogger();
+```
+
+## 高级配置
+
+### Python SDK 高级选项
+
+#### HTTP 客户端配置
+
+Opik Python SDK 使用 [httpx](https://www.python-httpx.org/) 库发出 HTTP 请求。应用于 HTTP 客户端的默认配置适用于大多数用例，但您可以通过注册自定义 httpx 客户端钩子来自定义它，如以下示例：
+
+```python
+import opik.hooks
+
+def custom_auth_client_hook(client: httpx.Client) -> None:
+    client.auth = CustomAuth()
+
+hook = opik.hooks.HttpxClientHook(
+    client_init_arguments={"trust_env": False},
+    client_modifier=custom_auth_client_hook,
+)
+opik.hooks.add_httpx_client_hook(hook)
+
+# Use the Opik SDK as usual
+
+```
+
+<Icon icon="warning" color="#DB0030" /> 确保在使用 Opik SDK 之前添加钩子。
+
+### TypeScript SDK 高级选项
+
+#### 批次配置
+
+TypeScript SDK 使用批次处理以获得最佳性能。您可以配置批次行为：
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik({
+  // Custom batching delay (default: 300ms)
+  batchDelayMs: 1000,
+
+  // Hold data until manual flush (default: false)
+  holdUntilFlush: true,
+
+  // Custom headers
+  headers: {
+    "Custom-Header": "value",
+  },
+});
+
+// Manual flushing
+await client.flush();
+```
+
+#### 全局刷新控制
+
+```typescript
+import { flushAll } from "opik";
+
+// Flush all instantiated clients
+await flushAll();
+```
+
+## 配置参考
+
+### Python SDK 配置值
+
+| 配置名称 | 环境变量 | 描述 |
+| --- | --- | --- |
+| url_override | `OPIK_URL_OVERRIDE` | Opik 服务器的 URL - 默认为 `https://www.comet.com/opik/api` |
+| api_key | `OPIK_API_KEY` | API 密钥 - 仅 Opik Cloud 需要 |
+| workspace | `OPIK_WORKSPACE` | 工作区名称 - 可选 |
+| project_name | `OPIK_PROJECT_NAME` | 要使用的项目名称 |
+| N/A | `OPIK_DEFAULT_LLM` | Python 评估/模拟助手使用的默认 LLM - 默认为 `openai/gpt-5-nano` |
+| opik_track_disable | `OPIK_TRACK_DISABLE` | 禁用追踪和 span 的追踪 - 默认为 `false` |
+| default_flush_timeout | `OPIK_DEFAULT_FLUSH_TIMEOUT` | 默认刷新超时 - 默认为无超时 |
+| opik_check_tls_certificate | `OPIK_CHECK_TLS_CERTIFICATE` | 检查 TLS 证书 - 默认为 `true` |
+| console_logging_level | `OPIK_CONSOLE_LOGGING_LEVEL` | 控制台日志级别 - 默认为 `INFO` |
+| file_logging_level | `OPIK_FILE_LOGGING_LEVEL` | 文件日志级别 - 默认未配置 |
+| logging_file | `OPIK_LOGGING_FILE` | 写入日志的文件 - 默认为 `opik.log` |
+
+### TypeScript SDK 配置值
+
+| 配置名称 | 环境变量 | 描述 |
+| --- | --- | --- |
+| apiUrl | `OPIK_URL_OVERRIDE` | Opik 服务器的 URL - 默认为 `http://localhost:5173/api` |
+| apiKey | `OPIK_API_KEY` | API 密钥 - Opik Cloud 需要 |
+| workspaceName | `OPIK_WORKSPACE` | 工作区名称 - 可选 |
+| projectName | `OPIK_PROJECT_NAME` | 项目名称 - 默认为 `Default Project` |
+| batchDelayMs | `OPIK_BATCH_DELAY_MS` | 批次延迟（毫秒） - 默认为 `300` |
+| holdUntilFlush | `OPIK_HOLD_UNTIL_FLUSH` | 保持数据直到手动刷新 - 默认为 `false` |
+| trackDisable | `OPIK_TRACK_DISABLE` | 禁用追踪和 span 的追踪 - 默认为 `false` |
+| N/A | `OPIK_LOG_LEVEL` | 日志级别 - 默认为 `INFO` |
+| N/A | `OPIK_CONFIG_PATH` | 自定义配置文件位置 |
+
+## 故障排除
+
+### Python SDK 故障排除
+
+#### SSL 证书错误
+
+如果您遇到以下错误：
+
+```
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1006)
+```
+
+您可以通过以下方式解决：
+
+- 通过将 `OPIK_CHECK_TLS_CERTIFICATE` 环境变量设置为 `false` 来禁用 TLS 证书检查
+- 通过设置 `REQUESTS_CA_BUNDLE` 环境变量将 Opik 服务器的证书添加到受信任的证书中
+
+#### 健康检查命令
+
+如果您遇到 Python SDK 的问题，例如从后端收到 400 或 500 错误，或完全无法连接，请运行健康检查命令：
+
+```bash
+opik healthcheck
+```
+
+此命令将分析您的配置和后端连接性，提供有关潜在问题的有用见解。
+
+<Frame>
+  <img src="../../img/healthcheck.png" />
+</Frame>
+
+查看健康检查输出可以帮助确定问题的根源并建议可能的解决方案。
+
+### TypeScript SDK 故障排除
+
+#### 配置验证错误
+
+TypeScript SDK 在启动时验证配置。常见错误：
+
+- **"OPIK_URL_OVERRIDE is not set"**：设置 `OPIK_URL_OVERRIDE` 环境变量
+- **"OPIK_API_KEY is not set"**：Opik Cloud 部署需要
+- **"OPIK_WORKSPACE is not set"**：可选，但可以为 Opik Cloud 部署设置
+
+#### 调试日志
+
+启用调试日志以排查问题：
+
+```bash
+export OPIK_LOG_LEVEL="DEBUG"
+```
+
+如果您使用的是 Opik Optimizer SDK，还可以启用优化器端调试日志：
+
+```bash
+export OPIK_OPTIMIZER_LOG_LEVEL="DEBUG"
+```
+
+或以编程方式：
+
+```typescript
+import { setLoggerLevel } from "opik";
+setLoggerLevel("DEBUG");
+```
+
+#### 批次队列问题
+
+如果数据未出现在 Opik 中：
+
+1. **检查数据是否已批次处理**：调用 `await client.flush()` 强制发送
+2. **验证配置**：确保正确的 API URL 和凭据
+3. **检查网络连接性**：验证防火墙和代理设置
+
+### 通用故障排除
+
+#### 环境变量未加载
+
+1. **Python**：确保在导入 `opik` 之前调用 `load_dotenv()`
+2. **TypeScript**：SDK 会自动加载 `.env` 文件
+3. **验证文件位置**：`.env` 文件应在项目根目录
+4. **检查文件格式**：`.env` 文件中 `=` 两边不要有空格
+
+#### 配置文件问题
+
+1. **文件位置**：默认为 `~/.opik.config`
+2. **自定义位置**：使用 `OPIK_CONFIG_PATH` 环境变量
+3. **文件格式**：Python 使用 TOML，TypeScript 使用 INI 格式
+4. **权限**：确保文件可被应用程序读取

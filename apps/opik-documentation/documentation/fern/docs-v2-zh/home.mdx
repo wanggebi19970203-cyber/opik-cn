@@ -1,0 +1,101 @@
+---
+title: 首页
+headline: Opik 文档 - 开源 LLM 可观测性与优化平台
+og:site_name: Opik 文档
+og:title: "Opik - 开源 LLM 可观测性与智能体优化"
+og:description: "从原型到生产，构建、测试和优化 GenAI 应用。为 RAG、智能体等提供全面的追踪、评估和提示词优化。"
+---
+
+Opik 是一个[开源](https://github.com/comet-ml/opik)平台，帮助你理解 LLM 应用的运行状况，衡量其表现，并系统性地进行优化。无论你正在构建聊天机器人、RAG 管道还是多步骤智能体，Opik 都能提供工具，帮助你从"在我的笔记本上能运行"进阶到"在生产环境中稳定运行"。
+
+## 端到端 AI 工程
+
+<Frame>
+  <img src="/img/home/EndToEnd-Engineering-Diagram.jpg" />
+</Frame>
+
+<Tip>
+  Opik 是开源的！你可以在 [GitHub](https://github.com/comet-ml/opik) 上找到完整源代码，
+  自托管指南请参阅[此处](/self-host/local_deployment)。
+</Tip>
+
+## 如何使用 Opik
+
+<Tip>
+  **使用 Claude Code、Cursor 或 VS Code Copilot？** 安装 [Opik MCP 服务器](/mcp-server)，即可在聊天中驱动整个工作区 — 读取追踪记录、评分输出、保存提示词并运行实验，无需打开 UI。
+</Tip>
+
+<Steps>
+  ### 查看应用运行状态
+
+  Opik 记录每次 LLM 调用、工具调用和智能体步骤，让你能够检查导致任何输出的完整事件链。只需添加几行代码，即可获得每个请求和响应的完整日志。
+
+  [开始记录追踪 →](/tracing/getting-started)
+
+  ### 从追踪记录构建测试套件
+
+  当你发现异常的追踪记录时，将其转化为测试用例。使用 [Ollie](/ollie) 自动完成（只需描述问题所在），或通过 UI 或 SDK 添加测试用例。然后使用 Ollie 或 SDK 运行测试套件以验证修复效果。
+
+  随着时间推移，你的测试套件将基于真实的生产故障不断增长，而非假设性示例。
+
+  [构建你的第一个测试套件 →](/evaluation/advanced/building-test-suites)
+
+  ### 跟踪生产环境质量
+
+  设置在线评估规则以自动评分传入的追踪记录，并从项目仪表板监控反馈分数、延迟、成本和错误率。
+
+  [设置生产监控 →](/production/online-evaluation/rules)
+
+  ### 自动优化提示词
+
+  Opik 的优化算法会根据你的指标和数据集测试提示词的变体，找到最佳方案，无需手动试错。
+
+  [运行你的第一次优化 →](/development/optimization-runs/quickstart)
+</Steps>
+
+## 按功能探索
+
+<CardGroup cols={2}>
+  <Card title="快速入门" href="/quickstart" icon="fa-solid fa-rocket" iconPosition="left">
+    在几分钟内将 Opik 与现有 AI 技术栈集成。支持 OpenAI、Anthropic、LangChain 等 50 多个提供商和框架。
+  </Card>
+  <Card title="MCP 服务器" href="/mcp-server" icon="fa-solid fa-network-wired" iconPosition="left">
+    将 Claude Code、Cursor 或 VS Code Copilot 直接连接到 Opik 工作区。在聊天中读取追踪记录、评分输出并运行实验 — 无需 UI。
+  </Card>
+  <Card title="记录追踪" href="/tracing/advanced/log_traces" icon="fa-solid fa-eye" iconPosition="left">
+    记录每次 LLM 调用、工具调用和智能体步骤。调试故障、跟踪 token 成本，了解应用运行状况。
+  </Card>
+  <Card title="评估性能" href="/evaluation/overview" icon="fa-solid fa-chart-line" iconPosition="left">
+    使用自动化 LLM-as-a-judge 和启发式指标，对应用的幻觉、上下文召回率、相关性等进行评分。
+  </Card>
+  <Card title="优化提示词" href="/development/optimization-runs/overview" icon="fa-solid fa-brain" iconPosition="left">
+    使用六种优化算法，自动生成并测试智能体中每个步骤的更优提示词。
+  </Card>
+  <Card title="管理提示词" href="/development/prompt-library/getting-started" icon="fa-solid fa-wand-magic-sparkles" iconPosition="left">
+    存储和版本化提示词，在[提示词工作台](/development/prompt-playground)中比较结果，并尝试不同模型。
+  </Card>
+  <Card title="自托管 Opik" href="/self-host/overview" icon="fa-solid fa-server" iconPosition="left">
+    使用 Docker 本地部署或 Kubernetes 大规模部署到自有基础设施。完全掌控你的数据。
+  </Card>
+</CardGroup>
+
+## 实际演示
+
+<Frame>
+  <iframe
+    width="100%"
+    height="500px"
+    src="https://www.youtube-nocookie.com/embed/TO9ar6-OJj4?rel=0"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  ></iframe>
+</Frame>
+
+## 开源访问与企业级性能兼得
+
+所有 Opik 版本（[云版](https://www.comet.com/signup?from=llm)、
+[开源版](https://github.com/comet-ml/opik)和
+[企业版](https://www.comet.com/site/pricing/)）均包含完整的 AI 工程功能集，
+并运行在 Comet 平台上，具备经过验证的大规模性能，服务于全球众多大型组织。

@@ -1,0 +1,44 @@
+{
+  "dialogs": {
+    "delete": {
+      "title": "Delete {{item}}",
+      "description": "Deleting {{item}} will also remove all associated data. This action cannot be undone. Are you sure you want to continue?",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    },
+    "reset": {
+      "title": "Reset {{item}}",
+      "description": "This will reset all changes. This action cannot be undone.",
+      "confirmText": "Reset",
+      "cancelText": "Cancel"
+    },
+    "unsavedChanges": {
+      "title": "Unsaved changes",
+      "description": "You have unsaved changes. Are you sure you want to leave?",
+      "confirmText": "Leave",
+      "cancelText": "Stay",
+      "saveAndLeaveText": "Save and leave"
+    },
+    "confirm": {
+      "title": "Confirm action",
+      "description": "Are you sure you want to proceed?",
+      "confirmText": "Confirm",
+      "cancelText": "Cancel"
+    },
+    "create": {
+      "title": "Create {{item}}",
+      "confirmText": "Create",
+      "cancelText": "Cancel"
+    },
+    "edit": {
+      "title": "Edit {{item}}",
+      "confirmText": "Save",
+      "cancelText": "Cancel"
+    },
+    "duplicate": {
+      "title": "Duplicate {{item}}",
+      "confirmText": "Duplicate",
+      "cancelText": "Cancel"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import isObject from "lodash/isObject";
 import isArray from "lodash/isArray";
 import isString from "lodash/isString";
@@ -50,6 +51,7 @@ type TrialConfigurationSectionProps = {
 };
 
 const MessageBlock: React.FC<{ message: MessageEntry }> = ({ message }) => {
+  const { t } = useTranslation("experiments");
   const [expanded, setExpanded] = useState(false);
   const needsTruncation = message.content.length > PROMPT_MAX_LENGTH;
   const displayText =
@@ -74,7 +76,7 @@ const MessageBlock: React.FC<{ message: MessageEntry }> = ({ message }) => {
           onClick={() => setExpanded((prev) => !prev)}
           className="comet-body-s mt-1 text-[hsl(var(--primary))] hover:underline"
         >
-          {expanded ? "Show less" : "See more..."}
+          {expanded ? t("showLess") : t("seeMore")}
         </button>
       )}
     </div>
@@ -236,11 +238,13 @@ const ConfigEntry: React.FC<{ label: string; value: unknown }> = ({
 
 const TrialConfigurationSection: React.FC<TrialConfigurationSectionProps> = ({
   experiments,
-  title = "Configuration",
+  title,
   referenceExperiment,
   parentExperiment,
   studioConfig,
 }) => {
+  const { t } = useTranslation("experiments");
+  const resolvedTitle = title ?? t("configuration");
   const [viewMode, setViewMode] = useState<ConfigViewMode>(
     CONFIG_VIEW_MODE.CONFIG,
   );
@@ -333,7 +337,7 @@ const TrialConfigurationSection: React.FC<TrialConfigurationSectionProps> = ({
   return (
     <div className="rounded-lg border bg-muted/20 p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="comet-title-s">{title}</h3>
+        <h3 className="comet-title-s">{resolvedTitle}</h3>
         {hasDiffSupport && (
           <ToggleGroup
             type="single"
@@ -346,18 +350,18 @@ const TrialConfigurationSection: React.FC<TrialConfigurationSectionProps> = ({
           >
             <ToggleGroupItem value={CONFIG_VIEW_MODE.CONFIG}>
               <List className="mr-1 size-3.5" />
-              Configuration
+              {t("configuration")}
             </ToggleGroupItem>
             {hasDiffBaseline && (
               <ToggleGroupItem value={CONFIG_VIEW_MODE.DIFF_BASELINE}>
                 <GitCompareArrows className="mr-1 size-3.5" />
-                Diff vs baseline
+                {t("diffVsBaseline")}
               </ToggleGroupItem>
             )}
             {hasDiffParent && (
               <ToggleGroupItem value={CONFIG_VIEW_MODE.DIFF_PARENT}>
                 <GitCompareArrows className="mr-1 size-3.5" />
-                Diff vs parent
+                {t("diffVsParent")}
               </ToggleGroupItem>
             )}
           </ToggleGroup>

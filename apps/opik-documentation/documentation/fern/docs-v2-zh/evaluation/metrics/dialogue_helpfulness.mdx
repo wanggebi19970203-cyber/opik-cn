@@ -1,0 +1,46 @@
+---
+description: 衡量对话中助手回复的帮助程度
+headline: 对话帮助性 | Opik 文档
+og:description: 使用 Opik 的对话帮助性评判器评估对话效果，确保回复具有相关性和可操作性。
+og:site_name: Opik 文档
+og:title: Opik 对话帮助性 - 提升用户支持质量
+title: 对话帮助性
+---
+
+# 对话帮助性评判器
+
+`DialogueHelpfulnessJudge` 在上下文对话轮次中检查助手的最新回复。它奖励那些能够理解用户请求、利用可用上下文并提供可操作指导的回复。
+
+```python title="对支持回复进行评分"
+from opik.evaluation.metrics import DialogueHelpfulnessJudge
+
+turns = """USER: My VPN disconnects every 5 minutes.\nASSISTANT: Try reinstalling the client.\nUSER: I already did.\n"""
+
+metric = DialogueHelpfulnessJudge()
+score = metric.score(
+    input=turns,
+    output="Can you send logs? I'll escalate to network engineering.",
+)
+
+print(score.value)
+print(score.reason)
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `input` | `str` | 可选 | 对话历史（交替的 USER / ASSISTANT 文本块）。 |
+| `conversation` | `list[dict]` | 可选 | 结构化的对话轮次（`{"role": "user", "content": "..."}` | `{"role": "assistant", ...}`）。 |
+| `output` | `str` | **是** | 待评分的助手最新回复。 |
+
+## 配置选项
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 对于复杂的企业工作流，可切换到更大的评估模型。 |
+| `temperature` | `0.0` | 使用低温度以获得可复现的基准结果。 |
+| `track` | `True` | 在 Opik 中记录评估结果。 |
+| `project_name` | `None` | 当需要将结果路由到不同项目时设置。 |
+
+将此评判器集成到回归测试套件中，以便在提示词变更或助手模型升级后捕捉回归问题。

@@ -1,0 +1,43 @@
+---
+description: 使用 SummarizationCoherenceJudge 评估摘要的可读性和结构质量
+headline: 摘要连贯性 | Opik 文档
+og:description: 使用 Opik 的摘要连贯性评判器评估摘要的清晰度和结构，可读性评分范围为 0.0 到 1.0。
+og:site_name: Opik 文档
+og:title: 摘要连贯性指标 - Opik
+title: 摘要连贯性
+---
+
+# 摘要连贯性评判器
+
+`SummarizationCoherenceJudge` 评估摘要的写作质量：结构、清晰度和逻辑流畅性。它与 `SummarizationConsistencyJudge` 互补，重点关注摘要的阅读体验而非事实准确性，返回由原始 0-10 分归一化后的 0.0-1.0 分数。
+
+```python title="提升摘要可读性"
+from opik.evaluation.metrics import SummarizationCoherenceJudge
+
+metric = SummarizationCoherenceJudge()
+
+score = metric.score(
+    output="""SUMMARY: First, the product launched. Revenue grew. Margins fell. Next steps TBD.""",
+)
+
+print(score.value)   # 归一化后的 0.0-1.0 分数
+print(score.reason)
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `output` | `str` | **是** | 待评估的摘要文本。 |
+| `input` | `str` | 否 | 原始文档/演讲内容，用于提供额外上下文（非必填）。 |
+
+## 配置项
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 评估长文本或领域特定摘要时建议升级模型。 |
+| `temperature` | `0.0` | 可适当提高（≤0.3）以获得多样化的风格评价。 |
+| `track` | `True` | 关闭后将跳过日志记录。 |
+| `project_name` | `None` | 跨项目追踪时可覆盖此配置。 |
+
+将此评判器与 `SummarizationConsistencyJudge` 搭配使用，可确保摘要既准确又易于阅读。评估器返回 0-10 的整数分数，由 Opik 归一化为 0-1。

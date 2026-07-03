@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -36,6 +37,7 @@ type IntegrationDetailsDialogProps = {
 const IntegrationDetailsDialog: React.FunctionComponent<
   IntegrationDetailsDialogProps
 > = ({ selectedIntegration, onClose }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const apiKey = useUserApiKey();
   const variant = useFeatureFlagVariantKey("run-button-activation-test");
@@ -92,25 +94,23 @@ const IntegrationDetailsDialog: React.FunctionComponent<
               src={iconSrc}
               className="size-7 shrink-0"
             />
-            {selectedIntegration.title} Integration
+            {selectedIntegration.title} {t("onboarding.integrationExplorer.integration")}
           </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
           <div className="comet-body-s mb-6 text-muted-slate">
-            It all starts with a trace. Follow these quick steps to log your
-            first set of LLM calls so you can use Opik to analyze them and
-            improve performance.{" "}
+            {t("onboarding.integrationExplorer.detailsDescription")}{" "}
             <a
               href={selectedIntegration.docsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
             >
-              Read full guide
+              {t("onboarding.integrationExplorer.readFullGuide")}
               <ExternalLink className="size-3" />
             </a>{" "}
-            in our docs.
+            {t("onboarding.integrationExplorer.inOurDocs")}
           </div>
 
           <IntegrationStep
@@ -139,7 +139,7 @@ const IntegrationDetailsDialog: React.FunctionComponent<
           )}
           {selectedIntegration.code && (
             <IntegrationStep
-              title={`2. Run the following code to get started with ${selectedIntegration.title}`}
+              title={t("onboarding.integrationExplorer.runCodeWithIntegration", { title: selectedIntegration.title })}
               className="mb-6"
             >
               {shouldShowCodeExecutor ? (
@@ -167,8 +167,8 @@ const IntegrationDetailsDialog: React.FunctionComponent<
 
           <HelpLinks
             onCloseParentDialog={onClose}
-            title="Need some help?"
-            description="Get help from your team or ours. Choose the option that works best for you."
+            title={t("onboarding.integrationExplorer.needSomeHelp")}
+            description={t("onboarding.integrationExplorer.needSomeHelpDescription")}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

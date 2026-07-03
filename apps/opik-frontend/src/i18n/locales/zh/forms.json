@@ -1,0 +1,75 @@
+{
+  "forms": {
+    "fields": {
+      "name": {
+        "label": "名称",
+        "placeholder": "请输入名称",
+        "required": "名称为必填项"
+      },
+      "description": {
+        "label": "描述",
+        "placeholder": "请输入描述"
+      },
+      "email": {
+        "label": "邮箱",
+        "placeholder": "请输入邮箱",
+        "required": "邮箱为必填项",
+        "invalid": "邮箱格式无效"
+      },
+      "password": {
+        "label": "密码",
+        "placeholder": "请输入密码",
+        "required": "密码为必填项",
+        "tooShort": "密码长度不足"
+      },
+      "url": {
+        "label": "URL",
+        "placeholder": "请输入URL",
+        "required": "URL为必填项",
+        "invalid": "URL格式无效"
+      },
+      "apiKey": {
+        "label": "API密钥",
+        "placeholder": "请输入API密钥"
+      },
+      "model": {
+        "label": "模型",
+        "placeholder": "请选择模型"
+      },
+      "dataset": {
+        "label": "数据集",
+        "placeholder": "请选择数据集"
+      },
+      "metric": {
+        "label": "指标",
+        "placeholder": "请选择指标"
+      },
+      "algorithm": {
+        "label": "算法",
+        "placeholder": "请选择算法"
+      },
+      "prompt": {
+        "label": "提示词",
+        "placeholder": "请输入提示词"
+      },
+      "systemPrompt": {
+        "label": "系统提示词",
+        "placeholder": "请输入系统提示词"
+      },
+      "userMessage": {
+        "label": "用户消息",
+        "placeholder": "输入消息"
+      }
+    },
+    "validation": {
+      "required": "此字段为必填项",
+      "invalid": "值无效",
+      "tooLong": "值过长",
+      "tooShort": "值过短",
+      "min": "值必须至少为 {{min}}",
+      "max": "值必须最多为 {{max}}",
+      "pattern": "格式无效",
+      "enterValidDate": "请输入有效日期"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import isString from "lodash/isString";
+import { useTranslation } from "react-i18next";
 
 import Loader from "@/shared/Loader/Loader";
 import NoData from "@/shared/NoData/NoData";
@@ -11,6 +12,7 @@ interface TextPreviewProps {
 }
 
 const TextPreview: React.FC<TextPreviewProps> = ({ url }) => {
+  const { t } = useTranslation("common");
   const { data, isPending, isError, error } = useQuery({
     queryKey: ["text", url],
     queryFn: async () => {
@@ -41,7 +43,7 @@ const TextPreview: React.FC<TextPreviewProps> = ({ url }) => {
         <MarkdownPreview>{data}</MarkdownPreview>
       </div>
     ) : (
-      <NoData message="Data is not a text" icon={null} />
+      <NoData message={t("textPreview.dataIsNotText")} icon={null} />
     );
   };
 

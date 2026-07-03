@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { MoveLeft } from "lucide-react";
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import Loader from "@/shared/Loader/Loader";
 import { Button } from "@/ui/button";
@@ -64,6 +65,7 @@ const persistMcpOAuthReturn = () => {
 const WorkspacePreloader: React.FunctionComponent<WorkspacePreloaderProps> = ({
   children,
 }) => {
+  const { t } = useTranslation();
   const setAppUser = useSetAppUser();
   const { data: user, isLoading } = useUser();
 
@@ -225,14 +227,14 @@ const WorkspacePreloader: React.FunctionComponent<WorkspacePreloaderProps> = ({
 
           <div className="flex flex-col items-center gap-4 px-10 py-24">
             <div className="comet-title-m text-muted-slate">
-              This is a private project
+              {t("common.messages.thisIsAPrivateProject")}
             </div>
             <Link
               to="/$workspaceName"
               params={{ workspaceName: defaultWorkspace.workspaceName }}
             >
               <div className="comet-body flex flex-row items-center justify-end text-[hsl(var(--primary))]">
-                <MoveLeft className="mr-2 size-4" /> Go back to your workspace
+                <MoveLeft className="mr-2 size-4" /> {t("common.messages.goBackToYourWorkspace")}
               </div>
             </Link>
           </div>
@@ -248,12 +250,11 @@ const WorkspacePreloader: React.FunctionComponent<WorkspacePreloaderProps> = ({
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4">
         <div className="comet-body py-4">
-          Opik traces limit has reached, to continue please purchase additional
-          traces via AWS
+          {t("common.messages.opikTracesLimitReached")}
         </div>
 
         <Button variant="secondary" onClick={() => window.location.reload()}>
-          Refresh page
+          {t("common.messages.refreshPage")}
         </Button>
       </div>
     );

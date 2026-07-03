@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import uniq from "lodash/uniq";
 import get from "lodash/get";
 
@@ -50,13 +51,13 @@ export const getExperimentListParams = ({
 export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: i18next.t("experimentLabels.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: COLUMN_DATASET_ID,
-    label: "Test suite",
+    label: i18next.t("experimentLabels.testSuite"),
     type: COLUMN_TYPE.string,
     cell: ResourceCell as never,
     customMeta: {
@@ -67,7 +68,7 @@ export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("experimentLabels.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     accessorFn: (row) => row.tags || [],
@@ -75,39 +76,39 @@ export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("experimentLabels.created"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: i18next.t("experimentLabels.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "duration.p50",
-    label: "Avg duration",
+    label: i18next.t("experimentLabels.avgDuration"),
     type: COLUMN_TYPE.duration,
     accessorFn: (row) => row.duration?.p50,
     cell: DurationCell as never,
   },
   {
     id: "duration.p90",
-    label: "Duration (p90)",
+    label: i18next.t("experimentLabels.durationP90"),
     type: COLUMN_TYPE.duration,
     accessorFn: (row) => row.duration?.p90,
     cell: DurationCell as never,
   },
   {
     id: "duration.p99",
-    label: "Duration (p99)",
+    label: i18next.t("experimentLabels.durationP99"),
     type: COLUMN_TYPE.duration,
     accessorFn: (row) => row.duration?.p99,
     cell: DurationCell as never,
   },
   {
     id: "prompt",
-    label: "Prompt commit",
+    label: i18next.t("experimentLabels.promptCommit"),
     type: COLUMN_TYPE.list,
     accessorFn: (row) => get(row, ["prompt_versions"], []),
     cell: MultiResourceCell as never,
@@ -122,28 +123,28 @@ export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   },
   {
     id: "trace_count",
-    label: "Trace count",
+    label: i18next.t("experimentLabels.traceCount"),
     type: COLUMN_TYPE.number,
     cell: TraceCountCell as never,
     customMeta: {
-      tooltip: "View experiment traces",
+      tooltip: i18next.t("experimentLabels.viewExperimentTraces"),
     },
   },
   {
     id: "total_estimated_cost",
-    label: "Total estimated cost",
+    label: i18next.t("experimentLabels.totalEstimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
   },
   {
     id: "total_estimated_cost_avg",
-    label: "Avg cost",
+    label: i18next.t("experimentLabels.avgCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
   },
   {
     id: "pass_rate",
-    label: "Pass rate",
+    label: i18next.t("experimentLabels.passRate"),
     type: COLUMN_TYPE.number,
     iconType: "pass_rate",
     accessorFn: (row) => row.pass_rate,
@@ -222,5 +223,5 @@ export const getRankingFilters = (
 
 export const widgetHelpers = {
   getDefaultConfig,
-  calculateTitle: () => "Experiment leaderboard",
+  calculateTitle: () => i18next.t("experimentLabels.experimentLeaderboard"),
 };

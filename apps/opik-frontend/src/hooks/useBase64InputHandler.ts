@@ -1,4 +1,5 @@
 import { useState } from "react";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import { isBase64DataUrl, getBase64SizeInMB } from "@/lib/base64";
 
@@ -45,10 +46,13 @@ export const useBase64InputHandler = ({
         // Check if already at max capacity
         if (currentItemsCount >= maxItems) {
           toast({
-            title: "Maximum limit reached",
-            description: `You can only add up to ${maxItems} ${
-              type === "image" ? "images" : "videos"
-            }`,
+            title: i18next.t("common.hooks.useBase64InputHandler.maximumLimitReached"),
+            description: i18next.t("common.hooks.useBase64InputHandler.maxItemsError", {
+              maxItems,
+              mediaType: type === "image"
+                ? i18next.t("common.media.images")
+                : i18next.t("common.media.videos"),
+            }),
             variant: "destructive",
           });
           callbacks?.onError?.();
@@ -58,8 +62,8 @@ export const useBase64InputHandler = ({
         // Check for duplicates
         if (existingItems.includes(trimmed)) {
           toast({
-            title: "Error",
-            description: `This ${type} already exists`,
+            title: i18next.t("common.hooks.useBase64InputHandler.error"),
+            description: i18next.t("common.hooks.useBase64InputHandler.duplicateMedia", { type }),
             variant: "destructive",
           });
           callbacks?.onError?.();
@@ -71,10 +75,12 @@ export const useBase64InputHandler = ({
 
         if (sizeInMB > maxSizeMB) {
           toast({
-            title: "File too large",
-            description: `The ${type} size (${sizeInMB.toFixed(
-              2,
-            )}MB) exceeds the maximum allowed size of ${maxSizeMB}MB`,
+            title: i18next.t("common.hooks.useBase64InputHandler.fileTooLarge"),
+            description: i18next.t("common.hooks.useBase64InputHandler.fileTooLargeDescription", {
+              type,
+              sizeMB: sizeInMB.toFixed(2),
+              maxSizeMB,
+            }),
             variant: "destructive",
           });
           callbacks?.onError?.();
@@ -86,8 +92,8 @@ export const useBase64InputHandler = ({
         callbacks?.onSuccess?.();
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to process base64 data. Please try again.",
+          title: i18next.t("common.hooks.useBase64InputHandler.error"),
+          description: i18next.t("common.hooks.useBase64InputHandler.failedToProcessBase64"),
           variant: "destructive",
         });
         callbacks?.onError?.();

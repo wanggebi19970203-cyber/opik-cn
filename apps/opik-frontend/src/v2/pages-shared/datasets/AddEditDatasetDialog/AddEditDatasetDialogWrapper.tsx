@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -32,6 +33,7 @@ type AddEditDatasetDialogWrapperProps = {
 const AddEditDatasetDialogWrapper: React.FunctionComponent<
   AddEditDatasetDialogWrapperProps
 > = ({ open, setOpen, form, hideUpload, idPrefix, children }) => {
+  const { t } = useTranslation("datasets");
   const {
     name,
     setName,
@@ -63,10 +65,10 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor={`${idPrefix}Name`}>Name</Label>
+            <Label htmlFor={`${idPrefix}Name`}>{t("addEditDialog.name")}</Label>
             <Input
               id={`${idPrefix}Name`}
-              placeholder="Name"
+              placeholder={t("addEditDialog.namePlaceholder")}
               value={name}
               className={
                 nameError &&
@@ -92,10 +94,10 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
             </span>
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor={`${idPrefix}Description`}>Description</Label>
+            <Label htmlFor={`${idPrefix}Description`}>{t("addEditDialog.description")}</Label>
             <Textarea
               id={`${idPrefix}Description`}
-              placeholder="Description"
+              placeholder={t("addEditDialog.descriptionPlaceholder")}
               className="min-h-20"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -105,7 +107,7 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
           {children}
           {!isEdit && !hideUpload && (
             <div className="flex flex-col gap-2 pb-4">
-              <Label>Upload a CSV or JSON file</Label>
+              <Label>{t("addEditDialog.uploadLabel")}</Label>
               <DatasetUploadDescription
                 fileSizeLimit={fileSizeLimit}
                 docsUrl={buildDocsUrl("/evaluation/advanced/manage_datasets")}
@@ -123,7 +125,7 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={isSubmitting}>
-              Cancel
+              {t("addEditDialog.cancel")}
             </Button>
           </DialogClose>
           <Button
@@ -140,10 +142,10 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
         open={confirmOpen}
         setOpen={setConfirmOpen}
         onCancel={submitHandler}
-        title="File can't be uploaded"
-        description={`This file cannot be uploaded because it does not pass validation. If you continue, the ${typeLabel} will be created without any items. You can add items manually later, or go back and upload a valid file.`}
-        cancelText={`Create empty ${typeLabel}`}
-        confirmText="Go back"
+        title={t("addEditDialog.fileCantBeUploaded")}
+        description={t("addEditDialog.fileCantBeUploadedDescription", { typeLabel })}
+        cancelText={t("addEditDialog.createEmpty", { typeLabel })}
+        confirmText={t("addEditDialog.goBack")}
       />
     </Dialog>
   );

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useBlocker } from "@tanstack/react-router";
 import isFunction from "lodash/isFunction";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -27,13 +28,20 @@ export interface UseNavigationBlockerResult {
 
 const useNavigationBlocker = ({
   condition,
-  title = "Unsaved changes",
-  description = "Are you sure you want to leave?",
-  confirmText = "Leave",
-  cancelText = "Stay",
+  title: titleProp,
+  description: descriptionProp,
+  confirmText: confirmTextProp,
+  cancelText: cancelTextProp,
   onSaveAndLeave,
-  saveAndLeaveText = "Save and leave",
+  saveAndLeaveText: saveAndLeaveTextProp,
 }: UseNavigationBlockerOptions): UseNavigationBlockerResult => {
+  const { t } = useTranslation("dialogs");
+  const title = titleProp ?? t("unsavedChanges.title");
+  const description = descriptionProp ?? t("unsavedChanges.description");
+  const confirmText = confirmTextProp ?? t("unsavedChanges.confirmText");
+  const cancelText = cancelTextProp ?? t("unsavedChanges.cancelText");
+  const saveAndLeaveText = saveAndLeaveTextProp ?? t("unsavedChanges.saveAndLeaveText");
+
   const [showDialog, setShowDialog] = useState(false);
 
   const { proceed, reset, status } = useBlocker({

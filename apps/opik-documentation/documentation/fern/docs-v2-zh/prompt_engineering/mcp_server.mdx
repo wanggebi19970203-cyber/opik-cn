@@ -1,0 +1,177 @@
+---
+headline: Opik 的 MCP 服务器 | Opik 文档
+og:description: 配置 Opik 的 MCP 服务器与 Cursor IDE 集成，高效管理 prompt 和分析 trace。
+og:site_name: Opik 文档
+og:title: 与 Opik 的 MCP 服务器集成用于 prompt 工程
+title: Opik 的 MCP 服务器
+canonical-url: https://www.comet.com/docs/opik/development/prompt-library/mcp-server
+---
+
+<Note>
+  **opik-mcp 已用 Python 重写。** 本页上的说明描述的是基于 npx 的旧版 JavaScript 服务器。有关新的 Python 服务器，请参阅 v2 文档：[Opik 的 MCP 服务器](/development/agent-configuration/mcp-server)。
+</Note>
+
+Opik 的 [MCP 服务器](https://github.com/comet-ml/opik-mcp)允许你将 IDE 与 Opik 集成，不仅用于 prompt 管理，还可用于访问和分析 trace。
+
+## 搭建 MCP 服务器
+
+<Tabs>
+    <Tab title="Cursor">
+    
+    要与 Cursor IDE 集成，打开 Cursor 设置页面并导航到 Features 标签。向下滚动到 MCP 部分，你会看到 `+ Add new MCP server` 按钮，允许你添加 Opik MCP 服务器。
+
+    打开新 MCP 服务器模态框后，选择 command 作为服务器类型，输入命令：`npx -y opik-mcp --apiKey YOUR_API_KEY`。
+
+    <Frame>
+        <img src="/img/prompt_engineering/cursor_add_mcp_server.png" />
+    </Frame>
+
+    MCP 服务器可用后，你可以通过询问 Cursor 来测试：`What is the latest trace available in Opik?`
+
+    <Tip>
+    如果你使用自托管版本的 Opik，需要指定 `apiBaseUrl` 参数并移除 `--apiKey` 参数：
+    `npx -y opik-mcp --apiBaseUrl http://localhost:5173/api`
+    </Tip>
+
+    </Tab>
+    <Tab title="VS Code">
+    
+    要将 Opik 与 VS Code（GitHub Copilot）集成，你需要将 MCP 服务器配置添加到工作区或用户设置中。
+
+    1. 在工作区中创建或打开 `.vscode/mcp.json` 文件（或运行 **MCP: Open User Configuration** 命令全局添加）。
+
+    2. 添加 Opik MCP 服务器配置：
+
+    ```json wordWrap title=".vscode/mcp.json"
+    {
+        "inputs": [
+            {
+                "type": "promptString",
+                "id": "opik-api-key",
+                "description": "Opik API Key",
+                "password": true
+            }
+        ],
+        "servers": {
+            "opik-mcp": {
+                "type": "stdio",
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "opik-mcp",
+                    "--apiKey",
+                    "${input:opik-api-key}"
+                ]
+            }
+        }
+    }
+    ```
+
+    3. 首次启动 MCP 服务器时，VS Code 会提示你输入 Opik API 密钥。该值会被安全存储以供后续使用。
+
+    <Tip>
+    如果你使用自托管版本的 Opik，添加 `--apiBaseUrl` 参数并移除 `--apiKey` 参数：
+
+    ```json wordWrap title=".vscode/mcp.json"
+    {
+        "servers": {
+            "opik-mcp": {
+                "type": "stdio",
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "opik-mcp",
+                    "--apiBaseUrl",
+                    "http://localhost:5173/api"
+                ]
+            }
+        },
+        "inputs": []
+    }
+    ```
+    </Tip>
+
+    MCP 服务器可用后，你可以通过询问 Copilot 来测试：`What is the latest trace available in Opik?`
+
+    </Tab>
+    <Tab title="Windsurf">
+    要安装 Opik MCP 服务器，你需要导航到 Windsurf 设置页面，在 MCP 服务器部分点击 `Add server` 按钮。这里你需要点击 `Add custom server` 按钮：
+
+    <Frame>
+        <img src="/img/prompt_engineering/windsurf_add_custom_server.png" />
+    </Frame>
+
+    创建 `mcp_config.json` 文件后，你可以通过添加以下内容配置 Opik 服务器（确保用你的密钥更新 API 密钥占位符）：
+
+    ```json wordWrap title="mcp_config.json"
+    {
+        "mcpServers": {
+        "opik": {
+            "command": "npx",
+            "args": [
+            "-y",
+            "opik-mcp",
+            "--apiKey",
+            "YOUR_API_KEY"
+            ]
+        }
+        }
+    }
+    ```
+
+    <Tip>
+    如果你使用自托管版本的 Opik，需要将 `apiBaseUrl` 参数指定为 `http://localhost:5173/api`，同时移除 `--apiKey` 参数。
+    </Tip>
+
+    MCP 服务器可用后，你可以通过询问 Windsurf 来测试：`What is the latest trace available in Opik ?`
+
+    </Tab>
+    <Tab title="手动">
+    你可以通过运行以下命令手动运行 Opik MCP 服务器：
+
+    ```bash
+    npx -y opik-mcp --transport sse --apiKey YOUR_API_KEY
+    ```
+
+    然后你可以通过 `sse` 端点访问 Opik MCP 服务器。
+    </Tab>
+
+</Tabs>
+
+## 使用 MCP 服务器
+
+Opik MCP 服务器包含多种不同的工具，包括项目管理、查询 prompt 和 trace 以及获取项目指标。我们将重点介绍查询 prompt 和 trace，因为这是使用 Opik MCP 服务器最常见的方式。
+
+### Prompt 管理
+
+你可以使用 MCP 服务器访问和保存 Opik prompt。你可以通过提出以下问题来完成：
+
+> Opik prompt 库中有哪些可用的 prompt？
+
+> "demo" Opik prompt 的最新版本是什么？
+
+> 将以下文本保存为 Opik 中名为 "example prompt" 的新 prompt
+
+### 管理 trace
+
+你可以从 MCP 服务器访问存储在 Opik 中的 trace，如果你想分析存储在 Opik 中的 trace 以确定如何改进你的智能体或 LLM chain，这尤其有用。
+
+入门时，你可以提出以下问题：
+
+> Opik 中最新 trace 的输出是什么？
+
+> 有多少 trace 已记录到 "demo data" Opik 项目中？
+
+你还可以更进一步，使用记录到 Opik 的 trace 来改进你的 prompt。一种效果良好的技术是首先获取 trace，然后要求 LLM 基于这些 trace 建议改进。虽然具体方法因 MCP 客户端而异，但以下问题效果良好：
+
+> 基于 "demo data" Opik 项目中存储的 10 个最新 trace，建议对编排器 prompt 的一些改进。
+
+> 在 "demo data" Opik 项目中搜索具有高幻觉分数的最新 trace 并创建新的 prompt 模板。
+
+### 示例对话
+
+以下是我们的一位用户在 Cursor 中进行的示例对话，他们利用 Opik MCP 服务器改进了 LLM 智能体：
+
+<Frame>
+  <img src="/img/prompt_engineering/mcp_example.png" />
+</Frame>

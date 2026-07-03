@@ -35,11 +35,11 @@ def pytest_addoption(parser: "pytest.Parser") -> None:
         "--opik",
         action="store_true",
         default=False,
-        help="Enable Opik pytest plugin hooks.",
+        help="启用 Opik pytest 插件钩子。",
     )
     parser.addini(
         "opik_pytest_enabled",
-        "Enable Opik pytest plugin hooks.",
+        "启用 Opik pytest 插件钩子。",
         type="bool",
         default=False,
     )
@@ -61,7 +61,7 @@ def pytest_collection_modifyitems(
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item: "pytest.Item") -> Generator:
     """
-    Write the results of each test in the session
+    将每个测试的结果写入会话中
     """
     plugin_enabled = _is_plugin_enabled(item.config)
     outcome = yield
@@ -77,13 +77,13 @@ def pytest_runtest_makereport(item: "pytest.Item") -> Generator:
             item.report = report
     except Exception:
         LOGGER.debug(
-            "Unexpected failure during opik pytest_runtest_makereport hook",
+            "opik pytest_runtest_makereport 钩子中发生意外失败",
             exc_info=True,
         )
 
 
 @_logging.convert_exception_to_log_message(
-    "Unexpected failure during opik pytest_sessionfinish hook",
+    "opik pytest_sessionfinish 钩子中发生意外失败",
     logger=LOGGER,
     exc_info=True,
     logging_level=logging.ERROR,
@@ -135,13 +135,13 @@ def pytest_sessionfinish(session: "pytest.Session", exitstatus: Any) -> None:
             client.flush()
     except Exception:
         LOGGER.error(
-            "Unexpected exception occured while trying to log LLM unit tests experiment results",
+            "尝试记录 LLM 单元测试实验结果时发生意外异常",
             exc_info=True,
         )
 
 
 @_logging.convert_exception_to_log_message(
-    "Unexpected exception occured while trying to print LLM unit tests summary",
+    "尝试打印 LLM 单元测试摘要时发生意外异常",
     logger=LOGGER,
     exc_info=True,
     logging_level=logging.DEBUG,

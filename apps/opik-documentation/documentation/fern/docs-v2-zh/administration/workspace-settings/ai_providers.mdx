@@ -1,0 +1,349 @@
+---
+description: 配置大语言模型提供商的连接
+headline: AI 提供商 | Opik 文档
+og:description: 在 Opik 中配置各种大语言模型的连接，管理集成，并轻松优化项目工作流。
+og:site_name: Opik 文档
+og:title: 在 Opik 中配置 AI 提供商
+title: AI 提供商
+---
+
+AI 提供商允许您连接大语言模型，以在 Playground 和在线评估中使用。
+
+## 使用 AI 提供商
+
+配置完成后，提供商将出现在两个地方：
+
+1. **Playground** — 使用不同模型交互式测试提示词。
+2. **在线评估** — 在您的 trace 上运行 LLM-as-a-judge 评分。
+
+## 添加提供商
+
+1. 点击右上角的 **添加配置** 按钮
+
+<Frame>
+  <img src="/img/configuration/new_ai_provider.png" alt="新建 AI 提供商弹窗" />
+</Frame>
+
+2. 在弹出的提供商配置对话框中：
+   - 从下拉菜单中选择一个提供商
+   - 输入该提供商的 API 密钥
+   - 点击 **保存** 以存储配置
+
+### 支持的提供商
+
+Opik 支持与多种 AI 提供商集成，包括：
+
+- OpenAI
+- Anthropic
+- OpenRouter
+- Gemini
+- VertexAI
+- Azure OpenAI
+- Amazon Bedrock
+- Ollama（本地或自托管，兼容 OpenAI）
+- vLLM / 任何其他兼容 OpenAI API 的提供商
+
+<Tip>
+  如果您希望我们支持更多大语言模型提供商，请在
+  [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。
+</Tip>
+
+### 提供商特定设置
+
+以下是各支持提供商的 API 密钥获取及其他必要信息的说明：
+
+#### OpenAI
+
+1. 创建或登录您的 [OpenAI 账户](https://platform.openai.com/)
+2. 前往 [API 密钥页面](https://platform.openai.com/api-keys)
+3. 点击 "Create new secret key"
+4. 复制您的 API 密钥（密钥仅显示一次）
+5. 在 Opik 中，选择 "OpenAI" 作为提供商并粘贴您的密钥
+
+#### Anthropic
+
+1. 注册或登录 [Anthropic 平台](https://console.anthropic.com/)
+2. 前往 [API 密钥页面](https://console.anthropic.com/settings/keys)
+3. 点击 "Create Key" 并选择适当的访问级别
+4. 复制您的 API 密钥（密钥仅显示一次）
+5. 在 Opik 中，选择 "Anthropic" 作为提供商并粘贴您的密钥
+
+#### OpenRouter
+
+1. 创建或登录您的 [OpenRouter 账户](https://openrouter.ai/)
+2. 前往 [API 密钥页面](https://openrouter.ai/settings/keys)
+3. 创建一个新的 API 密钥
+4. 复制您的 API 密钥
+5. 在 Opik 中，选择 "OpenRouter" 作为提供商并粘贴您的密钥
+
+#### Gemini
+
+1. 注册或登录 [Google AI Studio](https://aistudio.google.com/)
+2. 前往 [API 密钥页面](https://aistudio.google.com/apikey)\
+3. 为您现有的 Google Cloud 项目创建一个新的 API 密钥
+4. 复制您的 API 密钥（密钥仅显示一次）
+5. 在 Opik 中，选择 "Gemini" 作为提供商并粘贴您的密钥
+
+#### Azure OpenAI
+
+Azure OpenAI 通过 Microsoft Azure 提供对 OpenAI 模型的企业级访问。要在 Opik 中使用 Azure OpenAI：
+
+1. 获取您的 Azure OpenAI 端点 URL
+
+   - 前往 [portal.azure.com](https://portal.azure.com)
+   - 导航到您的 Azure OpenAI 资源
+   - 复制您的端点 URL（格式类似 `https://your-company.openai.azure.com`）
+
+2. 构建完整的 API URL
+
+   - 在端点 URL 末尾添加 `/openai/v1`
+   - 您的完整 URL 应类似：`https://your-company.openai.azure.com/openai/v1`
+
+3. 在 Opik 中配置
+   - 在 Opik 中，前往 **工作区设置 > AI 提供商**
+   - 点击 **"添加配置"**
+   - 从下拉菜单中选择 **"vLLM / 自定义提供商"**
+   - 在 URL 字段中输入您的完整 URL：`https://your-company.openai.azure.com/openai/v1`
+   - 在 API 密钥字段中添加您的 Azure OpenAI API 密钥
+   - 在模型部分，列出您在 Azure 中已部署的模型（例如 `gpt-4o`）
+   - 点击 **保存** 以存储配置
+
+保存后，您可以直接在在线评分和 Playground 中使用您的 Azure OpenAI 模型。
+
+#### Vertex AI
+
+##### 方案 A：通过 `gcloud` CLI 设置
+
+1. **创建自定义 IAM 角色**
+
+```bash
+gcloud iam roles create opik \
+  --project=<my-project> \
+  --title="Opik" \
+  --description="Custom IAM role for Opik" \
+  --permissions=aiplatform.endpoints.predict,resourcemanager.projects.get \
+  --stage=ALPHA
+```
+
+2. **创建服务账户**
+
+```bash
+gcloud iam service-accounts create opik-sa \
+  --description="Service account for Opik role" \
+  --display-name="Opik Service Account"
+```
+
+3. **将角色分配给服务账户**
+
+```bash
+gcloud projects add-iam-policy-binding <my-project> \
+  --member="serviceAccount:opik-sa@<my-project>.iam.gserviceaccount.com" \
+  --role="projects/<my-project>/roles/opik"
+```
+
+4. **生成服务账户密钥文件**
+
+```bash
+gcloud iam service-accounts keys create opik-key.json \
+  --iam-account=opik-sa@<my-project>.iam.gserviceaccount.com
+```
+
+> 文件 `opik-key.json` 包含您的凭据。**用文本编辑器打开它并复制全部内容。**
+
+---
+
+##### 方案 B：通过 Google Cloud 控制台（UI）设置
+
+步骤 1：创建自定义角色
+
+1. 前往 [IAM > Roles](https://console.cloud.google.com/iam-admin/roles)
+2. 点击 **Create Role**
+3. 填写表单：
+
+- **Title**: `Opik`
+- **ID**: `opik`
+- **Description**: `Custom IAM role for Opik`
+- **Stage**: `Alpha`
+
+4. 点击 **Add Permissions**，然后搜索并添加：
+
+- `aiplatform.endpoints.predict`
+- `resourcemanager.projects.get`
+
+5. 点击 **Create**
+
+步骤 2：创建服务账户
+
+1. 前往 [IAM > Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
+2. 点击 **Create Service Account**
+3. 填写：
+
+- **Service account name**: `Opik Service Account`
+- **ID**: `opik-sa`
+- **Description**: `Service account for Opik role`
+
+4. 点击 **Done**
+
+步骤 3：将角色分配给服务账户
+
+1. 前往 [IAM](https://console.cloud.google.com/iam-admin/iam)
+2. 找到服务账户 `opik-sa@<my-project>.iam.gserviceaccount.com`
+3. 点击 **编辑图标**
+4. 点击 **Add Another Role** > 选择您的自定义角色：**Opik**
+5. 点击 **Save**
+
+步骤 4：创建并下载密钥
+
+1. 前往 [Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
+2. 点击 `opik-sa` 账户
+3. 打开 **Keys** 标签页
+4. 点击 **Add Key > Create new key**
+5. 选择 **JSON**，点击 **Create**，并下载文件
+
+> **打开下载的 JSON 文件**，并 **复制其全部内容** 以用于下一步。
+
+---
+
+##### 最终步骤：将 Opik 连接到 Vertex AI
+
+1. 在 Opik 中，前往 **工作区设置 > AI 提供商**
+2. 点击 **"添加配置"**
+3. 设置：
+
+- **提供商**: `Vertex AI`
+- **位置**: 您的模型区域（例如 `us-central1`）
+- **Vertex AI API 密钥**: **在此粘贴 `opik-key.json` 文件的完整内容**
+
+4. 点击 **添加配置**
+
+#### Amazon Bedrock
+
+Amazon Bedrock 通过 AWS 提供来自领先 AI 公司（如 AI21 Labs、Anthropic、Cohere、Meta、Mistral AI、Stability AI 和 Amazon）的基础模型访问。Opik 使用 [OpenAI Chat Completions API](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html) 连接到 Bedrock。只有支持此 API 格式的模型才能在 Opik Playground 中使用。请在配置前查看[支持的模型文档](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions.html#inference-chat-completions-supported-models)以验证兼容性。
+
+##### 前提条件
+
+在 Opik 中配置 Bedrock 之前，请确保您已具备：
+
+1. 拥有 Bedrock 访问权限的有效 AWS 账户
+2. 已为要使用的模型启用模型访问权限（参见 [AWS 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html)）
+3. 已配置用于 Bedrock 访问的 API 密钥或凭据
+
+<Tip>
+  您可以在 [AWS Bedrock 控制台](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/providers)中请求模型访问权限。并非所有模型在所有区域都可用 — 请查看[模型可用性文档](https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html)以验证您所选区域的可用性。
+</Tip>
+
+##### 在 Opik 中配置 Bedrock
+
+1. 在 Opik 中，前往 **工作区设置 > AI 提供商**
+2. 点击 **"添加配置"**
+3. 从提供商下拉菜单中选择 **"Bedrock"**
+4. 填写配置：
+   - **提供商名称**: 此提供商实例的唯一标识符（例如 "Bedrock us-east-1"）
+   - **URL**: 您的 Bedrock 端点 URL（格式见下方）
+   - **API 密钥**: 您的 AWS Bedrock API 密钥（设置说明参见 [AWS 文档](https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html)）
+   - **模型列表**: 逗号分隔的模型列表（例如 `us.anthropic.claude-3-5-sonnet-20241022-v2:0,us.meta.llama3-2-3b-instruct-v1:0`）
+   - **自定义请求头**（可选）：添加您的配置所需的任何额外 HTTP 请求头
+5. 点击 **添加配置** 以保存
+
+##### 各区域的 Bedrock URL 格式
+
+Bedrock 端点遵循以下模式：`https://bedrock-runtime.<region>.amazonaws.com/openai/v1`
+
+**各区域示例：**
+
+- **US East 1**: `https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1`
+- **US West 2**: `https://bedrock-runtime.us-west-2.amazonaws.com/openai/v1`
+- **Europe West 1 (Ireland)**: `https://bedrock-runtime.eu-west-1.amazonaws.com/openai/v1`
+- **Europe Central 1 (Frankfurt)**: `https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1`
+- **Asia Pacific (Tokyo)**: `https://bedrock-runtime.ap-northeast-1.amazonaws.com/openai/v1`
+- **Asia Pacific (Singapore)**: `https://bedrock-runtime.ap-southeast-1.amazonaws.com/openai/v1`
+
+##### 多个 Bedrock 实例
+
+您可以为不同的 AWS 区域或账户配置多个 Bedrock 提供商。每个实例在提供商下拉菜单中单独显示，便于在 Playground 和在线评估中切换配置。
+
+#### Ollama
+
+Opik 使用兼容 OpenAI 的 API 连接到 [Ollama](https://ollama.com/)，因此您可以将 Ollama 模型用于所有大语言模型操作。
+
+<Note>
+**URL 必须以 `/v1` 结尾。** 您在 Opik 中输入的基础 URL 必须以 `/v1` 结尾（例如 `http://localhost:11434/v1`）。Opik 使用此 URL 调用 Ollama 实例上的兼容 OpenAI 的聊天补全端点。
+</Note>
+
+<Tip>
+**自托管部署：** Ollama 提供商默认启用。要禁用它，请在 Opik 后端服务上设置环境变量 `TOGGLE_OLLAMA_PROVIDER_ENABLED=false`。
+</Tip>
+
+##### 在 Opik 中配置 Ollama
+
+1. 在 Opik 中，前往 **工作区设置 > AI 提供商**
+2. 点击 **"添加配置"**
+3. 从提供商下拉菜单中选择 **"Ollama"**
+4. 填写：
+   - **提供商名称**: 此实例的名称（例如 "Ollama local"）
+   - **URL**: 您的 Ollama 实例的基础 URL，以 `/v1` 结尾（例如 `http://localhost:11434/v1`）
+   - **API 密钥**（可选）：除非您的 Ollama 实例需要身份验证，否则留空
+   - 使用 **"测试连接"** 验证 Opik 是否能访问该实例，然后使用 **"发现模型"** 加载模型列表
+5. 点击 **保存** 以存储配置
+
+您可以使用不同的提供商名称和 URL 配置多个 Ollama 实例。
+
+#### vLLM / 自定义提供商
+
+使用此选项添加任何其他兼容 OpenAI API 的提供商，如 vLLM 等。**您可以配置多个自定义提供商**，每个都有自己的唯一名称、URL 和模型。
+
+<Frame>
+  <img src="/img/configuration/vllm_configuration.png" alt="新建自定义 AI 提供商弹窗" />
+</Frame>
+
+##### 配置步骤
+
+1. **提供商名称**：输入一个唯一名称以标识此自定义提供商（例如 "vLLM Production"、"Ollama Local"、"Azure OpenAI Dev"）
+2. **URL**：输入您的服务器 URL，例如：`http://host.docker.internal:8000/v1`
+3. **API 密钥**（可选）：如果您的模型访问需要身份验证，请输入 API 密钥。否则，将此字段留空。
+4. **模型**：列出您服务器上所有可用的模型。您稍后可以选择其中一个使用。
+5. **自定义请求头**（可选）：以键值对形式添加您的自定义端点所需的任何额外 HTTP 请求头。
+
+<Tip>
+  如果您在本地运行 Opik，Mac 和 Windows 需要使用 `http://host.docker.internal:<PORT>/v1`，Linux 需要使用 `http://172.17.0.1:<PORT>/v1`，而不是 `http://localhost`。
+</Tip>
+
+##### 自定义请求头
+
+某些自定义提供商可能需要除 API 密钥之外的额外 HTTP 请求头用于身份验证或路由。您可以使用"自定义请求头"部分配置这些请求头：
+
+- 点击 **"+ 添加请求头"** 以添加新请求头
+- 输入请求头名称（例如 `X-Custom-Auth`、`X-Request-ID`）
+- 输入请求头值
+- 根据需要添加多个请求头
+- 使用删除图标移除请求头
+
+**自定义请求头的常见用例：**
+- **自定义身份验证**：您的基础设施所需的额外身份验证令牌或请求头
+- **请求路由**：用于将请求路由到特定模型版本或部署的请求头
+- **元数据跟踪**：用于跟踪或日志记录的自定义请求头
+- **企业功能**：企业代理配置所需的请求头
+
+<Note>
+  自定义请求头会随每个请求发送到您的自定义提供商端点。请确保请求头值保持安全，不要在日志或错误消息中暴露。
+</Note>
+
+##### 管理多个自定义提供商
+
+配置多个自定义提供商后，您可以：
+
+- 通过在配置对话框的提供商下拉菜单中选择来 **编辑** 任何自定义提供商
+- **删除** 不再需要的自定义提供商
+- 在 Playground 和自动化规则中 **切换** 不同的自定义提供商
+
+每个自定义提供商在提供商下拉菜单中作为单独的选项显示，便于使用多个自托管或自定义大语言模型部署。
+
+## API 密钥安全
+
+API 密钥经过加密并安全存储。配置后仅显示名称和提供商类型。
+
+## 故障排除
+
+- **身份验证错误**：确保您的 API 密钥有效且未过期
+- **访问被拒绝**：检查您的 API 密钥是否具有使用所请求模型所需的权限
+- **速率限制**：调整您的请求频率或联系提供商以提高限制

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -87,6 +88,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
   onQueueCreated,
   queue: defaultQueue,
 }) => {
+  const { t } = useTranslation();
   const {
     permissions: { canCreateAnnotationQueues, canEditAnnotationQueues },
   } = usePermissions();
@@ -110,11 +112,11 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
 
   const isEdit = Boolean(defaultQueue);
   const title = isEdit
-    ? "Edit annotation queue"
-    : "Create a new annotation queue";
+    ? t("common.annotationQueues.editAnnotationQueue")
+    : t("common.annotationQueues.createAnnotationQueue");
   const submitText = isEdit
-    ? "Update annotation queue"
-    : "Create annotation queue";
+    ? t("common.annotationQueues.updateAnnotationQueue")
+    : t("common.annotationQueues.createAnnotationQueueSubmit");
 
   const getQueue = useCallback(() => {
     const formData = form.getValues();
@@ -185,7 +187,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   const validationErrors = get(formState.errors, ["name"]);
                   return (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>{t("common.labels.name")}</FormLabel>
                       <FormControl>
                         <Input
                           className={cn({
@@ -193,7 +195,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                               validationErrors?.message,
                             ),
                           })}
-                          placeholder="Annotation queue name"
+                          placeholder={t("common.annotationQueues.annotationQueueName")}
                           {...field}
                         />
                       </FormControl>
@@ -213,7 +215,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
 
                     return (
                       <FormItem className="flex-1">
-                        <FormLabel>Project</FormLabel>
+                        <FormLabel>{t("common.shared.project")}</FormLabel>
                         <FormControl>
                           <ProjectsSelectBox
                             value={field.value}
@@ -238,7 +240,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   render={({ field }) => (
                     <FormItem className="flex-1">
                       <FormLabel>
-                        Scope{" "}
+                        {t("common.annotationQueues.scope")}{" "}
                         <ExplainerIcon
                           className="inline"
                           {...EXPLAINERS_MAP[
@@ -263,11 +265,10 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
               <Separator orientation="horizontal" className="my-4" />
               <div className="space-y-4">
                 <div className="comet-body-s text-muted-slate">
-                  Annotation guidelines
+                  {t("common.annotationQueues.annotationGuidelines")}
                 </div>
                 <Description>
-                  Set how items are scored and labeled, and provide instructions
-                  so annotators give consistent feedback.
+                  {t("common.annotationQueues.annotationGuidelinesDescription")}
                 </Description>
               </div>
               <div className="space-y-4">
@@ -276,10 +277,10 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   name="instructions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Instructions</FormLabel>
+                      <FormLabel>{t("common.labels.instructions")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Instructions for annotators"
+                          placeholder={t("common.annotationQueues.instructionsForAnnotators")}
                           rows={4}
                           {...field}
                         />
@@ -301,7 +302,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                     return (
                       <FormItem>
                         <FormLabel>
-                          Available feedback scores (optional){" "}
+                          {t("common.annotationQueues.availableFeedbackScores")}{" "}
                           <ExplainerIcon
                             className="inline"
                             {...EXPLAINERS_MAP[EXPLAINER_ID.visible_scores]}
@@ -330,12 +331,10 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
               </div>
               <div className="space-y-4">
                 <div className="comet-body-s text-muted-slate">
-                  Share annotation queue
+                  {t("common.annotationQueues.shareAnnotationQueue")}
                 </div>
                 <Description>
-                  You must invite annotators to your workspace for them to
-                  review the items. After creating the queue, you&apos;ll get a
-                  direct link to share with them.
+                  {t("common.annotationQueues.shareAnnotationQueueDescription")}
                 </Description>
               </div>
             </form>
@@ -343,7 +342,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("common.buttons.cancel")}</Button>
           </DialogClose>
           <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
             {submitText}

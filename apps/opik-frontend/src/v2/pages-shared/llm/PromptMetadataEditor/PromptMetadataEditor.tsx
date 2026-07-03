@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CodeMirror from "@uiw/react-codemirror";
 import { jsonLanguage } from "@codemirror/lang-json";
 import { EditorView } from "@codemirror/view";
@@ -25,6 +26,7 @@ const PromptMetadataEditor: React.FC<PromptMetadataEditorProps> = ({
   onChange,
   showInvalidJSON,
 }) => {
+  const { t } = useTranslation();
   // Use a transparent CodeMirror bg so the FormFieldCard's `bg-soft-background`
   // shows through instead of stacking a second `--codemirror-background` panel.
   const theme = useCodemirrorTheme({ editable: true, transparent: true });
@@ -32,7 +34,7 @@ const PromptMetadataEditor: React.FC<PromptMetadataEditorProps> = ({
   return (
     <div className="space-y-1.5">
       <FormFieldCard
-        title="Metadata"
+        title={t("common.labels.metadata")}
         actions={<CodeBlockCopy text={value} />}
         bodyClassName="px-0 pt-2"
       >
@@ -47,7 +49,7 @@ const PromptMetadataEditor: React.FC<PromptMetadataEditorProps> = ({
       </FormFieldCard>
       {showInvalidJSON && (
         <p className="comet-body-s text-destructive">
-          Metadata field is not valid
+          {t("common.messages.metadataFieldNotValid")}
         </p>
       )}
     </div>

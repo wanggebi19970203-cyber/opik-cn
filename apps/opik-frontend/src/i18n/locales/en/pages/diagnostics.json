@@ -1,0 +1,16 @@
+{
+  "diagnostics": {
+    "title": "Diagnostics",
+    "description": "Monitor system health and performance",
+    "metrics": {
+      "latency": "Latency",
+      "throughput": "Throughput",
+      "errors": "Error rate",
+      "uptime": "Uptime"
+    },
+    "alerts": {
+      "title": "System alerts",
+      "noAlerts": "No alerts"
+    }
+  }
+}

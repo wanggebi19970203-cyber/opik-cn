@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Control, FieldValues, Path, useWatch } from "react-hook-form";
 import get from "lodash/get";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -30,9 +31,10 @@ const WidgetRankingSettingsSection = <T extends FieldValues>({
   onRankingMetricChange,
   onRankingHigherIsBetterChange,
 }: WidgetRankingSettingsSectionProps<T>) => {
+  const { t } = useTranslation("dashboards");
   const rankingOptions: DropdownOption<string>[] = useMemo(() => {
     return [
-      { value: NO_RANKING_VALUE, label: "No ranking" },
+      { value: NO_RANKING_VALUE, label: t("leaderboard.noRanking") },
       ...dynamicScoresColumns.map((col) => ({
         value: col.id,
         label: col.label,
@@ -58,13 +60,13 @@ const WidgetRankingSettingsSection = <T extends FieldValues>({
 
           return (
             <FormItem className="flex-1">
-              <FormLabel>Ranking metric</FormLabel>
+              <FormLabel>{t("leaderboard.rankingMetricLabel")}</FormLabel>
               <FormControl>
                 <SelectBox
                   value={field.value || NO_RANKING_VALUE}
                   onChange={onRankingMetricChange}
                   options={rankingOptions}
-                  placeholder="Select ranking metric"
+                  placeholder={t("leaderboard.selectRankingMetric")}
                   className={cn({
                     "border-destructive": Boolean(validationErrors?.message),
                   })}
@@ -80,7 +82,7 @@ const WidgetRankingSettingsSection = <T extends FieldValues>({
         name={"rankingDirection" as Path<T>}
         render={({ field }) => (
           <FormItem className="shrink-0">
-            <FormLabel>Ranking order</FormLabel>
+            <FormLabel>{t("leaderboard.rankingOrderLabel")}</FormLabel>
             <FormControl>
               <ToggleGroup
                 type="single"
@@ -98,19 +100,19 @@ const WidgetRankingSettingsSection = <T extends FieldValues>({
               >
                 <ToggleGroupItem
                   value="higher"
-                  aria-label="High first"
+                  aria-label={t("leaderboard.highFirst")}
                   className="gap-1.5 whitespace-nowrap"
                 >
                   <TrendingUp className="size-3.5" />
-                  <span>High first</span>
+                  <span>{t("leaderboard.highFirst")}</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="lower"
-                  aria-label="Low first"
+                  aria-label={t("leaderboard.lowFirst")}
                   className="gap-1.5 whitespace-nowrap"
                 >
                   <TrendingDown className="size-3.5" />
-                  <span>Low first</span>
+                  <span>{t("leaderboard.lowFirst")}</span>
                 </ToggleGroupItem>
               </ToggleGroup>
             </FormControl>

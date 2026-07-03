@@ -1,0 +1,294 @@
+---
+headline: Kubernetes 部署 | Opik 文档
+og:description: 学习如何使用 Helm chart 在 Kubernetes 上配置和部署 Opik，适用于生产级环境。
+og:site_name: Opik 文档
+og:title: '使用 Opik 部署：轻松驾驭 Kubernetes'
+subtitle: 描述如何在 Kubernetes 集群上运行 Opik
+title: Kubernetes 部署
+---
+
+> **重要提示：** 如果您正在使用或打算使用 Opik 或 Comet 企业版，请联系 Sales@comet.com 以获取正确的部署文档。
+
+对于生产环境部署，我们建议使用我们的 Kubernetes Helm chart。该 chart 设计为高度可配置，并已在 Comet 的托管云服务中经过充分验证。
+
+# 前置条件
+
+要在 Kubernetes 集群上安装 Opik，您需要安装以下工具：
+
+- [Helm](https://helm.sh/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- 可选：[kubectx](https://github.com/ahmetb/kubectx) 和 [kubens](https://github.com/ahmetb/kubectx)，用于在 Kubernetes 集群和命名空间之间切换。
+
+# 安装
+
+您可以通过运行以下命令，使用 Opik 团队维护的 Helm chart 安装 Opik：
+
+添加 Opik Helm 仓库
+
+```bash
+helm repo add opik https://comet-ml.github.io/opik/
+helm repo update
+```
+
+您可以将 VERSION 设置为特定的 Opik 版本，或保留为 'latest'
+
+```bash
+VERSION=latest
+helm upgrade --install opik -n opik --create-namespace opik/opik \
+    --set component.backend.image.tag=$VERSION \
+    --set component.python-backend.image.tag=$VERSION \
+    --set component.python-backend.env.PYTHON_CODE_EXECUTOR_IMAGE_TAG="$VERSION" \
+    --set component.frontend.image.tag=$VERSION
+```
+
+您可以将需要的服务端口转发到本地机器：
+
+```bash
+kubectl port-forward -n opik svc/opik-frontend 5173
+```
+
+Opik 将在 `http://localhost:5173` 可用。
+
+# 配置
+
+您可以在 [Helm chart 文档](https://comet-ml.github.io/opik/) 中找到完整的配置选项列表。
+
+# 高级部署选项
+
+## 配置外部访问
+
+### 为 opik-frontend 配置 Ingress
+
+```yaml
+component:
+    frontend:
+      ingress:
+        enabled: true
+        ingressClassName: <your ingress class>
+        annotations:
+            <your annotations>
+        hosts:
+            - host: opik.example.com
+              paths:
+                - path: /
+                  port: 5173
+                  pathType: Prefix
+        # TLS 配置（可选）
+        tls:
+            enabled: true
+            hosts:  # 可选 - 如未指定则默认使用规则中的 hosts
+                - opik.example.com
+            secretName: <your-tls-secret>  # 可选 - 如果使用 cert-manager 或类似工具则省略
+```
+
+### 为 ClickHouse 配置 LoadBalancer 服务
+
+```yaml
+clickhouse:
+  service:
+    serviceTemplate: clickhouse-cluster-svc-lb-template
+    annotations: <your clickhouse LB service annotations>
+```
+
+## 配置 ClickHouse 备份
+
+[ClickHouse 备份](./backup)
+
+## 配置 ClickHouse 副本
+
+<Warning>
+
+**重要限制：**
+您必须在启用 ClickHouse 副本 _之前_ 让 Opik 运行起来。
+在 Opik 运行之前尝试设置副本可能会导致错误或配置错误。
+
+</Warning>
+
+```yaml
+clickhouse:
+  replicasCount: 2
+```
+
+## 配置额外的 ClickHouse 用户和配置文件
+
+您可以创建具有自定义设置配置文件的只读 ClickHouse 用户。
+
+### 使用内联密码
+
+```yaml
+clickhouse:
+  additionalProfiles:
+    - name: readonly_profile
+      settings:
+        readonly: 1
+        max_execution_time: 60
+        max_memory_usage: 10000000000
+        max_rows_to_read: 20000000
+        max_concurrent_queries_for_user: 2
+  additionalUsers:
+    - username: myuser
+      password: my_secure_password
+      profile: readonly_profile
+```
+
+### 使用 Kubernetes Secrets
+
+当 `adminUser.useSecret.enabled: true` 时，用户密码从 Kubernetes Secret 中读取。默认情况下，它使用管理员 Secret（`adminUser.secretname`），键名为 `<username>_pass`：
+
+```yaml
+clickhouse:
+  adminUser:
+    useSecret:
+      enabled: true
+    secretname: clickhouse-admin-pass
+  additionalProfiles:
+    - name: readonly_profile
+      settings:
+        readonly: 1
+        max_execution_time: 60
+        max_memory_usage: 10000000000
+        max_rows_to_read: 20000000
+        max_concurrent_queries_for_user: 2
+  additionalUsers:
+    - username: myuser
+      profile: readonly_profile
+      # 密码从 Secret "clickhouse-admin-pass" 的键 "myuser_pass" 中读取
+    - username: anotheruser
+      profile: readonly_profile
+      secretname: my-custom-secret  # 覆盖 Secret 名称
+      password_key: custom_key      # 覆盖键名
+```
+
+## 为 Opik 使用 S3 存储桶
+
+### 使用 AWS 密钥和密钥
+
+```yaml
+component:
+  backend:
+    env:
+      S3_BUCKET: <your_bucket_name>
+      S3_REGION: <aws_region>
+      AWS_ACCESS_KEY_ID: <your AWS Key>
+      AWS_SECRET_ACCESS_KEY: <your AWS Secret>
+```
+
+## 使用 IAM 角色
+
+如果您的 IAM 角色已配置给 K8s 节点，您只需为 opik-backend 设置以下内容：
+
+```yaml
+component:
+  backend:
+    env:
+      S3_BUCKET: <your_bucket_name>
+      S3_REGION: <aws_region> 
+```
+
+如果您的角色应由 opik-backend 的 ServiceAccount 使用，您还需要额外设置：
+
+```yaml
+component:
+  backend:
+    serviceAccount:
+      enabled: true
+      annotations:
+        eks.amazonaws.com/role-arn: <your IAM Role arn>
+```
+
+## 使用外部 ClickHouse 安装
+
+从 Opik chart 1.4.2 版本开始支持
+
+使用外部 ClickHouse 的配置示例：
+
+```yaml
+component:
+    backend:
+      ...
+      waitForClickhouse:
+        clickhouse:
+          host: <YOUR CLICKHOUSE HOST>
+          port: 8123
+          protocol: http
+      env:
+        ANALYTICS_DB_MIGRATIONS_URL: "jdbc:clickhouse://<YOUR CLICKHOUSE HOST>:8123"
+        ANALYTICS_DB_HOST: "<YOUR CLICKHOUSE HOST>"
+        ANALYTICS_DB_DATABASE_NAME: "opik"
+        ANALYTICS_DB_MIGRATIONS_USER: "opik"
+        ANALYTICS_DB_USERNAME: "opik"
+        ANALYTICS_DB_MIGRATIONS_PASS: "xxx"
+        ANALYTICS_DB_PASS: "xxx"
+    ...
+clickhouse:
+    enabled: false
+```
+
+密码可以通过 Secret 处理，配置如下：
+
+```yaml
+component:
+    backend:
+      ...
+      envFrom:
+        - configMapRef:
+            name: opik-backend
+        - secretRef:
+            name: <your secret name>
+      env:
+        ANALYTICS_DB_MIGRATIONS_URL: "jdbc:clickhouse://<YOUR CLICKHOUSE HOST>:8123"
+        ANALYTICS_DB_HOST: "<YOUR CLICKHOUSE HOST>"
+        ANALYTICS_DB_DATABASE_NAME: "opik"
+        ANALYTICS_DB_MIGRATIONS_USER: "opik"
+        ANALYTICS_DB_USERNAME: "opik"
+...
+clickhouse:
+    enabled: false
+```
+
+# 删除安装
+
+在使用 Helm 删除 Opik 安装之前，请确保移除 ClickHouse 资源上的 Finalizer：
+
+```bash
+kubectl patch -n opik chi opik-clickhouse --type json --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'
+```
+
+然后卸载 Opik：
+
+```bash
+helm uninstall opik -n opik
+```
+
+# 版本兼容性
+
+确保您的 Python SDK 版本与 Kubernetes 部署版本匹配，以避免兼容性问题。
+
+## 检查当前版本
+
+### 检查 Opik UI 版本
+您可以在 UI 中查看当前的 Opik 部署版本，方法是点击右上角的用户菜单。
+
+### 检查 Python SDK 版本
+您可以通过运行以下命令检查已安装的 Python SDK 版本：
+
+```bash
+pip show opik
+```
+
+## 确保版本兼容
+
+确保两个版本匹配。如果不匹配：
+
+1. **更新 Python SDK**：运行 `pip install --upgrade opik==<VERSION>`，其中 `<VERSION>` 与您的 Kubernetes 部署版本匹配
+2. **更新 Kubernetes 部署**：更新 Helm 安装命令中的 VERSION 变量，使其与您的 Python SDK 版本匹配
+
+# 故障排除
+
+如果您在运行 Helm 时遇到以下错误
+
+```bash
+ERROR: Exception Primary Reason:  Code: 225. DB::Exception: Can't create replicated table without ZooKeeper. (NO_ZOOKEEPER) (version 24.3.5.47.altinitystable (altinity build))
+```
+
+请确保您使用的是最新版本的 Opik Helm chart，该版本默认运行 ZooKeeper

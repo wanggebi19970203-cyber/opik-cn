@@ -1,0 +1,107 @@
+---
+description: 从这里开始将 Opik 集成到您的 BytePlus 生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: BytePlus | Opik 文档
+og:description: 了解如何通过 OpenAI SDK 将 Opik 与 BytePlus 集成，无缝访问前沿 AI 模型和企业级安全能力。
+og:site_name: Opik 文档
+og:title: 将 Opik 与 BytePlus 集成以构建 AI 解决方案
+title: 使用 Opik 实现 BytePlus 可观测性
+---
+
+[BytePlus](https://www.byteplus.com/) 是字节跳动旗下的 AI 原生企业平台，提供 ModelArk——一套完整的平台即服务 (PaaS) 解决方案，用于部署和使用强大的大语言模型。它提供对 SkyLark 模型、DeepSeek V3.1、Kimi-K2 等前沿 AI 模型的访问，具备企业级安全性和可扩展性。
+
+本指南介绍如何通过 OpenAI SDK 将 Opik 与 BytePlus 集成。BytePlus 提供兼容 OpenAI 的 API 端点，允许您使用标准 OpenAI 客户端调用 BytePlus 模型。
+
+## 快速开始
+
+首先，确保已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+您还需要一个 BytePlus API 密钥。有关如何为模型服务创建 BytePlus API 密钥，请参阅[此指南](https://docs.byteplus.com/en/docs/ModelArk/1399008)。
+
+## 跟踪 BytePlus API 调用
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 BytePlus 基础 URL 初始化 OpenAI 客户端
+client = OpenAI(
+    base_url="https://ark.ap-southeast.bytepluses.com/api/v3",
+    api_key="YOUR_BYTEPLUS_API_KEY"
+)
+client = track_openai(client)
+
+response = client.chat.completions.create(
+    model="kimi-k2-250711",  # 可以使用 BytePlus 上可用的任意模型
+    messages=[
+        {"role": "user", "content": "Hello, world!"}
+    ],
+    temperature=0.7,
+    max_tokens=100
+)
+
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 结合 @track 装饰器使用
+
+您可以将受跟踪的客户端与 Opik 的 `@track` 装饰器结合使用，实现全面的链路追踪：
+
+```python
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://ark.ap-southeast.bytepluses.com/api/v3",
+    api_key="YOUR_BYTEPLUS_API_KEY"
+)
+client = track_openai(client)
+
+@track
+def analyze_data_with_ai(query: str):
+    """使用 BytePlus AI 模型分析数据。"""
+
+    response = client.chat.completions.create(
+        model="kimi-k2-250711",
+        messages=[
+            {"role": "user", "content": query}
+        ]
+    )
+
+    return response.choices[0].message.content
+
+# 调用受跟踪的函数
+result = analyze_data_with_ai("Analyze this business data...")
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **认证错误**：请确保您的 API 密钥正确且具有必要的权限
+2. **模型未找到**：请确认模型名称在 BytePlus 上可用
+3. **请求频率限制**：BytePlus 可能有速率限制；请实现适当的重试逻辑
+4. **基础 URL 问题**：请确保基础 URL 与您的 BytePlus 部署匹配
+
+### 获取帮助
+
+- 查阅 [BytePlus API 文档](https://docs.byteplus.com/en/docs/ModelArk/) 了解详细错误码
+- 针对 API 相关问题联系 BytePlus 技术支持
+- 查阅 Opik 文档了解链路追踪和评估功能
+
+## 后续步骤
+
+将 BytePlus 与 Opik 集成后，您可以：
+
+- 使用 Opik 的评估框架[评估您的 LLM 应用](/evaluation/overview)
+- [创建数据集](/evaluation/advanced/manage_datasets)以测试和改进您的模型
+- [设置反馈收集](/tracing/advanced/annotate_traces)以获取人工评估
+- [监控性能](/tracing/concepts)在不同模型和配置下的表现
+
+有关使用 Opik 配合兼容 OpenAI 的 API 的更多信息，请参阅 [OpenAI 集成指南](/integrations/openai)。

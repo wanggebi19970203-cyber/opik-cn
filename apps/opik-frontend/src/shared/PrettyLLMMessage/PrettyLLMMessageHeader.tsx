@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PrettyLLMMessageHeaderProps } from "./types";
@@ -7,6 +8,7 @@ import { ROLE_CONFIG } from "./constants";
 
 const PrettyLLMMessageHeader: React.FC<PrettyLLMMessageHeaderProps> =
   React.memo(({ role, label, className }) => {
+    const { t } = useTranslation();
     const roleConfig = ROLE_CONFIG[role];
     const Icon = roleConfig.icon;
 
@@ -30,7 +32,7 @@ const PrettyLLMMessageHeader: React.FC<PrettyLLMMessageHeaderProps> =
           </div>
 
           <div className="comet-body-xs-accented text-muted-slate">
-            {roleConfig.label}
+            {t(roleConfig.label)}
           </div>
         </div>
         <div className="comet-body-xs text-light-slate">{label}</div>

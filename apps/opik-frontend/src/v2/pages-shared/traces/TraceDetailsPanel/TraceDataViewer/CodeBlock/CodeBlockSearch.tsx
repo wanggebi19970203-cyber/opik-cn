@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
@@ -12,6 +13,7 @@ const CodeBlockSearch: React.FC<CodeBlockSearchProps> = ({
   searchValue,
   onSearch,
 }) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(Boolean(searchValue));
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,7 +37,7 @@ const CodeBlockSearch: React.FC<CodeBlockSearchProps> = ({
       <button
         type="button"
         onClick={() => setIsExpanded(true)}
-        aria-label="Search"
+        aria-label={t("common.codeBlock.search")}
         className={cn(
           "flex size-3.5 shrink-0 items-center justify-center text-muted-slate transition-colors hover:text-foreground",
           isExpanded && "invisible",
@@ -49,7 +51,7 @@ const CodeBlockSearch: React.FC<CodeBlockSearchProps> = ({
           <DebounceInput
             ref={inputRef}
             value={searchValue ?? ""}
-            placeholder="Search..."
+            placeholder={t("common.codeBlock.search") + "..."}
             onValueChange={(v) => onSearch(v as string)}
             onKeyDown={handleKeyDown}
             className="comet-body-xs h-6 flex-1 border-0 bg-transparent px-1.5 focus-visible:ring-0"
@@ -57,7 +59,7 @@ const CodeBlockSearch: React.FC<CodeBlockSearchProps> = ({
           <button
             type="button"
             onClick={handleCollapse}
-            aria-label="Close search"
+            aria-label={t("common.codeBlock.closeSearch")}
             className="mr-1 flex size-4 shrink-0 items-center justify-center text-muted-slate transition-colors hover:text-foreground"
           >
             <X className="size-3" />

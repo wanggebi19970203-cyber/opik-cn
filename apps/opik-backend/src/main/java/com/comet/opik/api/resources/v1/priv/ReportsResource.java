@@ -44,7 +44,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Reports", description = "Ollie daily report management")
+@Tag(name = "Reports", description = "Ollie 每日报告管理")
 public class ReportsResource {
 
     private final @NonNull ReportService reportService;
@@ -52,10 +52,10 @@ public class ReportsResource {
 
     @POST
     @Path("/generate")
-    @Operation(operationId = "generateReport", summary = "Trigger report generation", description = "Creates a pending report and triggers asynchronous generation via the orchestrator.", responses = {
-            @ApiResponse(responseCode = "202", description = "Report generation triggered", content = @Content(schema = @Schema(implementation = GenerateReportResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden")
+    @Operation(operationId = "generateReport", summary = "触发报告生成", description = "创建待处理报告并通过编排器触发异步生成。", responses = {
+            @ApiResponse(responseCode = "202", description = "报告生成已触发", content = @Content(schema = @Schema(implementation = GenerateReportResponse.class))),
+            @ApiResponse(responseCode = "401", description = "未授权"),
+            @ApiResponse(responseCode = "403", description = "禁止访问")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response generateReport(@PathParam("projectId") UUID projectId) {
@@ -65,7 +65,7 @@ public class ReportsResource {
 
         if (reportId == null) {
             return Response.status(Response.Status.NOT_IMPLEMENTED)
-                    .entity(Map.of("error", "Report generation is not configured"))
+                    .entity(Map.of("error", "报告生成功能未配置"))
                     .build();
         }
 
@@ -74,9 +74,9 @@ public class ReportsResource {
 
     @POST
     @Path("/{reportId}/complete")
-    @Operation(operationId = "completeReport", summary = "Complete report generation", description = "Callback from Ollie to update report status and content after generation.", responses = {
-            @ApiResponse(responseCode = "204", description = "Report updated"),
-            @ApiResponse(responseCode = "404", description = "Report not found")
+    @Operation(operationId = "completeReport", summary = "完成报告生成", description = "Ollie 的回调接口，用于在生成后更新报告状态和内容。", responses = {
+            @ApiResponse(responseCode = "204", description = "报告已更新"),
+            @ApiResponse(responseCode = "404", description = "报告未找到")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response completeReport(
@@ -93,8 +93,8 @@ public class ReportsResource {
     }
 
     @GET
-    @Operation(operationId = "getReports", summary = "Get reports for a project", description = "Returns a paginated list of reports, newest first.", responses = {
-            @ApiResponse(responseCode = "200", description = "Reports page", content = @Content(schema = @Schema(implementation = OllieReportPage.class)))
+    @Operation(operationId = "getReports", summary = "获取项目报告", description = "返回分页报告列表，最新的在前。", responses = {
+            @ApiResponse(responseCode = "200", description = "报告分页", content = @Content(schema = @Schema(implementation = OllieReportPage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getReports(
@@ -111,8 +111,8 @@ public class ReportsResource {
 
     @GET
     @Path("/preferences")
-    @Operation(operationId = "getReportPreference", summary = "Get report preferences", description = "Returns report preferences for a project, or null if none have been set.", responses = {
-            @ApiResponse(responseCode = "200", description = "Report preferences or null", content = @Content(schema = @Schema(implementation = ReportPreference.class)))
+    @Operation(operationId = "getReportPreference", summary = "获取报告偏好设置", description = "返回项目的报告偏好设置，若未设置则返回 null。", responses = {
+            @ApiResponse(responseCode = "200", description = "报告偏好设置或 null", content = @Content(schema = @Schema(implementation = ReportPreference.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getPreference(@PathParam("projectId") UUID projectId) {
@@ -125,8 +125,8 @@ public class ReportsResource {
 
     @PUT
     @Path("/preferences")
-    @Operation(operationId = "updateReportPreference", summary = "Update report preferences", description = "Enable or disable daily report generation for a project.", responses = {
-            @ApiResponse(responseCode = "200", description = "Updated preferences", content = @Content(schema = @Schema(implementation = ReportPreference.class)))
+    @Operation(operationId = "updateReportPreference", summary = "更新报告偏好设置", description = "启用或禁用项目的每日报告生成。", responses = {
+            @ApiResponse(responseCode = "200", description = "已更新的偏好设置", content = @Content(schema = @Schema(implementation = ReportPreference.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response updatePreference(
@@ -140,7 +140,7 @@ public class ReportsResource {
         return Response.ok(updated).build();
     }
 
-    @Schema(description = "Response for report generation trigger")
+    @Schema(description = "报告生成触发响应")
     private record GenerateReportResponse(UUID reportId) {
     }
 }

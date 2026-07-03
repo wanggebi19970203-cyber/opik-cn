@@ -3,6 +3,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 import { Plus } from "lucide-react";
 import { ColumnPinningState, RowSelectionState } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 
 import useEnvironmentsList from "@/api/environments/useEnvironmentsList";
 import AddEditEnvironmentDialog from "@/v2/pages-shared/environments/AddEditEnvironmentDialog/AddEditEnvironmentDialog";
@@ -94,6 +95,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const EnvironmentsTab: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/settings");
   const newEnvironmentDialogKeyRef = useRef(0);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
 
@@ -149,13 +151,23 @@ const EnvironmentsTab: React.FunctionComponent = () => {
     [rowSelection, environments],
   );
 
+  const translatedColumns: ColumnData<Environment>[] = DEFAULT_COLUMNS.map(
+    (col) => ({
+      ...col,
+      label: t(`settings.environments.columns.${col.id}`),
+    }),
+  );
+
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<Environment>(),
-      ...convertColumnDataToColumn<Environment, Environment>(DEFAULT_COLUMNS, {
-        columnsOrder,
-        selectedColumns,
-      }),
+      ...convertColumnDataToColumn<Environment, Environment>(
+        translatedColumns,
+        {
+          columnsOrder,
+          selectedColumns,
+        },
+      ),
       ...(canConfigureWorkspaceSettings
         ? [generateActionsColumDef({ cell: EnvironmentsRowActionsCell })]
         : []),
@@ -187,14 +199,14 @@ const EnvironmentsTab: React.FunctionComponent = () => {
       disabled={atLimit}
     >
       <Plus className="mr-1 size-4" />
-      Create environment
+      {t("settings.environments.create")}
     </Button>
   ) : null;
 
   const headerAction =
     createButton && atLimit ? (
       <TooltipWrapper
-        content={`A workspace can have up to ${ENVIRONMENT_WORKSPACE_LIMIT} environments. Delete an existing one to create a new environment.`}
+        content={t("settings.environments.atLimitTooltip", { limit: ENVIRONMENT_WORKSPACE_LIMIT })}
       >
         <span>{createButton}</span>
       </TooltipWrapper>
@@ -205,14 +217,14 @@ const EnvironmentsTab: React.FunctionComponent = () => {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="comet-title-xs">Environments</h2>
+        <h2 className="comet-title-xs">{t("settings.environments.title")}</h2>
         {headerAction}
       </div>
       <div className="mb-4 flex items-center justify-between gap-8">
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search by name"
+          placeholder={t("settings.searchPlaceholder")}
           className="w-[320px]"
           dimension="sm"
         />
@@ -243,15 +255,15 @@ const EnvironmentsTab: React.FunctionComponent = () => {
             <DataTableEmptyContent
               lightImageUrl={emptyEnvironmentsLightImage}
               darkImageUrl={emptyEnvironmentsDarkImage}
-              title="No environments yet"
-              description="Create an environment to organize traces by deployment stage (development, staging, production, …)."
+              title={t("settings.environments.noEnvironmentsTitle")}
+              description={t("settings.environments.noEnvironmentsDescription")}
             >
               {canConfigureWorkspaceSettings && (
                 <button
                   onClick={handleNewEnvironmentClick}
                   className="comet-body-s underline underline-offset-4 hover:text-primary"
                 >
-                  Add environment
+                  {t("settings.environments.addEnvironment")}
                 </button>
               )}
             </DataTableEmptyContent>

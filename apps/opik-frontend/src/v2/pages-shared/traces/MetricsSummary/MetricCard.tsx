@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowUp, ArrowDown, LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { PercentageTrendType } from "@/shared/PercentageTrend/PercentageTrend";
 
@@ -61,6 +62,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   testId,
   deltaUnit = "%",
 }) => {
+  const { t } = useTranslation("tracing");
   const delta = computeDelta(
     currentRaw ?? null,
     previousRaw ?? null,
@@ -70,7 +72,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const renderChange = () => {
     if (delta === undefined || !isFinite(delta)) return null;
     if (delta === 0) {
-      return <span className="text-xs text-light-slate">No changes</span>;
+      return <span className="text-xs text-light-slate">{t("metrics.noChanges")}</span>;
     }
 
     const isUp = delta > 0;

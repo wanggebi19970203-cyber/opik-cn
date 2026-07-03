@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import JsonView from "react18-json-view";
 import isObject from "lodash/isObject";
 import isUndefined from "lodash/isUndefined";
@@ -23,6 +24,7 @@ const TraceMessage: React.FC<TraceMessageProps> = ({
   trace,
   handleOpenTrace,
 }) => {
+  const { t } = useTranslation("tracing");
   const jsonViewTheme = useJsonViewTheme();
 
   const userFeedback = useMemo(() => {
@@ -92,7 +94,7 @@ const TraceMessage: React.FC<TraceMessageProps> = ({
           onClick={() => handleOpenTrace(trace.id, false)}
         >
           <ListTree className="mr-1 size-3" />
-          View trace
+          {t("traceMessage.viewTrace")}
         </Button>
         {trace.has_tool_spans && (
           <Button
@@ -101,7 +103,7 @@ const TraceMessage: React.FC<TraceMessageProps> = ({
             onClick={() => handleOpenTrace(trace.id, true)}
           >
             <Hammer className="mr-1 size-3" />
-            View tool calls
+            {t("traceMessage.viewToolCalls")}
           </Button>
         )}
       </div>

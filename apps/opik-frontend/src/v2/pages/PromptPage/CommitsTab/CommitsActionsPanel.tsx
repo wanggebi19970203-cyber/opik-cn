@@ -8,6 +8,7 @@ import ComparePromptVersionDialog from "@/v2/pages/PromptPage/CommitsTab/Compare
 import AddTagDialog from "@/v2/pages/PromptPage/CommitsTab/AddTagDialog";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
+import { useTranslation } from "react-i18next";
 
 type CommitsActionsPanelsProps = {
   versions: PromptVersion[];
@@ -16,6 +17,7 @@ type CommitsActionsPanelsProps = {
 const CommitsActionsPanel: React.FunctionComponent<
   CommitsActionsPanelsProps
 > = ({ versions }) => {
+  const { t } = useTranslation("pages/prompt");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<number | boolean>(false);
   const disabled = versions?.length === 0;
@@ -35,7 +37,7 @@ const CommitsActionsPanel: React.FunctionComponent<
         open={open === 2}
         setOpen={setOpen}
       />
-      <TooltipWrapper content="Manage version tags">
+      <TooltipWrapper content={t("commits.manageVersionTags")}>
         <Button
           variant="outline"
           size="icon-sm"
@@ -48,7 +50,7 @@ const CommitsActionsPanel: React.FunctionComponent<
           <Tag />
         </Button>
       </TooltipWrapper>
-      <TooltipWrapper content="Compare commits">
+      <TooltipWrapper content={t("commits.compareCommits")}>
         <Button
           size="sm"
           onClick={() => {
@@ -58,7 +60,7 @@ const CommitsActionsPanel: React.FunctionComponent<
           disabled={compareDisabled}
         >
           <Split className="mr-1.5 size-3.5" />
-          Compare
+          {t("commits.compare")}
         </Button>
       </TooltipWrapper>
       <ExplainerIcon

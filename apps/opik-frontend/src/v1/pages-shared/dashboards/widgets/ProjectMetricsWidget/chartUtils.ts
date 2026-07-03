@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { INTERVAL_TYPE } from "@/api/projects/useProjectMetric";
 import { ChartTooltipRenderValueArguments } from "@/shared/Charts/ChartTooltipContent/ChartTooltipContent";
 import { formatDuration } from "@/lib/date";
@@ -8,9 +9,9 @@ import { formatNumberInK } from "@/lib/utils";
  * Duration labels mapping for percentile charts
  */
 export const DURATION_LABELS_MAP = {
-  "duration.p50": "Percentile 50",
-  "duration.p90": "Percentile 90",
-  "duration.p99": "Percentile 99",
+  "duration.p50": i18next.t("dashboards.chartUtils.percentile50"),
+  "duration.p90": i18next.t("dashboards.chartUtils.percentile90"),
+  "duration.p99": i18next.t("dashboards.chartUtils.percentile99"),
 } as const;
 
 /**
@@ -18,28 +19,28 @@ export const DURATION_LABELS_MAP = {
  */
 export const INTERVAL_DESCRIPTIONS = {
   TOTALS: {
-    [INTERVAL_TYPE.HOURLY]: "Hourly totals",
-    [INTERVAL_TYPE.DAILY]: "Daily totals",
-    [INTERVAL_TYPE.WEEKLY]: "Weekly totals",
-    [INTERVAL_TYPE.TOTAL]: "Whole period totals",
+    [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.hourlyTotals"),
+    [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.dailyTotals"),
+    [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.weeklyTotals"),
+    [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.wholePeriodTotals"),
   },
   AVERAGES: {
-    [INTERVAL_TYPE.HOURLY]: "Hourly averages",
-    [INTERVAL_TYPE.DAILY]: "Daily averages",
-    [INTERVAL_TYPE.WEEKLY]: "Weekly averages",
-    [INTERVAL_TYPE.TOTAL]: "Whole period averages",
+    [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.hourlyAverages"),
+    [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.dailyAverages"),
+    [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.weeklyAverages"),
+    [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.wholePeriodAverages"),
   },
   QUANTILES: {
-    [INTERVAL_TYPE.HOURLY]: "Hourly quantiles in seconds",
-    [INTERVAL_TYPE.DAILY]: "Daily quantiles in seconds",
-    [INTERVAL_TYPE.WEEKLY]: "Weekly quantiles in seconds",
-    [INTERVAL_TYPE.TOTAL]: "Whole period quantiles in seconds",
+    [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.hourlyQuantilesInSeconds"),
+    [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.dailyQuantilesInSeconds"),
+    [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.weeklyQuantilesInSeconds"),
+    [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.wholePeriodQuantilesInSeconds"),
   },
   COST: {
-    [INTERVAL_TYPE.HOURLY]: "Total hourly cost in USD",
-    [INTERVAL_TYPE.DAILY]: "Total daily cost in USD",
-    [INTERVAL_TYPE.WEEKLY]: "Total weekly cost in USD",
-    [INTERVAL_TYPE.TOTAL]: "Total cost in USD",
+    [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.totalHourlyCostInUsd"),
+    [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.totalDailyCostInUsd"),
+    [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.totalWeeklyCostInUsd"),
+    [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.totalCostInUsd"),
   },
 } as const;
 

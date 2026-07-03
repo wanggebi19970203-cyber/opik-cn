@@ -46,7 +46,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "AI Spend", description = "Coding-agent spend analytics")
+@Tag(name = "AI Spend", description = "编程智能体花费分析")
 public class AiSpendResource {
 
     private final @NonNull AiSpendService aiSpendService;
@@ -55,9 +55,9 @@ public class AiSpendResource {
 
     @POST
     @Path("/summary")
-    @Operation(operationId = "getSpendSummary", summary = "Get spend summary", description = "Get coding-agent spend KPI summary", responses = {
-            @ApiResponse(responseCode = "200", description = "Spend summary", content = @Content(schema = @Schema(implementation = SpendSummaryResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getSpendSummary", summary = "获取花费概览", description = "获取编程智能体花费KPI概览", responses = {
+            @ApiResponse(responseCode = "200", description = "花费概览", content = @Content(schema = @Schema(implementation = SpendSummaryResponse.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getSpendSummary(
@@ -75,9 +75,9 @@ public class AiSpendResource {
 
     @POST
     @Path("/composition")
-    @Operation(operationId = "getSpendComposition", summary = "Get spend composition", description = "Get coding-agent token-flow composition (Sankey)", responses = {
-            @ApiResponse(responseCode = "200", description = "Spend composition", content = @Content(schema = @Schema(implementation = SpendCompositionResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getSpendComposition", summary = "获取花费构成", description = "获取编程智能体令牌流量构成（桑基图）", responses = {
+            @ApiResponse(responseCode = "200", description = "花费构成", content = @Content(schema = @Schema(implementation = SpendCompositionResponse.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getSpendComposition(
@@ -95,9 +95,9 @@ public class AiSpendResource {
 
     @POST
     @Path("/composition/{laneKey}/breakdown")
-    @Operation(operationId = "getSpendLaneBreakdown", summary = "Get spend lane breakdown", description = "Get the per-item breakdown for a composition lane", responses = {
-            @ApiResponse(responseCode = "200", description = "Lane breakdown", content = @Content(schema = @Schema(implementation = SpendBreakdownResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getSpendLaneBreakdown", summary = "获取花费通道明细", description = "获取构成通道的逐项明细", responses = {
+            @ApiResponse(responseCode = "200", description = "通道明细", content = @Content(schema = @Schema(implementation = SpendBreakdownResponse.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getSpendLaneBreakdown(
@@ -116,9 +116,9 @@ public class AiSpendResource {
 
     @POST
     @Path("/composition/breakdowns")
-    @Operation(operationId = "getSpendAllBreakdowns", summary = "Get all spend lane breakdowns", description = "Get the per-item breakdown for every composition lane in one request", responses = {
-            @ApiResponse(responseCode = "200", description = "Lane breakdowns", content = @Content(schema = @Schema(implementation = SpendBreakdownsResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getSpendAllBreakdowns", summary = "获取所有花费通道明细", description = "一次请求获取所有构成通道的逐项明细", responses = {
+            @ApiResponse(responseCode = "200", description = "通道明细", content = @Content(schema = @Schema(implementation = SpendBreakdownsResponse.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getSpendAllBreakdowns(
@@ -136,16 +136,16 @@ public class AiSpendResource {
 
     @POST
     @Path("/users")
-    @Operation(operationId = "getSpendUsers", summary = "Get spend user leaderboard", description = "Get coding-agent spend per user", responses = {
-            @ApiResponse(responseCode = "200", description = "User leaderboard", content = @Content(schema = @Schema(implementation = SpendUserPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getSpendUsers", summary = "获取花费用户排行榜", description = "获取每个用户的编程智能体花费", responses = {
+            @ApiResponse(responseCode = "200", description = "用户排行榜", content = @Content(schema = @Schema(implementation = SpendUserPage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getSpendUsers(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @Max(1000) @DefaultValue("25") int size,
             @QueryParam("sorting") String sorting,
-            @QueryParam("name") @Schema(description = "Filter users by name or email (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称或邮箱过滤用户（部分匹配，不区分大小写）") String name,
             @RequestBody(content = @Content(schema = @Schema(implementation = SpendMetricRequest.class))) @NotNull @Valid SpendMetricRequest request) {
 
         String workspaceId = requestContext.get().getWorkspaceId();

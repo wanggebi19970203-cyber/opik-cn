@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryParam } from "use-query-params";
 
 import { convertColumnDataToColumn } from "@/lib/table";
@@ -28,6 +29,7 @@ import { EditThreadTimeoutFormValues } from "./EditThreadTimeoutForm";
 import EditTruncationToggleDialog from "./EditTruncationToggleDialog";
 
 const WorkspacePreferencesTab: React.FC = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { data: workspaceConfig, isPending } = useWorkspaceConfig({
     workspaceName: workspaceName,
@@ -57,13 +59,13 @@ const WorkspacePreferencesTab: React.FC = () => {
   const data = useMemo(
     () => [
       {
-        name: "Thread online scoring rule cooldown period",
-        value: formatIso8601Duration(threadTimeoutValue) ?? "Not set",
+        name: t("settings.workspacePreferences.threadTimeout.name"),
+        value: formatIso8601Duration(threadTimeoutValue) ?? t("settings.workspacePreferences.threadTimeout.notSet"),
         type: WORKSPACE_PREFERENCE_TYPE.THREAD_TIMEOUT,
       },
       {
-        name: "Data truncation in tables",
-        value: truncationToggleValue ? "Enabled" : "Disabled",
+        name: t("settings.workspacePreferences.truncationToggle.name"),
+        value: truncationToggleValue ? t("settings.workspacePreferences.truncationToggle.enabled") : t("settings.workspacePreferences.truncationToggle.disabled"),
         type: WORKSPACE_PREFERENCE_TYPE.TRUNCATION_TOGGLE,
       },
     ],

@@ -1,0 +1,61 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## Traces、Spans 和对话线程的环境追踪
+
+你现在可以为 traces、spans 和对话线程标记**环境**字段——`production`、`staging`、`dev` 或你定义的任何标签。这使得分离信号与噪声变得容易：将项目的 trace 视图过滤为仅生产环境问题，或比较环境间的行为而无需启动单独的项目。
+
+**新增内容：**
+
+- **日志视图中的环境列** - Traces 和 spans 表现在显示环境并支持过滤，你可以在单个项目中按 `production` 与 `staging` 切片
+- **从数据摄取自动创建环境** - 当带有新环境名称的 trace 首次到达时自动创建环境；无需设置
+- **Python SDK 支持** - 将 `environment` 传递给 `@track`、`opik.trace()` 或 `opik.span()`——并通过 `.end()` 和 `.update()` 调用保留
+- **TypeScript SDK 支持** - 在 trace 和 span 创建时设置 `environment`
+
+```python
+import opik
+
+@opik.track(environment="production")
+def my_agent(input: str) -> str:
+    ...
+```
+
+👉 [环境文档](https://www.comet.com/docs/opik/tracing/advanced/log_traces#environments)
+
+## 测试套件断言现在可以检查子 Spans
+
+测试套件断言现在可以查看 trace 内部——不仅仅是顶层输入/输出——以推理工具调用、中间 LLM 步骤和子 Agent 行为。评估器 LLM 获得两个按需工具的访问权限：`get_trace_spans`（列出 trace 的所有子 spans）和 `read`（按 ID 获取特定 span）——使其能够精确查看每一步发生了什么。
+
+**为什么重要：** 之前，断言只能看到 Agent 的输入和输出。现在它可以检查是否调用了正确的工具、中间步骤使用了哪个模型，或者特定 span 是否有错误——为复杂 Agents 实现更有意义的正确性检查。
+
+## Trace 表加载速度大幅提升
+
+Traces 和 spans 表在加载列表时不再下载附件字节（图像、PDF）——附件仅在你打开单个 trace 时懒加载。在我们的图像和 PDF 附件基准测试中，这将每页负载从 **85 MB 降至 0.13 MB**，加载时间从 3.4 秒降至 0.1 秒。
+
+**为什么重要：** 如果你的任何 traces 包含文件附件，表格之前会在每次页面加载时静默获取所有这些二进制数据。无论附件大小或数量如何，现在的体验都是快速的。
+
+## OpenAI Playground：每个模型的 reasoning_effort 支持
+
+Playground 的 `reasoning_effort` 控件现在追踪 OpenAI 实际的每模型能力矩阵。支持 `"none"` 选项的模型（如 `gpt-5.1`）会显示它；不支持 reasoning effort 的模型会自动隐藏该控件。之前，UI 可能与后端支持的内容不同步。
+
+## Python SDK 改进
+
+Python（和 TypeScript）SDK 的多项可靠性修复和小改进：
+
+- **Streamer 和 drain 可靠性** — 修复了后台消息管道中的两个边界情况 bug，在使用附件或高消息吞吐量时可能导致少量 traces 丢失
+- **速率限制自动重试** — `search_traces()` 和 `search_spans()` 现在在 429 响应时自动等待和重试，而不是抛出错误，因此大型批量搜索在 API 速率限制下可以可靠完成
+- **评估任务失败可见** — 当评估任务引发异常时，失败现在记录在实验项上（Python 和 TypeScript SDK），而不是被静默丢弃
+
+## Bug 修复
+
+- **标注队列原因持久化** — 两个客户报告的 bug：在队列项之间导航时原因/评论字段被清除，以及导航顺序不正确。两个都已修复。
+- **实验 traces 中的 LLM 失败可见** — 当实验运行期间 LLM 调用失败时，trace 显示为空输出项，没有任何错误指示。结构化错误详情现在写入 trace 输出，使失败可诊断。
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.0.24...2.0.31)
+
+_发布版本_: `2.0.25`, `2.0.26`, `2.0.27`, `2.0.28`, `2.0.29`, `2.0.30`, `2.0.31`

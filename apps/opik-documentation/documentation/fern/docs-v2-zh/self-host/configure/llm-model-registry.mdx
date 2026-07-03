@@ -1,0 +1,146 @@
+# LLM 模型注册表配置
+
+在 Opik 的下拉菜单（Playground、LLM-as-Judge、自动化规则、Optimization Studio）中显示的 LLM 模型列表由后端从 YAML 注册表提供。注册表由最多三个来源组成，按以下顺序合并：
+
+1. **类路径默认值** — 后端 JAR 中附带的 `llm-models-default.yaml`。始终加载。这是每个部署开箱即用的来源。
+2. **远程 CDN YAML** — **可选启用**。启用后，后端从您配置的 URL 获取 YAML 并按计划刷新。自托管部署不强制要求使用此功能；主要面向希望在 Opik 版本之间获取新模型而无需重新部署的运维人员。
+3. **本地覆盖 YAML** — 可选。您挂载到后端容器中的 YAML 文件；其条目可以覆盖或扩展默认值和远程内容。
+
+本页介绍如何为自托管部署配置这些来源。
+
+## 环境变量
+
+所有配置均通过 opik-backend 容器上的环境变量完成。
+
+| 变量 | 默认值 | 用途 |
+|---|---|---|
+| `LLM_MODEL_REGISTRY_DEFAULT_RESOURCE` | `llm-models-default.yaml` | 类路径资源名称。通常无需更改。 |
+| `LLM_MODEL_REGISTRY_REMOTE_ENABLED` | `false` | 设置为 `true` 以启用可选的远程 CDN 获取。 |
+| `LLM_MODEL_REGISTRY_REMOTE_URL` | 空 | 远程 YAML 的 URL（http/https）。当 `REMOTE_ENABLED=true` 时必填。 |
+| `LLM_MODEL_REGISTRY_REFRESH_INTERVAL_SECONDS` | `300` | 重新获取远程 YAML 的频率。 |
+| `LLM_MODEL_REGISTRY_LOCAL_OVERRIDE_PATH` | 空 | 容器内本地覆盖 YAML 的绝对路径。 |
+
+## YAML 模式
+
+```yaml
+openai:
+  - id: "gpt-4o"
+    label: "GPT 4o"
+    structuredOutput: true
+    reasoning: false
+anthropic:
+  - id: "claude-opus-4-7"
+    label: "Claude Opus 4.7"
+    reasoning: false
+vertex-ai:
+  - id: "gemini-2.5-pro"
+    qualifiedName: "vertex_ai/gemini-2.5-pro"
+    label: "Gemini 2.5 Pro"
+    structuredOutput: true
+```
+
+字段说明：
+
+- `id`（必填）— 推理时使用的模型标识符。
+- `qualifiedName`（可选）— 用于区分存在于多个提供商下的模型（例如通过 Vertex AI 使用的 Gemini 与直接通过 Gemini API 使用的模型）。设置后用作路由键。
+- `label`（可选）— 下拉菜单中显示的人类可读名称。省略时回退到 `id`。
+- `structuredOutput`（可选，默认 `false`）— 模型是否支持 JSON schema / 工具调用的结构化输出模式。
+- `reasoning`（可选，默认 `false`）— 模型是否为推理模型（强制 temperature = 1.0 并在 UI 中解锁 reasoning-effort 参数）。
+
+## 合并行为
+
+模型在所有提供商中按 `id` 键控。`qualifiedName` 用于路由查找（以区分 Gemini 直接 API 与 Vertex AI 下的 `gemini-2.5-pro`），但覆盖去重始终使用 `id`。合并时：
+
+- **添加**：较低层中不存在的 `id` 会被追加到该提供商的列表中。
+- **覆盖**：与较低层匹配的 `id` 会替换完整定义。不支持部分覆盖 — 请提供最终模型所需的所有字段。
+- **删除**：目前不支持。如需完全隐藏默认模型，请联系技术支持。
+
+## 配置场景
+
+### 默认行为
+
+保留默认设置即可。后端提供随 Opik 版本附带的类路径 `llm-models-default.yaml` — 无出站流量，无需额外配置。升级 Opik 即可获取新模型。
+
+### 启用远程 CDN 获取（可选）
+
+如果您希望在 Opik 版本之间为运行中的部署获取新模型 — 例如您以较长的升级周期运行长期运行的环境，并希望自动获取提供商侧的新增模型 — 请将后端指向远程 YAML：
+
+```
+LLM_MODEL_REGISTRY_REMOTE_ENABLED=true
+LLM_MODEL_REGISTRY_REMOTE_URL=https://your-cdn.example.com/opik/llm-models-default.yaml
+LLM_MODEL_REGISTRY_REFRESH_INTERVAL_SECONDS=3600
+```
+
+Comet SaaS 使用 `https://cdn.comet.ml/opik/llm-models-default.yaml`，由 Opik 同步工作流每天重新生成 — 您可以在自己的 CDN 上镜像该内容，或者如果策略允许，可以直接指向它。
+
+远程获取失败会被记录但不会导致致命错误：后端会继续提供上次成功的注册表（如果首次获取失败则使用类路径默认值），因此启用远程层永远不会丢失模型路由。
+
+### 添加私有微调模型（Docker Compose）
+
+在宿主机上创建 `/etc/opik/my-models-override.yaml`：
+
+```yaml
+openai:
+  - id: "ft:gpt-4o-2024-08-06:my-org::abc123"
+    label: "Our Fine-Tuned GPT-4o"
+    structuredOutput: true
+```
+
+将其挂载到后端容器并设置路径：
+
+```yaml
+# docker-compose.override.yaml
+services:
+  backend:
+    volumes:
+      - /etc/opik/my-models-override.yaml:/opt/opik/models-override.yaml:ro
+    environment:
+      LLM_MODEL_REGISTRY_LOCAL_OVERRIDE_PATH: /opt/opik/models-override.yaml
+```
+
+### 添加私有微调模型（Kubernetes / Helm）
+
+使用覆盖 YAML 创建 ConfigMap：
+
+```bash
+kubectl create configmap opik-llm-models-override \
+  --from-file=models-override.yaml=/path/to/models-override.yaml
+```
+
+通过扩展 Helm values 将其挂载到后端 Deployment：
+
+```yaml
+# values.yaml overrides
+component:
+  backend:
+    env:
+      LLM_MODEL_REGISTRY_LOCAL_OVERRIDE_PATH: "/etc/opik/models-override.yaml"
+    volumes:
+      - name: llm-models-override
+        configMap:
+          name: opik-llm-models-override
+    volumeMounts:
+      - name: llm-models-override
+        mountPath: /etc/opik/models-override.yaml
+        subPath: models-override.yaml
+        readOnly: true
+```
+
+## 验证
+
+重启后，检查模型是否出现：
+
+```bash
+curl -s https://your-opik/api/v1/private/llm/models | jq '.openai[] | select(.id | contains("ft:"))'
+```
+
+刷新浏览器后，相同的列表会在几秒内出现在 UI 下拉菜单中。
+
+## 故障模式
+
+| 故障情况 | 发生结果 |
+|---|---|
+| 启动时远程 CDN 获取失败 | 记录日志；注册表仅使用类路径默认值。 |
+| 定期刷新时远程 CDN 获取失败 | 记录日志；保留上次内存中的注册表。 |
+| 覆盖 YAML 格式错误 | 记录日志；注册表仅使用类路径 + 远程内容。 |
+| 覆盖 YAML 路径已设置但文件缺失 | 静默忽略（使用默认值 + 远程内容）。 |

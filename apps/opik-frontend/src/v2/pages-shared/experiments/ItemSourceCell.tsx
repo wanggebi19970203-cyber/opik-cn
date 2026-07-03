@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import {
   ChevronDown,
@@ -120,23 +121,24 @@ const resolveGroupPrefix = (
   evaluationMethod: EVALUATION_METHOD | undefined,
   datasetId: string | undefined,
   datasetTypeMap: Record<string, DATASET_TYPE> | undefined,
+  t: (key: string) => string,
 ): { prefix: string; resource: RESOURCE_TYPE | undefined } => {
   if (evaluationMethod === EVALUATION_METHOD.TEST_SUITE) {
-    return { prefix: "Test suite", resource: RESOURCE_TYPE.testSuite };
+    return { prefix: t("testSuite"), resource: RESOURCE_TYPE.testSuite };
   }
   if (evaluationMethod === EVALUATION_METHOD.DATASET) {
-    return { prefix: "Dataset", resource: RESOURCE_TYPE.dataset };
+    return { prefix: t("dataset"), resource: RESOURCE_TYPE.dataset };
   }
   if (datasetId && datasetTypeMap) {
-    const t = datasetTypeMap[datasetId];
-    if (t === DATASET_TYPE.TEST_SUITE) {
-      return { prefix: "Test suite", resource: RESOURCE_TYPE.testSuite };
+    const type = datasetTypeMap[datasetId];
+    if (type === DATASET_TYPE.TEST_SUITE) {
+      return { prefix: t("testSuite"), resource: RESOURCE_TYPE.testSuite };
     }
-    if (t === DATASET_TYPE.DATASET) {
-      return { prefix: "Dataset", resource: RESOURCE_TYPE.dataset };
+    if (type === DATASET_TYPE.DATASET) {
+      return { prefix: t("dataset"), resource: RESOURCE_TYPE.dataset };
     }
   }
-  return { prefix: ITEM_SOURCE_LABEL, resource: undefined };
+  return { prefix: t("itemSource"), resource: undefined };
 };
 
 export const createItemSourceGroupCell = <TData,>(
@@ -146,6 +148,7 @@ export const createItemSourceGroupCell = <TData,>(
   ) => void,
 ) =>
   function ItemSourceGroupCell(context: CellContext<TData, unknown>) {
+    const { t } = useTranslation("experiments");
     const { row, table } = context;
     const { custom } = context.column.columnDef.meta ?? {};
     const cellData = row.original;
@@ -171,6 +174,7 @@ export const createItemSourceGroupCell = <TData,>(
       evaluationMethod,
       id,
       datasetTypeMap,
+      t,
     );
 
     const aggregationData = table.options.meta?.aggregationMap?.[row.id];
@@ -203,7 +207,7 @@ export const createItemSourceGroupCell = <TData,>(
             disabled={!row.getCanSelect()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
             onClick={(event) => checkboxClickHandler(event, context)}
-            aria-label="Select row"
+            aria-label={t("common:table.selectRow")}
           />
           <Button
             variant="minimal"

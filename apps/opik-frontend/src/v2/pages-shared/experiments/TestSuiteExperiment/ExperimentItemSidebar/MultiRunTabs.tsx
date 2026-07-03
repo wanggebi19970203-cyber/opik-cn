@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ExperimentItem } from "@/types/datasets";
 import { RunStatus } from "@/types/test-suites";
@@ -16,6 +17,8 @@ const MultiRunTabs: React.FC<MultiRunTabsProps> = ({
   activeIndex,
   onActiveIndexChange,
 }) => {
+  const { t } = useTranslation("experiments");
+
   if (experimentItems.length <= 1) {
     return experimentItems[0] ? (
       <div className="flex min-h-0 flex-1 flex-col">
@@ -47,7 +50,7 @@ const MultiRunTabs: React.FC<MultiRunTabsProps> = ({
                 className="size-[7px] shrink-0 rounded-[1.5px]"
                 style={{ backgroundColor: dotColor }}
               />
-              Run {idx + 1}
+              {t("run", { index: idx + 1 })}
             </button>
           );
         })}

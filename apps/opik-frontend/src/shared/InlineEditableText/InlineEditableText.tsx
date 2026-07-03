@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Pencil, Check, X, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -22,6 +23,7 @@ const InlineEditableText: React.FunctionComponent<InlineEditableTextProps> = ({
   isTitle = false,
   rightIcon,
 }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +107,7 @@ const InlineEditableText: React.FunctionComponent<InlineEditableTextProps> = ({
           </div>
         </div>
         <div className="flex h-full items-center pr-2">
-          <TooltipWrapper content="Save">
+          <TooltipWrapper content={t("common.shared.save")}>
             <button
               type="button"
               onMouseDown={(e) => {
@@ -117,7 +119,7 @@ const InlineEditableText: React.FunctionComponent<InlineEditableTextProps> = ({
               <Check className="size-3.5 text-special-button" />
             </button>
           </TooltipWrapper>
-          <TooltipWrapper content="Cancel">
+          <TooltipWrapper content={t("common.shared.cancel")}>
             <button
               type="button"
               onMouseDown={(e) => {
@@ -134,7 +136,7 @@ const InlineEditableText: React.FunctionComponent<InlineEditableTextProps> = ({
               <div className="flex h-full items-center px-1 py-2.5">
                 <div className="h-full w-px bg-border" />
               </div>
-              <TooltipWrapper content="Reset to default">
+              <TooltipWrapper content={t("common.shared.resetToDefault")}>
                 <button
                   type="button"
                   onMouseDown={(e) => {

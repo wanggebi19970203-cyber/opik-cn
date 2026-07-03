@@ -3,6 +3,7 @@ import JsonView from "react18-json-view";
 import isObject from "lodash/isObject";
 import isUndefined from "lodash/isUndefined";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Trace, USER_FEEDBACK_SCORE } from "@/types/traces";
 import MarkdownPreview from "@/shared/MarkdownPreview/MarkdownPreview";
@@ -23,6 +24,7 @@ const TraceMessage: React.FC<TraceMessageProps> = ({
   trace,
   handleOpenTrace,
 }) => {
+  const { t } = useTranslation("tracing");
   const jsonViewTheme = useJsonViewTheme();
 
   const userFeedback = useMemo(() => {
@@ -89,7 +91,7 @@ const TraceMessage: React.FC<TraceMessageProps> = ({
             className="text-muted-slate"
             onClick={() => handleOpenTrace(trace.id, false)}
           >
-            Trace
+            {t("traceMessage.trace")}
             <ArrowUpRight className="ml-1 size-3" />
           </Button>
           {trace.has_tool_spans && (
@@ -99,7 +101,7 @@ const TraceMessage: React.FC<TraceMessageProps> = ({
               className="text-muted-slate"
               onClick={() => handleOpenTrace(trace.id, true)}
             >
-              Tool calls
+              {t("traceMessage.toolCalls")}
               <ArrowUpRight className="ml-1 size-3" />
             </Button>
           )}

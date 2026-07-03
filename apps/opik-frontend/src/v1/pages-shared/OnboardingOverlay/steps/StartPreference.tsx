@@ -1,27 +1,27 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
+import { useTranslation } from "react-i18next";
 import useAppStore from "@/store/AppStore";
 import OnboardingStep from "@/v1/pages-shared/OnboardingOverlay/OnboardingStep";
 import { usePermissions } from "@/contexts/PermissionsContext";
 
-const OPTIONS = {
-  TRACE_APP: "Trace an app – Debug and analyze every AI interaction",
-  TEST_PROMPTS:
-    "Test prompts – Test prompts across models and providers approaches",
-  RUN_EVALUATIONS:
-    "Run evaluations – Run experiments and track performance across versions of your app",
-} as const;
-
 const FEATURE_FLAG_KEY = "onboarding-start-exploring-test";
 
 const StartPreference: React.FC = () => {
+  const { t } = useTranslation("onboarding");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const variant = useFeatureFlagVariantKey(FEATURE_FLAG_KEY);
 
   const {
     permissions: { canViewExperiments },
   } = usePermissions();
+
+  const OPTIONS = {
+    TRACE_APP: `${t("startOptions.traceApp")} – ${t("startOptions.traceAppDesc")}`,
+    TEST_PROMPTS: `${t("startOptions.testPrompts")} – ${t("startOptions.testPromptsDesc")}`,
+    RUN_EVALUATIONS: `${t("startOptions.runEvaluations")} – ${t("startOptions.runEvaluationsDesc")}`,
+  } as const;
 
   // A/B test: control shows "Skip", test shows "Start exploring Opik"
   // Enhanced flow also opens create experiment dialog when clicking "Run evaluations"
@@ -30,7 +30,7 @@ const StartPreference: React.FC = () => {
   return (
     <OnboardingStep className="max-w-full">
       <OnboardingStep.BackButton />
-      <OnboardingStep.Title>How would you like to start?</OnboardingStep.Title>
+      <OnboardingStep.Title>{t("howWouldYouLikeToStart")}</OnboardingStep.Title>
 
       <OnboardingStep.AnswerList className="w-full gap-4 space-y-0 lg:flex-row">
         {showEnhancedOnboarding ? (

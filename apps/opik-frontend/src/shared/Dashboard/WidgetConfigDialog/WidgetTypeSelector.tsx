@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import CardSelector, { CardOption } from "@/shared/CardSelector/CardSelector";
 import {
@@ -19,6 +20,7 @@ const WidgetTypeSelector: React.FC<WidgetTypeSelectorProps> = ({
   selectedType,
   onSelect,
 }) => {
+  const { t } = useTranslation();
   const widgetResolver = useDashboardStore(selectWidgetResolver);
   const runtimeConfig = useDashboardStore(selectRuntimeConfig);
   const { permissions } = usePermissions();
@@ -50,7 +52,7 @@ const WidgetTypeSelector: React.FC<WidgetTypeSelectorProps> = ({
 
   return (
     <div className="space-y-2">
-      <Label>Widget type</Label>
+      <Label>{t("common:dashboard.widgetType")}</Label>
       <CardSelector
         value={selectedType ?? ""}
         onChange={onSelect}

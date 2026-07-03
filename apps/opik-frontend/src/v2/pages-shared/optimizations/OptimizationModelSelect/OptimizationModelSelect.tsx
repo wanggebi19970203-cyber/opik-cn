@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ChevronRight, Search, Settings2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
   hasError,
   disabled = false,
 }) => {
+  const { t } = useTranslation("optimizations");
   const resetDialogKeyRef = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const [filterValue, setFilterValue] = useState("");
@@ -114,7 +116,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
     if (hasNoProviders) {
       return (
         <div className="comet-body-s flex h-20 flex-col items-center justify-center gap-1 px-4 text-center text-muted-slate">
-          <span>No AI providers configured yet.</span>
+          <span>{t("optimizations.modelSelect.noProviders")}</span>
           {canUpdateAIProviders ? (
             <Button
               variant="link"
@@ -122,10 +124,10 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
               className="h-auto p-0"
               onClick={handleManageProviders}
             >
-              Configure a provider
+              {t("optimizations.modelSelect.configureProvider")}
             </Button>
           ) : (
-            <span>Ask a workspace admin to add one to choose a model.</span>
+            <span>{t("optimizations.modelSelect.askAdmin")}</span>
           )}
         </div>
       );
@@ -134,7 +136,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
     if (hasNoResults) {
       return (
         <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-          No search results
+          {t("optimizations.modelSelect.noSearchResults")}
         </div>
       );
     }
@@ -257,7 +259,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
               "border-destructive": hasError,
             })}
           >
-            <SelectValue placeholder="Select an LLM model">
+            <SelectValue placeholder={t("optimizations.modelSelect.placeholder")}>
               {displayTitle && (
                 <div className="flex items-center gap-2">
                   {Icon && <Icon className="min-w-3.5 text-foreground" />}
@@ -275,7 +277,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
               <Input
                 ref={inputRef}
                 className="outline-0"
-                placeholder="Search model"
+                placeholder={t("optimizations.modelSelect.searchPlaceholder")}
                 value={filterValue}
                 variant="ghost"
                 onChange={(e) => setFilterValue(e.target.value)}
@@ -288,7 +290,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
                 <SelectSeparator />
                 <ListAction onClick={handleManageProviders}>
                   <Settings2 className="size-3.5 shrink-0" />
-                  Manage AI providers
+                  {t("optimizations.modelSelect.manageProviders")}
                 </ListAction>
               </>
             )}

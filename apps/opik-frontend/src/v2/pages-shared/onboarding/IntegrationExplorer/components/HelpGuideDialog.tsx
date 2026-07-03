@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink, Book, PlayIcon } from "lucide-react";
 import imageTutorialUrl from "/images/tutorial-placeholder.png";
 import {
@@ -23,25 +24,26 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation();
   const InviteUsersForm = usePluginsStore((state) => state.InviteUsersForm);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-[790px] gap-2">
         <DialogHeader>
-          <DialogTitle>Help guide</DialogTitle>
+          <DialogTitle>{t("onboarding.integrationExplorer.helpGuide")}</DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody>
           <div className="comet-body-s mb-3 pb-2 text-muted-slate">
-            Need help getting started? Find useful resources here, or{" "}
+            {t("onboarding.integrationExplorer.needHelpGettingStarted")}{" "}
             <a
               href={buildDocsUrl("/quickstart")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
             >
-              check our docs
+              {t("onboarding.integrationExplorer.checkOurDocs")}
               <ExternalLink className="size-3" />
             </a>
             .
@@ -53,13 +55,12 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <PlayIcon className="size-4 text-muted-slate" />
                   <div className="comet-body-s-accented">
-                    Watch our guided tutorial
+                    {t("onboarding.integrationExplorer.watchGuidedTutorial")}
                   </div>
                 </div>
 
                 <div className="comet-body-s text-muted-slate">
-                  Watch a short video to guide you through setup and key
-                  features.
+                  {t("onboarding.integrationExplorer.watchShortVideo")}
                 </div>
               </div>
 
@@ -83,11 +84,11 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <Book className="size-4 text-muted-slate" />
                   <div className="comet-body-s-accented">
-                    Explore our documentation
+                    {t("onboarding.integrationExplorer.exploreOurDocumentation")}
                   </div>
                 </div>
                 <div className="comet-body-s text-muted-slate">
-                  Check out our docs and helpful guides to get started.
+                  {t("onboarding.integrationExplorer.checkOutDocs")}
                 </div>
               </div>
 
@@ -98,7 +99,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  Getting started with Opik
+                  {t("onboarding.integrationExplorer.gettingStartedWithOpik")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -107,7 +108,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  Opik&apos;s open-source collection of cookbooks
+                  {t("onboarding.integrationExplorer.opikCookbooks")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -116,7 +117,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  Integrate Opik with your LLM application
+                  {t("onboarding.integrationExplorer.integrateOpikWithLlm")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -125,7 +126,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  Track agent execution
+                  {t("onboarding.integrationExplorer.trackAgentExecution")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -134,7 +135,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  Read our FAQ
+                  {t("onboarding.integrationExplorer.readFaq")}
                   <ExternalLink className="size-4" />
                 </a>
               </div>
@@ -147,8 +148,8 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
 
           <HelpLinks
             onCloseParentDialog={() => setOpen(false)}
-            title="Not ready to integrate yet?"
-            description="Explore Opik by testing things out in the playground or browsing our Demo project. No setup required."
+            title={t("onboarding.integrationExplorer.notReadyToIntegrate")}
+            description={t("onboarding.integrationExplorer.exploreOpikDescription")}
           >
             <HelpLinks.Playground />
             <HelpLinks.DemoProject />

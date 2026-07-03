@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/ui/hover-card";
 import { AnnotationQueue } from "@/types/annotation-queues";
 
@@ -14,6 +15,7 @@ interface AnnotationQueueProgressProps {
 const AnnotationQueueProgress: React.FunctionComponent<
   AnnotationQueueProgressProps
 > = ({ annotationQueue, children }) => {
+  const { t } = useTranslation("annotation-queues");
   const { items_count: itemsCount, reviewers } = annotationQueue;
 
   if (!reviewers || reviewers.length === 0) {
@@ -37,7 +39,7 @@ const AnnotationQueueProgress: React.FunctionComponent<
       </HoverCardTrigger>
       <HoverCardContent className="w-64">
         <div className="space-y-2">
-          <h4 className="comet-title-xs">Progress by Reviewer</h4>
+          <h4 className="comet-title-xs">{t("annotationQueues.progress.byReviewer")}</h4>
           <div className="space-y-1">
             {reviewers.map((reviewer) => {
               const reviewerProgress =

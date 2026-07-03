@@ -58,6 +58,7 @@ import ChatPromptView from "./ChatPromptView";
 import TextPromptView from "./TextPromptView";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { buildDocsUrl, cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type ViewMode = "pretty" | "json";
 
@@ -79,6 +80,7 @@ interface VersionWithMaybeAuthor extends PromptVersion {
 }
 
 const PromptTab = ({ prompt }: PromptTabInterface) => {
+  const { t } = useTranslation("pages/prompt");
   const {
     permissions: { canUsePlayground, canConfigureWorkspaceSettings },
   } = usePermissions();
@@ -240,7 +242,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           </div>
         </div>
         <div className="hidden min-w-0 xl:block">
-          <p className="comet-body-s-accented mb-1 ml-3">Version history</p>
+          <p className="comet-body-s-accented mb-1 ml-3">{t("promptTab.versionHistory")}</p>
           <div className="space-y-3 p-4">
             {[0, 1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-16 w-full" />
@@ -365,7 +367,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                       className="px-3"
                     >
                       <Blocks className="mr-2 size-3.5 shrink-0 text-light-slate" />
-                      Load in Prompt playground
+                      {t("promptTab.loadInPlayground")}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -377,7 +379,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Reference prompt in code
+                      {t("promptTab.referenceInCode")}
                       <ExternalLink className="ml-2 size-3.5 shrink-0" />
                     </a>
                   </DropdownMenuItem>
@@ -417,7 +419,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                 onClick={() => setOpenEditPrompt(true)}
               >
                 <Pencil className="mr-1.5 size-3.5" />
-                Edit
+                {t("promptTab.edit")}
               </Button>
             </div>
           </div>
@@ -453,7 +455,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           {/* Prompt section */}
           <div className="px-4 pb-4">
             <FormFieldCard
-              title="Prompt"
+              title={t("promptTab.prompt")}
               actions={
                 <>
                   <FormFieldModeSelect
@@ -494,7 +496,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           {metadataJson && (
             <div className="px-4 pb-4">
               <FormFieldCard
-                title="Metadata"
+                title={t("promptTab.metadata")}
                 actions={<CodeBlockCopy text={metadataJson} />}
                 bodyClassName="px-0 pt-2"
               >
@@ -512,7 +514,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
 
       {/* Right sidebar (visible only on xl+ screens) */}
       <div className="hidden min-w-0 xl:block">
-        <p className="comet-body-s-accented mb-1 ml-3">Version history</p>
+        <p className="comet-body-s-accented mb-1 ml-3">{t("promptTab.versionHistory")}</p>
         <VersionHistoryTimeline
           items={historyItems}
           selectedId={effectiveVersionId}
@@ -543,9 +545,9 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
         open={openLoadConfirm}
         setOpen={setOpenLoadConfirm}
         onConfirm={handleLoadIntoPlayground}
-        title="Load prompt"
-        description="Loading this prompt into the Playground will replace any unsaved changes. This action cannot be undone."
-        confirmText="Load prompt"
+        title={t("promptTab.loadPrompt")}
+        description={t("promptTab.loadPromptDescription")}
+        confirmText={t("promptTab.loadPrompt")}
       />
     </div>
   );

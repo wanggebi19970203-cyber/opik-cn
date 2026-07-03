@@ -1,0 +1,162 @@
+---
+title: "高级提示词工程最佳实践"
+subtitle: "学习提示词工程的最佳方法"
+description: "了解高级提示词工程技术以及如何使用 Opik Agent Optimizer 系统地应用它们以改善 LLM 性能。"
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/overview
+---
+
+改善 LLM 应用和代理的性能通常需要提高您使用的提示词的质量。虽然手动迭代很常见，但结合自动化工具的结构化方法可以产生显著更好且更一致的结果。本指南涵盖基础提示词工程技术以及 Opik Agent Optimizer 如何帮助您应用和自动化它们。
+
+## 评估提示词质量：第一步
+
+在尝试改进提示词之前，建立如何衡量成功至关重要。没有清晰的评估策略，就无法知道您的更改是否有益。
+
+<Info>
+  我们强烈建议使用 [LLM 评估平台](/v1/evaluation/evaluate_prompt)。通过定义：- 相关的测试用例**数据集**。- 一组**指标**（例如，准确率、ROUGE、Levenshtein 距离、自定义业务指标）。您可以客观地评估提示词的更改是否带来真正的改进。
+</Info>
+
+## 核心提示词工程技术
+
+一旦评估到位，您可以应用各种技术来增强您的提示词。其中许多可以使用 Opik 的优化器进一步优化或自动化。
+
+### 1. 清晰度和特异性
+
+这是最基本的原则。LLM 需要精确理解您希望它做什么。
+
+- **清晰的指令**：使用简单的语言。避免行话，除非 LLM 被期望理解它（例如，当角色设置为专家时）。
+- **明确定义的任务**：清晰地阐述目标。如果是多步骤任务，考虑将其分解。
+- **输出格式**：指定所需的输出格式（例如，"以 JSON 对象形式提供答案，包含键 'name' 和 'age'。"）。
+
+_Opik 关联_：所有优化器都通过优化您的 `prompts`（在 `ChatPrompt` 中定义）来工作。清晰且具体的起始提示词为优化器提供了更好的基础。
+
+### 2. 提供角色、受众和声音
+
+指导 LLM 关于其角色、它在向谁说话以及所需的语气，可以显著提高输出质量。
+
+- **角色**："您是一位专家天体物理学家。"/"您是一位乐于助人的旅行助手。"
+  - _Opik 关联_：`ChatPrompt` 是设置角色的主要位置。像 `MetaPromptOptimizer` 和 `EvolutionaryOptimizer` 这样的优化器可以优化包含角色定义的提示词。
+- **受众**："向 5 岁的孩子解释这个概念。"/"为博士级别的受众撰写技术摘要。"
+- **声音/语气**："以正式和学术的语气回应。"/"使用友好和鼓励的声音。"
+
+### 3. 提供上下文和少样本示例
+
+当给定相关上下文和所需输入/输出行为的示例（少样本提示）时，LLM 表现更好。
+
+- **上下文**：在提示词中或通过检索文档（RAG）提供必要的背景信息。
+- **少样本示例**：在提示词中直接包含 2-5 个示例，演示任务。
+
+  ```
+  User: Translate "hello" to French.
+  Assistant: Bonjour
+  User: Translate "goodbye" to French.
+  Assistant: Au revoir
+  User: Translate "thank you" to French.
+  Assistant: Merci
+  ```
+
+  _Opik 关联_：[FewShotBayesianOptimizer](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer) 专门设计用于自动化从数据集中为**聊天模型**选择最佳数量和组合的少样本示例。
+
+  ```python
+  # Example: Initializing FewShotBayesianOptimizer
+  from opik_optimizer import FewShotBayesianOptimizer
+
+  optimizer = FewShotBayesianOptimizer(
+      model="openai/gpt-4", # Or your preferred chat model
+      min_examples=1,
+      max_examples=5,
+  )
+```
+
+### 4. 使用响应模式（结构化输出）
+
+强制模型返回结构化输出（例如 JSON）简化了下游任务中的数据解析并减少了错误。
+
+- **直接指令**："以 JSON 对象形式返回答案，包含键 'product_name' 和 'price'。"
+- **工具**：
+  - OpenAI 模型提供 `response_format={"type": "json_object"}` 参数。
+  - 对于更广泛的模型支持和更复杂的基于 Pydantic 的模式，[Instructor](https://github.com/instructor-ai/instructor) 库非常出色。
+
+<Steps>
+  <Step title="安装 Instructor 依赖">
+    ```bash
+    pip install -U instructor openai pydantic
+    ```
+  </Step>
+  <Step title="使用 Instructor 库和 Pydantic">
+    ```python
+    import instructor
+    from pydantic import BaseModel
+    from openai import OpenAI
+
+    # Define your desired output structure using Pydantic
+    class UserInfo(BaseModel):
+        name: str
+        age: int
+
+    # Patch the OpenAI client (or other compatible clients)
+    client = instructor.from_openai(OpenAI())
+
+    # Extract structured data
+    try:
+        user_info = client.chat.completions.create(
+            model="gpt-4o-mini", # Or any model that supports function calling/tool use
+            response_model=UserInfo,
+            messages=[{"role": "user", "content": "John Doe is 30 years old."}]
+        )
+        print(f"Name: {user_info.name}, Age: {user_info.age}")
+    except Exception as e:
+        print(f"Error extracting structured data: {e}")
+    ```
+
+  </Step>
+</Steps>
+
+_Opik 关联_：虽然 Opik Agent Optimizer 主要关注提示词的自然语言部分，但确保您的 `instruction_prompt` 指导 LLM 生成适合特定模式的内容是提示词设计的关键方面。优化器可以帮助优化鼓励结构化输出的指令。
+
+### 5. 迭代优化和元提示词
+
+提示词工程很少是一次性过程。持续迭代是关键。"元提示词"是给 LLM 的复杂提示词，帮助它评审、分析或重写另一个（用户的）提示词。
+
+- **手动迭代**：测试、分析失败、优化、重复。
+- **元提示**：使用 LLM 帮助您改进提示词。例如，"评审此提示词的清晰度，并提出 3 种方法使其对客户服务聊天机器人更有效。"
+
+  - _Opik 关联_：[MetaPrompt 优化器](/v1/agent_optimization/algorithms/metaprompt_optimizer)直接自动化了这个概念。它使用一个 LLM（"推理模型"），在内部元提示的指导下，迭代生成和评估您初始提示词的改进版本。
+
+  ```python
+  # Example: Initializing MetaPromptOptimizer
+  from opik_optimizer import MetaPromptOptimizer
+
+  prompter = MetaPromptOptimizer( # Note: often aliased as 'prompter' in examples
+      model="openai/gpt-4", # Evaluation model
+      prompts_per_round=3
+  )
+  ```
+
+### 6. 使用遗传算法进行提示词进化
+
+进化或遗传算法可以应用于"进化"提示词，使用选择、交叉和变异的原则来找到高性能的提示词结构。
+
+- _Opik 关联_：[进化优化器](/v1/agent_optimization/algorithms/evolutionary_optimizer)实现了这种方法。它可以探索广泛的提示词变体，甚至使用 LLM 执行更智能的"语义"变异和交叉。
+
+  ```python
+  # Example: Initializing EvolutionaryOptimizer
+  from opik_optimizer import EvolutionaryOptimizer
+
+  optimizer = EvolutionaryOptimizer(
+      model="openai/gpt-4o-mini",
+      population_size=20,
+      num_generations=10
+  )
+  ```
+
+## 使用 Opik Agent Optimizer 进行系统化提示词优化
+
+虽然上述技术对手动提示词工程很有价值，但 [Opik Agent Optimizer SDK](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook) 提供了一种系统化和数据驱动的方式来自动化和增强此过程。通过利用数据集和评估指标，优化器可以探索巨大的设计空间以找到高性能的提示词。
+
+我们提供几种不同的优化算法，每种都适合不同的场景：
+
+1.  [**MetaPrompt 优化器**](/v1/agent_optimization/algorithms/metaprompt_optimizer)：使用 LLM 基于元级推理过程迭代优化您的提示词。适用于通用提示词改进。
+2.  [**Few-shot 贝叶斯优化器**](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer)：通过贝叶斯优化为**聊天模型**找到最佳的少样本示例集和数量。
+3.  [**进化优化器**](/v1/agent_optimization/algorithms/evolutionary_optimizer)：使用遗传算法进化提示词，能够进行多目标优化（例如，性能 vs. 长度）并使用 LLM 进行高级遗传操作。
+
+请参阅每个优化器的具体文档以了解其优势以及如何与不同的提示词工程挑战对齐。有关入门的一般指导，请参阅 [Opik Agent Optimizer 快速开始](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook)。

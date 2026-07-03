@@ -1,0 +1,124 @@
+---
+headline: OpenTelemetry Ruby SDK | Opik 文档
+og:description: 在你的 Ruby 应用中配置 OpenTelemetry SDK，高效地将遥测数据发送到 Opik，提升可观测性。
+og:site_name: Opik 文档
+og:title: OpenTelemetry Ruby SDK 与 Opik 集成
+title: OpenTelemetry Ruby SDK
+---
+
+## 与 Opik 集成
+
+目前，`Opik` 尚未提供 Ruby SDK。但你可以使用 Opik 的 OpenTelemetry 集成将遥测数据发送到 Opik。
+
+## Opik 配置
+
+你可以通过设置以下依赖项来配置应用使用 OpenTelemetry SDK：
+
+```ruby
+# gemfile
+# ... 其他 gem
+
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-all'
+```
+
+接下来，你需要设置 OpenTelemetry SDK 并将其配置为使用 Opik 作为 traces 后端。
+
+```ruby
+# opentelemetry_config.rb
+require 'opentelemetry/sdk'
+require 'opentelemetry/exporter/otlp'
+require 'opentelemetry/instrumentation/all'
+
+module OpenTelemetryConfig
+  def self.configure
+
+    # Opik OTEL traces 的 API 端点 URL
+    opik_endpoint = ENV.fetch('OPIK_OTEL_TRACES_ENDPOINT', 'https://www.comet.com/opik/api/v1/private/otel/v1/traces')
+    # 在此设置 Opik API 密钥、项目名称和工作区名称
+    # 设置默认值，请确保在环境变量中正确配置
+    opik_api_key = ENV.fetch('OPIK_API_KEY', '<any-api-key-value>')
+    opik_project_name = ENV.fetch('OPIK_PROJECT_NAME', '<any-project-name-value>')
+    opik_workspace_name = ENV.fetch('OPIK_COMET_WORKSPACE', '<default-workspace>')
+
+    # 非常重要：需要设置请求头，以便对 Opik API 调用进行身份验证
+    otlp_headers = {
+      'Authorization' => opik_api_key,
+      'projectName' => opik_project_name,
+      'Comet-Workspace' => opik_workspace_name
+    }
+
+    # 配置导出器使用 Opik API 端点和请求头
+    ENV['OTEL_EXPORTER_OTLP_PROTOCOL'] = 'http/protobuf' # 使用 OTLP HTTP/Protobuf 协议
+    ENV['OTEL_EXPORTER_OTLP_TRACES_ENDPOINT'] = opik_endpoint
+    ENV['OTEL_EXPORTER_OTLP_TRACES_HEADERS'] = otlp_headers.map { |k, v| "#{k}=#{v}" }.join(',')
+
+    OpenTelemetry::SDK.configure do |c|
+      c.service_name = opik_project_name
+      c.use_all # 为常见库启用自动埋点
+    end
+  end
+end
+
+OpenTelemetryConfig.configure
+```
+
+## 使用方法
+
+配置完成后，你就可以在应用中使用 OpenTelemetry SDK。以下示例演示如何创建简单的 trace 和 span：
+
+```ruby
+# app.rb
+require_relative './opentelemetry_config'
+
+require 'net/http'
+require 'uri'
+require 'json'
+
+TRACER = OpenTelemetry.tracer_provider.tracer('opik-tracer', '1.0.0')
+
+uri = URI("https://jsonplaceholder.typicode.com/posts/1")
+
+# 通过 OpenTelemetry 埋点创建 trace 和 span
+TRACER.in_span('JSONPlaceholder API Call', kind: :client, attributes: {
+  'http.url' => uri.to_s,
+  'http.method' => 'GET',
+}) do |span|
+  # 你的应用逻辑 ...
+
+  # 例如，向 JSONPlaceholder 发起 HTTP 请求
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  request = Net::HTTP::Get.new(uri)
+  request["Content-Type"] = "application/json"
+
+  response = http.request(request)
+  span.set_attribute('http.status_code', response.code.to_i)
+
+  puts "Response from JSONPlaceholder: #{response.body}"
+
+  span.set_attribute('output', response.body)
+end
+```
+
+需要注意的是，OpenTelemetry (otel) 的自动埋点不会自动匹配 Opik 的 schema，因此你可能需要手动设置某些属性，例如上面示例中的 `output` 属性。
+
+Opik 支持将以下库的属性映射到 Opik traces：
+
+- `python/OpenInference`
+- `python/Pydantic`
+- `python/GenAI`
+
+未来我们可能会为 Opik 添加更多集成。如果你有任何建议，请告诉我们！
+
+<Tip>
+  如果你的应用是短生命周期进程，你可能需要在应用结束时调用 `OpenTelemetry.tracer_provider.force_flush(timeout: <timeout>)` 或类似方法，以确保所有遥测数据在退出前被刷新。
+</Tip>
+
+## 总结
+
+本指南概述了如何在 Ruby 中将 Opik 与 OpenTelemetry SDK 集成。按照上述步骤，你可以轻松配置应用，将遥测数据发送到 Opik 进行监控和分析。
+
+如果你在集成过程中有任何问题或遇到困难，欢迎通过 [GitHub 仓库](https://github.com/comet-ml/opik/issues) 联系我们，或加入我们的 [Slack](https://chat.comet.com) 频道。

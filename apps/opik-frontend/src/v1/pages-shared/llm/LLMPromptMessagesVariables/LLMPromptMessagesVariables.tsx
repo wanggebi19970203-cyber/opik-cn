@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { DropdownOption } from "@/types/shared";
 import { Alert, AlertTitle } from "@/ui/alert";
@@ -7,12 +8,6 @@ import { Description } from "@/ui/description";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { EXPLAINERS_MAP, EXPLAINER_ID } from "@/v1/constants/explainers";
 import { TRACE_DATA_TYPE } from "@/hooks/useTracesOrSpansList";
-
-const DEFAULT_DESCRIPTION =
-  "Detected variables in your prompt (e.g., {{variable1}}) will appear below. For each one, select a field from a recent trace to map it — including image fields like input.image_url or output.image_base64. These mappings auto-fill the variables during rule execution.";
-
-const DEFAULT_ERROR_TEXT =
-  "Template parsing error. The variables cannot be extracted.";
 
 interface MessageVariablesValidationError {
   [key: string]: {
@@ -48,14 +43,17 @@ const LLMPromptMessagesVariables = ({
   variables,
   onChange,
   projectId,
-  description = DEFAULT_DESCRIPTION,
-  errorText = DEFAULT_ERROR_TEXT,
+  description,
+  errorText,
   projectName,
   datasetColumnNames,
   type = TRACE_DATA_TYPE.traces,
   includeIntermediateNodes = false,
   reservedSentinels,
 }: LLMPromptMessagesVariablesProps) => {
+  const { t } = useTranslation("prompt");
+  const resolvedDescription = description ?? t("llmPromptMessagesVariables.defaultDescription");
+  const resolvedErrorText = errorText ?? t("llmPromptMessagesVariables.templateParsingError");
   const variablesList: DropdownOption<string>[] = useMemo(() => {
     if (!variables || typeof variables !== "object") {
       return [];
@@ -78,15 +76,15 @@ const LLMPromptMessagesVariables = ({
   return (
     <div className="pt-4">
       <div className="comet-body-s-accented mb-1 flex items-center gap-1 text-muted-slate">
-        <span>Variable mapping ({variablesList.length})</span>
+        <span>{t("llmPromptMessagesVariables.variableMapping", { count: variablesList.length })}</span>
         <ExplainerIcon
           {...EXPLAINERS_MAP[EXPLAINER_ID.llm_judge_variable_mapping]}
         />
       </div>
-      <Description className="mb-2 inline-block">{description}</Description>
+      <Description className="mb-2 inline-block">{resolvedDescription}</Description>
       {parsingError && (
         <Alert variant="destructive">
-          <AlertTitle>{errorText}</AlertTitle>
+          <AlertTitle>{resolvedErrorText}</AlertTitle>
         </Alert>
       )}
       <div className="flex flex-col gap-2 overflow-hidden">

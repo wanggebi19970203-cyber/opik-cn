@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -35,11 +36,14 @@ const FiltersSection = <TColumnData,>({
   config,
   filters,
   onChange,
-  label = "Filters",
-  description = "Add filters",
+  label,
+  description,
   className = "",
   errors,
 }: FiltersSectionProps<TColumnData>) => {
+  const { t } = useTranslation("common");
+  const resolvedLabel = label ?? t("filters.label");
+  const resolvedDescription = description ?? t("filters.description");
   const handleAddFilter = useCallback(() => {
     const newFilter: Filter = {
       ...createFilter(),
@@ -63,8 +67,8 @@ const FiltersSection = <TColumnData,>({
   return (
     <div className={cn("space-y-2", className)}>
       <div className="space-y-1">
-        <FormLabel>{label}</FormLabel>
-        <Description className="block">{description}</Description>
+        <FormLabel>{resolvedLabel}</FormLabel>
+        <Description className="block">{resolvedDescription}</Description>
       </div>
 
       {filters.length > 0 && (
@@ -101,7 +105,7 @@ const FiltersSection = <TColumnData,>({
 
             return (
               <FormErrorSkeleton key={index}>
-                Filter {index + 1}: {errorMessages.join(", ")}
+                {t("filters.filterError", { index: index + 1, messages: errorMessages.join(", ") })}
               </FormErrorSkeleton>
             );
           })}
@@ -116,7 +120,7 @@ const FiltersSection = <TColumnData,>({
         className="w-fit"
       >
         <Plus className="mr-1 size-3.5" />
-        Add filter
+        {t("filters.addFilter")}
       </Button>
     </div>
   );

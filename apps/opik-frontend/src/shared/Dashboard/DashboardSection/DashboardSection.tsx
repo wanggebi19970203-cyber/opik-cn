@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
+import i18n from "@/i18n";
 import { CSS } from "@dnd-kit/utilities";
 import { useShallow } from "zustand/react/shallow";
 
@@ -43,7 +44,7 @@ const DashboardSection: React.FunctionComponent<DashboardSectionProps> = ({
     useShallow((state) => {
       const section = state.sections.find((s) => s.id === sectionId);
       return {
-        sectionTitle: section?.title ?? "Untitled Section",
+        sectionTitle: section?.title ?? i18n.t("common:dashboard.untitledSection"),
         widgets: get(section, "widgets", []),
         layout: get(section, "layout", []),
       };

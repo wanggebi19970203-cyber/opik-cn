@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import AddEditAnnotationQueueDialog from "@/v2/pages-shared/annotation-queues/AddEditAnnotationQueueDialog";
 import { Button } from "@/ui/button";
@@ -13,6 +14,7 @@ interface EditAnnotationQueueButtonProps {
 const EditAnnotationQueueButton: React.FunctionComponent<
   EditAnnotationQueueButtonProps
 > = ({ annotationQueue }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const {
     permissions: { canEditAnnotationQueues },
   } = usePermissions();
@@ -37,10 +39,10 @@ const EditAnnotationQueueButton: React.FunctionComponent<
         projectId={annotationQueue.project_id}
         scope={annotationQueue.scope}
       />
-      <TooltipWrapper content="Edit annotation queue">
+      <TooltipWrapper content={t("annotationQueue.edit.tooltip")}>
         <Button size="sm" variant="outline" onClick={handleOpenEditDialog}>
           <Pencil className="mr-1.5 size-3.5" />
-          Edit
+          {t("annotationQueue.edit.button")}
         </Button>
       </TooltipWrapper>
     </>

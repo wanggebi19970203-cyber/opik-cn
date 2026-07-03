@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { FormLabel } from "@/ui/form";
 import { Description } from "@/ui/description";
@@ -11,14 +12,16 @@ type ColumnsSectionProps<TColumnData> = ColumnsContentProps<TColumnData> & {
 };
 
 const ColumnsSection = <TColumnData,>({
-  label = "Columns",
+  label,
   description,
   ...contentProps
 }: ColumnsSectionProps<TColumnData>) => {
+  const { t } = useTranslation("common");
+  const resolvedLabel = label ?? t("labels.columns");
   return (
     <div className="space-y-2">
       <div className="space-y-1">
-        <FormLabel>{label}</FormLabel>
+        <FormLabel>{resolvedLabel}</FormLabel>
         {description && (
           <Description className="block">{description}</Description>
         )}

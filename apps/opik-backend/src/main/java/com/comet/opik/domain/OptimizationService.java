@@ -67,7 +67,7 @@ public interface OptimizationService {
 
     Mono<Long> updateDatasetDeleted(Set<UUID> datasetIds);
 
-    // Studio methods
+    // Studio 方法
     Mono<OptimizationStudioLog> generateStudioLogsResponse(UUID optimizationId);
 }
 
@@ -90,9 +90,9 @@ class OptimizationServiceImpl implements OptimizationService {
     private final @NonNull RedissonReactiveClient redisClient;
     private final @NonNull AnalyticsService analyticsService;
 
-    // Redis key pattern for cancellation signals (Python worker checks this)
+    // 取消信号的 Redis 键模式（Python worker 会检查此键）
     private static final String CANCEL_KEY_PATTERN = "opik:cancel:%s";
-    // Statuses that can be cancelled
+    // 可取消的状态
     private static final Set<OptimizationStatus> CANCELLABLE_STATUSES = EnumSet.of(
             OptimizationStatus.INITIALIZED,
             OptimizationStatus.RUNNING);
@@ -138,7 +138,7 @@ class OptimizationServiceImpl implements OptimizationService {
     }
 
     /**
-     * @return resolved criteria, or {@code null} if dataset name filter matched no datasets (caller should return empty results)
+     * @return 解析后的搜索条件，如果数据集名称过滤未匹配到任何数据集则返回 {@code null}（调用方应返回空结果）
      */
     private OptimizationSearchCriteria resolveDatasetNameFilter(
             OptimizationSearchCriteria searchCriteria, String workspaceId) {
@@ -163,7 +163,7 @@ class OptimizationServiceImpl implements OptimizationService {
         UUID id = optimization.id() == null ? idGenerator.generateId() : optimization.id();
         IdGenerator.validateVersion(id, "Optimization");
 
-        // Detect if this is a Studio optimization (has studioConfig in the request)
+        // 检测是否为 Studio 优化（请求中包含 studioConfig）
         boolean isStudioOptimization = optimization.studioConfig() != null;
 
         return resolveProjectId(optimization)
@@ -176,7 +176,7 @@ class OptimizationServiceImpl implements OptimizationService {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
                     String userName = ctx.get(RequestContext.USER_NAME);
 
-                    // Check if optimization already exists to preserve certain fields
+                    // 检查优化是否已存在，以保留特定字段
                     return optimizationDAO.getById(id)
                             .map(Optional::of)
                             .defaultIfEmpty(Optional.empty())
@@ -186,34 +186,34 @@ class OptimizationServiceImpl implements OptimizationService {
                                         .datasetId(datasetId)
                                         .projectId(resolvedProjectId);
 
-                                // Preserve existing fields when updating (SDK doesn't know about studioConfig)
+                                // 更新时保留已有字段（SDK 不了解 studioConfig）
                                 if (existingOpt.isPresent()) {
                                     var existing = existingOpt.get();
                                     log.info("Optimization '{}' already exists, preserving studioConfig", id);
 
-                                    // Preserve studioConfig if not provided in update
+                                    // 如果更新中未提供 studioConfig，则保留原有的
                                     if (optimization.studioConfig() == null
                                             && existing.studioConfig() != null) {
                                         builder.studioConfig(existing.studioConfig());
                                     }
 
-                                    // Preserve original name only if incoming name is blank
-                                    // (SDK sends blank name, but explicit updates should be honored)
+                                    // 仅当传入名称为空时保留原始名称
+                                    //（SDK 发送空名称，但显式更新应被采纳）
                                     if (StringUtils.isBlank(optimization.name())) {
                                         builder.name(existing.name());
                                     } else {
                                         builder.name(optimization.name());
                                     }
 
-                                    // Don't re-enqueue job for existing optimizations
+                                    // 不为已存在的优化重新入队任务
                                 } else {
-                                    // New optimization: generate name if not provided
+                                    // 新优化：如果未提供名称则自动生成
                                     var name = StringUtils.getIfBlank(optimization.name(),
                                             nameGenerator::generateName);
                                     builder.name(name);
                                 }
 
-                                // Force INITIALIZED status for NEW Studio optimizations only
+                                // 仅对新的 Studio 优化强制设置 INITIALIZED 状态
                                 if (isStudioOptimization && existingOpt.isEmpty()) {
                                     builder.status(OptimizationStatus.INITIALIZED);
                                     log.info(
@@ -249,7 +249,7 @@ class OptimizationServiceImpl implements OptimizationService {
                                                                 userName));
                                             }
 
-                                            // Only enqueue job for NEW Studio optimizations
+                                            // 仅对新的 Studio 优化入队任务
                                             if (shouldEnqueueJob) {
                                                 String workspaceName = ctx.getOrDefault(
                                                         RequestContext.WORKSPACE_NAME,
@@ -279,8 +279,8 @@ class OptimizationServiceImpl implements OptimizationService {
                             });
                 }))
                 .subscribeOn(Schedulers.boundedElastic())
-                // If a conflict occurs, we just return the id of the existing experiment.
-                // If any other error occurs, we throw it. The event is not posted for both cases.
+                // 如果发生冲突，直接返回已有实验的 ID。
+                // 如果发生其他错误，则抛出异常。两种情况都不会发布事件。
                 .onErrorResume(throwable -> handleCreateError(throwable, id));
     }
 
@@ -318,11 +318,11 @@ class OptimizationServiceImpl implements OptimizationService {
                 .switchIfEmpty(Mono.error(failWithNotFound("Optimization", id)))
                 .flatMap(optimization -> Mono.deferContextual(ctx -> {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
-                    // USER_NAME is absent on the internal cancelOptimization() path, where only
-                    // WORKSPACE_ID is seeded — fall back and let AnalyticsService resolve identity.
+                    // 在内部 cancelOptimization() 路径中 USER_NAME 不存在，仅设置了
+                    // WORKSPACE_ID — 回退并让 AnalyticsService 解析身份。
                     String userName = ctx.getOrDefault(RequestContext.USER_NAME, null);
 
-                    // Validate cancellation request for Studio optimizations
+                    // 验证 Studio 优化的取消请求
                     boolean isStudioCancellation = update.status() == OptimizationStatus.CANCELLED
                             && optimization.studioConfig() != null;
                     boolean isNotCancellable = !CANCELLABLE_STATUSES.contains(optimization.status());
@@ -337,11 +337,11 @@ class OptimizationServiceImpl implements OptimizationService {
                     return signalCancellationIfNeeded(id, optimization, update)
                             .then(optimizationDAO.update(id, update))
                             .doOnSuccess(__ -> {
-                                // Sync logs when optimization reaches terminal status
-                                // Safe to call multiple times - just syncs and reduces TTL
+                                // 当优化达到终态时同步日志
+                                // 可安全多次调用 - 仅同步并减少 TTL
                                 if (update.status() != null && update.status().isTerminal()) {
                                     finalizeLogsAsync(workspaceId, id);
-                                    // Only emit completion event on the transition into a terminal state
+                                    // 仅在转换到终态时发出完成事件
                                     if (!optimization.status().isTerminal()) {
                                         Schedulers.boundedElastic().schedule(() -> analyticsService.trackEvent(
                                                 "opik_optimization_completed",
@@ -362,13 +362,13 @@ class OptimizationServiceImpl implements OptimizationService {
     }
 
     /**
-     * Signals cancellation to Redis if this is a valid cancellation request for a Studio optimization.
-     * The Python worker polls this Redis key to detect cancellation requests.
+     * 如果是有效的 Studio 优化取消请求，向 Redis 发送取消信号。
+     * Python worker 轮询此 Redis 键以检测取消请求。
      *
-     * @param id The optimization ID
-     * @param optimization The current optimization state
-     * @param update The requested update
-     * @return Mono that completes when the signal is set, or empty if no signal is needed
+     * @param id 优化 ID
+     * @param optimization 当前优化状态
+     * @param update 请求的更新
+     * @return 信号设置完成时发出的 Mono，如果不需要信号则为空
      */
     private Mono<Void> signalCancellationIfNeeded(UUID id, Optimization optimization, OptimizationUpdate update) {
         boolean isStudioCancellation = update.status() == OptimizationStatus.CANCELLED
@@ -446,7 +446,7 @@ class OptimizationServiceImpl implements OptimizationService {
 
         String projectName = resolveProjectNameForJob(optimization, workspaceId);
 
-        // Build job message (use workspace name for SDK, workspace ID for log storage)
+        // 构建任务消息（SDK 使用工作区名称，日志存储使用工作区 ID）
         var jobMessage = OptimizationStudioJobMessage.builder()
                 .optimizationId(optimization.id())
                 .workspaceId(workspaceId)
@@ -480,9 +480,9 @@ class OptimizationServiceImpl implements OptimizationService {
         try {
             return projectService.get(optimization.projectId(), workspaceId).name();
         } catch (NotFoundException exception) {
-            // Project may have been deleted between optimization create and job enqueue.
-            // Degrade gracefully: the studio runner will fall back to the SDK default
-            // project. Anything else is unexpected and is allowed to propagate.
+            // 项目可能在优化创建和任务入队之间被删除。
+            // 优雅降级：studio runner 将回退到 SDK 默认项目。
+            // 其他异常则允许传播。
             log.warn("Project '{}' not found while resolving project name for optimization '{}'",
                     optimization.projectId(), optimization.id(), exception);
             return null;
@@ -526,14 +526,14 @@ class OptimizationServiceImpl implements OptimizationService {
             log.debug("Generating logs response for Studio optimization: '{}' in workspace: '{}'", optimizationId,
                     workspaceId);
 
-            // Build S3 key using the shared method from OptimizationLogSyncService
+            // 使用 OptimizationLogSyncService 的共享方法构建 S3 键
             String s3Key = OptimizationLogSyncService.formatS3Key(workspaceId, optimizationId);
 
-            // TODO: Check if log file exists in S3 and get last modified
-            // For now, return null for lastModified (file doesn't exist yet for new optimizations)
+            // TODO: 检查日志文件是否存在于 S3 中并获取最后修改时间
+            // 目前 lastModified 返回 null（新优化的文件尚不存在）
             Instant lastModified = null;
 
-            // Generate presigned URL and calculate expiration
+            // 生成预签名 URL 并计算过期时间
             String presignedUrl = preSignerService.presignDownloadUrl(s3Key);
             long expirationSeconds = preSignerService.getPresignedUrlExpirationSeconds();
             Instant expiresAt = Instant.now().plus(Duration.ofSeconds(expirationSeconds));

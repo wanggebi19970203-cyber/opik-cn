@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { Dot } from "recharts";
+import { useTranslation } from "react-i18next";
 
 import {
   TRIAL_STATUS_COLORS,
@@ -62,6 +63,7 @@ const useScatterDot = ({
   isTestSuite,
   setHoveredTrial,
 }: UseScatterDotParams) => {
+  const { t } = useTranslation("experiments");
   return useCallback(
     (props: ScatterDotProps) => {
       const { cx: rawCx, cy, payload } = props;
@@ -148,7 +150,7 @@ const useScatterDot = ({
                 fill="hsl(var(--background))"
                 fontWeight={600}
               >
-                Best candidate
+                {t('bestCandidate')}
               </text>
             </>
           )}

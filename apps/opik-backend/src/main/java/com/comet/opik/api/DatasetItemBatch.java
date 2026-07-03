@@ -24,23 +24,23 @@ import static com.comet.opik.utils.ValidationUtils.NULL_OR_NOT_BLANK;
 @DatasetItemBatchValidation
 public record DatasetItemBatch(
         @JsonView({
-                DatasetItem.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "If null, dataset_id must be provided") String datasetName,
+                DatasetItem.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "如果为空，则必须提供 dataset_id") String datasetName,
         @JsonView({
-                DatasetItem.View.Write.class}) @Schema(description = "If null, dataset_name must be provided") UUID datasetId,
+                DatasetItem.View.Write.class}) @Schema(description = "如果为空，则必须提供 dataset_name") UUID datasetId,
         @JsonView({
-                DatasetItem.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "Optional. Associates the batch with a project by name. Ignored if project_id is provided.") String projectName,
+                DatasetItem.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "可选。按名称将批次与项目关联。如果提供了 project_id，则忽略此项。") String projectName,
         @JsonView({
-                DatasetItem.View.Write.class}) @Schema(description = "Optional. Associates the batch with a project by ID. Takes precedence over project_name.") UUID projectId,
+                DatasetItem.View.Write.class}) @Schema(description = "可选。按 ID 将批次与项目关联。优先于 project_name。") UUID projectId,
         @JsonView({DatasetItem.View.Write.class}) @NotNull @Size(min = 1, max = 1000) @Valid List<DatasetItem> items,
         @JsonView({
-                DatasetItem.View.Write.class}) @Schema(description = "Optional batch group ID to group multiple batches into a single dataset version. If null, mutates the latest version instead of creating a new one.") UUID batchGroupId,
-        // OPIK-6696: when both copy_from_* coordinates are set, the INSERT FROM SELECT that copies
-        // unchanged rows reads from this (dataset, version) pair instead of the destination dataset's
-        // prior version, avoiding the multi-replica read-after-write window.
+                DatasetItem.View.Write.class}) @Schema(description = "可选的批次组 ID，用于将多个批次分组到单个数据集版本中。如果为空，则修改最新版本而非创建新版本。") UUID batchGroupId,
+        // OPIK-6696: 当 copy_from_* 坐标都设置时，复制未更改行的 INSERT FROM SELECT
+        // 从此 (dataset, version) 对读取，而非目标数据集的先前版本，
+        // 避免多副本写后读窗口。
         @JsonView({
-                DatasetItem.View.Write.class}) @Schema(description = "Optional. Dataset to read carry-forward rows from when materializing the new version. Required together with copy_from_version_id. When null, carry-forward rows are read from the destination dataset's prior version.") UUID copyFromDatasetId,
+                DatasetItem.View.Write.class}) @Schema(description = "可选。在物化新版本时，从中读取延续行的数据集。需要与 copy_from_version_id 一起提供。如果为空，则从目标数据集的先前版本读取延续行。") UUID copyFromDatasetId,
         @JsonView({
-                DatasetItem.View.Write.class}) @Schema(description = "Optional. Version within copy_from_dataset_id to read carry-forward rows from. Required together with copy_from_dataset_id.") UUID copyFromVersionId)
+                DatasetItem.View.Write.class}) @Schema(description = "可选。在 copy_from_dataset_id 中读取延续行的版本。需要与 copy_from_dataset_id 一起提供。") UUID copyFromVersionId)
         implements
             RateEventContainer {
 

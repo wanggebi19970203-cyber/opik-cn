@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Clock, Coins, LucideIcon, PenLine } from "lucide-react";
 
 import MetricComparisonCell from "@/v2/pages-shared/experiments/MetricComparisonCell/MetricComparisonCell";
@@ -65,6 +66,36 @@ export type MetricKPICardConfig = {
   trend?: PercentageTrendType;
 };
 
+export const useMetricKPICardConfigs = (options?: {
+  isTestSuite?: boolean;
+  objectiveName?: string;
+}): MetricKPICardConfig[] => {
+  const { t } = useTranslation("experiments");
+  return [
+  {
+    key: "score",
+    icon: PenLine,
+    label: getObjectiveLabel(options?.isTestSuite, options?.objectiveName),
+    formatter: formatAsPercentage,
+  },
+  {
+    key: "latency",
+    icon: Clock,
+    label: t("latency"),
+    formatter: formatAsDuration,
+    trend: "inverted",
+  },
+  {
+    key: "cost",
+    icon: Coins,
+    label: t("runtimeCost"),
+    formatter: formatAsCurrency,
+    trend: "inverted",
+  },
+];
+};
+
+/** @deprecated Use useMetricKPICardConfigs instead */
 export const getMetricKPICardConfigs = (options?: {
   isTestSuite?: boolean;
   objectiveName?: string;

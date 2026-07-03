@@ -98,7 +98,7 @@ export const clients: OpikClient[] = [];
 
 let defaultProjectWarningEmitted = false;
 
-/** @internal Reset warning state — for tests only. */
+/** @internal 重置警告状态 - 仅用于测试。 */
 export function resetDefaultProjectWarning() {
   defaultProjectWarningEmitted = false;
 }
@@ -165,7 +165,7 @@ export class OpikClient {
   }
 
   /**
-   * Resolves the project name, falling back to the client's configured project name.
+   * 解析项目名称，若未提供则回退到客户端配置的项目名称。
    */
   public resolveProjectName(projectName?: string): string {
     if (projectName !== undefined) {
@@ -231,12 +231,12 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves an existing dataset by name
+   * 根据名称获取已有数据集
    *
-   * @param name The name of the dataset to retrieve
-   * @param projectName Optional project name to scope the dataset lookup. If not provided, uses the client's configured project.
-   * @returns A Dataset object associated with the specified name
-   * @throws Error if the dataset doesn't exist
+   * @param name 要获取的数据集名称
+   * @param projectName 可选的项目名称，用于限定数据集查找范围。若未提供，使用客户端配置的项目。
+   * @returns 与指定名称关联的 Dataset 对象
+   * @throws 若数据集不存在则抛出错误
    */
   public getDataset = async <T extends DatasetItemData = DatasetItemData>(
     name: string,
@@ -245,7 +245,7 @@ export class OpikClient {
     const resolvedProjectName = this.resolveProjectName(projectName);
     logger.debug(`Getting dataset with name "${name}"`);
     try {
-      // TODO Requires Batch class update to be able use name instead of id and get it from there
+      // TODO 需要更新 Batch 类以支持使用名称代替 ID 并从中获取
       await this.datasetBatchQueue.flush();
 
       const response = await this.api.datasets.getDatasetByIdentifier({
@@ -263,12 +263,12 @@ export class OpikClient {
   };
 
   /**
-   * Creates a new dataset with the given name and optional description
+   * 使用给定名称和可选描述创建新数据集
    *
-   * @param name The name of the dataset
-   * @param description Optional description of the dataset
-   * @param projectName Optional project name to scope the dataset. If not provided, uses the client's configured project.
-   * @returns The created Dataset object
+   * @param name 数据集名称
+   * @param description 数据集的可选描述
+   * @param projectName 可选的项目名称，用于限定数据集范围。若未提供，使用客户端配置的项目。
+   * @returns 创建的 Dataset 对象
    */
   public createDataset = async <T extends DatasetItemData = DatasetItemData>(
     name: string,
@@ -298,12 +298,12 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves an existing dataset by name or creates a new one if it doesn't exist.
+   * 根据名称获取已有数据集，若不存在则创建新数据集。
    *
-   * @param name The name of the dataset
-   * @param description Optional description of the dataset (used if created)
-   * @param projectName Optional project name to scope the dataset. If not provided, uses the client's configured project.
-   * @returns A promise that resolves to the existing or newly created Dataset object
+   * @param name 数据集名称
+   * @param description 数据集的可选描述（创建时使用）
+   * @param projectName 可选的项目名称，用于限定数据集范围。若未提供，使用客户端配置的项目。
+   * @returns 解析为已有或新创建的 Dataset 对象的 Promise
    */
   public getOrCreateDataset = async <
     T extends DatasetItemData = DatasetItemData,
@@ -331,11 +331,11 @@ export class OpikClient {
   };
 
   /**
-   * Returns all datasets up to the specified limit
+   * 返回指定数量限制内的所有数据集
    *
-   * @param maxResults Maximum number of datasets to return (default: 100)
-   * @param projectName Optional project name to filter datasets by. If not provided, uses the client's configured project.
-   * @returns List of Dataset objects
+   * @param maxResults 返回数据集的最大数量（默认：100）
+   * @param projectName 可选的项目名称，用于筛选数据集。若未提供，使用客户端配置的项目。
+   * @returns Dataset 对象列表
    */
   public getDatasets = async <T extends DatasetItemData = DatasetItemData>(
     maxResults: number = 100,
@@ -345,14 +345,14 @@ export class OpikClient {
     logger.debug(`Getting all datasets (limit: ${maxResults})`);
 
     try {
-      // Flush the queue first to ensure all pending datasets are created
+      // 先刷新队列以确保所有待处理的数据集已创建
       await this.datasetBatchQueue.flush();
 
       let projectId: string | undefined;
       try {
         projectId = await this.getProjectIdByName(resolvedProjectName);
       } catch {
-        // Project doesn't exist yet — list without project filter
+        // 项目尚不存在 — 不使用项目过滤器进行列表查询
       }
 
       const response = await this.api.datasets.findDatasets({
@@ -375,10 +375,10 @@ export class OpikClient {
   };
 
   /**
-   * Deletes a dataset by name
+   * 根据名称删除数据集
    *
-   * @param name The name of the dataset to delete
-   * @param projectName Optional project name to scope the dataset lookup. If not provided, uses the client's configured project.
+   * @param name 要删除的数据集名称
+   * @param projectName 可选的项目名称，用于限定数据集查找范围。若未提供，使用客户端配置的项目。
    */
   public deleteDataset = async (name: string, projectName?: string): Promise<void> => {
     logger.debug(`Deleting dataset with name "${name}"`);
@@ -397,10 +397,10 @@ export class OpikClient {
   };
 
   /**
-   * Creates a new test suite with the given options.
+   * 使用给定选项创建新的测试套件。
    *
-   * @param options - The options for creating the test suite
-   * @returns The created TestSuite object
+   * @param options - 创建测试套件的选项
+   * @returns 创建的 TestSuite 对象
    */
   public createTestSuite = async (
     options: CreateTestSuiteOptions
@@ -411,12 +411,12 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves an existing test suite by name.
+   * 根据名称获取已有测试套件。
    *
-   * @param name The name of the test suite to retrieve
-   * @param projectName Optional project name to scope the lookup. If not provided, uses the client's configured project.
-   * @returns A TestSuite object
-   * @throws DatasetNotFoundError if the test suite doesn't exist
+   * @param name 要获取的测试套件名称
+   * @param projectName 可选的项目名称，用于限定查找范围。若未提供，使用客户端配置的项目。
+   * @returns TestSuite 对象
+   * @throws 若测试套件不存在则抛出 DatasetNotFoundError
    */
   public getTestSuite = async (
     name: string,
@@ -429,10 +429,10 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves an existing test suite by name or creates a new one if it doesn't exist.
+   * 根据名称获取已有测试套件，若不存在则创建新的。
    *
-   * @param options - The options for creating the test suite if it doesn't exist
-   * @returns A TestSuite object (existing or newly created)
+   * @param options - 测试套件不存在时用于创建的选项
+   * @returns TestSuite 对象（已有或新创建的）
    */
   public getOrCreateTestSuite = async (
     options: CreateTestSuiteOptions
@@ -445,10 +445,10 @@ export class OpikClient {
   };
 
   /**
-   * Deletes a test suite by name.
+   * 根据名称删除测试套件。
    *
-   * @param name The name of the test suite to delete
-   * @param projectName Optional project name to scope the lookup. If not provided, uses the client's configured project.
+   * @param name 要删除的测试套件名称
+   * @param projectName 可选的项目名称，用于限定查找范围。若未提供，使用客户端配置的项目。
    */
   public deleteTestSuite = async (
     name: string,
@@ -461,11 +461,11 @@ export class OpikClient {
   };
 
   /**
-   * Returns all test suites up to the specified limit.
+   * 返回指定数量限制内的所有测试套件。
    *
-   * @param maxResults Maximum number of test suites to return (default: 100)
-   * @param projectName Optional project name to filter by. If not provided, uses the client's configured project.
-   * @returns List of TestSuite objects
+   * @param maxResults 返回测试套件的最大数量（默认：100）
+   * @param projectName 可选的项目名称，用于筛选。若未提供，使用客户端配置的项目。
+   * @returns TestSuite 对象列表
    */
   public getTestSuites = async (
     maxResults: number = 1000,
@@ -528,9 +528,9 @@ export class OpikClient {
   }
 
   /**
-   * Resolves a project name to its ID.
-   * Returns undefined if projectName is undefined (no API call made).
-   * Errors from the API are propagated — matching Python's resolve_project_id_by_name_optional().
+   * 将项目名称解析为对应的 ID。
+   * 若 projectName 为 undefined 则返回 undefined（不发起 API 调用）。
+   * API 错误会向上抛出 — 与 Python 的 resolve_project_id_by_name_optional() 行为一致。
    */
   private async resolveProjectId(projectName: string | undefined): Promise<string | undefined> {
     if (projectName === undefined) {
@@ -597,32 +597,32 @@ export class OpikClient {
   }
 
   /**
-   * Creates a new traces annotation queue for human annotation workflows.
+   * 创建新的追踪标注队列，用于人工标注工作流。
    *
-   * @param options - Configuration options for the annotation queue
-   * @param options.name - The name of the annotation queue
-   * @param options.projectName - Optional project name (defaults to client's configured project)
-   * @param options.description - Optional description of the queue
-   * @param options.instructions - Optional instructions for reviewers
-   * @param options.commentsEnabled - Optional flag to enable/disable comments
-   * @param options.feedbackDefinitionNames - Optional list of feedback definition names
-   * @returns The created TracesAnnotationQueue object
+   * @param options - 标注队列的配置选项
+   * @param options.name - 标注队列的名称
+   * @param options.projectName - 可选的项目名称（默认使用客户端配置的项目）
+   * @param options.description - 队列的可选描述
+   * @param options.instructions - 审核者的可选说明
+   * @param options.commentsEnabled - 启用/禁用评论的可选标志
+   * @param options.feedbackDefinitionNames - 反馈定义名称的可选列表
+   * @returns 创建的 TracesAnnotationQueue 对象
    */
   public createTracesAnnotationQueue = async (options: AnnotationQueueOptions): Promise<TracesAnnotationQueue> => {
     return this.createAnnotationQueueInternal(options, TracesAnnotationQueue);
   };
 
   /**
-   * Creates a new threads annotation queue for human annotation workflows.
+   * 创建新的线程标注队列，用于人工标注工作流。
    *
-   * @param options - Configuration options for the annotation queue
-   * @param options.name - The name of the annotation queue
-   * @param options.projectName - Optional project name (defaults to client's configured project)
-   * @param options.description - Optional description of the queue
-   * @param options.instructions - Optional instructions for reviewers
-   * @param options.commentsEnabled - Optional flag to enable/disable comments
-   * @param options.feedbackDefinitionNames - Optional list of feedback definition names
-   * @returns The created ThreadsAnnotationQueue object
+   * @param options - 标注队列的配置选项
+   * @param options.name - 标注队列的名称
+   * @param options.projectName - 可选的项目名称（默认使用客户端配置的项目）
+   * @param options.description - 队列的可选描述
+   * @param options.instructions - 审核者的可选说明
+   * @param options.commentsEnabled - 启用/禁用评论的可选标志
+   * @param options.feedbackDefinitionNames - 反馈定义名称的可选列表
+   * @returns 创建的 ThreadsAnnotationQueue 对象
    */
   public createThreadsAnnotationQueue = async (options: AnnotationQueueOptions): Promise<ThreadsAnnotationQueue> => {
     return this.createAnnotationQueueInternal(options, ThreadsAnnotationQueue);
@@ -655,34 +655,34 @@ export class OpikClient {
   }
 
   /**
-   * Retrieves a traces annotation queue by its ID.
+   * 根据 ID 获取追踪标注队列。
    *
-   * @param id - The unique identifier of the annotation queue
-   * @returns The TracesAnnotationQueue object
-   * @throws AnnotationQueueNotFoundError if the queue doesn't exist or is not a traces queue
+   * @param id - 标注队列的唯一标识符
+   * @returns TracesAnnotationQueue 对象
+   * @throws 若队列不存在或不是追踪队列则抛出 AnnotationQueueNotFoundError
    */
   public getTracesAnnotationQueue = async (id: string): Promise<TracesAnnotationQueue> => {
     return this.fetchAnnotationQueueById(id, "trace", TracesAnnotationQueue);
   };
 
   /**
-   * Retrieves a threads annotation queue by its ID.
+   * 根据 ID 获取线程标注队列。
    *
-   * @param id - The unique identifier of the annotation queue
-   * @returns The ThreadsAnnotationQueue object
-   * @throws AnnotationQueueNotFoundError if the queue doesn't exist or is not a threads queue
+   * @param id - 标注队列的唯一标识符
+   * @returns ThreadsAnnotationQueue 对象
+   * @throws 若队列不存在或不是线程队列则抛出 AnnotationQueueNotFoundError
    */
   public getThreadsAnnotationQueue = async (id: string): Promise<ThreadsAnnotationQueue> => {
     return this.fetchAnnotationQueueById(id, "thread", ThreadsAnnotationQueue);
   };
 
   /**
-   * Retrieves all traces annotation queues, optionally filtered by project.
+   * 获取所有追踪标注队列，可按项目筛选。
    *
-   * @param options - Optional configuration
-   * @param options.projectName - Optional project name to filter by
-   * @param options.maxResults - Maximum number of results to return (default: 1000)
-   * @returns List of TracesAnnotationQueue objects
+   * @param options - 可选配置
+   * @param options.projectName - 可选的项目名称筛选条件
+   * @param options.maxResults - 返回结果的最大数量（默认：1000）
+   * @returns TracesAnnotationQueue 对象列表
    */
   public getTracesAnnotationQueues = async (options?: {
     projectName?: string;
@@ -693,12 +693,12 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves all threads annotation queues, optionally filtered by project.
+   * 获取所有线程标注队列，可按项目筛选。
    *
-   * @param options - Optional configuration
-   * @param options.projectName - Optional project name to filter by
-   * @param options.maxResults - Maximum number of results to return (default: 1000)
-   * @returns List of ThreadsAnnotationQueue objects
+   * @param options - 可选配置
+   * @param options.projectName - 可选的项目名称筛选条件
+   * @param options.maxResults - 返回结果的最大数量（默认：1000）
+   * @returns ThreadsAnnotationQueue 对象列表
    */
   public getThreadsAnnotationQueues = async (options?: {
     projectName?: string;
@@ -768,35 +768,35 @@ export class OpikClient {
   }
 
   /**
-   * Deletes a traces annotation queue by its ID.
+   * 根据 ID 删除追踪标注队列。
    *
-   * @param id - The ID of the traces annotation queue to delete
+   * @param id - 要删除的追踪标注队列的 ID
    */
   public deleteTracesAnnotationQueue = async (id: string): Promise<void> => {
     return this.deleteAnnotationQueueById(id, "traces");
   };
 
   /**
-   * Deletes a threads annotation queue by its ID.
+   * 根据 ID 删除线程标注队列。
    *
-   * @param id - The ID of the threads annotation queue to delete
+   * @param id - 要删除的线程标注队列的 ID
    */
   public deleteThreadsAnnotationQueue = async (id: string): Promise<void> => {
     return this.deleteAnnotationQueueById(id, "threads");
   };
 
   /**
-   * Creates a new experiment with the given dataset name and optional parameters
+   * 使用给定数据集名称和可选参数创建新实验
    *
-   * @param datasetName The name of the dataset to associate with the experiment
-   * @param name Optional name for the experiment (if not provided, a generated name will be used)
-   * @param experimentConfig Optional experiment configuration parameters
-   * @param prompts Optional array of Prompt objects to link with the experiment
-   * @param type Optional experiment type (defaults to "regular")
-   * @param optimizationId Optional ID of an optimization associated with the experiment
-   * @param datasetVersionId Optional ID of the dataset version to link the experiment to
-   * @param evaluationMethod @internal Used by test suites — not part of the public API
-   * @returns The created Experiment object
+   * @param datasetName 与实验关联的数据集名称
+   * @param name 实验的可选名称（若未提供，将使用生成的名称）
+   * @param experimentConfig 实验的可选配置参数
+   * @param prompts 与实验关联的可选 Prompt 对象数组
+   * @param type 可选的实验类型（默认为 "regular"）
+   * @param optimizationId 与实验关联的优化的可选 ID
+   * @param datasetVersionId 关联实验的数据集版本的可选 ID
+   * @param evaluationMethod @internal 由测试套件使用 - 不属于公共 API
+   * @returns 创建的 Experiment 对象
    */
   public createExperiment = async ({
     datasetName,
@@ -827,7 +827,7 @@ export class OpikClient {
       throw new Error("Dataset name is required to create an experiment");
     }
 
-    // Process prompts and build metadata
+    // 处理提示词并构建元数据
     const [metadata, promptVersions] = buildMetadataAndPromptVersions(
       experimentConfig,
       prompts
@@ -863,14 +863,14 @@ export class OpikClient {
   };
 
     /**
-     * Updates an experiment by ID
+     * 根据 ID 更新实验
      *
-     * @param id The ID of the experiment
-     * @param experimentUpdate Object containing the fields to update
-     * @param experimentUpdate.name Optional new name for the experiment
-     * @param experimentUpdate.experimentConfig Optional new configuration for the experiment
-     * @returns Promise that resolves when the experiment is updated
-     * @throws {Error} If id is not provided or if neither name nor experimentConfig is provided
+     * @param id 实验的 ID
+     * @param experimentUpdate 包含要更新字段的对象
+     * @param experimentUpdate.name 实验的可选新名称
+     * @param experimentUpdate.experimentConfig 实验的可选新配置
+     * @returns 实验更新完成时解析的 Promise
+     * @throws {Error} 若未提供 id 或既未提供 name 也未提供 experimentConfig
      */
     public updateExperiment = async (
         id: string,
@@ -891,7 +891,7 @@ export class OpikClient {
 
         logger.debug(`Updating experiment with ID "${id}"`);
 
-        // Only include parameters that are provided to avoid clearing fields
+        // 仅包含已提供的参数以避免清除字段
         const request: OpikApi.ExperimentUpdate = {};
         if (name !== undefined) {
             request.name = name;
@@ -909,10 +909,10 @@ export class OpikClient {
     };
 
   /**
-   * Gets an experiment by its unique ID
+   * 根据唯一 ID 获取实验
    *
-   * @param id The unique identifier of the experiment
-   * @returns The Experiment object
+   * @param id 实验的唯一标识符
+   * @returns Experiment 对象
    */
   public getExperimentById = async (id: string): Promise<Experiment> => {
     logger.debug(`Getting experiment with ID "${id}"`);
@@ -941,10 +941,10 @@ export class OpikClient {
   };
 
   /**
-   * Gets experiments by name (can return multiple experiments with the same name)
+   * 根据名称获取实验（可返回同名的多个实验）
    *
-   * @param name The name of the experiments to retrieve
-   * @returns A list of Experiment objects with the given name
+   * @param name 要获取的实验名称
+   * @returns 具有给定名称的 Experiment 对象列表
    */
   public getExperimentsByName = async (name: string, projectName?: string): Promise<Experiment[]> => {
     const resolvedProjectName = this.resolveProjectName(projectName);
@@ -980,10 +980,10 @@ export class OpikClient {
   };
 
   /**
-   * Gets a single experiment by name (returns the first match if multiple exist)
+   * 根据名称获取单个实验（若存在多个则返回第一个匹配项）
    *
-   * @param name The name of the experiment to retrieve
-   * @returns The Experiment object
+   * @param name 要获取的实验名称
+   * @returns Experiment 对象
    */
   public getExperiment = async (name: string, projectName?: string): Promise<Experiment> => {
     logger.debug(`Getting experiment with name "${name}"`);
@@ -998,13 +998,13 @@ export class OpikClient {
   };
 
   /**
-   * Gets all experiments associated with a dataset
+   * 获取与数据集关联的所有实验
    *
-   * @param datasetName The name of the dataset
-   * @param maxResults Maximum number of experiments to return (default: 100)
-   * @param projectName Optional project name to scope the dataset lookup. If not provided, uses the client's configured project.
-   * @returns A list of Experiment objects associated with the dataset
-   * @throws {DatasetNotFoundError} If the dataset doesn't exist
+   * @param datasetName 数据集的名称
+   * @param maxResults 返回实验的最大数量（默认：100）
+   * @param projectName 可选的项目名称，用于限定数据集查找范围。若未提供，使用客户端配置的项目。
+   * @returns 与数据集关联的 Experiment 对象列表
+   * @throws {DatasetNotFoundError} 若数据集不存在
    */
   public getDatasetExperiments = async (
     datasetName: string,
@@ -1038,15 +1038,15 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves all experiments associated with a test suite.
+   * 获取与测试套件关联的所有实验。
    *
-   * @param name The name of the test suite
-   * @param maxResults Maximum number of experiments to return (default: 100)
-   * @param projectName Optional project name to scope the suite lookup. If not provided, uses the client's configured project.
-   * @returns A list of TestSuiteExperiment objects associated with the test suite,
-   *   each carrying the suite-specific assertion aggregates (`passRate`, `passedCount`,
-   *   `totalCount`, `assertionScores`) populated by the backend.
-   * @throws {DatasetNotFoundError} If the test suite doesn't exist
+   * @param name 测试套件的名称
+   * @param maxResults 返回实验的最大数量（默认：100）
+   * @param projectName 可选的项目名称，用于限定套件查找范围。若未提供，使用客户端配置的项目。
+   * @returns 与测试套件关联的 TestSuiteExperiment 对象列表，
+   *   每个对象携带由后端填充的套件特定断言聚合数据（`passRate`、`passedCount`、
+   *   `totalCount`、`assertionScores`）。
+   * @throws {DatasetNotFoundError} 若测试套件不存在
    */
   public getTestSuiteExperiments = async (
     name: string,
@@ -1084,10 +1084,9 @@ export class OpikClient {
   };
 
   /**
-   * Paginated fetch of experiments for a given dataset ID, mapping each raw
-   * `ExperimentPublic` row to a caller-chosen entity. Used internally by
-   * `getDatasetExperiments` and `getTestSuiteExperiments` to share the
-   * loop shape and only differ on the constructed type.
+   * 分页获取指定数据集 ID 的实验，将每个原始 `ExperimentPublic` 行映射为
+   * 调用方选择的实体。由 `getDatasetExperiments` 和 `getTestSuiteExperiments`
+   * 内部使用，共享相同的循环结构，仅在构造的类型上有所不同。
    */
   private findExperimentsByDatasetId = async <T>(
     datasetId: string,
@@ -1129,9 +1128,9 @@ export class OpikClient {
   };
 
   /**
-   * Deletes an experiment by ID
+   * 根据 ID 删除实验
    *
-   * @param id The ID of the experiment to delete
+   * @param id 要删除的实验的 ID
    */
   public deleteExperiment = async (id: string): Promise<void> => {
     logger.debug(`Deleting experiment with ID "${id}"`);
@@ -1145,17 +1144,17 @@ export class OpikClient {
   };
 
   /**
-   * Internal helper for creating prompts (text or chat).
-   * Handles common logic: version checking, creation, and property updates.
+   * 创建提示词（文本或聊天）的内部辅助方法。
+   * 处理通用逻辑：版本检查、创建和属性更新。
    *
-   * @param name - Prompt name
-   * @param template - Template string (raw text or JSON-serialized messages)
-   * @param templateStructure - Text or Chat structure
-   * @param options - Common prompt options (metadata, type, description, tags)
-   * @param validateStructure - Callback to validate template structure against existing prompt
-   * @param createInstance - Factory function to create Prompt or ChatPrompt instance
-   * @param logContext - Context string for logging (e.g., "prompt" or "chat prompt")
-   * @returns Promise resolving to Prompt or ChatPrompt instance
+   * @param name - 提示词名称
+   * @param template - 模板字符串（原始文本或 JSON 序列化的消息）
+   * @param templateStructure - Text 或 Chat 结构
+   * @param options - 通用提示词选项（metadata、type、description、tags）
+   * @param validateStructure - 用于验证模板结构与已有提示词是否匹配的回调
+   * @param createInstance - 创建 Prompt 或 ChatPrompt 实例的工厂函数
+   * @param logContext - 日志上下文字符串（如 "prompt" 或 "chat prompt"）
+   * @returns 解析为 Prompt 或 ChatPrompt 实例的 Promise
    */
   private createPromptInternal = async <T extends Prompt | ChatPrompt>(
     name: string,
@@ -1174,17 +1173,17 @@ export class OpikClient {
     logger.debug(`Creating ${logContext}`, { name });
 
     try {
-      // Fetch latest version (returns null if prompt doesn't exist yet)
+      // 获取最新版本（若提示词不存在则返回 null）
       const latestVersion = await fetchLatestPromptVersion(
         this.api.prompts,
         name,
         this.api.requestOptions
       );
 
-      // Validate template structure against existing prompt
+      // 验证模板结构与已有提示词是否匹配
       validateStructure(latestVersion);
 
-      // Determine if we need to create a new version
+      // 判断是否需要创建新版本
       const normalizedType = options.type ?? PromptType.MUSTACHE;
       const needsNewVersion = shouldCreateNewVersion(
         { prompt: template, metadata: options.metadata },
@@ -1195,7 +1194,7 @@ export class OpikClient {
       let versionResponse: OpikApi.PromptVersionDetail;
 
       if (needsNewVersion) {
-        // Create new version
+        // 创建新版本
         logger.debug(`Creating new ${logContext} version`, { name });
         versionResponse = await this.api.prompts.createPromptVersion(
           {
@@ -1211,12 +1210,12 @@ export class OpikClient {
           this.api.requestOptions
         );
       } else {
-        // Return existing version (idempotent)
+        // 返回已有版本（幂等操作）
         logger.debug(`Returning existing ${logContext} version`, { name });
         versionResponse = latestVersion!;
       }
 
-      // Fetch full prompt data and create instance
+      // 获取完整的提示词数据并创建实例
       if (!versionResponse.promptId) {
         throw new Error("Invalid API response: missing promptId");
       }
@@ -1231,7 +1230,7 @@ export class OpikClient {
 
       logger.debug(`${logContext} created`, { name });
 
-      // Update properties if provided
+      // 若提供了属性则更新
       if (options.description || options.tags) {
         return (await promptInstance.updateProperties({
           description: options.description,
@@ -1256,18 +1255,18 @@ export class OpikClient {
   };
 
   /**
-   * Creates a new prompt or new version if content differs.
+   * 创建新提示词或在内容不同时创建新版本。
    *
-   * Key Behaviors:
-   * - Smart Versioning: Only creates a new version if template, metadata, or type differ from latest
-   * - Idempotent: Returns existing version if identical (no duplicate versions)
-   * - 404 Handling: Gracefully handles first-time prompt creation
-   * - Uses create_prompt_version endpoint (not create_prompt which is for containers)
-   * - Synchronous: Returns immediately with the created/retrieved version
+   * 核心行为：
+   * - 智能版本控制：仅在模板、元数据或类型与最新版本不同时创建新版本
+   * - 幂等性：若内容相同则返回已有版本（不会创建重复版本）
+   * - 404 处理：优雅处理首次提示词创建
+   * - 使用 create_prompt_version 端点（而非用于容器的 create_prompt）
+   * - 同步操作：立即返回创建/获取的版本
    *
-   * @param options - Prompt configuration
-   * @returns Promise resolving to Prompt instance
-   * @throws PromptValidationError if parameters invalid
+   * @param options - 提示词配置
+   * @returns 解析为 Prompt 实例的 Promise
+   * @throws 若参数无效则抛出 PromptValidationError
    */
   public createPrompt = async (
     options: CreatePromptOptions
@@ -1279,7 +1278,7 @@ export class OpikClient {
       PromptTemplateStructure.Text,
       options,
       () => {
-        // No structure validation needed for text prompts
+        // 文本提示词无需结构验证
       },
       (promptData, versionData) =>
         Prompt.fromApiResponse(promptData, versionData, this, resolvedProjectName),
@@ -1303,13 +1302,13 @@ export class OpikClient {
   };
 
   /**
-   * Creates a new chat prompt or returns existing one if identical.
-   * Chat prompts use message arrays instead of string templates.
-   * Idempotent: returns existing version if messages, metadata, and type match.
+   * 创建新的聊天提示词，若内容相同则返回已有的。
+   * 聊天提示词使用消息数组而非字符串模板。
+   * 幂等性：若消息、元数据和类型匹配则返回已有版本。
    *
-   * @param options - Chat prompt configuration with messages array
-   * @returns Promise resolving to ChatPrompt instance
-   * @throws PromptTemplateStructureMismatch if a text prompt with same name exists
+   * @param options - 包含消息数组的聊天提示词配置
+   * @returns 解析为 ChatPrompt 实例的 Promise
+   * @throws 若存在同名的文本提示词则抛出 PromptTemplateStructureMismatch
    *
    * @example
    * ```typescript
@@ -1327,7 +1326,7 @@ export class OpikClient {
     options: CreateChatPromptOptions
   ): Promise<ChatPrompt> => {
     const resolvedProjectName = this.resolveProjectName(options.projectName);
-    // Serialize messages to JSON for backend storage
+    // 将消息序列化为 JSON 用于后端存储
     const messagesJson = JSON.stringify(options.messages);
 
     return this.createPromptInternal(
@@ -1336,7 +1335,7 @@ export class OpikClient {
       PromptTemplateStructure.Chat,
       options,
       (latestVersion) => {
-        // Check for template structure mismatch
+        // 检查模板结构是否不匹配
         if (
           latestVersion &&
           latestVersion.templateStructure &&
@@ -1371,24 +1370,23 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves a text prompt by name, optionally targeting a specific `version`.
-   * Results are cached client-side (TTL configurable via OPIK_PROMPT_CACHE_TTL_SECONDS,
-   * default 300s). When called inside a track() context the prompt reference
-   * is injected into the active trace/span metadata.
+   * 根据名称获取文本提示词，可选择指定特定 `version`。
+   * 结果在客户端缓存（TTL 可通过 OPIK_PROMPT_CACHE_TTL_SECONDS 配置，
+   * 默认 300 秒）。在 track() 上下文内调用时，提示词引用会被注入到
+   * 当前活跃的 trace/span 元数据中。
    *
-   * @param options - Prompt name and optional version pin or environment
-   * @param options.name - Name of the prompt
-   * @param options.version - Sequential version identifier (e.g. `"v3"`). If not
-   *   provided, the latest version is returned.
-   * @param options.commit - **Deprecated.** Use `version` instead.
-   * @param options.projectName - Optional project scope.
-   * @param options.environment - Optional environment name. Resolves to the version
-   *   currently owned by that workspace environment. Mutually exclusive with both
-   *   `commit` and `version`.
-   * @returns Promise resolving to Prompt or null if not found
-   * @throws Error if both `commit` and `version` are provided, or if `environment` is
-   *   combined with either `commit` or `version`
-   * @throws PromptTemplateStructureMismatch if prompt exists but is a chat prompt
+   * @param options - 提示词名称和可选的版本锁定或环境
+   * @param options.name - 提示词的名称
+   * @param options.version - 顺序版本标识符（如 `"v3"`）。若未提供，
+   *   则返回最新版本。
+   * @param options.commit - **已弃用。** 请使用 `version` 替代。
+   * @param options.projectName - 可选的项目范围。
+   * @param options.environment - 可选的环境名称。解析为该工作区环境当前
+   *   拥有的版本。与 `commit` 和 `version` 互斥。
+   * @returns 解析为 Prompt 或未找到时为 null 的 Promise
+   * @throws 若同时提供了 `commit` 和 `version`，或 `environment` 与
+   *   `commit` 或 `version` 组合使用则抛出错误
+   * @throws 若提示词存在但为聊天提示词则抛出 PromptTemplateStructureMismatch
    */
   public getPrompt = async (
     options: GetPromptOptions
@@ -1403,24 +1401,23 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves a chat prompt by name, optionally targeting a specific `version`.
-   * Results are cached client-side (TTL configurable via OPIK_PROMPT_CACHE_TTL_SECONDS,
-   * default 300s). When called inside a track() context the prompt reference
-   * is injected into the active trace/span metadata.
+   * 根据名称获取聊天提示词，可选择指定特定 `version`。
+   * 结果在客户端缓存（TTL 可通过 OPIK_PROMPT_CACHE_TTL_SECONDS 配置，
+   * 默认 300 秒）。在 track() 上下文内调用时，提示词引用会被注入到
+   * 当前活跃的 trace/span 元数据中。
    *
-   * @param options - Prompt name and optional version pin or environment
-   * @param options.name - Name of the prompt
-   * @param options.version - Sequential version identifier (e.g. `"v3"`). If not
-   *   provided, the latest version is returned.
-   * @param options.commit - **Deprecated.** Use `version` instead.
-   * @param options.projectName - Optional project scope.
-   * @param options.environment - Optional environment name. Resolves to the version
-   *   currently owned by that workspace environment. Mutually exclusive with both
-   *   `commit` and `version`.
-   * @returns Promise resolving to ChatPrompt or null if not found
-   * @throws Error if both `commit` and `version` are provided, or if `environment` is
-   *   combined with either `commit` or `version`
-   * @throws PromptTemplateStructureMismatch if prompt exists but is a text prompt
+   * @param options - 提示词名称和可选的版本锁定或环境
+   * @param options.name - 提示词的名称
+   * @param options.version - 顺序版本标识符（如 `"v3"`）。若未提供，
+   *   则返回最新版本。
+   * @param options.commit - **已弃用。** 请使用 `version` 替代。
+   * @param options.projectName - 可选的项目范围。
+   * @param options.environment - 可选的环境名称。解析为该工作区环境当前
+   *   拥有的版本。与 `commit` 和 `version` 互斥。
+   * @returns 解析为 ChatPrompt 或未找到时为 null 的 Promise
+   * @throws 若同时提供了 `commit` 和 `version`，或 `environment` 与
+   *   `commit` 或 `version` 组合使用则抛出错误
+   * @throws 若提示词存在但为文本提示词则抛出 PromptTemplateStructureMismatch
    *
    * @example
    * ```typescript
@@ -1452,7 +1449,7 @@ export class OpikClient {
     ) => T,
     logContext: string
   ): Promise<T | null> => {
-    // Validate mutual exclusivity synchronously, before touching any async work.
+    // 在处理任何异步操作之前，同步验证互斥性。
     if (options.commit && options.version) {
       throw new Error(
         "Provide either `commit` or `version`, not both. " +
@@ -1500,7 +1497,7 @@ export class OpikClient {
           try {
             projectId = await this.getProjectIdByName(resolvedProjectName);
           } catch {
-            // Project doesn't exist yet — search without project filter
+            // 项目尚不存在 — 不使用项目过滤器进行搜索
           }
 
           const searchResponse = await this.api.prompts.getPrompts(
@@ -1520,8 +1517,8 @@ export class OpikClient {
             return null;
           }
 
-          // Build the REST request body explicitly so we never leak SDK-only
-          // fields (such as `version` — the wire format calls it `versionNumber`).
+          // 显式构建 REST 请求体，避免泄露仅限 SDK 的字段
+          // 字段（如 `version` — 线路格式中称为 `versionNumber`）。
           const retrieveRequest: OpikApi.PromptVersionRetrieveDetail = {
             name: options.name,
             projectName: resolvedProjectName,
@@ -1610,52 +1607,52 @@ export class OpikClient {
   };
 
   /**
-   * Searches prompts with optional OQL filtering.
+   * 使用可选的 OQL 过滤条件搜索提示词。
    *
-   * @param filterString - Optional OQL filter string to narrow down search
+   * @param filterString - 可选的 OQL 过滤字符串，用于缩小搜索范围
    *
-   * Supported OQL format: `<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*`
+   * 支持的 OQL 格式：`<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*`
    *
-   * Supported columns:
-   * - `id`, `name`, `description`: String fields
-   * - `created_by`, `last_updated_by`: String fields
-   * - `template_structure`: String field (e.g., "text" or "chat")
-   * - `created_at`, `last_updated_at`: Date/time fields (ISO 8601 format)
-   * - `tags`: List field (use "contains" operator only)
-   * - `version_count`: Number field
+   * 支持的列：
+   * - `id`、`name`、`description`：字符串字段
+   * - `created_by`、`last_updated_by`：字符串字段
+   * - `template_structure`：字符串字段（如 "text" 或 "chat"）
+   * - `created_at`、`last_updated_at`：日期/时间字段（ISO 8601 格式）
+   * - `tags`：列表字段（仅支持 "contains" 操作符）
+   * - `version_count`：数字字段
    *
-   * Supported operators by column:
-   * - String fields (`id`, `name`, `description`, `created_by`, `last_updated_by`, `template_structure`): =, !=, contains, not_contains, starts_with, ends_with, >, <
-   * - Date/time fields (`created_at`, `last_updated_at`): =, >, <, >=, <=
-   * - Number fields (`version_count`): =, !=, >, <, >=, <=
-   * - List fields (`tags`): contains
+   * 各列支持的操作符：
+   * - 字符串字段（`id`、`name`、`description`、`created_by`、`last_updated_by`、`template_structure`）：=、!=、contains、not_contains、starts_with、ends_with、>、<
+   * - 日期/时间字段（`created_at`、`last_updated_at`）：=、>、<、>=、<=
+   * - 数字字段（`version_count`）：=、!=、>、<、>=、<=
+   * - 列表字段（`tags`）：contains
    *
-   * @returns Promise resolving to array of matching latest prompt versions
-   * @throws Error if OQL filter syntax is invalid
+   * @returns 解析为匹配的最新提示词版本数组的 Promise
+   * @throws 若 OQL 过滤语法无效则抛出错误
    *
    * @example
    * ```typescript
-   * // Get all prompts
+   * // 获取所有提示词
    * const allPrompts = await client.searchPrompts();
    *
-   * // Filter by tag
+   * // 按标签筛选
    * const prompts = await client.searchPrompts('tags contains "alpha"');
    *
-   * // Filter by multiple criteria
+   * // 按多个条件筛选
    * const prompts = await client.searchPrompts(
    *   'tags contains "alpha" AND name contains "summary"'
    * );
    *
-   * // Filter by creator
+   * // 按创建者筛选
    * const prompts = await client.searchPrompts('created_by = "user@example.com"');
    *
-   * // Filter by template structure
+   * // 按模板结构筛选
    * const chatPrompts = await client.searchPrompts('template_structure = "chat"');
    *
-   * // Filter by date range
+   * // 按日期范围筛选
    * const recentPrompts = await client.searchPrompts('created_at >= "2024-01-01T00:00:00Z"');
    *
-   * // Filter by version count
+   * // 按版本数量筛选
    * const multiVersion = await client.searchPrompts('version_count > 5');
    * ```
    */
@@ -1665,7 +1662,7 @@ export class OpikClient {
     logger.debug("Searching prompts", { filterString });
 
     try {
-      // Parse OQL filter string to JSON
+      // 将 OQL 过滤字符串解析为 JSON
       let filters: string | undefined;
       if (filterString) {
         const oql = OpikQueryLanguage.forPrompts(filterString);
@@ -1685,7 +1682,7 @@ export class OpikClient {
 
       const prompts = response.content ?? [];
 
-      // Map each prompt to get its latest version and create appropriate instance
+      // 映射每个提示词以获取其最新版本并创建相应的实例
       const promptsWithVersions = await Promise.all(
         prompts.map(async (promptData: OpikApi.PromptPublic) => {
           if (!promptData.name) {
@@ -1702,7 +1699,7 @@ export class OpikClient {
             const templateStructure = versionResponse.templateStructure;
 
             const searchProjectName = this.resolveProjectName();
-            // Default to text for backwards compatibility
+            // 为了向后兼容，默认为文本类型
             if (!templateStructure || templateStructure === PromptTemplateStructure.Text) {
               return Prompt.fromApiResponse(promptData, versionResponse, this, searchProjectName);
             } else if (templateStructure === PromptTemplateStructure.Chat) {
@@ -1735,10 +1732,10 @@ export class OpikClient {
   };
 
   /**
-   * Deletes multiple prompts and all their versions in batch.
-   * Performs synchronous deletion (no batching).
+   * 批量删除多个提示词及其所有版本。
+   * 执行同步删除（不使用批处理）。
    *
-   * @param ids - Array of prompt container IDs to delete
+   * @param ids - 要删除的提示词容器 ID 数组
    */
   public deletePrompts = async (ids: string[]): Promise<void> => {
     logger.debug("Deleting prompts in batch", { count: ids.length });
@@ -1758,22 +1755,20 @@ export class OpikClient {
   };
 
   /**
-   * Assigns a prompt version to an environment, or clears the assignment.
+   * 将提示词版本分配到环境，或清除分配。
    *
-   * Replace the full set of environments owned by a prompt version. The
-   * provided list becomes the resolved version's complete set of environments.
-   * Pass an empty array to clear all environments. Any other version of the
-   * same prompt that previously owned one of the listed environments is
-   * cleared. Existing prompt objects already in memory are not mutated —
-   * re-fetch with `client.getPrompt(...)` to see the change.
+   * 替换提示词版本拥有的完整环境集合。提供的列表将成为解析版本的
+   * 完整环境集合。传入空数组以清除所有环境。同一提示词的其他版本
+   * 如果之前拥有列表中的某个环境则会被清除。内存中已有的提示词
+   * 对象不会被修改 — 需要使用 `client.getPrompt(...)` 重新获取以查看变更。
    *
-   * @param options.promptName - Name of the prompt
-   * @param options.environments - Environments to assign. Each must already be registered in the workspace. Pass `[]` to clear.
-   * @param options.version - Sequential version selector in the wire format `"v<N>"` (e.g. `"v3"`). Defaults to the latest version.
-   * @param options.projectName - Project the prompt belongs to. Defaults to the client's project.
+   * @param options.promptName - 提示词的名称
+   * @param options.environments - 要分配的环境。每个环境必须已在工作区中注册。传入 `[]` 以清除。
+   * @param options.version - 线路格式中的顺序版本选择器 `"v<N>"`（如 `"v3"`）。默认为最新版本。
+   * @param options.projectName - 提示词所属的项目。默认为客户端的项目。
    *
-   * @throws {PromptNotFoundError} The prompt name (or the supplied `version`) does not exist in the resolved project.
-   * @throws {EnvironmentNotFoundError} One of `environments` is not registered in the workspace.
+   * @throws {PromptNotFoundError} 提示词名称（或提供的 `version`）在解析的项目中不存在。
+   * @throws {EnvironmentNotFoundError} `environments` 中的某个环境未在工作区中注册。
    */
   public setPromptEnvironments = async (
     options: {
@@ -1816,8 +1811,8 @@ export class OpikClient {
       );
     } catch (error) {
       if (error instanceof OpikApiError) {
-        // The backend reports unknown environments as 404 (not found) or 409
-        // (conflict, when the name collides with the workspace registry check).
+        // 后端将未知环境报告为 404（未找到）或 409
+        // （冲突，当名称与工作区注册表检查冲突时）。
         if (error.statusCode === 404 || error.statusCode === 409) {
           throw new EnvironmentNotFoundError(
             `One or more environments in [${target.join(", ")}] are not registered in this workspace.`,
@@ -1834,34 +1829,34 @@ export class OpikClient {
   };
 
   /**
-   * Search for traces in the given project. Optionally, you can wait for at least a certain number of traces
-   * to be found before returning within the specified timeout.
+   * 在给定项目中搜索追踪记录。可选择等待至少找到指定数量的追踪记录后
+   * 再在指定超时时间内返回。
    *
-   * @param projectName - The name of the project to search in. Defaults to the project configured on the Client.
-   * @param filterString - Filter using Opik Query Language (OQL). Format: `<COLUMN> <OPERATOR> <VALUE> [AND ...]`
-   *   Common columns: `id`, `name`, `start_time`, `end_time`, `input`, `output`, `status`, `tags`, `metadata.*`, `feedback_scores.*`, `usage.*`
-   *   Common operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `not_contains`, `starts_with`, `ends_with`
-   *   Use ISO 8601 format for dates (e.g., "2024-01-01T00:00:00Z")
-   * @param maxResults - Maximum number of traces to return (default: 1000)
-   * @param truncate - Whether to truncate image data in input, output, or metadata (default: true)
-   * @param waitForAtLeast - Minimum number of traces to wait for before returning
-   * @param waitForTimeout - Timeout for waiting in seconds (default: 60)
+   * @param projectName - 要搜索的项目名称。默认使用客户端配置的项目。
+   * @param filterString - 使用 Opik 查询语言（OQL）进行过滤。格式：`<COLUMN> <OPERATOR> <VALUE> [AND ...]`
+   *   常用列：`id`、`name`、`start_time`、`end_time`、`input`、`output`、`status`、`tags`、`metadata.*`、`feedback_scores.*`、`usage.*`
+   *   常用操作符：`=`、`!=`、`>`、`<`、`>=`、`<=`、`contains`、`not_contains`、`starts_with`、`ends_with`
+   *   日期使用 ISO 8601 格式（如 "2024-01-01T00:00:00Z"）
+   * @param maxResults - 返回追踪记录的最大数量（默认：1000）
+   * @param truncate - 是否截断输入、输出或元数据中的图像数据（默认：true）
+   * @param waitForAtLeast - 返回前等待的最少追踪记录数量
+   * @param waitForTimeout - 等待超时时间（秒）（默认：60）
    *
-   * @returns Promise resolving to array of traces matching the search criteria
-   * @throws {SearchTimeoutError} If waitForAtLeast traces are not found within the specified timeout
+   * @returns 解析为匹配搜索条件的追踪记录数组的 Promise
+   * @throws {SearchTimeoutError} 若在指定超时时间内未找到 waitForAtLeast 数量的追踪记录
    *
    * @example
    * ```typescript
-   * // Get all traces in a project
+   * // 获取项目中的所有追踪记录
    * const traces = await client.searchTraces({ projectName: "My Project" });
    *
-   * // Filter by date and metadata
+   * // 按日期和元数据筛选
    * const filtered = await client.searchTraces({
    *   projectName: "My Project",
    *   filterString: 'start_time >= "2024-01-01T00:00:00Z" AND metadata.model = "gpt-4"'
    * });
    *
-   * // Wait for at least 10 traces
+   * // 等待至少 10 条追踪记录
    * const traces = await client.searchTraces({
    *   projectName: "My Project",
    *   waitForAtLeast: 10,
@@ -1959,41 +1954,41 @@ export class OpikClient {
   };
 
   /**
-   * Search for threads in a project with optional filtering.
+   * 在项目中搜索线程，支持可选过滤。
    *
-   * Threads represent conversations or sessions that group related traces together.
-   * This method allows you to search and filter threads using Opik Query Language (OQL).
+   * 线程代表将相关追踪记录分组的对话或会话。
+   * 此方法允许使用 Opik 查询语言（OQL）搜索和筛选线程。
    *
-   * @param options - Search options
-   * @param options.projectName - Name of the project to search in. Defaults to the client's configured project.
-   * @param options.filterString - Filter string using Opik Query Language (OQL).
-   *   Supports filtering by: id, status, feedback_scores, duration, number_of_messages, tags, metadata, etc.
-   *   Examples: 'status = "active"', 'feedback_scores.quality > 0.8', 'duration > 300'
-   * @param options.maxResults - Maximum number of threads to return (default: 1000)
-   * @param options.truncate - Whether to truncate large fields in the response (default: true)
-   * @param options.waitForAtLeast - If specified, polls until at least this many threads are found
-   * @param options.waitForTimeout - Timeout in seconds when using waitForAtLeast (default: 60)
-   * @returns Promise resolving to an array of threads
-   * @throws {SearchTimeoutError} If waitForAtLeast is specified and timeout is reached
+   * @param options - 搜索选项
+   * @param options.projectName - 要搜索的项目名称。默认使用客户端配置的项目。
+   * @param options.filterString - 使用 Opik 查询语言（OQL）的过滤字符串。
+   *   支持按以下字段筛选：id、status、feedback_scores、duration、number_of_messages、tags、metadata 等。
+   *   示例：'status = "active"'、'feedback_scores.quality > 0.8'、'duration > 300'
+   * @param options.maxResults - 返回线程的最大数量（默认：1000）
+   * @param options.truncate - 是否截断响应中的大字段（默认：true）
+   * @param options.waitForAtLeast - 若指定，则轮询直到找到至少此数量的线程
+   * @param options.waitForTimeout - 使用 waitForAtLeast 时的超时时间（秒）（默认：60）
+   * @returns 解析为线程数组的 Promise
+   * @throws {SearchTimeoutError} 若指定了 waitForAtLeast 且达到超时
    *
    * @example
    * ```typescript
-   * // Get all threads in a project
+   * // 获取项目中的所有线程
    * const threads = await client.searchThreads({ projectName: "My Project" });
    *
-   * // Filter by status
+   * // 按状态筛选
    * const activeThreads = await client.searchThreads({
    *   projectName: "My Project",
    *   filterString: 'status = "active"'
    * });
    *
-   * // Filter by feedback score
+   * // 按反馈分数筛选
    * const highQualityThreads = await client.searchThreads({
    *   projectName: "My Project",
    *   filterString: 'feedback_scores.quality > 0.8'
    * });
    *
-   * // Wait for at least 5 threads
+   * // 等待至少 5 个线程
    * const threads = await client.searchThreads({
    *   projectName: "My Project",
    *   waitForAtLeast: 5,
@@ -2018,47 +2013,47 @@ export class OpikClient {
   };
 
   /**
-   * Search for spans in a project with optional filtering.
+   * 在项目中搜索跨度，支持可选过滤。
    *
-   * Spans represent individual operations or steps within traces, such as LLM calls or function executions.
-   * This method allows you to search and filter spans using Opik Query Language (OQL).
+   * 跨度代表追踪中的单个操作或步骤，如 LLM 调用或函数执行。
+   * 此方法允许使用 Opik 查询语言（OQL）搜索和筛选跨度。
    *
-   * @param options - Search options
-   * @param options.projectName - Name of the project to search in. Defaults to the client's configured project.
-   * @param options.filterString - Filter string using Opik Query Language (OQL).
-   *   Supports filtering by: model, provider, type, metadata, feedback_scores, usage, duration, etc.
-   *   Examples: 'model = "gpt-4"', 'provider = "openai"', 'type = "llm"', 'metadata.version = "1.0"'
-   * @param options.maxResults - Maximum number of spans to return (default: 1000)
-   * @param options.truncate - Whether to truncate large fields in the response (default: true)
-   * @param options.waitForAtLeast - If specified, polls until at least this many spans are found
-   * @param options.waitForTimeout - Timeout in seconds when using waitForAtLeast (default: 60)
-   * @returns Promise resolving to an array of spans
-   * @throws {SearchTimeoutError} If waitForAtLeast is specified and timeout is reached
+   * @param options - 搜索选项
+   * @param options.projectName - 要搜索的项目名称。默认使用客户端配置的项目。
+   * @param options.filterString - 使用 Opik 查询语言（OQL）的过滤字符串。
+   *   支持按以下字段筛选：model、provider、type、metadata、feedback_scores、usage、duration 等。
+   *   示例：'model = "gpt-4"'、'provider = "openai"'、'type = "llm"'、'metadata.version = "1.0"'
+   * @param options.maxResults - 返回跨度的最大数量（默认：1000）
+   * @param options.truncate - 是否截断响应中的大字段（默认：true）
+   * @param options.waitForAtLeast - 若指定，则轮询直到找到至少此数量的跨度
+   * @param options.waitForTimeout - 使用 waitForAtLeast 时的超时时间（秒）（默认：60）
+   * @returns 解析为跨度数组的 Promise
+   * @throws {SearchTimeoutError} 若指定了 waitForAtLeast 且达到超时
    *
    * @example
    * ```typescript
-   * // Get all spans in a project
+   * // 获取项目中的所有跨度
    * const spans = await client.searchSpans({ projectName: "My Project" });
    *
-   * // Filter by model
+   * // 按模型筛选
    * const gpt4Spans = await client.searchSpans({
    *   projectName: "My Project",
    *   filterString: 'model = "gpt-4"'
    * });
    *
-   * // Filter by provider and type
+   * // 按提供商和类型筛选
    * const openaiLLMSpans = await client.searchSpans({
    *   projectName: "My Project",
    *   filterString: 'provider = "openai" and type = "llm"'
    * });
    *
-   * // Filter by metadata
+   * // 按元数据筛选
    * const prodSpans = await client.searchSpans({
    *   projectName: "My Project",
    *   filterString: 'metadata.environment = "production"'
    * });
    *
-   * // Wait for at least 5 spans
+   * // 等待至少 5 个跨度
    * const spans = await client.searchSpans({
    *   projectName: "My Project",
    *   waitForAtLeast: 5,
@@ -2100,9 +2095,9 @@ export class OpikClient {
   }
 
   /**
-   * Log feedback scores to existing traces in batch.
+   * 批量记录已有追踪的反馈分数。
    *
-   * @param scores - Array of feedback score data with trace IDs
+   * @param scores - 包含追踪 ID 的反馈分数数据数组
    *
    * @example
    * ```typescript
@@ -2118,9 +2113,9 @@ export class OpikClient {
   }
 
   /**
-   * Log feedback scores to existing spans in batch.
+   * 批量记录已有跨度的反馈分数。
    *
-   * @param scores - Array of feedback score data with span IDs
+   * @param scores - 包含跨度 ID 的反馈分数数据数组
    *
    * @example
    * ```typescript
@@ -2220,7 +2215,7 @@ export class OpikClient {
       await this.spanFeedbackScoresBatchQueue.flush();
       await this.traceAssertionResultsBatchQueue.flush();
       await this.datasetBatchQueue.flush();
-      // Note: Prompt operations are synchronous and don't use batching
+      // 注意：提示词操作是同步的，不使用批处理
       if (!silent) logger.info("Successfully flushed all data to Opik");
     } catch (error) {
       logger.error("Error during flush operation:", {
@@ -2230,23 +2225,23 @@ export class OpikClient {
   };
 
   /**
-   * Retrieves a typed config and returns it as a `Config<T>` object.
-   * Must be called inside a `track()` function.
+   * 获取类型化配置并返回为 `Config<T>` 对象。
+   * 必须在 `track()` 函数内调用。
    *
-   * Selectors (mutually exclusive):
-   * - `options.version` — fetches the named version exactly
-   * - `options.env` — fetches the version pinned to that environment (default: `"prod"`)
-   * - neither — equivalent to `env="prod"`
+   * 选择器（互斥）：
+   * - `options.version` — 精确获取指定名称的版本
+   * - `options.env` — 获取固定到该环境的版本（默认：`"prod"`）
+   * - 都不指定 — 等同于 `env="prod"`
    *
-   * With `fallback`:
-   * - Backend errors return the fallback with `isFallback: true`
-   * - Empty project auto-creates from fallback values
-   * - T is inferred from the fallback type
+   * 使用 `fallback` 时：
+   * - 后端错误返回带有 `isFallback: true` 的回退值
+   * - 空项目从回退值自动创建
+   * - T 从回退类型推断
    *
-   * Without `fallback`:
-   * - Backend errors are re-thrown
-   * - Empty project throws ConfigNotFoundError
-   * - T defaults to `Record<string, unknown>`; use explicit type arg to assert a shape
+   * 不使用 `fallback` 时：
+   * - 后端错误会被重新抛出
+   * - 空项目抛出 ConfigNotFoundError
+   * - T 默认为 `Record<string, unknown>`；使用显式类型参数来断言结构
    */
   public getOrCreateConfig<T extends Record<string, unknown>>(
     options: {
@@ -2276,11 +2271,11 @@ export class OpikClient {
     return this._getOrCreateConfigImpl(options);
   }
 
-  /** Build a Config from a local fallback object (no backend involved). */
+  /** 从本地回退对象构建 Config（不涉及后端）。 */
   /**
-   * Validates that every BasePrompt value in `values` belongs to `projectName`.
-   * Prompts with an undefined projectName are skipped (cannot be validated).
-   * Throws ConfigMismatchError on the first mismatch found.
+   * 验证 `values` 中的每个 BasePrompt 值是否属于 `projectName`。
+   * projectName 为 undefined 的提示词会被跳过（无法验证）。
+   * 在发现第一个不匹配时抛出 ConfigMismatchError。
    */
   private _validatePromptProjects(
     values: Record<string, unknown>,
@@ -2302,8 +2297,8 @@ export class OpikClient {
   }
 
   /**
-   * Waits for all unsynced BasePrompt values in `values` to finish syncing,
-   * with a timeout. Returns true only when every prompt is synced.
+   * 等待 `values` 中所有未同步的 BasePrompt 值完成同步，带超时。
+   * 仅当每个提示词都已同步时返回 true。
    */
   private async _allPromptsSynced(values: Record<string, unknown>): Promise<boolean> {
     const prompts = Object.values(values).filter(
@@ -2328,7 +2323,7 @@ export class OpikClient {
       clearTimeout(timerId);
     }
 
-    // ready() resolved, but some prompts may have failed to sync.
+    // ready() 已解析，但某些提示词可能同步失败。
     return prompts.every((v) => v.synced);
   }
 
@@ -2347,9 +2342,9 @@ export class OpikClient {
   }
 
   /**
-   * Fetches a blueprint from the backend (or returns the cached one).
-   * Returns null if the backend returned no result (not an error path).
-   * On network error, returns the fallback config if one is provided; otherwise re-throws.
+   * 从后端获取蓝图（或返回缓存的蓝图）。
+   * 若后端未返回结果则返回 null（非错误路径）。
+   * 网络错误时，若提供了回退配置则返回回退配置；否则重新抛出错误。
    */
   private async _fetchBlueprintFromBackend<T extends Record<string, unknown>>(
     manager: ConfigManager,
@@ -2395,7 +2390,7 @@ export class OpikClient {
       throw error;
     }
 
-    // Set a background refresh for env-based and "latest" lookups (not pinned versions or masks)
+    // 为基于环境和"最新"的查找设置后台刷新（不适用于固定版本或掩码）
     const refreshCallback =
       maskId === undefined && !hasNamedVersion
         ? isLatest
@@ -2408,12 +2403,12 @@ export class OpikClient {
   }
 
   /**
-   * Handles the case where a blueprint lookup returned null.
-   * - Explicit selector (named version / env / runner context) → throws ConfigNotFoundError.
-   * - Default path: probes project-wide to distinguish "no prod tag" from "empty project".
-   *   When version="latest" the initial fetch was already project-wide — skips the probe.
-   * - Empty project + fallback → auto-creates and returns the new blueprint.
-   * - Empty project + no fallback → throws ConfigNotFoundError.
+   * 处理蓝图查找返回 null 的情况。
+   * - 显式选择器（命名版本 / 环境 / 运行器上下文）→ 抛出 ConfigNotFoundError。
+   * - 默认路径：探测整个项目以区分"无 prod 标签"和"空项目"。
+   *   当 version="latest" 时，初始获取已是项目范围 — 跳过探测。
+   * - 空项目 + 回退值 → 自动创建并返回新蓝图。
+   * - 空项目 + 无回退值 → 抛出 ConfigNotFoundError。
    */
   private async _resolveNullBlueprint<T extends Record<string, unknown>>(
     manager: ConfigManager,
@@ -2441,8 +2436,8 @@ export class OpikClient {
       );
     }
 
-    // Default path (env="prod"): fetch latest to distinguish empty project vs prod tag missing.
-    // When version="latest", the initial fetch was already project-wide — skip the redundant round-trip.
+    // 默认路径（env="prod"）：获取最新版本以区分空项目和缺少 prod 标签。
+    // 当 version="latest" 时，初始获取已是项目范围 — 跳过冗余的往返请求。
     if (!isLatest) {
       let latestBlueprint: Blueprint | null = null;
       try {
@@ -2469,17 +2464,17 @@ export class OpikClient {
       );
     }
 
-    // Validate that all Prompt/ChatPrompt values in the fallback belong to this project.
+    // 验证回退值中的所有 Prompt/ChatPrompt 值是否属于此项目。
     this._validatePromptProjects(fallback as Record<string, unknown>, projectName);
 
-    // Before auto-creating from fallback, wait for any unsynced prompts to finish syncing.
-    // Unsynced prompts lack commit/id, which would produce broken blueprint values.
+    // 在从回退值自动创建之前，等待所有未同步的提示词完成同步。
+    // 未同步的提示词缺少 commit/id，会导致生成损坏的蓝图值。
     const allSynced = await this._allPromptsSynced(fallback as Record<string, unknown>);
     if (!allSynced) {
       return this._makeFallbackConfig(fallback, maskId);
     }
 
-    // Auto-create from fallback (handle 409 race: another caller created it concurrently)
+    // 从回退值自动创建（处理 409 竞争：另一个调用者并发创建了它）
     let blueprint: Blueprint;
     try {
       blueprint = await manager.createBlueprint({
@@ -2502,7 +2497,7 @@ export class OpikClient {
   }
 
   /**
-   * Validates fallback keys against the blueprint, deserializes values, and returns a typed Config.
+   * 验证回退键与蓝图的匹配，反序列化值，并返回类型化的 Config。
    */
   private _buildConfigFromBlueprint<T extends Record<string, unknown>>(
     blueprint: Blueprint,
@@ -2560,7 +2555,7 @@ export class OpikClient {
     const maskId = getActiveConfigMask() ?? undefined;
 
     const blueprintName = getActiveConfigBlueprintName() ?? undefined;
-    // A runner context that pins a blueprint name is an explicit request — no auto-create.
+    // 固定蓝图名称的运行器上下文是显式请求 — 不自动创建。
     const isExplicitBlueprintFromContext = blueprintName !== undefined;
     const manager = new ConfigManager(projectName, this);
 
@@ -2568,7 +2563,7 @@ export class OpikClient {
     const isLatest = options?.version === "latest";
     const hasNamedVersion = options?.version !== undefined && !isLatest;
     const effectiveEnv = options?.version ? null : (options?.env ?? "prod");
-    // Cache key: null for both "latest" and the default env path
+    // 缓存键："latest" 和默认环境路径均为 null
     const effectiveVersion = blueprintName ?? (hasNamedVersion ? options!.version! : null);
 
     const fetchResult = await this._fetchBlueprintFromBackend<T>(manager, {
@@ -2602,13 +2597,13 @@ export class OpikClient {
   }
 
   /**
-   * Publishes a new config version unconditionally.
-   * Does NOT require a `track()` function.
+   * 无条件发布新的配置版本。
+   * 不需要 `track()` 函数。
    *
-   * @param values - Config field values to publish
-   * @param options.projectName - Project to publish under (defaults to client's configured project)
-   * @param options.description - Optional human-readable description for this version
-   * @returns The version name (or ID) of the published config
+   * @param values - 要发布的配置字段值
+   * @param options.projectName - 发布到的项目（默认使用客户端配置的项目）
+   * @param options.description - 此版本的可选人类可读描述
+   * @returns 已发布配置的版本名称（或 ID）
    */
   public createConfig = async (
     values: Record<string, SupportedValue>,
@@ -2642,12 +2637,12 @@ export class OpikClient {
   };
 
   /**
-   * Tags a specific config version with an environment label.
-   * Does NOT require a `track()` function.
+   * 为特定配置版本添加环境标签。
+   * 不需要 `track()` 函数。
    *
-   * @param options.version - The version name to tag
-   * @param options.env - The environment label (e.g. "prod", "staging")
-   * @param options.projectName - Project (defaults to client's configured project)
+   * @param options.version - 要标记的版本名称
+   * @param options.env - 环境标签（如 "prod"、"staging"）
+   * @param options.projectName - 项目（默认使用客户端配置的项目）
    */
   public setConfigEnv = async (options: {
     version: string;
@@ -2673,31 +2668,31 @@ export class OpikClient {
   };
 
   /**
-   * Updates tags for one or more prompt versions in a single batch operation.
+   * 在单个批量操作中更新一个或多个提示词版本的标签。
    *
-   * @param versionIds - Array of prompt version IDs to update
-   * @param options - Update options
-   * @param options.tags - Tags to set or merge:
-   *   - `[]`: Clear all tags (when mergeTags is false or unspecified)
-   *   - `['tag1', 'tag2']`: Set or merge tags (based on mergeTags)
-   * @param options.mergeTags - If true, adds new tags to existing tags (union). If false, replaces all existing tags (default: false)
-   * @returns Promise that resolves when update is complete
-   * @throws OpikApiError if update fails
+   * @param versionIds - 要更新的提示词版本 ID 数组
+   * @param options - 更新选项
+   * @param options.tags - 要设置或合并的标签：
+   *   - `[]`：清除所有标签（当 mergeTags 为 false 或未指定时）
+   *   - `['tag1', 'tag2']`：设置或合并标签（基于 mergeTags）
+   * @param options.mergeTags - 若为 true，将新标签添加到已有标签（并集）。若为 false，替换所有已有标签（默认：false）
+   * @returns 更新完成时解析的 Promise
+   * @throws 若更新失败则抛出 OpikApiError
    *
    * @example
    * ```typescript
-   * // Replace tags on multiple versions (default behavior)
+   * // 替换多个版本的标签（默认行为）
    * await client.updatePromptVersionTags(["version-id-1", "version-id-2"], {
    *   tags: ["production", "v2"]
    * });
    *
-   * // Merge new tags with existing tags
+   * // 将新标签与已有标签合并
    * await client.updatePromptVersionTags(["version-id-1"], {
    *   tags: ["hotfix"],
    *   mergeTags: true
    * });
    *
-   * // Clear all tags
+   * // 清除所有标签
    * await client.updatePromptVersionTags(["version-id-1"], {
    *   tags: []
    * });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Skeleton } from "@/ui/skeleton";
 
@@ -12,6 +13,7 @@ type AgentRunnerLoadingProps = {
 const AgentRunnerLoading: React.FC<AgentRunnerLoadingProps> = ({
   runnerId,
 }) => {
+  const { t } = useTranslation();
   const [isGraceElapsed, setIsGraceElapsed] = useState(false);
 
   useEffect(() => {
@@ -28,22 +30,25 @@ const AgentRunnerLoading: React.FC<AgentRunnerLoadingProps> = ({
       <div className="flex flex-col items-center gap-1 py-8 text-muted-slate">
         <AlertCircle className="mb-2 size-5 text-destructive" />
         <p className="comet-body-s font-medium text-foreground">
-          No agents registered
+          {t("common.messages.noAgentsRegistered")}
         </p>
         <div className="comet-body-xs mt-1 max-w-sm text-center">
           <p>
-            The runner is connected but has not registered any agents. Common
-            causes:
+            {t("common.messages.noAgentsRegisteredDescription")}
           </p>
           <ul className="mt-1 inline-block list-inside list-disc text-left">
             <li>
-              Missing <code>@opik.track(entrypoint=True)</code> decorator
+              {t("common.messages.runnerMissingDecorator", {
+                1: (chunks: string) => <code>{chunks}</code>,
+              })}
             </li>
-            <li>Process exited or crashed before registration</li>
-            <li>Script didn&apos;t import the entrypoint module</li>
+            <li>{t("common.messages.runnerProcessExited")}</li>
+            <li>{t("common.messages.runnerMissingEntrypoint")}</li>
           </ul>
           <p className="mt-2">
-            Check your <code>opik endpoint</code> terminal for details.
+            {t("common.messages.checkOpikEndpointTerminal", {
+              1: (chunks: string) => <code>{chunks}</code>,
+            })}
           </p>
         </div>
       </div>

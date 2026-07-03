@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Split } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -28,8 +29,9 @@ const CompareExperimentsButton: React.FunctionComponent<
   variant = "default",
   className,
   showIcon = true,
-  tooltipContent = "Compare experiments",
+  tooltipContent,
 }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -41,7 +43,7 @@ const CompareExperimentsButton: React.FunctionComponent<
         setOpen={setOpen}
       />
       <div className="inline-flex items-center gap-2">
-        <TooltipWrapper content={tooltipContent}>
+        <TooltipWrapper content={tooltipContent ?? t("compareExperiments.title")}>
           <Button
             size={size}
             variant={variant}
@@ -52,7 +54,7 @@ const CompareExperimentsButton: React.FunctionComponent<
             }}
           >
             {showIcon && <Split className="mr-1.5 size-3.5" />}
-            Compare
+            {t("compareExperiments.title")}
           </Button>
         </TooltipWrapper>
         <ExplainerIcon

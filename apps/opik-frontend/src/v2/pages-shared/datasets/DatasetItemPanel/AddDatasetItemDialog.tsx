@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 import { jsonLanguage } from "@codemirror/lang-json";
@@ -40,6 +41,7 @@ const AddDatasetItemDialog: React.FC<AddDatasetItemDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation("datasets");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const theme = useCodemirrorTheme({
     editable: true,
@@ -75,11 +77,11 @@ const AddDatasetItemDialog: React.FC<AddDatasetItemDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Add record</DialogTitle>
+          <DialogTitle>{t("addItem.addRecord")}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto">
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="input">Data</Label>
+            <Label htmlFor="input">{t("addItem.data")}</Label>
             <div className="max-h-52 overflow-y-auto rounded-md">
               <CodeMirror
                 theme={theme}
@@ -98,16 +100,16 @@ const AddDatasetItemDialog: React.FC<AddDatasetItemDialogProps> = ({
           </div>
           {showInvalidJSON && (
             <Alert variant="destructive">
-              <AlertTitle>Invalid JSON</AlertTitle>
+              <AlertTitle>{t("addItem.invalidJson")}</AlertTitle>
             </Alert>
           )}
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("addItem.cancel")}</Button>
           </DialogClose>
           <Button type="submit" disabled={!isValid} onClick={submitHandler}>
-            Add record
+            {t("addItem.addRecord")}
           </Button>
         </DialogFooter>
       </DialogContent>

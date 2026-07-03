@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   BrainCircuit,
   Bot,
@@ -40,6 +41,7 @@ const VerticalArrow = () => (
 );
 
 const AgentSandboxFlowDiagram: React.FC = () => {
+  const { t } = useTranslation("pages/agent-playground");
   const { themeMode } = useTheme();
   const logoUrl =
     themeMode === THEME_MODE.DARK ? opikLogoInvertedUrl : opikLogoUrl;
@@ -68,20 +70,33 @@ const AgentSandboxFlowDiagram: React.FC = () => {
         {/* Configure + Input row (equal height) */}
         <div className="flex gap-1.5">
           <div className="flex flex-1 flex-col rounded border border-border bg-background px-2 py-1">
-            <span className="mb-1 text-[10px] font-medium">Configure</span>
+            <span className="mb-1 text-[10px] font-medium">
+              {t("flowDiagram.configure")}
+            </span>
             <div className="flex flex-1 flex-col">
               <Tag
                 icon={<FileTerminal className="size-2.5" />}
-                label="Prompts"
+                label={t("flowDiagram.prompts")}
               />
-              <Tag icon={<Wrench className="size-2.5" />} label="Tools" />
-              <Tag icon={<BrainCircuit className="size-2.5" />} label="Model" />
-              <Tag icon={<Settings2 className="size-2.5" />} label="Params" />
+              <Tag
+                icon={<Wrench className="size-2.5" />}
+                label={t("flowDiagram.tools")}
+              />
+              <Tag
+                icon={<BrainCircuit className="size-2.5" />}
+                label={t("flowDiagram.model")}
+              />
+              <Tag
+                icon={<Settings2 className="size-2.5" />}
+                label={t("flowDiagram.params")}
+              />
             </div>
           </div>
 
           <div className="flex flex-1 flex-col rounded border border-border bg-background px-2 py-1">
-            <span className="mb-1 text-[10px] font-medium">Input</span>
+            <span className="mb-1 text-[10px] font-medium">
+              {t("flowDiagram.input")}
+            </span>
             <div className="flex flex-1 flex-col gap-1">
               <div className="flex-1 rounded border bg-primary-foreground px-2 py-1">
                 <span className="font-mono text-[10px] leading-snug text-foreground">
@@ -92,7 +107,9 @@ const AgentSandboxFlowDiagram: React.FC = () => {
               </div>
               <div className="flex items-center justify-center gap-1 rounded border px-2 py-0.5">
                 <Play className="size-2.5" />
-                <span className="text-[10px] font-medium">Run</span>
+                <span className="text-[10px] font-medium">
+                  {t("flowDiagram.run")}
+                </span>
               </div>
             </div>
           </div>
@@ -104,10 +121,12 @@ const AgentSandboxFlowDiagram: React.FC = () => {
         <div className="rounded border border-primary bg-primary-foreground px-2 py-1.5">
           <div className="flex items-center gap-1.5">
             <OllieOwl className="size-3 shrink-0 text-primary" />
-            <span className="text-[11px] font-medium">Improve with Ollie</span>
+            <span className="text-[11px] font-medium">
+              {t("flowDiagram.improveWithOllie")}
+            </span>
           </div>
           <p className="mt-0.5 text-[10px] text-muted-slate">
-            Analyze traces, suggest prompt tweaks
+            {t("flowDiagram.analyzeTracesSuggest")}
           </p>
         </div>
 
@@ -115,15 +134,26 @@ const AgentSandboxFlowDiagram: React.FC = () => {
 
         {/* Inspect */}
         <div className="rounded border border-border bg-background px-2 py-1.5">
-          <span className="mb-1 block text-[10px] font-medium">Inspect</span>
+          <span className="mb-1 block text-[10px] font-medium">
+            {t("flowDiagram.inspect")}
+          </span>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             <Tag
               icon={<MessageSquareMore className="size-2.5" />}
-              label="Response"
+              label={t("flowDiagram.response")}
             />
-            <Tag icon={<GitBranch className="size-2.5" />} label="Trajectory" />
-            <Tag icon={<Timer className="size-2.5" />} label="Latency" />
-            <Tag icon={<Hash className="size-2.5" />} label="Tokens" />
+            <Tag
+              icon={<GitBranch className="size-2.5" />}
+              label={t("flowDiagram.trajectory")}
+            />
+            <Tag
+              icon={<Timer className="size-2.5" />}
+              label={t("flowDiagram.latency")}
+            />
+            <Tag
+              icon={<Hash className="size-2.5" />}
+              label={t("flowDiagram.tokens")}
+            />
           </div>
         </div>
       </div>
@@ -133,7 +163,7 @@ const AgentSandboxFlowDiagram: React.FC = () => {
         {/* Top curve: ends closer to box vertical center */}
         <CurveRight className="absolute left-0 top-[34px] h-[86px] w-[62px]" />
         <span className="absolute left-[32px] top-[56px] whitespace-nowrap text-[10px] text-muted-slate">
-          Config + Input
+          {t("flowDiagram.configInput")}
         </span>
         {/* Animated dot traveling along top curve */}
         <div className="absolute left-0 top-[34px] h-[87px] w-[62px]">
@@ -150,7 +180,7 @@ const AgentSandboxFlowDiagram: React.FC = () => {
         <div className="absolute left-[62px] top-[107px] flex items-center gap-1.5 rounded border border-light-slate bg-primary-foreground p-2.5">
           <Bot className="size-3 text-light-slate" />
           <span className="whitespace-nowrap font-mono text-[10px] leading-loose text-foreground">
-            Your agent
+            {t("flowDiagram.yourAgent")}
           </span>
         </div>
 
@@ -168,7 +198,7 @@ const AgentSandboxFlowDiagram: React.FC = () => {
           />
         </div>
         <span className="absolute left-[32px] top-[185px] whitespace-nowrap text-[10px] text-muted-slate">
-          Response + trace
+          {t("flowDiagram.responseTrace")}
         </span>
       </div>
     </div>

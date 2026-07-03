@@ -1,0 +1,815 @@
+---
+headline: 手动记录实验 | Opik 文档
+og:description: 通过记录预计算的实验来评估您的 LLM 应用程序，并通过本详细指南增强对性能的信心。
+og:site_name: Opik 文档
+og:title: 手动记录实验 - Opik
+subtitle: 使用 Python SDK 和 REST API 记录评估结果的分步指南
+title: 手动记录实验
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+评估您的 LLM 应用程序可以让您对其性能有信心。在本指南中，我们将介绍如何使用您已计算的数据手动创建实验。
+
+<Tip>
+  本指南重点介绍如何记录预计算的评估结果。如果您希望使用 Opik 计算指标来运行评估，请参阅[评估您的代理](/evaluation/advanced/evaluate_your_llm)指南。
+</Tip>
+
+该过程涉及以下关键步骤：
+
+1. 创建包含测试用例的数据集
+2. 准备评估结果
+3. 批量记录实验项目
+
+## 1. 创建数据集
+
+首先，您需要创建一个包含测试用例的数据集。该数据集将链接到您的实验。
+
+<CodeBlocks>
+  ```typescript title="TypeScript" language="typescript" maxLines=1000
+  import { Opik } from "opik";
+
+  const client = new Opik({
+    apiKey: "your-api-key",
+    apiUrl: "https://www.comet.com/opik/api",
+    projectName: "your-project-name",
+    workspaceName: "your-workspace-name",
+  });
+  const dataset = await client.getOrCreateDataset("My dataset");
+
+  await dataset.insert([
+    {
+      user_question: "What is the capital of France?",
+      expected_output: "Paris"
+    },
+    {
+      user_question: "What is the capital of Japan?",
+      expected_output: "Tokyo"
+    },
+    {
+      user_question: "What is the capital of Brazil?",
+      expected_output: "Brasília"
+    }
+  ]);
+  ```
+
+  ```python title="Python" language="python" maxLines=1000
+  from opik import Opik
+  import opik
+
+  # 配置 Opik
+  opik.configure()
+
+  # 创建数据集项目
+  dataset_items = [
+      {
+          "user_question": "What is the capital of France?",
+          "expected_output": "Paris"
+      },
+      {
+          "user_question": "What is the capital of Japan?",
+          "expected_output": "Tokyo"
+      },
+      {
+          "user_question": "What is the capital of Brazil?",
+          "expected_output": "Brasília"
+      }
+  ]
+
+  # 获取或创建数据集
+  client = Opik()
+  dataset = client.get_or_create_dataset(name="geography-questions", project_name="your-project-name")
+
+  # 添加数据集项目
+  dataset.insert(dataset_items)
+  ```
+
+  ```bash title="REST API" maxLines=1000
+  # 首先，创建数据集
+  curl -X POST 'https://www.comet.com/opik/api/v1/private/datasets' \
+    -H 'Content-Type: application/json' \
+    -H 'Comet-Workspace: <your-workspace-name>' \
+    -H 'authorization: <your-api-key>' \
+    -d '{
+      "name": "geography-questions",
+      "description": "Geography quiz dataset"
+    }'
+
+  # 然后添加数据集项目
+  curl -X POST 'https://www.comet.com/opik/api/v1/private/datasets/items' \
+    -H 'Content-Type: application/json' \
+    -H 'Comet-Workspace: <your-workspace-name>' \
+    -H 'authorization: <your-api-key>' \
+    -d '{
+      "dataset_name": "geography-questions",
+      "items": [
+        {
+          "user_question": "What is the capital of France?",
+          "expected_output": "Paris"
+        },
+        {
+          "user_question": "What is the capital of Japan?",
+          "expected_output": "Tokyo"
+        },
+        {
+          "user_question": "What is the capital of Brazil?",
+          "expected_output": "Brasília"
+        }
+      ]
+    }'
+  ```
+</CodeBlocks>
+
+<Tip>
+  如果未提供数据集项目 ID，系统将自动生成。如果您提供自己的 ID，请确保它们是 UUID7 格式。
+</Tip>
+
+## 2. 准备评估结果
+
+使用必要的字段组织您的评估结果。每个实验项目应包括：
+
+- `dataset_item_id`：正在评估的数据集项目的 ID
+- `evaluate_task_result`：您的 LLM 应用程序的输出
+- `feedback_scores`：评估指标数组（可选）
+
+<CodeBlocks>
+  ```typescript title="TypeScript" language="typescript" maxLines=1000
+  const datasetItems = await dataset.getItems();
+
+  const mockResponses = {
+    "What is the capital of France?": "The capital of France is Paris.",
+    "What is the capital of Japan?": "Japan's capital is Tokyo.",
+    "What is the capital of Brazil?": "The capital of Brazil is Rio de Janeiro."
+  }
+
+  // 这将被您的特定逻辑替换，目标只是拥有一个包含
+  // dataset_item_id、evaluate_task_result 和 feedback_scores 的评估项目数组
+  const evaluationItems = datasetItems.map(item => {  
+    const response = mockResponses[item.user_question] || "I don't know";
+      return {
+        dataset_item_id: item.id,
+        evaluate_task_result: { prediction: response },
+        feedback_scores: [{ name: "accuracy", value: response.includes(item.expected_output) ? 1.0 : 0.0, source: "sdk" }]
+      }
+  });
+  ```
+
+```python title="Python" language="python" maxLines=1000
+# 从数据集对象获取数据集项目
+dataset_items = list(dataset.get_items())
+
+# 本示例的模拟 LLM 响应
+# 在实际场景中，您会在此处调用实际的 LLM
+mock_responses = {
+    "France": "The capital of France is Paris.",
+    "Japan": "Japan's capital is Tokyo.",
+    "Brazil": "The capital of Brazil is Rio de Janeiro."  # 错误
+}
+
+# 准备评估结果
+evaluation_items = []
+
+for item in dataset_items[:3]:  # 本示例处理前 3 个项目
+    # 确定使用哪个模拟响应
+    question = item['user_question']
+    response = "I don't know"
+
+    for country, mock_response in mock_responses.items():
+        if country.lower() in question.lower():
+            response = mock_response
+            break
+
+    # 计算准确率（如果响应中包含预期答案则为 1.0）
+    accuracy = 1.0 if item['expected_output'].lower() in response.lower() else 0.0
+
+    evaluation_items.append({
+        "dataset_item_id": item['id'],
+        "evaluate_task_result": {
+            "prediction": response
+        },
+        "feedback_scores": [
+            {
+                "name": "accuracy",
+                "value": accuracy,
+                "source": "sdk"
+            }
+        ]
+    })
+
+print(f"准备了 {len(evaluation_items)} 个评估项目")
+```
+
+```bash title="REST API"
+  {
+    "experiment_name": "geography-bot-v1",
+    "dataset_name": "geography-questions",
+    "items": [
+      {
+        "dataset_item_id": "dataset-item-id-1",
+        "evaluate_task_result": {
+          "prediction": "The capital of France is Paris."
+        },
+        "feedback_scores": [
+          {
+            "name": "accuracy",
+            "value": 1.0,
+            "source": "sdk"
+          }
+        ]
+      },
+      {
+        "dataset_item_id": "dataset-item-id-2",
+        "evaluate_task_result": {
+          "prediction": "Japan's capital is Tokyo."
+        },
+        "feedback_scores": [
+          {
+            "name": "accuracy",
+            "value": 1.0,
+            "source": "sdk"
+          }
+        ]
+      },
+      {
+        "dataset_item_id": "dataset-item-id-3",
+        "evaluate_task_result": {
+          "prediction": "The capital of Brazil is Rio de Janeiro."
+        },
+        "feedback_scores": [
+          {
+            "name": "accuracy",
+            "value": 0.0,
+            "source": "sdk"
+          }
+        ]
+      }
+    ]
+  }
+```
+
+</CodeBlocks>
+
+## 3. 批量记录实验项目
+
+使用批量端点高效地一次记录多个评估结果。
+
+<Note>
+  `project_name` 设置实验、数据集和自动创建的 traces 的项目。
+  提供时，它将被使用 — 如果与现有实验或数据集的项目冲突，请求将失败（409）。
+  省略时，项目从现有实验或数据集派生；如果两者都不适用，则回退到已弃用的 `Default Project`
+  （响应包含 `X-Opik-Deprecation` 头）。
+</Note>
+
+<CodeBlocks>
+```typescript title="TypeScript" language="typescript" maxLines=1000
+import { Opik } from "opik";
+
+const projectName = "your-project-name";
+const client = new Opik({
+  apiKey: "your-api-key",
+  apiUrl: "https://www.comet.com/opik/api",
+  projectName,
+  workspaceName: "your-workspace-name",
+});
+
+const experimentName = "Bulk experiment upload";
+const datasetName = "geography-questions";
+const items = [
+  {
+    dataset_item_id: "dataset-item-id-1",
+    evaluate_task_result: { prediction: "The capital of France is Paris." },
+    feedback_scores: [{ name: "accuracy", value: 1.0, source: "sdk" }]
+  }
+];
+
+await client.api.experiments.experimentItemsBulk({ experimentName, datasetName, projectName, items });
+```
+
+```python title="Python" language="python" maxLines=1000
+experiment_name = "Bulk experiment upload"
+# 使用批量方法记录实验结果
+client.rest_client.experiments.experiment_items_bulk(
+    experiment_name=experiment_name,
+    dataset_name="geography-questions",
+    project_name="your-project-name",
+    items=[
+        {
+            "dataset_item_id": item["dataset_item_id"],
+            "evaluate_task_result": item["evaluate_task_result"],
+            "feedback_scores": [
+                {**score, "source": "sdk"}
+                for score in item["feedback_scores"]
+            ]
+        }
+        for item in evaluation_items
+    ]
+)
+```
+
+```bash title="REST API" maxLines=1000
+curl -X PUT 'https://www.comet.com/opik/api/v1/private/experiments/items/bulk' \
+    -H 'Content-Type: application/json' \
+    -H 'Comet-Workspace: <your-workspace-name>' \
+    -H 'authorization: <your-api-key>' \
+    -d '{
+      "experiment_name": "geography-bot-v1",
+      "dataset_name": "geography-questions",
+      "project_name": "your-project-name",
+      "items": [
+        {
+          "dataset_item_id": "dataset-item-id-1",
+          "evaluate_task_result": {
+            "prediction": "The capital of France is Paris."
+          },
+          "feedback_scores": [
+            {
+              "name": "accuracy",
+              "value": 1.0,
+              "source": "sdk"
+            }
+          ]
+        },
+        {
+          "dataset_item_id": "dataset-item-id-2",
+          "evaluate_task_result": {
+            "prediction": "Japans capital is Tokyo."
+          },
+          "feedback_scores": [
+            {
+              "name": "accuracy",
+              "value": 1.0,
+              "source": "sdk"
+            }
+          ]
+        }
+      ]
+    }'
+```
+
+</CodeBlocks>
+
+<Warning>
+  **请求大小限制**：最大允许的有效负载大小为 **4MB**。对于较大的提交，请将数据分成较小的批次。
+</Warning>
+
+如果您希望将数据分成较小的批次，只需在有效负载中添加 `experiment_id`，以便实验项目可以添加到现有实验中。
+
+以下是将 `evaluation_items` 分成两个批次的示例，两个批次都将添加到同一个实验中：
+
+<CodeBlocks>
+  ```typescript title="TypeScript" language="typescript" maxLines=1000
+  import { generateId } from "opik";
+
+  const experimentId = generateId();
+  const experimentName = "Bulk experiment upload";
+  // 将 evaluation_items 分成两个批次
+  const mid = Math.floor(evaluationItems.length / 2);
+
+  const halves = [
+    evaluationItems.slice(0, mid),
+    evaluationItems.slice(mid)
+  ];
+
+  for (const half of halves) {
+    await client.restClient.experiments.experimentItemsBulk({
+      experimentId: experimentId,
+      experimentName: experimentName,
+      datasetName: "geography-questions",
+      projectName: "your-project-name",
+      items: half.map(item => ({
+        datasetItemId: item.datasetItemId,
+        evaluateTaskResult: item.evaluateTaskResult,
+        feedbackScores: item.feedbackScores.map(score => ({
+          ...score,
+          source: "sdk"
+        }))
+      }))
+    });
+  }
+  ```
+
+  ```python title="Python" language="python" maxLines=1000
+  experiment_id = str(uuid6.uuid7())
+  experiment_name = "Bulk experiment upload"
+  # 将 evaluation_items 分成两个批次
+  mid = len(evaluation_items) // 2
+
+  halves = [
+      evaluation_items[:mid],
+      evaluation_items[mid:]
+  ]
+
+  for half in halves:
+      client.rest_client.experiments.experiment_items_bulk(
+          experiment_id=experiment_id,
+          experiment_name=experiment_name,
+          dataset_name="geography-questions",
+          project_name="your-project-name",
+          items=[
+              {
+                  "dataset_item_id": item["dataset_item_id"],
+                  "evaluate_task_result": item["evaluate_task_result"],
+                  "feedback_scores": [
+                      {**score, "source": "sdk"}
+                      for score in item["feedback_scores"]
+                  ]
+              }
+              for item in half
+          ]
+      )
+  ```
+</CodeBlocks>
+
+## 4. 分析结果
+
+记录实验项目后，您可以在 Opik UI 中分析结果，甚至可以比较不同的实验。
+
+## 完整示例
+
+以下是将所有步骤整合在一起的完整示例：
+
+<CodeBlocks>
+  ```typescript title="TypeScript" language="typescript"
+  import { Opik } from "opik";
+
+const projectName = "your-project-name";
+const datasetName = "geography-questions";
+
+// 配置 Opik
+const client = new Opik({
+  apiKey: "your-api-key",
+  apiUrl: "https://www.comet.com/opik/api",
+  projectName,
+  workspaceName: "your-workspace-name",
+});
+
+// 步骤 1：创建数据集
+const dataset = await client.getOrCreateDataset(datasetName);
+
+const localDatasetItems = [
+  {
+    user_question: "What is the capital of France?",
+    expected_output: "Paris"
+  },
+  {
+    user_question: "What is the capital of Japan?",
+    expected_output: "Tokyo"
+  }
+];
+
+await dataset.insert(localDatasetItems);
+
+// 步骤 2：获取数据集项目并准备评估结果
+const datasetItems = await dataset.getItems();
+
+// 获取数据集项目 ID 的辅助函数
+const getDatasetItem = (country: string) => {
+  return datasetItems.find(item =>
+    item.user_question.toLowerCase().includes(country.toLowerCase())
+  );
+};
+
+// 准备评估结果
+const evaluationItems = [
+  {
+    dataset_item_id: getDatasetItem("France")?.id,
+    evaluate_task_result: { prediction: "The capital of France is Paris." },
+    feedback_scores: [{ name: "accuracy", value: 1.0 }]
+  },
+  {
+    dataset_item_id: getDatasetItem("Japan")?.id,
+    evaluate_task_result: { prediction: "Japan's capital is Tokyo." },
+    feedback_scores: [{ name: "accuracy", value: 1.0 }]
+  }
+];
+
+// 步骤 3：记录实验结果
+const experimentName = `geography-bot-${Math.random().toString(36).substr(2, 4)}`;
+await client.api.experiments.experimentItemsBulk({
+  experimentName,
+  datasetName,
+  projectName,
+  items: evaluationItems.map(item => ({
+    datasetItemId: item.dataset_item_id,
+    evaluateTaskResult: item.evaluate_task_result,
+    feedbackScores: item.feedback_scores.map(score => ({
+      ...score,
+      source: "sdk"
+    }))
+  }))
+});
+
+console.log(`实验 '${experimentName}' 创建成功！`);
+```
+
+```python title="Python" language="python"
+from opik import Opik
+import opik
+import uuid
+
+# 配置 Opik
+opik.configure()
+
+dataset_name = "geography-questions"
+project_name = "your-project-name"
+
+# 步骤 1：创建数据集
+client = Opik()
+dataset = client.get_or_create_dataset(name=dataset_name, project_name=project_name)
+
+dataset_items = [
+    {
+        "user_question": "What is the capital of France?",
+        "expected_output": "Paris"
+    },
+    {
+        "user_question": "What is the capital of Japan?",
+        "expected_output": "Tokyo"
+    }
+]
+
+dataset.insert(dataset_items)
+
+# 步骤 2：运行您的 LLM 应用程序并收集结果
+# （在实际场景中，您会在此处调用您的 LLM）
+
+# 获取数据集项目 ID 的辅助函数
+def get_dataset_item(country):
+    items = dataset.get_items()
+    for item in items:
+        if country.lower() in item['user_question'].lower():
+            return item
+    return None
+
+# 准备评估结果
+evaluation_items = [
+    {
+        "dataset_item_id": get_dataset_item("France")['id'],
+        "evaluate_task_result": {"prediction": "The capital of France is Paris."},
+        "feedback_scores": [{"name": "accuracy", "value": 1.0}]
+    },
+    {
+        "dataset_item_id": get_dataset_item("Japan")['id'],
+        "evaluate_task_result": {"prediction": "Japan's capital is Tokyo."},
+        "feedback_scores": [{"name": "accuracy", "value": 1.0}]
+    }
+]
+
+# 步骤 3：记录实验结果
+rest_client = client.rest_client
+experiment_name = f"geography-bot-{str(uuid.uuid4())[0:4]}"
+rest_client.experiments.experiment_items_bulk(
+    experiment_name=experiment_name,
+    dataset_name=dataset_name,
+    project_name=project_name,
+    items=[
+        {
+            "dataset_item_id": item["dataset_item_id"],
+            "evaluate_task_result": item["evaluate_task_result"],
+            "feedback_scores": [
+                {**score, "source": "sdk"}
+                for score in item["feedback_scores"]
+            ]
+        }
+        for item in evaluation_items
+    ]
+)
+
+print(f"实验 '{experiment_name}' 创建成功！")
+```
+
+```bash title="REST API"
+# 设置环境变量
+export OPIK_API_KEY="your_api_key"
+export OPIK_WORKSPACE="your_workspace_name"
+# 对于本地部署使用 http://localhost:5173/api/v1/private/...
+
+# 步骤 1：创建数据集
+curl -X POST "https://www.comet.com/opik/api/v1/private/datasets" \
+  -H "Content-Type: application/json" \
+  -H "Comet-Workspace: ${OPIK_WORKSPACE}" \
+  -H "authorization: ${OPIK_API_KEY}" \
+  -d '{
+    "name": "geography-questions",
+    "description": "Geography quiz dataset"
+  }'
+
+# 步骤 2：添加数据集项目
+curl -X POST "https://www.comet.com/opik/api/v1/private/datasets/items" \
+  -H "Content-Type: application/json" \
+  -H "Comet-Workspace: ${OPIK_WORKSPACE}" \
+  -H "authorization: ${OPIK_API_KEY}" \
+  -d '{
+    "dataset_name": "geography-questions",
+    "items": [
+      {
+        "user_question": "What is the capital of France?",
+        "expected_output": "Paris"
+      },
+      {
+        "user_question": "What is the capital of Japan?",
+        "expected_output": "Tokyo"
+      }
+    ]
+  }'
+
+# 步骤 3：记录实验结果
+curl -X PUT "https://www.comet.com/opik/api/v1/private/experiments/items/bulk" \
+  -H "Content-Type: application/json" \
+  -H "Comet-Workspace: ${OPIK_WORKSPACE}" \
+  -H "authorization: ${OPIK_API_KEY}" \
+  -d '{
+    "experiment_name": "geography-bot-v1",
+    "dataset_name": "geography-questions",
+    "project_name": "your-project-name",
+    "items": [
+      {
+        "dataset_item_id": "dataset-item-id-1",
+        "evaluate_task_result": {
+          "prediction": "The capital of France is Paris."
+        },
+        "feedback_scores": [
+          {
+            "name": "accuracy",
+            "value": 1.0,
+            "source": "sdk"
+          }
+        ]
+      },
+      {
+        "dataset_item_id": "dataset-item-id-2",
+        "evaluate_task_result": {
+          "prediction": "Japan'\''s capital is Tokyo."
+        },
+        "feedback_scores": [
+          {
+            "name": "accuracy",
+            "value": 1.0,
+            "source": "sdk"
+          }
+        ]
+      }
+    ]
+  }'
+```
+
+</CodeBlocks>
+
+## 高级用法
+
+### 包含 Traces 和 Spans
+
+您可以在实验项目中包含完整的执行 traces 以实现完整的可观测性，为此，请在实验项目中添加 `trace` 和 `spans` 字段：
+
+```json
+[
+  {
+    "dataset_item_id": "your-dataset-item-id",
+    "trace": {
+      "name": "geography_query",
+      "input": { "question": "What is the capital of France?" },
+      "output": { "answer": "Paris" },
+      "metadata": { "model": "gpt-3.5-turbo" },
+      "start_time": "2024-01-01T00:00:00Z",
+      "end_time": "2024-01-01T00:00:01Z"
+    },
+    "spans": [
+      {
+        "name": "llm_call",
+        "type": "llm",
+        "start_time": "2024-01-01T00:00:00Z",
+        "end_time": "2024-01-01T00:00:01Z",
+        "input": { "prompt": "What is the capital of France?" },
+        "output": { "response": "Paris" }
+      }
+    ],
+    "feedback_scores": [{ "name": "accuracy", "value": 1.0, "source": "sdk" }]
+  }
+]
+```
+
+<Warning>重要：您可以提供 `evaluate_task_result` 或 `trace` — 但不能同时提供两者。</Warning>
+
+### Java 示例
+
+对于 Java 开发者，以下是使用 Jackson 和 HttpClient 与 Opik 集成的方法：
+
+```java
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+public class OpikExperimentLogger {
+
+    public static void main(String[] args) {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String baseURI = System.getenv("OPIK_URL_OVERRIDE");
+        String workspaceName = System.getenv("OPIK_WORKSPACE");
+        String apiKey = System.getenv("OPIK_API_KEY");
+
+        String datasetName = "geography-questions";
+        String experimentName = "geography-bot-v1";
+
+        try (var client = HttpClient.newHttpClient()) {
+            // 流式传输数据集项目
+            var streamRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(baseURI).resolve("/v1/private/datasets/items/stream"))
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/octet-stream")
+                    .header("Authorization", apiKey)
+                    .header("Comet-Workspace", workspaceName)
+                    .POST(HttpRequest.BodyPublishers.ofString(
+                        mapper.writeValueAsString(Map.of("dataset_name", datasetName))
+                    ))
+                    .build();
+
+            HttpResponse<InputStream> streamResponse = client.send(
+                streamRequest,
+                HttpResponse.BodyHandlers.ofInputStream()
+            );
+
+            List<JsonNode> experimentItems = new ArrayList<>();
+
+            try (var reader = new BufferedReader(new InputStreamReader(streamResponse.body()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    JsonNode datasetItem = mapper.readTree(line);
+                    String question = datasetItem.get("data").get("user_question").asText();
+                    UUID datasetItemId = UUID.fromString(datasetItem.get("id").asText());
+
+                    // 调用您的 LLM 应用程序
+                    JsonNode llmOutput = callYourLLM(question);
+
+                    // 计算指标
+                    List<JsonNode> scores = calculateMetrics(llmOutput);
+
+                    // 构建实验项目
+                    ArrayNode scoresArray = JsonNodeFactory.instance.arrayNode().addAll(scores);
+                    JsonNode experimentItem = JsonNodeFactory.instance.objectNode()
+                            .put("dataset_item_id", datasetItemId.toString())
+                            .setAll(Map.of(
+                                "evaluate_task_result", llmOutput,
+                                "feedback_scores", scoresArray
+                            ));
+
+                    experimentItems.add(experimentItem);
+                }
+            }
+
+            // 批量发送实验结果
+            var bulkBody = JsonNodeFactory.instance.objectNode()
+                    .put("dataset_name", datasetName)
+                    .put("experiment_name", experimentName)
+                    .setAll(Map.of("items",
+                        JsonNodeFactory.instance.arrayNode().addAll(experimentItems)
+                    ));
+
+            var bulkRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(baseURI).resolve("/v1/private/experiments/items/bulk"))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", apiKey)
+                    .header("Comet-Workspace", workspaceName)
+                    .PUT(HttpRequest.BodyPublishers.ofString(bulkBody.toString()))
+                    .build();
+
+            HttpResponse<String> bulkResponse = client.send(
+                bulkRequest,
+                HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (bulkResponse.statusCode() == 204) {
+                System.out.println("实验项目创建成功。");
+            } else {
+                System.err.printf("创建实验项目失败：%s %s",
+                    bulkResponse.statusCode(), bulkResponse.body());
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+### 使用 REST API 进行本地部署
+
+如果您使用 REST API 进行本地部署，可以使用以下方式访问所有端点：
+
+```bash
+# 本地部署不需要认证头
+curl -X PUT 'http://localhost:5173/api/v1/private/experiments/items/bulk' \
+  -H 'Content-Type: application/json' \
+  -d '{ ... }'
+```
+
+## 参考
+
+- **端点**：`PUT /api/v1/private/experiments/items/bulk`
+- **最大有效负载大小**：4MB
+- **必填字段**：`experiment_name`、`dataset_name`、`items`（包含 `dataset_item_id`）
+- **SDK 参考**：[ExperimentsClient.experiment_items_bulk](https://www.comet.com/docs/opik/python-sdk-reference/rest_api/clients/experiments.html#opik.rest_api.experiments.client.ExperimentsClient.experiment_items_bulk)
+- **REST API 参考**：[Experiments API](/reference/rest-api/experiments/experiment-items-bulk)

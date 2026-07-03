@@ -62,7 +62,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Annotation Queues", description = "Private annotation queue operations")
+@Tag(name = "Annotation Queues", description = "私有标注队列操作")
 public class AnnotationQueuesResource {
 
     private final @NonNull AnnotationQueueService annotationQueueService;
@@ -72,15 +72,15 @@ public class AnnotationQueuesResource {
     private final @NonNull AnnotationQueueItemLockService lockService;
 
     @GET
-    @Operation(operationId = "findAnnotationQueues", summary = "Find annotation queues", description = "Find annotation queues with filtering and sorting", responses = {
-            @ApiResponse(responseCode = "200", description = "Annotation queues page", content = @Content(schema = @Schema(implementation = AnnotationQueue.AnnotationQueuePage.class)))
+    @Operation(operationId = "findAnnotationQueues", summary = "查找标注队列", description = "通过过滤和排序查找标注队列", responses = {
+            @ApiResponse(responseCode = "200", description = "标注队列分页", content = @Content(schema = @Schema(implementation = AnnotationQueue.AnnotationQueuePage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_VIEW)
     @JsonView(AnnotationQueue.View.Public.class)
     public Response findAnnotationQueues(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter annotation queues by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤标注队列（部分匹配，不区分大小写）") String name,
             @QueryParam("filters") String filters,
             @QueryParam("sorting") String sorting) {
 
@@ -104,9 +104,9 @@ public class AnnotationQueuesResource {
 
     @GET
     @Path("/{id}")
-    @Operation(operationId = "getAnnotationQueueById", summary = "Get annotation queue by id", description = "Get annotation queue by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Annotation queue resource", content = @Content(schema = @Schema(implementation = AnnotationQueue.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getAnnotationQueueById", summary = "根据ID获取标注队列", description = "根据ID获取标注队列", responses = {
+            @ApiResponse(responseCode = "200", description = "标注队列资源", content = @Content(schema = @Schema(implementation = AnnotationQueue.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_VIEW)
     @JsonView(AnnotationQueue.View.Public.class)
@@ -127,11 +127,11 @@ public class AnnotationQueuesResource {
 
     @POST
     @Path("/batch")
-    @Operation(operationId = "createAnnotationQueueBatch", summary = "Create annotation queue batch", description = "Create multiple annotation queues for human annotation workflows", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "createAnnotationQueueBatch", summary = "批量创建标注队列", description = "为人工标注工作流创建多个标注队列", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_CREATE)
@@ -153,11 +153,11 @@ public class AnnotationQueuesResource {
     }
 
     @POST
-    @Operation(operationId = "createAnnotationQueue", summary = "Create annotation queue", description = "Create annotation queue for human annotation workflows", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createAnnotationQueue", summary = "创建标注队列", description = "为人工标注工作流创建标注队列", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/traces/{annotationId}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_CREATE)
@@ -183,9 +183,9 @@ public class AnnotationQueuesResource {
 
     @PATCH
     @Path("/{id}")
-    @Operation(operationId = "updateAnnotationQueue", summary = "Update annotation queue", description = "Update annotation queue by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "updateAnnotationQueue", summary = "更新标注队列", description = "根据ID更新标注队列", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_EDIT)
     @RateLimited
@@ -208,9 +208,9 @@ public class AnnotationQueuesResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteAnnotationQueueBatch", summary = "Delete annotation queue batch", description = "Delete multiple annotation queues by their IDs", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "deleteAnnotationQueueBatch", summary = "批量删除标注队列", description = "根据ID批量删除多个标注队列", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_DELETE)
     public Response deleteAnnotationQueueBatch(
@@ -230,14 +230,14 @@ public class AnnotationQueuesResource {
         return Response.noContent().build();
     }
 
-    //    annotation queue items
+    //    标注队列项目
 
     @POST
     @Path("/{id}/items/add")
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_ANNOTATE)
-    @Operation(operationId = "addItemsToAnnotationQueue", summary = "Add items to annotation queue", description = "Add traces or threads to annotation queue", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "addItemsToAnnotationQueue", summary = "向标注队列添加项目", description = "向标注队列添加跟踪或线程", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response addItemsToAnnotationQueue(
             @PathParam("id") UUID queueId,
@@ -260,9 +260,9 @@ public class AnnotationQueuesResource {
 
     @POST
     @Path("/{id}/items/delete")
-    @Operation(operationId = "removeItemsFromAnnotationQueue", summary = "Remove items from annotation queue", description = "Remove items from annotation queue", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "removeItemsFromAnnotationQueue", summary = "从标注队列移除项目", description = "从标注队列移除项目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_DELETE)
     public Response removeItemsFromAnnotationQueue(
@@ -284,12 +284,12 @@ public class AnnotationQueuesResource {
         return Response.noContent().build();
     }
 
-    //    annotation queue item locks
+    //    标注队列项目锁
 
     @PUT
     @Path("/{queueId}/items/{itemId}/lock")
-    @Operation(operationId = "lockAnnotationQueueItem", summary = "Create or extend annotation queue item lock", description = "Claim an annotation queue item for the current user, or extend an existing lock", responses = {
-            @ApiResponse(responseCode = "200", description = "Lock result", content = @Content(schema = @Schema(implementation = LockResponse.class)))
+    @Operation(operationId = "lockAnnotationQueueItem", summary = "创建或延长标注队列项目锁", description = "为当前用户认领标注队列项目，或延长现有锁", responses = {
+            @ApiResponse(responseCode = "200", description = "锁定结果", content = @Content(schema = @Schema(implementation = LockResponse.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_ANNOTATE)
     public Response lockItem(
@@ -305,8 +305,8 @@ public class AnnotationQueuesResource {
 
     @GET
     @Path("/{queueId}/locks")
-    @Operation(operationId = "getAnnotationQueueLocks", summary = "Get all active locks for an annotation queue", description = "Returns lock status for all actively locked items in the queue", responses = {
-            @ApiResponse(responseCode = "200", description = "Queue locks", content = @Content(schema = @Schema(implementation = LocksResponse.class)))
+    @Operation(operationId = "getAnnotationQueueLocks", summary = "获取标注队列的所有活跃锁", description = "返回队列中所有被锁定项目的锁定状态", responses = {
+            @ApiResponse(responseCode = "200", description = "队列锁", content = @Content(schema = @Schema(implementation = LocksResponse.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.ANNOTATION_QUEUE_ANNOTATE)
     public Response getQueueLocks(@PathParam("queueId") UUID queueId) {

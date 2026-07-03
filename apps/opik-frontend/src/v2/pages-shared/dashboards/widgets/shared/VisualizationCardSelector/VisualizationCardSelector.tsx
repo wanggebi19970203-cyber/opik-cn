@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ChartLine, ChartBarBig } from "lucide-react";
 import { CHART_TYPE } from "@/constants/chart";
 import CardSelector, { CardOption } from "@/shared/CardSelector/CardSelector";
@@ -38,7 +39,16 @@ const VisualizationCardSelector: React.FC<VisualizationCardSelectorProps> = ({
   types,
   className,
 }) => {
-  const options = types.map((type) => ALL_OPTIONS[type]);
+  const { t } = useTranslation("dashboards");
+
+  const options = useMemo(
+    () =>
+      types.map((type) => ({
+        ...ALL_OPTIONS[type],
+        label: t(`visualization.${type === "line" ? "lineChart" : type === "bar" ? "barChart" : "radarChart"}`),
+      })),
+    [types, t],
+  );
 
   return (
     <CardSelector

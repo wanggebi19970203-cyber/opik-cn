@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import OnboardingProvider, { useOnboarding } from "./OnboardingOverlayContext";
 import { ONBOARDING_STEPS } from "./constants";
 import Role from "./steps/Role";
@@ -13,6 +14,7 @@ const STEP_IMAGES = {
 } as const;
 
 const OnboardingContent: React.FC = () => {
+  const { t } = useTranslation("onboarding");
   const { currentStep } = useOnboarding();
 
   const renderStep = () => {
@@ -37,7 +39,7 @@ const OnboardingContent: React.FC = () => {
           <div className="hidden flex-1 items-center lg:block">
             <img
               src={stepImage}
-              alt="Onboarding illustration"
+              alt={t("onboardingIllustration")}
               className="h-auto max-h-[calc(100vh-220px)] max-w-full object-contain"
             />
           </div>

@@ -11,6 +11,7 @@ import useCreatePromptVersionMutation from "@/api/prompts/useCreatePromptVersion
 import { useBooleanTimeoutState } from "@/hooks/useBooleanTimeoutState";
 import { isValidJsonObject, safelyParseJSON } from "@/lib/utils";
 import { PROMPT_TEMPLATE_STRUCTURE, PROMPT_TYPE } from "@/types/prompts";
+import { useTranslation } from "react-i18next";
 
 type EditPromptSheetProps = {
   open: boolean;
@@ -33,6 +34,7 @@ const EditPromptSheet: React.FC<EditPromptSheetProps> = ({
   type: promptType,
   onSetActiveVersionId,
 }) => {
+  const { t } = useTranslation("pages/prompt");
   const activeProjectId = useActiveProjectId();
 
   const metadataString = promptMetadata
@@ -121,7 +123,7 @@ const EditPromptSheet: React.FC<EditPromptSheetProps> = ({
       <SheetContent
         side="right"
         className="flex w-full max-w-none flex-col p-0 sm:max-w-[720px]"
-        header={<SheetTopBar variant="form" title="Edit prompt" />}
+        header={<SheetTopBar variant="form" title={t("editPrompt.title")} />}
         blockOverlayClose={isDirty}
       >
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 pb-6">
@@ -134,20 +136,20 @@ const EditPromptSheet: React.FC<EditPromptSheetProps> = ({
           />
 
           <div className="space-y-1.5">
-            <Label htmlFor="promptVersionNotes">Version notes</Label>
+            <Label htmlFor="promptVersionNotes">{t("editPrompt.versionNotes")}</Label>
             <AutoGrowTextarea
               id="promptVersionNotes"
               dimension="sm"
               className="comet-body-s"
               value={changeDescription}
               onChange={setChangeDescription}
-              placeholder="Describe what changed in this version"
+              placeholder={t("editPrompt.versionNotesPlaceholder")}
             />
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 border-t px-6 py-3">
           <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-            Cancel
+            {t("editPrompt.cancel")}
           </Button>
           <Button
             size="sm"
@@ -155,7 +157,7 @@ const EditPromptSheet: React.FC<EditPromptSheetProps> = ({
             disabled={!isValid || isSaving}
             onClick={handleClickEditPrompt}
           >
-            Create new version
+            {t("editPrompt.createNewVersion")}
           </Button>
         </div>
       </SheetContent>

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Split, Tag } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { PromptVersion } from "@/types/prompts";
@@ -16,6 +17,7 @@ type CommitsActionsPanelsProps = {
 const CommitsActionsPanel: React.FunctionComponent<
   CommitsActionsPanelsProps
 > = ({ versions }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<number | boolean>(false);
   const disabled = versions?.length === 0;
@@ -35,7 +37,7 @@ const CommitsActionsPanel: React.FunctionComponent<
         open={open === 2}
         setOpen={setOpen}
       />
-      <TooltipWrapper content="Manage version tags">
+      <TooltipWrapper content={t("prompt:commits.manageVersionTags")}>
         <Button
           variant="outline"
           size="icon-sm"
@@ -48,7 +50,7 @@ const CommitsActionsPanel: React.FunctionComponent<
           <Tag />
         </Button>
       </TooltipWrapper>
-      <TooltipWrapper content="Compare commits">
+      <TooltipWrapper content={t("prompt:commits.compareCommits")}>
         <Button
           size="sm"
           onClick={() => {
@@ -58,7 +60,7 @@ const CommitsActionsPanel: React.FunctionComponent<
           disabled={compareDisabled}
         >
           <Split className="mr-1.5 size-3.5" />
-          Compare
+          {t("prompt:commits.compare")}
         </Button>
       </TooltipWrapper>
       <ExplainerIcon

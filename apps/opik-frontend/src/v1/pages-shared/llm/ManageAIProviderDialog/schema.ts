@@ -1,4 +1,5 @@
 import { z } from "zod";
+import i18next from "i18next";
 import uniq from "lodash/uniq";
 
 import { PROVIDER_TYPE } from "@/types/providers";
@@ -13,27 +14,27 @@ export const CloudAIProviderDetailsFormSchema = z.object({
         v !== PROVIDER_TYPE.OLLAMA,
     ) as [string, ...string[]],
     {
-      message: "Provider is required",
+      message: i18next.t("common:validation.providerRequired"),
     },
   ),
   composedProviderType: z.string(),
   apiKey: z
     .string({
-      required_error: "API key is required",
+      required_error: i18next.t("common:validation.apiKeyRequired"),
     })
-    .min(1, { message: "API key is required" }),
+    .min(1, { message: i18next.t("common:validation.apiKeyRequired") }),
 });
 
 export const VertexAIProviderDetailsFormSchema = z.object({
   provider: z.enum([PROVIDER_TYPE.VERTEX_AI], {
-    message: "Provider is required",
+    message: i18next.t("common:validation.providerRequired"),
   }),
   composedProviderType: z.string(),
   apiKey: z
     .string({
-      required_error: "API key is required",
+      required_error: i18next.t("common:validation.apiKeyRequired"),
     })
-    .min(1, { message: "API key is required" }),
+    .min(1, { message: i18next.t("common:validation.apiKeyRequired") }),
   location: z.string(),
 });
 
@@ -45,7 +46,7 @@ export const createCustomProviderDetailsFormSchema = (
       provider: z.enum(
         [PROVIDER_TYPE.CUSTOM, PROVIDER_TYPE.BEDROCK, PROVIDER_TYPE.OLLAMA],
         {
-          message: "Provider is required",
+          message: i18next.t("common:validation.providerRequired"),
         },
       ),
       composedProviderType: z.string(),
@@ -55,14 +56,14 @@ export const createCustomProviderDetailsFormSchema = (
       url: z.string().url(),
       models: z
         .string()
-        .min(1, { message: "Models list is required" })
+        .min(1, { message: i18next.t("common:validation.modelsListRequired") })
         .refine(
           (models) => {
             const modelsArray = models.split(",").map((m) => m.trim());
 
             return modelsArray.length === uniq(modelsArray).length;
           },
-          { message: "All model names should be unique" },
+          { message: i18next.t("common:validation.allModelNamesShouldBeUnique") },
         ),
       headers: z
         .array(
@@ -87,7 +88,7 @@ export const createCustomProviderDetailsFormSchema = (
           if ((hasKey || hasValue) && !hasKey) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Header key is required",
+              message: i18next.t("common:validation.headerKeyRequired"),
               path: ["headers", index, "key"],
             });
           }
@@ -95,7 +96,7 @@ export const createCustomProviderDetailsFormSchema = (
           if ((hasKey || hasValue) && !hasValue) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Header value is required",
+              message: i18next.t("common:validation.headerValueRequired"),
               path: ["headers", index, "value"],
             });
           }
@@ -106,7 +107,7 @@ export const createCustomProviderDetailsFormSchema = (
             if (headerKeys.includes(trimmedKey)) {
               ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Header key must be unique",
+                message: i18next.t("common:validation.headerKeyMustBeUnique"),
                 path: ["headers", index, "key"],
               });
             } else {
@@ -118,7 +119,7 @@ export const createCustomProviderDetailsFormSchema = (
       if (!data.id && (!data.providerName || data.providerName.length === 0)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Provider name is required",
+          message: i18next.t("common:validation.providerNameRequired"),
           path: ["providerName"],
         });
       }
@@ -130,7 +131,7 @@ export const createCustomProviderDetailsFormSchema = (
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Provider name already exists",
+          message: i18next.t("common:validation.providerNameAlreadyExists"),
           path: ["providerName"],
         });
       }

@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 import { BlueprintValue } from "@/types/agent-configs";
 import { LLMMessage } from "@/types/llm";
@@ -43,6 +44,7 @@ const BlueprintValuePrompt = forwardRef<
     { value, projectId, isEditing = false, onDirtyChange, compact = false },
     ref,
   ) => {
+    const { t } = useTranslation();
     const [draftTemplate, setDraftTemplate] = useState("");
     const [draftMessages, setDraftMessages] = useState<LLMMessage[]>([]);
     const initialTemplate = useRef("");
@@ -122,9 +124,9 @@ const BlueprintValuePrompt = forwardRef<
               }
               return true;
             });
-            if (hasEmpty) return "Messages must not be empty";
+            if (hasEmpty) return t("common.messages.messagesMustNotBeEmpty");
           } else {
-            if (!draftTemplate.trim()) return "Prompt must not be empty";
+            if (!draftTemplate.trim()) return t("common.messages.promptMustNotBeEmpty");
           }
           return null;
         },
@@ -189,7 +191,7 @@ const BlueprintValuePrompt = forwardRef<
             <TextPromptEditor
               value={draftTemplate}
               onChange={setDraftTemplate}
-              label="Template"
+              label={t("common.labels.template")}
               showDescription={false}
               labelClassName="comet-body-xs-accented mt-auto"
             />

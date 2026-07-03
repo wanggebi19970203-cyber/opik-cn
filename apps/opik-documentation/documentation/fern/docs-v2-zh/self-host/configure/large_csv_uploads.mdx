@@ -1,0 +1,186 @@
+---
+headline: 大型 CSV 上传 | Opik 文档
+og:description: 配置 Opik 以支持最大 2GB 的 CSV 上传，实现高效数据集创建和异步处理。
+og:site_name: Opik 文档
+og:title: 启用 Opik 的大型 CSV 上传功能
+subtitle: 配置 Opik 以支持大型 CSV 文件上传创建数据集
+title: 大型 CSV 上传
+---
+
+# 启用大型 CSV 上传
+
+Opik 支持上传最大 2GB 的 CSV 文件来创建数据集。对于需要处理大型 CSV 文件的自托管部署，请应用以下额外配置。
+
+## 概述
+
+CSV 上传支持：
+- **最大 2GB** 的 CSV 文件
+- **异步处理** - 文件上传后在后台进行处理
+
+## 配置步骤
+
+### 1. 增加空闲超时时间
+
+大文件上传需要更多传输时间。请增加服务器空闲超时时间：
+
+```bash
+SERVER_IDLE_TIMEOUT: 10m
+```
+
+默认超时时间为 30 秒，不足以处理大文件上传。建议设置为 10 分钟以支持最大 2GB 的文件。
+
+### 2. 配置 Nginx（Kubernetes/Helm 部署）
+
+如果使用 Helm chart 部署，请在 `values.yaml` 中添加以下配置：
+
+```yaml
+component:
+  frontend:
+    # 增加客户端请求体大小限制至 2GB
+    clientMaxBodySize: "2g"
+    
+    # 增加代理超时时间以支持大文件上传
+    upstreamConfig:
+      proxy_read_timeout: 600s
+      proxy_connect_timeout: 600s
+      proxy_send_timeout: 600s
+      client_max_body_size: 2g
+```
+
+### 3. 确保充足的磁盘空间
+
+后端服务在处理上传的 CSV 文件前会将其临时缓冲到磁盘。请确保后端 Pod/容器具有：
+
+- **至少 50GB 可用磁盘空间**
+- **足够的 IOPS** 以支持并发文件操作
+
+### 4. 可选：调整批处理大小
+
+您可以选择性地配置 CSV 处理的批处理大小：
+
+```bash
+BATCH_OPERATIONS_DATASETS_CSV_BATCH_SIZE: 1000
+```
+
+默认批处理大小为每批 1000 行。请根据以下因素进行调整：
+- 可用内存
+- 行复杂度（列数、数据大小）
+- 期望的处理速度
+
+## Docker Compose 部署
+
+对于 Docker Compose 部署，配置略有不同：
+
+### 1. 更新 docker-compose.yml
+
+在后端服务中添加环境变量：
+
+```yaml
+services:
+  backend:
+    environment:
+      - SERVER_IDLE_TIMEOUT=10m
+      - BATCH_OPERATIONS_DATASETS_CSV_BATCH_SIZE=1000
+```
+
+### 2. 更新 Nginx 配置
+
+本地部署的 nginx 配置文件已包含 2GB 限制。`nginx_default_local.conf` 或 `nginx_local_be_local.conf` 无需额外更改。
+
+## Kubernetes/Helm 部署示例
+
+以下是 Helm chart 部署的完整示例：
+
+```yaml
+# values.yaml
+component:
+  backend:
+    env:
+      SERVER_IDLE_TIMEOUT: "10m"
+      BATCH_OPERATIONS_DATASETS_CSV_BATCH_SIZE: "1000"
+    
+    # 确保充足的磁盘空间
+    persistence:
+      enabled: true
+      size: 100Gi  # 根据需求调整
+  
+  frontend:
+    clientMaxBodySize: "2g"
+    
+    upstreamConfig:
+      proxy_read_timeout: 600s
+      proxy_connect_timeout: 600s
+      proxy_send_timeout: 600s
+      client_max_body_size: 2g
+```
+
+然后升级 Helm release：
+
+```bash
+helm upgrade opik opik/opik -n opik -f values.yaml
+```
+
+## 验证
+
+应用配置后：
+
+1. **重启服务** 以使配置生效
+2. **先用小型 CSV 测试**（< 100MB）以验证功能是否正常
+3. **监控日志** 以确保上传过程中正确处理：
+
+```bash
+# Kubernetes
+kubectl logs -n opik deployment/opik-backend -f | grep CSV
+
+# Docker Compose
+docker-compose logs -f backend | grep CSV
+```
+
+您应该看到类似以下的日志消息：
+```
+CSV upload request for dataset 'xxx' on workspaceId 'xxx'
+CSV upload accepted for dataset 'xxx' on workspaceId 'xxx', processing asynchronously
+Starting asynchronous CSV processing for dataset 'xxx' on workspaceId 'xxx'
+CSV processing completed for dataset 'xxx', total items: 'xxx'
+```
+
+## 故障排除
+
+### 上传失败并返回 413 错误
+
+**问题**：HTTP 413 Request Entity Too Large
+
+**解决方案**：验证 nginx 配置是否在 server 级别包含 `client_max_body_size: 2g`，而不仅仅是在 location 块中。
+
+### 上传成功但处理失败
+
+**问题**：文件上传成功但数据集中未显示数据项
+
+**解决方案**：
+1. 检查后端日志中的处理错误
+2. 验证是否有足够的可用磁盘空间
+3. 检查内存限制 - 处理大型 CSV 文件需要足够的内存
+
+### 超时错误
+
+**问题**：上传在完成前超时
+
+**解决方案**：
+1. 进一步增加 `SERVER_IDLE_TIMEOUT`（例如设置为 15m 或 20m）
+2. 在 `upstreamConfig` 中增加 nginx 代理超时时间
+3. 检查客户端与服务器之间的网络带宽
+
+### 内存不足错误
+
+**问题**：后端服务在处理过程中崩溃或重启
+
+**解决方案**：
+1. 减小 `BATCH_OPERATIONS_DATASETS_CSV_BATCH_SIZE` 以处理更小的批次
+2. 增加后端服务的内存限制
+3. 处理更小的 CSV 文件或将大文件拆分为多次上传
+
+## 相关资源
+
+- [扩展 Opik](/self-host/scaling) - 通用扩展指南
+- [Kubernetes 部署](/self-host/kubernetes) - Helm chart 文档
+- [故障排除](/self-host/troubleshooting) - 常见问题及解决方案

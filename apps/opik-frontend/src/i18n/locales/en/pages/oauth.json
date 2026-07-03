@@ -1,0 +1,10 @@
+{
+  "oauth": {
+    "title": "OAuth Consent",
+    "description": "Authorize application access",
+    "actions": {
+      "allow": "Allow",
+      "deny": "Deny"
+    }
+  }
+}

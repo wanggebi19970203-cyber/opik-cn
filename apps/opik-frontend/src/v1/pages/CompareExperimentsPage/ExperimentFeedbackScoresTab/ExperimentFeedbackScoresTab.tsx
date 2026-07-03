@@ -3,6 +3,7 @@ import useLocalStorageState from "use-local-storage-state";
 import { ColumnPinningState } from "@tanstack/react-table";
 import find from "lodash/find";
 import uniq from "lodash/uniq";
+import { useTranslation } from "react-i18next";
 
 import {
   AggregatedFeedbackScore,
@@ -133,7 +134,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 export const DEFAULT_COLUMNS: ColumnData<FeedbackScoreData>[] = [
   {
     id: "name",
-    label: "Feedback score",
+    label: "compareExperiments.feedbackScores.scoreName",
     type: COLUMN_TYPE.numberDictionary,
     cell: FeedbackScoreNameCell as never,
     size: 248,
@@ -148,6 +149,7 @@ export type ExperimentFeedbackScoresTabProps = {
 const ExperimentFeedbackScoresTab: React.FunctionComponent<
   ExperimentFeedbackScoresTabProps
 > = ({ experimentsIds, experiments, isPending }) => {
+  const { t } = useTranslation("compare-experiments");
   const isCompare = experimentsIds.length > 1;
 
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
@@ -200,8 +202,8 @@ const ExperimentFeedbackScoresTab: React.FunctionComponent<
   }, [feedbackScoresMap, experimentsIds, scoreTypeMap]);
 
   const noDataText = isCompare
-    ? "These experiments have no feedback scores"
-    : "This experiment has no feedback scores";
+    ? t("compareExperiments.feedbackScores.noScoresMultiple")
+    : t("compareExperiments.feedbackScores.noScoresSingle");
 
   const resizeConfig = useMemo(
     () => ({

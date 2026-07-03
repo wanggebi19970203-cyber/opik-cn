@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import sortBy from "lodash/sortBy";
 
@@ -19,9 +20,11 @@ const ExperimentsFeedbackScoresSelect: React.FC<
   experimentsIds,
   value,
   onValueChange,
-  placeholder = "Select score",
+  placeholder,
   className,
 }) => {
+  const { t } = useTranslation("experiments");
+  const resolvedPlaceholder = placeholder ?? t("selectScore");
   const { data } = useExperimentsFeedbackScoresNames(
     {
       experimentsIds,
@@ -43,7 +46,7 @@ const ExperimentsFeedbackScoresSelect: React.FC<
       value={value}
       onChange={onValueChange}
       options={options}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       className={className}
     />
   );

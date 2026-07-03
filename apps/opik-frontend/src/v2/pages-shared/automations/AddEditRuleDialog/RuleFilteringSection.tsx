@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import uniqid from "uniqid";
 import round from "lodash/round";
 import isArray from "lodash/isArray";
@@ -246,6 +247,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
   form,
   projectId,
 }) => {
+  const { t } = useTranslation("online-evaluation");
   const scope = form.watch("scope");
   const isTraceScope = scope === EVALUATORS_RULE_SCOPE.trace;
   const isThreadScope = scope === EVALUATORS_RULE_SCOPE.thread;
@@ -272,11 +274,11 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
     () => [
       ...(OPERATORS_MAP[COLUMN_TYPE.dictionary] || []),
       {
-        label: "is empty",
+        label: t("ruleFiltering.isEmpty"),
         value: "is_empty",
       },
       {
-        label: "is not empty",
+        label: t("ruleFiltering.isNotEmpty"),
         value: "is_not_empty",
       },
     ],
@@ -373,7 +375,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
           keyComponentProps: {
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: "Select score",
+            placeholder: t("ruleFiltering.selectScore"),
           },
         },
         ...getTagsFilterConfig({
@@ -428,15 +430,15 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
       <AccordionItem value="filtering-sampling" className="border-none">
         <AccordionTrigger className="px-3 py-2 hover:no-underline">
           <div className="flex items-center gap-1">
-            <Label className="text-sm font-medium">Filtering & Sampling</Label>
+            <Label className="text-sm font-medium">{t("ruleFiltering.filteringAndSampling")}</Label>
             <ExplainerIcon
               className="mt-0.5"
               description={
                 isTraceScope
-                  ? "Apply filters and sampling to select which traces will be evaluated by this rule"
+                  ? t("ruleFiltering.traceExplainer")
                   : isThreadScope
-                    ? "Use sampling rate to control how frequently this rule is applied to threads"
-                    : "Apply filters and sampling to select which spans will be evaluated by this rule"
+                    ? t("ruleFiltering.threadExplainer")
+                    : t("ruleFiltering.spanExplainer")
               }
             />
           </div>
@@ -444,21 +446,14 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
         <AccordionContent className="px-3 pb-3">
           <div className="mb-8 space-y-4">
             <Description>
-              Use sampling rate to control how frequently this rule is applied.
-              You can also add filters to select specific{" "}
-              {scope === EVALUATORS_RULE_SCOPE.trace
-                ? "traces"
-                : scope === EVALUATORS_RULE_SCOPE.thread
-                  ? "threads"
-                  : "spans"}{" "}
-              based on their properties. If nothing is defined, the rule will
-              evaluate all{" "}
-              {scope === EVALUATORS_RULE_SCOPE.trace
-                ? "traces"
-                : scope === EVALUATORS_RULE_SCOPE.thread
-                  ? "threads"
-                  : "spans"}
-              .
+              {t("ruleFiltering.samplingDescription", {
+                entityType:
+                  scope === EVALUATORS_RULE_SCOPE.trace
+                    ? t("common:common.labels.trace", "traces")
+                    : scope === EVALUATORS_RULE_SCOPE.thread
+                      ? "threads"
+                      : "spans",
+              })}
             </Description>
 
             <FormField
@@ -471,7 +466,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                 return (
                   <FormItem>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Filters</Label>
+                      <Label className="text-sm font-medium">{t("ruleFiltering.filtersLabel")}</Label>
 
                       {field.value.length > 0 && (
                         <FiltersContent
@@ -525,7 +520,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                           className="w-fit"
                         >
                           <Plus className="mr-1 size-3.5" />
-                          Add filter
+                          {t("ruleFiltering.addFilter")}
                         </Button>
                       </div>
                     </div>
@@ -549,8 +544,8 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                     field.onChange(round(displayValue, 1) / 100)
                   }
                   id="sampling_rate"
-                  label="Sampling rate"
-                  tooltip="Percentage of traces to evaluate"
+                  label={t("ruleFiltering.samplingRateLabel")}
+                  tooltip={t("ruleFiltering.samplingRateTooltip")}
                   suffix="%"
                 />
               )}

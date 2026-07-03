@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 
 import api, { PROMPTS_REST_ENDPOINT } from "@/api/api";
 import { useToast } from "@/ui/use-toast";
@@ -27,10 +28,10 @@ const useSetPromptVersionEnvironmentMutation = () => {
     },
     onError: (error: AxiosError) => {
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: getApiErrorMessage(
           error,
-          "An unknown error occurred while updating the prompt environment. Please try again.",
+          i18next.t("common:messages.unknownErrorUpdatingPromptEnvironment"),
         ),
         variant: "destructive",
       });

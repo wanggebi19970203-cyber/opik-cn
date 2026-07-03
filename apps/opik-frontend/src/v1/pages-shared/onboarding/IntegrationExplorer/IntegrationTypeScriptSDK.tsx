@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import IntegrationCard from "@/v1/pages-shared/onboarding/IntegrationExplorer/components/IntegrationCard";
 import tsLogo from "@/icons/ts-logo.svg";
 import { buildDocsUrl } from "@/v1/lib/utils";
 import { useIntegrationExplorer } from "@/v1/pages-shared/onboarding/IntegrationExplorer/IntegrationExplorerContext";
 
 const IntegrationTypeScriptSDK: React.FC = () => {
+  const { t } = useTranslation();
   const { source } = useIntegrationExplorer();
 
   return (
@@ -17,13 +19,13 @@ const IntegrationTypeScriptSDK: React.FC = () => {
       rel="noopener noreferrer"
     >
       <IntegrationCard
-        title="TypeScript SDK"
-        description="Bring observability and evaluations to your JS apps"
+        title={t('integrationExplorer.typeScriptSdk')}
+        description={t('integrationExplorer.typeScriptSdkDescription')}
         size="lg"
         icon={
           <img alt="TypeScript" src={tsLogo} className="size-[32px] shrink-0" />
         }
-        tag="New"
+        tag={t('integrationExplorer.newTag')}
         id={`integration-typescript-sdk-card${source ? `-${source}` : ""}`}
         data-fs-element={`IntegrationTypeScriptSDKCard${
           source ? `-${source}` : ""

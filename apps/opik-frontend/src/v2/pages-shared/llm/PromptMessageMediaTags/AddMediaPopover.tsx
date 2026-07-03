@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { Input } from "@/ui/input";
 import { useToast } from "@/ui/use-toast";
 import PromptVariablesList from "@/v2/pages-shared/llm/PromptVariablesList/PromptVariablesList";
+import { useTranslation } from "react-i18next";
 
 export type MediaType = "image" | "video" | "audio";
 
@@ -55,6 +56,7 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
   children,
 }) => {
   const { toast } = useToast();
+  const { t } = useTranslation("llm");
   const [open, setOpen] = useState(false);
   const [newItem, setNewItem] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,24 +64,16 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
   const resolvedMaxItems = maxItems ?? DEFAULT_MAX_ITEMS[type];
 
   const title = useMemo(() => {
-    if (type === "image") {
-      return "Add image";
-    }
-    if (type === "video") {
-      return "Add video";
-    }
-    return "Add audio";
-  }, [type]);
+    if (type === "image") return t("llm:addMediaPopover.addImage");
+    if (type === "video") return t("llm:addMediaPopover.addVideo");
+    return t("llm:addMediaPopover.addAudio");
+  }, [type, t]);
 
   const placeholder = useMemo(() => {
-    if (type === "image") {
-      return "Enter image URL or template variable";
-    }
-    if (type === "video") {
-      return "Enter video URL or template variable";
-    }
-    return "Enter audio URL or template variable";
-  }, [type]);
+    if (type === "image") return t("llm:addMediaPopover.enterImageUrl");
+    if (type === "video") return t("llm:addMediaPopover.enterVideoUrl");
+    return t("llm:addMediaPopover.enterAudioUrl");
+  }, [type, t]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -104,7 +98,7 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
       const typeLabel =
         type === "image" ? "images" : type === "video" ? "videos" : "audios";
       toast({
-        title: "Maximum limit reached",
+        title: t("llm:addMediaPopover.maximumLimitReached"),
         description: `You can only add up to ${resolvedMaxItems} ${typeLabel}`,
         variant: "destructive",
       });
@@ -113,7 +107,7 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
 
     if (items.includes(trimmed)) {
       toast({
-        title: "Error",
+        title: t("llm:addMediaPopover.error"),
         description: `This ${type} already exists`,
         variant: "destructive",
       });
@@ -123,7 +117,7 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
     const validation = validateMediaUrl(trimmed);
     if (!validation.valid) {
       toast({
-        title: "Invalid URL",
+        title: t("llm:addMediaPopover.invalidUrl"),
         description: validation.error,
         variant: "destructive",
       });
@@ -159,12 +153,12 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
               />
             </div>
             <Button type="button" variant="default" onClick={handleAddItem}>
-              Add
+              {t("llm:addMediaPopover.add")}
             </Button>
           </div>
           {promptVariables.length > 0 && (
             <p className="comet-body-xs text-light-slate">
-              Available variables:{" "}
+              {t("llm:addMediaPopover.availableVariables")}{" "}
               <PromptVariablesList
                 variables={promptVariables}
                 onVariableClick={handleVariableClick}

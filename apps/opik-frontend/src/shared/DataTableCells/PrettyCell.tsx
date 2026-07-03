@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import isObject from "lodash/isObject";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { ROW_HEIGHT } from "@/types/shared";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import CellTooltipWrapper from "@/shared/DataTableCells/CellTooltipWrapper";
@@ -18,6 +19,7 @@ const MAX_DATA_LENGTH_KEY = "pretty-cell-data-length-limit";
 const MAX_DATA_LENGTH = 10000;
 
 const PrettyCell = <TData,>(context: CellContext<TData, string | object>) => {
+  const { t } = useTranslation();
   const truncationEnabled = useTruncationEnabled();
   const [maxDataLength] = useLocalStorageState(MAX_DATA_LENGTH_KEY, {
     defaultValue: MAX_DATA_LENGTH,
@@ -40,11 +42,11 @@ const PrettyCell = <TData,>(context: CellContext<TData, string | object>) => {
     }
 
     if (truncationEnabled && message.length > maxDataLength) {
-      return message.slice(0, maxDataLength) + " [truncated]";
+      return message.slice(0, maxDataLength) + ` [${t("common:labels.truncated")}]`;
     }
 
     return message;
-  }, [value, fieldType, truncationEnabled, maxDataLength]);
+  }, [value, fieldType, truncationEnabled, maxDataLength, t]);
 
   const rowHeight =
     context.column.columnDef.meta?.overrideRowHeight ??

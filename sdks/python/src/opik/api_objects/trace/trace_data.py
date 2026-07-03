@@ -20,7 +20,7 @@ from ..observation_data import ObservationData
 @dataclasses.dataclass
 class TraceData(ObservationData):
     """
-    The TraceData object is returned when calling :func:`opik.opik_context.get_current_trace_data` from a tracked function.
+    从被追踪的函数中调用 :func:`opik.opik_context.get_current_trace_data` 时返回 TraceData 对象。
     """
 
     id: str = dataclasses.field(default_factory=id_helpers.generate_id)
@@ -73,7 +73,7 @@ class TraceData(ObservationData):
 
     @property
     def as_start_parameters(self) -> Dict[str, Any]:
-        """Returns parameters of this trace to be sent to the server when starting a new trace."""
+        """返回启动新 trace 时发送给服务器的此 trace 参数。"""
         start_parameters: Dict[str, Any] = {
             "id": self.id,
             "start_time": self.start_time,
@@ -95,7 +95,7 @@ class TraceData(ObservationData):
 
     @property
     def as_parameters(self) -> Dict[str, Any]:
-        """Returns all parameters of this trace to be sent to the server."""
+        """返回发送给服务器的此 trace 的所有参数。"""
         return {
             "id": self.id,
             "name": self.name,

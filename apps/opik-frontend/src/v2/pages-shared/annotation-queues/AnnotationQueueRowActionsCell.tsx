@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { MoreHorizontal, Copy, Trash, Pencil } from "lucide-react";
 import { CellContext } from "@tanstack/react-table";
 import copy from "clipboard-copy";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -25,6 +26,7 @@ import AddEditAnnotationQueueDialog from "./AddEditAnnotationQueueDialog";
 const AnnotationQueueRowActionsCell: React.FunctionComponent<
   CellContext<AnnotationQueue, unknown>
 > = (context) => {
+  const { t } = useTranslation("annotation-queues");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const resetKeyRef = useRef(0);
   const queue = context.row.original;
@@ -39,9 +41,8 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
   const handleCopySMELink = useCallback(() => {
     copy(generateSMEURL(workspaceName, queue.id));
     toast({
-      title: "Annotation queue link copied to clipboard",
-      description:
-        "Share this queue with your annotators so they can start annotating and provide feedback to improve the evaluation of your LLM application.",
+      title: t("annotationQueues.toast.linkCopiedTitle"),
+      description: t("annotationQueues.toast.linkCopiedDescription"),
     });
   }, [queue.id, toast, workspaceName]);
 
@@ -69,9 +70,9 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
           open={open === 1}
           setOpen={setOpen}
           onConfirm={deleteQueueHandler}
-          title="Delete annotation queue?"
-          description="Deleting an annotation queue will permanently remove it from the system. All associated data and configurations will be lost. This action can't be undone. Are you sure you want to continue?"
-          confirmText="Delete"
+          title={t("annotationQueues.deleteDialog.title")}
+          description={t("annotationQueues.deleteDialog.description")}
+          confirmText={t("annotationQueues.deleteDialog.confirmText")}
           confirmButtonVariant="destructive"
         />
       )}
@@ -86,19 +87,19 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("annotationQueues.actions.actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={handleCopySMELink}>
             <Copy className="mr-2 size-4" />
-            Copy sharing link
+            {t("annotationQueues.actions.copySharingLink")}
           </DropdownMenuItem>
           {canEditAnnotationQueues && (
             <DropdownMenuItem onClick={handleEdit}>
               <Pencil className="mr-2 size-4" />
-              Edit
+              {t("annotationQueues.actions.edit")}
             </DropdownMenuItem>
           )}
           {canDeleteAnnotationQueues && (
@@ -112,7 +113,7 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
                 variant="destructive"
               >
                 <Trash className="mr-2 size-4" />
-                Delete
+                {t("annotationQueues.actions.delete")}
               </DropdownMenuItem>
             </>
           )}

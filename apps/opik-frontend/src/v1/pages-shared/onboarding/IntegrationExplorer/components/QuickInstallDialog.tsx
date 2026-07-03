@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 
 import {
@@ -149,6 +150,7 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
   open,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       onClose();
@@ -177,36 +179,35 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
                 className="size-[32px] shrink-0"
               />
             </div>
-            Quick install with AI assistants
+            {t('integrationExplorer.quickInstallTitle')}
           </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
           <div className="space-y-6">
             <div className="comet-body-s text-muted-slate">
-              Get Opik integrated instantly by copying this prompt to Cursor,
-              Claude, or any AI coding assistant{" "}
+              {t('integrationExplorer.getOpikIntegrated')}{" "}
               <a
                 href={QUICKSTART_DOCS_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
               >
-                Read the full guide
+                {t('integrationExplorer.readTheFullGuide')}
                 <ExternalLink className="size-3" />
               </a>{" "}
-              in our docs.
+              {t('integrationExplorer.inOurDocs')}
             </div>
 
             <IntegrationStep
-              title="Set up Opik"
-              description="Use this prompt with your AI coding assistant of choice to integrate Opik with you application."
+              title={t('integrationExplorer.setUpOpik')}
+              description={t('integrationExplorer.setUpOpikDescription')}
               className="mb-6"
             >
               <div className="relative overflow-hidden rounded-md bg-primary-foreground">
                 <div className="flex items-center justify-between gap-2 border-b border-b-border p-2">
                   <div className="comet-body-s-accented px-2 text-foreground">
-                    AI assistant prompt
+                    {t('integrationExplorer.aiAssistantPrompt')}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -220,14 +221,14 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Try in Cursor
+                        {t('integrationExplorer.tryInCursor')}
                         <ExternalLink className="ml-1.5 size-3" />
                       </a>
                     </Button>
                     <CopyButton
-                      message="Successfully copied code"
+                      message={t('integrationExplorer.codeCopiedSuccessfully')}
                       text={AI_ASSISTANT_PROMPT}
-                      tooltipText="Copy code"
+                      tooltipText={t('integrationExplorer.copyCode')}
                       className="text-muted-slate"
                       id="quick-install-copy-prompt"
                       data-fs-element="QuickInstallCopyPrompt"
@@ -268,8 +269,8 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
           <Separator className="my-6" />
           <HelpLinks
             onCloseParentDialog={onClose}
-            title="Need some help?"
-            description="Get help from your team or ours. Choose the option that works best for you."
+            title={t('integrationExplorer.needSomeHelp')}
+            description={t('integrationExplorer.needSomeHelpDescription')}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import {
   FeedbackDefinition,
@@ -16,29 +17,45 @@ interface ScoresContentProps {
   annotationQueue: AnnotationQueue;
 }
 
-export const DEFAULT_COLUMNS: ColumnData<FeedbackDefinition>[] = [
-  {
-    id: "name",
-    label: "Feedback option",
-    type: COLUMN_TYPE.numberDictionary,
-    cell: FeedbackOptionCell as never,
-  },
-  {
-    id: "description",
-    label: "Description",
-    type: COLUMN_TYPE.string,
-  },
-  {
-    id: "values",
-    label: "Available values",
-    type: COLUMN_TYPE.string,
-    cell: FeedbackDefinitionsValueCell as never,
-  },
-];
+const useColumns = (hasOnlyComments: boolean) => {
+  const { t } = useTranslation("annotation-queues");
+
+  return useMemo(() => {
+    const baseColumns: ColumnData<FeedbackDefinition>[] = [
+      {
+        id: "name",
+        label: t("annotationQueues.scores.columns.feedbackOption"),
+        type: COLUMN_TYPE.numberDictionary,
+        cell: FeedbackOptionCell as never,
+      },
+      {
+        id: "description",
+        label: t("annotationQueues.scores.columns.description"),
+        type: COLUMN_TYPE.string,
+      },
+      {
+        id: "values",
+        label: t("annotationQueues.scores.columns.availableValues"),
+        type: COLUMN_TYPE.string,
+        cell: FeedbackDefinitionsValueCell as never,
+      },
+    ];
+
+    const columnsToShow = hasOnlyComments
+      ? baseColumns.filter((col) => col.id !== "values")
+      : baseColumns;
+
+    return convertColumnDataToColumn<FeedbackDefinition, FeedbackDefinition>(
+      columnsToShow,
+      {},
+    );
+  }, [t, hasOnlyComments]);
+};
 
 const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation("annotation-queues");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   // Extract repeated checks into well-named variables
@@ -73,8 +90,8 @@ const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
     if (hasComments) {
       definitions.push({
         id: "comments",
-        name: "Comments",
-        description: "Text field for open feedback or additional notes.",
+        name: t("annotationQueues.scores.comments"),
+        description: t("annotationQueues.scores.commentsDescription"),
         type: FEEDBACK_DEFINITION_TYPE.categorical,
         created_at: "",
         last_updated_at: "",
@@ -85,19 +102,9 @@ const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
     }
 
     return definitions;
-  }, [data?.content, hasFeedbackDefinitions, hasComments, annotationQueue]);
+  }, [data?.content, hasFeedbackDefinitions, hasComments, annotationQueue, t]);
 
-  const columns = useMemo(() => {
-    // If only Comments row is shown, hide "Available values" column
-    const columnsToShow = hasOnlyComments
-      ? DEFAULT_COLUMNS.filter((col) => col.id !== "values")
-      : DEFAULT_COLUMNS;
-
-    return convertColumnDataToColumn<FeedbackDefinition, FeedbackDefinition>(
-      columnsToShow,
-      {},
-    );
-  }, [hasOnlyComments]);
+  const columns = useColumns(hasOnlyComments);
 
   // Only hide the table if comments are disabled AND there are no feedback definitions
   if (!hasComments && !hasFeedbackDefinitions) {

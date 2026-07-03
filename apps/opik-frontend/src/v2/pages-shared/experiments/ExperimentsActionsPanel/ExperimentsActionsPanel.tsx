@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Split, Trash, Tag } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -22,6 +23,7 @@ type ExperimentsActionsPanelsProps = {
 const ExperimentsActionsPanel: React.FunctionComponent<
   ExperimentsActionsPanelsProps
 > = ({ experiments, onTagsAdded }) => {
+  const { t } = useTranslation("experiments");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean | number>(false);
   const navigate = useNavigate();
@@ -76,9 +78,9 @@ const ExperimentsActionsPanel: React.FunctionComponent<
         open={open === 2}
         setOpen={setOpen}
         onConfirm={deleteExperimentsHandler}
-        title="Delete experiments"
-        description="Deleting experiments will remove all samples in these experiments. Related traces won't be affected. This action cannot be undone. Are you sure you want to continue?"
-        confirmText="Delete experiments"
+        title={t("deleteExperiments")}
+        description={t("deleteExperimentsDescription")}
+        confirmText={t("deleteExperiments")}
         confirmButtonVariant="destructive"
       />
       <AddTagDialog
@@ -89,10 +91,10 @@ const ExperimentsActionsPanel: React.FunctionComponent<
         onSuccess={onTagsAdded}
       />
       <div className="inline-flex items-center gap-2">
-        <TooltipWrapper content="Compare experiments">
+        <TooltipWrapper content={t("compareExperiments")}>
           <Button size="sm" onClick={handleCompareClick} disabled={disabled}>
             <Split className="mr-1.5 size-3.5" />
-            Compare
+            {t("compare")}
           </Button>
         </TooltipWrapper>
         <ExplainerIcon
@@ -103,7 +105,7 @@ const ExperimentsActionsPanel: React.FunctionComponent<
         />
         <Separator orientation="vertical" className="mx-2 h-4" />
       </div>
-      <TooltipWrapper content="Manage tags">
+      <TooltipWrapper content={t("manageTags")}>
         <Button
           variant="outline"
           size="icon-sm"
@@ -116,7 +118,7 @@ const ExperimentsActionsPanel: React.FunctionComponent<
           <Tag />
         </Button>
       </TooltipWrapper>
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("deleteAction")}>
         <Button
           variant="outline"
           size="icon-sm"

@@ -1,4 +1,5 @@
 import get from "lodash/get";
+import i18next from "i18next";
 
 import { AssertionsCountCell } from "@/v2/pages-shared/datasets/TestSuiteComponents/AssertionsCountCell";
 import { ExecutionPolicyCell } from "@/v2/pages-shared/datasets/TestSuiteComponents/ExecutionPolicyCell";
@@ -49,112 +50,118 @@ export const DATASET_DEFAULT_SELECTED_COLUMNS: string[] = [
   "tags",
 ];
 
-export const buildSuiteColumns = (): ColumnData<DatasetItem>[] => [
-  {
-    id: COLUMN_ID_ID,
-    label: "ID",
-    type: COLUMN_TYPE.string,
-    cell: IdCell as never,
-  },
-  {
-    id: "description",
-    label: "Description",
-    type: COLUMN_TYPE.string,
-    accessorFn: (row) => row.description ?? "",
-  },
-  {
-    id: "last_updated_at",
-    label: "Last updated",
-    type: COLUMN_TYPE.time,
-    cell: TimeCell as never,
-  },
-  {
-    id: "data",
-    label: "Data",
-    type: COLUMN_TYPE.dictionary,
-    accessorFn: (row) => row.data,
-    cell: AutodetectCell as never,
-    size: 400,
-  },
-  {
-    id: "assertions",
-    label: "Custom assertions",
-    type: COLUMN_TYPE.string,
-    iconType: "assertions",
-    cell: AssertionsCountCell as never,
-    size: 120,
-  },
-  {
-    id: "execution_policy",
-    label: "Execution policy",
-    type: COLUMN_TYPE.string,
-    iconType: "execution_policy",
-    cell: ExecutionPolicyCell as never,
-  },
-  {
-    id: "tags",
-    label: "Tags",
-    type: COLUMN_TYPE.list,
-    iconType: "tags",
-    accessorFn: (row) => row.tags || [],
-    cell: ListCell as never,
-  },
-  {
-    id: "created_at",
-    label: "Created",
-    type: COLUMN_TYPE.time,
-    cell: TimeCell as never,
-  },
-  {
-    id: "created_by",
-    label: "Created by",
-    type: COLUMN_TYPE.string,
-  },
-];
+export const buildSuiteColumns = (): ColumnData<DatasetItem>[] => {
+  const t = i18next.getFixedT(null, "datasets");
+  return [
+    {
+      id: COLUMN_ID_ID,
+      label: "ID",
+      type: COLUMN_TYPE.string,
+      cell: IdCell as never,
+    },
+    {
+      id: "description",
+      label: t("datasets.columns.description"),
+      type: COLUMN_TYPE.string,
+      accessorFn: (row) => row.description ?? "",
+    },
+    {
+      id: "last_updated_at",
+      label: t("datasets.columns.lastUpdated"),
+      type: COLUMN_TYPE.time,
+      cell: TimeCell as never,
+    },
+    {
+      id: "data",
+      label: t("datasets.itemEditor.data"),
+      type: COLUMN_TYPE.dictionary,
+      accessorFn: (row) => row.data,
+      cell: AutodetectCell as never,
+      size: 400,
+    },
+    {
+      id: "assertions",
+      label: t("datasets.assertionsCount.customAssertions"),
+      type: COLUMN_TYPE.string,
+      iconType: "assertions",
+      cell: AssertionsCountCell as never,
+      size: 120,
+    },
+    {
+      id: "execution_policy",
+      label: t("datasets.testSuite.executionPolicyLabel"),
+      type: COLUMN_TYPE.string,
+      iconType: "execution_policy",
+      cell: ExecutionPolicyCell as never,
+    },
+    {
+      id: "tags",
+      label: t("datasets.columns.tags"),
+      type: COLUMN_TYPE.list,
+      iconType: "tags",
+      accessorFn: (row) => row.tags || [],
+      cell: ListCell as never,
+    },
+    {
+      id: "created_at",
+      label: t("datasets.columns.created"),
+      type: COLUMN_TYPE.time,
+      cell: TimeCell as never,
+    },
+    {
+      id: "created_by",
+      label: t("datasets.columns.createdBy"),
+      type: COLUMN_TYPE.string,
+    },
+  ];
+};
 
 export const buildDatasetColumns = (
   _datasetColumns: DatasetItemColumn[],
   dynamicDatasetColumns: DynamicColumn[],
-): ColumnData<DatasetItem>[] => [
-  {
-    id: COLUMN_ID_ID,
-    label: "ID",
-    type: COLUMN_TYPE.string,
-    cell: IdCell as never,
-  },
-  ...dynamicDatasetColumns.map(
-    ({ label, id, columnType }) =>
-      ({
-        id,
-        label,
-        type: columnType,
-        accessorFn: (row) => get(row, ["data", label], ""),
-        cell: AutodetectCell as never,
-      }) as ColumnData<DatasetItem>,
-  ),
-  {
-    id: "tags",
-    label: "Tags",
-    type: COLUMN_TYPE.list,
-    iconType: "tags",
-    accessorFn: (row) => row.tags || [],
-    cell: ListCell as never,
-  },
-  {
-    id: "created_at",
-    label: "Created",
-    type: COLUMN_TYPE.time,
-    cell: TimeCell as never,
-  },
-  {
-    id: "last_updated_at",
-    label: "Last updated",
-    type: COLUMN_TYPE.time,
-    cell: TimeCell as never,
-  },
-  {
-    id: "created_by",
-    label: "Created by",
-    type: COLUMN_TYPE.string,
-  },
-];
+): ColumnData<DatasetItem>[] => {
+  const t = i18next.getFixedT(null, "datasets");
+  return [
+    {
+      id: COLUMN_ID_ID,
+      label: "ID",
+      type: COLUMN_TYPE.string,
+      cell: IdCell as never,
+    },
+    ...dynamicDatasetColumns.map(
+      ({ label, id, columnType }) =>
+        ({
+          id,
+          label,
+          type: columnType,
+          accessorFn: (row) => get(row, ["data", label], ""),
+          cell: AutodetectCell as never,
+        }) as ColumnData<DatasetItem>,
+    ),
+    {
+      id: "tags",
+      label: t("datasets.columns.tags"),
+      type: COLUMN_TYPE.list,
+      iconType: "tags",
+      accessorFn: (row) => row.tags || [],
+      cell: ListCell as never,
+    },
+    {
+      id: "created_at",
+      label: t("datasets.columns.created"),
+      type: COLUMN_TYPE.time,
+      cell: TimeCell as never,
+    },
+    {
+      id: "last_updated_at",
+      label: t("datasets.columns.lastUpdated"),
+      type: COLUMN_TYPE.time,
+      cell: TimeCell as never,
+    },
+    {
+      id: "created_by",
+      label: t("datasets.columns.createdBy"),
+      type: COLUMN_TYPE.string,
+    },
+  ];
+};

@@ -88,8 +88,8 @@ import static java.util.stream.Collectors.toSet;
 public class ExperimentDAO {
 
     /**
-     * Common parameters for target project IDs query.
-     * Used to reduce traces, spans, and feedback_scores table scans.
+     * 目标项目ID查询的通用参数。
+     * 用于减少traces、spans和feedback_scores表的扫描次数。
      */
     private record TargetProjectsCriteria(
             UUID datasetId,
@@ -129,10 +129,10 @@ public class ExperimentDAO {
         }
 
         /**
-         * Check if optimization should be skipped.
-         * Skip when filtering by projectDeleted=true, because we're specifically looking for
-         * experiments with deleted/missing projects. The optimization would find project IDs
-         * from experiments with valid projects and incorrectly filter out the experiments we're looking for.
+         * 检查是否应跳过优化。
+         * 当按projectDeleted=true过滤时跳过，因为我们要专门查找
+         * 项目已删除/缺失的实验。优化会从具有有效项目的实验中查找项目ID，
+         * 并错误地过滤掉我们要查找的实验。
          */
         boolean shouldSkipOptimization() {
             return Boolean.TRUE.equals(projectDeleted);
@@ -140,8 +140,8 @@ public class ExperimentDAO {
     }
 
     /**
-     * Filter strategies used for experiment search binding.
-     * Reused across all experiment search operations to avoid repeated allocations.
+     * 用于实验搜索绑定的过滤策略。
+     * 在所有实验搜索操作中复用，避免重复分配。
      */
     private static final List<FilterStrategy> FILTER_STRATEGIES = List.of(
             FilterStrategy.EXPERIMENT,
@@ -155,10 +155,10 @@ public class ExperimentDAO {
             FilterStrategy.EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY);
 
     /**
-     * Per-workspace check: does any non-demo experiment have {@code project_id = ''} on its
-     * latest row? GROUP BY id with {@code argMax(project_id, last_updated_at)} in HAVING dedups
-     * the {@code ReplacingMergeTree}; we avoid {@code FINAL} because ClickHouse pushes outer
-     * WHERE predicates into the FINAL scan and would mask post-migration rows.
+     * 按工作区检查：是否有任何非演示实验在其最新行上具有 {@code project_id = ''}？
+     * 使用 {@code argMax(project_id, last_updated_at)} 的 GROUP BY id 在 HAVING 中去重
+     * {@code ReplacingMergeTree}；我们避免使用 {@code FINAL}，因为 ClickHouse 会将外部
+     * WHERE 谓词推入 FINAL 扫描，并会掩盖迁移后的行。
      */
     private static final String HAS_VERSION1_EXPERIMENTS = """
             SELECT 1
@@ -171,8 +171,8 @@ public class ExperimentDAO {
             SETTINGS log_comment = '<log_comment>'""";
 
     /**
-     * The query validates if already exists with this id. Failing if so.
-     * That way only insert is allowed, but not update.
+     * 该查询验证是否已存在具有此ID的记录。如果存在则失败。
+     * 这样只允许插入，不允许更新。
      */
     private static final String INSERT = """
             INSERT INTO experiments (
@@ -1153,10 +1153,10 @@ public class ExperimentDAO {
             """;
 
     /**
-     * Target project IDs for FIND / FIND_COUNT / FIND_GROUPS / FIND_GROUPS_AGGREGATIONS scoping.
-     * Fast path reads {@code project_id} from {@code experiment_aggregates} (skipping the ZERO_UUID
-     * placeholder that the aggregation job writes when no traces exist yet). Experiments without a
-     * valid aggregate project_id fall back to the {@code experiment_items -> traces} traversal.
+     * 用于 FIND / FIND_COUNT / FIND_GROUPS / FIND_GROUPS_AGGREGATIONS 作用域的目标项目ID。
+     * 快速路径从 {@code experiment_aggregates} 读取 {@code project_id}（跳过聚合作业在尚无跟踪时
+     * 写入的 ZERO_UUID 占位符）。没有有效聚合 project_id 的实验回退到
+     * {@code experiment_items -> traces} 遍历。
      */
     private static final String SELECT_TARGET_PROJECTS = """
             WITH experiments_final AS (
@@ -1734,11 +1734,11 @@ public class ExperimentDAO {
             """;
 
     /**
-     * Returns workspaces with at least one orphan experiment, ordered by smallest count first.
-     * An experiment is orphan when its latest row has {@code project_id = ''} — dedup against the
-     * {@code ReplacingMergeTree} versions via {@code GROUP BY id + argMax(project_id, last_updated_at)}.
-     * Demo names and the env-excluded workspaces are filtered out at the DB so the service only
-     * iterates workspaces it can actually migrate.
+     * 返回至少有一个孤立实验的工作区，按最小数量排序。
+     * 当实验的最新行具有 {@code project_id = ''} 时，该实验为孤立实验 —— 通过
+     * {@code GROUP BY id + argMax(project_id, last_updated_at)} 对 {@code ReplacingMergeTree}
+     * 版本进行去重。演示名称和环境排除的工作区在数据库中过滤掉，因此服务只迭代
+     * 实际可以迁移的工作区。
      */
     private static final String FIND_ELIGIBLE_EXPERIMENT_WORKSPACES = """
             SELECT
@@ -1763,19 +1763,18 @@ public class ExperimentDAO {
             """;
 
     /**
-     * For each orphan experiment in a workspace, returns the dominant project: {@code project_id}
-     * (empty when no traces are referenced), {@code distinct_project_count} ({@code 0} = no
-     * inference, {@code 1} = certain, {@code > 1} = dominant pick), and a {@code project_breakdown}
-     * ({@code projectId=count,...}) included in the per-assignment log line. Multi-project
-     * experiments are ranked by {@code (count DESC, last_activity DESC, project_id ASC)} so
-     * repeated runs produce the same result.
+     * 对于工作区中的每个孤立实验，返回主导项目：{@code project_id}
+     * （未引用跟踪时为空），{@code distinct_project_count}（{@code 0} = 无推断，
+     * {@code 1} = 确定，{@code > 1} = 主导选择），以及包含在每个分配日志行中的
+     * {@code project_breakdown}（{@code projectId=count,...}）。多项目实验按
+     * {@code (count DESC, last_activity DESC, project_id ASC)} 排序，以便重复运行
+     * 产生相同结果。
      *
-     * <p>{@code CAST(t.project_id AS String)} converts away from {@code FixedString(36)}, whose
-     * default would slip past the {@code != ''} guard and trip the downstream UUID parser.
-     * {@code count(DISTINCT ei.trace_id)} counts in units of "distinct traces per project"
-     * (the natural unit for the dominant pick, since one trace lives in one project) and
-     * neutralizes join-output inflation from transient ReplacingMergeTree row versions on
-     * either side.
+     * <p>{@code CAST(t.project_id AS String)} 从 {@code FixedString(36)} 转换，其默认值
+     * 会绕过 {@code != ''} 保护并触发下游 UUID 解析器。
+     * {@code count(DISTINCT ei.trace_id)} 以"每个项目的不同跟踪"为单位计数
+     * （主导选择的自然单位，因为一个跟踪存在于一个项目中），并中和两侧临时
+     * ReplacingMergeTree 行版本的连接输出膨胀。
      */
     private static final String COMPUTE_EXPERIMENT_PROJECT_MAPPING = """
             WITH per_experiment_ranked AS (
@@ -1820,15 +1819,13 @@ public class ExperimentDAO {
             """;
 
     /**
-     * Re-INSERT the latest row per id with overridden {@code project_id}, {@code last_updated_by}
-     * and {@code last_updated_at}. Uses {@code SELECT * REPLACE} so any future column added to
-     * {@code experiments} is automatically copied without a schema-drift fix to this query —
-     * the alternative (explicit column list) would silently lose new columns by writing their
-     * defaults instead of preserving the source row's values.
+     * 使用覆盖的 {@code project_id}、{@code last_updated_by} 和 {@code last_updated_at}
+     * 重新插入每个ID的最新行。使用 {@code SELECT * REPLACE}，以便将来添加到 {@code experiments}
+     * 的任何列都会自动复制，无需对此查询进行架构漂移修复 —— 替代方案（显式列列表）会通过写入
+     * 默认值而不是保留源行的值来静默丢失新列。
      *
-     * <p>Assumption: {@code experiments} has no {@code MATERIALIZED} or {@code ALIAS} columns.
-     * Adding one would require updating this query (the INSERT would fail loudly at execution
-     * time, surfacing the issue rather than corrupting data silently).
+     * <p>假设：{@code experiments} 没有 {@code MATERIALIZED} 或 {@code ALIAS} 列。
+     * 添加一个将需要更新此查询（INSERT 会在执行时大声失败，暴露问题而不是静默损坏数据）。
      */
     private static final String BATCH_SET_PROJECT_ID = """
             INSERT INTO experiments
@@ -1850,22 +1847,19 @@ public class ExperimentDAO {
             """;
 
     /**
-     * For one workspace and the given orphan dataset IDs, returns each dataset's inferred
-     * {@code project_id}, the {@code distinct_project_count} of referencing projects, and a sorted
-     * {@code project_breakdown} ({@code projectId=count,...}) included in the log entry for each
-     * assignment.
+     * 对于一个工作区和给定的孤立数据集ID，返回每个数据集推断的 {@code project_id}、
+     * 引用项目的 {@code distinct_project_count}，以及包含在每个分配日志条目中的排序
+     * {@code project_breakdown}（{@code projectId=count,...}）。
      *
-     * <p>Inference reads {@code experiments.project_id} (set by the experiment-project migration);
-     * experiments still at {@code project_id = ''} are excluded, so a dataset whose experiments are
-     * all unmigrated does not appear in the result and the service treats it as no-inference. With
-     * one referencing project the choice is unambiguous; with several, the dominant project wins,
-     * ordered by {@code (count DESC, last_activity DESC, project_id ASC)} so that repeated runs
-     * produce the same result.
+     * <p>推断读取 {@code experiments.project_id}（由实验-项目迁移设置）；
+     * 仍然在 {@code project_id = ''} 的实验被排除，因此实验全部未迁移的数据集不会出现在
+     * 结果中，服务将其视为无推断。有一个引用项目时选择是明确的；有多个时，主导项目获胜，
+     * 按 {@code (count DESC, last_activity DESC, project_id ASC)} 排序，以便重复运行
+     * 产生相同结果。
      *
-     * <p>The inner {@code argMax(project_id, last_updated_at) GROUP BY id} removes duplicate
-     * ReplacingMergeTree row versions: while a migration is in progress the table can briefly hold
-     * both the previous and the updated row for an experiment, and taking the latest keeps the
-     * outer aggregates from counting it twice.
+     * <p>内部的 {@code argMax(project_id, last_updated_at) GROUP BY id} 移除重复的
+     * ReplacingMergeTree 行版本：当迁移进行中时，表可能短暂持有实验的先前和更新行，
+     * 取最新的可防止外部聚合重复计数。
      */
     private static final String COMPUTE_DATASET_PROJECT_MAPPING = """
             WITH arraySort(proj -> (-proj.1, -proj.2, proj.3),
@@ -1902,21 +1896,20 @@ public class ExperimentDAO {
             """;
 
     /**
-     * For one workspace and a set of orphan prompt IDs, returns each referenced prompt's inferred
-     * {@code project_id}, the {@code distinct_project_count} of referencing projects, and a sorted
-     * {@code project_breakdown} ({@code projectId=count,...}) included in the dominant-assignment
-     * log entry. Same shape as {@link #COMPUTE_DATASET_PROJECT_MAPPING}: single-project rows are
-     * unambiguous; multi-project rows pick the dominant project by {@code (count DESC,
-     * last_activity DESC, project_id ASC)} so repeated runs produce the same result. Prompts whose
-     * only referencing experiments are still at {@code project_id = ''} are dropped by the inner
-     * {@code HAVING}; the caller treats absence as no-inference.
+     * 对于一个工作区和一组孤立提示ID，返回每个引用提示推断的 {@code project_id}、
+     * 引用项目的 {@code distinct_project_count}，以及包含在主导分配日志条目中的排序
+     * {@code project_breakdown}（{@code projectId=count,...}）。与
+     * {@link #COMPUTE_DATASET_PROJECT_MAPPING} 形状相同：单项目行是明确的；
+     * 多项目行按 {@code (count DESC, last_activity DESC, project_id ASC)} 选择主导项目，
+     * 以便重复运行产生相同结果。唯一引用实验仍在 {@code project_id = ''} 的提示被内部
+     * {@code HAVING} 丢弃；调用者将缺失视为无推断。
      *
-     * <p>{@code argMax(_, last_updated_at) GROUP BY id} dedupes ReplacingMergeTree row versions
-     * for in-flight experiment updates. {@code arrayDistinct} collapses experiments that reach
-     * the same prompt via both the legacy {@code prompt_id} column and the {@code prompt_versions}
-     * map, preventing {@code per_proj_count} inflation in the subsequent {@code ARRAY JOIN}.
-     * Demo-named experiments are filtered upstream so the seeded Demo Project cannot tilt the
-     * dominant choice for a user prompt that happens to be referenced by a demo experiment.
+     * <p>{@code argMax(_, last_updated_at) GROUP BY id} 对进行中的实验更新的
+     * ReplacingMergeTree 行版本进行去重。{@code arrayDistinct} 折叠通过旧版
+     * {@code prompt_id} 列和 {@code prompt_versions} 映射到达同一提示的实验，
+     * 防止后续 {@code ARRAY JOIN} 中的 {@code per_proj_count} 膨胀。
+     * 演示命名的实验在上游被过滤，因此种子演示项目不能倾斜恰好被演示实验引用的
+     * 用户提示的主导选择。
      */
     private static final String COMPUTE_PROMPT_PROJECT_CLASSIFICATION = """
             WITH arraySort(proj -> (-proj.1, -proj.2, proj.3),
@@ -1962,9 +1955,9 @@ public class ExperimentDAO {
     private final @NonNull ExperimentAggregatesDAO experimentAggregatesDAO;
 
     /**
-     * Checks for V1 (workspace-scoped) experiments excluding known demo names.
-     * ClickHouse string comparison is case-sensitive — every known casing of a demo name
-     * must be listed explicitly in {@link DemoData#EXPERIMENTS}.
+     * 检查V1（工作区范围）实验，排除已知演示名称。
+     * ClickHouse 字符串比较区分大小写 —— 演示名称的每种已知大小写
+     * 必须在 {@link DemoData#EXPERIMENTS} 中显式列出。
      */
     public Mono<Boolean> hasVersion1Experiments(@NonNull String workspaceId,
             @NonNull List<String> demoExperimentNames) {
@@ -2279,7 +2272,7 @@ public class ExperimentDAO {
     Mono<ExperimentPage> find(
             int page, int size, @NonNull ExperimentSearchCriteria experimentSearchCriteria) {
         return Mono.deferContextual(ctx -> {
-            // Run pre-queries in parallel: target project IDs and aggregated experiment counts
+            // 并行运行预查询：目标项目ID和聚合实验计数
             var aggregationCriteria = AggregationBranchCountsCriteria.builder()
                     .experimentIds(experimentSearchCriteria.experimentIds())
                     .datasetId(experimentSearchCriteria.datasetId())
@@ -2289,6 +2282,7 @@ public class ExperimentDAO {
                     TargetProjectsCriteria.from(experimentSearchCriteria));
             var branchCountsMono = getAggregationBranchCounts(aggregationCriteria);
 
+            // 并行运行预查询：目标项目ID和聚合实验计数
             return Mono.zip(targetProjectIdsMono, branchCountsMono)
                     .flatMap(preQueryResults -> {
                         var targetProjectIds = preQueryResults.getT1();
@@ -2334,7 +2328,7 @@ public class ExperimentDAO {
                 template.add("has_target_projects", true);
             }
 
-            // Add branch flags to conditionally include/exclude UNION ALL branches
+            // 添加分支标志以有条件地包含/排除UNION ALL分支
             template.add("has_aggregated", hasAggregated);
             template.add("has_raw", hasRaw);
 
@@ -2377,12 +2371,12 @@ public class ExperimentDAO {
         return makeFluxContextAware((userName, workspaceId) -> {
             var template = newFindTemplate(FIND_COUNT, experimentSearchCriteria, "count_experiments", workspaceId);
 
-            // Add target project IDs flag to template (from separate query to reduce table scans)
+            // 将目标项目ID标志添加到模板（来自单独查询以减少表扫描）
             if (CollectionUtils.isNotEmpty(targetProjectIds)) {
                 template.add("has_target_projects", true);
             }
 
-            // Add branch flags to conditionally include/exclude UNION ALL branches
+            // 添加分支标志以有条件地包含/排除UNION ALL分支
             template.add("has_aggregated", hasAggregated);
             template.add("has_raw", hasRaw);
 
@@ -2390,7 +2384,7 @@ public class ExperimentDAO {
                     .bind("workspace_id", workspaceId)
                     .bind("zero_uuid", ExperimentGroupMappers.ZERO_UUID);
 
-            // Bind target project IDs (from separate query to reduce table scans)
+            // 绑定目标项目ID（来自单独查询以减少表扫描）
             if (CollectionUtils.isNotEmpty(targetProjectIds)) {
                 statement.bind("target_project_ids", targetProjectIds.toArray(UUID[]::new));
             }
@@ -2477,7 +2471,7 @@ public class ExperimentDAO {
                 criteria,
                 filterQueryBuilder,
                 FILTER_STRATEGIES,
-                !isCount // Bind entity_type when not a count query
+                !isCount // 非计数查询时绑定entity_type
         );
     }
 
@@ -2760,11 +2754,11 @@ public class ExperimentDAO {
     }
 
     /**
-     * Get target project IDs from traces for the given experiments.
-     * This is executed as a separate query to reduce traces, spans, and feedback_scores table scans in the main query.
+     * 从给定实验的跟踪中获取目标项目ID。
+     * 作为单独查询执行，以减少主查询中traces、spans和feedback_scores表的扫描次数。
      */
     private Mono<Set<UUID>> getTargetProjectIdsForExperiments(TargetProjectsCriteria criteria) {
-        // Skip optimization when shouldSkipOptimization() returns true (e.g., projectDeleted=true)
+        // 当shouldSkipOptimization()返回true时跳过优化（例如projectDeleted=true）
         if (criteria.shouldSkipOptimization()) {
             log.info("Skipping target project IDs optimization due to projectDeleted='{}', criteria='{}'",
                     criteria.projectDeleted(), criteria);
@@ -2803,7 +2797,7 @@ public class ExperimentDAO {
 
                     var statement = connection.createStatement(query);
 
-                    // Bind the same criteria as the main query
+                    // 绑定与主查询相同的条件
                     Optional.ofNullable(criteria.datasetId())
                             .ifPresent(datasetId -> statement.bind("dataset_id", datasetId));
                     Optional.ofNullable(criteria.name())
@@ -3063,9 +3057,8 @@ public class ExperimentDAO {
     }
 
     /**
-     * Bulk classification for the prompt project migration. Returns one
-     * {@link PromptProjectClassification} per referenced prompt with a usable inferred project;
-     * prompts absent from the result are treated as no-inference by the caller.
+     * 提示项目迁移的批量分类。为每个具有可用推断项目的引用提示返回一个
+     * {@link PromptProjectClassification}；结果中不存在的提示被调用者视为无推断。
      */
     Flux<PromptProjectClassification> computePromptProjectClassification(Set<UUID> promptIds) {
         if (CollectionUtils.isEmpty(promptIds)) {

@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
@@ -13,11 +14,17 @@ import { Dataset, DATASET_TYPE, DatasetListType } from "@/types/datasets";
 const TYPE_CONFIG = {
   dataset: {
     entityName: "Dataset",
+    editTitleKey: "editSidebar.editDataset",
+    namePlaceholderKey: "editSidebar.nameYourDataset",
+    descPlaceholderKey: "editSidebar.datasetDescription",
     datasetType: DATASET_TYPE.DATASET,
     skipEvaluationCriteria: true,
   },
   test_suite: {
     entityName: "Test suite",
+    editTitleKey: "editSidebar.editTestSuite",
+    namePlaceholderKey: "editSidebar.nameYourTestSuite",
+    descPlaceholderKey: "editSidebar.testSuiteDescription",
     datasetType: DATASET_TYPE.TEST_SUITE,
     skipEvaluationCriteria: false,
   },
@@ -36,9 +43,8 @@ const EditDatasetSidebar: React.FunctionComponent<EditDatasetSidebarProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation("datasets");
   const config = TYPE_CONFIG[type];
-  const entityLabel =
-    config.entityName[0].toLowerCase() + config.entityName.slice(1);
 
   // Editing only changes name + description — upload and evaluation criteria
   // are create-only (gated by `!isEdit` in the original dialog).
@@ -77,7 +83,9 @@ const EditDatasetSidebar: React.FunctionComponent<EditDatasetSidebarProps> = ({
         <ResizableSidePanelTopBar
           variant="form"
           title={
-            <span className="comet-body-s-accented">{`Edit ${entityLabel}`}</span>
+            <span className="comet-body-s-accented">
+              {t(config.editTitleKey)}
+            </span>
           }
           onClose={handleClose}
         />
@@ -86,11 +94,11 @@ const EditDatasetSidebar: React.FunctionComponent<EditDatasetSidebarProps> = ({
       <div className="flex size-full flex-col">
         <div className="flex-1 overflow-y-auto pb-6 pl-9 pr-4 pt-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${type}EditName`}>Name</Label>
+            <Label htmlFor={`${type}EditName`}>{t("editSidebar.name")}</Label>
             <Input
               id={`${type}EditName`}
               dimension="sm"
-              placeholder={`Name your ${entityLabel}...`}
+              placeholder={t(config.namePlaceholderKey)}
               value={name}
               className={
                 nameError &&
@@ -115,12 +123,14 @@ const EditDatasetSidebar: React.FunctionComponent<EditDatasetSidebarProps> = ({
           </div>
           <div className="mt-3 flex flex-col gap-1.5">
             <Label htmlFor={`${type}EditDescription`}>
-              Description{" "}
-              <span className="font-normal text-foreground">(optional)</span>
+              {t("editSidebar.description")}{" "}
+              <span className="font-normal text-foreground">
+                {t("editSidebar.optional")}
+              </span>
             </Label>
             <Textarea
               id={`${type}EditDescription`}
-              placeholder={`${config.entityName} description`}
+              placeholder={t(config.descPlaceholderKey)}
               className="min-h-16 text-sm"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -135,11 +145,13 @@ const EditDatasetSidebar: React.FunctionComponent<EditDatasetSidebarProps> = ({
               onClick={handleClose}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("editSidebar.cancel")}
             </Button>
             <Button disabled={!isValid || isSubmitting} onClick={submitHandler}>
               {isSubmitting && <Spinner size="small" className="mr-2" />}
-              {isSubmitting ? "Saving..." : "Save changes"}
+              {isSubmitting
+                ? t("editSidebar.saving")
+                : t("editSidebar.saveChanges")}
             </Button>
           </div>
         </div>

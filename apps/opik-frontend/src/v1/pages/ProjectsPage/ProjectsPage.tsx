@@ -9,6 +9,7 @@ import {
 } from "use-query-params";
 import isNumber from "lodash/isNumber";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
 
 import { formatNumericData } from "@/lib/utils";
 import DataTable from "@/shared/DataTable/DataTable";
@@ -112,6 +113,7 @@ export const DEFAULT_SORTING_COLUMNS: ColumnSort[] = [
 ];
 
 const ProjectsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const isGuardrailsEnabled = useIsFeatureEnabled(
@@ -126,58 +128,58 @@ const ProjectsPage: React.FunctionComponent = () => {
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("projects.table.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
       },
       {
         id: "id",
-        label: "ID",
+        label: t("projects.table.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
         sortable: true,
       },
       {
         id: "duration.p50",
-        label: "Avg duration",
+        label: t("projects.table.avgDuration"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p50,
         cell: DurationCell as never,
       },
       {
         id: "duration.p90",
-        label: "Duration (p90)",
+        label: t("projects.table.durationP90"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p90,
         cell: DurationCell as never,
       },
       {
         id: "duration.p99",
-        label: "Duration (p99)",
+        label: t("projects.table.durationP99"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p99,
         cell: DurationCell as never,
       },
       {
         id: "total_estimated_cost_sum",
-        label: "Total cost",
+        label: t("projects.table.totalCost"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
       },
       {
         id: "trace_count",
-        label: "Trace count",
+        label: t("projects.table.traceCount"),
         type: COLUMN_TYPE.number,
       },
       {
         id: "thread_count",
-        label: "Thread count",
+        label: t("projects.table.threadCount"),
         type: COLUMN_TYPE.number,
       },
       {
         id: "error_count",
-        label: "Errors",
+        label: t("projects.table.errors"),
         type: COLUMN_TYPE.errors,
         cell: ErrorsCountCell as never,
         customMeta: {
@@ -206,7 +208,7 @@ const ProjectsPage: React.FunctionComponent = () => {
       },
       {
         id: "usage.total_tokens",
-        label: "Avg total tokens",
+        label: t("projects.table.avgTotalTokens"),
         type: COLUMN_TYPE.number,
         accessorFn: (row) =>
           row.usage && isNumber(row.usage.total_tokens)
@@ -215,7 +217,7 @@ const ProjectsPage: React.FunctionComponent = () => {
       },
       {
         id: "usage.prompt_tokens",
-        label: "Avg input tokens",
+        label: t("projects.table.avgInputTokens"),
         type: COLUMN_TYPE.number,
         accessorFn: (row) =>
           row.usage && isNumber(row.usage.prompt_tokens)
@@ -224,7 +226,7 @@ const ProjectsPage: React.FunctionComponent = () => {
       },
       {
         id: "usage.completion_tokens",
-        label: "Avg output tokens",
+        label: t("projects.table.avgOutputTokens"),
         type: COLUMN_TYPE.number,
         accessorFn: (row) =>
           row.usage && isNumber(row.usage.completion_tokens)
@@ -233,7 +235,7 @@ const ProjectsPage: React.FunctionComponent = () => {
       },
       {
         id: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Avg feedback scores",
+        label: t("projects.table.avgFeedbackScores"),
         type: COLUMN_TYPE.numberDictionary,
         accessorFn: (row) => get(row, "feedback_scores", []),
         cell: FeedbackScoreListCell as never,
@@ -247,13 +249,13 @@ const ProjectsPage: React.FunctionComponent = () => {
         ? [
             {
               id: COLUMN_GUARDRAILS_ID,
-              label: "Guardrails",
+              label: t("projects.table.guardrails"),
               type: COLUMN_TYPE.category,
               iconType: "guardrails" as HeaderIconType,
               accessorFn: (row: ProjectWithStatistic) =>
                 row.guardrails_failed_count &&
                 isNumber(row.guardrails_failed_count)
-                  ? `${row.guardrails_failed_count} failed`
+                  ? t("projects.table.guardrailsFailed", { count: row.guardrails_failed_count })
                   : "-",
             },
           ]
@@ -261,7 +263,7 @@ const ProjectsPage: React.FunctionComponent = () => {
 
       {
         id: "last_updated_at",
-        label: "Last updated",
+        label: t("projects.table.lastUpdated"),
         type: COLUMN_TYPE.time,
         accessorFn: (row) => row.last_updated_trace_at ?? row.last_updated_at,
         cell: TimeCell as never,
@@ -269,23 +271,23 @@ const ProjectsPage: React.FunctionComponent = () => {
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("projects.table.created"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
         sortable: true,
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("projects.table.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "description",
-        label: "Description",
+        label: t("projects.table.description"),
         type: COLUMN_TYPE.string,
       },
     ];
-  }, [isGuardrailsEnabled, navigate, workspaceName]);
+  }, [isGuardrailsEnabled, navigate, t, workspaceName]);
 
   const resetDialogKeyRef = useRef(0);
   const [openDialog, setOpenDialog] = useState<boolean>(false);
@@ -346,7 +348,7 @@ const ProjectsPage: React.FunctionComponent = () => {
   const projects = useMemo(() => data?.content ?? [], [data?.content]);
   const total = data?.total ?? 0;
   const noData = !search;
-  const noDataText = noData ? "There are no projects yet" : "No search results";
+  const noDataText = noData ? t("projects.page.noDataText") : t("projects.page.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -438,7 +440,7 @@ const ProjectsPage: React.FunctionComponent = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l truncate break-words">Projects</h1>
+        <h1 className="comet-title-l truncate break-words">{t("projects.title")}</h1>
       </div>
       <ExplainerDescription
         className="mb-4"
@@ -448,7 +450,7 @@ const ProjectsPage: React.FunctionComponent = () => {
         <SearchInput
           searchText={search!}
           setSearchText={setSearch}
-          placeholder="Search by name"
+          placeholder={t("projects.page.searchPlaceholder")}
           className="w-[320px]"
           dimension="sm"
         ></SearchInput>
@@ -468,7 +470,7 @@ const ProjectsPage: React.FunctionComponent = () => {
           ></ColumnsButton>
           {canCreateProjects && (
             <Button variant="default" size="sm" onClick={handleNewProjectClick}>
-              Create new project
+              {t("projects.page.createProject")}
             </Button>
           )}
         </div>
@@ -497,7 +499,7 @@ const ProjectsPage: React.FunctionComponent = () => {
           <DataTableNoData title={noDataText}>
             {noData && canCreateProjects && (
               <Button variant="link" onClick={handleNewProjectClick}>
-                Create new project
+                {t("projects.page.createProject")}
               </Button>
             )}
           </DataTableNoData>

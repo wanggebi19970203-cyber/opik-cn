@@ -29,7 +29,7 @@ def _make_cache_key(model_name: str, track: bool, model_kwargs: Dict[str, Any]) 
 
 
 def get_default_model_name() -> str:
-    """Resolve the default model name from Opik config."""
+    """从 Opik 配置中解析默认模型名称。"""
     return config.OpikConfig().default_llm
 
 
@@ -37,16 +37,16 @@ def get(
     model_name: Optional[str], track: bool = True, **model_kwargs: Any
 ) -> base_model.OpikBaseModel:
     """
-    Get or create a cached LiteLLM chat model instance.
+    获取或创建缓存的 LiteLLM 聊天模型实例。
 
     Args:
-        model_name: The name of the model to use. Defaults to OpikConfig.default_llm if None.
-        track: Whether to track the model calls. When False, disables tracing for this model instance.
-            Defaults to True.
-        **model_kwargs: Additional keyword arguments to pass to the model constructor.
+        model_name: 要使用的模型名称。为 None 时默认使用 OpikConfig.default_llm。
+        track: 是否追踪模型调用。为 False 时禁用此模型实例的追踪。
+            默认为 True。
+        **model_kwargs: 传递给模型构造函数的额外关键字参数。
 
     Returns:
-        A cached or newly created OpikBaseModel instance.
+        缓存的或新创建的 OpikBaseModel 实例。
     """
     if model_name is None:
         model_name = get_default_model_name()
@@ -66,8 +66,8 @@ def _should_use_anthropic_native(model_name: str) -> bool:
         return True
     _logging.log_once_at_level(
         logging.WARNING,
-        "Anthropic SDK is not installed. Falling back to LiteLLM for model '%s'. "
-        "Install it with `pip install anthropic` for a more stable experience.",
+        "Anthropic SDK 未安装。模型 '%s' 将回退使用 LiteLLM。"
+        "请通过 `pip install anthropic` 安装以获得更稳定的体验。",
         LOGGER,
         model_name,
     )
@@ -79,7 +79,7 @@ def _create_model(
 ) -> base_model.OpikBaseModel:
     if _should_use_anthropic_native(model_name):
         LOGGER.debug(
-            "Using native Anthropic SDK for model %s",
+            "使用原生 Anthropic SDK 处理模型 %s",
             model_name,
         )
         from .anthropic.anthropic_chat_model import AnthropicChatModel

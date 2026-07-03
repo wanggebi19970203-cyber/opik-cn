@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { CellContext } from "@tanstack/react-table";
 import { MoreHorizontal, Pencil, Copy, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -19,6 +20,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 export const DashboardRowActionsCell: React.FunctionComponent<
   CellContext<Dashboard, unknown>
 > = (context) => {
+  const { t } = useTranslation("pages/dashboards");
   const resetKeyRef = useRef(0);
   const dashboard = context.row.original;
 
@@ -72,7 +74,7 @@ export const DashboardRowActionsCell: React.FunctionComponent<
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("dashboards.actions.menuLabel")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -80,13 +82,13 @@ export const DashboardRowActionsCell: React.FunctionComponent<
           {canEditDashboards && (
             <DropdownMenuItem onClick={handleEdit}>
               <Pencil className="mr-2 size-4" />
-              Edit
+              {t("dashboards.actions.edit")}
             </DropdownMenuItem>
           )}
           {canCreateDashboards && (
             <DropdownMenuItem onClick={handleClone}>
               <Copy className="mr-2 size-4" />
-              Clone
+              {t("dashboards.actions.clone")}
             </DropdownMenuItem>
           )}
           {(canEditDashboards || canCreateDashboards) &&
@@ -94,7 +96,7 @@ export const DashboardRowActionsCell: React.FunctionComponent<
           {canDeleteDashboards && (
             <DropdownMenuItem onClick={handleDelete} variant="destructive">
               <Trash className="mr-2 size-4" />
-              Delete
+              {t("dashboards.actions.delete")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -118,9 +120,9 @@ export const DashboardRowActionsCell: React.FunctionComponent<
         open={openConfirmDialog}
         setOpen={setOpenConfirmDialog}
         onConfirm={deleteDashboard}
-        title="Delete dashboard"
-        description="Are you sure you want to delete this dashboard? This action cannot be undone."
-        confirmText="Delete dashboard"
+        title={t("dashboards.confirmDialog.deleteSingle.title")}
+        description={t("dashboards.confirmDialog.deleteSingle.description")}
+        confirmText={t("dashboards.confirmDialog.deleteSingle.confirmText")}
         confirmButtonVariant="destructive"
       />
     </div>

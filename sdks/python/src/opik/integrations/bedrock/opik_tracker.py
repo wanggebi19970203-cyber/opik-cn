@@ -16,23 +16,25 @@ def track_bedrock(
     client: "BedrockRuntimeClient",
     project_name: Optional[str] = None,
 ) -> "BedrockRuntimeClient":
-    """Adds Opik tracking to an AWS Bedrock client.
+    """为 AWS Bedrock 客户端添加 Opik 追踪功能。
 
-    Tracks calls to `converse()`, `converse_stream()`, `invoke_model()`, and `invoke_model_with_response_stream()` methods.
-    Can be used within other Opik-tracked functions.
+    追踪对 `converse()`、`converse_stream()`、`invoke_model()` 和
+    `invoke_model_with_response_stream()` 方法的调用。
+    可在其他已启用 Opik 追踪的函数中使用。
 
-    Supported Model subproviders for InvokeModel API (both streaming and non-streaming):
+    InvokeModel API 支持的模型子提供商（流式和非流式）：
     - **Anthropic** (Claude)
     - **Amazon** (Nova)
     - **Meta** (Llama)
     - **Mistral** (Pixtral)
 
     Args:
-        client: An instance of an AWS Bedrock client (botocore.client.BedrockRuntime or botocore.client.AgentsforBedrockRuntime).
-        project_name: The name of the project to log data.
+        client: AWS Bedrock 客户端实例
+            （botocore.client.BedrockRuntime 或 botocore.client.AgentsforBedrockRuntime）。
+        project_name: 用于记录数据的项目名称。
 
     Returns:
-        The modified bedrock client with Opik tracking enabled.
+        已启用 Opik 追踪的 Bedrock 客户端实例。
     """
 
     decorator_for_converse = converse_decorator.BedrockConverseDecorator()

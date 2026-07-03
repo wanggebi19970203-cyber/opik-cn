@@ -15,6 +15,7 @@ import {
   RowSelectionState,
 } from "@tanstack/react-table";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Separator } from "@/ui/separator";
@@ -69,22 +70,22 @@ import {
 import useQueryParamAndLocalStorageState from "@/hooks/useQueryParamAndLocalStorageState";
 import { capitalizeFirstLetter } from "@/lib/utils";
 
-const SHARED_COLUMNS: ColumnData<AnnotationQueue>[] = [
+const getSharedColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("annotationQueues.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "instructions",
-    label: "Instructions",
+    label: t("annotationQueues.columns.instructions"),
     type: COLUMN_TYPE.string,
     size: 400,
   },
   {
     id: "scope",
-    label: "Scope",
+    label: t("annotationQueues.columns.scope"),
     type: COLUMN_TYPE.category,
     cell: TagCell as never,
     accessorFn: (row) => capitalizeFirstLetter(row.scope),
@@ -94,36 +95,36 @@ const SHARED_COLUMNS: ColumnData<AnnotationQueue>[] = [
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("annotationQueues.columns.createdAt"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("annotationQueues.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("annotationQueues.columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     sortable: true,
   },
 ];
 
-const DEFAULT_COLUMNS: ColumnData<AnnotationQueue>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("annotationQueues.columns.name"),
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
     sortable: true,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Avg feedback scores",
+    label: t("annotationQueues.columns.avgFeedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
     accessorFn: (row) => row.feedback_scores ?? [],
     cell: FeedbackScoreListCell as never,
@@ -134,32 +135,32 @@ const DEFAULT_COLUMNS: ColumnData<AnnotationQueue>[] = [
   },
   {
     id: "items_count",
-    label: "Item count",
+    label: t("annotationQueues.columns.itemCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) => (row.items_count ? `${row.items_count}` : "-"),
   },
   {
     id: "reviewers",
-    label: "Reviewed by",
+    label: t("annotationQueues.columns.reviewedBy"),
     type: COLUMN_TYPE.list,
     cell: ListCell as never,
     accessorFn: (row) => row.reviewers?.map((r) => r.username) ?? [],
   },
   {
     id: "progress",
-    label: "Progress",
+    label: t("annotationQueues.columns.progress"),
     type: COLUMN_TYPE.string,
     cell: AnnotationQueueProgressCell as never,
   },
 ];
 
-const FILTER_COLUMNS: ColumnData<AnnotationQueue>[] = [
+const getFilterColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("annotationQueues.columns.name"),
     type: COLUMN_TYPE.string,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
 ];
 
 const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
@@ -199,21 +200,22 @@ const COLUMNS_SORT_KEY = "workspace-annotation-queues-columns-sort";
 const PAGINATION_SIZE_KEY = "workspace-annotation-queues-pagination-size";
 const ROW_HEIGHT_KEY = "workspace-annotation-queues-row-height";
 
-const FILTERS_CONFIG = {
+const getFiltersConfig = (t: (key: string) => string) => ({
   rowsMap: {
     scope: {
       keyComponentProps: {
         options: [
-          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: "Trace" },
-          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: "Thread" },
+          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: t("annotationQueues.filters.trace") },
+          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: t("annotationQueues.filters.thread") },
         ],
-        placeholder: "Select scope",
+        placeholder: t("annotationQueues.filters.selectScope"),
       },
     },
   },
-};
+});
 
 export const AnnotationQueuesPage: React.FC = () => {
+  const { t } = useTranslation("pages/annotation-queues");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const projectId = useActiveProjectId()!;
   const navigate = useNavigate();
@@ -315,8 +317,8 @@ export const AnnotationQueuesPage: React.FC = () => {
 
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? "There are no annotation queues yet"
-    : "No search results";
+    ? t("annotationQueues.noData.noQueuesYet")
+    : t("annotationQueues.noData.noSearchResults");
 
   const handleNewQueue = useCallback(() => {
     setOpenDialog(true);
@@ -341,7 +343,7 @@ export const AnnotationQueuesPage: React.FC = () => {
     return [
       generateSelectColumDef<AnnotationQueue>(),
       ...convertColumnDataToColumn<AnnotationQueue, AnnotationQueue>(
-        DEFAULT_COLUMNS,
+        getDefaultColumns(t),
         {
           columnsOrder,
           selectedColumns,
@@ -388,12 +390,12 @@ export const AnnotationQueuesPage: React.FC = () => {
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
         <h1 className="comet-body-accented truncate break-words">
-          Annotation queues
+          {t("annotationQueues.title")}
         </h1>
         {canCreateAnnotationQueues && (
           <Button size="xs" onClick={handleNewQueue}>
             <Plus className="mr-1 size-4" />
-            Create queue
+            {t("annotationQueues.actions.createQueue")}
           </Button>
         )}
       </div>
@@ -401,12 +403,10 @@ export const AnnotationQueuesPage: React.FC = () => {
         <PageEmptyState
           lightImageUrl={emptyAnnotationQueuesLightUrl}
           darkImageUrl={emptyAnnotationQueuesDarkUrl}
-          title="No annotation queues yet"
-          description={
-            "Get started by creating a queue for human review.\nOrganize traces and threads, label outputs, and gather feedback to improve performance."
-          }
+          title={t("annotationQueues.empty.title")}
+          description={t("annotationQueues.empty.description")}
           primaryActionLabel={
-            canCreateAnnotationQueues ? "Create your first queue" : undefined
+            canCreateAnnotationQueues ? t("annotationQueues.empty.action") : undefined
           }
           onPrimaryAction={
             canCreateAnnotationQueues ? handleNewQueue : undefined
@@ -420,13 +420,13 @@ export const AnnotationQueuesPage: React.FC = () => {
               <SearchInput
                 searchText={search as string}
                 setSearchText={setSearch}
-                placeholder="Search by name"
+                placeholder={t("annotationQueues.search.byName")}
                 className="w-[320px]"
                 dimension="sm"
               />
               <FiltersButton
-                columns={FILTER_COLUMNS}
-                config={FILTERS_CONFIG as never}
+                columns={getFilterColumns(t)}
+                config={getFiltersConfig(t) as never}
                 filters={filters}
                 onChange={setFilters}
                 layout="icon"
@@ -444,7 +444,7 @@ export const AnnotationQueuesPage: React.FC = () => {
                 setType={setHeight}
               />
               <ColumnsButton
-                columns={DEFAULT_COLUMNS}
+                columns={getDefaultColumns(t)}
                 selectedColumns={selectedColumns}
                 onSelectionChange={setSelectedColumns}
                 order={columnsOrder}

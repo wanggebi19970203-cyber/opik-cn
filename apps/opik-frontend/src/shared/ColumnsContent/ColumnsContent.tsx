@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import toLower from "lodash/toLower";
+import { useTranslation } from "react-i18next";
 
 import { Checkbox } from "@/ui/checkbox";
 import { Separator } from "@/ui/separator";
@@ -45,6 +46,7 @@ const ColumnsContent = <TColumnData,>({
   variant = "list",
   listMaxHeight,
 }: ColumnsContentProps<TColumnData>) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
 
   const { selectAllColumnsIds, allColumnsSelected, selectedCount, totalCount } =
@@ -127,7 +129,10 @@ const ColumnsContent = <TColumnData,>({
           onSelect={(event) => event.preventDefault()}
         >
           <div className="w-full break-words py-2">
-            {selectedCount} of {totalCount} selected
+            {t("common.selectBox.selected", {
+              selected: selectedCount,
+              total: totalCount,
+            })}
           </div>
         </DropdownMenuCustomCheckboxItem>
       );
@@ -141,7 +146,10 @@ const ColumnsContent = <TColumnData,>({
           <Checkbox checked={checkedState} tabIndex={-1} />
         </span>
         <div className="w-full break-words py-2">
-          {selectedCount} of {totalCount} selected
+          {t("common.selectBox.selected", {
+            selected: selectedCount,
+            total: totalCount,
+          })}
         </div>
       </div>
     );
@@ -151,7 +159,7 @@ const ColumnsContent = <TColumnData,>({
     if (noData) {
       return (
         <div className="comet-body-s flex h-32 w-56 items-center justify-center text-muted-slate">
-          No search results
+          {t("common.selectBox.noSearchResults")}
         </div>
       );
     }
@@ -207,7 +215,7 @@ const ColumnsContent = <TColumnData,>({
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search"
+          placeholder={t("common.placeholders.search")}
           variant="ghost"
         />
         <Separator className="mt-1" />

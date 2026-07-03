@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { Span, Trace, TraceFeedbackScore } from "@/types/traces";
 import get from "lodash/get";
 import isEmpty from "lodash/isEmpty";
@@ -29,7 +30,7 @@ import {
 
 export const SPAN_TYPE_FILTER_COLUMN: ColumnData<Span> = {
   id: "type",
-  label: "Span type",
+  label: i18next.t("common.traceLabels.spanType"),
   type: COLUMN_TYPE.category,
 };
 
@@ -37,68 +38,68 @@ export const TREE_FILTER_COLUMNS: ColumnData<Span>[] = [
   SPAN_TYPE_FILTER_COLUMN,
   {
     id: "name",
-    label: "Name",
+    label: i18next.t("common.traceLabels.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "input",
-    label: "Input",
+    label: i18next.t("common.traceLabels.input"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "output",
-    label: "Output",
+    label: i18next.t("common.traceLabels.output"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: i18next.t("common.traceLabels.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: i18next.t("common.traceLabels.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("common.traceLabels.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: i18next.t("common.traceLabels.totalTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: i18next.t("common.traceLabels.totalInputTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: i18next.t("common.traceLabels.totalOutputTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: i18next.t("common.traceLabels.estimatedCost"),
     type: COLUMN_TYPE.cost,
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: i18next.t("common.traceLabels.errors"),
     type: COLUMN_TYPE.errors,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: i18next.t("common.traceLabels.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
   {
     id: COLUMN_CUSTOM_ID,
-    label: "Custom filter",
+    label: i18next.t("common.traceLabels.customFilter"),
     type: COLUMN_TYPE.dictionary,
   },
 ];

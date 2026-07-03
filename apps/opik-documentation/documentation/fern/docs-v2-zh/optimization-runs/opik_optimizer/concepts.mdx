@@ -1,0 +1,81 @@
+---
+description: 了解 Opik Agent Optimizer 的核心概念，包括关键术语、评估流程、优化工作流和有效的 LLM 优化最佳实践。
+headline: 核心概念 | Opik 文档
+og:description: 在 Opik 中优化智能体和提示词优化，提升 LLM 评估和性能。
+og:site_name: Opik 文档
+og:title: 掌握 Opik 优化核心概念
+subtitle: 常见术语和我们的优化方式
+title: Opik Agent Optimizer 核心概念
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/concepts
+---
+
+## 概述
+
+理解 Opik Agent Optimizer 的核心概念对于充分发挥其在 LLM 评估和优化方面的潜力至关重要。本节解释了在 Opik 中进行有效的智能体和提示词优化所依赖的基础术语、流程和策略。
+
+## 什么是智能体优化（和提示词优化）？
+
+在 Opik 中，**智能体优化**是指系统性地优化和评估基于语言模型的应用程序的提示词、配置和整体设计，以最大化其性能。这是一种利用持续测试、数据驱动优化和高级评估技术的迭代方法。
+
+**提示词优化**是智能体优化的一个关键子集。它专门关注改进给大语言模型（LLM）的指令（提示词），以更准确、一致和高效地获得期望的输出。由于提示词是与 LLM 交互和引导的主要方式，优化它们对于增强任何 LLM 驱动的智能体或应用程序至关重要。
+
+`Opik Agent Optimizer` 为两者提供工具：直接优化单个提示词字符串，以及优化可能涉及多个提示词、few-shot 示例或工具交互的更复杂智能体结构。
+
+## 关键术语
+
+<AccordionGroup>
+  <Accordion title="优化器（Optimizer）">
+    Opik Agent Optimizer SDK 中专门用于提升提示词效果的算法。每个优化器
+    （例如 [`MetaPromptOptimizer`](/v1/agent_optimization/algorithms/metaprompt_optimizer)、
+    [`FewShotBayesianOptimizer`](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer)、
+    [`EvolutionaryOptimizer`](/v1/agent_optimization/algorithms/evolutionary_optimizer)、
+    [`HRPO`](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer)）
+    采用独特的策略和可配置参数来解决特定的优化目标。
+  </Accordion>
+  <Accordion title="ChatPrompt">
+    要优化的对象，包含你的聊天消息和每个示例中变化的变量占位符。
+    参见 [API 参考](/v1/agent_optimization/advanced/api_reference#chatprompt)。
+  </Accordion>
+  <Accordion title="候选方案（Candidate）">
+    由优化器生成的具体提示词（或多提示词包），用于评估。候选方案是优化过程中被评分和比较的对象，每个候选项对应一组特定的消息、参数和工具配置。
+  </Accordion>
+  <Accordion title="指标（Metric）">
+    定义如何衡量提示词性能的对象。指标函数应接受两个参数：
+    - `dataset_item`：包含数据集项键的字典
+    - `llm_output`：将填充 LLM 响应
+
+    应返回 [ScoreResult](https://www.comet.com/docs/opik/python-sdk-reference/Objects/ScoreResult.html) 对象或浮点数。
+  </Accordion>
+  <Accordion title="数据集（用于优化）">
+    数据项的集合，通常包含输入和期望输出（真实标签），用于引导和评估提示词优化过程。为获得最佳效果，请将数据分为单独的训练和验证数据集——优化器使用训练数据集分析失败并生成改进，然后在验证数据集上评估候选方案以防止过拟合。更多信息请参见[数据集](/v1/evaluation/manage_datasets)和[定义数据集](/v1/agent_optimization/optimization/define_datasets)。
+  </Accordion>
+  <Accordion title="优化运行（Optimization Run）">
+    使用特定配置执行一次提示词优化过程。例如，调用 `optimizer.optimize_prompt(...)` 一次构成一个运行。每个运行在 Opik 中记录为一次优化运行，包含多轮、多次试验和候选方案评估。
+  </Accordion>
+  <Accordion title="优化试验（Optimization Trial）">
+    每次优化运行由一个或多个优化试验组成。试验对应于在选定的数据集切片（完整、采样或小批量）上评估一个候选方案。你可以在 Opik UI 中查看每个试验的提示词、分数和推理历史，以了解优化进度。
+  </Accordion>
+  <Accordion title="优化轮次（Optimization Round）">
+    运行中的逻辑迭代，优化器提出一个或多个候选方案，评估它们，并使用结果决定下一批候选方案。一些优化器显式暴露轮次（例如进化、分层），而其他优化器则使用更简单的逐试验循环。
+  </Accordion>
+  <Accordion title="提示词模型（Prompt model）">
+  用于评估提示词的模型。这是你使用提示词的模型，应与你在应用程序中使用的模型相同。通过 `ChatPrompt(model="provider/model-name")` 配置。
+  
+  参见[配置 LLM 提供商](/v1/agent_optimization/optimization/configure_models)了解设置说明。
+  </Accordion>
+  <Accordion title="优化器模型（Optimizer model）">
+    用于优化提示词的模型。这是优化器用来改进你的提示词的模型，使用最强大的模型进行优化将获得最佳性能。通过优化器的 `model` 参数配置。
+    
+    参见[配置 LLM 提供商](/v1/agent_optimization/optimization/configure_models)了解设置说明。
+  </Accordion>
+</AccordionGroup>
+
+## 后续步骤
+
+- 探索具体的[优化器](/v1/agent_optimization/algorithms/overview)了解算法详情。
+- 参阅[常见问题](/v1/agent_optimization/faq)了解常见问题和故障排除。
+- 参阅 [API 参考](/v1/agent_optimization/advanced/api_reference)了解详细配置选项。
+
+<Info>
+  想看这些概念的实际应用？查看我们的[示例项目和实践手册](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook)，获取分步可运行的 Colab Notebook。
+</Info>

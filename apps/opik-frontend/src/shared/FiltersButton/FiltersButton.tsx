@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Filter as FilterIcon, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { Button, ButtonProps } from "@/ui/button";
@@ -40,6 +41,8 @@ const FiltersButton = <TColumnData,>({
   deferOnChange = false,
   tooltip,
 }: FiltersButtonProps<TColumnData>) => {
+  const { t } = useTranslation("common");
+  const { t: tActions } = useTranslation("actions");
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [open, setOpen] = useState(false);
   const isIconLayout = layout === "icon";
@@ -84,7 +87,7 @@ const FiltersButton = <TColumnData,>({
 
   return (
     <Popover onOpenChange={handleOpenChange} open={open}>
-      <TooltipWrapper content={isIconLayout ? tooltip ?? "Filters" : undefined}>
+      <TooltipWrapper content={isIconLayout ? tooltip ?? t("labels.filters") : undefined}>
         <PopoverTrigger asChild>
           <Button
             variant={variant}
@@ -101,7 +104,7 @@ const FiltersButton = <TColumnData,>({
                 <span className="ml-1.5">{validFilters.length}</span>
               ) : null
             ) : (
-              <span className="ml-1.5">{`Filters (${validFilters.length})`}</span>
+              <span className="ml-1.5">{`${t("labels.filters")} (${validFilters.length})`}</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -112,14 +115,14 @@ const FiltersButton = <TColumnData,>({
       >
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between pb-1">
-            <span className="comet-title-s">Filters</span>
+            <span className="comet-title-s">{t("labels.filters")}</span>
             <Button
               variant="ghost"
               size="sm"
               className="-mr-2.5"
               onClick={onClearAll}
             >
-              Clear all
+              {tActions("clearAll")}
             </Button>
           </div>
           <Separator />
@@ -133,7 +136,7 @@ const FiltersButton = <TColumnData,>({
           <div className="flex items-center">
             <Button variant="secondary" onClick={onAddFilter}>
               <Plus className="mr-2 size-4" />
-              Add filter
+              {tActions("addFilter")}
             </Button>
           </div>
         </div>

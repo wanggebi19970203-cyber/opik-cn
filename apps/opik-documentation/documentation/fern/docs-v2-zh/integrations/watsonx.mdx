@@ -1,0 +1,146 @@
+---
+description: 开始将 Opik 集成到您的 IBM watsonx 生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: WatsonX | Opik 文档
+og:description: 使用 WatsonX 构建和部署 AI 模型，通过 Opik 实现无缝的账户设置和 API 集成。
+og:site_name: Opik 文档
+og:title: 使用 Opik 训练 AI 模型 - WatsonX 模型提供商
+title: 使用 Opik 实现 IBM watsonx 可观测性
+---
+
+[watsonx](https://www.ibm.com/products/watsonx-ai) 是下一代企业级 AI 开发平台，供 AI 开发者训练、验证、调优和部署 AI 模型。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=watsonx&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=watsonx&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=watsonx&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+要开始追踪您的 watsonx LLM 调用，可以使用我们的 [LiteLLM 集成](/integrations/litellm)。您需要安装 `opik` 和 `litellm` 两个包。可以使用 pip 安装：
+
+```bash
+pip install opik litellm
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云托管 vs 企业版**设置
+- **配置文件**和环境变量
+
+<Info>
+
+如果您无法将 LiteLLM 集成与 watsonx 配合使用，请[提交 issue](https://github.com/comet-ml/opik/issues/new/choose)
+
+</Info>
+
+### 配置 watsonx
+
+要配置 watsonx，您需要准备：
+
+- 端点 URL：该参数的文档可在[此处](https://cloud.ibm.com/apidocs/watsonx-ai#endpoint-url)找到
+- Watsonx API Key：该参数的文档可在[此处](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui)找到
+- Watsonx Token：该参数的文档可在[此处](https://cloud.ibm.com/docs/account?topic=account-iamtoken_from_apikey#iamtoken_from_apikey)找到
+- （可选）Watsonx Project ID：可在项目的 Manage 部分找到
+
+获取这些信息后，可以将它们设置为环境变量：
+
+```python
+import os
+
+os.environ["WATSONX_URL"] = ""  # (required) Base URL of your WatsonX instance
+# (required) either one of the following:
+os.environ["WATSONX_API_KEY"] = ""  # IBM cloud API key
+os.environ["WATSONX_TOKEN"] = ""  # IAM auth token
+# optional - can also be passed as params to completion() or embedding()
+# os.environ["WATSONX_PROJECT_ID"] = "" # Project ID of your WatsonX instance
+# os.environ["WATSONX_DEPLOYMENT_SPACE_ID"] = "" # ID of your deployment space to use deployed models
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，需要创建 OpikLogger 回调。创建并添加 OpikLogger 回调到 LiteLLM 后，即可正常使用 LiteLLM 进行调用：
+
+```python
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+import os
+
+os.environ["OPIK_PROJECT_NAME"] = "watsonx-integration-demo"
+
+opik_logger = OpikLogger()
+litellm.callbacks = [opik_logger]
+
+prompt = """
+Write a short two sentence story about Opik.
+"""
+
+response = litellm.completion(
+    model="watsonx/ibm/granite-13b-chat-v2",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+print(response.choices[0].message.content)
+```
+
+<Frame>
+  <img src="/img/cookbook/watsonx_trace_cookbook.png" />
+</Frame>
+
+## 高级用法
+
+### 配合 `@track` 装饰器使用
+
+如果您的 LLM 管道包含多个步骤，可以使用 `@track` 装饰器记录每个步骤的 trace。如果在某个步骤中调用了 WatsonX，该 LLM 调用将与对应的步骤关联：
+
+```python
+from opik import track
+from opik.opik_context import get_current_span_data
+import litellm
+
+@track
+def generate_story(prompt):
+    response = litellm.completion(
+        model="watsonx/ibm/granite-13b-chat-v2",
+        messages=[{"role": "user", "content": prompt}],
+        metadata={
+            "opik": {
+                "current_span_data": get_current_span_data(),
+            },
+        },
+    )
+    return response.choices[0].message.content
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    response = litellm.completion(
+        model="watsonx/ibm/granite-13b-chat-v2",
+        messages=[{"role": "user", "content": prompt}],
+        metadata={
+            "opik": {
+                "current_span_data": get_current_span_data(),
+            },
+        },
+    )
+    return response.choices[0].message.content
+
+@track
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+# Execute the multi-step pipeline
+generate_opik_story()
+```
+
+<Frame>
+  <img src="/img/cookbook/watsonx_trace_decorator_cookbook.png" />
+</Frame>

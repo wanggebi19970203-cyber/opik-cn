@@ -1,5 +1,6 @@
 import React from "react";
 import { Brain } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button, ButtonProps } from "@/ui/button";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import { usePermissions } from "@/contexts/PermissionsContext";
@@ -29,6 +30,7 @@ const EvaluateButton: React.FunctionComponent<EvaluateButtonProps> = ({
   buttonSize,
   label,
 }) => {
+  const { t } = useTranslation("online-evaluation");
   const {
     permissions: { canUpdateOnlineEvaluationRules },
   } = usePermissions();
@@ -39,10 +41,10 @@ const EvaluateButton: React.FunctionComponent<EvaluateButtonProps> = ({
     if (disabled) return "";
 
     if (noEvaluateOptions) {
-      return "No online evaluation rules assigned to this project";
+      return t("evaluateButton.noRulesTooltip");
     }
 
-    return "Evaluate";
+    return t("evaluateButton.evaluate");
   };
 
   return (

@@ -1,0 +1,127 @@
+---
+description: 描述 Meaning Match 指标
+headline: Meaning Match | Opik 文档
+og:description: 使用 Meaning Match 评估 LLM 输出，通过 Opik 自动化工具确保问答系统中的语义准确性。
+og:site_name: Opik 文档
+og:title: Meaning Match 指标 - Opik
+title: Meaning Match
+---
+
+# Meaning Match
+
+Meaning Match 指标用于评估 LLM 的输出是否在语义上与标准答案匹配，而不考虑措辞或格式差异。该指标特别适用于问答系统的评估，因为同一答案可能有不同的表达方式。
+
+## 如何使用 Meaning Match 指标
+
+Meaning Match 指标可作为自动化规则中的 **LLM-as-a-Judge** 指标使用。您可以通过创建新规则来自动评估项目中的 traces。
+
+### 使用 Meaning Match 创建规则
+
+1. 在 Opik 中导航到您的项目
+2. 点击侧边栏中的 **"Rules"**
+3. 点击 **"Create new rule"**
+4. 选择 **"LLM-as-judge"** 作为指标类型
+5. 在提示词下拉菜单中选择 **"Meaning Match"**
+6. 配置变量映射：
+   - **input**：原始问题或提示词
+   - **ground_truth**：预期的正确答案
+   - **output**：LLM 生成的响应
+7. 选择您偏好的 LLM 模型进行评估
+8. 根据需要配置采样率和过滤器
+9. 点击 **"Create rule"**
+
+## 理解评分结果
+
+Meaning Match 指标返回**布尔评分**：
+
+- **true** (1.0)：输出传达了与标准答案相同的核心含义，即使措辞不同
+- **false** (0.0)：输出与标准答案矛盾、存在差异或未包含核心答案
+
+每个评分都包含解释判断依据的详细原因。
+
+## 评估指南
+
+Meaning Match 指标在评估响应时遵循以下规则：
+
+1. **关注事实等价性** - 忽略风格、语法或冗余内容
+2. **接受别名和同义词** - "NYC" ≈ "New York City"；"Da Vinci" ≈ "Leonardo da Vinci"
+3. **忽略格式差异** - 大小写、标点和空格差异可以接受
+4. **允许多余上下文** - 只要不与主要答案矛盾，额外细节可以接受
+5. **拒绝模糊表达** - 不确定或不完整的答案评分为 false
+6. **处理数字等价** - "100" = "one hundred"
+7. **拒绝多个备选** - 如果输出包含正确答案但也包含错误备选，则评分为 false
+
+## 评估示例
+
+| 输入 | 标准答案 | 输出 | 评分 | 原因 |
+|------|----------|------|------|------|
+| What's the capital of France? | Paris | It's Paris | ✅ true | 输出传达了与标准答案相同的事实 |
+| Who painted the Mona Lisa? | Leonardo da Vinci | Da Vinci | ✅ true | "Da Vinci" 是 "Leonardo da Vinci" 的公认别名 |
+| Who painted the Mona Lisa? | Leonardo da Vinci | Pablo Picasso | ❌ false | 输出指认了与标准答案不同的画家 |
+| What's 10 + 10? | 20 | The answer is twenty | ✅ true | 数字和文本形式被视为等价 |
+
+## Meaning Match 提示词
+
+Opik 使用 LLM 作为评判者来评估语义等价性。默认情况下，评估使用创建规则时选择的模型。评估使用的提示词模板如下：
+
+```
+You are an expert semantic equivalence judge. Your task is to decide whether the OUTPUT conveys the same essential answer as the GROUND_TRUTH, regardless of phrasing or formatting.
+
+## What to judge
+- TRUE if the OUTPUT expresses the same core fact/entity/value as the GROUND_TRUTH.
+- FALSE if the OUTPUT contradicts, differs from, or fails to include the core fact/value in GROUND_TRUTH.
+
+## Rules
+1. Focus only on the factual equivalence of the core answer. Ignore style, grammar, or verbosity.
+2. Accept aliases, synonyms, paraphrases, or equivalent expressions.
+   Examples: "NYC" ≈ "New York City"; "Da Vinci" ≈ "Leonardo da Vinci".
+3. Ignore case, punctuation, and formatting differences.
+4. Extra contextual details are acceptable **only if they don't change or contradict** the main answer.
+5. If the OUTPUT includes the correct answer along with additional unrelated or incorrect alternatives → FALSE.
+6. Uncertain, hedged, or incomplete answers → FALSE.
+7. Treat numeric and textual forms as equivalent (e.g., "100" = "one hundred").
+8. Ignore whitespace, articles, and small typos that don't change meaning.
+
+## Output Format
+Your response **must** be a single JSON object in the following format:
+{
+  "score": true or false,
+  "reason": ["short reason for the response"]
+}
+
+## Example
+INPUT: "Who painted the Mona Lisa?"
+GROUND_TRUTH: "Leonardo da Vinci"
+
+OUTPUT: "It was painted by Leonardo da Vinci."
+→ {"score": true, "reason": ["Output conveys the same factual answer as the ground truth."]}
+
+OUTPUT: "Pablo Picasso"
+→ {"score": false, "reason": ["Output names a different painter than the ground truth."]}
+
+INPUT:
+{{input}}
+
+GROUND_TRUTH:
+{{ground_truth}}
+
+OUTPUT:
+{{output}}
+```
+
+## 使用场景
+
+Meaning Match 指标适用于以下场景：
+
+- **问答系统** - 评估答案是否语义正确
+- **信息提取** - 验证提取的实体是否与预期值匹配
+- **知识库验证** - 检查响应是否与标准知识一致
+- **RAG 系统** - 评估检索到的信息是否正确回答了问题
+- **多语言系统** - 跨翻译比较答案（当标准答案已翻译时）
+
+## 最佳实践
+
+- **提供清晰的标准答案** - 标准答案越具体，评估越准确
+- **与其他指标配合使用** - 结合幻觉检测或答案相关性等其他指标进行全面评估
+- **监控误报/漏报** - 定期审查评估结果，确保指标适用于您的使用场景
+- **使用边界案例测试** - 尝试使用模糊或边界案例来理解指标的行为

@@ -63,6 +63,7 @@ import guardrailsaiCode from "@/integrations/integration-scripts/GuardrailsAI.py
 import predibaseCode from "@/integrations/integration-scripts/Predibase.py?raw";
 // import pydanticaiCode from "@/integration-scripts/PydanticAI.py?raw";
 // import smolagentsCode from "@/integration-scripts/Smolagents.py?raw";
+import i18next from "i18next";
 import { buildDocsUrl } from "@/lib/utils";
 import { SUPPORTED_LANGUAGE } from "@/constants/codeLanguage";
 // import strandsAgentsCode from "@/integration-scripts/StrandsAgents.py?raw";
@@ -102,10 +103,10 @@ export type Integration = {
 };
 
 export const INTEGRATION_CATEGORIES = {
-  ALL: "All integrations",
-  LLM_PROVIDERS: "LLM providers",
-  FRAMEWORKS_TOOLS: "Frameworks & tools",
-  AGENTS_OPTIMIZATION: "Agents optimization",
+  ALL: i18next.t("common.constants.integrations.categories.all"),
+  LLM_PROVIDERS: i18next.t("common.constants.integrations.categories.llmProviders"),
+  FRAMEWORKS_TOOLS: i18next.t("common.constants.integrations.categories.frameworksTools"),
+  AGENTS_OPTIMIZATION: i18next.t("common.constants.integrations.categories.agentsOptimization"),
 } as const;
 
 export const INTEGRATIONS: Integration[] = [
@@ -163,27 +164,24 @@ export const INTEGRATIONS: Integration[] = [
     icon: openclawLogoUrl,
     code: "",
     installCommand: "openclaw plugins install clawhub:@opik/opik-openclaw",
-    installTitle: "1. Install the OpenClaw plugin",
-    installDescription:
-      "Run this in your OpenClaw Gateway environment to install the Opik plugin.",
+    installTitle: i18next.t("common.constants.integrations.openclaw.installTitle"),
+    installDescription: i18next.t("common.constants.integrations.openclaw.installDescription"),
     additionalSteps: [
       {
-        title: "2. Configure the plugin",
-        description:
-          "The setup wizard validates your endpoint and credentials, then writes config under plugins.entries.opik-openclaw.",
+        title: i18next.t("common.constants.integrations.openclaw.step2Title"),
+        description: i18next.t("common.constants.integrations.openclaw.step2Description"),
         code: "openclaw opik configure",
         language: SUPPORTED_LANGUAGE.bash,
       },
       {
-        title: "3. Check effective settings",
-        description: "Print the active Opik configuration to verify the setup.",
+        title: i18next.t("common.constants.integrations.openclaw.step3Title"),
+        description: i18next.t("common.constants.integrations.openclaw.step3Description"),
         code: "openclaw opik status",
         language: SUPPORTED_LANGUAGE.bash,
       },
       {
-        title: "4. Start the gateway and send a test message",
-        description:
-          'Traces will stream into your "PROJECT_NAME_PLACEHOLDER" Opik project.',
+        title: i18next.t("common.constants.integrations.openclaw.step4Title"),
+        description: i18next.t("common.constants.integrations.openclaw.step4Description"),
         code: 'openclaw gateway run\nopenclaw message send "hello from openclaw"',
         language: SUPPORTED_LANGUAGE.bash,
       },

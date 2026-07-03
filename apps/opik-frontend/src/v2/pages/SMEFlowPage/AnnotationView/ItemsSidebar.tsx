@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CornerDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tag } from "@/ui/tag";
@@ -48,16 +49,6 @@ const getItemPreviews = (
   };
 };
 
-const STATE_CONFIG = {
-  [ITEM_STATE.COMPLETED]: { dotClass: "bg-emerald-400", label: "Completed" },
-  [ITEM_STATE.SCORED]: { dotClass: "bg-sky-400", label: "Reviewed" },
-  [ITEM_STATE.IN_REVIEW]: { dotClass: "bg-orange-400", label: "In review" },
-  [ITEM_STATE.DEFAULT]: {
-    dotClass: "border border-light-slate",
-    label: "To review",
-  },
-};
-
 enum SidebarFilter {
   TO_REVIEW = "to_review",
   PROCESSED = "processed",
@@ -70,6 +61,7 @@ type SidebarEntry = {
 };
 
 const ItemsSidebar: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/sme");
   const {
     queueItems,
     currentIndex,
@@ -140,11 +132,30 @@ const ItemsSidebar: React.FunctionComponent = () => {
 
   const allDone = queueItems.length > 0 && defaultCount === 0;
 
+  const STATE_CONFIG = {
+    [ITEM_STATE.COMPLETED]: {
+      dotClass: "bg-emerald-400",
+      label: t("itemsSidebar.completed"),
+    },
+    [ITEM_STATE.SCORED]: {
+      dotClass: "bg-sky-400",
+      label: t("itemsSidebar.reviewed"),
+    },
+    [ITEM_STATE.IN_REVIEW]: {
+      dotClass: "bg-orange-400",
+      label: t("itemsSidebar.inReview"),
+    },
+    [ITEM_STATE.DEFAULT]: {
+      dotClass: "border border-light-slate",
+      label: t("itemsSidebar.toReview"),
+    },
+  };
+
   return (
     <div className="flex h-full w-80 shrink-0 flex-col overflow-hidden border-r border-border">
       <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border bg-soft-background px-3">
         <span className="comet-body-xs-accented text-foreground">
-          Queue items
+          {t("itemsSidebar.queueItems")}
         </span>
         <span
           className={cn(
@@ -152,7 +163,9 @@ const ItemsSidebar: React.FunctionComponent = () => {
             allDone ? "text-success" : "text-muted-slate",
           )}
         >
-          {allDone ? "All scored" : `${defaultCount} remaining`}
+          {allDone
+            ? t("itemsSidebar.allScored")
+            : t("itemsSidebar.remaining", { count: defaultCount })}
         </span>
       </div>
       <div className="shrink-0 px-3 py-1.5">
@@ -166,14 +179,14 @@ const ItemsSidebar: React.FunctionComponent = () => {
               size="sm"
               value={SidebarFilter.TO_REVIEW}
             >
-              To review
+              {t("itemsSidebar.toReview")}
             </TabsTrigger>
             <TabsTrigger
               variant="segmented-primary"
               size="sm"
               value={SidebarFilter.PROCESSED}
             >
-              Processed
+              {t("itemsSidebar.processed")}
             </TabsTrigger>
           </TabsList>
         </Tabs>

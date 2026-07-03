@@ -53,8 +53,8 @@ public interface AttachmentService {
     void uploadAttachment(AttachmentInfo attachmentInfo, byte[] data, String workspaceId, String userName);
 
     /**
-     * Internal method for backend async uploads - works for both MinIO and S3.
-     * Bypasses the frontend restriction that requires presigned URLs for S3.
+     * 后端异步上传的内部方法 - 适用于 MinIO 和 S3。
+     * 绕过前端对 S3 要求预签名 URL 的限制。
      */
     void uploadAttachmentInternal(AttachmentInfo attachmentInfo, byte[] data, String workspaceId, String userName);
 
@@ -67,36 +67,36 @@ public interface AttachmentService {
     Mono<Long> deleteByEntityIds(EntityType entityType, Set<UUID> entityIds);
 
     /**
-     * Get existing attachments for a specific entity as AttachmentInfo objects.
-     * This is a convenience method for services that need to work with AttachmentInfo.
+     * 获取指定实体的现有附件，返回 AttachmentInfo 对象。
+     * 这是一个便捷方法，供需要使用 AttachmentInfo 的服务调用。
      */
     Mono<List<AttachmentInfo>> getAttachmentInfoByEntity(UUID entityId, EntityType entityType, UUID containerId);
 
     /**
-     * Returns true if any of the given entity IDs has at least one attachment.
-     * Uses a single batch DB call instead of per-entity queries.
+     * 判断给定的实体 ID 中是否有至少一个附件。
+     * 使用单次批量数据库调用，而非逐个实体查询。
      */
     Mono<Boolean> hasAnyAttachmentByEntityIds(EntityType entityType, Set<UUID> entityIds);
 
     /**
-     * Presigned (S3) download URL for a single attachment, reachable by an external
-     * caller (e.g. an LLM provider fetching media during online evaluation). Uses the
-     * same object-key layout as upload/download so it resolves the stored object.
+     * 单个附件的预签名 (S3) 下载 URL，可被外部调用者访问
+     * （例如 LLM 提供商在在线评估期间获取媒体资源）。使用与上传/下载相同的
+     * 对象键布局，因此可以解析存储的对象。
      */
     String presignDownloadUrl(AttachmentInfo attachmentInfo, String workspaceId);
 
     String presignDownloadUrl(AttachmentInfo attachmentInfo, String workspaceId, Duration expiresIn);
 
     /**
-     * Delete specific attachments by their filenames for a given entity.
-     * This method handles errors gracefully and continues processing other deletions.
+     * 按文件名删除指定实体的特定附件。
+     * 此方法会优雅地处理错误，并继续处理其他删除操作。
      */
     Mono<Void> deleteSpecificAttachments(List<AttachmentInfo> attachments, UUID entityId, EntityType entityType,
             UUID containerId);
 
     /**
-     * Delete only auto-stripped attachments (those matching the pattern {context}-attachment-{num}-{timestamp}.{ext})
-     * for the given entity IDs. User-uploaded attachments are preserved.
+     * 仅删除自动剥离的附件（匹配模式 {context}-attachment-{num}-{timestamp}.{ext} 的附件），
+     * 针对给定的实体 ID。用户上传的附件会被保留。
      */
     Mono<Long> deleteAutoStrippedAttachments(EntityType entityType, Set<UUID> entityIds);
 }
@@ -142,7 +142,7 @@ class AttachmentServiceImpl implements AttachmentService {
     public void completeMultiPartUpload(@NonNull CompleteMultipartUploadRequest completeUploadRequest,
             @NonNull String workspaceId,
             @NonNull String userName) {
-        // In case of MinIO complete is not needed, file is uploaded directly via BE
+        // 对于 MinIO，不需要 complete 操作，文件通过后端直接上传
         if (config.getS3Config().isMinIO()) {
             log.info("Skipping completeMultiPartUpload for MinIO");
             return;
@@ -172,13 +172,13 @@ class AttachmentServiceImpl implements AttachmentService {
                     Response.Status.FORBIDDEN);
         }
 
-        // Delegate to internal method for actual upload logic
+        // 委托给内部方法执行实际上传逻辑
         uploadAttachmentInternal(attachmentInfo, data, workspaceId, userName);
     }
 
     /**
-     * Internal method for backend async uploads - works for both MinIO and S3
-     * Does not enforce the presigned URL restriction that applies to frontend uploads
+     * 后端异步上传的内部方法 - 适用于 MinIO 和 S3
+     * 不强制执行适用于前端上传的预签名 URL 限制
      */
     @Override
     public void uploadAttachmentInternal(@NonNull AttachmentInfo attachmentInfo, byte[] data,
@@ -370,8 +370,8 @@ class AttachmentServiceImpl implements AttachmentService {
     }
 
     /**
-     * Get existing attachments for a specific entity as AttachmentInfo objects.
-     * This is a convenience method for services that need to work with AttachmentInfo.
+     * 获取指定实体的现有附件，返回 AttachmentInfo 对象。
+     * 这是一个便捷方法，供需要使用 AttachmentInfo 的服务调用。
      */
     public Mono<List<AttachmentInfo>> getAttachmentInfoByEntity(UUID entityId, EntityType entityType,
             UUID containerId) {
@@ -381,11 +381,11 @@ class AttachmentServiceImpl implements AttachmentService {
                 .containerId(containerId)
                 .build();
 
-        // Query the DAO directly rather than list(): callers only need metadata
-        // (fileName / mimeType), and list()'s download-URL enhancement reads
-        // RequestContext.WORKSPACE_NAME from the reactive context — which is not
-        // always present (e.g. the online-scoring thread path). The URL it builds is
-        // discarded here anyway, so skipping it removes a latent context dependency.
+        // 直接查询 DAO 而非 list()：调用者只需要元数据
+        // （fileName / mimeType），而 list() 的下载 URL 增强会从响应式上下文中
+        // 读取 RequestContext.WORKSPACE_NAME — 该上下文并非总是存在
+        // （例如在线评分线程路径）。此处构建的 URL 会被丢弃，
+        // 因此跳过它可以消除潜在的上下文依赖。
         return attachmentDAO.list(1, MAX_ATTACHMENTS_PER_ENTITY, criteria)
                 .map(attachmentPage -> attachmentPage.content().stream()
                         .map(attachment -> AttachmentInfo.builder()
@@ -400,8 +400,8 @@ class AttachmentServiceImpl implements AttachmentService {
     }
 
     /**
-     * Delete specific attachments by their filenames for a given entity.
-     * Makes a single delete call with all filenames.
+     * 按文件名删除指定实体的特定附件。
+     * 使用所有文件名进行单次删除调用。
      */
     public Mono<Void> deleteSpecificAttachments(List<AttachmentInfo> attachments, UUID entityId,
             EntityType entityType, UUID containerId) {
@@ -424,7 +424,7 @@ class AttachmentServiceImpl implements AttachmentService {
                 .onErrorResume(error -> {
                     log.warn("Failed to delete old attachments for entity '{}' of type '{}', filenames: {}, error: {}",
                             entityId, entityType, fileNames, error.getMessage());
-                    return Mono.empty(); // Continue processing
+                    return Mono.empty(); // 继续处理
                 })
                 .then();
     }
@@ -447,7 +447,7 @@ class AttachmentServiceImpl implements AttachmentService {
 
         return attachmentDAO.getAttachmentsByEntityIds(entityType, entityIds)
                 .flatMap(attachments -> {
-                    // Filter to only auto-stripped attachments
+                    // 仅筛选自动剥离的附件
                     List<AttachmentInfo> autoStrippedAttachments = AttachmentUtils
                             .filterAutoStrippedAttachments(attachments);
 
@@ -465,11 +465,11 @@ class AttachmentServiceImpl implements AttachmentService {
                             .map(AttachmentInfo::fileName)
                             .collect(Collectors.toSet());
 
-                    // Delete files from storage
+                    // 从存储中删除文件
                     return Mono.fromRunnable(() -> fileService.deleteObjects(fileNames))
                             .onErrorResume(error -> {
                                 log.warn("Failed to delete files from storage: {}", error.getMessage());
-                                return Mono.empty(); // Continue with DB deletion even if file deletion fails
+                                return Mono.empty(); // 即使文件删除失败也继续数据库删除
                             })
                             .then(attachmentDAO.deleteByFileNames(entityType, entityIds, fileNames));
                 });

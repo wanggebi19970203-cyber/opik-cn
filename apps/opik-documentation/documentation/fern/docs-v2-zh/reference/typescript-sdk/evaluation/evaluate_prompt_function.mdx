@@ -1,0 +1,578 @@
+---
+headline: Evaluate Prompt Function | Opik 文档
+og:description: 使用 Opik 轻松评估数据集上的提示模板。简化格式化、生成响应并使用关键指标评估结果。
+og:site_name: Opik 文档
+og:title: Evaluate Prompt Function - Opik
+title: evaluatePrompt 函数
+---
+
+<Note>
+  在 Opik 2.0 中，实验是项目级别的。调用 `evaluatePrompt()` 时请确保指定 `projectName`，以便结果关联到正确的项目。
+</Note>
+
+`evaluatePrompt` 函数提供了一种简化的方式来评估数据集上的提示模板。它会自动使用数据集变量格式化消息模板、生成 LLM 响应，并使用指定的指标评估结果。
+
+## 概述
+
+`evaluatePrompt` 是 [`evaluate`](/reference/typescript-sdk/evaluation/evaluate_function) 函数的便捷封装，用于处理：
+
+- **模板格式化**：自动使用数据集项变量格式化消息模板
+- **模型调用**：使用指定的模型生成 LLM 响应
+- **实验跟踪**：创建链接到特定提示版本的实验
+- **指标评估**：使用指定的指标对输出进行评分
+
+这对于提示工程工作流特别有用，当你想要快速测试不同提示模板在数据集上的表现时。
+
+## 函数签名
+
+```typescript
+function evaluatePrompt(
+  options: EvaluatePromptOptions
+): Promise<EvaluationResult>;
+```
+
+### EvaluatePromptOptions
+
+```typescript
+interface EvaluatePromptOptions extends Omit<EvaluateOptions, "task"> {
+  // Required parameters
+  dataset: Dataset;
+  messages: OpikMessage[];
+
+  // Optional parameters
+  model?: SupportedModelId | LanguageModel | OpikBaseModel;
+  templateType?: "mustache" | "jinja2";
+  scoringMetrics?: BaseMetric[];
+  experimentName?: string;
+  experimentConfig?: Record<string, unknown>;
+  prompts?: Prompt[];
+  projectName?: string;
+  nbSamples?: number;
+  scoringKeyMapping?: Record<string, string>;
+}
+```
+
+## 参数
+
+### 必需参数
+
+#### dataset
+
+- **类型**：`Dataset`
+- **描述**：要评估提示的数据集。每个数据集项将用于格式化消息模板并生成响应。
+
+```typescript
+const dataset = await client.getOrCreateDataset("my-dataset", "Evaluation dataset", "my-project");
+```
+
+#### messages
+
+- **类型**：`OpikMessage[]`
+- **描述**：包含 `{{placeholders}}` 的消息模板数组，将使用数据集变量进行格式化。
+
+```typescript
+messages: [
+  { role: "system", content: "You are a helpful assistant" },
+  { role: "user", content: "Translate to {{language}}: {{text}}" },
+];
+```
+
+### 可选参数
+
+#### model
+
+- **类型**：`SupportedModelId | LanguageModel | OpikBaseModel`
+- **默认值**：`"gpt-5-nano"`
+- **描述**：用于生成的语言模型。可以是：
+  - 模型 ID 字符串（例如 `"gpt-5-nano"`、`"claude-3-5-sonnet-latest"`、`"gemini-2.0-flash"`）
+  - 来自 Vercel AI SDK 的预配置 `LanguageModel` 实例
+  - 自定义 `OpikBaseModel` 实现
+
+```typescript
+// Using model ID string
+model: "gpt-5-nano";
+
+// Using LanguageModel instance
+import { openai } from "@ai-sdk/openai";
+const customModel = openai("gpt-5-nano");
+model: customModel;
+```
+
+#### templateType
+
+- **类型**：`"mustache" | "jinja2"`
+- **默认值**：`"mustache"`
+- **描述**：用于消息内容中变量替换的模板引擎。
+
+```typescript
+// Mustache syntax (default)
+templateType: "mustache";
+messages: [{ role: "user", content: "Hello {{name}}" }];
+
+// Jinja2 syntax
+templateType: "jinja2";
+messages: [{ role: "user", content: "Hello {{ name }}" }];
+```
+
+#### scoringMetrics
+
+- **类型**：`BaseMetric[]`
+- **描述**：用于评估生成输出的指标数组。可以包含启发式指标和 LLM 评判指标。
+
+```typescript
+import { ExactMatch, Hallucination } from "opik";
+
+scoringMetrics: [new ExactMatch(), new Hallucination()];
+```
+
+#### experimentName
+
+- **类型**：`string`
+- **描述**：实验名称。如果未提供，将自动生成一个名称。
+
+```typescript
+experimentName: "Prompt Evaluation - Translation Task";
+```
+
+#### experimentConfig
+
+- **类型**：`Record<string, unknown>`
+- **描述**：与实验一起存储的附加元数据。该函数会自动将 `prompt_template` 和 `model` 添加到此配置中。
+
+```typescript
+experimentConfig: {
+  temperature: 0.7,
+  max_tokens: 1000,
+  version: "v2",
+};
+```
+
+#### prompts
+
+- **类型**：`Prompt[]`
+- **描述**：链接到此实验的 Opik Prompt 对象数组。用于跟踪使用了哪些提示版本。
+
+```typescript
+const prompt = await client.createPrompt({
+  name: "translation-prompt",
+  prompt: "Translate to {{language}}: {{text}}",
+});
+
+prompts: [prompt];
+```
+
+#### projectName
+
+- **类型**：`string`
+- **描述**：用于记录跟踪的 Opik 项目名称。
+
+```typescript
+projectName: "prompt-engineering";
+```
+
+#### nbSamples
+
+- **类型**：`number`
+- **描述**：要评估的最大数据集项数。适用于快速测试。
+
+```typescript
+nbSamples: 10; // Only evaluate first 10 items
+```
+
+#### scoringKeyMapping
+
+- **类型**：`Record<string, string>`
+- **描述**：当指标参数名称与数据集/输出字段名称不匹配时，进行映射。
+
+```typescript
+scoringKeyMapping: {
+  input: "question", // Map 'input' param to 'question' field
+  expected: "reference_answer", // Map 'expected' param to 'reference_answer' field
+};
+```
+
+## 返回值
+
+返回一个 `Promise<EvaluationResult>`，包含：
+
+```typescript
+interface EvaluationResult {
+  experimentId: string; // ID of created experiment
+  experimentName: string; // Name of experiment
+  testResults: TestResult[]; // Results for each dataset item
+}
+```
+
+## 示例
+
+### 基本用法
+
+使用默认设置的简单提示评估：
+
+```typescript
+import { Opik, evaluatePrompt } from "opik";
+
+const client = new Opik();
+const dataset = await client.getOrCreateDataset("qa-dataset", "Evaluation dataset", "my-project");
+
+await dataset.insert([
+  {
+    question: "What is the capital of France?",
+    expected_answer: "Paris",
+  },
+  {
+    question: "How do you calculate the area of a circle?",
+    expected_answer: "π × radius²",
+  },
+]);
+
+const result = await evaluatePrompt({
+  dataset,
+  messages: [
+    {
+      role: "system",
+      content:
+        "You are a helpful assistant. Answer questions accurately and concisely.",
+    },
+    { role: "user", content: "{{question}}" },
+  ],
+  model: "gpt-5-nano",
+  projectName: "my-project",
+});
+
+console.log(`Experiment ID: ${result.experimentId}`);
+console.log(`Evaluated ${result.testResults.length} items`);
+```
+
+### 使用评分指标
+
+使用自动评分评估提示：
+
+```typescript
+import { evaluatePrompt } from "opik";
+import { Hallucination, ExactMatch } from "opik";
+
+// Create dataset with expected answers
+const dataset = await client.getOrCreateDataset("geography-qa", "Geography evaluation dataset", "my-project");
+await dataset.insert([
+  {
+    country: "France",
+    expected_answer: "Paris",
+  },
+  {
+    country: "Japan",
+    expected_answer: "Tokyo",
+  },
+]);
+
+await evaluatePrompt({
+  dataset,
+  messages: [
+    {
+      role: "user",
+      content: "What is the capital of {{country}}?",
+    },
+  ],
+  model: "gpt-5-nano",
+  scoringMetrics: [
+    new ExactMatch(), // Check exact match with expected output
+    new Hallucination(), // Check for hallucinations
+  ],
+  experimentName: "Geography Quiz Evaluation",
+  projectName: "my-project",
+});
+```
+
+### 使用 LanguageModel 实例
+
+使用 LanguageModel 实例获取提供商特定功能：
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { evaluatePrompt } from "opik";
+
+// Create model instance
+const customModel = openai("gpt-5-nano");
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "Summarize: {{text}}" }],
+  model: customModel,
+  experimentConfig: {
+    model_provider: "openai",
+    model_name: "gpt-5-nano",
+  },
+  projectName: "my-project",
+});
+```
+
+### 多提供商模型支持
+
+该函数支持来自多个提供商的模型：
+
+```typescript
+// OpenAI
+model: "gpt-5-nano";
+
+// Anthropic
+model: "claude-3-5-sonnet-latest";
+
+// Google Gemini
+model: "gemini-2.0-flash";
+
+// Or use provider-specific LanguageModel instances
+import { anthropic } from "@ai-sdk/anthropic";
+const claude = anthropic("claude-3-5-sonnet-latest");
+model: claude;
+```
+
+### 链接到提示版本
+
+跟踪评估中使用的提示版本：
+
+```typescript
+import { Opik, evaluatePrompt } from "opik";
+
+const client = new Opik();
+
+// Create or get a prompt
+const prompt = await client.createPrompt({
+  name: "customer-support-prompt",
+  prompt: "{{system_message}}\n\nUser: {{user_query}}",
+});
+
+// Link the prompt to the evaluation
+await evaluatePrompt({
+  dataset,
+  messages: [
+    { role: "system", content: "{{system_message}}" },
+    { role: "user", content: "{{user_query}}" },
+  ],
+  model: "gpt-5-nano",
+  prompts: [prompt], // Link to prompt
+  experimentName: "Customer Support - v2.1",
+  projectName: "my-project",
+});
+```
+
+### 模板类型
+
+#### Mustache 模板（默认）
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [
+    {
+      role: "user",
+      content: "Hello {{name}}, your order #{{order_id}} is ready.",
+    },
+  ],
+  templateType: "mustache", // This is the default
+  projectName: "my-project",
+});
+```
+
+#### Jinja2 模板
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [
+    {
+      role: "user",
+      content: "Hello {{ name }}, your order #{{ order_id }} is ready.",
+    },
+  ],
+  templateType: "jinja2",
+  projectName: "my-project",
+});
+```
+
+### 评分键映射
+
+将数据集字段映射到指标参数名称：
+
+```typescript
+// Dataset has: { question: "...", reference_answer: "..." }
+// Metric expects: { input: "...", expected: "..." }
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{question}}" }],
+  scoringMetrics: [new ExactMatch()],
+  scoringKeyMapping: {
+    input: "question",
+    expected: "reference_answer",
+  },
+  projectName: "my-project",
+});
+```
+
+### 子集评估
+
+仅评估数据集的子集以进行快速迭代：
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{prompt}}" }],
+  nbSamples: 5, // Only evaluate first 5 items
+  experimentName: "Quick Test",
+  projectName: "my-project",
+});
+```
+
+## 工作原理
+
+调用 `evaluatePrompt` 时，会发生以下过程：
+
+1. **模板格式化**：对于每个数据集项，使用项变量格式化消息模板
+2. **模型调用**：将格式化的消息发送到指定模型以生成响应
+3. **实验创建**：创建（或更新）带有元数据的实验
+4. **指标评分**：如果提供了指标，将对每个输出进行评分
+5. **结果聚合**：收集并返回结果
+
+## 实验配置
+
+该函数会自动使用以下内容丰富实验配置：
+
+- `prompt_template`：使用的消息模板
+- `model`：模型标识符（名称或类型）
+
+你可以通过 `experimentConfig` 添加附加元数据：
+
+```typescript
+experimentConfig: {
+  // Auto-added by evaluatePrompt:
+  // prompt_template: [{ role: 'user', content: '...' }]
+  // model: 'gpt-5-nano'
+
+  // Your custom metadata:
+  temperature: 0.7,
+  version: "v2.0",
+  author: "team-ai",
+  description: "Testing improved prompt structure",
+};
+```
+
+## 最佳实践
+
+### 1. 从简单开始，然后添加指标
+
+从基本提示评估开始，然后根据需要添加指标：
+
+```typescript
+// Step 1: Basic evaluation to see outputs
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  projectName: "my-project",
+});
+
+// Step 2: Add metrics after reviewing outputs
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  scoringMetrics: [new Hallucination()],
+  projectName: "my-project",
+});
+```
+
+### 2. 使用描述性实验名称
+
+便于查找和比较实验：
+
+```typescript
+experimentName: "Translation - GPT-4o - v2.3 - 2025-01-15";
+```
+
+### 3. 对提示进行版本管理
+
+将评估链接到提示版本以获得更好的跟踪：
+
+```typescript
+const prompt = await client.createPrompt({
+  name: "qa-prompt",
+  prompt: "Answer: {{question}}",
+  version: "v2.3",
+});
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "Answer: {{question}}" }],
+  prompts: [prompt],
+  projectName: "my-project",
+});
+```
+
+### 4. 从小样本开始
+
+在完整评估之前使用 `nbSamples` 进行快速迭代：
+
+```typescript
+// Quick test with 10 samples
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  nbSamples: 10,
+  projectName: "my-project",
+});
+
+// Full evaluation once satisfied
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  projectName: "my-project",
+  // Evaluate entire dataset
+});
+```
+
+### 5. 在系统消息中包含上下文
+
+使用清晰的系统消息构建提示：
+
+```typescript
+messages: [
+  {
+    role: "system",
+    content:
+      "You are an expert {{domain}} assistant. Provide accurate, concise answers.",
+  },
+  {
+    role: "user",
+    content: "{{question}}",
+  },
+];
+```
+
+## 错误处理
+
+该函数会验证输入并对常见问题抛出错误：
+
+```typescript
+try {
+  await evaluatePrompt({
+    dataset,
+    messages: [],
+  });
+} catch (error) {
+  console.error(error.message);
+  // Error: Messages array is required and cannot be empty
+}
+```
+
+常见验证错误：
+
+- 缺少必需的 `dataset` 参数
+- 空的 `messages` 数组
+- 无效的 `experimentConfig`（必须是普通对象）
+- 无效的 `templateType`（必须是 'mustache' 或 'jinja2'）
+
+## 参见
+
+- [evaluate 函数](/reference/typescript-sdk/evaluation/evaluate_function) - 用于评估自定义任务
+- [数据集](/reference/typescript-sdk/evaluation/datasets) - 使用评估数据集
+- [指标](/reference/typescript-sdk/evaluation/metrics) - 可用的评估指标
+- [模型](/reference/typescript-sdk/evaluation/models) - 模型配置和使用
+- [提示](/reference/typescript-sdk/prompts) - 管理提示模板

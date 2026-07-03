@@ -19,13 +19,12 @@ class LangchainChatModel(base_model.OpikBaseModel):
         track: bool = True,
     ) -> None:
         """
-        Initializes the model with a given Langchain chat model instance.
+        使用给定的 Langchain 聊天模型实例初始化模型。
 
         Args:
-            chat_model: A Langchain chat model instance to wrap.
-                It is assumed that the BaseChatModel is already configured and
-                all the requirement dependencies are installed.
-            track: Whether to track the model calls.
+            chat_model: 要包装的 Langchain 聊天模型实例。
+                假设 BaseChatModel 已配置完毕且所有必需依赖已安装。
+            track: 是否追踪模型调用。
         """
         model_name = _extract_model_name(chat_model)
         super().__init__(model_name=model_name)
@@ -40,15 +39,15 @@ class LangchainChatModel(base_model.OpikBaseModel):
         **kwargs: Any,
     ) -> str:
         """
-        Simplified interface to generate a string output from the model.
+        从模型生成字符串输出的简化接口。
 
         Args:
-            input: The input string based on which the model will generate the output.
-            response_format: pydantic model specifying the expected output string format.
-            kwargs: Additional arguments that may be used by the model for string generation.
+            input: 模型基于此输入字符串生成输出。
+            response_format: 指定期望输出字符串格式的 pydantic 模型。
+            kwargs: 模型生成字符串时可能使用的额外参数。
 
         Returns:
-            str: The generated string output.
+            str: 生成的字符串输出。
         """
         message = self.generate_chat_completion(
             messages=[{"role": "user", "content": input}],
@@ -64,15 +63,15 @@ class LangchainChatModel(base_model.OpikBaseModel):
         **kwargs: Any,
     ) -> base_model.ConversationDict:
         """
-        Generate the assistant turn from a list of chat messages.
+        从聊天消息列表生成 assistant 轮次。
 
         Args:
-            messages: A list of ``{"role": ..., "content": ...}`` dictionaries.
-            response_format: Optional Pydantic model specifying the expected output format.
-            kwargs: Additional arguments forwarded to the langchain chat model's invoke call.
+            messages: ``{"role": ..., "content": ...}`` 字典列表。
+            response_format: 可选的 Pydantic 模型，指定期望的输出格式。
+            kwargs: 转发给 langchain 聊天模型 invoke 调用的额外参数。
 
         Returns:
-            ``{"role": "assistant", "content": ...}``.
+            ``{"role": "assistant", "content": ...}``。
         """
         if response_format is not None:
             kwargs["response_format"] = response_format
@@ -90,17 +89,16 @@ class LangchainChatModel(base_model.OpikBaseModel):
         **kwargs: Any,
     ) -> "langchain_core.messages.AIMessage":
         """
-        Do not use this method directly. It is intended to be used within `base_model.get_provider_response()` method.
+        请勿直接调用此方法。此方法仅供 `base_model.get_provider_response()` 内部使用。
 
-        Generate a provider-specific response using the Langchain model.
+        使用 Langchain 模型生成提供商特定的响应。
 
         Args:
-            messages: A list of messages to be sent to the model, should be a list of dictionaries with the keys
-                "content" and "role".
-            kwargs: arguments required by the provider to generate a response.
+            messages: 发送给模型的消息列表，应为包含 "content" 和 "role" 键的字典列表。
+            kwargs: 提供商生成响应所需的参数。
 
         Returns:
-            ModelResponse: The response from the model provider.
+            ModelResponse: 模型提供商返回的响应。
         """
         langchain_messages = message_converters.convert_to_langchain_messages(messages)
 
@@ -116,15 +114,15 @@ class LangchainChatModel(base_model.OpikBaseModel):
         **kwargs: Any,
     ) -> str:
         """
-        Simplified interface to generate a string output from the model. Async version.
+        从模型生成字符串输出的简化接口（异步版本）。
 
         Args:
-            input: The input string based on which the model will generate the output.
-            response_format: pydantic model specifying the expected output string format.
-            kwargs: Additional arguments that may be used by the model for string generation.
+            input: 模型基于此输入字符串生成输出。
+            response_format: 指定期望输出字符串格式的 pydantic 模型。
+            kwargs: 模型生成字符串时可能使用的额外参数。
 
         Returns:
-            str: The generated string output.
+            str: 生成的字符串输出。
         """
         message = await self.agenerate_chat_completion(
             messages=[{"role": "user", "content": input}],
@@ -139,9 +137,7 @@ class LangchainChatModel(base_model.OpikBaseModel):
         response_format: Optional[Type[pydantic.BaseModel]] = None,
         **kwargs: Any,
     ) -> base_model.ConversationDict:
-        """
-        Async counterpart of :meth:`generate_chat_completion`.
-        """
+        """:meth:`generate_chat_completion` 的异步版本。"""
         if response_format is not None:
             kwargs["response_format"] = response_format
 
@@ -156,17 +152,16 @@ class LangchainChatModel(base_model.OpikBaseModel):
         self, messages: List[Dict[str, Any]], **kwargs: Any
     ) -> "langchain_core.messages.AIMessage":
         """
-        Do not use this method directly. It is intended to be used within `base_model.aget_provider_response()` method.
+        请勿直接调用此方法。此方法仅供 `base_model.aget_provider_response()` 内部使用。
 
-        Generate a provider-specific response using the Langchain model. Async version.
+        使用 Langchain 模型生成提供商特定的响应（异步版本）。
 
         Args:
-            messages: A list of messages to be sent to the model, should be a list of dictionaries with the keys
-                "content" and "role".
-            kwargs: arguments required by the provider to generate a response.
+            messages: 发送给模型的消息列表，应为包含 "content" 和 "role" 键的字典列表。
+            kwargs: 提供商生成响应所需的参数。
 
         Returns:
-            ModelResponse: The response from the model provider.
+            ModelResponse: 模型提供商返回的响应。
         """
         langchain_messages = message_converters.convert_to_langchain_messages(messages)
 

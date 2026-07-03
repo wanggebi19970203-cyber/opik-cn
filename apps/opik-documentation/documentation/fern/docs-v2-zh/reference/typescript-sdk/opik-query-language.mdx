@@ -1,0 +1,269 @@
+---
+headline: Opik 查询语言 (OQL) | Opik 文档
+og:description: 学习使用 OQL 在 Opik 中进行强大的数据过滤，采用类似 SQL 的语法和表达式条件实现精确数据检索。
+og:site_name: Opik 文档
+og:title: Opik 查询语言 (OQL) - Opik
+title: Opik 查询语言 (OQL)
+---
+
+OQL 提供了一种强大的、类似 SQL 的语法，用于在 Opik 中过滤数据。它与各种 SDK 方法（如 `searchPrompts()`、`searchTraces()` 和 `searchThreads()`）配合使用，通过表达式过滤条件精确查找所需数据。
+
+## 运算符
+
+### 字符串运算符
+
+```typescript
+// 精确匹配
+'name = "greeting-prompt"';
+
+// 不等于
+'name != "old-prompt"';
+
+// 包含子字符串（不区分大小写）
+'name contains "greeting"';
+
+// 不包含子字符串
+'name not_contains "deprecated"';
+
+// 以指定前缀开头
+'name starts_with "prod-"';
+
+// 以指定后缀结尾
+'name ends_with "-v2"';
+```
+
+### 比较运算符
+
+```typescript
+// 大于（字符串按字母顺序，数字按数值大小）
+'name > "m"'; // 名称以 n-z 开头
+'duration > 300'; // 持续时间超过 300 秒的会话
+
+// 小于（字符串按字母顺序，数字按数值大小）
+'name < "m"'; // 名称以 a-l 开头
+'number_of_messages < 5'; // 消息数少于 5 条的会话
+
+// 大于等于
+'feedback_scores.quality >= 0.8';
+
+// 小于等于
+'duration <= 600';
+```
+
+### 数值运算符
+
+```typescript
+// 等于
+'number_of_messages = 3';
+
+// 不等于
+'duration != 0';
+
+// 检查字段是否为空
+'feedback_scores.quality is_empty';
+
+// 检查字段是否不为空
+'feedback_scores.quality is_not_empty';
+```
+
+### 日期时间运算符
+
+```typescript
+// 使用 ISO 8601 格式的日期
+'start_time >= "2024-01-01T00:00:00Z"';
+'end_time < "2024-12-31T23:59:59Z"';
+```
+
+### 枚举运算符
+
+用于具有固定值集合的字段，例如 `environment`：
+
+```typescript
+// 精确匹配
+'environment = "production"';
+
+// 不等于
+'environment != "development"';
+
+// 匹配值集合中的任意一个
+'environment in ("production", "staging")';
+
+// 排除值集合中的值
+'environment not_in ("development", "local")';
+```
+
+### 列表运算符
+
+```typescript
+// 检查列表是否包含某值
+'tags contains "production"';
+
+// 检查列表是否不包含某值
+'tags not_contains "experimental"';
+```
+
+## 组合条件
+
+使用 `AND` 组合多个过滤条件。所有条件都必须为真才能匹配结果：
+
+```typescript
+// 使用 AND 组合多个条件
+'tags contains "production" AND name contains "greeting" AND created_by = "user@example.com"';
+
+// 复杂的多字段过滤
+'name starts_with "prod-" AND tags contains "stable" AND name not_contains "deprecated"';
+```
+
+<Note>
+  目前仅支持 `AND` 逻辑。OQL 中不支持 `OR` 逻辑。
+</Note>
+
+## 示例
+
+### 搜索提示词
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// 按单个标签过滤
+const prod = await client.searchPrompts('tags contains "production"');
+
+// 组合名称模式和标签
+const approved = await client.searchPrompts(
+  'name starts_with "prod-" AND tags contains "qa-approved"'
+);
+
+// 多个条件
+const results = await client.searchPrompts(
+  'created_by = "user@example.com" AND tags contains "production" AND name not_contains "deprecated"'
+);
+```
+
+### 搜索会话线程
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// 按状态过滤
+const activeThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'status = "active"'
+});
+
+// 按持续时间和消息数过滤
+const longConversations = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'duration > 300 AND number_of_messages >= 5'
+});
+
+// 按反馈评分过滤
+const highQualityThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'feedback_scores.quality > 0.8'
+});
+
+// 按空反馈评分过滤
+const unratedThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'feedback_scores.quality is_empty'
+});
+
+// 按环境过滤
+const prodThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'environment = "production"'
+});
+
+// 按多个环境过滤
+const stagingOrProdThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'environment in ("production", "staging")'
+});
+
+// 按标签和元数据过滤
+const importantProdThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'tags contains "important" AND metadata.environment = "production"'
+});
+
+// 按日期范围过滤
+const recentThreads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'start_time >= "2024-01-01T00:00:00Z"'
+});
+```
+
+### 搜索追踪
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// 按元数据过滤
+const traces = await client.searchTraces({
+  projectName: "my-project",
+  filterString: 'metadata.model = "gpt-5"'
+});
+
+// 按反馈评分过滤
+const goodTraces = await client.searchTraces({
+  projectName: "my-project",
+  filterString: 'feedback_scores.accuracy > 0.9'
+});
+
+// 按环境过滤
+const prodTraces = await client.searchTraces({
+  projectName: "my-project",
+  filterString: 'environment = "production"'
+});
+
+// 组合环境和其他过滤条件
+const goodProdTraces = await client.searchTraces({
+  projectName: "my-project",
+  filterString: 'environment = "production" AND feedback_scores.accuracy > 0.9'
+});
+```
+
+<Note>
+  相同的 OQL 语法适用于所有搜索方法（`searchPrompts()`、`searchTraces()`、`searchThreads()`）。
+  特定资源类型可能支持额外的字段 - 请参阅各自文档了解可用列。
+</Note>
+
+## 语法规则
+
+### 字符串值
+
+字符串值必须始终用双引号包裹：
+
+```typescript
+// ✅ 正确 - 值用双引号包裹
+await client.searchPrompts('name = "my-prompt"');
+await client.searchPrompts('tags contains "production"');
+
+// ❌ 错误 - 缺少引号
+await client.searchPrompts("name = my-prompt"); // 将失败
+
+// ❌ 错误 - 使用单引号
+await client.searchPrompts("name = 'my-prompt'"); // 将失败
+```
+
+### 错误处理
+
+```typescript
+try {
+  const results = await client.searchPrompts("invalid syntax ===");
+} catch (error) {
+  console.error("Invalid OQL syntax:", error.message);
+}
+```
+
+## 最佳实践
+
+1. **使用描述性标签层次结构** - 结构化标签如 `"production"`、`"staging"`、`"team-alpha"` 以实现有效过滤
+2. **使用命名约定** - 实现一致的命名模式（例如 `"prod-"` 前缀）以支持强大的过滤功能
+3. **处理错误** - 始终将 OQL 查询包裹在 try-catch 块中以优雅地处理语法错误

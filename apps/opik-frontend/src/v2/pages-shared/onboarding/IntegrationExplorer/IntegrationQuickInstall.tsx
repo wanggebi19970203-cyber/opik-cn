@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
 import IntegrationCard from "@/v2/pages-shared/onboarding/IntegrationExplorer/components/IntegrationCard";
@@ -28,6 +29,7 @@ const INTEGRATION_ICON_THEME_MAP = {
 } as const;
 
 const IntegrationQuickInstall: React.FC = () => {
+  const { t } = useTranslation();
   const { source, selectedIntegrationId, setSelectedIntegrationId } =
     useIntegrationExplorer();
   const { themeMode } = useTheme();
@@ -37,8 +39,8 @@ const IntegrationQuickInstall: React.FC = () => {
   return (
     <>
       <IntegrationCard
-        title="Quick install with AI assistants"
-        description="Set up Opik fast with Cursor, Copilot, Windsurf, or your favorite AI assistant."
+        title={t("onboarding.integrationExplorer.quickInstallTitle")}
+        description={t("onboarding.integrationExplorer.quickInstallDescription")}
         size="lg"
         icon={
           <div className="flex items-center gap-1 pr-2">

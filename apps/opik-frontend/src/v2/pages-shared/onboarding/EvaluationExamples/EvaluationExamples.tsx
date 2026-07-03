@@ -9,6 +9,7 @@ import IntegrationTemplate from "../FrameworkIntegrations/IntegrationTemplate";
 import UsingPlaygroundTab from "./UsingPlaygroundTab";
 import { useUserApiKey } from "@/store/AppStore";
 import useActiveProjectName from "@/hooks/useActiveProjectName";
+import { useTranslation } from "react-i18next";
 
 type TabValue = "evaluate-prompts" | "evaluate-llm" | "using-playground";
 type TabItem = {
@@ -16,25 +17,26 @@ type TabItem = {
   value: TabValue;
   icon: LucideIcon;
 };
-const tabList: TabItem[] = [
-  {
-    label: "Evaluate prompts",
-    value: "evaluate-prompts",
-    icon: FileTerminal,
-  },
-  {
-    label: "Evaluate LLM application",
-    value: "evaluate-llm",
-    icon: FlaskConical,
-  },
-  {
-    label: "Using the playground",
-    value: "using-playground",
-    icon: Blocks,
-  },
-];
 
 const EvaluationExamples: React.FC = () => {
+  const { t } = useTranslation();
+  const tabList: TabItem[] = [
+    {
+      label: t("evaluationExamples.evaluatePrompts"),
+      value: "evaluate-prompts",
+      icon: FileTerminal,
+    },
+    {
+      label: t("evaluationExamples.evaluateLlmApp"),
+      value: "evaluate-llm",
+      icon: FlaskConical,
+    },
+    {
+      label: t("evaluationExamples.usingPlayground"),
+      value: "using-playground",
+      icon: Blocks,
+    },
+  ];
   const [exampleTab, setExampleTab] = useState<TabValue>(tabList[0].value);
   const apiKey = useUserApiKey();
   const projectName = useActiveProjectName();
@@ -61,7 +63,7 @@ const EvaluationExamples: React.FC = () => {
     <IntegrationListLayout
       leftSidebar={
         <>
-          <IntegrationTabs.Title>Choose a Method</IntegrationTabs.Title>
+          <IntegrationTabs.Title>{t("evaluationExamples.chooseMethod")}</IntegrationTabs.Title>
           <IntegrationTabs>
             {tabList.map((item) => (
               <IntegrationTabs.Item

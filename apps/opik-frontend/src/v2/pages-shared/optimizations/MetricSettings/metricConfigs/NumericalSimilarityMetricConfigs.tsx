@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { Input } from "@/ui/input";
 import { NumericalSimilarityMetricParameters } from "@/types/optimizations";
@@ -17,13 +18,14 @@ const NumericalSimilarityMetricConfigs = ({
   onChange,
   datasetVariables = [],
 }: NumericalSimilarityMetricConfigsProps) => {
+  const { t } = useTranslation("optimizations");
   return (
     <div className="flex w-72 flex-col gap-6">
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="reference_key" className="text-sm">
-              Reference key
+              {t("optimizations.metricConfigs.referenceKey")}
             </Label>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.metric_reference_key]}
@@ -31,7 +33,7 @@ const NumericalSimilarityMetricConfigs = ({
           </div>
           <Input
             id="reference_key"
-            placeholder="e.g., score or $.feedback_scores[?(@.name=='Useful')].value"
+            placeholder={t("optimizations.metricConfigs.referenceKeyScorePlaceholder")}
             value={configs.reference_key ?? ""}
             onChange={(e) =>
               onChange({ ...configs, reference_key: e.target.value })

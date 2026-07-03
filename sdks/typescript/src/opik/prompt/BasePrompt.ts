@@ -8,7 +8,7 @@ import { logger } from "@/utils/logger";
 export const PROMPT_SYNC_TIMEOUT_MS = 5000;
 
 /**
- * Base data interface for all prompt types
+ * 所有提示词类型的基础数据接口
  */
 export interface BasePromptData {
   promptId?: string;
@@ -24,13 +24,13 @@ export interface BasePromptData {
   templateStructure?: PromptTemplateStructure;
   synced?: boolean;
   projectName?: string;
-  /** Optional environments that own this prompt version. */
+  /** 拥有此提示词版本的可选环境。 */
   environments?: string[];
 }
 
 /**
- * Abstract base class for all prompt types.
- * Provides common functionality for versioning, property updates, and deletion.
+ * 所有提示词类型的抽象基类。
+ * 提供版本控制、属性更新和删除的通用功能。
  */
 export abstract class BasePrompt {
   private _id: string | undefined;
@@ -54,20 +54,19 @@ export abstract class BasePrompt {
   protected readonly _metadata: OpikApi.JsonNode | undefined;
   protected readonly opik: OpikClient;
 
-  /** Pending background sync promise, set when constructed without synced:true. */
+  /** 待处理的后台同步 Promise，在未设置 synced:true 时构造。 */
   protected _pendingSync: Promise<void> | null = null;
 
   get id(): string | undefined { return this._id; }
   get versionId(): string | undefined { return this._versionId; }
   get commit(): string | undefined { return this._commit; }
   get version(): string | undefined { return this._version; }
-  /** Whether the prompt has been successfully synced with the backend. */
+  /** 提示词是否已成功与后端同步。 */
   get synced(): boolean { return this._synced; }
   get changeDescription(): string | undefined { return this._changeDescription; }
   get projectName(): string | undefined { return this._projectName; }
   /**
-   * The environments that own this prompt version. Returns an empty array
-   * if the version is not associated with any environment.
+   * 拥有此提示词版本的环境。如果版本未关联任何环境，则返回空数组。
    */
   get environments(): readonly string[] { return Object.freeze([...this._environments]); }
 
@@ -91,7 +90,7 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Updates internal state after a successful background sync.
+   * 成功后台同步后更新内部状态。
    */
   protected updateSyncState(result: {
     promptId?: string;
@@ -119,10 +118,9 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Shared background-sync helper for subclass constructors.
-   * Calls the provided create function, then only updates sync state when the
-   * returned instance is truly synced (has id, versionId, and commit populated).
-   * If the create call throws, or returns an unsynced instance, _synced stays false.
+   * 子类构造函数共享的后台同步辅助方法。
+   * 调用提供的创建函数，然后仅在返回的实例真正同步（填充了 id、versionId 和 commit）时更新同步状态。
+   * 如果创建调用抛出异常或返回未同步的实例，_synced 保持为 false。
    */
   protected async _syncViaCreate<T extends BasePrompt>(
     create: () => Promise<T>,
@@ -186,8 +184,8 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Resolves when initialization completes.
-   * Returns immediately if the prompt was already persisted (e.g. retrieved from backend).
+   * 初始化完成时解析。
+   * 如果提示词已持久化（例如从后端检索），则立即返回。
    */
   ready(): Promise<void> {
     return this._pendingSync ?? Promise.resolve();
@@ -207,8 +205,8 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Read-only metadata property.
-   * Returns deep copy to prevent external mutation.
+   * 只读元数据属性。
+   * 返回深拷贝以防止外部修改。
    */
   get metadata(): OpikApi.JsonNode | undefined {
     if (!this._metadata) {
@@ -218,11 +216,11 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Updates prompt properties (name, description, and/or tags).
-   * Performs immediate update (no batching).
+   * 更新提示词属性（名称、描述和/或标签）。
+   * 执行立即更新（无批处理）。
    *
-   * @param updates - Partial updates with optional name, description, and tags
-   * @returns Promise resolving to this prompt instance for method chaining
+   * @param updates - 包含可选名称、描述和标签的部分更新
+   * @returns 解析为此提示词实例的 Promise，用于方法链式调用
    */
   async updateProperties(updates: {
     name?: string;
@@ -250,8 +248,8 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Deletes this prompt from the backend.
-   * Performs immediate deletion (no batching).
+   * 从后端删除此提示词。
+   * 执行立即删除（无批处理）。
    */
   async delete(): Promise<void> {
     await this.ready();
@@ -260,12 +258,12 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Retrieves all version history for this prompt.
-   * Fetches and returns complete version history, sorted by creation date (newest first).
-   * Automatically handles pagination to fetch all versions.
+   * 检索此提示词的所有版本历史。
+   * 获取并返回完整的版本历史，按创建日期排序（最新的在前）。
+   * 自动处理分页以获取所有版本。
    *
-   * @param options - Optional filtering, sorting, and search parameters
-   * @returns Promise resolving to array of all PromptVersion instances for this prompt
+   * @param options - 可选的过滤、排序和搜索参数
+   * @returns 解析为此提示词所有 PromptVersion 实例数组的 Promise
    */
   async getVersions(options?: {
     search?: string;
@@ -326,11 +324,11 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Helper method to restore a version.
-   * Used by subclasses in their useVersion implementations.
+   * 恢复版本的辅助方法。
+   * 由子类在其 useVersion 实现中使用。
    *
-   * @param version - PromptVersion object to restore
-   * @returns Promise resolving to the API response for the restored version
+   * @param version - 要恢复的 PromptVersion 对象
+   * @returns 解析为恢复版本的 API 响应的 Promise
    */
   protected async restoreVersion(
     version: PromptVersion,
@@ -373,15 +371,13 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Helper method to retrieve a version by its sequential version identifier
-   * (e.g. `"v3"`) or, for backwards compatibility, by its commit hash.
+   * 通过顺序版本标识符（如 `"v3"`）或为向后兼容通过提交哈希检索版本的辅助方法。
    *
-   * Input matching `/^v\d+$/` is dispatched to the `versionNumber` endpoint;
-   * anything else is treated as a commit hash. Commit-based fetching is
-   * deprecated — pass a `"v<N>"` identifier instead.
+   * 匹配 `/^v\d+$/` 的输入会被分派到 `versionNumber` 端点；
+   * 其他内容被视为提交哈希。基于提交的获取已弃用 — 请改用 `"v<N>"` 标识符。
    *
-   * @param version - Sequential version (`"v3"`) or commit hash (deprecated)
-   * @returns Promise resolving to the API response or null if not found
+   * @param version - 顺序版本（`"v3"`）或提交哈希（已弃用）
+   * @returns 解析为 API 响应或未找到时为 null 的 Promise
    */
   protected async retrieveVersion(
     version: string,
@@ -418,8 +414,8 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Throws an error if the prompt has not been successfully synced with the backend.
-   * Used internally before backend operations to ensure we have a valid prompt ID.
+   * 如果提示词未成功与后端同步则抛出错误。
+   * 在后端操作之前内部使用，以确保我们有有效的提示词 ID。
    */
   protected ensureSynced(operation: string): void {
     if (!this.synced) {
@@ -431,30 +427,29 @@ export abstract class BasePrompt {
   }
 
   /**
-   * Get a specific version by its sequential version identifier (e.g. `"v3"`)
-   * or, for backwards compatibility, by its commit hash. Returns a new instance
-   * of the appropriate prompt type.
+   * 通过顺序版本标识符（如 `"v3"`）获取特定版本，或为向后兼容通过提交哈希获取。
+   * 返回适当提示词类型的新实例。
    *
-   * @param version - Sequential version (`"v<N>"`) — preferred; or commit hash (deprecated)
-   * @returns Promise resolving to prompt instance or null if not found
+   * @param version - 顺序版本（`"v<N>"`）（推荐）；或提交哈希（已弃用）
+   * @returns 解析为提示词实例或未找到时为 null 的 Promise
    */
   abstract getVersion(version: string): Promise<BasePrompt | null>;
 
   /**
-   * Restores a specific version by creating a new version with content from the specified version.
+   * 通过从指定版本创建新版本来恢复特定版本。
    *
-   * @param version - PromptVersion object to restore
-   * @returns Promise resolving to a new prompt instance with the restored version
+   * @param version - 要恢复的 PromptVersion 对象
+   * @returns 解析为包含恢复版本的新提示词实例的 Promise
    */
   abstract useVersion(version: PromptVersion): Promise<BasePrompt>;
 
   /**
-   * Synchronize the prompt with the backend.
+   * 将提示词与后端同步。
    *
-   * Creates or updates the prompt on the Opik server. If the sync fails,
-   * a warning is logged and the prompt continues to work locally.
+   * 在 Opik 服务器上创建或更新提示词。如果同步失败，
+   * 会记录警告，提示词继续在本地工作。
    *
-   * @returns Promise resolving to a new synced instance, or the same instance if sync fails
+   * @returns 解析为新的已同步实例的 Promise，如果同步失败则返回相同实例
    */
   abstract syncWithBackend(): Promise<BasePrompt>;
 }

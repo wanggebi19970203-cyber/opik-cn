@@ -1,6 +1,7 @@
 import React from "react";
 import AudioPlayerLib from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Play, Pause, Loader2, AlertCircle } from "lucide-react";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
@@ -12,6 +13,7 @@ export interface AudioPlayerProps {
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, className }) => {
+  const { t } = useTranslation("common");
   const {
     duration,
     currentTime,
@@ -30,7 +32,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, className }) => {
       {/* Header: Filename and Duration */}
       <div className="mb-1 flex items-center justify-between">
         <span className="truncate text-xs text-chart-gray-dark">
-          {name || "Audio"}
+          {name || t("shared.audio")}
         </span>
         {hasError ? (
           <span className="ml-2 shrink-0 text-xs text-slate-500">
@@ -51,7 +53,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, className }) => {
           {hasError ? (
             <AlertCircle
               className="size-3.5 text-slate-400"
-              aria-label="Audio error"
+              aria-label={t("shared.audioError")}
             />
           ) : isLoading ? (
             <Loader2 className="size-3.5 animate-spin text-light-slate" />
@@ -59,7 +61,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, className }) => {
             <button
               onClick={() => audioRef.current?.audio.current?.pause()}
               className="flex size-8 items-center justify-center rounded-full hover:bg-accent"
-              aria-label="Pause"
+              aria-label={t("buttons.pause")}
             >
               <Pause className="size-3.5 text-light-slate" />
             </button>
@@ -67,7 +69,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, className }) => {
             <button
               onClick={() => audioRef.current?.audio.current?.play()}
               className="flex size-8 items-center justify-center rounded-full hover:bg-accent"
-              aria-label="Play"
+              aria-label={t("buttons.play")}
             >
               <Play className="size-3.5 text-light-slate" />
             </button>
@@ -115,7 +117,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ url, name, className }) => {
               }
             }}
             className="absolute inset-0 size-full cursor-pointer opacity-0"
-            aria-label="Seek"
+            aria-label={t("shared.seek")}
             disabled={hasError}
           />
         </div>

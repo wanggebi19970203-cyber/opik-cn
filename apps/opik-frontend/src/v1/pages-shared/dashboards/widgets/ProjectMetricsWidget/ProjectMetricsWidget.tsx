@@ -1,6 +1,7 @@
 import React, { memo, useMemo, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useShallow } from "zustand/react/shallow";
+import { useTranslation } from "react-i18next";
 
 import DashboardWidget from "@/shared/Dashboard/DashboardWidget/DashboardWidget";
 import {
@@ -44,6 +45,7 @@ import {
 const ProjectMetricsWidget: React.FunctionComponent<
   DashboardWidgetComponentProps
 > = ({ sectionId, widgetId, preview = false }) => {
+  const { t } = useTranslation("dashboards");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -259,19 +261,19 @@ const ProjectMetricsWidget: React.FunctionComponent<
         span: {
           logsType: LOGS_TYPE.spans,
           filtersKey: "spans_filters",
-          tooltip: "View filtered spans",
+          tooltip: t("metrics.viewFilteredSpans"),
           widgetFilters: widget?.config?.spanFilters as Filter[] | undefined,
         },
         thread: {
           logsType: LOGS_TYPE.threads,
           filtersKey: "threads_filters",
-          tooltip: "View filtered threads",
+          tooltip: t("metrics.viewFilteredThreads"),
           widgetFilters: widget?.config?.threadFilters as Filter[] | undefined,
         },
         trace: {
           logsType: LOGS_TYPE.traces,
           filtersKey: "traces_filters",
-          tooltip: "View filtered traces",
+          tooltip: t("metrics.viewFilteredTraces"),
           widgetFilters: widget?.config?.traceFilters as Filter[] | undefined,
         },
       }[entityType];
@@ -318,6 +320,7 @@ const ProjectMetricsWidget: React.FunctionComponent<
       widget?.config?.traceFilters,
       widget?.config?.threadFilters,
       runtimeContext.dateRange,
+      t,
     ],
   );
 
@@ -335,11 +338,11 @@ const ProjectMetricsWidget: React.FunctionComponent<
     if (metric === METRIC_NAME_TYPE.FEEDBACK_SCORES) {
       return (
         <DashboardWidget.EmptyState
-          title="Track quality over time"
-          message="Add feedback scores to your traces to monitor quality trends. Use the SDK, the UI, or set up online scoring rules to get started."
+          title={t("metrics.trackQualityOverTime")}
+          message={t("metrics.trackQualityMessage")}
           action={
             <DashboardWidget.EmptyState.DocsLink
-              label="Learn how to add scores"
+              label={t("metrics.learnHowToAddScores")}
               href={buildDocsUrl("/tracing/annotate_traces")}
             />
           }
@@ -349,11 +352,11 @@ const ProjectMetricsWidget: React.FunctionComponent<
     if (metric === METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES) {
       return (
         <DashboardWidget.EmptyState
-          title="Track thread quality over time"
-          message="Add feedback scores to your threads to monitor conversation quality trends. First, group traces into threads, then annotate them via the SDK, the UI, or online scoring rules."
+          title={t("metrics.trackThreadQuality")}
+          message={t("metrics.trackThreadQualityMessage")}
           action={
             <DashboardWidget.EmptyState.DocsLink
-              label="Learn how to add scores"
+              label={t("metrics.learnHowToAddScores")}
               href={buildDocsUrl("/tracing/annotate_traces")}
             />
           }
@@ -366,11 +369,11 @@ const ProjectMetricsWidget: React.FunctionComponent<
     ) {
       return (
         <DashboardWidget.EmptyState
-          title="Monitor conversations end-to-end"
-          message="Group related traces into threads by passing a thread_id to track multi-turn conversations and agent sessions."
+          title={t("metrics.monitorConversations")}
+          message={t("metrics.monitorConversationsMessage")}
           action={
             <DashboardWidget.EmptyState.DocsLink
-              label="Learn how to track threads"
+              label={t("metrics.learnHowToTrackThreads")}
               href={buildDocsUrl("/tracing/log_chat_conversations")}
             />
           }
@@ -383,7 +386,7 @@ const ProjectMetricsWidget: React.FunctionComponent<
   const editAction =
     !preview && !readOnly ? (
       <DashboardWidget.EmptyState.EditAction
-        label="Configure widget"
+        label={t("statsCard.configureWidget")}
         onClick={handleEdit}
       />
     ) : undefined;
@@ -399,8 +402,8 @@ const ProjectMetricsWidget: React.FunctionComponent<
     if (!projectId) {
       return (
         <DashboardWidget.EmptyState
-          title="Project not configured"
-          message="This widget needs a project to display data. Set one in the widget settings."
+          title={t("statsCard.projectNotConfigured")}
+          message={t("statsCard.projectNotConfiguredMessage")}
           action={editAction}
         />
       );
@@ -409,8 +412,8 @@ const ProjectMetricsWidget: React.FunctionComponent<
     if (!metricType || !effectiveInterval) {
       return (
         <DashboardWidget.EmptyState
-          title="No metric selected"
-          message="Choose a metric to display in this widget"
+          title={t("statsCard.noMetricSelected")}
+          message={t("statsCard.noMetricSelectedMessage")}
           action={editAction}
         />
       );

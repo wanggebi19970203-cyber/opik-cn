@@ -3,6 +3,7 @@ import { useSearch } from "@tanstack/react-router";
 import { flatMap, get, uniq } from "lodash";
 import md5 from "md5";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import useRulesLogsList from "@/api/automations/useRulesLogsList";
 import NoData from "@/shared/NoData/NoData";
@@ -31,10 +32,10 @@ const generateEvaluatorRuleLogItemKey = (
   return `${item.timestamp}-${item.level}-${messageHash}`;
 };
 
-const BASE_COLUMNS: ColumnData<EvaluatorRuleLogItemWithId>[] = [
+const getBaseColumns = (t: (key: string) => string): ColumnData<EvaluatorRuleLogItemWithId>[] => [
   {
     id: "timestamp",
-    label: "Timestamp",
+    label: t("automationLogs.columns.timestamp"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -44,7 +45,7 @@ const BASE_COLUMNS: ColumnData<EvaluatorRuleLogItemWithId>[] = [
   },
   {
     id: "level",
-    label: "Level",
+    label: t("automationLogs.columns.level"),
     type: COLUMN_TYPE.string,
     size: 80,
   },
@@ -53,6 +54,7 @@ const BASE_COLUMNS: ColumnData<EvaluatorRuleLogItemWithId>[] = [
 const COLUMNS_WIDTH_KEY = "automation-logs-columns-width";
 
 const AutomationLogsPage = () => {
+  const { t } = useTranslation("pages/automation-logs");
   const {
     rule_id,
   }: {
@@ -130,7 +132,7 @@ const AutomationLogsPage = () => {
 
     const messageColumn: ColumnData<EvaluatorRuleLogItemWithId> = {
       id: "message",
-      label: "Message",
+      label: t("automationLogs.columns.message"),
       type: COLUMN_TYPE.string,
       cell: ExpandableTextCell as never,
       size: 400,
@@ -143,12 +145,12 @@ const AutomationLogsPage = () => {
       },
     };
 
-    const allColumns = [...BASE_COLUMNS, ...markerColumns, messageColumn];
+    const allColumns = [...getBaseColumns(t), ...markerColumns, messageColumn];
     return convertColumnDataToColumn<
       EvaluatorRuleLogItemWithId,
       EvaluatorRuleLogItemWithId
     >(allColumns, {});
-  }, [markerKeys, expanded, setExpanded]);
+  }, [t, markerKeys, expanded, setExpanded]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -160,13 +162,13 @@ const AutomationLogsPage = () => {
   );
 
   if (!rule_id) {
-    return <NoData message="No rule parameters set."></NoData>;
+    return <NoData message={t("automationLogs.noRuleParams")}></NoData>;
   }
 
   const isTableLoading = isPending || (isPlaceholderData && rows.length === 0);
 
   if (!isTableLoading && rows.length === 0) {
-    return <NoData message="There are no logs for this rule."></NoData>;
+    return <NoData message={t("automationLogs.noLogsForRule")}></NoData>;
   }
 
   return (
@@ -176,15 +178,15 @@ const AutomationLogsPage = () => {
           className="flex items-center justify-between py-4"
           direction="bidirectional"
         >
-          <h1 className="comet-title-xs truncate break-words">Logs</h1>
+          <h1 className="comet-title-xs truncate break-words">{t("automationLogs.title")}</h1>
           <div className="flex items-center gap-2">
             <RefreshButton
-              tooltip="Refresh logs list"
+              tooltip={t("automationLogs.actions.refreshTooltip")}
               isFetching={isFetching}
               onRefresh={() => refetch()}
             />
             <TooltipWrapper
-              content={allExpanded ? "Collapse all" : "Expand all"}
+              content={allExpanded ? t("automationLogs.actions.collapseAll") : t("automationLogs.actions.expandAll")}
             >
               <Button
                 onClick={toggleExpandAll}
@@ -199,7 +201,7 @@ const AutomationLogsPage = () => {
         <DataTable
           columns={columns}
           data={rows}
-          noData={<DataTableNoData title="There are no logs for this rule." />}
+          noData={<DataTableNoData title={t("automationLogs.noLogsForRule")} />}
           TableWrapper={PageBodyStickyTableWrapper}
           getRowId={(row) => row.id}
           stickyHeader

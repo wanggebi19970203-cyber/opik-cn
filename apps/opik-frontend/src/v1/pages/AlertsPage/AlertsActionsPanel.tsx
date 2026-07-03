@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -14,6 +15,7 @@ type AlertsActionsPanelsProps = {
 const AlertsActionsPanel: React.FunctionComponent<AlertsActionsPanelsProps> = ({
   alerts,
 }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !alerts?.length;
@@ -33,12 +35,12 @@ const AlertsActionsPanel: React.FunctionComponent<AlertsActionsPanelsProps> = ({
         open={open}
         setOpen={setOpen}
         onConfirm={deleteAlertsHandler}
-        title="Delete alerts"
-        description="Are you sure you want to delete these alerts? This action cannot be undone."
-        confirmText="Delete alerts"
+        title={t("alerts.confirmDialog.deleteBatch.title")}
+        description={t("alerts.confirmDialog.deleteBatch.description")}
+        confirmText={t("alerts.confirmDialog.deleteBatch.confirmText")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("alerts.actions.delete")}>
         <Button
           variant="outline"
           size="icon-sm"

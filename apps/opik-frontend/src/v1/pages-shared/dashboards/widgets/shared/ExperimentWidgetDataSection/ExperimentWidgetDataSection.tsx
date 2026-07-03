@@ -8,6 +8,7 @@ import {
 } from "react-hook-form";
 import isArray from "lodash/isArray";
 import isFunction from "lodash/isFunction";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { FilterOperator, Filters } from "@/types/filters";
@@ -32,52 +33,6 @@ type ExperimentColumnData = {
   dataset_id?: string;
 };
 
-const EXPERIMENT_FILTER_COLUMNS: ColumnData<ExperimentColumnData>[] = [
-  {
-    id: EXPERIMENT_IDS_FILTER_FIELD,
-    label: "Experiments",
-    type: COLUMN_TYPE.string,
-    disposable: true,
-  },
-  {
-    id: COLUMN_DATASET_ID,
-    label: "Dataset",
-    type: COLUMN_TYPE.string,
-    disposable: true,
-  },
-  {
-    id: "tags",
-    label: "Tags",
-    type: COLUMN_TYPE.list,
-    iconType: "tags",
-  },
-  {
-    id: COLUMN_METADATA_ID,
-    label: "Configuration",
-    type: COLUMN_TYPE.dictionary,
-  },
-];
-
-const EXPERIMENT_GROUP_COLUMNS: ColumnData<ExperimentColumnData>[] = [
-  {
-    id: COLUMN_DATASET_ID,
-    label: "Test suite",
-    type: COLUMN_TYPE.string,
-    disposable: true,
-  },
-  {
-    id: "tags",
-    label: "Tags",
-    type: COLUMN_TYPE.list,
-    iconType: "tags",
-  },
-  {
-    id: COLUMN_METADATA_ID,
-    label: "Configuration",
-    type: COLUMN_TYPE.dictionary,
-  },
-];
-
 interface ExperimentWidgetDataSectionProps<T extends FieldValues> {
   control: Control<T>;
   filtersFieldName: FieldPath<T>;
@@ -99,6 +54,60 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
   onGroupsChange,
   className = "",
 }: ExperimentWidgetDataSectionProps<T>) => {
+  const { t } = useTranslation("dashboards");
+
+  const EXPERIMENT_FILTER_COLUMNS: ColumnData<ExperimentColumnData>[] = useMemo(
+    () => [
+      {
+        id: EXPERIMENT_IDS_FILTER_FIELD,
+        label: t("filters.experimentsLabel"),
+        type: COLUMN_TYPE.string,
+        disposable: true,
+      },
+      {
+        id: COLUMN_DATASET_ID,
+        label: t("filters.datasetLabel"),
+        type: COLUMN_TYPE.string,
+        disposable: true,
+      },
+      {
+        id: "tags",
+        label: t("filters.tagsLabel"),
+        type: COLUMN_TYPE.list,
+        iconType: "tags",
+      },
+      {
+        id: COLUMN_METADATA_ID,
+        label: t("filters.configurationLabel"),
+        type: COLUMN_TYPE.dictionary,
+      },
+    ],
+    [t],
+  );
+
+  const EXPERIMENT_GROUP_COLUMNS: ColumnData<ExperimentColumnData>[] = useMemo(
+    () => [
+      {
+        id: COLUMN_DATASET_ID,
+        label: t("filters.testSuiteLabel"),
+        type: COLUMN_TYPE.string,
+        disposable: true,
+      },
+      {
+        id: "tags",
+        label: t("filters.tagsLabel"),
+        type: COLUMN_TYPE.list,
+        iconType: "tags",
+      },
+      {
+        id: COLUMN_METADATA_ID,
+        label: t("filters.configurationLabel"),
+        type: COLUMN_TYPE.dictionary,
+      },
+    ],
+    [t],
+  );
+
   const { field: filtersField } = useController({
     control,
     name: filtersFieldName,
@@ -136,7 +145,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
           },
           defaultOperator: "=" as FilterOperator,
           operators: [{ label: "=", value: "=" as FilterOperator }],
-          sortingMessage: "Last experiment created",
+          sortingMessage: t("filters.lastExperimentCreated"),
         },
         [COLUMN_METADATA_ID]: {
           keyComponent:
@@ -152,7 +161,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
         },
       },
     }),
-    [],
+    [t],
   );
 
   const setFilters = useCallback(
@@ -233,8 +242,8 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
         filters={filters}
         onChange={setFilters}
         className="mb-5"
-        label="Filter experiments"
-        description="Use filters to target specific experiments, or leave empty to apply to all."
+        label={t("filters.filterExperimentsLabel")}
+        description={t("filters.filterExperimentsDescription")}
         errors={parsedFilterErrors}
       />
 
@@ -244,12 +253,12 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
           config={dataConfig}
           groups={groups || []}
           onChange={setGroups}
-          label="Group by"
+          label={t("filters.groupByLabel")}
           errors={parsedGroupErrors}
           className="w-full"
           hideSorting
           disabled={hasExperimentIdsFilter}
-          disabledTooltip="Groups are not available when filtering by specific experiments"
+          disabledTooltip={t("filters.groupsNotAvailable")}
         />
       )}
     </div>

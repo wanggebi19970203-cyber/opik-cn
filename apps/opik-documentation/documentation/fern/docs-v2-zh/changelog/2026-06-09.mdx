@@ -1,0 +1,68 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog/2026-06-09
+---
+
+## 使用 `evaluate_resume` 恢复中断的评估
+
+长时间运行的评估任务被中途截断——无论是 Ctrl-C、OOM 错误、评分指标失败还是网络闪断——现在都可以从停止的地方继续，而不是从头开始。`opik.evaluate_resume(experiment_id, task, scoring_metrics=[...])` 仅重放未完成的试验，将它们与已完成的合并，并返回覆盖整个实验的单一 `EvaluationResult`。
+
+一个试验只有在 `trace.output` 被设置后才算完成，这发生在任务、评分和评分记录都成功之后。任何阻止到达该点的失败模式——指标引发异常、任务和评分之间的 `KeyboardInterrupt`——都会留下可重放的试验。
+
+```python
+import opik
+
+# 继续部分完成的实验——仅重放缺失的试验
+result = opik.evaluate_resume(
+    experiment_id="...",
+    task=my_task,
+    scoring_metrics=[Equals()],
+)
+```
+
+原始的 `evaluate(...)` 调用将恢复快照写入 `experiment_config`，以便可以在服务端重建精确的迭代（固定数据集版本、样本数、每项试验数）。当原始调用使用自定义 `dataset_sampler` 或显式 `dataset_item_ids` 时，SDK 还会为这些情况在实验 ID 旁边写入本地检查点。
+
+👉 [恢复评估文档](https://www.comet.com/docs/opik/evaluation/advanced/resume_evaluations)
+
+## Playground 和 LLM-as-a-Judge 中的 OpenAI Responses API 支持
+
+Playground 和 LLM-as-a-Judge 现在支持 OpenAI 的 `/v1/responses` API，使得可以使用 o 系列推理模型（`o1`、`o3`、`o3-mini`、`o4-mini`）和其他仅在较新 API 路径上可用的部署。之前，通过 Chat Completions 路径发送这些模型会返回"This is not a chat model and thus not supported in the v1/chat/completions endpoint."
+
+要启用，打开**管理 AI Provider**对话框，选择你的 OpenAI 密钥，将 **Pipeline mode** 设置为 **Responses API**。Chat Completions 路径仍然是默认值，对所有其他模型不变。
+
+Playground 的 `Top P` 滑块现在也对 OpenAI 推理模型（`gpt-5.x`、`o1*`、`o3*`、`o4*`）隐藏。这些模型直接拒绝 `top_p`；该滑块之前出现时会导致 400 错误。
+
+## Bug 修复和改进
+
+- **标注队列：并行标注的认领机制** — 多个标注者同时处理同一队列时，现在当另一个审查者正在查看某项时，该项会被锁定，防止重复工作。当所有标注者槽位被活跃锁和现有分数的组合占用时，项显示"审查中"指示器（橙色）。锁通过心跳保持活跃，在审查者导航离开时通过 TTL 过期。侧边栏还新增了"待审查"/"已处理"过滤标签页，每个标注者看到的项顺序不同以减少争用。
+
+- **Trace 和 span 详情视图中的可折叠 JSON/YAML** — trace 和 span 详情视图中的 JSON 对象、数组和 YAML 块现在可以通过每行末尾的内联折叠箭头折叠和展开。折叠的块渲染为可点击的灰色占位符。这使得导航大型负载更容易，无需滚动过不需要的内容。
+
+- **重新设计的数据集和测试套件创建流程** — 创建对话框现在呈现两条明确路径：**上传文件**（CSV 或 JSON 拖放区，带自动命名和可选的测试套件评估标准）和**使用 SDK**（名称 + 代码片段）。两个选项都可从标题按钮和列表空状态访问。成功后面板关闭并出现"前往..."提示。
+
+- **直接从 UI 评估实验 traces** — 比较实验页面在操作栏中有新的**评估**按钮（大脑图标）。它打开范围限定到当前实验所有 traces 的在线评估对话框，让你无需离开页面即可对实验输出评分。
+
+- **按 `created_at` 和 `last_updated_at` 过滤 spans** — span 搜索 API 现在接受 `created_at` 和 `last_updated_at` 作为过滤字段，支持所有比较运算符（`=`、`!=`、`>`、`>=`、`<`、`<=`）。这些字段之前已在 traces 上支持；span 支持之前缺失。
+
+- **OpenTelemetry：进程内 spans 现在链接到活跃的 `@opik.track` trace** — 当 OTel 插桩库（如 logfire 或 PydanticAI）从 `@opik.track` 装饰函数内部发出 spans 时，这些 spans 现在嵌套在活跃追踪的 trace 下，而不是启动单独的 trace。父 spans 或 W3C baggage 携带 Opik ID 的分布式流程继续优先于进程内上下文。
+
+- **优化：最佳试验配置现在显示优化后的 prompt** — 最佳试验配置面板之前显示基线 prompt 而不是优化器生成的 prompt。现在显示正确的优化结果。试验表还新增了 Prompt 列，带每消息格式化和与基线的差异弹出窗口。
+
+- **实验视图：prompt 版本标签替代提交哈希** — 实验表、单实验配置标签页和仪表板实验排行榜现在将 prompts 显示为"name (v3)"而不是原始提交哈希，与 Prompt 库中已使用的显示方式一致。
+
+- **AI 支出仪表板：总 token KPI 卡片和引导空状态** — 占位符"剩余预算"卡片被**总 token** KPI 替代，显示所有模型所有 token 层级的总和，带同期趋势指示器。仪表板在尚未收到 trace 数据时还显示带设置说明和可复制配置片段的引导空状态。
+
+- **成本计算：超过 200k tokens 的分层定价现已应用** — 对于 `gemini-2.5-pro` 和 `vertex_ai/claude-sonnet-4-5` 等具有 `above_200k_tokens` 费率层级的模型，超过 200k token 阈值的请求之前按基础输入费率计费。Opik 现在在超过阈值时应用层级费率（整个请求按层级价格计费，与 LiteLLM 的语义一致）。
+
+- **成本计算：Vertex AI 上的 Claude 缓存 token 现已打折** — Vertex AI 上的 Claude 模型（`vertex_ai/claude-haiku-4-5`、`vertex_ai/claude-sonnet-4-5`、`vertex_ai/claude-opus-4-1`）的缓存读取 token 之前按完整输入费率计费。现在使用 Anthropic 缓存计算器，正确对缓存 token 应用折扣。
+
+- **Vertex AI：跨 Provider 切换时保留模型选择** — 在 Playground 中从 Vertex AI 切换出去再切回来不再重置之前选择的模型。
+
+## 性能改进
+
+- **Span 时间戳过滤器使用 ClickHouse 跳跃索引** — `spans` 和 `traces` 表上的 `created_at` 和 `last_updated_at` 现在有 `minmax` 跳跃索引。这些列上的范围过滤器修剪 granules 而不是扫描整个项目分区，显著减少大表上的查询时间和 ClickHouse CPU 负载。
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.0.52...2.0.59)
+
+_发布版本_: `2.0.53`, `2.0.54`, `2.0.55`, `2.0.56`, `2.0.57`, `2.0.58`, `2.0.59`

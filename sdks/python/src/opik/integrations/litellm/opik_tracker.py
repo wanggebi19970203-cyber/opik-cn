@@ -11,15 +11,15 @@ def track_completion(
     project_name: Optional[str] = None,
     source: Optional[TraceSource] = None,
 ) -> Callable[[F], F]:
-    """Decorator for tracking LiteLLM function calls with Opik.
+    """用于追踪 LiteLLM 函数调用的装饰器，集成 Opik 监控。
 
-    Can be used within other Opik-tracked functions to create proper span hierarchy.
+    可在其他 Opik 追踪函数内部使用，以创建正确的 span 层级结构。
 
-    Supported (streaming and non-streaming modes):
+    支持流式和非流式模式：
     * `litellm.completion`
     * `litellm.acompletion`
 
-    Example:
+    示例:
         ```python
         import litellm
         from opik.integrations.litellm import track_completion
@@ -28,19 +28,19 @@ def track_completion(
         response = tracked_completion(model="gpt-3.5-turbo", messages=[...])
         ```
 
-    Args:
-        project_name: The name of the project to log data.
-        source: The source of the trace (e.g. "sdk", "optimization").
+    参数:
+        project_name: 用于记录数据的项目名称。
+        source: 追踪来源（例如 "sdk"、"optimization"）。
 
-    Returns:
-        Decorator function that wraps the completion function with Opik tracking.
+    返回:
+        装饰器函数，用于包装 completion 函数并集成 Opik 追踪。
     """
 
     decorator_factory = litellm_completion_decorator.LiteLLMCompletionTrackDecorator()
 
     return decorator_factory.track(  # type: ignore
         type="llm",
-        name=None,  # Use the function's name (completion or acompletion)
+        name=None,  # 使用函数名（completion 或 acompletion）
         project_name=project_name,
         generations_aggregator=completion_chunks_aggregator.aggregate,
         source=source,

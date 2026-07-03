@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ColumnPinningState } from "@tanstack/react-table";
 import { keepPreviousData } from "@tanstack/react-query";
 
@@ -73,6 +74,7 @@ const COLUMNS: ColumnData<DatasetVersion>[] = [
 ];
 
 const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
+  const { t } = useTranslation("datasets");
   const {
     permissions: { canEditDatasets },
   } = usePermissions();
@@ -127,9 +129,9 @@ const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
         getRowId={getRowId}
         columnPinning={DEFAULT_COLUMN_PINNING}
         noData={
-          <DataTableNoData title="No version history yet">
+          <DataTableNoData title={t("versionHistory.noData.title")}>
             <div className="text-sm text-muted-foreground">
-              Version history will appear here when you create dataset versions
+              {t("versionHistory.noData.description")}
             </div>
           </DataTableNoData>
         }

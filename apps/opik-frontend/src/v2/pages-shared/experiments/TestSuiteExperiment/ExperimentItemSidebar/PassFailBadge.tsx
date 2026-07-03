@@ -1,21 +1,22 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Tag } from "@/ui/tag";
 import { RunStatus } from "@/types/test-suites";
 
 const STATUS_CONFIG: Record<
   RunStatus,
-  { label: string; variant: "green" | "red" | "gray" }
+  { labelKey: string; variant: "green" | "red" | "gray" }
 > = {
   [RunStatus.PASSED]: {
-    label: "Passed",
+    labelKey: "passed",
     variant: "green",
   },
   [RunStatus.FAILED]: {
-    label: "Failed",
+    labelKey: "failed",
     variant: "red",
   },
   [RunStatus.SKIPPED]: {
-    label: "Skipped",
+    labelKey: "skipped",
     variant: "gray",
   },
 };
@@ -25,11 +26,12 @@ type PassFailBadgeProps = {
 };
 
 const PassFailBadge: React.FC<PassFailBadgeProps> = ({ status }) => {
+  const { t } = useTranslation("experiments");
   if (!status) return null;
 
   const config = STATUS_CONFIG[status];
 
-  return <Tag variant={config.variant}>{config.label}</Tag>;
+  return <Tag variant={config.variant}>{t(config.labelKey)}</Tag>;
 };
 
 export default PassFailBadge;

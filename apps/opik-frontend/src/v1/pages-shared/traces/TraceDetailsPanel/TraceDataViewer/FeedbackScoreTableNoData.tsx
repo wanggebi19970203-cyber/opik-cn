@@ -1,6 +1,7 @@
 import { Button } from "@/ui/button";
 import { Book, PenLine } from "lucide-react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { buildDocsUrl } from "@/v1/lib/utils";
 const entityCopy = {
@@ -18,6 +19,7 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
   onAddHumanReview,
   entityType,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canUpdateOnlineEvaluationRules, canAnnotateTraceSpanThread },
   } = usePermissions();
@@ -26,15 +28,15 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
 
   const getDescription = () => {
     if (canUpdateOnlineEvaluationRules && canAnnotateTraceSpanThread) {
-      return `Use the SDK or Online evaluation rules to automatically score your ${entityCopy[entityType]}, or manually annotate your ${entityCopy[entityType]} with human review.`;
+      return t("feedbackScoreTable.descOnlineEvalAndAnnotate", { entity: entityCopy[entityType] });
     }
 
     if (canAnnotateTraceSpanThread) {
-      return `Use the SDK to automatically score your ${entityCopy[entityType]}, or manually annotate your ${entityCopy[entityType]} with human review.`;
+      return t("feedbackScoreTable.descSdkOnly", { entity: entityCopy[entityType] });
     }
 
     if (canUpdateOnlineEvaluationRules) {
-      return `Use Online evaluation rules to automatically score your ${entityCopy[entityType]}.`;
+      return t("feedbackScoreTable.descOnlineEvalOnly", { entity: entityCopy[entityType] });
     }
 
     return "";
@@ -42,7 +44,7 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
 
   return (
     <div className="flex min-h-48 flex-col items-center justify-center gap-2 bg-background p-6">
-      <div>No feedback scores yet</div>
+      <div>{t("feedbackScoreTable.noFeedbackScoresYet")}</div>
       {(canAnnotateTraceSpanThread || canUpdateOnlineEvaluationRules) && (
         <>
           <span className="max-w-[500px] whitespace-pre-wrap break-words text-center text-muted-slate">
@@ -52,7 +54,7 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
             {canAnnotateTraceSpanThread && (
               <Button variant="outline" size="sm" onClick={onAddHumanReview}>
                 <PenLine className="mr-2 size-4" />
-                Add human review
+                {t("feedbackScoreTable.addHumanReview")}
               </Button>
             )}
             {canUpdateOnlineEvaluationRules && (
@@ -63,7 +65,7 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
                   rel="noopener noreferrer"
                 >
                   <Book className="mr-2 size-4" />
-                  Learn about online evaluation
+                  {t("feedbackScoreTable.learnAboutOnlineEvaluation")}
                 </a>
               </Button>
             )}

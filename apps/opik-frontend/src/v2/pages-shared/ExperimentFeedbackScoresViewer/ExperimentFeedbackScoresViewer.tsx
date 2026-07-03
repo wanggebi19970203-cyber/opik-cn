@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { TraceFeedbackScore } from "@/types/traces";
 import useTraceFeedbackScoreDeleteMutation from "@/api/traces/useTraceFeedbackScoreDeleteMutation";
 import ExpandableSection from "@/shared/ExpandableSection/ExpandableSection";
@@ -24,6 +25,7 @@ type ExperimentFeedbackScoresViewerProps = {
 const ExperimentFeedbackScoresViewer: React.FunctionComponent<
   ExperimentFeedbackScoresViewerProps
 > = ({ feedbackScores = [], traceId, spanId, sectionIdx }) => {
+  const { t } = useTranslation("common");
   const [activeTab, setActiveTab] = useState<string>(
     FEEDBACK_SCORES_TABS.ALL_SCORES,
   );
@@ -50,7 +52,7 @@ const ExperimentFeedbackScoresViewer: React.FunctionComponent<
   return (
     <ExpandableSection
       icon={<PenLine className="size-4" />}
-      title="Feedback scores"
+      title={t("experimentFeedbackScores.feedbackScores")}
       queryParamName="expandedFeedbackScoresSections"
       sectionIdx={sectionIdx}
       count={feedbackScores.length}
@@ -63,13 +65,13 @@ const ExperimentFeedbackScoresViewer: React.FunctionComponent<
               value={FEEDBACK_SCORES_TABS.ALL_SCORES}
               variant="underline"
             >
-              All scores
+              {t("experimentFeedbackScores.allScores")}
             </TabsTrigger>
             <TabsTrigger
               value={FEEDBACK_SCORES_TABS.YOUR_SCORES}
               variant="underline"
             >
-              Your scores
+              {t("experimentFeedbackScores.yourScores")}
             </TabsTrigger>
           </TabsList>
 

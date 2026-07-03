@@ -47,7 +47,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Workspaces", description = "Workspace related resources")
+@Tag(name = "Workspaces", description = "工作空间相关资源")
 public class WorkspacesResource {
 
     private final @NonNull WorkspaceMetricsService workspaceMetricsService;
@@ -58,9 +58,9 @@ public class WorkspacesResource {
     @Deprecated
     @POST
     @Path("/metrics/summaries")
-    @Operation(operationId = "metricsSummary", summary = "Get metrics summary", description = "Get metrics summary", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace Metrics", content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "metricsSummary", summary = "获取指标摘要", description = "获取指标摘要", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间指标", content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response metricsSummary(
             @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryRequest.class))) @NotNull @Valid WorkspaceMetricsSummaryRequest request) {
@@ -81,9 +81,9 @@ public class WorkspacesResource {
     @Deprecated
     @POST
     @Path("/metrics")
-    @Operation(operationId = "getMetric", summary = "Get metric daily data", description = "Get metric daily data", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace metric data by days", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getMetric", summary = "获取指标每日数据", description = "获取指标每日数据", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间按天的指标数据", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getMetric(
             @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryRequest.class))) @NotNull @Valid WorkspaceMetricRequest request) {
@@ -105,9 +105,9 @@ public class WorkspacesResource {
 
     @POST
     @Path("/costs/summaries")
-    @Operation(operationId = "costsSummary", summary = "Get costs summary", description = "Get costs summary", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace Metrics", content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryResponse.Result.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "costsSummary", summary = "获取成本摘要", description = "获取成本摘要", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间指标", content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryResponse.Result.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response costsSummary(
             @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryRequest.class))) @NotNull @Valid WorkspaceMetricsSummaryRequest request) {
@@ -127,9 +127,9 @@ public class WorkspacesResource {
 
     @POST
     @Path("/costs")
-    @Operation(operationId = "getCost", summary = "Get cost daily data", description = "Get cost daily data", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace cost data by days", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getCost", summary = "获取成本每日数据", description = "获取成本每日数据", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间按天的成本数据", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getCost(
             @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceMetricsSummaryRequest.class))) @NotNull @Valid WorkspaceMetricRequest request) {
@@ -152,21 +152,20 @@ public class WorkspacesResource {
 
     @GET
     @Path("/versions")
-    @Operation(operationId = "getWorkspaceVersion", summary = "Get workspace version", description = """
-            Determines whether the workspace should use Opik V1 (legacy workspace-scoped)
-            or Opik V2 (project-first) navigation. The backend is the single authority for this
-            determination, clients must never derive the version themselves.
+    @Operation(operationId = "getWorkspaceVersion", summary = "获取工作空间版本", description = """
+            确定工作空间应使用 Opik V1（传统工作空间范围）还是 Opik V2（项目优先）导航。
+            后端是此确定的唯一权威，客户端绝不能自行推导版本。
 
-            Determination logic (priority order):
-            1) V2 workspace allowlist (TOGGLE_V2_WORKSPACE_ALLOWLIST)
-            2) Feature flag override (TOGGLE_FORCE_WORKSPACE_VERSION)
-            3) Auth one-way V2 gate (authenticated mode only)
-            4) Version 1 entity check (entities without project_id)
-            5) Fallback on failure
+            确定逻辑（优先级顺序）：
+            1) V2 工作空间白名单 (TOGGLE_V2_WORKSPACE_ALLOWLIST)
+            2) 功能标志覆盖 (TOGGLE_FORCE_WORKSPACE_VERSION)
+            3) 认证单向 V2 门控（仅限已认证模式）
+            4) 版本 1 实体检查（没有 project_id 的实体）
+            5) 失败时回退
 
-            In unauthenticated mode (authentication.enabled=false), auth steps are skipped.
-            Called by the frontend on workspace load.""", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace version", content = @Content(schema = @Schema(implementation = WorkspaceVersion.class)))
+            在未认证模式下（authentication.enabled=false），跳过认证步骤。
+            由前端在工作空间加载时调用。""", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间版本", content = @Content(schema = @Schema(implementation = WorkspaceVersion.class)))
     })
     public Response getWorkspaceVersion() {
         var workspaceId = requestContext.get().getWorkspaceId();
@@ -183,9 +182,9 @@ public class WorkspacesResource {
 
     @GET
     @Path("/configurations")
-    @Operation(operationId = "getWorkspaceConfiguration", summary = "Get workspace configuration", description = "Get workspace configuration", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace Configuration", content = @Content(schema = @Schema(implementation = WorkspaceConfiguration.class))),
-            @ApiResponse(responseCode = "404", description = "Configuration Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getWorkspaceConfiguration", summary = "获取工作空间配置", description = "获取工作空间配置", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间配置", content = @Content(schema = @Schema(implementation = WorkspaceConfiguration.class))),
+            @ApiResponse(responseCode = "404", description = "配置未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getWorkspaceConfiguration() {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -208,10 +207,10 @@ public class WorkspacesResource {
     @PUT
     @Path("/configurations")
     @RequiredPermissions(WorkspaceUserPermission.WORKSPACE_SETTINGS_CONFIGURE)
-    @Operation(operationId = "upsertWorkspaceConfiguration", summary = "Upsert workspace configuration", description = "Upsert workspace configuration", responses = {
-            @ApiResponse(responseCode = "200", description = "Configuration Updated", content = @Content(schema = @Schema(implementation = WorkspaceConfiguration.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "upsertWorkspaceConfiguration", summary = "更新或插入工作空间配置", description = "更新或插入工作空间配置", responses = {
+            @ApiResponse(responseCode = "200", description = "配置已更新", content = @Content(schema = @Schema(implementation = WorkspaceConfiguration.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response upsertWorkspaceConfiguration(
             @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceConfiguration.class))) @Valid @NotNull WorkspaceConfiguration configuration) {
@@ -232,9 +231,9 @@ public class WorkspacesResource {
     @DELETE
     @Path("/configurations")
     @RequiredPermissions(WorkspaceUserPermission.WORKSPACE_SETTINGS_CONFIGURE)
-    @Operation(operationId = "deleteWorkspaceConfiguration", summary = "Delete workspace configuration", description = "Delete workspace configuration", responses = {
-            @ApiResponse(responseCode = "204", description = "Configuration Deleted"),
-            @ApiResponse(responseCode = "404", description = "Configuration Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "deleteWorkspaceConfiguration", summary = "删除工作空间配置", description = "删除工作空间配置", responses = {
+            @ApiResponse(responseCode = "204", description = "配置已删除"),
+            @ApiResponse(responseCode = "404", description = "配置未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response deleteWorkspaceConfiguration() {
         String workspaceId = requestContext.get().getWorkspaceId();

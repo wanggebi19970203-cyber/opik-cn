@@ -1,0 +1,23 @@
+{
+  "automationLogs": {
+    "title": "自动化日志",
+    "logs": "日志",
+    "description": "查看自动化执行历史",
+    "empty": {
+      "title": "暂无日志",
+      "description": "自动化日志将显示在这里。"
+    },
+    "noRuleParams": "未设置规则参数。",
+    "noLogsForRule": "此规则没有日志。",
+    "columns": {
+      "timestamp": "时间戳",
+      "level": "级别",
+      "message": "消息"
+    },
+    "actions": {
+      "refreshTooltip": "刷新日志列表",
+      "collapseAll": "全部折叠",
+      "expandAll": "全部展开"
+    }
+  }
+}

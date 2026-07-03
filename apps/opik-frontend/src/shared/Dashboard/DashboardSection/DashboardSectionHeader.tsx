@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Plus,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -48,6 +49,7 @@ const DashboardSectionHeader: React.FunctionComponent<
   onAddSectionAbove,
   onAddSectionBelow,
 }) => {
+  const { t } = useTranslation();
   const readOnly = useDashboardStore(selectReadOnly);
   const onAddEditWidgetCallback = useDashboardStore(
     (state) => state.onAddEditWidgetCallback,
@@ -108,7 +110,7 @@ const DashboardSectionHeader: React.FunctionComponent<
               className="gap-1.5"
             >
               <Plus className="size-3.5" />
-              Add widget
+              {t("common:dashboard.addWidget")}
             </Button>
 
             <DropdownMenu onOpenChange={setMenuOpen}>
@@ -129,7 +131,7 @@ const DashboardSectionHeader: React.FunctionComponent<
                   }}
                 >
                   <ArrowUp className="mr-2 size-4" />
-                  Insert section above
+                  {t("common:dashboard.insertSectionAbove")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
@@ -138,7 +140,7 @@ const DashboardSectionHeader: React.FunctionComponent<
                   }}
                 >
                   <ArrowDown className="mr-2 size-4" />
-                  Insert section below
+                  {t("common:dashboard.insertSectionBelow")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -147,7 +149,7 @@ const DashboardSectionHeader: React.FunctionComponent<
                   variant="destructive"
                 >
                   <Trash className="mr-2 size-4" />
-                  Delete section
+                  {t("common:dashboard.deleteSection")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -174,9 +176,9 @@ const DashboardSectionHeader: React.FunctionComponent<
         open={showDeleteDialog}
         setOpen={setShowDeleteDialog}
         onConfirm={onDeleteSection}
-        title={`Delete ${title} section?`}
-        description="Are you sure you want to delete this section? This action cannot be undone."
-        confirmText={`Delete ${title}`}
+        title={t("common:dashboard.deleteSectionTitle", { name: title })}
+        description={t("common:dashboard.deleteSectionDescription")}
+        confirmText={t("common:dashboard.deleteSectionName", { name: title })}
         confirmButtonVariant="destructive"
       />
     </div>

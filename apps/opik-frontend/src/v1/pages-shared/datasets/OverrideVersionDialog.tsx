@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 
 interface OverrideVersionDialogProps {
@@ -12,15 +13,16 @@ const OverrideVersionDialog: React.FC<OverrideVersionDialogProps> = ({
   setOpen,
   onConfirm,
 }) => {
+  const { t } = useTranslation("datasets");
   return (
     <ConfirmDialog
       open={open}
       setOpen={setOpen}
       onConfirm={onConfirm}
-      title="Version conflict detected"
-      description="Another version was created while you were editing. Do you want to override the latest version with your changes?"
-      confirmText="Override and save"
-      cancelText="Cancel"
+      title={t("overrideVersion.title")}
+      description={t("overrideVersion.description")}
+      confirmText={t("overrideVersion.confirmText")}
+      cancelText={t("overrideVersion.cancelText")}
       confirmButtonVariant="destructive"
     />
   );

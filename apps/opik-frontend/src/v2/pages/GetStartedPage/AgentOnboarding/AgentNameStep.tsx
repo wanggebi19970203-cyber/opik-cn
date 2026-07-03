@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AxiosError, HttpStatusCode } from "axios";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
@@ -17,6 +18,7 @@ import onboardingImageDarkUrl from "/images/onboarding_image_dark.svg";
 const MIN_AGENT_NAME_LENGTH = 3;
 
 const AgentNameStep: React.FC = () => {
+  const { t } = useTranslation("pages/get-started");
   const { goToStep, agentName } = useAgentOnboarding();
   const { themeMode } = useTheme();
   const [name, setName] = useState(agentName);
@@ -54,7 +56,7 @@ const AgentNameStep: React.FC = () => {
         });
         return;
       }
-      setError("Failed to create project. Please try again.");
+      setError(t("getStarted.agentName.createError"));
     }
   };
 
@@ -67,18 +69,20 @@ const AgentNameStep: React.FC = () => {
     <div className="mx-auto flex min-h-full max-w-[1200px] items-center justify-center gap-14 px-10 py-16">
       <form onSubmit={handleSubmit} className="w-full max-w-[480px]">
         <div className="flex flex-col gap-1.5">
-          <h2 className="comet-title-m">Name your project</h2>
+          <h2 className="comet-title-m">{t("getStarted.agentName.title")}</h2>
           <p className="comet-body-s text-muted-slate">
-            This creates a project where your traces and experiments will live.
+            {t("getStarted.agentName.description")}
           </p>
         </div>
 
         <div className="flex flex-col gap-2 pt-4">
-          <Label htmlFor="agent-name">Project name</Label>
+          <Label htmlFor="agent-name">
+            {t("getStarted.agentName.projectName")}
+          </Label>
           <Input
             id="agent-name"
             dimension="sm"
-            placeholder="My project"
+            placeholder={t("getStarted.agentName.placeholder")}
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -98,7 +102,9 @@ const AgentNameStep: React.FC = () => {
             id="onboarding-agent-name-continue"
             data-fs-element="onboarding-agent-name-continue"
           >
-            {isPending ? "Creating" : "Continue"}
+            {isPending
+              ? t("getStarted.agentName.creating")
+              : t("getStarted.agentName.continue")}
           </Button>
         </div>
       </form>
@@ -106,7 +112,7 @@ const AgentNameStep: React.FC = () => {
       <div className="hidden flex-1 items-center justify-center lg:flex">
         <img
           src={illustrationUrl}
-          alt="Onboarding illustration"
+          alt={t("getStarted.agentName.altText")}
           className="h-auto max-h-[400px] max-w-full object-contain"
         />
       </div>

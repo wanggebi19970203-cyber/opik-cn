@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/ui/button";
@@ -39,6 +40,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
   getAlert,
   isPending,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { mutate, isPending: isTestPending } = useWebhookTestMutation();
   const [expandedItem, setExpandedItem] = useState<string>("");
@@ -96,7 +98,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
     if (!validation.success) {
       const errorMessage =
         validation.error.errors[0]?.message ||
-        "Please enter a valid webhook URL before testing";
+        t("alerts.testWebhook.validUrlRequired");
       toast({
         description: errorMessage,
         variant: "destructive",
@@ -110,7 +112,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
       if (!routingKeyValidation.success) {
         const errorMessage =
           routingKeyValidation.error.errors[0]?.message ||
-          "Routing key is required for PagerDuty integration";
+          t("alerts.testWebhook.routingKeyRequired");
         toast({
           description: errorMessage,
           variant: "destructive",
@@ -123,8 +125,8 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
       onSuccess: (data) => {
         if (data.status === "failure") {
           toast({
-            title: "Webhook test failed",
-            description: data.error_message || "Webhook test failed",
+            title: t("alerts.testWebhook.failureTitle"),
+            description: data.error_message || t("alerts.testWebhook.failureTitle"),
             variant: "destructive",
           });
           return;
@@ -144,7 +146,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
       triggers: [],
     };
 
-    validateAndTest(connectionPayload, "Webhook connection test successful!");
+    validateAndTest(connectionPayload, t("alerts.testWebhook.successConnection"));
   };
 
   const handleTestTrigger = (eventType: string, label: string) => {
@@ -155,7 +157,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
 
     if (!triggerToTest) {
       toast({
-        description: "Trigger not found",
+        description: t("alerts.testWebhook.triggerNotFound"),
         variant: "destructive",
       });
       return;
@@ -166,16 +168,15 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
       triggers: [triggerToTest],
     };
 
-    validateAndTest(triggerPayload, `Webhook test successful for "${label}"!`);
+    validateAndTest(triggerPayload, t("alerts.testWebhook.successTrigger", { label }));
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="mt-2 flex flex-col gap-1">
-        <h3 className="comet-body-accented">Test alert configuration</h3>
+        <h3 className="comet-body-accented">{t("alerts.testWebhook.title")}</h3>
         <Description>
-          Send a test notification to your configured endpoint to verify that
-          the webhook is set up correctly and receiving events as expected.
+          {t("alerts.testWebhook.description")}
         </Description>
       </div>
 
@@ -190,7 +191,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
             {isTestPending && (
               <div className="mr-2 size-4 animate-spin rounded-full border-2 border-light-slate border-r-transparent" />
             )}
-            Test connection
+            {t("alerts.testWebhook.testConnection")}
           </Button>
           <Button variant="ghost" asChild>
             <a
@@ -198,7 +199,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
               target="_blank"
               rel="noreferrer"
             >
-              Go to docs
+              {t("alerts.testWebhook.goToDocs")}
               <ExternalLink className="m-2 size-3.5 shrink-0" />
             </a>
           </Button>
@@ -237,7 +238,7 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
                       {isTestPending && (
                         <div className="mr-2 size-4 animate-spin rounded-full border-2 border-light-slate border-r-transparent" />
                       )}
-                      Test trigger
+                      {t("alerts.testWebhook.testTrigger")}
                     </Button>
                   }
                 />

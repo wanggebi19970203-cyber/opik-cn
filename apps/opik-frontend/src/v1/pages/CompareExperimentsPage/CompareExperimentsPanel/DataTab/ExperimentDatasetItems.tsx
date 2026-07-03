@@ -8,6 +8,7 @@ import SyntaxHighlighter from "@/shared/SyntaxHighlighter/SyntaxHighlighter";
 import ImagesListWrapper from "@/shared/attachments/ImagesListWrapper/ImagesListWrapper";
 import NoData from "@/shared/NoData/NoData";
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { DatasetItem } from "@/types/datasets";
 import { pick } from "lodash";
 import { useProcessedInputData } from "@/hooks/useProcessedInputData";
@@ -21,6 +22,7 @@ const ExperimentDatasetItems = ({
   data,
   selectedKeys,
 }: ExperimentDatasetItemsProps) => {
+  const { t } = useTranslation();
   const selectedData: DatasetItem["data"] = useMemo(() => {
     if (!selectedKeys.length || !data) {
       return {};
@@ -53,7 +55,7 @@ const ExperimentDatasetItems = ({
     >
       {showMedia ? (
         <AccordionItem value="media" className="border-t">
-          <AccordionTrigger>Media</AccordionTrigger>
+          <AccordionTrigger>{t("compareExperiments.dataset.media")}</AccordionTrigger>
           <AccordionContent>
             <ImagesListWrapper media={media} />
           </AccordionContent>
@@ -61,7 +63,7 @@ const ExperimentDatasetItems = ({
       ) : null}
 
       <AccordionItem value="data">
-        <AccordionTrigger>Selected data</AccordionTrigger>
+        <AccordionTrigger>{t("compareExperiments.dataset.selectedData")}</AccordionTrigger>
         <AccordionContent>
           {formattedData ? (
             <SyntaxHighlighter

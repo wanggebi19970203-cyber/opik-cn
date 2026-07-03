@@ -54,11 +54,11 @@ public record Alert(
         @JsonView({
                 Alert.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) String lastUpdatedBy,
         @JsonView({Alert.View.Public.class,
-                Alert.View.Write.class}) @Schema(description = """
-                        Optional project scope for this alert. \
-                        When set, the alert is scoped to the specified project. \
-                        Do NOT also provide a 'scope:project' trigger config — the system will create it automatically from this field. \
-                        Sending both project_id and a scope:project trigger config will result in an error.\
+                Alert.View.Write.class})         @Schema(description = """
+                        此告警的可选项目范围。 \
+                        设置后，告警将限定在指定项目内。 \
+                        请勿同时提供 'scope:project' 触发器配置——系统会根据此字段自动创建。 \
+                        同时发送 project_id 和 scope:project 触发器配置将导致错误。\
                         """) UUID projectId,
         @JsonIgnore String workspaceId) {
 

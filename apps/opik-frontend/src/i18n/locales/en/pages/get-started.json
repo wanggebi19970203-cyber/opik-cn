@@ -1,0 +1,73 @@
+{
+  "getStarted": {
+    "title": "Get started",
+    "description": "Learn how to use Opik",
+    "steps": {
+      "install": "Install Opik",
+      "configure": "Configure your environment",
+      "firstTrace": "Create your first trace",
+      "evaluate": "Run your first evaluation"
+    },
+    "resources": {
+      "documentation": "Documentation",
+      "tutorials": "Tutorials",
+      "examples": "Examples"
+    },
+    "agentName": {
+      "title": "Name your project",
+      "description": "This creates a project where your traces and experiments will live.",
+      "projectName": "Project name",
+      "placeholder": "My project",
+      "creating": "Creating",
+      "continue": "Continue",
+      "createError": "Failed to create project. Please try again.",
+      "altText": "Onboarding illustration"
+    },
+    "connectAgent": {
+      "setUpOpikFor": "Set up Opik for {{agentName}}",
+      "description": "Connect your repo so Opik can help set up tracing, or instrument your code manually.",
+      "aiAssistedSetup": "AI-assisted setup",
+      "manualSetup": "Manual setup",
+      "backToIntegrations": "Back to integrations",
+      "needSomeHelp": "Need some help?",
+      "helpDescription": "Get help from your team or ours. Choose the option that works best for you.",
+      "getHelpInSlack": "Get help in Slack",
+      "watchTutorial": "Watch our tutorial",
+      "exploreOpik": "Explore Opik"
+    },
+    "connectToOllie": {
+      "description": "Ollie is Opik\u2019s AI coding assistant. When you connect your repo, Ollie can inspect your code, help add Opik tracing, and guide you through setup.",
+      "installOpik": "Install Opik",
+      "connectRepo": "Connect your repo to Ollie",
+      "repoConnected": "Repo connected",
+      "waitingForRepo": "Waiting for your repo to connect\u2026",
+      "connectedDescription": "Ollie can now inspect your code and help you set up tracing in Opik.",
+      "notConnectedDescription": "Run the command above in your repo. Once connected, Ollie can inspect your code and help finish setup.",
+      "connectTroubleshooting": "Connect troubleshooting"
+    },
+    "demoLoading": {
+      "creatingDemoProject": "Creating demo project…",
+      "settingUpSampleTraces": "Setting up sample traces…",
+      "preparingData": "Preparing some data for you…",
+      "almostReady": "Almost ready…",
+      "tryAgain": "Try again",
+      "takingLonger": "Demo data is taking longer than expected.",
+      "backToSetup": "Back to setup"
+    },
+    "manualIntegration": {
+      "allIntegrations": "All integrations",
+      "llmProviders": "LLM providers",
+      "frameworksAndTools": "Frameworks & tools",
+      "useOpikSkills": "Use Opik skills",
+      "viewAll": "View all"
+    },
+    "selectIntent": {
+      "welcome": "Welcome to Opik - let\u2019s get you set up",
+      "whereAreYou": "Where are you right now?",
+      "hasAgent": "I have an AI agent or LLM app",
+      "hasAgentDescription": "Connect it and track exactly what your agent does on every run.",
+      "noAgent": "I don\u2019t have an AI agent yet",
+      "altText": "Onboarding illustration"
+    }
+  }
+}

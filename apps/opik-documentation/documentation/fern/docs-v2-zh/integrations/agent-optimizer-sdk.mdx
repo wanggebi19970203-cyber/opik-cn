@@ -1,0 +1,143 @@
+---
+headline: Opik 优化器 | Opik 文档
+og:description: 为 Agent 优化器 SDK 做出有效贡献，提升模型性能。通过我们的详细指南开始优化提示词。
+og:site_name: Opik 文档
+og:title: 为 Agent 优化器做贡献 - Opik
+title: Opik 优化器
+---
+
+# 为 Agent 优化器 SDK 做贡献
+
+本指南将帮助你开始为 Agent 优化器 SDK 做出贡献，这是我们用于优化提示词和提升模型性能的工具。
+
+在开始之前，请查看我们的[贡献概述](/contributing/overview)和[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。
+
+## 项目结构
+
+Agent 优化器位于 `sdks/opik_optimizer` 目录中。以下是关键组件的概述：
+
+- `src/`：主要源代码
+- `benchmarks/`：基准测试工具和结果
+- `notebooks/`：示例笔记本和教程
+- `tests/`：测试文件
+- `docs/`：附加文档
+- `scripts/`：实用脚本
+- `setup.py`：包配置
+- `requirements.txt`：Python 依赖项
+
+## 环境设置
+
+<Steps>
+  <Step title="创建虚拟环境">
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # Windows 系统: venv\Scripts\activate
+    ```
+  </Step>
+  <Step title="安装依赖项">
+    ```bash
+    cd sdks/opik_optimizer
+    pip install -r requirements.txt
+    pip install -e .
+    ```
+  </Step>
+  <Step title="运行测试">
+    ```bash
+    pytest tests/
+    ```
+  </Step>
+</Steps>
+
+## 开发工作流程
+
+<Steps>
+  <Step title="创建分支">为你的更改创建新分支</Step>
+  <Step title="进行更改">进行你的更改</Step>
+  <Step title="添加测试">为新功能添加测试</Step>
+  <Step title="运行测试">运行测试套件</Step>
+  <Step title="运行基准测试">如果适用，运行基准测试</Step>
+  <Step title="提交 PR">提交拉取请求</Step>
+</Steps>
+
+## 测试
+
+我们使用 pytest 进行测试。添加新功能时：
+
+<Steps>
+  <Step title="编写单元测试">在 `tests/` 目录中编写单元测试</Step>
+  <Step title="运行测试">确保所有测试通过 `pytest tests/`</Step>
+</Steps>
+
+## 基准测试
+
+优化器包含用于衡量性能改进的基准测试工具：
+
+<Steps>
+  <Step title="运行基准测试">```bash cd benchmarks python run_benchmark.py ```</Step>
+  <Step title="查看结果">在 `benchmark_results/` 目录中查看结果</Step>
+  <Step title="添加基准测试">为新的优化策略添加基准测试</Step>
+</Steps>
+
+## 文档
+
+添加新功能或进行更改时：
+
+<Steps>
+  <Step title="更新 README">更新 README.md</Step>
+  <Step title="添加文档字符串">为新函数和类添加文档字符串</Step>
+  <Step title="添加示例">在 `notebooks/` 目录中包含示例</Step>
+  <Step title="更新文档">
+    如有必要，更新主文档。详见[文档指南](documentation)。
+  </Step>
+</Steps>
+
+## 代码风格
+
+我们遵循 PEP 8 规范。提交 PR 前：
+
+<Steps>
+  <Step title="运行代码检查">运行 `flake8` 检查代码风格问题</Step>
+  <Step title="修复问题">修复所有代码检查错误</Step>
+  <Step title="检查风格">确保你的代码遵循 Python 最佳实践</Step>
+</Steps>
+
+## 拉取请求流程
+
+<Steps>
+  <Step title="Fork 仓库">Fork 仓库</Step>
+  <Step title="创建分支">创建你的功能分支</Step>
+  <Step title="进行更改">进行你的更改</Step>
+  <Step title="运行检查">运行测试和基准测试</Step>
+  <Step title="提交 PR">提交拉取请求</Step>
+</Steps>
+
+你的 PR 应该：
+
+- 包含清晰的更改描述
+- 为新功能包含测试
+- 通过所有 CI 检查
+- 遵循项目编码标准
+- 如果适用，包含基准测试结果
+
+## 笔记本和示例
+
+`notebooks/` 目录包含示例和教程。添加新功能时：
+
+<Steps>
+  <Step title="创建笔记本">创建演示该功能的新笔记本</Step>
+  <Step title="添加说明">包含清晰的说明和注释</Step>
+  <Step title="展示用法">展示基本和高级用法</Step>
+  <Step title="添加比较">如果相关，添加性能比较</Step>
+</Steps>
+
+## 需要帮助？
+
+如果你需要帮助或有疑问：
+
+- 在 GitHub 上提交 issue
+- 加入我们的 [Comet Chat](https://chat.comet.com) 社区
+- 查看现有文档和笔记本
+
+---
+
+_贡献前请查看我们的[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。_

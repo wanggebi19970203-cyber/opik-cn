@@ -1,11 +1,12 @@
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 
 import { Tag, TagProps } from "@/ui/tag";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { DATASET_TYPE } from "@/types/datasets";
 import { ROW_HEIGHT } from "@/types/shared";
 import { TAG_SIZE_MAP } from "@/constants/shared";
-import { TYPE_LABELS } from "@/v2/pages/TestSuitesPage/columns";
+import { getTypeLabels } from "@/v2/pages/TestSuitesPage/columns";
 
 const VARIANT_MAP: Record<string, TagProps["variant"]> = {
   [DATASET_TYPE.TEST_SUITE]: "purple",
@@ -13,11 +14,13 @@ const VARIANT_MAP: Record<string, TagProps["variant"]> = {
 };
 
 const DatasetTypeCell = (context: CellContext<unknown, unknown>) => {
+  const { t } = useTranslation("pages/test-suites");
   const { column, table } = context;
   const value = (context.getValue() as string) ?? DATASET_TYPE.DATASET;
   const rowHeight = table.options.meta?.rowHeight ?? ROW_HEIGHT.small;
   const variant = VARIANT_MAP[value] ?? "yellow";
-  const label = TYPE_LABELS[value] ?? "Dataset";
+  const typeLabels = getTypeLabels(t);
+  const label = typeLabels[value] ?? t("testSuites.columnsPage.dataset");
   const tagSize = TAG_SIZE_MAP[rowHeight];
 
   return (

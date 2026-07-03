@@ -1,4 +1,5 @@
 import { APIWorkspaceMember } from "@/plugins/comet/useWorkspaceMembers";
+import i18next from "i18next";
 
 export interface User {
   apiKeys: string[];
@@ -46,6 +47,17 @@ export enum WORKSPACE_ROLE_TYPE {
   owner = "Workspace owner",
   member = "Workspace member",
 }
+
+export const getWorkspaceRoleLabel = (role: WORKSPACE_ROLE_TYPE): string => {
+  switch (role) {
+    case WORKSPACE_ROLE_TYPE.owner:
+      return i18next.t("comet.workspaceOwner");
+    case WORKSPACE_ROLE_TYPE.member:
+      return i18next.t("comet.workspaceMember");
+    default:
+      return role;
+  }
+};
 
 export interface Organization {
   id: string;

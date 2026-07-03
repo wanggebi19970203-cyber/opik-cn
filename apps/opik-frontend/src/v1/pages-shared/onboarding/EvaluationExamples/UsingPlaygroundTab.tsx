@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { SheetClose } from "@/ui/sheet";
 import useAppStore from "@/store/AppStore";
@@ -5,21 +6,20 @@ import { Link } from "@tanstack/react-router";
 import evaluationGifUrl from "/images/playground_evaluation.gif";
 import { buildDocsUrl } from "@/v1/lib/utils";
 const UsingPlaygroundTab = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
     <div className="flex flex-col gap-6 rounded-md border bg-background p-6">
       <div className="comet-body-s">
         <div className="pt-1">
-          You can run prompt evaluations from the Opik platform using the
-          Playground. This allows you to test different prompts on any test
-          suites available in the platform.
+          {t('integrationExplorer.playgroundDescription')}
         </div>
 
         <img className="my-5 block" src={evaluationGifUrl} />
 
         <div className="pb-1">
-          You can learn more about running evaluations in the playground in the{" "}
+          {t('integrationExplorer.learnMorePlayground')}{" "}
           <Button
             size="sm"
             variant="link"
@@ -33,12 +33,12 @@ const UsingPlaygroundTab = () => {
               target="_blank"
               rel="noreferrer"
             >
-              documentation guide.
+              {t('integrationExplorer.documentationGuide')}
             </a>
           </Button>
         </div>
         <div className="pt-2">
-          You can get started today by navigating to the{" "}
+          {t('integrationExplorer.getStartedPlayground')}{" "}
           <SheetClose asChild>
             <Button
               size="sm"
@@ -47,13 +47,13 @@ const UsingPlaygroundTab = () => {
               asChild
             >
               <Link to="/$workspaceName/playground" params={{ workspaceName }}>
-                Playground.
+                {t('integrationExplorer.playgroundLink')}
               </Link>
             </Button>
           </SheetClose>{" "}
-          From there, you can add prompts with variables in the format{" "}
-          <span className="text-emerald-500">{`{{ variable_name }}`}</span> and
-          evaluate them against your Opik test suites.
+          {t('integrationExplorer.playgroundUsage')}{" "}
+          <span className="text-emerald-500">{`{{ variable_name }}`}</span>{" "}
+          {t('integrationExplorer.evaluateAgainstSuites')}
         </div>
       </div>
     </div>

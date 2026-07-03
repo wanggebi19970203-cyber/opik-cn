@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -27,33 +28,32 @@ const TurnOnDiagnosticDialog: React.FC<TurnOnDiagnosticDialogProps> = ({
   onConfirm,
   isPending,
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Turn on daily diagnostic?</DialogTitle>
+          <DialogTitle>{t("signals.turnOnDiagnostic.title")}</DialogTitle>
         </DialogHeader>
 
         <div className="comet-body-s text-muted-slate">
-          First diagnostic runs now. Then every day at {DAILY_RUN_TIME_LABEL} —
-          we&apos;ll review your traces and flag issues to fix. Runs on your
-          Ollie tokens. Turn off anytime.{" "}
+          {t("signals.turnOnDiagnostic.description", { time: DAILY_RUN_TIME_LABEL })}{" "}
           <a
             href={DIAGNOSTICS_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--color-primary)] hover:underline"
           >
-            Learn more
+            {t("signals.turnOnDiagnostic.learnMore")}
           </a>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("signals.turnOnDiagnostic.cancel")}
           </Button>
           <Button onClick={onConfirm} disabled={isPending}>
-            Run first diagnostic
+            {t("signals.turnOnDiagnostic.runFirstDiagnostic")}
           </Button>
         </DialogFooter>
       </DialogContent>

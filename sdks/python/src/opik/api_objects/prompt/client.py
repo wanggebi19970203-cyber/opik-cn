@@ -20,7 +20,7 @@ _PromptT = TypeVar("_PromptT", bound=BasePrompt)
 
 @dataclasses.dataclass
 class PromptSearchResult:
-    """Result from searching prompts, containing name, template structure, and latest version details."""
+    """搜索提示词的结果，包含名称、模板结构和最新版本详情。"""
 
     name: str
     template_structure: str
@@ -33,14 +33,13 @@ def _validate_prompt_pin(
     version: Optional[str],
     environment: Optional[str],
 ) -> None:
-    """Reject mutually-exclusive prompt selectors before hitting the REST API.
+    """在调用 REST API 之前拒绝互斥的提示词选择器。
 
-    The wire-level ``retrieve_prompt_version`` endpoint accepts ``commit``,
-    ``version_number`` and ``environment``, but at most one may be set;
-    otherwise the backend silently picks one. ``commit`` is also deprecated
-    in favour of ``version``. Centralizing the check here keeps
-    ``PromptClient.get_prompt`` and ``PromptClient.get_prompt_with_cache``
-    in sync.
+    底层 ``retrieve_prompt_version`` 端点接受 ``commit``、
+    ``version_number`` 和 ``environment``，但最多只能设置一个；
+    否则后端会静默选择其中一个。``commit`` 也已弃用，
+    推荐使用 ``version``。在此处集中检查可以保持
+    ``PromptClient.get_prompt`` 和 ``PromptClient.get_prompt_with_cache`` 的同步。
     """
     if commit is not None and version is not None:
         raise ValueError(
@@ -75,31 +74,31 @@ class PromptClient:
         project_name: Optional[str] = None,
     ) -> prompt_version_detail.PromptVersionDetail:
         """
-        Creates the prompt detail for the given prompt name and template.
+        为给定的提示词名称和模板创建提示词详情。
 
-        Parameters:
-        - name: The name of the prompt.
-        - prompt: The template content for the prompt.
-        - metadata: Optional metadata for the prompt.
-        - type: The template type (MUSTACHE or JINJA2).
-        - template_structure: Either "text" (default) or "chat".
-        - id: Optional unique identifier (UUID) for the prompt.
-        - description: Optional description of the prompt (up to 255 characters).
-        - change_description: Optional description of changes in this version.
-        - tags: Optional list of tags to associate with the prompt.
-        - project_name: Optional project name to associate with the prompt. If not provided, the default project will be used.
+        Args:
+            name: 提示词的名称。
+            prompt: 提示词的模板内容。
+            metadata: 可选的提示词元数据。
+            type: 模板类型（MUSTACHE 或 JINJA2）。
+            template_structure: "text"（默认）或 "chat"。
+            id: 可选的提示词唯一标识符（UUID）。
+            description: 可选的提示词描述（最多 255 个字符）。
+            change_description: 可选的此版本更改描述。
+            tags: 可选的要与提示词关联的标签列表。
+            project_name: 可选的要与提示词关联的项目名称。如果未提供，将使用默认项目。
 
         Returns:
-        - A Prompt object for the provided prompt name and template.
+            为提供的提示词名称和模板创建的 Prompt 对象。
 
         Raises:
-        - PromptTemplateStructureMismatch: If a prompt with the same name already exists but has a different
-          template_structure (e.g., trying to create a text prompt when a chat prompt exists, or vice versa).
-          Template structure is immutable after prompt creation.
+            PromptTemplateStructureMismatch: 如果同名提示词已存在但具有不同的
+                template_structure（例如，当聊天提示词存在时尝试创建文本提示词，反之亦然）。
+                模板结构在提示词创建后不可变。
         """
         prompt_version = self._get_latest_version(name, project_name=project_name)
 
-        # For chat prompts, compare parsed JSON to avoid formatting differences
+        # 对于聊天提示词，比较解析后的 JSON 以避免格式差异
         templates_equal = False
 
         if prompt_version is not None:
@@ -120,12 +119,12 @@ class PromptClient:
             else:
                 templates_equal = prompt_version.template == prompt
 
-        # Create a new version if:
-        # - No version exists yet (new prompt)
-        # - Template content has changed
-        # - Metadata has changed
-        # - Type has changed
-        # Note: template_structure is immutable and used by the backend only if it is the first prompt version.
+        # 在以下情况下创建新版本：
+        # - 尚不存在版本（新提示词）
+        # - 模板内容已更改
+        # - 元数据已更改
+        # - 类型已更改
+        # 注意：template_structure 是不可变的，仅在它是第一个提示词版本时由后端使用。
         if (
             prompt_version is None
             or not templates_equal
@@ -162,8 +161,8 @@ class PromptClient:
         change_description: Optional[str] = None,
         tags: Optional[List[str]] = None,
     ) -> prompt_version_detail.PromptVersionDetail:
-        # If it's a new prompt and container-level params are provided, use create_prompt endpoint
-        # which creates both the container and first version in one call
+        # 如果是新提示词且提供了容器级参数，使用 create_prompt 端点
+        # 该端点在一次调用中同时创建容器和第一个版本
         if is_new and (id is not None or description is not None or tags is not None):
             self._rest_client.prompts.create_prompt(
                 name=name,
@@ -177,22 +176,22 @@ class PromptClient:
                 tags=tags,
                 project_name=project_name,
             )
-            # After creating, retrieve the version that was created
+            # 创建后，检索已创建的版本
             new_prompt_version_detail = (
                 self._rest_client.prompts.retrieve_prompt_version(
                     name=name, project_name=project_name
                 )
             )
-            # retrieve_prompt_version may not return tags, so we need to set them manually
-            # from the tags we just passed to create_prompt
+            # retrieve_prompt_version 可能不返回标签，因此我们需要手动设置它们
+            # 从我们刚刚传递给 create_prompt 的标签中
             if tags is not None and new_prompt_version_detail.tags is None:
-                # Pydantic objects are frozen, so we copy to inject tags;
-                # model_copy preserves every other field automatically.
+                # Pydantic 对象是冻结的，因此我们复制以注入标签；
+                # model_copy 自动保留所有其他字段。
                 new_prompt_version_detail = new_prompt_version_detail.model_copy(
                     update={"tags": tags}
                 )
         else:
-            # For existing prompts or when no container-level params, use create_prompt_version
+            # 对于现有提示词或没有容器级参数时，使用 create_prompt_version
             new_prompt_version_detail_data = prompt_version_detail.PromptVersionDetail(
                 template=prompt,
                 metadata=metadata,
@@ -221,22 +220,20 @@ class PromptClient:
         environment: Optional[str] = None,
     ) -> Optional[prompt_version_detail.PromptVersionDetail]:
         """
-        Retrieve the prompt detail for a given prompt name, optionally
-        pinned to a specific ``version``.
+        检索给定提示词名称的提示词详情，可选择固定到特定的 ``version``。
 
-        Parameters:
-            name: The name of the prompt.
-            version: Optional sequential version selector in the wire format
-                ``"v<N>"`` (e.g. ``"v3"``). If not provided, the latest
-                version is retrieved.
-            commit: DEPRECATED in favour of ``version``. Mutually exclusive with ``version``.
-            raise_if_not_template_structure: Optional template structure validation. If provided and doesn't match, raises PromptTemplateStructureMismatch.
-            project_name: The name of the project to which the prompt belongs. If not provided, the default project is used.
-            environment: Optional environment name. When provided, returns the version that the given environment
-                currently points to. Mutually exclusive with ``commit``.
+        Args:
+            name: 提示词的名称。
+            version: 可选的顺序版本选择器，格式为 ``"v<N>"``（例如 ``"v3"``）。
+                如果未提供，将检索最新版本。
+            commit: 已弃用，推荐使用 ``version``。与 ``version`` 互斥。
+            raise_if_not_template_structure: 可选的模板结构验证。如果提供且不匹配，将引发 PromptTemplateStructureMismatch。
+            project_name: 提示词所属项目的名称。如果未提供，将使用默认项目。
+            environment: 可选的环境名称。当提供时，返回给定环境当前指向的版本。
+                与 ``commit`` 互斥。
 
         Returns:
-            Prompt: The details of the specified prompt.
+            Prompt: 指定提示词的详情。
         """
         _validate_prompt_pin(commit, version, environment)
         try:
@@ -255,7 +252,7 @@ class PromptClient:
             if should_skip_validation:
                 return prompt_version
 
-            # Client-side validation for template_structure if requested and not skipped
+            # 如果请求且未跳过，进行客户端 template_structure 验证
             if (
                 raise_if_not_template_structure is not None
                 and prompt_version.template_structure != raise_if_not_template_structure
@@ -270,7 +267,7 @@ class PromptClient:
         except rest_api_core.ApiError as e:
             if e.status_code != 404:
                 raise e
-            # 400, 404 - not found
+            # 400, 404 - 未找到
         return None
 
     def get_prompt_with_cache(
@@ -343,8 +340,7 @@ class PromptClient:
             opik_context.attach_prompt_to_current_span(result)
         return result
 
-    # TODO: Need to add support for prompt name in the BE so we don't
-    # need to retrieve the prompt id
+    # TODO: 需要在后端添加对提示词名称的支持，这样我们就不需要检索提示词 id
     def get_all_prompt_versions(
         self,
         name: str,
@@ -353,48 +349,48 @@ class PromptClient:
         project_name: Optional[str] = None,
     ) -> List[prompt_version_detail.PromptVersionDetail]:
         """
-        Retrieve all the prompt details for a given prompt name.
+        检索给定提示词名称的所有提示词详情。
 
-        Parameters:
-            name: The name of the prompt.
-            search: Optional search text to find in the template or change description fields.
-            project_name: The name of the project to filter prompts by. If None, all prompts are returned.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: "<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+        Args:
+            name: 提示词的名称。
+            search: 可选的搜索文本，用于在模板或更改描述字段中查找。
+            project_name: 用于过滤提示词的项目名称。如果为 None，将返回所有提示词。
+            filter_string: 使用 Opik 查询语言（OQL）缩小搜索范围的过滤字符串。
+                格式为："<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
 
-                Supported columns include:
-                - `id`, `commit`, `template`, `change_description`, `created_by`: String fields with full operator support
-                - `metadata`: Dictionary field (use dot notation, e.g., "metadata.environment")
-                - `type`: Enum field (=, != only)
-                - `tags`: List field (use "contains" operator only)
-                - `created_at`: DateTime field (use ISO 8601 format, e.g., "2024-01-01T00:00:00Z")
+                支持的列包括：
+                - `id`、`commit`、`template`、`change_description`、`created_by`：字符串字段，完全支持运算符
+                - `metadata`：字典字段（使用点表示法，例如 "metadata.environment"）
+                - `type`：枚举字段（仅支持 =, !=）
+                - `tags`：列表字段（仅支持 "contains" 运算符）
+                - `created_at`：日期时间字段（使用 ISO 8601 格式，例如 "2024-01-01T00:00:00Z"）
 
-                Examples:
-                - `tags contains "production"` - Filter by tag
-                - `tags contains "v1" AND tags contains "production"` - Filter by multiple tags
-                - `template contains "customer"` - Filter by template content
-                - `created_by = "user@example.com"` - Filter by creator
-                - `created_at >= "2024-01-01T00:00:00Z"` - Filter by creation date
-                - `metadata.environment = "prod"` - Filter by metadata field
+                示例：
+                - `tags contains "production"` - 按标签过滤
+                - `tags contains "v1" AND tags contains "production"` - 按多个标签过滤
+                - `template contains "customer"` - 按模板内容过滤
+                - `created_by = "user@example.com"` - 按创建者过滤
+                - `created_at >= "2024-01-01T00:00:00Z"` - 按创建日期过滤
+                - `metadata.environment = "prod"` - 按元数据字段过滤
 
         Returns:
-            List[PromptVersionDetail]: A list of prompt versions for the given name.
+            List[PromptVersionDetail]: 给定名称的提示词版本列表。
 
         Example:
-            # Get all versions of a prompt
+            # 获取提示词的所有版本
             versions = prompt_client.get_all_prompt_versions(name="my-prompt")
 
-            # Filter by tags (versions containing "production" tag)
+            # 按标签过滤（包含 "production" 标签的版本）
             versions = prompt_client.get_all_prompt_versions(
                 name="my-prompt",
                 filter_string='tags contains "production"')
 
-            # Search for specific text in a template or change description fields
+            # 在模板或更改描述字段中搜索特定文本
             versions = prompt_client.get_all_prompt_versions(
                 name="my-prompt",
                 search="customer")
 
-            # Combine search and filtering
+            # 组合搜索和过滤
             versions = prompt_client.get_all_prompt_versions(
                 name="my-prompt",
                 search="customer",
@@ -458,8 +454,8 @@ class PromptClient:
             versions = prompt_versions_page or []
             prompts.extend(
                 [
-                    # Converting to PromptVersionDetail for consistency with other methods.
-                    # TODO: backend should implement non-frontend endpoint which will return PromptVersionDetail objects
+                    # 转换为 PromptVersionDetail 以与其他方法保持一致。
+                    # TODO: 后端应实现非前端端点，返回 PromptVersionDetail 对象
                     prompt_version_detail.PromptVersionDetail(
                         id=version.id,
                         prompt_id=version.prompt_id,
@@ -494,23 +490,23 @@ class PromptClient:
         project_name: Optional[str] = None,
     ) -> List[PromptSearchResult]:
         """
-        Search prompt containers by optional name substring and filters, then
-        return the latest version detail for each matched prompt container.
+        按可选的名称子字符串和过滤器搜索提示词容器，
+        然后返回每个匹配提示词容器的最新版本详情。
 
-        Parameters:
-            name: Optional substring of the prompt name to search for.
-            parsed_filters: List of parsed filters (OQL) that will be stringified for the backend.
-            project_name: The name of the project to search within. If not provided, the default project is used.
+        Args:
+            name: 可选的提示词名称子字符串，用于搜索。
+            parsed_filters: 已解析的过滤器（OQL）列表，将被序列化为字符串发送给后端。
+            project_name: 要搜索的项目名称。如果未提供，将使用默认项目。
 
         Returns:
-            List[PromptSearchResult]: Each result contains name, template_structure, and prompt_version_detail.
+            List[PromptSearchResult]: 每个结果包含 name、template_structure 和 prompt_version_detail。
         """
         try:
             filters_str = (
                 json.dumps(parsed_filters) if parsed_filters is not None else None
             )
 
-            # Page through all prompt containers and collect:
+            # 分页遍历所有提示词容器并收集：
             # (name, template_structure, tags)
             page = 1
             size = 1000
@@ -539,17 +535,17 @@ class PromptClient:
             if len(prompt_info) == 0:
                 return []
 
-            # Retrieve latest version for each container name
+            # 检索每个容器名称的最新版本
             results: List[PromptSearchResult] = []
             for prompt_name, template_structure, tags in prompt_info:
                 try:
                     latest_version = self._rest_client.prompts.retrieve_prompt_version(
                         name=prompt_name, project_name=project_name
                     )
-                    # retrieve_prompt_version may not return tags, so we need to set them from get_prompts response
+                    # retrieve_prompt_version 可能不返回标签，因此我们需要从 get_prompts 响应中设置它们
                     if tags is not None and latest_version.tags is None:
-                        # Pydantic objects are frozen, so we copy to inject tags;
-                        # model_copy preserves every other field automatically.
+                        # Pydantic 对象是冻结的，因此我们复制以注入标签；
+                        # model_copy 自动保留所有其他字段。
                         latest_version = latest_version.model_copy(
                             update={"tags": tags}
                         )
@@ -562,7 +558,7 @@ class PromptClient:
                         )
                     )
                 except rest_api_core.ApiError as e:
-                    # Skip prompts that can't be retrieved (e.g., deleted between search and retrieval)
+                    # 跳过无法检索的提示词（例如，在搜索和检索之间被删除的）
                     if e.status_code == 404:
                         continue
                     raise e
@@ -584,28 +580,24 @@ class PromptClient:
         project_name: Optional[str] = None,
         change_description: Optional[str] = None,
     ) -> prompt_version_detail.PromptVersionDetail:
-        """Create a hidden mask prompt version that overrides get_prompt output when mask context is active.
+        """创建一个隐藏的遮罩提示词版本，在遮罩上下文激活时覆盖 get_prompt 的输出。
 
-        Internal API — not intended for end-user use. A mask is a hidden
-        prompt version (version_type="mask") that does not appear in the prompt
-        history or version listings. When a mask context is active (via
-        ``prompt_mask_context``), ``get_prompt`` returns the mask's template
-        instead of the latest visible version.
+        内部 API — 不面向最终用户使用。遮罩是一个隐藏的
+        提示词版本（version_type="mask"），不会出现在提示词历史或版本列表中。
+        当遮罩上下文激活时（通过 ``prompt_mask_context``），
+        ``get_prompt`` 返回遮罩的模板而不是最新的可见版本。
 
         Args:
-            name: Name of the prompt to attach the mask to. The prompt must
-                already exist.
-            prompt: The template content for the mask version.
-            type: Template type (MUSTACHE or JINJA2).
-            metadata: Optional metadata dict.
-            template_structure: "text" or "chat".
-            project_name: Optional project scope. Uses the default project if
-                not provided.
-            change_description: Optional description of why this mask was
-                created.
+            name: 要附加遮罩的提示词名称。提示词必须已存在。
+            prompt: 遮罩版本的模板内容。
+            type: 模板类型（MUSTACHE 或 JINJA2）。
+            metadata: 可选的元数据字典。
+            template_structure: "text" 或 "chat"。
+            project_name: 可选的项目范围。如果未提供，将使用默认项目。
+            change_description: 可选的创建此遮罩的原因描述。
 
         Returns:
-            The created PromptVersionDetail with version_type="mask".
+            创建的 PromptVersionDetail，version_type="mask"。
         """
         new_version = prompt_version_detail.PromptVersionDetail(
             template=prompt,
@@ -628,34 +620,34 @@ class PromptClient:
         merge: Optional[bool] = None,
     ) -> None:
         """
-        Update tags for one or more prompt versions in a single batch operation.
+        在单个批量操作中更新一个或多个提示词版本的标签。
 
-        Parameters:
-            version_ids: List of prompt version IDs to update.
-            tags: Tags to set or merge. Semantics:
-                - None: No change to tags (preserves existing tags).
-                - []: Clear all tags (when merge is False or None).
-                - ['tag1', 'tag2']: Set or merge tags (based on merge parameter).
-            merge: Controls tag update behavior. Semantics:
-                - None: Use backend default behavior (replace mode).
-                - False: Replace all existing tags (replace mode).
-                - True: Merge new tags with existing tags (union).
+        Args:
+            version_ids: 要更新的提示词版本 ID 列表。
+            tags: 要设置或合并的标签。语义：
+                - None：不更改标签（保留现有标签）。
+                - []：清除所有标签（当 merge 为 False 或 None 时）。
+                - ['tag1', 'tag2']：设置或合并标签（基于 merge 参数）。
+            merge: 控制标签更新行为。语义：
+                - None：使用后端默认行为（替换模式）。
+                - False：替换所有现有标签（替换模式）。
+                - True：将新标签与现有标签合并（并集）。
 
         Example:
-            # Replace tags on multiple versions (default behavior)
+            # 替换多个版本上的标签（默认行为）
             prompts_client.batch_update_prompt_version_tags(
                 version_ids=["version-id-1", "version-id-2"],
                 tags=["production", "v2"]
             )
 
-            # Merge new tags with existing tags
+            # 将新标签与现有标签合并
             prompts_client.batch_update_prompt_version_tags(
                 version_ids=["version-id-1"],
                 tags=["hotfix"],
                 merge=True
             )
 
-            # Clear all tags
+            # 清除所有标签
             prompts_client.batch_update_prompt_version_tags(
                 version_ids=["version-id-1"],
                 tags=[]

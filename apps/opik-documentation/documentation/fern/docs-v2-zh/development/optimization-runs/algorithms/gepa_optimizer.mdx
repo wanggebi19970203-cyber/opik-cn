@@ -1,0 +1,162 @@
+---
+description: 通过 Opik 的 `GepaOptimizer` 使用外部 GEPA 包，利用反思模型优化单轮任务的系统提示词。
+headline: GEPA | Opik 文档
+og:description: 学习使用 GepaOptimizer 增强单轮任务提示词，借助 GEPA 实现高效优化并与 Opik 兼容的结果。
+og:site_name: Opik 文档
+og:title: 使用 Opik 优化单轮任务 - GEPA
+subtitle: 基于反思的单轮系统提示词优化
+title: GEPA 优化器
+---
+
+`GepaOptimizer` 封装了外部 [GEPA](https://github.com/gepa-ai/gepa) 包，用于优化单轮任务的系统提示词。它将 Opik 的数据集和指标映射为 GEPA 所需的格式，使用任务模型和反思模型运行 GEPA 的优化过程，并返回与 Opik SDK 兼容的标准 `OptimizationResult`。
+
+<Note>
+  `GepaOptimizer` 适用于单轮任务（一次用户输入 → 一次模型响应），并且您希望使用反思驱动的搜索来优化系统提示词的场景。
+</Note>
+
+## 工作原理
+
+GEPA 优化器结合了两种关键方法来优化智能体：
+
+1. **反思**：优化器利用评估结果来改进提示词。
+2. **进化**：优化器使用进化算法探索提示词空间。
+
+您可以在 [GEPA 论文](https://arxiv.org/abs/2507.19457) 中了解更多关于该算法的细节，简而言之，优化器将：
+
+<Frame>
+  <img src="/img/agent_optimization/gepa_optimizer.png" alt="GEPA 优化器" />
+</Frame>
+
+## 快速开始
+
+```python
+"""
+Optimize a simple system prompt on the tiny_test dataset.
+Requires: pip install gepa, and a valid OPENAI_API_KEY for LiteLLM-backed models.
+"""
+from typing import Any, Dict
+
+from opik.evaluation.metrics import LevenshteinRatio
+from opik.evaluation.metrics.score_result import ScoreResult
+
+from opik_optimizer import ChatPrompt, datasets
+from opik_optimizer.gepa_optimizer import GepaOptimizer
+
+def levenshtein_ratio(dataset_item: Dict[str, Any], llm_output: str) -> ScoreResult:
+    return LevenshteinRatio().score(reference=dataset_item["label"], output=llm_output)
+
+dataset = datasets.tiny_test()
+
+prompt = ChatPrompt(
+    system="You are a helpful assistant. Answer concisely with the exact answer.",
+    user="{text}",
+)
+
+optimizer = GepaOptimizer(
+    model="openai/gpt-4o-mini",
+    n_threads=6,
+    model_parameters={"temperature": 0.2, "max_tokens": 200},
+)
+
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    max_trials=12,
+    reflection_minibatch_size=2,
+    n_samples=5,
+)
+
+result.display()
+```
+
+### 确定性与工具使用
+
+- GEPA 的随机种子会直接传递到底层的 `gepa.optimize` 调用，但提示词中的任何非确定性因素（工具调用、非零温度、外部 API）仍会引入方差。如需单独测试种子效果，请禁用工具或使用缓存的响应。
+- GEPA 在优化循环内部会发出自己的基线评估。您会看到来自 Opik 封装层的一个基线分数，以及在第一次试验前来自 GEPA 的另一个基线分数；这是正常现象，不会重复消耗指标预算。
+- 反思仅在 GEPA 接受至少 `reflection_minibatch_size` 个不同的提示词后才会触发。如果迷你批次大小超过试验预算，优化器会记录警告并跳过反思。
+- GEPA 支持**评估期间的工具使用**（`allow_tool_use=True`），但目前**不支持** `optimize_tools=True`。在适配器支持之前，工具描述优化请求将被降级/阻止。
+
+### GEPA 分数与 Opik 分数
+
+- **GEPA 分数**列反映的是 GEPA 在其训练/验证集分割上计算的聚合分数，用于决定哪些候选保留在帕累托前沿上。它有助于理解 GEPA 的进化搜索如何对提示词进行排名。
+- **Opik 分数**列是通过 Opik 的指标管道在相同数据集上执行的全新评估（遵循 `n_samples` 设置）。这是您在与基线或其他优化器进行比较时应使用的分数。
+- 由于 GEPA 分数基于 GEPA 的内部聚合，它可能与同一提示词的 Opik 分数存在差异。这是正常现象——将 GEPA 分数视为 GEPA 保留或丢弃候选的参考依据，最终比较以 Opik 分数为准。
+
+### `skip_perfect_score`
+
+- 当 `skip_perfect_score=True` 时，GEPA 会立即忽略任何 GEPA 分数达到或超过 `perfect_score` 阈值（默认 `1.0`）的候选。这确保搜索继续探索不完美的提示词，而不是花费预算去优化已经完美的提示词。
+- 如果您的指标最高值低于 `1.0`，或者您仍想查看 GEPA 如何变异一个满分提示词（例如，当您关心的是通过 Opik 的重新评分步骤而非 GEPA 的聚合来打破平局时），请设置 `skip_perfect_score=False`。
+
+## 配置选项
+
+### 优化器参数
+
+优化器具有以下参数：
+
+<ParamField path="model" type="str" optional={true} default="openai/gpt-5-nano">用于优化算法的 LiteLLM 模型名称</ParamField>
+<ParamField path="model_parameters" type="dict[str, typing.Any] | None" optional={true}>可选的 LiteLLM 参数字典，用于优化器内部的 LLM 调用。常用参数：temperature、max_tokens、max_completion_tokens、top_p。</ParamField>
+<ParamField path="n_threads" type="int" optional={true} default="6">评估的并行线程数</ParamField>
+<ParamField path="verbose" type="int" optional={true} default="1">控制内部日志/进度条（0=关闭，1=开启）</ParamField>
+<ParamField path="seed" type="int" optional={true} default="42">用于可复现性的随机种子</ParamField>
+
+### `optimize_prompt` 参数
+
+`optimize_prompt` 方法具有以下参数：
+
+
+<ParamField path="prompt" type="ChatPrompt">要优化的提示词</ParamField>
+<ParamField path="dataset" type="Dataset">用于优化的 Opik 数据集</ParamField>
+<ParamField path="metric" type="Callable">用于评估的指标函数</ParamField>
+<ParamField path="experiment_config" type="dict | None" optional={true}>实验的可选配置</ParamField>
+<ParamField path="n_samples" type="int | float | str | None" optional={true}>每次评估使用的数据集条目数。可使用数量（如 `50`）、比例（如 `0.1`）、百分比（如 "10%"），或使用 "all"/"full"/None 表示完整数据集。</ParamField>
+<ParamField path="n_samples_minibatch" type="int | None" optional={true}>内部循环迷你批次的可选样本数（默认为 n_samples）。</ParamField>
+<ParamField path="n_samples_strategy" type="str | None" optional={true}>子采样的采样策略（默认："random_sorted"）。</ParamField>
+<ParamField path="auto_continue" type="bool" optional={true} default="False">是否自动继续优化</ParamField>
+<ParamField path="agent_class" type="type[opik_optimizer.optimizable_agent.OptimizableAgent] | None" optional={true}>可选的智能体类</ParamField>
+<ParamField path="project_name" type="str" optional={true} default="Optimization" />
+<ParamField path="max_trials" type="int" optional={true} default="10">要测试的不同提示词的最大数量（默认：10）</ParamField>
+<ParamField path="reflection_minibatch_size" type="int" optional={true} default="3">反思迷你批次大小（默认：3）</ParamField>
+<ParamField path="candidate_selection_strategy" type="str" optional={true} default="pareto">候选选择策略（可选 "pareto"、"current_best" 或 "epsilon_greedy"；默认："pareto"）</ParamField>
+<ParamField path="skip_perfect_score" type="bool" optional={true} default="True">跳过满分候选（默认：True）</ParamField>
+<ParamField path="perfect_score" type="float" optional={true} default="1.0">视为满分的分数（默认：1.0）</ParamField>
+<ParamField path="use_merge" type="bool" optional={true} default="False">启用合并操作（默认：False）</ParamField>
+<ParamField path="max_merge_invocations" type="int" optional={true} default="5">最大合并调用次数（默认：5）</ParamField>
+<ParamField path="run_dir" type="str | None" optional={true}>运行输出目录（默认：None）</ParamField>
+<ParamField path="track_best_outputs" type="bool" optional={true} default="False">在优化过程中跟踪最佳输出（默认：False）</ParamField>
+<ParamField path="display_progress_bar" type="bool" optional={true} default="False">显示进度条（默认：False）</ParamField>
+<ParamField path="seed" type="int" optional={true} default="42">用于可复现性的随机种子（默认：42）</ParamField>
+<ParamField path="raise_on_exception" type="bool" optional={true} default="True">遇到异常时抛出而非继续（默认：True）</ParamField>
+<ParamField path="kwargs" type="Any" />
+
+### 模型支持
+
+GEPA 协调两个模型上下文：
+- `GepaOptimizer.model`：优化器用于内部推理（反思、变异提示词等）的 LiteLLM 模型字符串。
+- `ChatPrompt.model`：针对您的数据集进行评估的模型——应与您在生产环境中运行的模型一致。
+
+将 `model` 设置为任何 LiteLLM 支持的提供商（例如 `"gpt-4o"`、`"azure/gpt-4"`、`"anthropic/claude-3-opus"`、`"gemini/gemini-1.5-pro"`），当需要调整温度、最大 token 数或其他限制时，通过 `model_parameters` 传递额外参数：
+
+```python
+optimizer = GepaOptimizer(
+    model="anthropic/claude-3-opus-20240229",
+    model_parameters={
+        "temperature": 0.7,
+        "max_tokens": 4096
+    }
+)
+```
+
+反思在内部处理，没有单独的 `reflection_model` 参数需要设置。
+
+## 限制与建议
+
+- **聚焦指令优化**：当前封装主要优化提示词的指令/系统部分。如果您大量依赖少样本示例，请考虑将 GEPA 与 Few-Shot 贝叶斯优化器或进化运行结合使用。
+- **反思可能失效**：GEPA 的反思变异效果取决于您提供的指标原因。如果 `ScoreResult.reason` 过于模糊，优化器可能会强化不良行为。在大规模运行 GEPA 之前，请投入精力完善描述性指标。
+- **注意成本**：虽然 GEPA 比某些基于强化学习的方法更高效，但反思和帕累托评分每次试验仍会消耗多次 LLM 调用。建议从小的 `max_trials` 开始，并监控 API 使用量。
+
+## 后续步骤
+
+1. 探索具体的[优化器](/development/optimization-runs/algorithms/overview)以了解算法详情。
+2. 参阅[常见问题](/development/optimization-runs/faq)获取常见问题解答和故障排除。
+3. 参阅 [API 参考](/development/optimization-runs/advanced/api_reference)获取详细的配置选项。

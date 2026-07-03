@@ -45,7 +45,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Pairing", description = "Pairing sessions for the `opik connect` and `opik endpoint` CLI commands")
+@Tag(name = "Pairing", description = "用于 `opik connect` 和 `opik endpoint` CLI 命令的配对会话")
 public class PairingResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -55,12 +55,12 @@ public class PairingResource {
     @POST
     @Path("/sessions")
     @RateLimited
-    @Operation(operationId = "createPairingSession", summary = "Create a pairing session", description = "Register a short-lived pairing session that a local daemon will later activate via HMAC", responses = {
-            @ApiResponse(responseCode = "201", description = "Session created", content = @Content(schema = @Schema(implementation = CreateSessionResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Project not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable entity", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "createPairingSession", summary = "创建配对会话", description = "注册一个短期配对会话，稍后由本地守护进程通过 HMAC 激活", responses = {
+            @ApiResponse(responseCode = "201", description = "会话已创建", content = @Content(schema = @Schema(implementation = CreateSessionResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "项目未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的实体", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "429", description = "请求过多", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response createSession(
             @RequestBody(content = @Content(schema = @Schema(implementation = CreateSessionRequest.class))) @NotNull @Valid CreateSessionRequest request) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -81,13 +81,13 @@ public class PairingResource {
     @POST
     @Path("/sessions/{sessionId}/activate")
     @RateLimited
-    @Operation(operationId = "activatePairingSession", summary = "Activate a pairing session", description = "Verify the activation HMAC and flip the runner row to CONNECTED", responses = {
-            @ApiResponse(responseCode = "201", description = "Session activated", headers = @Header(name = "Location", description = "URI of the runner")),
-            @ApiResponse(responseCode = "403", description = "Invalid HMAC", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Session not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Session already activated", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable entity", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "activatePairingSession", summary = "激活配对会话", description = "验证激活 HMAC 并将运行器状态切换为已连接", responses = {
+            @ApiResponse(responseCode = "201", description = "会话已激活", headers = @Header(name = "Location", description = "运行器的 URI")),
+            @ApiResponse(responseCode = "403", description = "HMAC 无效", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "会话未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "会话已激活", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的实体", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "429", description = "请求过多", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response activate(
             @PathParam("sessionId") @NotNull UUID sessionId,
             @RequestBody(content = @Content(schema = @Schema(implementation = ActivateRequest.class))) @NotNull @Valid ActivateRequest request,
@@ -116,7 +116,7 @@ public class PairingResource {
                     "user_name", userName,
                     "error", e.getClass().getSimpleName(),
                     "date", Instant.now().toString()));
-            // Best-effort: empty when the session is missing or in another workspace.
+            // 尽力而为：当会话不存在或在其他工作空间时为空。
             pairingService.peekSessionType(workspaceId, sessionId)
                     .ifPresent(type -> props.put("runner_type", type.getValue()));
             analyticsService.trackEvent("opik_connect_failed", props);

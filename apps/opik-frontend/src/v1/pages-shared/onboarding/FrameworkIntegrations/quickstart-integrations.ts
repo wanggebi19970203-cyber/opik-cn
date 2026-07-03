@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { buildDocsUrl } from "@/v1/lib/utils";
 import pythonLogoUrl from "/images/integrations/python.png";
 import langChainLogoUrl from "/images/integrations/langchain.png";
@@ -44,7 +45,7 @@ export type FrameworkIntegration = {
 
 export const QUICKSTART_INTEGRATIONS: FrameworkIntegration[] = [
   {
-    label: "Function decorators",
+    label: i18next.t("onboarding.integrationExplorer.functionDecorators"),
     logo: pythonLogoUrl,
     colab:
       "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/quickstart_notebook.ipynb",

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useCallback, useState } from "react";
 import uniq from "lodash/uniq";
 
@@ -59,8 +60,8 @@ const useEvaluateExperimentTraces = ({
 
       if (!ids.length) {
         toast({
-          title: "Nothing to evaluate",
-          description: "No traces are associated with this experiment.",
+          title: i18next.t("common.evaluateTraces.nothingToEvaluate"),
+          description: i18next.t("common.evaluateTraces.noTracesAssociated"),
           variant: "destructive",
         });
         return;
@@ -70,8 +71,8 @@ const useEvaluateExperimentTraces = ({
       setOpen(true);
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to load experiment traces for evaluation.",
+        title: i18next.t("common.labels.error"),
+        description: i18next.t("common.evaluateTraces.failedToLoadTraces"),
         variant: "destructive",
       });
     } finally {

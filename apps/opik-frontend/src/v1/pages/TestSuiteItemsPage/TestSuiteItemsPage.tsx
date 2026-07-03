@@ -11,6 +11,7 @@ import {
   Settings2,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import useDatasetById from "@/api/datasets/useDatasetById";
 import useDatasetItemChangesMutation from "@/api/datasets/useDatasetItemChangesMutation";
@@ -54,6 +55,7 @@ import UseTestSuiteDropdown from "./UseTestSuiteDropdown";
 const POLLING_INTERVAL_MS = 3000;
 
 function TestSuiteItemsPage(): React.ReactElement {
+  const { t } = useTranslation("test-suite-items");
   const suiteId = useSuiteIdFromURL();
 
   const [tab, setTab] = useQueryParam("tab", StringParam);
@@ -121,25 +123,23 @@ function TestSuiteItemsPage(): React.ReactElement {
 
   const { DialogComponent } = useNavigationBlocker({
     condition: hasDraft,
-    title: "Unsaved changes",
-    description:
-      "You have unsaved draft changes. Are you sure you want to leave?",
-    confirmText: "Leave without saving",
-    cancelText: "Stay",
+    title: t("page.unsavedChanges"),
+    description: t("page.unsavedDraftDescription"),
+    confirmText: t("page.leaveWithoutSaving"),
+    cancelText: t("page.stay"),
   });
 
   const showSuccessToast = useCallback(
     (versionId?: string) => {
       toast({
-        title: "New version created",
-        description:
-          "Your changes have been saved as a new version. You can now use it to run experiments in the SDK or the Playground.",
+        title: t("page.newVersionCreated"),
+        description: t("page.newVersionDescription"),
         actions: [
           <ToastAction
             variant="link"
             size="sm"
             className="comet-body-s-accented gap-1.5 px-0"
-            altText="Run experiment in the SDK"
+            altText={t("page.runExperimentSdk")}
             key="sdk"
             onClick={() =>
               navigateToExperiment({
@@ -149,13 +149,13 @@ function TestSuiteItemsPage(): React.ReactElement {
             }
           >
             <Code2 className="size-4" />
-            Run experiment in the SDK
+            {t("page.runExperimentSdk")}
           </ToastAction>,
           <ToastAction
             variant="link"
             size="sm"
             className="comet-body-s-accented gap-1.5 px-0"
-            altText="Run experiment in the Playground"
+            altText={t("page.runExperimentPlayground")}
             key="playground"
             onClick={() =>
               loadPlayground({
@@ -166,12 +166,12 @@ function TestSuiteItemsPage(): React.ReactElement {
             }
           >
             <Blocks className="size-4" />
-            Run experiment in the Playground
+            {t("page.runExperimentPlayground")}
           </ToastAction>,
         ],
       });
     },
-    [toast, navigateToExperiment, loadPlayground, suite?.name, suiteId],
+    [toast, navigateToExperiment, loadPlayground, suite?.name, suiteId, t],
   );
 
   const changesMutation = useDatasetItemChangesMutation({
@@ -271,11 +271,11 @@ function TestSuiteItemsPage(): React.ReactElement {
         open={discardDialogOpen}
         setOpen={setDiscardDialogOpen}
         onConfirm={handleDiscardChanges}
-        title="Discard changes"
-        description={`Discarding will remove all unsaved edits to this ${
-          isTestSuite ? "test suite" : "dataset"
-        }. This action can't be undone. Are you sure you want to continue?`}
-        confirmText="Discard changes"
+        title={t("page.discardChanges")}
+        description={t("page.discardChangesDescription", {
+          type: isTestSuite ? t("page.testSuite").toLowerCase() : t("page.dataset").toLowerCase(),
+        })}
+        confirmText={t("page.discardChanges")}
         confirmButtonVariant="destructive"
       />
       <OverrideVersionDialog
@@ -293,11 +293,11 @@ function TestSuiteItemsPage(): React.ReactElement {
           <div className="flex items-center gap-2">
             {hasDraft && (
               <Tag variant="orange" size="md">
-                Draft
+                {t("page.draft")}
               </Tag>
             )}
             <h1 className="comet-title-l truncate break-words">
-              {suite?.name ?? (isTestSuite ? "Test suite" : "Dataset")}
+              {suite?.name ?? (isTestSuite ? t("page.testSuite") : t("page.dataset"))}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -309,7 +309,7 @@ function TestSuiteItemsPage(): React.ReactElement {
                   onClick={() => setDiscardDialogOpen(true)}
                 >
                   <X className="mr-1 size-4" />
-                  Discard changes
+                  {t("page.discardChanges")}
                 </Button>
                 <Button
                   variant="default"
@@ -317,7 +317,7 @@ function TestSuiteItemsPage(): React.ReactElement {
                   onClick={() => setAddVersionDialogOpen(true)}
                 >
                   <Check className="mr-1 size-4" />
-                  Save changes
+                  {t("page.saveChanges")}
                 </Button>
               </>
             )}
@@ -335,7 +335,7 @@ function TestSuiteItemsPage(): React.ReactElement {
                 onClick={() => setSettingsDialogOpen(true)}
               >
                 <Settings2 className="size-3.5 shrink-0" />
-                Settings
+                {t("page.settings")}
               </Button>
             )}
           </div>
@@ -379,8 +379,7 @@ function TestSuiteItemsPage(): React.ReactElement {
                 >
                   <CheckCheck className="size-3 text-muted-foreground" />
                   <span className="comet-body-s-accented text-muted-foreground">
-                    {effectiveAssertions.length} global assertion
-                    {effectiveAssertions.length !== 1 ? "s" : ""}
+                    {effectiveAssertions.length} {effectiveAssertions.length !== 1 ? t("page.globalAssertions") : t("page.globalAssertion")}
                   </span>
                 </div>
               </TooltipTrigger>
@@ -415,10 +414,10 @@ function TestSuiteItemsPage(): React.ReactElement {
       <Tabs value={tab || "items"} onValueChange={setTab}>
         <TabsList variant="underline">
           <TabsTrigger variant="underline" value="items">
-            Items
+            {t("page.items")}
           </TabsTrigger>
           <TabsTrigger variant="underline" value="version-history">
-            Version history
+            {t("page.versionHistory")}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="items">

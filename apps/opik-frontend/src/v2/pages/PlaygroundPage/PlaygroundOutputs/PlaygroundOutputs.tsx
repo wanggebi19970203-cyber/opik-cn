@@ -1,6 +1,7 @@
 import { Check, Loader2 } from "lucide-react";
 import { keepPreviousData } from "@tanstack/react-query";
 import React, { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import PlaygroundOutputTable from "@/v2/pages/PlaygroundPage/PlaygroundOutputs/PlaygroundOutputTable/PlaygroundOutputTable";
 import PlaygroundExperimentOutputActions from "@/v2/pages/PlaygroundPage/PlaygroundOutputs/PlaygroundExperimentOutputActions";
 import PlaygroundPromptOutput from "@/v2/pages/PlaygroundPage/PlaygroundOutputs/PlaygroundPromptOutput";
@@ -45,6 +46,7 @@ const PlaygroundOutputs = ({
   stopSingle,
 }: PlaygroundOutputsProps) => {
   const promptIds = usePromptIds();
+  const { t } = useTranslation("pages/playground");
   const setDatasetVariables = useSetDatasetVariables();
   const setDatasetSampleData = useSetDatasetSampleData();
   const filters = useDatasetFilters();
@@ -133,16 +135,16 @@ const PlaygroundOutputs = ({
               <StatusMessage
                 icon={Loader2}
                 iconClassName="animate-spin"
-                title="Test suite still loading"
-                description="Experiments will run, but may not use the full test suite until loading completes."
+                title={t("playground.outputs.testSuiteLoading")}
+                description={t("playground.outputs.testSuiteLoadingDesc")}
                 className="mb-2"
               />
             )}
             {showSuccessMessage && (
               <StatusMessage
                 icon={Check}
-                title="Test suite fully loaded"
-                description="All items are now available."
+                title={t("playground.outputs.testSuiteLoaded")}
+                description={t("playground.outputs.testSuiteLoadedDesc")}
                 className="mb-2"
               />
             )}

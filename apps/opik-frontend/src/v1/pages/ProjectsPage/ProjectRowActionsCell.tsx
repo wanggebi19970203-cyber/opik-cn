@@ -10,6 +10,7 @@ import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import { Project } from "@/types/projects";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import AddEditProjectDialog from "@/v1/pages/ProjectsPage/AddEditProjectDialog";
 import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 import useProjectDeleteMutation from "@/api/projects/useProjectDeleteMutation";
@@ -19,6 +20,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
   context,
 ) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const project = context.row.original;
   const [open, setOpen] = useState<boolean | number>(false);
@@ -53,15 +55,17 @@ export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
         open={open === 1}
         setOpen={setOpen}
         onConfirm={deleteProjectHandler}
-        title="Delete project"
-        description="Deleting a project will also remove all the traces and their data. This action can’t be undone. Are you sure you want to continue?"
-        confirmText="Delete project"
+        title={t("projects:projects.rowActions.deleteTitle")}
+        description={t("projects:projects.rowActions.deleteDescription")}
+        confirmText={t("projects:projects.rowActions.deleteConfirm")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5 ">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">
+              {t("projects:projects.rowActions.actionsMenu")}
+            </span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -74,7 +78,7 @@ export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
               }}
             >
               <Pencil className="mr-2 size-4" />
-              Edit
+              {t("projects:projects.rowActions.edit")}
             </DropdownMenuItem>
           )}
           {(canCreateProjects || canDeleteProjects) && (
@@ -89,7 +93,7 @@ export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
               variant="destructive"
             >
               <Trash className="mr-2 size-4" />
-              Delete
+              {t("projects:projects.rowActions.delete")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

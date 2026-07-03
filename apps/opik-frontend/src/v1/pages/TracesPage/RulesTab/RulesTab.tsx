@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { NumberParam, StringParam, useQueryParam } from "use-query-params";
 import useLocalStorageState from "use-local-storage-state";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -50,47 +51,47 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 
 const getRowId = (d: EvaluatorsRule) => d.id;
 
-const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<EvaluatorsRule>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("tracing.tracesSpansTab.columns.name"),
     type: COLUMN_TYPE.string,
     sortable: true,
   },
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("tracing.tracesSpansTab.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("tracing.rulesTab.columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     sortable: true,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("tracing.rulesTab.columns.created"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     sortable: true,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("tracing.tracesSpansTab.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "sampling_rate",
-    label: "Sampling rate",
+    label: t("tracing.rulesTab.columns.samplingRate"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) => `${round(row.sampling_rate * 100, 1)}%`,
   },
   {
     id: "scope",
-    label: "Scope",
+    label: t("tracing.rulesTab.columns.scope"),
     type: COLUMN_TYPE.category,
     cell: TagCell as never,
     accessorFn: (row) => capitalizeFirstLetter(getUIRuleScope(row.type)),
@@ -98,7 +99,7 @@ const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
   },
   {
     id: "enabled",
-    label: "Status",
+    label: t("tracing.rulesTab.columns.status"),
     type: COLUMN_TYPE.string,
     cell: StatusCell as never,
   },
@@ -139,6 +140,7 @@ type RulesTabProps = {
 };
 
 export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
+  const { t } = useTranslation();
   const {
     permissions: { canUpdateOnlineEvaluationRules },
   } = usePermissions();
@@ -192,7 +194,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
   );
 
   const noData = !search;
-  const noDataText = noData ? `There are no rules yet` : "No search results";
+  const noDataText = noData ? t("tracing.rulesTab.noRulesYet") : t("tracing.actions.noSearchResults");
 
   const rows: EvaluatorsRule[] = useMemo(() => data?.content ?? [], [data]);
 
@@ -250,12 +252,13 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
   );
 
   const columns = useMemo(() => {
+    const defaultColumns = getDefaultColumns(t);
     return [
       ...(canUpdateOnlineEvaluationRules
         ? [generateSelectColumDef<EvaluatorsRule>()]
         : []),
       ...convertColumnDataToColumn<EvaluatorsRule, EvaluatorsRule>(
-        DEFAULT_COLUMNS,
+        defaultColumns,
         {
           columnsOrder,
           selectedColumns,
@@ -290,6 +293,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
     canUpdateOnlineEvaluationRules,
     handleOpenEditDialog,
     handleOpenCloneDialog,
+    t,
   ]);
 
   const resizeConfig = useMemo(
@@ -331,7 +335,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by ID"
+            placeholder={t("tracing.rulesTab.searchById")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -344,7 +348,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
             </>
           )}
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={getDefaultColumns(t)}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}
@@ -352,7 +356,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
           ></ColumnsButton>
           {canUpdateOnlineEvaluationRules && (
             <Button variant="default" size="sm" onClick={handleNewRuleClick}>
-              Create new rule
+              {t("tracing.rulesTab.createNewRule")}
             </Button>
           )}
         </div>

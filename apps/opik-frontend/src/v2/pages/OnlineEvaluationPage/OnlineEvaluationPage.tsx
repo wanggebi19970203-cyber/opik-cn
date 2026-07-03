@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-table";
 import round from "lodash/round";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   COLUMN_ID_ID,
@@ -59,45 +60,45 @@ import { useActiveProjectId } from "@/store/AppStore";
 
 const getRowId = (d: EvaluatorsRule) => d.id;
 
-const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<EvaluatorsRule>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("onlineEvaluation.columns.name"),
     type: COLUMN_TYPE.string,
     sortable: true,
   },
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("onlineEvaluation.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("onlineEvaluation.columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("onlineEvaluation.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("onlineEvaluation.columns.created"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "sampling_rate",
-    label: "Sampling rate",
+    label: t("onlineEvaluation.columns.samplingRate"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) => `${round(row.sampling_rate * 100, 1)}%`,
   },
   {
     id: "type",
-    label: "Scope",
+    label: t("onlineEvaluation.columns.scope"),
     type: COLUMN_TYPE.category,
     cell: TagCell as never,
     accessorFn: (row) => capitalizeFirstLetter(getUIRuleScope(row.type)),
@@ -105,13 +106,13 @@ const DEFAULT_COLUMNS: ColumnData<EvaluatorsRule>[] = [
   },
   {
     id: "enabled",
-    label: "Status",
+    label: t("onlineEvaluation.columns.status"),
     type: COLUMN_TYPE.string,
     cell: StatusCell as never,
   },
 ];
 
-const FILTER_COLUMNS = DEFAULT_COLUMNS.filter(
+const getFilterColumns = (t: (key: string) => string) => getDefaultColumns(t).filter(
   (col) =>
     col.id !== "type" && col.id !== "enabled" && col.id !== "sampling_rate",
 );
@@ -148,6 +149,7 @@ const COLUMNS_SORT_KEY = "workspace-rules-columns-sort";
 const PAGINATION_SIZE_KEY = "workspace-rules-pagination-size";
 
 export const OnlineEvaluationPage: React.FC = () => {
+  const { t } = useTranslation("pages/online-evaluation");
   const projectId = useActiveProjectId()!;
   const {
     permissions: { canUpdateOnlineEvaluationRules },
@@ -220,7 +222,7 @@ export const OnlineEvaluationPage: React.FC = () => {
     [data?.sortable_by],
   );
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? `There are no rules yet` : "No search results";
+  const noDataText = noData ? t("onlineEvaluation.noData.noRulesYet") : t("onlineEvaluation.noData.noSearchResults");
 
   const rows: EvaluatorsRule[] = useMemo(() => data?.content ?? [], [data]);
 
@@ -282,7 +284,7 @@ export const OnlineEvaluationPage: React.FC = () => {
         ? [generateSelectColumDef<EvaluatorsRule>()]
         : []),
       ...convertColumnDataToColumn<EvaluatorsRule, EvaluatorsRule>(
-        DEFAULT_COLUMNS,
+        getDefaultColumns(t),
         {
           columnsOrder,
           selectedColumns,
@@ -313,6 +315,7 @@ export const OnlineEvaluationPage: React.FC = () => {
         : []),
     ];
   }, [
+    t,
     columnsOrder,
     selectedColumns,
     sortableBy,
@@ -363,7 +366,7 @@ export const OnlineEvaluationPage: React.FC = () => {
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
         <h1 className="comet-body-accented truncate break-words">
-          Online evaluation
+          {t("onlineEvaluation.title")}
         </h1>
         {canUpdateOnlineEvaluationRules && (
           <Button
@@ -373,7 +376,7 @@ export const OnlineEvaluationPage: React.FC = () => {
             data-testid="online-evaluation-create-rule-button"
           >
             <Plus className="mr-1 size-4" />
-            Create rule
+            {t("onlineEvaluation.actions.createRule")}
           </Button>
         )}
       </div>
@@ -381,11 +384,9 @@ export const OnlineEvaluationPage: React.FC = () => {
         <PageEmptyState
           lightImageUrl={emptyOnlineEvalLightUrl}
           darkImageUrl={emptyOnlineEvalDarkUrl}
-          title="No online evaluations yet"
-          description={
-            "Create a rule to automatically score your model's outputs.\nDefine criteria, evaluate responses in real time, and track quality over time."
-          }
-          primaryActionLabel="Create your first rule"
+          title={t("onlineEvaluation.empty.title")}
+          description={t("onlineEvaluation.empty.description")}
+          primaryActionLabel={t("onlineEvaluation.empty.action")}
           onPrimaryAction={handleNewRuleClick}
           docsUrl={buildDocsUrl("/production/online-evaluation/rules")}
         />
@@ -396,12 +397,12 @@ export const OnlineEvaluationPage: React.FC = () => {
               <SearchInput
                 searchText={search as string}
                 setSearchText={setSearch}
-                placeholder="Search by ID"
+                placeholder={t("onlineEvaluation.search.byId")}
                 className="w-[320px]"
                 dimension="sm"
               ></SearchInput>
               <FiltersButton
-                columns={FILTER_COLUMNS}
+                columns={getFilterColumns(t)}
                 filters={filters}
                 onChange={setFilters}
                 layout="icon"
@@ -415,7 +416,7 @@ export const OnlineEvaluationPage: React.FC = () => {
                 </>
               )}
               <ColumnsButton
-                columns={DEFAULT_COLUMNS}
+                columns={getDefaultColumns(t)}
                 selectedColumns={selectedColumns}
                 onSelectionChange={setSelectedColumns}
                 order={columnsOrder}

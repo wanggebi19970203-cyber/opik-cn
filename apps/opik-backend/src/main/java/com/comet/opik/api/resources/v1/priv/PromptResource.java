@@ -72,7 +72,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Prompts", description = "Prompt resources")
+@Tag(name = "Prompts", description = "提示词资源")
 public class PromptResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -82,12 +82,12 @@ public class PromptResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @POST
-    @Operation(operationId = "createPrompt", summary = "Create prompt", description = "Create prompt", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createPrompt", summary = "创建提示词", description = "创建提示词", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/prompts/{promptId}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
 
     })
     @RateLimited
@@ -108,14 +108,14 @@ public class PromptResource {
     }
 
     @GET
-    @Operation(operationId = "getPrompts", summary = "Get prompts", description = "Get prompts", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = PromptPage.class))),
+    @Operation(operationId = "getPrompts", summary = "获取提示词列表", description = "获取提示词列表", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = PromptPage.class))),
     })
     @JsonView({Prompt.View.Public.class})
     public Response getPrompts(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter prompts by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤提示词（部分匹配，不区分大小写）") String name,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
@@ -137,15 +137,15 @@ public class PromptResource {
 
     @GET
     @Path("{id}")
-    @Operation(operationId = "getPromptById", summary = "Get prompt by id", description = "Get prompt by id; when mask_id or environment is provided, requestedVersion is populated with the resolved version. mask_id and environment are mutually exclusive.", responses = {
-            @ApiResponse(responseCode = "200", description = "Prompt resource", content = @Content(schema = @Schema(implementation = Prompt.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "getPromptById", summary = "按 ID 获取提示词", description = "按 ID 获取提示词；当提供 mask_id 或 environment 时，requestedVersion 将填充为解析后的版本。mask_id 和 environment 互斥。", responses = {
+            @ApiResponse(responseCode = "200", description = "提示词资源", content = @Content(schema = @Schema(implementation = Prompt.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @JsonView({Prompt.View.Detail.class})
     public Response getPromptById(@PathParam("id") UUID id,
-            @Parameter(description = "Optional mask version id; when set, requestedVersion is the mask row for that id") @QueryParam("mask_id") UUID maskId,
-            @Parameter(description = "Optional environment name; when set, requestedVersion is the version mapped to that environment for the prompt") @QueryParam("environment") @Pattern(regexp = Environment.NAME_PATTERN, message = Environment.NAME_PATTERN_MESSAGE) @Size(max = 150, message = "cannot exceed 150 characters") String environment) {
+            @Parameter(description = "可选的 mask 版本 ID；设置后 requestedVersion 为该 ID 对应的 mask 行") @QueryParam("mask_id") UUID maskId,
+            @Parameter(description = "可选的环境名称；设置后 requestedVersion 为该提示词映射到该环境的版本") @QueryParam("environment") @Pattern(regexp = Environment.NAME_PATTERN, message = Environment.NAME_PATTERN_MESSAGE) @Size(max = 150, message = "cannot exceed 150 characters") String environment) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
@@ -162,12 +162,12 @@ public class PromptResource {
 
     @PUT
     @Path("{id}")
-    @Operation(operationId = "updatePrompt", summary = "Update prompt", description = "Update prompt", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "updatePrompt", summary = "更新提示词", description = "更新提示词", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @RateLimited
     public Response updatePrompt(
@@ -185,8 +185,8 @@ public class PromptResource {
 
     @DELETE
     @Path("{id}")
-    @Operation(operationId = "deletePrompt", summary = "Delete prompt", description = "Delete prompt", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")
+    @Operation(operationId = "deletePrompt", summary = "删除提示词", description = "删除提示词", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")
     })
     @RequiredPermissions(WorkspaceUserPermission.PROMPT_DELETE)
     public Response deletePrompt(@PathParam("id") UUID id) {
@@ -202,8 +202,8 @@ public class PromptResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deletePromptsBatch", summary = "Delete prompts", description = "Delete prompts batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
+    @Operation(operationId = "deletePromptsBatch", summary = "批量删除提示词", description = "批量删除提示词", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RequiredPermissions(WorkspaceUserPermission.PROMPT_DELETE)
     public Response deletePromptsBatch(
@@ -217,9 +217,9 @@ public class PromptResource {
 
     @POST
     @Path("/versions/retrieve-by-ids")
-    @Operation(operationId = "retrievePromptVersionsByIds", summary = "Retrieve prompt versions by ids", description = "Retrieve a batch of prompt versions by their ids. Typically used by the UI to resolve mask overlays.", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PromptVersion.class)))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    @Operation(operationId = "retrievePromptVersionsByIds", summary = "按 ID 批量获取提示词版本", description = "按 ID 批量获取提示词版本。通常由 UI 用于解析 mask 覆盖层。", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PromptVersion.class)))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @JsonView({PromptVersion.View.Detail.class})
     public Response retrievePromptVersionsByIds(
@@ -240,8 +240,8 @@ public class PromptResource {
 
     @POST
     @Path("/retrieve-by-commits")
-    @Operation(operationId = "getPromptsByCommits", summary = "Get prompts by commits", description = "Get prompts by prompt version commits", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PromptVersionLink.class)))),
+    @Operation(operationId = "getPromptsByCommits", summary = "按提交获取提示词", description = "按提示词版本提交获取提示词", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PromptVersionLink.class)))),
     })
     @JsonView({Prompt.View.Public.class})
     public Response getPromptsByCommits(
@@ -262,11 +262,11 @@ public class PromptResource {
 
     @GET
     @Path("/by-commit/{commit}")
-    @Operation(operationId = "getPromptByCommit", summary = "Get prompt by commit", description = "Get prompt by commit", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Prompt.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "getPromptByCommit", summary = "按提交获取提示词", description = "按提交获取提示词", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = Prompt.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @JsonView({Prompt.View.Detail.class})
     public Response getPromptByCommit(
@@ -285,11 +285,11 @@ public class PromptResource {
 
     @POST
     @Path("/versions")
-    @Operation(operationId = "createPromptVersion", summary = "Create prompt version", description = "Create prompt version", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "createPromptVersion", summary = "创建提示词版本", description = "创建提示词版本", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     @JsonView({PromptVersion.View.Detail.class})
@@ -312,14 +312,14 @@ public class PromptResource {
 
     @GET
     @Path("/{id}/versions")
-    @Operation(operationId = "getPromptVersions", summary = "Get prompt versions", description = "Get prompt versions", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = PromptVersionPage.class))),
+    @Operation(operationId = "getPromptVersions", summary = "获取提示词版本列表", description = "获取提示词版本列表", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = PromptVersionPage.class))),
     })
     @JsonView({PromptVersion.View.Public.class})
     public Response getPromptVersions(@PathParam("id") UUID id,
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @Parameter(description = "Search text to find in template or change description fields") @QueryParam("search") String search,
+            @Parameter(description = "在模板或变更描述字段中搜索的文本") @QueryParam("search") String search,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
         var workspaceId = requestContext.get().getWorkspaceId();
@@ -336,9 +336,9 @@ public class PromptResource {
 
     @GET
     @Path("/versions/{versionId}")
-    @Operation(operationId = "getPromptVersionById", summary = "Get prompt version by id", description = "Get prompt version by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Prompt version resource", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "getPromptVersionById", summary = "按 ID 获取提示词版本", description = "按 ID 获取提示词版本", responses = {
+            @ApiResponse(responseCode = "200", description = "提示词版本资源", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @JsonView({PromptVersion.View.Detail.class})
     public Response getPromptVersionById(@PathParam("versionId") UUID id) {
@@ -356,10 +356,10 @@ public class PromptResource {
 
     @GET
     @Path("/{promptId}/versions/by-number/{versionNumber}")
-    @Operation(operationId = "getPromptVersionByNumber", summary = "Get prompt version by sequential number", description = "Get a prompt version by its sequential v<N> number for the given prompt.", responses = {
-            @ApiResponse(responseCode = "200", description = "Prompt version resource", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "getPromptVersionByNumber", summary = "按序号获取提示词版本", description = "按给定提示词的顺序编号 v<N> 获取提示词版本。", responses = {
+            @ApiResponse(responseCode = "200", description = "提示词版本资源", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @JsonView({PromptVersion.View.Detail.class})
     public Response getPromptVersionByNumber(@PathParam("promptId") UUID promptId,
@@ -380,20 +380,20 @@ public class PromptResource {
 
     @PATCH
     @Path("/versions")
-    @Operation(operationId = "updatePromptVersions", summary = "Update prompt versions", description = """
-            Update one or more prompt versions.
+    @Operation(operationId = "updatePromptVersions", summary = "更新提示词版本", description = """
+            更新一个或多个提示词版本。
 
-            Note: Prompt versions are immutable by design.
-            Only organizational properties, such as tags etc., can be updated.
-            Core properties like template and metadata cannot be modified after creation.
+            注意：提示词版本在设计上是不可变的。
+            仅可更新组织属性，如标签等。
+            核心属性（如模板和元数据）在创建后不可修改。
 
-            PATCH semantics:
-            - non-empty values update the field
-            - null values preserve existing field values (no change)
-            - empty values explicitly clear the field
+            PATCH 语义：
+            - 非空值更新字段
+            - null 值保留现有字段值（不变）
+            - 空值显式清除字段
             """, responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     public Response updatePromptVersions(
@@ -409,16 +409,15 @@ public class PromptResource {
 
     @PATCH
     @Path("/versions/{versionId}/environments")
-    @Operation(operationId = "setPromptVersionEnvironment", summary = "Set prompt version environment", description = """
-            Set or clear the environment owned by a prompt version.
-            Setting a non-null environment moves ownership atomically: any previous owner of that
-            environment for the same prompt has its environment cleared in the same transaction.
-            Setting null clears the environment from the version.
-            The environment must already exist in the workspace registry; unknown names return 404.
+    @Operation(operationId = "setPromptVersionEnvironment", summary = "设置提示词版本环境", description = """
+            设置或清除提示词版本所属的环境。
+            设置非空环境会原子性地转移所有权：同一提示词中该环境的前一个所有者将在同一事务中清除其环境。
+            设置 null 将清除该版本的环境。
+            环境必须已存在于工作空间注册表中；未知名称将返回 404。
             """, responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     public Response setPromptVersionEnvironment(@PathParam("versionId") UUID versionId,
@@ -434,11 +433,11 @@ public class PromptResource {
 
     @POST
     @Path("/versions/retrieve")
-    @Operation(operationId = "retrievePromptVersion", summary = "Retrieve prompt version", description = "Retrieve prompt version", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "retrievePromptVersion", summary = "检索提示词版本", description = "检索提示词版本", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @JsonView({PromptVersion.View.Detail.class})
     public Response retrievePromptVersion(
@@ -468,10 +467,10 @@ public class PromptResource {
 
     @POST
     @Path("/{promptId}/versions/{versionId}/restore")
-    @Operation(operationId = "restorePromptVersion", summary = "Restore prompt version", description = "Restore a prompt version by creating a new version with the content from the specified version", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    @Operation(operationId = "restorePromptVersion", summary = "恢复提示词版本", description = "通过使用指定版本的内容创建新版本来恢复提示词版本", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = PromptVersion.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @RateLimited
     @JsonView({PromptVersion.View.Detail.class})

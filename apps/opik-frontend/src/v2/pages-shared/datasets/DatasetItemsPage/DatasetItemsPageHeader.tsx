@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   CheckCheck,
@@ -66,6 +67,7 @@ const DatasetItemsPageHeader: React.FunctionComponent<
   onAddItem,
   onExpand,
 }) => {
+  const { t } = useTranslation("datasets");
   const datasetTags = dataset?.tags ?? [];
   const showTags = canEditDatasets || datasetTags.length > 0;
   const tagListProps = canEditDatasets
@@ -84,15 +86,15 @@ const DatasetItemsPageHeader: React.FunctionComponent<
                 ? "/$workspaceName/projects/$projectId/test-suites"
                 : "/$workspaceName/projects/$projectId/datasets"
             }
-            tooltip={isTestSuite ? "Back to test suites" : "Back to datasets"}
+            tooltip={isTestSuite ? t("header.backToTestSuites") : t("header.backToDatasets")}
           />
           {hasDraft && (
             <Tag variant="orange" size="md">
-              Draft
+              {t("header.draft")}
             </Tag>
           )}
           <h1 className="comet-body-accented truncate break-words">
-            {dataset?.name ?? (isTestSuite ? "Test suite" : "Dataset")}
+            {dataset?.name ?? (isTestSuite ? t("header.testSuite") : t("header.dataset"))}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -105,7 +107,7 @@ const DatasetItemsPageHeader: React.FunctionComponent<
                 data-testid="dataset-items-discard-button"
               >
                 <X className="mr-1 size-4" />
-                Discard changes
+                {t("header.discardChanges")}
               </Button>
               <Button
                 variant="default"
@@ -114,12 +116,12 @@ const DatasetItemsPageHeader: React.FunctionComponent<
                 data-testid="dataset-items-commit-button"
               >
                 <Check className="mr-1 size-4" />
-                Save changes
+                {t("header.saveChanges")}
               </Button>
             </>
           )}
           {canEditDatasets && (
-            <TooltipWrapper content="Expand with AI">
+            <TooltipWrapper content={t("actionsPanel.expandWithAi")}>
               <Button
                 variant="outline"
                 size="icon-sm"
@@ -141,7 +143,7 @@ const DatasetItemsPageHeader: React.FunctionComponent<
             isTestSuite={isTestSuite}
           />
           {isTestSuite && (
-            <TooltipWrapper content="Test settings">
+            <TooltipWrapper content={t("header.testSettings")}>
               <Button
                 variant="outline"
                 size="icon-sm"
@@ -161,7 +163,7 @@ const DatasetItemsPageHeader: React.FunctionComponent<
               data-testid="dataset-header-add-button"
             >
               <Plus className="mr-1.5 size-3.5" />
-              {isTestSuite ? "Test case" : "Record"}
+              {isTestSuite ? t("header.testCase") : t("header.record")}
             </Button>
           )}
         </div>
@@ -210,8 +212,7 @@ const DatasetItemsPageHeader: React.FunctionComponent<
               >
                 <CheckCheck className="size-3 shrink-0 text-muted-slate" />
                 <span className="comet-body-xs-accented text-foreground">
-                  {effectiveAssertions.length} global assertion
-                  {effectiveAssertions.length !== 1 ? "s" : ""}
+                  {t("header.globalAssertions", { count: effectiveAssertions.length })}
                 </span>
               </div>
             </TooltipTrigger>

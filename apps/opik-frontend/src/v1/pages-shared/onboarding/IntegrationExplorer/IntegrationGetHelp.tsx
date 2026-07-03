@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { HelpCircle } from "lucide-react";
 import HelpGuideDialog from "@/v1/pages-shared/onboarding/IntegrationExplorer/components/HelpGuideDialog";
@@ -11,8 +12,10 @@ type IntegrationGetHelpProps = {
 
 const IntegrationGetHelp: React.FunctionComponent<IntegrationGetHelpProps> = ({
   className,
-  label = "Get help",
+  label,
 }) => {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t('integrationExplorer.getHelp');
   const { helpGuideDialogOpen, setHelpGuideDialogOpen } =
     useIntegrationExplorer();
 
@@ -31,7 +34,7 @@ const IntegrationGetHelp: React.FunctionComponent<IntegrationGetHelpProps> = ({
         data-fs-element="IntegrationGetHelpButton"
       >
         <HelpCircle className="mr-1.5 size-3.5" />
-        {label}
+        {displayLabel}
       </Button>
 
       <HelpGuideDialog

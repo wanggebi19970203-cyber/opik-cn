@@ -1,0 +1,161 @@
+---
+headline: 记录用户反馈 | Opik 文档
+og:description: 捕获用户反馈并跟踪性能指标，使用 Opik 的日志记录能力增强您的智能体效果。
+og:site_name: Opik 文档
+og:title: 有效记录用户反馈 - Opik
+title: 记录用户反馈
+---
+
+记录用户反馈和对追踪进行评分是评估和改进智能体的关键环节。通过对特定交互或整个对话流程系统性地记录定性或定量反馈，您可以：
+
+1. 跟踪性能随时间的变化
+2. 识别需要改进的领域
+3. 比较不同的模型版本或提示词
+4. 收集用于微调或再训练的数据
+5. 为利益相关者提供系统效果的具体指标
+
+## 使用 SDK 记录用户反馈
+
+您可以使用 SDK 记录用户反馈并对追踪进行评分：
+
+<CodeBlocks>
+```typescript title="Typescript SDK" language="typescript"
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Create a new trace with a span
+const trace = client.trace({
+  name: "my_trace",
+  input: { input: "Hi!" },
+  output: { output: "Hello!" },
+});
+
+const span = trace.span({
+  name: "processing",
+  input: { step: 1 },
+});
+span.update({ output: { result: "processed" } });
+span.end();
+trace.end();
+
+// Log feedback scores to existing traces
+client.logTracesFeedbackScores([
+  { id: trace.data.id, name: "overall_quality", value: 0.9, reason: "Good answer" },
+  { id: trace.data.id, name: "coherence", value: 0.8 }
+]);
+
+// Log feedback scores to existing spans
+client.logSpansFeedbackScores([
+  { id: span.data.id, name: "accuracy", value: 0.95 }
+]);
+
+// Flush to ensure all data is sent
+await client.flush();
+```
+
+```python title="Python 函数装饰器" language="python"
+import opik
+from opik import opik_context
+
+@opik.track
+def my_function():
+  opik_context.update_current_trace(
+    feedback_scores=[
+      {
+        "name": "user_feedback",
+        "value": 1,
+        "reason": "Good answer" # 可选
+      }
+    ]
+  )
+
+  return "Hello, world!"
+```
+
+```python title="Python SDK" language="python"
+import opik
+
+client = opik.Opik()
+
+# Log feedback scores to an existing trace
+client.log_traces_feedback_scores(
+  scores=[
+    {"id": "trace_id", "name": "user_feedback", "value": 1, "project_name": "my-project"},
+    {"id": "trace_id", "name": "accuracy", "value": 1, "reason": "Good answer", "project_name": "my-project"} # 可选的原因说明
+  ]
+)
+
+# Log feedback score to a new trace
+client.trace(
+  name="my_trace",
+  input={"input": "Hi!"},
+  output={"output": "Hello!"},
+  feedback_scores=[
+    {"name": "user_feedback", "value": 1, "reason": "Good answer"}
+  ]
+)
+```
+
+</CodeBlocks>
+
+## 通过 UI 标注追踪
+
+要通过 UI 标注追踪，您可以导航到追踪页面中需要标注的追踪记录，然后点击 `Annotate` 按钮。这将打开一个侧边栏，您可以在其中为追踪添加标注。
+
+您可以通过 UI 标注追踪和跨度，请确保在侧边栏中选择了正确的跨度。
+
+<Frame>
+  <img src="/img/tracing/multivalue_feedback_scores.png" />
+</Frame>
+
+提供反馈评分后，您还可以添加原因来说明给出该评分的理由。这对于为评分添加额外的上下文信息非常有用。
+
+如果多个团队成员标注同一条追踪，您可以在 UI 的 `Feedback scores` 部分查看每位团队成员的标注。平均评分将在追踪级别显示。
+
+<Tip>
+  如果您需要更专业的标注界面，可以使用[标注队列](/evaluation/advanced/annotation_queues)功能。
+</Tip>
+
+## 在线评估
+
+您不需要手动标注每条追踪来衡量智能体的性能！通过使用 Opik 的[在线评估功能](/production/online-evaluation/rules)，您可以定义 LLM 作为评判的指标，自动对全部或部分生产追踪进行评分。
+
+![Online evaluation](/img/production/online_evaluation.gif)
+
+## 手动评估
+
+在线评估根据采样率和启用的规则自动对追踪进行评分，而手动评估则让您完全控制哪些追踪或线程被评估以及何时评估。这在以下场景中特别有用：
+
+- 评估失败或需要仔细检查的特定追踪或线程
+- 对未被采样捕获的历史数据应用评估规则
+- 在启用自动评分之前，在选定的示例上测试新的评估规则
+- 使用更新或修改后的规则重新评估追踪
+
+### 手动评估的工作方式
+
+手动评估允许您将任何现有的评估规则直接从 UI 应用到选定的追踪或线程，绕过采样率和规则启用状态。您可以从以下位置触发手动评估：
+
+1. **追踪页面**：选择一条或多条追踪，然后点击"Evaluate"以应用追踪级别的规则
+2. **线程页面**：选择一个或多个线程，然后点击"Evaluate"以应用线程级别的规则
+
+<Note>
+  **重要**：追踪级别的规则只能应用于追踪，线程级别的规则只能应用于线程。请确保为您选择的实体使用适当的规则类型。
+</Note>
+
+当您触发手动评估时：
+- 所有选定的追踪/线程将被排队等待评估，不受采样率限制
+- 您可以同时应用多个规则
+- 即使规则当前处于禁用状态也会执行
+- 评估结果将以反馈评分的形式出现在被评估的追踪/线程上
+- 评估是异步处理的，因此您可能需要等待几秒钟或刷新页面才能看到结果
+
+这让您可以灵活地在需要时评估所需的内容，无需等待下一条采样追踪或修改在线评估配置。
+
+## 后续步骤
+
+您可以进一步：
+
+1. [在生产环境中对智能体评分](/production/online-evaluation/rules)，以跟踪和捕获智能体的特定问题
+2. [使用标注队列](/evaluation/advanced/annotation_queues)，组织追踪以供专家团队审查和标注
+3. [查看我们的 LLM 作为评判指标](/evaluation/metrics/overview)

@@ -167,11 +167,11 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
             return Mono.empty();
         }
 
-        // group scores by project name to resolve project itemIds
+        // 按项目名称分组以解析项目ID
         Map<String, List<FeedbackScoreItem>> scoresPerProject = scores
                 .stream()
                 .map(score -> {
-                    IdGenerator.validateVersion(score.id(), entityType.getType()); // validate span/trace id
+                    IdGenerator.validateVersion(score.id(), entityType.getType()); // 验证 span/trace ID
 
                     return score.toBuilder()
                             .projectName(WorkspaceUtils.getProjectName(score.projectName()))
@@ -182,7 +182,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
         return projectService.retrieveByNamesOrCreate(scoresPerProject.keySet())
                 .map(ProjectService::groupByName)
                 .map(projectMap -> mergeProjectsAndScores(projectMap, scoresPerProject))
-                .flatMap(projects -> saveScoreBatch(entityType, projects)) // score all scores
+                .flatMap(projects -> saveScoreBatch(entityType, projects)) // 保存所有分数
                 .then();
     }
 
@@ -224,12 +224,12 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                                     .stream()
                                     .map(item -> switch (item) {
                                         case FeedbackScoreBatchItem tracingItem -> tracingItem.toBuilder()
-                                                .projectId(project.id()) // set projectId
+                                                .projectId(project.id()) // 设置项目ID
                                                 .build();
                                         case FeedbackScoreBatchItemThread threadItem -> threadItem.toBuilder()
-                                                .projectId(project.id()) // set projectId
+                                                .projectId(project.id()) // 设置项目ID
                                                 .build();
-                                    }) // set projectId
+                                    }) // 设置项目ID
                                     .map(item -> (T) item)
                                     .toList());
                 })
@@ -263,7 +263,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
     @Override
     public Mono<FeedbackScoreNames> getTraceFeedbackScoreNames(UUID projectId) {
         if (projectId == null) {
-            // Allow only for private access
+            // 仅允许私有访问
             boolean isPublic = Optional.ofNullable(requestContext.get().getVisibility())
                     .map(v -> v == Visibility.PUBLIC)
                     .orElse(false);
@@ -273,7 +273,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                         Response.Status.BAD_REQUEST));
             }
         } else {
-            // Will throw an error in case we try to get private project with public visibility
+            // 如果尝试以公共可见性访问私有项目，将抛出错误
             projectService.get(projectId);
         }
 
@@ -286,7 +286,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
 
     @Override
     public Mono<FeedbackScoreNames> getSpanFeedbackScoreNames(@NonNull UUID projectId, SpanType type) {
-        // Will throw an error in case we try to get private project with public visibility
+        // 如果尝试以公共可见性访问私有项目，将抛出错误
         projectService.get(projectId);
         return dao.getSpanFeedbackScoreNames(projectId, type)
                 .map(names -> names.stream()
@@ -420,7 +420,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
             return Mono.empty();
         }
 
-        // group scores by project name to resolve project itemIds
+        // 按项目名称分组以解析项目ID
         Map<String, List<FeedbackScoreBatchItemThread>> scoresPerProject = scores
                 .stream()
                 .map(score -> score.toBuilder()
@@ -431,7 +431,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
         return projectService.retrieveByNamesOrCreate(scoresPerProject.keySet())
                 .map(ProjectService::groupByName)
                 .map(projectMap -> mergeProjectsAndScores(projectMap, scoresPerProject))
-                .flatMap(this::saveThreadScoreBatch) // save all scores
+                .flatMap(this::saveThreadScoreBatch) // 保存所有分数
                 .doOnSuccess(count -> log.info("Saved '{}' thread scores in batch", count))
                 .then();
     }
@@ -445,19 +445,18 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
             @Nullable String author) {
         return Flux.fromIterable(projects)
                 .flatMap(projectDto -> {
-                    // Collect unique thread IDs from the scores
+                    // 从分数中收集唯一的线程ID
                     Set<String> threadIds = projectDto.scores()
                             .stream()
                             .map(FeedbackScoreItem::threadId)
                             .collect(Collectors.toSet());
 
-                    // resolve all thread model IDs in a single bulk get-or-create instead of one per thread
+                    // 批量获取或创建所有线程模型ID，而不是逐个处理
                     return traceThreadService.getOrCreateThreadIds(projectDto.project().id(), threadIds)
                             .map(threadIdMap -> bindThreadModelId(projectDto, threadIdMap))
                             .filter(projectDtoWithThreads -> !projectDtoWithThreads.scores().isEmpty())
-                            // Thread status validation removed - feedback scores can now be added to threads
-                            // regardless of their active/inactive status. The status concept is kept only
-                            // for online scoring cooling period.
+                            // 线程状态验证已移除 - 现在可以向线程添加反馈分数，无论其活跃/非活跃状态如何。
+                            // 状态概念仅保留用于在线评分冷却期。
                             .flatMap(
                                     validatedProjectDto -> dao.scoreBatchOfThreads(validatedProjectDto.scores(),
                                             author));
@@ -472,7 +471,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                 .scores(projectDto.scores()
                         .stream()
                         .map(score -> score.toBuilder()
-                                .id(threadIdMap.get(score.threadId())) // set thread model id
+                                .id(threadIdMap.get(score.threadId())) // 设置线程模型ID
                                 .build())
                         .collect(Collectors.toList()))
                 .build();

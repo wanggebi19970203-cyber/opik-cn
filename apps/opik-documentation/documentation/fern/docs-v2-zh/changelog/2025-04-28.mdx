@@ -1,0 +1,23 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**:
+
+- 更新了实验页面图表，更好地处理空值，现在显示所有指标值。
+- 为 traces 和 span 侧边栏添加了懒加载，更好地处理超大 traces。
+- 添加了 trace 和 span 附件支持，你现在可以将 PDF、视频和音频文件记录到 traces 中。
+
+<Frame>
+  <img src="/img/changelog/2025-04-28/trace_attachment.gif" />
+</Frame>
+
+- 改善了部分实验端点的性能
+
+**Python 和 JS / TS SDK**:
+
+- 根据最新 DSPy 版本更新了 DSPy 集成
+- 基于 Opik 的 OpenTelemetry 端点新增了 Autogen 集成
+- 为请求负载添加了压缩
+
+_发布版本_: `1.7.12`, `1.7.13`, `1.7.14`

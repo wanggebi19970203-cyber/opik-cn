@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import {
   categoryOptionLabelRenderer,
@@ -104,6 +105,7 @@ const renderParentValue = (displayText: string): React.ReactElement => (
 );
 
 const ValueCell: React.FC<ValueCellProps> = (context) => {
+  const { t } = useTranslation();
   const rowData = context.row.original;
   const value = context.getValue();
 
@@ -135,7 +137,7 @@ const ValueCell: React.FC<ValueCellProps> = (context) => {
     ) {
       const countFormat = formatParentRowWithCounts(rowData.value_by_author);
       return renderParentValue(
-        `avg ${formatNumericString(value)}: ${countFormat}`,
+        `${t("tracing:feedbackScoreTable.avg")} ${formatNumericString(value)}: ${countFormat}`,
       );
     }
 

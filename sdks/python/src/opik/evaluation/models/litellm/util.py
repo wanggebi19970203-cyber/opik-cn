@@ -1,4 +1,4 @@
-"""Utility helpers shared across LiteLLM models."""
+"""LiteLLM 模型共享的工具函数。"""
 
 from __future__ import annotations
 
@@ -6,16 +6,13 @@ from typing import Any, Callable, Dict, Optional, Set
 
 
 def coerce_temperature_to_float(value: Any) -> Optional[float]:
-    """Normalize a `temperature` value to a float.
+    """将 `temperature` 值规范化为浮点数。
 
-    LiteLLM accepts `temperature` as int, float, or numeric string and
-    coerces internally before the API call. Conflict-resolution code
-    (e.g. "drop X when temperature is non-1") needs the same coercion
-    to avoid false positives from string forms like ``"1"`` / ``"1.0"``.
-    Returns ``None`` when the value can't be coerced — callers should
-    treat that as "type mismatch, fall back to keeping the param" so a
-    bad input doesn't *also* trigger a silent drop of an unrelated
-    parameter.
+    LiteLLM 接受 `temperature` 为 int、float 或数字字符串，并在 API 调用前
+    内部强制转换。冲突解决代码（例如"当 temperature 非 1 时丢弃 X"）需要相同的
+    转换以避免 ``"1"`` / ``"1.0"`` 等字符串形式的误判。
+    当值无法转换时返回 ``None`` —— 调用方应将其视为"类型不匹配，回退保留参数"，
+    以免错误输入 *同时* 触发不相关参数的静默丢弃。
     """
     try:
         return float(value)
@@ -24,11 +21,10 @@ def coerce_temperature_to_float(value: Any) -> Optional[float]:
 
 
 def normalise_choice(choice: Any) -> Dict[str, Any]:
-    """Produce a dict view of a LiteLLM choice regardless of response type.
+    """无论响应类型如何，生成 LiteLLM choice 的字典视图。
 
-    LiteLLM may return raw dicts, Pydantic models, or dataclasses. Normalising to a
-    dict here keeps downstream parsing logic consistent and backwards compatible with
-    older client versions.
+    LiteLLM 可能返回原始字典、Pydantic 模型或数据类。在此规范化为字典
+    可保持下游解析逻辑一致，并与旧版客户端向后兼容。
     """
 
     if isinstance(choice, dict):
@@ -54,11 +50,11 @@ def apply_model_specific_filters(
     already_warned: Set[str],
     warn: Callable[[str, Any], None],
 ) -> None:
-    """Adjust/drop params for specific model families before calling LiteLLM.
+    """在调用 LiteLLM 前为特定模型系列调整/丢弃参数。
 
-    Currently handles:
-    - GPT-5: only honours temperature=1 and does not return log probabilities.
-    - DashScope Qwen: enforces constraints for logprobs / top_logprobs
+    当前处理：
+    - GPT-5：仅接受 temperature=1 且不返回对数概率。
+    - DashScope Qwen：强制 logprobs / top_logprobs 的约束。
     """
     normalized_model_name = _normalize_model_name(model_name)
 
@@ -72,7 +68,7 @@ def apply_model_specific_filters(
 
 
 def _normalize_model_name(model_name: str) -> str:
-    """Normalize provider-prefixed model names for capability checks."""
+    """为能力检查规范化带提供商前缀的模型名称。"""
     if "/" not in model_name:
         return model_name
 
@@ -88,11 +84,10 @@ def _apply_gpt5_filters(
     already_warned: Set[str],
     warn: Callable[[str, Any], None],
 ) -> None:
-    """Apply GPT-5 specific parameter filters.
+    """应用 GPT-5 特定的参数过滤器。
 
-    Only honours temperature=1 and does not return log probabilities.
-    Removing those eagerly avoids provider errors while the callback surfaces a
-    one-time warning to the caller.
+    仅接受 temperature=1 且不返回对数概率。
+    提前移除这些参数可避免提供商错误，同时回调向调用方发出一次性警告。
     """
 
     unsupported: list[tuple[str, Any]] = []
@@ -120,9 +115,9 @@ def _apply_qwen_dashscope_filters(
     already_warned: Set[str],
     warn: Callable[[str, Any], None],
 ) -> None:
-    """Apply Qwen/DashScope specific parameter filters.
+    """应用 Qwen/DashScope 特定的参数过滤器。
 
-    Does not return log probabilities.
+    不返回对数概率。
     """
 
     unsupported: list[tuple[str, Any]] = []
@@ -145,7 +140,7 @@ def _drop_unsupported_params_with_warning(
     already_warned: Set[str],
     warn: Callable[[str, Any], None],
 ) -> None:
-    """Remove unsupported params and emit warnings once per param name."""
+    """移除不支持的参数，每个参数名称仅发出一次警告。"""
     for param, value in unsupported_params:
         params.pop(param, None)
         if param in already_warned:

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -34,6 +35,7 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
   totalTokens,
   totalEstimatedCost,
 }) => {
+  const { t } = useTranslation("pages/agent-playground");
   const resultData = useMemo((): object | undefined => {
     if (job?.result === undefined) return undefined;
     if (typeof job.result === "object" && job.result !== null) {
@@ -53,7 +55,9 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex h-10 shrink-0 items-center gap-3 border-b px-4">
-        <span className="comet-body-xs-accented text-foreground">Result</span>
+        <span className="comet-body-xs-accented text-foreground">
+          {t("result.result")}
+        </span>
 
         {isCompleted && (
           <TraceStatsDisplay
@@ -72,7 +76,7 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
             onClick={onViewTrace}
             className="ml-auto gap-1 p-0"
           >
-            View trace
+            {t("result.viewTrace")}
             <ArrowUpRight className="size-3.5" />
           </Button>
         )}
@@ -84,10 +88,10 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
             <LeafIcon className="h-10 w-auto" aria-hidden="true" />
             <div className="flex flex-col gap-1">
               <p className="comet-body-s font-medium text-foreground">
-                No results yet
+                {t("result.noResultsYet")}
               </p>
               <p className="comet-body-xs max-w-xs text-muted-slate">
-                The agent response will appear here after a run
+                {t("result.agentResponseAppear")}
               </p>
             </div>
           </div>
@@ -97,10 +101,10 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
           <div className="flex flex-1 flex-col items-center gap-6 px-6 pt-12 text-center">
             <div className="flex flex-col gap-1">
               <p className="comet-body-s font-medium text-foreground">
-                Running your agent...
+                {t("result.runningYourAgent")}
               </p>
               <p className="comet-body-xs text-muted-slate">
-                Results will appear here when it&apos;s done.
+                {t("result.resultsAppearWhenDone")}
               </p>
             </div>
             <div className="flex flex-col gap-2">
@@ -113,7 +117,7 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
             </div>
             {hasTraceData && (
               <Button variant="link" size="2xs" onClick={onViewTrace}>
-                View trajectory live
+                {t("result.viewTrajectoryLive")}
               </Button>
             )}
           </div>
@@ -137,11 +141,11 @@ const AgentRunnerResult: React.FC<AgentRunnerResultProps> = ({
               <div>
                 <p className="comet-body-s-accented text-destructive">
                   {job.status === SandboxJobStatus.CANCELLED
-                    ? "Job cancelled"
-                    : "Execution failed"}
+                    ? t("result.jobCancelled")
+                    : t("result.executionFailed")}
                 </p>
                 <p className="comet-body-xs mt-1 text-muted-slate">
-                  {job.error ?? "An unknown error occurred."}
+                  {job.error ?? t("result.unknownError")}
                 </p>
               </div>
             </div>

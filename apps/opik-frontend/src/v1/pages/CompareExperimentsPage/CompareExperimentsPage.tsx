@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import isUndefined from "lodash/isUndefined";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
+import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import ExperimentItemsTab from "@/v1/pages/CompareExperimentsPage/ExperimentItemsTab/ExperimentItemsTab";
@@ -18,6 +19,7 @@ import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v1/constants/explainers";
 
 const CompareExperimentsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const [tab = "items", setTab] = useQueryParam("tab", StringParam, {
     updateType: "replaceIn",
   });
@@ -67,19 +69,19 @@ const CompareExperimentsPage: React.FunctionComponent = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="underline">
             <TabsTrigger variant="underline" value="items">
-              Experiment items
+              {t("compareExperiments.tabs.experimentItems")}
             </TabsTrigger>
             {!isTestSuite && (
               <TabsTrigger variant="underline" value="insights">
-                Insights
+                {t("compareExperiments.tabs.insights")}
               </TabsTrigger>
             )}
             <TabsTrigger variant="underline" value="config">
-              Configuration
+              {t("compareExperiments.tabs.configuration")}
             </TabsTrigger>
             {showScoresTab && (
               <TabsTrigger variant="underline" value="scores">
-                Feedback scores
+                {t("compareExperiments.tabs.feedbackScores")}
                 <ExplainerIcon
                   className="ml-1"
                   {...EXPLAINERS_MAP[EXPLAINER_ID.what_are_feedback_scores]}

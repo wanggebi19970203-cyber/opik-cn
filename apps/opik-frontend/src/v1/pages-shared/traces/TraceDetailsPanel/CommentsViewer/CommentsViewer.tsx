@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import useTraceCommentsBatchDeleteMutation from "@/api/traces/useTraceCommentsBatchDeleteMutation";
 import useSpanCommentsBatchDeleteMutation from "@/api/traces/useSpanCommentsBatchDeleteMutation";
@@ -29,6 +30,7 @@ const CommentsViewer: React.FC<CommentsViewerProps> = ({
   activeSection,
   setActiveSection,
 }) => {
+  const { t } = useTranslation("tracing");
   const traceDeleteMutation = useTraceCommentsBatchDeleteMutation();
   const spanDeleteMutation = useSpanCommentsBatchDeleteMutation();
 
@@ -88,8 +90,8 @@ const CommentsViewer: React.FC<CommentsViewerProps> = ({
 
   return (
     <DetailsActionSectionLayout
-      title="Comments"
-      closeTooltipContent="Close comments"
+      title={t("detailsPanel.comments")}
+      closeTooltipContent={t("detailsPanel.closeComments")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
     >

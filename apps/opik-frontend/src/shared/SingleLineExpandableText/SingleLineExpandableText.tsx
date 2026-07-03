@@ -1,4 +1,5 @@
 import React, { ReactNode, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 type SingleLineExpandableTextProps = {
@@ -11,11 +12,14 @@ type SingleLineExpandableTextProps = {
 
 const SingleLineExpandableText: React.FC<SingleLineExpandableTextProps> = ({
   children,
-  showMoreLabel = "Show more",
-  showLessLabel = "Show less",
+  showMoreLabel,
+  showLessLabel,
   className,
   buttonClassName,
 }) => {
+  const { t } = useTranslation();
+  const defaultShowMoreLabel = showMoreLabel || t("common.shared.showMore");
+  const defaultShowLessLabel = showLessLabel || t("common.shared.showLess");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -55,7 +59,7 @@ const SingleLineExpandableText: React.FC<SingleLineExpandableTextProps> = ({
               className={cn("ml-1 underline", buttonClassName)}
               onClick={toggle}
             >
-              {showLessLabel}
+              {defaultShowLessLabel}
             </button>
           )}
         </div>
@@ -68,7 +72,7 @@ const SingleLineExpandableText: React.FC<SingleLineExpandableTextProps> = ({
               className={cn("shrink-0 underline", buttonClassName)}
               onClick={toggle}
             >
-              {showMoreLabel}
+              {defaultShowMoreLabel}
             </button>
           )}
         </div>

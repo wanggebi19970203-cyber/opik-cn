@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 class OpikTrackDecorator(base_track_decorator.BaseTrackDecorator):
     """
-    Default implementation of BaseTrackDecorator
+    BaseTrackDecorator 的默认实现
     """
 
     @override

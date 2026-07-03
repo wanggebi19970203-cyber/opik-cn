@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Path, useFieldArray, UseFormReturn } from "react-hook-form";
 import { CircleHelp, ExternalLink, Plus, WebhookIcon, X } from "lucide-react";
 import get from "lodash/get";
@@ -36,29 +37,32 @@ type EventTriggersProps = {
   projectsIds: string[];
 };
 
-const WINDOW_OPTIONS: DropdownOption<string>[] = [
-  { label: "5 minutes", value: "300" },
-  { label: "15 minutes", value: "900" },
-  { label: "30 minutes", value: "1800" },
-  { label: "1 hour", value: "3600" },
-  { label: "6 hours", value: "21600" },
-  { label: "12 hours", value: "43200" },
-  { label: "24 hours", value: "86400" },
-  { label: "7 days", value: "604800" },
-  { label: "15 days", value: "1296000" },
-  { label: "30 days", value: "2592000" },
-];
+const useWindowOptions = (): DropdownOption<string>[] => {
+  const { t } = useTranslation();
+  return [
+    { label: t("alerts.windowOptions.300"), value: "300" },
+    { label: t("alerts.windowOptions.900"), value: "900" },
+    { label: t("alerts.windowOptions.1800"), value: "1800" },
+    { label: t("alerts.windowOptions.3600"), value: "3600" },
+    { label: t("alerts.windowOptions.21600"), value: "21600" },
+    { label: t("alerts.windowOptions.43200"), value: "43200" },
+    { label: t("alerts.windowOptions.86400"), value: "86400" },
+    { label: t("alerts.windowOptions.604800"), value: "604800" },
+    { label: t("alerts.windowOptions.1296000"), value: "1296000" },
+    { label: t("alerts.windowOptions.2592000"), value: "2592000" },
+  ];
+};
 
-function getThresholdLabel(eventType: ALERT_EVENT_TYPE): string {
+function getThresholdLabel(t: (key: string) => string, eventType: ALERT_EVENT_TYPE): string {
   switch (eventType) {
     case ALERT_EVENT_TYPE.trace_cost:
-      return "Total cost exceeds (USD)";
+      return t("alerts.thresholdLabels.trace_cost");
     case ALERT_EVENT_TYPE.trace_errors:
-      return "Trace errors count exceeds";
+      return t("alerts.thresholdLabels.trace_errors");
     case ALERT_EVENT_TYPE.trace_latency:
-      return "Average latency exceeds (seconds)";
+      return t("alerts.thresholdLabels.trace_latency");
     default:
-      return "Threshold exceeds";
+      return t("alerts.thresholdLabels.default");
   }
 }
 
@@ -79,6 +83,8 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
   form,
   projectsIds,
 }) => {
+  const { t } = useTranslation();
+  const windowOptions = useWindowOptions();
   const triggersError = form.formState.errors.triggers;
   const isGuardrailsEnabled = useIsFeatureEnabled(
     FeatureToggleKeys.GUARDRAILS_ENABLED,
@@ -140,7 +146,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             return (
               <FormItem className="flex-1">
                 <Label className="comet-body-s">
-                  {getThresholdLabel(eventType)}
+                  {getThresholdLabel(t, eventType)}
                 </Label>
                 <FormControl>
                   <Input
@@ -172,16 +178,16 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             ]);
             return (
               <FormItem className="flex-1">
-                <Label className="comet-body-s">In the last</Label>
+                <Label className="comet-body-s">{t("alerts.triggers.inTheLast")}</Label>
                 <FormControl>
                   <SelectBox
                     value={field.value as string}
                     onChange={field.onChange}
-                    options={WINDOW_OPTIONS}
+                    options={windowOptions}
                     className={cn("h-8", {
                       "border-destructive": Boolean(validationErrors?.message),
                     })}
-                    placeholder="Select time window"
+                    placeholder={t("alerts.triggers.selectTimeWindow")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -219,9 +225,9 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h3 className="comet-body-accented">Triggers</h3>
+          <h3 className="comet-body-accented">{t("alerts.triggers.title")}</h3>
           <Description>
-            Choose which platform events will trigger the alert.
+            {t("alerts.triggers.description")}
           </Description>
         </div>
 
@@ -229,7 +235,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
           <PopoverTrigger asChild>
             <Button type="button" variant="outline" size="sm">
               <Plus className="mr-1 size-3" />
-              Add trigger
+              {t("alerts.triggers.addTrigger")}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[480px] p-0" align="end">
@@ -269,7 +275,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                 <CircleHelp className="size-4 shrink-0 text-muted-foreground" />
                 <div className="flex flex-wrap items-center gap-1 text-sm">
                   <span className="comet-body-s">
-                    Missing a trigger? Open a
+                    {t("alerts.triggers.missingTrigger")}
                   </span>
                   <a
                     href="https://github.com/comet-ml/opik/issues/new"
@@ -278,10 +284,10 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="comet-body-s">GitHub ticket</span>
+                    <span className="comet-body-s">{t("alerts.triggers.githubTicket")}</span>
                     <ExternalLink className="size-3.5" />
                   </a>
-                  <span className="comet-body-s">to let us know!</span>
+                  <span className="comet-body-s">{t("alerts.triggers.toLetUsKnow")}</span>
                 </div>
               </div>
             </div>
@@ -295,11 +301,10 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             <div className="flex flex-col items-center justify-center gap-2 py-8">
               <WebhookIcon className="size-4 text-muted-foreground" />
               <p className="comet-body-s-accented text-center">
-                No triggers selected yet
+                {t("alerts.triggers.emptyTitle")}
               </p>
               <p className="comet-body-s text-center text-muted-foreground">
-                Choose one or more events to decide when this webhook should be
-                activated
+                {t("alerts.triggers.emptyDescription")}
               </p>
             </div>
           </CardContent>

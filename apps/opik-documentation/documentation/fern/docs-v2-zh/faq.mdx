@@ -1,0 +1,241 @@
+---
+headline: 常见问题 | Opik 文档
+og:description: 探索关于 Opik 的常见问题，了解如何开始使用，并获取帮助以提升您使用我们强大工具的体验。
+og:site_name: Opik 文档
+og:title: '常见问题 - Opik：入门指南'
+title: 常见问题
+---
+
+这些常见问题是我们从用户那里收集到的最常见问题。如果您有任何问题或需要额外帮助，请在
+[GitHub 上提交 issue](https://github.com/comet-ml/opik/issues)。
+
+## 通用问题
+
+### Opik 与 Comet 是什么关系？
+
+Opik 由 Comet 开发，提供多种部署选项：
+
+- 作为开源独立产品，可在本地使用或在您自己的基础设施上自行托管
+- 作为 Comet MLOps 平台的集成组件（支持 Comet 托管和自行托管部署）
+
+这意味着您可以独立于 Comet 平台使用 Opik，也可以将其作为现有 Comet MLOps 设置的一部分。
+
+### Opik 提供哪些 SDK？
+
+Opik 目前提供以下官方 SDK：
+
+- Python：功能最完整的 SDK，支持所有 Opik 功能
+- TypeScript：丰富的追踪功能
+
+这些 SDK 正在积极维护和定期更新。对于其他语言，您可以直接使用我们的 REST API - 详见 [API 文档](/reference/rest-api/overview)。
+
+### start_time 应该使用什么格式？
+
+`start_time` 字段支持带 UTC 时区的 **ISO 8601 日期时间格式**。为了在所有 Opik SDK 和后端之间获得最佳兼容性，请使用：
+
+```
+2024-01-01T10:20:30.123456Z
+```
+
+**格式规范：**
+
+- 模式：`YYYY-MM-DDTHH:MM:SS.ffffffZ`
+- 时区：UTC（始终带 `Z` 后缀）
+- 精度：微秒（6 位小数）
+
+**示例：**
+
+- `2024-01-01T10:20:30Z`（仅秒）
+- `2024-01-01T10:20:30.123Z`（毫秒）
+- `2024-01-01T10:20:30.123456Z`（微秒 - 推荐）
+
+此格式受以下组件支持：
+
+- Python SDK
+- TypeScript SDK
+- Java 后端
+- 前端 UI
+- ClickHouse 数据库
+
+**为什么使用带 Z 后缀的 UTC？**
+
+- 避免时区转换问题
+- 在各编程语言中普遍支持
+- 明确指示 UTC 时区
+- 符合 RFC 3339 标准
+
+### 我可以使用 Opik 在生产环境中监控 LLM 应用吗？
+
+可以，Opik 从设计之初就旨在用于监控生产应用。如果您自行托管 Opik 平台，我们建议使用 [Kubernetes 部署](/self-host/overview) 选项，以确保 Opik 能够按需扩展。
+
+### Opik Cloud 和开源 Opik 平台有什么区别？
+
+Opik Cloud 平台是 Opik 的托管版本，面向免费用户和付费客户。它包含您喜爱的开源版 Opik 的所有功能，还提供用户管理、计费和支持，无需您自行搭建和维护 Opik 平台。
+
+开源版 Opik 产品包含追踪和在线评估功能，可用于在生产环境中监控 LLM。它还包含高级评估功能，包括评估指标和高级实验比较 UI。非技术用户也可以使用 Opik 来审查生产追踪记录或在 Opik Playground 中运行实验。
+
+## Opik Cloud
+
+### 在哪里可以找到我的 Opik API 密钥？
+
+将数据记录到 Opik Cloud 平台需要 Opik API 密钥。您可以在账户设置或页面右上角的用户菜单中找到 API 密钥。
+
+<Frame>
+  <img src="/img/faq/opik_api_key.png" />
+</Frame>
+
+<Tip>
+  如果您使用的是开源 Opik 平台，则不会有 Opik API 密钥。您可以在终端中运行 `opik configure` 来配置 Opik，该命令会提示您输入 Opik 部署信息并创建所有必要的配置。
+</Tip>
+
+### 如何找到我的工作区和项目名称？
+
+您的**工作区名称**和**项目名称**显示在 Opik UI 中：
+
+**工作区名称：**
+
+- 查看页面顶部的面包屑导航
+- 它出现在面包屑路径中 "opik" 之后的第一个位置
+- 示例：`opik > your-workspace-name > Projects > your-project-name`
+
+**项目名称：**
+
+- 当您进入某个项目时，它会显示为内容区域的主标题
+- 它也是面包屑导航中的最后一项
+- 示例：`opik > your-workspace-name > Projects > your-project-name`
+
+您还可以在左侧边栏的 "Projects" 下看到工作区信息，其中显示了工作区中的项目数量。
+
+### Opik Cloud 有速率限制吗？
+
+有，为了确保所有用户都有良好的体验，我们实施了速率限制。当您遇到速率限制时，端点会返回状态码 `429`。
+
+所有 REST API 端点的全局速率为每用户每分钟 `2,000` 次请求，额外突发容量为 `100` 次请求。
+
+此外，数据摄取限制为每用户每分钟 `10,000` 个事件。事件是指被 Opik 摄取、存储和持久化的任何追踪、span、反馈分数、数据集条目、实验条目等。
+
+另外，每个工作区和每个用户的数据摄取限制为每分钟 `5,000` 个事件。
+
+最后，`Get span by id` 端点（`GET /api/v1/private/spans/:id`）的速率为每用户每分钟 `250` 次请求。
+
+<Note>
+Python SDK 已实现一些逻辑，在遇到速率限制时会降低日志记录速度以避免数据丢失。您会看到消息：`OPIK: Ingestion rate limited, retrying in 55 seconds, remaining queue size: 1, ...`。
+
+如果您使用其他日志记录方式，则需要自行实现"退避重试"策略。
+
+</Note>
+
+有关速率限制的问题，请在 [Slack](https://chat.comet.com) 上联系我们。
+
+## 集成
+
+### Opik 支持哪些集成？
+
+Opik 支持广泛的主流 LLM 框架、提供商和工具。您可以在我们的[集成概览](/integrations/overview)中找到详细的集成指南。
+
+**模型提供商：**
+Anthropic、AWS Bedrock、BytePlus、Cloudflare Workers AI、Cohere、DeepSeek、Fireworks AI、Google Gemini、Groq、Mistral AI、Novita AI、Ollama、OpenAI (Python & JS/TS)、Predibase、Together AI、IBM WatsonX、xAI Grok
+
+**框架：**
+AG2、Agent Spec、Agno、Autogen、CrewAI、DSPy、Haystack、Instructor、LangChain (Python & JS/TS)、LangGraph、LlamaIndex、Mastra、Pydantic AI、Semantic Kernel、Smolagents、Spring AI、Strands Agents、VoltAgent、OpenAI Agents、Google Agent Development Kit、LiveKit Agents、BeeAI
+
+**评估与测试：**
+Ragas
+
+**网关与代理：**
+LiteLLM、OpenRouter、AISuite
+
+**无代码工具：**
+Dify、Flowise
+
+**OpenTelemetry：**
+OpenTelemetry (Python & Ruby SDKs)
+
+**其他工具：**
+Guardrails AI
+
+### 如果 Opik 不支持我首选的框架或工具怎么办？
+
+如果您在集成列表中没有看到您首选的框架或工具，我们建议您：
+
+1. 在 [GitHub 上提交 issue](https://github.com/comet-ml/opik/issues) 请求集成
+2. 同时，您可以使用我们 SDK 的核心日志记录函数手动记录 LLM 交互 - 详见[追踪文档](/tracing/advanced/log_traces)中的示例
+
+我们根据社区反馈积极维护和扩展集成支持。
+
+## 故障排查
+
+### 为什么会出现 403 错误？
+
+如果您遇到 403（禁止）错误，通常表示存在身份验证或授权问题。如果您尚未配置凭据，最简单的入门方式是运行：
+
+```bash
+opik configure
+```
+
+此交互式命令将引导您完成所需配置的设置。
+
+否则，请仔细检查您的现有配置：
+
+对于 Comet 的 Opik Cloud：
+
+- `api_key`（必填）：验证您的 API 密钥是否正确且有效
+- `workspace`（可选）：如果指定了工作区，请确认您有权访问该工作区
+- `project_name`（可选）：如果指定了项目名称，请确保项目名称有效
+- `url_override`：应设置为 `https://www.comet.com/opik/api`（这是默认值）
+
+对于自行托管的 Opik：
+
+- `url_override`（必填）：验证您的基础 URL 指向您的 Opik 实例（例如，`http://your-instance:5173/api`）
+
+您可以在 Opik 配置文件（`~/.opik.config`）中找到当前配置，或检查环境变量（`OPIK_API_KEY`、`OPIK_WORKSPACE`、`OPIK_URL_OVERRIDE`、`OPIK_PROJECT_NAME`）。有关配置的更多详情，请参阅 [SDK 配置指南](/tracing/advanced/sdk_configuration)。
+
+## 如何诊断 Opik 的问题？
+
+如果您在使用 Opik 时遇到任何问题，例如从后端收到 400 或 500 错误，或完全无法连接，我们建议在终端中运行以下命令：
+
+```bash
+opik healthcheck
+```
+
+此命令将分析您的配置和后端连接性，提供有关潜在问题的有用信息。
+
+<Frame>
+  <img src="/img/healthcheck.png" />
+</Frame>
+
+查看这些部分可以帮助定位问题根源并提供可能的解决方案。
+
+### 使用 Comet 调试模式（UI/浏览器）
+
+**Comet 调试模式**是 **Opik Web 应用**中的一个隐藏诊断功能，可显示实时技术信息以帮助您排查问题。此模式在调查连接问题、报告 bug 或验证部署版本时特别有用。
+
+**切换 Comet 调试模式：**
+
+在 macOS 上按 `Command + Shift + .`，在 Windows/Linux 上按 `Ctrl + Shift + .`
+
+<Frame>
+  <img src="/img/faq/comet_debugger_mode.png" alt="显示 RTT 和版本的 Comet 调试模式" />
+</Frame>
+
+**显示内容：**
+
+- **网络状态**：实时连接指示器，带有 RTT（往返时间），以秒为单位显示到 Opik 后端服务器的延迟
+- **Opik 版本**：您当前运行的 Opik 版本（点击可复制到剪贴板）
+
+以下情况时此信息很有帮助：
+
+- 向 Opik 团队报告问题时（附上版本号和 RTT）
+- 验证您的 Opik 版本是否与预期部署匹配
+- 诊断 UI 和后端之间的连接问题（检查 RTT 以发现延迟问题）
+- 排查 UI 相关问题或意外行为
+- 确认更新或部署成功
+- 监控到后端服务器的网络性能和延迟
+
+**工作原理：**
+
+键盘快捷键可切换调试信息覆盖层的开关。启用后，UI 中会出现一个小状态栏，显示网络连接状态和版本信息。该模式在浏览器会话之间持久化（存储在本地存储中），因此您只需启用一次，直到再次切换关闭。
+
+<Note>
+  调试模式设置在会话之间持久化，存储在浏览器的本地存储中。再次按键盘快捷键可隐藏调试信息。
+</Note>

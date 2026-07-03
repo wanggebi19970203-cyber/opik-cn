@@ -1,0 +1,49 @@
+{
+  "testSuites": {
+    "title": "Datasets",
+    "description": "A dataset is a collection of inputs and expected outputs used to evaluate your LLM application.",
+    "readMore": "Read more",
+    "searchPlaceholder": "Search by name",
+    "selectType": "Select type",
+    "create": "Create test suite",
+    "edit": "Edit test suite",
+    "delete": "Delete test suite",
+    "empty": {
+      "title": "No datasets yet",
+      "description": "Get started by creating your first test suite.",
+      "action": "Create your first test suite",
+      "noSearchResults": "No search results"
+    },
+    "fields": {
+      "name": "Test suite name",
+      "dataset": "Dataset",
+      "metrics": "Metrics"
+    },
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "id": "ID",
+      "description": "Description",
+      "itemCount": "Item count",
+      "tags": "Tags",
+      "mostRecentExperiment": "Most recent experiment",
+      "mostRecentOptimization": "Most recent optimization",
+      "lastUpdated": "Last updated",
+      "created": "Created",
+      "createdBy": "Created by",
+      "dataset": "Dataset",
+      "metrics": "Metrics",
+      "lastRun": "Last run",
+      "status": "Status"
+    },
+    "actions": {
+      "view": "View test suite",
+      "run": "Run test suite",
+      "results": "View results"
+    },
+    "columnsPage": {
+      "testSuite": "Test suite",
+      "dataset": "Dataset"
+    }
+  }
+}

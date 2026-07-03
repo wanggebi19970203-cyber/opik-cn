@@ -23,7 +23,10 @@ import { widgetHelpers as experimentLeaderboardHelpers } from "./ExperimentsLead
 
 export const widgetResolver: WidgetResolver = (
   type: string,
+  t?: (key: string) => string,
 ): WidgetComponents => {
+  const translate = t || ((key: string) => key);
+
   switch (type) {
     case WIDGET_TYPES.PROJECT_METRICS:
       return {
@@ -32,8 +35,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: projectMetricsHelpers.getDefaultConfig,
         calculateTitle: projectMetricsHelpers.calculateTitle,
         metadata: {
-          title: "Time series",
-          description: "Visualize trends in project metrics over time.",
+          title: translate("widgetTypes.timeSeries"),
+          description: translate("widgetTypes.timeSeriesDescription"),
           icon: <ChartNoAxesCombined className="size-4" />,
           category: WIDGET_CATEGORY.OBSERVABILITY,
           iconColor: "text-chart-blue",
@@ -47,9 +50,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: textMarkdownHelpers.getDefaultConfig,
         calculateTitle: textMarkdownHelpers.calculateTitle,
         metadata: {
-          title: "Markdown",
-          description:
-            "Add markdown or text for explanations, labels, or annotations.",
+          title: translate("widgetTypes.markdown"),
+          description: translate("widgetTypes.markdownDescription"),
           icon: <NotebookText className="size-4" />,
           category: WIDGET_CATEGORY.GENERAL,
           iconColor: "text-chart-red",
@@ -63,8 +65,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: projectStatsCardHelpers.getDefaultConfig,
         calculateTitle: projectStatsCardHelpers.calculateTitle,
         metadata: {
-          title: "Single metric",
-          description: "Highlight key project numbers at a glance.",
+          title: translate("widgetTypes.singleMetric"),
+          description: translate("widgetTypes.singleMetricDescription"),
           icon: <Hash className="size-4" />,
           category: WIDGET_CATEGORY.OBSERVABILITY,
           iconColor: "text-chart-green",
@@ -78,8 +80,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: experimentsFeedbackScoresHelpers.getDefaultConfig,
         calculateTitle: experimentsFeedbackScoresHelpers.calculateTitle,
         metadata: {
-          title: "Metrics",
-          description: "Visualize experiment metrics over time or across runs.",
+          title: translate("widgetTypes.metrics"),
+          description: translate("widgetTypes.metricsDescription"),
           icon: <ChartNoAxesCombined className="size-4" />,
           category: WIDGET_CATEGORY.EVALUATION,
           iconColor: "text-chart-blue",
@@ -93,9 +95,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: experimentLeaderboardHelpers.getDefaultConfig,
         calculateTitle: experimentLeaderboardHelpers.calculateTitle,
         metadata: {
-          title: "Leaderboard",
-          description:
-            "Rank and compare experiments across multiple metrics in a sortable table.",
+          title: translate("widgetTypes.leaderboard"),
+          description: translate("widgetTypes.leaderboardDescription"),
           icon: <Trophy className="size-4" />,
           category: WIDGET_CATEGORY.EVALUATION,
           iconColor: "text-chart-yellow",
@@ -109,9 +110,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: textMarkdownHelpers.getDefaultConfig,
         calculateTitle: textMarkdownHelpers.calculateTitle,
         metadata: {
-          title: "Markdown",
-          description:
-            "Add markdown or text for explanations, labels, or annotations.",
+          title: translate("widgetTypes.markdown"),
+          description: translate("widgetTypes.markdownDescription"),
           icon: <NotebookText className="size-4" />,
           category: WIDGET_CATEGORY.GENERAL,
           iconColor: "text-chart-red",

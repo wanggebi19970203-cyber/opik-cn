@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import {
   AnthropicThinkingEffort,
   COMPOSED_PROVIDER_TYPE,
@@ -111,12 +112,12 @@ export const supportsVertexAIThinkingLevel = (
 };
 
 const EFFORT_LABELS: Record<AnthropicThinkingEffort, string> = {
-  adaptive: "Adaptive",
-  low: "Low",
-  medium: "Medium",
-  high: "High (Default)",
-  xhigh: "xHigh",
-  max: "Max",
+  adaptive: i18next.t("common:modelUtils.adaptive"),
+  low: i18next.t("common:modelUtils.low"),
+  medium: i18next.t("common:modelUtils.medium"),
+  high: i18next.t("common:modelUtils.highDefault"),
+  xhigh: i18next.t("common:modelUtils.xhigh"),
+  max: i18next.t("common:modelUtils.max"),
 };
 
 export const supportsSamplingParams = (
@@ -140,12 +141,12 @@ export const getAnthropicThinkingEffortOptions = (
   ).map((value) => ({ label: EFFORT_LABELS[value], value }));
 
 const OPENAI_EFFORT_LABELS: Record<ReasoningEffort, string> = {
-  none: "None",
-  minimal: "Minimal",
-  low: "Low",
-  medium: "Medium",
-  high: "High (Default)",
-  xhigh: "xHigh",
+  none: i18next.t("common:modelUtils.none"),
+  minimal: i18next.t("common:modelUtils.minimal"),
+  low: i18next.t("common:modelUtils.low"),
+  medium: i18next.t("common:modelUtils.medium"),
+  high: i18next.t("common:modelUtils.highDefault"),
+  xhigh: i18next.t("common:modelUtils.xhigh"),
 };
 
 export const supportsOpenAIReasoningEffort = (

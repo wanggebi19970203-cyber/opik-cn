@@ -17,17 +17,17 @@ def llm_unit(
     metadata_key: str = "metadata",
 ) -> Callable[[Any], Any]:
     """
-    Decorator used for special tests tracking.
-    Mark your test with `llm_unit` and when you run `pytest`, Opik will
-    create an experiment and log test results to it: test name, test inputs, result.
+    用于特殊测试追踪的装饰器。
+    使用 `llm_unit` 标记你的测试，当你运行 `pytest` 时，Opik 将
+    创建一个实验并将测试结果记录到其中：测试名称、测试输入、结果。
 
     Arguments:
-        expected_output_key: test argument name that will be logged as `expected_output` of the LLM task.
-            If not provided, Opik will try to find `expected_output` in arguments.
-        input_key: test argument name that will be logged as `input` of the LLM task.
-            If not provided, Opik will try to find `input` in arguments.
-        metadata_key: test argument name that will be logged as `metadata`.
-            If not provided, Opik will try to find `metadata` in arguments.
+        expected_output_key: 将作为 LLM 任务的 `expected_output` 记录的测试参数名称。
+            如果未提供，Opik 将尝试在参数中查找 `expected_output`。
+        input_key: 将作为 LLM 任务的 `input` 记录的测试参数名称。
+            如果未提供，Opik 将尝试在参数中查找 `input`。
+        metadata_key: 将作为 `metadata` 记录的测试参数名称。
+            如果未提供，Opik 将尝试在参数中查找 `metadata`。
     """
     argnames_mapping = {
         "expected_output": expected_output_key,
@@ -61,7 +61,7 @@ def llm_unit(
                 )
 
                 trace_input = {**test_run_content_.input}
-                trace_input.pop("test_name")  # we don't need it in traces
+                trace_input.pop("test_name")  # traces 中不需要此字段
                 opik_context.update_current_trace(
                     input=trace_input,
                     metadata=test_run_content_.metadata,
@@ -75,7 +75,7 @@ def llm_unit(
                 test_runs_storage.TEST_RUNS_CONTENTS[node_id] = test_run_content_
             except Exception:
                 LOGGER.error(
-                    "Unexpected exception occured during llm_unit test tracking for test %s",
+                    "在测试 %s 的 llm_unit 测试追踪期间发生意外异常",
                     func.__name__,
                     exc_info=True,
                 )
@@ -90,7 +90,7 @@ def llm_unit(
 
 
 def _get_test_nodeid() -> str:
-    # Examples of environment variables:
+    # 环境变量示例：
     # 'sdks/python/tests/tests_sandbox/test_things.py::TestGroup::test_example[13 32] (call)'
     # 'sdks/python/tests/tests_sandbox/test_things.py::TestGroup::test_example (call)'
     # 'sdks/python/tests/tests_sandbox/test_things.py::test_example (call)'

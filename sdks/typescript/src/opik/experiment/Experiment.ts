@@ -23,7 +23,7 @@ export interface ExperimentData {
 }
 
 /**
- * Represents an Experiment in Opik, linking traces and dataset items
+ * 表示 Opik 中的实验，关联追踪和数据集条目
  */
 export class Experiment {
   public readonly id: string;
@@ -34,8 +34,8 @@ export class Experiment {
   public readonly projectName?: string;
 
   /**
-   * Creates a new Experiment instance.
-   * This should not be created directly, use static factory methods instead.
+   * 创建新的实验实例。
+   * 不应直接构造，请使用静态工厂方法。
    */
   constructor(
     { id, name, datasetName, prompts, tags, projectName }: ExperimentData,
@@ -50,16 +50,16 @@ export class Experiment {
   }
 
   /**
-   * Gets the experiment name. If not provided during construction,
-   * lazy-loads it from the backend API.
+   * 获取实验名称。如果在构造时未提供，
+   * 则从后端 API 延迟加载。
    */
   get name(): string | undefined {
     return this._name;
   }
 
   /**
-   * Async method to ensure the name is loaded from backend if needed.
-   * Call this method before accessing name if you need to ensure it's loaded.
+   * 异步方法，确保在需要时从后端加载名称。
+   * 在访问名称之前调用此方法以确保已加载。
    */
   async ensureNameLoaded(): Promise<string> {
     if (this._name !== undefined) {
@@ -79,9 +79,9 @@ export class Experiment {
   }
 
   /**
-   * Creates new experiment items by linking existing traces and dataset items
+   * 通过关联现有追踪和数据集条目创建新的实验条目
    *
-   * @param experimentItemReferences List of references linking traces with dataset items
+   * @param experimentItemReferences 关联追踪与数据集条目的引用列表
    */
   public async insert(
     experimentItemReferences: ExperimentItemReferences[]
@@ -120,17 +120,17 @@ export class Experiment {
   }
 
   /**
-   * Retrieves experiment items with options to limit results and truncate data
+   * 检索实验条目，支持限制结果数量和截断数据的选项
    *
-   * @param options Options for retrieving items
-   * @returns Promise resolving to a list of experiment items
+   * @param options 检索条目的选项
+   * @returns 解析为实验条目列表的 Promise
    */
   public async getItems(options?: {
     maxResults?: number;
     truncate?: boolean;
   }): Promise<ExperimentItemContent[]> {
     const result: ExperimentItemContent[] = [];
-    const maxEndpointBatchSize = 2000; // Maximum batch size per API request
+    const maxEndpointBatchSize = 2000; // 每次 API 请求的最大批次大小
     const { maxResults, truncate = false } = options || {};
 
     let lastRetrievedId: string | undefined;

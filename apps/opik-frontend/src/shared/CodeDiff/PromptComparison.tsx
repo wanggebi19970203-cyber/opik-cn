@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { diffLines } from "diff";
 import { ChevronDown, GitCompareArrows } from "lucide-react";
 
@@ -100,11 +101,13 @@ const PlainText: React.FC<{ text: string }> = ({ text }) => (
  */
 const PromptComparison: React.FunctionComponent<PromptComparisonProps> = ({
   current,
-  currentLabel = "Trial",
+  currentLabel,
   targets,
   defaultTargetId,
   className,
 }) => {
+  const { t } = useTranslation("common");
+  const resolvedCurrentLabel = currentLabel ?? t("codeDiff.trial");
   const fallbackId = targets[0]?.id;
   const initialId =
     defaultTargetId && targets.some((t) => t.id === defaultTargetId)
@@ -194,7 +197,7 @@ const PromptComparison: React.FunctionComponent<PromptComparisonProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
             <span className="comet-body-s-accented text-foreground">
-              → {currentLabel}
+              → {resolvedCurrentLabel}
             </span>
           </div>
           <button
@@ -203,7 +206,7 @@ const PromptComparison: React.FunctionComponent<PromptComparisonProps> = ({
             className="comet-body-s inline-flex items-center gap-1 text-foreground"
           >
             <GitCompareArrows className="size-3.5" />
-            {showDiff ? "Hide diff" : "Show diff"}
+            {showDiff ? t("codeDiff.hideDiff") : t("codeDiff.showDiff")}
           </button>
         </div>
       )}

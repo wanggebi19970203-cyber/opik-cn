@@ -15,10 +15,12 @@ import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 import useProjectDeleteMutation from "@/api/projects/useProjectDeleteMutation";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { useTranslation } from "react-i18next";
 
 export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
   context,
 ) => {
+  const { t } = useTranslation("pages/projects");
   const resetKeyRef = useRef(0);
   const project = context.row.original;
   const [open, setOpen] = useState<boolean | number>(false);
@@ -56,15 +58,15 @@ export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
         open={open === 1}
         setOpen={setOpen}
         onConfirm={deleteProjectHandler}
-        title="Delete project"
-        description="Deleting a project will also remove all the traces and their data. This action can’t be undone. Are you sure you want to continue?"
-        confirmText="Delete project"
+        title={t("rowActions.deleteTitle")}
+        description={t("rowActions.deleteDescription")}
+        confirmText={t("rowActions.deleteConfirm")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5 ">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("rowActions.actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -77,7 +79,7 @@ export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
               }}
             >
               <Pencil className="mr-2 size-4" />
-              Edit
+              {t("rowActions.edit")}
             </DropdownMenuItem>
           )}
           {canCreateProjects && canDelete && <DropdownMenuSeparator />}
@@ -90,7 +92,7 @@ export const ProjectRowActionsCell: React.FC<CellContext<Project, unknown>> = (
               variant="destructive"
             >
               <Trash className="mr-2 size-4" />
-              Delete
+              {t("rowActions.delete")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

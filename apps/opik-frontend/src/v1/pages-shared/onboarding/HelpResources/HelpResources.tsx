@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink, Book, MonitorPlay } from "lucide-react";
 
 type HelpResourcesProps = {
@@ -6,6 +7,8 @@ type HelpResourcesProps = {
 };
 
 const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="rounded-lg border bg-background p-4">
@@ -13,13 +16,12 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
           <div className="flex items-center gap-2">
             <MonitorPlay className="size-4 text-muted-slate" />
             <div className="comet-body-s-accented">
-              Watch our guided tutorial
+              {t("helpResources.watchTutorial")}
             </div>
           </div>
 
           <div className="comet-body-s text-muted-slate">
-            Watch a short video to guide you through {title} integration and key
-            features.
+            {t("helpResources.watchTutorialDescription", { title })}
           </div>
         </div>
 
@@ -27,7 +29,7 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
           <div className="text-center">
             <MonitorPlay className="mx-auto mb-2 size-16 text-muted-foreground/50" />
             <p className="comet-body-s text-muted-foreground">
-              {title} tutorial coming soon
+              {t("helpResources.tutorialComingSoon", { title })}
             </p>
           </div>
         </div>
@@ -38,11 +40,11 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
           <div className="flex items-center gap-2">
             <Book className="size-4 text-muted-slate" />
             <div className="comet-body-s-accented">
-              Explore our documentation
+              {t("helpResources.exploreDocumentation")}
             </div>
           </div>
           <div className="comet-body-s text-muted-slate">
-            Check out our docs and helpful guides for {title} integration.
+            {t("helpResources.exploreDocumentationDescription", { title })}
           </div>
         </div>
 
@@ -53,7 +55,7 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
             rel="noopener noreferrer"
             className="comet-body-s inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
           >
-            Getting started with {title}
+            {t("helpResources.gettingStartedWith", { title })}
             <ExternalLink className="size-4" />
           </a>
           <a
@@ -62,7 +64,7 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
             rel="noopener noreferrer"
             className="comet-body-s inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
           >
-            {title} integration guide
+            {t("helpResources.integrationGuide", { title })}
             <ExternalLink className="size-4" />
           </a>
           <a
@@ -71,7 +73,7 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
             rel="noopener noreferrer"
             className="comet-body-s inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
           >
-            Best practices with {title}
+            {t("helpResources.bestPracticesWith", { title })}
             <ExternalLink className="size-4" />
           </a>
           <a
@@ -80,7 +82,7 @@ const HelpResources: React.FC<HelpResourcesProps> = ({ title }) => {
             rel="noopener noreferrer"
             className="comet-body-s inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
           >
-            Troubleshooting {title}
+            {t("helpResources.troubleshooting", { title })}
             <ExternalLink className="size-4" />
           </a>
         </div>

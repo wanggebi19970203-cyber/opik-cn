@@ -1,18 +1,21 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import OnboardingStep from "../OnboardingStep";
 
-const options = [
-  "Software Developer",
-  "ML Engineer / Data Scientist",
-  "Product Manager",
-  "Other",
-];
-
 const Role: React.FC = () => {
+  const { t } = useTranslation("onboarding");
+
+  const options = [
+    t("roles.softwareDeveloper"),
+    t("roles.mlEngineerDataScientist"),
+    t("roles.productManager"),
+    t("roles.other"),
+  ];
+
   return (
     <OnboardingStep className="mt-16">
       <OnboardingStep.Title>
-        How would you describe your role?
+        {t("roleQuestion")}
       </OnboardingStep.Title>
 
       <OnboardingStep.AnswerList>

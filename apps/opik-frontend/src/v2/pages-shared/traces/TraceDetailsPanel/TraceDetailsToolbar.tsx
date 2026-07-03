@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useHotkeys } from "react-hotkeys-hook";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
 import uniq from "lodash/uniq";
@@ -70,6 +71,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
   config,
   setConfig,
 }) => {
+  const { t } = useTranslation("tracing");
   const { toggleExpandAll, expandedTreeRows, fullExpandedSet } =
     useTreeDetailsStore();
   const isAllExpanded = expandedTreeRows.size === fullExpandedSet.size;
@@ -89,7 +91,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
         ? [
             {
               id: COLUMN_GUARDRAILS_ID,
-              label: "Guardrails",
+              label: t("treeToolbar.guardrails"),
               type: COLUMN_TYPE.category,
             },
           ]
@@ -169,16 +171,16 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
             )
               .sort()
               .map((key) => ({ value: key, label: key })),
-            placeholder: "Select score",
+            placeholder: t("treeToolbar.selectScore"),
           },
         },
         [COLUMN_GUARDRAILS_ID]: {
           keyComponentProps: {
             options: [
-              { value: GuardrailResult.FAILED, label: "Failed" },
-              { value: GuardrailResult.PASSED, label: "Passed" },
+              { value: GuardrailResult.FAILED, label: t("treeToolbar.failed") },
+              { value: GuardrailResult.PASSED, label: t("treeToolbar.passed") },
             ],
-            placeholder: "Status",
+            placeholder: t("treeToolbar.status"),
           },
         },
       },
@@ -193,11 +195,11 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
         <div className="flex-auto" />
         <ExpandableSearchInput
           value={search}
-          placeholder="Search by all fields"
+          placeholder={t("treeToolbar.searchByAllFields")}
           onChange={setSearch}
           disabled={isSpansLazyLoading}
           buttonVariant="ghost"
-          tooltip="Search spans"
+          tooltip={t("treeToolbar.searchSpans")}
           overlayExpand
         />
       </div>
@@ -211,14 +213,14 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
           variant="ghost"
           disabled={isSpansLazyLoading}
           align="start"
-          tooltip="Filter spans"
+          tooltip={t("treeToolbar.filterSpans")}
         />
         <HiddenSpansToggle spans={treeData} />
         <Separator orientation="vertical" className="mx-0.5 h-3" />
         {!hasSearchOrFilter ? (
           <>
             <TooltipWrapper
-              content={isAllExpanded ? "Collapse all" : "Expand all"}
+              content={isAllExpanded ? t("treeToolbar.collapseAll") : t("treeToolbar.expandAll")}
             >
               <Button onClick={toggleExpandAll} variant="ghost" size="icon-2xs">
                 {isAllExpanded ? (
@@ -239,7 +241,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
               setFilters([]);
             }}
           >
-            Clear
+            {t("treeToolbar.clear")}
           </Button>
         )}
       </div>
@@ -261,6 +263,7 @@ export const TraceDataToolbar: React.FC<TraceDataToolbarProps> = ({
   isLoading = false,
   hideAnnotateActions,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canAnnotateTraceSpanThread },
   } = usePermissions();
@@ -286,7 +289,7 @@ export const TraceDataToolbar: React.FC<TraceDataToolbarProps> = ({
   return (
     <div className="flex h-10 shrink-0 items-center gap-2 border-b bg-muted/50 px-4">
       <span className="comet-body-xs-accented whitespace-nowrap text-foreground">
-        Inspect:
+        {t("detailsPanel.inspect")}:
       </span>
       {isLoading || !dataToView ? (
         <Skeleton className="h-4 w-32" />

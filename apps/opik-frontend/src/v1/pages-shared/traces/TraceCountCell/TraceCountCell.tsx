@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 
 import LinkCell from "@/shared/DataTableCells/LinkCell";
@@ -21,12 +22,16 @@ type CustomMeta<TData extends GroupedExperiment> = {
 const TraceCountCell = <TData extends GroupedExperiment>(
   context: CellContext<TData, unknown>,
 ) => {
+  const { t } = useTranslation("tracing");
   const { custom } = context.column.columnDef.meta ?? {};
   const {
-    tooltip = "View experiment traces",
+    tooltip,
     getIsDisabled,
-    disabledTooltip = "No project associated with this experiment. Traces cannot be viewed.",
+    disabledTooltip,
   } = (custom ?? {}) as CustomMeta<TData>;
+
+  const resolvedTooltip = tooltip ?? t("traceCountCell.viewExperimentTraces");
+  const resolvedDisabledTooltip = disabledTooltip ?? t("traceCountCell.noProjectAssociated");
 
   const navigateToExperimentTraces = useExperimentsTraceCountNavigation();
   const value = context.getValue() as number | string;
@@ -48,9 +53,9 @@ const TraceCountCell = <TData extends GroupedExperiment>(
           custom: {
             ...custom,
             callback: navigateToExperimentTraces,
-            tooltip,
+            tooltip: resolvedTooltip,
             getIsDisabled: () => isDisabled,
-            disabledTooltip,
+            disabledTooltip: resolvedDisabledTooltip,
           },
         },
       },

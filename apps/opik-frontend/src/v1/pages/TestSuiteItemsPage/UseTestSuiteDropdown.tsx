@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Blocks, ChevronDown, Code2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ function UseTestSuiteDropdown({
   disabled = false,
   isTestSuite = true,
 }: UseTestSuiteDropdownProps) {
+  const { t } = useTranslation("test-suite-items");
   const resetKeyRef = useRef(0);
   const resetDialogKeyRef = useRef(0);
   const [openExperimentDialog, setOpenExperimentDialog] = useState(false);
@@ -77,19 +79,19 @@ function UseTestSuiteDropdown({
           open={openConfirmDialog}
           setOpen={setOpenConfirmDialog}
           onConfirm={handleLoadPlayground}
-          title={`Load ${
-            isTestSuite ? "test suite" : "dataset"
-          } into playground`}
-          description={`Loading this ${
-            isTestSuite ? "test suite" : "dataset"
-          } into the Playground will replace any unsaved changes. This action cannot be undone.`}
-          confirmText={`Load ${isTestSuite ? "test suite" : "dataset"}`}
+          title={t("useTestSuiteDropdown.loadIntoPlayground", {
+            type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+          })}
+          description={t("useTestSuiteDropdown.loadDescription", {
+            type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+          })}
+          confirmText={isTestSuite ? t("useTestSuiteDropdown.loadTestSuite") : t("useTestSuiteDropdown.loadDataset")}
         />
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" disabled={disabled}>
-            {isTestSuite ? "Use suite" : "Use dataset"}
+            {isTestSuite ? t("useTestSuiteDropdown.useSuite") : t("useTestSuiteDropdown.useDataset")}
             <ChevronDown className="ml-2 size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -101,11 +103,11 @@ function UseTestSuiteDropdown({
             >
               <Blocks className="mr-2 mt-0.5 size-4 shrink-0 self-start" />
               <div className="comet-body-s flex flex-col">
-                <span>Open in Playground</span>
+                <span>{t("useTestSuiteDropdown.openInPlayground")}</span>
                 <span className="text-light-slate">
-                  Test prompts over your{" "}
-                  {isTestSuite ? "test suite" : "dataset"} and run evaluations
-                  interactively
+                  {t("useTestSuiteDropdown.testPromptsOver", {
+                    type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+                  })}
                 </span>
               </div>
             </DropdownMenuItem>
@@ -120,10 +122,11 @@ function UseTestSuiteDropdown({
             >
               <Code2 className="mr-2 mt-0.5 size-4 shrink-0 self-start" />
               <div className="comet-body-s flex flex-col">
-                <span>Run an experiment</span>
+                <span>{t("useTestSuiteDropdown.runAnExperiment")}</span>
                 <span className="text-light-slate">
-                  Use this {isTestSuite ? "test suite" : "dataset"} to run an
-                  experiment using the Python SDK
+                  {t("useTestSuiteDropdown.runExperimentDescription", {
+                    type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+                  })}
                 </span>
               </div>
             </DropdownMenuItem>

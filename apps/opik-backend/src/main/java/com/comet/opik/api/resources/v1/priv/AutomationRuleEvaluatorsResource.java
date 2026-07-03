@@ -65,7 +65,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Automation rule evaluators", description = "Automation rule evaluators resource")
+@Tag(name = "Automation rule evaluators", description = "自动化规则评估器资源")
 public class AutomationRuleEvaluatorsResource {
 
     private final @NonNull AutomationRuleEvaluatorService service;
@@ -75,13 +75,13 @@ public class AutomationRuleEvaluatorsResource {
     private final @NonNull SortingQueryBuilder sortingQueryBuilder;
 
     @GET
-    @Operation(operationId = "findEvaluators", summary = "Find project Evaluators", description = "Find project Evaluators", responses = {
-            @ApiResponse(responseCode = "200", description = "Evaluators resource", content = @Content(schema = @Schema(implementation = AutomationRuleEvaluatorPage.class)))
+    @Operation(operationId = "findEvaluators", summary = "查找项目评估器", description = "查找项目评估器", responses = {
+            @ApiResponse(responseCode = "200", description = "评估器资源", content = @Content(schema = @Schema(implementation = AutomationRuleEvaluatorPage.class)))
     })
     @JsonView(View.Public.class)
     public Response find(@QueryParam("project_id") UUID projectId,
-            @QueryParam("id") @Schema(description = "Filter automation rules with rule ID containing this value (partial match, like %id%)") String id,
-            @QueryParam("name") @Schema(description = "Filter automation rule evaluators by name (partial match, case insensitive)") String name,
+            @QueryParam("id") @Schema(description = "按规则ID过滤自动化规则（部分匹配，如 %id%）") String id,
+            @QueryParam("name") @Schema(description = "按名称过滤自动化规则评估器（部分匹配，不区分大小写）") String name,
             @QueryParam("filters") String filters,
             @QueryParam("sorting") String sorting,
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
@@ -117,8 +117,8 @@ public class AutomationRuleEvaluatorsResource {
 
     @GET
     @Path("/{id}")
-    @Operation(operationId = "getEvaluatorById", summary = "Get automation rule evaluator by id", description = "Get automation rule by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Automation Rule resource", content = @Content(schema = @Schema(implementation = AutomationRuleEvaluator.class)))
+    @Operation(operationId = "getEvaluatorById", summary = "根据ID获取自动化规则评估器", description = "根据ID获取自动化规则", responses = {
+            @ApiResponse(responseCode = "200", description = "自动化规则资源", content = @Content(schema = @Schema(implementation = AutomationRuleEvaluator.class)))
     })
     @JsonView(View.Public.class)
     public Response getEvaluator(@QueryParam("project_id") UUID projectId, @PathParam("id") UUID evaluatorId) {
@@ -133,23 +133,23 @@ public class AutomationRuleEvaluatorsResource {
     }
 
     /**
-     * Extracts and validates project IDs from an evaluator write request.
-     * Enforces business rule: evaluators must be scoped to at least one project.
-     * Note: The 'projects' field is read-only and never populated from write requests.
+     * 从评估器写入请求中提取并验证项目ID。
+     * 强制业务规则：评估器必须至少关联一个项目。
+     * 注意：'projects'字段是只读的，不会从写入请求中填充。
      *
-     * @param projectIds The projectIds field from the request (write-only field, new multi-project API)
-     * @param projectId The legacy projectId field (single project, for backward compatibility)
-     * @return Non-empty set of project UUIDs
-     * @throws BadRequestException if no projects are specified
+     * @param projectIds 请求中的projectIds字段（只写字段，新多项目API）
+     * @param projectId 旧版projectId字段（单项目，用于向后兼容）
+     * @return 非空的项目UUID集合
+     * @throws BadRequestException 如果未指定项目
      */
     private Set<UUID> extractAndValidateProjectIds(Set<UUID> projectIds, UUID projectId) {
-        // Extract project IDs: prioritize projectIds field, then fall back to legacy projectId
+        // 提取项目ID：优先使用projectIds字段，然后回退到旧版projectId
         Set<UUID> extractedProjectIds = Optional.ofNullable(projectIds)
                 .orElseGet(() -> Optional.ofNullable(projectId)
                         .map(Set::of)
                         .orElse(Set.of()));
 
-        // Validate that at least one project is specified (business rule: evaluators must be scoped to projects)
+        // 验证至少指定了一个项目（业务规则：评估器必须关联到项目）
         if (extractedProjectIds.isEmpty()) {
             throw new BadRequestException("At least one project must be specified for the automation rule evaluator");
         }
@@ -158,8 +158,8 @@ public class AutomationRuleEvaluatorsResource {
     }
 
     @POST
-    @Operation(operationId = "createAutomationRuleEvaluator", summary = "Create automation rule evaluator", description = "Create automation rule evaluator", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createAutomationRuleEvaluator", summary = "创建自动化规则评估器", description = "创建自动化规则评估器", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/automations/evaluators/{evaluatorId}", schema = @Schema(implementation = String.class))
             })
     })
@@ -189,8 +189,8 @@ public class AutomationRuleEvaluatorsResource {
 
     @PATCH
     @Path("/{id}")
-    @Operation(operationId = "updateAutomationRuleEvaluator", summary = "Update Automation Rule Evaluator by id", description = "Update Automation Rule Evaluator by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "updateAutomationRuleEvaluator", summary = "根据ID更新自动化规则评估器", description = "根据ID更新自动化规则评估器", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ONLINE_EVALUATION_RULE_UPDATE)
@@ -215,8 +215,8 @@ public class AutomationRuleEvaluatorsResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteAutomationRuleEvaluatorBatch", summary = "Delete automation rule evaluators", description = "Delete automation rule evaluators batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
+    @Operation(operationId = "deleteAutomationRuleEvaluatorBatch", summary = "删除自动化规则评估器", description = "批量删除自动化规则评估器", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     public Response deleteEvaluators(
             @NotNull @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @Valid BatchDelete batchDelete,
@@ -234,8 +234,8 @@ public class AutomationRuleEvaluatorsResource {
 
     @GET
     @Path("/{id}/logs")
-    @Operation(operationId = "getEvaluatorLogsById", summary = "Get automation rule evaluator logs by id", description = "Get automation rule evaluator logs by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Automation rule evaluator logs resource", content = @Content(schema = @Schema(implementation = LogPage.class)))
+    @Operation(operationId = "getEvaluatorLogsById", summary = "根据ID获取自动化规则评估器日志", description = "根据ID获取自动化规则评估器日志", responses = {
+            @ApiResponse(responseCode = "200", description = "自动化规则评估器日志资源", content = @Content(schema = @Schema(implementation = LogPage.class)))
     })
     public Response getLogs(@PathParam("id") UUID evaluatorId,
             @QueryParam("size") @Min(1) @DefaultValue("1000") int size) {

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError, HttpStatusCode } from "axios";
 import get from "lodash/get";
+import i18next from "i18next";
 import api, { DATASETS_REST_ENDPOINT } from "@/api/api";
 import { Dataset } from "@/types/datasets";
 import { useToast } from "@/ui/use-toast";
@@ -28,7 +29,7 @@ const useDatasetCreateMutation = () => {
 
       if (!extractedId) {
         throw new Error(
-          "Failed to create test suite: No ID returned from server",
+          i18next.t("common:messages.failedToCreateTestSuiteNoId"),
         );
       }
 
@@ -50,7 +51,7 @@ const useDatasetCreateMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

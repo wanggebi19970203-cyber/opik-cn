@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { BooleanParam, JsonParam, useQueryParam } from "use-query-params";
 import find from "lodash/find";
@@ -58,6 +59,7 @@ const TraceDetailsPanel: React.FunctionComponent<TraceDetailsPanelProps> = ({
   open,
   onRowChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const [activeSection, setActiveSection] =
     useDetailsActionSectionState("lastSection");
   const { flattenedTree } = useTreeDetailsStore();
@@ -166,8 +168,8 @@ const TraceDetailsPanel: React.FunctionComponent<TraceDetailsPanelProps> = ({
       },
       hasNext: Boolean(nextRowId),
       hasPrevious: Boolean(previousRowId),
-      nextTooltip: "Next span",
-      previousTooltip: "Previous span",
+      nextTooltip: t("detailsPanel.nextSpan"),
+      previousTooltip: t("detailsPanel.previousSpan"),
     };
   }, [spanId, traceId, handleRowSelect, flattenedTree]);
 

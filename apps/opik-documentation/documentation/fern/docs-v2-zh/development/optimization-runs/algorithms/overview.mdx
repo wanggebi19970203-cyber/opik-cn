@@ -1,0 +1,40 @@
+---
+description: 比较 Agent Optimizer 各算法，为您的工作负载选择合适的方案。
+headline: 概览 | Opik 文档
+og:description: 在 Opik 中探索并选择合适的优化器，通过无缝 API 增强您的流水线，实现高效性能。
+og:site_name: Opik 文档
+og:title: 优化算法概览 - Opik
+title: 优化算法概览
+---
+
+Opik Optimizer SDK 封装了自研算法（MetaPrompt、HRPO）和外部研究项目（如 GEPA）。每个优化器遵循相同的 API（`optimize_prompt`、`OptimizationResult`），因此您可以在不重写流水线的情况下切换优化器。在深入了解详细指南之前，请使用本页面快速决定运行哪个优化器。
+
+## 优化器运行流程
+
+1. **输入** — 您传入 `ChatPrompt` 定义、数据集和评估指标。许多优化器还接受额外参数，用于设置使用的模型、优化轮次，甚至工具使用（MCP 和函数调用）定义。
+2. **候选生成** — 每个算法提出新的提示词（MetaPrompt 通过推理 LLM、进化算法通过变异/交叉、GEPA 通过其遗传帕累托搜索）。
+3. **评估** — Opik 根据您的数据集/指标运行候选方案，并将试验记录到仪表盘。步骤 2 到 3 持续循环，直到找到最佳提示词或搜索已穷尽。
+4. **结果交付** — 每个优化器返回一个 `OptimizationResult`，包含最佳提示词、历史记录、分数和元数据，这些信息会被回传并在 UI 中可用。
+
+## 选择矩阵
+
+| 优化器 | 来源 | 最佳适用场景 | 关键输入 | 备注 |
+| --- | --- | --- | --- | --- |
+| [MetaPrompt](/development/optimization-runs/algorithms/metaprompt_optimizer) | Opik | 通用提示词优化 | 提示词 + 数据集 + 指标 | 推理 LLM 评审并重写提示词，支持 MCP 工作流和工具模式。 |
+| [HRPO](/development/optimization-runs/algorithms/hierarchical_adaptive_optimizer) | Opik | 复杂提示词的根因分析 | 带详细原因的指标 | 批量处理失败案例，综合归纳主题，提出针对性修复方案。 |
+| [Few-Shot Bayesian](/development/optimization-runs/algorithms/fewshot_bayesian_optimizer) | Opik | 优化少样本示例集 | 带示例的数据集 | 使用 Optuna 为聊天提示词选择示例的数量和顺序。 |
+| [Evolutionary](/development/optimization-runs/algorithms/evolutionary_optimizer) | Opik + DEAP | 探索多样化的提示词结构 | 变异/交叉参数 | 多目标优化（分数 vs. 长度）及 LLM 驱动的操作算子。 |
+| [GEPA](/development/optimization-runs/algorithms/gepa_optimizer) | 外部 (GEPA) | 单轮、重反思的任务 | `gepa` 依赖 + 反思小批量数据 | 我们提供封装器，使 GEPA 能消费 Opik 数据集/指标，同时保留其帕累托搜索能力。 |
+| [Parameter](/development/optimization-runs/algorithms/parameter_optimizer) | Opik | Temperature / top_p 调优 | 提示词 + 参数搜索空间 | 不修改提示词；专注于通过贝叶斯搜索调整采样参数。 |
+
+## 如何选择
+
+1. **确定约束**（例如，措辞 vs. 工具使用 vs. 参数）。
+2. **检查数据集就绪情况** — 反思型优化器需要详细的指标原因。考虑将数据拆分为训练集和验证集以防止过拟合。
+3. **估算预算** — 进化/GEPA 运行比 MetaPrompt 消耗更多 token。
+4. **规划后续** — 必要时可以串联优化器（MetaPrompt → Parameter）。
+
+## 后续步骤
+
+- 参阅各优化器指南了解配置详情。
+- 了解如何[串联优化器](/development/optimization-runs/advanced/chaining_optimizers)以应对复杂工作流。

@@ -1,0 +1,63 @@
+---
+description: 构建专业指标，集成外部模型，并在多次优化中复用。
+headline: 自定义指标 | Opik 文档
+og:description: 探索 Opik 中的自定义指标，通过领域特定的评分和精准的安全检查增强评估能力。
+og:site_name: Opik 文档
+og:title: 评估自定义指标 - Opik
+title: 自定义指标
+---
+
+当内置指标无法满足需求时（领域特定评分、精准安全检查、独特的多模态检查），请使用自定义指标。请先阅读 Opik 核心评估文档，了解已有功能：
+
+- [评估概念](/evaluation/concepts) — 术语和生命周期。
+- [指标概览](/evaluation/metrics/overview) — 默认启发式指标（ROUGE、BLEU、幻觉检测等）。
+- [LLM-as-a-judge 模式](/evaluation/advanced/evaluate_agent_trajectory) — Opik 如何对多轮轨迹运行评判模型。
+
+## 设计原则
+
+- **确定性** — 缓存外部模型调用。在模型支持的情况下，将温度设置为 0 并指定种子值，以提高重复运行结果的一致性。请注意，即使使用这些设置，部分模型也无法保证确定性输出。
+- **可解释性** — 始终在 `ScoreResult` 上设置 `reason`，以便在仪表板中获得更好的展示效果。
+- **可组合性** — 将辅助函数封装为工具模块，便于多个优化器共享复用。
+- **分层设计** — 从单一指标开始，当需要权衡多个目标时，通过 `MultiMetricObjective` 进行组合。
+- **成本考量** — 如果评估依赖计算资源和 API 调用，请考虑相关成本。
+
+## 示例：安全性 + 完整性指标
+
+```python
+from opik.evaluation.metrics import AnswerRelevance
+from opik.evaluation.metrics.score_result import ScoreResult
+from some_safety_model import classify_risk
+
+safety_model = classify_risk.Client()
+
+def safety_and_completeness(item, output):
+    relevance = AnswerRelevance().score(
+        context=[item["answer"]], output=output, input=item["question"]
+    )
+    safety = safety_model.score(text=output)
+
+    value = 1.0 if relevance.value > 0.75 and safety["label"] == "safe" else 0.0
+    reason = f"Relevant={relevance.value:.2f}, safety={safety['label']}"
+
+    return ScoreResult(name="safety_completeness", value=value, reason=reason)
+```
+
+## 指标构建模块
+
+- **单一指标** — 针对每个关注点（准确性、语气、成本）实现一个可调用对象。保持其在不同提示词间的可复用性。
+- **多指标目标** — 当需要权衡时，通过权重组合多个单一指标，例如准确性（0.7）+ 风格（0.3）。参见[多指标优化](/development/optimization-runs/optimization/define_metrics#compose-metrics)获取模板。
+- **LLM-as-a-judge** — 在指标内部调用评估模型（OpenAI、Anthropic 等）。始终包含详细的提示词以确保结果稳定，并注意反射式优化器会继承这些评判调用中的任何噪声。
+- **启发式方法** — 利用 `/evaluation/metrics` 中的内置指标，而不是重新实现经典评分。如上所示，可以将启发式方法与自定义逻辑组合使用。
+
+## 测试
+
+- 编写 pytest 测试用例，将预设数据集项输入指标并断言预期评分。
+- 在 CI 中对黄金数据集运行指标以捕获回归问题。
+- 对于多指标目标，添加测试以验证权重变化是否符合预期（例如，更高的权重会增加敏感度）。
+
+## 相关文档
+
+- [定义指标](/development/optimization-runs/optimization/define_metrics)
+- [评估概念](/evaluation/concepts)
+- [LLM 评判工作流](/evaluation/advanced/evaluate_agent_trajectory)
+- [指标概览](/evaluation/metrics/overview)

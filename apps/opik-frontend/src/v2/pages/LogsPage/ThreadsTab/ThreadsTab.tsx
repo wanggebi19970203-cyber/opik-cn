@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -376,8 +377,82 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   logsType,
   onLogsTypeChange,
 }) => {
+  const { t } = useTranslation("pages/logs");
   const { open: openQuickstart } = useOpenQuickStartDialog();
   const truncationEnabled = useTruncationEnabled();
+
+  const columnLabelMap: Record<string, string> = useMemo(
+    () => ({
+      first_message: t("logs.threads.columns.firstMessage"),
+      last_message: t("logs.threads.columns.lastMessage"),
+      number_of_messages: t("logs.threads.columns.messageCount"),
+      duration: t("logs.columns.duration"),
+      tags: t("logs.filters.tags"),
+      start_time: t("logs.columns.startTime"),
+      end_time: t("logs.columns.startTime").replace(
+        t("logs.columns.startTime").split(" ")[0],
+        "End",
+      ),
+      total_tokens: t("logs.threads.columns.totalTokens"),
+      prompt_tokens: t("logs.threads.columns.totalInputTokens"),
+      completion_tokens: t("logs.threads.columns.totalOutputTokens"),
+      total_estimated_cost: t("logs.threads.columns.estimatedCost"),
+      created_by: t("logs.threads.columns.createdBy"),
+      comments: t("logs.threads.columns.comments"),
+    }),
+    [t],
+  );
+
+  const translatedDefaultColumns = useMemo(
+    () =>
+      DEFAULT_COLUMNS.map((col) => ({
+        ...col,
+        label: columnLabelMap[col.id] ?? col.label,
+      })),
+    [columnLabelMap],
+  );
+
+  const chipLabelMap: Record<
+    string,
+    { label: string; placeholder?: string; addLabel?: string }
+  > = useMemo(
+    () => ({
+      start_time: { label: t("logs.columns.startTime") },
+      end_time: {
+        label: t("logs.columns.startTime").replace(
+          t("logs.columns.startTime").split(" ")[0],
+          "End",
+        ),
+      },
+      duration: { label: t("logs.columns.duration") },
+      number_of_messages: { label: t("logs.threads.columns.messageCount") },
+      first_message: {
+        label: t("logs.threads.columns.firstMessage"),
+        placeholder: t("logs.threads.filters.searchFirstMessage"),
+      },
+      last_message: {
+        label: t("logs.threads.columns.lastMessage"),
+        placeholder: t("logs.threads.filters.searchLastMessage"),
+      },
+      id: {
+        label: t("logs.threads.columns.threadId"),
+        placeholder: t("logs.threads.filters.enterThreadId"),
+      },
+      annotation_queue_ids: {
+        label: t("logs.threads.columns.annotationQueueId"),
+        placeholder: t("logs.threads.filters.enterAnnotationQueueId"),
+      },
+      tags: {
+        label: t("logs.filters.tags"),
+        placeholder: t("logs.threads.filters.typeATag"),
+        addLabel: t("logs.threads.filters.addTag"),
+      },
+      feedback_scores: {
+        label: t("logs.threads.feedbackScores"),
+      },
+    }),
+    [t],
+  );
 
   const {
     dateRange,
@@ -452,45 +527,58 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   );
 
   const threadChipDefinitions = useMemo<ChipDefinition[]>(() => {
+    const translatedStaticChips = THREAD_CHIP_DEFINITIONS.map((chip) => {
+      const mapped = chipLabelMap[chip.id];
+      if (!mapped) return chip;
+      const base = { ...chip, label: mapped.label ?? chip.label };
+      if ("value" in chip && chip.value && mapped.placeholder) {
+        return {
+          ...base,
+          value: { ...chip.value, placeholder: mapped.placeholder },
+        };
+      }
+      return base;
+    });
+
     const dynamicChips: Record<string, ChipDefinition> = {
       tags: {
         id: "tags",
         field: "tags",
-        label: "Tags",
+        label: t("logs.filters.tags"),
         kind: "query-builder",
         columnType: COLUMN_TYPE.list,
         operators: TAGS_OPERATORS,
         defaultOperator: "contains",
         value: {
-          placeholder: "Type a tag…",
+          placeholder: t("logs.threads.filters.typeATag"),
           options: chipOptions(useTagsOptions, {
             projectId,
             entityType: "threads",
           }),
         },
-        addLabel: "Add tag",
+        addLabel: t("logs.threads.filters.addTag"),
       },
       feedback_scores: {
         id: "feedback_scores",
         field: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Feedback scores",
+        label: t("logs.threads.feedbackScores"),
         kind: "query-builder",
         columnType: COLUMN_TYPE.numberDictionary,
         operators: FEEDBACK_SCORE_OPERATORS,
         defaultOperator: ">=",
         key: {
-          placeholder: "Select score",
+          placeholder: t("logs.threads.filters.selectScore"),
           options: chipOptionsValue(threadScoreOptions),
         },
         value: { type: "numeric", decimals: 2, placeholder: "0" },
       },
     };
     const byId: Record<string, ChipDefinition> = {
-      ...keyBy(THREAD_CHIP_DEFINITIONS, "id"),
+      ...keyBy(translatedStaticChips, "id"),
       ...dynamicChips,
     };
     return compact(THREAD_CHIP_ORDER.map((id) => byId[id]));
-  }, [projectId, threadScoreOptions]);
+  }, [projectId, threadScoreOptions, t, chipLabelMap]);
 
   const {
     chipsPinned: threadChipsPinned,
@@ -723,8 +811,8 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   );
 
   const columns = useMemo(() => {
-    const columnDefsWithTagClick: ColumnData<Thread>[] = DEFAULT_COLUMNS.map(
-      (col) =>
+    const columnDefsWithTagClick: ColumnData<Thread>[] =
+      translatedDefaultColumns.map((col) =>
         col.id === "tags"
           ? {
               ...col,
@@ -735,7 +823,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
               },
             }
           : col,
-    );
+      );
     const convertedColumns = convertColumnDataToColumn<Thread, Thread>(
       columnDefsWithTagClick,
       {
@@ -762,6 +850,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
     scoresColumnsOrder,
     handleRowClick,
     addThreadTagFilter,
+    translatedDefaultColumns,
   ]);
 
   const columnsToExport = useMemo(() => {
@@ -813,13 +902,13 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Feedback scores",
+        title: t("logs.threads.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
       },
     ];
-  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
+  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder, t]);
 
   const isTableLoading = isPending || isFeedbackScoresNamesPending;
   const showEmptyState =
@@ -842,7 +931,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
             size="icon-xs"
           />
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={translatedDefaultColumns}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}
@@ -861,7 +950,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
           />
           <Separator orientation="vertical" className="mx-2 h-6" />
           <RefreshButton
-            tooltip="Refresh threads list"
+            tooltip={t("logs.threads.refreshTooltip")}
             size="icon-xs"
             isFetching={isFetching}
             onRefresh={() => refetch()}
@@ -876,7 +965,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
         <MetricsSummary
           projectId={projectId}
           entityType="threads"
-          countLabel="Threads"
+          countLabel={t("logs.threads.countLabel")}
           filters={threadChipFilters}
           intervalStart={intervalStart}
           intervalEnd={intervalEnd}
@@ -922,7 +1011,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
               <SearchInput
                 searchText={search as string}
                 setSearchText={setSearch}
-                placeholder="Search by anything"
+                placeholder={t("logs.threads.filters.searchByAnything")}
                 className="w-[200px] shrink-0"
                 dimension="xs"
               />
@@ -936,8 +1025,8 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
         isEmpty={showEmptyState}
         emptyState={
           <DataTableEmptyContent
-            title="No threads yet"
-            description="Threads will appear here once your agent starts receiving requests."
+            title={t("logs.threads.empty.title")}
+            description={t("logs.threads.empty.description")}
             lightImageUrl={emptyLogsLightUrl}
             darkImageUrl={emptyLogsDarkUrl}
           >
@@ -946,7 +1035,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
                 onClick={openQuickstart}
                 className="comet-body-s underline underline-offset-4 hover:text-primary"
               >
-                Quickstart guide
+                {t("logs.threads.empty.quickstartGuide")}
               </button>
               <a
                 href={buildDocsUrl("/tracing/advanced/log_chat_conversations")}
@@ -954,7 +1043,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
                 rel="noreferrer"
                 className="comet-body-s inline-flex items-center gap-1 underline underline-offset-4 hover:text-primary"
               >
-                View docs
+                {t("logs.threads.empty.viewDocs")}
                 <ExternalLink className="size-3" />
               </a>
             </div>

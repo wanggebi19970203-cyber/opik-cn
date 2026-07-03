@@ -1,0 +1,138 @@
+---
+description: 从这里开始将 Opik 集成到基于 DeepSeek 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: DeepSeek | Opik 文档
+og:description: 了解如何使用 Opik 跟踪 DeepSeek 调用，支持 DeepSeek API、Fireworks AI API 和 Together AI API 等多种托管选项。
+og:site_name: Opik 文档
+og:title: 将 DeepSeek 与 Opik 集成以增强跟踪能力
+title: 使用 Opik 实现 DeepSeek 可观测性
+---
+
+DeepSeek 是一个开源 LLM 模型，其性能可与 OpenAI 的 o1 媲美。你可以在 [Github](https://github.com/deepseek-ai/DeepSeek-R1) 或 [deepseek.com](https://www.deepseek.com/) 上了解更多关于 DeepSeek 的信息。
+
+在本指南中，我们将展示如何使用 Opik 跟踪 DeepSeek 调用。由于 DeepSeek 是开源的，运行和调用模型的方式有很多种。我们将重点介绍如何将 Opik 与以下托管选项集成：
+
+1. DeepSeek API
+2. Fireworks AI API
+3. Together AI API
+
+## 快速开始
+
+### 配置托管提供商
+
+在开始跟踪 DeepSeek 调用之前，你需要从托管提供商处获取 API 密钥。
+
+<Tabs>
+    <Tab value="DeepSeek API" title="DeepSeek API">
+
+要使用 DeepSeek API，你需要拥有一个 API 密钥。你可以在 [DeepSeek.com](https://chat.deepseek.com/sign_up) 上注册账户。
+注册完成后，即可申请 API 密钥。
+
+</Tab>
+<Tab value="Fireworks AI API" title="Fireworks AI API">
+
+你可以在 [fireworks.ai](https://fireworks.ai/) 上登录 Fireworks AI。然后在 [API 密钥](https://fireworks.ai/account/api-keys) 页面获取你的 API 密钥。
+
+</Tab>
+<Tab value="Together AI API" title="Together AI API">
+
+你可以在 [together.ai](https://together.ai/) 上登录 Together AI。然后在 [API 密钥](https://api.together.ai/settings/api-keys) 页面获取你的 API 密钥。
+
+</Tab>
+</Tabs>
+
+### 配置 Opik
+
+```bash
+pip install --upgrade --quiet opik
+
+opik configure
+```
+
+<Tip>
+  Opik 完全开源，可以在本地运行或通过 Opik Cloud 平台运行。你可以在[自托管指南](/self-host/overview)中了解更多关于在自有基础设施上托管 Opik 的信息。
+</Tip>
+
+## 跟踪 DeepSeek 调用
+
+使用 Opik 调用 DeepSeek 最简单的方式是使用 OpenAI Python SDK 和 `track_openai` 装饰器。此方法兼容 DeepSeek API、Fireworks AI API 和 Together AI API：
+
+<Tabs>
+    <Tab value="DeepSeek API" title="DeepSeek API">
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# Create the OpenAI client that points to DeepSeek API
+client = OpenAI(api_key="<DeepSeek API Key>", base_url="https://api.deepseek.com")
+
+# Wrap your OpenAI client to track all calls to Opik
+client = track_openai(client)
+
+# Call the API
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+
+print(response.choices[0].message.content)
+```
+
+</Tab>
+<Tab value="Fireworks AI API" title="Fireworks AI API">
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# Create the OpenAI client that points to DeepSeek API
+client = OpenAI(api_key="<Fireworks AI API Key>", base_url="https://api.fireworks.ai/inference/v1")
+
+# Wrap your OpenAI client to track all calls to Opik
+client = track_openai(client)
+
+# Call the API
+response = client.chat.completions.create(
+    model="accounts/fireworks/models/deepseek-v3",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+
+print(response.choices[0].message.content)
+```
+
+</Tab>
+<Tab value="Together AI API" title="Together AI API">
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# Create the OpenAI client that points to Together AI API
+client = OpenAI(api_key="<Together AI API Key>", base_url="https://api.together.xyz/v1")
+
+# Wrap your OpenAI client to track all calls to Opik
+client = track_openai(client)
+
+# Call the API
+response = client.chat.completions.create(
+    model="deepseek-ai/DeepSeek-R1",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+
+print(response.choices[0].message.content)
+```
+
+</Tab>
+</Tabs>

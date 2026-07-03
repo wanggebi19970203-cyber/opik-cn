@@ -19,7 +19,7 @@ from ..observation_data import ObservationData
 @dataclasses.dataclass
 class SpanData(ObservationData):
     """
-    The SpanData object is returned when calling :func:`opik.opik_context.get_current_span_data` from a tracked function.
+    从被追踪的函数中调用 :func:`opik.opik_context.get_current_span_data` 时返回 SpanData 对象。
     """
 
     trace_id: str
@@ -77,7 +77,7 @@ class SpanData(ObservationData):
 
     @property
     def as_start_parameters(self) -> Dict[str, Any]:
-        """Returns parameters of this span to be sent to the server when starting a new span."""
+        """返回启动新 span 时发送给服务器的此 span 参数。"""
         start_parameters: Dict[str, Any] = {
             "id": self.id,
             "start_time": self.start_time,
@@ -103,7 +103,7 @@ class SpanData(ObservationData):
 
     @property
     def as_parameters(self) -> Dict[str, Any]:
-        """Returns all parameters of this span to be sent to the server."""
+        """返回发送给服务器的此 span 的所有参数。"""
         return {
             "trace_id": self.trace_id,
             "id": self.id,

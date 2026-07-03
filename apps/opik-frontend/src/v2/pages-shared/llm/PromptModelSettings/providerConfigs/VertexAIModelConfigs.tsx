@@ -12,6 +12,7 @@ import SelectBox from "@/shared/SelectBox/SelectBox";
 import { Label } from "@/ui/label";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { supportsVertexAIThinkingLevel } from "@/lib/modelUtils";
+import { useTranslation } from "react-i18next";
 
 interface VertexAIModelConfigsProps {
   configs: LLMVertexAIConfigsType;
@@ -24,6 +25,7 @@ const VertexAIModelConfigs = ({
   model,
   onChange,
 }: VertexAIModelConfigsProps) => {
+  const { t } = useTranslation();
   const hasThinkingLevel = supportsVertexAIThinkingLevel(model);
 
   return (
@@ -37,9 +39,9 @@ const VertexAIModelConfigs = ({
           max={2}
           step={0.01}
           defaultValue={DEFAULT_VERTEX_AI_CONFIGS.TEMPERATURE}
-          label="Temperature"
+          label={t("sharedModelConfigs.temperature")}
           tooltip={
-            <PromptModelConfigsTooltipContent text="Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive." />
+            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.temperatureTooltip")} />
           }
         />
       )}
@@ -53,9 +55,9 @@ const VertexAIModelConfigs = ({
           max={65535}
           step={1}
           defaultValue={DEFAULT_VERTEX_AI_CONFIGS.MAX_COMPLETION_TOKENS}
-          label="Max output tokens"
+          label={t("sharedModelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelConfigsTooltipContent text="The maximum number of tokens to generate shared between the prompt and completion. The exact limit varies by model. (One token is roughly 4 characters for standard English text)." />
+            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxOutputTokensTooltip")} />
           }
         />
       )}
@@ -69,9 +71,9 @@ const VertexAIModelConfigs = ({
           max={1}
           step={0.01}
           defaultValue={DEFAULT_VERTEX_AI_CONFIGS.TOP_P}
-          label="Top P"
+          label={t("sharedModelConfigs.topP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text="Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered" />
+            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.topPTooltip")} />
           }
         />
       )}
@@ -80,9 +82,9 @@ const VertexAIModelConfigs = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Label htmlFor="thinkingLevel" className="text-sm font-medium">
-              Thinking level
+              {t("vertexAIModelConfigs.thinkingLevel")}
             </Label>
-            <ExplainerIcon description="Controls the depth of reasoning the model performs before responding. Higher thinking level may result in more thorough but slower responses." />
+            <ExplainerIcon description={t("vertexAIModelConfigs.thinkingLevelDescription")} />
           </div>
           <SelectBox
             id="thinkingLevel"
@@ -91,7 +93,7 @@ const VertexAIModelConfigs = ({
               onChange({ thinkingLevel: value })
             }
             options={THINKING_LEVEL_OPTIONS}
-            placeholder="Select thinking level"
+            placeholder={t("vertexAIModelConfigs.selectThinkingLevel")}
           />
         </div>
       )}
@@ -104,9 +106,9 @@ const VertexAIModelConfigs = ({
         max={10}
         step={0.1}
         defaultValue={DEFAULT_VERTEX_AI_CONFIGS.THROTTLING}
-        label="Throttling (seconds)"
+        label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text="Minimum time in seconds between consecutive requests to avoid rate limiting" />
+          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
         }
       />
 
@@ -121,9 +123,9 @@ const VertexAIModelConfigs = ({
         max={20}
         step={1}
         defaultValue={DEFAULT_VERTEX_AI_CONFIGS.MAX_CONCURRENT_REQUESTS}
-        label="Max concurrent requests"
+        label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text="Maximum number of requests that can run simultaneously. Set to 1 for sequential execution, higher values for parallel processing" />
+          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
         }
       />
     </div>

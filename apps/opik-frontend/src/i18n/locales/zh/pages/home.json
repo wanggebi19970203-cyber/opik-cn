@@ -1,0 +1,104 @@
+{
+  "home": {
+    "title": "首页",
+    "description": "欢迎使用 Opik",
+    "welcomeBack": "欢迎回到 Opik",
+    "welcomeBanner": {
+      "title": "欢迎使用 Opik",
+      "description": "Opik 通过先进的追踪、实验管理、评估和实时监控，帮助您构建更安全、更可靠的 AI 系统",
+      "getStarted": "快速开始"
+    },
+    "gettingStarted": "快速开始",
+    "recentActivity": "最近活动",
+    "quickActions": {
+      "title": "快捷操作",
+      "createProject": "创建项目",
+      "createDataset": "创建数据集",
+      "viewDocs": "查看文档"
+    },
+    "stats": {
+      "projects": "项目",
+      "traces": "追踪",
+      "datasets": "数据集",
+      "experiments": "实验"
+    },
+    "costOverview": {
+      "title": "成本概览",
+      "totalEstimatedSpend": "预估总支出",
+      "comparesTooltip": "比较当前周期与上一周期的总成本。",
+      "docsDescription": "查看我们的文档以了解更多关于成本的信息。",
+      "noCostsAvailable": "暂无成本数据",
+      "noDataDescription": "当前筛选条件下未找到数据。这可能是因为所选时间范围内没有 LLM 调用。请尝试调整筛选条件以探索可用数据"
+    },
+    "evaluation": {
+      "title": "评估",
+      "testSuite": "测试套件",
+      "itemCount": "项目数量",
+      "passRate": "通过率",
+      "feedbackScores": "反馈评分",
+      "created": "创建时间",
+      "noExperiments": "暂无实验",
+      "createNewExperiment": "创建新实验",
+      "allExperiments": "所有实验"
+    },
+    "getStarted": {
+      "title": "快速开始",
+      "logATrace": "记录追踪",
+      "runAnExperiment": "运行实验",
+      "setAGuardrail": "设置护栏",
+      "tryOutPlayground": "试用 Playground",
+      "frameworkInstructions": "选择一个框架并按照说明将 Comet 集成到您的代码中，或在右侧探索我们提供的即用示例"
+    },
+    "metricsOverview": {
+      "unlockYourMetrics": "解锁您的指标！",
+      "integrateProject": "将您的项目与 Opik 集成以评估您的 AI。",
+      "metricsWillAppear": "数据开始流入后，指标将显示在此处。",
+      "getStarted": "快速开始",
+      "logFirstMetrics": "记录您的首个项目指标以在此处查看",
+      "noMetricsDescription": "当前筛选条件下未找到指标。这可能是因为所选范围内没有追踪或指标。请尝试调整筛选条件以探索可用数据",
+      "noMetricsAvailable": "暂无指标数据",
+      "comparesTooltip": "比较当前周期与上一周期的 {{metricName}} 平均值。",
+      "docsDescription": "查看我们的文档以了解更多关于 {{metricName}} 的信息。"
+    },
+    "observability": {
+      "title": "可观测性",
+      "project": "项目",
+      "lastUpdated": "最后更新",
+      "avgFeedbackScores": "平均反馈评分",
+      "traceCount": "追踪数量",
+      "noProjects": "暂无项目",
+      "createNewProject": "创建新项目",
+      "allProjects": "所有项目"
+    },
+    "optimizationRuns": {
+      "title": "优化运行",
+      "testSuite": "测试套件",
+      "optimizer": "优化器",
+      "bestScore": "最佳评分",
+      "status": "状态",
+      "trials": "试验次数",
+      "created": "创建时间",
+      "noOptimizationRuns": "暂无优化运行",
+      "createNewOptimization": "创建新优化",
+      "allOptimizationRuns": "所有优化运行"
+    },
+    "projectSelector": {
+      "filterProjects": "筛选项目",
+      "search": "搜索",
+      "presentingLatest": "显示最近的 {{count}} 个项目，按最近活动排序。",
+      "noSearchResults": "无搜索结果",
+      "allProjects": "所有项目"
+    },
+    "guardrails": {
+      "sensitivity": "敏感度",
+      "restrictedPersonalData": "受限个人数据",
+      "restrictedTopics": "受限主题",
+      "topicPlaceholder": "主题1，主题2...",
+      "useCommaToSeparate": "使用逗号分隔主题",
+      "configureGuardrailCode": "2. 使用以下代码配置您的护栏",
+      "setAGuardrail": "设置护栏",
+      "guardrailsDescription": "护栏帮助您保护应用程序免受 LLM 固有风险的影响。使用它们来检查 LLM 调用的输入和输出，检测离题回答或敏感信息泄露等问题。",
+      "learnGuardrailsDocs": "在我们的文档中了解如何配置护栏。"
+    }
+  }
+}

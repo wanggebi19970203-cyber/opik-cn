@@ -8,6 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 import isFunction from "lodash/isFunction";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -48,6 +49,8 @@ const DataTablePagination = ({
   disabled = false,
   isLoadingTotal = false,
 }: DataTableProps) => {
+  const { t } = useTranslation();
+
   const maxSize =
     supportsTruncation && !truncationEnabled
       ? TRUNCATION_DISABLED_MAX_PAGE_SIZE
@@ -73,8 +76,8 @@ const DataTablePagination = ({
   );
 
   const textPrefix = isMinimal
-    ? `${from}-${to} of `
-    : `Showing ${from}-${to} of `;
+    ? t("common.table.rangeOf", { from, to })
+    : t("common.table.showingRange", { from, to });
   const buttonSize = isMinimal ? "icon-xs" : "icon-sm";
   const navButtonVariant = isMinimal ? "ghost" : "outline";
   const buttonClass = isMinimal ? "w-5" : "";
@@ -102,7 +105,7 @@ const DataTablePagination = ({
       }`}
     >
       <div className="flex flex-row items-center gap-1">
-        {!isMinimal && <span className="comet-body-s">Rows per page: </span>}
+        {!isMinimal && <span className="comet-body-s">{t("common.table.rowsPerPage")}</span>}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

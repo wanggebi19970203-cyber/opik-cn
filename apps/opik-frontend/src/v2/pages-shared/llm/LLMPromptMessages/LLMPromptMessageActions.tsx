@@ -41,6 +41,7 @@ import {
   PROMPT_UNSAVED_EXPERIMENT_TOOLTIP,
   PROMPT_UNSAVED_TOOLTIP,
 } from "@/constants/prompts";
+import { useTranslation } from "react-i18next";
 
 type ConfirmType = "load" | "save";
 
@@ -76,6 +77,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
   improvePromptConfig,
 }) => {
   const activeProjectId = useActiveProjectId();
+  const { t } = useTranslation("llm");
 
   const {
     permissions: { canCreatePrompts },
@@ -143,10 +145,10 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
   const hasModel = Boolean(improvePromptConfig?.model?.trim());
   const isPromptButtonDisabled = !hasModel;
   const promptButtonTooltip = !hasModel
-    ? "Configure model first"
+    ? t("llm:promptMessageActions.configureModelFirst")
     : hasContent
-      ? "Improve prompt"
-      : "Generate prompt";
+      ? t("llm:promptMessageActions.improvePrompt")
+      : t("llm:promptMessageActions.generatePrompt");
 
   const handleOpenWizard = useCallback(() => {
     setShowImproveWizard(true);
@@ -168,9 +170,8 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
         // Validate model and provider are configured
         if (!hasModel) {
           toast({
-            title: "Model configuration required",
-            description:
-              "Please configure a model and provider before improving the prompt. Select a model from the dropdown above.",
+            title: t("llm:promptMessageActions.modelConfigurationRequired"),
+            description: t("llm:promptMessageActions.modelConfigurationDescription"),
           });
           return;
         }
@@ -259,10 +260,9 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
           tempVersionIdRef.current,
         );
       },
-      title: "Load prompt",
-      description:
-        "You have unsaved changes in your message field. Loading a new prompt will overwrite them with the prompt's content. This action cannot be undone.",
-      confirmText: "Load prompt",
+      title: t("llm:promptMessageActions.loadPrompt"),
+      description: t("llm:promptMessageActions.loadPromptDescription"),
+      confirmText: t("llm:promptMessageActions.loadPrompt"),
     };
   }, [handleUpdateExternalPromptId]);
 

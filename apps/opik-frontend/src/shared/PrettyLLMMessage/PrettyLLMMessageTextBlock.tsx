@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
 import { useHeightTruncation } from "@/hooks/useHeightTruncation";
@@ -9,6 +10,7 @@ const MAX_LINES = 3;
 
 const PrettyLLMMessageTextBlock: React.FC<PrettyLLMMessageTextBlockProps> =
   React.memo(({ children, role, showMoreButton = true, className }) => {
+    const { t } = useTranslation();
     const shouldTruncate = role === "system";
     const { ref, isTruncated, isExpanded, toggle } = useHeightTruncation(
       MAX_LINES,
@@ -39,7 +41,7 @@ const PrettyLLMMessageTextBlock: React.FC<PrettyLLMMessageTextBlockProps> =
             onClick={toggle}
             className="h-auto p-0 text-xs"
           >
-            {isExpanded ? "Show less" : "Show more"}
+            {isExpanded ? t("common:llmMessages.showLess") : t("common:llmMessages.showMore")}
           </Button>
         )}
       </div>

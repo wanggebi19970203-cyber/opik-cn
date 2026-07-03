@@ -1,0 +1,79 @@
+---
+description: 面向 LLM 应用程序的 AI 驱动追踪分析和调试助手
+headline: Opik Assist | Opik 文档
+og:description: 探索 Opik Assist，使用 AI 驱动的洞察和对话支持来调试和增强您的 LLM 应用程序追踪
+og:site_name: Opik 文档
+og:title: 使用 Opik Assist 分析和优化
+title: Opik Assist（Beta）
+canonical-url: https://www.comet.com/docs/opik/ollie
+---
+
+<img src="/img/tracing/trace_inspector_with_response.png" alt="Opik Assist AI response with recommendations" />
+
+<Warning>
+**Beta 功能**：Opik Assist 目前处于 Beta 阶段，仅在 Opik Cloud (www.comet.com) 上可用。随着我们持续改进体验，功能和特性可能会发生变化。
+</Warning>
+
+Opik Assist 是一个 AI 驱动的助手，可帮助您快速分析、调试和优化 LLM 应用程序追踪。通过与 AI 代理对话，您可以：
+
+- **提出自然语言问题**关于当前追踪及其 span
+- **自动识别性能问题**和瓶颈
+- **获取调试建议**用于失败或缓慢的操作
+- **分析模式**在选定的追踪中
+- **了解成本影响**您的 LLM 调用
+
+## 如何使用 Opik Assist
+
+1. **导航到您的项目**在 Opik Cloud 中
+2. **打开任何您想分析的追踪**
+3. **点击"Debug with AI"按钮**（标有 Beta 徽章）
+4. **使用右侧面板上的聊天界面**提问
+5. **在聊天输入框中输入消息**即可获得即时分析和建议
+
+<img src="/img/tracing/trace_inspector_initial_view.png" alt="Opik Assist interface" />
+
+## 数据隐私与安全
+
+您的追踪数据安全和隐私是我们的首要任务。以下是您的数据处理方式的确切说明：
+
+### 隐私保证
+- **不用于训练**：您的追踪数据**永远不会用于**训练 AI 模型
+- **仅用于质量保证**：Comet 仅保留提示词和响应的日志用于内部质量保证和调试
+- **不用于第三方训练**：这些日志不会用于训练第三方模型
+
+### 与 OpenAI 共享的数据
+为了提供智能分析，Opik Assist 会将以下内容发送到 OpenAI 的 AI 模型：
+- **追踪和 span 元数据**：名称、时间戳、延迟信息
+- **输入/输出内容**：来自追踪的实际提示词、响应和工具输出
+- **性能指标**：token 计数、成本和时间数据
+- **错误信息**：追踪中的任何错误消息或状态代码
+
+### 不共享的数据
+- **Opik 系统标识符**：没有来自 Opik 的 API 密钥或认证令牌
+- **账户信息**：没有工作区或项目标识信息
+- **历史数据**：仅分析当前正在分析的追踪
+
+<Warning>
+**重要提示**：虽然 Opik 不会发送系统标识符，但您的追踪数据（输入/输出）可能包含您在提示词或响应中包含的个人或敏感信息。这些内容将作为追踪分析的一部分发送给 OpenAI。
+</Warning>
+
+## 当前限制（Beta）
+
+作为 Beta 功能，Opik Assist 目前有一些限制：
+
+- **仅限云端**：仅在 Opik Cloud 上可用，不支持自托管部署
+- **单追踪分析**：一次只能分析一个追踪，不支持跨追踪比较或聚合
+- **速率限制**：在高峰时段使用可能会受到速率限制
+
+## 反馈与支持
+
+由于这是 Beta 功能，我们很想听听您的反馈：
+
+- 通过 [GitHub Issues](https://github.com/comet-ml/opik/issues) 报告问题
+- 加入我们的 [Slack 社区](http://chat.comet.com/)获取实时支持
+
+---
+
+<Info>
+**即将推出**：我们正在努力将 Opik Assist 扩展到自托管部署，并添加高级分析功能的支持。
+</Info>

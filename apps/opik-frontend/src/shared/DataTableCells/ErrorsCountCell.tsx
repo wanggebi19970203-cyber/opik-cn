@@ -1,4 +1,5 @@
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { Tag } from "@/ui/tag";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { TriangleAlert, ZoomIn } from "lucide-react";
@@ -11,27 +12,31 @@ type CustomMeta = {
   onZoomIn: (row: unknown) => void;
 };
 
-const getErrorDeviationCopy = (error: ProjectErrorCount) => {
+const getErrorDeviationCopy = (
+  error: ProjectErrorCount,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+) => {
   if (error.deviation === 0) {
-    return "(No new errors this week)";
+    return `(${t("common:messages.noNewErrorsThisWeek")})`;
   }
 
   if (error.deviation_percentage < 0) {
-    return `(-${error.deviation_percentage}% since last week)`;
+    return `(${t("common:messages.decreaseSinceLastWeek", { percentage: error.deviation_percentage })})`;
   }
 
   if (error.deviation_percentage > 0) {
-    return `(+${error.deviation_percentage}% since last week)`;
+    return `(${t("common:messages.increaseSinceLastWeek", { percentage: error.deviation_percentage })})`;
   }
 
   if (error.deviation_percentage === 0) {
-    return "(No change since last week)";
+    return `(${t("common:messages.noChangeSinceLastWeek")})`;
   }
 
   return ``;
 };
 
 const ErrorsCountCell = (context: CellContext<unknown, ProjectErrorCount>) => {
+  const { t } = useTranslation();
   const error = context.getValue();
   const { custom } = context.column.columnDef.meta ?? {};
   const { onZoomIn } = (custom ?? {}) as CustomMeta;
@@ -41,7 +46,7 @@ const ErrorsCountCell = (context: CellContext<unknown, ProjectErrorCount>) => {
     return null;
   }
 
-  const deviationCopy = getErrorDeviationCopy(error);
+  const deviationCopy = getErrorDeviationCopy(error, t);
 
   const onClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -55,7 +60,7 @@ const ErrorsCountCell = (context: CellContext<unknown, ProjectErrorCount>) => {
       className="group relative"
       stopClickPropagation
     >
-      <CellTooltipWrapper content={`${error.count} errors ${deviationCopy}`}>
+      <CellTooltipWrapper content={`${error.count} ${error.count === 1 ? t("common:labels.error") : t("common:labels.errors")} ${deviationCopy}`}>
         <Tag
           onClick={onClick}
           variant="red"
@@ -65,7 +70,7 @@ const ErrorsCountCell = (context: CellContext<unknown, ProjectErrorCount>) => {
           <TriangleAlert className="size-3 shrink-0" />
           <span>{error.count}</span>
           <span className="truncate">
-            {error.count === 1 ? "error" : "errors"}
+            {error.count === 1 ? t("common:labels.error") : t("common:labels.errors")}
           </span>
         </Tag>
       </CellTooltipWrapper>

@@ -1,0 +1,86 @@
+{
+  "prompts": {
+    "title": "Prompt library",
+    "description": "Manage and version your prompts",
+    "create": "Create prompt",
+    "edit": "Edit prompt",
+    "delete": "Delete prompt",
+    "empty": {
+      "title": "No prompts yet",
+      "description": "Get started by creating your first prompt.",
+      "action": "Create your first prompt",
+      "manageDescription": "Manage your prompts outside your codebase. Version them, update them without redeploying, and keep a full history of every change.",
+      "createTextPrompt": "Create a text prompt",
+      "textPromptDescription": "Start with a simple prompt with variable substitution.",
+      "createChatPrompt": "Create a chat prompt",
+      "chatPromptDescription": "Start with a message-based prompt for conversational AI.",
+      "viewDocs": "View docs"
+    },
+    "fields": {
+      "name": "Prompt name",
+      "content": "Prompt content",
+      "description": "Description",
+      "version": "Version"
+    },
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "versions": "Versions",
+      "lastUpdated": "Last updated",
+      "created": "Created",
+      "type": "Type",
+      "tags": "Tags",
+      "createdBy": "Created by"
+    },
+    "actions": {
+      "view": "View prompt",
+      "edit": "Edit prompt",
+      "duplicate": "Duplicate prompt",
+      "versions": "View versions",
+      "compare": "Compare versions",
+      "actionsMenu": "Actions menu"
+    },
+    "noData": {
+      "noPrompts": "There are no prompts yet",
+      "noResults": "No search results"
+    },
+    "common": {
+      "name": "Name",
+      "description": "Description",
+      "addOptionalDescription": "Add optional description",
+      "cancel": "Cancel"
+    },
+    "dropdown": {
+      "prompt": "Prompt",
+      "textPrompt": "Text prompt",
+      "textPromptDescription": "Simple prompts with variable substitution.",
+      "chatPrompt": "Chat prompt",
+      "chatPromptDescription": "Message-based prompts for conversational AI."
+    },
+    "createSheet": {
+      "newChatPrompt": "New chat prompt",
+      "newTextPrompt": "New text prompt",
+      "creating": "Creating…"
+    },
+    "editSheet": {
+      "saving": "Saving…",
+      "saveChanges": "Save changes"
+    },
+    "deleteDialog": {
+      "title": "Delete {{name}}",
+      "description": "Deleting a prompt will also remove all associated commits. This action can't be undone. Are you sure you want to continue?",
+      "confirmText": "Delete prompt"
+    },
+    "batchDelete": {
+      "title": "Delete prompts",
+      "description": "Deleting these prompts will also remove all associated commits. This action cannot be undone. Are you sure you want to continue?",
+      "confirmText": "Delete prompts",
+      "tooltip": "Delete"
+    },
+    "promptType": {
+      "text": "Text",
+      "chat": "Chat"
+    },
+    "searchPlaceholder": "Search by name"
+  }
+}

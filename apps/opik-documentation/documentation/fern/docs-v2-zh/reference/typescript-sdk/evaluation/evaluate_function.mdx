@@ -1,0 +1,128 @@
+---
+headline: Evaluate 函数 | Opik 文档
+og:description: 使用 Opik 中的 evaluate 函数，通过可自定义的指标对数据集进行 LLM 任务评估，实现精确评测。
+og:site_name: Opik 文档
+og:title: Evaluate 函数 - Opik
+title: Evaluate 函数
+---
+
+<Note>
+  在 Opik 2.0 中，实验是项目级别的。调用 `evaluate()` 时请务必指定 `projectName`，以确保结果关联到正确的项目。
+</Note>
+
+`evaluate` 函数允许你使用可自定义的指标，对数据集运行全面的 LLM 任务评估。
+
+```typescript
+async function evaluate(options: EvaluateOptions): Promise<EvaluationResult>;
+```
+
+## 参数
+
+该函数接受一个 `options` 参数，类型为 `EvaluateOptions`，包含以下属性：
+
+| 参数                | 类型                      | 必填 | 说明                                                                                       |
+| ------------------- | ------------------------- | ---- | ------------------------------------------------------------------------------------------ |
+| `dataset`           | `Dataset \| DatasetVersion` | 是   | 要评估的数据集或数据集版本。使用 `DatasetVersion` 可将评估固定到特定快照，实现可复现评估。 |
+| `task`              | `EvaluationTask`          | 是   | 要执行的具体 LLM 任务                                                                     |
+| `scoringMetrics`    | `BaseMetric[]`            | 否   | 可选的指标数组，用于评估模型性能（如准确率、F1 分数等）                                    |
+| `experimentName`    | `string`                  | 否   | 可选的评估实验名称，用于追踪和报告                                                         |
+| `projectName`       | `string`                  | 否   | 可选的项目标识符，用于关联此实验                                                           |
+| `experimentConfig`  | `Record<string, unknown>` | 否   | 可选的实验配置项，以键值对形式提供                                                         |
+| `nbSamples`         | `number`                  | 否   | 可选的评估样本数量（未指定时默认评估全部样本）                                             |
+| `client`            | `OpikClient`              | 否   | 可选的 Opik 客户端实例，用于追踪                                                           |
+| `scoringKeyMapping` | `ScoringKeyMappingType`   | 否   | 可选的映射关系，用于将数据集键映射到评分指标的输入                                         |
+
+## 返回值
+
+该函数返回一个 Promise，解析为 `EvaluationResult` 对象，包含：
+
+- 所有评估样本的聚合分数
+- 各样本的详细结果
+- 执行元数据
+
+## 使用示例
+
+```typescript
+import {
+  evaluate,
+  EvaluationTask,
+  Opik,
+  BaseMetric,
+  EvaluationScoreResult,
+  ExactMatch,
+} from "opik";
+import OpenAI from "openai";
+
+// 初始化客户端
+const openai = new OpenAI();
+const opik = new Opik();
+
+// 定义数据集项类型
+type DatasetItem = {
+  input: string;
+  expected_output: string;
+  metadata: {
+    category: string;
+    difficulty: string;
+    version: number;
+  };
+};
+
+// 定义 LLM 任务
+const llmTask: EvaluationTask<DatasetItem> = async (datasetItem) => {
+  const { input } = datasetItem;
+
+  const response = await openai.responses.create({
+    model: "gpt-5-nano",
+    instructions: "You are a coding assistant",
+    input,
+  });
+
+  return { output: response.output_text };
+};
+
+async function runEvaluation() {
+  // 获取或创建数据集
+  const dataset = await opik.getOrCreateDataset<DatasetItem>("example-dataset", "Evaluation dataset", "my-project");
+
+  // 运行评估
+  const result = await evaluate({
+    dataset,
+    task: llmTask,
+    scoringMetrics: [new ExactMatch()],
+    experimentName: "Example Evaluation",
+    projectName: "my-project",
+
+    // 将任务输出和数据集项数据映射到期望的指标输入
+    scoringKeyMapping: {
+      expected: "expected_output",
+    },
+  });
+}
+```
+
+### 评估特定版本
+
+如需可复现的评估，请使用 `DatasetVersion` 代替 `Dataset`：
+
+```typescript
+// 获取特定版本以实现可复现评估
+const dataset = await opik.getOrCreateDataset<DatasetItem>("example-dataset", "Evaluation dataset", "my-project");
+const v2 = await dataset.getVersionView("v2");
+
+const result = await evaluate({
+  dataset: v2,
+  task: llmTask,
+  scoringMetrics: [new ExactMatch()],
+  experimentName: "Pinned to v2",
+  projectName: "my-project",
+});
+// 实验关联到版本 v2，而非最新版本
+```
+
+## 说明
+
+- 该函数会自动在 Opik 中创建实验，用于追踪和分析
+- 如果未提供 `client`，将使用全局 Opik 客户端实例
+- 你可以提供类型参数，以正确标注数据集和任务输入/输出的类型
+- 评估过程中的错误会被正确记录并重新抛出

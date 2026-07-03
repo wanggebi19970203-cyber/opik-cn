@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MoreHorizontal, Pause, Play, RotateCcw, Unplug } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -74,6 +75,7 @@ type AgentRunnerContentProps = {
 const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
   projectId,
 }) => {
+  const { t } = useTranslation("pages/agent-playground");
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [traceOpen, setTraceOpen] = useState(false);
   const [hasAllRequiredParams, setHasAllRequiredParams] = useState(false);
@@ -112,11 +114,10 @@ const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
 
   const { DialogComponent: navigationBlockerDialog } = useNavigationBlocker({
     condition: isJobRunning || createJobMutation.isPending,
-    title: "Agent execution in progress",
-    description:
-      "Your agent is currently running. Leaving now will interrupt the execution and may result in an incomplete trace. Are you sure you want to leave?",
-    confirmText: "Leave anyway",
-    cancelText: "Stay and wait",
+    title: t("content.executionInProgress"),
+    description: t("content.executionInProgressDescription"),
+    confirmText: t("content.leaveAnyway"),
+    cancelText: t("content.stayAndWait"),
   });
 
   const { data: traceData } = useTraceById(
@@ -196,19 +197,19 @@ const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 border-b bg-gray-100 px-4 py-3">
-        <h1 className="comet-title-xs">Agent playground</h1>
+        <h1 className="comet-title-xs">{t("content.agentPlayground")}</h1>
 
         {pairing.isInitialLoading ? null : isConnected ? (
-          <TooltipWrapper content="Your agent is connected to Opik">
+          <TooltipWrapper content={t("content.connectedTooltip")}>
             <span className="comet-body-xs flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-0.5 text-foreground">
               <span className="size-1.5 rounded-full bg-emerald-500" />
-              Connected
+              {t("content.connected")}
             </span>
           </TooltipWrapper>
         ) : (
           <span className="comet-body-xs flex items-center gap-1.5 text-rose-500">
             <span className="size-1.5 rounded-full bg-rose-500" />
-            Disconnected
+            {t("content.disconnected")}
           </span>
         )}
 
@@ -218,13 +219,13 @@ const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
               {isJobRunning ? (
                 <Button variant="outline" size="2xs" onClick={handleStop}>
                   <Pause className="mr-1 size-3.5" />
-                  Stop run
+                  {t("content.stopRun")}
                 </Button>
               ) : (
                 <TooltipWrapper
                   content={
                     !hasAllRequiredParams
-                      ? "Some required parameters are missing"
+                      ? t("content.missingParams")
                       : undefined
                   }
                 >
@@ -239,19 +240,19 @@ const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
                       }
                     >
                       <Play className="mr-1 size-3.5" />
-                      Run
+                      {t("content.run")}
                       <HotkeyDisplay hotkey="⇧" size="2xs" className="ml-1.5" />
                       <HotkeyDisplay hotkey="⏎" size="2xs" className="ml-1" />
                     </Button>
                   </span>
                 </TooltipWrapper>
               )}
-              <TooltipWrapper content="Reset">
+              <TooltipWrapper content={t("content.reset")}>
                 <Button
                   variant="ghost"
                   size="icon-2xs"
                   onClick={handleReset}
-                  aria-label="Reset"
+                  aria-label={t("content.reset")}
                 >
                   <RotateCcw />
                 </Button>
@@ -262,7 +263,7 @@ const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
                     <Button
                       variant="ghost"
                       size="icon-2xs"
-                      aria-label="More actions"
+                      aria-label={t("content.moreActions")}
                     >
                       <MoreHorizontal />
                     </Button>
@@ -277,7 +278,7 @@ const AgentRunnerContent: React.FC<AgentRunnerContentProps> = ({
                       }}
                     >
                       <Unplug className="mr-2 size-3.5" />
-                      Disconnect
+                      {t("content.disconnect")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

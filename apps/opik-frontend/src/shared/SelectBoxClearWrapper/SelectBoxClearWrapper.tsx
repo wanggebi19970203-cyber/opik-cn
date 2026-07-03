@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 import { Button, ButtonProps } from "@/ui/button";
@@ -18,15 +19,16 @@ const SelectBoxClearWrapper: React.FC<SelectBoxClearWrapperProps> = ({
   isClearable,
   onClear,
   disabled = false,
-  clearTooltip = "Clear selection",
+  clearTooltip,
   buttonSize = "default",
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex w-full">
       {children}
 
       {isClearable && (
-        <TooltipWrapper content={clearTooltip}>
+        <TooltipWrapper content={clearTooltip ?? t("common.emptyStates.clearSelection")}>
           <Button
             variant="outline"
             size={buttonSize}

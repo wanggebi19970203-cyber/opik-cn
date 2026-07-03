@@ -1,0 +1,118 @@
+{
+  "annotationQueue": {
+    "title": "标注队列",
+    "description": "标注数据项目",
+    "tabs": {
+      "queueItems": "队列项目",
+      "configuration": "配置"
+    },
+    "navigation": {
+      "goToTraces": "前往追踪",
+      "goToThreads": "前往线程",
+      "viewAllTraces": "查看此队列的所有追踪",
+      "viewAllThreads": "查看此队列的所有线程",
+      "goToProject": "前往 {{name}}",
+      "project": "项目",
+      "logs": "日志"
+    },
+    "configuration": {
+      "loadingMessage": "正在加载队列信息",
+      "reviewers": {
+        "title": "审核者 ({{count}})",
+        "columns": {
+          "reviewer": "审核者",
+          "progress": "进度"
+        }
+      }
+    },
+    "copyLink": {
+      "toastTitle": "标注队列链接已复制到剪贴板",
+      "toastDescription": "与您的标注者分享此队列，以便他们开始标注并提供反馈，以改进您的 LLM 应用评估。",
+      "tooltip": "分享标注队列链接",
+      "button": "分享"
+    },
+    "edit": {
+      "tooltip": "编辑标注队列",
+      "button": "编辑"
+    },
+    "export": {
+      "noDataTitle": "没有数据可导出",
+      "noDataDescription": "标注队列中没有可导出的项目。",
+      "failedTitle": "导出失败",
+      "fetchFailed": "获取导出数据失败",
+      "disabledTooltip": "此安装已禁用导出功能",
+      "tooltip": "导出标注数据",
+      "button": "导出队列",
+      "asCsv": "导出为 CSV",
+      "asJson": "导出为 JSON"
+    },
+    "openSME": {
+      "tooltip": "开始标注",
+      "button": "标注"
+    },
+    "noItems": {
+      "titleTraces": "将追踪添加到您的队列",
+      "titleThreads": "将线程添加到您的队列",
+      "descriptionTraces": "您的标注队列为空。从项目中添加追踪以开始标注流程并收集有价值的反馈。",
+      "descriptionThreads": "您的标注队列为空。从项目中添加线程以开始标注流程并收集有价值的反馈。",
+      "readDocs": "阅读文档",
+      "goToTraces": "前往追踪",
+      "goToThreads": "前往线程"
+    },
+    "queueItemActions": {
+      "removeFromQueue": "从队列中移除",
+      "removeDescription": "移除标注队列项目将把它们从队列中删除。此操作无法撤销。确定要继续吗？",
+      "removeItems": "移除项目",
+      "removeItem": "移除项目",
+      "removeSelectedTooltip": "从队列中移除所选项目",
+      "actionsMenu": "操作菜单"
+    },
+    "search": {
+      "byId": "按 ID 搜索"
+    },
+    "emptyState": {
+      "noItemsToReview": "没有待审核的项目",
+      "addTracesDescription": "将追踪添加到此队列以开始标注。",
+      "addThreadsDescription": "将线程添加到此队列以开始标注。"
+    },
+    "columns": {
+      "firstMessage": "首条消息",
+      "lastMessage": "末条消息",
+      "messageCount": "消息数量",
+      "createdAt": "创建时间",
+      "lastUpdated": "最后更新",
+      "duration": "持续时间",
+      "tags": "标签",
+      "startTime": "开始时间",
+      "endTime": "结束时间",
+      "totalTokens": "总 token 数",
+      "estimatedCost": "预估成本",
+      "createdBy": "创建者",
+      "comments": "评论",
+      "feedbackScores": "反馈评分",
+      "name": "名称",
+      "input": "输入",
+      "output": "输出",
+      "metadata": "元数据",
+      "totalInputTokens": "总输入 token 数",
+      "totalOutputTokens": "总输出 token 数",
+      "llmCallsCount": "LLM 调用次数",
+      "threadId": "线程 ID",
+      "errors": "错误"
+    },
+    "filters": {
+      "selectScore": "选择评分"
+    },
+    "columnSections": {
+      "feedbackScores": "反馈评分"
+    },
+    "actions": {
+      "annotate": "标注",
+      "skip": "跳过",
+      "submit": "提交"
+    },
+    "empty": {
+      "noSearchResults": "无搜索结果"
+    }
+  }
+}

@@ -1,0 +1,2195 @@
+---
+headline: Prompt 管理 | Opik 文档
+og:description: 学习使用 Opik 的 prompt 库进行版本控制、跨项目复用和集中管理 prompt。
+og:site_name: Opik 文档
+og:title: 使用 Opik 有效管理 Prompt
+title: Prompt 管理
+canonical-url: https://www.comet.com/docs/opik/development/prompt-library/getting-started
+---
+
+Opik 提供了一个 prompt 库，你可以用它来管理你的 prompt。将 prompt 存储在库中允许你对其进行版本控制、跨项目复用以及在集中位置管理它们。
+
+<Note>
+  在 Opik 2.0 中，prompt 是项目范围的。创建 prompt 时请指定 `project_name` 以便与正确的项目关联。
+</Note>
+
+使用 prompt 库并不意味着你不能将 prompt 存储在代码中，我们设计的 prompt 库可以与你现有的 prompt 文件无缝配合，同时提供集中 prompt 库的好处。
+
+Opik 支持两种类型的 prompt：
+
+- [**文本 Prompt**](#文本-prompt)：支持变量替换的简单字符串 prompt
+- [**聊天 Prompt**](#聊天-prompt)：OpenAI 格式的结构化消息 prompt，用于对话式 AI 应用，支持多模态内容（文本、图像、视频）
+
+## 文本 Prompt
+
+文本 prompt 是支持变量替换的简单字符串模板。它们适合单轮交互或当你需要生成单段文本时。
+
+### 管理存储在代码中的文本 prompt
+
+创建和管理文本 prompt 的推荐方式是使用 [`Prompt`](https://www.comet.com/docs/opik/python-sdk-reference/library/Prompt.html) 对象。这将允许你继续在代码中对 prompt 进行版本控制，同时获得在 Opik 平台中管理 prompt 版本的好处，以便更容易地跟踪进度。
+
+#### 存储在代码变量中的 Prompt
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # Prompt 文本存储在变量中
+        PROMPT_TEXT = "Write a summary of the following text: {{text}}"
+
+        # 创建 prompt
+        prompt = opik.Prompt(
+            name="prompt-summary",
+            prompt=PROMPT_TEXT,
+            metadata={"environment": "production"},
+            project_name="my-project"
+        )
+
+        # 打印 prompt 文本
+        print(prompt.prompt)
+
+        # 构建 prompt
+        print(prompt.format(text="Hello, world!"))
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { Prompt } from "opik";
+
+        // Prompt 文本存储在变量中
+        const PROMPT_TEXT = "Write a summary of the following text: {{text}}";
+
+        // 创建 prompt
+        const prompt = new Prompt({
+          name: "prompt-summary",
+          prompt: PROMPT_TEXT,
+          metadata: { environment: "production" },
+          projectName: "my-project",
+        });
+
+        // 打印 prompt 文本
+        console.log(prompt.prompt);
+
+        // 构建 prompt
+        console.log(prompt.format({ text: "Hello, world!" }));
+        ```
+
+    </Tab>
+</Tabs>
+
+#### 存储在文件中的 Prompt
+
+Prompt 也可以存储在文件中并从中加载：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # 从文件读取 prompt
+        with open("prompt.txt", "r") as f:
+            prompt_text = f.read()
+
+        prompt = opik.Prompt(name="prompt-summary", prompt=prompt_text, project_name="my-project")
+
+        # 打印 prompt 文本
+        print(prompt.prompt)
+
+        # 构建 prompt
+        print(prompt.format(text="Hello, world!"))
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { Prompt } from "opik";
+        import { readFileSync } from "fs";
+
+        // 从文件读取 prompt
+        const promptText = readFileSync("prompt.txt", "utf-8");
+
+        const prompt = new Prompt({
+          name: "prompt-summary",
+          prompt: promptText,
+          projectName: "my-project",
+        });
+
+        // 打印 prompt 文本
+        console.log(prompt.prompt);
+
+        // 构建 prompt
+        console.log(prompt.format({ text: "Hello, world!" }));
+        ```
+
+    </Tab>
+</Tabs>
+
+Prompt 现在将存储在库中并进行版本控制：
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_library_versions.png" />
+</Frame>
+
+<Tip>
+[`Prompt`](https://www.comet.com/docs/opik/python-sdk-reference/library/Prompt.html) 对象将在库中创建新 prompt（如果该 prompt 尚不存在），否则将返回现有 prompt。
+
+这意味着你可以安全地多次运行上述代码而不会创建重复的 prompt。
+
+</Tip>
+
+### 使用底层 SDK 管理文本 prompt
+
+如果你更愿意将文本 prompt 保存在 Opik 平台中并手动更新/下载它们，可以使用底层 Python SDK 来管理你的 prompt。
+
+<Note>
+**何时使用客户端方法 vs. 类：**
+
+- **使用 `Prompt()` 类**（推荐）：对于大多数用例，此类自动使用 `opik.configure()` 设置的全局 Opik 配置。
+
+- **使用 `client.create_prompt()`**：当你需要使用与全局配置不同的特定客户端配置时（例如不同的工作区、主机或 API 密钥）。
+</Note>
+
+#### 创建文本 prompt
+
+你可以使用 SDK 和 UI 在库中创建新 prompt：
+
+<Tabs>
+    <Tab value="Python SDK" title="Python SDK">
+        ```python
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 创建新 prompt
+        prompt = client.create_prompt(name="prompt-summary", prompt="Write a summary of the following text: {{text}}", metadata={"environment": "development"}, project_name="my-project")
+        ```
+    </Tab>
+    <Tab value="TypeScript SDK" title="TypeScript SDK">
+        ```typescript
+        import { Prompt } from "opik";
+
+        // 创建新 prompt
+        const prompt = new Prompt({
+          name: "prompt-summary",
+          prompt: "Write a summary of the following text: {{text}}",
+          metadata: { environment: "development" },
+          projectName: "my-project",
+        });
+        ```
+    </Tab>
+    <Tab value="使用 UI" title="使用 UI">
+        你可以通过导航到 Prompt 库并点击 `Create new prompt` 在 UI 中创建 prompt。这将打开一个对话框，你可以在其中输入 prompt 名称、prompt 文本，以及可选的描述：
+
+        <Frame>
+
+<img src="/img/prompt_engineering/prompt_library.png" />
+</Frame>
+
+        你也可以通过点击库中的 prompt 名称并点击 `Edit prompt` 来编辑 prompt。
+    </Tab>
+
+</Tabs>
+
+#### 将 prompt 添加到 trace 和 span
+
+你可以使用 `opik_context` 模块将 prompt 与 trace 和 span 关联。当你想跟踪函数执行期间使用了哪些 prompt 时，这很有用：
+
+<Tabs>
+    <Tab value="将 prompt 添加到 trace" title="将 prompt 添加到 trace">
+        ```python
+        import opik
+        from opik.opik_context import update_current_trace
+
+        # 创建 prompt
+        system_prompt = opik.Prompt(
+            name="system-prompt",
+            prompt="You are a helpful assistant that provides accurate and concise answers.",
+            project_name="my-project"
+        )
+
+        # 从 Prompt 库获取 prompt
+        client = opik.Opik()
+        user_prompt = client.get_prompt(name="user-prompt")
+
+        @opik.track
+        def process_user_query(question: str) -> str:
+            # 将 prompt 添加到当前 trace
+            update_current_trace(
+                name="user-query-processing",
+                prompts=[system_prompt, user_prompt],
+                metadata={"query_type": "general"}
+            )
+            
+            # 你的处理逻辑
+            formatted_prompt = user_prompt.format(question=question)
+            # ... 函数的其余部分
+            return "Response to: " + question
+        ```
+    </Tab>
+    <Tab value="将 prompt 添加到 span" title="将 prompt 添加到 span">
+        ```python
+        import opik
+        from opik.opik_context import update_current_span
+
+        # 为特定操作创建 prompt
+        analysis_prompt = opik.Prompt(
+            name="text-analysis-prompt",
+            prompt="Analyze the sentiment of the following text: {{text}}",
+            project_name="my-project"
+        )
+
+        @opik.track
+        def analyze_sentiment(text: str) -> str:
+            # 将 prompt 添加到当前 span
+            update_current_span(
+                name="sentiment-analysis",
+                prompts=[analysis_prompt],
+                metadata={"analysis_type": "sentiment"}
+            )
+            
+            # 你的分析逻辑
+            formatted_prompt = analysis_prompt.format(text=text)
+            # ... 函数的其余部分
+            return "Positive"  # 示例结果
+        ```
+    </Tab>
+    <Tab value="组合使用" title="组合使用">
+        ```python
+        import opik
+        from opik.opik_context import update_current_trace, update_current_span
+
+        # 为不同目的创建不同的 prompt
+        main_prompt = opik.Prompt(
+            name="main-processing-prompt",
+            prompt="Process the following data: {{data}}",
+            project_name="my-project"
+        )
+        
+        validation_prompt = opik.Prompt(
+            name="validation-prompt",
+            prompt="Validate this result: {{result}}",
+            project_name="my-project"
+        )
+
+        @opik.track
+        def validate_result(result: Dict[str, Any]) -> str:
+            # 将验证 prompt 添加到 span 级别
+            update_current_span(
+                name="result-validation",
+                prompts=[validation_prompt],
+                metadata={"validation_type": "result_check"}
+            )
+
+            # ... 验证逻辑
+
+            return "Valid"  # 示例结果
+
+        @opik.track
+        def complex_processing(data: str) -> str:
+            # 将主 prompt 添加到 trace 级别
+            update_current_trace(
+                name="complex-data-processing",
+                prompts=[main_prompt],
+                metadata={"processing_type": "complex"}
+            )
+            
+            # 处理数据
+            result = process_data(data)
+
+            # 验证结果
+            validated_result = validate_result(result)
+
+            return validated_result
+
+        complex_processing("My data")
+        ```
+    </Tab>
+</Tabs>
+
+你可以在 Opik UI 中查看与 trace 或 span 关联的 prompt：
+
+<Frame>
+    <img src="/img/prompt_engineering/prompt_opik_context_update.png" />
+</Frame>
+
+以下部分提供了从 Prompt 库使用 prompt 的更多详情。
+
+
+#### 在支持的集成中使用 prompt
+
+Prompt 可以在所有支持的第三方集成中使用，通过 [`opik_context` 模块](/v1/prompt_engineering/prompt_management#adding-prompts-to-traces-and-spans)将它们附加到 trace 和 span。
+
+例如，你可以在 `Google ADK` 集成中使用 prompt，如[此处示例](/v1/integrations/adk#prompts-integration)所示。
+
+
+#### 下载文本 prompt
+
+在库中创建 prompt 后，你可以在代码中下载它：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        使用 [`Opik.get_prompt`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_prompt) 方法：
+
+        ```python
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 获取数据集
+        dataset = client.get_or_create_dataset("test_dataset", project_name="my-project")
+
+        # 获取 prompt
+        prompt = client.get_prompt(name="prompt-summary")
+
+        # 创建 prompt 消息
+        prompt.format(text="Hello, world!")
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        使用 `getPrompt` 方法：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+
+        // 获取 prompt
+        const prompt = await client.getPrompt({ name: "prompt-summary" });
+
+        if (prompt) {
+          // 格式化 prompt
+          const formatted = prompt.format({ text: "Hello, world!" });
+          console.log(formatted);
+        }
+        ```
+    </Tab>
+</Tabs>
+
+如果你不使用 SDK，可以通过 [REST API](/reference/rest-api/overview) 下载 prompt。
+
+#### 搜索 prompt
+
+要按名称子字符串和/或过滤器发现 prompt，请使用 `search_prompts`。过滤器使用 Opik 查询语言（OQL）编写：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        使用 [`search_prompts`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_prompts)：
+
+        ```python
+        import opik
+
+        client = opik.Opik()
+
+        # 仅按名称子字符串搜索
+        latest_versions = client.search_prompts(
+            filter_string='name contains "summary"'
+        )
+
+        # 按名称子字符串和标签过滤搜索
+        filtered = client.search_prompts(
+            filter_string='name contains "summary" AND tags contains "alpha" AND tags contains "beta"',
+        )
+
+        # 仅搜索文本 prompt
+        text_prompts = client.search_prompts(
+            filter_string='template_structure = "text"'
+        )
+
+        for prompt in filtered:
+            print(prompt.name, prompt.commit, prompt.prompt)
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        使用 `searchPrompts`：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+
+        // 仅按名称子字符串搜索
+        const latestVersions = await client.searchPrompts(
+          'name contains "summary"'
+        );
+
+        // 按名称子字符串和标签过滤搜索
+        const filtered = await client.searchPrompts(
+          'name contains "summary" AND tags contains "alpha" AND tags contains "beta"'
+        );
+
+        // 仅搜索文本 prompt
+        const textPrompts = await client.searchPrompts(
+          'template_structure = "text"'
+        );
+
+        for (const prompt of filtered) {
+          console.log(prompt.name, prompt.commit, prompt.prompt);
+        }
+        ```
+    </Tab>
+</Tabs>
+
+你可以按 `template_structure` 过滤以仅搜索文本 prompt（`"text"`）或仅搜索聊天 prompt（`"chat"`）。不使用过滤器时，`search_prompts` 返回两种类型。
+
+`filter_string` 参数使用 Opik 查询语言（OQL），格式为：
+`"<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"`
+
+**Prompt 支持的列：**
+
+| 列               | 类型   | 运算符                                                                   |
+| -------------------- | ------ | --------------------------------------------------------------------------- |
+| `id`                 | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `name`               | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `created_by`         | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `tags`               | List   | `contains`                                                                  |
+| `template_structure` | String | `=`, `!=`                                                                   |
+
+**示例：**
+
+- `tags contains "production"` — 按标签过滤
+- `name contains "summary"` — 按名称子字符串过滤
+- `created_by = "user@example.com"` — 按创建者过滤
+- `tags contains "alpha" AND tags contains "beta"` — 多标签过滤
+- `template_structure = "text"` — 仅过滤文本 prompt
+- `template_structure = "chat"` — 仅过滤聊天 prompt
+
+`search_prompts` 返回每个匹配 prompt 的**最新**版本。
+
+## 聊天 Prompt
+
+聊天 prompt 是为对话式 AI 应用设计的结构化消息模板。它们支持多种消息角色（system、user、assistant）和多模态内容，包括文本、图像和视频。
+
+### 主要特性
+
+- **结构化消息**：将 prompt 组织为带有角色（system、user、assistant）的消息列表
+- **多模态支持**：在同一 prompt 中包含图像、视频和文本
+- **变量替换**：使用 Mustache（`{{variable}}`）或 Jinja2 语法
+- **版本控制**：消息更改时自动版本控制
+- **模板验证**：可选的模板占位符验证
+
+### 管理存储在代码中的聊天 prompt
+
+与文本 prompt 类似，你可以使用 [`ChatPrompt`](https://www.comet.com/docs/opik/python-sdk-reference/library/ChatPrompt.html) 类创建和管理聊天 prompt。这允许你在代码中对聊天 prompt 进行版本控制，同时受益于 Opik 平台中的集中管理。
+
+#### 简单聊天 prompt
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # 定义带变量的聊天消息
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant specializing in {{domain}}."},
+            {"role": "user", "content": "Explain {{topic}} in simple terms."}
+        ]
+
+        # 创建聊天 prompt
+        chat_prompt = opik.ChatPrompt(
+            name="educational-assistant",
+            messages=messages,
+            metadata={"category": "education"},
+            project_name="my-project"
+        )
+
+        # 使用变量格式化 prompt
+        formatted_messages = chat_prompt.format(
+            variables={
+                "domain": "physics",
+                "topic": "quantum entanglement"
+            }
+        )
+
+        # 将格式化后的消息用于你的 LLM
+        print(formatted_messages)
+        # 输出：
+        # [
+        #     {"role": "system", "content": "You are a helpful assistant specializing in physics."},
+        #     {"role": "user", "content": "Explain quantum entanglement in simple terms."}
+        # ]
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+
+        // 定义带变量的聊天消息
+        const messages = [
+          {
+            role: "system",
+            content: "You are a helpful assistant specializing in {{domain}}.",
+          },
+          { role: "user", content: "Explain {{topic}} in simple terms." },
+        ];
+
+        // 创建聊天 prompt
+        const chatPrompt = new ChatPrompt({
+          name: "educational-assistant",
+          messages: messages,
+          metadata: { category: "education" },
+          projectName: "my-project",
+        });
+
+        // 使用变量格式化 prompt
+        const formattedMessages = chatPrompt.format({
+          domain: "physics",
+          topic: "quantum entanglement",
+        });
+
+        // 将格式化后的消息用于你的 LLM
+        console.log(formattedMessages);
+        // 输出：
+        // [
+        //   { role: "system", content: "You are a helpful assistant specializing in physics." },
+        //   { role: "user", content: "Explain quantum entanglement in simple terms." }
+        // ]
+        ```
+
+    </Tab>
+</Tabs>
+
+#### 将聊天 prompt 与 OpenAI 一起使用
+
+聊天 prompt 与 OpenAI 的 chat completion API 无缝配合：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+        from openai import OpenAI
+
+        # 定义带变量的聊天消息
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant specializing in {{domain}}."},
+            {"role": "user", "content": "Explain {{topic}} in simple terms."}
+        ]
+
+        # 创建聊天 prompt
+        chat_prompt = opik.ChatPrompt(
+            name="educational-assistant",
+            messages=messages,
+            metadata={"category": "education"},
+            project_name="my-project"
+        )
+
+        # 使用变量格式化 prompt
+        formatted_messages = chat_prompt.format(
+            variables={
+                "domain": "physics",
+                "topic": "quantum entanglement"
+            }
+        )
+
+        # 与 OpenAI API 一起使用
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=formatted_messages
+        )
+
+        print(response.choices[0].message.content)
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+        import OpenAI from "openai";
+
+        const openai = new OpenAI();
+
+        // 定义带变量的聊天消息
+        const messages = [
+          {
+            role: "system",
+            content: "You are a helpful assistant specializing in {{domain}}.",
+          },
+          { role: "user", content: "Explain {{topic}} in simple terms." },
+        ];
+
+        // 创建聊天 prompt
+        const chatPrompt = new ChatPrompt({
+          name: "educational-assistant",
+          messages: messages,
+          metadata: { category: "education" },
+          projectName: "my-project",
+        });
+
+        // 使用变量格式化 prompt
+        const formattedMessages = chatPrompt.format({
+          domain: "physics",
+          topic: "quantum entanglement",
+        });
+
+        // 与 OpenAI API 一起使用
+        const response = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: formattedMessages,
+        });
+
+        console.log(response.choices[0].message.content);
+        ```
+
+    </Tab>
+</Tabs>
+
+#### 多轮对话模板
+
+你可以为多轮对话创建模板：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # 定义多轮对话模板
+        messages = [
+            {"role": "system", "content": "You are a customer support agent for {{company}}."},
+            {"role": "user", "content": "I have an issue with {{product}}."},
+            {"role": "assistant", "content": "I'd be happy to help with your {{product}}. Can you describe the issue?"},
+            {"role": "user", "content": "{{issue_description}}"}
+        ]
+
+        chat_prompt = opik.ChatPrompt(
+            name="customer-support-flow",
+            messages=messages,
+            project_name="my-project"
+        )
+
+        # 使用特定值格式化
+        formatted = chat_prompt.format(
+            variables={
+                "company": "Acme Corp",
+                "product": "Widget Pro",
+                "issue_description": "It won't turn on"
+            }
+        )
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+
+        // 定义多轮对话模板
+        const messages = [
+          {
+            role: "system",
+            content: "You are a customer support agent for {{company}}.",
+          },
+          { role: "user", content: "I have an issue with {{product}}." },
+          {
+            role: "assistant",
+            content:
+              "I'd be happy to help with your {{product}}. Can you describe the issue?",
+          },
+          { role: "user", content: "{{issue_description}}" },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "customer-support-flow",
+          messages: messages,
+          projectName: "my-project",
+        });
+
+        // 使用特定值格式化
+        const formatted = chatPrompt.format({
+          company: "Acme Corp",
+          product: "Widget Pro",
+          issue_description: "It won't turn on",
+        });
+        ```
+
+    </Tab>
+</Tabs>
+
+聊天 prompt 现在将存储在库中并进行版本控制，就像文本 prompt 一样。
+
+<Tip>
+[`ChatPrompt`](https://www.comet.com/docs/opik/python-sdk-reference/library/ChatPrompt.html) 类将在库中创建新的聊天 prompt（如果尚不存在），否则将返回现有 prompt。
+
+这意味着你可以安全地多次运行代码而不会创建重复的 prompt。
+</Tip>
+
+创建后，你可以在 Opik UI 中查看和管理聊天 prompt：
+
+<Frame>
+    <img src="/img/prompt_engineering/chat_prompt_ui_view.png" />
+</Frame>
+
+### 多模态聊天 Prompt
+
+聊天 prompt 支持多模态内容，允许你在文本旁包含图像和视频。这对于支持视觉的模型很有用。
+
+#### 图像分析
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # 带图像内容的聊天 prompt
+        messages = [
+            {"role": "system", "content": "You analyze images and provide detailed descriptions."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What's in this image of {{subject}}?"},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "{{image_url}}",
+                            "detail": "high"
+                        }
+                    }
+                ]
+            }
+        ]
+
+        chat_prompt = opik.ChatPrompt(
+            name="image-analyzer",
+            messages=messages,
+            project_name="my-project"
+        )
+
+        # 使用变量格式化
+        formatted = chat_prompt.format(
+            variables={
+                "subject": "a sunset",
+                "image_url": "https://example.com/sunset.jpg"
+            },
+            supported_modalities={"vision": True}
+        )
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+
+        // 带图像内容的聊天 prompt
+        const messages = [
+          {
+            role: "system",
+            content: "You analyze images and provide detailed descriptions.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "What's in this image of {{subject}}?" },
+              {
+                type: "image_url",
+                image_url: {
+                  url: "{{image_url}}",
+                  detail: "high",
+                },
+              },
+            ],
+          },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "image-analyzer",
+          messages: messages,
+          projectName: "my-project",
+        });
+
+        // 使用变量格式化
+        const formatted = chatPrompt.format(
+          {
+            subject: "a sunset",
+            image_url: "https://example.com/sunset.jpg",
+          },
+          { vision: true }
+        );
+        ```
+
+    </Tab>
+</Tabs>
+
+#### 视频分析
+
+聊天 prompt 也可以包含视频内容：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # 带视频内容的聊天 prompt
+        messages = [
+            {"role": "system", "content": "You analyze videos and provide insights."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Analyze this video: {{description}}"},
+                    {
+                        "type": "video_url",
+                        "video_url": {
+                            "url": "{{video_url}}",
+                            "mime_type": "video/mp4"
+                        }
+                    }
+                ]
+            }
+        ]
+
+        chat_prompt = opik.ChatPrompt(
+            name="video-analyzer",
+            messages=messages,
+            project_name="my-project"
+        )
+
+        # 使用变量格式化
+        formatted = chat_prompt.format(
+            variables={
+                "description": "traffic analysis",
+                "video_url": "https://example.com/traffic.mp4"
+            },
+            supported_modalities={"vision": True}
+        )
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+
+        // 带视频内容的聊天 prompt
+        const messages = [
+          {
+            role: "system",
+            content: "You analyze videos and provide insights.",
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Analyze this video: {{description}}" },
+              {
+                type: "video_url",
+                video_url: {
+                  url: "{{video_url}}",
+                  mime_type: "video/mp4",
+                },
+              },
+            ],
+          },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "video-analyzer",
+          messages: messages,
+          projectName: "my-project",
+        });
+
+        // 使用变量格式化
+        const formatted = chatPrompt.format(
+          {
+            description: "traffic analysis",
+            video_url: "https://example.com/traffic.mp4",
+          },
+          { vision: true, video: true }
+        );
+        ```
+
+    </Tab>
+</Tabs>
+
+#### 混合内容
+
+你可以在单条消息中组合多种内容类型：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+        ```python
+        import opik
+
+        # 带多张图像和文本的聊天 prompt
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Compare these two images:"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": "{{image1_url}}"}
+                    },
+                    {"type": "text", "text": "and"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": "{{image2_url}}"}
+                    },
+                    {"type": "text", "text": "What are the main differences?"}
+                ]
+            }
+        ]
+
+        chat_prompt = opik.ChatPrompt(
+            name="image-comparison",
+            messages=messages,
+            project_name="my-project"
+        )
+
+        formatted = chat_prompt.format(
+            variables={
+                "image1_url": "https://example.com/before.jpg",
+                "image2_url": "https://example.com/after.jpg"
+            },
+            supported_modalities={"vision": True}
+        )
+        ```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+
+        // 带多张图像和文本的聊天 prompt
+        const messages = [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Compare these two images:" },
+              {
+                type: "image_url",
+                image_url: { url: "{{image1_url}}" },
+              },
+              { type: "text", text: "and" },
+              {
+                type: "image_url",
+                image_url: { url: "{{image2_url}}" },
+              },
+              { type: "text", text: "What are the main differences?" },
+            ],
+          },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "image-comparison",
+          messages: messages,
+          projectName: "my-project",
+        });
+
+        const formatted = chatPrompt.format(
+          {
+            image1_url: "https://example.com/before.jpg",
+            image2_url: "https://example.com/after.jpg",
+          },
+          { vision: true }
+        );
+        ```
+
+    </Tab>
+</Tabs>
+
+<Note>
+格式化多模态 prompt 时，你可以指定 `supported_modalities` 来控制内容如何渲染：
+
+- 如果支持某种模态（例如 `{"vision": True}`），结构化内容将被保留
+- 如果不支持某种模态，它将被文本占位符替换（例如 `<<<image>>><<</image>>>`）
+
+这允许你将相同的 prompt 模板用于可能支持或不支持某些模态的不同模型。
+</Note>
+
+### 使用底层 SDK 管理聊天 prompt
+
+你也可以使用底层 Python SDK 直接创建和管理聊天 prompt。
+
+<Note>
+**何时使用客户端方法 vs. 类：**
+
+- **使用 `ChatPrompt()` 或 `Prompt()` 类**（推荐）：对于大多数用例，这些类自动使用 `opik.configure()` 设置的全局 Opik 配置。
+
+- **使用 `client.create_chat_prompt()` 或 `client.create_prompt()`**：当你需要使用与全局配置不同的特定客户端配置时（例如不同的工作区、主机或 API 密钥）。
+</Note>
+
+#### 创建聊天 prompt
+
+<Tabs>
+    <Tab value="Python SDK" title="Python SDK">
+        使用 [`Opik.create_chat_prompt`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.create_chat_prompt) 创建聊天 prompt：
+
+        ```python
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 创建新的聊天 prompt
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello, {{name}}!"}
+        ]
+
+        chat_prompt = client.create_chat_prompt(
+            name="greeting-prompt",
+            messages=messages,
+            metadata={"environment": "development"},
+            project_name="my-project"
+        )
+
+        # 格式化并使用 prompt
+        formatted = chat_prompt.format(variables={"name": "Alice"})
+        print(formatted)
+        ```
+    </Tab>
+    <Tab value="TypeScript SDK" title="TypeScript SDK">
+        使用 `ChatPrompt` 创建聊天 prompt：
+
+        ```typescript
+        import { ChatPrompt } from "opik";
+
+        // 创建新的聊天 prompt
+        const messages = [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: "Hello, {{name}}!" },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "greeting-prompt",
+          messages: messages,
+          metadata: { environment: "development" },
+          projectName: "my-project",
+        });
+
+        // 格式化并使用 prompt
+        const formatted = chatPrompt.format({ name: "Alice" });
+        console.log(formatted);
+        ```
+    </Tab>
+    <Tab value="使用 UI" title="使用 UI">
+        你可以通过导航到 Prompt 库并点击 `Create new prompt` 在 UI 中创建聊天 prompt。选择 "Chat prompt" 作为 prompt 类型，然后输入 prompt 名称，添加不同角色（system、user、assistant）的聊天消息，并可选添加元数据。
+
+        <Frame>
+            <img src="/img/prompt_engineering/create_chat_prompt.png" />
+        </Frame>
+
+        你也可以通过点击库中的 prompt 名称并点击 `Edit prompt` 来编辑聊天 prompt。
+    </Tab>
+</Tabs>
+
+#### 下载聊天 prompt
+
+在库中创建聊天 prompt 后，你可以在代码中下载它：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        使用 [`Opik.get_chat_prompt`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_chat_prompt) 方法：
+
+        ```python
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 获取聊天 prompt
+        chat_prompt = client.get_chat_prompt(name="greeting-prompt")
+
+        # 格式化消息
+        formatted_messages = chat_prompt.format(variables={"name": "Bob"})
+
+        # 与你的 LLM 一起使用
+        # response = llm.chat(messages=formatted_messages)
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        使用 `getChatPrompt` 方法：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+
+        // 获取聊天 prompt
+        const chatPrompt = await client.getChatPrompt({ name: "greeting-prompt" });
+
+        if (chatPrompt) {
+          // 格式化消息
+          const formattedMessages = chatPrompt.format({ name: "Bob" });
+
+          // 与你的 LLM 一起使用
+          // const response = await llm.chat(formattedMessages);
+        }
+        ```
+    </Tab>
+</Tabs>
+
+#### 搜索聊天 prompt
+
+你可以使用 `template_structure` 过滤器专门搜索聊天 prompt：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        使用带过滤器的 [`Opik.search_prompts`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_prompts)：
+
+        ```python
+        import opik
+
+        client = opik.Opik()
+
+        # 仅搜索聊天 prompt
+        chat_prompts = client.search_prompts(
+            filter_string='template_structure = "chat" AND name contains "assistant"'
+        )
+
+        for prompt in chat_prompts:
+            print(f"Chat prompt: {prompt.name}")
+            print(f"Messages: {prompt.template}")
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        使用带过滤器的 `searchPrompts`：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+
+        // 仅搜索聊天 prompt
+        const chatPrompts = await client.searchPrompts(
+          'template_structure = "chat" AND name contains "assistant"'
+        );
+
+        for (const prompt of chatPrompts) {
+          console.log(`Chat prompt: ${prompt.name}`);
+          console.log(`Messages: ${prompt.messages}`);
+        }
+        ```
+    </Tab>
+</Tabs>
+
+要仅搜索文本 prompt，使用 `template_structure = "text"`。不使用过滤器时，`search_prompts` 返回文本和聊天 prompt。
+
+`filter_string` 参数使用 Opik 查询语言（OQL），支持与文本 prompt 相同的列和运算符（参见上文[搜索 prompt](#搜索-prompt)）。
+
+### 聊天 prompt 的模板类型
+
+聊天 prompt 支持两种模板类型用于变量替换。
+
+#### Mustache（默认）
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        ```python
+        import opik
+        from opik.api_objects.prompt import PromptType
+
+        messages = [
+            {"role": "user", "content": "Hello {{name}}, you live in {{city}}."}
+        ]
+
+        chat_prompt = opik.ChatPrompt(
+            name="mustache-example",
+            messages=messages,
+            type=PromptType.MUSTACHE,  # 默认
+            project_name="my-project"
+        )
+
+        formatted = chat_prompt.format(variables={"name": "Alice", "city": "Paris"})
+        # 结果：[{"role": "user", "content": "Hello Alice, you live in Paris."}]
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        ```typescript
+        import { ChatPrompt, PromptType } from "opik";
+
+        const messages = [
+          { role: "user", content: "Hello {{name}}, you live in {{city}}." },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "mustache-example",
+          messages: messages,
+          type: PromptType.MUSTACHE, // 默认
+          projectName: "my-project",
+        });
+
+        const formatted = chatPrompt.format({ name: "Alice", city: "Paris" });
+        // 结果：[{ role: "user", content: "Hello Alice, you live in Paris." }]
+        ```
+    </Tab>
+</Tabs>
+
+#### Jinja2
+
+用于更高级的模板功能，包括条件、循环和过滤器：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        ```python
+        import opik
+        from opik.api_objects.prompt import PromptType
+
+        messages = [
+            {
+                "role": "user",
+                "content": """
+                {% if is_premium %}
+                Hello {{ name }}, welcome to our premium service!
+                {% else %}
+                Hello {{ name }}, welcome!
+                {% endif %}
+                """
+            }
+        ]
+
+        chat_prompt = opik.ChatPrompt(
+            name="jinja-example",
+            messages=messages,
+            type=PromptType.JINJA2,
+            project_name="my-project"
+        )
+
+        # 高级用户
+        formatted = chat_prompt.format(
+            variables={"name": "Alice", "is_premium": True}
+        )
+        # 结果包含："Hello Alice, welcome to our premium service!"
+
+        # 普通用户
+        formatted = chat_prompt.format(
+            variables={"name": "Bob", "is_premium": False}
+        )
+        # 结果包含："Hello Bob, welcome!"
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        ```typescript
+        import { ChatPrompt, PromptType } from "opik";
+
+        const messages = [
+          {
+            role: "user",
+            content: `
+              {% if is_premium %}
+              Hello {{ name }}, welcome to our premium service!
+              {% else %}
+              Hello {{ name }}, welcome!
+              {% endif %}
+            `,
+          },
+        ];
+
+        const chatPrompt = new ChatPrompt({
+          name: "jinja-example",
+          messages: messages,
+          type: PromptType.JINJA2,
+          projectName: "my-project",
+        });
+
+        // 高级用户
+        const formatted1 = chatPrompt.format({
+          name: "Alice",
+          is_premium: true,
+        });
+        // 结果包含："Hello Alice, welcome to our premium service!"
+
+        // 普通用户
+        const formatted2 = chatPrompt.format({
+          name: "Bob",
+          is_premium: false,
+        });
+        // 结果包含："Hello Bob, welcome!"
+        ```
+    </Tab>
+</Tabs>
+
+<Note>
+Jinja2 模板支持条件、循环和过滤器等高级功能，使其对复杂的 prompt 逻辑更加强大。然而，Mustache 模板更简单且更易移植。
+</Note>
+
+### 聊天 prompt 版本控制
+
+聊天 prompt 在消息更改时自动进行版本控制。每个版本都有唯一的 commit ID。
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        ```python
+        import opik
+
+        # 创建初始版本
+        messages_v1 = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "Hi!"}
+        ]
+
+        chat_prompt_v1 = opik.ChatPrompt(
+            name="assistant-prompt",
+            messages=messages_v1,
+            project_name="my-project"
+        )
+
+        print(f"Version 1 commit: {chat_prompt_v1.commit}")
+
+        # 创建具有不同消息的新版本
+        messages_v2 = [
+            {"role": "system", "content": "You are very helpful."},
+            {"role": "user", "content": "Hello there!"},
+            {"role": "assistant", "content": "How can I assist you?"}
+        ]
+
+        chat_prompt_v2 = opik.ChatPrompt(
+            name="assistant-prompt",
+            messages=messages_v2,
+            project_name="my-project"
+        )
+
+        print(f"Version 2 commit: {chat_prompt_v2.commit}")
+
+        # 按 commit 获取特定版本
+        client = opik.Opik()
+        specific_version = client.get_chat_prompt(
+            name="assistant-prompt",
+            commit=chat_prompt_v1.commit
+        )
+
+        # 获取版本历史
+        history = client.get_chat_prompt_history(name="assistant-prompt")
+        print(f"Total versions: {len(history)}")
+        ```
+
+        你可以使用 [`get_chat_prompt`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_chat_prompt) 按 commit ID 检索特定版本，使用 [`get_chat_prompt_history`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_chat_prompt_history) 获取所有版本。
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        ```typescript
+        import { ChatPrompt, Opik } from "opik";
+
+        // 创建初始版本
+        const messagesV1 = [
+          { role: "system", content: "You are helpful." },
+          { role: "user", content: "Hi!" },
+        ];
+
+        const chatPromptV1 = new ChatPrompt({
+          name: "assistant-prompt",
+          messages: messagesV1,
+          projectName: "my-project",
+        });
+
+        console.log(`Version 1 commit: ${chatPromptV1.commit}`);
+
+        // 创建具有不同消息的新版本
+        const messagesV2 = [
+          { role: "system", content: "You are very helpful." },
+          { role: "user", content: "Hello there!" },
+          { role: "assistant", content: "How can I assist you?" },
+        ];
+
+        const chatPromptV2 = new ChatPrompt({
+          name: "assistant-prompt",
+          messages: messagesV2,
+          projectName: "my-project",
+        });
+
+        console.log(`Version 2 commit: ${chatPromptV2.commit}`);
+
+        // 按 commit 获取特定版本
+        const client = new Opik();
+        const specificVersion = await client.getChatPrompt({
+          name: "assistant-prompt",
+          commit: chatPromptV1.commit,
+        });
+
+        // 获取版本历史
+        const versions = await chatPromptV1.getVersions();
+        console.log(`Total versions: ${versions.length}`);
+        ```
+
+        你可以使用带 commit 参数的 `getChatPrompt` 检索特定版本，使用 `getVersions()` 方法获取所有版本。
+    </Tab>
+</Tabs>
+
+<Tip>
+如果你创建的聊天 prompt 与现有版本具有相同的消息，Opik 将返回现有版本而不是创建重复项。这有助于避免不必要的版本膨胀。
+</Tip>
+
+### Prompt 结构不可变性
+
+一旦你创建了具有特定结构（文本或聊天）的 prompt，该结构就无法更改。这确保了一致性并防止意外混合 prompt 类型。
+
+```python
+import opik
+
+# 创建聊天 prompt
+chat_prompt = opik.ChatPrompt(
+    name="my-prompt",
+    messages=[{"role": "user", "content": "Hello"}],
+    project_name="my-project"
+)
+
+# 尝试创建同名的文本 prompt 将引发错误
+try:
+    text_prompt = opik.Prompt(
+        name="my-prompt",
+        prompt="Hello {{name}}",
+        project_name="my-project"
+    )
+except opik.exceptions.PromptTemplateStructureMismatch as e:
+    print("Error: Cannot change prompt structure from chat to text")
+```
+
+类似地，如果你先创建了文本 prompt，就不能后来创建同名的聊天 prompt。
+
+[`Prompt`](https://www.comet.com/docs/opik/python-sdk-reference/library/Prompt.html) 和 [`ChatPrompt`](https://www.comet.com/docs/opik/python-sdk-reference/library/ChatPrompt.html) 类在你尝试更改现有 prompt 的结构时都会引发 [`PromptTemplateStructureMismatch`](https://www.comet.com/docs/opik/python-sdk-reference/exceptions.html#opik.exceptions.PromptTemplateStructureMismatch) 异常。
+
+## 使用 prompt 版本
+
+### 查看 prompt 历史（所有版本）
+
+<Tabs>
+    <Tab value="文本 prompt" title="文本 prompt">
+        对文本 prompt 使用 [`get_prompt_history`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_prompt_history)：
+
+        ```python maxLines=1000
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 获取文本 prompt 的完整版本历史
+        prompt_history = client.get_prompt_history(name="prompt-summary")
+
+        # 遍历所有版本
+        for version in prompt_history:
+            print(f"Name: {version.name}")
+            print(f"Commit: {version.commit}")
+            print(f"Prompt text: {version.prompt}")
+            print(f"Metadata: {version.metadata}")
+            print(f"Type: {version.type}")
+            print("-" * 50)
+        ```
+
+        这返回给定 prompt 名称的 Prompt 对象列表（每个代表一个特定版本）。
+    </Tab>
+    <Tab value="聊天 prompt" title="聊天 prompt">
+        对聊天 prompt 使用 [`get_chat_prompt_history`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_chat_prompt_history)：
+
+        ```python maxLines=1000
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 获取聊天 prompt 的完整版本历史
+        chat_prompt_history = client.get_chat_prompt_history(name="assistant-prompt")
+
+        # 遍历所有版本
+        for version in chat_prompt_history:
+            print(f"Name: {version.name}")
+            print(f"Commit: {version.commit}")
+            print(f"Messages: {version.template}")
+            print(f"Metadata: {version.metadata}")
+            print(f"Type: {version.type}")
+            print("-" * 50)
+        ```
+
+        这返回给定 prompt 名称的 ChatPrompt 对象列表（每个代表一个特定版本）。
+    </Tab>
+</Tabs>
+
+你可以使用这些信息来：
+
+- **审计更改** — 了解 prompt 如何演变
+- **识别最佳性能版本** — 通过将 commit ID 与实验结果关联
+- **记录 prompt 更改** — 用于合规或审查目的
+- **检索特定版本** — 按 commit ID 用于测试或回滚
+
+### 访问特定 prompt 版本
+
+<Tabs>
+    <Tab value="文本 prompt" title="文本 prompt">
+        使用 [`get_prompt`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_prompt) 的 `commit` 参数：
+
+        ```python maxLines=1000
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 按 commit ID 获取文本 prompt 的特定版本
+        prompt = client.get_prompt(name="prompt-summary", commit="abc123def456")
+
+        # 在应用中使用 prompt
+        formatted_prompt = prompt.format(text="Hello, world!")
+        print(formatted_prompt)
+        ```
+    </Tab>
+    <Tab value="聊天 prompt" title="聊天 prompt">
+        使用 [`get_chat_prompt`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_chat_prompt) 的 `commit` 参数：
+
+        ```python maxLines=1000
+        import opik
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 按 commit ID 获取聊天 prompt 的特定版本
+        chat_prompt = client.get_chat_prompt(name="assistant-prompt", commit="abc123def456")
+
+        # 在应用中使用 prompt
+        formatted_messages = chat_prompt.format(variables={"name": "Alice"})
+        print(formatted_messages)
+        ```
+    </Tab>
+</Tabs>
+
+`commit` 参数接受你要检索的特定 prompt 版本的 commit ID。你可以在 Opik UI 中的 prompt 历史中找到 commit ID，或使用 `get_prompt_history` 或 `get_chat_prompt_history` 方法（见上文）。
+
+这在以下情况特别有用：
+- **固定到特定版本** — 在生产中确保一致行为
+- **并排测试不同版本** — 在实验中
+- **回滚** — 如果发现问题
+- **比较结果** — 跨不同 prompt 版本
+
+## Prompt 版本标签
+
+Opik 支持两个级别的标签，服务于不同目的：
+
+- **Prompt 容器标签** — 应用于整个 prompt（所有版本共享）。创建或更新 prompt 时通过 `tags` 参数设置。用于搜索和组织 prompt，在[搜索 prompt](#搜索-prompt)部分介绍。
+- **Prompt 版本标签** — 应用于特定版本。创建版本后通过 `batch_update_prompt_version_tags` / `updatePromptVersionTags` API 设置。允许你标记个别里程碑（例如 "production"、"stable"、"deprecated"）并过滤版本历史。
+
+本节介绍 **prompt 版本标签**（每版本的那些）。
+
+### 从 UI 管理标签
+
+#### Prompt 页面和 commit 历史
+
+当你从库中打开 prompt 时，prompt 页面显示其完整的 commit 历史 — 每个版本作为一行列出，包含 commit ID、创建日期和分配的任何标签：
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_commits_history.png" />
+</Frame>
+
+#### Commits 表
+
+Commits 表提供了 prompt 所有版本的详细视图。每行显示 commit ID、模板预览、更改描述、作者、创建日期和附加到该版本的标签。你可以通过点击任何行的标签编辑器直接从此表添加或删除标签：
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_version_tags.png" />
+</Frame>
+
+#### 过滤 commits 表
+
+commits 表支持过滤，以便你可以按标签、模板内容、作者或其他字段快速查找版本。使用表上方的过滤控件应用一个或多个过滤器：
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_commits_table_filter.png" />
+</Frame>
+
+#### 比较视图
+
+选择要比较的版本时，下拉菜单列出所有版本，标签内联显示，便于无需逐一打开每个版本即可识别正确的候选：
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_version_compare_dropdown.png" />
+</Frame>
+
+选择两个版本后，它们的标签显示在比较对话框中 commit ID 和更改描述旁边：
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_version_comparison_tags.png" />
+</Frame>
+
+### 批量更新标签
+
+使用批量更新 API 高效地一次更新一个或多个 prompt 版本的标签。当你想将版本提升到生产环境或在发布后清理标签时，这尤其有用。
+
+有两种更新模式：
+
+- **替换模式**（默认）：用新集合替换所有现有标签
+- **合并模式**：将新标签添加到现有标签（并集）
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        通过 `get_prompts_client()` 从 Opik 客户端访问 `PromptClient`，然后调用 [`batch_update_prompt_version_tags`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_prompts_client)：
+
+        ```python
+        import opik
+
+        client = opik.Opik()
+
+        # 从 prompt 历史获取版本 ID
+        history = client.get_prompt_history(name="summarizer")
+        version_id = history[0].version_id  # 最新版本
+
+        prompts_client = client.get_prompts_client()
+
+        # 替换所有标签（默认行为）
+        prompts_client.batch_update_prompt_version_tags(
+            version_ids=[version_id],
+            tags=["production", "v2"]
+        )
+
+        # 将新标签与现有标签合并
+        prompts_client.batch_update_prompt_version_tags(
+            version_ids=[version_id],
+            tags=["hotfix"],
+            merge=True
+        )
+
+        # 通过传递空列表清除所有标签
+        prompts_client.batch_update_prompt_version_tags(
+            version_ids=[version_id],
+            tags=[]
+        )
+
+        # 一次更新多个版本
+        version_ids = [v.version_id for v in history[:3]]
+        prompts_client.batch_update_prompt_version_tags(
+            version_ids=version_ids,
+            tags=["archived"]
+        )
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        使用 `client.updatePromptVersionTags()`：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+
+        // 从 prompt 历史获取版本 ID
+        const prompt = await client.getPrompt({ name: "summarizer" });
+        const versions = await prompt.getVersions();
+        const versionId = versions[0].id; // 最新版本
+
+        // 替换所有标签（默认行为）
+        await client.updatePromptVersionTags([versionId], {
+          tags: ["production", "v2"],
+        });
+
+        // 将新标签与现有标签合并
+        await client.updatePromptVersionTags([versionId], {
+          tags: ["hotfix"],
+          mergeTags: true,
+        });
+
+        // 通过传递空数组清除所有标签
+        await client.updatePromptVersionTags([versionId], {
+          tags: [],
+        });
+
+        // 一次更新多个版本
+        const versionIds = versions.slice(0, 3).map((v) => v.id);
+        await client.updatePromptVersionTags(versionIds, {
+          tags: ["archived"],
+        });
+        ```
+    </Tab>
+</Tabs>
+
+### 搜索、过滤和排序版本历史
+
+你可以搜索、过滤和排序 prompt 版本历史以查找特定版本。
+
+#### 搜索
+
+`search` 对模板内容和更改描述字段执行自由文本匹配：
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        ```python
+        import opik
+
+        client = opik.Opik()
+
+        # 查找模板或更改描述包含 "customer" 的版本
+        results = client.get_prompt_history(name="summarizer", search="customer")
+
+        # 对聊天 prompt 同样有效
+        chat_results = client.get_chat_prompt_history(name="assistant", search="helpful")
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+        const prompt = await client.getPrompt({ name: "summarizer" });
+
+        // 查找模板或更改描述包含 "customer" 的版本
+        const results = await prompt.getVersions({ search: "customer" });
+        ```
+    </Tab>
+</Tabs>
+
+#### 过滤
+
+使用 `filter_string`（Python OQL）或 `filters`（TypeScript JSON 数组）按任何版本字段缩小结果。
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        ```python
+        import opik
+
+        client = opik.Opik()
+
+        # 按标签过滤
+        production_versions = client.get_prompt_history(
+            name="summarizer",
+            filter_string='tags contains "production"'
+        )
+
+        # 按多个标签过滤（AND 逻辑）
+        stable_production = client.get_prompt_history(
+            name="summarizer",
+            filter_string='tags contains "production" AND tags contains "stable"'
+        )
+
+        # 按模板内容过滤
+        customer_versions = client.get_prompt_history(
+            name="summarizer",
+            filter_string='template contains "customer"'
+        )
+
+        # 按创建者过滤
+        my_versions = client.get_prompt_history(
+            name="summarizer",
+            filter_string='created_by = "alice@example.com"'
+        )
+
+        # 按日期过滤
+        recent_versions = client.get_prompt_history(
+            name="summarizer",
+            filter_string='created_at >= "2024-01-01T00:00:00Z"'
+        )
+
+        # 按元数据字段过滤（点表示法）
+        prod_env = client.get_prompt_history(
+            name="summarizer",
+            filter_string='metadata.environment = "prod"'
+        )
+
+        # 组合搜索和过滤
+        results = client.get_prompt_history(
+            name="summarizer",
+            search="customer",
+            filter_string='tags contains "production"'
+        )
+
+        # 对聊天 prompt 使用相同的 API
+        chat_production = client.get_chat_prompt_history(
+            name="assistant",
+            filter_string='tags contains "production"'
+        )
+
+        for version in production_versions:
+            print(f"Commit: {version.commit}, Tags: {version.tags}")
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+        const prompt = await client.getPrompt({ name: "summarizer" });
+
+        // 按标签过滤
+        const productionVersions = await prompt.getVersions({
+          filters: JSON.stringify([
+            { field: "tags", operator: "contains", value: "production" },
+          ]),
+        });
+
+        // 按多个标签过滤（AND 逻辑）
+        const stableProduction = await prompt.getVersions({
+          filters: JSON.stringify([
+            { field: "tags", operator: "contains", value: "production" },
+            { field: "tags", operator: "contains", value: "stable" },
+          ]),
+        });
+
+        // 按模板内容过滤
+        const customerVersions = await prompt.getVersions({
+          filters: JSON.stringify([
+            { field: "template", operator: "contains", value: "customer" },
+          ]),
+        });
+
+        // 按创建者过滤
+        const myVersions = await prompt.getVersions({
+          filters: JSON.stringify([
+            { field: "created_by", operator: "=", value: "alice@example.com" },
+          ]),
+        });
+
+        // 按日期过滤
+        const recentVersions = await prompt.getVersions({
+          filters: JSON.stringify([
+            { field: "created_at", operator: ">=", value: "2024-01-01T00:00:00Z" },
+          ]),
+        });
+
+        // 组合搜索和过滤
+        const results = await prompt.getVersions({
+          search: "customer",
+          filters: JSON.stringify([
+            { field: "tags", operator: "contains", value: "production" },
+          ]),
+        });
+
+        for (const version of productionVersions) {
+          console.log(`Commit: ${version.commit}, Tags: ${version.tags}`);
+        }
+        ```
+    </Tab>
+</Tabs>
+
+**版本过滤支持的字段：**
+
+| 列 | 类型 | 支持的运算符 | 备注 |
+|--------|------|---------------------|-------|
+| `id` | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` | |
+| `commit` | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` | |
+| `template` | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` | |
+| `change_description` | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` | |
+| `created_by` | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` | |
+| `type` | Enum | `=`, `!=` | 值：`"mustache"`、`"jinja2"` |
+| `tags` | List | `contains` | 多个条目需要所有标签（AND 逻辑） |
+| `created_at` | DateTime | `>=`, `<=`, `>`, `<` | ISO 8601 格式：`"2024-01-01T00:00:00Z"` |
+| `metadata` | Dict | `=`, `!=` | 仅 Python。使用点表示法：`metadata.environment = "prod"` |
+
+对于 Python，条件在 OQL 字符串中用 `AND` 组合。对于 TypeScript，向过滤数组添加多个对象。
+
+#### 排序（仅 TypeScript）
+
+<Note>
+排序目前仅在 TypeScript SDK 中支持。Python 的 `get_prompt_history` 和 `get_chat_prompt_history` 始终返回最新版本在前。
+</Note>
+
+使用 `sorting` 选项和 JSON 编码的排序数组。每个条目指定一个 `field` 和 `direction`（`"ASC"` 或 `"DESC"`）：
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+const prompt = await client.getPrompt({ name: "summarizer" });
+
+// 按模板内容字母排序
+const alphabetical = await prompt.getVersions({
+  sorting: JSON.stringify([{ field: "template", direction: "ASC" }]),
+});
+
+// 按创建日期排序（最旧的在前）
+const oldest = await prompt.getVersions({
+  sorting: JSON.stringify([{ field: "created_at", direction: "ASC" }]),
+});
+
+// 组合排序和过滤
+const sorted = await prompt.getVersions({
+  filters: JSON.stringify([
+    { field: "tags", operator: "contains", value: "production" },
+  ]),
+  sorting: JSON.stringify([{ field: "created_at", direction: "DESC" }]),
+});
+```
+
+可排序字段包括：`id`、`commit`、`template`、`change_description`、`created_by`、`type`、`created_at`。
+
+### 示例：将版本提升到生产环境
+
+以下端到端示例展示了一个常见工作流程：创建新的 prompt 版本，然后通过将其标记为 `production` 来提升表现最佳的版本。
+
+<Tabs>
+    <Tab value="Python" title="Python">
+        ```python
+        import opik
+
+        client = opik.Opik()
+        prompts_client = client.get_prompts_client()
+
+        # 创建新版本
+        candidate = opik.Prompt(
+            name="summarizer",
+            prompt="Provide a concise summary of: {{text}}",
+            project_name="my-project"
+        )
+
+        # ... 在此运行你的评估逻辑 ...
+        # 假设评估通过，我们想提升此版本
+
+        # 提升到生产环境（使用 version_id 定位特定版本）
+        prompts_client.batch_update_prompt_version_tags(
+            version_ids=[candidate.version_id],
+            tags=["production", "v3"]
+        )
+
+        # 归档之前的生产版本
+        old_production = client.get_prompt_history(
+            name="summarizer",
+            filter_string='tags contains "production"'
+        )
+        older_version_ids = [
+            v.version_id for v in old_production
+            if v.version_id != candidate.version_id
+        ]
+        if older_version_ids:
+            prompts_client.batch_update_prompt_version_tags(
+                version_ids=older_version_ids,
+                tags=["archived"]
+            )
+        ```
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+        ```typescript
+        import { Opik, Prompt } from "opik";
+
+        const client = new Opik();
+
+        // 创建新版本
+        const candidate = new Prompt({
+          name: "summarizer",
+          prompt: "Provide a concise summary of: {{text}}",
+          projectName: "my-project",
+        });
+
+        // ... 在此运行你的评估逻辑 ...
+        // 假设评估通过，我们想提升此版本
+
+        // 提升到生产环境（versionId 定位特定版本）
+        await client.updatePromptVersionTags([candidate.versionId], {
+          tags: ["production", "v3"],
+        });
+
+        // 归档之前的生产版本
+        const allVersions = await candidate.getVersions({
+          filters: JSON.stringify([
+            { field: "tags", operator: "contains", value: "production" },
+          ]),
+        });
+        const olderVersionIds = allVersions
+          .filter((v) => v.id !== candidate.versionId)
+          .map((v) => v.id);
+
+        if (olderVersionIds.length > 0) {
+          await client.updatePromptVersionTags(olderVersionIds, {
+            tags: ["archived"],
+          });
+        }
+        ```
+    </Tab>
+</Tabs>
+
+## 在实验中使用 prompt
+
+### 将 prompt 链接到实验
+
+<Tabs>
+    <Tab value="文本 prompt" title="文本 prompt">
+        ```python maxLines=1000
+        import opik
+        from opik.evaluation import evaluate
+        from opik.evaluation.metrics import Hallucination
+        from openai import OpenAI
+
+        opik.configure()
+        opik_client = opik.Opik()
+        openai_client = OpenAI()
+
+        # 获取数据集
+        dataset = opik_client.get_or_create_dataset("test_dataset", project_name="my-project")
+
+        # 创建文本 prompt
+        prompt = opik.Prompt(name="My prompt", prompt="Summarize: {{text}}", project_name="my-project")
+
+        # 创建评估任务
+        def evaluation_task(dataset_item):
+            # 在任务中使用 prompt
+            formatted_prompt = prompt.format(text=dataset_item["input"])
+            
+            # 使用格式化后的 prompt 调用 OpenAI API
+            response = openai_client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": formatted_prompt}]
+            )
+            
+            return {"output": response.choices[0].message.content}
+
+        # 运行评估
+        evaluation = evaluate(
+            experiment_name="My experiment",
+            dataset=dataset,
+            task=evaluation_task,
+            prompts=[prompt],
+            project_name="my-project",
+        )
+        ```
+    </Tab>
+    <Tab value="聊天 prompt" title="聊天 prompt">
+        ```python maxLines=1000
+        import opik
+        from opik.evaluation import evaluate
+        from opik.evaluation.metrics import Hallucination
+        from openai import OpenAI
+
+        opik.configure()
+        opik_client = opik.Opik()
+        openai_client = OpenAI()
+
+        # 获取数据集
+        dataset = opik_client.get_or_create_dataset("test_dataset", project_name="my-project")
+
+        # 创建聊天 prompt
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Summarize: {{text}}"}
+        ]
+        chat_prompt = opik.ChatPrompt(name="My chat prompt", messages=messages, project_name="my-project")
+
+        # 创建评估任务
+        def evaluation_task(dataset_item):
+            # 在任务中使用聊天 prompt
+            formatted_messages = chat_prompt.format(
+                variables={"text": dataset_item["input"]}
+            )
+            
+            # 使用格式化后的消息调用 OpenAI API
+            response = openai_client.chat.completions.create(
+                model="gpt-4",
+                messages=formatted_messages
+            )
+            
+            return {"output": response.choices[0].message.content}
+
+        # 运行评估
+        evaluation = evaluate(
+            experiment_name="My experiment",
+            dataset=dataset,
+            task=evaluation_task,
+            prompts=[chat_prompt],
+            project_name="my-project",
+        )
+        ```
+    </Tab>
+</Tabs>
+
+实验现在将链接到 prompt，允许你查看使用特定 prompt 的所有实验：
+
+<Frame>
+  <img src="/img/evaluation/linked_prompt.png" />
+</Frame>
+
+### 在实验中比较 prompt 版本
+
+<Tabs>
+    <Tab value="文本 prompt" title="文本 prompt">
+        ```python maxLines=1000
+        import opik
+        from opik.evaluation import evaluate
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 获取数据集
+        dataset = client.get_or_create_dataset("test_dataset", project_name="my-project")
+
+        # 获取同一文本 prompt 的不同版本
+        prompt_v1 = client.get_prompt(name="prompt-summary", commit="abc123")
+        prompt_v2 = client.get_prompt(name="prompt-summary", commit="def456")
+
+        # 定义使用 prompt 的评估任务
+        def evaluation_task_v1(dataset_item):
+            formatted_prompt = prompt_v1.format(text=dataset_item["input"])
+            # 使用格式化后的 prompt 调用你的 LLM
+            return {"output": "llm_response"}
+        
+        def evaluation_task_v2(dataset_item):
+            formatted_prompt = prompt_v2.format(text=dataset_item["input"])
+            # 使用格式化后的 prompt 调用你的 LLM
+            return {"output": "llm_response"}
+
+        # 使用不同 prompt 版本运行实验
+        experiment_v1 = evaluate(
+            experiment_name="My experiment - v1",
+            dataset=dataset,
+            task=evaluation_task_v1,
+            prompts=[prompt_v1],
+            project_name="my-project",
+        )
+
+        experiment_v2 = evaluate(
+            experiment_name="My experiment - v2",
+            dataset=dataset,
+            task=evaluation_task_v2,
+            prompts=[prompt_v2],
+            project_name="my-project",
+        )
+
+        # 在 Opik UI 中比较结果
+        ```
+    </Tab>
+    <Tab value="聊天 prompt" title="聊天 prompt">
+        ```python maxLines=1000
+        import opik
+        from opik.evaluation import evaluate
+
+        opik.configure()
+        client = opik.Opik()
+
+        # 获取数据集
+        dataset = client.get_or_create_dataset("test_dataset", project_name="my-project")
+
+        # 获取同一聊天 prompt 的不同版本
+        chat_prompt_v1 = client.get_chat_prompt(name="assistant-prompt", commit="abc123")
+        chat_prompt_v2 = client.get_chat_prompt(name="assistant-prompt", commit="def456")
+
+        # 定义使用 prompt 的评估任务
+        def evaluation_task_v1(dataset_item):
+            formatted_messages = chat_prompt_v1.format(
+                variables={"text": dataset_item["input"]}
+            )
+            # 使用格式化后的消息调用你的 LLM
+            return {"output": "llm_response"}
+        
+        def evaluation_task_v2(dataset_item):
+            formatted_messages = chat_prompt_v2.format(
+                variables={"text": dataset_item["input"]}
+            )
+            # 使用格式化后的消息调用你的 LLM
+            return {"output": "llm_response"}
+
+        # 使用不同聊天 prompt 版本运行实验
+        experiment_v1 = evaluate(
+            experiment_name="My experiment - v1",
+            dataset=dataset,
+            task=evaluation_task_v1,
+            prompts=[chat_prompt_v1],
+            project_name="my-project",
+        )
+
+        experiment_v2 = evaluate(
+            experiment_name="My experiment - v2",
+            dataset=dataset,
+            task=evaluation_task_v2,
+            prompts=[chat_prompt_v2],
+            project_name="my-project",
+        )
+
+        # 在 Opik UI 中比较结果
+        ```
+    </Tab>
+</Tabs>
+
+此工作流程允许你系统地测试和比较不同的 prompt 版本，以确定最适合你用例的版本。

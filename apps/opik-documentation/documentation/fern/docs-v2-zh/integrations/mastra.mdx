@@ -1,0 +1,280 @@
+---
+description: 从这里开始将 Opik 集成到您的 Mastra 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Mastra | Opik 文档
+og:description: 使用 Mastra 的 TypeScript 框架构建 AI 应用。无缝捕获遥测数据、实现工作流并增强记忆集成。
+og:site_name: Opik 文档
+og:title: 'Mastra: AI Agent 框架 - Opik'
+title: 使用 Opik 实现 Mastra 可观测性
+---
+
+Mastra 是一个 TypeScript Agent 框架，旨在为构建 AI 应用提供核心基础能力。它支持开发者创建具有记忆和工具调用能力的 AI Agent，实现确定性的 LLM 工作流，并利用 RAG 进行知识集成。
+
+Mastra 的主要优势在于其内置的遥测支持，能够自动捕获 Agent 交互、LLM 调用和工作流执行，从而方便地监控和调试 AI 应用。
+
+<Frame>
+  <img src="/img/tracing/mastra_integration.png" alt="Mastra tracing" />
+</Frame>
+
+## 快速开始
+
+### 创建 Mastra 项目
+
+如果您还没有 Mastra 项目，可以使用 Mastra CLI 创建一个：
+
+```bash
+npx create-mastra
+cd your-mastra-project
+```
+
+### 安装依赖包
+
+安装 Mastra 可观测性所需的依赖：
+
+```bash
+npm install @mastra/observability @mastra/otel
+```
+
+### 添加环境变量
+
+创建或更新 `.env` 文件，添加以下变量：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        # Your LLM API key
+        OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+
+        # Opik configuration
+        OPIK_API_KEY=<your-opik-api-key>
+        OPIK_WORKSPACE_NAME=<your-workspace>
+        OPIK_PROJECT_NAME=<your-project-name>
+        ```
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        # Your LLM API key
+        OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+
+        # Opik configuration
+        OPIK_API_KEY=<your-opik-api-key>
+        OPIK_WORKSPACE_NAME=<your-workspace>
+        OPIK_PROJECT_NAME=<your-project-name>
+        ```
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash
+        # Your LLM API key
+        OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+
+        # Opik configuration
+        OPIK_PROJECT_NAME=<your-project-name>
+        ```
+    </Tab>
+</Tabs>
+
+## 设置 Agent
+
+在项目中创建一个 Agent。例如，创建文件 `src/mastra/index.ts`：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```typescript
+        import { Mastra } from "@mastra/core/mastra";
+        import { Observability } from "@mastra/observability";
+        import { OtelExporter } from "@mastra/otel";
+        import { PinoLogger } from "@mastra/loggers";
+        import { LibSQLStore } from "@mastra/libsql";
+        import { Agent } from "@mastra/core/agent";
+        import { openai } from "@ai-sdk/openai";
+
+        const OPIK_API_KEY = process.env.OPIK_API_KEY!;
+        const OPIK_WORKSPACE_NAME = process.env.OPIK_WORKSPACE_NAME!;
+        const OPIK_PROJECT_NAME = process.env.OPIK_PROJECT_NAME!;
+
+        export const chefAgent = new Agent({
+          name: "chef-agent",
+          instructions:
+            "You are Michel, a practical and experienced home chef " +
+            "You help people cook with whatever ingredients they have available.",
+          model: openai("gpt-4o-mini"),
+        });
+
+        export const mastra = new Mastra({
+          agents: { chefAgent },
+          storage: new LibSQLStore({
+            url: ":memory:",
+          }),
+          logger: new PinoLogger({
+            name: "Mastra",
+            level: "info",
+          }),
+          observability: new Observability({
+            configs: {
+              default: {
+                serviceName: "chef-agent",
+                exporters: [
+                  new OtelExporter({
+                    provider: {
+                      custom: {
+                        endpoint: "https://www.comet.com/opik/api/v1/private/otel/v1/traces",
+                        protocol: "http/json",
+                        headers: {
+                          Authorization: OPIK_API_KEY,
+                          "Comet-Workspace": OPIK_WORKSPACE_NAME,
+                          projectName: OPIK_PROJECT_NAME,
+                        },
+                      },
+                    },
+                  }),
+                ],
+              },
+            },
+          }),
+        });
+        ```
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```typescript
+        import { Mastra } from "@mastra/core/mastra";
+        import { Observability } from "@mastra/observability";
+        import { OtelExporter } from "@mastra/otel";
+        import { PinoLogger } from "@mastra/loggers";
+        import { LibSQLStore } from "@mastra/libsql";
+        import { Agent } from "@mastra/core/agent";
+        import { openai } from "@ai-sdk/openai";
+
+        const OPIK_API_KEY = process.env.OPIK_API_KEY!;
+        const OPIK_WORKSPACE_NAME = process.env.OPIK_WORKSPACE_NAME!;
+        const OPIK_PROJECT_NAME = process.env.OPIK_PROJECT_NAME!;
+
+        export const chefAgent = new Agent({
+          name: "chef-agent",
+          instructions:
+            "You are Michel, a practical and experienced home chef " +
+            "You help people cook with whatever ingredients they have available.",
+          model: openai("gpt-4o-mini"),
+        });
+
+        export const mastra = new Mastra({
+          agents: { chefAgent },
+          storage: new LibSQLStore({
+            url: ":memory:",
+          }),
+          logger: new PinoLogger({
+            name: "Mastra",
+            level: "info",
+          }),
+          observability: new Observability({
+            configs: {
+              default: {
+                serviceName: "chef-agent",
+                exporters: [
+                  new OtelExporter({
+                    provider: {
+                      custom: {
+                        endpoint: "https://<comet-deployment-url>/opik/api/v1/private/otel/v1/traces",
+                        protocol: "http/json",
+                        headers: {
+                          Authorization: OPIK_API_KEY,
+                          "Comet-Workspace": OPIK_WORKSPACE_NAME,
+                          projectName: OPIK_PROJECT_NAME,
+                        },
+                      },
+                    },
+                  }),
+                ],
+              },
+            },
+          }),
+        });
+        ```
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```typescript
+        import { Mastra } from "@mastra/core/mastra";
+        import { Observability } from "@mastra/observability";
+        import { OtelExporter } from "@mastra/otel";
+        import { PinoLogger } from "@mastra/loggers";
+        import { LibSQLStore } from "@mastra/libsql";
+        import { Agent } from "@mastra/core/agent";
+        import { openai } from "@ai-sdk/openai";
+
+        const OPIK_PROJECT_NAME = process.env.OPIK_PROJECT_NAME!;
+
+        export const chefAgent = new Agent({
+          name: "chef-agent",
+          instructions:
+            "You are Michel, a practical and experienced home chef " +
+            "You help people cook with whatever ingredients they have available.",
+          model: openai("gpt-4o-mini"),
+        });
+
+        export const mastra = new Mastra({
+          agents: { chefAgent },
+          storage: new LibSQLStore({
+            url: ":memory:",
+          }),
+          logger: new PinoLogger({
+            name: "Mastra",
+            level: "info",
+          }),
+          observability: new Observability({
+            configs: {
+              default: {
+                serviceName: "chef-agent",
+                exporters: [
+                  new OtelExporter({
+                    provider: {
+                      custom: {
+                        endpoint: "http://localhost:5173/api/v1/private/otel/v1/traces",
+                        protocol: "http/json",
+                        headers: {
+                          projectName: OPIK_PROJECT_NAME,
+                        },
+                      },
+                    },
+                  }),
+                ],
+              },
+            },
+          }),
+        });
+        ```
+    </Tab>
+</Tabs>
+
+## 运行 Mastra 开发服务器
+
+启动 Mastra 开发服务器：
+
+```bash
+npm run dev
+```
+
+使用提供的 URL 打开开发者 Playground，开始与您的 Agent 进行对话。
+
+## 追踪内容
+
+通过此配置，您的 Mastra 应用将自动追踪以下内容：
+
+- **Agent 交互**：与 Agent 的完整对话流程
+- **LLM 调用**：模型请求、响应和 Token 使用量
+- **工具执行**：函数调用及其结果
+- **工作流步骤**：复杂工作流中的各个步骤
+- **记忆操作**：上下文和记忆更新
+
+## 验证
+
+1. 运行 Mastra 开发服务器并执行一次 Agent 对话。
+2. 确认 OTLP 导出请求已发送到配置的端点。
+3. 在 Opik 中验证对应工作区/项目下的追踪记录。
+
+## 参考资料
+
+- [Mastra 文档](https://mastra.ai/)
+- [Mastra 遥测文档](https://mastra.ai/en/docs/observability/overview)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)
+
+## 进一步改进
+
+如果您对 Mastra 集成有任何问题或建议，请在我们的 GitHub 仓库中[提交 Issue](https://github.com/comet-ml/opik/issues/new/choose)。

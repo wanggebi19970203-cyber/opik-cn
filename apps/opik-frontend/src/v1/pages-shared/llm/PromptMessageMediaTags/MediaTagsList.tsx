@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Music, Image, Video, CircleX } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Tag } from "@/ui/tag";
@@ -35,6 +36,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
   editable = true,
   preview = true,
 }) => {
+  const { t } = useTranslation("prompt");
   const icon = useMemo(() => {
     if (type === "image") {
       return <Image className="size-3.5 shrink-0" />;
@@ -61,7 +63,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
       return (
         <div className="flex max-w-[240px] flex-col gap-2">
           <p className="comet-body-s text-muted-foreground">
-            Preview not available
+            {t("mediaTagsList.previewNotAvailable")}
           </p>
           <p className="comet-body-xs truncate text-muted-foreground">
             {value}
@@ -75,7 +77,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
         <div className="flex max-w-[240px] flex-col gap-2">
           <img
             src={value}
-            alt="Image preview"
+            alt={t("mediaTagsList.imagePreview")}
             className="max-h-24 rounded border object-contain"
             onError={(event) => {
               event.currentTarget.style.display = "none";
@@ -97,7 +99,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
               const parent = event.currentTarget.parentElement;
               if (parent) {
                 parent.innerHTML = `
-                  <p class="comet-body-s text-muted-foreground">Video preview failed</p>
+                  <p class="comet-body-s text-muted-foreground">${t("mediaTagsList.videoPreviewFailed")}</p>
                   <p class="comet-body-xs truncate text-muted-foreground">${value.substring(
                     0,
                     50,
@@ -106,7 +108,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
               }
             }}
           >
-            Your browser does not support video playback.
+            {t("mediaTagsList.browserVideoNotSupported")}
           </video>
         </div>
       );
@@ -123,12 +125,12 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
             const parent = event.currentTarget.parentElement;
             if (parent) {
               parent.innerHTML = `
-                <p class="comet-body-s text-muted-foreground">Audio preview failed</p>
+                <p class="comet-body-s text-muted-foreground">${t("mediaTagsList.audioPreviewFailed")}</p>
               `;
             }
           }}
         >
-          Your browser does not support audio playback.
+          {t("mediaTagsList.browserAudioNotSupported")}
         </audio>
       </div>
     );

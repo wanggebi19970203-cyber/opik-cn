@@ -1,0 +1,149 @@
+---
+description: 从这里开始将 Opik 集成到基于 Anthropic 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Anthropic | Opik 文档
+og:description: 使用 Opik 的 `track_anthropic` 方法跟踪和评估您的 Anthropic API 调用，实现可靠的 AI 系统集成。
+og:site_name: Opik 文档
+og:title: 将 Opik 与 Anthropic 集成以增强 AI 跟踪能力
+title: 使用 Opik 实现 Anthropic 的可观测性
+---
+
+[Anthropic](https://www.anthropic.com/) 是一家 AI 安全与研究公司，致力于构建可靠、可解释且可控的 AI 系统。
+
+本指南介绍如何将 Opik 与 Anthropic Python SDK 集成。通过使用 opik 提供的 `track_anthropic` 方法，您可以轻松地在 Opik 项目中跟踪和评估 Anthropic API 调用，Opik 会自动记录输入提示词、使用的模型、token 用量以及生成的响应。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=anthropic&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=anthropic&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=anthropic&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+要开始跟踪 Anthropic LLM 调用，您需要安装 `opik` 和 `anthropic` 两个包。可以使用 pip 安装：
+
+```bash
+pip install opik anthropic
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云版本 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Anthropic
+
+要配置 Anthropic，您需要设置 Anthropic API Key。您可以在[此页面查找或创建 Anthropic API Key](https://console.anthropic.com/settings/keys)。
+
+可以将其设置为环境变量：
+
+```bash
+export ANTHROPIC_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "ANTHROPIC_API_KEY" not in os.environ:
+    os.environ["ANTHROPIC_API_KEY"] = getpass.getpass("Enter your Anthropic API key: ")
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，您需要使用 `track_anthropic` 包装 anthropic 客户端。使用包装后的客户端进行调用时，所有调用都会被记录到 Opik：
+
+```python
+import anthropic
+from opik.integrations.anthropic import track_anthropic
+
+anthropic_client = anthropic.Anthropic()
+anthropic_client = track_anthropic(anthropic_client, project_name="anthropic-integration-demo")
+
+PROMPT = "Why is it important to use a LLM Monitoring like CometML Opik tool that allows you to log traces and spans when working with Anthropic LLM Models?"
+
+response = anthropic_client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": PROMPT}
+    ]
+)
+print("Response", response.content[0].text)
+```
+
+<Frame>
+  <img src="/img/cookbook/anthropic_trace_cookbook.png" />
+</Frame>
+
+## 高级用法
+
+### 与 `@track` 装饰器配合使用
+
+如果您的 LLM 流程包含多个步骤，可以使用 `@track` 装饰器记录每个步骤的 trace。如果在某个步骤中调用了 Anthropic，该 LLM 调用将与对应步骤关联：
+
+```python
+import anthropic
+from opik import track
+from opik.integrations.anthropic import track_anthropic
+
+os.environ["OPIK_PROJECT_NAME"] = "anthropic-integration-demo"
+
+anthropic_client = anthropic.Anthropic()
+anthropic_client = track_anthropic(anthropic_client)
+
+@track
+def generate_story(prompt):
+    res = anthropic_client.messages.create(
+        model="claude-3-5-sonnet-20241022",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return res.content[0].text
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    res = anthropic_client.messages.create(
+        model="claude-3-5-sonnet-20241022",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return res.content[0].text
+
+@track
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+# 执行多步骤流程
+generate_opik_story()
+```
+
+现在可以在 UI 中查看 trace，层级化的 span 展示了不同步骤之间的关系：
+
+<Frame>
+  <img src="/img/cookbook/anthropic_trace_decorator_cookbook.png" />
+</Frame>
+
+## 成本跟踪
+
+`track_anthropic` 包装器会自动跟踪所有支持的 Anthropic 模型的 token 用量和成本。
+
+成本信息会自动捕获并显示在 Opik UI 中，包括：
+
+- Token 用量详情
+- 基于 Anthropic 定价的每次请求成本
+- 总 trace 成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看支持的模型和提供商的完整列表。
+</Tip>

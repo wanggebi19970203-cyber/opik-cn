@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import {
   OPTIMIZER_TYPE,
   OPTIMIZATION_STATUS,
@@ -67,7 +68,7 @@ export const extractMetricNameFromCode = (code: string): string => {
 export const getObjectiveLabel = (
   isTestSuite?: boolean,
   objectiveName?: string,
-): string => (isTestSuite ? "Pass rate" : objectiveName ?? "Accuracy");
+): string => (isTestSuite ? i18next.t("common:optimizations.passRate") : objectiveName ?? i18next.t("common:optimizations.accuracy"));
 
 export const MAX_EXPERIMENTS_LOADED = 1000;
 

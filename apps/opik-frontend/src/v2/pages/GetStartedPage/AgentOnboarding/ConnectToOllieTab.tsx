@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useAgentOnboarding } from "./AgentOnboardingContext";
 import { useUserApiKey, useActiveWorkspaceName } from "@/store/AppStore";
 import { buildDocsUrl } from "@/v2/lib/utils";
@@ -13,6 +14,7 @@ interface ConnectToOllieTabProps {
 }
 
 const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
+  const { t } = useTranslation("pages/get-started");
   const { agentName } = useAgentOnboarding();
   const apiKey = useUserApiKey();
   const workspaceName = useActiveWorkspaceName();
@@ -30,14 +32,14 @@ const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
   return (
     <div className="flex flex-col gap-4 px-1">
       <p className="comet-body-s text-muted-slate">
-        Ollie is Opik&apos;s AI coding assistant. When you connect your repo,
-        Ollie can inspect your code, help add Opik tracing, and guide you
-        through setup.
+        {t("getStarted.connectToOllie.description")}
       </p>
       <div className="flex flex-col">
         <TimelineStep number={1}>
           <div className="flex flex-col gap-2.5">
-            <h4 className="comet-body-s-accented">Install Opik</h4>
+            <h4 className="comet-body-s-accented">
+              {t("getStarted.connectToOllie.installOpik")}
+            </h4>
             <CodeSnippet title="Terminal" code={INSTALL_COMMAND} />
           </div>
         </TimelineStep>
@@ -45,7 +47,7 @@ const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
         <TimelineStep number={2}>
           <div className="flex flex-col gap-2.5">
             <h4 className="comet-body-s-accented">
-              Connect your repo to Ollie
+              {t("getStarted.connectToOllie.connectRepo")}
             </h4>
             <CodeSnippet title="Terminal" code={connectCommandText} />
           </div>
@@ -55,16 +57,15 @@ const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
           <div className="flex flex-col gap-1">
             <h4 className="comet-body-s-accented text-primary">
               {connected
-                ? "Repo connected"
-                : "Waiting for your repo to connect\u2026"}
+                ? t("getStarted.connectToOllie.repoConnected")
+                : t("getStarted.connectToOllie.waitingForRepo")}
             </h4>
             <p className="comet-body-xs text-muted-slate">
               {connected ? (
-                "Ollie can now inspect your code and help you set up tracing in Opik."
+                t("getStarted.connectToOllie.connectedDescription")
               ) : (
                 <>
-                  Run the command above in your repo. Once connected, Ollie can
-                  inspect your code and help finish setup.{" "}
+                  {t("getStarted.connectToOllie.notConnectedDescription")}{" "}
                   <a
                     href={buildDocsUrl(
                       "/agents/local-runner",
@@ -74,7 +75,7 @@ const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
                     rel="noopener noreferrer"
                     className="underline hover:text-foreground"
                   >
-                    Connect troubleshooting
+                    {t("getStarted.connectToOllie.connectTroubleshooting")}
                   </a>
                 </>
               )}

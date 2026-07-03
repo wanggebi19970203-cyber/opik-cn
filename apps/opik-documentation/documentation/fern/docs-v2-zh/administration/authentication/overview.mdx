@@ -1,0 +1,239 @@
+---
+headline: 认证概述 | Opik 文档
+og:description: 了解 Opik 中可用的认证选项，包括 SAML、OIDC 和 JWT，为您的组织选择合适的方案。
+og:site_name: Opik 文档
+og:title: 'Opik 认证：SSO 和 JWT 配置指南'
+subtitle: 了解认证选项并选择合适的方法
+title: 认证概述
+---
+
+Opik 支持多种认证方法，以便与您组织的身份管理基础设施集成。本指南帮助您了解可用选项并选择适合您需求的方法。
+
+<Note>
+认证功能适用于企业版计划。开源部署中不提供这些功能。如果您想为 Opik 部署启用 SSO 或 JWT 认证，请[联系我们](https://www.comet.com/site/about-us/contact-us/)。
+</Note>
+
+## 认证方法
+
+Opik 为企业组织提供多种认证方法。对于可配置的 UI 访问，您可以设置 SAML SSO 或 OIDC SSO 以与身份提供商集成。其他可用方法包括基本认证（用户名/密码）、Google OAuth、GitHub OAuth 和 LDAP（用于本地部署）。
+JWT 认证单独提供，用于 SDK 和编程访问。与 SAML SSO 和 OIDC SSO 不同，JWT 认证专为服务间和 API 集成设计，而非用于用户界面登录。
+
+| 方法 | 最佳用途 | 主要特性 |
+| --- | --- | --- |
+| **SAML SSO** | 拥有企业 IdP 的组织（Okta、Azure AD 等） | 工作区同步、属性映射、广泛的 IdP 支持 |
+| **OIDC SSO** | 使用 OAuth 2.0 / OpenID Connect 的组织 | 设置更简单、基于令牌、现代协议 |
+| **JWT 认证** | 编程访问、自定义认证流程 | 灵活集成、JWKS 支持、服务间认证 |
+
+## 选择认证方法
+
+使用此决策指南选择合适的认证方法：
+
+### 使用 SAML SSO 的场景：
+
+- 您的组织已使用企业身份提供商（Okta、Azure AD、OneLogin 等）
+- 您需要基于用户属性/组的自动工作区分配
+- 您需要集中式用户生命周期管理（自动配置/取消配置）
+- 您的安全策略要求基于 SAML 的认证
+
+### 使用 OIDC SSO 的场景：
+
+- 您的身份提供商支持 OpenID Connect 但不支持 SAML
+- 您偏好更简单、更现代的协议
+- 您使用云原生身份解决方案
+- 您不需要基于属性的工作区同步
+
+### 使用 JWT 认证的场景：
+
+- 您需要从后端服务进行编程/API 访问
+- 您正在构建自定义认证流程
+- 您希望与现有的基于 JWT 的系统集成
+- 您需要服务间认证
+
+<Tip>
+**多种方法**：您可以为组织配置多种认证方法。例如，为人类用户使用 SAML，为服务账户使用 JWT。
+</Tip>
+
+## 前置条件
+
+在配置任何认证方法之前，请确保您具备：
+
+1. **管理员权限**：您必须是组织管理员。
+2. **企业版计划**：SSO 功能需要企业版订阅。
+3. **域名所有权**：您应控制要用于 SSO 的电子邮件域名。
+4. **IdP 访问权限**（用于 SSO）：具有配置集成的身份提供商管理员访问权限。
+
+## 术语表
+
+理解这些术语将帮助您配置认证：
+
+### 通用术语
+
+| 术语 | 描述 |
+| --- | --- |
+| **IdP（身份提供商）** | 对用户进行身份认证的系统（例如 Okta、Azure AD、Google Workspace） |
+| **SP（服务提供商）** | 用户登录的应用程序（Opik） |
+| **SSO（单点登录）** | 允许用户登录一次即可访问多个应用程序的认证方法 |
+| **域名** | 您组织的电子邮件域名（例如 `company.com`），用于将用户路由到 SSO |
+
+### SAML 专用术语
+
+| 术语 | 描述 |
+| --- | --- |
+| **Entity ID** | SAML 配置中 IdP 或 SP 的唯一标识符 |
+| **ACS URL（断言消费服务）** | IdP 发送认证响应的 URL |
+| **IdP SSO URL** | 用户被重定向进行认证的 URL |
+| **X.509 证书** | 用于验证 SAML 断言的公共证书 |
+| **属性映射** | 将 IdP 用户属性映射到 Opik 字段的配置 |
+| **工作区同步** | 基于 IdP 属性自动将用户分配到工作区的功能 |
+
+### OIDC 专用术语
+
+| 术语 | 描述 |
+| --- | --- |
+| **Client ID** | Opik 在您 IdP 中的唯一标识符 |
+| **Client Secret** | 用于向您的 IdP 认证 Opik 的密钥 |
+| **Authorization URL** | 用户被重定向进行认证的 URL |
+| **Token URL** | Opik 用授权码交换令牌的 URL |
+| **Callback URL** | 认证后 IdP 重定向用户的 URL |
+| **Scope** | 向 IdP 请求的权限（例如 `openid`、`profile`、`email`） |
+
+### JWT 专用术语
+
+| 术语 | 描述 |
+| --- | --- |
+| **JWKS（JSON Web Key Set）** | 提供用于 JWT 验证的公钥的端点 |
+| **JWKS URI** | JWKS 端点的 URL |
+| **静态公钥** | JWKS 的替代方案；用于验证的固定公钥（仅限本地部署） |
+| **Issuer（签发者）** | 签发 JWT 令牌的实体 |
+| **Audience（受众）** | JWT 令牌的预期接收者 |
+| **Subject（主题）** | 令牌代表的用户或实体 |
+| **主题映射** | Opik 如何从 JWT 声明中识别用户（`EMAIL` 或 `USER_NAME`） |
+| **Subject Claim Name** | 包含主题的 JWT 声明（默认为 `sub`） |
+| **kid（密钥 ID）** | JWT 头部中指定用于验证的密钥的标识符 |
+
+## 认证流程对比
+
+### SAML 认证流程
+
+```
+┌──────┐      ┌──────┐      ┌──────┐
+│ User │      │ Opik │      │  IdP │
+└──┬───┘      └──┬───┘      └──┬───┘
+   │   1. Login   │             │
+   │────────────>│             │
+   │             │ 2. Redirect │
+   │             │────────────>│
+   │             │             │ 3. User authenticates
+   │             │<────────────│
+   │             │ 4. SAML     │
+   │             │   Assertion │
+   │<────────────│             │
+   │ 5. Logged in│             │
+   └─────────────┘             │
+```
+
+### OIDC 认证流程
+
+```
+┌──────┐      ┌──────┐      ┌──────┐
+│ User │      │ Opik │      │  IdP │
+└──┬───┘      └──┬───┘      └──┬───┘
+   │   1. Login   │             │
+   │────────────>│             │
+   │             │ 2. Redirect │
+   │────────────────────────-->│
+   │             │             │ 3. User authenticates
+   │<──────────────────────────│
+   │ 4. Auth code│             │
+   │────────────>│             │
+   │             │ 5. Exchange │
+   │             │    for token│
+   │             │────────────>│
+   │             │<────────────│
+   │             │ 6. Token    │
+   │<────────────│             │
+   │ 7. Logged in│             │
+```
+
+### JWT 认证流程
+
+```
+┌──────────┐      ┌──────┐      ┌──────┐
+│ Service/ │      │ Opik │      │ JWKS │
+│   User   │      │      │      │      │
+└────┬─────┘      └──┬───┘      └──┬───┘
+     │   1. API call │             │
+     │   with JWT    │             │
+     │──────────────>│             │
+     │               │ 2. Fetch    │
+     │               │    keys     │
+     │               │────────────>│
+     │               │<────────────│
+     │               │ 3. Verify   │
+     │               │    JWT      │
+     │<──────────────│             │
+     │ 4. Response   │             │
+```
+
+## 配置指南
+
+每种认证方法的详细设置说明：
+
+<CardGroup cols={3}>
+  <Card title="SAML SSO" href="/administration/authentication/saml">
+    配置基于 SAML 的企业身份提供商单点登录。
+  </Card>
+  <Card title="OIDC SSO" href="/administration/authentication/oidc">
+    为您的组织设置 OpenID Connect 认证。
+  </Card>
+  <Card title="JWT 认证" href="/administration/authentication/jwt">
+    配置基于 JWT 的编程访问认证。
+  </Card>
+</CardGroup>
+
+## 安全注意事项
+
+### 域名验证
+
+配置 SSO 时，您需要将电子邮件域名与组织关联。这确保：
+
+- 拥有这些电子邮件域名的用户会被引导到您的 SSO 配置。
+- 只有通过您的 IdP 认证的用户才能访问组织。
+
+<Warning>
+**重要提示**：请确保只配置您拥有或控制的域名。配置错误的域名可能会阻止合法用户访问其账户。
+</Warning>
+
+### 证书管理
+
+对于 SAML 认证：
+
+- 安全存储 IdP 证书。
+- 监控证书到期日期。
+- 规划证书轮换以避免认证中断。
+
+### 密钥轮换
+
+对于 JWT 认证：
+
+- 尽可能使用 JWKS 端点实现自动密钥轮换。
+- 如果使用静态密钥（仅限本地部署），请建立密钥轮换计划。
+- 监控 JWKS 端点可用性。
+
+## 故障排除
+
+常见认证问题及解决方案：
+
+| 问题 | 可能原因 | 解决方案 |
+| --- | --- | --- |
+| 用户无法通过 SSO 登录 | 域名未配置、IdP 配置错误 | 验证域名设置、检查 IdP 配置 |
+| 用户进入错误的组织 | 同一域名有多个 SSO 配置 | 检查域名到组织的映射 |
+| 工作区同步不工作 | 属性映射不正确 | 验证 IdP 发送了预期的属性 |
+| JWT 验证失败 | 密钥不匹配、令牌过期、签发者错误 | 检查 JWKS 端点、验证令牌声明 |
+| 证书错误 | 证书过期或错误 | 在 SSO 配置中更新证书 |
+
+## 后续步骤
+
+- [配置 SAML SSO](/administration/authentication/saml) 用于企业身份提供商。
+- [设置 OIDC](/administration/authentication/oidc) 用于 OpenID Connect 认证。
+- [配置 JWT 认证](/administration/authentication/jwt) 用于编程访问。

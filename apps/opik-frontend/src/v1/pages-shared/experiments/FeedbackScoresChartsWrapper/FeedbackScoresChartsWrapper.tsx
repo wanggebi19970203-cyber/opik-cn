@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import FeedbackScoresChartContainer from "@/v1/pages-shared/experiments/FeedbackScoresChartsWrapper/FeedbackScoresChartContainer";
@@ -15,6 +16,7 @@ const FeedbackScoresChartsWrapper = ({
   areAggregatedScores = false,
   noDataComponent,
 }: FeedbackScoresChartsWrapperProps) => {
+  const { t } = useTranslation("experiments");
   const chartClassName =
     chartsData.length === 1
       ? "w-full"
@@ -33,7 +35,7 @@ const FeedbackScoresChartsWrapper = ({
               chartData={chartsData[index]}
               chartId={data.id}
               chartName={data.name}
-              subtitle={areAggregatedScores ? "Aggregated scores" : undefined}
+              subtitle={areAggregatedScores ? t('aggregatedScores') : undefined}
             />
           ))}
     </div>

@@ -1,0 +1,105 @@
+{
+  "testSuiteItems": {
+    "title": "测试套件项目",
+    "description": "查看和管理测试套件项目",
+    "empty": {
+      "title": "暂无项目",
+      "description": "向您的测试套件添加项目。"
+    },
+    "editTestSuite": {
+      "dialogTitle": "编辑测试套件",
+      "name": "名称",
+      "namePlaceholder": "输入测试套件名称",
+      "nameRequired": "名称为必填项",
+      "description": "描述",
+      "descriptionPlaceholder": "数据集描述",
+      "defaultRunsPerItem": "默认每项运行次数",
+      "defaultPassThreshold": "默认通过阈值",
+      "cancel": "取消",
+      "updateTestSuite": "更新测试套件"
+    },
+    "addItemPanel": {
+      "addSuiteItem": "添加套件项目",
+      "cancel": "取消",
+      "saveChanges": "保存更改",
+      "discardChangesTitle": "放弃更改？",
+      "discardChangesDescription": "您有未保存的更改。是否要放弃并关闭？",
+      "keepEditing": "继续编辑",
+      "discardChanges": "放弃更改"
+    },
+    "itemForm": {
+      "description": "描述",
+      "describeItemPlaceholder": "描述此项目...",
+      "data": "数据",
+      "mustBeJsonObject": "必须是JSON对象",
+      "invalidJson": "无效的JSON",
+      "runsForItem": "此项目的运行次数",
+      "globalDefaultIs": "全局默认值为 {{value}}",
+      "passThreshold": "通过阈值",
+      "manageGlobalAssertions": "管理全局断言"
+    },
+    "itemPanel": {
+      "actionsMenu": "操作菜单",
+      "urlCopiedToClipboard": "URL已成功复制到剪贴板",
+      "shareItem": "分享项目",
+      "itemIdCopiedToClipboard": "项目ID已成功复制到剪贴板",
+      "copyItemId": "复制项目ID",
+      "deleteItem": "删除项目",
+      "addSuiteItem": "添加套件项目",
+      "suiteItem": "套件项目"
+    },
+    "page": {
+      "unsavedChanges": "未保存的更改",
+      "unsavedDraftDescription": "您有未保存的草稿更改。确定要离开吗？",
+      "leaveWithoutSaving": "不保存直接离开",
+      "stay": "留下",
+      "newVersionCreated": "新版本已创建",
+      "newVersionDescription": "您的更改已保存为新版本。您现在可以在SDK或Playground中使用它来运行实验。",
+      "runExperimentSdk": "在SDK中运行实验",
+      "runExperimentPlayground": "在Playground中运行实验",
+      "draft": "草稿",
+      "testSuite": "测试套件",
+      "dataset": "数据集",
+      "discardChanges": "放弃更改",
+      "discardChangesDescription": "放弃将移除此{{type}}的所有未保存编辑。此操作无法撤销。确定要继续吗？",
+      "saveChanges": "保存更改",
+      "items": "项目",
+      "versionHistory": "版本历史",
+      "globalAssertion": "个全局断言",
+      "globalAssertions": "个全局断言",
+      "settings": "设置"
+    },
+    "itemsTab": {
+      "saveChangesToSearch": "保存更改后才能搜索",
+      "saveChangesToFilter": "保存更改后才能筛选",
+      "search": "搜索",
+      "suiteItems": "套件项目",
+      "datasetItems": "数据集项目",
+      "allDeletedOnPage": "此页面上的所有{{itemLabel}}已被删除",
+      "noItemsYet": "暂无{{itemLabel}}",
+      "addSuiteItem": "添加套件项目",
+      "suiteStillLoading": "您的套件仍在加载中",
+      "datasetStillLoading": "您的数据集仍在加载中",
+      "loadingDescription": "随着更多数据变为可用，部分结果或计数可能会更新。在{{type}}加载期间，您可以继续浏览。",
+      "suiteFullyLoaded": "您的套件已完全加载",
+      "datasetFullyLoaded": "您的数据集已完全加载",
+      "allItemsAvailable": "所有项目现已可用。",
+      "saveChangesToNavigate": "保存更改后才能翻页",
+      "checkDocumentation": "查看我们的文档"
+    },
+    "useTestSuiteDropdown": {
+      "testSuite": "测试套件",
+      "dataset": "数据集",
+      "loadIntoPlayground": "将{{type}}加载到Playground",
+      "loadDescription": "将此{{type}}加载到Playground将替换任何未保存的更改。此操作无法撤销。",
+      "loadTestSuite": "加载测试套件",
+      "loadDataset": "加载数据集",
+      "useSuite": "使用套件",
+      "useDataset": "使用数据集",
+      "openInPlayground": "在Playground中打开",
+      "testPromptsOver": "在您的{{type}}上测试提示词并交互式运行评估",
+      "runAnExperiment": "运行实验",
+      "runExperimentDescription": "使用此{{type}}通过Python SDK运行实验"
+    }
+  }
+}

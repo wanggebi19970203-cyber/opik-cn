@@ -59,7 +59,7 @@ import static com.comet.opik.api.AlertType.GENERAL;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Alerts", description = "Alert resources")
+@Tag(name = "Alerts", description = "告警资源")
 public class AlertResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -68,12 +68,12 @@ public class AlertResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @POST
-    @Operation(operationId = "createAlert", summary = "Create alert", description = "Create alert", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createAlert", summary = "创建告警", description = "创建告警", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/alerts/{alertId}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ALERT_UPDATE)
@@ -104,11 +104,11 @@ public class AlertResource {
 
     @PUT
     @Path("{id}")
-    @Operation(operationId = "updateAlert", summary = "Update alert", description = "Update alert", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "updateAlert", summary = "更新告警", description = "更新告警", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ALERT_UPDATE)
@@ -134,8 +134,8 @@ public class AlertResource {
     }
 
     @GET
-    @Operation(operationId = "findAlerts", summary = "Find alerts", description = "Find alerts", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Alert.AlertPage.class))),
+    @Operation(operationId = "findAlerts", summary = "查找告警", description = "查找告警", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = Alert.AlertPage.class))),
     })
     @JsonView(Alert.View.Public.class)
     public Response findAlerts(
@@ -160,9 +160,9 @@ public class AlertResource {
 
     @GET
     @Path("/{id}")
-    @Operation(operationId = "getAlertById", summary = "Get Alert by id", description = "Get Alert by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Alert resource", content = @Content(schema = @Schema(implementation = Alert.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "getAlertById", summary = "根据ID获取告警", description = "根据ID获取告警", responses = {
+            @ApiResponse(responseCode = "200", description = "告警资源", content = @Content(schema = @Schema(implementation = Alert.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @JsonView(Alert.View.Public.class)
     public Response getAlertById(@PathParam("id") UUID id) {
@@ -180,9 +180,9 @@ public class AlertResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteAlertBatch", summary = "Delete alert batch", description = "Delete multiple alerts by their IDs", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "deleteAlertBatch", summary = "批量删除告警", description = "根据ID批量删除多个告警", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     public Response deleteAlertBatch(
             @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @Valid @NotNull BatchDelete batch) {
@@ -202,9 +202,9 @@ public class AlertResource {
 
     @POST
     @Path("/webhooks/tests")
-    @Operation(operationId = "testWebhook", summary = "Test alert webhook", description = "Test alert webhook", responses = {
-            @ApiResponse(responseCode = "200", description = "Webhook test", content = @Content(schema = @Schema(implementation = WebhookTestResult.class))),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "testWebhook", summary = "测试告警Webhook", description = "测试告警Webhook", responses = {
+            @ApiResponse(responseCode = "200", description = "Webhook测试结果", content = @Content(schema = @Schema(implementation = WebhookTestResult.class))),
+            @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response testWebhook(
             @RequestBody(content = @Content(schema = @Schema(implementation = Alert.class))) @JsonView(Alert.View.Write.class) @Valid @NotNull Alert alert) {
@@ -222,8 +222,8 @@ public class AlertResource {
 
     @GET
     @Path("/webhooks/examples")
-    @Operation(operationId = "getWebhookExamples", summary = "Get webhook payload examples", description = "Get webhook payload examples for all alert event types, optionally filtered by alert type", responses = {
-            @ApiResponse(responseCode = "200", description = "Webhook examples", content = @Content(schema = @Schema(implementation = WebhookExamples.class)))
+    @Operation(operationId = "getWebhookExamples", summary = "获取Webhook载荷示例", description = "获取所有告警事件类型的Webhook载荷示例，可按告警类型筛选", responses = {
+            @ApiResponse(responseCode = "200", description = "Webhook示例", content = @Content(schema = @Schema(implementation = WebhookExamples.class)))
     })
     public Response getWebhookExamples(@QueryParam("alert_type") AlertType alertType) {
 

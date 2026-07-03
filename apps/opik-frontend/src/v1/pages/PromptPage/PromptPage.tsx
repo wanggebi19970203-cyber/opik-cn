@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { StringParam, useQueryParam } from "use-query-params";
+import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import useBreadcrumbsStore from "@/store/BreadcrumbsStore";
@@ -19,6 +20,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import ExperimentsTab from "./ExperimentsTab/ExperimentsTab";
 
 const PromptPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("prompt");
   const [tab, setTab] = useQueryParam("tab", StringParam);
 
   const {
@@ -88,11 +90,11 @@ const PromptPage: React.FunctionComponent = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="underline">
             <TabsTrigger variant="underline" value="prompt">
-              Prompt
+              {t("prompt.tabs.prompt")}
             </TabsTrigger>
             {canViewExperiments && (
               <TabsTrigger variant="underline" value="experiments">
-                Experiments
+                {t("prompt.tabs.experiments")}
                 <ExplainerIcon
                   className="ml-1"
                   {...EXPLAINERS_MAP[
@@ -102,7 +104,7 @@ const PromptPage: React.FunctionComponent = () => {
               </TabsTrigger>
             )}
             <TabsTrigger variant="underline" value="commits">
-              Commits
+              {t("prompt.tabs.commits")}
               <ExplainerIcon
                 className="ml-1"
                 {...EXPLAINERS_MAP[EXPLAINER_ID.what_are_commits]}

@@ -122,21 +122,21 @@ class Opik:
         _show_misconfiguration_message: bool = True,
     ) -> None:
         """
-        Initialize an Opik object that can be used to log traces and spans manually to Opik server.
+        初始化一个Opik对象，用于手动向Opik服务器记录traces和spans。
 
         Args:
-            project_name: The name of the project. If not provided, falls back to the active project context
-                (from @track or opik.project_context), then to the `Default Project`.
-            workspace: The name of the workspace. If not provided, `default` will be used.
-            host: The host URL for the Opik server. If not provided, it will default to `https://www.comet.com/opik/api`.
-            api_key: The API key for Opik. This parameter is ignored for local installations.
-            batching: If True (default), enables request batching for higher throughput.
-                When enabled, update operations (``update_span``, ``update_trace``,
-                ``Span.update``, ``Trace.update``) may cause data loss if the update
-                arrives at the server before the batched create request is flushed.
-            _use_batching: Deprecated. Use ``batching`` instead.
-            _show_misconfiguration_message: intended for internal usage in specific conditions only.
-                Print a warning message if the Opik server is not configured properly.
+            project_name: 项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用`Default Project`。
+            workspace: 工作区名称。如果未提供，将使用`default`。
+            host: Opik服务器的主机URL。如果未提供，默认为`https://www.comet.com/opik/api`。
+            api_key: Opik的API密钥。对于本地安装，此参数会被忽略。
+            batching: 如果为True（默认），则启用请求批处理以提高吞吐量。
+                启用后，更新操作（``update_span``、``update_trace``、
+                ``Span.update``、``Trace.update``）可能会导致数据丢失，
+                如果更新在批处理的创建请求刷新之前到达服务器。
+            _use_batching: 已弃用。请使用``batching``代替。
+            _show_misconfiguration_message: 仅用于特定条件下的内部使用。
+                如果Opik服务器配置不当，打印警告消息。
         Returns:
             None
         """
@@ -168,32 +168,32 @@ class Opik:
     def config(self) -> opik_config.OpikConfig:
         """
         Returns:
-            OpikConfig: Read-only copy of the configuration of the Opik client.
+            OpikConfig: Opik客户端配置的只读副本。
         """
         return self._config.model_copy()
 
     @property
     def rest_client(self) -> rest_api_client.OpikApi:
         """
-        Provides direct access to the underlying REST API client.
+        提供对底层REST API客户端的直接访问。
 
-        WARNING: This client is not guaranteed to be backward compatible with future SDK versions.
-        While it provides a convenient way to use the current REST API of Opik.
-        However, it's not considered safe to heavily rely on its API as Opik's REST API contracts may change.
+        警告：此客户端不保证与未来SDK版本向后兼容。
+        虽然它提供了使用当前Opik REST API的便捷方式，
+        但不建议过度依赖其API，因为Opik的REST API合约可能会更改。
 
         Returns:
-            OpikApi: The REST client used by the Opik client.
+            OpikApi: Opik客户端使用的REST客户端。
         """
         return self._rest_client
 
     @property
     def project_name(self) -> str:
         """
-        This property retrieves the name of the project associated with the instance.
-        It is a read-only property.
+        此属性获取与实例关联的项目名称。
+        这是一个只读属性。
 
         Returns:
-            str: The name of the project.
+            str: 项目名称。
         """
         return self._project_name
 
@@ -213,7 +213,7 @@ class Opik:
         )
         self._rest_client._client_wrapper._timeout = (
             httpx.USE_CLIENT_DEFAULT
-        )  # See https://github.com/fern-api/fern/issues/5321
+        )  # 参见 https://github.com/fern-api/fern/issues/5321
         rest_client_configurator.configure(self._rest_client)
 
         max_queue_size = message_queue.calculate_max_queue_size(
@@ -292,10 +292,10 @@ class Opik:
 
     def auth_check(self) -> None:
         """
-        Checks if current API key user has an access to the configured workspace and its content.
+        检查当前API密钥用户是否有权访问配置的工作区及其内容。
         """
         self._rest_client.check.access(
-            request={}  # empty body for future backward compatibility
+            request={}  # 空请求体，为未来向后兼容性保留
         )
 
     def trace(
@@ -317,27 +317,27 @@ class Opik:
         **ignored_kwargs: Any,
     ) -> trace_module.Trace:
         """
-        Create and log a new trace.
+        创建并记录一个新的trace。
 
         Args:
-            id: The unique identifier for the trace, if not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid7.com/) ID.
-            name: The name of the trace.
-            start_time: The start time of the trace. If not provided, the current local time will be used.
-            end_time: The end time of the trace.
-            input: The input data for the trace. This can be any valid JSON serializable object.
-            output: The output data for the trace. This can be any valid JSON serializable object.
-            metadata: Additional metadata for the trace. This can be any valid JSON serializable object.
-            tags: Tags associated with the trace.
-            feedback_scores: The list of feedback score dicts associated with the trace. Dicts don't require to have an `id` value.
-            project_name: The name of the project. If not provided, falls back to the active project context
-                (from @track or opik.project_context), then to the client's default.
-            error_info: The dictionary with error information (typically used when the trace function has failed).
-            thread_id: Used to group multiple traces into a thread.
-                The identifier is user-defined and has to be unique per project.
-            attachments: The list of attachments to be uploaded to the trace.
+            id: trace的唯一标识符，如果未提供，将生成新的ID。必须是有效的[UUIDv7](https://uuid7.com/) ID。
+            name: trace的名称。
+            start_time: trace的开始时间。如果未提供，将使用当前本地时间。
+            end_time: trace的结束时间。
+            input: trace的输入数据。可以是任何有效的JSON可序列化对象。
+            output: trace的输出数据。可以是任何有效的JSON可序列化对象。
+            metadata: trace的附加元数据。可以是任何有效的JSON可序列化对象。
+            tags: 与trace关联的标签。
+            feedback_scores: 与trace关联的反馈分数字典列表。字典不需要包含`id`值。
+            project_name: 项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            error_info: 包含错误信息的字典（通常在trace函数失败时使用）。
+            thread_id: 用于将多个trace分组到一个线程中。
+                标识符由用户定义，在每个项目中必须唯一。
+            attachments: 要上传到trace的附件列表。
 
         Returns:
-            trace.Trace: The created trace object.
+            trace.Trace: 创建的trace对象。
         """
         return self.__internal_api__trace__(
             id=id,
@@ -442,20 +442,18 @@ class Opik:
         delete_original_project: bool = False,
     ) -> None:
         """
-        Copy traces from one project to another. This method will copy all traces in a source project
-        to the destination project. Optionally, you can also delete these traces from the source project.
+        将traces从一个项目复制到另一个项目。此方法将源项目中的所有traces
+        复制到目标项目。可选地，您也可以从源项目中删除这些traces。
 
-        As the traces are copied, the IDs for both traces and spans will be updated as part of the copy
-        process.
+        在复制traces时，traces和spans的ID都将在复制过程中更新。
 
-        Note: This method is not optimized for large projects, if you run into any issues please raise
-        an issue on GitHub. In addition, be aware that deleting traces that are linked to experiments
-        will lead to inconsistencies in the UI.
+        注意：此方法未针对大型项目进行优化，如果遇到任何问题，请在GitHub上
+        提交issue。此外，请注意删除链接到实验的traces将导致UI中的不一致。
 
         Args:
-            project_name: The name of the project to copy traces from.
-            destination_project_name: The name of the project to copy traces to.
-            delete_original_project: Whether to delete the original project. Defaults to False.
+            project_name: 要复制traces的源项目名称。
+            destination_project_name: 要复制traces的目标项目名称。
+            delete_original_project: 是否删除原始项目。默认为False。
 
         Returns:
             None
@@ -525,37 +523,38 @@ class Opik:
         attachments: Optional[List[Attachment]] = None,
     ) -> span_module.Span:
         """
-        Create and log a new span.
+        创建并记录一个新的span。
 
         Args:
-            trace_id: The unique identifier for the trace. If not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid7.com/) ID.
-            id: The unique identifier for the span. If not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid.ramsey.dev/en/stable/rfc4122/version8.html) ID.
-            parent_span_id: The unique identifier for the parent span.
-            name: The name of the span.
-            type: The type of the span. Default is "general".
-            start_time: The start time of the span. If not provided, the current local time will be used.
-            end_time: The end time of the span.
-            metadata: Additional metadata for the span. This can be any valid JSON serializable object.
-            input: The input data for the span. This can be any valid JSON serializable object.
-            output: The output data for the span. This can be any valid JSON serializable object.
-            tags: Tags associated with the span.
-            feedback_scores: The list of feedback score dicts associated with the span. Dicts don't require having an `id` value.
-            project_name: The name of the project. If not provided, falls back to the active project context
-                (from @track or opik.project_context), then to the client's default.
-            usage: Usage data for the span. In order for input, output, and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionally to the original usage on the top level of the dict): prompt_tokens, completion_tokens, and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The name of LLM (in this case `type` parameter should be == `llm`)
-            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our GitHub - https://github.com/comet-ml/opik.
-                If your provider is not in the list, you can still specify it, but the cost tracking will not be available
-            error_info: The dictionary with error information (typically used when the span function has failed).
-            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
-            attachments: The list of attachments to be uploaded to the span.
+            trace_id: trace的唯一标识符。如果未提供，将生成新的ID。必须是有效的[UUIDv7](https://uuid7.com/) ID。
+            id: span的唯一标识符。如果未提供，将生成新的ID。必须是有效的[UUIDv7](https://uuid.ramsey.dev/en/stable/rfc4122/version8.html) ID。
+            parent_span_id: 父span的唯一标识符。
+            name: span的名称。
+            type: span的类型。默认为"general"。
+            start_time: span的开始时间。如果未提供，将使用当前本地时间。
+            end_time: span的结束时间。
+            metadata: span的附加元数据。可以是任何有效的JSON可序列化对象。
+            input: span的输入数据。可以是任何有效的JSON可序列化对象。
+            output: span的输出数据。可以是任何有效的JSON可序列化对象。
+            tags: 与span关联的标签。
+            feedback_scores: 与span关联的反馈分数字典列表。字典不需要包含`id`值。
+            project_name: 项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            usage: span的使用数据。为了在UI中显示输入、输出和总token数，
+                usage必须包含OpenAI格式的键（可以在字典顶层额外传递）：
+                prompt_tokens、completion_tokens和total_tokens。
+                如果未找到OpenAI格式的键，Opik将尝试自动计算（如果识别出使用格式），
+                但不保证成功。可以在opik.LLMProvider枚举中查看支持的提供商格式。
+            model: LLM的名称（在这种情况下`type`参数应为== `llm`）
+            provider: LLM的提供商。可以在`opik.LLMProvider`枚举中找到Opik官方支持的成本跟踪提供商。
+                如果您的提供商不在其中，请在我们的GitHub上提交issue - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍然可以指定它，但成本跟踪将不可用。
+            error_info: 包含错误信息的字典（通常在span函数失败时使用）。
+            total_cost: span的成本（以美元为单位）。此值优先于Opik根据使用情况计算的成本。
+            attachments: 要上传到span的附件列表。
 
         Returns:
-            span.Span: The created span object.
+            span.Span: 创建的span对象。
         """
         return self.__internal_api__span__(
             trace_id=trace_id,
@@ -615,8 +614,8 @@ class Opik:
 
         if trace_id is None:
             trace_id = id_helpers.generate_id()
-            # TODO: decide what needs to be passed to CreateTraceMessage.
-            # This version is likely not final.
+            # TODO: 决定需要传递什么给CreateTraceMessage。
+            # 此版本可能不是最终版本。
             create_trace_message = messages.CreateTraceMessage(
                 trace_id=trace_id,
                 project_name=project_name,
@@ -688,44 +687,45 @@ class Opik:
         attachments: Optional[List[Attachment]] = None,
     ) -> None:
         """
-        Update the attributes of an existing span.
+        更新现有span的属性。
 
-        This method should only be used after the span has been fully created and stored.
-        If called before or immediately after span creation, the update may silently fail or result in incorrect data.
+        此方法应在span完全创建和存储后使用。
+        如果在span创建之前或之后立即调用，更新可能会静默失败或导致数据不正确。
 
-        This method uses four parameters to identify the span:
+        此方法使用四个参数来标识span：
             - `id`
             - `trace_id`
             - `parent_span_id`
             - `project_name`
 
-        These parameters **must match exactly** the values used when the span was created.
-        If any of them are incorrect, the update may not apply and no error will be raised.
+        这些参数**必须完全匹配**创建span时使用的值。
+        如果其中任何一个不正确，更新可能不会应用且不会引发错误。
 
-        All other parameters are optional and will update the corresponding fields in the span.
-        If a parameter is not provided, the existing value will remain unchanged.
+        所有其他参数都是可选的，将更新span中的相应字段。
+        如果未提供参数，现有值将保持不变。
 
         Args:
-            id: The unique identifier for the span to update.
-            trace_id: The unique identifier for the trace to which the span belongs.
-            parent_span_id: The unique identifier for the parent span.
-            project_name: The project name to which the span belongs.
-            end_time: The new end time of the span.
-            metadata: The new metadata to be associated with the span.
-            input: The new input data for the span.
-            output: The new output data for the span.
-            tags: A new list of tags to be associated with the span.
-            usage: The new usage data for the span. In order for input, output and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionaly to original usage on the top level of the dict):  prompt_tokens, completion_tokens and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The new name of LLM.
-            provider: The new provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our github - https://github.com/comet-ml/opik.
-                If your provider not in the list, you can still specify it but the cost tracking will not be available
-            error_info: The new dictionary with error information (typically used when the span function has failed).
-            total_cost: The new cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
-            attachments: The new list of attachments to be uploaded to the span.
+            id: 要更新的span的唯一标识符。
+            trace_id: span所属trace的唯一标识符。
+            parent_span_id: 父span的唯一标识符。
+            project_name: span所属的项目名称。
+            end_time: span的新结束时间。
+            metadata: 与span关联的新元数据。
+            input: span的新输入数据。
+            output: span的新输出数据。
+            tags: 与span关联的新标签列表。
+            usage: span的新使用数据。为了在UI中显示输入、输出和总token数，
+                usage必须包含OpenAI格式的键（可以在字典顶层额外传递）：
+                prompt_tokens、completion_tokens和total_tokens。
+                如果未找到OpenAI格式的键，Opik将尝试自动计算（如果识别出使用格式），
+                但不保证成功。可以在opik.LLMProvider枚举中查看支持的提供商格式。
+            model: LLM的新名称。
+            provider: LLM的新提供商。可以在`opik.LLMProvider`枚举中找到Opik官方支持的成本跟踪提供商。
+                如果您的提供商不在其中，请在我们的GitHub上提交issue - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍然可以指定它，但成本跟踪将不可用。
+            error_info: 包含错误信息的新字典（通常在span函数失败时使用）。
+            total_cost: span的新成本（以美元为单位）。此值优先于Opik根据使用情况计算的成本。
+            attachments: 要上传到span的新附件列表。
 
         Returns:
             None
@@ -770,32 +770,32 @@ class Opik:
         thread_id: Optional[str] = None,
     ) -> None:
         """
-        Update the trace attributes.
+        更新trace属性。
 
-        This method should only be used after the trace has been fully created and stored.
-        If called before or immediately after trace creation, the update may silently fail or result in incorrect data.
+        此方法应在trace完全创建和存储后使用。
+        如果在trace创建之前或之后立即调用，更新可能会静默失败或导致数据不正确。
 
-        This method uses two parameters to identify the trace:
+        此方法使用两个参数来标识trace：
             - `trace_id`
             - `project_name`
 
-        These parameters **must match exactly** the values used when the trace was created.
-        If any of them are incorrect, the update may not apply and no error will be raised.
+        这些参数**必须完全匹配**创建trace时使用的值。
+        如果其中任何一个不正确，更新可能不会应用且不会引发错误。
 
-        All other parameters are optional and will update the corresponding fields in the trace.
-        If a parameter is not provided, the existing value will remain unchanged.
+        所有其他参数都是可选的，将更新trace中的相应字段。
+        如果未提供参数，现有值将保持不变。
 
         Args:
-            trace_id: The unique identifier for the trace.
-            project_name: The project name to which the trace belongs.
-            end_time: The end time of the trace.
-            metadata: Additional metadata to be associated with the trace.
-            input: The input data for the trace.
-            output: The output data for the trace.
-            tags: A list of tags to be associated with the trace.
-            error_info: The dictionary with error information (typically used when the trace function has failed).
-            thread_id: Used to group multiple traces into a thread.
-                The identifier is user-defined and has to be unique per project.
+            trace_id: trace的唯一标识符。
+            project_name: trace所属的项目名称。
+            end_time: trace的结束时间。
+            metadata: 与trace关联的附加元数据。
+            input: trace的输入数据。
+            output: trace的输出数据。
+            tags: 与trace关联的标签列表。
+            error_info: 包含错误信息的字典（通常在trace函数失败时使用）。
+            thread_id: 用于将多个trace分组到一个线程中。
+                标识符由用户定义，在每个项目中必须唯一。
 
         Returns:
             None
@@ -830,14 +830,14 @@ class Opik:
         self, scores: List[BatchFeedbackScoreDict], project_name: Optional[str] = None
     ) -> None:
         """
-        Log feedback scores for spans.
+        记录spans的反馈分数。
 
         Args:
-            scores (List[BatchFeedbackScoreDict]): A list of feedback score dictionaries.
-                Specifying a span id via `id` key for each score is mandatory.
-            project_name: The name of the project in which the spans are logged. If not provided, falls back to the
-                active project context (from @track or opik.project_context), then to the client's default.
-                Deprecated: use `project_name` in the feedback score dictionary that's listed in the `scores` parameter.
+            scores (List[BatchFeedbackScoreDict]): 反馈分数字典列表。
+                必须通过`id`键为每个分数指定span id。
+            project_name: 记录spans的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+                已弃用：请在`scores`参数中列出的反馈分数字典中使用`project_name`。
 
         Returns:
             None
@@ -845,7 +845,7 @@ class Opik:
         Example:
             >>> from opik import Opik
             >>> client = Opik()
-            >>> # Batch logging across multiple projects
+            >>> # 跨多个项目批量记录
             >>> scores = [
             >>>     {"id": span1_id, "name": "accuracy", "value": 0.95, "project_name": "project-A"},
             >>>     {"id": span2_id, "name": "accuracy", "value": 0.88, "project_name": "project-B"},
@@ -879,14 +879,14 @@ class Opik:
         self, scores: List[BatchFeedbackScoreDict], project_name: Optional[str] = None
     ) -> None:
         """
-        Log feedback scores for traces.
+        记录traces的反馈分数。
 
         Args:
-            scores (List[BatchFeedbackScoreDict]): A list of feedback score dictionaries.
-                Specifying a trace id via `id` key for each score is mandatory.
-            project_name: The name of the project in which the traces are logged. If not provided, falls back to the
-                active project context (from @track or opik.project_context), then to the client's default.
-                Deprecated: use `project_name` in the feedback score dictionary that's listed in the `scores` parameter.
+            scores (List[BatchFeedbackScoreDict]): 反馈分数字典列表。
+                必须通过`id`键为每个分数指定trace id。
+            project_name: 记录traces的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+                已弃用：请在`scores`参数中列出的反馈分数字典中使用`project_name`。
 
         Returns:
             None
@@ -894,7 +894,7 @@ class Opik:
         Example:
             >>> from opik import Opik
             >>> client = Opik()
-            >>> # Batch logging across multiple projects
+            >>> # 跨多个项目批量记录
             >>> scores = [
             >>>     {"id": trace1_id, "name": "accuracy", "value": 0.95, "project_name": "project-A"},
             >>>     {"id": trace2_id, "name": "accuracy", "value": 0.88, "project_name": "project-B"},
@@ -931,14 +931,13 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> None:
         """
-        Log assertion results for traces via the dedicated assertion-results
-        ingestion endpoint.
+        通过专用的断言结果摄取端点记录traces的断言结果。
 
         Args:
-            assertion_results: A list of assertion result dictionaries. Each entry
-                requires `id` (trace id), `name`, and `status` ("passed" or "failed").
-            project_name: The project the traces belong to. If not provided, falls
-                back to the active project context, then to the client's default.
+            assertion_results: 断言结果字典列表。每个条目需要`id`（trace id）、
+                `name`和`status`（"passed"或"failed"）。
+            project_name: traces所属的项目。如果未提供，则回退到活动项目上下文，
+                然后使用客户端默认值。
         """
         resolved_project_name = self._resolve_project_name(project_name)
 
@@ -985,14 +984,14 @@ class Opik:
         self, scores: List[BatchFeedbackScoreDict], project_name: Optional[str] = None
     ) -> None:
         """
-        Log feedback scores for threads.
+        记录线程的反馈分数。
 
         Args:
-            scores (List[BatchFeedbackScoreDict]): A list of feedback score dictionaries.
-                Specifying a thread id via `id` key for each score is mandatory.
-            project_name: The name of the project in which the threads are logged. If not provided, falls back to the
-                active project context (from @track or opik.project_context), then to the client's default.
-                Deprecated: use `project_name` in the feedback score dictionary that's listed in the `scores` parameter.
+            scores (List[BatchFeedbackScoreDict]): 反馈分数字典列表。
+                必须通过`id`键为每个分数指定线程id。
+            project_name: 记录线程的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+                已弃用：请在`scores`参数中列出的反馈分数字典中使用`project_name`。
 
         Returns:
             None
@@ -1000,7 +999,7 @@ class Opik:
         Example:
             >>> from opik import Opik
             >>> client = Opik()
-            >>> # Batch logging across multiple projects
+            >>> # 跨多个项目批量记录
             >>> scores = [
             >>>     {"id": "thread_123", "name": "user_satisfaction", "value": 0.85, "project_name": "project-A"},
             >>>     {"id": "thread_456", "name": "user_satisfaction", "value": 0.92, "project_name": "project-B"},
@@ -1018,40 +1017,41 @@ class Opik:
         max_results: int = 1000,
         truncate: bool = True,
     ) -> List[trace_thread.TraceThread]:
-        """Search for threads in a given project based on specific criteria.
+        """
+        根据特定条件在给定项目中搜索线程。
 
         Args:
-            project_name: The name of the project to search the threads for. If not provided, falls back to the
-                active project context (from @track or opik.project_context), then to the client's default.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: `"<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"`
+            project_name: 要搜索线程的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            filter_string: 使用Opik查询语言（OQL）缩小搜索范围的过滤器字符串。
+                格式为：`"<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"`
 
-                Supported columns:
-                - `id`: String (=, !=, contains, not_contains, starts_with, ends_with, >, <)
-                - `first_message`, `last_message`: String (=, !=, contains, not_contains, starts_with, ends_with, >, <)
-                - `environment`: Enum for lifecycle stage (=, !=, in, not_in)
-                - `status`: Enum (=, !=)
-                - `start_time`, `end_time`, `created_at`, `last_updated_at`: DateTime (=, !=, >, >=, <, <=)
-                - `feedback_scores`: Numeric with dot notation (=, !=, >, >=, <, <=, is_empty, is_not_empty)
-                - `tags`, `annotation_queue_ids`: List (=, !=, contains, not_contains, is_empty, is_not_empty)
-                - `duration`, `number_of_messages`: Numeric (=, !=, >, >=, <, <=)
+                支持的列：
+                - `id`: 字符串 (=, !=, contains, not_contains, starts_with, ends_with, >, <)
+                - `first_message`, `last_message`: 字符串 (=, !=, contains, not_contains, starts_with, ends_with, >, <)
+                - `environment`: 生命周期阶段枚举 (=, !=, in, not_in)
+                - `status`: 枚举 (=, !=)
+                - `start_time`, `end_time`, `created_at`, `last_updated_at`: 日期时间 (=, !=, >, >=, <, <=)
+                - `feedback_scores`: 数值，使用点表示法 (=, !=, >, >=, <, <=, is_empty, is_not_empty)
+                - `tags`, `annotation_queue_ids`: 列表 (=, !=, contains, not_contains, is_empty, is_not_empty)
+                - `duration`, `number_of_messages`: 数值 (=, !=, >, >=, <, <=)
 
-                Examples:
-                - `status = "active"` - Filter by thread status
-                - `id = "thread_123"` - Filter by specific thread ID
-                - `number_of_messages >= 5` - Filter by message count
-                - `first_message contains "hello"` - Filter by first message content
-                - `feedback_scores.user_frustration > 0.5` - Filter by feedback score
-                - `tags contains "important"` - Filter by tag
-                - `environment = "production"` - Filter by environment
-                - `environment in ("production", "staging")` - Filter by multiple environments
+                示例：
+                - `status = "active"` - 按线程状态过滤
+                - `id = "thread_123"` - 按特定线程ID过滤
+                - `number_of_messages >= 5` - 按消息数量过滤
+                - `first_message contains "hello"` - 按首条消息内容过滤
+                - `feedback_scores.user_frustration > 0.5` - 按反馈分数过滤
+                - `tags contains "important"` - 按标签过滤
+                - `environment = "production"` - 按环境过滤
+                - `environment in ("production", "staging")` - 按多个环境过滤
 
-                If not provided, all threads in the project will be returned up to the limit.
-            max_results: The maximum number of threads to retrieve. The default value is 1000.
-            truncate: Whether to truncate image data stored in input, output, or metadata.
+                如果未提供，将返回项目中的所有线程，最多返回限制数量。
+            max_results: 要检索的最大线程数。默认值为1000。
+            truncate: 是否截取存储在输入、输出或元数据中的图像数据。
 
         Returns:
-            A list of TraceThread objects that match the search criteria.
+            与搜索条件匹配的TraceThread对象列表。
 
         Example:
             >>> from opik import Opik
@@ -1071,13 +1071,13 @@ class Opik:
 
     def delete_trace_feedback_score(self, trace_id: str, name: str) -> None:
         """
-        Deletes a feedback score associated with a specific trace.
+        删除与特定trace关联的反馈分数。
 
         Args:
             trace_id:
-                The unique identifier of the trace for which the feedback score needs to be deleted.
+                需要删除反馈分数的trace的唯一标识符。
             name: str
-                The name associated with the feedback score that should be deleted.
+                与要删除的反馈分数关联的名称。
 
         Returns:
             None
@@ -1089,13 +1089,13 @@ class Opik:
 
     def delete_span_feedback_score(self, span_id: str, name: str) -> None:
         """
-        Deletes a feedback score associated with a specific span.
+        删除与特定span关联的反馈分数。
 
         Args:
             span_id:
-                The unique identifier of the trace for which the feedback score needs to be deleted.
+                需要删除反馈分数的span的唯一标识符。
             name: str
-                The name associated with the feedback score that should be deleted.
+                与要删除的反馈分数关联的名称。
 
         Returns:
             None
@@ -1111,15 +1111,16 @@ class Opik:
         description: Optional[str] = None,
         color: Optional[str] = None,
     ) -> environment_public.EnvironmentPublic:
-        """Create a new environment in the current workspace.
+        """
+        在当前工作区中创建新环境。
 
         Args:
-            name: Human-readable environment name (e.g. ``production``).
-            description: Optional description.
-            color: Optional color hex code used for UI display.
+            name: 人类可读的环境名称（例如``production``）。
+            description: 可选描述。
+            color: 可选的颜色十六进制代码，用于UI显示。
 
         Returns:
-            The created environment.
+            创建的环境。
         """
         new_id = id_helpers.generate_id()
         try:
@@ -1136,9 +1137,10 @@ class Opik:
         return self._rest_client.environments.get_environment_by_id(new_id)
 
     def get_environments(self) -> List[environment_public.EnvironmentPublic]:
-        """List environments in the current workspace.
+        """
+        列出当前工作区中的环境。
 
-        The backend caps the response at the workspace limit (default 20).
+        后端将响应限制在工作区限制内（默认20个）。
         """
         page = self._rest_client.environments.find_environments()
         return list(page.content or [])
@@ -1151,9 +1153,10 @@ class Opik:
         description: Optional[str] = None,
         color: Optional[str] = None,
     ) -> environment_public.EnvironmentPublic:
-        """Update the description and/or color of an environment, identified by name.
+        """
+        通过名称标识环境，更新其描述和/或颜色。
 
-        Returns the updated environment.
+        返回更新后的环境。
         """
         if color is not None and name in self._BUILTIN_ENVIRONMENT_NAMES:
             raise exceptions.EnvironmentConfigurationError(
@@ -1171,7 +1174,9 @@ class Opik:
         return self._rest_client.environments.get_environment_by_id(existing.id)
 
     def delete_environment(self, name: str) -> None:
-        """Delete an environment by name. No-op if no matching environment exists."""
+        """
+        按名称删除环境。如果不存在匹配的环境，则不执行任何操作。
+        """
         existing = self._find_environment_by_name(name)
         if existing is None:
             return
@@ -1189,14 +1194,15 @@ class Opik:
         self, name: str, project_name: Optional[str] = None
     ) -> dataset.Dataset:
         """
-        Get dataset by name
+        按名称获取数据集。
 
         Args:
-            name: The name of the dataset
-            project_name: The name of the project to which the dataset belongs. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 数据集的名称。
+            project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            dataset.Dataset: dataset object associated with the name passed.
+            dataset.Dataset: 与传入名称关联的数据集对象。
         """
         project_name = self._resolve_project_name(project_name)
         dataset_fern = self._rest_client.datasets.get_dataset_by_identifier(
@@ -1217,19 +1223,19 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> List[dataset.Dataset]:
         """
-        Returns all datasets up to the specified limit.
+        返回所有数据集，最多返回指定限制数量。
 
         Args:
-            project_name: The name of the project to which the datasets belong. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            max_results: The maximum number of datasets to return.
-            sync_items: If True, eagerly preload item hashes for every returned
-                dataset — one REST roundtrip per dataset. Defaults to False: the
-                hashes are loaded lazily on the first ``dataset.insert(...)``
-                call, so callers that only inspect metadata pay nothing and
-                callers that insert still get content-hash dedup correctly.
+            project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            max_results: 要返回的最大数据集数量。
+            sync_items: 如果为True，则为每个返回的数据集预先加载项目哈希——
+                每个数据集一次REST往返。默认为False：哈希在首次``dataset.insert(...)``
+                调用时懒加载，因此仅检查元数据的调用者无需支付任何代价，
+                而插入数据的调用者仍然可以正确获得内容哈希去重。
 
         Returns:
-            List[dataset.Dataset]: A list of dataset objects that match the filter string.
+            List[dataset.Dataset]: 与过滤器字符串匹配的数据集对象列表。
         """
         datasets = dataset_rest_operations.get_datasets(
             project_name=self._resolve_project_name(project_name),
@@ -1247,15 +1253,16 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> List[experiment.Experiment]:
         """
-        Returns all experiments up to the specified limit.
+        返回所有实验，最多返回指定限制数量。
 
         Args:
-            dataset_name: The name of the dataset
-            max_results: The maximum number of experiments to return.
-            project_name: The name of the project to which the datasets belong. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            dataset_name: 数据集的名称。
+            max_results: 要返回的最大实验数量。
+            project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            List[experiment.Experiment]: A list of experiment objects.
+            List[experiment.Experiment]: 实验对象列表。
         """
         project_name = self._resolve_project_name(project_name)
         dataset_id = dataset_rest_operations.get_dataset_id(
@@ -1275,11 +1282,12 @@ class Opik:
 
     def delete_dataset(self, name: str, project_name: Optional[str] = None) -> None:
         """
-        Delete dataset by name
+        按名称删除数据集。
 
         Args:
-            name: The name of the dataset
-            project_name: The name of the project to which the dataset belongs. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 数据集的名称。
+            project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
         """
         project_name = self._resolve_project_name(project_name)
         self._rest_client.datasets.delete_dataset_by_name(
@@ -1293,15 +1301,16 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> dataset.Dataset:
         """
-        Create a new dataset.
+        创建新数据集。
 
         Args:
-            name: The name of the dataset.
-            description: An optional description of the dataset.
-            project_name: The name of the project to which the dataset belongs. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 数据集的名称。
+            description: 数据集的可选描述。
+            project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            dataset.Dataset: The created dataset object.
+            dataset.Dataset: 创建的数据集对象。
         """
         project_name = self._resolve_project_name(project_name)
         self._rest_client.datasets.create_dataset(
@@ -1330,15 +1339,16 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> dataset.Dataset:
         """
-        Get an existing dataset by name or create a new one if it does not exist.
+        按名称获取现有数据集，如果不存在则创建新数据集。
 
         Args:
-            name: The name of the dataset.
-            description: An optional description of the dataset.
-            project_name: The name of the project to which the dataset belongs. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 数据集的名称。
+            description: 数据集的可选描述。
+            project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            dataset.Dataset: The dataset object.
+            dataset.Dataset: 数据集对象。
         """
         try:
             return self.get_dataset(name, project_name=project_name)
@@ -1361,23 +1371,22 @@ class Opik:
         ] = None,
     ) -> dashboard.Dashboard:
         """
-        Create a new dashboard.
+        创建新的仪表板。
 
         Args:
-            name: The name of the dashboard.
-            type: The dashboard type, either ``"multi_project"`` or ``"experiments"``.
-                Determines which widget types are allowed.
-            description: An optional description of the dashboard.
-            project_name: For a project-scoped dashboard, the project name. If it does
-                not exist it will be created. Ignored when ``project_id`` is provided.
-            project_id: For a project-scoped dashboard, the project id. Takes precedence
-                over ``project_name``. If neither is provided, a workspace-level
-                dashboard is created.
-            sections: Optional initial sections (``DashboardSection`` objects or dicts).
-                If omitted, the dashboard starts with a single empty "Overview" section.
+            name: 仪表板的名称。
+            type: 仪表板类型，可以是``"multi_project"``或``"experiments"``。
+                决定允许哪些小部件类型。
+            description: 仪表板的可选描述。
+            project_name: 对于项目范围的仪表板，项目名称。如果不存在将被创建。
+                当提供``project_id``时被忽略。
+            project_id: 对于项目范围的仪表板，项目id。优先于``project_name``。
+                如果两者都未提供，将创建工作区级别的仪表板。
+            sections: 可选的初始部分（``DashboardSection``对象或字典）。
+                如果省略，仪表板将从一个空的"Overview"部分开始。
 
         Returns:
-            dashboard.Dashboard: The created dashboard object.
+            dashboard.Dashboard: 创建的仪表板对象。
         """
         if sections is None:
             section_dicts: List[Dict[str, Any]] = [
@@ -1397,7 +1406,7 @@ class Opik:
                 if project_id is not None:
                     dashboard_validation.inject_project_id(widget, project_id)
                 elif project_name is None:
-                    # No project at all — delegate the error to inject_project_id
+                    # 完全没有项目——将错误委托给inject_project_id
                     dashboard_validation.inject_project_id(widget, None)
 
         config = {
@@ -1424,13 +1433,13 @@ class Opik:
 
     def get_dashboard(self, dashboard_id: str) -> dashboard.Dashboard:
         """
-        Get a dashboard by id.
+        按id获取仪表板。
 
         Args:
-            dashboard_id: The id of the dashboard.
+            dashboard_id: 仪表板的id。
 
         Returns:
-            dashboard.Dashboard: The dashboard object.
+            dashboard.Dashboard: 仪表板对象。
         """
         response = self._rest_client.dashboards.get_dashboard_by_id(dashboard_id)
         return dashboard.Dashboard.from_public(
@@ -1448,17 +1457,17 @@ class Opik:
         filters: Optional[str] = None,
     ) -> List[dashboard.Dashboard]:
         """
-        Get dashboards in the workspace.
+        获取工作区中的仪表板。
 
         Args:
-            name: Optional name to filter dashboards by.
-            project_id: Optional project id to filter dashboards by.
-            max_results: The maximum number of dashboards to return.
-            sorting: Optional serialized sorting specification.
-            filters: Optional serialized filter specification.
+            name: 可选的仪表板名称过滤器。
+            project_id: 可选的项目id过滤器。
+            max_results: 要返回的最大仪表板数量。
+            sorting: 可选的序列化排序规范。
+            filters: 可选的序列化过滤器规范。
 
         Returns:
-            List[dashboard.Dashboard]: The matching dashboards.
+            List[dashboard.Dashboard]: 匹配的仪表板列表。
         """
         return dashboard_rest_operations.find_dashboards(
             rest_client=self._rest_client,
@@ -1472,10 +1481,10 @@ class Opik:
 
     def delete_dashboard(self, dashboard_id: str) -> None:
         """
-        Delete a dashboard by id.
+        按id删除仪表板。
 
         Args:
-            dashboard_id: The id of the dashboard.
+            dashboard_id: 仪表板的id。
         """
         self._rest_client.dashboards.delete_dashboard(dashboard_id)
 
@@ -1491,25 +1500,23 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> test_suite.TestSuite:
         """
-        Create a new test suite for regression testing.
+        创建用于回归测试的新测试套件。
 
-        Test suites are pre-configured test suites that let you validate
-        that prompt changes, model updates, or code modifications don't break
-        existing functionality.
+        测试套件是预配置的测试套件，可让您验证提示词更改、模型更新或
+        代码修改不会破坏现有功能。
 
         Args:
-            name: The name of the test suite.
-            description: Optional description of what this suite tests.
-            global_assertions: Suite-level assertions applied to all items.
-                Each string describes an expected behavior that will be
-                checked by an LLM.
-            global_execution_policy: Suite-level execution policy.
-                Example: {"runs_per_item": 3, "pass_threshold": 2}
-            tags: Optional list of tags for the suite.
-            project_name: Optional name of the project to associate the suite with.
+            name: 测试套件的名称。
+            description: 此套件测试内容的可选描述。
+            global_assertions: 应用于所有项目的套件级断言。
+                每个字符串描述将由LLM检查的预期行为。
+            global_execution_policy: 套件级执行策略。
+                示例：{"runs_per_item": 3, "pass_threshold": 2}
+            tags: 套件的可选标签列表。
+            project_name: 与套件关联的项目可选名称。
 
         Returns:
-            TestSuite: The created test suite object.
+            TestSuite: 创建的测试套件对象。
 
         Example:
             >>> suite = client.create_test_suite(
@@ -1566,20 +1573,19 @@ class Opik:
         self, name: str, project_name: Optional[str] = None
     ) -> test_suite.TestSuite:
         """
-        Get an existing test suite by name.
+        按名称获取现有测试套件。
 
-        Retrieves the dataset and its version-level assertions and execution
-        policy from the backend, returning a fully configured TestSuite.
+        从后端检索数据集及其版本级断言和执行策略，返回完全配置的TestSuite。
 
         Args:
-            name: The name of the test suite.
-            project_name: Optional name of the project the suite is associated with.
+            name: 测试套件的名称。
+            project_name: 套件关联的项目可选名称。
 
         Returns:
-            TestSuite: The test suite object.
+            TestSuite: 测试套件对象。
 
         Raises:
-            ApiError: If no dataset with the given name exists (404).
+            ApiError: 如果不存在具有给定名称的数据集（404）。
         """
         project_name = self._resolve_project_name(project_name)
         dataset_fern = self._rest_client.datasets.get_dataset_by_identifier(
@@ -1612,23 +1618,23 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> test_suite.TestSuite:
         """
-        Get an existing test suite by name or create a new one if it does not exist.
+        按名称获取现有测试套件，如果不存在则创建新的。
 
-        If the suite already exists it is returned as-is — the
-        ``global_assertions``, ``global_execution_policy``, ``description``,
-        and ``tags`` parameters are only used when creating a new suite.
-        To modify an existing suite, use :meth:`TestSuite.update` instead.
+        如果套件已存在，则按原样返回——``global_assertions``、
+        ``global_execution_policy``、``description``和``tags``参数
+        仅在创建新套件时使用。
+        要修改现有套件，请使用:meth:`TestSuite.update`。
 
         Args:
-            name: The name of the test suite.
-            description: Optional description (used only when creating).
-            global_assertions: Suite-level assertions (used only when creating).
-            global_execution_policy: Execution policy (used only when creating).
-            tags: Optional list of tags (used only when creating).
-            project_name: Optional name of the project the suite is associated with.
+            name: 测试套件的名称。
+            description: 可选描述（仅在创建时使用）。
+            global_assertions: 套件级断言（仅在创建时使用）。
+            global_execution_policy: 执行策略（仅在创建时使用）。
+            tags: 可选标签列表（仅在创建时使用）。
+            project_name: 套件关联的项目可选名称。
 
         Returns:
-            TestSuite: The test suite object.
+            TestSuite: 测试套件对象。
         """
         try:
             return self.get_test_suite(name, project_name=project_name)
@@ -1646,11 +1652,11 @@ class Opik:
 
     def delete_test_suite(self, name: str, project_name: Optional[str] = None) -> None:
         """
-        Delete a test suite by name.
+        按名称删除测试套件。
 
         Args:
-            name: The name of the test suite.
-            project_name: The name of the project the suite belongs to.
+            name: 测试套件的名称。
+            project_name: 套件所属的项目名称。
         """
         project_name = self._resolve_project_name(project_name)
         self._rest_client.datasets.delete_dataset_by_name(
@@ -1663,16 +1669,16 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> List[test_suite.TestSuite]:
         """
-        Returns all test suites up to the specified limit.
+        返回所有测试套件，最多返回指定限制数量。
 
-        Only returns test suites, not regular datasets.
+        仅返回测试套件，不返回常规数据集。
 
         Args:
-            max_results: The maximum number of test suites to return.
-            project_name: The name of the project the suites belong to.
+            max_results: 要返回的最大测试套件数量。
+            project_name: 套件所属的项目名称。
 
         Returns:
-            List[TestSuite]: A list of test suite objects.
+            List[TestSuite]: 测试套件对象列表。
         """
         from .dataset import rest_operations
 
@@ -1690,15 +1696,15 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> List[experiment.Experiment]:
         """
-        Returns all experiments for a test suite.
+        返回测试套件的所有实验。
 
         Args:
-            name: The name of the test suite.
-            max_results: The maximum number of experiments to return.
-            project_name: The name of the project the suite belongs to.
+            name: 测试套件的名称。
+            max_results: 要返回的最大实验数量。
+            project_name: 套件所属的项目名称。
 
         Returns:
-            List[Experiment]: A list of experiment objects.
+            List[Experiment]: 实验对象列表。
         """
         from .dataset import rest_operations as dataset_rest_operations
 
@@ -1731,23 +1737,23 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> experiment.Experiment:
         """
-        Creates a new experiment using the given dataset name and optional parameters.
+        使用给定的数据集名称和可选参数创建新实验。
 
         Args:
-            dataset_name: The name of the dataset to associate with the experiment.
-            name: The optional name for the experiment. If None, a generated name will be used.
-            experiment_config: Optional experiment configuration parameters. Must be a dictionary if provided.
-            prompt: Prompt object to associate with the experiment. Deprecated, use `prompts` argument instead.
-            prompts: List of Prompt objects to associate with the experiment.
-            type: The type of the experiment. Can be "regular", "trial", or "mini-batch".
-                Defaults to "regular". "trial" and "mini-batch" are only relevant for prompt optimization experiments.
-            optimization_id: Optional ID of the optimization associated with the experiment.
-            tags: Optional list of tags to associate with the experiment.
-            dataset_version_id: Optional ID of the dataset version to associate with the experiment.
-            project_name: Optional name of the project to associate the experiment with.
+            dataset_name: 要与实验关联的数据集名称。
+            name: 实验的可选名称。如果为None，将使用生成的名称。
+            experiment_config: 可选的实验配置参数。如果提供，必须是字典。
+            prompt: 要与实验关联的提示词对象。已弃用，请改用`prompts`参数。
+            prompts: 要与实验关联的提示词对象列表。
+            type: 实验类型。可以是"regular"、"trial"或"mini-batch"。
+                默认为"regular"。"trial"和"mini-batch"仅与提示词优化实验相关。
+            optimization_id: 与实验关联的优化的可选ID。
+            tags: 要与实验关联的可选标签列表。
+            dataset_version_id: 要与实验关联的数据集版本的可选ID。
+            project_name: 与实验关联的项目可选名称。
 
         Returns:
-            experiment.Experiment: The newly created experiment object.
+            experiment.Experiment: 新创建的实验对象。
         """
         id = id_helpers.generate_id()
 
@@ -1798,15 +1804,15 @@ class Opik:
         experiment_config: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
-        Update an experiment's name and/or configuration.
+        更新实验的名称和/或配置。
 
         Args:
-            id: The experiment ID.
-            name: The new name for the experiment. If None, the name will not be updated.
-            experiment_config: The new configuration for the experiment. If None, the configuration will not be updated.
+            id: 实验ID。
+            name: 实验的新名称。如果为None，名称将不会更新。
+            experiment_config: 实验的新配置。如果为None，配置将不会更新。
 
         Raises:
-            ValueError: if id is None or empty, or if both name and experiment_config are None
+            ValueError: 如果id为None或空，或者name和experiment_config都为None。
         """
         if not id:
             raise ValueError(
@@ -1818,7 +1824,7 @@ class Opik:
                 "At least one of 'name' or 'experiment_config' must be provided"
             )
 
-        # Only include parameters that are provided to avoid clearing fields
+        # 仅包含提供的参数以避免清除字段
         request_params: Dict[str, Any] = {}
         if name is not None:
             request_params["name"] = name
@@ -1831,17 +1837,18 @@ class Opik:
         self, name: str, project_name: Optional[str] = None
     ) -> experiment.Experiment:
         """
-        Returns an existing experiment by its name.
+        按名称返回现有实验。
 
         Args:
-            name: The name of the experiment.
-            project_name: The name of the project the experiment belongs to. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 实验的名称。
+            project_name: 实验所属的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            experiment.Experiment: the API object for an existing experiment.
+            experiment.Experiment: 现有实验的API对象。
         """
         LOGGER.warning(
-            "Deprecated, use `get_experiments_by_name` or `get_experiment_by_id` instead."
+            "已弃用，请改用`get_experiments_by_name`或`get_experiment_by_id`。"
         )
         project_name = self._resolve_project_name(project_name)
         experiment_public = experiment_rest_operations.get_experiment_data_by_name(
@@ -1863,15 +1870,15 @@ class Opik:
         self, name: str, project_name: Optional[str] = None
     ) -> List[experiment.Experiment]:
         """
-        Returns a list of existing experiments containing the given string in their name.
-        Search is case-insensitive.
+        返回名称中包含给定字符串的现有实验列表。
+        搜索不区分大小写。
 
         Args:
-            name: The string to search for in the experiment names.
-            project_name: The project name to search within. If None, uses the default project.
+            name: 要在实验名称中搜索的字符串。
+            project_name: 要搜索的项目名称。如果为None，使用默认项目。
 
         Returns:
-            List[experiment.Experiment]: List of existing experiments.
+            List[experiment.Experiment]: 现有实验列表。
         """
         project_name = self._resolve_project_name(project_name)
         experiments_public = experiment_rest_operations.get_experiments_data_by_name(
@@ -1896,13 +1903,13 @@ class Opik:
 
     def get_experiment_by_id(self, id: str) -> experiment.Experiment:
         """
-        Returns an existing experiment by its id.
+        按id返回现有实验。
 
         Args:
-            id: The id of the experiment.
+            id: 实验的id。
 
         Returns:
-            experiment.Experiment: the API object for an existing experiment.
+            experiment.Experiment: 现有实验的API对象。
         """
         try:
             experiment_public = self._rest_client.experiments.get_experiment_by_id(
@@ -1928,20 +1935,16 @@ class Opik:
 
     def end(self, timeout: Optional[int] = None, *, flush: bool = True) -> None:
         """
-        End the Opik session and submit all pending messages.
+        结束Opik会话并提交所有待处理消息。
 
         Args:
-            timeout (Optional[int]): The timeout for closing the streamer. Once
-                the timeout is reached, the streamer will be closed regardless
-                of whether all messages have been sent. If no timeout is set,
-                the default value from the Opik configuration will be used.
-                Ignored when ``flush`` is False.
-            flush (bool): If True (default), wait for queued messages and file
-                uploads to reach the backend before closing — the safe choice
-                for production and atexit shutdown. If False, return as soon
-                as the stop signals have been sent, dropping anything still in
-                flight — useful in per-test teardown where assertions have
-                already polled the backend during the test body.
+            timeout (Optional[int]): 关闭流处理器的超时时间。一旦达到超时，
+                流处理器将被关闭，无论所有消息是否已发送。如果未设置超时，
+                将使用Opik配置中的默认值。当``flush``为False时忽略。
+            flush (bool): 如果为True（默认），则在关闭前等待排队的消息和
+                文件上传到达后端——这是生产环境和atexit关闭的安全选择。
+                如果为False，则在发送停止信号后立即返回，丢弃仍在传输中的
+                任何内容——适用于测试内断言已在测试期间轮询后端的测试拆卸。
 
         Returns:
             None
@@ -1951,13 +1954,14 @@ class Opik:
 
     def flush(self, timeout: Optional[int] = None) -> bool:
         """
-        Flush the streamer to ensure all messages are sent.
+        刷新流处理器以确保所有消息已发送。
 
         Args:
-            timeout (Optional[int]): The timeout for flushing the streamer. Once the timeout is reached, the flush method will return regardless of whether all messages have been sent.
+            timeout (Optional[int]): 刷新流处理器的超时时间。一旦达到超时，
+                刷新方法将返回，无论所有消息是否已发送。
 
         Returns:
-            True if all messages have been sent within specified timeout, False otherwise.
+            如果在指定超时内所有消息已发送则返回True，否则返回False。
         """
         timeout = timeout if timeout is not None else self._flush_timeout
         return self._streamer.flush(timeout)
@@ -1965,20 +1969,21 @@ class Opik:
     def __internal_api__drain_to_processors__(
         self, timeout: Optional[float] = None
     ) -> bool:
-        """Drain pending messages so in-process chained processors
-        (notably the local emulator) have applied every message
-        submitted so far.
+        """
+        排空待处理消息，以便进程内链式处理器（特别是本地模拟器）
+        已应用迄今为止提交的每条消息。
 
-        Lighter than `flush(...)`: skips file-upload and replay flushes
-        because the caller only cares about local processor state, not
-        backend delivery. Used by the evaluation engine before invoking
-        the agentic LLM judge — see
-        `EvaluationEngine._build_trace_tool_context` for the rationale.
+        比`flush(...)`更轻量：跳过文件上传和重放刷新，因为调用者
+        只关心本地处理器状态，而不是后端传递。在调用代理式LLM判断器
+        之前由评估引擎使用——参见`EvaluationEngine._build_trace_tool_context`
+        了解原因。
         """
         return self._streamer.drain_to_processors(timeout)
 
     def __internal_api__failed_uploads__(self, timeout: Optional[float] = None) -> int:
-        """Returns the number of failed file uploads after flush. Blocking - waits for all uploads to complete."""
+        """
+        返回刷新后失败的文件上传数量。阻塞式 - 等待所有上传完成。
+        """
         return self._streamer.__internal_api__failed_uploads__(timeout=timeout)
 
     def search_traces(
@@ -1992,28 +1997,29 @@ class Opik:
         wait_for_timeout: int = httpx_client.READ_TIMEOUT_SECONDS,
     ) -> List[trace_public.TracePublic]:
         """
-        Search for traces in the given project. Optionally, you can wait for at least a certain number of traces
-        to be found before returning within the specified timeout. If wait_for_at_least number of traces are not found
-        within the specified timeout, an exception will be raised.
+        在给定项目中搜索traces。可选地，您可以等待至少找到一定数量的traces后再返回，
+        但需在指定超时内。如果在指定超时内未找到wait_for_at_least数量的traces，
+        将引发异常。
 
         Args:
-            project_name: The name of the project to search traces in. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: "<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+            project_name: 要搜索traces的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            filter_string: 使用Opik查询语言（OQL）缩小搜索范围的过滤器字符串。
+                格式为："<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
 
-                Supported columns include:
-                - `id`, `name`, `created_by`, `thread_id`, `type`, `model`, `provider`: String fields with full operator support
-                - `environment`: Enum field for lifecycle stage (=, !=, in, not_in)
-                - `status`: String field (=, contains, not_contains only)
-                - `start_time`, `end_time`: DateTime fields (use ISO 8601 format, e.g., "2024-01-01T00:00:00Z")
-                - `input`, `output`: String fields for content (=, contains, not_contains only)
-                - `metadata`: Dictionary field (use dot notation, e.g., "metadata.model")
-                - `feedback_scores`: Numeric field (use dot notation, e.g., "feedback_scores.accuracy")
-                - `tags`: List field (use "contains" operator only)
-                - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`: Numeric usage fields
-                - `duration`, `number_of_messages`, `total_estimated_cost`: Numeric fields
+                支持的列包括：
+                - `id`, `name`, `created_by`, `thread_id`, `type`, `model`, `provider`: 字符串字段，完全支持运算符
+                - `environment`: 生命周期阶段枚举字段 (=, !=, in, not_in)
+                - `status`: 字符串字段 (=, contains, not_contains)
+                - `start_time`, `end_time`: 日期时间字段（使用ISO 8601格式，例如"2024-01-01T00:00:00Z"）
+                - `input`, `output`: 内容字符串字段 (=, contains, not_contains)
+                - `metadata`: 字典字段（使用点表示法，例如"metadata.model"）
+                - `feedback_scores`: 数值字段（使用点表示法，例如"feedback_scores.accuracy"）
+                - `tags`: 列表字段（仅使用"contains"运算符）
+                - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`: 数值使用字段
+                - `duration`, `number_of_messages`, `total_estimated_cost`: 数值字段
 
-                Supported operators by column:
+                按列支持的运算符：
                 - `id`, `name`, `created_by`, `thread_id`, `type`, `model`, `provider`: =, !=, contains, not_contains, starts_with, ends_with, >, <
                 - `environment`: =, !=, in, not_in
                 - `status`: =, contains, not_contains
@@ -2021,32 +2027,32 @@ class Opik:
                 - `input`, `output`: =, contains, not_contains
                 - `metadata`: =, contains, >, <
                 - `feedback_scores`: =, >, <, >=, <=, is_empty, is_not_empty
-                - `tags`: contains (only)
+                - `tags`: contains（仅）
                 - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`, `duration`, `number_of_messages`, `total_estimated_cost`: =, !=, >, <, >=, <=
 
-                Examples:
-                - `start_time >= "2024-01-01T00:00:00Z"` - Filter by start date
-                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - Date range
-                - `input contains "question"` - Filter by input content
-                - `usage.total_tokens > 1000` - Filter by token usage
-                - `feedback_scores.accuracy > 0.8` - Filter by feedback score
-                - `feedback_scores.my_metric is_empty` - Filter traces with empty feedback score
-                - `feedback_scores.my_metric is_not_empty` - Filter traces with non-empty feedback score
-                - `tags contains "production"` - Filter by tag
-                - `metadata.model = "gpt-4"` - Filter by metadata field
-                - `thread_id = "thread_123"` - Filter by thread ID
-                - `environment = "production"` - Filter by environment
-                - `environment in ("production", "staging")` - Filter by multiple environments
+                示例：
+                - `start_time >= "2024-01-01T00:00:00Z"` - 按开始日期过滤
+                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - 日期范围
+                - `input contains "question"` - 按输入内容过滤
+                - `usage.total_tokens > 1000` - 按token使用过滤
+                - `feedback_scores.accuracy > 0.8` - 按反馈分数过滤
+                - `feedback_scores.my_metric is_empty` - 过滤反馈分数为空的traces
+                - `feedback_scores.my_metric is_not_empty` - 过滤反馈分数非空的traces
+                - `tags contains "production"` - 按标签过滤
+                - `metadata.model = "gpt-4"` - 按元数据字段过滤
+                - `thread_id = "thread_123"` - 按线程ID过滤
+                - `environment = "production"` - 按环境过滤
+                - `environment in ("production", "staging")` - 按多个环境过滤
 
-                If not provided, all traces in the project will be returned up to the limit.
-            max_results: The maximum number of traces to return.
-            truncate: Whether to truncate image data stored in input, output, or metadata
-            exclude: Fields to exclude from the response. For example, ["feedback_scores"]
-            wait_for_at_least: The minimum number of traces to wait for before returning.
-            wait_for_timeout: The timeout for waiting for traces.
+                如果未提供，将返回项目中的所有traces，最多返回限制数量。
+            max_results: 要返回的最大traces数量。
+            truncate: 是否截取存储在输入、输出或元数据中的图像数据。
+            exclude: 要从响应中排除的字段。例如，["feedback_scores"]
+            wait_for_at_least: 返回前等待的最小traces数量。
+            wait_for_timeout: 等待traces的超时时间。
 
         Raises:
-            exceptions.SearchTimeoutError if wait_for_at_least traces are not found within the specified timeout.
+            如果在指定超时内未找到wait_for_at_least数量的traces，引发exceptions.SearchTimeoutError。
         """
         filters_ = helpers.parse_filter_expressions(
             filter_string,
@@ -2069,7 +2075,7 @@ class Opik:
         if wait_for_at_least is None:
             return search_functor()
 
-        # do synchronization with backend if wait_for_at_least is provided until a specific number of traces are found
+        # 如果提供了 wait_for_at_least，则与后端同步直到找到指定数量的 traces
         result = search_helpers.search_and_wait_for_done(
             search_functor=search_functor,
             wait_for_at_least=wait_for_at_least,
@@ -2095,30 +2101,31 @@ class Opik:
         wait_for_timeout: int = httpx_client.READ_TIMEOUT_SECONDS,
     ) -> List[span_public.SpanPublic]:
         """
-        Search for spans in the given trace. This allows you to search spans based on the span input, output,
-        metadata, tags, etc. or based on the trace ID. Also, you can wait for at least a certain number of spans
-        to be found before returning within the specified timeout. If wait_for_at_least number of spans are not found
-        within the specified timeout, an exception will be raised.
+        在给定trace中搜索spans。这允许您根据span的输入、输出、元数据、标签等或
+        根据trace ID搜索spans。此外，您可以等待至少找到一定数量的spans后再返回，
+        但需在指定超时内。如果在指定超时内未找到wait_for_at_least数量的spans，
+        将引发异常。
 
         Args:
-            project_name: The name of the project to search spans in. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            trace_id: The ID of the trace to search spans in. If provided, the search will be limited to the spans in the given trace.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: "<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+            project_name: 要搜索spans的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            trace_id: 要搜索spans的trace ID。如果提供，搜索将仅限于给定trace中的spans。
+            filter_string: 使用Opik查询语言（OQL）缩小搜索范围的过滤器字符串。
+                格式为："<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
 
-                Supported columns include:
-                - `id`, `name`, `created_by`, `thread_id`, `type`, `model`, `provider`: String fields with full operator support
-                - `environment`: Enum field for lifecycle stage (=, !=, in, not_in)
-                - `status`: String field (=, contains, not_contains only)
-                - `start_time`, `end_time`: DateTime fields (use ISO 8601 format, e.g., "2024-01-01T00:00:00Z")
-                - `input`, `output`: String fields for content (=, contains, not_contains only)
-                - `metadata`: Dictionary field (use dot notation, e.g., "metadata.model")
-                - `feedback_scores`: Numeric field (use dot notation, e.g., "feedback_scores.accuracy")
-                - `tags`: List field (use "contains" operator only)
-                - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`: Numeric usage fields
-                - `duration`, `number_of_messages`, `total_estimated_cost`: Numeric fields
+                支持的列包括：
+                - `id`, `name`, `created_by`, `thread_id`, `type`, `model`, `provider`: 字符串字段，完全支持运算符
+                - `environment`: 生命周期阶段枚举字段 (=, !=, in, not_in)
+                - `status`: 字符串字段 (=, contains, not_contains)
+                - `start_time`, `end_time`: 日期时间字段（使用ISO 8601格式，例如"2024-01-01T00:00:00Z"）
+                - `input`, `output`: 内容字符串字段 (=, contains, not_contains)
+                - `metadata`: 字典字段（使用点表示法，例如"metadata.model"）
+                - `feedback_scores`: 数值字段（使用点表示法，例如"feedback_scores.accuracy"）
+                - `tags`: 列表字段（仅使用"contains"运算符）
+                - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`: 数值使用字段
+                - `duration`, `number_of_messages`, `total_estimated_cost`: 数值字段
 
-                Supported operators by column:
+                按列支持的运算符：
                 - `id`, `name`, `created_by`, `thread_id`, `type`, `model`, `provider`: =, !=, contains, not_contains, starts_with, ends_with, >, <
                 - `environment`: =, !=, in, not_in
                 - `status`: =, contains, not_contains
@@ -2126,32 +2133,32 @@ class Opik:
                 - `input`, `output`: =, contains, not_contains
                 - `metadata`: =, contains, >, <
                 - `feedback_scores`: =, >, <, >=, <=, is_empty, is_not_empty
-                - `tags`: contains (only)
+                - `tags`: contains（仅）
                 - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`, `duration`, `number_of_messages`, `total_estimated_cost`: =, !=, >, <, >=, <=
 
-                Examples:
-                - `start_time >= "2024-01-01T00:00:00Z"` - Filter by start date
-                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - Date range
-                - `input contains "question"` - Filter by input content
-                - `usage.total_tokens > 1000` - Filter by token usage
-                - `feedback_scores.accuracy > 0.8` - Filter by feedback score
-                - `feedback_scores.my_metric is_empty` - Filter spans with empty feedback score
-                - `feedback_scores.my_metric is_not_empty` - Filter spans with non-empty feedback score
-                - `tags contains "production"` - Filter by tag
-                - `metadata.model = "gpt-4"` - Filter by metadata field
-                - `thread_id = "thread_123"` - Filter by thread ID
-                - `environment = "production"` - Filter by environment
-                - `environment in ("production", "staging")` - Filter by multiple environments
+                示例：
+                - `start_time >= "2024-01-01T00:00:00Z"` - 按开始日期过滤
+                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - 日期范围
+                - `input contains "question"` - 按输入内容过滤
+                - `usage.total_tokens > 1000` - 按token使用过滤
+                - `feedback_scores.accuracy > 0.8` - 按反馈分数过滤
+                - `feedback_scores.my_metric is_empty` - 过滤反馈分数为空的spans
+                - `feedback_scores.my_metric is_not_empty` - 过滤反馈分数非空的spans
+                - `tags contains "production"` - 按标签过滤
+                - `metadata.model = "gpt-4"` - 按元数据字段过滤
+                - `thread_id = "thread_123"` - 按线程ID过滤
+                - `environment = "production"` - 按环境过滤
+                - `environment in ("production", "staging")` - 按多个环境过滤
 
-                If not provided, all spans in the project/trace will be returned up to the limit.
-            max_results: The maximum number of spans to return.
-            truncate: Whether to truncate image data stored in input, output, or metadata
-            exclude: List of fields to exclude from the response (e.g., ["feedback_scores", "input", "output"])
-            wait_for_at_least: The minimum number of spans to wait for before returning.
-            wait_for_timeout: The timeout for waiting for spans.
+                如果未提供，将返回项目/trace中的所有spans，最多返回限制数量。
+            max_results: 要返回的最大spans数量。
+            truncate: 是否截取存储在输入、输出或元数据中的图像数据。
+            exclude: 要从响应中排除的字段列表（例如["feedback_scores", "input", "output"]）
+            wait_for_at_least: 返回前等待的最小spans数量。
+            wait_for_timeout: 等待spans的超时时间。
 
         Raises:
-            exceptions.SearchTimeoutError if wait_for_at_least spans are not found within the specified timeout.
+            如果在指定超时内未找到wait_for_at_least数量的spans，引发exceptions.SearchTimeoutError。
         """
         filters = helpers.parse_filter_expressions(
             filter_string,
@@ -2174,7 +2181,7 @@ class Opik:
         if wait_for_at_least is None:
             return search_functor()
 
-        # do synchronization with backend if wait_for_at_least is provided until a specific number of spans are found
+        # 如果提供了 wait_for_at_least，则与后端同步直到找到指定数量的 spans
         result = search_helpers.search_and_wait_for_done(
             search_functor=search_functor,
             wait_for_at_least=wait_for_at_least,
@@ -2193,8 +2200,8 @@ class Opik:
         Args:
             id (str): trace id
         Returns:
-            trace_public.TracePublic: pydantic model object with all the data associated with the trace found.
-            Raises an error if trace was not found.
+            trace_public.TracePublic: 包含找到的trace所有数据的pydantic模型对象。
+            如果未找到trace则引发错误。
         """
         return self._rest_client.traces.get_trace_by_id(id)
 
@@ -2203,33 +2210,33 @@ class Opik:
         Args:
             id (str): span id
         Returns:
-            span_public.SpanPublic: pydantic model object with all the data associated with the span found.
-            Raises an error if span was not found.
+            span_public.SpanPublic: 包含找到的span所有数据的pydantic模型对象。
+            如果未找到span则引发错误。
         """
         return self._rest_client.spans.get_span_by_id(id)
 
     def get_project(self, id: str) -> project_public.ProjectPublic:
         """
-        Fetches a project by its unique identifier.
+        通过唯一标识符获取项目。
 
         Parameters:
-            id (str): project id (uuid).
+            id (str): 项目id（uuid）。
 
         Returns:
-            project_public.ProjectPublic: pydantic model object with all the data associated with the project found.
-            Raises an error if project was not found
+            project_public.ProjectPublic: 包含找到的项目所有数据的pydantic模型对象。
+            如果未找到项目则引发错误。
         """
         return self._rest_client.projects.get_project_by_id(id)
 
     def get_project_url(self, project_name: Optional[str] = None) -> str:
         """
-        Returns a URL to the project in the current workspace.
-        This method does not make any requests or perform any checks (e.g. that the project exists).
-        It only builds a URL string based on the data provided.
+        返回当前工作区中项目的URL。
+        此方法不发出任何请求或执行任何检查（例如项目是否存在）。
+        它仅根据提供的数据构建URL字符串。
 
         Parameters:
-            project_name (str): project name to return URL for.
-                If not provided, a default project name for the current Opik instance will be used.
+            project_name (str): 要返回URL的项目名称。
+                如果未提供，将使用当前Opik实例的默认项目名称。
 
         Returns:
             str: URL
@@ -2249,25 +2256,24 @@ class Opik:
 
     def get_threads_client(self) -> threads_client.ThreadsClient:
         """
-        Creates and provides an instance of the ``ThreadsClient`` tied to the current context.
+        创建并提供绑定到当前上下文的``ThreadsClient``实例。
 
-        The ``ThreadsClient`` can be used to interact with the threads API to manage and interact with conversational threads.
+        ``ThreadsClient``可用于与线程API交互，以管理和交互对话线程。
 
         Returns:
-            ThreadsClient: An instance of ``threads_client.ThreadsClient`` initialized
-            with the current context.
+            ThreadsClient: 使用当前上下文初始化的``threads_client.ThreadsClient``实例。
         """
         return threads_client.ThreadsClient(self)
 
     def get_attachment_client(self) -> attachment_client.AttachmentClient:
         """
-        Creates and provides an instance of the ``AttachmentClient`` tied to the current context.
+        创建并提供绑定到当前上下文的``AttachmentClient``实例。
 
-        The ``AttachmentClient`` can be used to interact with the attachments API to retrieve
-        attachment lists, download attachments, and upload attachments for traces and spans.
+        ``AttachmentClient``可用于与附件API交互，以检索附件列表、
+        下载附件以及为traces和spans上传附件。
 
         Returns:
-            AttachmentClient: An instance of ``attachment.client.AttachmentClient``
+            AttachmentClient: ``attachment.client.AttachmentClient``的实例。
         """
         return attachment_client.AttachmentClient(
             rest_client=self._rest_client,
@@ -2285,19 +2291,19 @@ class Opik:
         file_name: Optional[str] = None,
         mime_type: Optional[str] = None,
     ) -> None:
-        """Queue a local file for background upload as an attachment via the streamer.
+        """
+        将本地文件排队通过流处理器后台上传为附件。
 
-        This method is non-blocking: the upload is handled by the background streamer
-        which provides parallelization, automatic retries, and monitoring. Call
-        :meth:`flush` to wait for all queued uploads to complete.
+        此方法是非阻塞的：上传由后台流处理器处理，提供并行化、自动重试和监控。
+        调用:meth:`flush`等待所有排队的上传完成。
 
         Parameters:
-            entity_type: The type of entity to attach the file to (``"trace"`` or ``"span"``).
-            entity_id: The ID of the trace or span to attach the file to.
-            project_name: The name of the project containing the entity.
-            file_path: Path to the local file to upload.
-            file_name: Name to assign the attachment. Defaults to the file's basename.
-            mime_type: MIME type of the file. Auto-detected from the file name if not provided.
+            entity_type: 要附加文件的实体类型（``"trace"``或``"span"``）。
+            entity_id: 要附加文件的trace或span的ID。
+            project_name: 包含实体的项目名称。
+            file_path: 要上传的本地文件路径。
+            file_name: 要分配给附件的名称。默认为文件的基本名称。
+            mime_type: 文件的MIME类型。如果未提供，将从文件名自动检测。
         """
         attachment_data = Attachment(
             data=file_path,
@@ -2328,26 +2334,27 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> prompt_module.Prompt:
         """
-        Creates a new text prompt with the given name and template.
-        If a text prompt with the same name already exists, it will create a new version of the existing prompt if the templates differ.
+        使用给定名称和模板创建新的文本提示词。
+        如果已存在同名的文本提示词，且模板不同，将创建现有提示词的新版本。
 
         Parameters:
-            name: The name of the prompt.
-            prompt: The template content of the prompt.
-            metadata: Optional metadata to be included in the prompt.
-            type: The template type (MUSTACHE or JINJA2).
-            id: Optional unique identifier (UUID) for the prompt.
-            description: Optional description of the prompt (up to 255 characters).
-            change_description: Optional description of changes in this version.
-            tags: Optional list of tags to associate with the prompt.
-            project_name: Optional project name to associate with the prompt. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 提示词的名称。
+            prompt: 提示词的模板内容。
+            metadata: 要包含在提示词中的可选元数据。
+            type: 模板类型（MUSTACHE或JINJA2）。
+            id: 提示词的可选唯一标识符（UUID）。
+            description: 提示词的可选描述（最多255个字符）。
+            change_description: 此版本更改的可选描述。
+            tags: 要与提示词关联的可选标签列表。
+            project_name: 要与提示词关联的可选项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            A Prompt object containing details of the created or retrieved prompt.
+            包含创建或检索的提示词详细信息的Prompt对象。
 
         Raises:
-            PromptTemplateStructureMismatch: If a chat prompt with the same name already exists (template structure is immutable).
-            ApiError: If there is an error during the creation of the prompt.
+            PromptTemplateStructureMismatch: 如果已存在同名的聊天提示词（模板结构不可变）。
+            ApiError: 如果在创建提示词期间出现错误。
         """
         prompt_client_ = prompt_client.PromptClient(self._rest_client)
         project_name = self._resolve_project_name(project_name)
@@ -2379,26 +2386,26 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> prompt_module.ChatPrompt:
         """
-        Creates a new chat prompt with the given name and message templates.
-        If a chat prompt with the same name already exists, it will create a new version if the messages differ.
+        使用给定名称和消息模板创建新的聊天提示词。
+        如果已存在同名的聊天提示词，且消息不同，将创建新版本。
 
         Parameters:
-            name: The name of the chat prompt.
-            messages: List of message dictionaries with 'role' and 'content' fields.
-            metadata: Optional metadata to be included in the prompt.
-            type: The template type (MUSTACHE or JINJA2).
-            id: Optional unique identifier (UUID) for the prompt.
-            description: Optional description of the prompt (up to 255 characters).
-            change_description: Optional description of changes in this version.
-            tags: Optional list of tags to associate with the prompt.
-            project_name: Optional project name for the prompt.
+            name: 聊天提示词的名称。
+            messages: 包含'role'和'content'字段的消息字典列表。
+            metadata: 要包含在提示词中的可选元数据。
+            type: 模板类型（MUSTACHE或JINJA2）。
+            id: 提示词的可选唯一标识符（UUID）。
+            description: 提示词的可选描述（最多255个字符）。
+            change_description: 此版本更改的可选描述。
+            tags: 要与提示词关联的可选标签列表。
+            project_name: 提示词的可选项目名称。
 
         Returns:
-            A ChatPrompt object containing details of the created or retrieved chat prompt.
+            包含创建或检索的聊天提示词详细信息的ChatPrompt对象。
 
         Raises:
-            PromptTemplateStructureMismatch: If a text prompt with the same name already exists (template structure is immutable).
-            ApiError: If there is an error during the creation of the prompt.
+            PromptTemplateStructureMismatch: 如果已存在同名的文本提示词（模板结构不可变）。
+            ApiError: 如果在创建提示词期间出现错误。
         """
         validator = ChatPromptMessagesValidator(messages)
         validator.validate()
@@ -2433,29 +2440,29 @@ class Opik:
         environment: Optional[str] = None,
     ) -> Optional[prompt_module.Prompt]:
         """
-        Retrieve a text prompt by name, optionally targeting a specific ``version``.
+        按名称检索文本提示词，可选择性地针对特定``version``。
 
-        This method only returns text prompts. Results are cached client-side
-        (TTL configurable via OPIK_PROMPT_CACHE_TTL_SECONDS, default 300 s).
-        When called inside an @track context the prompt reference is injected
-        into the active trace/span metadata.
+        此方法仅返回文本提示词。结果在客户端缓存
+        （TTL可通过OPIK_PROMPT_CACHE_TTL_SECONDS配置，默认300秒）。
+        在@track上下文中调用时，提示词引用将注入到活动trace/span元数据中。
 
         Parameters:
-            name: The name of the prompt.
-            commit: DEPRECATED in favour of ``version``. Mutually exclusive with ``version``.
-            project_name: The name of the project to retrieve the prompt from. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            no_cache: If True, skip the local cache and fetch directly from the backend, guaranteeing a fresh value.
-            version: Optional sequential version selector in the wire format
-                ``"v<N>"`` (e.g. ``"v3"``). If not provided, the latest version is retrieved.
-            environment: Optional environment name. When provided, returns the version that the given environment
-                currently points to. Mutually exclusive with ``version``.
+            name: 提示词的名称。
+            commit: 已弃用，推荐使用``version``。与``version``互斥。
+            project_name: 要从中检索提示词的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            no_cache: 如果为True，则跳过本地缓存并直接从后端获取，保证获取新值。
+            version: 可选的顺序版本选择器，格式为``"v<N>"``（例如``"v3"``）。
+                如果未提供，将检索最新版本。
+            environment: 可选的环境名称。提供时，返回给定环境当前指向的版本。
+                与``version``互斥。
 
         Returns:
-            Prompt: The details of the specified text prompt, or None if not found.
+            Prompt: 指定文本提示词的详细信息，如果未找到则返回None。
 
         Raises:
-            PromptTemplateStructureMismatch: If the prompt exists but is a chat prompt (template structure mismatch).
-            ValueError: If both ``version`` and ``environment`` are provided.
+            PromptTemplateStructureMismatch: 如果提示词存在但是聊天提示词（模板结构不匹配）。
+            ValueError: 如果同时提供了``version``和``environment``。
         """
         return prompt_client.PromptClient(self._rest_client).get_prompt_with_cache(
             name=name,
@@ -2478,29 +2485,29 @@ class Opik:
         environment: Optional[str] = None,
     ) -> Optional[prompt_module.ChatPrompt]:
         """
-        Retrieve a chat prompt by name, optionally targeting a specific ``version``.
+        按名称检索聊天提示词，可选择性地针对特定``version``。
 
-        This method only returns chat prompts. Results are cached client-side
-        (TTL configurable via OPIK_PROMPT_CACHE_TTL_SECONDS, default 300 s).
-        When called inside an @track context the prompt reference is injected
-        into the active trace/span metadata.
+        此方法仅返回聊天提示词。结果在客户端缓存
+        （TTL可通过OPIK_PROMPT_CACHE_TTL_SECONDS配置，默认300秒）。
+        在@track上下文中调用时，提示词引用将注入到活动trace/span元数据中。
 
         Parameters:
-            name: The name of the prompt.
-            commit: DEPRECATED in favour of ``version``. Mutually exclusive with ``version``.
-            project_name: The name of the project to retrieve the prompt from. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            no_cache: If True, skip the local cache and fetch directly from the backend, guaranteeing a fresh value.
-            version: Optional sequential version selector in the wire format
-                ``"v<N>"`` (e.g. ``"v3"``). If not provided, the latest version is retrieved.
-            environment: Optional environment name. When provided, returns the version that the given environment
-                currently points to. Mutually exclusive with ``version``.
+            name: 提示词的名称。
+            commit: 已弃用，推荐使用``version``。与``version``互斥。
+            project_name: 要从中检索提示词的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            no_cache: 如果为True，则跳过本地缓存并直接从后端获取，保证获取新值。
+            version: 可选的顺序版本选择器，格式为``"v<N>"``（例如``"v3"``）。
+                如果未提供，将检索最新版本。
+            environment: 可选的环境名称。提供时，返回给定环境当前指向的版本。
+                与``version``互斥。
 
         Returns:
-            ChatPrompt: The details of the specified chat prompt, or None if not found.
+            ChatPrompt: 指定聊天提示词的详细信息，如果未找到则返回None。
 
         Raises:
-            PromptTemplateStructureMismatch: If the prompt exists but is a text prompt (template structure mismatch).
-            ValueError: If both ``version`` and ``environment`` are provided.
+            PromptTemplateStructureMismatch: 如果提示词存在但是文本提示词（模板结构不匹配）。
+            ValueError: 如果同时提供了``version``和``environment``。
         """
         return prompt_client.PromptClient(self._rest_client).get_prompt_with_cache(
             name=name,
@@ -2521,29 +2528,24 @@ class Opik:
         version: Optional[str] = None,
         project_name: Optional[str] = None,
     ) -> None:
-        """Replace the full set of environments owned by a prompt version.
+        """
+        替换提示词版本拥有的完整环境集。
 
-        The provided list becomes the resolved version's complete set of environments.
-        Pass an empty list to clear all environments from the version. Ownership of any
-        environment in the list moves to this version: any other version of the same
-        prompt that previously owned one of them is cleared. Existing ``Prompt`` objects
-        already in memory are not mutated — re-fetch with ``client.get_prompt(...)`` to
-        see the change.
+        提供的列表成为解析版本的完整环境集。
+        传入空列表可清除版本的所有环境。列表中任何环境的所有权都转移到此版本：
+        之前拥有这些环境的同一提示词的任何其他版本都将被清除。
+        内存中现有的``Prompt``对象不会被修改——使用``client.get_prompt(...)``重新获取以查看更改。
 
         Parameters:
-            prompt_name: The name of the prompt.
-            environments: Environments to assign. Each must already be registered in the
-                workspace. Pass ``[]`` to clear.
-            version: Optional sequential version selector in the wire format
-                ``"v<N>"`` (e.g. ``"v3"``). Defaults to the latest version.
-            project_name: Project the prompt belongs to. Defaults to the active project
-                context, then to the client's default.
+            prompt_name: 提示词的名称。
+            environments: 要分配的环境。每个环境必须已在工作区中注册。传入``[]``可清除。
+            version: 可选的顺序版本选择器，格式为``"v<N>"``（例如``"v3"``）。
+                默认为最新版本。
+            project_name: 提示词所属的项目。默认为活动项目上下文，然后使用客户端默认值。
 
         Raises:
-            PromptNotFoundError: The prompt name (or the supplied ``version``) does not exist
-                in the resolved project.
-            EnvironmentNotFoundError: One of ``environments`` is not registered in the
-                workspace.
+            PromptNotFoundError: 提示词名称（或提供的``version``）在解析的项目中不存在。
+            EnvironmentNotFoundError: ``environments``中的一个未在工作区中注册。
         """
         resolved_project_name = self._resolve_project_name(project_name)
         try:
@@ -2570,8 +2572,8 @@ class Opik:
                 environments=target,
             )
         except ApiError as e:
-            # The backend reports unknown environments as 404 (not found) or 409
-            # (conflict, when the name collides with the workspace registry check).
+            # 后端将未知环境报告为404（未找到）或409
+            # （冲突，当名称与工作区注册表检查冲突时）。
             if e.status_code in (404, 409):
                 raise exceptions.EnvironmentNotFoundError(
                     f"One or more environments in {target!r} are not registered in this workspace."
@@ -2590,55 +2592,56 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> List[prompt_module.Prompt]:
         """
-        Retrieve all text prompt versions history for a given prompt name.
+        检索给定提示词名称的所有文本提示词版本历史。
 
         Parameters:
-            name: The name of the prompt.
-            search: Optional search text to find in template or change description fields.
-            project_name: The name of the project to retrieve the prompt history from. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: "<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+            name: 提示词的名称。
+            search: 要在模板或更改描述字段中查找的可选搜索文本。
+            project_name: 要从中检索提示词历史的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            filter_string: 使用Opik查询语言（OQL）缩小搜索范围的过滤器字符串。
+                格式为："<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
 
-                Supported columns include:
-                - `id`, `commit`, `template`, `change_description`, `created_by`: String fields with full operator support
-                - `metadata`: Dictionary field (use dot notation, e.g., "metadata.environment")
-                - `type`: Enum field (=, != only)
-                - `tags`: List field (use "contains" operator only)
-                - `created_at`: DateTime field (use ISO 8601 format, e.g., "2024-01-01T00:00:00Z")
+                支持的列包括：
+                - `id`, `commit`, `template`, `change_description`, `created_by`: 字符串字段，完全支持运算符
+                - `metadata`: 字典字段（使用点表示法，例如"metadata.environment"）
+                - `type`: 枚举字段（仅=, !=）
+                - `tags`: 列表字段（仅使用"contains"运算符）
+                - `created_at`: 日期时间字段（使用ISO 8601格式，例如"2024-01-01T00:00:00Z"）
 
-                Examples:
-                - `tags contains "production"` - Filter by tag
-                - `tags contains "v1" AND tags contains "production"` - Filter by multiple tags
-                - `template contains "customer"` - Filter by template content
-                - `created_by = "user@example.com"` - Filter by creator
-                - `created_at >= "2024-01-01T00:00:00Z"` - Filter by creation date
-                - `metadata.environment = "prod"` - Filter by metadata field
+                示例：
+                - `tags contains "production"` - 按标签过滤
+                - `tags contains "v1" AND tags contains "production"` - 按多个标签过滤
+                - `template contains "customer"` - 按模板内容过滤
+                - `created_by = "user@example.com"` - 按创建者过滤
+                - `created_at >= "2024-01-01T00:00:00Z"` - 按创建日期过滤
+                - `metadata.environment = "prod"` - 按元数据字段过滤
 
         Returns:
-            List[Prompt]: A list of text Prompt instances for the given name, or an empty list if not found.
+            List[Prompt]: 给定名称的文本Prompt实例列表，如果未找到则返回空列表。
 
         Raises:
-            PromptTemplateStructureMismatch: If the prompt exists but is a chat prompt (template structure mismatch).
+            PromptTemplateStructureMismatch: 如果提示词存在但是聊天提示词（模板结构不匹配）。
 
         Example:
-            # Get all versions of a prompt
+            # 获取提示词的所有版本
             versions = client.get_prompt_history(name="my-prompt", project_name="my-project")
 
-            # Filter by tags (versions containing "production" tag)
+            # 按标签过滤（包含"production"标签的版本）
             versions = client.get_prompt_history(
                 name="my-prompt",
                 project_name="my-project",
                 filter_string='tags contains "production"'
             )
 
-            # Search for specific text in template or change description fields
+            # 在模板或更改描述字段中搜索特定文本
             versions = client.get_prompt_history(
                 name="my-prompt",
                 project_name="my-project",
                 search="customer"
             )
 
-            # Combine search and filtering
+            # 组合搜索和过滤
             versions = client.get_prompt_history(
                 name="my-prompt",
                 project_name="my-project",
@@ -2649,8 +2652,8 @@ class Opik:
         prompt_client_ = prompt_client.PromptClient(self._rest_client)
         project_name = self._resolve_project_name(project_name)
 
-        # First, validate that this is a text prompt by trying to get the latest version
-        # Let PromptTemplateStructureMismatch exception propagate - this is a hard error
+        # 首先，通过尝试获取最新版本来验证这是文本提示词
+        # 让PromptTemplateStructureMismatch异常传播——这是一个硬错误
         latest_version = prompt_client_.get_prompt(
             name=name, raise_if_not_template_structure="text", project_name=project_name
         )
@@ -2658,7 +2661,7 @@ class Opik:
         if latest_version is None:
             return []
 
-        # Now get all versions (we know it's a text prompt)
+        # 现在获取所有版本（我们知道这是文本提示词）
         fern_prompt_versions = prompt_client_.get_all_prompt_versions(
             name=name,
             search=search,
@@ -2682,55 +2685,56 @@ class Opik:
         project_name: Optional[str] = None,
     ) -> List[prompt_module.ChatPrompt]:
         """
-        Retrieve all chat prompt versions history for a given prompt name.
+        检索给定提示词名称的所有聊天提示词版本历史。
 
         Parameters:
-            name: The name of the prompt.
-            search: Optional search text to find in template or change description fields.
-            project_name: The name of the project to retrieve the prompt history from. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: "<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+            name: 提示词的名称。
+            search: 要在模板或更改描述字段中查找的可选搜索文本。
+            project_name: 要从中检索提示词历史的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            filter_string: 使用Opik查询语言（OQL）缩小搜索范围的过滤器字符串。
+                格式为："<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
 
-                Supported columns include:
-                - `id`, `commit`, `template`, `change_description`, `created_by`: String fields with full operator support
-                - `metadata`: Dictionary field (use dot notation, e.g., "metadata.environment")
-                - `type`: Enum field (=, != only)
-                - `tags`: List field (use "contains" operator only)
-                - `created_at`: DateTime field (use ISO 8601 format, e.g., "2024-01-01T00:00:00Z")
+                支持的列包括：
+                - `id`, `commit`, `template`, `change_description`, `created_by`: 字符串字段，完全支持运算符
+                - `metadata`: 字典字段（使用点表示法，例如"metadata.environment"）
+                - `type`: 枚举字段（仅=, !=）
+                - `tags`: 列表字段（仅使用"contains"运算符）
+                - `created_at`: 日期时间字段（使用ISO 8601格式，例如"2024-01-01T00:00:00Z"）
 
-                Examples:
-                - `tags contains "production"` - Filter by tag
-                - `tags contains "v1" AND tags contains "production"` - Filter by multiple tags
-                - `template contains "helpful assistant"` - Filter by template content
-                - `created_by = "user@example.com"` - Filter by creator
-                - `created_at >= "2024-01-01T00:00:00Z"` - Filter by creation date
-                - `metadata.environment = "prod"` - Filter by metadata field
+                示例：
+                - `tags contains "production"` - 按标签过滤
+                - `tags contains "v1" AND tags contains "production"` - 按多个标签过滤
+                - `template contains "helpful assistant"` - 按模板内容过滤
+                - `created_by = "user@example.com"` - 按创建者过滤
+                - `created_at >= "2024-01-01T00:00:00Z"` - 按创建日期过滤
+                - `metadata.environment = "prod"` - 按元数据字段过滤
 
         Returns:
-            List[ChatPrompt]: A list of ChatPrompt instances for the given name, or an empty list if not found.
+            List[ChatPrompt]: 给定名称的ChatPrompt实例列表，如果未找到则返回空列表。
 
         Raises:
-            PromptTemplateStructureMismatch: If the prompt exists but is a text prompt (template structure mismatch).
+            PromptTemplateStructureMismatch: 如果提示词存在但是文本提示词（模板结构不匹配）。
 
         Example:
-            # Get all versions of a chat prompt
+            # 获取聊天提示词的所有版本
             versions = client.get_chat_prompt_history(name="my-chat-prompt", project_name="my-project")
 
-            # Filter by tags (versions containing "production" tag)
+            # 按标签过滤（包含"production"标签的版本）
             versions = client.get_chat_prompt_history(
                 name="my-chat-prompt",
                 project_name="my-project",
                 filter_string='tags contains "production"'
             )
 
-            # Search for specific text in template or change description fields
+            # 在模板或更改描述字段中搜索特定文本
             versions = client.get_chat_prompt_history(
                 name="my-chat-prompt",
                 project_name="my-project",
                 search="helpful assistant"
             )
 
-            # Combine search and filtering
+            # 组合搜索和过滤
             versions = client.get_chat_prompt_history(
                 name="my-chat-prompt",
                 project_name="my-project",
@@ -2741,8 +2745,8 @@ class Opik:
         prompt_client_ = prompt_client.PromptClient(self._rest_client)
         project_name = self._resolve_project_name(project_name)
 
-        # First, validate that this is a chat prompt by trying to get the latest version
-        # Let PromptTemplateStructureMismatch exception propagate - this is a hard error
+        # 首先，通过尝试获取最新版本来验证这是聊天提示词
+        # 让PromptTemplateStructureMismatch异常传播——这是一个硬错误
         latest_version = prompt_client_.get_prompt(
             name=name, raise_if_not_template_structure="chat", project_name=project_name
         )
@@ -2750,7 +2754,7 @@ class Opik:
         if latest_version is None:
             return []
 
-        # Now get all versions (we know it's a chat prompt)
+        # 现在获取所有版本（我们知道这是聊天提示词）
         fern_prompt_versions = prompt_client_.get_all_prompt_versions(
             name=name,
             search=search,
@@ -2770,18 +2774,19 @@ class Opik:
         self, name: str, project_name: Optional[str] = None
     ) -> List[prompt_module.Prompt]:
         """
-        DEPRECATED: Please use Opik.get_prompt_history() instead.
-        Retrieve all the prompt versions history for a given prompt name.
+        已弃用：请改用Opik.get_prompt_history()。
+        检索给定提示词名称的所有提示词版本历史。
 
         Parameters:
-            name: The name of the prompt.
-            project_name: The name of the project to retrieve the prompt history from. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
+            name: 提示词的名称。
+            project_name: 要从中检索提示词历史的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
 
         Returns:
-            List[prompt_module.Prompt]: A list of Prompt instances for the given name.
+            List[prompt_module.Prompt]: 给定名称的Prompt实例列表。
         """
         LOGGER.warning(
-            "Opik.get_all_prompts() is deprecated. Please use Opik.get_prompt_history() instead."
+            "Opik.get_all_prompts()已弃用。请改用Opik.get_prompt_history()。"
         )
         return self.get_prompt_history(name, project_name=project_name)
 
@@ -2789,39 +2794,40 @@ class Opik:
         self, filter_string: Optional[str] = None, project_name: Optional[str] = None
     ) -> List[Union[prompt_module.Prompt, prompt_module.ChatPrompt]]:
         """
-        Retrieve the latest prompt versions (both string and chat prompts) for the given search parameters.
+        检索给定搜索参数的最新提示词版本（包括文本和聊天提示词）。
 
         Parameters:
-            project_name: The name of the project to search in. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            filter_string: A filter string to narrow down the search using Opik Query Language (OQL).
-                The format is: "<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+            project_name: 要搜索的项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            filter_string: 使用Opik查询语言（OQL）缩小搜索范围的过滤器字符串。
+                格式为："<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
 
-                Supported columns include:
-                - `id`, `name`: String fields
-                - `tags`: List field (use "contains" operator only)
-                - `created_by`: String field
-                - `template_structure`: String field ("string" or "chat")
+                支持的列包括：
+                - `id`, `name`: 字符串字段
+                - `tags`: 列表字段（仅使用"contains"运算符）
+                - `created_by`: 字符串字段
+                - `template_structure`: 字符串字段（"string"或"chat"）
 
-                Supported operators by column:
+                按列支持的运算符：
                 - `id`: =, !=, contains, not_contains, starts_with, ends_with, >, <
                 - `name`: =, !=, contains, not_contains, starts_with, ends_with, >, <
                 - `created_by`: =, !=, contains, not_contains, starts_with, ends_with, >, <
                 - `template_structure`: =, !=
-                - `tags`: contains (only)
+                - `tags`: contains（仅）
 
-                Examples:
-                - `tags contains "alpha"` - Filter by tag
-                - `tags contains "alpha" AND tags contains "beta"` - Filter by multiple tags
-                - `name contains "summary"` - Filter by name substring
-                - `created_by = "user@example.com"` - Filter by creator
-                - `id starts_with "prompt_"` - Filter by ID prefix
-                - `template_structure = "text"` - Only text prompts
-                - `template_structure = "chat"` - Only chat prompts
+                示例：
+                - `tags contains "alpha"` - 按标签过滤
+                - `tags contains "alpha" AND tags contains "beta"` - 按多个标签过滤
+                - `name contains "summary"` - 按名称子字符串过滤
+                - `created_by = "user@example.com"` - 按创建者过滤
+                - `id starts_with "prompt_"` - 按ID前缀过滤
+                - `template_structure = "text"` - 仅文本提示词
+                - `template_structure = "chat"` - 仅聊天提示词
 
-                If not provided, all prompts (both text and chat) will be returned.
+                如果未提供，将返回所有提示词（包括文本和聊天）。
 
         Returns:
-            List[Union[Prompt, ChatPrompt]]: A list of Prompt and/or ChatPrompt instances found.
+            List[Union[Prompt, ChatPrompt]]: 找到的Prompt和/或ChatPrompt实例列表。
         """
         oql = opik_query_language.OpikQueryLanguage.for_traces(filter_string or "")
         parsed_filters = oql.get_filter_expressions()
@@ -2833,7 +2839,7 @@ class Opik:
             parsed_filters=parsed_filters, project_name=project_name
         )
 
-        # Convert to Prompt or ChatPrompt objects based on template_structure
+        # 根据template_structure转换为Prompt或ChatPrompt对象
         prompts: List[Union[prompt_module.Prompt, prompt_module.ChatPrompt]] = []
         for result in search_results:
             if result.template_structure == "chat":
@@ -2904,21 +2910,21 @@ class Opik:
 
     def get_experiments_client(self) -> experiments_client.ExperimentsClient:
         """
-        Retrieves an instance of `ExperimentsClient`.
+        检索`ExperimentsClient`的实例。
 
         Returns:
-            An instance of the ExperimentsClient initialized with a cached REST client.
+            使用缓存的REST客户端初始化的ExperimentsClient实例。
         """
         return experiments_client.ExperimentsClient(self._rest_client)
 
     def get_prompts_client(self) -> prompt_client.PromptClient:
         """
-        Retrieves an instance of `PromptClient` for bulk prompt operations.
+        检索用于批量提示词操作的`PromptClient`实例。
 
-        Use this client for operations like updating prompt version tags in batch.
+        使用此客户端进行批量更新提示词版本标签等操作。
 
         Returns:
-            An instance of the PromptClient initialized with a cached REST client.
+            使用缓存的REST客户端初始化的PromptClient实例。
 
         Example:
             prompts_client = client.get_prompts_client()
@@ -2939,7 +2945,7 @@ class Opik:
         comments_enabled: Optional[bool],
         feedback_definition_names: Optional[List[str]],
     ) -> QueueT:
-        """Helper method to create an annotation queue with the specified scope."""
+        """创建具有指定范围的标注队列的辅助方法。"""
         project_name = self._resolve_project_name(project_name)
 
         project_id = rest_helpers.resolve_project_id_by_name(
@@ -2984,18 +2990,19 @@ class Opik:
         feedback_definition_names: Optional[List[str]] = None,
     ) -> TracesAnnotationQueue:
         """
-        Create a new annotation queue for traces.
+        创建用于traces的新标注队列。
 
         Args:
-            name: The name of the annotation queue.
-            project_name: The name of the project. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            description: An optional description of the queue.
-            instructions: Optional instructions for reviewers.
-            comments_enabled: Whether to enable comments on items.
-            feedback_definition_names: Optional list of feedback definition names.
+            name: 标注队列的名称。
+            project_name: 项目的名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            description: 队列的可选描述。
+            instructions: 审阅者的可选说明。
+            comments_enabled: 是否启用项目评论。
+            feedback_definition_names: 反馈定义名称的可选列表。
 
         Returns:
-            TracesAnnotationQueue: The created traces annotation queue object.
+            TracesAnnotationQueue: 创建的traces标注队列对象。
         """
         return self._create_annotation_queue(
             name=name,
@@ -3017,18 +3024,19 @@ class Opik:
         feedback_definition_names: Optional[List[str]] = None,
     ) -> ThreadsAnnotationQueue:
         """
-        Create a new annotation queue for threads.
+        创建用于线程的新标注队列。
 
         Args:
-            name: The name of the annotation queue.
-            project_name: The name of the project. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            description: An optional description of the queue.
-            instructions: Optional instructions for reviewers.
-            comments_enabled: Whether to enable comments on items.
-            feedback_definition_names: Optional list of feedback definition names.
+            name: 标注队列的名称。
+            project_name: 项目的名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            description: 队列的可选描述。
+            instructions: 审阅者的可选说明。
+            comments_enabled: 是否启用项目评论。
+            feedback_definition_names: 反馈定义名称的可选列表。
 
         Returns:
-            ThreadsAnnotationQueue: The created threads annotation queue object.
+            ThreadsAnnotationQueue: 创建的线程标注队列对象。
         """
         return self._create_annotation_queue(
             name=name,
@@ -3042,16 +3050,16 @@ class Opik:
 
     def get_traces_annotation_queue(self, queue_id: str) -> TracesAnnotationQueue:
         """
-        Get a traces annotation queue by its ID.
+        按ID获取traces标注队列。
 
         Args:
-            queue_id: The ID of the annotation queue.
+            queue_id: 标注队列的ID。
 
         Returns:
-            TracesAnnotationQueue: The traces annotation queue object.
+            TracesAnnotationQueue: traces标注队列对象。
 
         Raises:
-            OpikException: If the queue is not found or is not a traces queue.
+            OpikException: 如果未找到队列或不是traces队列。
         """
         return annotation_queue_rest_operations.get_traces_annotation_queue_by_id(
             rest_client=self._rest_client,
@@ -3060,16 +3068,16 @@ class Opik:
 
     def get_threads_annotation_queue(self, queue_id: str) -> ThreadsAnnotationQueue:
         """
-        Get a threads annotation queue by its ID.
+        按ID获取线程标注队列。
 
         Args:
-            queue_id: The ID of the annotation queue.
+            queue_id: 标注队列的ID。
 
         Returns:
-            ThreadsAnnotationQueue: The threads annotation queue object.
+            ThreadsAnnotationQueue: 线程标注队列对象。
 
         Raises:
-            OpikException: If the queue is not found or is not a threads queue.
+            OpikException: 如果未找到队列或不是线程队列。
         """
         return annotation_queue_rest_operations.get_threads_annotation_queue_by_id(
             rest_client=self._rest_client,
@@ -3082,14 +3090,15 @@ class Opik:
         max_results: int = 1000,
     ) -> List[TracesAnnotationQueue]:
         """
-        Get all traces annotation queues for a project.
+        获取项目的所有traces标注队列。
 
         Args:
-            project_name: The name of the project. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            max_results: Maximum number of queues to return. Defaults to 1000.
+            project_name: 项目的名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            max_results: 要返回的最大队列数。默认为1000。
 
         Returns:
-            List[TracesAnnotationQueue]: A list of traces annotation queue objects.
+            List[TracesAnnotationQueue]: traces标注队列对象列表。
         """
         project_id = rest_helpers.resolve_project_id_by_name(
             self._rest_client, self._resolve_project_name(project_name)
@@ -3107,14 +3116,15 @@ class Opik:
         max_results: int = 1000,
     ) -> List[ThreadsAnnotationQueue]:
         """
-        Get all threads annotation queues for a project.
+        获取项目的所有线程标注队列。
 
         Args:
-            project_name: The name of the project. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            max_results: Maximum number of queues to return. Defaults to 1000.
+            project_name: 项目的名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            max_results: 要返回的最大队列数。默认为1000。
 
         Returns:
-            List[ThreadsAnnotationQueue]: A list of threads annotation queue objects.
+            List[ThreadsAnnotationQueue]: 线程标注队列对象列表。
         """
         project_id = rest_helpers.resolve_project_id_by_name(
             self._rest_client, self._resolve_project_name(project_name)
@@ -3128,10 +3138,10 @@ class Opik:
 
     def delete_annotation_queue(self, queue_id: str) -> None:
         """
-        Delete an annotation queue by its ID.
+        按ID删除标注队列。
 
         Args:
-            queue_id: The ID of the annotation queue to delete.
+            queue_id: 要删除的标注队列的ID。
         """
         self._rest_client.annotation_queues.delete_annotation_queue_batch(
             ids=[queue_id]
@@ -3168,49 +3178,39 @@ class Opik:
         version: Optional[str] = None,
         timeout_in_seconds: Optional[int] = 5,
     ) -> Config:
-        """Fetch a config from the backend, optionally auto-creating from a fallback.
+        """
+        从后端获取配置，可选择性地从回退值自动创建。
 
-        Must be called from inside a function decorated with ``@opik.track``.
+        必须在用``@opik.track``装饰的函数内部调用。
 
-        At most one of ``env`` or ``version`` may be provided.
+        最多只能提供``env``或``version``中的一个。
 
-        * ``env`` — fetch the version deployed to an environment (e.g. ``"staging"``).
-        * ``version`` — fetch a specific version by name. The special value
-          ``"latest"`` fetches the latest version in the project; when no config
-          exists at all and ``fallback`` is provided, auto-creates one from it.
-        * Neither — equivalent to ``env="prod"``. If no config exists at all in
-          the project and ``fallback`` is provided, auto-creates one from it
-          (the backend tags the first version as ``"prod"``).
+        * ``env`` — 获取部署到环境的版本（例如``"staging"``）。
+        * ``version`` — 按名称获取特定版本。特殊值``"latest"``获取项目中的最新版本；
+          当配置完全不存在且提供了``fallback``时，从中自动创建。
+        * 两者都不提供 — 等同于``env="prod"``。如果项目中配置完全不存在且提供了
+          ``fallback``，则从中自动创建（后端将第一个版本标记为``"prod"``）。
 
-        Failure modes depend on whether ``fallback`` is provided:
+        失败模式取决于是否提供了``fallback``：
 
-        * **With fallback**: Backend errors (timeouts, network failures) return
-          the fallback instance with ``is_fallback=True``. If an explicit
-          ``env``/``version`` is requested but missing, raises
-          :class:`~opik.exceptions.ConfigNotFound`. If no config exists at all,
-          auto-creates from the fallback. The return value is an instance of
-          ``type(fallback)``.
-        * **Without fallback**: Backend errors are re-raised. If no config
-          exists at all, raises :class:`~opik.exceptions.ConfigNotFound`
-          instead of auto-creating. The return value is a generic ``Config``
-          instance — typed field access is only available when a fallback
-          supplies the subclass.
+        * **有回退值**：后端错误（超时、网络故障）返回``is_fallback=True``的回退实例。
+          如果请求了明确的``env``/``version``但缺失，引发:class:`~opik.exceptions.ConfigNotFound`。
+          如果配置完全不存在，从回退值自动创建。返回值是``type(fallback)``的实例。
+        * **无回退值**：后端错误会重新引发。如果配置完全不存在，
+          引发:class:`~opik.exceptions.ConfigNotFound`而不是自动创建。
+          返回值是通用的``Config``实例——只有当回退值提供子类时才能进行类型化字段访问。
 
-        If the backend blueprint is missing any field declared on the
-        fallback's class, raises :class:`~opik.exceptions.ConfigMismatch`.
+        如果后端蓝图缺少回退值类上声明的任何字段，引发:class:`~opik.exceptions.ConfigMismatch`。
 
         Args:
-            fallback: An instance of a user-defined ``Config`` subclass. When
-                provided, used as the return value if the backend is
-                unreachable and as the initial values when auto-creating.
-            project_name: Opik project name. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            env: Environment tag to fetch (e.g. ``"prod"``, ``"staging"``).
-            version: Fetch a specific version by its name. Use ``"latest"`` to
-                fetch the latest version.
-            timeout_in_seconds: Maximum seconds to wait for the backend
-                response. With a fallback, a timeout returns the fallback and
-                the cache continues refreshing in the background; without one,
-                the timeout is raised. Pass ``None`` to wait indefinitely.
+            fallback: 用户定义的``Config``子类的实例。提供时，如果后端不可达，
+                用作返回值；自动创建时用作初始值。
+            project_name: Opik项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            env: 要获取的环境标签（例如``"prod"``、``"staging"``）。
+            version: 按名称获取特定版本。使用``"latest"``获取最新版本。
+            timeout_in_seconds: 等待后端响应的最大秒数。有回退值时，超时返回回退值，
+                缓存在后台继续刷新；无回退值时，引发超时异常。传入``None``无限期等待。
         """
         if fallback is not None and (
             not isinstance(fallback, Config) or type(fallback) is Config
@@ -3226,10 +3226,10 @@ class Opik:
                 "or 'version' (fetch by version name)."
             )
 
-        # Resolve selectors:
-        # - version="latest" → fetch latest blueprint; auto-create if empty.
-        # - explicit env or named version → fetch by selector; no auto-create.
-        # - neither → fetch env="prod"; auto-create if no config exists at all.
+        # 解析选择器：
+        # - version="latest" → 获取最新蓝图；如果为空则自动创建。
+        # - 明确的env或命名版本 → 按选择器获取；不自动创建。
+        # - 两者都不提供 → 获取env="prod"；如果配置完全不存在则自动创建。
         if version == "latest":
             env = None
             version = None
@@ -3262,19 +3262,20 @@ class Opik:
         project_name: Optional[str] = None,
         description: Optional[str] = None,
     ) -> str:
-        """Write a config version to the backend unconditionally.
+        """
+        无条件地将配置版本写入后端。
 
-        Unlike :meth:`get_or_create_config`, this does not require a
-        ``@opik.track`` context and always performs a write — the new version's
-        values overwrite the latest blueprint's values.
+        与:meth:`get_or_create_config`不同，此方法不需要``@opik.track``上下文，
+        且始终执行写入——新版本的值会覆盖最新蓝图的值。
 
         Args:
-            config: An instance of a user-defined ``Config`` subclass.
-            project_name: Opik project name. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            description: Optional description stored with the version.
+            config: 用户定义的``Config``子类的实例。
+            project_name: Opik项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            description: 与版本一起存储的可选描述。
 
         Returns:
-            The version name of the newly written blueprint.
+            新写入蓝图的版本名称。
         """
         if not isinstance(config, Config) or type(config) is Config:
             raise TypeError(
@@ -3295,15 +3296,16 @@ class Opik:
         version: str,
         env: str,
     ) -> None:
-        """Tag a specific config version with an environment name.
+        """
+        为特定配置版本标记环境名称。
 
-        After tagging, ``get_or_create_config(env=env)`` for the project will
-        return this version.
+        标记后，项目的``get_or_create_config(env=env)``将返回此版本。
 
         Args:
-            project_name: Opik project name. If not provided, falls back to the active project context (from @track or opik.project_context), then to the client's default.
-            version: Version name of the blueprint to tag.
-            env: Environment name (e.g. ``"prod"``, ``"staging"``).
+            project_name: Opik项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            version: 要标记的蓝图版本名称。
+            env: 环境名称（例如``"prod"``、``"staging"``）。
         """
         resolved_project = self._resolve_project_name(project_name)
         manager = ConfigManager(
@@ -3327,12 +3329,13 @@ _global_singleton: Optional[Opik] = None
 
 
 def get_current_client_raw() -> Optional[Opik]:
-    """Return the active Opik client without auto-creating one.
+    """
+    返回活动的Opik客户端，不自动创建。
 
-    Resolution order:
-    1. Context-local client (set via ``set_global_client(client, context_wise=True)``)
-    2. Global singleton (set via ``set_global_client(client)``)
-    3. ``None`` if no client has been set
+    解析顺序：
+    1. 上下文本地客户端（通过``set_global_client(client, context_wise=True)``设置）
+    2. 全局单例（通过``set_global_client(client)``设置）
+    3. 如果未设置客户端，返回``None``
     """
     client = _context_client_var.get()
     if client is not None:
@@ -3342,12 +3345,13 @@ def get_current_client_raw() -> Optional[Opik]:
 
 
 def get_global_client() -> Opik:
-    """Get the active Opik client, creating one if needed.
+    """
+    获取活动的Opik客户端，如果需要则创建一个。
 
-    Resolution order:
-    1. Context-local client (set via ``set_global_client(client, context_wise=True)``)
-    2. Global singleton (set via ``set_global_client(client)``)
-    3. Auto-created default client (created on first call)
+    解析顺序：
+    1. 上下文本地客户端（通过``set_global_client(client, context_wise=True)``设置）
+    2. 全局单例（通过``set_global_client(client)``设置）
+    3. 自动创建的默认客户端（首次调用时创建）
     """
     client = get_current_client_raw()
     if client is not None:
@@ -3359,12 +3363,13 @@ def get_global_client() -> Opik:
 
 
 def set_global_client(client: Opik, context_wise: bool = False) -> None:
-    """Set the active Opik client.
+    """
+    设置活动的Opik客户端。
 
     Args:
-        client: The Opik client instance to use.
-        context_wise: If True, sets the client for the current context only
-            (thread-safe, async-safe). If False, replaces the global singleton.
+        client: 要使用的Opik客户端实例。
+        context_wise: 如果为True，则仅为当前上下文设置客户端（线程安全、异步安全）。
+            如果为False，则替换全局单例。
     """
     if context_wise:
         _context_client_var.set(client)
@@ -3374,12 +3379,12 @@ def set_global_client(client: Opik, context_wise: bool = False) -> None:
 
 
 def reset_global_client(end_client: bool = True) -> None:
-    """Clear the active Opik client.
+    """
+    清除活动的Opik客户端。
 
     Args:
-        end_client: If True (default), calls ``.end()`` on the global singleton
-            before clearing it. Set to False when the caller manages the client
-            lifecycle independently.
+        end_client: 如果为True（默认），在清除前对全局单例调用``.end()``。
+            当调用者独立管理客户端生命周期时，设置为False。
     """
     global _global_singleton
     if _global_singleton is not None:

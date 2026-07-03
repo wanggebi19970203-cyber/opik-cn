@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { INTERVAL_TYPE } from "@/api/projects/useProjectMetric";
 import { ChartTooltipRenderValueArguments } from "@/shared/Charts/ChartTooltipContent/ChartTooltipContent";
 import { formatDuration } from "@/lib/date";
@@ -7,6 +8,16 @@ import { formatNumberInK } from "@/lib/utils";
 /**
  * Duration labels mapping for percentile charts
  */
+export const getDurationLabelsMap = () => {
+  const t = i18next.getFixedT(null, "dashboards");
+  return {
+    "duration.p50": t("chartUtils.percentile50"),
+    "duration.p90": t("chartUtils.percentile90"),
+    "duration.p99": t("chartUtils.percentile99"),
+  } as const;
+};
+
+/** @deprecated Use getDurationLabelsMap() instead */
 export const DURATION_LABELS_MAP = {
   "duration.p50": "Percentile 50",
   "duration.p90": "Percentile 90",
@@ -16,6 +27,37 @@ export const DURATION_LABELS_MAP = {
 /**
  * Interval descriptions for different chart types and intervals
  */
+export const getIntervalDescriptions = () => {
+  const t = i18next.getFixedT(null, "dashboards");
+  return {
+    TOTALS: {
+      [INTERVAL_TYPE.HOURLY]: t("chartUtils.hourlyTotals"),
+      [INTERVAL_TYPE.DAILY]: t("chartUtils.dailyTotals"),
+      [INTERVAL_TYPE.WEEKLY]: t("chartUtils.weeklyTotals"),
+      [INTERVAL_TYPE.TOTAL]: t("chartUtils.wholePeriodTotals"),
+    },
+    AVERAGES: {
+      [INTERVAL_TYPE.HOURLY]: t("chartUtils.hourlyAverages"),
+      [INTERVAL_TYPE.DAILY]: t("chartUtils.dailyAverages"),
+      [INTERVAL_TYPE.WEEKLY]: t("chartUtils.weeklyAverages"),
+      [INTERVAL_TYPE.TOTAL]: t("chartUtils.wholePeriodAverages"),
+    },
+    QUANTILES: {
+      [INTERVAL_TYPE.HOURLY]: t("chartUtils.hourlyQuantilesInSeconds"),
+      [INTERVAL_TYPE.DAILY]: t("chartUtils.dailyQuantilesInSeconds"),
+      [INTERVAL_TYPE.WEEKLY]: t("chartUtils.weeklyQuantilesInSeconds"),
+      [INTERVAL_TYPE.TOTAL]: t("chartUtils.wholePeriodQuantilesInSeconds"),
+    },
+    COST: {
+      [INTERVAL_TYPE.HOURLY]: t("chartUtils.totalHourlyCostInUsd"),
+      [INTERVAL_TYPE.DAILY]: t("chartUtils.totalDailyCostInUsd"),
+      [INTERVAL_TYPE.WEEKLY]: t("chartUtils.totalWeeklyCostInUsd"),
+      [INTERVAL_TYPE.TOTAL]: t("chartUtils.totalCostInUsd"),
+    },
+  } as const;
+};
+
+/** @deprecated Use getIntervalDescriptions() instead */
 export const INTERVAL_DESCRIPTIONS = {
   TOTALS: {
     [INTERVAL_TYPE.HOURLY]: "Hourly totals",

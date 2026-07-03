@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { ListTree, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Accordion,
   AccordionContent,
@@ -25,6 +26,7 @@ import { Button } from "@/ui/button";
 const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 const TraceDataViewer: React.FC = () => {
+  const { t } = useTranslation("sme");
   const { currentItem, nextItem } = useSMEFlow();
   const { state, updateScrollTop } = useAnnotationTreeState();
 
@@ -120,7 +122,7 @@ const TraceDataViewer: React.FC = () => {
     <>
       <div className="relative pr-4">
         <TraceIdentifier
-          label="Trace"
+          label={t("traceDataViewer.trace")}
           name={displayTrace?.name}
           id={displayTrace?.id || ""}
         />
@@ -136,7 +138,7 @@ const TraceDataViewer: React.FC = () => {
             onClick={() => handleOpenTrace(false)}
           >
             <ListTree className="mr-1 size-3" />
-            View trace
+            {t("traceDataViewer.viewTrace")}
           </Button>
           {displayTrace?.has_tool_spans && (
             <Button
@@ -144,7 +146,7 @@ const TraceDataViewer: React.FC = () => {
               size="2xs"
               onClick={() => handleOpenTrace(true)}
             >
-              View tool calls
+              {t("traceDataViewer.viewToolCalls")}
             </Button>
           )}
         </div>
@@ -156,7 +158,7 @@ const TraceDataViewer: React.FC = () => {
           >
             {displayTrace && <AttachmentsList media={media} />}
             <AccordionItem className="group" value="input">
-              <AccordionTrigger>Input</AccordionTrigger>
+              <AccordionTrigger>{t("traceDataViewer.input")}</AccordionTrigger>
               <AccordionContent
                 forceMount
                 className="group-data-[state=closed]:hidden"
@@ -174,7 +176,7 @@ const TraceDataViewer: React.FC = () => {
             </AccordionItem>
 
             <AccordionItem className="group" value="output">
-              <AccordionTrigger>Output</AccordionTrigger>
+              <AccordionTrigger>{t("traceDataViewer.output")}</AccordionTrigger>
               <AccordionContent
                 forceMount
                 className="group-data-[state=closed]:hidden"
@@ -192,7 +194,7 @@ const TraceDataViewer: React.FC = () => {
             </AccordionItem>
 
             <AccordionItem className="group" value="metadata">
-              <AccordionTrigger>Metadata</AccordionTrigger>
+              <AccordionTrigger>{t("traceDataViewer.metadata")}</AccordionTrigger>
               <AccordionContent
                 forceMount
                 className="group-data-[state=closed]:hidden"

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import useWorkspace from "@/plugins/comet/useWorkspace";
 import useUserPermission from "@/plugins/comet/useUserPermission";
 import SidebarMenuItem, {
@@ -15,6 +16,7 @@ export type SidebarInviteDevButtonProps = {
 const SidebarInviteDevButton: React.FC<SidebarInviteDevButtonProps> = ({
   expanded,
 }) => {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const workspace = useWorkspace();
@@ -50,7 +52,7 @@ const SidebarInviteDevButton: React.FC<SidebarInviteDevButtonProps> = ({
             item={{
               id: "inviteTeamMember",
               icon: UserPlus,
-              label: "Invite a teammate",
+              label: t("collaborators.inviteTeammate"),
               type: MENU_ITEM_TYPE.button,
             }}
             expanded={expanded}

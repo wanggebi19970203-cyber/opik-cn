@@ -1,7 +1,8 @@
+import i18next from "i18next";
 import { TRACE_DATA_TYPE } from "@/constants/traces";
 import { ProjectStatsCardWidget } from "@/types/dashboard";
 
-const DEFAULT_TITLE = "Project statistics";
+const DEFAULT_TITLE = i18next.t("projectStats.projectStatistics");
 const FEEDBACK_SCORE_PREFIX = "feedback_scores.";
 
 const getMetricTitleMap = (source: TRACE_DATA_TYPE): Record<string, string> => {
@@ -9,24 +10,24 @@ const getMetricTitleMap = (source: TRACE_DATA_TYPE): Record<string, string> => {
   const sourceLabel = isSpans ? "span" : "trace";
 
   return {
-    trace_count: "Total trace count",
-    thread_count: "Total thread count",
-    span_count: isSpans ? "Total span count" : "Average span count",
-    llm_span_count: "Average LLM span count",
-    error_count: `Total ${sourceLabel} error count`,
-    "duration.p50": `P50 ${sourceLabel} duration`,
-    "duration.p90": `P90 ${sourceLabel} duration`,
-    "duration.p99": `P99 ${sourceLabel} duration`,
-    total_estimated_cost: isSpans ? "Avg cost per span" : "Avg cost per trace",
-    total_estimated_cost_sum: `Total ${sourceLabel} cost sum`,
-    "usage.completion_tokens": `Avg ${sourceLabel} output tokens`,
-    "usage.prompt_tokens": `Avg ${sourceLabel} input tokens`,
-    "usage.total_tokens": `Avg ${sourceLabel} total tokens`,
-    input: `Total ${sourceLabel} input count`,
-    output: `Total ${sourceLabel} output count`,
-    metadata: `Total ${sourceLabel} metadata count`,
-    tags: `Avg ${sourceLabel} tags count`,
-    guardrails_failed_count: `Total ${sourceLabel} guardrails failed`,
+    trace_count: i18next.t("projectStats.totalTraceCount"),
+    thread_count: i18next.t("projectStats.totalThreadCount"),
+    span_count: isSpans ? i18next.t("projectStats.totalSpanCount") : i18next.t("projectStats.averageSpanCount"),
+    llm_span_count: i18next.t("projectStats.averageLlmSpanCount"),
+    error_count: i18next.t("projectStats.totalErrorCount", { source: sourceLabel }),
+    "duration.p50": i18next.t("projectStats.p50Duration", { source: sourceLabel }),
+    "duration.p90": i18next.t("projectStats.p90Duration", { source: sourceLabel }),
+    "duration.p99": i18next.t("projectStats.p99Duration", { source: sourceLabel }),
+    total_estimated_cost: isSpans ? i18next.t("projectStats.avgCostPerSpan") : i18next.t("projectStats.avgCostPerTrace"),
+    total_estimated_cost_sum: i18next.t("projectStats.totalCostSum", { source: sourceLabel }),
+    "usage.completion_tokens": i18next.t("projectStats.avgOutputTokens", { source: sourceLabel }),
+    "usage.prompt_tokens": i18next.t("projectStats.avgInputTokens", { source: sourceLabel }),
+    "usage.total_tokens": i18next.t("projectStats.avgTotalTokens", { source: sourceLabel }),
+    input: i18next.t("projectStats.totalInputCount", { source: sourceLabel }),
+    output: i18next.t("projectStats.totalOutputCount", { source: sourceLabel }),
+    metadata: i18next.t("projectStats.totalMetadataCount", { source: sourceLabel }),
+    tags: i18next.t("projectStats.avgTagsCount", { source: sourceLabel }),
+    guardrails_failed_count: i18next.t("projectStats.totalGuardrailsFailed", { source: sourceLabel }),
   };
 };
 
@@ -44,7 +45,7 @@ const calculateProjectStatsCardTitle = (
   if (metric.startsWith(FEEDBACK_SCORE_PREFIX)) {
     const scoreName = metric.replace(FEEDBACK_SCORE_PREFIX, "");
     const sourceLabel = source === TRACE_DATA_TYPE.spans ? "span" : "trace";
-    return `Average ${sourceLabel} ${scoreName}`;
+    return i18next.t("projectStats.averageFeedbackScore", { source: sourceLabel, scoreName });
   }
 
   const metricTitleMap = getMetricTitleMap(source);

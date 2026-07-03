@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import copy from "clipboard-copy";
 import FileSaver from "file-saver";
 import { json2csv } from "json-2-csv";
@@ -105,6 +106,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
   treeData,
   setActiveSection,
 }) => {
+  const { t } = useTranslation("tracing");
   const [popupOpen, setPopupOpen] = useState<boolean>(false);
   const [isSmall, setIsSmall] = useState<boolean>(false);
   const isGuardrailsEnabled = useIsFeatureEnabled(
@@ -240,13 +242,13 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
       FileSaver.saveAs(blob, fileName);
 
       toast({
-        title: "Export successful",
-        description: `Exported ${fileSuffix} to CSV`,
+        title: t("actions.exportSuccessful"),
+        description: t("actions.exportedToFormat", { type: fileSuffix, format: "CSV" }),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: get(error, "message", "Failed to export"),
+        title: t("actions.exportFailed"),
+        description: get(error, "message", t("actions.failedToExport")),
         variant: "destructive",
       });
     }
@@ -266,13 +268,13 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
       FileSaver.saveAs(blob, fileName);
 
       toast({
-        title: "Export successful",
-        description: `Exported ${fileSuffix} to JSON`,
+        title: t("actions.exportSuccessful"),
+        description: t("actions.exportedToFormat", { type: fileSuffix, format: "JSON" }),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: get(error, "message", "Failed to export"),
+        title: t("actions.exportFailed"),
+        description: get(error, "message", t("actions.failedToExport")),
         variant: "destructive",
       });
     }
@@ -285,7 +287,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
         ? [
             {
               id: COLUMN_GUARDRAILS_ID,
-              label: "Guardrails",
+              label: t("treeToolbar.guardrails"),
               type: COLUMN_TYPE.category,
             },
           ]
@@ -296,7 +298,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
   const filtersConfig = useMemo(
     () => ({
       rowsMap: {
-        ...getSpanTypeFilterConfig(isGuardrailsEnabled),
+        ...getSpanTypeFilterConfig(isGuardrailsEnabled, t),
         [COLUMN_METADATA_ID]: {
           keyComponent: (
             props: {
@@ -365,16 +367,16 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
             )
               .sort()
               .map((key) => ({ value: key, label: key })),
-            placeholder: "Select score",
+            placeholder: t("treeToolbar.selectScore"),
           },
         },
         [COLUMN_GUARDRAILS_ID]: {
           keyComponentProps: {
             options: [
-              { value: GuardrailResult.FAILED, label: "Failed" },
-              { value: GuardrailResult.PASSED, label: "Passed" },
+              { value: GuardrailResult.FAILED, label: t("treeToolbar.failed") },
+              { value: GuardrailResult.PASSED, label: t("treeToolbar.passed") },
             ],
-            placeholder: "Status",
+            placeholder: t("treeToolbar.status"),
           },
         },
       },
@@ -390,25 +392,25 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
           {showExperimentButton && (
             <NavigationTag
               id={experiment.dataset_id}
-              name="View in experiment"
+              name={t("actions.viewInExperiment")}
               resource={RESOURCE_TYPE.experimentItem}
               search={{
                 experiments: [experiment.id],
                 row: experiment.dataset_item_id,
               }}
-              tooltipContent={`View this item in experiment: ${experiment.name}`}
+              tooltipContent={t("actions.viewInExperiment", { name: experiment.name })}
               className="h-8"
               isSmall={isSmall}
             />
           )}
           {hasThread && (
-            <TooltipWrapper content="Go to thread">
+            <TooltipWrapper content={t("actions.goToThread")}>
               <Button
                 variant="outline"
                 size={isSmall ? "icon-sm" : "sm"}
                 onClick={() => setThreadId!(threadId)}
               >
-                {isSmall ? <MessagesSquare /> : "Go to thread"}
+                {isSmall ? <MessagesSquare /> : t("actions.goToThread")}
               </Button>
             </TooltipWrapper>
           )}
@@ -420,7 +422,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
         <div className="flex min-w-44 max-w-56 flex-auto justify-end overflow-hidden">
           <ExpandableSearchInput
             value={search}
-            placeholder="Search by all fields"
+            placeholder={t("treeToolbar.searchByAllFields")}
             onChange={setSearch}
             disabled={isSpansLazyLoading}
           />
@@ -439,7 +441,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
           <Separator orientation="vertical" className="mx-1 h-4" />
         )}
         {isAIInspectorEnabled && (
-          <TooltipWrapper content="Debug your trace with AI assistance (OpikAssist)">
+          <TooltipWrapper content={t("actions.debugTraceWithAI")}>
             <Button
               variant="default"
               size={isSmall ? "icon-sm" : "sm"}
@@ -448,13 +450,13 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
               }
             >
               <Sparkles className="size-3.5 shrink-0" />
-              {isSmall ? null : <span className="ml-1.5">Debug with AI</span>}
+              {isSmall ? null : <span className="ml-1.5">{t("aiAssistant.debugWithOpikAssist")}</span>}
             </Button>
           </TooltipWrapper>
         )}
         {hasAgentGraph && (
           <TooltipWrapper
-            content={graph ? "Hide agent graph" : "Show agent graph"}
+            content={graph ? t("agentGraph.collapseGraph") : t("agentGraph.expandGraph")}
           >
             <Button
               variant="default"
@@ -468,7 +470,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
               )}
               {isSmall ? null : (
                 <span className="ml-1.5">
-                  {graph ? "Hide agent graph" : "Show agent graph"}
+                  {graph ? t("agentGraph.collapseGraph") : t("agentGraph.expandGraph")}
                 </span>
               )}
             </Button>
@@ -478,7 +480,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon-sm">
-              <span className="sr-only">Actions menu</span>
+              <span className="sr-only">{t("actions.actionsMenu")}</span>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
@@ -486,25 +488,25 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
             <DropdownMenuItem
               onClick={() => {
                 toast({
-                  description: "URL copied to clipboard",
+                  description: t("actions.urlCopiedToClipboard"),
                 });
                 copy(window.location.href);
               }}
             >
               <Share className="mr-2 size-4" />
-              Share
+              {t("actions.share")}
             </DropdownMenuItem>
             <TooltipWrapper content={traceId} side="left">
-              <DropdownMenuItem
-                onClick={() => {
-                  toast({
-                    description: `Trace ID copied to clipboard`,
-                  });
-                  copy(traceId);
-                }}
-              >
-                <Copy className="mr-2 size-4" />
-                Copy trace ID
+                <DropdownMenuItem
+                  onClick={() => {
+                    toast({
+                      description: t("actions.traceIdCopiedToClipboard"),
+                    });
+                    copy(traceId);
+                  }}
+                >
+                  <Copy className="mr-2 size-4" />
+                  {t("actions.copyTraceId")}
               </DropdownMenuItem>
             </TooltipWrapper>
             {spanId && (
@@ -512,20 +514,20 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
                 <DropdownMenuItem
                   onClick={() => {
                     toast({
-                      description: `Span ID copied to clipboard`,
+                      description: t("actions.spanIdCopiedToClipboard"),
                     });
                     copy(spanId);
                   }}
                 >
                   <Copy className="mr-2 size-4" />
-                  Copy span ID
+                  {t("actions.copySpanId")}
                 </DropdownMenuItem>
               </TooltipWrapper>
             )}
             <DropdownMenuSeparator />
             {!isExportEnabled ? (
               <TooltipWrapper
-                content="Export functionality is disabled for this installation"
+                content={t("actions.exportDisabled")}
                 side="left"
               >
                 <div>
@@ -534,19 +536,19 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
                     disabled={!isExportEnabled}
                   >
                     <Download className="mr-2 size-4" />
-                    Export as CSV
+                    {t("actions.exportAs", { format: "CSV" })}
                   </DropdownMenuItem>
                 </div>
               </TooltipWrapper>
             ) : (
               <DropdownMenuItem onClick={handleExportCSV}>
                 <Download className="mr-2 size-4" />
-                Export as CSV
+                {t("actions.exportAs", { format: "CSV" })}
               </DropdownMenuItem>
             )}
             {!isExportEnabled ? (
               <TooltipWrapper
-                content="Export functionality is disabled for this installation"
+                content={t("actions.exportDisabled")}
                 side="left"
               >
                 <div>
@@ -555,14 +557,14 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
                     disabled={!isExportEnabled}
                   >
                     <Download className="mr-2 size-4" />
-                    Export as JSON
+                    {t("actions.exportAs", { format: "JSON" })}
                   </DropdownMenuItem>
                 </div>
               </TooltipWrapper>
             ) : (
               <DropdownMenuItem onClick={handleExportJSON}>
                 <Download className="mr-2 size-4" />
-                Export as JSON
+                {t("actions.exportAs", { format: "JSON" })}
               </DropdownMenuItem>
             )}
             {canDeleteTraces && (
@@ -573,7 +575,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
                   variant="destructive"
                 >
                   <Trash className="mr-2 size-4" />
-                  Delete trace
+                  {t("actions.deleteTrace")}
                 </DropdownMenuItem>
               </>
             )}
@@ -584,9 +586,9 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
             open={popupOpen}
             setOpen={setPopupOpen}
             onConfirm={handleTraceDelete}
-            title="Delete trace"
-            description="Deleting a trace will also remove the trace data from related experiment samples. This action can’t be undone. Are you sure you want to continue?"
-            confirmText="Delete trace"
+            title={t("actions.deleteTrace")}
+            description={t("actions.deleteTraceDescription")}
+            confirmText={t("actions.deleteTrace")}
             confirmButtonVariant="destructive"
           />
         )}

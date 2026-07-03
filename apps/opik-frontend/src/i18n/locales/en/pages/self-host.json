@@ -1,0 +1,11 @@
+{
+  "selfHost": {
+    "title": "Self-host",
+    "description": "Deploy Opik on your own infrastructure",
+    "methods": {
+      "docker": "Docker",
+      "kubernetes": "Kubernetes",
+      "cloud": "Cloud"
+    }
+  }
+}

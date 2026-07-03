@@ -1,0 +1,404 @@
+---
+headline: JWT 认证 | Opik 文档
+og:description: 了解如何为 Opik 组织配置基于 JWT 的认证以进行程序化访问。
+og:site_name: Opik 文档
+og:title: '在 Opik 中配置 JWT 认证：API 访问指南'
+subtitle: 为程序化和服务访问设置 JWT 令牌认证
+title: JWT 认证
+---
+
+JWT (JSON Web Token) 认证允许使用外部签发的令牌进行程序化访问 Opik。这适用于服务间认证、自定义认证流程以及与现有基于 JWT 的系统集成。
+
+<Note>
+JWT 认证在企业版计划中可用。此功能在开源部署中不可用。如果需要为您的 Opik 部署启用此功能，请[联系我们](https://www.comet.com/site/about-us/contact-us/)。
+</Note>
+
+## 何时使用 JWT 认证
+
+JWT 认证最适合以下场景：
+
+- **后端服务**需要访问 Opik API
+- **CI/CD 流水线**运行自动化实验
+- **自定义应用程序**已有 JWT 基础设施
+- **服务间通信**无需用户交互
+
+对于需要交互式登录的用户，请考虑使用 [SAML](/administration/authentication/saml) 或 [OIDC](/administration/authentication/oidc) 单点登录。
+
+## 前置条件
+
+配置 JWT 认证之前，您需要：
+
+- **组织管理员权限**访问 Opik
+- **企业版计划**已为您的组织启用
+- **JWT 基础设施**能够签发签名令牌
+- **JWKS 端点**（推荐）或用于令牌验证的公钥
+
+## JWT 认证工作原理
+
+```
+┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│   Service/   │      │    Opik      │      │    JWKS      │
+│   Client     │      │    API       │      │   Endpoint   │
+└──────┬───────┘      └──────┬───────┘      └──────┬───────┘
+       │                     │                     │
+       │  1. Request with    │                     │
+       │     JWT in header   │                     │
+       │────────────────────>│                     │
+       │                     │  2. Fetch keys      │
+       │                     │     (cached)        │
+       │                     │────────────────────>│
+       │                     │<────────────────────│
+       │                     │                     │
+       │                     │  3. Verify JWT      │
+       │                     │     signature       │
+       │                     │                     │
+       │                     │  4. Validate claims │
+       │                     │     (iss, aud, sub) │
+       │                     │                     │
+       │  5. API response    │                     │
+       │<────────────────────│                     │
+```
+
+1. 客户端在 `Authorization` 头中携带 JWT 发送 API 请求。
+2. Opik 从您的 JWKS 端点获取公钥（已缓存以提高性能）。
+3. Opik 使用相应的密钥验证 JWT 签名。
+4. Opik 验证声明（签发者、受众、主题）。
+5. 如果有效，请求将作为映射的用户进行处理。
+
+## 配置选项
+
+JWT 认证可以通过以下方式配置：
+
+| 选项 | 描述 | 使用场景 |
+| --- | --- | --- |
+| **JWKS URI** | 动态获取公钥的 URL | 推荐用于大多数部署 |
+| **静态公钥** | 用于验证的固定公钥 | 仅用于本地部署 |
+
+<Note>
+您必须配置 **JWKS URI** 或 **静态公钥**之一，但不能同时配置两者。
+</Note>
+
+## 配置 JWT 认证
+
+### 步骤 1：导航到 SSO 设置
+
+1. 进入 **管理员仪表板** > **SSO 配置**。
+2. 选择 **JWT 认证**（可能在高级选项下）。
+
+### 步骤 2：选择密钥验证方式
+
+<Tabs>
+<Tab value="jwks" title="JWKS URI（推荐）">
+
+### 使用 JWKS URI
+
+JWKS (JSON Web Key Set) 是推荐的方式，因为它：
+
+- 支持自动密钥轮换
+- 允许多个密钥实现无缝轮换
+- 遵循行业最佳实践
+
+**配置：**
+
+| 字段 | 描述 | 示例 |
+| --- | --- | --- |
+| **JWKS URI** | JWKS 端点的 URL | `https://auth.company.com/.well-known/jwks.json` |
+
+**要求：**
+
+- 端点必须可公开访问（或可从 Opik 服务器访问）。
+- 必须返回有效的 JWKS JSON 格式。
+- 必须在组织间唯一（不能有两个组织共享 JWKS URI）。
+- 应支持 HTTPS。
+
+**示例 JWKS 响应：**
+
+```json
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "key-1",
+      "use": "sig",
+      "n": "0vx7agoebGcQ...",
+      "e": "AQAB"
+    }
+  ]
+}
+```
+
+</Tab>
+<Tab value="static" title="静态公钥（仅限本地部署）">
+
+### 使用静态公钥
+
+<Note>
+**仅限本地部署**：静态公钥配置仅适用于本地部署。云部署必须使用 JWKS URI。
+</Note>
+
+静态公钥配置更简单，但需要手动轮换密钥：
+
+| 字段 | 描述 | 示例 |
+| --- | --- | --- |
+| **静态公钥** | PEM 编码的公钥 | `-----BEGIN PUBLIC KEY-----...` |
+
+**格式：**
+
+公钥必须为 PEM 格式：
+
+```
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----
+```
+
+<Warning>
+**密钥轮换**：使用静态密钥时，轮换密钥必须手动更新配置。请规划轮换流程以避免服务中断。
+</Warning>
+
+</Tab>
+</Tabs>
+
+### 步骤 3：配置主题映射
+
+主题映射决定 Opik 如何从 JWT 声明中识别用户：
+
+| 字段 | 描述 | 选项 |
+| --- | --- | --- |
+| **主题映射类型** | 如何解释主题声明 | `EMAIL` 或 `USER_NAME` |
+| **主题声明名称** | 哪个声明包含主题 | 默认：`sub` |
+
+**主题映射类型：**
+
+| 类型 | 描述 | 示例声明值 |
+| --- | --- | --- |
+| `EMAIL` | 主题是电子邮件地址 | `user@company.com` |
+| `USER_NAME` | 主题是用户名 | `jsmith` |
+
+<Tip>
+当您的 JWT 令牌在主题声明中包含电子邮件地址时，使用 `EMAIL` 映射。这是最常见的配置。
+</Tip>
+
+**自定义声明名称：**
+
+默认情况下，Opik 读取 `sub`（主题）声明。如果您的令牌使用不同的声明：
+
+```json
+{
+  "sub": "12345",
+  "email": "user@company.com",
+  "preferred_username": "jsmith"
+}
+```
+
+将 **主题声明名称** 设置为 `email` 或 `preferred_username` 以使用这些声明。
+
+### 步骤 4：配置可选限制
+
+#### 允许的签发者
+
+限制接受哪些令牌签发者：
+
+| 字段 | 描述 |
+| --- | --- |
+| **允许的签发者** | 接受的 `iss` 声明值列表 |
+
+**示例：**
+
+```
+https://auth.company.com
+https://auth.partner.com
+```
+
+如果配置了此选项，签发者不在此列表中的令牌将被拒绝。
+
+#### 允许的受众
+
+限制接受哪些受众：
+
+| 字段 | 描述 |
+| --- | --- |
+| **允许的受众** | 接受的 `aud` 声明值列表 |
+
+**示例：**
+
+```
+opik-api
+https://api.opik.com
+```
+
+如果配置了此选项，没有匹配受众声明的令牌将被拒绝。
+
+<Tip>
+**安全最佳实践**：配置允许的签发者和受众，确保只有特定预期的令牌可以访问您的组织。
+</Tip>
+
+## JWT 令牌要求
+
+### 必需声明
+
+您的 JWT 令牌必须包含：
+
+| 声明 | 描述 | 示例 |
+| --- | --- | --- |
+| `sub`（或自定义） | 标识用户的主题 | `user@company.com` |
+| `iat` | 签发时间戳 | `1704067200` |
+| `exp` | 过期时间戳 | `1704070800` |
+
+### 推荐声明
+
+| 声明 | 描述 | 示例 |
+| --- | --- | --- |
+| `iss` | 令牌签发者 | `https://auth.company.com` |
+| `aud` | 预期受众 | `opik-api` |
+
+### 必需头部
+
+使用具有多个密钥的 JWKS 时：
+
+| 头部 | 描述 | 示例 |
+| --- | --- | --- |
+| `kid` | 匹配 JWKS 密钥的密钥 ID | `key-1` |
+| `alg` | 算法（必须与密钥匹配） | `RS256` |
+
+<Warning>
+**多租户要求**：如果您的 JWKS 端点包含多个密钥，JWT **必须包含 `kid`（密钥 ID）** 头部以标识使用哪个密钥进行验证。缺少 `kid` 头部可能导致认证失败。
+</Warning>
+
+## 使用 JWT 认证
+
+### API 请求
+
+在 `Authorization` 头中包含 JWT：
+
+```bash
+curl -X GET "https://api.opik.com/v1/projects" \
+  -H "Authorization: Bearer <your-jwt-token>"
+```
+
+### SDK 配置
+
+配置 Opik SDK 使用 JWT 认证：
+
+<Tabs>
+<Tab value="python" title="Python">
+
+```python
+import opik
+
+# 使用 JWT 令牌配置
+client = opik.Opik(
+    api_key="<your-jwt-token>",
+    workspace="your-workspace"
+)
+```
+
+</Tab>
+<Tab value="typescript" title="TypeScript">
+
+```typescript
+import { Opik } from 'opik';
+
+const client = new Opik({
+  apiKey: '<your-jwt-token>',
+  workspace: 'your-workspace'
+});
+```
+
+</Tab>
+</Tabs>
+
+## 密钥缓存与性能
+
+### JWKS 缓存
+
+Opik 缓存 JWKS 响应以提高性能：
+
+- **缓存时长**：密钥被缓存并定期刷新。
+- **自动刷新**：在缓存过期或遇到新的 `kid` 时获取密钥。
+- **回退机制**：如果 JWKS 端点暂时不可用，将使用缓存的密钥。
+
+### 配置选项（本地部署）
+
+本地部署可以配置缓存行为：
+
+| 环境变量 | 描述 | 默认值 |
+| --- | --- | --- |
+| `JWKS_CACHE_UPDATE_SECONDS` | 刷新缓存的频率 | 300（5 分钟） |
+| `JWKS_FETCH_TIMEOUT_MS` | JWKS 获取请求的超时时间 | 5000（5 秒） |
+
+## 故障排除
+
+### 常见问题
+
+| 问题 | 可能原因 | 解决方案 |
+| --- | --- | --- |
+| "Invalid token signature" | 密钥不匹配 | 验证 JWKS 端点返回正确的密钥 |
+| "Token expired" | `exp` 声明已过期 | 签发具有适当过期时间的令牌 |
+| "Unknown key ID" | `kid` 不在 JWKS 中 | 确保令牌的 `kid` 匹配 JWKS 中的密钥 |
+| "Invalid issuer" | `iss` 不在允许列表中 | 将签发者添加到允许列表或移除限制 |
+| "Invalid audience" | `aud` 不在允许列表中 | 将受众添加到允许列表或移除限制 |
+| "User not found" | 主题未映射到用户 | 验证主题声明包含有效的电子邮件/用户名 |
+
+### 调试 JWT 令牌
+
+解码并检查您的 JWT 令牌（不要用于包含密钥的生产令牌）：
+
+```bash
+# 解码 JWT 头部和载荷（不验证）
+echo "<your-jwt>" | cut -d'.' -f1 | base64 -d 2>/dev/null | jq .
+echo "<your-jwt>" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq .
+```
+
+或使用 [jwt.io](https://jwt.io) 检查令牌内容。
+
+### 验证 JWKS 端点
+
+测试您的 JWKS 端点是否可访问并返回有效的 JSON：
+
+```bash
+curl -s "https://auth.company.com/.well-known/jwks.json" | jq .
+```
+
+验证以下内容：
+
+- 端点返回 HTTP 200。
+- 响应是包含 `keys` 数组的有效 JSON。
+- 密钥包含 `kid`、`kty` 和特定算法字段。
+
+### 令牌生成检查清单
+
+集成之前，请验证您的令牌：
+
+1. **签名**：令牌使用 JWKS 中的密钥签名。
+2. **头部**：包含匹配 JWKS 中密钥的 `kid`（如果有多个密钥）。
+3. **主题**：在配置的声明中包含用户电子邮件或用户名。
+4. **过期时间**：`exp` 声明在未来。
+5. **签发者**：匹配允许的签发者（如果已配置）。
+6. **受众**：匹配允许的受众（如果已配置）。
+
+## 安全最佳实践
+
+### 令牌生命周期
+
+- **短期过期**：使用短期令牌（例如 1 小时）。
+- **刷新令牌**：为长时间运行的进程实现令牌刷新。
+- **撤销**：在密钥泄露时有轮换密钥的流程。
+
+### 密钥管理
+
+- **密钥轮换**：定期轮换密钥（例如每 90 天）。
+- **多密钥**：在轮换期间在 JWKS 中维护多个密钥。
+- **安全存储**：保护用于签名的私钥。
+
+### 访问限制
+
+- **限制签发者**：配置允许的签发者以防止来自未授权来源的令牌。
+- **限制受众**：配置允许的受众以确保令牌是为 Opik 签发的。
+- **监控使用**：审查认证日志以发现异常。
+
+## 后续步骤
+
+- [配置 SAML](/administration/authentication/saml) 用于交互式用户认证。
+- [配置 OIDC](/administration/authentication/oidc) 用于基于 OAuth 的认证。
+- [创建服务账户](/administration/admin-dashboard/service_accounts) 作为替代的程序化访问方式。

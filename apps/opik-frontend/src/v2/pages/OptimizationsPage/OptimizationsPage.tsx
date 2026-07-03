@@ -1,4 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import useLocalStorageState from "use-local-storage-state";
 import { RowSelectionState } from "@tanstack/react-table";
 import { useNavigate } from "@tanstack/react-router";
@@ -56,28 +58,28 @@ const COLUMNS_ORDER_KEY = "optimizations-columns-order-v1";
 export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   {
     id: "dataset_name",
-    label: "Dataset name",
+    label: i18next.t("pages/optimizations:optimizations.columns.datasetName"),
     type: COLUMN_TYPE.string,
     cell: DatasetNameCell as never,
     size: 200,
   },
   {
     id: "created_at",
-    label: "Start time",
+    label: i18next.t("pages/optimizations:optimizations.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     size: 140,
   },
   {
     id: "status",
-    label: "Status",
+    label: i18next.t("pages/optimizations:optimizations.columns.status"),
     type: COLUMN_TYPE.string,
     cell: OptimizationStatusCell as never,
     size: 120,
   },
   {
     id: "pass_rate",
-    label: "Pass rate",
+    label: i18next.t("pages/optimizations:optimizations.columns.passRate"),
     type: COLUMN_TYPE.numberDictionary,
     size: 200,
     accessorFn: (row) => row.best_objective_score,
@@ -85,7 +87,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "accuracy",
-    label: "Accuracy",
+    label: i18next.t("pages/optimizations:optimizations.columns.accuracy"),
     type: COLUMN_TYPE.numberDictionary,
     size: 200,
     accessorFn: (row) =>
@@ -94,7 +96,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "latency",
-    label: "Latency",
+    label: i18next.t("pages/optimizations:optimizations.columns.latency"),
     type: COLUMN_TYPE.duration,
     size: 180,
     accessorFn: (row) => row.best_duration,
@@ -102,7 +104,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "cost",
-    label: "Cost",
+    label: i18next.t("pages/optimizations:optimizations.columns.cost"),
     type: COLUMN_TYPE.cost,
     size: 180,
     accessorFn: (row) => row.best_cost,
@@ -110,7 +112,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "opt_cost",
-    label: "Opt. cost",
+    label: i18next.t("pages/optimizations:optimizations.columns.optCost"),
     type: COLUMN_TYPE.cost,
     size: 120,
     accessorFn: (row) => row.total_optimization_cost,
@@ -121,7 +123,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
 export const FILTER_COLUMNS = [
   {
     id: COLUMN_DATASET_ID,
-    label: "Test suite",
+    label: i18next.t("pages/optimizations:optimizations.filters.testSuite"),
     type: COLUMN_TYPE.string,
     disposable: true,
   },
@@ -158,6 +160,7 @@ const actionsColumn = generateActionsColumDef({
 });
 
 const OptimizationsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/optimizations");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const navigate = useNavigate();
@@ -322,7 +325,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-1 flex min-h-7 items-center justify-between">
         <h1 className="comet-body-accented truncate break-words">
-          Optimization runs
+          {t("optimizations.title")}
         </h1>
       </div>
       {isEmpty ? (
@@ -334,8 +337,8 @@ const OptimizationsPage: React.FunctionComponent = () => {
           <PageEmptyState
             lightImageUrl={emptyOptStudioLightUrl}
             darkImageUrl={emptyOptStudioDarkUrl}
-            title="No optimization runs yet"
-            description="Try different prompt versions and see what performs best. Optimization runs help you improve accuracy, consistency, and user experience."
+            title={t("optimizations.empty.title")}
+            description={t("optimizations.empty.pageDescription")}
             docsUrl={buildDocsUrl(
               "/development/optimization-runs/optimization_studio",
             )}
@@ -350,7 +353,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
                 <SearchInput
                   searchText={search!}
                   setSearchText={setSearch}
-                  placeholder="Search by dataset name"
+                  placeholder={t("optimizations.searchPlaceholder")}
                   className="w-[320px]"
                   dimension="sm"
                 ></SearchInput>
@@ -372,7 +375,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
                   </>
                 )}
                 <RefreshButton
-                  tooltip="Refresh optimizations list"
+                  tooltip={t("optimizations.refreshTooltip")}
                   isFetching={isFetching}
                   onRefresh={() => refetch()}
                 />

@@ -1,0 +1,46 @@
+{
+  "messages": {
+    "success": {
+      "created": "Created successfully",
+      "updated": "Updated successfully",
+      "deleted": "Deleted successfully",
+      "saved": "Changes saved successfully",
+      "copied": "Copied to clipboard",
+      "exported": "Export successful",
+      "imported": "Import successful",
+      "connected": "Connection successful",
+      "sent": "Sent successfully"
+    },
+    "error": {
+      "generic": "An error occurred",
+      "notFound": "Resource not found",
+      "unauthorized": "Unauthorized access",
+      "forbidden": "Access denied",
+      "timeout": "Request timeout",
+      "network": "Network error",
+      "server": "Server error",
+      "validation": "Validation error",
+      "create": "Failed to create",
+      "update": "Failed to update",
+      "delete": "Failed to delete",
+      "save": "Failed to save changes",
+      "load": "Failed to load data",
+      "copy": "Failed to copy",
+      "export": "Export failed",
+      "import": "Import failed",
+      "connect": "Connection failed"
+    },
+    "warning": {
+      "unsavedChanges": "You have unsaved changes",
+      "limitReached": "Maximum limit reached",
+      "slowConnection": "Slow network connection"
+    },
+    "info": {
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "processing": "Processing...",
+      "noData": "No data available",
+      "noResults": "No results found"
+    }
+  }
+}

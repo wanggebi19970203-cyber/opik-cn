@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import get from "lodash/get";
 import isEmpty from "lodash/isEmpty";
 import { ColumnDef } from "@tanstack/react-table";
@@ -56,13 +57,14 @@ const PlaygroundOutputTable = ({
   const [leftPanelWidth, setLeftPanelWidth] = useLocalStorageState<
     string | number
   >(LEFT_PANEL_WIDTH_KEY, { defaultValue: DEFAULT_LEFT_WIDTH });
+  const { t } = useTranslation("pages/playground");
 
   const { hydratedItems: hydratedDatasetItems } =
     useIncrementalDatasetHydration(datasetItems);
 
   const noDataMessage = isLoadingDatasetItems
-    ? "Loading..."
-    : "No dataset items";
+    ? t("playground.outputs.loading")
+    : t("playground.outputs.noDatasetItems");
 
   const rows = useMemo(() => {
     if (isLoadingDatasetItems) {

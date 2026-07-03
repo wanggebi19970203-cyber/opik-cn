@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
@@ -116,6 +117,7 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
   rowId,
   onRowIdChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const { flattenedTree, expandedTreeRows, toggleExpand } =
     useTreeDetailsStore();
 
@@ -262,7 +264,7 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
 
     const durationTooltip = (
       <div>
-        Duration in seconds: {duration}
+        {t("detailsPanel.durationInSeconds", { duration })}
         <p>
           {start_time} {end_time ? ` - ${end_time}` : ""}
         </p>
@@ -288,15 +290,15 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
     const tokensBreakdownTooltip = node.data.usage ? (
       <div className="space-y-2">
         <div className="space-y-0.5">
-          <div className="text-sm font-medium">Token Usage</div>
+          <div className="text-sm font-medium">{t("treeToolbar.tokenUsage")}</div>
           <div className="text-xs">
-            <span className="font-medium">Input:</span> {promptTokens} |{" "}
-            <span className="font-medium">Output:</span> {completionTokens} |{" "}
-            <span className="font-medium">Total:</span> {tokens}
+            <span className="font-medium">{t("treeToolbar.input")}:</span> {promptTokens} |{" "}
+            <span className="font-medium">{t("treeToolbar.output")}:</span> {completionTokens} |{" "}
+            <span className="font-medium">{t("treeToolbar.total")}:</span> {tokens}
           </div>
         </div>
         <div className="space-y-1">
-          <div className="text-xs font-medium opacity-75">Breakdown:</div>
+          <div className="text-xs font-medium opacity-75">{t("treeToolbar.breakdown")}:</div>
           <pre className="whitespace-pre font-mono text-xs opacity-75">
             {Object.entries(node.data.usage)
               .map(([key, value]) => `"${key}": ${value}`)
@@ -314,8 +316,8 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
           <TooltipWrapper
             content={
               guardrailStatus === GuardrailResult.PASSED
-                ? "Guardrails passed"
-                : "Guardrails failed"
+                ? t("treeToolbar.guardrailsPassed")
+                : t("treeToolbar.guardrailsFailed")
             }
           >
             <div
@@ -335,7 +337,7 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
         )}
         {config[TREE_DATABLOCK_TYPE.MODEL] && (model || provider) && (
           <TooltipWrapper
-            content={`Model: ${model || "NA"}, Provider: ${provider || "NA"}`}
+            content={t("detailsPanel.model", { model: model || "NA", provider: provider || "NA" })}
           >
             <div className="comet-body-xs flex items-center gap-1 text-muted-slate">
               <Brain className="size-3 shrink-0" />{" "}
@@ -348,9 +350,7 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
         {config[TREE_DATABLOCK_TYPE.ESTIMATED_COST] &&
           !isUndefined(estimatedCost) && (
             <TooltipWrapper
-              content={`Estimated cost ${formatCost(estimatedCost, {
-                modifier: "full",
-              })}`}
+              content={t("detailsPanel.estimatedCost", { cost: formatCost(estimatedCost, { modifier: "full" }) })}
             >
               <div className="comet-body-xs flex items-center gap-1 text-muted-slate">
                 <Coins className="size-3 shrink-0" />{" "}
@@ -359,7 +359,7 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
             </TooltipWrapper>
           )}
         {config[TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS] && isNumber(tokens) && (
-          <TooltipWrapper content={`Total amount of tokens: ${tokens}`}>
+          <TooltipWrapper content={t("detailsPanel.totalTokens", { tokens })}>
             <div className="comet-body-xs flex items-center gap-1 text-muted-slate">
               <Hash className="size-3 shrink-0" /> {tokens}
             </div>
@@ -481,7 +481,7 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
                 <div className="flex-auto" />
                 {node.data.hasError && (
                   <TooltipWrapper
-                    content={node.data.error_info?.message ?? "Has error"}
+                    content={node.data.error_info?.message ?? t("treeToolbar.hasError")}
                   >
                     <span className="flex size-4 shrink-0 items-center justify-center text-destructive">
                       <ErrorTriangle width={12} height={12} />
@@ -490,14 +490,14 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
                 )}
                 {isExpandable ? (
                   <TooltipWrapper
-                    content="Expand/Collapse"
+                    content={t("treeToolbar.expandCollapse")}
                     hotkeys={EXPAND_HOTKEYS}
                   >
                     <Button
                       variant="ghost"
                       size="icon-3xs"
                       className="ml-1"
-                      aria-label="Expand or collapse span"
+                      aria-label={t("treeToolbar.expandCollapse")}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleExpand(node.id);

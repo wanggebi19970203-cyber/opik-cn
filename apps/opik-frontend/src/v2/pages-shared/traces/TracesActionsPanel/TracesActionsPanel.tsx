@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Tag, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import slugify from "slugify";
 import { cn } from "@/lib/utils";
 import { Button, ButtonProps } from "@/ui/button";
@@ -59,6 +60,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
   buttonVariant = "outline",
   buttonSize = "sm",
 }) => {
+  const { t } = useTranslation("tracing");
   const { iconButtonSize, leadIconClassName } =
     (buttonSize && ACTIONS_BUTTON_STYLE_BY_SIZE[buttonSize]) ??
     DEFAULT_ACTIONS_BUTTON_STYLE;
@@ -115,9 +117,9 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
           open={open === 2}
           setOpen={setOpen}
           onConfirm={deleteTracesHandler}
-          title="Delete traces"
-          description="Deleting these traces will also remove their data from related experiment samples. This action cannot be undone. Are you sure you want to continue?"
-          confirmText="Delete traces"
+          title={t("actions.deleteTraces")}
+          description={t("actions.deleteTracesDescription")}
+          confirmText={t("actions.deleteTraces")}
           confirmButtonVariant="destructive"
         />
       )}
@@ -152,7 +154,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
         buttonSize={buttonSize}
       />
       {canLogTraceSpanThread && (
-        <TooltipWrapper content="Manage tags">
+        <TooltipWrapper content={t("actions.manageTags")}>
           <Button
             variant={buttonVariant}
             size={buttonSize}
@@ -163,7 +165,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
             disabled={disabled}
           >
             <Tag className={leadIconClassName} />
-            <span>Manage tags</span>
+            <span>{t("actions.manageTags")}</span>
           </Button>
         </TooltipWrapper>
       )}
@@ -173,7 +175,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
           disabled={disabled}
           buttonVariant={buttonVariant}
           buttonSize={buttonSize}
-          label="Evaluate"
+          label={t("actions.evaluate")}
           onClick={() => {
             setOpen(4);
             resetKeyRef.current = resetKeyRef.current + 1;
@@ -194,13 +196,11 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
         buttonVariant={buttonVariant}
         buttonSize={iconButtonSize}
         tooltipContent={
-          !isExportEnabled
-            ? "Export functionality is disabled for this installation"
-            : undefined
+          !isExportEnabled ? t("actions.exportDisabled") : undefined
         }
       />
       {type === TRACE_DATA_TYPE.traces && canDeleteTraces && (
-        <TooltipWrapper content="Delete">
+        <TooltipWrapper content={t("actions.delete")}>
           <Button
             variant={buttonVariant}
             size={iconButtonSize}

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import isUndefined from "lodash/isUndefined";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/ui/button";
@@ -37,7 +38,7 @@ type ExpandableSearchInputProps = {
 };
 
 const ExpandableSearchInput: React.FC<ExpandableSearchInputProps> = ({
-  placeholder = "Search...",
+  placeholder: placeholderProp,
   value,
   onChange,
   className,
@@ -50,6 +51,8 @@ const ExpandableSearchInput: React.FC<ExpandableSearchInputProps> = ({
   onExpandedChange,
   overlayExpand = false,
 }) => {
+  const { t } = useTranslation("common");
+  const placeholder = placeholderProp ?? t("placeholders.search");
   const [isExpanded, setIsExpanded] = useState(Boolean(value) && !disabled);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

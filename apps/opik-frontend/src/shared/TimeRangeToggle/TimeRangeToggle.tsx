@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
@@ -37,26 +38,30 @@ const PRESETS: PresetConfig[] = [
   },
 ];
 
-const RELATIVE_PRESETS = [
-  { label: "Last day", dateRangePreset: "past24hours" as DateRangePreset },
-  { label: "Last 3 days", dateRangePreset: "past3days" as DateRangePreset },
-  { label: "Last week", dateRangePreset: "past7days" as DateRangePreset },
-  { label: "Last month", dateRangePreset: "past30days" as DateRangePreset },
-  {
-    label: "Last quarter",
-    getRange: () => ({
-      from: dayjs().subtract(3, "months").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
-    }),
-  },
-  {
-    label: "Last 6 months",
-    getRange: () => ({
-      from: dayjs().subtract(6, "months").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
-    }),
-  },
-];
+const useRelativePresets = (t: (key: string) => string) =>
+  useMemo(
+    () => [
+      { label: t("common.timeRange.lastDay"), dateRangePreset: "past24hours" as DateRangePreset },
+      { label: t("common.timeRange.last3Days"), dateRangePreset: "past3days" as DateRangePreset },
+      { label: t("common.time.lastWeek"), dateRangePreset: "past7days" as DateRangePreset },
+      { label: t("common.time.lastMonth"), dateRangePreset: "past30days" as DateRangePreset },
+      {
+        label: t("common.timeRange.lastQuarter"),
+        getRange: () => ({
+          from: dayjs().subtract(3, "months").startOf("day").toDate(),
+          to: dayjs().endOf("day").toDate(),
+        }),
+      },
+      {
+        label: t("common.timeRange.last6Months"),
+        getRange: () => ({
+          from: dayjs().subtract(6, "months").startOf("day").toDate(),
+          to: dayjs().endOf("day").toDate(),
+        }),
+      },
+    ],
+    [t],
+  );
 
 const PRESET_TO_TOGGLE: Partial<Record<DateRangePreset, TimeRangePresetKey>> = {
   past24hours: "1D",
@@ -84,16 +89,21 @@ const getActivePreset = (value: DateRangeValue): TimeRangePresetKey | null => {
   return null;
 };
 
-const getActiveRelativePreset = (value: DateRangeValue): string | null => {
+type RelativePreset = { label: string; dateRangePreset?: DateRangePreset; getRange?: () => DateRangeValue };
+
+const getActiveRelativePreset = (
+  value: DateRangeValue,
+  relativePresets: RelativePreset[],
+): string | null => {
   const rangePreset = getRangePreset(value);
   if (rangePreset) {
-    const found = RELATIVE_PRESETS.find(
+    const found = relativePresets.find(
       (p) => "dateRangePreset" in p && p.dateRangePreset === rangePreset,
     );
     if (found) return found.label;
   }
 
-  for (const preset of RELATIVE_PRESETS) {
+  for (const preset of relativePresets) {
     if ("getRange" in preset && preset.getRange) {
       const range = preset.getRange();
       if (
@@ -124,6 +134,8 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
   minDate,
   maxDate,
 }) => {
+  const { t } = useTranslation();
+  const relativePresets = useRelativePresets(t);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [pendingRange, setPendingRange] = useState<DateRange | undefined>();
   const [pendingPresetLabel, setPendingPresetLabel] = useState<string | null>(
@@ -147,13 +159,13 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
   const handleCalendarOpen = (open: boolean) => {
     if (open) {
       setPendingRange(value);
-      setPendingPresetLabel(getActiveRelativePreset(value));
+      setPendingPresetLabel(getActiveRelativePreset(value, relativePresets));
     }
     setIsCalendarOpen(open);
   };
 
   const handleRelativePresetClick = (
-    preset: (typeof RELATIVE_PRESETS)[number],
+    preset: RelativePreset,
   ) => {
     let range: DateRangeValue;
     if ("dateRangePreset" in preset && preset.dateRangePreset) {
@@ -198,7 +210,7 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
 
   const handleReset = () => {
     setPendingRange(value);
-    setPendingPresetLabel(getActiveRelativePreset(value));
+    setPendingPresetLabel(getActiveRelativePreset(value, relativePresets));
   };
 
   const canApply = Boolean(pendingRange?.from && pendingRange?.to);
@@ -234,16 +246,16 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
             type="button"
             className={cn(itemClassName, isCustom && activeItemClassName)}
           >
-            Custom
+            {t("common.timeRange.custom")}
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">
           <div className="flex">
             <div className="flex w-40 flex-col gap-1 p-4">
               <p className="comet-body-xs mb-2 text-muted-slate">
-                Relative time range
+                {t("common.timeRange.relativeTimeRange")}
               </p>
-              {RELATIVE_PRESETS.map((preset) => (
+              {relativePresets.map((preset) => (
                 <button
                   key={preset.label}
                   type="button"
@@ -261,7 +273,7 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
             <Separator orientation="vertical" className="h-auto" />
             <div className="flex flex-col p-4">
               <p className="comet-body-xs mb-2 text-muted-slate">
-                Absolute time range
+                {t("common.timeRange.absoluteTimeRange")}
               </p>
               <Calendar
                 mode="range"
@@ -269,7 +281,7 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
                 onDayClick={handleDayClick}
                 numberOfMonths={1}
                 className="rounded-md p-0"
-                aria-label="Select date range"
+                aria-label={t("common.dateRange.selectDateRange")}
                 disabled={disabledDates}
               />
             </div>
@@ -277,10 +289,10 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
           <Separator />
           <div className="flex items-center justify-between p-3">
             <Button variant="ghost" size="sm" onClick={handleReset}>
-              Reset
+              {t("common.buttons.reset")}
             </Button>
             <Button size="sm" onClick={handleApply} disabled={!canApply}>
-              Apply
+              {t("common.buttons.apply")}
             </Button>
           </div>
         </PopoverContent>

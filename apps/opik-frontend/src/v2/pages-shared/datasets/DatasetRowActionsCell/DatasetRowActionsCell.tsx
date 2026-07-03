@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { Download, MoreHorizontal, Pencil, Trash } from "lucide-react";
 
@@ -42,6 +43,7 @@ export const createDatasetRowActionsCell = ({
   const DatasetRowActionsCell: React.FunctionComponent<
     CellContext<Dataset, unknown>
   > = (context) => {
+    const { t } = useTranslation("datasets");
     const resetKeyRef = useRef(0);
     const dataset = context.row.original;
     const [open, setOpen] = useState<boolean | number>(false);
@@ -76,9 +78,8 @@ export const createDatasetRowActionsCell = ({
           },
           onError: () => {
             toast({
-              title: "Export failed",
-              description:
-                "Failed to start test suite export. Please try again.",
+              title: t("rowActions.exportFailed"),
+              description: t("rowActions.exportFailedDescription"),
               variant: "destructive",
             });
           },
@@ -112,16 +113,16 @@ export const createDatasetRowActionsCell = ({
             open={open === 1}
             setOpen={setOpen}
             onConfirm={deleteDatasetHandler}
-            title={`Delete ${entityName}`}
-            description={`Deleting this ${entityName} will also remove all its items. Any experiments linked to it will be moved to a \u201cDeleted test suite\u201d group. This action can\u2019t be undone. Are you sure you want to continue?`}
-            confirmText={`Delete ${entityName}`}
+            title={t("rowActions.deleteTitle", { entityName })}
+            description={t("rowActions.deleteDescription", { entityName })}
+            confirmText={t("rowActions.deleteConfirmText", { entityName })}
             confirmButtonVariant="destructive"
           />
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="minimal" size="icon" className="-mr-2.5">
-              <span className="sr-only">Actions menu</span>
+              <span className="sr-only">{t("rowActions.actionsMenu")}</span>
               <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -134,7 +135,7 @@ export const createDatasetRowActionsCell = ({
                 }}
               >
                 <Pencil className="mr-2 size-4" />
-                Edit
+                {t("rowActions.edit")}
               </DropdownMenuItem>
             )}
             {isDatasetExportEnabled && (
@@ -143,7 +144,7 @@ export const createDatasetRowActionsCell = ({
                 disabled={isExportStarting}
               >
                 <Download className="mr-2 size-4" />
-                Download
+                {t("rowActions.download")}
               </DropdownMenuItem>
             )}
             {canDeleteDatasets &&
@@ -159,7 +160,7 @@ export const createDatasetRowActionsCell = ({
                 variant="destructive"
               >
                 <Trash className="mr-2 size-4" />
-                Delete
+                {t("rowActions.delete")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

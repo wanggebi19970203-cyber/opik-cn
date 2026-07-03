@@ -1,0 +1,57 @@
+---
+description: 评估智能体是否遵循了预期的行动路径
+headline: 轨迹准确性 | Opik 文档
+og:description: 使用轨迹准确性评估和审计智能体性能，确保在复杂工作流中做出有效决策。
+og:site_name: Opik 文档
+og:title: 轨迹准确性指标 - Opik
+title: 轨迹准确性
+---
+
+# 轨迹准确性
+
+`TrajectoryAccuracy` 检查 ReAct 风格的智能体在多大程度上遵循了合理的思考、行动和观察序列来实现既定目标。它适用于审计复杂工作流智能体和强化学习轨迹。
+
+```python title="审计智能体运行"
+from opik.evaluation.metrics import TrajectoryAccuracy
+
+metric = TrajectoryAccuracy()
+
+score = metric.score(
+    goal="Book travel to Paris",
+    trajectory=[
+        {
+            "thought": "Check available flights",
+            "action": "search_flights(destination='Paris')",
+            "observation": "Found flights for next week",
+        },
+        {
+            "thought": "Summarise the best option",
+            "action": "summarise(options)",
+            "observation": "Shared top three flights",
+        },
+    ],
+    final_result="Here are the best flights to Paris next week.",
+)
+
+print(score.value)  # Already normalised between 0.0 and 1.0
+print(score.reason)  # Explanation of the verdict
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `goal` | `str` | **是** | 智能体的目标或任务描述。 |
+| `trajectory` | `list[dict]` | **是** | 包含 `thought`、`action` 和 `observation` 键的步骤序列。 |
+| `final_result` | `str` | **是** | 智能体完成轨迹后报告的结果。 |
+
+## 配置
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 用于对轨迹评分的裁判模型。 |
+| `temperature` | `None` | 提供时传递给底层模型。 |
+| `track` | `True` | 设为 `False` 可跳过向 Opik 记录日志，同时禁用指标和底层 LLM 裁判调用的追踪。 |
+| `project_name` | `None` | 覆盖追踪项目名称。 |
+
+该指标返回 0.0–1.0 范围内的值，并附带详细说明，指出缺失的步骤、偏离的行动或其他问题。

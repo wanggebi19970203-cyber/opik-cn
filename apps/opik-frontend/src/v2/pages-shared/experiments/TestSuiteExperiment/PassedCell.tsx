@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
   CircleCheck,
@@ -39,35 +40,37 @@ type StatusInfo = {
   runsPerItem: number | undefined;
 };
 
-const NO_EXPERIMENT_ITEM_REASON = "No experiment item defined";
-const NO_ASSERTIONS_REASON = "No assertions defined";
-const SCORING_ERROR_REASON =
-  "Assertion scoring failed. Check that the configured model is available and try again.";
+const NO_EXPERIMENT_ITEM_REASON = "noExperimentItemDefined";
+const NO_ASSERTIONS_REASON = "noAssertionsDefined";
+const SCORING_ERROR_REASON = "scoringFailed";
 
 type DisplayState = "error" | "skipped" | "passed" | "failed";
 
 const STATUS_DISPLAY = {
   error: {
     Icon: AlertTriangle,
-    label: "Scoring error",
     colorClass: "bg-[var(--tag-orange-bg)] text-[var(--tag-orange-text)]",
   },
   skipped: {
     Icon: CircleMinus,
-    label: "Skipped",
     colorClass: "bg-muted text-muted-foreground",
   },
   passed: {
     Icon: CircleCheck,
-    label: "Passed",
     colorClass: "bg-[var(--tag-green-bg)] text-[var(--tag-green-text)]",
   },
   failed: {
     Icon: CircleX,
-    label: "Failed",
     colorClass: "bg-[var(--tag-red-bg)] text-[var(--tag-red-text)]",
   },
 } as const;
+
+const STATUS_LABEL_KEYS: Record<DisplayState, string> = {
+  error: "scoringError",
+  skipped: "skipped",
+  passed: "passed",
+  failed: "failed",
+};
 
 const SKIPPED_RESULT = (reason: string): StatusInfo => ({
   status: RunStatus.SKIPPED,
@@ -198,13 +201,15 @@ export const StatusTag: React.FC<StatusInfo & { className?: string }> = ({
   runsPerItem,
   className,
 }) => {
+  const { t } = useTranslation("experiments");
+
   if (evaluating) {
     return (
       <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-muted-slate">
         <span className="inline-flex animate-spin">
           <Loader2 className="size-3" />
         </span>
-        Evaluating assertions
+        {t("evaluatingAssertions")}
       </span>
     );
   }
@@ -221,7 +226,8 @@ export const StatusTag: React.FC<StatusInfo & { className?: string }> = ({
         ? "passed"
         : "failed";
 
-  const { Icon, label, colorClass } = STATUS_DISPLAY[displayState];
+  const { Icon, colorClass } = STATUS_DISPLAY[displayState];
+  const label = t(STATUS_LABEL_KEYS[displayState]);
 
   const tag = (
     <span
@@ -247,7 +253,7 @@ export const StatusTag: React.FC<StatusInfo & { className?: string }> = ({
               collisionPadding={16}
               className="max-w-xs"
             >
-              {reason}
+              {t(reason)}
             </TooltipContent>
           </TooltipPortal>
         )}

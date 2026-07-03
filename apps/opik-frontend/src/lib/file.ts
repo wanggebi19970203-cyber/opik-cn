@@ -1,4 +1,5 @@
 import { csv2json } from "json-2-csv";
+import i18next from "i18next";
 
 import { JsonUploadFormat } from "@/types/datasets";
 
@@ -16,11 +17,11 @@ export const convertFileToBase64 = (file: File): Promise<string> => {
       if (typeof reader.result === "string") {
         resolve(reader.result);
       } else {
-        reject(new Error("Failed to convert file to base64"));
+        reject(new Error(i18next.t("common:fileValidation.failedToConvertToBase64")));
       }
     };
     reader.onerror = () => {
-      reject(new Error("Failed to read file"));
+      reject(new Error(i18next.t("common:fileValidation.failedToReadFile")));
     };
     reader.readAsDataURL(file);
   });
@@ -34,11 +35,11 @@ export async function validateCsvFile(
   if (!file) return {};
 
   if (file.size > maxSize * 1024 * 1024) {
-    return { error: `File exceeds maximum size (${maxSize}MB).` };
+    return { error: i18next.t("common:fileValidation.fileExceedsMaxSize", { maxSize }) };
   }
 
   if (!file.name.toLowerCase().endsWith(".csv")) {
-    return { error: "File must be in .csv format" };
+    return { error: i18next.t("common:fileValidation.fileMustBeCsvFormat") };
   }
 
   try {
@@ -53,23 +54,23 @@ export async function validateCsvFile(
     });
 
     if (!Array.isArray(parsed)) {
-      return { error: "Invalid CSV format." };
+      return { error: i18next.t("common:fileValidation.invalidCsvFormat") };
     }
 
     if (parsed.length === 0) {
-      return { error: "CSV file is empty." };
+      return { error: i18next.t("common:fileValidation.csvFileIsEmpty") };
     }
 
     if (parsed.length > maxItems) {
       return {
-        error: `File is too large (max. ${maxItems.toLocaleString()} rows)`,
+        error: i18next.t("common:fileValidation.fileTooLarge", { maxItems: maxItems.toLocaleString() }),
       };
     }
 
     return { data: parsed as Record<string, unknown>[] };
   } catch (err) {
     console.error(err);
-    return { error: "Failed to process CSV file." };
+    return { error: i18next.t("common:fileValidation.failedToProcessCsv") };
   }
 }
 
@@ -91,9 +92,7 @@ export const validateFileCount = (
   if (newFilesCount > availableSlots) {
     return {
       valid: false,
-      error: `You can only add ${availableSlots} more file${
-        availableSlots !== 1 ? "s" : ""
-      }`,
+      error: i18next.t("common:fileValidation.canOnlyAddFiles", { count: availableSlots }),
     };
   }
 
@@ -113,9 +112,12 @@ export const validateFileSize = (
   if (oversizedFiles.length > 0) {
     return {
       valid: false,
-      error: `File${
-        oversizedFiles.length > 1 ? "s" : ""
-      } must be smaller than ${maxSizeMB}MB. Please use a smaller file or add it as a URL.`,
+      error: i18next.t(
+        oversizedFiles.length > 1
+          ? "common:fileValidation.filesMustBeSmaller_plural"
+          : "common:fileValidation.filesMustBeSmaller",
+        { maxSizeMB },
+      ),
     };
   }
 
@@ -167,8 +169,8 @@ export const DATASET_UPLOAD_ACCEPTED_TYPES = ".csv,.json,.jsonl,.ndjson";
 /**
  * Error shown when a picked dataset-upload file has an unsupported extension.
  */
-export const INVALID_UPLOAD_FORMAT_MESSAGE =
-  "File must be .csv, .json, .jsonl, or .ndjson";
+export const getInvalidUploadFormatMessage = () =>
+  i18next.t("common:fileValidation.invalidUploadFormat");
 
 export type DatasetUploadValidation = {
   file?: File;
@@ -187,11 +189,11 @@ export const validateDatasetUploadFile = (
 ): DatasetUploadValidation => {
   if (!file) return {};
   if (file.size > maxSizeMB * 1024 * 1024) {
-    return { error: `File exceeds maximum size (${maxSizeMB}MB).` };
+    return { error: i18next.t("common:fileValidation.fileExceedsMaxSize", { maxSize: maxSizeMB }) };
   }
   const format = detectUploadFormat(file.name);
   if (!format) {
-    return { error: INVALID_UPLOAD_FORMAT_MESSAGE };
+    return { error: getInvalidUploadFormatMessage() };
   }
   return { file, format };
 };

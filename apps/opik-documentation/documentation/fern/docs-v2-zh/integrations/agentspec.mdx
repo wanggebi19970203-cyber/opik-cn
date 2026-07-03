@@ -1,0 +1,160 @@
+---
+description: 从这里开始将 Opik 集成到您的 Agent Spec 应用中，实现端到端的可观测性、单元测试和优化。
+headline: Agent Spec | Opik 文档
+og:description: 在 Opik 中追踪 Agent Spec 工作流，以调试和优化 Agent 执行。
+og:site_name: Opik 文档
+og:title: Agent Spec - Opik
+title: 使用 Opik 实现 Agent Spec 的可观测性
+---
+
+[Open Agent Specification](https://github.com/oracle/agent-spec) 是一种可移植的配置语言，用于定义 Agent 系统（Agent、工具和结构化工作流）。
+
+Agent Spec Tracing 是 Agent Spec 的扩展，它标准化了 Agent 和流程执行发出追踪数据的方式。这使得跨不同运行时和适配器分析发生的事情（LLM 调用、工具调用和中间步骤）变得更加容易。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=agentspec&utm_campaign=opik)
+提供了 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=agentspec&utm_campaign=opik)并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=agentspec&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+要将 Agent Spec 与 Opik 一起使用，请安装 `opik` 和 `pyagentspec`：
+
+```bash
+pip install -U opik pyagentspec opentelemetry-sdk opentelemetry-instrumentation
+```
+
+如果您使用的是 LangGraph 适配器（如下面的示例所示），还需要安装 LangGraph 扩展：
+
+```bash
+pip install -U "pyagentspec[langgraph]"
+```
+
+如果您使用的是其他框架，可以根据[安装说明](https://github.com/oracle/agent-spec#installation)安装 `pyagentspec` 的相应扩展。
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云平台 vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置您的 LLM 提供商
+
+为了运行下面的示例，您需要配置 LLM 提供商的 API Key。本示例使用 OpenAI。您可以在[这些页面中查找或创建您的 API Key](https://platform.openai.com/settings/organization/api-keys)：
+
+您可以将它们设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或者通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 使用 Opik 追踪 Agent Spec 工作流
+
+Opik 提供了 `AgentSpecInstrumentor`，将 Agent Spec Tracing 连接到 Opik。将您的 Agent Spec 运行时执行包装在 Instrumentor 上下文中以捕获追踪数据。
+
+```python
+import asyncio
+import uuid
+
+from pyagentspec.agent import Agent
+from pyagentspec.llms import OpenAiConfig
+from pyagentspec.property import FloatProperty
+from pyagentspec.tools import ServerTool
+
+
+def build_agentspec_agent() -> Agent:
+    tools = [
+        ServerTool(
+            name="sum",
+            description="Sum two numbers",
+            inputs=[FloatProperty(title="a"), FloatProperty(title="b")],
+            outputs=[FloatProperty(title="result")],
+        ),
+        ServerTool(
+            name="subtract",
+            description="Subtract two numbers",
+            inputs=[FloatProperty(title="a"), FloatProperty(title="b")],
+            outputs=[FloatProperty(title="result")],
+        ),
+    ]
+
+    return Agent(
+        name="calculator_agent",
+        description="An agent that provides assistance with tool use.",
+        llm_config=OpenAiConfig(name="openai-gpt-5-mini", model_id="gpt-5-mini"),
+        system_prompt=(
+            "You are a helpful calculator agent.\n"
+            "Your duty is to compute the result of the given operation using tools, "
+            "and to output the result.\n"
+            "It's important that you reply with the result only.\n"
+        ),
+        tools=tools,
+    )
+
+
+async def main():
+    from opik.integrations.agentspec import AgentSpecInstrumentor
+    from pyagentspec.adapters.langgraph import AgentSpecLoader
+
+    agent = build_agentspec_agent()
+    tool_registry = {
+        "sum": lambda a, b: a + b,
+        "subtract": lambda a, b: a - b,
+    }
+
+    langgraph_agent = AgentSpecLoader(tool_registry=tool_registry).load_component(agent)
+
+    # Each conversation turn gets its own Opik trace; thread_id groups them into a session.
+    thread_id = str(uuid.uuid4())
+    messages = []
+    while True:
+        user_input = input("USER  >>> ")
+        if user_input.lower() in ["exit", "quit"]:
+            break
+        messages.append({"role": "user", "content": user_input})
+
+        with AgentSpecInstrumentor().instrument_context(
+            project_name="agentspec-demo",
+            mask_sensitive_information=False,
+            thread_id=thread_id,
+        ):
+            response = langgraph_agent.invoke(
+                input={"messages": messages},
+                config={"configurable": {"thread_id": "1"}},
+            )
+
+        agent_answer = response["messages"][-1].content.strip()
+        print("AGENT >>>", agent_answer)
+        messages.append({"role": "assistant", "content": agent_answer})
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+<Tip>
+  Agent Spec 追踪数据通常包含提示词、工具输入/输出和消息。如果您需要避免记录敏感信息，请设置 `mask_sensitive_information=True`。
+</Tip>
+
+运行脚本并与您的 Agent 交互后，您可以在 Opik 中检查追踪树，以调试工具使用、LLM 生成和中间步骤。
+
+## 进一步改进
+
+如果您希望我们改进此集成，请在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。

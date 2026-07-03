@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import get from "lodash/get";
+import i18next from "i18next";
 import api, { EXPERIMENT_EXECUTION_REST_ENDPOINT } from "@/api/api";
 import { sanitizeConfigForRequest } from "@/lib/modelUtils";
 import { snakeCaseObj } from "@/lib/utils";
@@ -78,10 +79,10 @@ export default function useRunExperimentExecution() {
       const message =
         get(error, ["response", "data", "message"]) ||
         error.message ||
-        "An unexpected error occurred while running the experiment";
+        i18next.t("common:messages.unexpectedErrorRunningExperiment");
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

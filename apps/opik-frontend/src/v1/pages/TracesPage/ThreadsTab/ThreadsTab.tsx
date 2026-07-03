@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -83,10 +84,10 @@ const getRowId = (d: Thread) => d.id;
 
 const REFETCH_INTERVAL = 30000;
 
-const SHARED_COLUMNS: ColumnData<Thread>[] = [
+const getSharedColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: "first_message",
-    label: "First message",
+    label: t("tracing.threadsTab.columns.firstMessage"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -96,7 +97,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "last_message",
-    label: "Last message",
+    label: t("tracing.threadsTab.columns.lastMessage"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -106,14 +107,14 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "number_of_messages",
-    label: "Message count",
+    label: t("tracing.threadsTab.columns.messageCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       isNumber(row.number_of_messages) ? `${row.number_of_messages}` : "-",
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("tracing.tracesSpansTab.columns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationCell as never,
     statisticDataFormater: formatDuration,
@@ -122,13 +123,13 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("tracing.tracesSpansTab.columns.tags"),
     type: COLUMN_TYPE.list,
     cell: ListCell as never,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("tracing.tracesSpansTab.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -137,7 +138,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("tracing.tracesSpansTab.columns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -146,18 +147,18 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
 ];
 
-const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("tracing.tracesSpansTab.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
     sortable: true,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: `${COLUMN_USAGE_ID}.total_tokens`,
-    label: "Total tokens",
+    label: t("tracing.tracesSpansTab.columns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -167,7 +168,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: `${COLUMN_USAGE_ID}.prompt_tokens`,
-    label: "Total input tokens",
+    label: t("tracing.tracesSpansTab.columns.totalInputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.prompt_tokens)
@@ -177,7 +178,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: `${COLUMN_USAGE_ID}.completion_tokens`,
-    label: "Total output tokens",
+    label: t("tracing.tracesSpansTab.columns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.completion_tokens)
@@ -187,7 +188,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("tracing.tracesSpansTab.columns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_thread_cost_estimated],
@@ -199,32 +200,32 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("tracing.tracesSpansTab.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_COMMENTS_ID,
-    label: "Comments",
+    label: t("tracing.tracesSpansTab.columns.comments"),
     type: COLUMN_TYPE.string,
     cell: CommentsCell as never,
   },
 ];
 
-const FILTER_COLUMNS: ColumnData<Thread>[] = [
+const getFilterColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("tracing.tracesSpansTab.columns.id"),
     type: COLUMN_TYPE.string,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: "annotation_queue_ids",
-    label: "Annotation queue ID",
+    label: t("tracing.tracesSpansTab.columns.annotationQueueId"),
     type: COLUMN_TYPE.list,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("tracing.tracesSpansTab.columns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
@@ -284,6 +285,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   logsType,
   onLogsTypeChange,
 }) => {
+  const { t } = useTranslation();
   const truncationEnabled = useTruncationEnabled();
 
   const {
@@ -431,7 +433,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   );
 
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? `There are no threads yet` : "No search results";
+  const noDataText = noData ? t("tracing.traceLogs.noTracesYet") : t("tracing.actions.noSearchResults");
 
   const filtersConfig = useMemo(
     () => ({
@@ -440,12 +442,12 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
           keyComponent: ThreadsFeedbackScoresSelect,
           keyComponentProps: {
             projectId,
-            placeholder: "Select score",
+            placeholder: t("tracing.threadsTab.filterSelectScore"),
           },
         },
       },
     }),
-    [projectId],
+    [projectId, t],
   );
 
   const dynamicScoresColumns = useMemo(() => {
@@ -550,8 +552,9 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   );
 
   const columns = useMemo(() => {
+    const defaultColumns = getDefaultColumns(t);
     const convertedColumns = convertColumnDataToColumn<Thread, Thread>(
-      DEFAULT_COLUMNS,
+      defaultColumns,
       {
         columnsOrder,
         selectedColumns,
@@ -575,6 +578,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     handleRowClick,
+    t,
   ]);
 
   const columnsToExport = useMemo(() => {
@@ -626,13 +630,13 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Feedback scores",
+        title: t("tracing.threadsTab.feedbackScoresSection"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
       },
     ];
-  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
+  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder, t]);
 
   const isTableLoading = isPending || isFeedbackScoresNamesPending;
   const showEmptyState =
@@ -650,12 +654,12 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search threads..."
+            placeholder={t("tracing.threadsTab.searchThreads")}
             className="w-[320px]"
             dimension="sm"
           />
           <FiltersButton
-            columns={FILTER_COLUMNS}
+            columns={getFilterColumns(t)}
             filters={filters}
             onChange={setFilters}
             config={filtersConfig as never}
@@ -677,7 +681,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
             minDate={minDate}
             maxDate={maxDate}
           />
-          <TooltipWrapper content={`Refresh threads list`}>
+          <TooltipWrapper content={t("tracing.threadsTab.refreshThreadsList")}>
             <Button
               variant="outline"
               size="icon-sm"
@@ -694,7 +698,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
             setType={setHeight}
           />
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={getDefaultColumns(t)}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}

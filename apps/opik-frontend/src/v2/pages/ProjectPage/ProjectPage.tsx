@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import last from "lodash/last";
 import { Link, Navigate, Outlet, useLocation } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import useProjectById from "@/api/projects/useProjectById";
 import useBreadcrumbsStore from "@/store/BreadcrumbsStore";
 import { useActiveProjectId, useActiveWorkspaceName } from "@/store/AppStore";
@@ -13,6 +14,7 @@ import NoData from "@/shared/NoData/NoData";
 import { Button } from "@/ui/button";
 
 const ProjectPage = () => {
+  const { t } = useTranslation("pages/project-home");
   const setBreadcrumbParam = useBreadcrumbsStore((state) => state.setParam);
   const projectId = useProjectIdFromURL();
   const workspaceName = useActiveWorkspaceName();
@@ -56,12 +58,12 @@ const ProjectPage = () => {
   if (isError) {
     return (
       <NoData
-        title="Something went wrong"
-        message="Failed to load the project. Please try again later."
+        title={t("projectPage.somethingWentWrong")}
+        message={t("projectPage.failedToLoad")}
       >
         <div className="pt-5">
           <Link to="/$workspaceName/projects" params={{ workspaceName }}>
-            <Button>Back to Projects</Button>
+            <Button>{t("projectPage.backToProjects")}</Button>
           </Link>
         </div>
       </NoData>
@@ -72,12 +74,12 @@ const ProjectPage = () => {
     return (
       <NoData
         icon={<div className="comet-title-m mb-1 text-foreground">404</div>}
-        title="This project could not be found"
-        message="The project you're looking for doesn't exist or has been deleted."
+        title={t("projectPage.projectNotFound")}
+        message={t("projectPage.projectNotFoundMessage")}
       >
         <div className="pt-5">
           <Link to="/$workspaceName/projects" params={{ workspaceName }}>
-            <Button>Back to Projects</Button>
+            <Button>{t("projectPage.backToProjects")}</Button>
           </Link>
         </div>
       </NoData>

@@ -14,21 +14,20 @@ class HallucinationResponseFormat(pydantic.BaseModel):
 
 class Hallucination(base_metric.BaseMetric):
     """
-    A metric that evaluates whether an LLM's output contains hallucinations based on given input and context.
+    评估 LLM 输出是否基于给定输入和上下文产生幻觉的指标。
 
-    This metric uses another LLM to judge if the output is factual or contains hallucinations.
-    It returns a score of 1.0 if hallucination is detected, and 0.0 otherwise.
+    该指标使用另一个 LLM 来判断输出是否包含事实性错误或幻觉。
+    如果检测到幻觉则返回 1.0 分，否则返回 0.0 分。
 
     Args:
-        model: The LLM to use for evaluation. Can be a string (model name) or an `opik.evaluation.models.OpikBaseModel` subclass instance.
-            `opik.evaluation.models.LiteLLMChatModel` is used by default.
-        name: The name of the metric.
-        few_shot_examples: A list of few-shot examples to use for hallucination detection.  If None, default examples will be used.
-        track: Whether to track the metric. Defaults to True.
-        project_name: Optional project name to track the metric in for the cases when
-            there are no parent span/trace to inherit project name from.
-        seed: Optional seed value for reproducible model generation. If provided, this seed will be passed to the model for deterministic outputs.
-        temperature: Optional temperature value for model generation. If provided, this temperature will be passed to the model. If not provided, the model's default temperature will be used.
+        model: 用于评估的 LLM。可以是字符串（模型名称）或 `opik.evaluation.models.OpikBaseModel` 子类实例。
+            默认使用 `opik.evaluation.models.LiteLLMChatModel`。
+        name: 指标名称。
+        few_shot_examples: 用于幻觉检测的少样本示例列表。如果为 None，将使用默认示例。
+        track: 是否追踪该指标。默认为 True。
+        project_name: 可选的项目名称，用于在没有父级 span/trace 可继承项目名称时追踪指标。
+        seed: 可选的随机种子值，用于可复现的模型生成。如果提供，此种子将传递给模型以获得确定性输出。
+        temperature: 可选的模型生成温度值。如果提供，此温度将传递给模型。如果未提供，将使用模型的默认温度。
 
     Example:
         >>> from opik.evaluation.metrics import Hallucination
@@ -85,17 +84,17 @@ class Hallucination(base_metric.BaseMetric):
         **ignored_kwargs: Any,
     ) -> score_result.ScoreResult:
         """
-        Calculate the hallucination score for the given input, output, and optional context field.
+        计算给定输入、输出和可选上下文字段的幻觉分数。
 
         Args:
-            input: The original input/question.
-            output: The LLM's output to evaluate.
-            context: A list of context strings. If not provided, the presence of hallucinations will be evaluated based on the output only.
-            **ignored_kwargs: Additional keyword arguments that are ignored.
+            input: 原始输入/问题。
+            output: 待评估的 LLM 输出。
+            context: 上下文字符串列表。如果未提供，将仅基于输出评估是否存在幻觉。
+            **ignored_kwargs: 被忽略的额外关键字参数。
 
         Returns:
-            score_result.ScoreResult: A ScoreResult object with a value of 1.0 if hallucination
-                is detected, 0.0 otherwise, along with the reason for the verdict.
+            score_result.ScoreResult: 如果检测到幻觉则返回值为 1.0 的 ScoreResult 对象，
+                否则返回值为 0.0，同时附带判定原因。
         """
         messages = template.build_messages(
             input=input,
@@ -117,17 +116,17 @@ class Hallucination(base_metric.BaseMetric):
         **ignored_kwargs: Any,
     ) -> score_result.ScoreResult:
         """
-        Asynchronously calculate the hallucination score for the given input, output, and optional context field.
+        异步计算给定输入、输出和可选上下文字段的幻觉分数。
 
         Args:
-            input: The original input/question.
-            output: The LLM's output to evaluate.
-            context: A list of context strings. If not provided, the presence of hallucinations will be evaluated based on the output only.
-            **ignored_kwargs: Additional keyword arguments that are ignored.
+            input: 原始输入/问题。
+            output: 待评估的 LLM 输出。
+            context: 上下文字符串列表。如果未提供，将仅基于输出评估是否存在幻觉。
+            **ignored_kwargs: 被忽略的额外关键字参数。
 
         Returns:
-            score_result.ScoreResult: A ScoreResult object with a value of 1.0 if hallucination
-                is detected, 0.0 otherwise, along with the reason for the verdict.
+            score_result.ScoreResult: 如果检测到幻觉则返回值为 1.0 的 ScoreResult 对象，
+                否则返回值为 0.0，同时附带判定原因。
         """
         messages = template.build_messages(
             input=input,

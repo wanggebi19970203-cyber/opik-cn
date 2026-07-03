@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import { useUnifiedMedia } from "@/hooks/useUnifiedMedia";
 import { MediaProvider } from "@/shared/PrettyLLMMessage/llmMessages";
@@ -24,6 +25,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
   isLoading,
   search,
 }) => {
+  const { t } = useTranslation("tracing");
   // Use unified media hook to fetch all media and get transformed data
   const { media, transformedInput, transformedOutput } = useUnifiedMedia(data);
 
@@ -49,7 +51,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
         <AttachmentsList media={media} />
         {hasError && (
           <AccordionItem className="group" value="error" disabled={isLoading}>
-            <AccordionTrigger>Error</AccordionTrigger>
+            <AccordionTrigger>{t("detailsTab.error")}</AccordionTrigger>
             <AccordionContent
               forceMount
               className="group-data-[state=closed]:hidden"
@@ -68,7 +70,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
           </AccordionItem>
         )}
         <AccordionItem className="group" value="input" disabled={isLoading}>
-          <AccordionTrigger>Input</AccordionTrigger>
+          <AccordionTrigger>{t("detailsTab.input")}</AccordionTrigger>
           <AccordionContent
             forceMount
             className="group-data-[state=closed]:hidden"
@@ -87,7 +89,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
           </AccordionContent>
         </AccordionItem>
         <AccordionItem className="group" value="output" disabled={isLoading}>
-          <AccordionTrigger>Output</AccordionTrigger>
+          <AccordionTrigger>{t("detailsTab.output")}</AccordionTrigger>
           <AccordionContent
             forceMount
             className="group-data-[state=closed]:hidden"
@@ -108,7 +110,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
         <EventsList data={data} isLoading={isLoading} search={search} />
         {hasMetadata && (
           <AccordionItem className="group" value="metadata">
-            <AccordionTrigger>Metadata</AccordionTrigger>
+            <AccordionTrigger>{t("detailsTab.metadata")}</AccordionTrigger>
             <AccordionContent
               forceMount
               className="group-data-[state=closed]:hidden"
@@ -123,7 +125,7 @@ const DetailsTab: React.FunctionComponent<DetailsTabProps> = ({
         )}
         {hasTokenUsage && (
           <AccordionItem className="group" value="usage">
-            <AccordionTrigger>Token usage</AccordionTrigger>
+            <AccordionTrigger>{t("detailsTab.tokenUsage")}</AccordionTrigger>
             <AccordionContent
               forceMount
               className="group-data-[state=closed]:hidden"

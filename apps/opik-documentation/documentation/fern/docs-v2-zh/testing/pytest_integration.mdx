@@ -1,0 +1,66 @@
+---
+headline: Pytest 集成 | Opik 文档
+og:description: 通过使用 Opik 的 Pytest 集成跟踪测试结果并在部署前确保可靠性，监控您的 LLM 应用性能。
+og:site_name: Opik 文档
+og:title: 使用 Pytest 测试 - Opik
+subtitle: 描述如何使用 Opik 与 Pytest 编写 LLM 单元测试
+title: Pytest 集成
+canonical-url: https://www.comet.com/docs/opik/evaluation/overview
+---
+
+确保您的 LLM 应用按预期工作是部署到生产环境之前的关键步骤。Opik 提供了 Pytest 集成，使您可以轻松跟踪测试的整体通过/失败率以及每个测试的单独通过/失败率。
+
+## 使用 Pytest 集成
+
+我们建议使用 `llm_unit` 装饰器来包装您的测试。这将确保 Opik 可以跟踪您的测试结果并为您提供详细报告。当与用于追踪 LLM 应用的 `track` 装饰器结合使用时，它也能很好地工作。
+
+当收集到 Opik `llm_unit` 测试时，Pytest 钩子会自动激活。如果您的套件没有收集任何 `llm_unit` 测试，插件默认保持惰性。您可以使用 `--opik` 或在 pytest 配置中设置 `opik_pytest_enabled = true` 来强制启用。
+
+```python
+import pytest
+from opik import track, llm_unit
+
+@track
+def llm_application(user_question: str) -> str:
+    # LLM application code here
+    return "Paris"
+
+@llm_unit()
+def test_simple_passing_test():
+    user_question = "What is the capital of France?"
+    response = llm_application(user_question)
+    assert response == "Paris"
+```
+
+当您运行测试时，Opik 将为每次运行创建一个新实验并记录每个测试结果。通过导航到 `tests` 数据集，您将看到每次测试运行的新实验。
+
+<Frame>
+  <img src="/img/testing/test_experiments.png" />
+</Frame>
+
+<Tip>
+  如果您在开发期间评估 LLM 应用，我们建议使用 `evaluate` 函数，因为它将为您提供更详细的报告。您可以在[评估文档](/v1/evaluation/evaluate_your_llm)中了解更多关于 `evaluate` 函数的信息。
+</Tip>
+
+### 高级用法
+
+`llm_unit` 装饰器也可以与 `parametrize` Pytest 装饰器结合使用，后者允许您使用不同输入运行相同的测试：
+
+```python
+import pytest
+from opik import track, llm_unit
+
+@track
+def llm_application(user_question: str) -> str:
+    # LLM application code here
+    return "Paris"
+
+@llm_unit(expected_output_key="expected_output")
+@pytest.mark.parametrize("user_question, expected_output", [
+    ("What is the capital of France?", "Paris"),
+    ("What is the capital of Germany?", "Berlin")
+])
+def test_simple_passing_test(user_question, expected_output):
+    response = llm_application(user_question)
+    assert response == expected_output
+```

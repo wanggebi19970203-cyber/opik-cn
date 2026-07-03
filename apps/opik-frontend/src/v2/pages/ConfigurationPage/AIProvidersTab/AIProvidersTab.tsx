@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { ColumnPinningState } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 
 import { convertColumnDataToColumn } from "@/lib/table";
 import { ProviderObject, PROVIDER_TYPE } from "@/types/providers";
@@ -57,6 +58,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 };
 
 const AIProvidersTab = () => {
+  const { t } = useTranslation("pages/settings");
   const {
     permissions: { canUpdateAIProviders },
   } = usePermissions();
@@ -98,11 +100,17 @@ const AIProvidersTab = () => {
     });
   }, [providerKeys, search]);
 
+  const translatedColumns: ColumnData<ProviderObject>[] =
+    DEFAULT_COLUMNS.map((col) => ({
+      ...col,
+      label: t(`settings.providers.columns.${col.id}`),
+    }));
+
   const columns = useMemo(() => {
     const basicColumns = convertColumnDataToColumn<
       ProviderObject,
       ProviderObject
-    >(DEFAULT_COLUMNS, {});
+    >(translatedColumns, {});
 
     if (canUpdateAIProviders)
       return [
@@ -133,12 +141,12 @@ const AIProvidersTab = () => {
           searchText={search}
           setSearchText={setSearch}
           className="w-[320px]"
-          placeholder="Search by name"
+          placeholder={t("settings.searchPlaceholder")}
           dimension="sm"
         />
         {canUpdateAIProviders && (
           <Button onClick={handleAddConfigurationClick} size="sm">
-            Add configuration
+            {t("settings.providers.add")}
           </Button>
         )}
       </div>
@@ -151,15 +159,15 @@ const AIProvidersTab = () => {
         noData={
           search === "" ? (
             <DataTableEmptyContent
-              title="No AI providers yet"
-              description="Configure AI providers to use the playground and online scoring."
+              title={t("settings.providers.noProvidersTitle")}
+              description={t("settings.providers.noProvidersDescription")}
             >
               {canUpdateAIProviders && (
                 <button
                   onClick={handleAddConfigurationClick}
                   className="comet-body-s underline underline-offset-4 hover:text-primary"
                 >
-                  Add configuration
+                  {t("settings.providers.add")}
                 </button>
               )}
             </DataTableEmptyContent>

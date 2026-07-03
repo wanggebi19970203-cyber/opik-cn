@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import useTraceCommentsBatchDeleteMutation from "@/api/traces/useTraceCommentsBatchDeleteMutation";
 import useCreateTraceCommentMutation from "@/api/traces/useCreateTraceCommentMutation";
 import useUpdateTraceCommentMutation from "@/api/traces/useUpdateTraceCommentMutation";
@@ -18,6 +19,7 @@ const ExperimentCommentsViewer: React.FC<ExperimentCommentsViewerProps> = ({
   traceId,
   sectionIdx,
 }) => {
+  const { t } = useTranslation();
   const traceDeleteMutation = useTraceCommentsBatchDeleteMutation();
   const createTraceMutation = useCreateTraceCommentMutation();
   const updateTraceMutation = useUpdateTraceCommentMutation();
@@ -47,7 +49,7 @@ const ExperimentCommentsViewer: React.FC<ExperimentCommentsViewerProps> = ({
   return (
     <ExpandableSection
       icon={<MessageSquareMore className="size-4" />}
-      title="Comments"
+      title={t("common.labels.comments")}
       queryParamName="expandedCommentSections"
       sectionIdx={sectionIdx}
       count={comments.length}

@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDown, CircleCheck, CircleX } from "lucide-react";
 
@@ -28,6 +29,7 @@ type AssertionsBreakdownTooltipProps = {
 export const AssertionsBreakdownTooltip: React.FC<
   AssertionsBreakdownTooltipProps
 > = ({ children, assertionsByRun, passThreshold, runsPerItem }) => {
+  const { t } = useTranslation("experiments");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLSpanElement>(null);
   const [preferredSide, setPreferredSide] = useState<Side>("bottom");
@@ -147,7 +149,7 @@ export const AssertionsBreakdownTooltip: React.FC<
         {showPassCriteria && (
           <div className="border-b px-3 py-2">
             <span className="comet-body-xs text-muted-slate">
-              Pass criteria: {passThreshold}/{runsPerItem} runs must pass
+              {t("passCriteria", { passThreshold, runsPerItem })}
             </span>
           </div>
         )}
@@ -172,7 +174,7 @@ export const AssertionsBreakdownTooltip: React.FC<
                     <AccordionPrimitive.Trigger className="flex flex-1 items-center justify-between px-3 py-2 outline-none focus-visible:ring-1 focus-visible:ring-ring [&[data-state=open]>svg:last-child]:rotate-180">
                       <div className="flex items-center gap-2">
                         <span className="comet-body-xs-accented text-foreground">
-                          Run {runIdx + 1}
+                          {t("run", { index: runIdx + 1 })}
                         </span>
                         <div
                           className={cn(
@@ -187,7 +189,7 @@ export const AssertionsBreakdownTooltip: React.FC<
                           ) : (
                             <CircleX className="size-3 shrink-0" />
                           )}
-                          {passedCount}/{run.length} assertions passed
+                          {t("assertionsPassed", { passed: passedCount, total: run.length })}
                         </div>
                       </div>
                       <ChevronDown className="size-3 shrink-0 transition-transform duration-200" />

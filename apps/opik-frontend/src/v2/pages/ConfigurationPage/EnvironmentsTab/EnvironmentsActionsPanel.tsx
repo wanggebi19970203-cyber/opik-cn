@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Environment } from "@/types/environments";
@@ -14,6 +15,7 @@ type EnvironmentsActionsPanelProps = {
 const EnvironmentsActionsPanel: React.FunctionComponent<
   EnvironmentsActionsPanelProps
 > = ({ environments }) => {
+  const { t } = useTranslation("pages/settings");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !environments?.length;
@@ -31,12 +33,12 @@ const EnvironmentsActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deleteEnvironmentsHandler}
-        title="Delete environments"
-        description="This action can’t be undone. Existing traces and spans will keep their environment values. Are you sure you want to continue?"
-        confirmText="Delete environments"
+        title={t("settings.environments.confirmDialog.deleteBatch.title")}
+        description={t("settings.environments.confirmDialog.deleteBatch.description")}
+        confirmText={t("settings.environments.confirmDialog.deleteBatch.confirmText")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("settings.actions.delete")}>
         <Button
           variant="outline"
           size="icon-sm"

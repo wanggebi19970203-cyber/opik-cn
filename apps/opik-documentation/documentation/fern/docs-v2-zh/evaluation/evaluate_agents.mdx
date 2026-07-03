@@ -1,0 +1,395 @@
+---
+headline: Agent 评估最佳实践 | Opik 文档
+og:description: 了解评估 AI Agent 的最佳实践，在整个生命周期中确保其可靠性和可扩展性，Opik 为您提供指导。
+og:site_name: Opik 文档
+og:title: 高效评估 AI Agent - Opik
+subtitle: 关于如何在 AI Agent 整个生命周期中进行评估和优化的分步指南
+title: Agent 评估最佳实践
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时，请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+构建 AI Agent 不仅仅是让它能运行，更需要让它可靠、智能且可扩展。
+
+随着 Agent 进行推理、执行操作并与真实用户交互，将其视为黑盒是远远不够的。
+
+要交付生产级 Agent，团队需要一条从开发到部署的清晰路径，以**可观测性、测试和优化**为基础。
+
+本指南将带您了解 Agent 的生命周期，并展示 Opik 在每个阶段如何提供帮助。
+
+### 1. 从可观测性开始
+
+Agent 开发的第一步是让其行为透明化。从第一天起，您就应该为 Agent 增加追踪日志——记录输入、中间步骤、工具调用、输出和错误。
+
+**仅需两行代码**，您就能全面了解 Agent 的思考和执行过程。使用 Opik，您可以检查每个步骤，理解发生了什么，并快速调试问题。
+
+<Frame caption="为 Agent 添加追踪能力">
+  <img src="/img/evaluation/evaluation_agents_tracing.png" alt="为 AI Agent 添加追踪能力" />
+</Frame>
+
+<Tip>
+  本指南使用基于 LangGraph 构建的 Python Agent 来演示追踪和评估。如果您使用的是其他框架，如 OpenAI Agents、CrewAI、Haystack 或 LlamaIndex，请查看我们的[集成概览](/integrations/overview)以了解如何在您的环境中启用追踪。
+</Tip>
+
+记录首批追踪数据后，Opik 会立即为您提供有价值的洞察——不仅是 Agent 做了什么，还有它的表现如何。您可以浏览详细的追踪数据，查看 Agent 生成了多少条追踪和 Span，跟踪 Token 使用量，并监控各次运行的响应延迟。
+
+<Frame caption="Opik 仪表板展示成本、延迟和 Token 使用情况">
+  <img
+    src="/img/evaluation/evaluation_agents_dashboard.png"
+    alt="仪表板展示 AI Agent 的追踪数据、Span 和 Token 使用情况"
+  />
+</Frame>
+
+对于每次与终端用户的交互，您还可以了解 Agent 如何规划、选择工具，以及如何基于用户输入、Agent 图谱等信息构建回答。
+
+<Frame caption="单条 Agent 追踪的详细视图">
+  <img
+    src="/img/evaluation/evaluation_agents_trace.png"
+    alt="单条 Agent 追踪的详细可视化，包含步骤和工具交互"
+  />
+</Frame>
+
+在开发阶段，获取所有这些信息对于调试和理解哪些功能正常、哪些功能异常至关重要。
+
+**错误检测**
+
+立即访问所有返回错误的追踪数据也非常重要，Opik 使这一过程极其简单：
+
+<Frame caption="突出显示 Agent 错误的追踪列表">
+  <img
+    src="/img/evaluation/evaluation_agents_traces.png"
+    alt="多条 Agent 追踪的列表视图，包含错误检测高亮"
+  />
+</Frame>
+
+对于捕获的每个错误和异常，您都可以访问修复问题所需的所有详细信息：
+
+<Frame caption="失败 Agent 追踪的错误详情视图">
+  <img
+    src="/img/evaluation/evaluation_agents_errors.png"
+    alt="展开的错误报告，展示 Agent 失败的原因和上下文"
+  />
+</Frame>
+
+### 2. 评估 Agent 的端到端行为
+
+当您对 Agent 的交互、记忆和工具使用有了全面的可见性，并确保所有功能在技术层面正常运行后，下一个合理的步骤是开始检查响应质量和 Agent 所采取的操作。
+
+**人工反馈**
+
+最快且最简单的方法是提供手动人工反馈。每条追踪和每个 Span 都可以由人工（很可能是您！）标记为"正确"或"错误"，这将为理解响应质量提供基准。
+
+您可以在 Opik 中为每条追踪的评分提供人工反馈和评论，完成后可以将所有结果存储到数据集中，用于后续的 Agent 优化迭代。
+
+<Frame caption="Agent 追踪的人工反馈">
+  <img
+    src="/img/evaluation/evaluation_agents_scores.png"
+    alt="Agent 追踪的人工反馈界面，包含评分和评论"
+  />
+</Frame>
+
+**在线评估**
+
+将答案简单标记为"正确"或"错误"是有用的第一步，但这远远不够。随着 Agent 变得越来越复杂，您需要衡量它在更细致的维度上的表现。
+
+这就是在线评估变得至关重要的地方。
+
+使用 Opik，您可以使用多种指标自动对追踪进行评分，例如答案相关性、幻觉检测、Agent 审核、用户审核，甚至可以针对特定用例定制自定义标准。这些评估持续运行，无需手动审查即可为您的 Agent 质量提供结构化反馈。
+
+<Tip>
+  想深入了解？请查看[指标文档](/evaluation/metrics/overview)，探索 Opik 开箱即用的所有启发式指标和 LLM-as-a-judge 评估。
+</Tip>
+
+### 3. 评估 Agent 的步骤
+
+构建复杂 Agent 时，仅评估最终输出是不够的。Agent 通过**一系列操作**进行推理——选择工具、调用函数、检索记忆和生成中间消息。
+
+这些**步骤**中的任何一个都可能在错误出现在最终答案之前就引入问题。
+
+这就是为什么**独立评估 Agent 步骤**是一个核心最佳实践。
+
+没有步骤级评估，您可能只在失败影响最终用户响应后才注意到问题，而不知道哪里出了错。通过步骤评估，您可以在问题发生时就捕获它们，并准确定位 Agent 推理或架构中需要修复的部分。
+
+#### **应该评估哪些步骤？**
+
+根据您的 Agent 架构，您可能需要对以下内容进行评分：
+
+| 步骤类型 | 示例评估问题 |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| **工具调用** | Agent 是否选择了正确的工具？是否提供了正确的参数？ |
+| **记忆检索** | 检索到的记忆是否与查询相关？ |
+| **计划** | Agent 是否生成了连贯、可执行的计划？ |
+| **中间消息** | 内部推理是否具有逻辑性和一致性？ |
+
+对于这些步骤中的每一个，您可以使用 Opik 预定义的指标，或创建适应您需求的自定义指标。
+
+### 4. 示例：使用 Opik 评估工具选择质量
+
+构建使用工具（如网络搜索、计算器、API 等）的 Agent 时，了解 **Agent 选择和使用这些工具的能力**至关重要。
+
+它们是否选择了正确的工具？是否正确使用了？是否在浪费时间或犯错误？
+
+在 Opik 中衡量这一点最简单的方法是运行一个**自定义评估实验**。
+
+#### **我们将做什么**
+
+在本示例中，我们将使用 Opik 的 SDK 创建一个**脚本来运行实验**，以**衡量 Agent 选择工具的能力**。
+
+运行实验时，Opik 将：
+
+- 对示例数据集中的每个条目执行 Agent。
+- 使用自定义指标评估每次 Agent 交互。
+- 将结果（评分和推理）记录到可探索的仪表板中。
+
+这将为您提供关于 Agent 工具选择行为好坏的**清晰、数据驱动的视图**。
+
+#### **我们需要什么**
+
+对于每个要运行的实验，我们需要创建的最重要元素如下：
+
+<Steps>
+  <Step title="数据集">
+    一组示例用户查询和预期的正确工具使用方式。
+  </Step>
+
+  <Step title="指标">
+    一种自动判断 Agent 行为是否正确的方法（我们将创建一个自定义指标）。
+  </Step>
+  
+  <Step title="评估任务">
+    一个告诉 Opik 如何对每个数据集条目运行 Agent 的函数。
+  </Step>
+</Steps>
+
+#### 完整示例：工具选择评估脚本
+
+以下是完整示例：
+
+```python
+
+import os
+from opik import Opik
+from opik.evaluation import evaluate
+from agent import agent_executor
+from langchain_core.messages import HumanMessage
+from experiments.tool_selection_metric import ToolSelectionQuality
+
+os.environ["OPIK_API_KEY"] = "YOUR_API_KEY"
+os.environ["OPIK_WORKSPACE"] = "YOUR_WORKSPACE"
+
+client = Opik()
+
+# This is the dataset with the examples of good tool selection
+dataset = client.get_dataset(name="Your_Dataset")
+
+"""
+Note: if you don't have a dataset yet, you can easily create it this way:
+dataset = client.get_or_create_dataset(name="My_Dataset", project_name="my-project")
+
+# Define the items
+items = [
+    {
+        "input": "Find information about adding numbers.",
+        "expected_output": "tavily_search_results_json"
+    },
+    {
+        "input": "Multiply 7x6",
+        "expected_output": "simple_math_tool"
+    }
+    [...]
+]
+
+# Insert the dataset items
+dataset.insert(items)
+"""
+
+# This function defines how each item in the dataset will be evaluated.
+# For each dataset item:
+# - It sends the `input` as a message to the agent (`agent_executor`).
+# - It captures the agent's actual tool calls from its outputs.
+# - It packages the original input, the agent's outputs, the detected tool calls, and the expected tool calls.
+# This structured output is what the evaluation platform will use to compare expected vs actual behavior using the custom metric(s) you define.
+
+def evaluation_task(dataset_item):
+    try:
+        user_message_content = dataset_item["input"]
+        expected_tool = dataset_item["expected_output"]
+
+        # This is where you call your agent with the input message and get the real execution results.
+        result = agent_executor.invoke({"messages": [HumanMessage(content=user_message_content)]})
+
+        tool_calls = []
+
+        # Here we extract the tool calls the agent actually made.
+        # We loop through the agent's messages, check tool calls,
+        # and for each tool call, we capture its metadata.
+        for msg in result.get("messages", []):
+            if hasattr(msg, "tool_calls") and msg.tool_calls:
+                for tool_call in msg.tool_calls:
+                    tool_calls.append({
+                        "function_name": tool_call.get("name"),
+                        "function_parameters": tool_call.get("args", {})
+                    })
+
+        return {
+            "input": user_message_content,
+            "output": result,
+            "tool_calls": tool_calls,
+            "expected_tool_calls": [{"function_name": expected_tool, "function_parameters": {}}]
+        }
+
+    except Exception as e:
+        return {
+            "input": dataset_item.get("input", {}),
+            "output": "Error processing input.",
+            "tool_calls": [],
+            "expected_tool_calls": [{"function_name": "unknown", "function_parameters": {}}],
+            "error": str(e)
+        }
+
+# This is the custom metric we have defined
+metrics = [ToolSelectionQuality()]
+
+# This function runs the full evaluation process.
+# It loops over each dataset item and applies the `evaluation_task` function to generate outputs.
+# It then applies the custom `ToolSelectionQuality` metric (or any provided metrics) to score each result.
+# It logs the evaluation results to Opik under the specified experiment name ("AgentToolSelectionExperiment").
+# This allows tracking, comparing, and analyzing your agent's tool selection quality over time in Opik.
+
+eval_results = evaluate(
+  experiment_name="AgentToolSelectionExperiment",
+  dataset=dataset,
+  task=evaluation_task,
+  scoring_metrics=metrics,
+  project_name="my-project"
+)
+
+```
+
+自定义工具选择指标如下所示：
+
+```python
+from opik.evaluation.metrics import base_metric, score_result
+
+class ToolSelectionQuality(base_metric.BaseMetric):
+    def __init__(self, name: str = "tool_selection_quality"):
+        self.name = name
+
+    def score(self, tool_calls, expected_tool_calls, **kwargs):
+        try:
+            actual_tool = tool_calls[0]["function_name"]
+            expected_tool = expected_tool_calls[0]["function_name"]
+
+            if actual_tool == expected_tool:
+                return score_result.ScoreResult(
+                    name=self.name,
+                    value=1,
+                    reason=f"Correct tool selected: {actual_tool}"
+                )
+            else:
+                return score_result.ScoreResult(
+                    name=self.name,
+                    value=0,
+                    reason=f"Wrong tool. Expected {expected_tool}, got {actual_tool}"
+                )
+        except Exception as e:
+            return score_result.ScoreResult(
+                name=self.name,
+                value=0,
+                reason=f"Scoring error: {e}"
+            )
+```
+
+运行此脚本后：
+
+- 您将在 **Opik 中看到一个新实验**。
+- 每个条目将有一个**工具选择评分**和一个**解释正确或错误原因**的说明。
+- 您可以**分析结果**、**筛选错误**，并为 Agent **构建更好的训练数据**。
+
+这种方法是一种可扩展的方式，可以在改进 Agent 行为时**从直觉判断转变为有据可依**。
+
+<Frame caption="Opik 中的实验仪表板">
+  <img src="/img/evaluation/evaluation_agents_experiments.png" alt="Opik 中的实验仪表板" />
+</Frame>
+
+#### 接下来会发生什么？迭代、改进和比较
+
+运行一次实验为您提供了一个**基准**：对 Agent 工具选择行为好坏的首次衡量。
+
+但真正的力量在于**利用这些结果来改进 Agent**——然后**重新运行实验**来衡量进展。
+
+以下是使用此工作流程的方法：
+
+<Steps>
+  <Step title="运行初始评估实验">
+    查看 Agent 在哪些地方犯了工具选择错误。
+  </Step>
+
+{" "}
+
+<Step title="在 Opik 中分析结果">
+  查看最常见的错误，并阅读低评分背后的推理。
+</Step>
+
+{" "}
+
+<Step title="改进您的 Agent">
+  更新<strong>系统提示</strong>以改进指令，优化<strong>工具描述</strong>，并调整<strong>工具名称或输入格式</strong>使其更直观。
+</Step>
+
+{" "}
+
+<Step title="重新运行评估实验">
+  使用相同的数据集来衡量您的更改对工具选择质量的影响。
+</Step>
+
+{" "}
+
+<Step title="比较结果">
+  审查评分改进，发现错误减少，并识别新的模式或回归问题。
+</Step>
+
+{" "}
+
+<Frame caption="比较实验之间的结果">
+  <img
+    src="/img/evaluation/evaluation_agents_compare_experiments.png"
+    alt="在 Opik 中比较实验之间的结果"
+  />
+</Frame>
+
+  <Step title="重复此循环直到满足质量要求">
+    根据需要迭代多次，直到 Agent 达到您期望的性能水平。
+  </Step>
+</Steps>
+
+而这只是一个模块！接下来您可以转向 Agent 的下一个组件。
+
+**您可以使用以下指标评估各个模块：**
+
+- **路由器**：工具选择和参数提取
+- **工具**：输出准确性、幻觉
+- **规划器**：计划长度、有效性、充分性
+- **路径**：循环、冗余步骤
+- **反思**：输出质量、重试逻辑
+
+### 5. 总结：后续方向
+
+构建优秀的 Agent 是一段旅程，不会止步于让它们"能用"。
+而是要创建您可以信任、理解并持续改进的 Agent。
+
+在本指南中，您已经学会了如何让 Agent 行为可被观测，如何评估输出和推理步骤，以及如何设计能够推动真实、可衡量改进的实验。
+
+但这只是开始。
+
+从这里开始，您可能还需要：
+
+- 通过**[提示词优化](/development/optimization-runs/overview)**优化提示词以驱动更好的 Agent 行为。
+- 通过**[生产监控](/tracing/dashboards/production_monitoring)**在生产环境中监控 Agent，实时捕获回归、错误和漂移。
+- 添加**[防护栏](/production/gateway-guardrails/guardrails)**以实现安全性、内容安全和敏感数据泄露防护，确保您的 Agent 在动态环境中也能负责任地运行。
+
+这些步骤中的每一个都建立在您已经奠定的基础之上：可观测性、评估和持续迭代。
+
+通过将它们结合起来，您将能够把 Agent 从早期原型带到生产级系统，使其强大、安全且可扩展。

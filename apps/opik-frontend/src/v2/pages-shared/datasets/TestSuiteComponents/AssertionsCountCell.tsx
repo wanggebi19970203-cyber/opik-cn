@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext, ColumnMeta, TableMeta } from "@tanstack/react-table";
 import { CheckCheck } from "lucide-react";
 import { DatasetItem, Evaluator } from "@/types/datasets";
@@ -25,6 +26,7 @@ const AssertionsCountCellInner: React.FC<AssertionsCountCellInnerProps> = ({
   metadata,
   tableMetadata,
 }) => {
+  const { t } = useTranslation("datasets");
   const assertions = useEffectiveItemAssertions(itemId, serverEvaluators);
   const count = assertions.length;
 
@@ -65,7 +67,7 @@ const AssertionsCountCellInner: React.FC<AssertionsCountCellInnerProps> = ({
           >
             <AssertionsListTooltipContent
               assertions={assertions}
-              title="Custom assertions"
+              title={t("assertionsCount.customAssertions")}
             />
           </TooltipContent>
         </TooltipPortal>

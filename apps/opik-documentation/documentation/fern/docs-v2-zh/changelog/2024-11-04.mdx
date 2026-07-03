@@ -1,0 +1,16 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 新增 `Prompt library`（提示词库）页面，在界面中管理您的提示词。
+  <Frame>
+    <img src="/img/changelog/2024-11-04/prompt_library_versions.png" />
+  </Frame>
+
+**SDK**：
+
+- 在 SDK 中引入 `Prompt` 对象，用于管理存储在提示词库中的提示词。更多信息请参阅[提示词管理](/v1/prompt_engineering/prompt_management)指南。
+- 引入 `Opik.search_spans` 方法用于搜索项目中的 span。更多信息请参阅[搜索 span](/v1/tracing/export_data#exporting-spans)指南。
+- 发布了与 [AWS Bedrock](/v1/integrations/bedrock) 的新集成，用于将 Opik 与 Bedrock 模型配合使用。

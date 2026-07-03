@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { BookOpen } from "lucide-react";
 import HelpGuideDialog from "@/v2/pages-shared/onboarding/IntegrationExplorer/components/HelpGuideDialog";
@@ -12,8 +13,9 @@ type IntegrationGetHelpProps = {
 
 const IntegrationGetHelp: React.FunctionComponent<IntegrationGetHelpProps> = ({
   className,
-  label = "View docs",
+  label,
 }) => {
+  const { t } = useTranslation();
   const { helpGuideDialogOpen, setHelpGuideDialogOpen } =
     useIntegrationExplorer();
 
@@ -33,7 +35,7 @@ const IntegrationGetHelp: React.FunctionComponent<IntegrationGetHelpProps> = ({
       >
         <a href={buildDocsUrl()} target="_blank" rel="noopener noreferrer">
           <BookOpen className="mr-1.5 size-3.5" />
-          {label}
+          {label ?? t("common.buttons.viewDocs")}
         </a>
       </Button>
 

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useActiveProjectId } from "@/store/AppStore";
 
@@ -23,6 +24,7 @@ enum OPTIMIZATION_TAB {
 }
 
 const OptimizationPage: React.FC = () => {
+  const { t } = useTranslation("pages/optimization");
   const navigate = useNavigate();
   const activeProjectId = useActiveProjectId();
   const {
@@ -160,10 +162,10 @@ const OptimizationPage: React.FC = () => {
       >
         <TabsList variant="underline" className="shrink-0">
           <TabsTrigger variant="underline" value={OPTIMIZATION_TAB.OVERVIEW}>
-            Overview
+            {t("optimization.tabs.overview")}
           </TabsTrigger>
           <TabsTrigger variant="underline" value={OPTIMIZATION_TAB.TRIALS}>
-            Trials
+            {t("optimization.tabs.trials")}
           </TabsTrigger>
         </TabsList>
 
@@ -202,7 +204,7 @@ const OptimizationPage: React.FC = () => {
             <div className="shrink-0 pb-4">
               <TrialConfigurationSection
                 experiments={[bestExperiment]}
-                title="Best trial configuration"
+                title={t("optimization.trials.bestTrialConfiguration")}
                 referenceExperiment={
                   candidates.length > 1 ? baselineExperiment : undefined
                 }

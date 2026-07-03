@@ -4,6 +4,7 @@ import useCreateTraceCommentMutation from "@/api/traces/useCreateTraceCommentMut
 import useUpdateTraceCommentMutation from "@/api/traces/useUpdateTraceCommentMutation";
 import { CommentItems } from "@/types/comment";
 import { MessageSquareMore } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ExpandableSection from "@/shared/ExpandableSection/ExpandableSection";
 import CommentsSection from "@/shared/UserComment/CommentsSection";
 
@@ -18,6 +19,7 @@ const ExperimentCommentsViewer: React.FC<ExperimentCommentsViewerProps> = ({
   traceId,
   sectionIdx,
 }) => {
+  const { t } = useTranslation("pages/compare-experiments");
   const traceDeleteMutation = useTraceCommentsBatchDeleteMutation();
   const createTraceMutation = useCreateTraceCommentMutation();
   const updateTraceMutation = useUpdateTraceCommentMutation();
@@ -47,7 +49,7 @@ const ExperimentCommentsViewer: React.FC<ExperimentCommentsViewerProps> = ({
   return (
     <ExpandableSection
       icon={<MessageSquareMore className="size-4" />}
-      title="Comments"
+      title={t("compareExperiments.comments.title")}
       queryParamName="expandedCommentSections"
       sectionIdx={sectionIdx}
       count={comments.length}

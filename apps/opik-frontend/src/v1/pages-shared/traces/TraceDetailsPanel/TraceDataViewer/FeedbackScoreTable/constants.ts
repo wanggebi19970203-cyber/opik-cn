@@ -6,6 +6,7 @@ import ValueCell from "./cells/ValueCell";
 import ReasonCell from "./cells/ReasonCell";
 import AuthorCell from "./cells/AuthorCell";
 import TypeCell from "./cells/TypeCell";
+import i18next from "i18next";
 
 export enum FeedbackScoreTableColumns {
   SOURCE = "source",
@@ -36,7 +37,7 @@ export const DEFAULT_SELECTED_COLUMNS_WITH_TYPE = [
  * Used when Type column should not be available (trace scores, individual span scores).
  */
 export const getConfigurableColumnsWithoutType = () =>
-  CONFIGURABLE_COLUMNS.filter(
+  getConfigurableColumns().filter(
     (col) => col.id !== FeedbackScoreTableColumns.TYPE,
   );
 
@@ -99,51 +100,57 @@ export const ENTITY_TYPE_TO_STORAGE_KEYS: Record<
   },
 };
 
-export const NON_CONFIGURABLE_COLUMNS: ColumnData<ExpandingFeedbackScoreRow>[] =
-  [
+export const getNonConfigurableColumns =
+  (): ColumnData<ExpandingFeedbackScoreRow>[] => [
     {
       id: FeedbackScoreTableColumns.KEY,
-      label: "Key",
+      label: i18next.t("feedbackScoreTable.key"),
       type: COLUMN_TYPE.string,
       size: 100,
       cell: NameCell as never,
     },
   ];
 
-export const CONFIGURABLE_COLUMNS: ColumnData<ExpandingFeedbackScoreRow>[] = [
-  {
-    id: FeedbackScoreTableColumns.SOURCE,
-    label: "Source",
-    type: COLUMN_TYPE.string,
-    size: 100,
-    cell: SourceCell as never,
-  },
-  {
-    id: FeedbackScoreTableColumns.TYPE,
-    label: "Type",
-    type: COLUMN_TYPE.string,
-    size: 100,
-    cell: TypeCell as never,
-  },
-  {
-    id: FeedbackScoreTableColumns.VALUE,
-    label: "Score",
-    type: COLUMN_TYPE.string,
-    cell: ValueCell as never,
-    size: 100,
-  },
-  {
-    id: FeedbackScoreTableColumns.REASON,
-    label: "Reason",
-    type: COLUMN_TYPE.string,
-    cell: ReasonCell as never,
-    size: 100,
-  },
-  {
-    id: FeedbackScoreTableColumns.CREATED_BY,
-    label: "Scored by",
-    type: COLUMN_TYPE.string,
-    cell: AuthorCell as never,
-    size: 100,
-  },
-];
+export const getConfigurableColumns =
+  (): ColumnData<ExpandingFeedbackScoreRow>[] => [
+    {
+      id: FeedbackScoreTableColumns.SOURCE,
+      label: i18next.t("feedbackScoreTable.source"),
+      type: COLUMN_TYPE.string,
+      size: 100,
+      cell: SourceCell as never,
+    },
+    {
+      id: FeedbackScoreTableColumns.TYPE,
+      label: i18next.t("feedbackScoreTable.type"),
+      type: COLUMN_TYPE.string,
+      size: 100,
+      cell: TypeCell as never,
+    },
+    {
+      id: FeedbackScoreTableColumns.VALUE,
+      label: i18next.t("feedbackScoreTable.score"),
+      type: COLUMN_TYPE.string,
+      cell: ValueCell as never,
+      size: 100,
+    },
+    {
+      id: FeedbackScoreTableColumns.REASON,
+      label: i18next.t("feedbackScoreTable.reason"),
+      type: COLUMN_TYPE.string,
+      cell: ReasonCell as never,
+      size: 100,
+    },
+    {
+      id: FeedbackScoreTableColumns.CREATED_BY,
+      label: i18next.t("feedbackScoreTable.scoredBy"),
+      type: COLUMN_TYPE.string,
+      cell: AuthorCell as never,
+      size: 100,
+    },
+  ];
+
+/** @deprecated Use getNonConfigurableColumns() instead */
+export const NON_CONFIGURABLE_COLUMNS = getNonConfigurableColumns();
+/** @deprecated Use getConfigurableColumns() instead */
+export const CONFIGURABLE_COLUMNS = getConfigurableColumns();

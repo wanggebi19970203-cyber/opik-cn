@@ -1,0 +1,225 @@
+---
+headline: 评估多轮对话智能体 | Opik 文档
+og:description: 学习使用模拟技术评估多轮对话智能体，以提升聊天机器人性能和改善用户交互。
+og:site_name: Opik 文档
+og:title: 有效评估多轮对话智能体 - Opik
+subtitle: 评估多轮对话智能体的分步指南
+title: 评估多轮对话智能体
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时，请确保指定 `project_name`，以便将其关联到正确的项目。
+</Note>
+
+在开发聊天机器人或多轮对话智能体时，评估智能体在多轮对话中的行为可能具有挑战性，因为你无法预知用户会提出什么后续问题。
+
+为解决这个问题，我们可以使用 LLM 来模拟用户——根据当前对话生成逼真的后续消息，并运行可配置轮数的对话。
+
+获得对话记录后，我们可以使用 Opik 的评估功能对智能体的表现进行评分。
+
+<Frame>
+    <img src="/img/evaluation/multi_turn_evaluation.png" />
+</Frame>
+
+## 创建用户模拟器
+
+为了执行多轮评估，我们需要创建一个用户模拟器，用于根据之前的对话轮次生成用户的响应。
+
+```python title="用户模拟器" maxLines=1000
+from opik.simulation import SimulatedUser
+
+user_simulator = SimulatedUser(
+    persona="You are a frustrated user who wants a refund",
+    model="openai/gpt-4.1",
+)
+
+conversation_history = [
+    {"role": "assistant", "content": "Hello, how can I help you today?"}
+]
+
+for turn in range(3):
+    # 基于当前对话生成用户消息
+    user_message = user_simulator.generate_response(conversation_history)
+    conversation_history.append({"role": "user", "content": user_message})
+    print(f"User: {user_message}")
+
+    # 实际应用中，这里应该是你的智能体响应
+    agent_response = f"Placeholder agent response for turn {turn + 1}"
+    conversation_history.append({"role": "assistant", "content": agent_response})
+    print(f"Assistant: {agent_response}\n")
+```
+
+现在我们有了模拟用户的方法，可以创建多个模拟对话来进行评估。
+
+## 运行模拟
+
+<Steps>
+    <Step title="1. 创建场景列表">
+        为了更方便地跟踪我们将要运行的场景，让我们创建一个包含用户角色的数据集：
+
+        ```python title="创建包含用户角色的数据集" maxLines=1000
+        import opik
+
+        opik_client = opik.Opik()
+        dataset = opik_client.get_or_create_dataset(name="Multi-turn evaluation", project_name="my-project")
+        dataset.insert([
+            {"user_persona": "You are a frustrated user who wants a refund"},
+            {"user_persona": "You are a user who is happy with your product and wants to buy more"},
+            {"user_persona": "You are a user who is having trouble with your product and wants to get help"}
+        ])
+        ```
+    </Step>
+    <Step title="2. 创建智能体应用">
+        `run_simulation` 函数期望一个 `app` 可调用对象，其约定如下：接收一个 `user_message` 字符串和一个 `thread_id` 关键字参数，返回一个消息字典 `{"role": "assistant", "content": "..."}`。应用负责使用 `thread_id` 管理自己的对话历史。
+
+        以下是使用 LangChain 的示例：
+
+        ```python title="智能体应用示例（LangChain）" maxLines=1000
+        from langchain.agents import create_agent
+        from opik.integrations.langchain import OpikTracer
+
+        opik_tracer = OpikTracer()
+
+        agent = create_agent(
+            model="openai:gpt-4.1",
+            tools=[],
+            system_prompt="You are a helpful assistant",
+        )
+
+        agent_history = {}
+
+        def run_agent(user_message: str, *, thread_id: str, **kwargs) -> dict[str, str]:
+            if thread_id not in agent_history:
+                agent_history[thread_id] = []
+
+            agent_history[thread_id].append({"role": "user", "content": user_message})
+            messages = agent_history[thread_id]
+
+            response = agent.invoke({"messages": messages}, config={"callbacks": [opik_tracer]})
+            agent_history[thread_id] = response["messages"]
+
+            return {"role": "assistant", "content": response["messages"][-1].content}
+        ```
+    </Step>
+    <Step title="3. 运行模拟">
+        现在我们有了包含用户角色的数据集，可以运行模拟了：
+
+        ```python title="运行模拟" maxLines=1000
+        import opik
+        from opik.simulation import SimulatedUser, run_simulation
+
+        # 获取用户角色
+        opik_client = opik.Opik()
+        dataset = opik_client.get_or_create_dataset(name="Multi-turn evaluation", project_name="my-project")
+
+        # 运行模拟
+        all_simulations = []
+        for item in dataset.get_items():
+            user_persona = item["user_persona"]
+            user_simulator = SimulatedUser(
+                persona=user_persona,
+                model="openai/gpt-4.1",
+            )
+            simulation = run_simulation(
+                app=run_agent,
+                user_simulator=user_simulator,
+                max_turns=5,
+            )
+
+            all_simulations.append(simulation)
+        ```
+
+        每个模拟结果是一个字典，包含：
+        - `thread_id`：对话线程的唯一标识符
+        - `conversation_history`：消息字典列表（`{"role": "user"|"assistant", "content": "..."}`）
+
+        <Tip>
+        `run_simulation` 函数通过构建消息列表来跟踪内部对话状态，其中 `run_agent` 函数的结果作为助手消息，`SimulatedUser` 的响应作为用户消息。
+
+        如果需要更复杂的对话状态，可以直接使用 `SimulatedUser` 的 `generate_response` 方法创建线程。
+        </Tip>
+
+        模拟线程将在 Opik 线程界面中可用：
+
+        <Frame>
+            <img src="/img/evaluation/multi_turn_evaluation_threads.png" />
+        </Frame>
+    </Step>
+</Steps>
+
+## 线程评分
+
+在评估多轮对话时，你可以使用 Opik 内置的对话指标或[创建自定义指标](/evaluation/metrics/custom_conversation_metric)。
+
+如果你使用了 `run_simulation` 函数，你将已经有一个对话消息列表，可以直接传递给指标；否则可以使用 `evaluate_threads` 函数：
+<CodeBlock>
+    ```python title="对模拟进行评分" maxLines=1000
+    import opik
+    from opik.evaluation.metrics import ConversationalCoherenceMetric, UserFrustrationMetric
+
+    opik_client = opik.Opik()
+
+    # 定义要使用的指标
+    conversation_coherence_metric = ConversationalCoherenceMetric()
+    user_frustration_metric = UserFrustrationMetric()
+
+    for simulation in all_simulations:
+        conversation = simulation["conversation_history"]
+
+        coherence_score = conversation_coherence_metric.score(conversation)
+        frustration_score = user_frustration_metric.score(conversation)
+
+        opik_client.log_threads_feedback_scores(
+            scores=[
+                {
+                    "id": simulation["thread_id"],
+                    "name": "conversation_coherence",
+                    "value": coherence_score.value,
+                    "reason": coherence_score.reason
+                },
+                {
+                    "id": simulation["thread_id"],
+                    "name": "user_frustration",
+                    "value": frustration_score.value,
+                    "reason": frustration_score.reason
+                }
+            ]
+        )
+    ```
+
+    ```python title="使用 evaluate_threads"
+    import opik
+    from opik.evaluation import evaluate_threads
+    from opik.evaluation.metrics import ConversationalCoherenceMetric, UserFrustrationMetric
+
+    opik_client = opik.Opik()
+
+    conversation_coherence_metric = ConversationalCoherenceMetric()
+    user_frustration_metric = UserFrustrationMetric()
+
+    results = evaluate_threads(
+        project_name="multi_turn_evaluation",
+        filter_string=f'thread_id = "<THREAD_ID>"',
+        metrics=[conversation_coherence_metric, user_frustration_metric],
+        trace_input_transform=lambda x: x["input"],
+        trace_output_transform=lambda x: x["output"],
+    )
+    ```
+</CodeBlock>
+
+<Tip>
+你可以在 [evaluate_threads 指南](/evaluation/evaluate_threads)中了解更多关于 `evaluate_threads` 函数的信息。
+</Tip>
+
+线程评分完成后，你可以在 Opik 线程界面中查看结果：
+
+<Frame>
+    <img src="/img/evaluation/threads_user_frustration_score.png" />
+</Frame>
+
+## 后续步骤
+
+- 了解更多关于[对话指标](/evaluation/metrics/conversation_threads_metrics)的信息
+- 了解更多关于[自定义对话指标](/evaluation/metrics/custom_conversation_metric)的信息
+- 了解更多关于 [evaluate_threads](/evaluation/evaluate_threads) 的信息
+- 了解更多关于[智能体轨迹评估](/evaluation/advanced/evaluate_agent_trajectory)的信息

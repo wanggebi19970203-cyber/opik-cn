@@ -1,0 +1,144 @@
+{
+  "onlineEvaluation": {
+    "title": "Online evaluation",
+    "description": "Monitor and evaluate model performance in real-time",
+    "empty": {
+      "title": "No online evaluations yet",
+      "description": "Create a rule to automatically score your model's outputs.\nDefine criteria, evaluate responses in real time, and track quality over time.",
+      "action": "Create your first rule"
+    },
+    "fields": {
+      "name": "Rule name",
+      "metric": "Metric",
+      "sampling": "Sampling rate"
+    },
+    "columns": {
+      "name": "Name",
+      "id": "ID",
+      "projects": "Projects",
+      "lastUpdated": "Last updated",
+      "createdBy": "Created by",
+      "created": "Created",
+      "samplingRate": "Sampling rate",
+      "scope": "Scope",
+      "status": "Status"
+    },
+    "actions": {
+      "view": "View rule",
+      "run": "Run now",
+      "enable": "Enable rule",
+      "disable": "Disable rule",
+      "createRule": "Create rule",
+      "showLogs": "Show logs",
+      "clone": "Clone"
+    },
+    "search": {
+      "byId": "Search by ID"
+    },
+    "noData": {
+      "noRulesYet": "There are no rules yet",
+      "noSearchResults": "No search results"
+    },
+    "confirmDialog": {
+      "deleteSingle": {
+        "title": "Delete evaluation rule",
+        "description": "Deleting an online evaluation rule will stop scoring for all new traces. Existing traces that have already been scored won't be affected. This action can't be undone. Are you sure you want to continue?\n\nTip: To pause scoring without deleting, disable the rule.",
+        "confirmText": "Delete evaluation rule"
+      },
+      "deleteBatch": {
+        "title": "Delete evaluation rules",
+        "description": "Deleting online evaluation rules will stop scoring for all new traces. Existing traces that have already been scored won't be affected. This action can't be undone. Are you sure you want to continue?\n\nTip: To pause scoring without deleting, disable the rules.",
+        "confirmText": "Delete evaluation rules"
+      }
+    },
+    "addEditRule": {
+      "editTitle": "Edit rule",
+      "cloneTitle": "Clone evaluation rule",
+      "createTitle": "Create a new rule",
+      "updateSubmit": "Update rule",
+      "createSubmit": "Create rule",
+      "nameLabel": "Name",
+      "namePlaceholder": "Rule name",
+      "scopeLabel": "Scope",
+      "scopeTooltip": "Choose whether the evaluation rule scores the entire thread, each individual trace, or each span. Thread-level rules assess the full conversation, trace-level rules evaluate one model response at a time, and span-level rules evaluate individual operations within a trace.",
+      "selectScopePlaceholder": "Select scope",
+      "enableRule": "Enable rule",
+      "enableRuleDescription": "Enable or disable this evaluation rule",
+      "typeLabel": "Type",
+      "llmAsJudge": "LLM-as-judge",
+      "codeMetric": "Code metric",
+      "codeMetricDisabledTooltip": "Code metric cannot be updated. This feature is not available for this environment",
+      "cancel": "Cancel",
+      "goToProject": "Go to project",
+      "loseChangesTitle": "You're about to lose your changes",
+      "loseChangesDescription": "If you change the evaluation scope, your current rule settings — including prompt, model, and variable mappings — will be reset.\nAre you sure you want to continue?",
+      "resetAndContinue": "Reset and continue"
+    },
+    "pythonCodeRule": {
+      "pythonCodeLabel": "Python code",
+      "variablesDescription": "All variables are automatically added based on the code snippet. They are extracted from the `score` method and are required.",
+      "variablesError": "Code parsing error. The variables cannot be extracted."
+    },
+    "ruleFiltering": {
+      "filteringAndSampling": "Filtering & Sampling",
+      "traceExplainer": "Apply filters and sampling to select which traces will be evaluated by this rule",
+      "threadExplainer": "Use sampling rate to control how frequently this rule is applied to threads",
+      "spanExplainer": "Apply filters and sampling to select which spans will be evaluated by this rule",
+      "samplingDescription": "Use sampling rate to control how frequently this rule is applied. You can also add filters to select specific {{entityType}} based on their properties. If nothing is defined, the rule will evaluate all {{entityType}}.",
+      "filtersLabel": "Filters",
+      "addFilter": "Add filter",
+      "samplingRateLabel": "Sampling rate",
+      "samplingRateTooltip": "Percentage of traces to evaluate",
+      "isEmpty": "is empty",
+      "isNotEmpty": "is not empty",
+      "selectScore": "Select score"
+    },
+    "evaluateButton": {
+      "noRulesTooltip": "No online evaluation rules assigned to this project",
+      "evaluate": "Evaluate"
+    },
+    "noRulesPage": {
+      "title": "Automate your scores",
+      "description": "An automated rule is a predefined logic that scores LLM outputs in real-time based on set criteria, ensuring efficient and consistent performance assessment.",
+      "readDocumentation": "Read documentation",
+      "createFirstRule": "Create your first rule"
+    },
+    "projectsSelectBox": {
+      "selectProjects": "Select projects",
+      "allProjects": "All projects",
+      "selectAProject": "Select a project",
+      "clearProjectSelection": "Clear project selection"
+    },
+    "ruleEnabledCell": {
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "ruleRowActions": {
+      "actionsMenu": "Actions menu",
+      "edit": "Edit",
+      "clone": "Clone",
+      "delete": "Delete",
+      "deleteTitle": "Delete evaluation rule",
+      "deleteDescription": "Deleting an online evaluation rule will stop scoring for all new traces. Existing traces that have already been scored won't be affected. This action can't be undone. Are you sure you want to continue?\n\nTip: To pause scoring without deleting, disable the rule.",
+      "deleteConfirmText": "Delete evaluation rule"
+    },
+    "rulesActionsPanel": {
+      "deleteTooltip": "Delete",
+      "deleteTitle": "Delete evaluation rules",
+      "deleteDescription": "Deleting online evaluation rules will stop scoring for all new traces. Existing traces that have already been scores won't be affected. This action can't be undone. Are you sure you want to continue?\n\nTip: To pause scoring without deleting, disable the rules.",
+      "deleteConfirmText": "Delete evaluation rules"
+    },
+    "runEvaluationDialog": {
+      "title": "Run online evaluation rules",
+      "description": "Choose the online evaluation rules you want to apply to the selected {{entityLabel}}. Each rule will generate new scores based on its configuration.",
+      "createNewRule": "Create a new rule",
+      "noRulesMessage": "No online evaluation rules assigned to this project",
+      "noRulesDescription": "Create a new rule, or assign an existing rule in the Online evaluation page",
+      "showPrompt": "Show prompt",
+      "hidePrompt": "Hide prompt",
+      "cancel": "Cancel",
+      "evaluating": "Evaluating...",
+      "evaluateEntity": "Evaluate {{entityLabel}}"
+    }
+  }
+}

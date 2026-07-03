@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import isNull from "lodash/isNull";
 
 import { AggregatedCandidate } from "@/types/optimizations";
@@ -13,8 +14,8 @@ import {
   type InProgressInfo,
 } from "./optimizationChartUtils";
 
-const INITIALIZING_MESSAGE = "Optimization process is initialized...";
-const CALCULATING_BASELINE_MESSAGE = "Calculating baseline...";
+const INITIALIZING_MESSAGE_KEY = "optimizationInitialized";
+const CALCULATING_BASELINE_MESSAGE_KEY = "calculatingBaseline";
 
 type OptimizationProgressChartContainerProps = {
   candidates: AggregatedCandidate[];
@@ -43,12 +44,13 @@ const OptimizationProgressChartContainer: React.FC<
   inProgressInfo,
   isRunningMiniBatches,
 }) => {
+  const { t } = useTranslation("experiments");
   const isInProgress =
     !!status && IN_PROGRESS_OPTIMIZATION_STATUSES.includes(status);
 
   const baselineMessage = candidates.some((c) => c.stepIndex === 0)
-    ? CALCULATING_BASELINE_MESSAGE
-    : INITIALIZING_MESSAGE;
+    ? t(CALCULATING_BASELINE_MESSAGE_KEY)
+    : t(INITIALIZING_MESSAGE_KEY);
 
   const chartData = useMemo(
     () =>
@@ -82,7 +84,7 @@ const OptimizationProgressChartContainer: React.FC<
       return (
         <NoData
           className="min-h-32 text-light-slate"
-          message="No data to show"
+          message={t("noDataToShow")}
         />
       );
     }
@@ -107,16 +109,16 @@ const OptimizationProgressChartContainer: React.FC<
     <Card className="h-[280px] min-w-[400px] flex-auto">
       <CardHeader className="space-y-0.5 px-4 pt-3">
         <CardTitle className="comet-body-s-accented flex items-center gap-2">
-          Optimization progress
+          {t("optimizationProgress")}
           {isInProgress && !noData && (
             <>
               <Spinner size="xs" />
               <span className="comet-body-xs font-normal text-muted-slate">
                 {inProgressInfo
-                  ? "Evaluating new candidate..."
+                  ? t("evaluatingNewCandidate")
                   : isRunningMiniBatches
-                    ? "Looking for failing examples to reflect on..."
-                    : "Generating new candidate..."}
+                    ? t("lookingForFailingExamples")
+                    : t("generatingNewCandidate")}
               </span>
             </>
           )}

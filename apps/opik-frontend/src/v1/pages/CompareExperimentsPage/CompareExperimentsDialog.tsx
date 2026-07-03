@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { JsonParam, useQueryParam } from "use-query-params";
 import { keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -34,6 +35,7 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation("compare-experiments");
   const datasetId = useDatasetIdFromCompareExperimentsURL();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [search, setSearch] = useState("");
@@ -83,7 +85,7 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
     if (experiments.length === 0) {
       return (
         <div className="comet-body-s flex h-32 items-center justify-center text-muted-slate">
-          No search results
+          {t("compareExperiments.dialog.noSearchResults")}
         </div>
       );
     }
@@ -106,7 +108,7 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
                       : [...ids, e.id];
                   })
                 }
-                aria-label="Select experiment"
+                aria-label={t("compareExperiments.dialog.selectExperiment")}
                 className="mt-0.5"
               />
               <span className="comet-body-s-accented truncate">{e.name}</span>
@@ -124,7 +126,7 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Compare experiments</DialogTitle>
+          <DialogTitle>{t("compareExperiments.dialog.title")}</DialogTitle>
         </DialogHeader>
         <div className="w-full overflow-hidden">
           <ExplainerDescription
@@ -136,7 +138,7 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
           <SearchInput
             searchText={search}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("compareExperiments.dialog.searchPlaceholder")}
           ></SearchInput>
           <div className="my-4 flex max-h-[400px] min-h-36 max-w-full flex-col justify-stretch overflow-y-auto">
             {renderListItems()}
@@ -155,7 +157,7 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("compareExperiments.dialog.cancel")}</Button>
           </DialogClose>
           <DialogClose asChild>
             <Button
@@ -163,10 +165,12 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
               disabled={selectedExperimentsIds.length === 0}
               onClick={() => setExperimentsIds(selectedExperimentsIds)}
             >
-              Compare {selectedExperimentsIds.length}{" "}
-              {selectedExperimentsIds.length === 1
-                ? "experiment"
-                : "experiments"}
+              {t("compareExperiments.dialog.compareCount", {
+                count: selectedExperimentsIds.length,
+                type: selectedExperimentsIds.length === 1
+                  ? t("compareExperiments.experiment")
+                  : t("compareExperiments.experiments"),
+              })}
             </Button>
           </DialogClose>
         </DialogFooter>

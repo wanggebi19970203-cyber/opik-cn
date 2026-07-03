@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { BooleanParam, JsonParam, useQueryParam } from "use-query-params";
 import find from "lodash/find";
@@ -120,6 +121,7 @@ const TraceDetailsPanel: React.FunctionComponent<TraceDetailsPanelProps> = ({
   refetchInterval,
   hideAnnotateActions,
 }) => {
+  const { t } = useTranslation("tracing");
   const [activeSection, setActiveSection] =
     useDetailsActionSectionState("lastSection");
   const { flattenedTree } = useTreeDetailsStore();
@@ -249,8 +251,8 @@ const TraceDetailsPanel: React.FunctionComponent<TraceDetailsPanelProps> = ({
       },
       hasNext: Boolean(nextRowId),
       hasPrevious: Boolean(previousRowId),
-      nextTooltip: "Next span",
-      previousTooltip: "Previous span",
+      nextTooltip: t("detailsPanel.nextSpan"),
+      previousTooltip: t("detailsPanel.previousSpan"),
     };
   }, [spanId, traceId, handleRowSelect, flattenedTree]);
 
@@ -425,7 +427,7 @@ const TraceDetailsPanel: React.FunctionComponent<TraceDetailsPanelProps> = ({
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
               <DialogHeader>
-                <DialogTitle>Agent graph</DialogTitle>
+                <DialogTitle>{t("detailsPanel.agentGraph")}</DialogTitle>
               </DialogHeader>
               <div className="flex-auto overflow-hidden">
                 <ZoomPanContainer expandButton={false}>

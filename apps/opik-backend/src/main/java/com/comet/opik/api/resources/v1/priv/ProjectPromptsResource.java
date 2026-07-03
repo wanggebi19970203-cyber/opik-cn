@@ -40,7 +40,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project related resources")
+@Tag(name = "Projects", description = "项目相关资源")
 public class ProjectPromptsResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -49,15 +49,15 @@ public class ProjectPromptsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @GET
-    @Operation(operationId = "getPromptsByProject", summary = "Get prompts by project", description = "Get prompts scoped to a project", responses = {
-            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = PromptPage.class))),
+    @Operation(operationId = "getPromptsByProject", summary = "按项目获取提示", description = "获取指定项目范围内的提示", responses = {
+            @ApiResponse(responseCode = "200", description = "成功", content = @Content(schema = @Schema(implementation = PromptPage.class))),
     })
     @JsonView(Prompt.View.Public.class)
     public Response getPrompts(
             @PathParam("projectId") UUID projectId,
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter prompts by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称筛选提示（部分匹配，不区分大小写）") String name,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
 

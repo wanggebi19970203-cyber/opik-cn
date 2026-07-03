@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { ArrowUpRight, ListTree } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   BooleanParam,
   JsonParam,
@@ -25,6 +26,7 @@ type TraceLogsSidebarButtonProps = {
 const TraceLogsSidebarButton: React.FunctionComponent<
   TraceLogsSidebarButtonProps
 > = ({ projectId, logsSource, sourceFilters, variant = "tag", title }) => {
+  const { t } = useTranslation("tracing");
   const [open = false, setOpen] = useQueryParam(
     `${TLS_QUERY_PREFIX}open`,
     BooleanParam,
@@ -60,7 +62,7 @@ const TraceLogsSidebarButton: React.FunctionComponent<
 
   const trigger =
     variant === "icon" ? (
-      <TooltipWrapper content="Go to logs">
+      <TooltipWrapper content={t("tabs.logs")}>
         <Button
           data-testid="playground-logs-sidebar-button"
           variant="outline"
@@ -78,7 +80,7 @@ const TraceLogsSidebarButton: React.FunctionComponent<
         onClick={handleOpen}
       >
         <div className="comet-body-s-accented truncate text-foreground">
-          Logs
+          {t("tabs.logs")}
         </div>
         <ArrowUpRight className="size-3 shrink-0 text-foreground" />
       </Tag>

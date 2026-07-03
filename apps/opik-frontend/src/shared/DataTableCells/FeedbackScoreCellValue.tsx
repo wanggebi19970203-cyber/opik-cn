@@ -4,6 +4,7 @@ import {
   TraceFeedbackScore,
 } from "@/types/traces";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import FeedbackScoreEditDropdown from "./FeedbackScoreEditDropdown";
 import {
   formatScoreDisplay,
@@ -21,6 +22,7 @@ const formatMultiValueDisplay = (
   valueByAuthor: FeedbackScoreValueByAuthorMap,
   category: string | undefined,
   avgValue: number | string,
+  t: (key: string) => string,
 ): string => {
   if (getIsCategoricFeedbackScore(category)) {
     const scoreMap = getCategoricFeedbackScoreValuesMap(valueByAuthor);
@@ -32,7 +34,7 @@ const formatMultiValueDisplay = (
     const remaining = entries.length - MAX_DISPLAY_CATEGORIES;
     return remaining > 0 ? `${displayed}, +${remaining}` : displayed;
   }
-  return `avg ${formatScoreDisplay(avgValue)}`;
+  return `${t("common:aggregation.average")} ${formatScoreDisplay(avgValue)}`;
 };
 
 const FeedbackScoreCellValue = ({
@@ -50,6 +52,7 @@ const FeedbackScoreCellValue = ({
   footer?: string;
   size?: "sm" | "md";
 }) => {
+  const { t } = useTranslation();
   const { getColor } = useWorkspaceColorMap();
   const [openHoverCard, setOpenHoverCard] = useState(false);
 
@@ -86,7 +89,7 @@ const FeedbackScoreCellValue = ({
 
   const displayText =
     isMultiValue && valueByAuthor
-      ? formatMultiValueDisplay(valueByAuthor, category, value)
+      ? formatMultiValueDisplay(valueByAuthor, category, value, t)
       : category
         ? `${category} (${formattedValue})`
         : String(formattedValue);

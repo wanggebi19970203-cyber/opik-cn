@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -34,6 +35,7 @@ const FeedbackScoreEditDropdown: React.FC<FeedbackScoreEditDropdownProps> = ({
   onValueChange,
   size = "md",
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const currentUserName = useLoggedInUserNameOrOpenSourceDefaultUser();
   const [open, setOpen] = useState(false);
@@ -109,7 +111,7 @@ const FeedbackScoreEditDropdown: React.FC<FeedbackScoreEditDropdownProps> = ({
             e.stopPropagation();
           }}
         >
-          <TooltipWrapper content="Click to edit your score">
+          <TooltipWrapper content={t("common:feedbackScoreEdit.clickToEditScore")}>
             <Pencil className={size === "sm" ? "size-2.5" : "size-3"} />
           </TooltipWrapper>
         </Button>
@@ -121,7 +123,7 @@ const FeedbackScoreEditDropdown: React.FC<FeedbackScoreEditDropdownProps> = ({
         sideOffset={4}
       >
         <DropdownMenuLabel className="px-8 text-xs font-medium text-secondary-foreground">
-          Your feedback
+          {t("common:feedbackScoreEdit.yourFeedback")}
         </DropdownMenuLabel>
         <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white">
           {feedbackOptions.map((option) => (

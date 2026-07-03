@@ -1,0 +1,145 @@
+---
+description: 了解如何使用进化优化器通过遗传算法发现最优提示，支持多目标优化和LLM驱动的遗传操作。
+headline: 进化 | Opik 文档
+og:description: 了解如何使用EvolutionaryOptimizer通过遗传算法进行有效的多目标优化来优化提示。
+og:site_name: Opik 文档
+og:title: Opik 的进化优化算法
+subtitle: 使用遗传算法和多目标优化发现最优提示。
+title: '进化优化器：遗传算法'
+---
+
+`EvolutionaryOptimizer` 使用遗传算法来优化和发现有效的提示。它通过迭代进化一个提示群体，应用选择、交叉和变异操作来找到最大化给定评估指标的提示。该优化器还可以执行多目标优化（例如，在最大化分数的同时最小化提示长度），并利用LLM实现更复杂的遗传操作。
+
+<Note>
+  当您想要探索非常多样化的提示结构或有多个优化目标（例如，性能分数和提示长度）时，`EvolutionaryOptimizer` 是一个很好的选择。它的优势在于能够通过进化机制跳出局部最优解，发现新颖的提示解决方案，特别是在使用LLM驱动的遗传算子增强时。
+</Note>
+
+## 工作原理
+
+`EvolutionaryOptimizer` 基于 [DEAP](https://deap.readthedocs.io/) 进化计算库构建。该优化器的核心概念是通过多代进化一个提示群体来找到最佳提示。
+
+我们利用不同的技术来进化提示群体：
+
+- **选择**：从群体中选择最佳提示作为下一代的父代。
+- **交叉**：对父代进行交叉以创建下一代的子代。
+- **变异**：对子代进行变异以创建新的提示群体。
+
+我们重复此过程直到找到最佳提示。
+
+<Frame>
+  <img src="/img/agent_optimization/evolutionary_optimizer.png" alt="进化优化器" />
+</Frame>
+
+<Tip>
+  该优化器是开源的，您可以在 [Opik 仓库](https://github.com/comet-ml/opik/tree/main/sdks/opik_optimizer/src/opik_optimizer/algorithms/evolutionary_optimizer) 中查看代码。
+</Tip>
+
+## 快速入门
+
+您可以使用 `EvolutionaryOptimizer` 来优化提示：
+
+```python maxLines=1000
+from opik_optimizer import EvolutionaryOptimizer
+from opik.evaluation.metrics import LevenshteinRatio # or any other suitable metric
+from opik_optimizer import datasets, ChatPrompt
+
+# 1. Define your evaluation dataset
+dataset = datasets.tiny_test() # Replace with your actual dataset
+
+# 2. Configure the evaluation metric
+def levenshtein_ratio(dataset_item, llm_output):
+    return LevenshteinRatio().score(reference=dataset_item["label"], output=llm_output)
+
+# 3. Define your base prompt and task configuration
+initial_prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "{text}"}
+    ]
+)
+
+# 4. Initialize the EvolutionaryOptimizer
+optimizer = EvolutionaryOptimizer(
+    model="openai/gpt-4o-mini",
+    model_parameters={"temperature": 0.4},
+    population_size=20,
+    num_generations=10,
+)
+
+# 5. Run the optimization
+optimization_result = optimizer.optimize_prompt(
+    prompt=initial_prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    n_samples=5
+)
+
+# 6. View the results
+optimization_result.display()
+```
+
+## 配置选项
+
+### 优化器参数
+
+优化器具有以下参数：
+
+<ParamField path="model" type="str" optional={true} default="openai/gpt-5-nano" />
+<ParamField path="model_parameters" type="dict[str, typing.Any] | None" optional={true} />
+<ParamField path="population_size" type="int" optional={true} default="30" />
+<ParamField path="num_generations" type="int" optional={true} default="15" />
+<ParamField path="mutation_rate" type="float" optional={true} default="0.2" />
+<ParamField path="crossover_rate" type="float" optional={true} default="0.8" />
+<ParamField path="tournament_size" type="int" optional={true} default="4" />
+<ParamField path="elitism_size" type="int" optional={true} default="3" />
+<ParamField path="adaptive_mutation" type="bool" optional={true} default="True" />
+<ParamField path="enable_moo" type="bool" optional={true} default="True" />
+<ParamField path="enable_llm_crossover" type="bool" optional={true} default="True" />
+<ParamField path="output_style_guidance" type="str | None" optional={true} />
+<ParamField path="infer_output_style" type="bool" optional={true} default="False" />
+<ParamField path="n_threads" type="int" optional={true} default="12" />
+<ParamField path="verbose" type="int" optional={true} default="1" />
+<ParamField path="seed" type="int" optional={true} default="42" />
+
+### `optimize_prompt` 参数
+
+`optimize_prompt` 方法具有以下参数：
+
+<ParamField path="prompt" type="ChatPrompt">要优化的提示</ParamField>
+<ParamField path="dataset" type="Dataset">用于评估的数据集</ParamField>
+<ParamField path="metric" type="Callable">用于优化的指标函数，应具有 `dataset_item` 和 `llm_output` 参数</ParamField>
+<ParamField path="experiment_config" type="dict | None" optional={true}>可选的实验配置</ParamField>
+<ParamField path="n_samples" type="int | float | str | None" optional={true}>每次评估使用的数据集项数。使用计数（例如 `50`）、分数（例如 `0.1`）、百分比（例如 "10%"）或 "all"/"full"/None 表示完整数据集。</ParamField>
+<ParamField path="n_samples_minibatch" type="int | None" optional={true}>可选的内循环小批量样本数（默认为 n_samples）。</ParamField>
+<ParamField path="n_samples_strategy" type="str | None" optional={true}>子采样策略（默认："random_sorted"）。</ParamField>
+<ParamField path="auto_continue" type="bool" optional={true} default="False">是否自动继续优化</ParamField>
+<ParamField path="agent_class" type="type[opik_optimizer.optimizable_agent.OptimizableAgent] | None" optional={true}>可选的代理类</ParamField>
+<ParamField path="project_name" type="str" optional={true} default="Optimization">用于记录跟踪的 Opik 项目名称（默认："Optimization"）</ParamField>
+<ParamField path="max_trials" type="int" optional={true} default="10" />
+<ParamField path="mcp_config" type="opik_optimizer.mcp_utils.mcp_workflow.MCPExecutionConfig | None" optional={true}>MCP 工具调用配置（默认：None）</ParamField>
+<ParamField path="args" type="Any" />
+<ParamField path="kwargs" type="Any" />
+
+## 模型支持
+
+使用 `EvolutionaryOptimizer` 时需要考虑两个模型：
+- `EvolutionaryOptimizer.model`：用于进化提示群体的模型。
+- `ChatPrompt.model`：用于评估提示的模型。
+
+`model` 参数接受任何 LiteLLM 支持的模型字符串（例如 `"gpt-4o"`、`"azure/gpt-4"`、`"anthropic/claude-3-opus"`、`"gemini/gemini-1.5-pro"`）。您还可以使用 `model_parameters` 参数传入额外的模型参数：
+
+```python
+optimizer = EvolutionaryOptimizer(
+    model="anthropic/claude-3-opus-20240229",
+    model_parameters={
+        "temperature": 0.7,
+        "max_tokens": 4096
+    }
+)
+```
+
+## 后续步骤
+
+1. 探索特定的[优化器](/development/optimization-runs/algorithms/overview)以获取算法详情。
+2. 参考[常见问题](/development/optimization-runs/faq)获取常见问题解答和故障排除。
+3. 参考[API参考](/development/optimization-runs/advanced/api_reference)获取详细的配置选项。

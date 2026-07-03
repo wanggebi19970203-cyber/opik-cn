@@ -1,0 +1,79 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+这是我们迄今为止最大的发布！从根本上重新思考了如何使用 Opik 构建、调试和改进 AI Agents。三大新功能组（Ollie、测试套件和 Agent Playground）协同工作，从发现问题到发布修复形成闭环，全程无需离开平台。与此同时，我们围绕项目重新组织了一切，重新设计了核心 trace 体验，并重建了导航以匹配。以下是新增内容：
+
+## Ollie 和 Opik Connect
+
+Ollie 是一个内嵌在 Opik UI 中的强大编码 Agent。它完全访问你项目的 traces 和日志，能够分析数百个交互中的模式、诊断问题并采取行动修复它们，全程无需离开平台。
+
+<Frame>
+  <img src="/img/v2/ollie/hero.png" alt="Opik 内的 Ollie Agent 界面" />
+</Frame>
+
+**亮点：**
+
+- **Trace 分析** - 分析 traces，发现交互中的模式，并在完整项目上下文中诊断问题
+- **通过 Opik Connect 修复代码** - 将 Ollie 连接到你的本地代码库，使其可以直接在开发代码中实施修复
+- **测试用例生成** - 当 Ollie 修复问题时，自动在测试套件中创建新的测试用例以防止回归
+- **UI 导航** - Ollie 可以导航 Opik UI，创建过滤视图，并代表你执行操作
+- **Opik Connect CLI** - 使用 `opik connect` 连接代码库，支持 `--workspace` 和 `--api-key` 标志
+- **始终可用** - 从项目主页或产品中任何页面的持久侧边栏访问 Ollie
+
+👉 [Ollie Agent 文档](https://www.comet.com/docs/opik/ollie)
+
+## 测试套件
+
+测试套件为 Agent 开发带来了结构化的回归测试。每个套件有全局规则，每个测试用例都必须通过，加上针对特定场景的项级别断言。用自然语言定义你的 Agent 应该和不应该做什么的规则，运行时获得清晰的通过/失败结果。
+
+<Frame>
+  <img src="/img/v2/evaluation/test-suite-run-results.png" alt="测试套件实验结果，展示每个项的通过/失败及断言详情" />
+</Frame>
+
+**亮点：**
+
+- **通过/失败断言** - 用自然语言定义全局规则和项级别断言，无需复杂的指标配置
+- **多 Provider LLM-as-Judge** - 断言可以使用不同的 LLM Provider 进行评估，为你提供测试用例评判方式的灵活性
+- **断言原因和分解** - 通过详细的运行分解弹出窗口准确了解每个断言通过或失败的原因
+- **将 Traces 添加为测试用例** - 直接将生产 traces 添加到你的套件中并附带断言，套件会随着你的构建和调试自然增长
+- **完整 SDK 支持** - Python 和 TypeScript SDK 支持创建套件、添加项、运行实验以及导入/导出套件
+
+👉 [构建测试套件](https://www.comet.com/docs/opik/evaluation/advanced/building-test-suites)
+
+## Agent Playground 和 Agent 配置
+
+Agent Playground 连接到你的 Agent，让你直接从 Opik UI 运行它。尝试不同的 prompts、模型和参数，查看整个 Agent 的响应，无需修改代码。Agent 配置将完整的 prompts、模型和变量集作为单一单元进行追踪和版本管理，让你始终知道哪种组合有效。
+
+<Frame>
+  <img src="/img/v2/development/agent_sandbox.png" alt="Agent Playground 运行 Agent 及配置控制" />
+</Frame>
+
+**亮点：**
+
+- **Agent Playground** - 从 Opik UI 运行完整 Agent，无需更改代码即可测试不同配置
+- **Agent 配置** - 将 prompts、模型和变量作为单一版本化单元进行追踪和管理
+- **蓝图版本管理** - 自动递增命名、版本间差异视图，以及从配置变更自动生成描述
+- **完整 SDK 支持** - Python `AgentConfigManager` 和 TypeScript `AgentConfig`，具有 Zod schema 验证和蓝图缓存
+
+👉 [Agent Playground](https://www.comet.com/docs/opik/development/agent-playground)
+
+## 项目范围组织和用户体验改进
+
+项目现在直接映射到你的 Agents。测试套件、实验、优化、prompts、数据集、告警和仪表板都限定在项目范围内，为你提供与单个 Agent 相关的一切内容的聚焦视图，配合重新设计的导航和 trace 体验。
+
+<Frame>
+  <img src="/img/v2/observability/traces-page.png" alt="重新设计的统一日志页面，对话线程、traces 和 spnas 在单一视图中" />
+</Frame>
+
+**新增内容：**
+
+- **重新设计的导航** - 新侧边栏包含工作区级项目选择器和跨所有页面的项目范围路由
+- **统一日志页面** - 对话线程、traces 和 spnas 现在合并到单一重新设计的日志页面中，布局更简洁，导航更快
+- **重新设计的 Trace 详情** - 新的标签页布局，包含 LLM 消息格式化、反馈评分部分和错误标注，更快识别问题
+- **项目范围 API** - 所有端点现在支持数据集、实验、优化、prompts、告警和仪表板的 `project_name` 范围限定
+- **KPI 卡片** - 项目主页上的新项目级指标摘要卡片
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.10.23...2.0.21)
+
+_发布版本_: `1.10.24` 至 `2.0.21`

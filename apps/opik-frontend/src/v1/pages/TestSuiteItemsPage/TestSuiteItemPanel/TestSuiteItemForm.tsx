@@ -5,6 +5,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { EditorView } from "@codemirror/view";
 import { jsonLanguage } from "@codemirror/lang-json";
 import { Settings2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
@@ -39,14 +40,15 @@ interface TestSuiteItemFormProps {
 }
 
 const DescriptionSection: React.FC = () => {
+  const { t } = useTranslation("test-suite-items");
   const { register } = useFormContext<TestSuiteItemFormValues>();
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">Description</h3>
+      <h3 className="comet-body-s-accented mb-2">{t("itemForm.description")}</h3>
       <TextareaAutosize
         {...register("description")}
-        placeholder="Describe this item..."
+        placeholder={t("itemForm.describeItemPlaceholder")}
         className={cn(TEXT_AREA_CLASSES, "min-h-0 resize-none")}
         minRows={1}
       />
@@ -57,6 +59,7 @@ const DescriptionSection: React.FC = () => {
 const DataSection: React.FC<{ showDescription?: boolean }> = ({
   showDescription,
 }) => {
+  const { t } = useTranslation("test-suite-items");
   const theme = useCodemirrorTheme({ editable: true });
   const { control } = useFormContext<TestSuiteItemFormValues>();
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -67,16 +70,16 @@ const DataSection: React.FC<{ showDescription?: boolean }> = ({
       if (typeof parsed === "object" && parsed !== null) {
         setJsonError(null);
       } else {
-        setJsonError("Must be a JSON object");
+        setJsonError(t("itemForm.mustBeJsonObject"));
       }
     } catch {
-      setJsonError("Invalid JSON");
+      setJsonError(t("itemForm.invalidJson"));
     }
   }
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">Data</h3>
+      <h3 className="comet-body-s-accented mb-2">{t("itemForm.data")}</h3>
       <Controller
         control={control}
         name="data"
@@ -129,6 +132,7 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
   suitePolicy,
   onOpenSettings,
 }) => {
+  const { t } = useTranslation("test-suite-items");
   const form = useFormContext<TestSuiteItemFormValues>();
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -166,7 +170,7 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
 
       <div className="mb-4 flex gap-4">
         <div className="flex flex-1 flex-col gap-1">
-          <Label className="comet-body-xs-accented">Runs for this item</Label>
+          <Label className="comet-body-xs-accented">{t("itemForm.runsForItem")}</Label>
           <Input
             dimension="sm"
             className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -182,11 +186,11 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
             onKeyDown={runsInput.onKeyDown}
           />
           <span className="comet-body-xs text-light-slate">
-            Global default is {suitePolicy.runs_per_item}
+            {t("itemForm.globalDefaultIs", { value: suitePolicy.runs_per_item })}
           </span>
         </div>
         <div className="flex flex-1 flex-col gap-1">
-          <Label className="comet-body-xs-accented">Pass threshold</Label>
+          <Label className="comet-body-xs-accented">{t("itemForm.passThreshold")}</Label>
           <Input
             dimension="sm"
             className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -202,7 +206,7 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
             onKeyDown={thresholdInput.onKeyDown}
           />
           <span className="comet-body-xs text-light-slate">
-            Global default is {suitePolicy.pass_threshold}
+            {t("itemForm.globalDefaultIs", { value: suitePolicy.pass_threshold })}
           </span>
         </div>
       </div>
@@ -216,7 +220,7 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
             onClick={onOpenSettings}
           >
             <Settings2 className="size-3.5 shrink-0" />
-            Manage global assertions
+            {t("itemForm.manageGlobalAssertions")}
           </button>
         }
         readOnlyAssertions={suiteAssertions}

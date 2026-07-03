@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TextareaAutosize from "react-textarea-autosize";
@@ -22,6 +23,7 @@ interface DatasetItemEditorFormProps {
 }
 
 const FieldInput: React.FC<{ field: DatasetField }> = ({ field }) => {
+  const { t } = useTranslation("datasets");
   const form = useFormContext<Record<string, unknown>>();
   const fieldValue = form.watch(field.key);
 
@@ -39,7 +41,7 @@ const FieldInput: React.FC<{ field: DatasetField }> = ({ field }) => {
         onChange={(e) =>
           form.setValue(field.key, e.target.value, { shouldDirty: true })
         }
-        placeholder="Enter text for this field…"
+        placeholder={t("itemEditor.enterTextForField")}
         className={cn(
           "flex w-full rounded-md resize-none border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 font-mono hover:shadow-sm focus-visible:border-primary",
         )}

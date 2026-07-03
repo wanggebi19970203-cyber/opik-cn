@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { ListTree } from "lucide-react";
 
@@ -44,6 +45,7 @@ const PlaygroundOutputCell: React.FunctionComponent<
   const originalRow = context.row.original;
 
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
+  const { t } = useTranslation("pages/playground");
 
   const value = useOutputValueByPromptDatasetItemId(
     promptId,
@@ -118,7 +120,7 @@ const PlaygroundOutputCell: React.FunctionComponent<
       {hasOutput ? (
         <div className="group relative flex size-full flex-col">
           {traceId && activeProjectId && (
-            <TooltipWrapper content="Click to open original trace">
+            <TooltipWrapper content={t("playground.outputCell.openTrace")}>
               <Button
                 size="icon-xs"
                 variant="outline"

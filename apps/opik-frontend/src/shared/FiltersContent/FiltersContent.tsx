@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import filter from "lodash/filter";
 import uniq from "lodash/uniq";
+import { useTranslation } from "react-i18next";
 import { Filter, FilterRowConfig, Filters } from "@/types/filters";
 import { ColumnData, OnChangeFn } from "@/types/shared";
 import FilterRow from "@/shared/FiltersContent/FilterRow";
@@ -21,6 +22,7 @@ const FiltersContent = <TColumnData,>({
   config,
   className,
 }: FiltersContentProps<TColumnData>) => {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
@@ -77,7 +79,7 @@ const FiltersContent = <TColumnData,>({
 
   const renderFilters = () => {
     return filters.map((filter, index) => {
-      const prefix = index === 0 ? "Where" : "And";
+      const prefix = index === 0 ? t("common.filters.where") : t("common.filters.and");
 
       return (
         <FilterRow

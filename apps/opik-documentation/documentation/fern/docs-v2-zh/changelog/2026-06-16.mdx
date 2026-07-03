@@ -1,0 +1,42 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog/2026-06-16
+---
+
+## PydanticAI 和 Logfire Trace 保真度改进
+
+通过 OpenTelemetry（经由 Logfire）摄取的 PydanticAI Agent traces 现在显示完整、正确类型的数据和准确的成本。OTel → Opik span 映射中的几个差距已修复：
+
+- **工具调用 I/O 现已捕获** — 工具 span 输入和输出现在出现在正确的 Input/Output 字段中。之前，logfire 的 `tool_response` 属性落入 Input 桶中，Output 字段为空。
+- **错误在 trace 级别显示** — 当 span 携带 OTel `exception` 事件或 `STATUS_CODE_ERROR` 状态时，错误被转换为 `error_info` 并传播到父 trace，使失败的 Agent 运行在顶层被标记。
+- **Gemini/Google 成本现已计算** — PydanticAI 报告通用的 `provider` 名称，之前不匹配任何定价行并显示 $0 成本。后端现在根据服务器主机名将其解析为 `google_vertexai` 或 `google_ai`。
+- **Agent 运行 spans 正确分类** — 来自 `invoke_agent` 操作的 spans 现在被分类为 `general` 而不是 `llm`，因此 trace 树准确反映 Agent 结构。
+
+错误显示修复是通用的，惠及所有 OTel 集成；工具 I/O 和成本改进特定于 PydanticAI 和 Logfire。
+
+## 通过 `opik configure` 快速设置 MCP 服务器
+
+设置 Claude Desktop（或任何 MCP 客户端）连接到 Opik 不再需要手动编辑 JSON 配置文件。运行 `opik configure` 现在在流程末尾提供可选的 MCP 设置步骤。独立的 `opik mcp configure` 命令运行相同的向导。两者都会自动将 Opik MCP 服务器块写入你的 Claude Desktop 配置。
+
+👉 [MCP 服务器文档](https://www.comet.com/docs/opik/prompt_engineering/mcp-server)
+
+## Bug 修复和改进
+
+- **OpenClaw 添加到引导集成** — Get Started 页面现在包含 OpenClaw 及其四步 CLI 设置指南（安装插件 → 配置 → 状态 → 运行），使用 bash 语法高亮渲染。集成详情对话框未来也支持多步骤和非 pip 集成。
+
+- **日志视图：搜索栏重新定位与过滤器对齐** — 搜索栏现在与活跃过滤芯片一起放在单个换行行中。工具栏控件（列、行高、刷新）移到标签行，减少主搜索区域的视觉杂乱。图表条改为紫色，表格标签改为绿色。
+
+- **标注队列：分数按队列范围限定** — 反馈评分和评论现在携带 `source_queue_id`，因此每个队列的指标（平均分、审查者计数）独立计算。通过一个队列提交的分数在同一个 trace 出现在两个队列中时不再计入另一个队列的统计。
+
+- **标注队列：解决了错误的"另一个标注者正在审查"消息** — 提交反馈评分后，锁心跳现在正确识别现有锁持有者，标注者不再在评分后立即看到错误的"另一个标注者正在审查此项"消息。
+
+- **对话线程范围的标注队列不再崩溃** — 打开没有额外队列过滤器的对话线程标注队列不再抛出 `Unknown expression or function identifier` 错误并崩溃队列视图。
+
+- **实验页面：水平滚动表格时图表保持固定** — 反馈评分图表现在在实验表水平滚动时保持固定在顶部。
+
+- **Playground：OpenAI 配额耗尽时立即失败** — 当 OpenAI API 密钥配额不足（HTTP 429 `insufficient_quota`）时，Playground 现在立即返回错误，而不是多次重试请求并延迟响应。
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.0.66...2.0.73)
+
+_发布版本_: `2.0.67`, `2.0.68`, `2.0.69`, `2.0.70`, `2.0.71`, `2.0.72`, `2.0.73`

@@ -9,6 +9,7 @@ import {
 } from "use-query-params";
 import { ColumnPinningState, ColumnSort } from "@tanstack/react-table";
 import useLocalStorageState from "use-local-storage-state";
+import { useTranslation } from "react-i18next";
 
 import DataTable from "@/shared/DataTable/DataTable";
 import DataTableNoData from "@/shared/DataTableNoData/DataTableNoData";
@@ -94,37 +95,38 @@ export const DEFAULT_COLUMNS_ORDER: string[] = [
 export const FILTERS_COLUMNS: ColumnData<Dashboard>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "dashboards.columns.name",
     type: COLUMN_TYPE.string,
   },
   {
     id: "type",
-    label: "Type",
+    label: "dashboards.columns.type",
     type: COLUMN_TYPE.category,
   },
   {
     id: "description",
-    label: "Description",
+    label: "dashboards.columns.description",
     type: COLUMN_TYPE.string,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "dashboards.columns.last_updated_at",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "dashboards.columns.created_at",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "dashboards.columns.created_by",
     type: COLUMN_TYPE.string,
   },
 ];
 
 const DashboardsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("dashboards");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -132,7 +134,7 @@ const DashboardsPage: React.FunctionComponent = () => {
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("dashboards.columns.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
@@ -145,7 +147,7 @@ const DashboardsPage: React.FunctionComponent = () => {
       },
       {
         id: "type",
-        label: "Type",
+        label: t("dashboards.columns.type"),
         type: COLUMN_TYPE.category,
         cell: TagCell as never,
         accessorFn: (row: Dashboard) =>
@@ -157,24 +159,24 @@ const DashboardsPage: React.FunctionComponent = () => {
       },
       {
         id: "description",
-        label: "Description",
+        label: t("dashboards.columns.description"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "last_updated_at",
-        label: "Last updated",
+        label: t("dashboards.columns.last_updated_at"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("dashboards.columns.created_at"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("dashboards.columns.created_by"),
         type: COLUMN_TYPE.string,
       },
     ];
@@ -253,8 +255,8 @@ const DashboardsPage: React.FunctionComponent = () => {
   const total = data?.total ?? 0;
   const noData = !search && (!filters || filters.length === 0);
   const noDataText = noData
-    ? "There are no dashboards yet"
-    : "No search results";
+    ? t("dashboards.empty.title")
+    : t("projectViews.noSearchResults");
 
   const selectedDashboards = useMemo(() => {
     return dashboards.filter((dashboard) => rowSelection[dashboard.id]);
@@ -356,7 +358,7 @@ const DashboardsPage: React.FunctionComponent = () => {
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center">
-          <h1 className="comet-title-l truncate break-words">Dashboards</h1>
+          <h1 className="comet-title-l truncate break-words">{t("dashboards.title")}</h1>
         </div>
       </div>
       <ExplainerDescription
@@ -368,7 +370,7 @@ const DashboardsPage: React.FunctionComponent = () => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("dashboards.searchPlaceholder")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -399,7 +401,7 @@ const DashboardsPage: React.FunctionComponent = () => {
               size="sm"
               onClick={handleNewDashboardClick}
             >
-              Create new dashboard
+              {t("dashboards.createNewDashboard")}
             </Button>
           )}
         </div>
@@ -420,7 +422,7 @@ const DashboardsPage: React.FunctionComponent = () => {
           <DataTableNoData title={noDataText}>
             {noData && canCreateDashboards && (
               <Button variant="link" onClick={handleNewDashboardClick}>
-                Create new dashboard
+                {t("dashboards.createNewDashboard")}
               </Button>
             )}
           </DataTableNoData>

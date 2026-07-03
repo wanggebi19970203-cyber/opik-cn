@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 
 import useProjectDatasetsList from "@/api/datasets/useProjectDatasetsList";
@@ -20,12 +21,14 @@ const DatasetSelectBox: React.FC<DatasetSelectBoxProps> = ({
   value,
   onValueChange,
   projectId,
-  placeholder = "Select a test suite",
+  placeholder,
   className,
 }) => {
+  const { t } = useTranslation("experiments");
   const {
     permissions: { canViewDatasets },
   } = usePermissions();
+  const resolvedPlaceholder = placeholder ?? t("selectTestSuite");
   const [isLoadedMore, setIsLoadedMore] = useState(false);
   const { data, isLoading } = useProjectDatasetsList(
     {
@@ -54,7 +57,7 @@ const DatasetSelectBox: React.FC<DatasetSelectBoxProps> = ({
     <LoadableSelectBox
       options={options}
       value={value}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       onChange={onValueChange}
       onLoadMore={
         total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore

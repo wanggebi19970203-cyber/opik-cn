@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Copy, MoreHorizontal, Share, Trash } from "lucide-react";
 import copy from "clipboard-copy";
+import { useTranslation } from "react-i18next";
 import {
   DatasetItemColumn,
   DatasetItemWithDraft,
@@ -80,6 +81,7 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
   isNewItem,
   columns,
 }) => {
+  const { t } = useTranslation("test-suite-items");
   const {
     isPending,
     handleDelete,
@@ -155,37 +157,37 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon-sm">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("itemPanel.actionsMenu")}</span>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem
             onClick={() => {
-              toast({ description: "URL successfully copied to clipboard" });
+              toast({ description: t("itemPanel.urlCopiedToClipboard") });
               copy(window.location.href);
             }}
           >
             <Share className="mr-2 size-4" />
-            Share item
+            {t("itemPanel.shareItem")}
           </DropdownMenuItem>
           <TooltipWrapper content={datasetItemId} side="left">
             <DropdownMenuItem
               onClick={() => {
                 toast({
-                  description: "Item ID successfully copied to clipboard",
+                  description: t("itemPanel.itemIdCopiedToClipboard"),
                 });
                 copy(datasetItemId);
               }}
             >
               <Copy className="mr-2 size-4" />
-              Copy item ID
+              {t("itemPanel.copyItemId")}
             </DropdownMenuItem>
           </TooltipWrapper>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => handleDelete(onClose)}>
             <Trash className="mr-2 size-4" />
-            Delete item
+            {t("itemPanel.deleteItem")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -210,10 +212,10 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
           <div className="sticky top-0 z-10 border-b bg-background p-6 pb-4">
             <div className="comet-body-accented">
               {isNewItem ? (
-                "Add suite item"
+                t("itemPanel.addSuiteItem")
               ) : (
                 <>
-                  Suite item{" "}
+                  {t("itemPanel.suiteItem")}{" "}
                   <TooltipWrapper content={datasetItemId}>
                     <span className="comet-body-s text-muted-slate">
                       {truncateId(datasetItemId)}

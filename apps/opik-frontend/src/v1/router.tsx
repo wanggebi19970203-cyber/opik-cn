@@ -1,4 +1,5 @@
 import React, { lazy } from "react";
+import i18next from "i18next";
 import {
   createRootRoute,
   createRoute,
@@ -183,7 +184,7 @@ const homeRoute = createRoute({
   getParentRoute: () => workspaceGuardRoute,
   component: OldHomePage,
   staticData: {
-    title: "Home",
+    title: i18next.t("navigation.breadcrumbs.home"),
   },
 });
 
@@ -192,7 +193,7 @@ const homeRouteNew = createRoute({
   getParentRoute: () => workspaceGuardRoute,
   component: HomePage,
   staticData: {
-    title: "Home",
+    title: i18next.t("navigation.breadcrumbs.home"),
   },
 });
 
@@ -202,7 +203,7 @@ const dashboardsRoute = createRoute({
   getParentRoute: () => workspaceRoute,
   component: DashboardsPageGuard,
   staticData: {
-    title: "Dashboards",
+    title: i18next.t("navigation.menu.dashboards"),
   },
 });
 
@@ -226,7 +227,7 @@ const projectsRoute = createRoute({
   path: "/projects",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Projects",
+    title: i18next.t("navigation.menu.projects"),
   },
 });
 
@@ -257,7 +258,7 @@ const experimentsRoute = createRoute({
   getParentRoute: () => workspaceRoute,
   component: ExperimentsPageGuard,
   staticData: {
-    title: "Experiments",
+    title: i18next.t("navigation.menu.experiments"),
   },
 });
 
@@ -273,7 +274,7 @@ const compareExperimentsRoute = createRoute({
   component: CompareExperimentsPage,
   staticData: {
     param: "compare",
-    paramValue: "Compare",
+    paramValue: i18next.t("navigation.breadcrumbs.experiments"),
   },
 });
 
@@ -283,7 +284,7 @@ const optimizationsRoute = createRoute({
   getParentRoute: () => workspaceRoute,
   component: OptimizationsPageGuard,
   staticData: {
-    title: "Optimization studio",
+    title: i18next.t("navigation.menu.optimizationStudio"),
   },
 });
 
@@ -344,7 +345,7 @@ const testSuitesRoute = createRoute({
   path: "/test-suites",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Datasets",
+    title: i18next.t("navigation.menu.datasets"),
   },
 });
 
@@ -431,7 +432,7 @@ const promptsRoute = createRoute({
   path: "/prompts",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Prompt library",
+    title: i18next.t("navigation.menu.prompts"),
   },
 });
 
@@ -487,7 +488,7 @@ const playgroundRoute = createRoute({
   path: "/playground",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Playground",
+    title: i18next.t("navigation.menu.playground"),
   },
   component: PlaygroundPageGuard,
 });
@@ -504,7 +505,7 @@ const configurationRoute = createRoute({
   path: "/configuration",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Configuration",
+    title: i18next.t("navigation.menu.configuration"),
   },
   component: ConfigurationPage,
 });
@@ -513,7 +514,7 @@ const alertsRoute = createRoute({
   path: "/alerts",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Alerts",
+    title: i18next.t("navigation.menu.alerts"),
   },
   component: AlertsRouteWrapper,
 });
@@ -522,7 +523,7 @@ const alertNewRoute = createRoute({
   path: "/new",
   getParentRoute: () => alertsRoute,
   staticData: {
-    title: "New alert",
+    title: i18next.t("navigation.breadcrumbs.newAlert"),
   },
   component: AlertEditPageGuard,
 });
@@ -542,7 +543,7 @@ const onlineEvaluationRoute = createRoute({
   path: "/online-evaluation",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Online evaluation",
+    title: i18next.t("navigation.menu.online_evaluation"),
   },
   component: OnlineEvaluationPage,
 });
@@ -551,7 +552,7 @@ const annotationQueuesRoute = createRoute({
   path: "/annotation-queues",
   getParentRoute: () => workspaceRoute,
   staticData: {
-    title: "Annotation queues",
+    title: i18next.t("navigation.menu.annotation_queues"),
   },
 });
 

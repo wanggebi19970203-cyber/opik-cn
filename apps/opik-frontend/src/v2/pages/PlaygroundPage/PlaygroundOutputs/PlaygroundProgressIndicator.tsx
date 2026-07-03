@@ -1,4 +1,6 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import {
   useProgressCompleted,
   useProgressPhase,
@@ -6,11 +8,12 @@ import {
 } from "@/store/PlaygroundStore";
 
 const PHASE_LABELS: Record<string, string> = {
-  running: "Step 1: Gathering LLM output",
-  evaluating: "Step 2: Evaluating assertions",
+  running: i18next.t("pages/playground:playground.progress.running"),
+  evaluating: i18next.t("pages/playground:playground.progress.evaluating"),
 };
 
 const PlaygroundProgressIndicator: React.FC = () => {
+  const { t } = useTranslation("pages/playground");
   const progressTotal = useProgressTotal();
   const progressCompleted = useProgressCompleted();
   const progressPhase = useProgressPhase();
@@ -24,7 +27,7 @@ const PlaygroundProgressIndicator: React.FC = () => {
   );
 
   const phaseLabel =
-    (progressPhase && PHASE_LABELS[progressPhase]) || "Progress";
+    (progressPhase && PHASE_LABELS[progressPhase]) || t("playground.progress.progress");
 
   return (
     <div className="flex flex-col gap-2">
@@ -33,7 +36,7 @@ const PlaygroundProgressIndicator: React.FC = () => {
           {phaseLabel}
         </span>
         <span className="comet-body-s text-light-slate">
-          {progressCompleted}/{progressTotal} completed ({progressPercentage}%)
+          {progressCompleted}/{progressTotal} {t("playground.progress.completed")} ({progressPercentage}%)
         </span>
       </div>
       <div className="flex flex-1 items-center">

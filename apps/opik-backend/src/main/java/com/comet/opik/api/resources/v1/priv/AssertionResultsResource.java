@@ -34,15 +34,15 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Assertion Results", description = "Assertion result related resources")
+@Tag(name = "Assertion Results", description = "断言结果相关资源")
 public class AssertionResultsResource {
 
     private final @NonNull AssertionResultService assertionResultService;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @PUT
-    @Operation(operationId = "storeAssertionsBatch", summary = "Batch ingestion of assertion results", description = "Batch ingestion of assertion results for traces or spans", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content")})
+    @Operation(operationId = "storeAssertionsBatch", summary = "批量摄入断言结果", description = "批量摄入跟踪或跨度的断言结果", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     @RateLimited
     public Response storeAssertionsBatch(
             @RequestBody(content = @Content(schema = @Schema(implementation = AssertionResultBatch.class))) @NotNull @Valid AssertionResultBatch batch) {

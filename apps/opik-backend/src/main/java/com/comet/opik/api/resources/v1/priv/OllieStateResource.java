@@ -36,7 +36,7 @@ import java.io.InputStream;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Ollie State", description = "Ollie pod state persistence")
+@Tag(name = "Ollie State", description = "Ollie Pod 状态持久化")
 public class OllieStateResource {
 
     private static final String OLLIE_STATE_UPLOAD = "ollieStateUpload";
@@ -50,11 +50,11 @@ public class OllieStateResource {
     @Produces(MediaType.APPLICATION_JSON)
     @RateLimited(value = OLLIE_STATE_UPLOAD
             + ":{apiKey}", shouldAffectWorkspaceLimit = false, shouldAffectUserGeneralLimit = false)
-    @Operation(operationId = "replaceOllieState", summary = "Replace ollie state", description = "Upload gzip-compressed SQLite DB file, replacing any existing state", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "429", description = "Rate limit exceeded", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "replaceOllieState", summary = "替换 Ollie 状态", description = "上传 gzip 压缩的 SQLite 数据库文件，替换已有状态", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "429", description = "超出速率限制", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response upload(@HeaderParam(HttpHeaders.CONTENT_LENGTH) Long contentLength,
             InputStream inputStream) throws IOException {
@@ -74,10 +74,10 @@ public class OllieStateResource {
 
     @GET
     @Produces("application/gzip")
-    @Operation(operationId = "downloadOllieState", summary = "Download ollie state", description = "Download stored ollie state file", responses = {
-            @ApiResponse(responseCode = "200", description = "Ollie state file", content = @Content(mediaType = "application/gzip", schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "downloadOllieState", summary = "下载 Ollie 状态", description = "下载已存储的 Ollie 状态文件", responses = {
+            @ApiResponse(responseCode = "200", description = "Ollie 状态文件", content = @Content(mediaType = "application/gzip", schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response download() {
         String userName = requestContext.get().getUserName();
@@ -94,9 +94,9 @@ public class OllieStateResource {
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(operationId = "deleteOllieState", summary = "Delete ollie state", description = "Clear stored ollie state", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "deleteOllieState", summary = "删除 Ollie 状态", description = "清除已存储的 Ollie 状态", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response delete() {
         String userName = requestContext.get().getUserName();

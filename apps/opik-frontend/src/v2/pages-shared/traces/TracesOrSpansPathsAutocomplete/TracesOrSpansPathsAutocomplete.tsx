@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { TRACE_DATA_TYPE } from "@/hooks/useTracesOrSpansList";
 import Autocomplete from "@/shared/Autocomplete/Autocomplete";
@@ -34,10 +35,11 @@ const TracesOrSpansPathsAutocomplete: React.FC<
   datasetColumnNames,
   includeIntermediateNodes = false,
 }) => {
+  const { t } = useTranslation("tracing");
   const defaultPlaceholder =
     type === TRACE_DATA_TYPE.spans
-      ? "Select a key from recent span"
-      : "Select a key from recent trace";
+      ? t("tracesOrSpansPaths.selectKeyFromRecentSpan")
+      : t("tracesOrSpansPaths.selectKeyFromRecentTrace");
   const finalPlaceholder = placeholder ?? defaultPlaceholder;
 
   const { items: allItems, isLoading } = usePathsOptions({

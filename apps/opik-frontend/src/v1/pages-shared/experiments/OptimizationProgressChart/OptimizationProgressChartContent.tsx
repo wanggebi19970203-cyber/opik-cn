@@ -7,6 +7,7 @@ import {
   Scatter,
   Customized,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 import { ChartContainer } from "@/ui/chart";
 import {
@@ -68,6 +69,7 @@ const OptimizationProgressChartContent: React.FC<
   isInProgress = false,
   inProgressInfo,
 }) => {
+  const { t } = useTranslation("experiments");
   const steps = useMemo(() => {
     const s = new Set(chartData.map((d) => d.stepIndex));
     return Array.from(s).sort((a, b) => a - b);
@@ -215,7 +217,7 @@ const OptimizationProgressChartContent: React.FC<
                 ? [...steps, ghostStep]
                 : steps
             }
-            tickFormatter={(value) => `Step ${value}`}
+            tickFormatter={(value) => t('step', { value })}
             domain={xDomain}
             padding={X_AXIS_PADDING}
           />

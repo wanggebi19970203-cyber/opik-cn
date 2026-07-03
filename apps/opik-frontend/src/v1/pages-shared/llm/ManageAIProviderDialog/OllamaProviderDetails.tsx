@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import { Label } from "@/ui/label";
 import EyeInput from "@/shared/EyeInput/EyeInput";
@@ -26,6 +27,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
   form,
   isEdit = false,
 }) => {
+  const { t } = useTranslation("prompt");
   const { toast } = useToast();
   const [connectionTested, setConnectionTested] = useState(false);
   const [connectionSuccess, setConnectionSuccess] = useState(false);
@@ -48,8 +50,8 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
   const handleTestConnection = async () => {
     if (!url) {
       toast({
-        title: "URL required",
-        description: "Please enter the Ollama base URL first",
+        title: t("ollamaProviderDetails.urlRequired"),
+        description: t("ollamaProviderDetails.urlRequiredDescription"),
         variant: "destructive",
       });
       return;
@@ -66,16 +68,16 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
       if (response.connected) {
         toast({
-          title: "Connection successful",
-          description: `Connected to Ollama ${response.version || ""}`,
+          title: t("ollamaProviderDetails.connectionSuccessful"),
+          description: t("ollamaProviderDetails.connectedToOllama", { version: response.version || "" }),
         });
 
         // Auto-fetch models if connection successful
         handleFetchModels();
       } else {
         toast({
-          title: "Connection failed",
-          description: response.error_message || "Unable to connect to Ollama",
+          title: t("ollamaProviderDetails.connectionFailed"),
+          description: response.error_message || t("ollamaProviderDetails.unableToConnect"),
           variant: "destructive",
         });
       }
@@ -83,8 +85,8 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
       setConnectionTested(true);
       setConnectionSuccess(false);
       toast({
-        title: "Connection failed",
-        description: "Unable to connect to Ollama instance",
+        title: t("ollamaProviderDetails.connectionFailed"),
+        description: t("ollamaProviderDetails.unableToConnectInstance"),
         variant: "destructive",
       });
     }
@@ -107,22 +109,22 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
         setModelsFetchFailed(false);
 
         toast({
-          title: "Models discovered",
-          description: `Found ${models.length} model(s)`,
+          title: t("ollamaProviderDetails.modelsDiscovered"),
+          description: t("ollamaProviderDetails.foundModels", { count: models.length }),
         });
       } else {
         setModelsFetchFailed(false);
         toast({
-          title: "No models found",
-          description: "No models are available on this Ollama instance",
+          title: t("ollamaProviderDetails.noModelsFound"),
+          description: t("ollamaProviderDetails.noModelsDescription"),
           variant: "default",
         });
       }
     } catch (error) {
       setModelsFetchFailed(true);
       toast({
-        title: "Failed to fetch models",
-        description: "Unable to retrieve models from Ollama",
+        title: t("ollamaProviderDetails.failedToFetchModels"),
+        description: t("ollamaProviderDetails.unableToRetrieveModels"),
         variant: "destructive",
       });
     }
@@ -146,7 +148,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">Provider name</Label>
+                <Label htmlFor="providerName">{t("ollamaProviderDetails.providerName")}</Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -161,9 +163,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
                 </FormControl>
                 <FormMessage />
                 <Description>
-                  A unique name for this Ollama instance (e.g.,
-                  &ldquo;local&rdquo;, &ldquo;cloud&rdquo;,
-                  &ldquo;production&rdquo;).
+                  {t("ollamaProviderDetails.providerNameDescription")}
                 </Description>
               </FormItem>
             );
@@ -179,7 +179,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
           return (
             <FormItem>
               <div className="flex items-center justify-between">
-                <Label htmlFor="url">Ollama URL</Label>
+                <Label htmlFor="url">{t("ollamaProviderDetails.ollamaUrl")}</Label>
                 <Button
                   type="button"
                   variant="link"
@@ -187,7 +187,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
                   onClick={() => field.onChange(getDefaultUrl())}
                   className="h-auto p-0 text-xs"
                 >
-                  Use default URL
+                  {t("ollamaProviderDetails.useDefaultUrl")}
                 </Button>
               </div>
               <FormControl>
@@ -203,14 +203,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                <strong>Important:</strong> URL must end with{" "}
-                <code className="text-xs">/v1</code> for OpenAI API
-                compatibility. For local Ollama:{" "}
-                <code className="text-xs">http://localhost:11434/v1</code>. For
-                remote:{" "}
-                <code className="text-xs">http://ollama-test:11434/v1</code> or
-                your server URL with <code className="text-xs">/v1</code>{" "}
-                suffix.
+                <strong>{t("ollamaProviderDetails.urlMustEndWith")}</strong> {t("ollamaProviderDetails.urlMustEndWithDescription")}
               </Description>
             </FormItem>
           );
@@ -231,34 +224,34 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
         {testConnectionMutation.isPending ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            Testing connection...
+            {t("ollamaProviderDetails.testingConnection")}
           </>
         ) : listModelsMutation.isPending ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            Discovering models...
+            {t("ollamaProviderDetails.discoveringModels")}
           </>
         ) : connectionTested ? (
           connectionSuccess ? (
             modelsFetchFailed ? (
               <>
                 <CheckCircle2 className="mr-2 size-4 text-warning" />
-                Connected (models failed)
+                {t("ollamaProviderDetails.connectedModelsFailed")}
               </>
             ) : (
               <>
                 <CheckCircle2 className="mr-2 size-4 text-green-600" />
-                Connected
+                {t("ollamaProviderDetails.connected")}
               </>
             )
           ) : (
             <>
               <XCircle className="mr-2 size-4 text-destructive" />
-              Connection failed (click to retry)
+              {t("ollamaProviderDetails.connectionFailedRetry")}
             </>
           )
         ) : (
-          "Connect"
+          t("ollamaProviderDetails.connect")
         )}
       </Button>
 
@@ -270,11 +263,11 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">API key (optional)</Label>
+              <Label htmlFor="apiKey">{t("ollamaProviderDetails.apiKeyOptional")}</Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
-                  placeholder="API key"
+                  placeholder={t("ollamaProviderDetails.apiKeyPlaceholder")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -284,8 +277,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Most Ollama instances don&apos;t require an API key. Only add
-                one if your instance is configured with authentication.
+                {t("ollamaProviderDetails.apiKeyDescription")}
               </Description>
             </FormItem>
           );
@@ -300,11 +292,11 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">Models list</Label>
+              <Label htmlFor="models">{t("ollamaProviderDetails.modelsList")}</Label>
               <FormControl>
                 <Input
                   id="models"
-                  placeholder="llama3, mistral, codellama"
+                  placeholder={t("ollamaProviderDetails.modelsListPlaceholder")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -314,8 +306,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Comma-separated list of available models. Use &ldquo;Discover
-                Models&rdquo; to auto-populate this field.
+                {t("ollamaProviderDetails.modelsListDescription")}
               </Description>
             </FormItem>
           );
@@ -324,7 +315,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
       <CustomHeadersField
         form={form}
-        description="Optional custom headers for authentication or configuration."
+        description={t("ollamaProviderDetails.customHeadersDescription")}
       />
     </div>
   );

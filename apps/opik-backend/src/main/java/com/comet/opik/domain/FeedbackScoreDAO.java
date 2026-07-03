@@ -66,9 +66,8 @@ public interface FeedbackScoreDAO {
     Mono<List<String>> getProjectsTraceThreadsFeedbackScoreNames(List<UUID> projectId);
 
     /**
-     * Returns {@code true} iff the legacy {@code feedback_scores} ClickHouse table has at least
-     * one row for the workspace. Called once during workspace version determination so subsequent
-     * stats queries can skip the legacy table UNION when no data exists there.
+     * 当且仅当旧版 {@code feedback_scores} ClickHouse 表中存在该工作空间的至少一行数据时返回 {@code true}。
+     * 在工作空间版本确定时调用一次，以便后续的统计查询在无数据时可以跳过旧版表的 UNION 操作。
      */
     Mono<Boolean> hasLegacyScores(String workspaceId);
 }
@@ -659,7 +658,7 @@ class FeedbackScoreDAOImpl implements FeedbackScoreDAO {
         log.info("Deleting feedback scores by span entityId, traceIds count '{}'", traceIds.size());
 
         return makeMonoContextAware((userName, workspaceId) -> {
-            // Delete from feedback_scores table
+            // 从feedback_scores表中删除
             var template1 = getSTWithLogComment(DELETE_SPANS_CASCADE_FEEDBACK_SCORE, "cascade_span_delete", workspaceId,
                     userName, traceIds.size());
             Optional.ofNullable(projectId)
@@ -674,7 +673,7 @@ class FeedbackScoreDAOImpl implements FeedbackScoreDAO {
                 statement1.bind("project_id", projectId);
             }
 
-            // Delete from authored_feedback_scores table
+            // 从authored_feedback_scores表中删除
             var template2 = getSTWithLogComment(DELETE_SPANS_CASCADE_FEEDBACK_SCORE, "cascade_span_delete_authored",
                     workspaceId, userName, traceIds.size());
             Optional.ofNullable(projectId)
@@ -699,7 +698,7 @@ class FeedbackScoreDAOImpl implements FeedbackScoreDAO {
         log.info("Deleting feedback scores by entityType '{}', entityIds count '{}'", entityType, entityIds.size());
 
         return makeMonoContextAware((userName, workspaceId) -> {
-            // Delete from feedback_scores table
+            // 从feedback_scores表中删除
             var template1 = getSTWithLogComment(DELETE_FEEDBACK_SCORE_BY_ENTITY_IDS, "delete_scores_by_entity_ids",
                     workspaceId, userName, entityIds.size());
             Optional.ofNullable(projectId)
@@ -715,7 +714,7 @@ class FeedbackScoreDAOImpl implements FeedbackScoreDAO {
                 statement1.bind("project_id", projectId);
             }
 
-            // Delete from authored_feedback_scores table
+            // 从authored_feedback_scores表中删除
             var template2 = getSTWithLogComment(DELETE_FEEDBACK_SCORE_BY_ENTITY_IDS,
                     "delete_scores_by_entity_ids_authored", workspaceId, userName, entityIds.size());
             Optional.ofNullable(projectId)

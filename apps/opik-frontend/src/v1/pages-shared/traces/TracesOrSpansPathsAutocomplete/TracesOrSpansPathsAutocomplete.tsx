@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import uniq from "lodash/uniq";
 import isObject from "lodash/isObject";
@@ -52,11 +53,12 @@ const TracesOrSpansPathsAutocomplete: React.FC<
   datasetColumnNames,
   includeIntermediateNodes = false,
 }) => {
+  const { t } = useTranslation("tracing");
   // Default placeholder based on type
   const defaultPlaceholder =
     type === TRACE_DATA_TYPE.spans
-      ? "Select a key from recent span"
-      : "Select a key from recent trace";
+      ? t("tracing.tracesOrSpansPaths.selectKeyFromRecentSpan")
+      : t("tracing.tracesOrSpansPaths.selectKeyFromRecentTrace");
   const finalPlaceholder = placeholder ?? defaultPlaceholder;
   const isProjectId = Boolean(projectId);
   const queryClient = useQueryClient();

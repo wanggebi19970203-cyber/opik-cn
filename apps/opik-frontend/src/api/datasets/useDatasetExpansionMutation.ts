@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 
 import api, { DATASETS_REST_ENDPOINT } from "@/api/api";
 import {
@@ -33,8 +34,8 @@ const useDatasetExpansionMutation = () => {
     onSuccess: (_, { entityName = "dataset" }) => {
       const label = entityName.charAt(0).toUpperCase() + entityName.slice(1);
       toast({
-        title: `${label} expansion successful`,
-        description: "Synthetic samples have been generated successfully",
+        title: i18next.t("common:messages.expansionSuccessful", { label }),
+        description: i18next.t("common:messages.syntheticSamplesGenerated"),
       });
     },
     onError: (error, { entityName = "dataset" }) => {
@@ -46,18 +47,18 @@ const useDatasetExpansionMutation = () => {
       let message =
         errorData?.message ||
         errorData?.detail ||
-        `Failed to expand ${entityName}`;
+        i18next.t("common:messages.failedToExpand", { entityName });
 
       // Handle specific model not supported error
       if (message.includes("model not supported")) {
         const modelMatch = message.match(/model not supported (.+)/);
         const modelName = modelMatch ? modelMatch[1] : "selected model";
-        message = `The ${modelName} is not supported by the backend. Please select a different model from the dropdown.`;
+        message = i18next.t("common:messages.modelNotSupported", { modelName });
       }
 
       const label = entityName.charAt(0).toUpperCase() + entityName.slice(1);
       toast({
-        title: `${label} expansion failed`,
+        title: i18next.t("common:messages.expansionFailed", { label }),
         description: message,
         variant: "destructive",
       });

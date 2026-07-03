@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -83,6 +84,7 @@ print(formatted_messages)
 const UseThisPromptDialog: React.FunctionComponent<
   UseThisPromptDialogProps
 > = ({ open, setOpen, promptName, templateStructure }) => {
+  const { t } = useTranslation();
   const isChatPrompt = templateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT;
 
   return (
@@ -93,7 +95,10 @@ const UseThisPromptDialog: React.FunctionComponent<
       >
         <DialogHeader>
           <DialogTitle>
-            Use this {isChatPrompt ? "chat " : ""}prompt
+            {t("prompt:usePrompt.useThisPrompt", {
+              kind: isChatPrompt ? "chat " : "",
+              suffix: "prompt",
+            })}
           </DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
@@ -103,7 +108,9 @@ const UseThisPromptDialog: React.FunctionComponent<
           />
           <div className="flex flex-col gap-2">
             <div className="comet-body-accented mt-4">
-              Creating a {isChatPrompt ? "chat " : ""}prompt
+              {t("prompt:usePrompt.creatingPrompt", {
+                kind: isChatPrompt ? "chat " : "",
+              })}
             </div>
             <CodeHighlighter
               data={
@@ -113,7 +120,9 @@ const UseThisPromptDialog: React.FunctionComponent<
               }
             />
             <div className="comet-body-accented mt-4">
-              Getting a {isChatPrompt ? "chat " : ""}prompt
+              {t("prompt:usePrompt.gettingPrompt", {
+                kind: isChatPrompt ? "chat " : "",
+              })}
             </div>
             <CodeHighlighter
               data={

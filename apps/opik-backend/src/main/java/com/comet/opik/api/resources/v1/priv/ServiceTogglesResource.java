@@ -23,14 +23,14 @@ import lombok.extern.slf4j.Slf4j;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Service Toggles", description = "Service Toggles resources")
+@Tag(name = "Service Toggles", description = "服务开关资源")
 public class ServiceTogglesResource {
 
     private final @NonNull OpikConfiguration config;
 
     @GET
-    @Operation(operationId = "getServiceToggles", summary = "Get Service Toggles", description = "Get Service Toggles", responses = {
-            @ApiResponse(responseCode = "200", description = "Service Toggles", content = @Content(schema = @Schema(implementation = ServiceTogglesConfig.class)))})
+    @Operation(operationId = "getServiceToggles", summary = "获取服务开关", description = "获取服务开关配置", responses = {
+            @ApiResponse(responseCode = "200", description = "服务开关配置", content = @Content(schema = @Schema(implementation = ServiceTogglesConfig.class)))})
     public Response getToggles() {
         return Response.ok()
                 .entity(config.getServiceToggles())

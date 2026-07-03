@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowUpRight,
   ChevronDown,
@@ -71,6 +72,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
   search,
   defaultOpen = false,
 }) => {
+  const { t } = useTranslation("tracing");
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [view, setView] = useState<PromptView>("pretty");
   const [showLoadConfirm, setShowLoadConfirm] = useState(false);
@@ -154,7 +156,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
   const handleCopy = useCallback(async () => {
     await copy(textContent);
-    toast({ description: "Prompt copied to clipboard" });
+    toast({ description: t("promptCard.promptCopiedToClipboard") });
   }, [textContent, toast]);
 
   const effectiveTemplateStructure = isChatPrompt
@@ -248,9 +250,9 @@ const PromptCard: React.FC<PromptCardProps> = ({
           <Skeleton className="h-3 w-8 shrink-0" />
         ) : null}
         {rawPrompt.modified && (
-          <TooltipWrapper content="This run was edited after loading from the linked library version">
+          <TooltipWrapper content={t("promptCard.modifiedTooltip")}>
             <span className="comet-body-xs shrink-0 rounded bg-muted px-1.5 text-light-slate">
-              modified
+              {t("promptCard.modified")}
             </span>
           </TooltipWrapper>
         )}
@@ -272,10 +274,10 @@ const PromptCard: React.FC<PromptCardProps> = ({
               >
                 {view === "pretty" ? (
                   <>
-                    Pretty <Sparkles className="ml-1 size-3" />
+                    {t("promptCard.pretty")} <Sparkles className="ml-1 size-3" />
                   </>
                 ) : (
-                  <>Raw</>
+                  <>{t("promptCard.raw")}</>
                 )}
                 <ChevronDown className="ml-1 size-3" />
               </Button>
@@ -285,14 +287,14 @@ const PromptCard: React.FC<PromptCardProps> = ({
                 onClick={() => setView("pretty")}
                 selected={view === "pretty"}
               >
-                Pretty
+                {t("promptCard.pretty")}
                 <Sparkles className="ml-1 size-3" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setView("raw")}
                 selected={view === "raw"}
               >
-                Raw
+                {t("promptCard.raw")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -314,7 +316,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
               }}
               search={versionId ? { activeVersionId: versionId } : {}}
             >
-              View
+              {t("promptCard.view")}
               <ArrowUpRight className="ml-1 size-3" />
             </Link>
           </Button>
@@ -330,7 +332,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                     size="2xs"
                     className="text-light-slate hover:text-foreground"
                   >
-                    Use
+                    {t("promptCard.use")}
                     <ChevronDown className="ml-1 size-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -340,7 +342,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                     onClick={handleOpenInPlayground}
                   >
                     <Play className="mr-2 size-3.5" />
-                    Open in playground
+                    {t("promptCard.openInPlayground")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -352,12 +354,12 @@ const PromptCard: React.FC<PromptCardProps> = ({
               <Separator orientation="vertical" className="h-4" />
 
               <div className="relative">
-                <TooltipWrapper content="Search">
+                <TooltipWrapper content={t("promptCard.search")}>
                   <Button
                     variant="minimal"
                     size="icon-2xs"
                     onClick={() => setIsSearchExpanded(true)}
-                    aria-label="Search"
+                    aria-label={t("promptCard.search")}
                     className={cn(
                       "text-light-slate hover:text-foreground",
                       isSearchExpanded && "invisible",
@@ -372,7 +374,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                     <DebounceInput
                       ref={searchInputRef}
                       value={localSearch}
-                      placeholder="Search..."
+                      placeholder={t("promptCard.searchPlaceholder")}
                       onValueChange={(v) => setLocalSearch(v as string)}
                       onKeyDown={(e) => e.key === "Escape" && closeSearch()}
                       className="comet-body-xs h-7 flex-1 border-0 bg-transparent px-1.5 focus-visible:ring-0"
@@ -380,7 +382,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
                     <button
                       type="button"
                       onClick={closeSearch}
-                      aria-label="Close search"
+                      aria-label={t("promptCard.closeSearch")}
                       className="mr-1 flex size-4 shrink-0 items-center justify-center text-light-slate transition-colors hover:text-foreground"
                     >
                       <X className="size-3" />
@@ -391,7 +393,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
             </>
           )}
 
-          <TooltipWrapper content="Copy prompt">
+          <TooltipWrapper content={t("promptCard.copyPrompt")}>
             <Button
               variant="minimal"
               size="icon-2xs"
@@ -410,9 +412,9 @@ const PromptCard: React.FC<PromptCardProps> = ({
         open={showLoadConfirm}
         setOpen={setShowLoadConfirm}
         onConfirm={doLoadIntoPlayground}
-        title="Load prompt"
-        description="Loading this prompt into the Playground will replace any unsaved changes. This action cannot be undone."
-        confirmText="Load prompt"
+        title={t("promptCard.loadPrompt")}
+        description={t("promptCard.loadPromptDescription")}
+        confirmText={t("promptCard.loadPrompt")}
       />
     </div>
   );

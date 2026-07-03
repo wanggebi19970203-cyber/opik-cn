@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -20,6 +21,7 @@ interface SidebarWorkspaceSelectorProps {
 const SidebarWorkspaceSelector: React.FC<SidebarWorkspaceSelectorProps> = ({
   expanded = true,
 }) => {
+  const { t } = useTranslation("common");
   const {
     user,
     workspaceName,
@@ -82,7 +84,7 @@ const SidebarWorkspaceSelector: React.FC<SidebarWorkspaceSelectorProps> = ({
         {expandedThumb}
         <div className="flex min-w-0 flex-1 flex-col items-stretch">
           <span className="comet-body-xs-accented text-light-slate">
-            Workspace
+            {t("labels.workspace")}
           </span>
           <span className="comet-body-s-accented w-full truncate text-left text-foreground">
             {displayName}
@@ -115,7 +117,7 @@ const SidebarWorkspaceSelector: React.FC<SidebarWorkspaceSelectorProps> = ({
             {expandedThumb}
             <div className="flex min-w-0 flex-1 flex-col items-stretch">
               <span className="flex items-center gap-0.5 text-light-slate">
-                <span className="comet-body-xs-accented">Workspace</span>
+                <span className="comet-body-xs-accented">{t("labels.workspace")}</span>
                 {isDropdownOpen ? (
                   <ChevronUp className="size-3.5" />
                 ) : (
@@ -129,11 +131,11 @@ const SidebarWorkspaceSelector: React.FC<SidebarWorkspaceSelectorProps> = ({
           </button>
         </DropdownMenuTrigger>
       ) : (
-        <TooltipWrapper content="Switch workspace" side="right">
+        <TooltipWrapper content={t("labels.switchWorkspace")} side="right">
           <DropdownMenuTrigger asChild>
             <button
               className="relative flex w-fit items-center justify-center self-center"
-              aria-label="Open workspace selector"
+              aria-label={t("labels.openWorkspaceSelector")}
             >
               {collapsedThumb}
               <Button

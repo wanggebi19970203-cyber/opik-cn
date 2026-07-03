@@ -47,7 +47,7 @@ import static com.comet.opik.utils.ValidationUtils.validateDateRangeParameters;
 @Produces(MediaType.APPLICATION_JSON)
 @Timed
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Agent Insights", description = "Agent Insights report results")
+@Tag(name = "Agent Insights", description = "智能体洞察报告结果")
 public class AgentInsightsResource {
 
     private final @NonNull AgentInsightsIssueService agentInsightsIssueService;
@@ -55,10 +55,10 @@ public class AgentInsightsResource {
 
     @GET
     @Path("/issues")
-    @Operation(operationId = "findAgentInsightsIssues", summary = "Find agent insights issues", description = "Returns a paginated list of issues that have at least one detail row within the requested time window, with metrics aggregated over the window", responses = {
-            @ApiResponse(responseCode = "200", description = "Issues page", content = @Content(schema = @Schema(implementation = AgentInsightsIssue.AgentInsightsIssuePage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findAgentInsightsIssues", summary = "查询智能体洞察问题列表", description = "返回在请求时间窗口内至少有一条详情记录的问题分页列表，指标在时间窗口内聚合", responses = {
+            @ApiResponse(responseCode = "200", description = "问题分页", content = @Content(schema = @Schema(implementation = AgentInsightsIssue.AgentInsightsIssuePage.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response findIssues(
             @QueryParam("project_id") @NotNull UUID projectId,
@@ -81,11 +81,11 @@ public class AgentInsightsResource {
 
     @GET
     @Path("/issues/{issue_id}")
-    @Operation(operationId = "getAgentInsightsIssueById", summary = "Get agent insights issue by id", description = "Returns the issue together with its per-day breakdown within the requested time window", responses = {
-            @ApiResponse(responseCode = "200", description = "Issue with details", content = @Content(schema = @Schema(implementation = AgentInsightsIssueWithDetails.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getAgentInsightsIssueById", summary = "根据ID获取智能体洞察问题", description = "返回问题及其在请求时间窗口内的每日明细", responses = {
+            @ApiResponse(responseCode = "200", description = "问题详情", content = @Content(schema = @Schema(implementation = AgentInsightsIssueWithDetails.class))),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getIssueById(
             @PathParam("issue_id") UUID issueId,
@@ -103,11 +103,11 @@ public class AgentInsightsResource {
 
     @POST
     @Path("/issues")
-    @Operation(operationId = "reportAgentInsightsIssues", summary = "Store agent insights report results", description = "Upserts the detected issues and their per-day metrics for the given report day in a single transaction. Issue status is never modified by this endpoint.", responses = {
-            @ApiResponse(responseCode = "204", description = "Report stored"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Project not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "reportAgentInsightsIssues", summary = "存储智能体洞察报告结果", description = "在单个事务中更新插入指定报告日期的检测问题及其每日指标。此端点不会修改问题状态。", responses = {
+            @ApiResponse(responseCode = "204", description = "报告已存储"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "项目未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response reportIssues(
             @RequestBody(content = @Content(schema = @Schema(implementation = AgentInsightsReport.class))) @NotNull @Valid AgentInsightsReport report) {
@@ -119,11 +119,11 @@ public class AgentInsightsResource {
 
     @PATCH
     @Path("/issues/{issue_id}")
-    @Operation(operationId = "updateAgentInsightsIssue", summary = "Update agent insights issue status", description = "Moves an issue through its lifecycle: open, resolved or closed", responses = {
-            @ApiResponse(responseCode = "204", description = "Issue updated"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "updateAgentInsightsIssue", summary = "更新智能体洞察问题状态", description = "推动问题在其生命周期中流转：已开启、已解决或已关闭", responses = {
+            @ApiResponse(responseCode = "204", description = "问题已更新"),
+            @ApiResponse(responseCode = "400", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "401", description = "未授权", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response updateIssue(
             @PathParam("issue_id") UUID issueId,

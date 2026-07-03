@@ -8,6 +8,7 @@ import toLower from "lodash/toLower";
 import find from "lodash/find";
 import omit from "lodash/omit";
 import { flattie } from "flattie";
+import { useTranslation } from "react-i18next";
 
 import { COLUMN_TYPE, ColumnData } from "@/types/shared";
 import DataTable from "@/shared/DataTable/DataTable";
@@ -40,10 +41,10 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
   right: [],
 };
 
-export const DEFAULT_COLUMNS: ColumnData<CompareConfig>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<CompareConfig>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("configurationTab.name"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -59,6 +60,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   experiments,
   isPending,
 }) => {
+  const { t } = useTranslation("trial");
   const [search = "", setSearch] = useQueryParam("searchConfig", StringParam, {
     updateType: "replaceIn",
   });
@@ -77,7 +79,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
 
   const columns = useMemo(() => {
     const retVal = convertColumnDataToColumn<CompareConfig, CompareConfig>(
-      DEFAULT_COLUMNS,
+      getDefaultColumns(t),
       {},
     );
 
@@ -98,7 +100,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
     });
 
     return retVal;
-  }, [experimentsIds, onlyDiff, experiments]);
+  }, [experimentsIds, onlyDiff, experiments, t]);
 
   const flattenExperimentMetadataMap = useMemo(() => {
     return experiments.reduce<
@@ -157,10 +159,10 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   }, [rows, search, onlyDiff, isCompare]);
 
   const noDataText = search
-    ? "No search results"
+    ? t("configurationTab.noSearchResults")
     : isCompare
-      ? "These trials have no configuration"
-      : "This trial has no configuration";
+      ? t("configurationTab.noConfigMultiple")
+      : t("configurationTab.noConfigSingle");
 
   const resizeConfig = useMemo(
     () => ({
@@ -194,7 +196,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("configurationTab.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -204,7 +206,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">Show differences only</Label>
+                <Label htmlFor="show-doff-only">{t("configurationTab.showDifferencesOnly")}</Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

@@ -1,5 +1,6 @@
 import React from "react";
 import { useQueries } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Coins, Hash, ListTree, Timer } from "lucide-react";
 import api, { TRACE_KEY, TRACES_REST_ENDPOINT } from "@/api/api";
 import { Trace } from "@/types/traces";
@@ -21,6 +22,7 @@ const AffectedTracesSample: React.FC<AffectedTracesSampleProps> = ({
   projectId,
   traceIds,
 }) => {
+  const { t } = useTranslation();
   const results = useQueries({
     queries: traceIds.map((traceId) => ({
       queryKey: [TRACE_KEY, { traceId, stripAttachments: true }],
@@ -59,7 +61,7 @@ const AffectedTracesSample: React.FC<AffectedTracesSampleProps> = ({
 
   if (!traces.length) {
     return (
-      <p className="comet-body-xs text-muted-slate">No traces to show yet.</p>
+      <p className="comet-body-xs text-muted-slate">{t("common.messages.noTracesToShow")}</p>
     );
   }
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 
 import { LLM_MESSAGE_ROLE } from "@/types/llm";
@@ -17,6 +18,7 @@ const TraceChatMessage: React.FC<TraceChatMessageProps> = ({
   message,
   entityMap,
 }) => {
+  const { t } = useTranslation("tracing");
   const isUser = message.role === LLM_MESSAGE_ROLE.user;
   const isToolCall = message.messageType === MESSAGE_TYPE.tool_call;
 
@@ -73,7 +75,7 @@ const TraceChatMessage: React.FC<TraceChatMessageProps> = ({
         {message.isError && (
           <div className="mb-1 flex items-center gap-1 text-destructive">
             <AlertCircle className="size-3" />
-            <span className="comet-body-s-accented">Error</span>
+            <span className="comet-body-s-accented">{t("detailsTab.error")}</span>
           </div>
         )}
         {noContent ? (

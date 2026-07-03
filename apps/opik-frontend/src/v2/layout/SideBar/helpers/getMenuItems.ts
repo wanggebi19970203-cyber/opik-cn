@@ -17,6 +17,7 @@ import {
   Brain,
   GitBranch,
 } from "lucide-react";
+import { TFunction } from "i18next";
 import OllieOwl from "@/icons/ollie-owl.svg?react";
 import {
   MENU_ITEM_TYPE,
@@ -33,6 +34,7 @@ const getMenuItems = ({
   showHomePage,
   showOlliePage,
   showDiagnostics,
+  t,
 }: {
   projectId: string | null;
   canViewExperiments: boolean;
@@ -43,6 +45,7 @@ const getMenuItems = ({
   showHomePage: boolean;
   showOlliePage: boolean;
   showDiagnostics: boolean;
+  t: TFunction;
 }): MenuItemGroup[] => {
   const projectPrefix = projectId
     ? "/$workspaceName/projects/$projectId"
@@ -62,7 +65,7 @@ const getMenuItems = ({
                 path: projectPath("/home"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: House,
-                label: "Home",
+                label: t("navigation.menu.home"),
                 disabled: !projectPrefix,
               },
             ]
@@ -74,7 +77,7 @@ const getMenuItems = ({
                 path: projectPath("/ollie"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: OllieOwl,
-                label: "Opik Connect",
+                label: t("navigation.menu.ollie"),
                 disabled: !projectPrefix,
               },
             ]
@@ -83,14 +86,14 @@ const getMenuItems = ({
     },
     {
       id: "observability",
-      label: "Observability",
+      label: t("navigation.groups.observability"),
       items: [
         {
           id: "logs",
           path: projectPath("/logs"),
           type: MENU_ITEM_TYPE.router,
           icon: Rows3,
-          label: "Logs",
+          label: t("navigation.menu.logs"),
           disabled: !projectPrefix,
         },
         ...(showDiagnostics
@@ -100,7 +103,7 @@ const getMenuItems = ({
                 path: projectPath("/diagnostics"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: Radar,
-                label: "Diagnostics",
+                label: t("navigation.menu.diagnostics"),
                 disabled: !projectPrefix,
                 badge: DiagnosticsNavBadge,
               },
@@ -113,7 +116,7 @@ const getMenuItems = ({
                 path: projectPath("/dashboards"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: ChartLine,
-                label: "Dashboards",
+                label: t("navigation.menu.dashboards"),
                 disabled: !projectPrefix,
               },
             ]
@@ -122,14 +125,14 @@ const getMenuItems = ({
     },
     {
       id: "development",
-      label: "Development",
+      label: t("navigation.groups.development"),
       items: [
         {
           id: "prompts",
           path: projectPath("/prompts"),
           type: MENU_ITEM_TYPE.router,
           icon: FileTerminal,
-          label: "Prompt library",
+          label: t("navigation.menu.prompts"),
           disabled: !projectPrefix,
         },
         {
@@ -137,7 +140,7 @@ const getMenuItems = ({
           path: projectPath("/agent-playground"),
           type: MENU_ITEM_TYPE.router,
           icon: GitBranch,
-          label: "Agent playground",
+          label: t("navigation.menu.agent_runner"),
           disabled: !projectPrefix,
         },
         ...(canUsePlayground
@@ -147,7 +150,7 @@ const getMenuItems = ({
                 path: projectPath("/playground"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: Blocks,
-                label: "Prompt playground",
+                label: t("navigation.menu.playground"),
                 disabled: !projectPrefix,
               },
             ]
@@ -159,7 +162,7 @@ const getMenuItems = ({
                 path: projectPath("/optimizations"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: Sparkles,
-                label: "Optimization runs",
+                label: t("navigation.menu.optimizations"),
                 disabled: !projectPrefix,
               },
             ]
@@ -168,7 +171,7 @@ const getMenuItems = ({
     },
     {
       id: "evaluation",
-      label: "Evaluation",
+      label: t("navigation.groups.evaluation"),
       items: [
         ...(canViewDatasets
           ? [
@@ -177,7 +180,7 @@ const getMenuItems = ({
                 path: projectPath("/test-suites"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: ListChecks,
-                label: "Test suites",
+                label: t("navigation.menu.test_suites"),
                 disabled: !projectPrefix,
               },
               {
@@ -185,7 +188,7 @@ const getMenuItems = ({
                 path: projectPath("/datasets"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: Database,
-                label: "Datasets",
+                label: t("navigation.menu.datasets"),
                 disabled: !projectPrefix,
               },
             ]
@@ -197,7 +200,7 @@ const getMenuItems = ({
                 path: projectPath("/experiments"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: FlaskConical,
-                label: "Experiments",
+                label: t("navigation.menu.experiments"),
                 disabled: !projectPrefix,
               },
             ]
@@ -207,21 +210,21 @@ const getMenuItems = ({
           path: projectPath("/annotation-queues"),
           type: MENU_ITEM_TYPE.router,
           icon: UserPen,
-          label: "Annotation queues",
+          label: t("navigation.menu.annotation_queues"),
           disabled: !projectPrefix,
         },
       ],
     },
     {
       id: "production",
-      label: "Production",
+      label: t("navigation.groups.production"),
       items: [
         {
           id: "online_evaluation",
           path: projectPath("/online-evaluation"),
           type: MENU_ITEM_TYPE.router,
           icon: Brain,
-          label: "Online evaluation",
+          label: t("navigation.menu.online_evaluation"),
           disabled: !projectPrefix,
         },
         {
@@ -229,7 +232,7 @@ const getMenuItems = ({
           path: projectPath("/alerts"),
           type: MENU_ITEM_TYPE.router,
           icon: Bell,
-          label: "Alerts",
+          label: t("navigation.menu.alerts"),
           disabled: !projectPrefix,
         },
       ],
@@ -237,7 +240,7 @@ const getMenuItems = ({
   ].filter((group) => group.items.length > 0);
 };
 
-export const getWorkspaceMenuItems = (): MenuItemGroup[] => {
+export const getWorkspaceMenuItems = (t: TFunction): MenuItemGroup[] => {
   return [
     {
       id: "workspace-nav",
@@ -247,7 +250,7 @@ export const getWorkspaceMenuItems = (): MenuItemGroup[] => {
           path: "/$workspaceName/projects",
           type: MENU_ITEM_TYPE.router,
           icon: LayoutDashboard,
-          label: "Workspace",
+          label: t("navigation.menu.workspace"),
           muted: true,
           exact: true,
         },
@@ -256,7 +259,7 @@ export const getWorkspaceMenuItems = (): MenuItemGroup[] => {
           path: "/$workspaceName/configuration",
           type: MENU_ITEM_TYPE.router,
           icon: Settings2,
-          label: "Configuration",
+          label: t("navigation.menu.configuration"),
           muted: true,
         },
       ],
@@ -266,8 +269,10 @@ export const getWorkspaceMenuItems = (): MenuItemGroup[] => {
 
 export const getWorkspaceSidebarMenuItems = ({
   canViewDashboards,
+  t,
 }: {
   canViewDashboards: boolean;
+  t: TFunction;
 }): MenuItemGroup[] => {
   return [
     {
@@ -278,7 +283,7 @@ export const getWorkspaceSidebarMenuItems = ({
           path: "/$workspaceName/projects",
           type: MENU_ITEM_TYPE.router,
           icon: Bot,
-          label: "Projects",
+          label: t("navigation.menu.projects"),
         },
         ...(canViewDashboards
           ? [
@@ -287,7 +292,7 @@ export const getWorkspaceSidebarMenuItems = ({
                 path: "/$workspaceName/dashboards",
                 type: MENU_ITEM_TYPE.router as const,
                 icon: ChartLine,
-                label: "Dashboards",
+                label: t("navigation.menu.dashboards"),
               },
             ]
           : []),
@@ -296,7 +301,7 @@ export const getWorkspaceSidebarMenuItems = ({
           path: "/$workspaceName/configuration",
           type: MENU_ITEM_TYPE.router,
           icon: Settings2,
-          label: "Configuration",
+          label: t("navigation.menu.configuration"),
         },
       ],
     },

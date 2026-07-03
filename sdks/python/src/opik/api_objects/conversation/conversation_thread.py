@@ -5,11 +5,10 @@ import pydantic
 
 class ConversationThreadItem(pydantic.BaseModel):
     """
-    Represents a single message within a conversation thread.
+    表示对话线程中的单条消息。
 
-    Each ConversationItem contains the role of the sender (e.g., 'user', 'assistant', 'system')
-    and the content of the message. This structured format allows for consistent representation
-    of messages across different conversation interfaces and evaluation systems.
+    每个 ConversationItem 包含发送者的角色（如 'user'、'assistant'、'system'）和消息内容。
+    这种结构化格式使得消息能够在不同的对话接口和评估系统中保持一致的表示。
     """
 
     role: str
@@ -18,17 +17,15 @@ class ConversationThreadItem(pydantic.BaseModel):
 
 class ConversationThread(pydantic.BaseModel):
     """
-    Represents a conversation thread composed of multiple conversation items.
+    表示由多个对话项组成的对话线程。
 
-    This class is built using Pydantic's BaseModel to ensure type validation and data
-    integrity. It maintains a list of conversation items, where each item is an
-    instance of the `ConversationThreadItem` class. The conversation thread allows
-    adding messages from various roles, such as assistant, user, and system, and
-    provides the ability to export the conversation data as a JSON-serializable list.
+    此类使用 Pydantic 的 BaseModel 构建，以确保类型验证和数据完整性。
+    它维护一个对话项列表，每个项是 `ConversationThreadItem` 类的实例。
+    该对话线程允许添加来自不同角色（如 assistant、user 和 system）的消息，
+    并提供将对话数据导出为 JSON 可序列化列表的能力。
 
     Attributes:
-        discussion (List[ConversationThreadItem]): A list of conversation items
-            representing the dialogue between the roles.
+        discussion (List[ConversationThreadItem]): 表示角色之间对话的对话项列表。
     """
 
     discussion: List[ConversationThreadItem] = pydantic.Field(default_factory=list)

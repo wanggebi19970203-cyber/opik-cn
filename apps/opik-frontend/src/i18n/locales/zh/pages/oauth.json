@@ -1,0 +1,10 @@
+{
+  "oauth": {
+    "title": "OAuth 授权",
+    "description": "授权应用程序访问",
+    "actions": {
+      "allow": "允许",
+      "deny": "拒绝"
+    }
+  }
+}

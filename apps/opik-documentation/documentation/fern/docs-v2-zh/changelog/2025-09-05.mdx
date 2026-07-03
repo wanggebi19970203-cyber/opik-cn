@@ -1,0 +1,64 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## Opik Trace 分析器 Beta 上线！
+我们很高兴地宣布在 Opik Cloud 上推出 **Opik Trace 分析器**！
+
+这意味着：更快的调试和分析！
+
+我们的用户现在可以轻松理解、分析和调试其开发和生产环境的 traces。
+
+想试试吗？你只需前往某个 trace 并点击"检查 trace"即可开始获取有价值的洞察。
+
+<Frame>
+  <img src="/img/changelog/2025-09-05/opik_trace_analyzer.png" alt="Opik Trace 分析器 Beta 界面，展示 trace 分析和调试功能" />
+</Frame>
+
+## 功能和改进
+- 我们终于添加了**深色模式**支持！这个功能已被社区成员多次请求。你现在可以在账户设置中切换主题。
+
+<Frame>
+  <img src="/img/changelog/2025-09-05/dark_mode.png" alt="Opik 账户设置中的深色模式主题切换，展示浅色和深色主题选项" />
+</Frame> 
+
+- 现在你可以按 trace 和对话线程属性过滤指标标签页中的组件
+
+<Frame>
+  <img src="/img/changelog/2025-09-05/metrics_filters.png" alt="指标标签页过滤器，展示 trace 和对话线程属性过滤选项" />
+</Frame>
+
+- 需要标注大量对话线程？我们添加了将对话线程的反馈评分评论导出为 CSV 的功能，便于在外部工具中分析。
+- 我们还改进了实验比较功能的可发现性。
+- 在实验表中添加了新的过滤操作符
+
+<Frame>
+  <img src="/img/changelog/2025-09-05/experiment_operators.png" alt="实验表过滤操作符，展示高级过滤选项" />
+</Frame>
+
+- 在实验元数据中添加了资源？我们现在在实验配置标签页中显示可点击的链接，便于导航。
+
+<Frame>
+  <img src="/img/changelog/2025-09-05/clickable_assets_metadata.png" alt="实验配置标签页中的可点击资源和元数据链接，展示改进的导航" />
+</Frame>
+
+
+## 文档
+- 我们发布了 [Opik 学院](/v1/opik-university)！这是文档中的一个新部分，包含大量解释产品的视频指南。
+
+<Frame>
+  <img src="/img/changelog/2025-09-05/opik_university.png" alt="Opik 学院文档部分，展示视频指南和教程" />
+</Frame>
+
+## SDK 和集成改进
+- 增强了 *LangChain* 集成，包含全面的测试和构建修复
+- 在 Python SDK 中实现了新的 search_prompts 方法
+- 添加了[支持成本追踪的模型、provider 和框架文档](/v1/tracing/cost_tracking#supported-models-providers-and-integrations)
+- 增强了 Google ADK 集成，将**错误信息记录到相应的 spans 和 traces 中**
+
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.8.33...1.8.42)
+
+_发布版本_: `1.8.34`, `1.8.35`, `1.8.36`, `1.8.37`, `1.8.38`, `1.8.39`, `1.8.40`, `1.8.41`, `1.8.42`

@@ -1,0 +1,236 @@
+---
+headline: 前端 | Opik 文档
+og:description: 了解如何通过查阅指南和项目结构为 Opik 前端项目做贡献，实现有效协作。
+og:site_name: Opik 文档
+og:title: 为 Opik 前端做贡献
+title: 前端
+canonical-url: https://www.comet.com/docs/opik/contributing/guides/frontend
+---
+
+# 为前端做贡献
+
+本指南将帮助你开始为 Opik 前端做贡献。
+
+<Tip>
+  在开始之前，请查阅我们的通用[贡献概述](/v1/contributing/overview)和[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。
+</Tip>
+
+## 项目结构
+
+Opik 前端是一个 React 应用，位于 `comet-ml/opik` 仓库的 `apps/opik-frontend` 目录中。它提供了与 Opik 平台交互的用户界面。
+
+### 目录布局
+
+```
+apps/opik-frontend/src/
+├── api/          # API 客户端和端点定义
+├── constants/    # 应用级常量
+├── hooks/        # 共享自定义 hooks
+├── lib/          # 工具库
+├── store/        # Zustand stores
+├── types/        # 共享 TypeScript 类型
+├── ui/           # 基础 UI 组件（shadcn/ui + Radix）
+├── shared/       # 共享业务组件
+├── v1/           # Opik 1 UI（布局、页面、页面共享组件）
+└── v2/           # Opik 2 UI（布局、页面、页面共享组件）
+```
+
+**导入规则：** `ui → shared → v{N}/pages-shared → v{N}/pages`（单向）。v1 和 v2 不能相互导入。使用 `npm run deps:validate` 验证。
+
+## 搭建开发环境
+
+我们提供多种前端开发方式。选择最适合你工作流程的方式：
+
+<Tabs>
+  <Tab value="Local Process Mode" title="本地进程模式（推荐）">
+    **最适合带热重载的快速开发**
+
+    此模式使用 Vite 开发服务器将前端作为本地进程运行，在你保存文件时提供即时热重载：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+        ```bash
+        # 从仓库根目录 - 重启所有服务
+        scripts/dev-runner.sh
+
+        # 或仅启动（如果已构建则更快）
+        scripts/dev-runner.sh --start
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        # 从仓库根目录 - 重启所有服务
+        scripts\dev-runner.ps1
+
+        # 或仅启动（如果已构建则更快）
+        scripts\dev-runner.ps1 --start
+        ```
+      </Tab>
+    </Tabs>
+
+    访问 UI `http://localhost:5174`（Vite 开发服务器，带热重载）。
+
+    **优势：**
+    - 文件更改时即时热重载
+    - 快速重建
+    - 完整的 TypeScript 类型检查和 linting
+    - 方便使用浏览器开发工具调试
+
+    **前提条件：**
+    - Node.js 18+ 及 npm。你可以从 [nodejs.org](https://nodejs.org/) 下载。
+    - Java Development Kit (JDK) 25（用于后端）
+    - Apache Maven 3.8+（用于后端）
+  </Tab>
+
+  <Tab value="Docker Mode" title="Docker 模式">
+    **最适合测试完整系统**
+
+    此模式在 Docker 容器中运行所有组件：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+        ```bash
+        # 从仓库根目录
+        ./opik.sh --build
+
+        # 或不重建直接启动
+        ./opik.sh
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        # 从仓库根目录
+        .\opik.ps1 --build
+
+        # 或不重建直接启动
+        .\opik.ps1
+        ```
+      </Tab>
+    </Tabs>
+
+    访问 UI `http://localhost:5173`。
+
+    **优势：**
+    - 最接近生产环境
+    - 无需本地安装 Node.js
+    - 团队间环境一致
+
+    **前提条件：**
+    - Docker 和 Docker Compose
+  </Tab>
+
+  <Tab value="Manual Setup" title="手动搭建">
+    **最适合了解构建过程**
+
+    手动搭建各个组件：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+        1. **启动后端服务：** 这会在后端服务中启用 `CORS: true` 以支持本地前端开发。
+           ```bash
+           ./opik.sh --backend --port-mapping
+           ```
+          检查后端是否运行：http://localhost:8080/is-alive/ping
+
+        2. **配置环境变量：**
+           更新 `apps/opik-frontend/.env.development`：
+           ```ini
+           VITE_BASE_URL=/
+           VITE_BASE_API_URL=http://localhost:8080
+           ```
+          这告诉前端开发服务器在哪里找到后端 API。
+
+        3. **安装依赖：**
+           ```bash
+           cd apps/opik-frontend
+           npm install
+           ```
+
+        4. **启动前端：**
+           ```bash
+           npm run start
+           ```
+      </Tab>
+      <Tab title="Windows">
+        1. **启动后端服务：** 这会在后端服务中启用 `CORS: true` 以支持本地前端开发。
+           ```powershell
+           .\opik.ps1 --backend --port-mapping
+           ```
+          检查后端是否运行：http://localhost:8080/is-alive/ping
+
+        2. **配置环境变量：**
+           更新 `apps\opik-frontend\.env.development`：
+           ```ini
+           VITE_BASE_URL=/
+           VITE_BASE_API_URL=http://localhost:8080
+           ```
+          这告诉前端开发服务器在哪里找到后端 API。
+
+        3. **安装依赖：**
+           ```powershell
+           cd apps\opik-frontend
+           npm install
+           ```
+
+        4. **启动前端：**
+           ```powershell
+           npm run start
+           ```
+      </Tab>
+    </Tabs>
+
+    访问 UI `http://localhost:5174`。
+
+    **前提条件：**
+    - Node.js 18+ 及 npm。你可以从 [nodejs.org](https://nodejs.org/) 下载。
+    - Docker 和 Docker Compose（用于后端）
+  </Tab>
+</Tabs>
+
+有关所有开发模式、故障排除和高级工作流程的完整文档，请参阅我们的[本地开发指南](/v1/contributing/guides/local-development)。
+
+### 4. 代码质量检查
+
+在提交拉取请求之前，请确保你的代码通过以下检查：
+
+#### Linting
+
+<Tabs>
+  <Tab value="Using dev-runner" title="使用 dev-runner（推荐）">
+    <Tabs>
+      <Tab title="Linux/Mac">
+        ```bash
+        # 从仓库根目录
+        scripts/dev-runner.sh --lint-fe
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        # 从仓库根目录
+        scripts\dev-runner.ps1 --lint-fe
+        ```
+      </Tab>
+    </Tabs>
+  </Tab>
+  <Tab value="Manual npm" title="手动 npm">
+    ```bash
+    cd apps/opik-frontend
+    npm run lint
+    ```
+  </Tab>
+</Tabs>
+
+#### 类型检查和单元测试
+
+从 `apps/opik-frontend` 目录运行以下命令：
+
+```bash
+cd apps/opik-frontend
+
+npm run run typecheck # TypeScript 类型检查
+npm run test      # 工具和辅助函数的单元测试
+```
+
+### 5. 提交拉取请求
+
+实现更改后，提交你的更改并向 `comet-ml/opik` 仓库的 `main` 分支发起拉取请求。

@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { Trash, Sparkles, Tag } from "lucide-react";
 import get from "lodash/get";
 import slugify from "slugify";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { DatasetItem, DATASET_TYPE } from "@/types/datasets";
@@ -57,6 +58,7 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
   datasetType,
   suiteAssertions,
 }) => {
+  const { t } = useTranslation("datasets");
   const resetKeyRef = useRef(0);
   const [expansionDialogOpen, setExpansionDialogOpen] =
     useState<boolean>(false);
@@ -115,8 +117,8 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
 
       const plural = items.length !== 1 ? "s" : "";
       toast({
-        title: "Samples added to draft",
-        description: `${items.length} sample${plural} added to your draft changes`,
+        title: t("actionsPanel.samplesAddedToDraft"),
+        description: t("actionsPanel.samplesAddedDescription", { count: items.length, plural }),
       });
     },
     [bulkAddItems, toast],
@@ -206,9 +208,9 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
             }}
           >
             <Sparkles className="mr-2 size-4" />
-            Expand with AI
+            {t("actionsPanel.expandWithAi")}
           </Button>
-          <TooltipWrapper content="Manage tags">
+          <TooltipWrapper content={t("actionsPanel.manageTags")}>
             <Button
               variant="outline"
               size="icon-sm"
@@ -234,12 +236,12 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
         generateFileName={generateFileName}
         tooltipContent={
           !isExportEnabled
-            ? "Export functionality is disabled for this installation"
+            ? t("tracing.actions.exportDisabled")
             : undefined
         }
       />
       {canEditDatasets && (
-        <TooltipWrapper content="Delete">
+        <TooltipWrapper content={t("rowActions.delete")}>
           <Button
             variant="outline"
             size="icon-sm"

@@ -1,0 +1,27 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+## 告警中的 AND/OR 条件分组
+
+告警规则现在支持结构化条件分组：组内条件使用 AND 评估，组之间使用 OR 组合。这使得可以表达诸如"如果（幻觉分数 > 0.8 且相关性分数 < 0.3）或（毒性分数 > 0.5）则标记 trace"的逻辑。
+
+现有的单条件告警继续按原样工作——每个旧条件自动被视为自己的组，因此无需迁移。
+
+## Bug 修复和改进
+
+- **Prompt 掩码（Python 和 TypeScript SDK）** — `prompt_mask_context(masks)` / `promptMaskContext(masks)` 让你可以运行 Agent 代码，其中特定 prompt ID 静默重定向到不同的版本 ID，非破坏性地。Agent 按常规调用 `get_prompt()` 并接收覆盖的模板，不会对 prompt 库造成任何永久更改。专为 A/B 测试和优化器扫描场景设计。
+
+- **实验：数据集版本内联显示** — 数据集版本现在在实验表和实验详情标题中作为药丸标签与项来源一起显示。独立的"Test suite version"列已被移除；相同信息现在在上下文中可见。
+
+- **数据集项：冲突的键名不再导致错误** — 遍历包含与 `DatasetItem` 字段匹配的键（如 HotpotQA 中的 `id`）的数据集之前会引发 `TypeError: multiple values for keyword argument`。SDK 现在会剥离冲突键并发出一次性警告，使遍历完成。
+
+- **Harbor 集成：支持 harbor `<0.8` 和 `>=0.8`** — `track_harbor()` 现在修补已安装 harbor 版本暴露的方法名（`_setup_environment` 或 `_setup_agent_environment`），因此无论安装哪个版本，追踪都能工作。
+
+- **新的 Playground 模型** — Gemini 3.5 Flash 和 `qwen/qwen3.7-max` 现在在模型选择器中可用。
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.0.37...2.0.47)
+
+_发布版本_: `2.0.42`, `2.0.43`, `2.0.44`, `2.0.45`, `2.0.46`, `2.0.47`

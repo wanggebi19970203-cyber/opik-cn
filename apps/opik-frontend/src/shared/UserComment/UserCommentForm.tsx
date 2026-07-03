@@ -4,15 +4,17 @@ import { cn, updateTextAreaHeight } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Check, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 import isFunction from "lodash/isFunction";
 
 const CancelButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (buttonProps, ref) => {
+    const { t } = useTranslation();
     return (
       <Button {...buttonProps} variant="outline" size="icon-xs" ref={ref}>
-        <span className="sr-only">Cancel edit comment</span>
+        <span className="sr-only">{t("common:comments.cancelEditComment")}</span>
         <X />
       </Button>
     );
@@ -26,6 +28,7 @@ const SubmitButton = React.forwardRef<
     editMode?: boolean;
   }
 >(({ editMode, ...buttonProps }, ref) => {
+  const { t } = useTranslation();
   const {
     formState: { isValid, isDirty },
   } = useFormContext();
@@ -40,7 +43,7 @@ const SubmitButton = React.forwardRef<
       type="submit"
       disabled={!isValid || !isDirty || buttonProps.disabled}
     >
-      <span className="sr-only">Approve edit comment</span>
+      <span className="sr-only">{t("common:comments.approveEditComment")}</span>
       <SubmitIcon />
     </Button>
   );
@@ -160,13 +163,14 @@ type UserCommentFormComponents = {
   StandaloneTextareaField: typeof StandaloneTextareaField;
 };
 
-const commentSchema = z.object({
-  commentText: z
-    .string()
-    .min(1, "Can not be empty")
-    .max(MAX_LENGTH_LIMIT, `Max ${MAX_LENGTH_LIMIT} characters`),
-});
-type CommentFormValues = z.infer<typeof commentSchema>;
+const createCommentSchema = (t: (key: string, opts?: Record<string, unknown>) => string) =>
+  z.object({
+    commentText: z
+      .string()
+      .min(1, t("common:comments.canNotBeEmpty"))
+      .max(MAX_LENGTH_LIMIT, t("common:comments.maxCharacters", { count: MAX_LENGTH_LIMIT })),
+  });
+type CommentFormValues = z.infer<ReturnType<typeof createCommentSchema>>;
 
 export type UserCommentFormProps = {
   onSubmit: (data: CommentFormValues) => void;
@@ -183,6 +187,8 @@ const UserCommentForm: UserCommentFormComponents &
   className,
   children,
 }) => {
+  const { t } = useTranslation();
+  const commentSchema = createCommentSchema(t);
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
     defaultValues: {

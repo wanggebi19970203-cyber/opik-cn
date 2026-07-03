@@ -1,5 +1,6 @@
 import React from "react";
 import { SquareDashedMousePointer, MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { OPTIMIZATION_DEMO_TEMPLATES } from "@/constants/optimizations";
 import useNavigateToOptimizationStudio from "@/v2/pages-shared/optimizations/useNavigateToOptimizationStudio";
 import OptimizationTemplateCard from "./OptimizationTemplateCard";
@@ -15,12 +16,13 @@ const TEMPLATE_ICONS: Record<
 };
 
 const StudioTemplates: React.FC = () => {
+  const { t } = useTranslation("optimizations");
   const handleTemplateClick = useNavigateToOptimizationStudio();
 
   return (
     <div className="pt-4">
       <h2 className="comet-title-s sticky top-0 z-10 truncate break-words bg-soft-background pb-3 pt-2">
-        Run an optimization
+        {t("optimizations.studioTemplates.title")}
       </h2>
       <div className="flex flex-col">
         <div className="flex items-stretch gap-6">
@@ -49,15 +51,15 @@ const StudioTemplates: React.FC = () => {
           <div className="flex flex-col items-center gap-2">
             <div className="w-px flex-1 bg-slate-200" />
             <p className="comet-body-xs whitespace-nowrap text-light-slate">
-              or
+              {t("optimizations.studioTemplates.or")}
             </p>
             <div className="w-px flex-1 bg-slate-200" />
           </div>
 
           <div className="flex w-80">
             <OptimizationTemplateCard
-              name="Optimize your own prompt"
-              description="Start from scratch and configure your own optimization settings."
+              name={t("optimizations.studioTemplates.optimizeYourOwnPrompt")}
+              description={t("optimizations.studioTemplates.optimizeYourOwnPromptDescription")}
               icon={SquareDashedMousePointer}
               iconColor="text-template-icon-scratch"
               interactive

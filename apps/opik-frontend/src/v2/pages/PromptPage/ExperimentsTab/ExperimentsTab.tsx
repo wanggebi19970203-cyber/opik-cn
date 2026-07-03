@@ -69,6 +69,7 @@ import { useExpandingConfig } from "@/v2/pages-shared/experiments/useExpandingCo
 import PageBodyStickyContainer from "@/shared/PageBodyStickyContainer/PageBodyStickyContainer";
 import PageBodyStickyTableWrapper from "@/v2/layout/PageBodyStickyTableWrapper/PageBodyStickyTableWrapper";
 import DataTablePagination from "@/shared/DataTablePagination/DataTablePagination";
+import { useTranslation } from "react-i18next";
 
 const STORAGE_KEY_PREFIX = "prompt-experiments";
 const PAGINATION_SIZE_KEY = "prompt-experiments-pagination-size";
@@ -113,6 +114,7 @@ interface ExperimentsTabProps {
 }
 
 const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
+  const { t } = useTranslation("pages/prompt");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const [search = "", setSearch] = useQueryParam("search", StringParam, {
@@ -434,8 +436,8 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? "No experiments have used this prompt yet"
-    : "No search results";
+    ? t("experiments.noExperimentsYet")
+    : t("experiments.noSearchResults");
 
   const hasGroups = Boolean(groups.length);
 
@@ -474,7 +476,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("experiments.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>

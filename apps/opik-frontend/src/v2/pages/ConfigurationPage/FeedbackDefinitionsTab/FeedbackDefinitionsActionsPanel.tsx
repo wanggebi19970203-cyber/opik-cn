@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { FeedbackDefinition } from "@/types/feedback-definitions";
@@ -14,6 +15,7 @@ type FeedbackDefinitionsActionsPanelsProps = {
 const FeedbackDefinitionsActionsPanel: React.FunctionComponent<
   FeedbackDefinitionsActionsPanelsProps
 > = ({ feedbackDefinitions }) => {
+  const { t } = useTranslation("pages/settings");
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !feedbackDefinitions?.length;
@@ -33,12 +35,12 @@ const FeedbackDefinitionsActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deleteFeedbackDefinitionsHandler}
-        title="Delete feedback definitions"
-        description="This action can’t be undone. Existing scored traces won’t be affected. Are you sure you want to continue?"
-        confirmText="Delete feedback definitions"
+        title={t("settings.feedback.confirmDialog.deleteBatch.title")}
+        description={t("settings.feedback.confirmDialog.deleteBatch.description")}
+        confirmText={t("settings.feedback.confirmDialog.deleteBatch.confirmText")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("settings.actions.delete")}>
         <Button
           variant="outline"
           size="icon-sm"

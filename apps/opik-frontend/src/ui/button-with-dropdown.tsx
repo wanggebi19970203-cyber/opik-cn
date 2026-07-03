@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button, ButtonProps } from "@/ui/button";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,8 @@ const ButtonWithDropdownTrigger = React.forwardRef<
     },
     ref,
   ) => {
+    const { t } = useTranslation("common");
+
     return (
       <div className="inline-flex">
         {/* Main button - executes primary action */}
@@ -83,7 +86,7 @@ const ButtonWithDropdownTrigger = React.forwardRef<
                 size as keyof typeof dropdownTriggerSizeStyles
               ],
             )}
-            aria-label="Show more options"
+            aria-label={t("labels.showMoreOptions")}
           >
             <ChevronDown className="size-4" />
           </Button>

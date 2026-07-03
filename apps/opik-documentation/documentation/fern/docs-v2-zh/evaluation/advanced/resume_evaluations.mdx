@@ -1,0 +1,67 @@
+---
+headline: 恢复中断的评估 | Opik 文档
+og:description: 在崩溃、网络抖动或 Ctrl-C 中断后继续运行长时间的 Opik 评估——仅重放未完成的运行。
+og:site_name: Opik 文档
+og:title: 恢复中断的评估 - Opik
+subtitle: 从中断处继续评估
+title: 恢复中断的评估
+---
+
+<Note>
+  `evaluate_resume` 是 Python SDK 的一项功能，适用于通过
+  `opik.evaluate(...)` 创建的实验。
+</Note>
+
+长时间运行的评估可能会被中断：Ctrl-C、内存不足（OOM）、指标抛出异常或网络抖动。
+`opik.evaluate_resume(experiment_id, ...)` 会从原始 `evaluate(...)`
+中断处继续执行——仅重放未完成的运行，保留已完成的运行。
+
+## 快速开始
+
+```python title="Python" language="python"
+import opik
+from opik.evaluation.metrics import Equals
+
+def my_task(item):
+    return {"output": call_my_model(item["input"])}
+
+result = opik.evaluate_resume(
+    experiment_id="<id of the experiment to resume>",
+    task=my_task,
+    scoring_metrics=[Equals()],
+)
+```
+
+返回的 `EvaluationResult` 涵盖**整个**实验，而不仅仅是本次调用执行的运行。
+你无需传入 `dataset`、`nb_samples` 或 `experiment_name`——恢复操作会从实验中读取这些信息。
+
+## 恢复操作的行为
+
+- **保留所有已完成的运行。** 输出和反馈分数将原样保留；不会对这些运行重新调用任务。
+- **仅重放未完成的运行。** 失败的任务、失败的评分、未触达的数据项，以及 `trial_count > 1` 的数据项中缺失的运行都会被重放。
+- **返回一个合并后的结果。** `EvaluationResult.test_results` 同时包含保留的运行和新重放的运行。
+
+## 不适合使用 `evaluate_resume` 的场景
+
+- **你想用新指标对已有实验重新评分。** 请使用
+  [`opik.evaluate_experiment(...)`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/evaluate_experiment.html)
+  ——它可以在不重新运行任务的情况下对已有运行进行评分。
+- **你想向实验中添加更多数据项。** 恢复操作仅迭代原始评估所涉及的数据项。请使用更大的数据集重新启动 `evaluate()`。
+- **你在两次调用之间修改了 `task` 实现或指标。** 调用方有责任提供与最初相同的 `task` 和 `scoring_metrics`。
+  恢复操作仅对缺失的运行调用你新的 `task` 并运行新的指标；
+  已完成的运行保留其原始输出和反馈分数。如果变更需要影响所有运行，请重新启动 `evaluate()`。
+
+## 前提条件
+
+要调用 `evaluate_resume`，实验必须满足以下创建条件：
+
+- 使用支持恢复功能的 Python SDK 版本创建。
+- 针对**带版本控制的数据集**调用 `evaluate(...)` 创建。
+
+如果任一条件不满足，`evaluate_resume` 将抛出
+`opik.exceptions.ExperimentNotResumable` 异常。
+
+如果原始 `evaluate(...)` 使用了自定义 `dataset_sampler` 或显式指定的
+`dataset_item_ids`，恢复操作还需要在实验 ID 旁写入的本地检查点。
+请在运行原始调用的同一台机器上执行恢复操作——否则将抛出
+`opik.exceptions.LocalCheckpointMissing` 异常。未使用采样器或显式 ID 的评估**不需要**在同一台机器上运行。

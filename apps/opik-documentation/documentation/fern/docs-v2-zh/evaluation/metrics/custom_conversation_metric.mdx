@@ -1,0 +1,291 @@
+---
+description: 了解如何创建用于评估多轮对话的自定义指标
+headline: 自定义对话指标 | Opik 文档
+og:description: 精准评估多轮对话。学习为聊天机器人和对话系统实现自定义对话指标。
+og:site_name: Opik 文档
+og:title: 自定义对话指标 - Opik
+title: 自定义对话指标
+toc_max_heading_level: 4
+---
+
+# 自定义对话（多轮）指标
+
+对话指标用于评估多轮对话，而非单一的输入-输出对。这些指标对于评估聊天机器人、对话代理以及任何多轮对话系统尤为有用。
+
+## 理解对话格式
+
+对话线程指标使用标准化的对话格式：
+
+```python
+from typing import List, Dict, Literal
+
+# 类型定义
+ConversationDict = Dict[Literal["role", "content"], str]
+Conversation = List[ConversationDict]
+
+# 示例对话
+conversation = [
+    {"role": "user", "content": "Hello! Can you help me?"},
+    {"role": "assistant", "content": "Hi there! I'd be happy to help. What do you need?"},
+    {"role": "user", "content": "I need information about Python"},
+    {"role": "assistant", "content": "Python is a versatile programming language..."},
+]
+```
+
+## 创建自定义对话指标
+
+要创建自定义对话指标，需继承 [`ConversationThreadMetric`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/ConversationThreadMetric.html) 并实现 `score` 方法：
+
+```python
+from typing import Any
+from opik.evaluation.metrics import score_result
+from opik.evaluation.metrics.conversation import (
+    ConversationThreadMetric,
+    types as conversation_types,
+)
+
+
+class ConversationLengthMetric(ConversationThreadMetric):
+    """
+    一个简单的指标，用于计算对话轮次数量。
+    """
+
+    def __init__(self, name: str = "conversation_length_score"):
+        super().__init__(name)
+
+    def score(
+        self, conversation: conversation_types.Conversation, **kwargs: Any
+    ) -> score_result.ScoreResult:
+        """
+        基于对话长度进行评分。
+        
+        Args:
+            conversation: 包含 'role' 和 'content' 的对话消息列表。
+            **kwargs: 附加参数（忽略）。
+        """
+        # 计算助手回复数量（每条回复代表一个对话轮次）
+        num_turns = sum(1 for msg in conversation if msg["role"] == "assistant")
+        
+        return score_result.ScoreResult(
+            name=self.name,
+            value=num_turns,
+            reason=f"对话共 {num_turns} 个轮次"
+        )
+```
+
+## 高级示例：基于 LLM 的对话质量评估指标
+
+对于更复杂的评估，可以使用 LLM 来评判对话质量。当需要对对话的有用性、连贯性或语气等属性进行细致评估时，这种模式尤为有用。
+
+以下示例展示了如何评估助手回复的质量：
+
+### 步骤 1：定义输出模式
+
+```python
+import pydantic
+
+class ConversationQualityScore(pydantic.BaseModel):
+    """LLM 评判输出的模式。"""
+    score_value: float  # 分数范围 0.0 到 1.0
+    reason: str  # 评分理由
+
+    __hash__ = object.__hash__
+```
+
+### 步骤 2：创建评估提示词
+
+```python
+def create_evaluation_prompt(conversation: list) -> str:
+    """
+    创建提示词，请求 LLM 评估对话质量。
+    """
+    return f"""评估此对话中助手回复的质量。
+请考虑以下标准：
+1. 有用性：助手是否提供了有用、相关的信息？
+2. 清晰度：回复是否清晰易懂？
+3. 一致性：助手是否在各轮次间保持上下文连贯？
+4. 专业性：语气是否恰当且礼貌？
+
+请返回一个 JSON 对象，包含：
+- score_value：0.0（差）到 1.0（优秀）之间的数值
+- reason：评估理由的简要说明
+
+对话内容：
+{conversation}
+
+你的评估（仅返回 JSON）：
+"""
+```
+
+### 步骤 3：实现指标
+
+```python
+import logging
+from typing import Optional, Union, Any
+import pydantic
+
+from opik import exceptions
+from opik.evaluation.metrics import score_result
+from opik.evaluation.metrics.conversation import (
+    ConversationThreadMetric,
+    types as conversation_types,
+)
+from opik.evaluation.metrics.llm_judges import parsing_helpers
+from opik.evaluation.models import base_model, models_factory
+
+LOGGER = logging.getLogger(__name__)
+
+
+class ConversationQualityMetric(ConversationThreadMetric):
+    """
+    基于 LLM 的对话质量评估指标。
+
+    Args:
+        model: 用作评判的 LLM（例如 "gpt-4"、"claude-3-5-sonnet-20241022"）。
+               如果为 None，则使用默认模型。
+        name: 此指标的名称。
+        track: 是否在 Opik 中跟踪此指标。
+        project_name: 可选的项目名称，用于跟踪。
+    """
+
+    def __init__(
+        self,
+        model: Optional[Union[str, base_model.OpikBaseModel]] = None,
+        name: str = "conversation_quality_score",
+        track: bool = True,
+        project_name: Optional[str] = None,
+    ):
+        super().__init__(name=name, track=track, project_name=project_name)
+        self._init_model(model)
+
+    def _init_model(
+        self, model: Optional[Union[str, base_model.OpikBaseModel]]
+    ) -> None:
+        """初始化用于评判的 LLM 模型。"""
+        if isinstance(model, base_model.OpikBaseModel):
+            self._model = model
+        else:
+            # 从工厂获取模型（通过 LiteLLM 支持多种提供商）
+            self._model = models_factory.get(model_name=model)
+
+    def score(
+        self,
+        conversation: conversation_types.Conversation,
+        **kwargs: Any,
+    ) -> score_result.ScoreResult:
+        """
+        使用 LLM 评判评估对话质量。
+
+        Args:
+            conversation: 对话消息列表。
+            **kwargs: 附加参数（忽略）。
+
+        Returns:
+            ScoreResult，值范围为 0.0 到 1.0。
+        """
+        try:
+            # 创建评估提示词
+            llm_query = create_evaluation_prompt(conversation)
+
+            # 调用 LLM 获取结构化输出
+            model_output = self._model.generate_string(
+                input=llm_query,
+                response_format=ConversationQualityScore,
+            )
+
+            # 解析 LLM 响应
+            score_data = self._parse_llm_output(model_output)
+
+            # 确保分数在有效范围 [0.0, 1.0] 内
+            validated_score = max(0.0, min(1.0, score_data.score_value))
+
+            return score_result.ScoreResult(
+                name=self.name,
+                value=validated_score,
+                reason=score_data.reason,
+            )
+
+        except Exception as e:
+            LOGGER.error(f"计算对话质量失败: {e}")
+            raise exceptions.MetricComputationError(
+                f"计算对话质量失败: {e}"
+            ) from e
+
+    def _parse_llm_output(self, model_output: str) -> ConversationQualityScore:
+        """解析并验证 LLM 的输出。"""
+        try:
+            # 从模型输出中提取 JSON
+            dict_content = parsing_helpers.extract_json_content_or_raise(
+                model_output
+            )
+
+            # 根据模式验证
+            return ConversationQualityScore.model_validate(dict_content)
+
+        except pydantic.ValidationError as e:
+            LOGGER.warning(
+                f"解析 LLM 输出失败: {model_output}，错误: {e}",
+                exc_info=True,
+            )
+            raise
+```
+
+### 步骤 4：使用指标
+
+```python
+from opik.evaluation import evaluate_threads
+
+# 使用你偏好的评判模型初始化指标
+quality_metric = ConversationQualityMetric(
+    model="gpt-4o",  # 或 "claude-3-5-sonnet-20241022" 等
+    name="conversation_quality"
+)
+
+# 评估项目中的线程
+results = evaluate_threads(
+    project_name="my_chatbot_project",
+    eval_project_name="quality_evaluation",
+    metrics=[quality_metric],
+)
+```
+
+### LLM 评判指标的关键模式
+
+构建 LLM 评判指标时，请遵循以下最佳实践：
+
+1. **结构化输出**：使用 Pydantic 模型确保 LLM 响应的一致性
+2. **清晰的提示词**：为评判者提供具体的评估标准
+3. **错误处理**：使用 try-except 块包装 LLM 调用并添加适当的日志记录
+4. **模型灵活性**：允许用户指定偏好的评判模型
+5. **理由字段**：始终包含解释说明以提高透明度
+
+## 使用自定义对话指标
+
+你可以将自定义指标与 `evaluate_threads` 配合使用：
+
+```python
+from opik.evaluation import evaluate_threads
+
+# 初始化你的指标
+conversation_length_metric = ConversationLengthMetric()
+quality_metric = ConversationQualityMetric(model="gpt-4o")
+
+# 评估项目中的线程。
+# `evaluate_threads` 对 `filter_string` 匹配的每个线程运行评估；
+# 使用过滤器限定你实际想要评分的线程范围。
+results = evaluate_threads(
+    project_name="my_chatbot_project",
+    filter_string='thread_id contains "user-session"',
+    eval_project_name="chatbot_evaluation",
+    metrics=[conversation_length_metric, quality_metric],
+    trace_input_transform=lambda x: x["input"],
+    trace_output_transform=lambda x: x["output"],
+)
+```
+
+有关评估对话线程的更多详情，请参阅[评估线程指南](/evaluation/evaluate_threads)。
+
+## 后续步骤
+
+- 了解[内置对话指标](/evaluation/metrics/conversation_threads_metrics)
+- 阅读[评估线程指南](/evaluation/evaluate_threads)

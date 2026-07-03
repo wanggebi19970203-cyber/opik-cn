@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import UploadField from "@/shared/UploadField/UploadField";
 import {
@@ -21,19 +22,22 @@ const DatasetUploadField: React.FC<DatasetUploadFieldProps> = ({
   uploadError,
   onFileSelect,
   disabled,
-}) => (
-  <UploadField
-    disabled={disabled}
-    description="Drop a CSV or JSON file to upload or"
-    accept={DATASET_UPLOAD_ACCEPTED_TYPES}
-    onFileSelect={onFileSelect}
-    errorText={uploadError}
-    successText={
-      uploadFile && !uploadError && uploadFormat
-        ? `${formatToHumanLabel(uploadFormat)} file ready to upload`
-        : undefined
-    }
-  />
-);
+}) => {
+  const { t } = useTranslation("datasets");
+  return (
+    <UploadField
+      disabled={disabled}
+      description={t("uploadField.description")}
+      accept={DATASET_UPLOAD_ACCEPTED_TYPES}
+      onFileSelect={onFileSelect}
+      errorText={uploadError}
+      successText={
+        uploadFile && !uploadError && uploadFormat
+          ? t("uploadField.fileReady", { format: formatToHumanLabel(uploadFormat) })
+          : undefined
+      }
+    />
+  );
+};
 
 export default DatasetUploadField;

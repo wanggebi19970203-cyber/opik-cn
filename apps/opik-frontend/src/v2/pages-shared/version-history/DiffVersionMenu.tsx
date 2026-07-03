@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Clock, GitCompareArrows } from "lucide-react";
 
 import { getTimeFromNow } from "@/lib/date";
@@ -26,8 +27,10 @@ const DiffVersionMenu: React.FC<DiffVersionMenuProps> = ({
   currentItemId,
   versions,
   onSelectVersion,
-  triggerLabel = "Show diff",
+  triggerLabel,
 }) => {
+  const { t } = useTranslation("tracing");
+  const resolvedTriggerLabel = triggerLabel ?? t("versionHistory.showDiff");
   const selectableVersions = versions.filter((v) => v.id !== currentItemId);
 
   return (
@@ -40,11 +43,11 @@ const DiffVersionMenu: React.FC<DiffVersionMenuProps> = ({
           disabled={selectableVersions.length === 0}
         >
           <GitCompareArrows className="mr-1.5 size-3.5" />
-          {triggerLabel}
+          {resolvedTriggerLabel}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel size="sm">Compare against</DropdownMenuLabel>
+        <DropdownMenuLabel size="sm">{t("versionHistory.compareAgainst")}</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border" />
         <div className="max-h-[40vh] overflow-y-auto">
           {selectableVersions.map((version) => (

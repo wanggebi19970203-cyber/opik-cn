@@ -1,0 +1,47 @@
+---
+headline: 定义评估指标 | Opik 文档
+og:description: 学习在 Opik 中定义和实施有效的评估指标，以获得更好的性能分析和决策。
+og:site_name: Opik 文档
+og:title: 在 Opik 中定义评估指标 - 增强您的分析
+title: 定义评估指标
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div style={{
+    position: 'relative',
+    paddingBottom: '56.25%', // 16:9 aspect ratio
+    height: 0,
+    overflow: 'hidden',
+    maxWidth: '100%',
+    marginBottom: '20px'
+}}>
+    <iframe
+        src="https://www.loom.com/embed/c2de2efd1b4c4d22b3a7c40dbc257572?sid=0afb6895-f476-4010-90eb-1604ced968b6"
+        frameBorder="0"
+        webkitallowfullscreen
+        mozallowfullscreen
+        allowfullscreen
+        style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+        }}
+    />
+</div>
+
+## 从主观评估到可量化指标
+
+本视频探索 Opik 全面的[指标](/v1/evaluation/metrics/overview)系统，将主观 LLM 评估转化为可量化的测量。您将发现可用的不同类型的自动评分方法，查看使用[答案相关性](/v1/evaluation/metrics/answer_relevance)和 [Levenshtein](/v1/evaluation/metrics/heuristic_metrics) 指标的实际示例，并学习如何在需要时创建[自定义指标](/v1/evaluation/metrics/custom_metric)。视频还涵盖了成本考虑因素以及组合多个[指标](/v1/evaluation/metrics/overview)以捕获不同质量维度的最佳实践。
+
+## 关键亮点
+
+- **全面的指标类型**：从启发式指标（精确匹配、包含、正则表达式、JSON 验证）、幻觉检测和 LLM 作为评判者方法（如 GEVAL）中选择
+- **简单实施**：直接从 [`opik.evaluation.metrics`](/v1/evaluation/overview#running-an-evaluation) 导入指标并实例化类 - 使用 Answer Relevance 和 Levenshtein ratio 进行演示
+- **自定义指标开发**：当内置选项不能满足您的需求时，通过扩展 Opik 仓库中的基础指标类来创建自己的指标
+- **UI 集成**：通过向右滚动或打开反馈分数部分在追踪概览中查看指标，能够手动添加/删除分数
+- **手动反馈定义**：在配置部分创建自定义反馈定义，用于人工应用的指标，如通过/失败分类
+- **成本感知评估**：考虑评估速度、深度和成本之间的权衡 - 特别是使用昂贵的思维模型进行 LLM 作为评判者方法时
+- **多维度评估**：组合多个指标（例如事实准确性 + 有用性）以获得完整的质量画面，而不是单一指标评估
+- **过滤功能**：使用反馈分数过滤追踪并识别模型在不同质量维度上的性能模式

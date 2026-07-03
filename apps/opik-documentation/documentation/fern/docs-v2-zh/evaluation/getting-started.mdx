@@ -1,0 +1,172 @@
+---
+headline: 评估入门 | Opik 文档
+og:description: 使用测试套件或数据集驱动的指标，开始评估您的 LLM 应用
+og:site_name: Opik 文档
+og:title: 评估入门 — Opik
+title: 评估入门
+---
+
+Opik 提供两种评估方式。请根据您的使用场景选择：
+
+- **测试套件**：使用自然语言定义断言，让 LLM 评判者进行测试。适用于通过/失败的行为测试。
+- **数据集与指标**：使用量化指标对数据集上的输出进行评分。适用于衡量大量 trace 的质量。
+
+## 快速开始
+
+<Tabs>
+  <Tab title="测试套件">
+    测试套件允许您将预期行为定义为自然语言断言，并针对您的 Agent 运行这些断言。LLM 评判者会自动检查每条断言。
+
+    <CodeBlocks>
+      ```python title="Python"
+      import opik
+      from openai import OpenAI
+      from opik.integrations.openai import track_openai
+
+      openai_client = track_openai(OpenAI())
+      opik_client = opik.Opik()
+
+      # Create a suite with assertions
+      suite = opik_client.get_or_create_test_suite(
+          name="my-agent-tests",
+          project_name="my-agent",
+          global_assertions=[
+              "The response directly addresses the user's question",
+              "The response is concise (3 sentences or fewer)",
+          ],
+          global_execution_policy={"runs_per_item": 2, "pass_threshold": 2},
+      )
+
+      # Add test cases
+      suite.insert([
+          {"data": {"question": "How do I create a new project?", "context": "Go to Dashboard and click 'New Project'."}},
+          {"data": {"question": "What are the pricing tiers?", "context": "Free ($0/month), Pro ($29/month), Enterprise (custom)."}},
+      ])
+
+      # Define the task
+      def task(item):
+          response = openai_client.chat.completions.create(
+              model="gpt-4o-mini",
+              messages=[
+                  {"role": "system", "content": "Answer based ONLY on the provided context."},
+                  {"role": "user", "content": f"Question: {item['question']}\n\nContext:\n{item['context']}"},
+              ],
+          )
+          return {"input": item, "output": response.choices[0].message.content}
+
+      # Run the evaluation
+      result = opik.run_tests(test_suite=suite, task=task)
+      print(f"Pass rate: {result.pass_rate:.0%}")
+      ```
+
+      ```ts title="Typescript"
+      import { Opik, TestSuite, runTests } from "opik";
+      import OpenAI from "openai";
+
+      const client = new Opik();
+      const openai = new OpenAI();
+
+      // Create a suite with assertions
+      const suite = await TestSuite.getOrCreate(client, {
+          name: "my-agent-tests",
+          projectName: "my-agent",
+          globalAssertions: [
+              "The response directly addresses the user's question",
+              "The response is concise (3 sentences or fewer)",
+          ],
+          globalExecutionPolicy: { runsPerItem: 2, passThreshold: 2 },
+      });
+
+      // Add test cases
+      await suite.insert([
+          { data: { question: "How do I create a new project?", context: "Go to Dashboard and click 'New Project'." } },
+          { data: { question: "What are the pricing tiers?", context: "Free ($0/month), Pro ($29/month), Enterprise (custom)." } },
+      ]);
+
+      // Define the task
+      const task = async (item: Record<string, string>) => {
+          const response = await openai.chat.completions.create({
+              model: "gpt-4o-mini",
+              messages: [
+                  { role: "system", content: "Answer based ONLY on the provided context." },
+                  { role: "user", content: `Question: ${item.question}\n\nContext:\n${item.context}` },
+              ],
+          });
+          return { input: item, output: response.choices[0].message.content };
+      };
+
+      // Run the evaluation
+      const result = await runTests({ testSuite: suite, task });
+      console.log(`Pass rate: ${((result.passRate ?? 0) * 100).toFixed(0)}%`);
+      ```
+    </CodeBlocks>
+
+    每次运行都会在 Opik 仪表板中创建一个实验，便于对比分析。
+
+    <Frame>
+      <img src="/img/v2/evaluation/test-suite-run-results.png" alt="测试套件实验结果，显示每个测试项的通过/失败状态及断言详情" />
+    </Frame>
+
+    完整操作指南请参阅[构建测试套件](/evaluation/advanced/building-test-suites)。
+  </Tab>
+  <Tab title="数据集与指标">
+    基于数据集的评估使用量化指标对 Agent 的输出进行评分，例如幻觉检测、回答相关性或自定义评分函数。
+
+    <CodeBlocks>
+      ```python title="Python"
+      import opik
+      from opik.evaluation import evaluate
+      from opik.evaluation.metrics import Hallucination
+
+      opik.configure()
+      client = opik.Opik()
+
+      # Create a dataset
+      dataset = client.get_or_create_dataset(name="my-eval-dataset")
+      dataset.insert([
+          {"input": "What is the capital of France?", "expected_output": "Paris"},
+          {"input": "What is 2+2?", "expected_output": "4"},
+      ])
+
+      # Define the task
+      def task(item):
+          # Your LLM call here
+          result = call_llm(item["input"])
+          return {"output": result}
+
+      # Run evaluation with metrics
+      evaluate(
+          dataset=dataset,
+          task=task,
+          scoring_metrics=[Hallucination()],
+          experiment_name="my-experiment-v1",
+      )
+      ```
+
+      ```ts title="Typescript"
+      import { Opik } from "opik";
+
+      const client = new Opik();
+
+      // Create a dataset
+      const dataset = await client.getOrCreateDataset({ name: "my-eval-dataset" });
+      await dataset.insert([
+          { input: "What is the capital of France?", expectedOutput: "Paris" },
+          { input: "What is 2+2?", expectedOutput: "4" },
+      ]);
+
+      // Run evaluation with metrics
+      await client.evaluate({
+          dataset,
+          task: async (item) => {
+              const result = await callLlm(item.input);
+              return { output: result };
+          },
+          experimentName: "my-experiment-v1",
+      });
+      ```
+    </CodeBlocks>
+
+    完整操作指南请参阅[数据集与实验](/evaluation/advanced/evaluate_your_llm)，所有可用指标请参阅[指标](/evaluation/metrics/overview)章节。
+  </Tab>
+</Tabs>

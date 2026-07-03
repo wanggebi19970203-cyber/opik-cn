@@ -1,5 +1,6 @@
 import SideDialog from "@/shared/SideDialog/SideDialog";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { SheetTitle } from "@/ui/sheet";
 import { IntegrationExplorer } from "@/v1/pages-shared/onboarding/IntegrationExplorer";
 import { useLayoutDialog } from "@/hooks/useLayoutDialog";
@@ -7,18 +8,17 @@ import { useLayoutDialog } from "@/hooks/useLayoutDialog";
 const useOpenQuickStartDialog = () => useLayoutDialog("quickstart");
 
 const QuickstartDialog: React.FC = () => {
+  const { t } = useTranslation();
   const { isOpen, setOpen } = useOpenQuickStartDialog();
 
   return (
     <SideDialog open={isOpen} setOpen={setOpen}>
       <div className="flex w-full min-w-fit flex-col px-20 pb-20">
         <SheetTitle className="comet-title-xl my-3 text-left">
-          Quickstart guide
+          {t("common.table.quickstartGuide")}
         </SheetTitle>
         <div className="comet-body-s mb-10 text-muted-slate">
-          Opik helps you improve your LLM features by tracking what happens
-          behind the scenes. Integrate Opik to unlock evaluations, experiments,
-          and debugging.
+          {t("common.shared.opikDescription")}
         </div>
 
         <IntegrationExplorer source="quickstart-dialog">

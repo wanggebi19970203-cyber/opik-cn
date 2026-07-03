@@ -20,6 +20,7 @@ import {
   QuickFilterMode,
   collectQuickFilterTargets,
 } from "@/shared/SyntaxHighlighter/quickFilterPaths";
+import i18next from "i18next";
 
 // The extension only ever resolves a string value (unquoted editor text), so
 // the callback advertises string rather than the broader JsonValue.
@@ -36,8 +37,8 @@ const CHECK_ICON = renderToStaticMarkup(
   createElement(Check, { size: 12, strokeWidth: 2.5 }),
 );
 
-const TOOLTIP_TEXT = "Filter by this attribute";
-const TOOLTIP_APPLIED_TEXT = "Filter applied";
+const TOOLTIP_TEXT = () => i18next.t("quickFilter.filterByThisAttribute");
+const TOOLTIP_APPLIED_TEXT = () => i18next.t("quickFilter.filterApplied");
 // How long the "Filter applied" confirmation stays up before reverting.
 const APPLIED_VISIBLE_MS = 1500;
 
@@ -85,7 +86,7 @@ class QuickFilterTooltip {
     });
 
     this.text = document.createElement("span");
-    this.text.textContent = TOOLTIP_TEXT;
+    this.text.textContent = TOOLTIP_TEXT();
 
     this.el.append(this.icon, this.text);
     document.body.appendChild(this.el);
@@ -112,14 +113,14 @@ class QuickFilterTooltip {
   showHint(anchor: HTMLElement) {
     this.clearTimer();
     this.icon.style.display = "none";
-    this.text.textContent = TOOLTIP_TEXT;
+    this.text.textContent = TOOLTIP_TEXT();
     this.el.style.display = "flex";
     this.position(anchor);
   }
 
   showApplied(anchor: HTMLElement) {
     this.icon.style.display = "inline-flex";
-    this.text.textContent = TOOLTIP_APPLIED_TEXT;
+    this.text.textContent = TOOLTIP_APPLIED_TEXT();
     this.el.style.display = "flex";
     this.position(anchor);
     // Auto-dismiss on a timer, independent of the triggering widget's DOM
@@ -132,7 +133,7 @@ class QuickFilterTooltip {
     this.clearTimer();
     this.el.style.display = "none";
     this.icon.style.display = "none";
-    this.text.textContent = TOOLTIP_TEXT;
+    this.text.textContent = TOOLTIP_TEXT();
   }
 
   destroy() {
@@ -207,7 +208,7 @@ class QuickFilterWidget extends WidgetType {
     button.className = "cm-quick-filter-add";
     button.setAttribute("role", "button");
     button.setAttribute("tabindex", "0");
-    button.setAttribute("aria-label", "Filter by this attribute");
+    button.setAttribute("aria-label", i18next.t("quickFilter.filterByThisAttribute"));
     button.innerHTML = FILTER_ICON;
 
     const activate = (event: Event) => {

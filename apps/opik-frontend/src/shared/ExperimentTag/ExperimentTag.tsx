@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { FlaskConical } from "lucide-react";
 import { Tag } from "@/ui/tag";
 
@@ -11,6 +12,8 @@ const ExperimentTag: React.FC<ExperimentTagProps> = ({
   experimentName,
   count,
 }) => {
+  const { t } = useTranslation();
+
   if (experimentName) {
     return (
       <Tag size="md" variant="transparent" className="flex items-center gap-1">
@@ -29,7 +32,7 @@ const ExperimentTag: React.FC<ExperimentTagProps> = ({
     return (
       <Tag size="md" variant="transparent">
         <div className="comet-body-s-accented text-muted-slate">
-          {count} experiments
+          {t("common.shared.experiments", { count })}
         </div>
       </Tag>
     );

@@ -18,17 +18,17 @@ export interface ChatPromptData extends BasePromptData {
 }
 
 /**
- * Domain object representing a versioned chat prompt template.
- * Provides immutable access to chat message templates and formatting.
- * Integrates with backend for persistence and version management.
+ * 表示版本化聊天提示词模板的领域对象。
+ * 提供对聊天消息模板和格式化的不可变访问。
+ * 与后端集成以实现持久化和版本管理。
  */
 export class ChatPrompt extends BasePrompt {
   public readonly messages: ChatMessage[];
   private readonly chatTemplate: ChatPromptTemplate;
 
   /**
-   * Creates a new ChatPrompt instance.
-   * All operations work seamlessly without requiring manual configuration.
+   * 创建新的 ChatPrompt 实例。
+   * 所有操作无需手动配置即可无缝运行。
    */
   constructor(data: ChatPromptData);
   /** @deprecated Passing an opik client is deprecated. */
@@ -70,24 +70,23 @@ export class ChatPrompt extends BasePrompt {
   }
 
   /**
-   * Returns the template messages for this chat prompt.
-   * Alias for the `messages` property for consistency with Prompt.
+   * 返回此聊天提示词的模板消息。
+   * 与 Prompt 保持一致的 `messages` 属性别名。
    */
   get template(): ChatMessage[] {
     return structuredClone(this.messages);
   }
 
   /**
-   * Formats chat template by substituting variables in messages.
+   * 通过替换消息中的变量来格式化聊天模板。
    *
-   * @param variables - Object with values to substitute into template
-   * @param supportedModalities - Optional specification of which modalities are supported.
-   *   When a modality is not supported (false or not specified), structured content
-   *   parts (e.g., images, videos) are replaced with text placeholders like
-   *   "<<<image>>>" or "<<<video>>>". When supported (true), the structured content
-   *   is preserved as-is. Defaults to all modalities supported.
-   * @returns Array of formatted chat messages with variables substituted
-   * @throws PromptValidationError if template processing fails
+   * @param variables - 包含要替换到模板中的值的对象
+   * @param supportedModalities - 可选的支持模态规格。
+   *   当模态不受支持（false 或未指定）时，结构化内容部分（如图像、视频）
+   *   将被替换为文本占位符，如 "<<<image>>>" 或 "<<<video>>>"。
+   *   当受支持（true）时，结构化内容将保持原样。默认支持所有模态。
+   * @returns 替换变量后的已格式化聊天消息数组
+   * @throws 若模板处理失败则抛出 PromptValidationError
    *
    * @example
    * ```typescript
@@ -100,13 +99,13 @@ export class ChatPrompt extends BasePrompt {
    *   type: "mustache"
    * }, client);
    *
-   * // Format with all modalities supported
+   * // 支持所有模态的格式化
    * const messages = chatPrompt.format({
    *   role: "helpful assistant",
    *   task: "coding"
    * });
    *
-   * // Format with limited modalities
+   * // 限制模态的格式化
    * const textOnly = chatPrompt.format(
    *   { role: "assistant", task: "coding" },
    *   { vision: false, video: false }
@@ -121,13 +120,13 @@ export class ChatPrompt extends BasePrompt {
   }
 
   /**
-   * Static factory method to create ChatPrompt from backend API response.
+   * 从后端 API 响应创建 ChatPrompt 的静态工厂方法。
    *
-   * @param promptData - PromptPublic data containing name, description, tags
-   * @param apiResponse - REST API PromptVersionDetail response
-   * @param opik - OpikClient instance
-   * @returns ChatPrompt instance constructed from response data
-   * @throws PromptValidationError if response structure invalid
+   * @param promptData - 包含名称、描述、标签的 PromptPublic 数据
+   * @param apiResponse - REST API PromptVersionDetail 响应
+   * @param opik - OpikClient 实例
+   * @returns 从响应数据构造的 ChatPrompt 实例
+   * @throws 若响应结构无效则抛出 PromptValidationError
    */
   static fromApiResponse(
     promptData: OpikApi.PromptPublic,
@@ -209,28 +208,28 @@ export class ChatPrompt extends BasePrompt {
   }
 
   /**
-   * Restores a specific version by creating a new version with content from the specified version.
-   * The version must be obtained from the backend (e.g., via getVersions()).
-   * Returns a new ChatPrompt instance with the restored content as the latest version.
+   * 通过从指定版本创建新版本来恢复特定版本。
+   * 版本必须从后端获取（例如通过 getVersions()）。
+   * 返回一个新的 ChatPrompt 实例，其内容为恢复的最新版本。
    *
-   * @param version - PromptVersion object to restore (must be from backend)
-   * @returns Promise resolving to a new ChatPrompt instance with the restored version
-   * @throws OpikApiError if REST API call fails
+   * @param version - 要恢复的 PromptVersion 对象（必须来自后端）
+   * @returns 解析为包含恢复版本的新 ChatPrompt 实例的 Promise
+   * @throws 若 REST API 调用失败则抛出 OpikApiError
    *
    * @example
    * ```typescript
    * const chatPrompt = await client.getChatPrompt({ name: "my-chat-prompt" });
    *
-   * // Get all versions
+   * // 获取所有版本
    * const versions = await chatPrompt.getVersions();
    *
-   * // Restore a specific version
+   * // 恢复特定版本
    * const targetVersion = versions.find(v => v.commit === "abc123de");
    * if (targetVersion) {
    *   const restoredPrompt = await chatPrompt.useVersion(targetVersion);
    *   console.log(`Restored to commit: ${restoredPrompt.commit}`);
    *
-   *   // Continue using the restored prompt
+   *   // 继续使用恢复的提示词
    *   const formatted = restoredPrompt.format({ name: "World" });
    * }
    * ```
@@ -251,12 +250,12 @@ export class ChatPrompt extends BasePrompt {
   }
 
   /**
-   * Synchronize the chat prompt with the backend.
+   * 将聊天提示词与后端同步。
    *
-   * Creates or updates the chat prompt on the Opik server. If the sync fails,
-   * a warning is logged and the same (unsynced) instance is returned.
+   * 在 Opik 服务器上创建或更新聊天提示词。如果同步失败，
+   * 会记录警告并返回相同的（未同步的）实例。
    *
-   * @returns Promise resolving to a new synced ChatPrompt instance, or this instance if sync fails
+   * @returns 解析为新的已同步 ChatPrompt 实例的 Promise，如果同步失败则返回此实例
    */
   async syncWithBackend(): Promise<ChatPrompt> {
     try {
@@ -280,22 +279,21 @@ export class ChatPrompt extends BasePrompt {
   }
 
   /**
-   * Get a ChatPrompt at a specific version.
+   * 获取特定版本的 ChatPrompt。
    *
-   * Accepts either the sequential version identifier (e.g. `"v3"`) — preferred —
-   * or a commit hash for backwards compatibility. Inputs matching `/^v\d+$/`
-   * are treated as version numbers; anything else is treated as a commit.
+   * 接受顺序版本标识符（如 `"v3"`）（推荐）或用于向后兼容的提交哈希。
+   * 匹配 `/^v\d+$/` 的输入被视为版本号；其他内容被视为提交。
    *
-   * @param version - Sequential version (`"v<N>"`) or commit hash
-   *   (commit input is **deprecated** — pass a `"v<N>"` identifier instead).
-   * @returns ChatPrompt instance representing that version, or null if not found
+   * @param version - 顺序版本（`"v<N>"`）或提交哈希
+   *   （提交输入已**弃用** — 请改用 `"v<N>"` 标识符）。
+   * @returns 表示该版本的 ChatPrompt 实例，如果未找到则返回 null
    *
    * @example
    * ```typescript
-   * // Preferred
+   * // 推荐
    * const v3 = await chatPrompt.getVersion("v3");
    *
-   * // @deprecated — commit-shaped input
+   * // @deprecated — 提交格式输入
    * const byCommit = await chatPrompt.getVersion("abc123de");
    * ```
    */

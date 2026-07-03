@@ -1,5 +1,6 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -27,6 +28,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
   onConfirm,
   isSubmitting,
 }) => {
+  const { t } = useTranslation("datasets");
   const handleSubmit = (data: VersionFormData) => {
     onConfirm?.(data.tags, data.versionNote);
   };
@@ -43,13 +45,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Save changes</DialogTitle>
+          <DialogTitle>{t('addVersion.title')}</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          Saving your changes will create a new version. You&apos;ll be able to
-          use it in experiments or in the Playground. The previous version will
-          remain available in version history.
+          {t('addVersion.description')}
         </p>
 
         <VersionForm
@@ -65,7 +65,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             onClick={handleCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            {t('addVersion.cancel')}
           </Button>
           <Button
             type="submit"
@@ -73,7 +73,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-            Save changes
+            {t('addVersion.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -111,7 +111,7 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Datasets", description = "Dataset resources")
+@Tag(name = "Datasets", description = "数据集资源")
 public class DatasetsResource {
 
     private final @NonNull DatasetService service;
@@ -131,8 +131,8 @@ public class DatasetsResource {
 
     @GET
     @Path("/{id}")
-    @Operation(operationId = "getDatasetById", summary = "Get dataset by id", description = "Get dataset by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset resource", content = @Content(schema = @Schema(implementation = Dataset.class)))
+    @Operation(operationId = "getDatasetById", summary = "根据ID获取数据集", description = "根据ID获取数据集", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集资源", content = @Content(schema = @Schema(implementation = Dataset.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_VIEW)
     @JsonView(Dataset.View.Public.class)
@@ -140,16 +140,16 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Finding dataset by id '{}' on workspaceId '{}'", id, workspaceId);
+        log.info("根据ID '{}' 查找数据集，工作区 '{}'", id, workspaceId);
         Dataset dataset = service.findById(id);
-        log.info("Found dataset by id '{}' on workspaceId '{}'", id, workspaceId);
+        log.info("已找到数据集，ID '{}'，工作区 '{}'", id, workspaceId);
 
         return Response.ok().entity(dataset).build();
     }
 
     @GET
-    @Operation(operationId = "findDatasets", summary = "Find datasets", description = "Find datasets", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset resource", content = @Content(schema = @Schema(implementation = DatasetPage.class)))
+    @Operation(operationId = "findDatasets", summary = "查找数据集", description = "查找数据集列表", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集资源", content = @Content(schema = @Schema(implementation = DatasetPage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_VIEW)
     @JsonView(Dataset.View.Public.class)
@@ -160,7 +160,7 @@ public class DatasetsResource {
             @QueryParam("with_optimizations_only") boolean withOptimizationsOnly,
             @QueryParam("prompt_id") UUID promptId,
             @QueryParam("project_id") UUID projectId,
-            @QueryParam("name") @Schema(description = "Filter datasets by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤数据集（部分匹配，不区分大小写）") String name,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
 
@@ -177,10 +177,10 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Finding datasets by '{}', sorted with: {}, on workspaceId '{}'", criteria, sorting, workspaceId);
+        log.info("根据条件 '{}' 查找数据集，排序方式: {}，工作区 '{}'", criteria, sorting, workspaceId);
         List<SortingField> sortingFields = sortingFactory.newSorting(sorting);
         DatasetPage datasetPage = service.find(page, size, criteria, sortingFields);
-        log.info("Found datasets by '{}', sorted with: {}, count '{}' on workspaceId '{}'", criteria, sorting,
+        log.info("已找到数据集，条件 '{}'，排序方式: {}，数量 '{}'，工作区 '{}'", criteria, sorting,
                 datasetPage.size(), workspaceId);
 
         var builder = Response.ok(datasetPage);
@@ -188,8 +188,8 @@ public class DatasetsResource {
     }
 
     @POST
-    @Operation(operationId = "createDataset", summary = "Create dataset", description = "Create dataset", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createDataset", summary = "创建数据集", description = "创建新数据集", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/api/v1/private/datasets/{id}", schema = @Schema(implementation = String.class))
             })
     })
@@ -201,9 +201,9 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Creating dataset with name '{}', on workspace_id '{}'", dataset.name(), workspaceId);
+        log.info("创建数据集，名称 '{}'，工作区 '{}'", dataset.name(), workspaceId);
         Dataset savedDataset = service.save(dataset);
-        log.info("Created dataset with name '{}', id '{}', on workspace_id '{}'", savedDataset.name(),
+        log.info("已创建数据集，名称 '{}'，ID '{}'，工作区 '{}'", savedDataset.name(),
                 savedDataset.id(), workspaceId);
 
         if (savedDataset.type() == DatasetType.TEST_SUITE
@@ -220,8 +220,8 @@ public class DatasetsResource {
 
     @PUT
     @Path("{id}")
-    @Operation(operationId = "updateDataset", summary = "Update dataset by id", description = "Update dataset by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "updateDataset", summary = "根据ID更新数据集", description = "根据ID更新数据集", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_EDIT)
     @RateLimited
@@ -229,32 +229,32 @@ public class DatasetsResource {
             @RequestBody(content = @Content(schema = @Schema(implementation = DatasetUpdate.class))) @NotNull @Valid DatasetUpdate datasetUpdate) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Updating dataset by id '{}' on workspace_id '{}'", id, workspaceId);
+        log.info("更新数据集，ID '{}'，工作区 '{}'", id, workspaceId);
         service.update(id, datasetUpdate);
-        log.info("Updated dataset by id '{}' on workspace_id '{}'", id, workspaceId);
+        log.info("已更新数据集，ID '{}'，工作区 '{}'", id, workspaceId);
 
         return Response.noContent().build();
     }
 
     @DELETE
     @Path("/{id}")
-    @Operation(operationId = "deleteDataset", summary = "Delete dataset by id", description = "Delete dataset by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "deleteDataset", summary = "根据ID删除数据集", description = "根据ID删除数据集", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_DELETE)
     public Response deleteDataset(@PathParam("id") UUID id) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Deleting dataset by id '{}' on workspace_id '{}'", id, workspaceId);
+        log.info("删除数据集，ID '{}'，工作区 '{}'", id, workspaceId);
         service.delete(id);
-        log.info("Deleted dataset by id '{}' on workspace_id '{}'", id, workspaceId);
+        log.info("已删除数据集，ID '{}'，工作区 '{}'", id, workspaceId);
         return Response.noContent().build();
     }
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteDatasetByName", summary = "Delete dataset by name", description = "Delete dataset by name", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "deleteDatasetByName", summary = "根据名称删除数据集", description = "根据名称删除数据集", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_DELETE)
     public Response deleteDatasetByName(
@@ -262,17 +262,17 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Deleting dataset by name '{}' on workspace_id '{}'", identifier.datasetName(), workspaceId);
+        log.info("根据名称 '{}' 删除数据集，工作区 '{}'", identifier.datasetName(), workspaceId);
         service.delete(identifier);
-        log.info("Deleted dataset by name '{}' on workspace_id '{}'", identifier.datasetName(), workspaceId);
+        log.info("已删除数据集，名称 '{}'，工作区 '{}'", identifier.datasetName(), workspaceId);
 
         return Response.noContent().build();
     }
 
     @POST
     @Path("/delete-batch")
-    @Operation(operationId = "deleteDatasetsBatch", summary = "Delete datasets", description = "Delete datasets batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "deleteDatasetsBatch", summary = "批量删除数据集", description = "批量删除数据集", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_DELETE)
     public Response deleteDatasetsBatch(
@@ -280,17 +280,17 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Deleting datasets by ids, count '{}' on workspace_id '{}'", batchDelete.ids().size(), workspaceId);
+        log.info("批量删除数据集，数量 '{}'，工作区 '{}'", batchDelete.ids().size(), workspaceId);
         service.delete(batchDelete.ids());
-        log.info("Deleted datasets by ids, count '{}' on workspace_id '{}'", batchDelete.ids().size(), workspaceId);
+        log.info("已批量删除数据集，数量 '{}'，工作区 '{}'", batchDelete.ids().size(), workspaceId);
 
         return Response.noContent().build();
     }
 
     @POST
     @Path("/retrieve")
-    @Operation(operationId = "getDatasetByIdentifier", summary = "Get dataset by name", description = "Get dataset by name", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset resource", content = @Content(schema = @Schema(implementation = Dataset.class))),
+    @Operation(operationId = "getDatasetByIdentifier", summary = "根据名称获取数据集", description = "根据名称获取数据集", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集资源", content = @Content(schema = @Schema(implementation = Dataset.class))),
     })
     @JsonView(Dataset.View.Public.class)
     public Response getDatasetByIdentifier(
@@ -299,10 +299,10 @@ public class DatasetsResource {
         String workspaceId = requestContext.get().getWorkspaceId();
         Visibility visibility = requestContext.get().getVisibility();
 
-        log.info("Finding dataset by name '{}', projectName '{}' on workspace_id '{}'", identifier.datasetName(),
+        log.info("根据名称 '{}' 查找数据集，项目名称 '{}'，工作区 '{}'", identifier.datasetName(),
                 identifier.projectName(), workspaceId);
         Dataset dataset = service.findByNameDetailed(identifier, visibility);
-        log.info("Found dataset by name '{}', id '{}' on workspace_id '{}'", identifier.datasetName(), dataset.id(),
+        log.info("已找到数据集，名称 '{}'，ID '{}'，工作区 '{}'", identifier.datasetName(), dataset.id(),
                 workspaceId);
 
         var responseBuilder = Response.ok(dataset);
@@ -315,62 +315,62 @@ public class DatasetsResource {
 
     @POST
     @Path("/{id}/expansions")
-    @Operation(operationId = "expandDataset", summary = "Expand dataset with synthetic samples", description = "Generate synthetic dataset samples using LLM based on existing data patterns", responses = {
-            @ApiResponse(responseCode = "200", description = "Generated synthetic samples", content = @Content(schema = @Schema(implementation = DatasetExpansionResponse.class)))
+    @Operation(operationId = "expandDataset", summary = "使用合成样本扩展数据集", description = "基于现有数据模式使用LLM生成合成数据集样本", responses = {
+            @ApiResponse(responseCode = "200", description = "生成的合成样本", content = @Content(schema = @Schema(implementation = DatasetExpansionResponse.class)))
     })
     @RateLimited
     public Response expandDataset(
             @PathParam("id") UUID datasetId,
             @RequestBody(content = @Content(schema = @Schema(implementation = DatasetExpansion.class))) @JsonView(DatasetExpansion.View.Write.class) @NotNull @Valid DatasetExpansion request) {
         var workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Expanding dataset with id '{}' on workspaceId '{}'", datasetId, workspaceId);
+        log.info("扩展数据集，ID '{}'，工作区 '{}'", datasetId, workspaceId);
         var response = expansionService.expandDataset(datasetId, request);
-        log.info("Expanded dataset with id '{}' on workspaceId '{}', total samples '{}'",
+        log.info("已扩展数据集，ID '{}'，工作区 '{}'，总样本数 '{}'",
                 datasetId, workspaceId, response.totalGenerated());
         return Response.ok(response).build();
     }
 
-    // Dataset Item Resources
+    // 数据集条目资源
 
     @GET
     @Path("/items/{itemId}")
-    @Operation(operationId = "getDatasetItemById", summary = "Get dataset item by id", description = "Get dataset item by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset item resource", content = @Content(schema = @Schema(implementation = DatasetItem.class)))
+    @Operation(operationId = "getDatasetItemById", summary = "根据ID获取数据集条目", description = "根据ID获取数据集条目", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集条目资源", content = @Content(schema = @Schema(implementation = DatasetItem.class)))
     })
     @JsonView(DatasetItem.View.Public.class)
     public Response getDatasetItemById(@PathParam("itemId") @NotNull UUID itemId) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Finding dataset item by id '{}' on workspace_id '{}'", itemId, workspaceId);
+        log.info("根据ID '{}' 查找数据集条目，工作区 '{}'", itemId, workspaceId);
         DatasetItem datasetItem = itemService.get(itemId)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found dataset item by id '{}' on workspace_id '{}'", itemId, workspaceId);
+        log.info("已找到数据集条目，ID '{}'，工作区 '{}'", itemId, workspaceId);
 
         return Response.ok(datasetItem).build();
     }
 
     @PATCH
     @Path("/items/batch")
-    @Operation(operationId = "batchUpdateDatasetItems", summary = "Batch update dataset items", description = "Update multiple dataset items", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "batchUpdateDatasetItems", summary = "批量更新数据集条目", description = "批量更新多个数据集条目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RateLimited
     public Response batchUpdate(
             @RequestBody(content = @Content(schema = @Schema(implementation = DatasetItemBatchUpdate.class))) @Valid @NotNull DatasetItemBatchUpdate batchUpdate) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Batch updating dataset items. workspaceId='{}', idsSize='{}', filters='{}'", workspaceId,
+        log.info("批量更新数据集条目，工作区 '{}'，IDs数量 '{}'，过滤条件数量 '{}'", workspaceId,
                 emptyIfNull(batchUpdate.ids()).size(), emptyIfNull(batchUpdate.filters()).size());
 
         itemService.batchUpdate(batchUpdate)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Batch updated dataset items. workspaceId='{}', idsSize='{}', filters='{}'", workspaceId,
+        log.info("已批量更新数据集条目，工作区 '{}'，IDs数量 '{}'，过滤条件数量 '{}'", workspaceId,
                 emptyIfNull(batchUpdate.ids()).size(), emptyIfNull(batchUpdate.filters()).size());
 
         return Response.noContent().build();
@@ -378,9 +378,9 @@ public class DatasetsResource {
 
     @PATCH
     @Path("/items/{itemId}")
-    @Operation(operationId = "patchDatasetItem", summary = "Partially update dataset item by id", description = "Partially update dataset item by id. Only provided fields will be updated.", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "404", description = "Dataset item not found")
+    @Operation(operationId = "patchDatasetItem", summary = "根据ID部分更新数据集条目", description = "根据ID部分更新数据集条目，仅更新提供的字段", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "数据集条目未找到")
     })
     @RateLimited
     public Response patchDatasetItem(
@@ -389,40 +389,40 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Patching dataset item by id '{}' on workspace_id '{}'", itemId, workspaceId);
+        log.info("部分更新数据集条目，ID '{}'，工作区 '{}'", itemId, workspaceId);
         itemService.patch(itemId, item)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .retryWhen(RetryUtils.handleConnectionError())
                 .block();
-        log.info("Patched dataset item by id '{}' on workspace_id '{}'", itemId, workspaceId);
+        log.info("已部分更新数据集条目，ID '{}'，工作区 '{}'", itemId, workspaceId);
 
         return Response.noContent().build();
     }
 
     @GET
     @Path("/{id}/items")
-    @Operation(operationId = "getDatasetItems", summary = "Get dataset items", description = "Get dataset items", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset items resource", content = @Content(schema = @Schema(implementation = DatasetItem.DatasetItemPage.class)))
+    @Operation(operationId = "getDatasetItems", summary = "获取数据集条目", description = "获取数据集条目列表", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集条目资源", content = @Content(schema = @Schema(implementation = DatasetItem.DatasetItemPage.class)))
     })
     @JsonView(DatasetItem.View.Public.class)
     public Response getDatasetItems(
             @PathParam("id") UUID id,
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("version") @Schema(description = "Version hash or tag to fetch specific dataset version") String version,
+            @QueryParam("version") @Schema(description = "版本哈希或标签，用于获取特定数据集版本") String version,
             @QueryParam("filters") String filters,
-            @QueryParam("truncate") @Schema(description = "Truncate image included in either input, output or metadata") boolean truncate) {
+            @QueryParam("truncate") @Schema(description = "截断输入、输出或元数据中包含的图片") boolean truncate) {
 
         var queryFilters = filtersFactory.newFilters(filters, DatasetItemFilter.LIST_TYPE_REFERENCE);
         String workspaceId = requestContext.get().getWorkspaceId();
 
         log.info(
-                "Finding dataset items by id '{}', version '{}', page '{}', size '{}', filters '{}' on workspace_id '{}'",
+                "根据ID '{}' 查找数据集条目，版本 '{}'，页码 '{}'，每页大小 '{}'，过滤条件 '{}'，工作区 '{}'",
                 id, version, page, size, filters, workspaceId);
 
         var datasetItemSearchCriteria = DatasetItemSearchCriteria.builder()
                 .datasetId(id)
-                .experimentIds(Set.of()) // Empty set for regular dataset items
+                .experimentIds(Set.of()) // 普通数据集条目使用空集合
                 .filters(queryFilters)
                 .entityType(EntityType.TRACE)
                 .truncate(truncate)
@@ -433,7 +433,7 @@ public class DatasetsResource {
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found dataset items by id '{}', count '{}', page '{}', size '{}' on workspace_id '{}'", id,
+        log.info("已找到数据集条目，ID '{}'，数量 '{}'，页码 '{}'，每页大小 '{}'，工作区 '{}'", id,
                 datasetItemPage.content().size(), page, size, workspaceId);
 
         return Response.ok(datasetItemPage).build();
@@ -442,8 +442,8 @@ public class DatasetsResource {
     @POST
     @Path("/items/stream")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(operationId = "streamDatasetItems", summary = "Stream dataset items", description = "Stream dataset items", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset items stream or error during process", content = @Content(array = @ArraySchema(schema = @Schema(anyOf = {
+    @Operation(operationId = "streamDatasetItems", summary = "流式传输数据集条目", description = "流式传输数据集条目", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集条目流或处理过程中的错误", content = @Content(array = @ArraySchema(schema = @Schema(anyOf = {
                     DatasetItem.class,
                     ErrorMessage.class
             }), maxItems = 2000)))
@@ -454,12 +454,12 @@ public class DatasetsResource {
         var ctxSnapshot = requestContext.get();
         var workspaceId = ctxSnapshot.getWorkspaceId();
 
-        // Suppress unchecked cast warning since we already pass DatasetItemFilter reference to newFilters
+        // 抑制未检查的类型转换警告，因为我们已经传递了DatasetItemFilter引用给newFilters
         @SuppressWarnings("unchecked")
         List<DatasetItemFilter> queryFilters = Optional.ofNullable((List<DatasetItemFilter>) filtersFactory.newFilters(
                 request.filters(), DatasetItemFilter.LIST_TYPE_REFERENCE)).orElse(List.of());
 
-        log.info("Streaming dataset items for dataset '{}', projectName '{}' on workspaceId '{}'",
+        log.info("流式传输数据集条目，数据集 '{}'，项目名称 '{}'，工作区 '{}'",
                 request.datasetName(), request.projectName(), workspaceId);
 
         try {
@@ -473,7 +473,7 @@ public class DatasetsResource {
 
             ChunkedOutput<JsonNode> outputStream = streamer.getOutputStream(items);
 
-            log.info("Streamed dataset items for dataset '{}', projectName '{}' on workspaceId '{}'",
+            log.info("已流式传输数据集条目，数据集 '{}'，项目名称 '{}'，工作区 '{}'",
                     request.datasetName(), request.projectName(), workspaceId);
 
             String fallbackMessage = requestContext.get().getWorkspaceFallbackMessage();
@@ -483,8 +483,8 @@ public class DatasetsResource {
 
             return outputStream;
         } catch (NotFoundException ex) {
-            // The visibility check failed, return empty stream to avoid exposing existence of the dataset
-            log.info("Empty dataset items stream for dataset '{}', projectName '{}' on workspaceId '{}'",
+            // 可见性检查失败，返回空流以避免暴露数据集的存在
+            log.info("数据集条目流为空，数据集 '{}'，项目名称 '{}'，工作区 '{}'",
                     request.datasetName(), request.projectName(), workspaceId);
 
             return streamer.getOutputStream(Flux.empty());
@@ -492,28 +492,26 @@ public class DatasetsResource {
     }
 
     /**
-     * OPIK-6696: the copy_from_* coordinates let callers pin the carry-forward read source to a
-     * specific (dataset, version) pair, avoiding the multi-replica read-after-write window when
-     * chaining version writes against a destination that may not have replicated yet.
+     * OPIK-6696: copy_from_* 坐标允许调用者将继承行的读取源固定到特定的（数据集，版本）对，
+     * 避免在链式版本写入尚未复制的目标时出现多副本读写窗口问题。
      */
     @PUT
     @Path("/items")
-    @Operation(operationId = "createOrUpdateDatasetItems", summary = "Create/update dataset items", description = """
-            Create/update dataset items based on dataset item id.
-            Each item's 'id' field is the stable identifier and upsert key.
-            Provide it to update an existing item, or omit it to create a new one.
+    @Operation(operationId = "createOrUpdateDatasetItems", summary = "创建/更新数据集条目", description = """
+            根据数据集条目ID创建或更新数据集条目。
+            每个条目的'id'字段是稳定的标识符和更新插入键。
+            提供ID以更新现有条目，或省略ID以创建新条目。
 
-            Set 'copy_from_dataset_id' and 'copy_from_version_id' together to read carry-forward rows
-            from the supplied (dataset, version) pair instead of the destination's prior version. When
-            the fields are null, carry-forward rows are read from the destination's prior version.""", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+            同时设置'copy_from_dataset_id'和'copy_from_version_id'以从提供的（数据集，版本）对读取继承行，
+            而不是从目标的先前版本读取。当这些字段为null时，继承行从目标的先前版本读取。""", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RateLimited
     public Response createDatasetItems(
             @RequestBody(content = @Content(schema = @Schema(implementation = DatasetItemBatch.class))) @JsonView({
                     DatasetItem.View.Write.class}) @NotNull @Valid DatasetItemBatch batch) {
 
-        // Generate ids for items without ids before the retryable operation
+        // 在可重试操作之前为没有ID的条目生成ID
         List<DatasetItem> items = batch.items().stream().map(item -> {
             if (item.id() == null) {
                 return item.toBuilder().id(idGenerator.generateId()).build();
@@ -524,7 +522,7 @@ public class DatasetsResource {
         String workspaceId = requestContext.get().getWorkspaceId();
 
         log.info(
-                "Creating dataset items batch by datasetId '{}', datasetName '{}', size '{}', batchGroupId '{}' on workspaceId '{}'",
+                "批量创建数据集条目，数据集ID '{}'，数据集名称 '{}'，数量 '{}'，批次组ID '{}'，工作区 '{}'",
                 batch.datasetId(), batch.datasetName(), batch.items().size(), batch.batchGroupId(), workspaceId);
 
         DatasetItemBatch batchWithIds = batch.toBuilder()
@@ -536,7 +534,7 @@ public class DatasetsResource {
                 .retryWhen(RetryUtils.handleConnectionError())
                 .block();
         log.info(
-                "Saved dataset items batch by datasetId '{}', datasetName '{}', size '{}', batchGroupId '{}' on workspaceId '{}'",
+                "已批量保存数据集条目，数据集ID '{}'，数据集名称 '{}'，数量 '{}'，批次组ID '{}'，工作区 '{}'",
                 batch.datasetId(), batch.datasetName(), batch.items().size(), batch.batchGroupId(), workspaceId);
 
         return Response.noContent().build();
@@ -544,8 +542,8 @@ public class DatasetsResource {
 
     @POST
     @Path("/{dataset_id}/items/from-traces")
-    @Operation(operationId = "createDatasetItemsFromTraces", summary = "Create dataset items from traces", description = "Create dataset items from traces with enriched metadata", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "createDatasetItemsFromTraces", summary = "从追踪创建数据集条目", description = "从追踪创建带有丰富元数据的数据集条目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RateLimited
     public Response createDatasetItemsFromTraces(
@@ -554,7 +552,7 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Creating dataset items from traces for dataset '{}', trace count '{}' on workspaceId '{}'",
+        log.info("从追踪创建数据集条目，数据集 '{}'，追踪数量 '{}'，工作区 '{}'",
                 datasetId, request.traceIds().size(), workspaceId);
 
         itemService.createFromTraces(datasetId, request.traceIds(), request.enrichmentOptions(),
@@ -563,7 +561,7 @@ public class DatasetsResource {
                 .retryWhen(RetryUtils.handleConnectionError())
                 .block();
 
-        log.info("Created dataset items from traces for dataset '{}', trace count '{}' on workspaceId '{}'",
+        log.info("已从追踪创建数据集条目，数据集 '{}'，追踪数量 '{}'，工作区 '{}'",
                 datasetId, request.traceIds().size(), workspaceId);
 
         return Response.noContent().build();
@@ -571,8 +569,8 @@ public class DatasetsResource {
 
     @POST
     @Path("/{dataset_id}/items/from-spans")
-    @Operation(operationId = "createDatasetItemsFromSpans", summary = "Create dataset items from spans", description = "Create dataset items from spans with enriched metadata", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "createDatasetItemsFromSpans", summary = "从Span创建数据集条目", description = "从Span创建带有丰富元数据的数据集条目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     @RateLimited
     public Response createDatasetItemsFromSpans(
@@ -581,7 +579,7 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Creating dataset items from spans for dataset '{}', span count '{}' on workspaceId '{}'",
+        log.info("从Span创建数据集条目，数据集 '{}'，Span数量 '{}'，工作区 '{}'",
                 datasetId, request.spanIds().size(), workspaceId);
 
         itemService.createFromSpans(datasetId, request.spanIds(), request.enrichmentOptions(),
@@ -590,7 +588,7 @@ public class DatasetsResource {
                 .retryWhen(RetryUtils.handleConnectionError())
                 .block();
 
-        log.info("Created dataset items from spans for dataset '{}', span count '{}' on workspaceId '{}'",
+        log.info("已从Span创建数据集条目，数据集 '{}'，Span数量 '{}'，工作区 '{}'",
                 datasetId, request.spanIds().size(), workspaceId);
 
         return Response.noContent().build();
@@ -599,9 +597,9 @@ public class DatasetsResource {
     @POST
     @Path("/items/from-csv")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Operation(operationId = "createDatasetItemsFromCsv", summary = "Create dataset items from CSV file", description = "Create dataset items from uploaded CSV file. CSV should have headers in the first row. Processing happens asynchronously in batches.", responses = {
-            @ApiResponse(responseCode = "202", description = "Accepted - CSV processing started"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    @Operation(operationId = "createDatasetItemsFromCsv", summary = "从CSV文件创建数据集条目", description = "从上传的CSV文件创建数据集条目。CSV第一行应包含表头。处理以异步批次方式进行。", responses = {
+            @ApiResponse(responseCode = "202", description = "已接受 - CSV处理已开始"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @RateLimited
     public Response createDatasetItemsFromCsv(
@@ -612,11 +610,11 @@ public class DatasetsResource {
         String userName = requestContext.get().getUserName();
         Visibility visibility = requestContext.get().getVisibility();
 
-        log.info("CSV upload request for dataset '{}' on workspaceId '{}'", datasetId, workspaceId);
+        log.info("CSV上传请求，数据集 '{}'，工作区 '{}'", datasetId, workspaceId);
 
         csvProcessor.processUploadedCsv(fileInputStream, datasetId, workspaceId, userName, visibility);
 
-        log.info("CSV upload accepted for dataset '{}' on workspaceId '{}', processing asynchronously", datasetId,
+        log.info("CSV上传已接受，数据集 '{}'，工作区 '{}'，异步处理中", datasetId,
                 workspaceId);
 
         return Response.status(Response.Status.ACCEPTED).build();
@@ -625,15 +623,15 @@ public class DatasetsResource {
     @POST
     @Path("/items/from-json")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Operation(operationId = "createDatasetItemsFromJson", summary = "Create dataset items from JSON file", description = """
-            Create dataset items from an uploaded JSON or JSONL file. JSON files must contain a top-level array of objects.
-            JSONL files contain one JSON object per non-blank line; multi-line JSON objects are not supported.
-            Reserved keys (id, source, description, tags, evaluators, execution_policy) are extracted into the
-            corresponding DatasetItem fields; all remaining keys form the item's data map and preserve their JSON types.
-            To link dataset items to specific traces or spans use the dedicated /items/from-traces or /items/from-spans endpoints.
-            Processing happens asynchronously in batches. With dataset versioning enabled, a supplied id acts as an upsert key.""", responses = {
-            @ApiResponse(responseCode = "202", description = "Accepted - JSON processing started"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    @Operation(operationId = "createDatasetItemsFromJson", summary = "从JSON文件创建数据集条目", description = """
+            从上传的JSON或JSONL文件创建数据集条目。JSON文件必须包含顶级对象数组。
+            JSONL文件每个非空行包含一个JSON对象；不支持多行JSON对象。
+            保留键（id, source, description, tags, evaluators, execution_policy）会被提取到对应的DatasetItem字段中；
+            所有剩余的键构成条目的数据映射并保留其JSON类型。
+            要将数据集条目链接到特定的追踪或Span，请使用专用的/items/from-traces或/items/from-spans端点。
+            处理以异步批次方式进行。启用数据集版本控制时，提供的ID用作更新插入键。""", responses = {
+            @ApiResponse(responseCode = "202", description = "已接受 - JSON处理已开始"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @RateLimited
     public Response createDatasetItemsFromJson(
@@ -645,43 +643,40 @@ public class DatasetsResource {
         String userName = requestContext.get().getUserName();
         Visibility visibility = requestContext.get().getVisibility();
 
-        log.info("JSON upload request for dataset '{}' on workspaceId '{}', format '{}'",
+        log.info("JSON上传请求，数据集 '{}'，工作区 '{}'，格式 '{}'",
                 datasetId, workspaceId, format);
 
         jsonProcessor.processUploadedJson(fileInputStream, datasetId, workspaceId, userName, visibility, format);
 
-        log.info("JSON upload accepted for dataset '{}' on workspaceId '{}', processing asynchronously", datasetId,
+        log.info("JSON上传已接受，数据集 '{}'，工作区 '{}'，异步处理中", datasetId,
                 workspaceId);
 
         return Response.status(Response.Status.ACCEPTED).build();
     }
 
     /**
-     * OPIK-6696: the copy_from_* coordinates let callers pin the carry-forward (and edit-via-SELECT-INSERT)
-     * read source to a specific (dataset, version) pair, avoiding the multi-replica read-after-write window
-     * when chaining version writes against a destination that may not have replicated yet.
+     * OPIK-6696: copy_from_* 坐标允许调用者将继承行（和通过SELECT-INSERT编辑）的读取源固定到特定的（数据集，版本）对，
+     * 避免在链式版本写入尚未复制的目标时出现多副本读写窗口问题。
      */
     @POST
     @Path("/{id}/items/changes")
-    @Operation(operationId = "applyDatasetItemChanges", summary = "Apply changes to dataset items", description = """
-            Apply delta changes (add, edit, delete) to a dataset version with conflict detection.
+    @Operation(operationId = "applyDatasetItemChanges", summary = "应用数据集条目变更", description = """
+            对数据集版本应用增量变更（添加、编辑、删除）并进行冲突检测。
 
-            This endpoint:
-            - Creates a new version with the applied changes
-            - Validates that baseVersion matches the latest version (unless override=true)
-            - Returns 409 Conflict if baseVersion is stale and override is not set
+            此端点：
+            - 创建包含应用变更的新版本
+            - 验证baseVersion是否匹配最新版本（除非override=true）
+            - 如果baseVersion过时且未设置override，则返回409冲突
 
-            Use `override=true` query parameter to force version creation even with stale baseVersion.
+            使用`override=true`查询参数强制创建版本，即使baseVersion过时。
 
-            Set 'copy_from_dataset_id' and 'copy_from_version_id' together on the request body to read
-            carry-forward rows from the supplied (dataset, version) pair instead of the destination's
-            prior version. When the fields are null, carry-forward rows are read from the destination's
-            prior version.
+            在请求体中同时设置'copy_from_dataset_id'和'copy_from_version_id'以从提供的（数据集，版本）对读取继承行，
+            而不是从目标的先前版本读取。当这些字段为null时，继承行从目标的先前版本读取。
             """, responses = {
-            @ApiResponse(responseCode = "201", description = "Version created successfully", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Dataset or version not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Version conflict - baseVersion is not the latest", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "201", description = "版本创建成功", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "数据集或版本未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "版本冲突 - baseVersion不是最新版本", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @RateLimited
     @JsonView(DatasetVersion.View.Public.class)
@@ -694,7 +689,7 @@ public class DatasetsResource {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
 
-        log.info("Applying dataset item changes for dataset '{}', baseVersion '{}', override '{}' on workspaceId '{}'",
+        log.info("应用数据集条目变更，数据集 '{}'，基础版本 '{}'，覆盖 '{}'，工作区 '{}'",
                 datasetId, changes.baseVersion(), override, workspaceId);
 
         DatasetVersion newVersion = itemService.applyDeltaChanges(datasetId, changes, override)
@@ -703,10 +698,10 @@ public class DatasetsResource {
                         .put(RequestContext.USER_NAME, userName))
                 .block();
 
-        log.info("Applied changes to dataset '{}', created version '{}' on workspaceId '{}'",
+        log.info("已应用变更到数据集 '{}'，创建版本 '{}'，工作区 '{}'",
                 datasetId, newVersion.versionHash(), workspaceId);
 
-        // Build location header pointing to the newly created version
+        // 构建指向新创建版本的Location头
         String location = String.format("/v1/private/datasets/%s/versions/%s",
                 datasetId, newVersion.id());
 
@@ -718,15 +713,15 @@ public class DatasetsResource {
 
     @POST
     @Path("/items/delete")
-    @Operation(operationId = "deleteDatasetItems", summary = "Delete dataset items", description = """
-            Delete dataset items using one of two modes:
-            1. **Delete by IDs**: Provide 'item_ids' to delete specific items by their IDs
-            2. **Delete by filters**: Provide 'dataset_id' with optional 'filters' to delete items matching criteria
+    @Operation(operationId = "deleteDatasetItems", summary = "删除数据集条目", description = """
+            使用以下两种模式之一删除数据集条目：
+            1. **按ID删除**：提供'item_ids'以按ID删除特定条目
+            2. **按过滤条件删除**：提供'dataset_id'和可选的'filters'以删除匹配条件的条目
 
-            When using filters, an empty 'filters' array will delete all items in the specified dataset.
+            使用过滤条件时，空的'filters'数组将删除指定数据集中的所有条目。
             """, responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "400", description = "Bad request - invalid parameters or conflicting fields"),
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误 - 参数无效或字段冲突"),
     })
     @RequiredPermissions(WorkspaceUserPermission.DATASET_DELETE)
     public Response deleteDatasetItems(
@@ -735,7 +730,7 @@ public class DatasetsResource {
         String workspaceId = requestContext.get().getWorkspaceId();
 
         log.info(
-                "Deleting dataset items. workspaceId='{}', itemIdsSize='{}', datasetId='{}', filtersSize='{}', batchGroupId='{}'",
+                "删除数据集条目，工作区 '{}'，IDs数量 '{}'，数据集ID '{}'，过滤条件数量 '{}'，批次组ID '{}'",
                 workspaceId,
                 emptyIfNull(request.itemIds()).size(),
                 request.datasetId(),
@@ -747,7 +742,7 @@ public class DatasetsResource {
                 .block();
 
         log.info(
-                "Deleted dataset items. workspaceId='{}', itemIdsSize='{}', datasetId='{}', filtersSize='{}', batchGroupId='{}'",
+                "已删除数据集条目，工作区 '{}'，IDs数量 '{}'，数据集ID '{}'，过滤条件数量 '{}'，批次组ID '{}'",
                 workspaceId,
                 emptyIfNull(request.itemIds()).size(),
                 request.datasetId(),
@@ -759,8 +754,8 @@ public class DatasetsResource {
 
     @GET
     @Path("/{id}/items/experiments/items")
-    @Operation(operationId = "findDatasetItemsWithExperimentItems", summary = "Find dataset items with experiment items", description = "Find dataset items with experiment items", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset item resource", content = @Content(schema = @Schema(implementation = DatasetItem.DatasetItemPage.class)))
+    @Operation(operationId = "findDatasetItemsWithExperimentItems", summary = "查找包含实验条目的数据集条目", description = "查找包含实验条目的数据集条目", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集条目资源", content = @Content(schema = @Schema(implementation = DatasetItem.DatasetItemPage.class)))
     })
     @JsonView(ExperimentItem.View.Compare.class)
     public Response findDatasetItemsWithExperimentItems(
@@ -771,7 +766,7 @@ public class DatasetsResource {
             @QueryParam("filters") String filters,
             @QueryParam("sorting") String sorting,
             @QueryParam("search") String search,
-            @QueryParam("truncate") @Schema(description = "Truncate image included in either input, output or metadata") boolean truncate) {
+            @QueryParam("truncate") @Schema(description = "截断输入、输出或元数据中包含的图片") boolean truncate) {
 
         var experimentIds = ParamsValidator.getIds(experimentIdsQueryParam);
 
@@ -794,12 +789,12 @@ public class DatasetsResource {
                 .search(search)
                 .entityType(EntityType.TRACE)
                 .truncate(truncate)
-                .versionHashOrTag(null) // Service layer will resolve to experiment's version when experimentIds present
+                .versionHashOrTag(null) // 当存在experimentIds时，服务层将解析为实验的版本
                 .build();
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Finding dataset items with experiment items by '{}', page '{}', size '{}' on workspaceId '{}'",
+        log.info("查找包含实验条目的数据集条目，条件 '{}'，页码 '{}'，每页大小 '{}'，工作区 '{}'",
                 datasetItemSearchCriteria, page, size, workspaceId);
 
         var datasetItemPage = itemService.getItems(page, size, datasetItemSearchCriteria)
@@ -807,7 +802,7 @@ public class DatasetsResource {
                 .block();
 
         log.info(
-                "Found dataset items with experiment items by '{}', count '{}', page '{}', size '{}' on workspaceId '{}'",
+                "已找到包含实验条目的数据集条目，条件 '{}'，数量 '{}'，页码 '{}'，每页大小 '{}'，工作区 '{}'",
                 datasetItemSearchCriteria, datasetItemPage.content().size(), page, size, workspaceId);
         return Response.ok(datasetItemPage).build();
     }
@@ -815,8 +810,8 @@ public class DatasetsResource {
     @Timed
     @GET
     @Path("/{id}/items/experiments/items/stats")
-    @Operation(operationId = "getDatasetExperimentItemsStats", summary = "Get experiment items stats for dataset", description = "Get experiment items stats for dataset", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiment items stats resource", content = @Content(schema = @Schema(implementation = com.comet.opik.api.ProjectStats.class)))
+    @Operation(operationId = "getDatasetExperimentItemsStats", summary = "获取数据集的实验条目统计", description = "获取数据集的实验条目统计信息", responses = {
+            @ApiResponse(responseCode = "200", description = "实验条目统计资源", content = @Content(schema = @Schema(implementation = com.comet.opik.api.ProjectStats.class)))
     })
     @JsonView({com.comet.opik.api.ProjectStats.ProjectStatItem.View.Public.class})
     @SuppressWarnings("unchecked")
@@ -837,21 +832,21 @@ public class DatasetsResource {
         List<ExperimentsComparisonFilter> queryFilters = (List<ExperimentsComparisonFilter>) filtersFactory
                 .newFilters(filters, ExperimentsComparisonFilter.LIST_TYPE_REFERENCE);
 
-        log.info("Getting experiment items stats for dataset '{}' and experiments '{}' with filters '{}'",
+        log.info("获取实验条目统计，数据集 '{}'，实验 '{}'，过滤条件 '{}'",
                 datasetId, experimentIds, filters);
         var stats = itemService.getExperimentItemsStats(datasetId, experimentIds, queryFilters)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Got experiment items stats for dataset '{}' and experiments '{}', count '{}'", datasetId,
+        log.info("已获取实验条目统计，数据集 '{}'，实验 '{}'，数量 '{}'", datasetId,
                 experimentIds, stats.stats().size());
         return Response.ok(stats).build();
     }
 
     @GET
     @Path("/{id}/items/experiments/items/output/columns")
-    @Operation(operationId = "getDatasetItemsOutputColumns", summary = "Get dataset items output columns", description = "Get dataset items output columns", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset item output columns", content = @Content(schema = @Schema(implementation = PageColumns.class)))
+    @Operation(operationId = "getDatasetItemsOutputColumns", summary = "获取数据集条目输出列", description = "获取数据集条目输出列", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集条目输出列", content = @Content(schema = @Schema(implementation = PageColumns.class)))
     })
     public Response getDatasetItemsOutputColumns(
             @PathParam("id") @NotNull UUID datasetId,
@@ -864,38 +859,38 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Finding traces output columns by datasetId '{}', experimentIds '{}', on workspaceId '{}'",
+        log.info("查找追踪输出列，数据集ID '{}'，实验IDs '{}'，工作区 '{}'",
                 datasetId, experimentIds, workspaceId);
 
         PageColumns columns = itemService.getOutputColumns(datasetId, experimentIds)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found traces output columns by datasetId '{}', experimentIds '{}', on workspaceId '{}'",
+        log.info("已找到追踪输出列，数据集ID '{}'，实验IDs '{}'，工作区 '{}'",
                 datasetId, experimentIds, workspaceId);
 
         return Response.ok(columns).build();
     }
 
     /**
-     * Sub-resource locator for dataset version operations.
-     * Delegates all requests under /{id}/versions to DatasetVersionsResource.
+     * 数据集版本操作的子资源定位器。
+     * 将/{id}/versions下的所有请求委托给DatasetVersionsResource。
      *
-     * @param datasetId the dataset ID from the path parameter
-     * @return a new instance of DatasetVersionsResource configured for this dataset
+     * @param datasetId 路径参数中的数据集ID
+     * @return 为此数据集配置的DatasetVersionsResource新实例
      */
     @Path("/{id}/versions")
     public DatasetVersionsResource versions(@PathParam("id") UUID datasetId) {
         return new DatasetVersionsResource(datasetId, versionService, requestContext, featureFlags);
     }
 
-    // Dataset Export Resources
+    // 数据集导出资源
 
     @POST
     @Path("/{id}/export")
-    @Operation(operationId = "startDatasetExport", summary = "Start dataset CSV export", description = "Initiates an asynchronous CSV export job for the dataset. Returns immediately with job details for polling.", responses = {
-            @ApiResponse(responseCode = "202", description = "Export job created", content = @Content(schema = @Schema(implementation = DatasetExportJob.class))),
-            @ApiResponse(responseCode = "200", description = "Existing export job in progress", content = @Content(schema = @Schema(implementation = DatasetExportJob.class)))
+    @Operation(operationId = "startDatasetExport", summary = "启动数据集CSV导出", description = "为数据集启动异步CSV导出作业。立即返回作业详情供轮询。", responses = {
+            @ApiResponse(responseCode = "202", description = "导出作业已创建", content = @Content(schema = @Schema(implementation = DatasetExportJob.class))),
+            @ApiResponse(responseCode = "200", description = "现有导出作业进行中", content = @Content(schema = @Schema(implementation = DatasetExportJob.class)))
     })
     @JsonView(DatasetExportJob.View.Public.class)
     @RateLimited
@@ -903,19 +898,19 @@ public class DatasetsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Starting CSV export for dataset '{}' on workspaceId '{}'", datasetId, workspaceId);
+        log.info("启动CSV导出，数据集 '{}'，工作区 '{}'", datasetId, workspaceId);
 
-        // Verify dataset exists
+        // 验证数据集是否存在
         service.findById(datasetId);
 
         DatasetExportJob job = csvExportService.startExport(datasetId)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Export job '{}' created/found for dataset '{}' on workspaceId '{}'", job.id(), datasetId,
+        log.info("导出作业 '{}' 已创建/找到，数据集 '{}'，工作区 '{}'", job.id(), datasetId,
                 workspaceId);
 
-        // Return 202 if new job was created (PENDING status), 200 if existing job found
+        // 如果创建了新作业（PENDING状态）返回202，如果找到现有作业返回200
         var status = job.status() == DatasetExportStatus.PENDING
                 ? Response.Status.ACCEPTED
                 : Response.Status.OK;
@@ -925,64 +920,64 @@ public class DatasetsResource {
 
     @GET
     @Path("/export-jobs/{jobId}")
-    @Operation(operationId = "getDatasetExportJob", summary = "Get dataset export job status", description = "Retrieves the current status of a dataset export job", responses = {
-            @ApiResponse(responseCode = "200", description = "Export job details", content = @Content(schema = @Schema(implementation = DatasetExportJob.class))),
-            @ApiResponse(responseCode = "404", description = "Export job not found")
+    @Operation(operationId = "getDatasetExportJob", summary = "获取数据集导出作业状态", description = "获取数据集导出作业的当前状态", responses = {
+            @ApiResponse(responseCode = "200", description = "导出作业详情", content = @Content(schema = @Schema(implementation = DatasetExportJob.class))),
+            @ApiResponse(responseCode = "404", description = "导出作业未找到")
     })
     @JsonView(DatasetExportJob.View.Public.class)
     public Response getDatasetExportJob(@PathParam("jobId") @NotNull UUID jobId) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Getting export job '{}' on workspaceId '{}'", jobId, workspaceId);
+        log.info("获取导出作业 '{}'，工作区 '{}'", jobId, workspaceId);
 
         DatasetExportJob job = csvExportService.getJob(jobId)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found export job '{}' with status '{}' on workspaceId '{}'", jobId, job.status(), workspaceId);
+        log.info("已找到导出作业 '{}'，状态 '{}'，工作区 '{}'", jobId, job.status(), workspaceId);
 
         return Response.ok(job).build();
     }
 
     @PUT
     @Path("/export-jobs/{jobId}/mark-viewed")
-    @Operation(operationId = "markDatasetExportJobViewed", summary = "Mark dataset export job as viewed", description = "Marks a dataset export job as viewed by setting the viewed_at timestamp. This is used to track that a user has seen a failed job's error message. This operation is idempotent.", responses = {
-            @ApiResponse(responseCode = "204", description = "Job marked as viewed"),
-            @ApiResponse(responseCode = "404", description = "Export job not found")
+    @Operation(operationId = "markDatasetExportJobViewed", summary = "标记数据集导出作业为已查看", description = "通过设置viewed_at时间戳将数据集导出作业标记为已查看。用于跟踪用户是否已查看失败作业的错误消息。此操作是幂等的。", responses = {
+            @ApiResponse(responseCode = "204", description = "作业已标记为已查看"),
+            @ApiResponse(responseCode = "404", description = "导出作业未找到")
     })
     public Response markDatasetExportJobViewed(@PathParam("jobId") @NotNull UUID jobId) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Marking export job '{}' as viewed on workspaceId '{}'", jobId, workspaceId);
+        log.info("标记导出作业 '{}' 为已查看，工作区 '{}'", jobId, workspaceId);
 
         csvExportService.markJobAsViewed(jobId)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Marked export job '{}' as viewed on workspaceId '{}'", jobId, workspaceId);
+        log.info("已标记导出作业 '{}' 为已查看，工作区 '{}'", jobId, workspaceId);
 
         return Response.noContent().build();
     }
 
     @GET
     @Path("/export-jobs")
-    @Operation(operationId = "getDatasetExportJobs", summary = "Get all dataset export jobs", description = "Retrieves all export jobs for the workspace. This is used to restore the export panel state after page refresh.", responses = {
-            @ApiResponse(responseCode = "200", description = "List of export jobs", content = @Content(array = @ArraySchema(schema = @Schema(implementation = DatasetExportJob.class))))
+    @Operation(operationId = "getDatasetExportJobs", summary = "获取所有数据集导出作业", description = "获取工作区的所有导出作业。用于在页面刷新后恢复导出面板状态。", responses = {
+            @ApiResponse(responseCode = "200", description = "导出作业列表", content = @Content(array = @ArraySchema(schema = @Schema(implementation = DatasetExportJob.class))))
     })
     @JsonView(DatasetExportJob.View.Public.class)
     public Response getDatasetExportJobs() {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Getting export jobs for workspaceId '{}'", workspaceId);
+        log.info("获取导出作业，工作区 '{}'", workspaceId);
 
         var jobs = csvExportService.findAllJobs()
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found '{}' export job(s) for workspaceId '{}'", jobs.size(), workspaceId);
+        log.info("已找到 '{}' 个导出作业，工作区 '{}'", jobs.size(), workspaceId);
 
         return Response.ok(jobs).build();
     }
@@ -990,18 +985,18 @@ public class DatasetsResource {
     @GET
     @Path("/export-jobs/{jobId}/download")
     @Produces("text/csv")
-    @Operation(operationId = "downloadDatasetExport", summary = "Download dataset export file", description = "Downloads the exported CSV file for a completed export job. This endpoint proxies the file download to avoid exposing internal storage URLs.", responses = {
-            @ApiResponse(responseCode = "200", description = "CSV file content", content = @Content(schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "400", description = "Export job is not ready for download"),
-            @ApiResponse(responseCode = "404", description = "Export job not found")
+    @Operation(operationId = "downloadDatasetExport", summary = "下载数据集导出文件", description = "下载已完成导出作业的CSV文件。此端点代理文件下载以避免暴露内部存储URL。", responses = {
+            @ApiResponse(responseCode = "200", description = "CSV文件内容", content = @Content(schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "400", description = "导出作业未准备好下载"),
+            @ApiResponse(responseCode = "404", description = "导出作业未找到")
     })
     public Response downloadDatasetExport(@PathParam("jobId") @NotNull UUID jobId) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Downloading export file for job '{}' on workspaceId '{}'", jobId, workspaceId);
+        log.info("下载导出文件，作业 '{}'，工作区 '{}'", jobId, workspaceId);
 
-        // Get job to extract dataset name for filename
+        // 获取作业以提取数据集名称用于文件名
         DatasetExportJob job = csvExportService.getJob(jobId)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
@@ -1010,12 +1005,12 @@ public class DatasetsResource {
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        // Generate filename from dataset name or fallback to job ID
+        // 从数据集名称生成文件名，或回退到作业ID
         String filename = FileNameUtils.buildDatasetExportFilename(job.datasetName(), jobId);
 
-        log.info("Completed download for export job '{}' on workspaceId '{}'", jobId, workspaceId);
+        log.info("已完成导出作业下载，作业 '{}'，工作区 '{}'", jobId, workspaceId);
 
-        // Use Jersey's ContentDisposition to safely build the header (handles encoding)
+        // 使用Jersey的ContentDisposition安全构建头（处理编码）
         ContentDisposition contentDisposition = ContentDisposition.type("attachment")
                 .fileName(filename)
                 .build();

@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import uniq from "lodash/uniq";
 import isObject from "lodash/isObject";
 import isArray from "lodash/isArray";
+import { useTranslation } from "react-i18next";
 
 import { Sorting } from "@/types/sorting";
 import { getJSONPaths } from "@/lib/utils";
@@ -30,10 +31,12 @@ const ExperimentsPathsAutocomplete: React.FC<
   promptId,
   sorting,
   filters,
-  placeholder = "Select a key from recent experiments",
+  placeholder,
   excludeRoot = false,
   className,
 }) => {
+  const { t } = useTranslation("experiments");
+  const resolvedPlaceholder = placeholder ?? t('selectKeyFromRecentExperiments');
   const { data, isPending } = useExperimentsList({
     promptId,
     sorting,
@@ -69,7 +72,7 @@ const ExperimentsPathsAutocomplete: React.FC<
       items={items}
       hasError={hasError}
       isLoading={isPending}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       className={className}
     />
   );

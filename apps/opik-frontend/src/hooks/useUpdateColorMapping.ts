@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import i18next from "i18next";
 import { useServerSync } from "@/contexts/server-sync-provider";
 import useWorkspaceConfigMutation from "@/api/workspaces/useWorkspaceConfigMutation";
 import { useToast } from "@/ui/use-toast";
@@ -17,9 +18,8 @@ const useUpdateColorMapping = () => {
     (colorKey: string, hexColor: string) => {
       if (!config)
         return toast({
-          title: "Changes not saved",
-          description:
-            "Workspace configuration is not loaded yet. Please try again.",
+          title: i18next.t("common.hooks.useUpdateColorMapping.changesNotSaved"),
+          description: i18next.t("common.hooks.useUpdateColorMapping.workspaceConfigNotLoaded"),
           variant: "destructive",
         });
 
@@ -38,8 +38,10 @@ const useUpdateColorMapping = () => {
           Object.keys(currentMap).length >= COLOR_MAP_MAX_ENTRIES
         ) {
           toast({
-            title: "Color map limit reached",
-            description: `Cannot exceed ${COLOR_MAP_MAX_ENTRIES} color mappings.`,
+            title: i18next.t("common.hooks.useUpdateColorMapping.colorMapLimitReached"),
+            description: i18next.t("common.hooks.useUpdateColorMapping.colorMapLimitExceeded", {
+              maxEntries: COLOR_MAP_MAX_ENTRIES,
+            }),
             variant: "destructive",
           });
           return;

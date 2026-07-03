@@ -1,0 +1,88 @@
+---
+description: Configure LangServe host-level OpenTelemetry export for Opik with clear applicability and minimal setup guidance.
+headline: LangServe | Opik Documentation
+og:description: LangServe has no standalone OTEL bootstrap; instrument the hosting app and export to Opik.
+og:site_name: Opik Documentation
+og:title: LangServe Integration - Opik
+title: 使用 Opik 对 LangServe 进行可观测性监控
+---
+
+[LangServe](https://github.com/langchain-ai/langserve) 不定义自己的独立 OpenTelemetry 引导程序。检测配置在宿主应用/运行时层（通常是 FastAPI + LangChain 组件）进行。
+
+## 本指南适用场景
+
+当你的 LangServe 路由运行在 Python Web 应用中，并且你希望在 Opik 中获取请求和框架 span 时，请使用本指南。
+
+## Opik OTLP 端点模式
+
+有关完整的端点/请求头详情，请参阅 [Opik OpenTelemetry 概述](/integrations/opentelemetry)。
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需请求头：`Authorization`、`Comet-Workspace`
+        可选请求头：`projectName`
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需请求头：`Authorization`、`Comet-Workspace`
+        可选请求头：`projectName`
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+        必需请求头：默认无
+        可选请求头：`projectName`，如已启用则需要认证请求头
+    </Tab>
+</Tabs>
+
+## LangServe 的 OTEL 配置模式
+
+目的：
+在 LangServe 宿主边界配置遥测，以便导出请求和框架 span。
+
+适用条件：
+LangServe 挂载在你控制的应用中（例如 FastAPI）。
+
+必需输入：
+- 启用宿主运行时检测
+- OTLP 端点
+- 适用于你部署模式的 OTLP 请求头
+
+可选输入：
+- 显式 `service.name`
+- 额外的框架或库检测器
+- 路由级过滤/采样
+
+最小有效配置：
+- 设置 `OTEL_EXPORTER_OTLP_ENDPOINT`
+- 设置 `OTEL_EXPORTER_OTLP_HEADERS`
+- 为你的宿主应用和 LangChain 技术栈启用检测
+
+使用以下规范的宿主/运行时配置：
+- [OpenTelemetry FastAPI 检测](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/fastapi/fastapi.html)
+- [Opik LangChain 集成指南](/tracing/integrations/langchain)
+
+## 验证
+
+1. 通过 LangServe 端点发送请求。
+2. 确认宿主应用发出了根 HTTP/服务器 span。
+3. 确认下游 LangChain/LangServe 相关 span 已导出并在 Opik 中可见。
+
+## 参考资料
+
+- [LangServe 仓库](https://github.com/langchain-ai/langserve)
+- [OpenTelemetry FastAPI 检测](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/fastapi/fastapi.html)
+- [Opik LangChain 集成指南](/tracing/integrations/langchain)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)

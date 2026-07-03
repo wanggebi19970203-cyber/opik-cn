@@ -1,0 +1,261 @@
+---
+description: 从这里开始将 Opik 集成到您的基于 Google Gemini 的 genai 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Gemini | Opik 文档
+og:description: 将 Opik 与 Google Generative AI SDK 集成，有效追踪和监控 Gemini API 调用，增强调试和性能监控。
+og:site_name: Opik 文档
+og:title: 与 Gemini API 的无缝集成
+title: 使用 Opik 实现 Google Gemini (TypeScript) 可观测性
+---
+
+Opik 通过 `opik-gemini` 包与 [Google Generative AI Node.js SDK](https://github.com/googleapis/js-genai) (`@google/genai`) 实现无缝集成，允许您追踪、监控和调试 Gemini API 调用。
+
+## 功能特性
+
+- **全面追踪**：自动追踪 Gemini API 调用，包括文本生成、聊天和多模态交互
+- **层级可视化**：以父子关系的结构化追踪视图查看 Gemini 请求
+- **详细元数据捕获**：记录模型名称、提示词、补全结果、token 使用量和自定义元数据
+- **错误处理**：捕获并可视化 Gemini API 交互过程中遇到的错误
+- **自定义标签**：添加自定义标签以组织和过滤追踪记录
+- **流式支持**：完全支持流式响应，逐 token 追踪
+- **VertexAI 支持**：兼容 Google AI Studio 和 Vertex AI 端点
+
+![Gemini TypeScript 集成](/img/tracing/gemini_typescript_integration.png)
+
+## 安装
+
+### 方式 1：使用 npm
+
+```bash
+npm install opik-gemini @google/genai
+```
+
+### 方式 2：使用 yarn
+
+```bash
+yarn add opik-gemini @google/genai
+```
+
+### 系统要求
+
+- Node.js ≥ 18
+- Google Generative AI SDK (`@google/genai` ≥ 1.0.0)
+- Opik SDK（作为依赖自动安装）
+
+**注意**：官方 Google GenAI SDK 包是 `@google/genai`（而非 `@google/generative-ai`）。这是 Google Deepmind 为 Gemini Developer API 和 Vertex AI 提供的统一 SDK。
+
+## 基本用法
+
+### 与 Google Generative AI 客户端配合使用
+
+要追踪 Gemini API 调用，您需要使用 `trackGemini` 函数包装 Gemini 客户端实例：
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+import { trackGemini } from "opik-gemini";
+
+// 初始化原始 Gemini 客户端
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+// 使用 Opik 追踪包装客户端
+const trackedGenAI = trackGemini(genAI);
+
+// 生成内容
+const response = await trackedGenAI.models.generateContent({
+  model: "gemini-2.0-flash-001",
+  contents: "Hello, how can you help me today?",
+});
+
+console.log(response.text);
+
+// 确保在应用终止前发送所有追踪记录
+await trackedGenAI.flush();
+```
+
+### 使用流式响应
+
+该集成完全支持 Gemini 的流式响应：
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+import { trackGemini } from "opik-gemini";
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const trackedGenAI = trackGemini(genAI);
+
+async function streamingExample() {
+  // 创建流式生成
+  const response = await trackedGenAI.models.generateContentStream({
+    model: "gemini-2.0-flash-001",
+    contents: "Write a short story about AI observability",
+  });
+
+  // 处理流
+  let streamedContent = "";
+  for await (const chunk of response) {
+    const chunkText = chunk.text;
+    if (chunkText) {
+      process.stdout.write(chunkText);
+      streamedContent += chunkText;
+    }
+  }
+
+  console.log("\nStreaming complete!");
+
+  // 完成后不要忘记刷新
+  await trackedGenAI.flush();
+}
+
+streamingExample();
+```
+
+## 高级配置
+
+`trackGemini` 函数接受可选的配置对象来自定义集成：
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+import { trackGemini } from "opik-gemini";
+import { Opik } from "opik";
+
+// 可选：创建自定义 Opik 客户端
+const customOpikClient = new Opik({
+  apiKey: "YOUR_OPIK_API_KEY", // 如果不使用环境变量
+  projectName: "gemini-integration-project",
+});
+
+const existingOpikTrace = customOpikClient.trace({
+  name: `Trace`,
+  input: {
+    prompt: `Hello, world!`,
+  },
+  output: {
+    response: `Hello, world!`,
+  },
+});
+
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+// 使用选项配置追踪客户端
+const trackedGenAI = trackGemini(genAI, {
+  // 可选：应用于所有追踪记录的标签数组
+  traceMetadata: {
+    tags: ["gemini", "production", "user-query"],
+
+    // 可选：包含在所有追踪记录中的元数据
+    environment: "production",
+    version: "1.2.3",
+    component: "story-generator",
+  },
+
+  // 可选：生成/追踪的自定义名称
+  generationName: "StoryGenerationService",
+
+  // 可选：预配置的 Opik 客户端
+  // 如果未提供，将使用单例实例
+  client: customOpikClient,
+
+  // 可选：用于层级关系的父追踪
+  parent: existingOpikTrace,
+});
+
+// 使用配置的选项和追踪客户端
+const response = await trackedGenAI.models.generateContent({
+  model: "gemini-2.0-flash-001",
+  contents: "Generate a creative story",
+});
+
+console.log(response.text);
+
+// 关闭现有追踪
+existingOpikTrace.end();
+
+// 在应用退出前刷新
+await trackedGenAI.flush();
+```
+
+## 与 VertexAI 配合使用
+
+该集成也支持 Google 的 VertexAI 平台。只需为 VertexAI 配置 Gemini 客户端并使用 `trackGemini` 包装：
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+import { trackGemini } from "opik-gemini";
+
+// 为 VertexAI 配置
+const genAI = new GoogleGenAI({
+  vertexai: true,
+  project: "your-project-id",
+  location: "us-central1",
+});
+
+const trackedGenAI = trackGemini(genAI);
+
+const response = await trackedGenAI.models.generateContent({
+  model: "gemini-2.0-flash-001",
+  contents: "Write a short story about AI observability",
+});
+
+console.log(response.text);
+
+// 在应用退出前刷新
+await trackedGenAI.flush();
+```
+
+## 聊天对话
+
+追踪与 Gemini 的多轮聊天对话：
+
+```typescript
+import { GoogleGenAI } from "@google/genai";
+import { trackGemini } from "opik-gemini";
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const trackedGenAI = trackGemini(genAI);
+
+async function chatExample() {
+  // 使用 generateContent 和历史记录进行多轮对话
+  const response = await trackedGenAI.models.generateContent({
+    model: "gemini-2.0-flash-001",
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: "Hello, I want to learn about AI observability." }],
+      },
+      {
+        role: "model",
+        parts: [
+          {
+            text: "Great! AI observability helps track and debug LLM applications.",
+          },
+        ],
+      },
+      {
+        role: "user",
+        parts: [{ text: "What are the key benefits of using Opik?" }],
+      },
+    ],
+  });
+
+  console.log(response.text);
+
+  await trackedGenAI.flush();
+}
+
+chatExample();
+```
+
+## 故障排除
+
+**缺少追踪记录**：确保您的 Gemini 和 Opik API 密钥正确，并在应用退出前调用 `await trackedGenAI.flush()`。
+
+**数据不完整**：对于流式响应，请确保在结束应用之前消费完整个流。
+
+**层级追踪**：要创建正确的父子关系，请在需要将 Gemini 调用设为另一个追踪的子追踪时，在配置中使用 `parent` 选项。
+
+**性能影响**：Opik 集成对 Gemini API 调用增加的开销极小。
+
+**VertexAI 认证**：使用 VertexAI 时，请确保已正确配置 Google Cloud 项目凭据。

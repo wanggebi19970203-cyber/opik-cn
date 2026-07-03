@@ -18,48 +18,48 @@ type DatasetOrVersion<T extends DatasetItemData> =
   | DatasetVersion<T>;
 
 export interface EvaluateOptions<T = Record<string, unknown>> {
-  /** The dataset or dataset version to evaluate against, containing inputs and expected outputs */
+  /** 要评估的数据集或数据集版本，包含输入和预期输出 */
   dataset: DatasetOrVersion<T extends DatasetItemData ? T : DatasetItemData & T>;
 
-  /** The specific LLM task to perform (e.g., classification, generation, question-answering) */
+  /** 要执行的特定 LLM 任务（如分类、生成、问答） */
   task: EvaluationTask<T>;
 
-  /** Optional array of metrics to evaluate model performance (e.g., accuracy, F1 score) */
+  /** 可选的指标数组，用于评估模型性能（如准确率、F1 分数） */
   scoringMetrics?: BaseMetric[];
 
-  /** Optional name for this evaluation experiment for tracking and reporting */
+  /** 此评估实验的可选名称，用于跟踪和报告 */
   experimentName?: string;
 
-  /** Optional project identifier to associate this experiment with */
+  /** 可选的项目标识符，用于关联此实验 */
   projectName?: string;
 
-  /** Optional configuration settings for the experiment as key-value pairs */
+  /** 实验的可选配置设置，以键值对形式 */
   experimentConfig?: Record<string, unknown>;
 
-  /** Optional array of Prompt objects to link with the experiment for tracking */
+  /** 可选的 Prompt 对象数组，用于与实验关联进行跟踪 */
   prompts?: Prompt[];
 
-  /** Optional number of samples to evaluate from the dataset (defaults to all if not specified) */
+  /** 可选的要从数据集中评估的样本数量（如果未指定则默认为全部） */
   nbSamples?: number;
 
   /**
-   * Optional Opik client instance to use for tracking
+   * 可选的 Opik 客户端实例，用于跟踪
    */
   client?: OpikClient;
 
   /**
-   * Optional mapping between dataset keys and scoring metric inputs
-   * Allows renaming keys from dataset or task output to match what metrics expect
+   * 可选的数据集键与评分指标输入之间的映射
+   * 允许从数据集或任务输出重命名键以匹配指标期望的格式
    */
   scoringKeyMapping?: ScoringKeyMappingType;
 
-  /** Optional list of tags to associate with the experiment */
+  /** 可选的标签列表，用于与实验关联 */
   tags?: string[];
 
-  /** Number of concurrent task executions (default: 16, matching Python SDK) */
+  /** 并发任务执行数量（默认：16，与 Python SDK 匹配） */
   taskThreads?: number;
 
-  /** Optional agent configuration blueprint ID to link with the experiment */
+  /** 可选的代理配置蓝图 ID，用于与实验关联 */
   blueprintId?: string;
 }
 

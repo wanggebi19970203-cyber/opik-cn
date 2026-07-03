@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import isArray from "lodash/isArray";
 import isObject from "lodash/isObject";
 import get from "lodash/get";
@@ -38,6 +39,7 @@ const getConfiguration = (
 const ConfigurationDiffContent: React.FunctionComponent<
   ConfigurationDiffContentProps
 > = ({ baselineExperiment, currentExperiment }) => {
+  const { t } = useTranslation("experiments");
   const { promptDiffs, configDiffs } = useMemo(() => {
     const baseConfig = getConfiguration(baselineExperiment?.metadata) ?? {};
     const currConfig = getConfiguration(currentExperiment?.metadata) ?? {};
@@ -141,7 +143,7 @@ const ConfigurationDiffContent: React.FunctionComponent<
     <div className="space-y-3">
       {!hasDiffs && (
         <div className="py-8 text-center text-muted-foreground">
-          No differences found.
+          {t("noDifferencesFound")}
         </div>
       )}
       {promptDiffs.map((diff) => (

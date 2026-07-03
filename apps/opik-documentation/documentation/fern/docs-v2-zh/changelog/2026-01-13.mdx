@@ -1,0 +1,71 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## Playground 和 Provider 增强
+
+我们扩展了 Playground，新增 Provider 支持和增强功能，使 prompt 实验更加强大。
+
+**新增内容：**
+
+- **在输出中显示指标结果** - Playground 输出单元格现在直接显示指标结果，让你一目了然地评估 prompt 性能
+
+<Frame>
+  <img src="/img/changelog/2026-01-13/Playground-metric-results.png" alt="Playground 输出，直接在输出单元格中显示指标结果" />
+</Frame>
+
+- **OpikAI 功能的模型选择器** - 轻松选择哪个模型驱动 Prompt 生成器和 Prompt 改进器功能
+
+<Frame>
+  <img src="/img/changelog/2026-01-13/OpikAI-model-selector.png" alt="OpikAI 功能的模型选择器下拉菜单，如 Prompt 生成器和 Prompt 改进器" />
+</Frame>
+
+- **原生 AWS Bedrock 集成** - Bedrock 现在作为原生 Provider 在 Playground 中可用，无需额外配置即可直接访问 Amazon 的模型
+
+<Frame>
+  <img src="/img/changelog/2026-01-13/AWS_Bedrock.png" alt="Playground Provider 选择中的 AWS Bedrock 集成" />
+</Frame>
+
+- **Gemini 3 Flash 支持** - 在 Playground 和在线评分中添加了 Gemini 3 Flash 支持，扩展了快速、经济高效评估的模型选项
+
+## 在线评估和评分
+
+我们使在线评估更灵活，更容易跨项目管理。
+
+**改进内容：**
+
+- **多项目评估规则** - 在线评估规则现在可以应用于多个项目，减少重复并简化规则管理
+
+<Frame>
+  <img src="/img/changelog/2026-01-13/Multi-project-rule-support.png" alt="在线评估规则的多项目支持" />
+</Frame>
+
+- **克隆评分规则** - 快速复制现有在线评分规则以创建变体，无需从头开始
+
+## UI 和用户体验增强
+
+我们在整个平台上优化了用户体验，改善了响应性和仪表板精致度。
+
+**改进内容：**
+
+- **移动端响应性** - 记录 traces 时对移动设备的更好支持
+- **仪表板增强** - 统一的组件编辑器设计、侧边栏中的仪表板计数，以及仪表板体验的各种用户体验改进
+
+## SDK 改进
+
+我们更新了 SDK，新增功能并现代化依赖。
+
+**新增内容：**
+
+- **Python 3.9 生命周期结束** - Python 3.9 支持已退役，因为它已到达生命周期终点。请升级到 Python 3.10+
+- **evaluate() 中的实验标签** - 你现在可以在调用 `evaluate()` 方法时直接为实验添加标签
+- **Vercel AI SDK v6** - TypeScript SDK 集成从 Vercel AI SDK v5 升级到 v6
+- **Prompt 版本标签（TypeScript）** - TypeScript SDK 现在支持 prompt 版本标签，改善 prompt 管理
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.9.56...1.9.78)
+
+_发布版本_: `1.9.57`, `1.9.58`, `1.9.59`, `1.9.60`, `1.9.61`, `1.9.62`, `1.9.63`, `1.9.64`, `1.9.65`, `1.9.66`, `1.9.67`, `1.9.68`, `1.9.69`, `1.9.70`, `1.9.71`, `1.9.72`, `1.9.73`, `1.9.74`, `1.9.75`, `1.9.76`, `1.9.77`, `1.9.78`

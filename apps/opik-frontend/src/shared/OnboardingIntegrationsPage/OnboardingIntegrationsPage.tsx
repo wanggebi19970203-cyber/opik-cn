@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 type IntegrationExplorerComponent = React.FC<{
   source?: string;
@@ -27,18 +28,18 @@ const OnboardingIntegrationsPage: React.FC<OnboardingIntegrationsPageProps> = ({
   banner,
   onSkip,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="mx-auto w-full max-w-[1040px] pb-10">
       <div className="mb-3 mt-6 flex items-center justify-between md:mt-10">
         <h1 className="md:comet-title-xl comet-title-l">
-          Get started with Opik
+          {t("common.shared.getStartedWithOpik")}
         </h1>
         {banner}
       </div>
       <p className="comet-body-s mb-10 text-muted-slate">
-        Opik helps you improve your LLM features by tracking what happens behind
-        the scenes. Integrate Opik to unlock evaluations, experiments, and
-        debugging.
+        {t("common.shared.opikDescription")}
       </p>
 
       <IntegrationExplorer source={source}>

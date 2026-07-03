@@ -43,15 +43,15 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Environments", description = "Environment related resources")
+@Tag(name = "Environments", description = "环境相关资源")
 public class EnvironmentsResource {
 
     private final @NonNull EnvironmentService service;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @GET
-    @Operation(operationId = "findEnvironments", summary = "Find environments", description = "Find environments for the workspace. Capped at the workspace limit (default 20).", responses = {
-            @ApiResponse(responseCode = "200", description = "Environments page", content = @Content(schema = @Schema(implementation = Environment.EnvironmentPage.class)))
+    @Operation(operationId = "findEnvironments", summary = "查找环境", description = "查找工作区内的环境。受工作区上限限制（默认20个）。", responses = {
+            @ApiResponse(responseCode = "200", description = "环境分页列表", content = @Content(schema = @Schema(implementation = Environment.EnvironmentPage.class)))
     })
     @JsonView({Environment.View.Public.class})
     public Response find() {
@@ -65,9 +65,9 @@ public class EnvironmentsResource {
 
     @GET
     @Path("{id}")
-    @Operation(operationId = "getEnvironmentById", summary = "Get environment by id", description = "Get environment by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Environment", content = @Content(schema = @Schema(implementation = Environment.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getEnvironmentById", summary = "根据ID获取环境", description = "根据ID获取环境", responses = {
+            @ApiResponse(responseCode = "200", description = "环境详情", content = @Content(schema = @Schema(implementation = Environment.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @JsonView({Environment.View.Public.class})
     public Response getById(@PathParam("id") @NotNull UUID id) {
@@ -80,10 +80,10 @@ public class EnvironmentsResource {
     }
 
     @POST
-    @Operation(operationId = "createEnvironment", summary = "Create environment", description = "Create environment", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createEnvironment", summary = "创建环境", description = "创建环境", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/environments/{environmentId}", schema = @Schema(implementation = String.class))}),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RateLimited
     public Response create(
@@ -104,10 +104,10 @@ public class EnvironmentsResource {
 
     @PATCH
     @Path("{id}")
-    @Operation(operationId = "updateEnvironment", summary = "Update environment by id", description = "Update environment by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "updateEnvironment", summary = "根据ID更新环境", description = "根据ID更新环境", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RateLimited
     public Response update(@PathParam("id") @NotNull UUID id,
@@ -123,8 +123,8 @@ public class EnvironmentsResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteEnvironmentsBatch", summary = "Delete environments", description = "Delete environments batch. Idempotent — missing ids are silently ignored.", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content")
+    @Operation(operationId = "deleteEnvironmentsBatch", summary = "删除环境", description = "批量删除环境。幂等操作 - 不存在的ID将被静默忽略。", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")
     })
     public Response deleteEnvironmentsBatch(
             @NotNull @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @Valid BatchDelete batchDelete) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import i18next from "i18next";
 import { FIELD_TYPE, DatasetField } from "./useDatasetItemData";
 import { DatasetItemColumn } from "@/types/datasets";
 import { DYNAMIC_COLUMN_TYPE } from "@/types/shared";
@@ -78,7 +79,11 @@ export const createDynamicSchema = (fields: DatasetField[]) => {
             return false;
           }
         },
-        { message: "Must be a valid JSON object or array" },
+        {
+          message: i18next.getFixedT(null, "datasets")(
+            "datasets.testSuiteItemForm.mustBeJsonObject",
+          ),
+        },
       );
     } else {
       schemaShape[field.key] = z.any();

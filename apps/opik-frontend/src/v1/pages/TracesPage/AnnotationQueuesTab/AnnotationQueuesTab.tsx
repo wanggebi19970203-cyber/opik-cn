@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -67,22 +68,22 @@ import {
 } from "@/types/annotation-queues";
 import { capitalizeFirstLetter } from "@/lib/utils";
 
-const SHARED_COLUMNS: ColumnData<AnnotationQueue>[] = [
+const getSharedColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("tracing.tracesSpansTab.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "instructions",
-    label: "Instructions",
+    label: t("tracing.annotationQueuesTab.columns.instructions"),
     type: COLUMN_TYPE.string,
     size: 400,
   },
   {
     id: "scope",
-    label: "Scope",
+    label: t("tracing.annotationQueuesTab.columns.scope"),
     type: COLUMN_TYPE.category,
     cell: TagCell as never,
     accessorFn: (row) => capitalizeFirstLetter(row.scope),
@@ -90,36 +91,36 @@ const SHARED_COLUMNS: ColumnData<AnnotationQueue>[] = [
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("tracing.annotationQueuesTab.columns.createdAt"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("tracing.tracesSpansTab.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("tracing.rulesTab.columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     sortable: true,
   },
 ];
 
-const DEFAULT_COLUMNS: ColumnData<AnnotationQueue>[] = [
+const getDefaultColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("tracing.tracesSpansTab.columns.name"),
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
     sortable: true,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Avg feedback scores",
+    label: t("tracing.annotationQueuesTab.columns.avgFeedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
     accessorFn: (row) => row.feedback_scores ?? [],
     cell: FeedbackScoreListCell as never,
@@ -130,32 +131,32 @@ const DEFAULT_COLUMNS: ColumnData<AnnotationQueue>[] = [
   },
   {
     id: "items_count",
-    label: "Item count",
+    label: t("tracing.annotationQueuesTab.columns.itemCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) => (row.items_count ? `${row.items_count}` : "-"),
   },
   {
     id: "reviewers",
-    label: "Reviewed by",
+    label: t("tracing.annotationQueuesTab.columns.reviewedBy"),
     type: COLUMN_TYPE.list,
     cell: ListCell as never,
     accessorFn: (row) => row.reviewers?.map((r) => r.username) ?? [],
   },
   {
     id: "progress",
-    label: "Progress",
+    label: t("tracing.annotationQueuesTab.columns.progress"),
     type: COLUMN_TYPE.string,
     cell: AnnotationQueueProgressCell as never,
   },
 ];
 
-const FILTER_COLUMNS: ColumnData<AnnotationQueue>[] = [
+const getFilterColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("tracing.tracesSpansTab.columns.name"),
     type: COLUMN_TYPE.string,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
 ];
 
 const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
@@ -195,19 +196,19 @@ const COLUMNS_SORT_KEY = "annotation-queues-columns-sort";
 const PAGINATION_SIZE_KEY = "annotation-queues-pagination-size";
 const ROW_HEIGHT_KEY = "annotation-queues-row-height";
 
-const FILTERS_CONFIG = {
+const getFiltersConfig = (t: (key: string) => string) => ({
   rowsMap: {
     scope: {
       keyComponentProps: {
         options: [
-          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: "Trace" },
-          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: "Thread" },
+          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: t("tracing.annotationQueuesTab.filterTrace") },
+          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: t("tracing.annotationQueuesTab.filterThread") },
         ],
-        placeholder: "Select scope",
+        placeholder: t("tracing.annotationQueuesTab.filterSelectScope"),
       },
     },
   },
-};
+});
 
 type AnnotationQueuesTabProps = {
   projectId: string;
@@ -216,6 +217,7 @@ type AnnotationQueuesTabProps = {
 const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
   projectId,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
   const resetDialogKeyRef = useRef(0);
@@ -327,10 +329,11 @@ const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
   );
 
   const columns = useMemo(() => {
+    const defaultColumns = getDefaultColumns(t);
     return [
       generateSelectColumDef<AnnotationQueue>(),
       ...convertColumnDataToColumn<AnnotationQueue, AnnotationQueue>(
-        DEFAULT_COLUMNS,
+        defaultColumns,
         {
           columnsOrder,
           selectedColumns,
@@ -350,7 +353,7 @@ const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
         cell: AnnotationQueueRowActionsCell,
       }),
     ];
-  }, [sortableBy, columnsOrder, selectedColumns]);
+  }, [sortableBy, columnsOrder, selectedColumns, t]);
 
   const sortConfig = useMemo(
     () => ({
@@ -372,10 +375,10 @@ const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
 
   const noDataText = useMemo(() => {
     if (search) {
-      return `No annotation queues found for "${search}"`;
+      return t("tracing.annotationQueuesTab.noQueuesFound", { search });
     }
-    return "No annotation queues";
-  }, [search]);
+    return t("tracing.annotationQueuesTab.noQueues");
+  }, [search, t]);
 
   const noData = !search && filters.length === 0;
   const showEmptyState =
@@ -392,13 +395,13 @@ const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("tracing.annotationQueuesTab.searchByName")}
             className="w-[320px]"
             dimension="sm"
           />
           <FiltersButton
-            columns={FILTER_COLUMNS}
-            config={FILTERS_CONFIG as never}
+            columns={getFilterColumns(t)}
+            config={getFiltersConfig(t) as never}
             filters={filters}
             onChange={setFilters}
             layout="icon"
@@ -416,7 +419,7 @@ const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
             setType={setHeight}
           />
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={getDefaultColumns(t)}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}
@@ -424,7 +427,7 @@ const AnnotationQueuesTab: React.FC<AnnotationQueuesTabProps> = ({
           />
           {canCreateAnnotationQueues && (
             <Button size="sm" onClick={handleNewQueue}>
-              Create new queue
+              {t("tracing.annotationQueuesTab.createNewQueue")}
             </Button>
           )}
         </div>

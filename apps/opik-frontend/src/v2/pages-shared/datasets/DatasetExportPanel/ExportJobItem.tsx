@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Download, Loader2, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ interface ExportJobItemProps {
 }
 
 const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
+  const { t } = useTranslation("datasets");
   const { job, datasetName } = jobInfo;
   const removeJob = useRemoveExportJob();
   const updateJob = useUpdateExportJob();
@@ -72,10 +74,10 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
 
     if (shouldShowToast) {
       toast({
-        title: "Export failed",
+        title: t("exportPanel.exportFailed"),
         description:
           currentJob.error_message ||
-          `Failed to export test suite "${datasetName}"`,
+          t("exportPanel.exportFailedDescription", { datasetName }),
         variant: "destructive",
       });
 
@@ -92,6 +94,7 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
     datasetName,
     toast,
     markAsViewed,
+    t,
   ]);
 
   const isLoading = isJobLoading(job.status);
@@ -129,7 +132,7 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
   const renderActionButton = () => {
     if (isCompleted && isHovered) {
       return (
-        <TooltipWrapper content="Download">
+        <TooltipWrapper content={t("exportPanel.download")}>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -147,7 +150,7 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
 
     if (isFailed) {
       return (
-        <TooltipWrapper content="Dismiss">
+        <TooltipWrapper content={t("exportPanel.dismiss")}>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -177,14 +180,14 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
         {renderStatusIndicator()}
         <span className="truncate text-sm">{datasetName}</span>
         {isFailed && (
-          <span className="shrink-0 text-xs text-destructive">Failed</span>
+          <span className="shrink-0 text-xs text-destructive">{t("exportPanel.failed")}</span>
         )}
         {isCompleted && (
-          <span className="shrink-0 text-xs text-green-600">Ready</span>
+          <span className="shrink-0 text-xs text-green-600">{t("exportPanel.ready")}</span>
         )}
         {isLoading && (
           <span className="shrink-0 text-xs text-muted-foreground">
-            Exporting...
+            {t("exportPanel.exporting")}
           </span>
         )}
       </div>

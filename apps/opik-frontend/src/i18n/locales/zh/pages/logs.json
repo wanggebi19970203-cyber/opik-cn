@@ -1,0 +1,140 @@
+{
+  "logs": {
+    "title": "日志",
+    "description": "查看和分析追踪与跨度",
+    "empty": {
+      "title": "暂无追踪",
+      "description": "当您的Agent开始接收请求后，追踪将显示在这里。"
+    },
+    "columns": {
+      "id": "ID",
+      "name": "名称",
+      "status": "状态",
+      "duration": "时长",
+      "startTime": "开始时间",
+      "feedbackScores": "反馈分数"
+    },
+    "actions": {
+      "view": "查看追踪",
+      "copyId": "复制追踪ID",
+      "addToDataset": "添加到数据集",
+      "addToQueue": "添加到队列"
+    },
+    "filters": {
+      "search": "搜索追踪",
+      "status": "状态",
+      "duration": "时长",
+      "tags": "标签"
+    },
+    "threads": {
+      "columns": {
+        "firstMessage": "首条消息",
+        "lastMessage": "末条消息",
+        "messageCount": "消息数量",
+        "totalTokens": "总Token数",
+        "totalInputTokens": "总输入Token数",
+        "totalOutputTokens": "总输出Token数",
+        "estimatedCost": "预估成本",
+        "createdBy": "创建者",
+        "comments": "评论",
+        "threadId": "会话ID",
+        "annotationQueueId": "标注队列ID"
+      },
+      "filters": {
+        "searchByAnything": "搜索任意内容",
+        "searchFirstMessage": "搜索首条消息",
+        "searchLastMessage": "搜索末条消息",
+        "enterThreadId": "输入会话ID",
+        "enterAnnotationQueueId": "输入标注队列ID",
+        "typeATag": "输入标签\u2026",
+        "addTag": "添加标签",
+        "selectScore": "选择分数"
+      },
+      "empty": {
+        "title": "暂无会话",
+        "description": "当您的Agent开始接收请求后，会话将显示在这里。",
+        "quickstartGuide": "快速入门指南",
+        "viewDocs": "查看文档"
+      },
+      "refreshTooltip": "刷新会话列表",
+      "countLabel": "会话",
+      "feedbackScores": "反馈分数",
+      "deleteThreads": "删除会话",
+      "deleteDescription": "删除会话将同时移除所有关联的追踪及其数据。此操作不可撤销。确定要继续吗？",
+      "deleteConfirm": "删除会话",
+      "manageTags": "管理标签",
+      "evaluate": "评估",
+      "exportDisabled": "此安装已禁用导出功能",
+      "delete": "删除"
+    },
+    "tracesSpans": {
+      "columns": {
+        "input": "输入",
+        "output": "输出",
+        "errors": "错误",
+        "totalTokens": "总Token数",
+        "totalInputTokens": "总输入Token数",
+        "totalOutputTokens": "总输出Token数",
+        "estimatedCost": "预估成本",
+        "metadata": "元数据",
+        "spanCount": "跨度数量",
+        "llmCallsCount": "LLM调用次数",
+        "threadId": "会话ID",
+        "experiment": "实验",
+        "createdBy": "创建者",
+        "comments": "评论",
+        "guardrails": "护栏",
+        "provider": "提供者"
+      },
+      "filters": {
+        "searchByAnything": "搜索任意内容",
+        "searchInput": "搜索输入",
+        "searchOutput": "搜索输出",
+        "searchName": "搜索名称",
+        "withErrors": "包含错误",
+        "traceName": "追踪名称",
+        "spanName": "跨度名称",
+        "traceId": "追踪ID",
+        "spanId": "跨度ID",
+        "threadId": "会话ID",
+        "enterTraceId": "输入追踪ID",
+        "enterSpanId": "输入跨度ID",
+        "enterThreadId": "输入会话ID",
+        "enterProvider": "输入提供者",
+        "enterAnnotationQueueId": "输入标注队列ID",
+        "typeATag": "输入标签\u2026",
+        "addTag": "添加标签",
+        "errorType": "错误类型",
+        "selectErrorType": "选择错误类型",
+        "traceFeedbackScores": "追踪反馈分数",
+        "spanFeedbackScores": "跨度反馈分数",
+        "selectScore": "选择分数",
+        "selectSpanScore": "选择跨度分数",
+        "customFilter": "自定义过滤",
+        "guardrails": "护栏",
+        "failed": "失败",
+        "passed": "通过",
+        "annotationQueueId": "标注队列ID",
+        "cost": "成本",
+        "tokens": "Token数",
+        "inputTokens": "输入Token数",
+        "outputTokens": "输出Token数",
+        "llmCallsCount": "LLM调用次数"
+      },
+      "empty": {
+        "quickstartGuide": "快速入门指南",
+        "viewDocs": "查看文档"
+      },
+      "refreshTooltip": {
+        "traces": "刷新追踪列表",
+        "spans": "刷新跨度列表"
+      },
+      "countLabel": {
+        "traces": "追踪",
+        "spans": "跨度"
+      },
+      "feedbackScores": "反馈分数",
+      "failed": "失败"
+    }
+  }
+}

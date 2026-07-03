@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 import { ChartConfig } from "@/ui/chart";
 import { Spinner } from "@/ui/spinner";
@@ -36,10 +37,16 @@ const MetricLineChart: React.FunctionComponent<MetricLineChartProps> = ({
   labelActions,
   isAggregateTotal = false,
 }) => {
+  const { t } = useTranslation("dashboards");
+
   const renderChartTooltipHeader = useCallback(
     ({ payload }: ChartTooltipRenderHeaderArguments) => {
       if (isAggregateTotal) {
-        return <div className="comet-body-xs mb-1 text-light-slate">Total</div>;
+        return (
+          <div className="comet-body-xs mb-1 text-light-slate">
+            {t("chart.total")}
+          </div>
+        );
       }
       return (
         <div className="comet-body-xs mb-1 text-light-slate">
@@ -47,7 +54,7 @@ const MetricLineChart: React.FunctionComponent<MetricLineChartProps> = ({
         </div>
       );
     },
-    [isAggregateTotal],
+    [isAggregateTotal, t],
   );
 
   const xTickFormatter = useCallback(

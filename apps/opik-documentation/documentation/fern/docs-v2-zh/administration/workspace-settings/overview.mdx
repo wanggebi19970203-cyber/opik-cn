@@ -1,0 +1,52 @@
+---
+headline: 工作区设置概述 | Opik 文档
+og:description: 在 Opik 中配置工作区级别的设置，包括反馈定义、AI 提供商、偏好设置和成员管理。
+og:site_name: Opik 文档
+og:title: 'Opik 工作区设置：配置您的工作区'
+subtitle: 了解 Opik 中的工作区级配置选项
+title: 概述
+---
+
+工作区设置允许您配置应用于整个工作区的选项。这些设置与组织级别的管理功能分开管理。
+
+## 访问工作区设置
+
+1. 在 Opik 中导航到您的工作区
+2. 点击左侧边栏中的 **配置**
+3. 选择要配置的设置对应的选项卡
+
+<Frame>
+  <img src="/img/administration/workspace_configuration.png" alt="工作区配置" />
+</Frame>
+
+## 谁可以访问工作区设置？
+
+- **工作区所有者**可以访问所有设置，包括成员管理和偏好设置
+- 具有相应角色的**工作区成员**可以访问反馈定义和 AI 提供商
+
+<Note>
+工作区成员功能适用于 Opik Cloud 和企业版计划。此功能在开源部署中不可用。如果您想为您的 Opik 部署启用此功能，请[联系我们](https://www.comet.com/site/about-us/contact-us/)。
+</Note>
+
+## 可用设置
+
+<CardGroup cols={2}>
+  <Card title="反馈定义" href="/administration/workspace-settings/feedback_definitions">
+    创建用于评估 LLM 输出的自定义标签，支持结构化反馈类型。
+  </Card>
+  <Card title="AI 提供商" href="/administration/workspace-settings/ai_providers">
+    配置与 LLM 提供商的连接，用于 Playground 和在线评估。
+  </Card>
+  <Card title="工作区偏好" href="/administration/workspace-settings/workspace_preferences">
+    配置工作区范围的偏好设置，如线程超时和数据截断。
+  </Card>
+  <Card title="工作区成员" href="/administration/workspace-settings/workspace_members">
+    管理工作区成员及其访问权限（仅限 Cloud/企业版）。
+  </Card>
+</CardGroup>
+
+## 后续步骤
+
+- 要创建自定义反馈类型，请参阅[反馈定义](/administration/workspace-settings/feedback_definitions)
+- 要连接 LLM 提供商，请参阅[AI 提供商](/administration/workspace-settings/ai_providers)
+- 要管理工作区成员（Cloud/企业版），请参阅[工作区成员](/administration/workspace-settings/workspace_members)

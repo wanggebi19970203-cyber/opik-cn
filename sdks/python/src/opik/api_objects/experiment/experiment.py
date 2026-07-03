@@ -87,11 +87,11 @@ class Experiment:
         experiment_items_references: List[experiment_item.ExperimentItemReferences],
     ) -> None:
         """
-        Creates a new experiment item by linking the existing trace and dataset item.
+        通过链接现有的 trace 和数据集项目创建新的实验项目。
 
         Args:
-            experiment_items_references: The list of ExperimentItemReferences objects, containing
-                trace id and dataset item id to link together into experiment item.
+            experiment_items_references: ExperimentItemReferences 对象列表，
+                包含要链接在一起的 trace id 和数据集项目 id。
 
         Returns:
             None
@@ -109,7 +109,7 @@ class Experiment:
             for item in experiment_items_references
         ]
 
-        # Split into batches for the streamer
+        # 拆分为批次发送给流处理器
         batches = sequence_splitter.split_into_batches(
             experiment_item_messages,
             max_length=constants.FEEDBACK_SCORES_MAX_BATCH_SIZE,
@@ -127,17 +127,17 @@ class Experiment:
         truncate: bool = False,
     ) -> List[experiment_item.ExperimentItemContent]:
         """
-        Retrieves and returns a list of experiment items for this experiment.
+        检索并返回此实验的实验项目列表。
 
         Args:
-            max_results: Maximum number of experiment items to retrieve. Defaults to 10000 if not specified.
-            truncate: Whether to truncate the items returned by the backend. Defaults to False.
+            max_results: 要检索的最大实验项目数。如果未指定，默认为 10000。
+            truncate: 是否截断后端返回的项目。默认为 False。
 
         Returns:
-            List of ExperimentItemContent objects for this experiment.
+            此实验的 ExperimentItemContent 对象列表。
         """
         if max_results is None:
-            max_results = 10000  # TODO: remove this once we have a proper way to get all experiment items
+            max_results = 10000  # TODO: 一旦我们有了获取所有实验项目的正确方法就移除此处
 
         return self._experiments_client.find_experiment_items_for_dataset(
             dataset_name=self.dataset_name,
@@ -151,7 +151,7 @@ class Experiment:
         self,
         score_results: List["score_result.ScoreResult"],
     ) -> None:
-        """Log experiment-level scores to the backend."""
+        """向后端记录实验级别的分数。"""
         experiment_scores: List[rest_api_types.ExperimentScore] = []
 
         for score_result_ in score_results:

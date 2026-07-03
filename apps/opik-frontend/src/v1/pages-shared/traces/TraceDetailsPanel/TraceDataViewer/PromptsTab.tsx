@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import { PromptWithLatestVersion, PromptVersion } from "@/types/prompts";
 import { PromptLibraryMetadata } from "@/types/playground";
@@ -70,6 +71,7 @@ const PromptsTab: React.FunctionComponent<PromptsTabProps> = ({
   data,
   search,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canUsePlayground },
   } = usePermissions();
@@ -106,7 +108,7 @@ const PromptsTab: React.FunctionComponent<PromptsTabProps> = ({
               <FileTerminal className="size-4" />
               <div className="flex flex-col items-start">
                 <div className="flex items-center gap-2">
-                  <span>Prompt: {promptName}</span>
+                  <span>{t("prompts.promptLabel", { name: promptName })}</span>
                   {commitHash && (
                     <div className="flex items-center">
                       <GitCommitVertical className="size-3 text-muted-slate" />

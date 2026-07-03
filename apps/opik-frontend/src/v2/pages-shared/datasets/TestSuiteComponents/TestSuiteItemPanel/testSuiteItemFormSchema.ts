@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { z } from "zod";
 import { ExecutionPolicy, MAX_RUNS_PER_ITEM } from "@/types/test-suites";
 
@@ -11,7 +12,7 @@ export const testSuiteItemFormSchema = z
     useGlobalPolicy: z.boolean().default(false),
   })
   .refine((data) => data.passThreshold <= data.runsPerItem, {
-    message: "Pass threshold cannot exceed runs per item",
+    message: i18next.t("common:validation.passThresholdCannotExceedRunsPerItem"),
     path: ["passThreshold"],
   });
 

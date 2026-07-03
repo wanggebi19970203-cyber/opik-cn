@@ -10,6 +10,7 @@ import {
 import useLocalStorageState from "use-local-storage-state";
 import get from "lodash/get";
 import uniqBy from "lodash/uniqBy";
+import { useTranslation } from "react-i18next";
 
 import { Groups } from "@/types/groups";
 import {
@@ -84,6 +85,7 @@ export const useExperimentsTableConfig = <
   sortedColumns,
   setSortedColumns,
 }: UseExperimentsTableConfigProps<T>) => {
+  const { t } = useTranslation("experiments");
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     `${storageKeyPrefix}-selected-columns-v2`,
     {
@@ -222,10 +224,10 @@ export const useExperimentsTableConfig = <
           valueKey: `${metaKey}.value`,
           labelKey: `${metaKey}.label`,
           countAggregationKey: "experiment_count",
-          explainer: {
-            id: "group-experiments",
-            description: `Some of the experiments didn’t match any group`,
-          },
+            explainer: {
+              id: "group-experiments",
+              description: t('someExperimentsDidntMatchGroup'),
+            },
         },
       } as ColumnData<T>;
 
@@ -244,7 +246,7 @@ export const useExperimentsTableConfig = <
               countAggregationKey: "experiment_count",
               explainer: {
                 id: "group-experiments",
-                description: `Some experiments reference a dataset that has been deleted`,
+                description: t('someExperimentsReferenceDeletedDataset'),
               },
             },
           } as ColumnData<T>;
@@ -263,7 +265,7 @@ export const useExperimentsTableConfig = <
               countAggregationKey: "experiment_count",
               explainer: {
                 id: "group-experiments",
-                description: `Some experiments reference a project that has been deleted`,
+                description: t('someExperimentsReferenceDeletedProject'),
               },
             },
           } as ColumnData<T>;
@@ -389,7 +391,7 @@ export const useExperimentsTableConfig = <
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Feedback scores",
+        title: t('columns.feedbackScores'),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,

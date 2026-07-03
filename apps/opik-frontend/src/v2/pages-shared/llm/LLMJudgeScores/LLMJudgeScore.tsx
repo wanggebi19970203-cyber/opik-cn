@@ -16,6 +16,7 @@ import { FormErrorSkeleton } from "@/ui/form";
 import { Input } from "@/ui/input";
 import { TEXT_AREA_CLASSES } from "@/ui/textarea";
 import { get } from "lodash";
+import { useTranslation } from "react-i18next";
 
 const SCORE_TYPE_OPTIONS: DropdownOption<LLM_SCHEMA_TYPE>[] = [
   {
@@ -50,6 +51,7 @@ const LLMJudgeScore = ({
   onRemoveScore,
 }: LLMJudgeScoreProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const { t } = useTranslation("llm");
   const [scoreData, setScoreData] = useState<ScoreFieldData>({
     name: score.name || "",
     description: score.description || "",
@@ -121,7 +123,7 @@ const LLMJudgeScore = ({
               <>
                 <Input
                   dimension="sm"
-                  placeholder="Score name"
+                  placeholder={t("llm:judgeScores.scoreName")}
                   className={cn({
                     "border-destructive": nameErrorText,
                   })}
@@ -136,7 +138,7 @@ const LLMJudgeScore = ({
                   </FormErrorSkeleton>
                 )}
                 <TextareaAutosize
-                  placeholder="Score description"
+                  placeholder={t("llm:judgeScores.scoreDescription")}
                   value={scoreData.description}
                   onChange={(event) =>
                     onUpdateField(event.target.value, "description")
@@ -160,7 +162,7 @@ const LLMJudgeScore = ({
             />
 
             {!isEditing ? (
-              <TooltipWrapper content="Edit a score">
+              <TooltipWrapper content={t("llm:judgeScores.editScore")}>
                 <Button
                   variant="outline"
                   size="icon-sm"
@@ -172,7 +174,7 @@ const LLMJudgeScore = ({
                 </Button>
               </TooltipWrapper>
             ) : (
-              <TooltipWrapper content="Done editing">
+              <TooltipWrapper content={t("llm:judgeScores.doneEditing")}>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -181,12 +183,12 @@ const LLMJudgeScore = ({
                   type="button"
                 >
                   <Check className="mr-1.5 size-3.5 shrink-0" />
-                  Done editing
+                  {t("llm:judgeScores.doneEditing")}
                 </Button>
               </TooltipWrapper>
             )}
 
-            <TooltipWrapper content="Delete a score">
+            <TooltipWrapper content={t("llm:judgeScores.deleteScore")}>
               <Button
                 variant="outline"
                 size="icon-sm"

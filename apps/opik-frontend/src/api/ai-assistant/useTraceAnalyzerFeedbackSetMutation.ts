@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import get from "lodash/get";
+import i18next from "i18next";
 
 import api, { BASE_OPIK_AI_URL, TRACE_ANALYZER_REST_ENDPOINT } from "@/api/api";
 import { useToast } from "@/ui/use-toast";
@@ -33,10 +34,10 @@ const useTraceAnalyzerFeedbackSetMutation = () => {
     onError: (error) => {
       const message =
         get(error, ["response", "data", "message"], error.message) ||
-        "Failed to update feedback. Please try again.";
+        i18next.t("common:messages.failedToUpdateFeedback");
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

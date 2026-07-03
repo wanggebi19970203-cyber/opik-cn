@@ -1,0 +1,274 @@
+---
+headline: 评估单个 prompt | Opik 文档
+og:description: 在 Opik 中使用 playground 或 Python SDK 评估和比较 prompt 性能，以增强你的 prompt 工程流程。
+og:site_name: Opik 文档
+og:title: 有效评估单个 Prompt - Opik
+subtitle: 评估 LLM prompt 的分步指南
+title: 评估单个 prompt
+canonical-url: https://www.comet.com/docs/opik/evaluation/getting-started
+---
+
+<Note>
+  在 Opik 2.0 中，实验和评估套件是项目范围的。创建数据集和运行实验时请确保指定 `project_name`。
+</Note>
+
+在开发 prompt 和进行 prompt 工程时，很难知道新 prompt 是否比之前的版本更好。
+
+Opik 实验允许你在多个样本上评估 prompt，对每个 LLM 输出进行评分，并比较不同 prompt 的性能。
+
+<Frame>
+  <img src="/img/evaluation/experiment_items.png" />
+</Frame>
+
+在 Opik 中有两种评估 prompt 的方式：
+
+1. 使用 prompt playground
+2. 使用 Python SDK 中的 `evaluate_prompt` 函数
+
+## 使用 prompt playground
+
+Opik playground 允许你快速测试不同的 prompt 并查看它们的表现。
+
+你可以通过点击 playground 右上角的 `+ Add prompt` 按钮来比较多个 prompt。这将允许你输入多个 prompt 并并排比较它们。
+
+要在样本上评估 prompt，你可以使用 `{{variable}}` 语法在 prompt 消息中添加变量。然后你可以连接数据集并在每个数据集项上运行 prompt。
+
+![Playground 评估](/img/evaluation/playground_evaluation.gif)
+
+## 以编程方式评估 prompt
+
+Opik SDK 提供了一种简单的方式使用 `evaluate prompt` 方法评估 prompt。此方法允许你指定数据集、prompt 和模型。然后 prompt 在每个数据集项上进行评估，输出可以在 Opik UI 中查看和标注。
+
+要运行实验，你可以使用以下代码：
+
+<CodeBlocks>
+    ```typescript title="TypeScript" language="typescript"
+    import { Opik, evaluatePrompt } from 'opik';
+
+    // 创建包含要评估样本的数据集
+    const opikClient = new Opik();
+    const dataset = await opikClient.getOrCreateDataset({
+        name: "my_dataset",
+    });
+    await dataset.insert([
+        { input: "Hello, world!", expected_output: "Hello, world!" },
+        { input: "What is the capital of France?", expected_output: "Paris" },
+    ]);
+
+    // 运行评估
+    await evaluatePrompt({
+        dataset,
+        messages: [
+            { role: "user", content: "Translate the following text to French: {{input}}" },
+        ],
+        model: "gpt-4o",
+        projectName: "my-project",
+    });
+    ```
+
+    ```python title="Python" language="python"
+    import opik
+    from opik.evaluation import evaluate_prompt
+
+    # 创建包含要评估样本的数据集
+    opik_client = opik.Opik()
+    dataset = opik_client.get_or_create_dataset("my_dataset", project_name="my-project")
+    dataset.insert([
+        {"input": "Hello, world!", "expected_output": "Hello, world!"},
+        {"input": "What is the capital of France?", "expected_output": "Paris"},
+    ])
+
+    # 运行评估
+    evaluate_prompt(
+        dataset=dataset,
+        messages=[
+            {"role": "user", "content": "Translate the following text to French: {{input}}"},
+        ],
+        model="gpt-3.5-turbo",
+        project_name="my-project",
+    )
+    ```
+
+</CodeBlocks>
+评估完成后，你可以在 Opik UI 中查看响应并对每个 LLM 输出进行评分。
+
+<Frame>
+  <img src="/img/evaluation/experiment_items.png" />
+</Frame>
+
+### 自动化评分过程
+
+手动审查每个 LLM 输出既耗时又容易出错。`evaluate_prompt` 函数允许你指定评分指标列表来对每个 LLM 输出进行评分。Opik 有一组内置指标，可以检测幻觉、答案相关性等，如果你需要的指标我们没有，你可以轻松创建自己的。
+
+你可以在[指标概述](/v1/evaluation/metrics/overview)部分找到所有 Opik 支持的指标的完整列表，或者你可以使用[自定义指标](/v1/evaluation/metrics/custom_metric)部分定义自己的指标。
+
+通过在 `evaluate_prompt` 函数中添加 `scoring_metrics` 参数，你可以指定用于评分的指标列表。我们将更新上面的示例使用 `Hallucination` 指标进行评分：
+
+<CodeBlocks>
+    ```python title="Python" language="python"
+    import opik
+    from opik.evaluation import evaluate_prompt
+    from opik.evaluation.metrics import Hallucination
+
+    # 创建包含要评估样本的数据集
+    opik_client = opik.Opik()
+    dataset = opik_client.get_or_create_dataset("my_dataset", project_name="my-project")
+    dataset.insert([
+        {"input": "Hello, world!", "expected_output": "Hello, world!"},
+        {"input": "What is the capital of France?", "expected_output": "Paris"},
+    ])
+
+    # 运行评估
+    evaluate_prompt(
+        dataset=dataset,
+        messages=[
+            {"role": "user", "content": "Translate the following text to French: {{input}}"},
+        ],
+        model="gpt-3.5-turbo",
+        scoring_metrics=[Hallucination()],
+        project_name="my-project",
+    )
+    ```
+
+    ```typescript title="TypeScript" language="typescript"
+    import { Opik, evaluatePrompt, Hallucination } from 'opik';
+
+    // 创建包含要评估样本的数据集
+    const opikClient = new Opik();
+    const dataset = await opikClient.getOrCreateDataset({
+        name: "my_dataset",
+    });
+    await dataset.insert([
+        { input: "Hello, world!", expected_output: "Hello, world!" },
+        { input: "What is the capital of France?", expected_output: "Paris" },
+    ]);
+
+    // 运行评估
+    await evaluatePrompt({
+        dataset,
+        messages: [
+            { role: "user", content: "Translate the following text to French: {{input}}" },
+        ],
+        model: "gpt-4o",
+        scoringMetrics: [new Hallucination()],
+        projectName: "my-project",
+    });
+    ```
+
+</CodeBlocks>
+
+### 自定义使用的模型
+
+你可以通过使用 [`LiteLLMChatModel`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/LiteLLMChatModel.html) 类创建新模型来自定义使用的模型。这支持向模型传递额外参数，如 `temperature` 或模型使用的基础 URL。
+
+<CodeBlocks>
+    ```python
+    import opik
+    from opik.evaluation import evaluate_prompt
+    from opik.evaluation.metrics import Hallucination
+    from opik.evaluation import models
+
+    # 创建包含要评估样本的数据集
+    opik_client = opik.Opik()
+    dataset = opik_client.get_or_create_dataset("my_dataset", project_name="my-project")
+    dataset.insert([
+        {"input": "Hello, world!", "expected_output": "Hello, world!"},
+        {"input": "What is the capital of France?", expected_output": "Paris"},
+    ])
+
+    # 运行评估
+    evaluate_prompt(
+        dataset=dataset,
+        messages=[
+            {"role": "user", "content": "Translate the following text to French: {{input}}"},
+        ],
+        model=models.LiteLLMChatModel(model="gpt-3.5-turbo", temperature=0),
+        scoring_metrics=[Hallucination()],
+        project_name="my-project",
+    )
+    ```
+
+    ```typescript title="TypeScript" language="typescript"
+    import { Opik, evaluatePrompt, Hallucination } from 'opik';
+    import { openai } from '@ai-sdk/openai';
+
+    // 创建包含要评估样本的数据集
+    const opikClient = new Opik();
+    const dataset = await opikClient.getOrCreateDataset({
+        name: "my_dataset",
+    });
+    await dataset.insert([
+        { input: "Hello, world!", expected_output: "Hello, world!" },
+        { input: "What is the capital of France?", expected_output: "Paris" },
+    ]);
+
+
+    // 定义具有特定配置的自定义模型提供商
+    const openai = createOpenAI({
+        // 自定义设置 https://ai-sdk.dev/providers/ai-sdk-providers/openai#setup
+        baseURL: "https://api.openai.com/v1"
+    });
+
+    // 运行评估
+    await evaluatePrompt({
+        dataset,
+        messages: [
+            { role: "user", content: "Translate the following text to French: {{input}}" },
+        ],
+        model: openai('gpt-4o'),
+        scoringMetrics: [new Hallucination()],
+        temperature: 0,
+        projectName: "my-project",
+    });
+    ```
+
+</CodeBlocks>
+
+### 过滤数据集项
+
+你可以使用 `dataset_filter_string` 参数仅评估数据集项的子集。当你想在特定类别的数据上运行实验时，这很有用：
+
+<CodeBlocks>
+    ```python title="Python" language="python"
+    import opik
+    from opik.evaluation import evaluate_prompt
+
+    # 创建或获取数据集
+    opik_client = opik.Opik()
+    dataset = opik_client.get_or_create_dataset("my_dataset", project_name="my-project")
+
+    # 仅评估具有特定标签的项
+    evaluate_prompt(
+        dataset=dataset,
+        messages=[
+            {"role": "user", "content": "Translate the following text to French: {{input}}"},
+        ],
+        model="gpt-3.5-turbo",
+        dataset_filter_string='tags contains "production"',
+        project_name="my-project",
+    )
+
+    # 评估匹配多个条件的项
+    evaluate_prompt(
+        dataset=dataset,
+        messages=[
+            {"role": "user", "content": "Answer the question: {{question}}"},
+        ],
+        model="gpt-4",
+        dataset_filter_string='data.category = "finance" AND data.difficulty = "hard"',
+        project_name="my-project",
+    )
+    ```
+
+</CodeBlocks>
+
+过滤器使用 Opik 查询语言（OQL）语法。有关过滤语法和支持的列的更多详情，请参阅[过滤语法](/v1/evaluation/manage_datasets#filter-syntax)。
+
+## 后续步骤
+
+要评估复杂的 LLM 应用（如 RAG 应用或智能体），你可以使用 [`evaluate`](/v1/evaluation/evaluate_your_llm) 函数。
+
+<Tip>
+  你还可以在使用 `experiment_scoring_functions` 参数评估 prompt 时计算实验级聚合指标。
+  了解更多关于[实验级指标](/v1/evaluation/evaluate_your_llm#computing-experiment-level-metrics)。
+</Tip>

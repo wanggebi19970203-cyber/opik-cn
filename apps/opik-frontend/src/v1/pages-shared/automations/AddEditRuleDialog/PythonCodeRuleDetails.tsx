@@ -1,5 +1,6 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import CodeMirror from "@uiw/react-codemirror";
 import { pythonLanguage } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
@@ -29,6 +30,7 @@ const PythonCodeRuleDetails: React.FC<PythonCodeRuleDetailsProps> = ({
   projectName,
   datasetColumnNames,
 }) => {
+  const { t } = useTranslation();
   const theme = useCodemirrorTheme({
     editable: true,
   });
@@ -53,7 +55,7 @@ const PythonCodeRuleDetails: React.FC<PythonCodeRuleDetailsProps> = ({
         render={({ field }) => {
           return (
             <FormItem>
-              <Label>Python code</Label>
+              <Label>{t("common.automations.pythonCode")}</Label>
               <FormControl>
                 <div className="rounded-md">
                   <CodeMirror
@@ -124,8 +126,8 @@ const PythonCodeRuleDetails: React.FC<PythonCodeRuleDetailsProps> = ({
                 projectId={form.watch("projectIds")[0] || ""}
                 variables={field.value}
                 onChange={field.onChange}
-                description="All variables are automatically added based on the code snippet. They are extracted from the `score` method and are required."
-                errorText="Code parsing error. The variables cannot be extracted."
+                description={t("common.automations.pythonCodeVariablesDescription")}
+                errorText={t("common.automations.pythonCodeParsingError")}
                 projectName={projectName}
                 datasetColumnNames={datasetColumnNames}
                 type={autocompleteType}

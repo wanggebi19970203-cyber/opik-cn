@@ -1,6 +1,7 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Label } from "@/ui/label";
@@ -24,12 +25,14 @@ type WebhookSettingsProps = {
 };
 
 const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
+  const { t } = useTranslation("pages/alerts");
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h3 className="comet-body-accented">Webhook settings</h3>
+        <h3 className="comet-body-accented">{t("alerts.webhook.title")}</h3>
         <Description>
-          Configure how the platform sends notifications to your system.
+          {t("alerts.webhook.description")}
         </Description>
       </div>
 
@@ -38,7 +41,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
         name="alertType"
         render={({ field }) => (
           <FormItem>
-            <Label>Destination</Label>
+            <Label>{t("alerts.webhook.destination")}</Label>
             <FormControl>
               <DestinationSelector
                 value={field.value}
@@ -58,17 +61,16 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
             const validationErrors = get(formState.errors, ["routingKey"]);
             return (
               <FormItem>
-                <Label>Routing Key</Label>
+                <Label>{t("alerts.webhook.routingKey")}</Label>
                 <Description>
-                  PagerDuty routing key for an integration on a service or on a
-                  global ruleset
+                  {t("alerts.webhook.routingKeyDescription")}
                 </Description>
                 <FormControl>
                   <Input
                     className={cn({
                       "border-destructive": Boolean(validationErrors?.message),
                     })}
-                    placeholder="Enter routing key"
+                    placeholder={t("alerts.webhook.routingKeyPlaceholder")}
                     {...field}
                   />
                 </FormControl>
@@ -86,7 +88,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
           const validationErrors = get(formState.errors, ["url"]);
           return (
             <FormItem>
-              <Label>Endpoint URL</Label>
+              <Label>{t("alerts.webhook.endpointUrl")}</Label>
               <FormControl>
                 <Input
                   className={cn({
@@ -98,9 +100,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
               </FormControl>
               <FormMessage />
               <Description>
-                Destination URL where the platform will send webhook
-                notifications. This endpoint should be active and able to
-                receive and process incoming POST requests.
+                {t("alerts.webhook.endpointUrlDescription")}
               </Description>
             </FormItem>
           );
@@ -109,7 +109,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
 
       <Accordion type="single" collapsible defaultValue="">
         <AccordionItem value="advanced" className="border-t">
-          <AccordionTrigger>Advanced webhook settings</AccordionTrigger>
+          <AccordionTrigger>{t("alerts.webhook.advancedSettings")}</AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4 px-3">
               <FormField
@@ -121,7 +121,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
                   ]);
                   return (
                     <FormItem>
-                      <Label>Secret token (optional)</Label>
+                      <Label>{t("alerts.webhook.secretToken")}</Label>
                       <FormControl>
                         <EyeInput
                           className={cn({
@@ -135,8 +135,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
                       </FormControl>
                       <FormMessage />
                       <Description>
-                        Add to securely verify that incoming webhook requests
-                        come from the platform.
+                        {t("alerts.webhook.secretTokenDescription")}
                       </Description>
                     </FormItem>
                   );

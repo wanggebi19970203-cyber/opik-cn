@@ -1,4 +1,5 @@
 import React, { useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import keyBy from "lodash/keyBy";
 import { Plus } from "lucide-react";
@@ -62,6 +63,7 @@ const LLMPromptMessages = ({
   disabled = false,
   jsonTreeData,
 }: LLMPromptMessagesProps) => {
+  const { t } = useTranslation("prompt");
   const lastFocusedMessageIdRef = useRef<string | null>(null);
   const messageRefsMap = useRef<Map<string, LLMPromptMessageHandle>>(new Map());
 
@@ -240,12 +242,11 @@ const LLMPromptMessages = ({
 
         {promptVariables.length > 0 && (
           <p className="comet-body-s mt-2 text-light-slate">
-            Use {"{{variable_name}}"} syntax to reference dataset variables in
-            your prompt:{" "}
+            {t("llmPromptMessages.variableSyntaxHint", { syntax: "{{variable_name}}" })}{" "}
             <PromptVariablesList
               variables={promptVariables}
               onVariableClick={handleVariableClick}
-              tooltipContent="Click to insert into prompt"
+              tooltipContent={t("llmPromptMessages.clickToInsertIntoPrompt")}
             />
           </p>
         )}
@@ -259,7 +260,7 @@ const LLMPromptMessages = ({
             type="button"
           >
             <Plus className="mr-2 size-4" />
-            Message
+            {t("llmPromptMessages.message")}
           </Button>
         )}
       </div>

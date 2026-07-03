@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChartLine } from "lucide-react";
 import {
   CellContext,
@@ -88,7 +89,7 @@ import { EXPERIMENT_STATUS } from "@/types/datasets";
 import { formatPromptVersionLabel } from "@/lib/experiments";
 import { Skeleton } from "@/ui/skeleton";
 
-const PASS_RATE_LABEL = "Pass rate";
+const PASS_RATE_SCORE_KEY = "Pass rate";
 
 const withRunningSkeleton = <TValue,>(
   Cell: React.ComponentType<CellContext<GroupedExperiment, TValue>>,
@@ -153,6 +154,7 @@ type GeneralDatasetsTabProps = {
 const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
   isExistencePending = false,
 }) => {
+  const { t } = useTranslation("pages/experiments");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const navigate = useNavigate();
@@ -191,7 +193,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("experiments.columns.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
@@ -199,7 +201,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("experiments.columns.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
       },
@@ -215,18 +217,18 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("experiments.columns.created"),
         type: COLUMN_TYPE.time,
         accessorFn: (row) => formatDate(row.created_at),
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("experiments.columns.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "duration.p50",
-        label: "Duration (avg.)",
+        label: t("experiments.columns.durationAvg"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p50,
         cell: withRunningSkeleton(DurationCell) as never,
@@ -237,7 +239,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "duration.p90",
-        label: "Duration (p90)",
+        label: t("experiments.columns.durationP90"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p90,
         cell: withRunningSkeleton(DurationCell) as never,
@@ -248,7 +250,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "duration.p99",
-        label: "Duration (p99)",
+        label: t("experiments.columns.durationP99"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p99,
         cell: withRunningSkeleton(DurationCell) as never,
@@ -259,7 +261,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "prompt",
-        label: "Prompt",
+        label: t("experiments.columns.prompt"),
         type: COLUMN_TYPE.list,
         // Show the prompt name plus its version (OPIK-6838). Unlike the Prompt
         // Library experiments tab, where the prompt is implied by the page
@@ -282,7 +284,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "trace_count",
-        label: "Trace count",
+        label: t("experiments.columns.traceCount"),
         type: COLUMN_TYPE.number,
         cell: withRunningSkeleton(TextCell) as never,
         aggregatedCell: TextCell.Aggregation as never,
@@ -292,7 +294,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "total_estimated_cost",
-        label: "Total estimated cost",
+        label: t("experiments.columns.totalEstimatedCost"),
         type: COLUMN_TYPE.cost,
         cell: withRunningSkeleton(CostCell) as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -302,7 +304,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "total_estimated_cost_avg",
-        label: "Cost per trace (avg.)",
+        label: t("experiments.columns.costPerTraceAvg"),
         type: COLUMN_TYPE.cost,
         cell: withRunningSkeleton(CostCell) as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -312,7 +314,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: "pass_rate",
-        label: "Pass rate",
+        label: t("experiments.columns.passRate"),
         type: COLUMN_TYPE.number,
         iconType: "pass_rate",
         accessorFn: (row) => row.pass_rate,
@@ -324,7 +326,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Feedback Scores",
+        label: t("experiments.columns.feedbackScores"),
         type: COLUMN_TYPE.numberDictionary,
         accessorFn: transformExperimentScores,
         cell: withRunningSkeleton(FeedbackScoreListCell) as never,
@@ -338,20 +340,20 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("experiments.columns.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell as never,
       },
       {
         id: "tags",
-        label: "Tags",
+        label: t("experiments.columns.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags" as const,
         cell: ListCell as never,
       },
       {
         id: COLUMN_METADATA_ID,
-        label: "Configuration",
+        label: t("experiments.columns.configuration"),
         type: COLUMN_TYPE.dictionary,
         accessorFn: (row) =>
           isObject(row.metadata)
@@ -360,7 +362,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
         cell: CodeCell as never,
       },
     ];
-  }, []);
+  }, [t]);
 
   const { isFeedbackScoresPending, dynamicScoresColumns } =
     useExperimentsFeedbackScores({ projectId: activeProjectId ?? undefined });
@@ -564,8 +566,8 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
                   label: groupLabel,
                   value:
                     label === DELETED_ENTITY_LABEL
-                      ? "Deleted dataset"
-                      : label || value || "Undefined",
+                      ? t("experiments.deletedDataset")
+                      : label || value || t("experiments.undefined"),
                 };
               }),
               experiments: groupExperiments,
@@ -600,7 +602,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
           isTestSuiteExperiment(experiment) &&
           isNumber(experiment.pass_rate)
         ) {
-          scores[PASS_RATE_LABEL] = experiment.pass_rate;
+          scores[PASS_RATE_SCORE_KEY] = experiment.pass_rate;
         }
 
         groupsMap[groupKey].data.unshift({
@@ -656,12 +658,11 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
               noDataComponent={
                 <Card className="flex min-h-[208px] w-full min-w-[400px] flex-col items-center justify-center gap-2">
                   <ChartLine className="size-4 shrink-0 text-light-slate" />
-                  <div className="comet-body-s-accented text-foreground">
-                    No charts to show
+                   <div className="comet-body-s-accented text-foreground">
+                    {t("experiments.charts.noChartsToShow")}
                   </div>
                   <div className="comet-body-s text-muted-slate">
-                    Please expand a group to see its chart. You can expand up to{" "}
-                    {MAX_EXPANDED_DEEPEST_GROUPS} deepest groups simultaneously.
+                    {t("experiments.charts.expandGroupHint", { count: MAX_EXPANDED_DEEPEST_GROUPS })}
                   </div>
                 </Card>
               }
@@ -679,7 +680,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("experiments.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -707,7 +708,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
           />
           <Separator orientation="vertical" className="mx-2 h-4" />
           <RefreshButton
-            tooltip="Refresh experiments list"
+            tooltip={t("experiments.refreshTooltip")}
             isFetching={isFetching}
             onRefresh={() => refetch()}
           />

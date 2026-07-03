@@ -1,0 +1,115 @@
+---
+headline: OpenTelemetry | Opik 文档
+og:description: 将 OpenTelemetry SDK 与 Opik 集成，以分布式追踪增强您的 ML/AI 应用并简化监控
+og:site_name: Opik 文档
+og:title: OpenTelemetry 入门 - Opik
+subtitle: 描述如何使用 OpenTelemetry 向 Opik 发送数据
+title: OpenTelemetry
+toc_max_heading_level: 4
+canonical-url: https://www.comet.com/docs/opik/integrations/opentelemetry
+---
+
+# OpenTelemetry 入门
+
+Opik 提供对 OpenTelemetry (OTel) 的原生支持，允许您使用分布式追踪来检测您的 ML/AI 应用程序。本指南将向您展示如何将 OpenTelemetry SDK 直接与 Opik 集成。
+
+<Note>
+Opik 中的 OpenTelemetry 集成目前支持 HTTP 传输。我们正在积极扩展功能集——请关注更新！
+</Note>
+
+## OpenTelemetry 端点配置
+
+### 基础端点
+
+要开始向 Opik 发送追踪，请使用以下端点之一配置您的 OpenTelemetry 导出器：
+
+<Tabs>
+<Tab title="Opik Cloud">
+
+```bash wordWrap
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://www.comet.com/opik/api/v1/private/otel"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=<your-api-key>,projectName=<your-project-name>,Comet-Workspace=<your-workspace-name>"
+```
+
+</Tab>
+<Tab title="自托管部署">
+
+```bash wordWrap
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:5173/api/v1/private/otel"
+```
+
+</Tab>
+<Tab title="企业部署">
+
+```bash wordWrap
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://<comet deployment url>/opik/api/v1/private/otel"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=<your-api-key>,projectName=<your-project-name>,Comet-Workspace=<your-workspace-name>"
+```
+
+</Tab>
+</Tabs>
+
+### 信号特定端点
+
+如果您的 OpenTelemetry 设置需要信号特定配置，您可以使用追踪端点。当不同的信号（追踪、指标、日志）需要发送到不同的端点时，这特别有用：
+
+```bash wordWrap
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://<YOUR-OPIK-INSTANCE>/api/v1/private/otel/v1/traces"
+```
+
+## 通过 OpenTelemetry SDK 自定义
+
+您可以使用任何 OpenTelemetry SDK 直接向 Opik 发送追踪。OpenTelemetry 为多种语言提供 SDK（C++、.NET、Erlang/Elixir、Go、Java、JavaScript、PHP、Python、Ruby、Rust、Swift）。这将 Opik 的语言支持扩展到官方 SDK（Python 和 TypeScript）之外。有关更多说明，请访问 [OpenTelemetry 文档](https://opentelemetry.io/docs/languages/)。
+
+以下是展示如何使用 Opik 设置 OpenTelemetry 的 Python 示例：
+
+```python wordWrap
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter
+)
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# For Comet-hosted installations
+OPIK_ENDPOINT = "https://<COMET-SERVER>/api/v1/private/otel/v1/traces"
+API_KEY = "<your-api-key>"
+PROJECT_NAME = "<your-project-name>"
+WORKSPACE_NAME = "<your-workspace-name>"
+
+# Initialize the trace provider
+provider = TracerProvider()
+processor = BatchSpanProcessor(
+    OTLPSpanExporter(
+        endpoint=OPIK_ENDPOINT,
+        headers={
+            "Authorization": API_KEY,
+            "projectName": PROJECT_NAME,
+            "Comet-Workspace": WORKSPACE_NAME
+        }
+    )
+)
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
+```
+
+<Tip>
+为了跟踪 OpenAI 调用，您需要使用 OpenTelemetry 的 OpenAI 检测：
+
+```bash wordWrap
+pip install opentelemetry-instrumentation-openai
+```
+
+然后检测您的 OpenAI 客户端：
+
+```python wordWrap
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+
+OpenAIInstrumentor().instrument()
+```
+
+</Tip>
+
+<Warning>
+请确保导入 `http` 追踪导出器（`opentelemetry.exporter.otlp.proto.http.trace_exporter`），如果使用 GRPC 导出器，您将遇到错误。
+</Warning>

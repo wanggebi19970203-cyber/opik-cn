@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { GitCompareArrows } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   Table,
@@ -35,6 +36,7 @@ const BlueprintDiffTable: React.FC<BlueprintDiffTableProps> = ({
   diff,
   defaultOnlyDiff = false,
 }) => {
+  const { t } = useTranslation("agent-optimization");
   const [onlyDiff, setOnlyDiff] = useState(defaultOnlyDiff);
 
   const { data: fetchedBaseConfig, isPending: baseLoading } =
@@ -110,7 +112,7 @@ const BlueprintDiffTable: React.FC<BlueprintDiffTableProps> = ({
           <TableRow className="hover:bg-soft-background">
             <TableHead className="h-8 w-[240px] border-r border-border px-2 py-0">
               <span className="comet-body-xs-accented text-light-slate">
-                Key
+                {t("agentOptimization.diffTable.key")}
               </span>
             </TableHead>
             <TableHead className="h-8 px-2 py-0">
@@ -123,7 +125,7 @@ const BlueprintDiffTable: React.FC<BlueprintDiffTableProps> = ({
                     htmlFor="only-diff"
                     className="comet-body-xs cursor-pointer text-light-slate"
                   >
-                    Show differences only
+                    {t("agentOptimization.diffTable.showDifferencesOnly")}
                   </Label>
                   <Switch
                     id="only-diff"
@@ -143,8 +145,7 @@ const BlueprintDiffTable: React.FC<BlueprintDiffTableProps> = ({
                 <div className="flex h-60 flex-col items-center justify-center gap-1 text-muted-slate">
                   <GitCompareArrows className="size-4" />
                   <span className="comet-body-s">
-                    There are no differences between {base.label} and{" "}
-                    {diff.label}
+                    {t("agentOptimization.diffTable.noDifferences", { base: base.label, diff: diff.label })}
                   </span>
                 </div>
               </TableCell>

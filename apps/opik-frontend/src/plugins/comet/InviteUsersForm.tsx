@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send, UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
@@ -30,15 +32,16 @@ const isValidUser = (val: string) => isUsername(val) || isEmail(val);
 
 export const inviteUsersSchema = z.object({
   users: z.string().superRefine((value, ctx) => {
+    const t = i18next.getFixedT(null, "common");
     const items = value
       .split(",")
-      .map((t) => t.trim())
+      .map((item) => item.trim())
       .filter(Boolean);
 
     if (items.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Must contain at least one username or email.",
+        message: t("validation.mustContainAtLeastOneUser"),
       });
       return;
     }
@@ -48,9 +51,9 @@ export const inviteUsersSchema = z.object({
     if (invalidItems.length > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Invalid entries: ${invalidItems
-          .map((v) => `"${v}"`)
-          .join(", ")}`,
+        message: t("validation.invalidEntries", {
+          entries: invalidItems.map((v) => `"${v}"`).join(", "),
+        }),
       });
     }
   }),
@@ -59,6 +62,7 @@ export const inviteUsersSchema = z.object({
 type InviteUsersFormData = z.infer<typeof inviteUsersSchema>;
 
 const InviteUsersForm = () => {
+  const { t } = useTranslation("common");
   const workspaceName = useOpikWorkspaceName();
   const { data: user } = useUser();
   const { data: allWorkspaces } = useAllWorkspaces({
@@ -103,11 +107,10 @@ const InviteUsersForm = () => {
       <div className="mb-4 flex flex-col items-start gap-1.5">
         <div className="flex items-center gap-2">
           <UserPlus className="size-4 text-muted-slate" />
-          <div className="comet-body-s-accented">Invite a team member</div>
+          <div className="comet-body-s-accented">{t("collaborators.inviteTeamMember")}</div>
         </div>
         <div className="comet-body-s text-muted-slate">
-          Invite teammates by email or username to join your workspace and help
-          with setup. Use commas to invite multiple people at once.
+          {t("collaborators.inviteTeammatesDescription")}
         </div>
       </div>
 
@@ -119,11 +122,11 @@ const InviteUsersForm = () => {
               name="users"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel className="sr-only">Emails or Usernames</FormLabel>
+                  <FormLabel className="sr-only">{t("labels.emailsOrUsernames")}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="Type emails or usernames separated by commas"
+                      placeholder={t("placeholders.emailsOrUsernames")}
                       className="h-8"
                       tabIndex={-1}
                     />
@@ -141,7 +144,7 @@ const InviteUsersForm = () => {
               size="sm"
             >
               <Send className="mr-1.5 size-3.5" />
-              Send invite
+              {t("buttons.sendInvite")}
             </Button>
           </div>
         </form>

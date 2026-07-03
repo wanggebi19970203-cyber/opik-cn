@@ -1,0 +1,23 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 在 Opik playground 中新增对本地模型的支持
+
+<Frame>
+  <img src="/img/changelog/2025-02-10/local_models.gif" />
+</Frame>
+
+**Python SDK**：
+
+- 改进了 `@track` 装饰器以更好地支持嵌套生成器。
+- 新增 `Opik.copy_traces(project_name, destination_project_name)` 方法，用于将 trace 从一个项目复制到另一个项目。
+- 新增对搜索反馈评分名称中包含空格的 trace 的支持。
+- 改进了 LangChain 和 LangGraph 集成
+
+**JS / TS SDK**：
+
+- 发布了 Vercel AI 集成
+- 新增对记录反馈评分的支持

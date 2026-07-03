@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import first from "lodash/first";
+import i18next from "i18next";
 import {
   COMPOSED_PROVIDER_TYPE,
   PROVIDER_MODEL_TYPE,
@@ -48,7 +49,7 @@ const MINIMAL_FALLBACK: ProviderModelsMap = {
   [PROVIDER_TYPE.OPIK_FREE]: [
     {
       value: PROVIDER_MODEL_TYPE.OPIK_FREE_MODEL,
-      label: "Free model",
+      label: i18next.t("common.hooks.useLLMProviderModelsData.freeModel"),
     },
   ],
   [PROVIDER_TYPE.OPEN_AI]: [],

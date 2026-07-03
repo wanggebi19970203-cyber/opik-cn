@@ -1,0 +1,16 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 更新了大部分表格以提高信息密度，现在更容易一次性查看多个 trace。
+- 记录到数据集和实验中的图片现在会在界面中显示。支持图片 URL 和 base64 编码的图片。
+
+**SDK**：
+
+- `evaluate` 方法中的 `scoring_metrics` 参数现在是可选的。当您希望在 Opik 界面中手动评估 LLM 调用时，这很有用。
+- 上传数据集时，SDK 现在会打印指向界面中数据集的链接。
+- 使用 LangChain OpenAI 集成时，usage 信息现在被正确记录。
+- 实现了 span 和数据集条目的批量上传机制，以避免 `413 Request Entity Too Large` 错误。
+- 移除了 pandas 和 numpy 作为必需依赖。

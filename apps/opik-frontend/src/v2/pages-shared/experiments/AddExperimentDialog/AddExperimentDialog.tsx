@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import useAppStore, { useUserApiKey } from "@/store/AppStore";
 import { DropdownOption } from "@/types/shared";
@@ -185,6 +186,7 @@ type AddExperimentDialogProps = {
 const AddExperimentDialog: React.FunctionComponent<
   AddExperimentDialogProps
 > = ({ open, setOpen, datasetName: initialDatasetName = "", projectId }) => {
+  const { t } = useTranslation("experiments");
   const {
     permissions: { canCreateExperiments },
   } = usePermissions();
@@ -401,9 +403,9 @@ eval_results = evaluate(
   const generateList = (title: string, list: MetricOption[]) => {
     return (
       <div>
-        <div className="comet-body-s-accented pb-1 pt-2 text-muted-slate">
-          {title}
-        </div>
+            <div className="comet-body-s-accented pb-1 pt-2 text-muted-slate">
+              {title}
+            </div>
         {list.map((m) => {
           return (
             <label key={m.value} className="flex cursor-pointer py-2.5">
@@ -433,9 +435,9 @@ eval_results = evaluate(
 
   const renderExperimentCodeSection = () => (
     <div>
-      <CodeSectionTitle>3. Create an Experiment</CodeSectionTitle>
+      <CodeSectionTitle>{t("createExperimentStep")}</CodeSectionTitle>
       {isPhonePortrait ? (
-        <CodeBlockWithHeader title="Python" copyText={codeWithConfigToCopy}>
+        <CodeBlockWithHeader title={t("python")} copyText={codeWithConfigToCopy}>
           <CodeHighlighter
             data={codeWithConfig}
             highlightedLines={highlightedLines}
@@ -453,22 +455,22 @@ eval_results = evaluate(
 
   const renderEvaluatorsContent = () => (
     <>
-      {generateList("Heuristics metrics", HEURISTICS_MODELS_OPTIONS)}
-      {generateList("LLM Judges", LLM_JUDGES_MODELS_OPTIONS)}
+      {generateList(t("heuristicsMetrics"), HEURISTICS_MODELS_OPTIONS)}
+      {generateList(t("llmJudges"), LLM_JUDGES_MODELS_OPTIONS)}
     </>
   );
 
   const renderCustomMetricsLink = () => (
     <div className="mt-4">
       <Button variant="secondary" asChild>
-        <a
-          href={buildDocsUrl("/evaluation/metrics/custom_metric")}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center"
-        >
-          Learn about custom metrics
-          <ExternalLink className="ml-1 size-4" />
+          <a
+            href={buildDocsUrl("/evaluation/metrics/custom_metric")}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center"
+          >
+            {t("learnAboutCustomMetrics")}
+            <ExternalLink className="ml-1 size-4" />
         </a>
       </Button>
     </div>
@@ -478,14 +480,14 @@ eval_results = evaluate(
     <div className="flex flex-col gap-2 md:sticky md:top-0 md:w-[250px] md:shrink-0 md:self-start">
       {isPhonePortrait ? (
         <>
-          <div className="comet-body-s-accented">
-            Select evaluators
-            {models.length > 0 && <span> ({models.length})</span>}
-          </div>
-          <LoadableSelectBox
-            options={ALL_EVALUATOR_OPTIONS}
-            value={models}
-            placeholder="Select evaluators"
+            <div className="comet-body-s-accented">
+              {t("selectEvaluators")}
+              {models.length > 0 && <span> ({models.length})</span>}
+            </div>
+            <LoadableSelectBox
+              options={ALL_EVALUATOR_OPTIONS}
+              value={models}
+              placeholder={t("selectEvaluators")}
             onChange={(values: string[]) =>
               setModels(values as EVALUATOR_MODEL[])
             }
@@ -495,7 +497,7 @@ eval_results = evaluate(
         </>
       ) : (
         <>
-          <div className="comet-title-s">Select evaluators</div>
+          <div className="comet-title-s">{t("selectEvaluators")}</div>
           {renderEvaluatorsContent()}
           {renderCustomMetricsLink()}
         </>
@@ -514,18 +516,18 @@ eval_results = evaluate(
     <SideDialog
       open={open && canCreateExperiments}
       setOpen={openChangeHandler}
-      header={<SheetTopBar variant="info" title="Create new experiment" />}
+      header={<SheetTopBar variant="info" title={t("createNewExperiment")} />}
     >
       <div className="max-h-full overflow-y-auto px-5 pb-20 pt-4">
         <div className="mx-auto flex w-full flex-col gap-6 md:flex-row md:items-start">
           {!isTestSuite && renderEvaluatorsSection()}
           <div className="flex w-full flex-col gap-6 md:min-w-[450px] md:flex-1 md:rounded-md md:border md:border-border md:p-6">
             <div>
-              <CodeSectionTitle>1. Select test suite</CodeSectionTitle>
+              <CodeSectionTitle>{t("selectTestSuiteStep")}</CodeSectionTitle>
               <LoadableSelectBox
                 options={options}
                 value={datasetName}
-                placeholder="Select a test suite"
+                placeholder={t("selectTestSuite")}
                 onChange={setDatasetName}
                 onLoadMore={
                   total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore

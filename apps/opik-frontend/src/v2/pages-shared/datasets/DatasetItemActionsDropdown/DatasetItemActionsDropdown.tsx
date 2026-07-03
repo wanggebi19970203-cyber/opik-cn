@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Copy, MoreHorizontal, Share, Trash } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -26,29 +27,30 @@ const DatasetItemActionsDropdown: React.FC<DatasetItemActionsDropdownProps> = ({
   onCopyId,
   onDelete,
 }) => {
+  const { t } = useTranslation("datasets");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon-2xs">
-          <span className="sr-only">Actions menu</span>
+          <span className="sr-only">{t("itemActions.actionsMenu")}</span>
           <MoreHorizontal />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem onClick={onShare}>
           <Share className="mr-2 size-4" />
-          Share {itemName}
+          {t("itemActions.shareItem", { itemName })}
         </DropdownMenuItem>
         <TooltipWrapper content={datasetItemId} side="left">
           <DropdownMenuItem onClick={onCopyId}>
             <Copy className="mr-2 size-4" />
-            Copy {itemName} ID
+            {t("itemActions.copyItemId", { itemName })}
           </DropdownMenuItem>
         </TooltipWrapper>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onDelete}>
           <Trash className="mr-2 size-4" />
-          Delete {itemName}
+          {t("itemActions.deleteItem", { itemName })}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -33,6 +33,8 @@ TRACES_CREATED_BY_DECORATOR: Set[str] = set()
 
 
 class TrackingStartOptions(NamedTuple):
+    """跟踪启动选项，包含创建span所需的参数。"""
+
     start_span_parameters: arguments_helpers.StartSpanParameters
     opik_args: Optional[opik_args.OpikArgs]
     opik_distributed_trace_headers: Optional[DistributedTraceHeadersDict]
@@ -40,22 +42,21 @@ class TrackingStartOptions(NamedTuple):
 
 class BaseTrackDecorator(abc.ABC):
     """
-    For internal usage.
+    内部使用基类。
 
-    All TrackDecorator instances share the same context and can be
-    used together simultaneously.
+    所有 TrackDecorator 实例共享相同的上下文，可以同时使用。
 
-    The following methods must be implemented in the subclass:
-        * _start_span_inputs_preprocessor
-        * _end_span_inputs_preprocessor
-        * _generators_handler (the default implementation is provided but still needs to be called via `super()`)
+    子类必须实现以下方法:
+        * _start_span_inputs_preprocessor - 预处理span创建输入参数
+        * _end_span_inputs_preprocessor - 预处理span结束输入参数
+        * _generators_handler - 生成器处理器（提供了默认实现，但仍需通过 `super()` 调用）
 
-    Overriding other methods of this class is not recommended.
+    不建议重写此类的其他方法。
     """
 
     def __init__(self) -> None:
         self.provider: Optional[str] = None
-        """ Name of the LLM provider. Used in subclasses in integrations track decorators. """
+        """ LLM 提供商名称。在集成跟踪装饰器的子类中使用。 """
 
     def track(
         self,
@@ -75,39 +76,38 @@ class BaseTrackDecorator(abc.ABC):
         environment: Optional[str] = None,
     ) -> Union[Callable, Callable[[Callable], Callable]]:
         """
-        Decorator to track the execution of a function.
+        跟踪函数执行的装饰器。
 
-        Can be used as @track or @track().
+        可以用作 @track 或 @track() 形式。
 
         Args:
-            name: The name of the span.
-            type: The type of the span.
-            tags: Tags to associate with the span.
-            metadata: Metadata to associate with the span.
-            capture_input: Whether to capture the input arguments.
-            ignore_arguments: The list of the arguments NOT to include into span/trace inputs.
-            capture_output: Whether to capture the output result.
-            generations_aggregator: Function to aggregate generation results.
-            flush: Whether to flush the client after logging.
-            project_name: The name of the project to log data.
-            create_duplicate_root_span: Whether to create a root span duplicating the root trace data.
-            source: The source of the trace.
+            name: span 的名称。
+            type: span 的类型。
+            tags: 与 span 关联的标签。
+            metadata: 与 span 关联的元数据。
+            capture_input: 是否捕获输入参数。
+            ignore_arguments: 不应包含在 span/trace 输入中的参数列表。
+            capture_output: 是否捕获输出结果。
+            generations_aggregator: 用于聚合生成结果的函数。
+            flush: 日志记录后是否刷新客户端。
+            project_name: 记录数据的项目名称。
+            create_duplicate_root_span: 是否创建复制根 trace 数据的根 span。
+            source: trace 的来源。
 
         Returns:
-            Callable: The decorated function(if used without parentheses)
-                or the decorator function (if used with parentheses).
+            Callable: 被装饰的函数（无括号使用时）
+                或装饰器函数（有括号使用时）。
 
         Note:
-            You can use this decorator to track nested functions, Opik will automatically create
-            a trace and correctly span nested function calls.
+            可以使用此装饰器跟踪嵌套函数，Opik 会自动创建 trace
+            并正确处理嵌套函数调用的 span。
 
-            This decorator can be used to track both synchronous and asynchronous functions,
-            and also synchronous and asynchronous generators.
-            It automatically detects the function type and applies the appropriate tracking logic.
+            此装饰器可用于跟踪同步和异步函数，
+            以及同步和异步生成器。
+            它会自动检测函数类型并应用相应的跟踪逻辑。
 
-            Tracing is checked only once at the start of the call; a call that
-            began while tracing was enabled will still be logged even if
-            tracing is disabled before it returns.
+            跟踪状态仅在调用开始时检查一次；在跟踪启用期间开始的调用
+            即使在返回前跟踪被禁用，仍会被记录。
         """
         track_options = arguments_helpers.TrackOptions(
             name=None,
@@ -126,8 +126,8 @@ class BaseTrackDecorator(abc.ABC):
         )
 
         if callable(name):
-            # Decorator was used without '()'. It means that decorated function
-            # automatically passed as the first argument of 'track' function - name
+            # 装饰器未使用 '()' 调用。这意味着被装饰的函数
+            # 自动作为 'track' 函数的第一个参数 - name 传入
             func = name
             return self._decorate(
                 func=func,
@@ -153,26 +153,23 @@ class BaseTrackDecorator(abc.ABC):
         track_options: arguments_helpers.TrackOptions,
     ) -> Callable:
         """
-        Tracking strategies:
+        跟踪策略:
 
-            * Regular sync and async functions/methods: start the span when the
-        function is called, end the span when the function is finished. While the
-        function is working, the span is kept in opik context, so it can be a parent for the
-        spans created by nested tracked functions.
+            * 常规同步和异步函数/方法: 在函数调用时开始 span，
+        函数结束时结束 span。在函数执行期间，span 保存在 opik 上下文中，
+        因此可以作为嵌套跟踪函数创建的 span 的父级。
 
-            * Generators and async generators: start the span when the generator started
-        yielding values, end the trace when the generator finished yielding values.
-        Span is kept in the opik context only while __next__ or __anext__ method is working.
-        It means that the span can be a parent only for spans created by tracked functions
-        called inside __next__ or __anext__.
+            * 生成器和异步生成器: 在生成器开始产出值时开始 span，
+        生成器完成产出值时结束 trace。span 仅在 __next__ 或 __anext__ 方法
+        执行期间保存在 opik 上下文中。这意味着 span 只能作为在 __next__
+        或 __anext__ 内部调用的跟踪函数创建的 span 的父级。
 
-            * Sync and async functions that return a stream or stream manager object
-        recognizable by `_streams_handler`: span is started when the function is called,
-        finished when the stream chunks are exhausted. Span is NOT kept inside the opik context.
-        So these spans can't be parents for other spans. This is usually the case LLM API calls
-        with `stream=True`.
+            * 返回可被 `_streams_handler` 识别的流或流管理器对象的同步和异步函数:
+        span 在函数调用时开始，在流数据块耗尽时结束。span 不保存在 opik 上下文中，
+        因此这些 span 不能作为其他 span 的父级。这通常是 LLM API 调用中
+        使用 `stream=True` 的情况。
         """
-        # Idempotency: skip re-decoration if already tracked
+        # 幂等性: 如果已经跟踪过则跳过重复装饰
         if hasattr(func, "opik_tracked") and func.opik_tracked:  # type: ignore
             return func
 
@@ -203,14 +200,29 @@ class BaseTrackDecorator(abc.ABC):
         args: Tuple,
         kwargs: Dict[str, Any],
     ) -> TrackingStartOptions:
+        """
+        准备跟踪启动选项，提取分布式跟踪头和 opik 参数。
+
+        Args:
+            func: 被跟踪的函数。
+            track_options: 跟踪配置选项。
+            args: 函数的位置参数。
+            kwargs: 函数的关键字参数。
+
+        Returns:
+            TrackingStartOptions: 包含启动参数的选项对象。
+        """
+        # 提取分布式跟踪头信息
         opik_distributed_trace_headers = (
             arguments_helpers.extract_distributed_trace_headers(kwargs)
         )
 
         opik_args_ = None
         try:
+            # 从关键字参数中提取 opik 特定参数
             opik_args_ = opik_args.extract_opik_args(kwargs, func)
 
+            # 使用子类实现的预处理器生成 span 启动参数
             start_span_arguments = self._start_span_inputs_preprocessor(
                 func=func,
                 track_options=track_options,
@@ -218,7 +230,7 @@ class BaseTrackDecorator(abc.ABC):
                 kwargs=kwargs,
             )
 
-            # Apply opik_args to start span arguments
+            # 将 opik 参数应用到 span 启动参数
             start_span_arguments = opik_args.apply_opik_args_to_start_span_params(
                 params=start_span_arguments,
                 opik_args=opik_args_,
@@ -350,6 +362,7 @@ class BaseTrackDecorator(abc.ABC):
                 error_info = error_info_collector.collect(exception)
                 func_exception = exception
 
+            # 检查结果是否为流或流管理器对象
             stream_or_stream_manager = self._streams_handler(
                 result,
                 track_options.capture_output,
@@ -358,6 +371,7 @@ class BaseTrackDecorator(abc.ABC):
             if stream_or_stream_manager is not None:
                 return stream_or_stream_manager
 
+            # 处理函数调用后的数据保存
             self._after_call(
                 output=result,
                 error_info=error_info,
@@ -369,6 +383,7 @@ class BaseTrackDecorator(abc.ABC):
                 raise func_exception
             return result
 
+        # 标记函数已被跟踪
         wrapper.opik_tracked = True  # type: ignore
 
         return wrapper
@@ -433,6 +448,12 @@ class BaseTrackDecorator(abc.ABC):
         args: Tuple,
         kwargs: Dict[str, Any],
     ) -> bool:
+        """
+        在函数调用前执行的准备工作。
+
+        Returns:
+            bool: 是否应处理 span 数据。
+        """
         try:
             return self.__before_call_unsafe(
                 func=func,
@@ -483,6 +504,18 @@ class BaseTrackDecorator(abc.ABC):
         flush: bool = False,
         should_process_span_data: bool = True,
     ) -> None:
+        """
+        在函数调用后执行的清理和数据保存工作。
+
+        Args:
+            output: 函数的输出结果。
+            error_info: 错误信息（如果发生异常）。
+            capture_output: 是否捕获输出。
+            generators_span_to_end: 生成器的 span 数据（如果适用）。
+            generators_trace_to_end: 生成器的 trace 数据（如果适用）。
+            flush: 是否刷新客户端。
+            should_process_span_data: 是否应处理 span 数据。
+        """
         try:
             self.__after_call_unsafe(
                 output=output,
@@ -514,10 +547,10 @@ class BaseTrackDecorator(abc.ABC):
         span_data_to_end: Optional[span.SpanData] = None
         if generators_span_to_end is None:
             if should_process_span_data:
-                # the span data must be present in the context stack, otherwise something is wrong
+                # span 数据必须存在于上下文栈中，否则表示出现问题
                 span_data_to_end, trace_data_to_end = pop_end_candidates()
             else:
-                # the span data is not in the context, only the root trace data there
+                # span 数据不在上下文中，只有根 trace 数据存在
                 trace_data_to_end = pop_end_candidate_trace_data()
         else:
             span_data_to_end, trace_data_to_end = (
@@ -527,7 +560,7 @@ class BaseTrackDecorator(abc.ABC):
 
         if output is not None:
             if should_process_span_data and span_data_to_end is not None:
-                # create end arguments from current span data only if appropriate
+                # 仅在适当时从当前 span 数据创建结束参数
                 try:
                     end_arguments = self._end_span_inputs_preprocessor(
                         output=output,
@@ -546,17 +579,18 @@ class BaseTrackDecorator(abc.ABC):
                         output={"output": output}
                     )
             else:
-                # just use output as end arguments
+                # 直接使用输出作为结束参数
                 end_arguments = arguments_helpers.EndSpanParameters(
                     output={"output": output}
                 )
         else:
             end_arguments = arguments_helpers.EndSpanParameters(error_info=error_info)
 
+        # 获取全局 Opik 客户端实例
         client = opik_client.get_global_client()
 
         if should_process_span_data and span_data_to_end is not None:
-            # save span data only if appropriate
+            # 仅在适当时保存 span 数据
             span_data_to_end.init_end_time().update(
                 **end_arguments.to_kwargs(),
             )
@@ -580,12 +614,11 @@ class BaseTrackDecorator(abc.ABC):
         generations_aggregator: Optional[Callable[[List[Any]], str]],
     ) -> Optional[Any]:
         """
-        Subclasses must override this method to customize stream-like objects handling.
-        Stream objects are usually the objects returned by LLM providers when invoking their API with
-        `stream=True` option.
+        子类必须重写此方法以自定义流式对象的处理。
+        流对象通常是 LLM 提供商在使用 `stream=True` 选项调用其 API 时返回的对象。
 
-        Opik's approach for such stream objects is to start the span when the API call is made and
-        finish the span when the stream chunks are exhausted.
+        Opik 对此类流对象的处理方式是在 API 调用时开始 span，
+        在流数据块耗尽时结束 span。
         """
 
         NO_STREAM_DETECTED = None
@@ -601,8 +634,8 @@ class BaseTrackDecorator(abc.ABC):
         kwargs: Dict[str, Any],
     ) -> arguments_helpers.StartSpanParameters:
         """
-        Subclasses must override this method to customize generating
-        span/trace parameters from the function input arguments
+        子类必须重写此方法以自定义从函数输入参数
+        生成 span/trace 参数的逻辑。
         """
         pass
 
@@ -614,8 +647,8 @@ class BaseTrackDecorator(abc.ABC):
         current_span_data: span.SpanData,
     ) -> arguments_helpers.EndSpanParameters:
         """
-        Subclasses must override this method to customize generating
-        span/trace parameters from the function return value
+        子类必须重写此方法以自定义从函数返回值
+        生成 span/trace 参数的逻辑。
         """
         pass
 
@@ -625,6 +658,7 @@ def _apply_entrypoint(
     wrapped_func: Callable,
     track_options: "arguments_helpers.TrackOptions",
 ) -> None:
+    """应用入口点配置，将函数注册到运行器注册表中。"""
     agent_name = track_options.name or original_func.__name__
     agent_project = track_options.project_name or "default"
     params = registry.extract_params(original_func)
@@ -645,11 +679,10 @@ def _apply_entrypoint(
 
 def pop_end_candidates() -> Tuple[span.SpanData, Optional[trace.TraceData]]:
     """
-    Pops span and trace (if trace exists) data created by @track decorator
-    from the current context, returns popped objects.
+    从当前上下文中弹出由 @track 装饰器创建的 span 和 trace（如果存在）数据，
+    返回弹出的对象。
 
-    Decorator can't attach any child objects to the popped ones because
-    they are no longer in the context stack.
+    装饰器无法向已弹出的对象附加任何子对象，因为它们已不在上下文栈中。
     """
     span_data_to_end = context_storage.pop_span_data()
     assert span_data_to_end is not None, (
@@ -664,19 +697,17 @@ def pop_end_candidates() -> Tuple[span.SpanData, Optional[trace.TraceData]]:
 
 def pop_end_candidate_trace_data() -> Optional[trace.TraceData]:
     """
-    Pops the most recently created trace data from the stack if it meets specific criteria.
+    如果满足特定条件，从栈中弹出最近创建的 trace 数据。
 
-    This function checks whether the context storage's span data stack is empty, and if so, it attempts
-    to pop and return the most recently created trace data associated with the context. The trace data
-    is only removed if its ID is part of a predefined set of trace IDs created using a decorator. If the
-    criteria are not met, None is returned.
+    此函数检查上下文存储的 span 数据栈是否为空，如果是，则尝试
+    弹出并返回与上下文关联的最近创建的 trace 数据。只有当 trace 数据的 ID
+    是使用装饰器创建的预定义 trace ID 集合的一部分时，才会被移除。
+    如果不满足条件，则返回 None。
 
-    Note: Decorator can't attach any child objects to the popped ones because
-    they are no longer in the context stack.
+    注意: 装饰器无法向已弹出的对象附加任何子对象，因为它们已不在上下文栈中。
 
     Returns:
-        The trace data popped from the stack if the criteria are met;
-        otherwise, None.
+        如果满足条件，从栈中弹出的 trace 数据；否则返回 None。
     """
     possible_trace_data_to_end = context_storage.get_trace_data()
     if (
@@ -699,6 +730,7 @@ def pop_end_candidate_trace_data() -> Optional[trace.TraceData]:
 def _try_acquire_project_name(
     span_creation_result: span_creation_handler.SpanCreationResult,
 ) -> None:
+    """尝试获取项目名称，将 span 或 trace 的项目名称注册到上下文中。"""
     if span_creation_result.should_process_span_data:
         span_data = span_creation_result.span_data
         if span_data.project_name is not None:
@@ -722,29 +754,27 @@ def add_start_candidates(
     source: Optional[TraceSource],
 ) -> span_creation_handler.SpanCreationResult:
     """
-    Handles the creation and registration of a new start span and trace while respecting the
-    tracing context based on given parameters. It also applies relevant arguments
-    to the trace if it was created and handles client logging if the tracing is active.
+    处理新开始 span 和 trace 的创建与注册，同时根据给定参数
+    遵循跟踪上下文。如果创建了 trace，还会应用相关参数，
+    并在跟踪活动时处理客户端日志记录。
 
     Args:
-        start_span_parameters: The parameters used to start the span, including the
-            span name and other configurations.
-        opik_distributed_trace_headers: Optional headers for distributed tracing, which
-            are passed to the span creation process.
-        opik_args_data : Optional additional arguments that can be applied to the trace
-            data after the span is created.
-        tracing_active: A boolean indicating whether a tracing is active.
-        create_duplicate_root_span: A boolean indicating whether to create a root span along with the root trace
-            and duplicating its data.
-        source: The source of the trace, which determines how the trace is created.
+        start_span_parameters: 用于启动 span 的参数，包括 span 名称和其他配置。
+        opik_distributed_trace_headers: 可选的分布式跟踪头信息，传递给 span 创建过程。
+        opik_args_data: 可选的附加参数，可在 span 创建后应用于 trace 数据。
+        tracing_active: 布尔值，指示跟踪是否处于活动状态。
+        create_duplicate_root_span: 布尔值，指示是否创建根 span 及其关联的根 trace 并复制其数据。
+        source: trace 的来源，决定如何创建 trace。
 
     Returns:
-        The result of the span creation, including the span and trace data.
+        span 创建的结果，包含 span 和 trace 数据。
     """
+    # 检查是否有预设的 trace ID
     preset_trace_id = None
     if opik_args_data and opik_args_data.trace_args and opik_args_data.trace_args.id:
         preset_trace_id = opik_args_data.trace_args.id
 
+    # 根据上下文创建 span
     span_creation_result = span_creation_handler.create_span_respecting_context(
         start_span_arguments=start_span_parameters,
         distributed_trace_headers=opik_distributed_trace_headers,
@@ -753,9 +783,11 @@ def add_start_candidates(
         source=source,
     )
     if span_creation_result.should_process_span_data:
+        # 将 span 数据添加到上下文存储
         context_storage.add_span_data(span_creation_result.span_data)
 
         if tracing_active:
+            # 获取全局客户端并记录 span 开始事件
             client = opik_client.get_global_client()
 
             if client.config.log_start_trace_span:
@@ -763,6 +795,7 @@ def add_start_candidates(
                     **span_creation_result.span_data.as_start_parameters
                 )
     else:
+        # 如果不应处理 span 数据，显示警告（如果需要）
         _show_root_span_not_created_warning_if_needed(
             start_span_parameters=start_span_parameters,
             tracing_active=tracing_active,
@@ -787,26 +820,24 @@ def add_start_trace_candidate(
     tracing_active: bool,
 ) -> None:
     """
-    Adds a start trace candidate to the current context storage and updates
-    it with the given Opik arguments if applicable.
+    将开始 trace 候选项添加到当前上下文存储中，
+    并在适用时使用给定的 Opik 参数进行更新。
 
-    This function initializes the trace data in the current context and
-    tracks its creation. It also applies provided Opik argument modifications
-    to the trace and logs the start trace span in the client if tracing is
-    active and logging is enabled.
+    此函数在当前上下文中初始化 trace 数据并跟踪其创建。
+    它还会将提供的 Opik 参数修改应用于 trace，
+    并在跟踪活动且日志记录启用时在客户端记录开始 trace span。
 
     Args:
-        trace_data: The trace data object to be added and initialized in the
-            current context storage. It contains details about the trace.
-        opik_args_data: Optional OpikArgs object containing additional data
-            to be applied to the trace. This may include configurations
-            that modify or enrich the trace data.
-        tracing_active: A boolean indicating whether a tracing is active.
+        trace_data: 要添加和初始化到当前上下文存储的 trace 数据对象，
+            包含 trace 的详细信息。
+        opik_args_data: 可选的 OpikArgs 对象，包含要应用于 trace 的附加数据。
+            可能包括修改或丰富 trace 数据的配置。
+        tracing_active: 布尔值，指示跟踪是否处于活动状态。
     """
     context_storage.set_trace_data(trace_data)
     TRACES_CREATED_BY_DECORATOR.add(trace_data.id)
 
-    # Handle thread_id and trace updates after span/trace creation
+    # 在 span/trace 创建后处理 thread_id 和 trace 更新
     opik_args.apply_opik_args_to_trace(opik_args=opik_args_data, trace_data=trace_data)
 
     if not tracing_active:
@@ -822,6 +853,17 @@ def _show_root_span_not_created_warning_if_needed(
     tracing_active: bool,
     should_process_span_data: bool,
 ) -> None:
+    """
+    如果需要，显示根 span 未被创建的警告。
+
+    当用户指定的 span 类型（如 'llm' 或 'tool'）因禁用根 trace 而丢失时，
+    记录警告日志。
+
+    Args:
+        start_span_parameters: span 的启动参数。
+        tracing_active: 跟踪是否处于活动状态。
+        should_process_span_data: 是否应处理 span 数据。
+    """
     if not tracing_active:
         return
 

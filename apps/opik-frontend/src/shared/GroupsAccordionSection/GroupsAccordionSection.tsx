@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Description } from "@/ui/description";
@@ -46,8 +47,8 @@ const GroupsAccordionSection = <TColumnData,>({
   config,
   groups,
   onChange,
-  label = "Group by",
-  description = "Add groups to aggregate data.",
+  label: labelProp,
+  description: descriptionProp,
   className = "",
   errors,
   hideSorting = false,
@@ -55,6 +56,10 @@ const GroupsAccordionSection = <TColumnData,>({
   disabled = false,
   disabledTooltip,
 }: GroupsAccordionSectionProps<TColumnData>) => {
+  const { t } = useTranslation();
+  const label = labelProp ?? t("common.groups.label");
+  const description = descriptionProp ?? t("common.groups.description");
+
   const handleAddGroup = useCallback(() => {
     if (groups.length >= MAX_GROUP_LEVELS) return;
     const newGroup: Group = {
@@ -130,7 +135,7 @@ const GroupsAccordionSection = <TColumnData,>({
 
                   return (
                     <FormErrorSkeleton key={index}>
-                      Group {index + 1}: {errorMessages.join(", ")}
+                      {t("common.groups.groupError", { index: index + 1, messages: errorMessages.join(", ") })}
                     </FormErrorSkeleton>
                   );
                 })}
@@ -147,12 +152,12 @@ const GroupsAccordionSection = <TColumnData,>({
                 className="w-fit"
               >
                 <Plus className="mr-1 size-3.5" />
-                Add group
+                {t("common.groups.addGroup")}
               </Button>
 
               {groups.length >= MAX_GROUP_LEVELS && (
                 <Description className="text-muted-foreground">
-                  Maximum {MAX_GROUP_LEVELS} levels reached
+                  {t("common.groups.maxLevelsReached", { count: MAX_GROUP_LEVELS })}
                 </Description>
               )}
             </div>

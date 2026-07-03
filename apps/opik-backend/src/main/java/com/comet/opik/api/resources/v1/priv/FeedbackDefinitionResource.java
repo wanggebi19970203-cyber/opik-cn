@@ -50,21 +50,21 @@ import static com.comet.opik.domain.FeedbackDefinitionModel.FeedbackType;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Feedback-definitions", description = "Feedback definitions related resources")
+@Tag(name = "Feedback-definitions", description = "反馈定义相关资源")
 public class FeedbackDefinitionResource {
 
     private final @NonNull FeedbackDefinitionService service;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @GET
-    @Operation(operationId = "findFeedbackDefinitions", summary = "Find Feedback definitions", description = "Find Feedback definitions", responses = {
-            @ApiResponse(responseCode = "200", description = "Feedback definitions resource", content = @Content(schema = @Schema(implementation = FeedbackDefinition.FeedbackDefinitionPage.class)))
+    @Operation(operationId = "findFeedbackDefinitions", summary = "查找反馈定义", description = "查找反馈定义", responses = {
+            @ApiResponse(responseCode = "200", description = "反馈定义资源", content = @Content(schema = @Schema(implementation = FeedbackDefinition.FeedbackDefinitionPage.class)))
     })
     @JsonView({FeedbackDefinition.View.Public.class})
     public Response find(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter feedback definitions by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称筛选反馈定义（部分匹配，不区分大小写）") String name,
             @QueryParam("type") FeedbackType type) {
 
         var criteria = FeedbackDefinitionCriteria.builder()
@@ -84,8 +84,8 @@ public class FeedbackDefinitionResource {
 
     @GET
     @Path("{id}")
-    @Operation(operationId = "getFeedbackDefinitionById", summary = "Get feedback definition by id", description = "Get feedback definition by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Feedback definition resource", content = @Content(schema = @Schema(implementation = FeedbackDefinition.class)))
+    @Operation(operationId = "getFeedbackDefinitionById", summary = "根据ID获取反馈定义", description = "根据ID获取反馈定义", responses = {
+            @ApiResponse(responseCode = "200", description = "反馈定义资源", content = @Content(schema = @Schema(implementation = FeedbackDefinition.class)))
     })
     @JsonView({FeedbackDefinition.View.Public.class})
     public Response getById(@PathParam("id") @NotNull UUID id) {
@@ -99,8 +99,8 @@ public class FeedbackDefinitionResource {
     }
 
     @POST
-    @Operation(operationId = "createFeedbackDefinition", summary = "Create feedback definition", description = "Get feedback definition", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createFeedbackDefinition", summary = "创建反馈定义", description = "创建反馈定义", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/feedback-definitions/{feedbackId}", schema = @Schema(implementation = String.class))})
     })
     @RateLimited
@@ -124,8 +124,8 @@ public class FeedbackDefinitionResource {
 
     @PUT
     @Path("{id}")
-    @Operation(operationId = "updateFeedbackDefinition", summary = "Update feedback definition by id", description = "Update feedback definition by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content")
+    @Operation(operationId = "updateFeedbackDefinition", summary = "根据ID更新反馈定义", description = "根据ID更新反馈定义", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")
     })
     @RateLimited
     public Response update(final @PathParam("id") UUID id,
@@ -144,9 +144,9 @@ public class FeedbackDefinitionResource {
 
     @DELETE
     @Path("{id}")
-    @Operation(operationId = "deleteFeedbackDefinitionById", summary = "Delete feedback definition by id", description = "Delete feedback definition by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    @Operation(operationId = "deleteFeedbackDefinitionById", summary = "根据ID删除反馈定义", description = "根据ID删除反馈定义", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     public Response deleteById(@PathParam("id") UUID id) {
 
@@ -161,9 +161,9 @@ public class FeedbackDefinitionResource {
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteFeedbackDefinitionsBatch", summary = "Delete feedback definitions", description = "Delete feedback definitions batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    @Operation(operationId = "deleteFeedbackDefinitionsBatch", summary = "批量删除反馈定义", description = "批量删除反馈定义", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     public Response deleteFeedbackDefinitionsBatch(
             @NotNull @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @Valid BatchDelete batchDelete) {

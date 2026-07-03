@@ -1,0 +1,24 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板：**
+
+- 在实验对比页面新增 CSV 导出
+- 为 trace 和 span 的输入/输出字段新增精美模式渲染
+
+  <Frame>
+    <img src="/img/changelog/2025-03-10/pretty_mode.png" />
+  </Frame>
+
+- 改进了精美模式以支持换行符和制表符
+- 为 Opik 日期时间过滤器新增时间支持
+- 改进了长文本的工具提示
+- 为 JSON 下载中的反馈评分添加 `reason` 字段
+
+**Python 和 JS / TS SDK**：
+
+- 与 [OpenAI Agents](/v1/integrations/openai_agents) 的首发集成
+- 修复了 `get_experiment_by_name` 方法的问题
+- 为 Anthropic 集成添加成本跟踪
+- 将 Opik 库的导入时间从约 5 秒缩短到不到 1 秒

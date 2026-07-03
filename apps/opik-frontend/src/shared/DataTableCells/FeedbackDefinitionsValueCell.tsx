@@ -1,5 +1,6 @@
 import React from "react";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 
 import {
   FEEDBACK_DEFINITION_TYPE,
@@ -11,6 +12,7 @@ import CellTooltipWrapper from "@/shared/DataTableCells/CellTooltipWrapper";
 const FeedbackDefinitionsValueCell = (
   context: CellContext<FeedbackDefinition, string>,
 ) => {
+  const { t } = useTranslation();
   const feedbackDefinition = context.row.original;
 
   let items: React.ReactNode = null;
@@ -25,7 +27,7 @@ const FeedbackDefinitionsValueCell = (
     items = categoryList;
     tooltipContent = categoryList;
   } else if (feedbackDefinition.type === FEEDBACK_DEFINITION_TYPE.numerical) {
-    const numericText = `Min: ${feedbackDefinition.details.min}, Max: ${feedbackDefinition.details.max}`;
+    const numericText = `${t("common:labels.min")}: ${feedbackDefinition.details.min}, ${t("common:labels.max")}: ${feedbackDefinition.details.max}`;
     items = <p>{numericText}</p>;
     tooltipContent = numericText;
   } else if (feedbackDefinition.type === FEEDBACK_DEFINITION_TYPE.boolean) {

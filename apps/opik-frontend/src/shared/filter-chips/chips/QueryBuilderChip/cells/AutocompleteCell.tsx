@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { Command as CommandPrimitive } from "cmdk";
+import { useTranslation } from "react-i18next";
 import { Popover, PopoverAnchor, PopoverContent } from "@/ui/popover";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/ui/command";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
   grow = false,
   hasError = false,
 }) => {
+  const { t } = useTranslation("common");
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -149,11 +151,11 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
         >
           <CommandList className="w-[--radix-popover-trigger-width] min-w-[320px] max-w-[800px] rounded-md border border-border bg-background p-1 shadow-md">
             {isLoading && (
-              <div className="comet-body-s p-2 text-light-slate">Loading…</div>
+              <div className="comet-body-s p-2 text-light-slate">{t("autocomplete.loading")}</div>
             )}
             {showResults && (
               <CommandGroup
-                heading="Recently used"
+                heading={t("autocomplete.recentlyUsed")}
                 className="p-0 [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-light-slate"
               >
                 {filtered.map((item) => (
@@ -182,8 +184,7 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
                 )}
               >
                 <span>
-                  No match in recent {itemNoun} - type your {itemNoun} to search
-                  all
+                  {t("autocomplete.noMatchInRecent", { itemNoun })}
                 </span>
               </CommandItem>
             )}

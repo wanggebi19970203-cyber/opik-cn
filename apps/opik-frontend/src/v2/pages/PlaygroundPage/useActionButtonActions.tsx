@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import asyncLib from "async";
 import { useQueryClient } from "@tanstack/react-query";
 import { getExperimentById } from "@/api/datasets/useExperimentById";
@@ -77,6 +78,7 @@ const useActionButtonActions = ({
   versionHash,
   projectName,
 }: UseActionButtonActionsArguments) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { toast } = useToast();
@@ -189,7 +191,7 @@ const useActionButtonActions = ({
       },
       onError: (e) => {
         toast({
-          title: "Error",
+          title: t("playground.actionErrors.error"),
           variant: "destructive",
           description: e.message,
         });
@@ -255,9 +257,9 @@ const useActionButtonActions = ({
       resetProgress();
       queryClient.invalidateQueries({ queryKey: ["experiments"] });
       queryClient.invalidateQueries({ queryKey: [COMPARE_EXPERIMENTS_KEY] });
-      toast({ title: "Timeout", description, variant: "destructive" });
+      toast({ title: t("playground.actionErrors.timeout"), description, variant: "destructive" });
     },
-    [clearRunningMap, resetProgress, queryClient, toast],
+    [clearRunningMap, resetProgress, queryClient, toast, t],
   );
 
   const finishPollScope = useCallback(
@@ -286,13 +288,13 @@ const useActionButtonActions = ({
       }
       if ((error as Error)?.name !== "AbortError") {
         toast({
-          title: "Error",
+          title: t("playground.actionErrors.error"),
           description,
           variant: "destructive",
         });
       }
     },
-    [finishPollScope, toast],
+    [finishPollScope, toast, t],
   );
 
   // TODO: OPIK-5724 — for datasets >20k items, replace with a dedicated BE count endpoint
@@ -313,14 +315,14 @@ const useActionButtonActions = ({
           if (isScoped) {
             finishPollScope(scope);
             toast({
-              title: "Timeout",
+              title: t("playground.actionErrors.timeout"),
               description:
-                "Assertion evaluation polling timed out after 5 minutes",
+                t("playground.actionErrors.assertionPollingTimeout"),
               variant: "destructive",
             });
           } else {
             handlePollTimeout(
-              "Assertion evaluation polling timed out after 5 minutes",
+              t("playground.actionErrors.assertionPollingTimeout"),
             );
           }
           return;
@@ -399,7 +401,7 @@ const useActionButtonActions = ({
           handlePollError(
             error,
             scope,
-            "Failed to poll assertion evaluation status",
+            t("playground.actionErrors.assertionPollingFailed"),
             resetProgress,
           );
         }
@@ -437,14 +439,14 @@ const useActionButtonActions = ({
           if (isScoped) {
             finishPollScope(scope);
             toast({
-              title: "Timeout",
+              title: t("playground.actionErrors.timeout"),
               description:
-                "Experiment completion polling timed out after 5 minutes",
+                t("playground.actionErrors.experimentPollingTimeout"),
               variant: "destructive",
             });
           } else {
             handlePollTimeout(
-              "Experiment completion polling timed out after 5 minutes",
+              t("playground.actionErrors.experimentPollingTimeout"),
             );
           }
           return;
@@ -511,7 +513,7 @@ const useActionButtonActions = ({
           handlePollError(
             error,
             scope,
-            "Failed to poll experiment completion status",
+            t("playground.actionErrors.experimentPollingFailed"),
           );
         }
       };

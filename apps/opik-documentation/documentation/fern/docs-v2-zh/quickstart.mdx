@@ -1,0 +1,301 @@
+---
+headline: 快速入门 | Opik 文档
+og:description: 将 Opik 集成到您的 LLM 应用程序中，高效记录调用和链。通过我们的分步指南开始使用。
+og:site_name: Opik 文档
+og:title: 快速入门指南 - Opik 集成
+title: 快速入门
+---
+
+本指南帮助您将 Opik 平台集成到现有的 Agent 中。目标是帮助您记录首批 trace 并开始在 Opik 中跟踪提示词和 agent 配置。
+
+<Frame>
+  <img src="/img/v2/observability/traces-page.png" alt="Opik traces 页面展示 trace 详情，包括 span 树、输出和反馈评分" />
+</Frame>
+
+## 前置条件
+
+在开始之前，您需要选择使用 Opik 的方式：
+
+- **Opik 云服务**：在 [comet.com/opik](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=quickstart&utm_campaign=opik) 创建免费账户
+- **自托管**：按照[自托管指南](/self-host/overview)在本地或 Kubernetes 上部署 Opik
+
+## 记录您的首批 LLM 调用
+
+Opik 可以轻松集成到现有的 LLM 应用程序中。选择与您的技术栈匹配的标签页，按照三个步骤记录您的首个 trace：
+
+<Tabs>
+  <Tab title="Python SDK" value="python-function-decorator">
+    如果您使用 Python 函数装饰器，可以按以下步骤集成：
+
+    <Steps>
+      <Step>
+        安装 Opik Python SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        配置 Opik Python SDK：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `@track` 装饰器包装您的函数：
+
+        ```python
+        from opik import track
+
+        @track
+        def my_function(input: str) -> str:
+            return input
+        ```
+
+        现在所有对 `my_function` 的调用都会被记录到 Opik。这适用于任何函数，包括嵌套函数，大多数集成也支持此方式（只需用 `@track` 装饰器包装任意父函数即可）。
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="TypeScript SDK" value="typescript-sdk">
+    如果您想使用 TypeScript SDK 直接记录 trace：
+
+    <Steps>
+      <Step>
+        安装 Opik TypeScript SDK：
+
+        ```bash
+        npm install opik
+        ```
+      </Step>
+      <Step>
+        运行交互式 CLI 工具配置 Opik TypeScript SDK：
+
+        ```bash
+        npx opik-ts configure
+        ```
+
+        该命令将检测您的项目设置、安装所需依赖并帮助您配置环境变量。
+      </Step>
+      <Step>
+        使用 Opik 客户端记录 trace：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+
+        const trace = client.trace({
+          name: "My LLM Application",
+          input: { prompt: "What is the capital of France?" },
+          output: { response: "The capital of France is Paris." },
+        });
+
+        trace.end();
+        await client.flush();
+        ```
+
+        现在所有 trace 都会被记录到 Opik。您还可以在 trace 中记录 span 以获得更详细的可观测性。
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="OpenAI (Python)" value="openai-python-sdk">
+    如果您使用 OpenAI Python SDK，可以按以下步骤集成：
+
+    <Steps>
+      <Step>
+        安装 Opik Python SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        配置 Opik Python SDK，如果您使用 Opik 云服务，系统会提示您输入 API 密钥；如果是自托管，则需要输入 Opik 服务器地址：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `track_openai` 函数包装您的 OpenAI 客户端：
+
+        ```python
+        from opik.integrations.openai import track_openai
+        from openai import OpenAI
+
+        # Wrap your OpenAI client
+        client = OpenAI()
+        client = track_openai(client)
+
+        # Use the client as normal
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "user", "content": "Hello, how are you?",
+                },
+            ],
+        )
+        print(completion.choices[0].message.content)
+        ```
+
+        现在使用 `client` 进行的所有 OpenAI 调用都会被记录到 Opik。您可以将其与 `@track` 装饰器结合使用，以记录 agent 每个步骤的 trace。
+
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="OpenAI (TS)" value="openai-ts-sdk">
+    如果您使用 OpenAI TypeScript SDK，可以按以下步骤集成：
+
+    <Steps>
+      <Step>
+        安装 Opik TypeScript SDK：
+
+        ```bash
+        npm install opik-openai
+        ```
+      </Step>
+      <Step>
+        运行交互式 CLI 工具配置 Opik TypeScript SDK：
+
+        ```bash
+        npx opik-ts configure
+        ```
+
+        该命令将检测您的项目设置、安装所需依赖并帮助您配置环境变量。
+      </Step>
+      <Step>
+        使用 `trackOpenAI` 函数包装您的 OpenAI 客户端：
+
+        ```typescript
+        import OpenAI from "openai";
+        import { trackOpenAI } from "opik-openai";
+
+        // Initialize the original OpenAI client
+        const openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        // Wrap the client with Opik tracking
+        const trackedOpenAI = trackOpenAI(openai);
+
+        // Use the tracked client just like the original
+        const completion = await trackedOpenAI.chat.completions.create({
+          model: "gpt-4",
+          messages: [{ role: "user", content: "Hello, how can you help me today?" }],
+        });
+        console.log(completion.choices[0].message.content);
+
+        // Ensure all traces are sent before your app terminates
+        await trackedOpenAI.flush();
+        ```
+
+        现在使用 `trackedOpenAI` 进行的所有 OpenAI 调用都会被记录到 Opik。
+
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="LangGraph" value="langgraph">
+    如果您使用 LangGraph，可以按以下步骤集成：
+
+    <Steps>
+      <Step>
+        安装 Opik SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        在终端中运行 `opik configure` 命令配置 Opik SDK：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `track_langgraph` 跟踪您的 LangGraph 图：
+
+        ```python
+        from opik.integrations.langchain import OpikTracer, track_langgraph
+
+        # Create your LangGraph graph
+        graph = ...
+        app = graph.compile(...)
+
+        # Create OpikTracer and track the graph once
+        # The graph visualization is automatically extracted by track_langgraph
+        opik_tracer = OpikTracer()
+        app = track_langgraph(app, opik_tracer)
+
+        # Now all invocations are automatically tracked!
+        result = app.invoke({"messages": [HumanMessage(content = "How to use LangGraph ?")]})
+        ```
+
+        现在所有 LangGraph 调用都会被记录到 Opik。无需在每次调用时传递回调函数！
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="AI 集成">
+    如果您已经在使用编程 Agent（Claude Code、Codex、Cursor、OpenCode 等），可以让它通过 Opik Skill 为您的应用添加监控。需要已安装 Node.js。
+
+    <Steps>
+      <Step title="安装 Opik skill">
+        ```bash
+        npx skills add comet-ml/opik-skills
+        ```
+      </Step>
+      <Step title="运行集成">
+        安装 skill 后，您可以使用以下提示词与 Opik 集成：
+        ```
+        Instrument my agent with Opik using the /instrument command.
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="所有集成">
+    Opik 拥有 **30+ 种集成**，支持主流框架和模型提供商：
+
+    <CardGroup cols={3}>
+      <Card title="LangChain" href="/integrations/langchain" icon={<img src="/img/tracing/langchain.svg" />} iconPosition="left"/>
+      <Card title="LlamaIndex" href="/integrations/llama_index" icon={<img src="/img/tracing/llamaindex.svg" />} iconPosition="left"/>
+      <Card title="Anthropic" href="/integrations/anthropic" icon={<img src="/img/tracing/anthropic.svg" />} iconPosition="left"/>
+      <Card title="AWS Bedrock" href="/integrations/bedrock" icon={<img src="/img/tracing/bedrock.svg" />} iconPosition="left"/>
+      <Card title="Google Gemini" href="/integrations/gemini" icon={<img src="/img/tracing/gemini.svg" />} iconPosition="left"/>
+      <Card title="CrewAI" href="/integrations/crewai" icon={<img src="/img/tracing/crewai.svg" />} iconPosition="left"/>
+    </CardGroup>
+
+    **[查看全部 30+ 种集成 →](/integrations/overview)**
+
+  </Tab>
+</Tabs>
+
+## 分析您的 trace
+
+运行应用程序后，您将开始在 Opik 中看到 trace，可以使用 Ollie 分析它们并改进您的 agent。
+
+<video
+  src="/img/tracing/quickstart.mp4"
+  width="854"
+  height="480"
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="auto"
+/>
+
+如果没有看到 trace 出现，请通过 [Slack](https://chat.comet.com) 联系我们或在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue，我们将帮助您排查问题。
+
+## 后续步骤
+
+现在您已经记录了首批 trace，以下是接下来可以探索的内容：
+
+1. [Agent 可观测性深入指南](/tracing/advanced/log_traces)：了解如何自定义记录到 Opik 的数据以及如何记录对话。
+2. [Opik 实验](/evaluation/concepts)：Opik 允许您自动化 LLM 应用程序的评估流程，无需再手动审查每个 LLM 响应。
+3. [Opik 评估指标](/evaluation/metrics/overview)：Opik 提供一套评估指标（幻觉检测、答案相关性、上下文召回率等），可用于对 LLM 响应进行评分。

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Calendar,
@@ -166,6 +167,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
   container,
   hideAnnotateActions,
 }) => {
+  const { t } = useTranslation("tracing");
   const navigate = useNavigate();
 
   const {
@@ -333,17 +335,17 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
       FileSaver.saveAs(blob, fileName);
 
       toast({
-        title: "Export successful",
-        description: "Exported thread to CSV",
+        title: t("actions.exportSuccessful"),
+        description: t("actions.exportedToFormat", { type: "thread", format: "CSV" }),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: get(error, "message", "Failed to export"),
+        title: t("actions.exportFailed"),
+        description: get(error, "message", t("actions.failedToExport")),
         variant: "destructive",
       });
     }
-  }, [thread, threadId, exportColumns, traces, traceExportColumns]);
+  }, [thread, threadId, exportColumns, traces, traceExportColumns, t]);
 
   const handleExportJSON = useCallback(async () => {
     try {
@@ -373,17 +375,17 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
       FileSaver.saveAs(blob, fileName);
 
       toast({
-        title: "Export successful",
-        description: "Exported thread to JSON",
+        title: t("actions.exportSuccessful"),
+        description: t("actions.exportedToFormat", { type: "thread", format: "JSON" }),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: get(error, "message", "Failed to export"),
+        title: t("actions.exportFailed"),
+        description: get(error, "message", t("actions.failedToExport")),
         variant: "destructive",
       });
     }
-  }, [thread, threadId, exportColumns, traces, traceExportColumns]);
+  }, [thread, threadId, exportColumns, traces, traceExportColumns, t]);
 
   const horizontalNavigation = useMemo(
     () =>
@@ -417,21 +419,21 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
     return (
       <div className="flex flex-col gap-2">
         <div className="comet-body-s flex w-full flex-wrap items-center gap-3 pl-1 text-foreground">
-          <TooltipWrapper content="Thread start time">
+          <TooltipWrapper content={t("thread.threadStartTime")}>
             <div className="flex items-center gap-1">
               <Calendar className="size-3.5 shrink-0 text-muted-slate" />
               {thread?.start_time ? formatDate(thread?.start_time) : "NA"}
             </div>
           </TooltipWrapper>
-          <TooltipWrapper content="Number of messages in the thread">
+          <TooltipWrapper content={t("thread.numberOfMessages")}>
             <div className="flex items-center gap-1">
               <Hash className="size-3.5 shrink-0 text-muted-slate" />
               {thread?.number_of_messages
-                ? `${thread.number_of_messages} messages`
+                ? t("thread.messages", { count: thread.number_of_messages })
                 : "NA"}
             </div>
           </TooltipWrapper>
-          <TooltipWrapper content="Thread duration">
+          <TooltipWrapper content={t("thread.threadDuration")}>
             <div className="flex items-center gap-1">
               <Clock className="size-3.5 shrink-0 text-muted-slate" />
               {formatDuration(thread?.duration, false)}
@@ -439,10 +441,11 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           </TooltipWrapper>
           {!isUndefined(thread?.total_estimated_cost) && (
             <TooltipWrapper
-              content={`Estimated cost ${formatCost(
-                thread?.total_estimated_cost,
-                { modifier: "full" },
-              )}`}
+              content={t("thread.estimatedCost", {
+                cost: formatCost(thread?.total_estimated_cost, {
+                  modifier: "full",
+                }),
+              })}
             >
               <div className="flex items-center gap-1">
                 <Coins className="size-3.5 shrink-0 text-muted-slate" />
@@ -454,7 +457,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
             <FeedbackScoreHoverCard scores={threadFeedbackScores}>
               <div className="flex items-center gap-1">
                 <PenLine className="size-3.5 shrink-0 text-muted-slate" />
-                {threadFeedbackScores.length} scores
+                {t("thread.scores", { count: threadFeedbackScores.length })}
               </div>
             </FeedbackScoreHoverCard>
           )}
@@ -480,14 +483,14 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
         <div className="mx-4" data-panel-tabs="true">
           <TabsList variant="segmented-primary">
             <TabsTrigger variant="segmented-primary" size="sm" value="messages">
-              Messages
+              {t("detailsPanel.messages")}
             </TabsTrigger>
             <TabsTrigger
               variant="segmented-primary"
               size="sm"
               value="feedback_scores"
             >
-              Feedback scores
+              {t("detailsPanel.feedbackScores")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -553,7 +556,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
             <div className="flex size-full flex-col">
               <div className="flex h-10 shrink-0 items-center gap-2 border-b bg-muted/50 px-4">
                 <span className="comet-body-xs-accented whitespace-nowrap text-foreground">
-                  Inspect
+                  {t("detailsPanel.inspect")}
                 </span>
                 <div className="flex-auto" />
                 {!hideAnnotateActions && (
@@ -622,7 +625,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
     return (
       <ResizableSidePanelTopBar
         variant="info"
-        title="Thread"
+        title={t("thread.title")}
         leftIcon={
           <div className="relative flex size-4 shrink-0 items-center justify-center rounded bg-[var(--thread-icon-background)] text-[var(--thread-icon-text)]">
             <MessagesSquare className="size-2" />
@@ -641,25 +644,25 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
             <DropdownMenuItem
               onClick={() => {
                 toast({
-                  description: "URL successfully copied to clipboard",
+                  description: t("actions.urlSuccessfullyCopiedToClipboard"),
                 });
                 copy(window.location.href);
               }}
             >
               <Share className="mr-2 size-4" />
-              Share
+              {t("actions.share")}
             </DropdownMenuItem>
             <TooltipWrapper content={threadId} side="left">
               <DropdownMenuItem
                 onClick={() => {
                   toast({
-                    description: `Thread ID successfully copied to clipboard`,
+                    description: t("actions.threadIdCopiedToClipboard"),
                   });
                   copy(threadId);
                 }}
               >
                 <Copy className="mr-2 size-4" />
-                Copy thread ID
+                {t("actions.copyThreadId")}
               </DropdownMenuItem>
             </TooltipWrapper>
             <DropdownMenuSeparator />
@@ -673,7 +676,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
                   disabled={!isExportEnabled}
                 >
                   <Download className="mr-2 size-4" />
-                  Export as {format.toUpperCase()}
+                  {t("actions.exportAs", { format: format.toUpperCase() })}
                 </DropdownMenuItem>
               );
 
@@ -682,7 +685,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               ) : (
                 <TooltipWrapper
                   key={format}
-                  content="Export functionality is disabled for this installation"
+                  content={t("actions.exportDisabled")}
                   side="left"
                 >
                   <div>{item}</div>
@@ -695,7 +698,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               variant="destructive"
             >
               <Trash className="mr-2 size-4" />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -703,9 +706,9 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           open={popupOpen}
           setOpen={setPopupOpen}
           onConfirm={handleThreadDelete}
-          title="Delete thread"
-          description="Deleting a thread will also remove all traces linked to it and their data. This action can’t be undone. Are you sure you want to continue?"
-          confirmText="Delete thread"
+          title={t("actions.deleteThread")}
+          description={t("actions.deleteThreadDescription")}
+          confirmText={t("actions.deleteThread")}
           confirmButtonVariant="destructive"
         />
 
@@ -713,7 +716,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           horizontalNavigation={horizontalNavigation}
         />
 
-        <TooltipWrapper content="View all traces for this thread">
+        <TooltipWrapper content={t("actions.viewAllTracesForThread")}>
           <Button
             variant="outline"
             size="2xs"
@@ -739,7 +742,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               });
             }}
           >
-            Traces
+            {t("actions.traces")}
             <ArrowUpRight className="ml-1 size-3.5" />
           </Button>
         </TooltipWrapper>

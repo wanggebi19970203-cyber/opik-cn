@@ -1,0 +1,77 @@
+{
+  "projectHome": {
+    "title": "项目首页",
+    "description": "项目概览和快捷操作",
+    "stats": {
+      "traces": "追踪",
+      "datasets": "数据集",
+      "experiments": "实验"
+    }
+  },
+  "projectPage": {
+    "somethingWentWrong": "出了点问题",
+    "failedToLoad": "加载项目失败。请稍后重试。",
+    "backToProjects": "返回项目列表",
+    "projectNotFound": "找不到此项目",
+    "projectNotFoundMessage": "您要查找的项目不存在或已被删除。"
+  },
+  "dailyBriefing": {
+    "title": "每日简报",
+    "active": "活跃",
+    "inactive": "未激活",
+    "paused": "已暂停",
+    "runningReport": "正在生成报告...",
+    "runningReportHint": "可能需要几分钟",
+    "scheduled": "计划时间：{{time}}",
+    "runNow": "立即运行",
+    "briefingFailed": "简报生成失败",
+    "runAgain": "重新运行",
+    "reactivateDailyBriefing": "重新激活每日简报",
+    "reactivate": "重新激活",
+    "actionCount": "{{count}} 个操作",
+    "settings": "简报设置",
+    "emptyTitle": "每日推荐以改进您的代理",
+    "emptyDescription": "每天 Ollie 会审查您项目过去 24 小时的数据 — 总结变化、标记异常并建议下一步操作。",
+    "turnOn": "开启每日简报",
+    "turnOnDialogTitle": "开启每日简报？",
+    "turnOnDialogDescription": "Ollie 将每天 {{time}} 运行，审查您的追踪并告诉您需要改进的地方。",
+    "turnOnDialogTokenInfo": "使用您的 Ollie 令牌。可随时关闭。",
+    "turnOnDialogLearnMore": "了解更多",
+    "turnOnDialogRunImmediately": "激活后立即运行第一份报告",
+    "turnOnDialogRunImmediatelyDescription": "您可以在设置中自定义计划时间和报告说明。",
+    "turnOnDialogCancel": "取消",
+    "turnOnDialogConfirm": "开启",
+    "noBriefingsYet": "暂无简报",
+    "nextBriefingScheduled": "下一次简报计划于 {{time}}。",
+    "showMore": "显示更多",
+    "today": "今天",
+    "tomorrow": "明天",
+    "dayAtTime": "{{day}} {{time}}",
+    "settingsDialog": {
+      "title": "每日简报设置",
+      "active": "每日简报已激活",
+      "activeDescription": "关闭以暂停自动报告。您可以随时重新激活。",
+      "paused": "每日简报已暂停",
+      "pausedDescription": "开启以恢复自动报告。",
+      "scheduledFor": "计划时间",
+      "customInstructions": "自定义指令",
+      "customInstructionsPlaceholder": "添加自定义指令以定制报告",
+      "billing": "计费",
+      "billingDescription": "使用您的 Ollie 令牌。",
+      "cancel": "取消",
+      "saveChanges": "保存更改"
+    }
+  },
+  "recentActivity": {
+    "title": "近期活动",
+    "tracesLogged": "追踪记录 {{time}}",
+    "optimizationCreated": "优化运行已创建",
+    "experimentCreated": "实验已创建",
+    "datasetUpdated": "数据集已更新",
+    "testSuiteUpdated": "测试套件已更新",
+    "promptCreated": "提示词已创建",
+    "alertTriggered": "告警已触发",
+    "noActivityYet": "暂无活动",
+    "noActivityDescription": "追踪此项目中的重要活动 — 新制品、更新和触发的告警。"
+  }
+}

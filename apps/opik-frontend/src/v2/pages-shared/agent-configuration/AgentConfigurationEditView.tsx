@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { Plus, RotateCcw, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { serializeChatTemplate } from "@/lib/chatTemplate";
 import { PROMPT_TEMPLATE_STRUCTURE } from "@/types/prompts";
@@ -89,6 +90,7 @@ const AgentConfigurationEditView = React.forwardRef<
     },
     ref,
   ) => {
+    const { t } = useTranslation("agent-optimization");
     const { data: agentConfig, isPending } = useAgentConfigById({
       blueprintId: item.id,
     });
@@ -287,11 +289,10 @@ const AgentConfigurationEditView = React.forwardRef<
 
     const { DialogComponent } = useNavigationBlocker({
       condition: blockNavigation && isDirty,
-      title: "You have unsaved changes",
-      description:
-        "If you leave now, your changes will be lost. Are you sure you want to continue?",
-      confirmText: "Leave without saving",
-      cancelText: "Stay on page",
+      title: t("agentOptimization.editView.unsavedChangesTitle"),
+      description: t("agentOptimization.editView.unsavedChangesDescription"),
+      confirmText: t("agentOptimization.editView.leaveWithoutSaving"),
+      cancelText: t("agentOptimization.editView.stayOnPage"),
     });
 
     if (isPending) {
@@ -303,12 +304,12 @@ const AgentConfigurationEditView = React.forwardRef<
         <>
           <BlueprintDiffTable
             base={{
-              label: `${item.name} (original)`,
+              label: t("agentOptimization.editView.original", { name: item.name }),
               blueprintId: item.id,
               values: agentConfig?.values,
             }}
             diff={{
-              label: "Current changes",
+              label: t("agentOptimization.editView.currentChanges"),
               blueprintId: item.id,
               values: currentValues,
               promptTemplates: diffPromptTemplates,
@@ -341,10 +342,10 @@ const AgentConfigurationEditView = React.forwardRef<
             const isBoolean = v.type === BlueprintValueType.BOOLEAN;
 
             const modifiedDot = isChanged ? (
-              <TooltipWrapper content="Modified">
+              <TooltipWrapper content={t("agentOptimization.editView.modified")}>
                 <span
                   className="size-1.5 rounded-full bg-amber-400"
-                  aria-label="Modified"
+                  aria-label={t("agentOptimization.editView.modified")}
                 />
               </TooltipWrapper>
             ) : null;
@@ -378,7 +379,7 @@ const AgentConfigurationEditView = React.forwardRef<
                     <div className="flex items-center gap-1">
                       {modifiedDot}
                       <TooltipWrapper
-                        content={isRemoved ? "Restore field" : "Remove field"}
+                        content={isRemoved ? t("agentOptimization.editView.restoreField") : t("agentOptimization.editView.removeField")}
                       >
                         <Button
                           variant="minimal"
@@ -501,7 +502,7 @@ const AgentConfigurationEditView = React.forwardRef<
           <div className="flex justify-end">
             <Button variant="outline" size="sm" onClick={handleAddNewField}>
               <Plus className="mr-1 size-3.5" />
-              Add field
+              {t("agentOptimization.editView.addField")}
             </Button>
           </div>
         </div>

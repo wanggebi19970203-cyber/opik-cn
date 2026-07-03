@@ -1,0 +1,40 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 新增按 `Last updated`、`Created at` 和 `Name` 列对项目表格排序的选项。
+- 更新了图片显示逻辑，不再依赖响应格式，现在使用正则规则检测 trace 或 span 输入是否包含 base64 编码的图片或 URL。
+- 通过截断包含 base64 编码图片的 trace 输入和输出，提升了 Traces 表格的性能。
+- 修复了以 YAML 格式渲染 trace 输入和输出的一些问题。
+- 在实验页面新增分组和图表：
+  <Frame>
+    <img src="/img/changelog/2024-11-11/experiment_summary.png" />
+  </Frame>
+
+**SDK**：
+
+- **新集成**：Anthropic 集成
+
+  ```python wordWrap
+  from anthropic import Anthropic, AsyncAnthropic
+  from opik.integrations.anthropic import track_anthropic
+
+  client = Anthropic()
+  client = track_anthropic(client, project_name="anthropic-example")
+
+  message = client.messages.create(
+        max_tokens=1024,
+        messages=[
+            {
+                "role": "user",
+                "content": "Tell a fact",
+            }
+        ],
+        model="claude-3-opus-20240229",
+    )
+  print(message)
+  ```
+
+- 在 SDK 中新增 `evaluate_experiment` 方法，可用于对现有实验重新评分，更多信息请参阅[更新实验](/v1/evaluation/update_existing_experiment)指南。

@@ -1,0 +1,244 @@
+---
+description: 从这里开始将 Opik 集成到基于 Novita AI 的生成式 AI 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Novita AI | Opik 文档
+og:description: 学习如何使用 LiteLLM 将 Opik 与 Novita AI 集成，在项目中有效跟踪和评估 API 调用。
+og:site_name: Opik 文档
+og:title: 将 Novita AI 模型与 Opik 集成 - Opik
+title: 使用 Opik 实现 Novita AI 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/novita-ai
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+[Novita AI](https://novita.ai/) 是一个 AI 云平台，帮助开发者通过简单的 API 轻松部署 AI 模型，由经济实惠且可靠的 GPU 云基础设施支持。它提供了对多种模型的访问，包括 DeepSeek、Qwen、Llama 和其他流行的 LLM。
+
+本指南介绍如何通过 LiteLLM 将 Opik 与 Novita AI 集成。通过使用 Opik 提供的 LiteLLM 集成，你可以轻松地在 Opik 项目中跟踪和评估 Novita AI API 调用，Opik 将自动记录输入提示、使用的模型、token 使用量和生成的响应。
+
+
+## 快速开始
+
+### 配置 Opik
+
+首先，你需要配置 Opik 将追踪发送到你的 Comet 项目。可以通过设置 `OPIK_PROJECT_NAME` 环境变量来完成：
+
+```bash
+export OPIK_PROJECT_NAME="your-project-name"
+export OPIK_WORKSPACE="your-workspace-name"
+```
+
+你也可以调用 `opik.configure` 方法：
+
+```python
+import opik
+
+opik.configure(
+    project_name="your-project-name",
+    workspace="your-workspace-name",
+)
+```
+
+### 配置 LiteLLM
+
+安装所需的包：
+
+```bash
+pip install opik litellm
+```
+
+创建 LiteLLM 配置文件（例如 `litellm_config.yaml`）：
+
+```yaml
+model_list:
+  - model_name: deepseek-r1-turbo
+    litellm_params:
+      model: novita/deepseek/deepseek-r1-turbo
+      api_key: os.environ/NOVITA_API_KEY
+  - model_name: qwen-32b-fp8
+    litellm_params:
+      model: novita/qwen/qwen3-32b-fp8
+      api_key: os.environ/NOVITA_API_KEY
+  - model_name: llama-70b-instruct
+    litellm_params:
+      model: novita/meta-llama/llama-3.1-70b-instruct
+      api_key: os.environ/NOVITA_API_KEY
+
+litellm_settings:
+  callbacks: ["opik"]
+```
+
+### 身份验证
+
+将你的 Novita AI API key 设置为环境变量：
+
+```bash
+export NOVITA_API_KEY="your-novita-api-key"
+```
+
+你可以从 [Novita AI 控制面板](https://novita.ai/settings) 获取 Novita AI API key。
+
+## 使用方法
+
+### 使用 LiteLLM 代理服务器
+
+启动 LiteLLM 代理服务器：
+
+```bash
+litellm --config litellm_config.yaml
+```
+
+使用代理服务器发送请求：
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="anything",  # 可以是任意值
+    base_url="http://0.0.0.0:4000"
+)
+
+response = client.chat.completions.create(
+    model="deepseek-r1-turbo",
+    messages=[
+        {"role": "user", "content": "What are the advantages of using cloud-based AI platforms?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+### 直接集成
+
+你也可以在 Python 代码中直接使用 LiteLLM：
+
+```python
+import os
+from litellm import completion
+
+# 配置 Opik
+import opik
+opik.configure()
+
+# 为 Opik 配置 LiteLLM
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+
+litellm.callbacks = ["opik"]
+
+os.environ["NOVITA_API_KEY"] = "your-novita-api-key"
+
+response = completion(
+    model="novita/deepseek/deepseek-r1-turbo",
+    messages=[
+        {"role": "user", "content": "How can cloud AI platforms improve development efficiency?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+## 支持的模型
+
+Novita AI 提供了来自领先提供商的全面模型目录。一些可用的热门模型包括：
+
+- **DeepSeek 模型**：`deepseek-r1-turbo`、`deepseek-v3-turbo`、`deepseek-v3-0324`
+- **Qwen 模型**：`qwen3-235b-a22b-fp8`、`qwen3-30b-a3b-fp8`、`qwen3-32b-fp8`
+- **Llama 模型**：`llama-4-maverick-17b-128e-instruct-fp8`、`llama-3.3-70b-instruct`、`llama-3.1-70b-instruct`
+- **Mistral 模型**：`mistral-nemo`
+- **Google 模型**：`gemma-3-27b-it`
+
+有关可用模型的完整列表，请访问 [Novita AI 模型目录](https://novita.ai/models/llm)。
+
+## 高级功能
+
+### 工具调用
+
+Novita AI 支持兼容模型的函数调用：
+
+```python
+from litellm import completion
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    },
+                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                },
+                "required": ["location"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="novita/deepseek/deepseek-r1-turbo",
+    messages=[{"role": "user", "content": "What's the weather like in Boston today?"}],
+    tools=tools,
+)
+```
+
+### JSON 模式
+
+要获取结构化输出，可以启用 JSON 模式：
+
+```python
+response = completion(
+    model="novita/deepseek/deepseek-r1-turbo",
+    messages=[
+        {"role": "user", "content": "List 5 popular cookie recipes."}
+    ],
+    response_format={"type": "json_object"}
+)
+```
+
+## 反馈评分和评估
+
+一旦你的 Novita AI 调用通过 Opik 记录，你就可以使用 Opik 的评估框架来评估你的 LLM 应用程序：
+
+```python
+from opik.evaluation import evaluate
+from opik.evaluation.metrics import Hallucination
+
+# 定义你的评估任务
+def evaluation_task(x):
+    return {
+        "message": x["message"],
+        "output": x["output"],
+        "reference": x["reference"]
+    }
+
+# 创建幻觉指标
+hallucination_metric = Hallucination()
+
+# 运行评估
+evaluation_results = evaluate(
+    experiment_name="novita-ai-evaluation",
+    dataset=your_dataset,
+    task=evaluation_task,
+    scoring_metrics=[hallucination_metric],
+    project_name="my-project",
+)
+```
+
+## 环境变量
+
+确保设置以下环境变量：
+
+```bash
+# Novita AI 配置
+export NOVITA_API_KEY="your-novita-api-key"
+
+# Opik 配置
+export OPIK_PROJECT_NAME="your-project-name"
+export OPIK_WORKSPACE="your-workspace-name"
+```

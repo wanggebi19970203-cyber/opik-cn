@@ -1,0 +1,83 @@
+---
+title: Optimization Studio
+description: 从 Opik UI 运行提示词优化，支持数据集、指标和可视化进度跟踪。
+headline: Optimization Studio | Opik 文档
+og:description: 从 Opik UI 运行提示词优化，支持数据集、指标和可视化进度跟踪。
+og:site_name: Opik 文档
+og:title: Optimization Studio - Opik
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization_studio
+---
+
+Optimization Studio 帮助你无需编写代码即可改进提示词。你提供一个提示词，定义"好"的标准，Opik 测试变体以找到一个你可以自信发布的更好版本。团队喜欢它，因为它缩短了从想法到证据的循环：你看到的是分数和示例，而不仅仅是直觉。如果你偏好编程工作流，请使用[优化提示词](/v1/agent_optimization/optimization/optimize_prompts)指南。
+
+<video
+  src="/img/agent_optimization/optimization_studio_walkthrough.mp4"
+  width="854"
+  height="480"
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="auto"
+/>
+
+## 开始优化
+
+优化运行是一种结构化的方式来改进提示词。Opik 获取你当前的提示词，尝试小的变体，并对每个变体评分，让你可以用证据而不是猜测来选择表现最好的版本。
+
+<Frame>
+  <img src="/img/agent_optimization/optimization_studio_create_form.png" alt="Optimization Studio 表单显示名称、提示词、算法、数据集和指标配置" />
+</Frame>
+
+## 配置运行
+
+### 命名运行
+
+为运行取一个描述性名称，以便日后查找。好的模式是 `目标 + 数据集 + 日期`，例如 "Support intent v1 - Jan 2026"。
+
+### 配置提示词
+
+选择将生成响应的模型，然后设置消息角色（System、User 等）。如果你的数据集有 `question` 或 `answer` 等字段，请用 `{{variable}}` 占位符插入它们，使每个示例正确流入提示词。从你已在生产中使用的提示词开始，这样改进就容易比较。
+
+### 选择算法
+
+选择 Opik 应该如何搜索更好的提示词。GEPA 适用于单轮提示词和快速改进，而 HRPO 更适合当你需要深入分析提示词失败原因时。如果你是新手，从 GEPA 开始获取快速基线，然后在需要更深入洞察时切换到 HRPO。技术详情请参见[优化算法](/v1/agent_optimization/algorithms/overview)。
+
+### 选择数据集
+
+选择一个现有数据集来提供示例。优先选择多样化的真实场景案例而非仅边界案例，第一次运行保持小规模以便快速迭代。如果需要先创建或上传数据，请参见[管理数据集](/v1/evaluation/manage_datasets)。
+
+### 定义指标
+
+选择 Opik 应该如何对每个提示词评分。如果输出应该精确匹配，使用 Equals；如果需要模型评分质量，使用 G-Eval。使用 G-Eval 时，确保评分提示词反映你的任务中"好"的标准。
+
+- **Equals**：当你有单一正确答案且需要严格匹配时使用。
+- **G-Eval**：当答案可以变化且需要模型评分质量时使用。
+
+## 监控进度
+
+运行开始后，Optimization Studio 显示到目前为止的最佳分数和每个试验的进度图表。
+
+<Frame>
+  <img src="/img/agent_optimization/optimization_studio_results.png" alt="优化结果页面，包含进度图表和最佳提示词指示器" />
+</Frame>
+
+## 分析结果
+
+Trials 标签页是你可以比较提示词变体和分数的地方，点击特定试验可以查看被评估的各个试验项。
+
+<Frame>
+  <img src="/img/agent_optimization/optimization_studio_trials.png" alt="试验表格显示每个优化试验的提示词和分数" />
+</Frame>
+
+## 操作
+
+你可以重新运行相同的设置、取消运行以更改输入，或选择多个运行来比较结果。
+
+## 在 UI 外复用结果
+
+如果你想稍后在代码中自动化优化，请按照[优化提示词](/v1/agent_optimization/optimization/optimize_prompts)操作，并使用本次运行中的相同数据集和指标。
+
+## 后续步骤
+
+要更深入地了解试验和追踪，请访问[仪表板结果](/v1/agent_optimization/optimization/dashboard_results)。如果你想自动化此工作流，请使用[优化提示词](/v1/agent_optimization/optimization/optimize_prompts)。要调整你的策略，请探索[优化算法](/v1/agent_optimization/algorithms/overview)。

@@ -17,6 +17,7 @@ import { Prompt, PROMPT_TEMPLATE_STRUCTURE } from "@/types/prompts";
 import { pickHighestStage } from "@/utils/version-stages";
 import { cn } from "@/lib/utils";
 import { formatDate, getTimeFromNow } from "@/lib/date";
+import { useTranslation } from "react-i18next";
 
 const DEFAULT_LOADED_PROMPTS = 1000;
 
@@ -50,6 +51,7 @@ const PromptLibraryMenu: React.FC<PromptLibraryMenuProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const { t } = useTranslation("llm");
 
   const { data, isLoading } = useProjectPromptsList(
     {
@@ -108,7 +110,7 @@ const PromptLibraryMenu: React.FC<PromptLibraryMenuProps> = ({
           <SearchInput
             searchText={search}
             setSearchText={setSearch}
-            placeholder="Search"
+            placeholder={t("llm:promptLibraryMenu.search")}
             variant="ghost"
             dimension="sm"
           />
@@ -120,7 +122,7 @@ const PromptLibraryMenu: React.FC<PromptLibraryMenuProps> = ({
               <Spinner />
             </div>
           ) : filteredPrompts.length === 0 ? (
-            <NoOptions text={search ? "No search results" : "No prompts"} />
+            <NoOptions text={search ? t("llm:promptLibraryMenu.noSearchResults") : t("llm:promptLibraryMenu.noPrompts")} />
           ) : (
             filteredPrompts.map((prompt) => (
               <PromptRow
@@ -227,6 +229,7 @@ const PromptVersionsList: React.FC<PromptVersionsListProps> = ({
   enabled,
   onSelect,
 }) => {
+  const { t } = useTranslation("llm");
   const { data, isLoading } = usePromptVersionsById(
     {
       promptId,
@@ -253,7 +256,7 @@ const PromptVersionsList: React.FC<PromptVersionsListProps> = ({
 
   if (versions.length === 0) {
     return (
-      <div className="comet-body-xs p-2 text-light-slate">No versions</div>
+      <div className="comet-body-xs p-2 text-light-slate">{t("llm:promptLibraryMenu.noVersions")}</div>
     );
   }
 

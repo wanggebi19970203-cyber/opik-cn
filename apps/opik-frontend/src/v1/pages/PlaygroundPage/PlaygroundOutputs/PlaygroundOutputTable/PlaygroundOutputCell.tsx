@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { ListTree } from "lucide-react";
 
@@ -32,6 +33,7 @@ interface CustomMeta {
 const PlaygroundOutputCell: React.FunctionComponent<
   CellContext<PlaygroundOutputCellData, unknown>
 > = (context) => {
+  const { t } = useTranslation();
   const { custom } = context.column.columnDef.meta ?? {};
   const { promptId } = (custom ?? {}) as CustomMeta;
   const originalRow = context.row.original;
@@ -109,7 +111,7 @@ const PlaygroundOutputCell: React.FunctionComponent<
     >
       <div className="group relative flex size-full flex-col">
         {traceId && playgroundProject?.id && (
-          <TooltipWrapper content="Click to open original trace">
+          <TooltipWrapper content={t("playground.outputCell.openTrace")}>
             <Button
               size="icon-xs"
               variant="outline"

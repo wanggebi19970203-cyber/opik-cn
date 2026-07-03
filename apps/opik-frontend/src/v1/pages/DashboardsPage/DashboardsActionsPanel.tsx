@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -14,6 +15,7 @@ type DashboardsActionsPanelsProps = {
 const DashboardsActionsPanel: React.FunctionComponent<
   DashboardsActionsPanelsProps
 > = ({ dashboards }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean>(false);
   const disabled = !dashboards?.length;
@@ -33,12 +35,12 @@ const DashboardsActionsPanel: React.FunctionComponent<
         open={open}
         setOpen={setOpen}
         onConfirm={deleteDashboardsHandler}
-        title="Delete dashboards"
-        description="Deleting dashboards will also remove all their widgets and sections. This action can't be undone. Are you sure you want to continue?"
-        confirmText="Delete dashboards"
+        title={t("dashboards.confirmDialog.deleteBatch.title")}
+        description={t("dashboards.confirmDialog.deleteBatch.description")}
+        confirmText={t("dashboards.confirmDialog.deleteBatch.confirmText")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content="Delete">
+      <TooltipWrapper content={t("dashboards.actions.delete")}>
         <Button
           variant="outline"
           size="icon-sm"

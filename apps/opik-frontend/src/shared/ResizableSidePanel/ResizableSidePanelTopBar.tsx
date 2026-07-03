@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronsRight, X } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -17,14 +18,15 @@ type ResizableSidePanelTopBarProps = {
 const ResizableSidePanelTopBar: React.FunctionComponent<
   ResizableSidePanelTopBarProps
 > = ({ variant = "info", title, leftIcon, children, onClose }) => {
+  const { t } = useTranslation();
   const CloseIcon = variant === "form" ? X : ChevronsRight;
   return (
     <div className="flex flex-auto items-center justify-between">
       <div className="flex items-center gap-1 overflow-hidden">
-        <TooltipWrapper content="Close panel">
+        <TooltipWrapper content={t("common.sidePanel.closePanel")}>
           <Button variant="ghost" size="icon-2xs" onClick={onClose}>
             <CloseIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t("common.buttons.close")}</span>
           </Button>
         </TooltipWrapper>
         {leftIcon}

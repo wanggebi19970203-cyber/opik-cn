@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Settings2 } from "lucide-react";
 import isEmpty from "lodash/isEmpty";
 import {
@@ -35,6 +36,7 @@ const AlgorithmConfigs = ({
   size = "icon-sm",
   disabled: disabledProp = false,
 }: AlgorithmConfigsProps) => {
+  const { t } = useTranslation();
   const getOptimizerForm = () => {
     if (optimizerType === OPTIMIZER_TYPE.GEPA) {
       return (
@@ -85,13 +87,13 @@ const AlgorithmConfigs = ({
       >
         <div className="mb-5 w-72">
           <div className="mb-1 flex items-center gap-1">
-            <h3 className="comet-body-s-accented">Algorithm settings</h3>
+            <h3 className="comet-body-s-accented">{t('optimizations.algorithmConfigs.title')}</h3>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_algorithm_settings]}
             />
           </div>
           <p className="comet-body-xs text-muted-slate">
-            Configure parameters for the selected optimization algorithm
+            {t('optimizations.algorithmConfigs.description')}
           </p>
         </div>
         {getOptimizerForm()}

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import useAppStore, { useUserApiKey } from "@/store/AppStore";
 import { DropdownOption } from "@/types/shared";
@@ -87,6 +88,11 @@ const EVALUATOR_MODEL_MAP: Record<EVALUATOR_MODEL, ModelData> = {
   },
 };
 
+const ALL_EVALUATOR_OPTIONS = Object.values(EVALUATOR_MODEL).map((value) => ({
+  value,
+  label: value,
+}));
+
 interface MetricOption extends DropdownOption<EVALUATOR_MODEL> {
   docLink: string;
 }
@@ -163,14 +169,6 @@ const LLM_JUDGES_MODELS_OPTIONS: MetricOption[] = [
   },
 ];
 
-const ALL_EVALUATOR_OPTIONS: MetricOption[] = [
-  ...HEURISTICS_MODELS_OPTIONS.map((m) => ({
-    ...m,
-    group: "Heuristics metrics",
-  })),
-  ...LLM_JUDGES_MODELS_OPTIONS.map((m) => ({ ...m, group: "LLM Judges" })),
-];
-
 const DEFAULT_LOADED_DATASET_ITEMS = 25;
 const DEMO_DATASET_NAME = "Opik Demo Questions";
 
@@ -183,6 +181,7 @@ type AddExperimentDialogProps = {
 const AddExperimentDialog: React.FunctionComponent<
   AddExperimentDialogProps
 > = ({ open, setOpen, datasetName: initialDatasetName = "" }) => {
+  const { t } = useTranslation("experiments");
   const {
     permissions: { canCreateExperiments },
   } = usePermissions();
@@ -423,9 +422,9 @@ eval_results = evaluate(
 
   const renderExperimentCodeSection = () => (
     <div>
-      <CodeSectionTitle>3. Create an Experiment</CodeSectionTitle>
+      <CodeSectionTitle>{t("experiments.createExperimentStep")}</CodeSectionTitle>
       {isPhonePortrait ? (
-        <CodeBlockWithHeader title="Python" copyText={codeWithConfigToCopy}>
+        <CodeBlockWithHeader title={t("experiments.python")} copyText={codeWithConfigToCopy}>
           <CodeHighlighter
             data={codeWithConfig}
             highlightedLines={highlightedLines}
@@ -443,8 +442,8 @@ eval_results = evaluate(
 
   const renderEvaluatorsContent = () => (
     <>
-      {generateList("Heuristics metrics", HEURISTICS_MODELS_OPTIONS)}
-      {generateList("LLM Judges", LLM_JUDGES_MODELS_OPTIONS)}
+      {generateList(t("experiments.heuristicsMetrics"), HEURISTICS_MODELS_OPTIONS)}
+      {generateList(t("experiments.llmJudges"), LLM_JUDGES_MODELS_OPTIONS)}
     </>
   );
 
@@ -457,7 +456,7 @@ eval_results = evaluate(
           rel="noreferrer"
           className="flex items-center"
         >
-          Learn about custom metrics
+          {t("experiments.learnAboutCustomMetrics")}
           <ExternalLink className="ml-1 size-4" />
         </a>
       </Button>
@@ -469,13 +468,13 @@ eval_results = evaluate(
       {isPhonePortrait ? (
         <>
           <div className="comet-body-s-accented">
-            Select evaluators
+            {t("experiments.selectEvaluators")}
             {models.length > 0 && <span> ({models.length})</span>}
           </div>
           <LoadableSelectBox
             options={ALL_EVALUATOR_OPTIONS}
             value={models}
-            placeholder="Select evaluators"
+            placeholder={t("experiments.selectEvaluators")}
             onChange={(values: string[]) =>
               setModels(values as EVALUATOR_MODEL[])
             }
@@ -485,7 +484,7 @@ eval_results = evaluate(
         </>
       ) : (
         <>
-          <div className="comet-title-s">Select evaluators</div>
+          <div className="comet-title-s">{t("experiments.selectEvaluators")}</div>
           {renderEvaluatorsContent()}
           {renderCustomMetricsLink()}
         </>
@@ -504,21 +503,20 @@ eval_results = evaluate(
     <SideDialog open={open && canCreateExperiments} setOpen={openChangeHandler}>
       <div className="pb-20">
         <div className="pb-8">
-          <SheetTitle>Create a new experiment</SheetTitle>
+          <SheetTitle>{t("experiments.createNewExperiment")}</SheetTitle>
           <div className="comet-body-s mx-auto mt-4 max-w-[468px] text-center text-muted-slate">
-            Select a test suite, assign the relevant evaluators, and follow the
-            instructions to track and compare your training runs
+            {t("experiments.addExperimentDescription")}
           </div>
         </div>
         <div className="mx-auto flex w-full flex-col gap-6 md:max-w-[1250px] md:flex-row md:items-start">
           {!isTestSuite && renderEvaluatorsSection()}
           <div className="flex w-full flex-col gap-6 md:min-w-[450px] md:flex-1 md:rounded-md md:border md:border-border md:p-6">
             <div>
-              <CodeSectionTitle>1. Select test suite</CodeSectionTitle>
+              <CodeSectionTitle>{t("experiments.selectTestSuiteStep")}</CodeSectionTitle>
               <LoadableSelectBox
                 options={options}
                 value={datasetName}
-                placeholder="Select a test suite"
+                placeholder={t("experiments.selectTestSuite")}
                 onChange={setDatasetName}
                 onLoadMore={
                   total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore

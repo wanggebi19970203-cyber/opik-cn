@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { FileTerminal, Trash, Save } from "lucide-react";
 import last from "lodash/last";
 import { useQueryClient } from "@tanstack/react-query";
@@ -106,6 +107,7 @@ const PlaygroundPrompt = ({
   const {
     permissions: { canCreatePrompts },
   } = usePermissions();
+  const { t } = useTranslation("pages/playground");
 
   const [showSaveChatPromptDialog, setShowSaveChatPromptDialog] =
     useState(false);
@@ -405,7 +407,7 @@ const PlaygroundPrompt = ({
               onOpenChange={setIsChatLibraryOpen}
               trigger={
                 <div>
-                  <TooltipWrapper content="Load prompt">
+                  <TooltipWrapper content={t("playground.prompt.loadPrompt")}>
                     <Button
                       variant="minimal"
                       size="icon-sm"
@@ -443,7 +445,7 @@ const PlaygroundPrompt = ({
             {promptCount > 1 && (
               <>
                 <Separator orientation="vertical" className="mx-1 h-4" />
-                <TooltipWrapper content="Remove prompt">
+                <TooltipWrapper content={t("playground.prompt.removePrompt")}>
                   <Button
                     variant="minimal"
                     size="icon-sm"

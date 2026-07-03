@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { flushSync } from "react-dom";
 import { AxiosError, HttpStatusCode } from "axios";
 import { useForm } from "react-hook-form";
@@ -50,20 +51,18 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { DISABLED_EXPERIMENTS_TOOLTIP } from "@/constants/permissions";
 import CardSelector, { CardOption } from "@/shared/CardSelector/CardSelector";
 
-const DASHBOARD_TYPE_OPTIONS: CardOption[] = [
+const getDashboardTypeOptions = (t: (key: string) => string): CardOption[] => [
   {
     value: DASHBOARD_TYPE.MULTI_PROJECT,
-    label: "Multi-project dashboard",
-    description:
-      "Monitor performance, cost, and usage across multiple projects in your workspace.",
+    label: t("dialog.multiProjectDashboard"),
+    description: t("dialog.multiProjectDescription"),
     icon: <LayoutGridIcon className="size-4" />,
     iconColor: "text-chart-red",
   },
   {
     value: DASHBOARD_TYPE.EXPERIMENTS,
-    label: "Experiments dashboard",
-    description:
-      "Track experiment results and quality metrics across your workspace.",
+    label: t("dialog.experimentsDashboard"),
+    description: t("dialog.experimentsDescription"),
     icon: <FlaskConical className="size-4" />,
     iconColor: "text-chart-green",
   },
@@ -112,6 +111,7 @@ const AddEditCloneDashboardDialog: React.FC<
   dashboardType,
   dashboardScope,
 }) => {
+  const { t } = useTranslation("dashboards");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { toast } = useToast();
@@ -134,7 +134,7 @@ const AddEditCloneDashboardDialog: React.FC<
 
   const getInitialName = () => {
     if (mode === "clone") {
-      return `${dashboard!.name} (Copy)`;
+      return `${dashboard!.name} ${t("dialog.copySuffix")}`;
     }
 
     return dashboard?.name || "";
@@ -153,22 +153,21 @@ const AddEditCloneDashboardDialog: React.FC<
 
   const config = {
     create: {
-      title: "Create dashboard",
-      description:
-        "Build a dashboard to monitor project performance or experiment quality across your workspace.",
-      buttonText: "Create dashboard",
+      title: t("dialog.createTitle"),
+      description: t("dialog.createDescription"),
+      buttonText: t("dialog.createButton"),
       showDescription: true,
     },
     edit: {
-      title: "Edit dashboard",
+      title: t("dialog.editTitle"),
       description: null,
-      buttonText: "Update dashboard",
+      buttonText: t("dialog.updateButton"),
       showDescription: false,
     },
     clone: {
-      title: "Clone dashboard",
+      title: t("dialog.cloneTitle"),
       description: null,
-      buttonText: "Clone dashboard",
+      buttonText: t("dialog.cloneButton"),
       showDescription: false,
     },
   }[mode];
@@ -197,14 +196,14 @@ const AddEditCloneDashboardDialog: React.FC<
 
   const showCreatedToast = useCallback(() => {
     toast({
-      title: "Dashboard created",
-      description: "Start customizing it by adding widgets.",
+      title: t("dialog.dashboardCreated"),
+      description: t("dialog.dashboardCreatedDescription"),
       actions: [
         <ToastAction
           variant="link"
           size="sm"
           className="px-0"
-          altText="Add your first widget"
+          altText={t("dashboards.widgets.addFirst")}
           key="add-widget"
           onClick={() => {
             const { onAddEditWidgetCallback, sections } =
@@ -215,7 +214,7 @@ const AddEditCloneDashboardDialog: React.FC<
           }}
         >
           <ChartLine className="mr-1.5 size-3.5" />
-          Add your first widget
+          {t("dashboards.widgets.addFirst")}
         </ToastAction>,
       ],
     });
@@ -233,12 +232,12 @@ const AddEditCloneDashboardDialog: React.FC<
       if (statusCode === HttpStatusCode.Conflict) {
         form.setError("name", {
           type: "server",
-          message: "This name already exists",
+          message: t("dialog.nameAlreadyExists"),
         });
       } else {
         toast({
-          title: `Error saving dashboard`,
-          description: message || `Failed to ${action} dashboard`,
+          title: t("dialog.errorSaving"),
+          description: message || t("dialog.failedToAction", { action }),
           variant: "destructive",
         });
       }
@@ -317,7 +316,7 @@ const AddEditCloneDashboardDialog: React.FC<
 
   const dashboardTypeOptions = useMemo<CardOption[]>(
     () =>
-      DASHBOARD_TYPE_OPTIONS.map((option) =>
+      getDashboardTypeOptions(t).map((option) =>
         option.value === DASHBOARD_TYPE.EXPERIMENTS && !canViewExperiments
           ? {
               ...option,
@@ -354,11 +353,11 @@ const AddEditCloneDashboardDialog: React.FC<
 
                   return (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>{t("dialog.nameLabel")}</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Dashboard name"
+                          placeholder={t("dialog.namePlaceholder")}
                           className={cn({
                             "border-destructive": Boolean(
                               validationErrors?.message,
@@ -384,7 +383,7 @@ const AddEditCloneDashboardDialog: React.FC<
                   name="dashboardType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type</FormLabel>
+                      <FormLabel>{t("dialog.typeLabel")}</FormLabel>
                       <CardSelector
                         value={field.value}
                         onChange={field.onChange}
@@ -402,12 +401,12 @@ const AddEditCloneDashboardDialog: React.FC<
               >
                 <AccordionItem value="description">
                   <AccordionTrigger className="h-11 py-1.5">
-                    Description
+                    {t("dialog.descriptionLabel")}
                   </AccordionTrigger>
                   <AccordionContent className="px-3">
                     <Textarea
                       {...form.register("description")}
-                      placeholder="Dashboard description"
+                      placeholder={t("dialog.descriptionPlaceholder")}
                       maxLength={255}
                     />
                   </AccordionContent>
@@ -420,7 +419,7 @@ const AddEditCloneDashboardDialog: React.FC<
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={isPending}>
-              Cancel
+              {t("dialog.cancel")}
             </Button>
           </DialogClose>
 

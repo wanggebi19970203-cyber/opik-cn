@@ -1,4 +1,5 @@
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { BaseTraceDataErrorInfo } from "@/types/traces";
 import CellTooltipWrapper from "./CellTooltipWrapper";
@@ -9,6 +10,7 @@ import { TriangleAlert } from "lucide-react";
 const ErrorCell = <TData,>(
   context: CellContext<TData, BaseTraceDataErrorInfo | undefined>,
 ) => {
+  const { t } = useTranslation();
   const value = context.getValue();
 
   if (!value) return null;
@@ -16,8 +18,8 @@ const ErrorCell = <TData,>(
   const tagSize = getCellTagSize(context, TAG_SIZE_MAP);
 
   const errorMessage = value.message
-    ? `Message: ${value.message}`
-    : "Error message is not specified";
+    ? `${t("common:labels.message")}: ${value.message}`
+    : t("common:messages.errorMessageNotSpecified");
 
   return (
     <CellWrapper

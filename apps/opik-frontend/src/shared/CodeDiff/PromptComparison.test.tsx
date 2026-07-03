@@ -30,7 +30,7 @@ describe("PromptComparison", () => {
 
       expect(container.textContent).toContain("current system text");
       expect(container.textContent).toContain("hello");
-      expect(screen.queryByText("Hide diff")).not.toBeInTheDocument();
+      expect(screen.queryByText("codeDiff.hideDiff")).not.toBeInTheDocument();
     });
 
     it("renders nothing when the current prompt is empty", () => {
@@ -50,8 +50,8 @@ describe("PromptComparison", () => {
 
       // Trigger shows the selected target; current side labelled after the arrow.
       expect(screen.getByText("Baseline")).toBeInTheDocument();
-      expect(screen.getByText("→ Trial")).toBeInTheDocument();
-      expect(screen.getByText("Hide diff")).toBeInTheDocument();
+      expect(screen.getByText("→ codeDiff.trial")).toBeInTheDocument();
+      expect(screen.getByText("codeDiff.hideDiff")).toBeInTheDocument();
 
       // Both sides of the diff render (target removed, current added).
       expect(container.textContent).toContain("baseline system text");
@@ -63,9 +63,9 @@ describe("PromptComparison", () => {
         <PromptComparison current={current} targets={[baselineTarget]} />,
       );
 
-      fireEvent.click(screen.getByText("Hide diff"));
+      fireEvent.click(screen.getByText("codeDiff.hideDiff"));
 
-      expect(screen.getByText("Show diff")).toBeInTheDocument();
+      expect(screen.getByText("codeDiff.showDiff")).toBeInTheDocument();
       expect(container.textContent).toContain("current system text");
       expect(container.textContent).not.toContain("baseline system text");
     });

@@ -1,0 +1,42 @@
+{
+  "promptEngineering": {
+    "title": "提示词工程",
+    "description": "设计和优化提示词",
+    "features": {
+      "versioning": "版本控制",
+      "testing": "A/B 测试",
+      "optimization": "优化"
+    },
+    "modelConfigs": {
+      "temperature": "温度",
+      "temperatureTooltip": "控制随机性：降低温度会产生更少随机的补全结果。当温度接近零时，模型将变得确定性和重复。",
+      "maxOutputTokens": "最大输出令牌数",
+      "maxOutputTokensTooltip": "提示和补全之间共享的最大生成令牌数。确切限制因模型而异。（对于标准英文文本，一个令牌大约为4个字符）。",
+      "maxTokens": "最大令牌数",
+      "maxTokensTooltip": "提示和补全之间共享的最大生成令牌数。确切限制因模型而异。（对于标准英文文本，一个令牌大约为4个字符）。",
+      "topP": "Top P",
+      "topPTooltip": "通过核采样控制多样性：0.5 表示考虑所有可能性加权选项的一半",
+      "topK": "Top K",
+      "topKTooltip": "限制模型在每一步的令牌选择范围，使其从更小的集合中选择。值为1表示模型将始终选择最可能的下一个令牌，产生可预测的结果。默认情况下此设置被禁用，使模型考虑所有选择。",
+      "frequencyPenalty": "频率惩罚",
+      "frequencyPenaltyTooltip": "基于令牌在文本中已有的出现频率对新令牌的惩罚程度。降低模型逐字重复相同行的可能性",
+      "openRouterFrequencyPenaltyTooltip": "此设置旨在基于令牌在输入中出现的频率来控制令牌重复。它尝试减少在输入中出现较多的令牌的使用频率，与其出现频率成正比。令牌惩罚随出现次数缩放。负值将鼓励令牌重用。",
+      "presencePenalty": "存在惩罚",
+      "presencePenaltyTooltip": "基于令牌是否已在文本中出现对新令牌的惩罚程度。增加模型谈论新话题的可能性",
+      "openRouterPresencePenaltyTooltip": "调整模型重复输入中已使用令牌的频率。较高值使此类重复不太可能发生，而负值则相反。令牌惩罚不随出现次数缩放。负值将鼓励令牌重用。",
+      "repetitionPenalty": "重复惩罚",
+      "repetitionPenaltyTooltip": "帮助减少输入中令牌的重复。较高值使模型不太可能重复令牌，但过高值会使输出不太连贯（通常出现缺少小词的连写句）。令牌惩罚基于原始令牌的概率缩放。",
+      "minP": "Min P",
+      "minPTooltip": "表示令牌被考虑的最小概率，相对于最可能令牌的概率。（该值根据最可能令牌的置信度而变化。）如果您的Min-P设置为0.1，这意味着它只允许概率至少为最佳选项1/10的令牌。",
+      "topA": "Top A",
+      "topATooltip": "仅考虑基于最可能令牌概率的\"足够高\"概率的顶级令牌。将其视为动态Top-P。较低的Top-A值基于最高概率令牌聚焦选择，但范围更窄。较高的Top-A值不一定影响输出的创造力，而是基于最大概率细化过滤过程。",
+      "throttling": "节流（秒）",
+      "throttlingTooltip": "连续请求之间的最小时间（秒），以避免速率限制",
+      "maxConcurrentRequests": "最大并发请求数",
+      "maxConcurrentRequestsTooltip": "可以同时运行的最大请求数。设置为1进行顺序执行，较高值用于并行处理",
+      "extraBodyParameters": "额外请求体参数（可选）",
+      "extraBodyParametersTooltip": "随每个请求发送的提供商特定JSON参数",
+      "invalidJson": "无效的JSON"
+    }
+  }
+}

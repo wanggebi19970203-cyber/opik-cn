@@ -1,0 +1,75 @@
+---
+description: 从这里开始将 Kong AI Gateway 与 Opik 集成，获得具备企业级功能的生产就绪 LLM 网关能力。
+headline: Kong AI Gateway | Opik 文档
+og:description: 学习如何使用 Opik Kong 插件将 Kong AI Gateway 与 Opik 集成，记录所有 LLM 调用以实现全面可观测性。
+og:site_name: Opik 文档
+og:title: 将 Kong AI Gateway 与 Opik 集成以用于生产环境 LLM 网关
+title: 使用 Opik 实现 Kong AI Gateway 可观测性
+---
+
+[Kong](https://docs.konghq.com/gateway/latest/) 是一个流行的开源 API 网关，提供 AI Gateway 功能。
+
+## 网关概述
+
+Kong AI Gateway 提供企业级功能来管理 LLM API 访问，包括：
+
+- **认证机制**：为 LLM 端点提供安全访问控制
+- **负载均衡**：在多个 LLM 提供商之间分配流量
+- **缓存**：降低成本并提升响应速度
+- **速率限制**：控制 API 使用并防止滥用
+- **高级监控**：跟踪使用情况、性能和成本
+
+您可以在[这里](https://docs.konghq.com/gateway/latest/ai-gateway/)了解更多关于 Kong AI Gateway 的信息。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=kong-ai-gateway&utm_campaign=opik) 提供 Opik 平台的托管版本。[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=kong-ai-gateway&utm_campaign=opik)并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=kong-ai-gateway&utm_campaign=opik)了解更多信息。
+
+## 快速开始
+
+### 安装 Opik Kong 插件
+
+我们开发了一个 Kong 插件，允许您将 Kong 服务器上的所有 LLM 调用记录到 Opik 平台。该插件面向企业客户开放。请联系我们的支持团队获取访问权限。
+
+### 配置 Opik Kong 插件
+
+插件安装完成后，您可以通过运行以下命令启用它：
+
+```bash
+curl -is -X POST http://localhost:8001/services/{serviceName|Id}/plugins \
+  --header "accept: application/json" \
+  --header "Content-Type: application/json" \
+  --data '
+  {
+    "name": "opik-log",
+    "config": {
+      "opik_api_key": "<Replace with your Opik API key>",
+      "opik_workspace": "<Replace with your Opik workspace>"
+    }
+  }'
+```
+
+### 配置参数
+
+Opik Kong 插件接受以下配置参数：
+
+- **`opik_api_key`**：您的 Opik API key（必填）
+- **`opik_workspace`**：您的 Opik 工作区名称（可选）
+
+### 在 Opik 中查看 Trace
+
+配置完成后，您可以在 Opik 仪表板中查看所有 LLM 调用：
+
+<Frame>
+  <img src="/img/production/opik-kong-gateway.png" />
+</Frame>
+
+## 企业支持
+
+如需了解更多关于 Opik Kong 插件的信息，请联系我们的支持团队。
+
+## 持续改进
+
+如果您对 Kong AI Gateway 集成有改进建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

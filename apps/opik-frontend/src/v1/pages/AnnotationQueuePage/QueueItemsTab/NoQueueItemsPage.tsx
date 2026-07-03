@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Book, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import noData from "/images/no-data-annotation-queue.png";
@@ -36,14 +37,14 @@ const NoQueueItemsPage: React.FC<NoQueueItemsPageProps> = ({
   height,
   className,
 }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const workspaceName = useActiveWorkspaceName();
   const isTraceQueue = queueScope === ANNOTATION_QUEUE_SCOPE.TRACE;
-  const itemType = isTraceQueue ? "traces" : "threads";
 
   return (
     <Wrapper
-      title={`Add ${itemType} to your queue`}
-      description={`Your annotation queue is empty. Add ${itemType} from your project to start the annotation process and gather valuable feedback.`}
+      title={isTraceQueue ? t("annotationQueue.noItems.titleTraces") : t("annotationQueue.noItems.titleThreads")}
+      description={isTraceQueue ? t("annotationQueue.noItems.descriptionTraces") : t("annotationQueue.noItems.descriptionThreads")}
       imageUrl={noData}
       height={height}
       className={className}
@@ -59,7 +60,7 @@ const NoQueueItemsPage: React.FC<NoQueueItemsPageProps> = ({
               rel="noreferrer"
             >
               <Book className="mr-2 size-4" />
-              Read documentation
+              {t("annotationQueue.noItems.readDocs")}
             </a>
           </Button>
           {annotationQueue?.project_id && (
@@ -76,7 +77,7 @@ const NoQueueItemsPage: React.FC<NoQueueItemsPageProps> = ({
                 }}
               >
                 <ExternalLink className="mr-2 size-4" />
-                {isTraceQueue ? "Go to traces" : "Go to threads"}
+                {isTraceQueue ? t("annotationQueue.noItems.goToTraces") : t("annotationQueue.noItems.goToThreads")}
               </Link>
             </Button>
           )}

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles, ChevronDown, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogClose,
@@ -38,6 +39,7 @@ type RunEvaluationDialogProps = {
 const RunEvaluationDialog: React.FunctionComponent<
   RunEvaluationDialogProps
 > = ({ open, setOpen, projectId, entityIds, entityType, rules, isLoading }) => {
+  const { t } = useTranslation();
   const {
     permissions: { canUpdateOnlineEvaluationRules },
   } = usePermissions();
@@ -140,11 +142,10 @@ const RunEvaluationDialog: React.FunctionComponent<
         <div className="flex flex-col items-center justify-center gap-2 py-8">
           <Sparkles className="size-4 text-muted-foreground" />
           <p className="comet-body-s-accented text-center">
-            No online evaluation rules assigned to this project
+            {t("common.automations.noOnlineEvaluationRules")}
           </p>
           <p className="comet-body-s text-center text-muted-foreground">
-            Create a new rule, or assign an existing rule in the Online
-            evaluation page
+            {t("common.automations.createNewRuleDescription")}
           </p>
           <Button
             variant="link"
@@ -152,7 +153,7 @@ const RunEvaluationDialog: React.FunctionComponent<
             onClick={handleCreateRule}
             className="mt-2"
           >
-            Create a new rule
+            {t("common.automations.createANewRule")}
           </Button>
         </div>
       </div>
@@ -227,7 +228,7 @@ const RunEvaluationDialog: React.FunctionComponent<
                               isExpanded && "rotate-180",
                             )}
                           />
-                          {isExpanded ? "Hide" : "Show"} prompt
+                          {isExpanded ? t("common.automations.hidePrompt") : t("common.automations.showPrompt")}
                         </Button>
                         {isExpanded && (
                           <div className="mt-2 rounded-md bg-muted p-3">
@@ -250,16 +251,16 @@ const RunEvaluationDialog: React.FunctionComponent<
 
   const entityLabel =
     entityType === "trace"
-      ? "traces"
+      ? t("common.automations.traces")
       : entityType === "thread"
-        ? "threads"
-        : "spans";
+        ? t("common.automations.threads")
+        : t("common.automations.spans");
   const capitalizedEntityLabel =
     entityType === "trace"
-      ? "Traces"
+      ? t("common.automations.tracesCapitalized")
       : entityType === "thread"
-        ? "Threads"
-        : "Spans";
+        ? t("common.automations.threadsCapitalized")
+        : t("common.automations.spansCapitalized");
   const isRunDisabled =
     selectedRuleIds.size === 0 || manualEvaluationMutation.isPending;
 
@@ -276,19 +277,17 @@ const RunEvaluationDialog: React.FunctionComponent<
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-lg sm:max-w-screen-sm">
           <DialogHeader>
-            <DialogTitle>Run online evaluation rules</DialogTitle>
+            <DialogTitle>{t("common.automations.runOnlineEvaluationRules")}</DialogTitle>
           </DialogHeader>
           <div className="w-full overflow-hidden">
             <p className="comet-body-s mb-4 text-muted-foreground">
-              Choose the online evaluation rules you want to apply to the
-              selected {entityLabel}. Each rule will generate new scores based
-              on its configuration.
+              {t("common.automations.runOnlineEvaluationDescription", { entity: entityLabel })}
             </p>
             {canUpdateOnlineEvaluationRules && rules.length > 0 && (
               <div className="mb-4 flex justify-end">
                 <Button variant="ghost" size="sm" onClick={handleCreateRule}>
                   <Plus className="mr-1 size-4" />
-                  Create a new rule
+                  {t("common.automations.createANewRule")}
                 </Button>
               </div>
             )}
@@ -298,7 +297,7 @@ const RunEvaluationDialog: React.FunctionComponent<
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t("common.buttons.cancel")}</Button>
             </DialogClose>
             <Button
               type="submit"
@@ -306,8 +305,8 @@ const RunEvaluationDialog: React.FunctionComponent<
               onClick={handleRunEvaluation}
             >
               {manualEvaluationMutation.isPending
-                ? "Evaluating..."
-                : `Evaluate ${capitalizedEntityLabel.toLowerCase()}`}
+                ? t("common.automations.evaluating")
+                : t("common.automations.evaluateEntities", { entity: capitalizedEntityLabel.toLowerCase() })}
             </Button>
           </DialogFooter>
         </DialogContent>

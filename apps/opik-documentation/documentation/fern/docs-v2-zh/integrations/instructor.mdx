@@ -1,0 +1,161 @@
+---
+description: 从这里开始将 Opik 集成到基于 Instructor 的 GenAI 应用中，实现结构化输出跟踪、Schema 验证监控和 LLM 调用可观测性。
+headline: Instructor | Opik 文档
+og:description: 了解如何将 Opik 与 Instructor 集成，将所有调用记录为 traces，增强 LLM 结构化输出管理。
+og:site_name: Opik 文档
+og:title: 将 Instructor 与 Opik 集成以增强 Tracing
+title: Instructor 结构化输出跟踪与 Opik 集成
+---
+
+[Instructor](https://github.com/instructor-ai/instructor) 是一个基于 Pydantic 构建的 Python 库，用于处理 LLM 的结构化输出。它提供了简单的方式来管理 Schema 验证、重试和流式响应。
+
+本指南将展示如何将 Opik 与 Instructor 集成，使所有 Instructor 调用都被记录为 Opik 中的 traces。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=instructor&utm_campaign=opik) 提供托管版本的 Opik 平台，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=instructor&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=instructor&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `instructor`：
+
+```bash
+pip install opik instructor
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Instructor
+
+要使用 Instructor，您需要配置 LLM 提供商的 API 密钥。本示例将使用 OpenAI、Anthropic 和 Gemini。您可以在这些页面中[查找或创建 API 密钥](https://platform.openai.com/settings/organization/api-keys)：
+
+可以通过环境变量设置：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+export ANTHROPIC_API_KEY="YOUR_API_KEY"
+export GOOGLE_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+
+if "ANTHROPIC_API_KEY" not in os.environ:
+    os.environ["ANTHROPIC_API_KEY"] = getpass.getpass("Enter your Anthropic API key: ")
+
+if "GOOGLE_API_KEY" not in os.environ:
+    os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google API key: ")
+```
+
+## 在 Instructor 库中使用 Opik
+
+为了将 Instructor 的 traces 记录到 Opik 中，我们将对 `instructor` 库进行 patch。这将把每次 LLM 调用记录到 Opik 平台。
+
+对于所有集成，我们首先为 LLM 客户端添加跟踪，然后将其传递给 Instructor 库：
+
+```python
+from opik.integrations.openai import track_openai
+import instructor
+from pydantic import BaseModel
+from openai import OpenAI
+
+# We will first create the OpenAI client and add the `track_openai`
+# method to log data to Opik
+openai_client = track_openai(OpenAI())
+
+# Patch the OpenAI client for Instructor
+client = instructor.from_openai(openai_client)
+
+# Define your desired output structure
+class UserInfo(BaseModel):
+    name: str
+    age: int
+
+user_info = client.chat.completions.create(
+    model="gpt-4o-mini",
+    response_model=UserInfo,
+    messages=[{"role": "user", "content": "John Doe is 30 years old."}],
+)
+
+print(user_info)
+```
+
+得益于 `track_openai` 方法，所有对 OpenAI 的调用都将被记录到 Opik 平台。如果您同时使用 `opik.track` 装饰器，这种方式也能很好地工作，因为它会自动将 Instructor 进行的 LLM 调用记录到相关的 trace 中。
+
+<Frame>
+  <img src="/img/cookbook/instructor_cookbook.png" />
+</Frame>
+
+## 与其他 LLM 提供商集成
+
+Instructor 库支持除 OpenAI 之外的多种 LLM 提供商，包括：Anthropic、AWS Bedrock、Gemini 等。Opik 也支持这些提供商中的大多数。
+
+以下是与不同提供商集成所需的代码片段：
+
+### Anthropic
+
+```python
+from opik.integrations.anthropic import track_anthropic
+import instructor
+from anthropic import Anthropic
+
+# Add Opik tracking
+anthropic_client = track_anthropic(Anthropic())
+
+# Patch the Anthropic client for Instructor
+client = instructor.from_anthropic(
+    anthropic_client, mode=instructor.Mode.ANTHROPIC_JSON
+)
+
+user_info = client.chat.completions.create(
+    model="claude-3-5-sonnet-20241022",
+    response_model=UserInfo,
+    messages=[{"role": "user", "content": "John Doe is 30 years old."}],
+    max_tokens=1000,
+)
+
+print(user_info)
+```
+
+### Gemini
+
+```python
+from opik.integrations.genai import track_genai
+import instructor
+from google import genai
+
+# Add Opik tracking
+gemini_client = track_genai(genai.Client())
+
+# Patch the GenAI client for Instructor
+client = instructor.from_genai(
+    gemini_client, mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS
+)
+
+user_info = client.chat.completions.create(
+    model="gemini-2.0-flash-001",
+    response_model=UserInfo,
+    messages=[{"role": "user", "content": "John Doe is 30 years old."}],
+)
+
+print(user_info)
+```
+
+您可以阅读[Instructor 文档](https://python.useinstructor.com/)了解更多关于如何使用 Instructor 库的信息。

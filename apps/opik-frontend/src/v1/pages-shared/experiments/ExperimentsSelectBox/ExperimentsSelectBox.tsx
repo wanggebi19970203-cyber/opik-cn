@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
@@ -148,6 +149,7 @@ type ExperimentsSelectBoxProps =
   | MultiSelectExperimentsProps;
 
 const ExperimentsSelectBox: React.FC<ExperimentsSelectBoxProps> = (props) => {
+  const { t } = useTranslation("experiments");
   const {
     className,
     disabled,
@@ -186,28 +188,28 @@ const ExperimentsSelectBox: React.FC<ExperimentsSelectBoxProps> = (props) => {
       const experimentNames = selectedOptions.map((o) => o.label).join(", ");
       return (
         <TooltipWrapper content={experimentNames}>
-          <div className="truncate">{count} experiments</div>
+          <div className="truncate">{t('experimentsCountLabel', { count })}</div>
         </TooltipWrapper>
       );
     },
-    [],
+    [t],
   );
 
   const loadableSelectBoxProps = props.multiselect
     ? {
         options,
         value: props.value,
-        placeholder: "Select experiments",
+        placeholder: t("selectExperiments"),
         onChange: props.onValueChange,
         multiselect: true as const,
         showSelectAll: props.showSelectAll,
-        selectAllLabel: props.selectAllLabel || "All experiments",
+        selectAllLabel: props.selectAllLabel || t("allExperiments"),
         renderTitle: renderExperimentsTitle,
       }
     : {
         options,
         value: props.value,
-        placeholder: "Select an experiment",
+        placeholder: t("selectAnExperiment"),
         onChange: props.onValueChange,
         multiselect: false as const,
       };
@@ -251,7 +253,7 @@ const ExperimentsSelectBox: React.FC<ExperimentsSelectBoxProps> = (props) => {
       isClearable={isClearable}
       onClear={handleClear}
       disabled={disabled}
-      clearTooltip="Clear experiment selection"
+      clearTooltip={t("clearExperimentSelection")}
       buttonSize="icon"
     >
       {selectBox}

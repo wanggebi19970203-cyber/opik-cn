@@ -1,0 +1,23 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**:
+
+- 发布了用于在线评估的 Python 代码指标，支持 Opik Cloud 和自托管部署。
+  允许你定义 Python 函数来评估生产环境中的 traces。
+
+<Frame>
+  <img src="/img/changelog/2025-04-21/python_code_metrics.png" />
+</Frame>
+
+**Python 和 JS / TS SDK**:
+
+- 修复了 LLM as a Judge 指标，当 LLM 返回不在 0 到 1 范围内的分数时，
+  现在会返回错误而非默认分数 0.5。
+
+**部署**:
+
+- 更新了 Dockerfiles，确保所有容器以非 root 用户运行。
+
+_发布版本_: `1.7.11`

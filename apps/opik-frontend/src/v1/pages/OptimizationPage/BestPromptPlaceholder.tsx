@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -20,6 +21,7 @@ const BestPromptPlaceholder: React.FC<BestPromptPlaceholderProps> = ({
   objectiveName,
   studioConfig,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const messages = extractDisplayMessages(studioConfig.prompt?.messages);
 
   return (
@@ -27,7 +29,7 @@ const BestPromptPlaceholder: React.FC<BestPromptPlaceholderProps> = ({
       <CardHeader className="gap-y-0.5 px-5">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="comet-body-s-accented">Best prompt</CardTitle>
+            <CardTitle className="comet-body-s-accented">{t("optimization.bestPrompt.title")}</CardTitle>
             <CardDescription className="!mt-0">
               <ColoredTagNew label={objectiveName} size="sm" className="px-0" />
             </CardDescription>
@@ -41,14 +43,14 @@ const BestPromptPlaceholder: React.FC<BestPromptPlaceholderProps> = ({
       </CardHeader>
       <CardContent className="px-5 pb-4">
         <div className="comet-body-s mb-3 text-muted-slate">
-          Waiting for trials...
+          {t("optimization.bestPrompt.waitingForTrials")}
         </div>
-        <div className="comet-body-xs mb-2 text-muted-slate">Prompt</div>
+        <div className="comet-body-xs mb-2 text-muted-slate">{t("optimization.bestPrompt.prompt")}</div>
         {messages && messages.length > 0 ? (
           <MessagesList messages={messages} />
         ) : (
           <div className="comet-body-s text-muted-slate">
-            No prompt messages
+            {t("optimization.bestPrompt.noPromptMessages")}
           </div>
         )}
       </CardContent>

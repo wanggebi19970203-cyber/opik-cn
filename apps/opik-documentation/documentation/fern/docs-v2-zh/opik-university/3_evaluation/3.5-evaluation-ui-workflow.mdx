@@ -1,0 +1,50 @@
+---
+headline: 无代码 LLM 评估工作流 | Opik 文档
+og:description: 使用 Opik 的无代码工作流轻松评估 LLM 性能，简化您的机器学习评估流程。
+og:site_name: Opik 文档
+og:title: 无代码 LLM 评估工作流 - Opik
+title: 无代码 LLM 评估工作流
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div style={{
+    position: 'relative',
+    paddingBottom: '56.25%', // 16:9 aspect ratio
+    height: 0,
+    overflow: 'hidden',
+    maxWidth: '100%',
+    marginBottom: '20px'
+}}>
+    <iframe
+        src="https://drive.google.com/file/d/1b0dUc8knAncBCapo70_aTt7IwNRqOFaw/preview"
+        frameborder="0"
+        webkitallowfullscreen
+        mozallowfullscreen
+        allowfullscreen
+        style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+        }}
+    />
+</div>
+
+## 端到端基于 UI 的 LLM 实验
+
+本综合视频演示如何在 15 分钟的视频中使用 Opik 的 UI 进行完整的 LLM [实验](/v1/evaluation/evaluate_your_llm)。
+通过构建风险感知 LLM 应用的实际示例，您将学习从[数据集](/v1/evaluation/manage_datasets)创建到[实验](/v1/evaluation/evaluate_prompt)比较的完整工作流。
+视频演示了测试不同的[提示](/v1/prompt_engineering/prompt_management)策略以确保 LLM 输出包含足够的警告声明，使用 LLM 作为评判者[指标](/v1/evaluation/metrics/overview)进行系统化[评估](/v1/evaluation/overview)，无需任何编码经验。
+
+## 关键亮点
+
+- **完整 UI 工作流**：完全通过 Opik 的界面演示端到端 [LLM 评估](/v1/evaluation/evaluate_prompt)，使非技术用户和数据科学家都能访问
+- **实际用例**：确保 LLM 应用提供足够风险警告的真实示例，防止潜在危险的命令执行（如 Docker 卷删除）
+- **[数据集](/v1/evaluation/manage_datasets)创建和管理**：上传 CSV 文件或使用 AI 合成扩展[数据集](/v1/evaluation/manage_datasets)，包含有风险的提示以进行全面测试场景
+- **系统[提示](/v1/prompt_engineering/prompt_management)测试**：比较不同的提示策略，包括"Risky Rick"（最少警告）、"Safety Sid"（全面警告）和基线 ChatGPT 响应
+- **交互式[游乐场](/v1/prompt_engineering/playground)**：并排测试多个[提示](/v1/prompt_engineering/prompt_management)变体，使用可配置的模型参数和使用模板变量的[数据集](/v1/evaluation/manage_datasets)集成
+- **[LLM 作为评判者](/v1/evaluation/metrics/g_eval)[评估](/v1/evaluation/overview)**：创建自定义[评估规则](/v1/production/rules)，使用布尔评分（0/1）自动评估输出质量以进行系统化风险评估
+- **自动化[实验](/v1/evaluation/evaluate_your_llm)比较**：在整个[数据集](/v1/evaluation/manage_datasets)上运行并行测试，比较聚合[指标](/v1/evaluation/metrics/overview)以识别最佳性能的[提示](/v1/prompt_engineering/prompt_management)策略
+- **生产成本考虑**：配置[在线评估](/v1/production/rules)的采样和过滤选项，以管理在生产数据上运行 LLM 作为评判者的成本
+- **可扩展的[评估](/v1/evaluation/overview)方法**：超越手动抽查，在 20+ 测试用例上进行系统化评估，为生产部署实现数据驱动决策

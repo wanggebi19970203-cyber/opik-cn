@@ -34,7 +34,7 @@ SpanOrTraceData = Union[span.SpanData, trace.TraceData]
 
 class OpikTracer:
     """
-    Opik tracer for google-adk.
+    用于 google-adk 的 Opik 追踪器。
     """
 
     def __init__(
@@ -46,14 +46,14 @@ class OpikTracer:
         distributed_headers: Optional[DistributedTraceHeadersDict] = None,
     ):
         """
-        Initialize OpikTracer.
+        初始化 OpikTracer。
 
-        Arguments:
-            name: The default name for root span or trace created by the tracer.
-            tags: The default tags for all the traces and spans created by the tracer.
-            metadata: The default metadata for all the traces and spans created by the tracer.
-            project_name: The name of the project for tracing.
-            distributed_headers: The distributed trace headers.
+        Args:
+            name: 追踪器创建的根 span 或 trace 的默认名称。
+            tags: 追踪器创建的所有 trace 和 span 的默认标签。
+            metadata: 追踪器创建的所有 trace 和 span 的默认元数据。
+            project_name: 用于追踪的项目名称。
+            distributed_headers: 分布式追踪头信息。
         """
         self.name = name
         self.tags = tags
@@ -69,12 +69,11 @@ class OpikTracer:
         return opik.get_global_client()
 
     def _init_internal_attributes(self) -> None:
-        # Cache the last model output per ADK ``invocation_id``. A single tracer
-        # instance is shared across concurrent invocations (the
-        # ``track_adk_agent_recursive`` pattern), so keying by invocation isolates
-        # their output; the cache is bounded so it can't grow without bound.
+        # 按 ADK invocation_id 缓存最后一次模型输出。单个追踪器实例会在
+        # 并发调用间共享（track_adk_agent_recursive 模式），因此按 invocation_id
+        # 隔离各自的输出；缓存有上限，不会无限增长。
         self._last_model_output = output_cache.LastModelOutputCache()
-        # Track time-to-first-token: map span_id -> (request_start_time, first_token_time)
+        # 追踪首 token 时间（TTFT）：映射 span_id -> (请求开始时间, 首 token 时间)
         self._ttft_tracking: Dict[str, Tuple[float, Optional[float]]] = {}
 
         patchers.patch_adk(
@@ -83,22 +82,22 @@ class OpikTracer:
 
     def _has_response_content(self, llm_response: models.LlmResponse) -> bool:
         """
-        Check if the LlmResponse contains actual content (text or function calls).
+        检查 LlmResponse 是否包含实际内容（文本或函数调用）。
 
-        Arguments:
-            llm_response: The LLM response to check.
+        Args:
+            llm_response: 待检查的 LLM 响应。
 
         Returns:
-            True if the response contains text content or function calls, False otherwise.
+            如果响应包含文本内容或函数调用则返回 True，否则返回 False。
         """
         try:
-            # Check the LlmResponse object directly for content structure
+            # 直接检查 LlmResponse 对象的内容结构
             if llm_response.content is not None and llm_response.content.parts:
                 for part in llm_response.content.parts:
-                    # Check for text content
+                    # 检查文本内容
                     if part.text and part.text.strip():
                         return True
-                    # Check for function call content (tool calls)
+                    # 检查函数调用内容（工具调用）
                     if part.function_call:
                         return True
             return False
@@ -113,15 +112,15 @@ class OpikTracer:
         self, span_id: Optional[str], pop: bool = False
     ) -> Tuple[Optional[float], Optional[float]]:
         """
-        Safely retrieve time-to-first-token tracking data for a span.
+        安全地获取某个 span 的首 token 时间（TTFT）追踪数据。
 
-        Arguments:
-            span_id: The span ID to look up in tracking.
-            pop: If True, remove the entry after fetching. If False, keep it.
+        Args:
+            span_id: 待查询的 span ID。
+            pop: 若为 True，获取后移除该条目；若为 False，保留该条目。
 
         Returns:
-            Tuple of (request_start_time, first_token_time). Returns (None, None) if
-            span_id is None or not found in tracking.
+            (请求开始时间, 首 token 时间) 的元组。如果 span_id 为 None 或未找到，
+            返回 (None, None)。
         """
         if span_id is None or span_id not in self._ttft_tracking:
             return (None, None)
@@ -229,9 +228,9 @@ class OpikTracer:
             if provider is None:
                 provider = adk_helpers.get_adk_provider()
 
-            # ADK runs `before_model_callback` before running `start_as_current_span` function for the LLM call,
-            # which makes it impossible to update the Opik span from this method.
-            # So we create a span manually here. This flow is handled inside ADKTracerWrapper.
+            # ADK 在执行 LLM 调用的 `start_as_current_span` 之前就运行 `before_model_callback`，
+            # 因此无法在此方法中更新 Opik span。
+            # 所以我们在这里手动创建 span，该流程由 ADKTracerWrapper 内部处理。
             result = span_creation_handler.create_span_respecting_context(
                 start_span_arguments=arguments_helpers.StartSpanParameters(
                     name=model,
@@ -250,7 +249,7 @@ class OpikTracer:
 
             context_storage.add_span_data(result.span_data)
 
-            # Track request start time for time-to-first-token calculation
+            # 记录请求开始时间，用于计算首 token 时间
             request_start_time = time.time()
             self._ttft_tracking[result.span_data.id] = (request_start_time, None)
         except Exception as e:
@@ -277,7 +276,7 @@ class OpikTracer:
             output = None
 
             if adk_helpers.has_empty_text_part_content(llm_response):
-                # Clean up TTFT tracking if it exists before early return
+                # 提前返回前清理已有的 TTFT 追踪数据
                 current_span = context_storage.top_span_data()
                 if current_span is not None and current_span.id is not None:
                     self._safe_ttft_tracking(current_span.id, pop=True)
@@ -291,12 +290,12 @@ class OpikTracer:
                 )
                 return
 
-            # Store span_id early for cleanup on all exit paths
+            # 提前保存 span_id，确保所有退出路径都能正确清理
             span_id = current_span.id
 
-            # Track time-to-first-token: detect first token arrival
-            # We check for first token on EVERY callback (including partial chunks)
-            # to catch the first moment content appears
+            # 追踪首 token 时间：检测首个 token 的到达
+            # 在每次回调（包括部分分片）中检查首 token，
+            # 以便捕获内容首次出现的时刻
             request_start_time, first_token_time = self._safe_ttft_tracking(
                 span_id, pop=False
             )
@@ -305,26 +304,25 @@ class OpikTracer:
                 and request_start_time is not None
                 and span_id is not None
             ):
-                # Check if this response contains actual content (first token)
-                # Content can be text or function calls (tool calls)
+                # 检查此响应是否包含实际内容（首 token）
+                # 内容可以是文本或函数调用（工具调用）
                 if self._has_response_content(llm_response):
-                    # First token detected - record the time
+                    # 检测到首 token - 记录时间
                     first_token_time = time.time()
                     self._ttft_tracking[span_id] = (
                         request_start_time,
                         first_token_time,
                     )
 
-            # Ignore partial chunks for final processing, ADK will call this method with the full response at the end
-            # Note: We intentionally keep the TTFT tracking entry for partial chunks since ADK will call
-            # this method again with the final non-partial response, where we'll properly clean it up
+            # 忽略部分分片的最终处理，ADK 会在最后用完整响应调用此方法
+            # 注意：我们故意保留部分分片的 TTFT 追踪条目，因为 ADK 会用最终的
+            # 非部分响应再次调用此方法，届时会正确清理
             if is_partial:
                 return
 
-            # Final (non-partial) response for this call: clear any output cached
-            # for this invocation up front, so a failed conversion (or a later
-            # error) below leaves no stale value for after_agent_callback to
-            # stamp. It is re-set only if conversion succeeds.
+            # 本次调用的最终（非部分）响应：预先清除该 invocation 缓存的输出，
+            # 这样即使下方转换失败（或后续出错），after_agent_callback 也不会
+            # 写入过期数据。仅在转换成功时重新设置。
             self._last_model_output.discard(callback_context.invocation_id)
 
             try:
@@ -341,7 +339,7 @@ class OpikTracer:
                     exc_info=True,
                 )
 
-            # Calculate time-to-first-token and add to metadata
+            # 计算首 token 时间并添加到元数据
             metadata_update = {}
             request_start_time, first_token_time = self._safe_ttft_tracking(
                 span_id, pop=True
@@ -350,7 +348,7 @@ class OpikTracer:
                 time_to_first_token = first_token_time - request_start_time
                 metadata_update["time_to_first_token"] = time_to_first_token
 
-            # Merge with existing metadata
+            # 与已有元数据合并
             if current_span.metadata is None:
                 current_span.metadata = {}
             current_span.metadata.update(metadata_update)
@@ -370,8 +368,8 @@ class OpikTracer:
 
             context_storage.pop_span_data(ensure_id=current_span.id)
             current_span.init_end_time()
-            # We close this span manually because otherwise ADK will close it too late,
-            # and it will also add tool spans inside of it, which we want to avoid.
+            # 手动关闭此 span，因为 ADK 关闭得太晚，
+            # 而且还会在其中添加工具 span，这是我们希望避免的。
             if opik.is_tracing_active():
                 self._opik_client.__internal_api__span__(**current_span.as_parameters)
             if output is not None:
@@ -381,10 +379,10 @@ class OpikTracer:
             exception_occurred = True
             LOGGER.error(f"Failed during after_model_callback(): {e}", exc_info=True)
         finally:
-            # Clean up TTFT tracking entry on all exit paths to prevent memory leak
-            # Skip cleanup for partial chunks (normal return) since ADK will call again with final response
-            # For final responses, entry is already popped at line 325, so this is a no-op
-            # For errors (exception_occurred=True) or early returns, this ensures cleanup happens
+            # 在所有退出路径上清理 TTFT 追踪条目，防止内存泄漏
+            # 跳过部分分片的清理（正常返回），因为 ADK 会用最终响应再次调用
+            # 对于最终响应，条目已在前面被弹出，此处为空操作
+            # 对于错误（exception_occurred=True）或提前返回，此处确保清理发生
             if span_id is not None and (exception_occurred or not is_partial):
                 self._ttft_tracking.pop(span_id, None)
 
@@ -404,7 +402,7 @@ class OpikTracer:
                 **self.metadata,
             }
 
-            # Update existing span with tool information
+            # 用工具信息更新现有 span
             if current_span is not None:
                 current_span.update(
                     name=tool.name,
@@ -432,7 +430,7 @@ class OpikTracer:
         **kwargs: Any,
     ) -> None:
         try:
-            # Debug logging for callback invocation
+            # 回调调用的调试日志
             current_span = context_storage.top_span_data()
 
             output = (
@@ -441,7 +439,7 @@ class OpikTracer:
                 else {"output": tool_response}
             )
 
-            # Update existing span with tool output
+            # 用工具输出更新现有 span
             if current_span is not None:
                 current_span.update(
                     output=output,
@@ -458,10 +456,10 @@ class OpikTracer:
     def __getstate__(self) -> Dict[str, Any]:
         state = self.__dict__.copy()
         state.pop("_opik_client", None)
-        # Don't serialize TTFT tracking as it's runtime state
+        # TTFT 追踪是运行时状态，不进行序列化
         state.pop("_ttft_tracking", None)
-        # The output cache holds a threading.Lock (unpicklable) and is per-process
-        # runtime state; __setstate__ recreates a fresh one.
+        # 输出缓存包含 threading.Lock（不可 pickle）且为进程级运行时状态；
+        # __setstate__ 会重新创建一个全新的实例。
         state.pop("_last_model_output", None)
         return state
 

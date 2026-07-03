@@ -6,6 +6,7 @@ import {
   UserPen,
   LucideIcon,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button, ButtonProps } from "@/ui/button";
 import {
@@ -23,7 +24,7 @@ import { DATASET_TYPE } from "@/types/datasets";
 
 type DatasetOption = {
   datasetType: DATASET_TYPE;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   openValue: number;
 };
@@ -31,13 +32,13 @@ type DatasetOption = {
 const DATASET_OPTIONS: DatasetOption[] = [
   {
     datasetType: DATASET_TYPE.TEST_SUITE,
-    label: "Test suite",
+    labelKey: "addToDropdown.testSuite",
     icon: ListChecks,
     openValue: 1,
   },
   {
     datasetType: DATASET_TYPE.DATASET,
-    label: "Dataset",
+    labelKey: "addToDropdown.dataset",
     icon: Database,
     openValue: 3,
   },
@@ -61,6 +62,7 @@ export type AddToDropdownProps = {
 };
 
 const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
+  const { t } = useTranslation("tracing");
   const {
     selectedRows,
     disabled = false,
@@ -90,7 +92,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
       {showAddToDataset &&
         DATASET_OPTIONS.map((opt) => (
           <AddToDatasetDialog
-            key={`${opt.label}-${resetKeyRef.current}`}
+            key={`${opt.labelKey}-${resetKeyRef.current}`}
             selectedRows={selectedRows as Array<Trace | Span>}
             datasetType={opt.datasetType}
             open={open === opt.openValue}
@@ -113,7 +115,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
             disabled={disabled}
             className={cn("font-normal", buttonVariant === "ghost" && "px-0")}
           >
-            Add to
+            {t("addToDropdown.addTo")}
             <ChevronDown
               className={cn(
                 "ml-2",
@@ -127,7 +129,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
           {showAddToDataset &&
             DATASET_OPTIONS.map((opt) => (
               <DropdownMenuItem
-                key={opt.label}
+                key={opt.labelKey}
                 onClick={() => {
                   setOpen(opt.openValue);
                   resetKeyRef.current = resetKeyRef.current + 1;
@@ -135,7 +137,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
                 disabled={disabled}
               >
                 <opt.icon className="mr-2 size-4" />
-                {opt.label}
+                {t(opt.labelKey)}
               </DropdownMenuItem>
             ))}
           {showAddToQueue && (
@@ -147,7 +149,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
               disabled={disabled}
             >
               <UserPen className="mr-2 size-4" />
-              Annotation queue
+              {t("addToDropdown.annotationQueue")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

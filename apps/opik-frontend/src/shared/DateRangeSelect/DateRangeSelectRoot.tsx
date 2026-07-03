@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar } from "@/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
@@ -37,6 +38,7 @@ type CustomDatesOptionProps = {
 };
 
 const CustomDatesOption: React.FC<CustomDatesOptionProps> = ({ className }) => {
+  const { t } = useTranslation();
   const { minDate, maxDate, setCustomRange, selectValue, value } =
     useDateRangeSelectContext();
   const [date, setDate] = React.useState<DateRange | undefined>(value);
@@ -83,7 +85,7 @@ const CustomDatesOption: React.FC<CustomDatesOptionProps> = ({ className }) => {
                 </span>
               )}
               <div className="flex w-full items-center justify-between">
-                <span>Custom dates</span>
+                <span>{t("common.dateRange.customDates")}</span>
                 <CalendarIcon className="ml-auto size-3.5 text-light-slate" />
               </div>
             </div>
@@ -106,7 +108,7 @@ const CustomDatesOption: React.FC<CustomDatesOptionProps> = ({ className }) => {
             onDayClick={handleDayClick}
             numberOfMonths={1}
             className="rounded-md"
-            aria-label="Select date range"
+            aria-label={t("common.dateRange.selectDateRange")}
             disabled={disabledDates}
           />
         </PopoverContent>

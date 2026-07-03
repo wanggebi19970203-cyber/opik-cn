@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { ArrowDownToLine, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -31,6 +32,7 @@ const OptimizationLogsFullscreenDialog: React.FC<
   hasNewLogs,
   initialScrollRatio = 1,
 }) => {
+  const { t } = useTranslation("optimizations");
   const hasInitializedScrollRef = useRef(false);
 
   const { scrollContainerRef, handleScroll, scrollToBottom } = useChatScroll({
@@ -76,10 +78,10 @@ const OptimizationLogsFullscreenDialog: React.FC<
       <DialogContent className="flex h-[90vh] w-[90vw] max-w-[90vw] flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span>Logs</span>
+            <span>{t("optimizations.logs.title")}</span>
             {lastUpdatedAt && (
               <TooltipWrapper
-                content={`Last updated at ${formatDate(lastUpdatedAt, {
+                content={`${t("optimizations.logs.lastUpdatedAt")} ${formatDate(lastUpdatedAt, {
                   includeSeconds: true,
                 })}`}
               >
@@ -107,7 +109,7 @@ const OptimizationLogsFullscreenDialog: React.FC<
               className="absolute bottom-4 left-1/2 -translate-x-1/2 gap-1.5 shadow-md"
             >
               <ArrowDownToLine className="size-3.5" />
-              New logs available
+              {t("optimizations.logs.newLogsAvailable")}
             </Button>
           )}
         </div>

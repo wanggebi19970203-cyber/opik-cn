@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import isUndefined from "lodash/isUndefined";
@@ -32,28 +33,28 @@ export const RESOURCE_MAP = {
     url: "/$workspaceName/projects/$projectId/traces",
     projectUrl: "/$workspaceName/projects/$projectId/home",
     param: "projectId",
-    deleted: "Deleted project",
+    deletedKey: "deletedProject",
     label: "project",
   },
   [RESOURCE_TYPE.dataset]: {
     url: "/$workspaceName/datasets/$datasetId/items",
     projectUrl: "/$workspaceName/projects/$projectId/datasets/$datasetId/items",
     param: "datasetId",
-    deleted: "Deleted dataset",
+    deletedKey: "deletedDataset",
     label: "dataset",
   },
   [RESOURCE_TYPE.datasetItem]: {
     url: "/$workspaceName/datasets/$datasetId/items",
     projectUrl: "/$workspaceName/projects/$projectId/datasets/$datasetId/items",
     param: "datasetId",
-    deleted: "Deleted dataset item",
+    deletedKey: "deletedDatasetItem",
     label: "dataset item",
   },
   [RESOURCE_TYPE.prompt]: {
     url: "/$workspaceName/prompts/$promptId",
     projectUrl: "/$workspaceName/projects/$projectId/prompts/$promptId",
     param: "promptId",
-    deleted: "Deleted prompt",
+    deletedKey: "deletedPrompt",
     label: "prompt",
   },
   [RESOURCE_TYPE.experiment]: {
@@ -61,7 +62,7 @@ export const RESOURCE_MAP = {
     projectUrl:
       "/$workspaceName/projects/$projectId/experiments/$datasetId/compare",
     param: "datasetId",
-    deleted: "Deleted experiment",
+    deletedKey: "deletedExperiment",
     label: "experiment",
   },
   [RESOURCE_TYPE.experimentItem]: {
@@ -69,7 +70,7 @@ export const RESOURCE_MAP = {
     projectUrl:
       "/$workspaceName/projects/$projectId/experiments/$datasetId/compare",
     param: "datasetId",
-    deleted: "Deleted experiment item",
+    deletedKey: "deletedExperimentItem",
     label: "experiment item",
   },
   [RESOURCE_TYPE.optimization]: {
@@ -77,7 +78,7 @@ export const RESOURCE_MAP = {
     projectUrl:
       "/$workspaceName/projects/$projectId/optimizations/$optimizationId",
     param: "optimizationId",
-    deleted: "Deleted optimization",
+    deletedKey: "deletedOptimization",
     label: "optimization run",
   },
   [RESOURCE_TYPE.trial]: {
@@ -85,7 +86,7 @@ export const RESOURCE_MAP = {
     projectUrl:
       "/$workspaceName/projects/$projectId/optimizations/$optimizationId/trials",
     param: "optimizationId",
-    deleted: "Deleted optimization",
+    deletedKey: "deletedOptimization",
     label: "trial",
   },
   [RESOURCE_TYPE.annotationQueue]: {
@@ -93,20 +94,20 @@ export const RESOURCE_MAP = {
     projectUrl:
       "/$workspaceName/projects/$projectId/annotation-queues/$annotationQueueId",
     param: "annotationQueueId",
-    deleted: "Deleted annotation queue",
+    deletedKey: "deletedAnnotationQueue",
     label: "annotation queue",
   },
   [RESOURCE_TYPE.dashboard]: {
     url: "/$workspaceName/dashboards/$dashboardId",
     param: "dashboardId",
-    deleted: "Deleted dashboard",
+    deletedKey: "deletedDashboard",
     label: "dashboard",
   },
   [RESOURCE_TYPE.traces]: {
     url: "/$workspaceName/projects/$projectId/traces",
     projectUrl: "/$workspaceName/projects/$projectId/logs",
     param: "projectId",
-    deleted: "Deleted traces",
+    deletedKey: "deletedTraces",
     label: "traces",
     search: { tab: PROJECT_TAB.logs, logsType: LOGS_TYPE.traces },
     projectSearch: { logsType: LOGS_TYPE.traces },
@@ -116,14 +117,14 @@ export const RESOURCE_MAP = {
     projectUrl:
       "/$workspaceName/projects/$projectId/test-suites/$suiteId/items",
     param: "suiteId",
-    deleted: "Deleted test suite",
+    deletedKey: "deletedTestSuite",
     label: "test suite",
   },
   [RESOURCE_TYPE.threads]: {
     url: "/$workspaceName/projects/$projectId/traces",
     projectUrl: "/$workspaceName/projects/$projectId/logs",
     param: "projectId",
-    deleted: "Deleted threads",
+    deletedKey: "deletedThreads",
     label: "threads",
     search: { tab: PROJECT_TAB.logs, logsType: LOGS_TYPE.threads },
     projectSearch: { logsType: LOGS_TYPE.threads },
@@ -159,6 +160,7 @@ function ResourceLink({
   suffix,
   className,
 }: ResourceLinkProps): React.ReactElement {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const props = RESOURCE_MAP[resource];
@@ -177,7 +179,7 @@ function ResourceLink({
   linkParams[props.param] = id;
 
   const deleted = isUndefined(name) || isDeleted;
-  const text = deleted ? props.deleted : name;
+  const text = deleted ? t(`common.shared.${props.deletedKey}`) : name;
 
   return (
     <Link

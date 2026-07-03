@@ -1,0 +1,103 @@
+{
+  "compareExperiments": {
+    "title": "Compare experiments",
+    "description": "Compare experiment results side by side",
+    "tabs": {
+      "experimentItems": "Experiment items",
+      "insights": "Insights",
+      "configuration": "Configuration",
+      "feedbackScores": "Feedback scores"
+    },
+    "metrics": {
+      "score": "Score",
+      "latency": "Latency",
+      "cost": "Cost"
+    },
+    "actions": {
+      "exportDisabled": "Export functionality is disabled for this installation",
+      "evaluate": "Evaluate"
+    },
+    "dialog": {
+      "title": "Compare experiments",
+      "searchPlaceholder": "Search by name",
+      "noSearchResults": "No search results",
+      "cancel": "Cancel",
+      "compareCount": "Compare {{count}} {{type}}",
+      "selectExperiment": "Select experiment"
+    },
+    "details": {
+      "backToExperiments": "Back to experiments",
+      "compareCount": "Compare ({{count}})",
+      "baselineOf": "Baseline of",
+      "comparedAgainst": "compared against",
+      "testSuite": "Test suite",
+      "dataset": "Dataset",
+      "prompt": "Prompt",
+      "experimentLogs": "Experiment logs",
+      "passRate": "{{rate}}% pass rate",
+      "deletedTestSuite": "Deleted test suite",
+      "goToPrompt": "Go to {{name}}",
+      "goToTraces": "Go to traces",
+      "viewAllTraces": "View all traces for this experiment"
+    },
+    "viewer": {
+      "noRelatedTrace": "No related trace found",
+      "traceDeletedMessage": "It looks like it was deleted or not created",
+      "openTraceTooltip": "Click to open original trace",
+      "trace": "Trace"
+    },
+    "comments": {
+      "title": "Comments"
+    },
+    "dataset": {
+      "testSuiteItem": "Test suite item",
+      "viewInTestSuite": "View in test suite",
+      "viewItemTooltip": "View this item in the test suite",
+      "keys": "Keys",
+      "selectedCount": "{{selected}} of {{total}} selected",
+      "media": "Media",
+      "selectedData": "Selected data"
+    },
+    "configuration": {
+      "name": "Name",
+      "noSearchResults": "No search results",
+      "noConfigMultiple": "These experiments have no configuration",
+      "noConfigSingle": "This experiment has no configuration",
+      "searchPlaceholder": "Search by name",
+      "showDifferencesOnly": "Show differences only"
+    },
+    "feedbackScores": {
+      "scoreName": "Feedback score",
+      "noScoresMultiple": "These experiments have no feedback scores",
+      "noScoresSingle": "This experiment has no feedback scores"
+    },
+    "items": {
+      "itemId": "Item ID",
+      "testSuiteItemId": "ID (Test suite item)",
+      "datasetItemId": "Dataset item ID",
+      "duration": "Duration",
+      "comments": "Comments",
+      "evaluationTask": "Evaluation task",
+      "feedbackScores": "Feedback scores",
+      "noData": "There is no data for the selected experiments",
+      "selectScore": "Select score",
+      "totalTokens": "Total tokens",
+      "estimatedCost": "Estimated cost",
+      "testSuite": "Test suite",
+      "dataset": "Dataset",
+      "experiments": "Experiments",
+      "name": "Name",
+      "evaluationTaskLastTrial": "Evaluation task (last trial)",
+      "result": "Result",
+      "output": "Output",
+      "searchTestSuiteItems": "Search test suite items",
+      "searchDatasetItems": "Search dataset items"
+    },
+    "experiment": "experiment",
+    "experiments": "experiments",
+    "panel": {
+      "idCopiedToClipboard": "ID successfully copied to clipboard",
+      "copyId": "Copy ID"
+    }
+  }
+}

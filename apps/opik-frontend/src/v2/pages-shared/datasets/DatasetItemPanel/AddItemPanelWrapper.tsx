@@ -1,4 +1,5 @@
 import React, { ReactNode, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
 import ResizableSidePanelTopBar from "@/shared/ResizableSidePanel/ResizableSidePanelTopBar";
@@ -28,6 +29,7 @@ const AddItemPanelWrapperContent: React.FC<{
   onDirtyChange: (dirty: boolean) => void;
   children: (context: AddItemPanelContext) => ReactNode;
 }> = ({ formId, onClose, onDirtyChange, children }) => {
+  const { t } = useTranslation("datasets");
   const [tags, setTags] = useState<string[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const isDirty = hasUnsavedChanges || tags.length > 0;
@@ -74,10 +76,10 @@ const AddItemPanelWrapperContent: React.FC<{
               }
             }}
           >
-            Cancel
+            {t("addItem.cancel")}
           </Button>
           <Button variant="default" size="sm" type="submit" form={formId}>
-            Save changes
+            {t("addItem.saveChanges")}
           </Button>
         </div>
       </div>
@@ -87,10 +89,10 @@ const AddItemPanelWrapperContent: React.FC<{
         setOpen={() => cancel()}
         onConfirm={cancel}
         onCancel={confirm}
-        title="Discard changes?"
-        description="You have unsaved changes. Do you want to discard them and close?"
-        confirmText="Keep editing"
-        cancelText="Discard changes"
+        title={t("addItem.discardChangesTitle")}
+        description={t("addItem.discardChangesDescription")}
+        confirmText={t("addItem.keepEditing")}
+        cancelText={t("addItem.discardChanges")}
         confirmButtonVariant="default"
       />
     </>

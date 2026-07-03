@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { CellContext } from "@tanstack/react-table";
 import debounce from "lodash/debounce";
+import { useTranslation } from "react-i18next";
 import { Select, SelectTrigger, SelectValue } from "@/ui/select";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -16,6 +17,7 @@ import { useWorkspaceRolesContext } from "@/plugins/comet/WorkspaceRolesContext"
 import useCurrentOrganization from "@/plugins/comet/useCurrentOrganization";
 
 const WorkspaceRoleCell = (context: CellContext<WorkspaceMember, string>) => {
+  const { t } = useTranslation("common");
   const value = context.getValue();
   const row = context.row.original;
   const isInvitedByEmail = !row.isMember;
@@ -141,13 +143,13 @@ const WorkspaceRoleCell = (context: CellContext<WorkspaceMember, string>) => {
 
   const getTooltipContent = () => {
     if (isOwnRole) {
-      return "You can't update your own role";
+      return t("messages.cannotUpdateOwnRole");
     }
     if (isOrganizationAdmin) {
-      return "You can't change the role, since this user is an organization admin";
+      return t("messages.cannotChangeOrgAdminRole");
     }
     if (isInvitedByEmail) {
-      return "Cannot change roles for users invited by email";
+      return t("messages.cannotChangeEmailInviteeRole");
     }
     return "";
   };

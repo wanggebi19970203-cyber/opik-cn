@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Settings2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -62,6 +63,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
   search,
   setSearch,
 }) => {
+  const { t } = useTranslation("common");
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldVirtualize =
     sortedWorkspaces.length > WORKSPACE_VIRTUALIZATION_THRESHOLD;
@@ -118,7 +120,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
             <DropdownMenuSubContent className="w-[280px] p-1" sideOffset={8}>
-              <DropdownMenuLabel size="sm">Organizations</DropdownMenuLabel>
+              <DropdownMenuLabel size="sm">{t("labels.organizations")}</DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1" />
               <div className="max-h-[60vh] overflow-auto">
                 {sortedOrganizations.length > 0 ? (
@@ -167,7 +169,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
                 ) : (
                   <div className="flex min-h-[120px] flex-col items-center justify-center px-4 py-2 text-center">
                     <span className="comet-body-s text-muted-slate">
-                      No organizations found
+                      {t("emptyStates.noOrganizationsFound")}
                     </span>
                   </div>
                 )}
@@ -207,7 +209,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search"
+          placeholder={t("placeholders.search")}
           variant="ghost"
           dimension="sm"
         />
@@ -219,7 +221,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
         {sortedWorkspaces.length === 0 ? (
           <div className="flex min-h-[120px] flex-col items-center justify-center px-4 py-2 text-center">
             <span className="comet-body-s text-muted-slate">
-              No workspaces found
+              {t("emptyStates.noWorkspacesFound")}
             </span>
           </div>
         ) : shouldVirtualize ? (
@@ -255,7 +257,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
       <ListAction variant="default" size="sm" asChild>
         <a href={buildUrl("account-settings/workspaces", workspaceName)}>
           <Settings2 className="size-3.5 text-light-slate" />
-          <span>Manage workspaces</span>
+          <span>{t("labels.manageWorkspaces")}</span>
         </a>
       </ListAction>
     </>

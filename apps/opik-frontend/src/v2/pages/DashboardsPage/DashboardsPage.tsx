@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import {
   JsonParam,
   NumberParam,
@@ -127,6 +128,7 @@ export const FILTERS_COLUMNS: ColumnData<Dashboard>[] = [
 ];
 
 const DashboardsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/dashboards");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -134,20 +136,20 @@ const DashboardsPage: React.FunctionComponent = () => {
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("dashboards.columns.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
       },
       {
         id: "id",
-        label: "ID",
+        label: t("dashboards.columns.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
       },
       {
         id: "type",
-        label: "Type",
+        label: t("dashboards.columns.type"),
         type: COLUMN_TYPE.category,
         cell: TagCell as never,
         accessorFn: (row: Dashboard) =>
@@ -159,28 +161,35 @@ const DashboardsPage: React.FunctionComponent = () => {
       },
       {
         id: "description",
-        label: "Description",
+        label: t("dashboards.columns.description"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "last_updated_at",
-        label: "Last updated",
+        label: t("dashboards.columns.last_updated_at"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("dashboards.columns.created_at"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("dashboards.columns.created_by"),
         type: COLUMN_TYPE.string,
       },
     ];
-  }, []);
+  }, [t]);
+
+  const translatedFilterColumns: ColumnData<Dashboard>[] = FILTERS_COLUMNS.map(
+    (col) => ({
+      ...col,
+      label: t(`dashboards.columns.${col.id}`),
+    }),
+  );
 
   const {
     permissions: {
@@ -354,11 +363,11 @@ const DashboardsPage: React.FunctionComponent = () => {
   return (
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
-        <h1 className="comet-body-accented truncate break-words">Dashboards</h1>
+        <h1 className="comet-body-accented truncate break-words">{t("dashboards.title")}</h1>
         {canCreateDashboards && (
           <Button variant="default" size="xs" onClick={handleNewDashboardClick}>
             <Plus className="mr-1 size-4" />
-            Create dashboard
+            {t("dashboards.create")}
           </Button>
         )}
       </div>
@@ -366,12 +375,10 @@ const DashboardsPage: React.FunctionComponent = () => {
         <PageEmptyState
           lightImageUrl={emptyTestSuitesLightUrl}
           darkImageUrl={emptyTestSuitesDarkUrl}
-          title="No dashboards yet"
-          description={
-            "Build a cross-project dashboard to get a real-time view of your agents, metrics,\nand costs. Or explore a project to see detailed insights."
-          }
+          title={t("dashboards.empty.title")}
+          description={t("dashboards.empty.description")}
           primaryActionLabel={
-            canCreateDashboards ? "Create your first dashboard" : undefined
+            canCreateDashboards ? t("dashboards.empty.action") : undefined
           }
           onPrimaryAction={
             canCreateDashboards ? handleNewDashboardClick : undefined
@@ -385,12 +392,12 @@ const DashboardsPage: React.FunctionComponent = () => {
               <SearchInput
                 searchText={search!}
                 setSearchText={setSearch}
-                placeholder="Search by name"
+                placeholder={t("dashboards.searchPlaceholder")}
                 className="w-[320px]"
                 dimension="sm"
               ></SearchInput>
               <FiltersButton
-                columns={FILTERS_COLUMNS}
+                columns={translatedFilterColumns}
                 config={FILTERS_CONFIG as never}
                 filters={filters!}
                 onChange={setFilters}

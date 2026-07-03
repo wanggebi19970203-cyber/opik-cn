@@ -1,0 +1,249 @@
+---
+description: 从这里开始将 Opik 集成到基于 OpenAI Agents 的生成式 AI 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: OpenAI Agents | Opik 文档
+og:description: 使用 OpenAI Agents 构建高级 AI 应用，利用强大的模型、工具和记忆能力来增强性能。
+og:site_name: Opik 文档
+og:title: 探索 OpenAI Agents 框架 - Opik
+title: 使用 Opik 实现 OpenAI Agents 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/openai_agents
+---
+
+OpenAI 发布了一个名为 [Agents](https://platform.openai.com/docs/guides/agents) 的智能体框架。该框架的独特之处在于它提供了丰富的核心构建模块：
+
+1. [模型](https://platform.openai.com/docs/guides/agents#models)：支持所有 OpenAI 模型
+2. [工具](https://platform.openai.com/docs/guides/agents#tools)：类似于直接使用 OpenAI 模型时可用的函数调用功能
+3. [知识和记忆](https://platform.openai.com/docs/guides/agents#knowledge-memory)：与 OpenAI 的向量存储和 Embeddings Anthropic 无缝集成
+4. [护栏](https://platform.openai.com/docs/guides/agents#guardrails)：在智能体执行**并行**运行护栏检查，实现安全执行而不降低整体智能体执行速度。
+
+Opik 与 Agents 的集成只需一行代码，即可在我们的开源平台上分析和调试智能体执行流程。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=openai&utm_campaign=opik) 提供托管版本的 Opik 平台，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=openai&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=openai&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保你已安装 `opik` 和 `openai-agents` 包：
+
+```bash
+pip install opik openai-agents
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/v1/tracing/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs Cloud vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置 OpenAI Agents
+
+要使用 OpenAI Agents，你需要配置你的 OpenAI API key。你可以在[这些页面中查找或创建你的 API key](https://platform.openai.com/settings/organization/api-keys)：
+
+可以将其设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过编程方式设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 启用 Opik 日志记录
+
+要启用 Opik 日志记录，只需在现有的 OpenAI Agents 代码中添加以下两行代码：
+
+```python
+import os
+from agents import Agent, Runner
+from agents import set_trace_processors
+from opik.integrations.openai.agents import OpikTracingProcessor
+
+# 设置项目名称以便更好地组织
+os.environ["OPIK_PROJECT_NAME"] = "openai-agents-demo"
+
+set_trace_processors(processors=[OpikTracingProcessor()])
+
+agent = Agent(name="Assistant", instructions="You are a helpful assistant")
+
+result = Runner.run_sync(agent, "Write a haiku about recursion in programming.")
+print(result.final_output)
+```
+
+<Tip>
+  Opik 集成将自动跟踪每个 LLM 调用的 token 使用量和总成本。你也可以查看整个智能体执行的汇总信息。
+</Tip>
+
+## 示例：带函数工具的智能体
+
+<Frame>
+  <img src="/img/tracing/openai_agents_trace.png" alt="Opik 中的 OpenAI Agents 追踪" />
+</Frame>
+
+你可以创建带有自定义函数工具的智能体。`OpikTracingProcessor` 也会自动捕获所有工具调用：
+
+```python
+from agents import Agent, Runner, function_tool, set_trace_processors
+from opik.integrations.openai.agents import OpikTracingProcessor
+
+set_trace_processors(processors=[OpikTracingProcessor()])
+
+@function_tool
+def calculate_average(numbers: list[float]) -> float:
+    return sum(numbers) / len(numbers)
+
+@function_tool  
+def get_recommendation(topic: str, user_level: str) -> str:
+    recommendations = {
+        "python": {
+            "beginner": "Start with Python.org's tutorial, then try Python Crash Course book. Practice with simple scripts and built-in functions.",
+            "intermediate": "Explore frameworks like Flask/Django, learn about decorators, context managers, and dive into Python's data structures.",
+            "advanced": "Study Python internals, contribute to open source, learn about metaclasses, and explore performance optimization."
+        },
+        "machine learning": {
+            "beginner": "Start with Andrew Ng's Coursera course, learn basic statistics, and try scikit-learn with simple datasets.",
+            "intermediate": "Dive into deep learning with TensorFlow/PyTorch, study different algorithms, and work on real projects.",
+            "advanced": "Research latest papers, implement algorithms from scratch, and contribute to ML frameworks."
+        }
+    }
+    
+    topic_lower = topic.lower()
+    level_lower = user_level.lower()
+    
+    if topic_lower in recommendations and level_lower in recommendations[topic_lower]:
+        return recommendations[topic_lower][level_lower]
+    else:
+        return f"For {topic} at {user_level} level: Focus on fundamentals, practice regularly, and build projects to apply your knowledge."
+
+def create_advanced_agent():
+    """创建一个带有工具和综合指令的高级智能体。"""
+    instructions = """
+    You are an expert programming tutor and learning advisor. You have access to tools that help you:
+    1. Calculate averages for performance metrics, grades, or other numerical data
+    2. Provide personalized learning recommendations based on topics and user experience levels
+    
+    Your role:
+    - Help users learn programming concepts effectively
+    - Provide clear, beginner-friendly explanations when needed
+    - Use your tools when appropriate to give concrete help
+    - Offer structured learning paths and resources
+    - Be encouraging and supportive
+    
+    When users ask about:
+    - Programming languages: Use get_recommendation to provide tailored advice
+    - Performance or scores: Use calculate_average if numbers are involved
+    - Learning paths: Combine your knowledge with tool-based recommendations
+    
+    Always explain your reasoning and make your responses educational.
+    """
+    
+    return Agent(
+        name="AdvancedProgrammingTutor",
+        instructions=instructions,
+        model="gpt-4o-mini",
+        tools=[calculate_average, get_recommendation]
+    )
+
+# 创建并使用高级智能体
+advanced_agent = create_advanced_agent()
+
+# 示例查询
+queries = [
+    "I'm new to Python programming. Can you tell me about it?",
+    "I got these test scores: 85, 92, 78, 96, 88. What's my average and how am I doing?",
+    "I know some Python basics but want to learn machine learning. What should I do next?",
+]
+
+for i, query in enumerate(queries, 1):
+    print(f"\n Query {i}: {query}")
+    result = Runner.run_sync(advanced_agent, query)
+    print(f" Response: {result.final_output}")
+    print("=" * 80)
+```
+
+### 使用 `@track` 装饰器增加粒度
+
+如果你需要更深入了解工具函数内部发生的情况，可以使用 `@track` 装饰器来跟踪工具执行中的特定步骤：
+
+```python
+from agents import Agent, Runner, function_tool, set_trace_processors
+from opik.integrations.openai.agents import OpikTracingProcessor
+from opik import track
+
+set_trace_processors(processors=[OpikTracingProcessor()])
+
+@track(name="fetch_user_data")
+def fetch_user_data(user_id: str) -> dict:
+    # 此步骤将被单独追踪
+    return {"user_id": user_id, "preferences": ["python", "ml"]}
+
+@track(name="generate_recommendations")
+def generate_recommendations(preferences: list) -> str:
+    # 此步骤也将被单独追踪
+    return f"Based on your interests in {', '.join(preferences)}, we recommend..."
+
+@function_tool
+def get_personalized_advice(user_id: str) -> str:
+    """获取用户的个性化学习建议。"""
+    # 工具内每个被跟踪的函数调用将作为单独的 span 出现
+    user_data = fetch_user_data(user_id)
+    recommendations = generate_recommendations(user_data["preferences"])
+    return recommendations
+
+agent = Agent(
+    name="PersonalizedTutor",
+    instructions="Help users with personalized learning advice.",
+    model="gpt-4o-mini",
+    tools=[get_personalized_advice]
+)
+
+result = Runner.run_sync(agent, "Give me learning advice for user_123")
+print(result.final_output)
+```
+
+
+## 记录对话线程
+
+当你使用 [OpenAI Agents 追踪 API](https://openai.github.io/openai-agents-python/running_agents/#conversationschat-threads) 与 OpenAI Agents 运行多轮对话时，Opik 集成会自动将追踪的 group_id 用作线程 ID，方便你在 Opik 中查看对话。以下是示例：
+
+```python
+async def main():
+    agent = Agent(name="Assistant", instructions="Reply very concisely.")
+
+    thread_id = str(uuid.uuid4())
+
+    with trace(workflow_name="Conversation", group_id=thread_id):
+        # 第一轮
+        result = await Runner.run(agent, "What city is the Golden Gate Bridge in?")
+        print(result.final_output)
+        # San Francisco
+
+        # 第二轮
+        new_input = result.to_input_list() + [{"role": "user", "content": "What state is it in?"}]
+        result = await Runner.run(agent, new_input)
+        print(result.final_output)
+        # California
+```
+
+## 进一步改进
+
+OpenAI Agents 仍然是一个相对较新的框架，我们正在努力进行一些改进：
+
+1. 改进 LLM 调用的输入和输出渲染，作为我们 `Pretty Mode` 功能的一部分
+2. 改进 span 的命名约定
+3. 在追踪级别添加智能体执行的输入和输出
+
+如果你有其他希望我们改进的地方，欢迎在我们的 [GitHub 仓库](https://github.com/comet-ml/opik/issues) 提交 issue。

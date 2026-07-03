@@ -1,5 +1,6 @@
 import React, { Fragment, type ReactNode } from "react";
 import { CheckCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   Tooltip,
@@ -19,6 +20,7 @@ type AssertionsBreakdownTooltipProps = {
 export const AssertionsBreakdownTooltip: React.FC<
   AssertionsBreakdownTooltipProps
 > = ({ children, assertionsByRun }) => {
+  const { t } = useTranslation("experiments");
   if (assertionsByRun.length === 0 || assertionsByRun[0].length === 0) {
     return <>{children}</>;
   }
@@ -51,7 +53,7 @@ export const AssertionsBreakdownTooltip: React.FC<
                 <CheckCheck className="size-3 text-foreground" />
               </div>
               <span className="comet-body-xs-accented text-foreground">
-                Assertions
+                {t('assertions')}
               </span>
             </div>
             {isMultiRun &&
@@ -60,7 +62,7 @@ export const AssertionsBreakdownTooltip: React.FC<
                   key={runIdx}
                   className="comet-body-xs-accented pb-0.5 pt-1 text-center text-muted-slate"
                 >
-                  Run {runIdx + 1}
+                  {t('run', { index: runIdx + 1 })}
                 </span>
               ))}
 
@@ -80,7 +82,7 @@ export const AssertionsBreakdownTooltip: React.FC<
                   return (
                     <div key={runIdx} className="flex justify-center py-1">
                       <Tag variant={passed ? "green" : "red"} size="sm">
-                        {passed ? "Passed" : "Failed"}
+                        {passed ? t('passed') : t('failed')}
                       </Tag>
                     </div>
                   );

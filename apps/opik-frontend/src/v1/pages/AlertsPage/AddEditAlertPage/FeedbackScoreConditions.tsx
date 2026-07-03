@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Path, useFieldArray, UseFormReturn } from "react-hook-form";
 import { Plus, X } from "lucide-react";
 import get from "lodash/get";
@@ -29,18 +30,21 @@ export const DEFAULT_FEEDBACK_SCORE_CONDITION: FeedbackScoreConditionType = {
   operator: ">",
 };
 
-const WINDOW_OPTIONS: DropdownOption<string>[] = [
-  { label: "5 minutes", value: "300" },
-  { label: "15 minutes", value: "900" },
-  { label: "30 minutes", value: "1800" },
-  { label: "1 hour", value: "3600" },
-  { label: "6 hours", value: "21600" },
-  { label: "12 hours", value: "43200" },
-  { label: "24 hours", value: "86400" },
-  { label: "7 days", value: "604800" },
-  { label: "15 days", value: "1296000" },
-  { label: "30 days", value: "2592000" },
-];
+const useWindowOptions = (): DropdownOption<string>[] => {
+  const { t } = useTranslation();
+  return [
+    { label: t("alerts.windowOptions.300"), value: "300" },
+    { label: t("alerts.windowOptions.900"), value: "900" },
+    { label: t("alerts.windowOptions.1800"), value: "1800" },
+    { label: t("alerts.windowOptions.3600"), value: "3600" },
+    { label: t("alerts.windowOptions.21600"), value: "21600" },
+    { label: t("alerts.windowOptions.43200"), value: "43200" },
+    { label: t("alerts.windowOptions.86400"), value: "86400" },
+    { label: t("alerts.windowOptions.604800"), value: "604800" },
+    { label: t("alerts.windowOptions.1296000"), value: "1296000" },
+    { label: t("alerts.windowOptions.2592000"), value: "2592000" },
+  ];
+};
 
 const OPERATOR_OPTIONS: DropdownOption<string>[] = [
   { label: ">", value: ">" },
@@ -52,6 +56,8 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
   triggerIndex,
   eventType,
 }) => {
+  const { t } = useTranslation();
+  const windowOptions = useWindowOptions();
   const conditionsFieldArray = useFieldArray({
     control: form.control,
     name: `triggers.${triggerIndex}.conditions` as "triggers.0.conditions",
@@ -128,12 +134,12 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
                       <FormItem className="min-w-[150px] flex-1">
                         {isFirstCondition && (
                           <Label className="comet-body-s-accented">
-                            When average
+                            {t("alerts.feedbackConditions.whenAverage")}
                           </Label>
                         )}
                         {!isFirstCondition && (
                           <Label className="comet-body-s-accented">
-                            Or when average
+                            {t("alerts.feedbackConditions.orWhenAverage")}
                           </Label>
                         )}
                         <FormControl>
@@ -228,19 +234,19 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
                   return (
                     <FormItem className="min-w-[120px] flex-1">
                       <Label className="comet-body-s-accented">
-                        In the last
+                        {t("alerts.triggers.inTheLast")}
                       </Label>
                       <FormControl>
                         <SelectBox
                           value={field.value as string}
                           onChange={field.onChange}
-                          options={WINDOW_OPTIONS}
+                          options={windowOptions}
                           className={cn("h-8 text-left", {
                             "border-destructive": Boolean(
                               validationErrors?.message,
                             ),
                           })}
-                          placeholder="Select time window"
+                          placeholder={t("alerts.triggers.selectTimeWindow")}
                         />
                       </FormControl>
                     </FormItem>
@@ -306,7 +312,7 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
           onClick={addCondition}
         >
           <Plus className="mr-1 size-3" />
-          Add condition
+          {t("alerts.feedbackConditions.addCondition")}
         </Button>
       </div>
     </div>

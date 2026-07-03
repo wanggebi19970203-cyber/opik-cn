@@ -3,6 +3,7 @@ import TextareaAutosize, {
   TextareaAutosizeProps,
 } from "react-textarea-autosize";
 import { Globe, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import {
@@ -37,11 +38,10 @@ const BUTTON_CLASSES =
 const READONLY_BUTTON_CLASSES =
   "border-l-0 cursor-default hover:bg-transparent";
 
-const GLOBAL_ASSERTION_TOOLTIP =
-  "This is a global assertion and can't be removed from here. You can manage them from the settings menu.";
-
 const AssertionField = forwardRef<HTMLTextAreaElement, AssertionFieldProps>(
   ({ isReadOnly = false, onRemove, ...textareaProps }, ref) => {
+    const { t } = useTranslation("common");
+
     return (
       <div
         className={cn(
@@ -69,7 +69,7 @@ const AssertionField = forwardRef<HTMLTextAreaElement, AssertionFieldProps>(
             </TooltipTrigger>
             <TooltipPortal>
               <TooltipContent side="top" className="max-w-[240px]">
-                {GLOBAL_ASSERTION_TOOLTIP}
+                {t("assertionField.globalAssertionTooltip")}
               </TooltipContent>
             </TooltipPortal>
           </Tooltip>

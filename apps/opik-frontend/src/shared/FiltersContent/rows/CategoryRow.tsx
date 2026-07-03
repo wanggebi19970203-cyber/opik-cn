@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Filter, FilterRowConfig } from "@/types/filters";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
 import SelectBox from "@/shared/SelectBox/SelectBox";
@@ -16,6 +17,7 @@ export const CategoryRow: React.FunctionComponent<EqualsRowProps> = ({
   onChange,
   config,
 }) => {
+  const { t } = useTranslation();
   const value = `${filter.value}`;
   return (
     <>
@@ -34,7 +36,7 @@ export const CategoryRow: React.FunctionComponent<EqualsRowProps> = ({
         <SelectBox
           value={value}
           options={[]}
-          placeholder="Select value"
+          placeholder={t("common.selectBox.selectValue")}
           onChange={(value) => onChange({ ...filter, value })}
           {...(config?.keyComponentProps ?? {})}
         />

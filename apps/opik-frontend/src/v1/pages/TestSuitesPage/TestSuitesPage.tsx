@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 import { useNavigate } from "@tanstack/react-router";
@@ -68,66 +69,66 @@ const PAGINATION_SIZE_KEY = "test-suites-pagination-size";
 export const DEFAULT_COLUMNS: ColumnData<Dataset>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "testSuites.columns.name",
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
   },
   {
     id: "type",
-    label: "Type",
+    label: "testSuites.columns.type",
     type: COLUMN_TYPE.string,
     cell: DatasetTypeCell as never,
   },
   {
     id: "id",
-    label: "ID",
+    label: "testSuites.columns.id",
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "description",
-    label: "Description",
+    label: "testSuites.columns.description",
     type: COLUMN_TYPE.string,
   },
   {
     id: "dataset_items_count",
-    label: "Item count",
+    label: "testSuites.columns.itemCount",
     type: COLUMN_TYPE.number,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: "testSuites.columns.tags",
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "most_recent_experiment_at",
-    label: "Most recent experiment",
+    label: "testSuites.columns.mostRecentExperiment",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "most_recent_optimization_at",
-    label: "Most recent optimization",
+    label: "testSuites.columns.mostRecentOptimization",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "testSuites.columns.lastUpdated",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "testSuites.columns.created",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "testSuites.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
 ];
@@ -135,43 +136,43 @@ export const DEFAULT_COLUMNS: ColumnData<Dataset>[] = [
 export const FILTERS_COLUMNS: ColumnData<Dataset>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "testSuites.columns.name",
     type: COLUMN_TYPE.string,
   },
   {
     id: "type",
-    label: "Type",
+    label: "testSuites.columns.type",
     type: COLUMN_TYPE.category,
   },
   {
     id: "id",
-    label: "ID",
+    label: "testSuites.columns.id",
     type: COLUMN_TYPE.string,
   },
   {
     id: "description",
-    label: "Description",
+    label: "testSuites.columns.description",
     type: COLUMN_TYPE.string,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: "testSuites.columns.tags",
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "testSuites.columns.lastUpdated",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "testSuites.columns.created",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "testSuites.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
 ];
@@ -182,6 +183,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 };
 
 const TestSuitesPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("test-suites");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
 
@@ -241,7 +243,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? "There are no datasets yet" : "No search results";
+  const noDataText = noData ? t("empty.title") : t("empty.noSearchResults", "No search results");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V3,
@@ -275,7 +277,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
               value,
               label,
             })),
-            placeholder: "Select type",
+            placeholder: t("selectType", "Select type"),
           },
         },
       },
@@ -353,18 +355,17 @@ const TestSuitesPage: React.FunctionComponent = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l truncate break-words">Datasets</h1>
+        <h1 className="comet-title-l truncate break-words">{t("title")}</h1>
       </div>
       <div className="comet-body-s mb-4 text-muted-slate">
-        A dataset is a collection of inputs and expected outputs used to
-        evaluate your LLM application.{" "}
+        {t("description")}{" "}
         <a
           href={buildDocsUrl("/evaluation/manage_datasets")}
           target="_blank"
           rel="noreferrer"
           className="text-primary"
         >
-          Read more
+          {t("readMore", "Read more")}
         </a>
       </div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
@@ -372,7 +373,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("searchPlaceholder", "Search by name")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -403,7 +404,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
           ></ColumnsButton>
           {canCreateDatasets && (
             <Button variant="default" size="sm" onClick={handleNewSuiteClick}>
-              Create new
+              {t("create")}
             </Button>
           )}
         </div>
@@ -424,7 +425,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
           <DataTableNoData title={noDataText}>
             {noData && canCreateDatasets && (
               <Button variant="link" onClick={handleNewSuiteClick}>
-                Create new
+                {t("create")}
               </Button>
             )}
           </DataTableNoData>

@@ -1,0 +1,701 @@
+---
+description: 从这里开始将 Opik 集成到基于 Google Agent Development Kit 的 genai 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Google ADK | Opik 文档
+og:description: 使用 Google ADK 构建灵活的 AI 代理，轻松集成 Gemini 模型和 Google AI 工具，适用于简单和复杂架构。
+og:site_name: Opik 文档
+og:title: 使用 Google ADK 开发 AI 代理 - Opik
+title: 使用 Opik 实现 Google Agent Development Kit（Python）可观测性
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时，请确保指定 `project_name`，以便它们关联到正确的项目。
+</Note>
+
+[Agent Development Kit (ADK)](https://google.github.io/adk-docs/) 是一个灵活且模块化的框架，用于开发和部署 AI 代理。ADK 可与流行的 LLM 和开源生成式 AI 工具配合使用，设计重点在于与 Google 生态系统和 Gemini 模型的深度集成。ADK 使使用 Gemini 模型和 Google AI 工具构建简单代理变得容易，同时为更复杂的代理架构和编排提供所需的控制和结构。
+
+本指南将展示如何将 Opik 与 Google ADK 集成，使所有 ADK 调用都作为追踪记录在 Opik 中。我们将介绍三种关键集成模式：
+
+1. **自动代理追踪** - 推荐方式，使用 `track_adk_agent_recursive` 实现轻松插桩
+2. **手动回调配置** - 替代方式，通过显式回调设置实现细粒度控制
+3. **混合追踪** - 结合 Opik 装饰器和 ADK 回调实现全面可观测性
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=google-adk&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=google-adk&utm_campaign=opik) 并获取 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=google-adk&utm_campaign=opik)。
+
+Opik 提供与 ADK 的全面集成，自动记录所有代理执行、工具调用和 LLM 交互的追踪日志，并提供详细的成本跟踪和错误监控。
+
+## 核心特性
+
+- **一行代码插桩** 使用 `track_adk_agent_recursive` 自动追踪整个代理层级
+- **自动成本跟踪** 支持所有 LLM 提供商，包括 LiteLLM 模型（OpenAI、Anthropic、Google AI、AWS Bedrock 等）
+- **完全兼容** `@opik.track` 装饰器，支持混合追踪方式
+- **线程支持** 用于使用 ADK 会话的对话应用
+- **自动代理图可视化** 使用 Mermaid 图表展示复杂的多代理工作流
+- **全面错误跟踪** 提供详细错误信息和堆栈追踪
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `google-adk`：
+
+```bash
+pip install opik google-adk
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业** 设置
+- **配置文件** 和环境变量
+
+### 配置 Google ADK
+
+要配置 Google ADK，您需要拥有 LLM 提供商的 API Key。本示例使用 OpenAI。您可以在[此页面查找或创建 OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)。
+
+可以设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 示例 1：自动代理追踪（推荐）
+
+追踪 ADK 代理的推荐方式是使用 [`track_adk_agent_recursive`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/adk/track_adk_agent_recursive.html) 和 [`OpikTracer`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/adk/OpikTracer.html)，通过单个函数调用自动插桩整个代理层级。此方式适用于单代理和复杂的多代理设置：
+
+```python
+import datetime
+from zoneinfo import ZoneInfo
+
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
+from opik.integrations.adk import OpikTracer, track_adk_agent_recursive
+
+def get_weather(city: str) -> dict:
+    """Get weather information for a city."""
+    if city.lower() == "new york":
+        return {
+            "status": "success",
+            "report": "The weather in New York is sunny with a temperature of 25 °C (77 °F).",
+        }
+    elif city.lower() == "london":
+        return {
+            "status": "success",
+            "report": "The weather in London is cloudy with a temperature of 18 °C (64 °F).",
+        }
+    return {"status": "error", "error_message": f"Weather info for '{city}' is unavailable."}
+
+def get_current_time(city: str) -> dict:
+    """Get current time for a city."""
+    if city.lower() == "new york":
+        tz = ZoneInfo("America/New_York")
+        now = datetime.datetime.now(tz)
+        return {
+            "status": "success",
+            "report": now.strftime(f"The current time in {city} is %Y-%m-%d %H:%M:%S %Z%z."),
+        }
+    elif city.lower() == "london":
+        tz = ZoneInfo("Europe/London")
+        now = datetime.datetime.now(tz)
+        return {
+            "status": "success",
+            "report": now.strftime(f"The current time in {city} is %Y-%m-%d %H:%M:%S %Z%z."),
+        }
+    return {"status": "error", "error_message": f"No timezone info for '{city}'."}
+
+# Initialize LiteLLM with OpenAI gpt-4o
+llm = LiteLlm(model="openai/gpt-4o")
+
+# Create the basic agent
+basic_agent = LlmAgent(
+    name="weather_time_agent",
+    model=llm,
+    description="Agent for answering time & weather questions",
+    instruction="Answer questions about the time or weather in a city. Be helpful and provide clear information.",
+    tools=[get_weather, get_current_time],
+)
+
+# Configure Opik tracer
+opik_tracer = OpikTracer(
+    name="basic-weather-agent",
+    tags=["basic", "weather", "time", "single-agent"],
+    metadata={
+        "environment": "development",
+        "model": "gpt-4o",
+        "framework": "google-adk",
+        "example": "basic"
+    },
+    project_name="adk-basic-demo"
+)
+
+# Instrument the agent with a single function call - this is the recommended approach
+track_adk_agent_recursive(basic_agent, opik_tracer)
+```
+
+每次代理执行现在都会自动记录到 Opik 平台，并包含详细的追踪信息：
+
+<Frame>
+  <img src="/img/cookbook/google_adk_integration_basic_agent.png" />
+</Frame>
+
+此方式自动处理：
+- **所有代理回调**（代理、模型和工具执行的前后回调）
+- **子代理** 和嵌套代理层级
+- **包含其他代理的代理工具**
+- **复杂工作流** 只需最少代码
+
+## 示例 2：手动回调配置（替代方式）
+
+如需对插桩哪些回调进行细粒度控制，可以手动配置 [`OpikTracer`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/adk/OpikTracer.html) 回调。此方式提供显式控制，但需要更多设置代码：
+
+```python
+# Configure Opik tracer (same as before)
+opik_tracer = OpikTracer(
+    name="basic-weather-agent",
+    tags=["basic", "weather", "time", "single-agent"],
+    metadata={
+        "environment": "development",
+        "model": "gpt-4o",
+        "framework": "google-adk",
+        "example": "basic"
+    },
+    project_name="adk-basic-demo"
+)
+
+# Create the agent with explicit callback configuration
+basic_agent = LlmAgent(
+    name="weather_time_agent",
+    model=llm,
+    description="Agent for answering time & weather questions",
+    instruction="Answer questions about the time or weather in a city. Be helpful and provide clear information.",
+    tools=[get_weather, get_current_time],
+    before_agent_callback=opik_tracer.before_agent_callback,
+    after_agent_callback=opik_tracer.after_agent_callback,
+    before_model_callback=opik_tracer.before_model_callback,
+    after_model_callback=opik_tracer.after_model_callback,
+    before_tool_callback=opik_tracer.before_tool_callback,
+    after_tool_callback=opik_tracer.after_tool_callback,
+)
+```
+
+<Note>
+对于大多数用例，我们建议使用 `track_adk_agent_recursive`（如示例 1 所示），因为它需要更少的代码并自动处理复杂的代理层级。
+</Note>
+
+## 示例 3：多代理设置与层级追踪
+
+此示例演示了一个复杂的多代理设置，其中包含针对不同任务的专用代理。使用 `track_adk_agent_recursive`，您可以通过单个函数调用插桩整个层级：
+
+```python
+def get_detailed_weather(city: str) -> dict:
+    """Get detailed weather information including forecast."""
+    weather_data = {
+        "new york": {
+            "current": "Sunny, 25°C (77°F)",
+            "humidity": "65%",
+            "wind": "10 km/h NW",
+            "forecast": "Partly cloudy tomorrow, high of 27°C"
+        },
+        "london": {
+            "current": "Cloudy, 18°C (64°F)",
+            "humidity": "78%",
+            "wind": "15 km/h SW",
+            "forecast": "Light rain expected tomorrow, high of 16°C"
+        },
+        "tokyo": {
+            "current": "Partly cloudy, 22°C (72°F)",
+            "humidity": "70%",
+            "wind": "8 km/h E",
+            "forecast": "Sunny tomorrow, high of 25°C"
+        }
+    }
+
+    city_lower = city.lower()
+    if city_lower in weather_data:
+        data = weather_data[city_lower]
+        return {
+            "status": "success",
+            "report": f"Weather in {city}: {data['current']}. Humidity: {data['humidity']}, Wind: {data['wind']}. {data['forecast']}"
+        }
+    return {"status": "error", "error_message": f"Detailed weather for '{city}' is unavailable."}
+
+def get_world_time(city: str) -> dict:
+    """Get time information for major world cities."""
+    timezones = {
+        "new york": "America/New_York",
+        "london": "Europe/London",
+        "tokyo": "Asia/Tokyo",
+        "sydney": "Australia/Sydney",
+        "paris": "Europe/Paris"
+    }
+
+    city_lower = city.lower()
+    if city_lower in timezones:
+        tz = ZoneInfo(timezones[city_lower])
+        now = datetime.datetime.now(tz)
+        return {
+            "status": "success",
+            "report": now.strftime(f"Current time in {city}: %A, %B %d, %Y at %I:%M %p %Z")
+        }
+    return {"status": "error", "error_message": f"Time zone info for '{city}' is unavailable."}
+
+def get_travel_info(from_city: str, to_city: str) -> dict:
+    """Get basic travel information between cities."""
+    travel_data = {
+        ("new york", "london"): {"flight_time": "7 hours", "time_diff": "+5 hours"},
+        ("london", "new york"): {"flight_time": "8 hours", "time_diff": "-5 hours"},
+        ("new york", "tokyo"): {"flight_time": "14 hours", "time_diff": "+14 hours"},
+        ("tokyo", "new york"): {"flight_time": "13 hours", "time_diff": "-14 hours"},
+        ("london", "tokyo"): {"flight_time": "12 hours", "time_diff": "+9 hours"},
+        ("tokyo", "london"): {"flight_time": "11 hours", "time_diff": "-9 hours"},
+    }
+
+    route = (from_city.lower(), to_city.lower())
+    if route in travel_data:
+        data = travel_data[route]
+        return {
+            "status": "success",
+            "report": f"Travel from {from_city} to {to_city}: Approximately {data['flight_time']} flight time. Time difference: {data['time_diff']}"
+        }
+    return {"status": "error", "error_message": f"Travel info for '{from_city}' to '{to_city}' is unavailable."}
+
+# Weather specialist agent (no Opik callbacks needed)
+weather_agent = LlmAgent(
+    name="weather_specialist",
+    model=llm,
+    description="Specialized agent for detailed weather information",
+    instruction="Provide comprehensive weather information including current conditions and forecasts. Be detailed and informative.",
+    tools=[get_detailed_weather]
+)
+
+# Time specialist agent (no Opik callbacks needed)
+time_agent = LlmAgent(
+    name="time_specialist",
+    model=llm,
+    description="Specialized agent for world time information",
+    instruction="Provide accurate time information for cities around the world. Include day of week and full date.",
+    tools=[get_world_time]
+)
+
+# Travel specialist agent (no Opik callbacks needed)
+travel_agent = LlmAgent(
+    name="travel_specialist",
+    model=llm,
+    description="Specialized agent for travel information",
+    instruction="Provide helpful travel information including flight times and time zone differences.",
+    tools=[get_travel_info]
+)
+
+# Configure Opik tracer for multi-agent example
+multi_agent_tracer = OpikTracer(
+    name="multi-agent-coordinator",
+    tags=["multi-agent", "coordinator", "weather", "time", "travel"],
+    metadata={
+        "environment": "development",
+        "model": "gpt-4o",
+        "framework": "google-adk",
+        "example": "multi-agent",
+        "agent_count": 4
+    },
+    project_name="adk-multi-agent-demo"
+)
+
+# Coordinator agent with sub-agents
+coordinator_agent = LlmAgent(
+    name="travel_coordinator",
+    model=llm,
+    description="Coordinator agent that delegates to specialized agents for weather, time, and travel information",
+    instruction="""You are a travel coordinator that helps users with weather, time, and travel information.
+
+    You have access to three specialized agents:
+    - weather_specialist: For detailed weather information
+    - time_specialist: For world time information
+    - travel_specialist: For travel planning information
+
+    Delegate appropriate queries to the right specialist agents and compile comprehensive responses for the user.""",
+    tools=[],  # No direct tools, delegates to sub-agents
+    sub_agents=[weather_agent, time_agent, travel_agent],
+)
+
+# Use track_adk_agent_recursive to instrument all agents at once
+# This automatically adds callbacks to the coordinator and ALL sub-agents
+from opik.integrations.adk import track_adk_agent_recursive
+track_adk_agent_recursive(coordinator_agent, multi_agent_tracer)
+```
+
+现在可以在 UI 中查看追踪，展示完整的层级结构：
+
+<Frame>
+  <img src="/img/cookbook/google_adk_integration_multi_agent.png" />
+</Frame>
+
+`track_adk_agent_recursive` 方式特别适用于：
+
+- **多代理系统** 包含协调器和专用代理
+- **顺序代理** 包含多个处理步骤
+- **并行代理** 并发执行任务
+- **循环代理** 包含迭代工作流
+- **代理工具** 包含嵌套代理
+- **复杂层级** 包含深层嵌套的代理结构
+
+通过在顶层代理上调用一次 `track_adk_agent_recursive`，所有子代理及其操作都会被自动插桩，无需额外代码
+
+## 成本跟踪
+
+Opik 自动跟踪代理执行期间所有 LLM 调用的令牌使用量和成本，不仅限于 Gemini LLM，还包括通过 `LiteLLM` 访问的模型。
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看完整的支持模型和提供商列表。
+</Tip>
+
+## 代理图可视化
+
+Opik 使用 Mermaid 图表自动生成代理工作流的可视化表示。该图展示：
+
+- **代理层级** 和关系
+- **顺序执行** 流程
+- **并行处理** 分支
+- **循环结构** 和迭代
+- **工具连接** 和依赖关系
+
+该图会自动计算并随每次追踪存储，为代理的执行流程提供清晰的视觉理解：
+
+天气时间代理的图如下所示：
+
+<Frame>
+  <img src="/img/tracing/adk/adk_weather_time_graph_screenshot.png" />
+</Frame>
+
+对于更复杂的代理架构，展示图表可能更加有益：
+
+<Frame>
+  <img src="/img/tracing/adk/adk_code_assistant_graph_screenshot.png" />
+</Frame>
+
+## 示例 4：混合追踪 - 结合 Opik 装饰器和 ADK 回调
+
+此高级示例展示如何将 Opik 的 `@opik.track` 装饰器与 ADK 的回调系统结合使用。当您有复杂的多步骤工具执行自身内部操作并希望单独追踪，同时保持整体代理追踪上下文时，这种方式非常强大。
+
+您可以将 `track_adk_agent_recursive` 与工具函数上的 `@opik.track` 装饰器一起使用，以获得最大可见性：
+
+```python
+from opik import track
+
+@track(name="weather_data_processing", tags=["data-processing", "weather"])
+def process_weather_data(raw_data: dict) -> dict:
+    """Process raw weather data with additional computations."""
+    # Simulate some data processing steps that we want to trace separately
+    processed = {
+        "temperature_celsius": raw_data.get("temp_c", 0),
+        "temperature_fahrenheit": raw_data.get("temp_c", 0) * 9/5 + 32,
+        "conditions": raw_data.get("condition", "unknown"),
+        "comfort_index": "comfortable" if 18 <= raw_data.get("temp_c", 0) <= 25 else "less comfortable"
+    }
+    return processed
+
+@track(name="location_validation", tags=["validation", "location"])
+def validate_location(city: str) -> dict:
+    """Validate and normalize city names."""
+    # Simulate location validation logic that we want to trace
+    normalized_cities = {
+        "nyc": "New York",
+        "ny": "New York",
+        "new york city": "New York",
+        "london uk": "London",
+        "london england": "London",
+        "tokyo japan": "Tokyo"
+    }
+
+    city_lower = city.lower().strip()
+    validated_city = normalized_cities.get(city_lower, city.title())
+
+    return {
+        "original": city,
+        "validated": validated_city,
+        "is_valid": city_lower in ["new york", "london", "tokyo"] or city_lower in normalized_cities
+    }
+
+@track(name="advanced_weather_lookup", tags=["weather", "api-simulation"])
+def get_advanced_weather(city: str) -> dict:
+    """Get weather with internal processing steps tracked by Opik decorators."""
+
+    # Step 1: Validate location (traced by @opik.track)
+    location_result = validate_location(city)
+
+    if not location_result["is_valid"]:
+        return {
+            "status": "error",
+            "error_message": f"Invalid location: {city}"
+        }
+
+    validated_city = location_result["validated"]
+
+    # Step 2: Get raw weather data (simulated)
+    raw_weather_data = {
+        "New York": {"temp_c": 25, "condition": "sunny", "humidity": 65},
+        "London": {"temp_c": 18, "condition": "cloudy", "humidity": 78},
+        "Tokyo": {"temp_c": 22, "condition": "partly cloudy", "humidity": 70}
+    }
+
+    if validated_city not in raw_weather_data:
+        return {
+            "status": "error",
+            "error_message": f"Weather data unavailable for {validated_city}"
+        }
+
+    raw_data = raw_weather_data[validated_city]
+
+    # Step 3: Process the data (traced by @opik.track)
+    processed_data = process_weather_data(raw_data)
+
+    return {
+        "status": "success",
+        "city": validated_city,
+        "report": f"Weather in {validated_city}: {processed_data['conditions']}, {processed_data['temperature_celsius']}°C ({processed_data['temperature_fahrenheit']:.1f}°F). Comfort level: {processed_data['comfort_index']}.",
+        "raw_humidity": raw_data["humidity"]
+    }
+
+# Configure Opik tracer for hybrid example
+hybrid_tracer = OpikTracer(
+    name="hybrid-tracing-agent",
+    tags=["hybrid", "decorators", "callbacks", "advanced"],
+    metadata={
+        "environment": "development",
+        "model": "gpt-4o",
+        "framework": "google-adk",
+        "example": "hybrid-tracing",
+        "tracing_methods": ["decorators", "callbacks"]
+    },
+    project_name="adk-hybrid-demo"
+)
+
+# Create hybrid agent that combines both tracing approaches
+hybrid_agent = LlmAgent(
+    name="advanced_weather_time_agent",
+    model=llm,
+    description="Advanced agent with hybrid Opik tracing using both decorators and callbacks",
+    instruction="""You are an advanced weather and time agent that provides detailed information with comprehensive internal processing.
+
+    Your tools perform multi-step operations that are individually traced, giving detailed visibility into the processing pipeline.
+    Use the advanced weather and time tools to provide thorough, well-processed information to users.""",
+    tools=[get_advanced_weather],
+)
+
+# Instrument the agent with track_adk_agent_recursive
+# The @opik.track decorators in your tools will automatically create child spans
+from opik.integrations.adk import track_adk_agent_recursive
+track_adk_agent_recursive(hybrid_agent, hybrid_tracer)
+```
+
+现在可以在 UI 中查看追踪：
+
+<Frame>
+  <img src="/img/cookbook/google_adk_integration_hybrid_agent.png" />
+</Frame>
+
+## 与 @track 装饰器的兼容性
+
+`OpikTracer` 与 `@track` 装饰器完全兼容，允许您创建结合 ADK 代理追踪和自定义函数追踪的混合追踪方式。
+您既可以从另一个被追踪的函数内部调用代理，也可以在工具函数内部调用被追踪的函数，所有 span 和追踪的父子关系都将被保留！
+
+## 线程支持
+
+Opik 集成自动处理 ADK 会话，并将其映射到 Opik 线程，用于对话应用：
+
+```python
+from opik.integrations.adk import OpikTracer
+from google.adk import sessions as adk_sessions, runners as adk_runners
+
+# ADK session management
+session_service = adk_sessions.InMemorySessionService()
+session = session_service.create_session_sync(
+    app_name="my_app",
+    user_id="user_123",
+    session_id="conversation_456"
+)
+
+opik_tracer = OpikTracer()
+runner = adk_runners.Runner(
+    agent=your_agent,
+    app_name="my_app",
+    session_service=session_service
+)
+
+# All traces will be automatically grouped by session_id as thread_id
+```
+
+该集成自动：
+
+- 使用 ADK 会话 ID 作为 Opik 线程 ID
+- 对相关对话和交互进行分组
+- 将 app_name 和 user_id 记录为元数据
+- 在多次交互中维护对话上下文
+
+您可以将整个会话作为完整对话查看，并轻松导航到所需的任何特定追踪。
+
+<Frame>
+  <img src="/img/tracing/adk/adk_weather_time_thread_screenshot.png" />
+</Frame>
+
+## 错误追踪
+
+`OpikTracer` 提供全面的错误追踪和监控：
+
+- **自动捕获错误** 代理执行失败时
+- **详细堆栈追踪** 包含完整上下文信息
+- **工具执行错误** 包含输入/输出数据
+- **模型调用失败** 包含提供商特定的错误详情
+
+错误信息会自动记录到 span 和追踪中，便于在生产环境中调试问题：
+
+<Frame>
+  <img src="/img/tracing/adk/adk_error_propagation_screenshot.png" />
+</Frame>
+
+## 故障排查：追踪缺失
+
+使用 `Runner.run_async` 时，请确保完整处理所有事件，即使在找到最终响应后（当 `event.is_final_response()` 为 `True` 时）。如果过早退出循环，OpikTracer 将无法记录最终响应，追踪将不完整。不要使用过早停止处理事件的代码：
+
+```python
+async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
+    if event.is_final_response():
+        ...
+        break  # Stop processing events once the final response is found
+```
+
+上游有关于如何最好解决此问题的讨论：https://github.com/google/adk-python/issues/1695。
+
+<Tip>
+  我们的团队已尝试解决这些问题并使集成尽可能稳定。如果您遇到类似问题，我们建议首先将 `opik` 和 `google-adk` 更新到最新版本。我们正在积极改进此集成，使用最新版本您将获得最佳体验！
+</Tip>
+
+## 刷新追踪
+
+`OpikTracer` 对象具有 `flush` 方法，确保在退出脚本之前将所有追踪记录到 Opik 平台：
+
+```python
+from opik.integrations.adk import OpikTracer
+
+opik_tracer = OpikTracer()
+
+# Your ADK agent execution code here...
+
+# Ensure all traces are sent before script exits
+opik_tracer.flush()
+```
+
+## Prompts 集成
+
+`OpikTracer` 可以与 [Opik 提示词库](/development/prompt-library/getting-started) 一起使用，
+方便访问现有提示词或创建新提示词，然后将它们与 ADK 代理流程中的追踪或 span 关联。
+
+```python
+import datetime
+import uuid
+from typing import Iterator, Optional
+from zoneinfo import ZoneInfo
+
+from google.adk import Agent, Runner
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
+from google.adk.sessions import InMemorySessionService
+from google.genai import types as genai_types
+from google.adk import events as adk_events
+
+import opik
+from opik.opik_context import update_current_trace
+from opik.integrations.adk import OpikTracer, track_adk_agent_recursive
+
+# Create prompt
+system_prompt = opik.Prompt(
+    name="system-prompt",
+    prompt="You are a helpful assistant that provides accurate and concise answers.",
+    project_name="my-project",
+)
+
+# Get prompt from the Prompt library
+client = opik.Opik()
+user_prompt = client.get_prompt(name="user-prompt")
+
+def get_weather(city: str) -> dict:
+    """Get weather information for a city."""
+    # Add prompts to the current trace
+    update_current_trace(
+        prompts=[system_prompt, user_prompt]
+    )
+
+    if city.lower() == "new york":
+        return {
+            "status": "success",
+            "report": "The weather in New York is sunny with a temperature of 25 °C (77 °F).",
+        }
+    elif city.lower() == "london":
+        return {
+            "status": "success",
+            "report": "The weather in London is cloudy with a temperature of 18 °C (64 °F).",
+        }
+    return {"status": "error", "error_message": f"Weather info for '{city}' is unavailable."}
+
+def get_current_time(city: str) -> dict:
+    """Get current time for a city."""
+    if city.lower() == "new york":
+        tz = ZoneInfo("America/New_York")
+        now = datetime.datetime.now(tz)
+        return {
+            "status": "success",
+            "report": now.strftime(f"The current time in {city} is %Y-%m-%d %H:%M:%S %Z%z."),
+        }
+    elif city.lower() == "london":
+        tz = ZoneInfo("Europe/London")
+        now = datetime.datetime.now(tz)
+        return {
+            "status": "success",
+            "report": now.strftime(f"The current time in {city} is %Y-%m-%d %H:%M:%S %Z%z."),
+        }
+    return {"status": "error", "error_message": f"No timezone info for '{city}'."}
+
+# Initialize LiteLLM with OpenAI gpt-4o
+llm = LiteLlm(model="openai/gpt-4o")
+
+# Create the basic agent
+basic_agent = LlmAgent(
+    name="weather_time_agent",
+    model=llm,
+    description="Agent for answering time & weather questions",
+    instruction="Answer questions about the time or weather in a city. Be helpful and provide clear information.",
+    tools=[get_weather, get_current_time],
+)
+
+# Configure Opik tracer
+opik_tracer = OpikTracer(
+    name="basic-weather-agent",
+    tags=["basic", "weather", "time", "single-agent"],
+    metadata={
+        "environment": "development",
+        "model": "gpt-4o",
+        "framework": "google-adk",
+        "example": "basic"
+    },
+    project_name="adk-basic-demo"
+)
+
+# Instrument the agent with a single function call - this is the recommended approach
+track_adk_agent_recursive(basic_agent, opik_tracer)
+
+```

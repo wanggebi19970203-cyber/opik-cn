@@ -72,7 +72,7 @@ import java.util.concurrent.TimeUnit;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Runners", description = "Local runner management endpoints")
+@Tag(name = "Runners", description = "本地运行器管理端点")
 public class LocalRunnersResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -83,9 +83,9 @@ public class LocalRunnersResource {
     private final @NonNull AnalyticsService analyticsService;
 
     @GET
-    @Operation(operationId = "listRunners", summary = "List local runners", description = "List local runners owned by the current user in the workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Runners list", content = @Content(schema = @Schema(implementation = LocalRunner.LocalRunnerPage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "listRunners", summary = "列出本地运行器", description = "列出当前用户在工作区中拥有的本地运行器", responses = {
+            @ApiResponse(responseCode = "200", description = "运行器列表", content = @Content(schema = @Schema(implementation = LocalRunner.LocalRunnerPage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response listRunners(
             @QueryParam("project_id") @NotNull UUID projectId,
             @QueryParam("status") LocalRunnerStatus status,
@@ -100,9 +100,9 @@ public class LocalRunnersResource {
 
     @GET
     @Path("/{runnerId}")
-    @Operation(operationId = "getRunner", summary = "Get local runner", description = "Get a single local runner with its registered agents", responses = {
-            @ApiResponse(responseCode = "200", description = "Runner details", content = @Content(schema = @Schema(implementation = LocalRunner.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getRunner", summary = "获取本地运行器", description = "获取单个本地运行器及其已注册的代理", responses = {
+            @ApiResponse(responseCode = "200", description = "运行器详情", content = @Content(schema = @Schema(implementation = LocalRunner.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response getRunner(@PathParam("runnerId") UUID runnerId) {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
@@ -112,11 +112,11 @@ public class LocalRunnersResource {
 
     @DELETE
     @Path("/{runnerId}")
-    @Operation(operationId = "disconnectRunner", summary = "Disconnect local runner", description = "Disconnect a local runner, terminating its connection and failing any pending jobs", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")})
+    @Operation(operationId = "disconnectRunner", summary = "断开本地运行器", description = "断开本地运行器连接，终止其连接并使所有待处理任务失败", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     public Response disconnectRunner(@PathParam("runnerId") UUID runnerId) {
-        // Emit only on a real disconnect; no-op calls (already reaped / not owned) would
-        // pollute the clean-shutdown vs heartbeat-reaper comparison.
+        // 仅在实际断开连接时发送事件；无操作调用（已被回收/不属于当前用户）
+        // 会污染正常关闭与心跳回收的比较结果。
         runnerService.disconnectRunner(runnerId).ifPresent(type -> {
             String workspaceId = requestContext.get().getWorkspaceId();
             String userName = requestContext.get().getUserName();
@@ -134,12 +134,12 @@ public class LocalRunnersResource {
     @PUT
     @Path("/{runnerId}/agents")
     @RateLimited
-    @Operation(operationId = "registerAgents", summary = "Register local runner agents", description = "Register or update the local runner's agent list", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "registerAgents", summary = "注册本地运行器代理", description = "注册或更新本地运行器的代理列表", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response registerAgents(@PathParam("runnerId") UUID runnerId,
-            @RequestBody(description = "Map of agent name to agent definition", content = @Content(schema = @Schema(implementation = Object.class))) @NotNull @Valid Map<String, LocalRunner.Agent> agents) {
+            @RequestBody(description = "代理名称到代理定义的映射", content = @Content(schema = @Schema(implementation = Object.class))) @NotNull @Valid Map<String, LocalRunner.Agent> agents) {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
         endpointJobService.registerAgents(runnerId, workspaceId, userName, agents);
@@ -149,9 +149,9 @@ public class LocalRunnersResource {
     @PATCH
     @Path("/{runnerId}/checklist")
     @RateLimited
-    @Operation(operationId = "patchChecklist", summary = "Patch runner checklist", description = "Partial update of the runner's checklist (deep merge)", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "patchChecklist", summary = "更新运行器检查清单", description = "部分更新运行器的检查清单（深度合并）", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response patchChecklist(@PathParam("runnerId") UUID runnerId,
             @RequestBody(content = @Content(schema = @Schema(implementation = Object.class))) @NotNull JsonNode updates) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -163,10 +163,10 @@ public class LocalRunnersResource {
     @POST
     @Path("/{runnerId}/heartbeats")
     @RateLimited
-    @Operation(operationId = "heartbeat", summary = "Local runner heartbeat", description = "Refresh local runner heartbeat", responses = {
-            @ApiResponse(responseCode = "200", description = "Heartbeat response", content = @Content(schema = @Schema(implementation = LocalRunnerHeartbeatResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "410", description = "Gone", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "heartbeat", summary = "本地运行器心跳", description = "刷新本地运行器心跳", responses = {
+            @ApiResponse(responseCode = "200", description = "心跳响应", content = @Content(schema = @Schema(implementation = LocalRunnerHeartbeatResponse.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "410", description = "已失效", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response heartbeat(@PathParam("runnerId") UUID runnerId,
             @RequestBody(content = @Content(schema = @Schema(implementation = LocalRunnerHeartbeatRequest.class))) LocalRunnerHeartbeatRequest body) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -179,10 +179,10 @@ public class LocalRunnersResource {
     @POST
     @Path("/jobs")
     @RateLimited
-    @Operation(operationId = "createJob", summary = "Create local runner job", description = "Create a local runner job and enqueue it for execution", responses = {
-            @ApiResponse(responseCode = "201", description = "Job created", headers = @Header(name = "Location", description = "URI of the job")),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "createJob", summary = "创建本地运行器任务", description = "创建本地运行器任务并将其加入执行队列", responses = {
+            @ApiResponse(responseCode = "201", description = "任务已创建", headers = @Header(name = "Location", description = "任务的URI")),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response createJob(
             @RequestBody(content = @Content(schema = @Schema(implementation = CreateLocalRunnerJobRequest.class))) @NotNull @Valid CreateLocalRunnerJobRequest request,
             @Context UriInfo uriInfo) {
@@ -196,9 +196,9 @@ public class LocalRunnersResource {
 
     @GET
     @Path("/{runnerId}/jobs")
-    @Operation(operationId = "listJobs", summary = "List local runner jobs", description = "List jobs for a local runner", responses = {
-            @ApiResponse(responseCode = "200", description = "Jobs list", content = @Content(schema = @Schema(implementation = LocalRunnerJob.LocalRunnerJobPage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "listJobs", summary = "列出本地运行器任务", description = "列出本地运行器的任务", responses = {
+            @ApiResponse(responseCode = "200", description = "任务列表", content = @Content(schema = @Schema(implementation = LocalRunnerJob.LocalRunnerJobPage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response listJobs(@PathParam("runnerId") UUID runnerId,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("page") @DefaultValue("0") @Min(0) int page,
@@ -212,9 +212,9 @@ public class LocalRunnersResource {
 
     @POST
     @Path("/{runnerId}/jobs/next")
-    @Operation(operationId = "nextJob", summary = "Next local runner job", description = "Long-poll for the next pending local runner job", responses = {
-            @ApiResponse(responseCode = "200", description = "Job available, or null if no pending jobs", content = @Content(schema = @Schema(nullable = true, allOf = LocalRunnerJob.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "nextJob", summary = "获取下一个本地运行器任务", description = "长轮询获取下一个待处理的本地运行器任务", responses = {
+            @ApiResponse(responseCode = "200", description = "任务可用，如果没有待处理任务则返回null", content = @Content(schema = @Schema(nullable = true, allOf = LocalRunnerJob.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public void nextJob(@PathParam("runnerId") UUID runnerId,
             @Suspended AsyncResponse asyncResponse) {
         long pollTimeoutSeconds = runnerConfig.getNextJobPollTimeout().toSeconds();
@@ -242,9 +242,9 @@ public class LocalRunnersResource {
 
     @GET
     @Path("/jobs/{jobId}")
-    @Operation(operationId = "getJob", summary = "Get local runner job", description = "Get a single local runner job's status and results", responses = {
-            @ApiResponse(responseCode = "200", description = "Job details", content = @Content(schema = @Schema(implementation = LocalRunnerJob.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getJob", summary = "获取本地运行器任务", description = "获取单个本地运行器任务的状态和结果", responses = {
+            @ApiResponse(responseCode = "200", description = "任务详情", content = @Content(schema = @Schema(implementation = LocalRunnerJob.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response getJob(@PathParam("jobId") UUID jobId) {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
@@ -254,9 +254,9 @@ public class LocalRunnersResource {
 
     @GET
     @Path("/jobs/{jobId}/logs")
-    @Operation(operationId = "getJobLogs", summary = "Get local runner job logs", description = "Get log entries for a local runner job", responses = {
-            @ApiResponse(responseCode = "200", description = "Log entries", content = @Content(array = @ArraySchema(schema = @Schema(implementation = LocalRunnerLogEntry.class)))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getJobLogs", summary = "获取本地运行器任务日志", description = "获取本地运行器任务的日志条目", responses = {
+            @ApiResponse(responseCode = "200", description = "日志条目", content = @Content(array = @ArraySchema(schema = @Schema(implementation = LocalRunnerLogEntry.class)))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response getJobLogs(@PathParam("jobId") UUID jobId,
             @QueryParam("offset") @DefaultValue("0") @Min(0) int offset) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -268,10 +268,10 @@ public class LocalRunnersResource {
     @POST
     @Path("/jobs/{jobId}/logs")
     @RateLimited
-    @Operation(operationId = "appendJobLogs", summary = "Append local runner job logs", description = "Append log entries for a running local runner job", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "appendJobLogs", summary = "追加本地运行器任务日志", description = "为正在运行的本地运行器任务追加日志条目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response appendLogs(@PathParam("jobId") UUID jobId,
             @RequestBody(content = @Content(array = @ArraySchema(schema = @Schema(implementation = LocalRunnerLogEntry.class)))) @NotNull @Valid List<@NotNull LocalRunnerLogEntry> entries) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -282,10 +282,10 @@ public class LocalRunnersResource {
 
     @POST
     @Path("/jobs/{jobId}/results")
-    @Operation(operationId = "reportJobResult", summary = "Report local runner job result", description = "Report local runner job completion or failure", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "reportJobResult", summary = "报告本地运行器任务结果", description = "报告本地运行器任务完成或失败", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response reportResult(@PathParam("jobId") UUID jobId,
             @RequestBody(content = @Content(schema = @Schema(implementation = LocalRunnerJobResultRequest.class))) @NotNull @Valid LocalRunnerJobResultRequest result) {
         String workspaceId = requestContext.get().getWorkspaceId();
@@ -296,9 +296,9 @@ public class LocalRunnersResource {
 
     @POST
     @Path("/jobs/{jobId}/cancel")
-    @Operation(operationId = "cancelJob", summary = "Cancel local runner job", description = "Cancel a pending or running local runner job", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "cancelJob", summary = "取消本地运行器任务", description = "取消待处理或正在运行的本地运行器任务", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response cancelJob(@PathParam("jobId") UUID jobId) {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
@@ -309,11 +309,11 @@ public class LocalRunnersResource {
     @POST
     @Path("/{runnerId}/bridge/commands")
     @RateLimited
-    @Operation(operationId = "createBridgeCommand", summary = "Submit bridge command", description = "Submit a bridge command for execution by the local daemon", responses = {
-            @ApiResponse(responseCode = "201", description = "Command submitted", headers = @Header(name = "Location", description = "URI of the command"), content = @Content(schema = @Schema(implementation = BridgeCommandSubmitResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Runner not found or not connected", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Runner does not support bridge", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "createBridgeCommand", summary = "提交桥接命令", description = "提交桥接命令供本地守护进程执行", responses = {
+            @ApiResponse(responseCode = "201", description = "命令已提交", headers = @Header(name = "Location", description = "命令的URI"), content = @Content(schema = @Schema(implementation = BridgeCommandSubmitResponse.class))),
+            @ApiResponse(responseCode = "404", description = "运行器未找到或未连接", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "运行器不支持桥接", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "429", description = "请求过多", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response createBridgeCommand(@PathParam("runnerId") UUID runnerId,
             @RequestBody(content = @Content(schema = @Schema(implementation = BridgeCommandSubmitRequest.class))) @NotNull @Valid BridgeCommandSubmitRequest request,
             @Context UriInfo uriInfo) {
@@ -330,9 +330,9 @@ public class LocalRunnersResource {
 
     @POST
     @Path("/{runnerId}/bridge/commands/next")
-    @Operation(operationId = "nextBridgeCommands", summary = "Poll next bridge commands", description = "Long-poll for pending bridge commands (batch)", responses = {
-            @ApiResponse(responseCode = "200", description = "Commands batch", content = @Content(schema = @Schema(implementation = BridgeCommandBatchResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "nextBridgeCommands", summary = "轮询下一个桥接命令", description = "长轮询获取待处理的桥接命令（批量）", responses = {
+            @ApiResponse(responseCode = "200", description = "命令批次", content = @Content(schema = @Schema(implementation = BridgeCommandBatchResponse.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public void nextBridgeCommands(@PathParam("runnerId") UUID runnerId,
             @Valid BridgeCommandNextRequest request,
             @Suspended AsyncResponse asyncResponse) {
@@ -362,10 +362,10 @@ public class LocalRunnersResource {
 
     @POST
     @Path("/{runnerId}/bridge/commands/{commandId}/results")
-    @Operation(operationId = "reportBridgeResult", summary = "Report bridge command result", description = "Report bridge command completion or failure", responses = {
-            @ApiResponse(responseCode = "204", description = "Result accepted"),
-            @ApiResponse(responseCode = "404", description = "Command not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Already completed", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "reportBridgeResult", summary = "报告桥接命令结果", description = "报告桥接命令完成或失败", responses = {
+            @ApiResponse(responseCode = "204", description = "结果已接受"),
+            @ApiResponse(responseCode = "404", description = "命令未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "已完成", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public Response reportBridgeResult(@PathParam("runnerId") UUID runnerId,
             @PathParam("commandId") UUID commandId,
             @RequestBody(content = @Content(schema = @Schema(implementation = BridgeCommandResultRequest.class))) @NotNull @Valid BridgeCommandResultRequest request) {
@@ -377,9 +377,9 @@ public class LocalRunnersResource {
 
     @GET
     @Path("/{runnerId}/bridge/commands/{commandId}")
-    @Operation(operationId = "getBridgeCommand", summary = "Get bridge command", description = "Get bridge command status, optionally long-polling for completion", responses = {
-            @ApiResponse(responseCode = "200", description = "Command state", content = @Content(schema = @Schema(implementation = BridgeCommand.class))),
-            @ApiResponse(responseCode = "404", description = "Command not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getBridgeCommand", summary = "获取桥接命令", description = "获取桥接命令状态，可选择长轮询等待完成", responses = {
+            @ApiResponse(responseCode = "200", description = "命令状态", content = @Content(schema = @Schema(implementation = BridgeCommand.class))),
+            @ApiResponse(responseCode = "404", description = "命令未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     public void getBridgeCommand(@PathParam("runnerId") UUID runnerId,
             @PathParam("commandId") UUID commandId,
             @QueryParam("wait") @DefaultValue("false") boolean wait,

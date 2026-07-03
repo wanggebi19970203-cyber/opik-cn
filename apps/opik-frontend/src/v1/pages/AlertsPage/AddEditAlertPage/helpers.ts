@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import cloneDeep from "lodash/cloneDeep";
 import get from "lodash/get";
 import set from "lodash/set";
@@ -25,7 +26,7 @@ export interface TriggerConfig {
 }
 
 export const ALERT_TYPE_LABELS: Record<ALERT_TYPE, string> = {
-  [ALERT_TYPE.general]: "General",
+  [ALERT_TYPE.general]: i18next.t("alerts.typeGeneral"),
   [ALERT_TYPE.slack]: "Slack",
   [ALERT_TYPE.pagerduty]: "PagerDuty",
 };
@@ -38,62 +39,53 @@ export const ALERT_TYPE_ICONS = {
 
 export const TRIGGER_CONFIG: Record<ALERT_EVENT_TYPE, TriggerConfig> = {
   [ALERT_EVENT_TYPE.trace_errors]: {
-    title: "Trace errors threshold",
-    description:
-      "Triggered when the number of trace errors exceeds the specified threshold in selected projects.",
+    title: i18next.t("alerts.trigger.traceErrorsTitle"),
+    description: i18next.t("alerts.trigger.traceErrorsDescription"),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.trace_guardrails_triggered]: {
-    title: "Guardrail triggered",
-    description:
-      "Triggered when a guardrail event occurs in any trace within the selected projects.",
+    title: i18next.t("alerts.trigger.guardrailTriggeredTitle"),
+    description: i18next.t("alerts.trigger.guardrailTriggeredDescription"),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.trace_feedback_score]: {
-    title: "Trace feedback score threshold",
-    description:
-      "Triggered when the average feedback score for traces exceeds the specified threshold in selected projects.",
+    title: i18next.t("alerts.trigger.traceFeedbackScoreTitle"),
+    description: i18next.t("alerts.trigger.traceFeedbackScoreDescription"),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.trace_thread_feedback_score]: {
-    title: "Thread feedback score threshold",
-    description:
-      "Triggered when the average feedback score for threads exceeds the specified threshold in selected projects.",
+    title: i18next.t("alerts.trigger.threadFeedbackScoreTitle"),
+    description: i18next.t("alerts.trigger.threadFeedbackScoreDescription"),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.prompt_created]: {
-    title: "New prompt added",
-    description:
-      "Triggered when a new prompt is created or saved in the workspace's prompt library.",
+    title: i18next.t("alerts.trigger.promptCreatedTitle"),
+    description: i18next.t("alerts.trigger.promptCreatedDescription"),
     hasScope: false,
   },
   [ALERT_EVENT_TYPE.prompt_committed]: {
-    title: "New prompt version created",
-    description:
-      "Triggered when a new commit (version) is added to any prompt in the workspace's prompt library.",
+    title: i18next.t("alerts.trigger.promptCommittedTitle"),
+    description: i18next.t("alerts.trigger.promptCommittedDescription"),
     hasScope: false,
   },
   [ALERT_EVENT_TYPE.prompt_deleted]: {
-    title: "Prompt deleted",
-    description:
-      "Triggered when a prompt is removed from the workspace's prompt library.",
+    title: i18next.t("alerts.trigger.promptDeletedTitle"),
+    description: i18next.t("alerts.trigger.promptDeletedDescription"),
     hasScope: false,
   },
   [ALERT_EVENT_TYPE.experiment_finished]: {
-    title: "Experiment finished",
-    description: "Triggered when an experiment completes in the workspace.",
+    title: i18next.t("alerts.trigger.experimentFinishedTitle"),
+    description: i18next.t("alerts.trigger.experimentFinishedDescription"),
     hasScope: false,
   },
   [ALERT_EVENT_TYPE.trace_cost]: {
-    title: "Cost threshold",
-    description:
-      "Triggered when total trace cost exceeds the specified threshold in the selected projects.",
+    title: i18next.t("alerts.trigger.costThresholdTitle"),
+    description: i18next.t("alerts.trigger.costThresholdDescription"),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.trace_latency]: {
-    title: "Latency threshold",
-    description:
-      "Triggered when average trace latency exceeds the specified threshold in the selected projects.",
+    title: i18next.t("alerts.trigger.latencyThresholdTitle"),
+    description: i18next.t("alerts.trigger.latencyThresholdDescription"),
     hasScope: true,
   },
 };

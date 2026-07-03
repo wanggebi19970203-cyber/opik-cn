@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { CodeMetricParameters } from "@/types/optimizations";
 import CodeMirror from "@uiw/react-codemirror";
@@ -38,6 +39,7 @@ const CODEMIRROR_BASIC_SETUP = {
 } as const;
 
 const CodeMetricConfigs = ({ configs, onChange }: CodeMetricConfigsProps) => {
+  const { t } = useTranslation();
   const theme = useCodemirrorTheme();
   const [isFocused, setIsFocused] = useState(false);
 
@@ -45,7 +47,7 @@ const CodeMetricConfigs = ({ configs, onChange }: CodeMetricConfigsProps) => {
     <div className="flex w-full flex-col gap-2">
       <div className="space-y-2">
         <Label htmlFor="code" className="text-sm">
-          Python code
+          {t('optimizations.metricConfigs.pythonCode')}
         </Label>
         <div
           className={cn(
@@ -67,10 +69,7 @@ const CodeMetricConfigs = ({ configs, onChange }: CodeMetricConfigsProps) => {
           />
         </div>
         <p className="text-xs text-muted-slate">
-          Define a class that extends <code>BaseMetric</code> with a{" "}
-          <code>score</code> method that takes <code>output</code> (the LLM
-          response) and <code>**kwargs</code> (dataset fields), returning a{" "}
-          <code>ScoreResult</code>.
+          {t('optimizations.metricConfigs.pythonCodeDescription')}
         </p>
       </div>
     </div>

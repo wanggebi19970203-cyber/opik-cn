@@ -1,0 +1,454 @@
+{
+  "prompt": {
+    "title": "提示词",
+    "description": "查看和编辑提示词详情",
+    "tabs": {
+      "versions": "版本",
+      "commits": "提交",
+      "prompt": "提示词",
+      "experiments": "实验"
+    }
+  },
+  "backToPrompts": "返回提示词列表",
+  "tryInPlayground": "在 Playground 中试用",
+  "loadPrompt": "加载提示词",
+  "loadPromptDescription": "将此提示词加载到 Playground 将替换任何未保存的更改。此操作无法撤销。",
+  "commits": {
+    "manageVersionTags": "管理版本标签",
+    "compareCommits": "比较提交",
+    "compare": "比较",
+    "noCommitsYet": "暂无提交",
+    "searchPlaceholder": "搜索提示词或提交信息",
+    "columns": {
+      "prompt": "提示词",
+      "metadata": "元数据",
+      "commitMessage": "提交信息",
+      "versionTags": "版本标签",
+      "createdAt": "创建时间",
+      "createdBy": "创建者",
+      "promptCommit": "提示词提交"
+    }
+  },
+  "compare": {
+    "pretty": "美化",
+    "noMetadata": "无元数据",
+    "compareVersions": "比较 {{base}} → {{diff}}",
+    "comparePrompts": "比较提示词",
+    "chatMessages": "聊天消息",
+    "prompt": "提示词",
+    "metadata": "元数据"
+  },
+  "experiments": {
+    "noExperimentsYet": "尚无实验使用此提示词",
+    "noSearchResults": "无搜索结果",
+    "searchByName": "按名称搜索"
+  },
+  "editPrompt": {
+    "title": "编辑提示词",
+    "versionNotes": "版本说明",
+    "versionNotesPlaceholder": "描述此版本的更改",
+    "cancel": "取消",
+    "createNewVersion": "创建新版本",
+    "mediaComparison": "媒体对比",
+    "imagesBefore": "图片（修改前）：",
+    "imagesAfter": "图片（修改后）：",
+    "videosBefore": "视频（修改前）：",
+    "videosAfter": "视频（修改后）：",
+    "audiosBefore": "音频（修改前）：",
+    "audiosAfter": "音频（修改后）："
+  },
+  "promptTab": {
+    "versionHistory": "版本历史",
+    "loadInPlayground": "在 Prompt playground 中加载",
+    "referenceInCode": "在代码中引用提示词",
+    "edit": "编辑",
+    "prompt": "提示词",
+    "metadata": "元数据",
+    "loadPrompt": "加载提示词",
+    "loadPromptDescription": "将此提示词加载到 Playground 将替换任何未保存的更改。此操作无法撤销。",
+    "commitCopiedToClipboard": "提交已成功复制到剪贴板",
+    "commitHistory": "提交历史",
+    "copyCommit": "复制提交",
+    "restoreThisVersion": "恢复此版本",
+    "versionTagsList": "版本标签列表",
+    "newVersionTag": "新版本标签",
+    "addVersionTag": "添加版本标签",
+    "versionTag": "版本标签",
+    "deployTo": "部署到",
+    "noEnvironmentsConfigured": "未配置环境",
+    "currentlyVersion": "当前 v{{version}}",
+    "removedFromEnvironment": "已从 {{environment}} 移除 {{version}}",
+    "deployedToEnvironment": "已将 {{version}} 部署到 {{environment}}",
+    "removedFromAll": "已从所有环境移除 {{version}}",
+    "removeFromAll": "从所有环境移除",
+    "manageEnvironments": "管理环境"
+  },
+  "restoreVersion": {
+    "title": "恢复版本",
+    "description": "确定要恢复版本 {{commit}} 吗？这将创建一个具有相同内容的新版本。",
+    "restoring": "恢复中...",
+    "restore": "恢复"
+  },
+  "usePrompt": {
+    "useThisPrompt": "使用此{{kind}}{{suffix}}",
+    "creatingPrompt": "创建{{kind}}",
+    "gettingThisPrompt": "获取此{{kind}}{{suffix}}",
+    "gettingPrompt": "获取{{kind}}"
+  },
+  "textPromptEditor": {
+    "prompt": "提示词",
+    "editView": "编辑视图",
+    "prettyView": "美化视图",
+    "images": "图片",
+    "videos": "视频",
+    "audios": "音频",
+    "mustacheSyntaxHint": "使用 mustache 语法引用数据集变量。示例：{{question}}。"
+  },
+  "promptImprovement": {
+    "generatePrompt": "生成提示词",
+    "improvePrompt": "优化提示词",
+    "improvePromptDescription": "在 Playground 中打开提示词进行优化",
+    "improvePromptWithAi": "使用 AI 优化此提示词",
+    "improveButton": "优化",
+    "savedImprovedVersion": "已保存 {{name}} 的优化版本",
+    "regeneratePrompt": "重新生成提示词",
+    "rerunImprovement": "重新优化",
+    "useThisPrompt": "使用此提示词",
+    "generatePlaceholder": "您希望 AI 做什么？",
+    "improvePlaceholder": "您希望改进什么（例如：语气、长度）",
+    "yourInitialPrompt": "您的初始提示词",
+    "initialPromptDescription": "这是您的初始提示词。可选的说明可以指导改进，或者我们会自动优化。",
+    "improvedPrompt": "优化后的提示词",
+    "generatedPrompt": "生成的提示词",
+    "instructions": "说明",
+    "instructionsOptional": "说明（可选）",
+    "instructionsDescription": "用简单的语言写下您的说明。我们会将其转化为最佳实践的提示词，供您审阅和迭代。",
+    "analyzingInstructions": "正在分析您的说明...",
+    "definingStructure": "正在定义提示词结构...",
+    "scopingRole": "正在确定角色和视角...",
+    "applyingBestPractices": "正在应用最佳实践...",
+    "synthesizingPrompt": "正在合成完整提示词...",
+    "polishingOutput": "正在打磨输出...",
+    "modelLabel": "模型",
+    "notConfigured": "未配置",
+    "generatedPromptDescription": "这是您生成的提示词，使用所选模型（{{modelDisplayName}}）和参数创建。可以编辑。",
+    "generatedPromptPlaceholder": "生成的提示词将显示在此处，供您审阅和编辑",
+    "anErrorOccurred": "生成过程中发生错误",
+    "promptCutOff": "生成的提示词因令牌限制被截断。请尝试增加模型配置中的 max_tokens 设置或使用更短的说明。",
+    "noContentReturned": "模型未返回任何内容。请重试或调整您的说明。",
+    "failedToGenerate": "生成提示词失败",
+    "failedToImprove": "优化提示词失败"
+  },
+  "setupProvider": {
+    "addProviderConfiguration": "添加提供商配置",
+    "addProvider": "添加提供商"
+  },
+  "promptsSelectBox": {
+    "loadChatPrompt": "加载聊天提示词",
+    "loadPrompt": "加载提示词",
+    "searchChatPrompt": "搜索聊天提示词",
+    "searchTextPrompt": "搜索文本提示词",
+    "removePromptSelection": "移除提示词选择"
+  },
+  "chatPromptRawView": {
+    "messageFormatInvalid": "消息格式无效。",
+    "editRawJsonDescription": "编辑聊天消息的原始 JSON 表示。必须是有效的 JSON 数组，至少包含一个对象。每个对象必须有 \"role\" 字段（system/user/assistant）和 \"content\" 字段（字符串或对象数组）。"
+  },
+  "llmJudgeScores": {
+    "addScore": "添加评分"
+  },
+  "llmJudgeScore": {
+    "number": "数字",
+    "integer": "整数",
+    "boolean": "布尔值",
+    "scoreNamePlaceholder": "评分名称",
+    "scoreDescriptionPlaceholder": "评分描述",
+    "editScoreTooltip": "编辑评分",
+    "doneEditingTooltip": "完成编辑",
+    "doneEditing": "完成编辑",
+    "deleteScoreTooltip": "删除评分"
+  },
+  "addNewPromptVersionDialog": {
+    "saveToPromptLibrary": "保存到提示词库",
+    "updateExisting": "更新现有",
+    "saveAsNew": "另存为新",
+    "promptLabel": "提示词",
+    "selectedPromptUpdated": "所选提示词将被更新。您可以在以下位置查看版本",
+    "promptLibrary": "提示词库",
+    "commitMessage": "提交信息",
+    "nameLabel": "名称",
+    "promptNamePlaceholder": "提示词名称",
+    "newPromptCreatedIn": "将在以下位置创建新提示词",
+    "descriptionOptional": "描述（可选）",
+    "promptDescriptionPlaceholder": "提示词描述",
+    "metadataLabel": "元数据",
+    "metadataFieldNotValid": "元数据字段无效",
+    "cancel": "取消",
+    "saveToLibrary": "保存到库"
+  },
+  "llmPromptMessage": {
+    "deleteMessageTooltip": "删除消息",
+    "duplicateMessageTooltip": "复制消息",
+    "typeYourMessage": "输入消息"
+  },
+  "llmPromptMessageActions": {
+    "configureModelFirst": "请先配置模型",
+    "improvePromptWithAi": "使用 AI 优化提示词",
+    "generatePromptWithAi": "使用 AI 生成提示词",
+    "modelConfigurationRequired": "需要配置模型",
+    "modelConfigurationRequiredDescription": "请在优化提示词之前配置模型和提供商。从上方下拉菜单中选择模型。",
+    "copiedToClipboard": "已复制到剪贴板",
+    "promptCopiedSuccessfully": "提示词复制成功",
+    "failedToCopy": "复制失败",
+    "couldNotCopyToClipboard": "无法复制到剪贴板",
+    "resetPrompt": "重置提示词",
+    "loadPrompt": "加载提示词",
+    "resetPromptDescription": "重置提示词将丢弃所有未保存的更改。此操作无法撤销。确定要继续吗？",
+    "loadPromptDescription": "您的消息字段中有未保存的更改。加载新提示词将用提示词内容覆盖它们。此操作无法撤销。",
+    "discardChanges": "放弃更改",
+    "saveChanges": "保存更改",
+    "copyPrompt": "复制提示词",
+    "generatePrompt": "生成提示词",
+    "improvePrompt": "优化提示词"
+  },
+  "llmPromptMessages": {
+    "variableSyntaxHint": "使用 {{syntax}} 语法在提示词中引用数据集变量：",
+    "clickToInsertIntoPrompt": "点击插入到提示词",
+    "message": "消息"
+  },
+  "llmPromptMessagesVariables": {
+    "variableMapping": "变量映射（{{count}}）",
+    "defaultDescription": "提示词中检测到的变量（例如 {{variable1}}）将显示在下方。为每个变量选择一个最近追踪中的字段进行映射——包括图片字段如 input.image_url 或 output.image_base64。这些映射在规则执行期间自动填充变量。",
+    "templateParsingError": "模板解析错误。无法提取变量。"
+  },
+  "addMediaPopover": {
+    "addImage": "添加图片",
+    "addVideo": "添加视频",
+    "addAudio": "添加音频",
+    "enterImageUrl": "输入图片 URL 或模板变量",
+    "enterVideoUrl": "输入视频 URL 或模板变量",
+    "enterAudioUrl": "输入音频 URL 或模板变量",
+    "maximumLimitReached": "已达最大限制",
+    "maximumLimitDescription": "最多只能添加 {{count}} 个{{type}}",
+    "alreadyExists": "此{{type}}已存在",
+    "availableVariables": "可用变量：",
+    "invalidUrlError": "请输入有效的 HTTP 或 HTTPS URL"
+  },
+  "mediaTagsList": {
+    "previewNotAvailable": "预览不可用",
+    "videoPreviewFailed": "视频预览失败",
+    "audioPreviewFailed": "音频预览失败",
+    "imagePreview": "图片预览",
+    "browserVideoNotSupported": "您的浏览器不支持视频播放。",
+    "browserAudioNotSupported": "您的浏览器不支持音频播放。"
+  },
+  "promptMessageMediaSection": {
+    "addFile": "添加文件..."
+  },
+  "promptMessagesReadonly": {
+    "showLess": "收起",
+    "showMore": "展开更多"
+  },
+  "promptModelSelect": {
+    "noConfiguredProviders": "未配置提供商",
+    "noSearchResults": "无搜索结果",
+    "selectAnLlmModel": "选择 LLM 模型",
+    "searchModel": "搜索模型",
+    "manageAiProviders": "管理 AI 提供商"
+  },
+  "providerGrid": {
+    "provider": "提供商",
+    "configured": "已配置"
+  },
+  "providerSelectionStep": {
+    "noProvidersAvailable": "此环境没有可用的提供商"
+  },
+  "promptTemplateView": {
+    "chatMessages": "聊天消息",
+    "prompt": "提示词",
+    "messageView": "消息视图",
+    "rawView": "原始视图",
+    "prettyView": "美化视图"
+  },
+  "promptVariablesList": {
+    "clickToInsert": "点击插入"
+  },
+  "bedrockProviderDetails": {
+    "providerName": "提供商名称",
+    "providerNamePlaceholder": "Bedrock us-east-1",
+    "providerNameDescription": "此提供商实例的唯一标识符（例如 \"Bedrock us-east-1\"）。",
+    "url": "URL",
+    "apiKey": "API 密钥",
+    "apiKeyPlaceholder": "API 密钥",
+    "clickHere": "点击",
+    "here": "这里",
+    "apiKeyDescription": "查看如何创建服务账户并分配正确权限的说明。",
+    "modelsList": "模型列表",
+    "modelsListPlaceholder": "模型列表",
+    "modelsListDescription": "可用模型的逗号分隔列表。示例："
+  },
+  "cloudAIProviderDetails": {
+    "apiKeyLabel": "{{providerName}}API 密钥",
+    "getYourApiKey": "获取您的 {{providerName}} API 密钥",
+    "here": "这里"
+  },
+  "customHeadersField": {
+    "customHeadersOptional": "自定义请求头（可选）",
+    "headerNamePlaceholder": "请求头名称",
+    "headerValuePlaceholder": "请求头值",
+    "addHeader": "添加请求头",
+    "defaultDescription": "自定义提供商可能需要 API 密钥之外的额外请求头。在此以键值对形式添加。"
+  },
+  "customProviderDetails": {
+    "providerName": "提供商名称",
+    "providerNameDescription": "此提供商实例的唯一标识符（例如 \"ollama\"、\"vLLM\"、\"LM-Studio\"）。",
+    "url": "URL",
+    "apiKey": "API 密钥",
+    "apiKeyPlaceholder": "API 密钥",
+    "apiKeyDescription": "自定义提供商可能不需要 API 密钥，取决于您的服务器配置。了解更多信息请参阅",
+    "documentation": "文档",
+    "modelsList": "模型列表",
+    "modelsListPlaceholder": "模型列表",
+    "modelsListDescription": "可用模型的逗号分隔列表。示例："
+  },
+  "manageAIProviderDialog": {
+    "editProviderConfiguration": "编辑提供商配置",
+    "addProviderConfiguration": "添加提供商配置",
+    "updateConfiguration": "更新配置",
+    "addProvider": "添加提供商",
+    "back": "返回",
+    "deleteConfiguration": "删除配置",
+    "cancel": "取消",
+    "deleteConfigurationTitle": "删除配置",
+    "deleteConfigurationDescription": "此配置在工作区中共享。删除将移除所有人的访问权限。此操作无法撤销。确定要继续吗？",
+    "deleteConfigurationConfirm": "删除配置"
+  },
+  "ollamaProviderDetails": {
+    "providerName": "提供商名称",
+    "providerNameDescription": "此 Ollama 实例的唯一名称（例如 \"local\"、\"cloud\"、\"production\"）。",
+    "ollamaUrl": "Ollama URL",
+    "useDefaultUrl": "使用默认 URL",
+    "urlMustEndWith": "重要：",
+    "urlMustEndWithDescription": "URL 必须以 /v1 结尾以兼容 OpenAI API。本地 Ollama：http://localhost:11434/v1。远程：http://ollama-test:11434/v1 或您的服务器 URL 加 /v1 后缀。",
+    "testingConnection": "正在测试连接...",
+    "discoveringModels": "正在发现模型...",
+    "connectedModelsFailed": "已连接（模型获取失败）",
+    "connected": "已连接",
+    "connectionFailedRetry": "连接失败（点击重试）",
+    "connect": "连接",
+    "apiKeyOptional": "API 密钥（可选）",
+    "apiKeyPlaceholder": "API 密钥",
+    "apiKeyDescription": "大多数 Ollama 实例不需要 API 密钥。仅在实例配置了身份验证时添加。",
+    "modelsList": "模型列表",
+    "modelsListPlaceholder": "llama3, mistral, codellama",
+    "modelsListDescription": "可用模型的逗号分隔列表。使用\"发现模型\"自动填充此字段。",
+    "customHeadersDescription": "用于身份验证或配置的可选自定义请求头。",
+    "urlRequired": "需要 URL",
+    "urlRequiredDescription": "请先输入 Ollama 基础 URL",
+    "connectionSuccessful": "连接成功",
+    "connectedToOllama": "已连接到 Ollama {{version}}",
+    "connectionFailed": "连接失败",
+    "unableToConnect": "无法连接到 Ollama",
+    "unableToConnectInstance": "无法连接到 Ollama 实例",
+    "modelsDiscovered": "已发现模型",
+    "foundModels": "找到 {{count}} 个模型",
+    "noModelsFound": "未找到模型",
+    "noModelsDescription": "此 Ollama 实例上没有可用的模型",
+    "failedToFetchModels": "获取模型失败",
+    "unableToRetrieveModels": "无法从 Ollama 获取模型"
+  },
+  "vertexAIProviderDetails": {
+    "location": "位置",
+    "locationPlaceholder": "位置",
+    "apiKeyLabel": "{{providerName}} API 密钥",
+    "clickHere": "点击这里",
+    "clickHereDescription": "查看如何创建服务账户并分配正确权限的说明。"
+  },
+  "sharedModelConfigs": {
+    "frequencyPenalty": "频率惩罚",
+    "presencePenalty": "存在惩罚",
+    "repetitionPenalty": "重复惩罚",
+    "minP": "Min P",
+    "topA": "Top A",
+    "topK": "Top K",
+    "temperature": "温度",
+    "temperatureTooltip": "控制随机性：降低温度会减少随机性。当温度接近零时，模型将变得确定性和重复性。",
+    "temperatureReasoningTooltip": "推理模型要求温度 = 1.0。此设置控制补全中的随机性。",
+    "maxOutputTokens": "最大输出令牌数",
+    "maxOutputTokensTooltip": "在提示词和补全之间共享的最大生成令牌数。具体限制因模型而异。（一个令牌大约相当于标准英文文本的 4 个字符）。",
+    "topP": "Top P",
+    "topPTooltip": "通过核采样控制多样性：0.5 表示考虑所有按可能性加权的选项的一半",
+    "throttling": "节流（秒）",
+    "throttlingTooltip": "连续请求之间的最小时间（秒），以避免速率限制",
+    "maxConcurrentRequests": "最大并发请求数",
+    "maxConcurrentRequestsTooltip": "可以同时运行的最大请求数。设置为 1 表示顺序执行，更高的值表示并行处理",
+    "clearToUseTopP": "清除以使用 Top P",
+    "clearToUseTemperature": "清除以使用温度",
+    "anthropicTemperatureTooltip": "控制随机性：降低温度会减少随机性。当温度接近零时，模型将变得确定性和重复性。注意：Anthropic 模型要求使用温度或 Top P，不能同时使用。",
+    "anthropicTopPTooltip": "通过核采样控制多样性：0.5 表示考虑所有按可能性加权的选项的一半。注意：Anthropic 模型要求使用温度或 Top P，不能同时使用。"
+  },
+  "anthropicModelConfigs": {
+    "thinkingEffort": "思考努力程度",
+    "thinkingEffortDescription": "控制 Claude 在回答前投入多少思考努力。更高的努力程度会产生更彻底的分析，但需要更长时间。使用自适应思考模式。",
+    "selectThinkingEffort": "选择思考努力程度"
+  },
+  "openAIModelConfigs": {
+    "reasoningEffort": "推理努力程度",
+    "reasoningEffortDescription": "控制模型在回答前投入多少推理努力。更高的努力程度可能会产生更深思熟虑但更慢的回答。",
+    "selectReasoningEffort": "选择推理努力程度",
+    "frequencyPenalty": "频率惩罚",
+    "frequencyPenaltyTooltip": "基于令牌在文本中已出现的频率对其进行惩罚的程度。降低模型逐字重复同一行的可能性",
+    "presencePenalty": "存在惩罚",
+    "presencePenaltyTooltip": "基于令牌是否已出现在文本中对其进行惩罚的程度。增加模型讨论新话题的可能性"
+  },
+  "geminiModelConfigs": {
+    "thinkingLevel": "思考级别",
+    "thinkingLevelDescription": "控制模型在回答前执行的推理深度。更高的思考级别可能会产生更彻底但更慢的回答。",
+    "selectThinkingLevel": "选择思考级别"
+  },
+  "vertexAIModelConfigs": {
+    "thinkingLevel": "思考级别",
+    "thinkingLevelDescription": "控制模型在回答前执行的推理深度。更高的思考级别可能会产生更彻底但更慢的回答。",
+    "selectThinkingLevel": "选择思考级别"
+  },
+  "promptModelConfigs": {
+    "modelParameters": "模型参数"
+  },
+  "customModelConfigs": {
+    "temperatureTooltip": "控制随机性：降低温度会产生更少随机的补全结果。当温度接近零时，模型将变得确定性和重复。",
+    "maxOutputTokensTooltip": "提示和补全之间共享的最大生成令牌数。确切限制因模型而异。（对于标准英文文本，一个令牌大约为4个字符）。",
+    "topPTooltip": "通过核采样控制多样性：0.5 表示考虑所有可能性加权选项的一半",
+    "frequencyPenaltyTooltip": "基于令牌在文本中已有的出现频率对新令牌的惩罚程度。降低模型逐字重复相同行的可能性",
+    "presencePenaltyTooltip": "基于令牌是否已在文本中出现对新令牌的惩罚程度。增加模型谈论新话题的可能性"
+  },
+  "openRouterModelConfigs": {
+    "maxTokens": "最大令牌数",
+    "maxTokensTooltip": "提示和补全之间共享的最大生成令牌数。确切限制因模型而异。（对于标准英文文本，一个令牌大约为4个字符）。",
+    "topKTooltip": "限制模型在每一步的令牌选择范围，使其从更小的集合中选择。值为1表示模型将始终选择最可能的下一个令牌，产生可预测的结果。默认情况下此设置被禁用，使模型考虑所有选择。",
+    "frequencyPenaltyTooltip": "此设置旨在基于令牌在输入中出现的频率来控制令牌重复。它尝试减少在输入中出现较多的令牌的使用频率，与其出现频率成正比。令牌惩罚随出现次数缩放。负值将鼓励令牌重用。",
+    "presencePenaltyTooltip": "调整模型重复输入中已使用令牌的频率。较高值使此类重复不太可能发生，而负值则相反。令牌惩罚不随出现次数缩放。负值将鼓励令牌重用。",
+    "repetitionPenaltyTooltip": "帮助减少输入中令牌的重复。较高值使模型不太可能重复令牌，但过高值会使输出不太连贯（通常出现缺少小词的连写句）。令牌惩罚基于原始令牌的概率缩放。",
+    "minPTooltip": "表示令牌被考虑的最小概率，相对于最可能令牌的概率。（该值根据最可能令牌的置信度而变化。）如果您的Min-P设置为0.1，这意味着它只允许概率至少为最佳选项1/10的令牌。",
+    "topATooltip": "仅考虑基于最可能令牌概率的\"足够高\"概率的顶级令牌。将其视为动态Top-P。较低的Top-A值基于最高概率令牌聚焦选择，但范围更窄。较高的Top-A值不一定影响输出的创造力，而是基于最大概率细化过滤过程。"
+  },
+  "saveVersionDialog": {
+    "title": "保存 {{name}} 的新版本",
+    "versionNotes": "版本说明",
+    "versionNotesPlaceholder": "描述此版本的更改",
+    "cancel": "取消",
+    "saveVersion": "保存版本"
+  },
+  "setupProviderDialog": {
+    "title": "添加提供商配置",
+    "back": "返回",
+    "cancel": "取消",
+    "addProvider": "添加提供商"
+  },
+  "promptTemplateEditor": {
+    "chatMessages": "聊天消息",
+    "prompt": "提示词",
+    "placeholder": "输入您的提示词...",
+    "variableSyntaxHint": "使用 mustache 语法在提示词中引用测试套件变量。示例：{{example}}。",
+    "messageFormatInvalid": "消息格式无效。"
+  }
+}

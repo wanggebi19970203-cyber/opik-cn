@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import get from "lodash/get";
 import isEmpty from "lodash/isEmpty";
 import isNumber from "lodash/isNumber";
+import { useTranslation } from "react-i18next";
 
 import {
   Form,
@@ -53,6 +54,7 @@ import {
 
 const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
   (_, ref) => {
+    const { t } = useTranslation("dashboards");
     const widgetData = useDashboardStore(
       (state) => state.previewWidget!,
     ) as DashboardWidget & ExperimentsFeedbackScoresWidgetType;
@@ -179,7 +181,7 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
               ]);
               return (
                 <FormItem>
-                  <FormLabel>Metrics</FormLabel>
+                  <FormLabel>{t("feedbackScores.metricsLabel")}</FormLabel>
                   <FormControl>
                     <FeedbackDefinitionsAndScoresSelectBox
                       value={field.value || []}
@@ -191,7 +193,7 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
                       entityIds={computedExperimentIds}
                       multiselect={true}
                       showSelectAll={true}
-                      placeholder="All metrics"
+                      placeholder={t("feedbackScores.allMetricsPlaceholder")}
                       className={cn({
                         "border-destructive": Boolean(
                           validationErrors?.message,
@@ -200,8 +202,7 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
                     />
                   </FormControl>
                   <Description>
-                    Select specific metrics to display. Leave empty to show all
-                    available metrics.
+                    {t("feedbackScores.metricsDescription")}
                   </Description>
                   <FormMessage />
                 </FormItem>
@@ -211,9 +212,9 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
 
           {hasRuntimeExperiments ? (
             <FormItem>
-              <FormLabel>Data source</FormLabel>
+              <FormLabel>{t("feedbackScores.dataSourceLabel")}</FormLabel>
               <Description>
-                Experiments are provided by the page context.
+                {t("feedbackScores.dataSourceDescription")}
               </Description>
             </FormItem>
           ) : (
@@ -236,7 +237,9 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
                   ]);
                   return (
                     <FormItem>
-                      <FormLabel>Max experiments</FormLabel>
+                      <FormLabel>
+                        {t("feedbackScores.maxExperimentsLabel")}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -255,8 +258,9 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
                         />
                       </FormControl>
                       <Description>
-                        Limit how many experiments are loaded (max{" "}
-                        {MAX_MAX_EXPERIMENTS}).
+                        {t("feedbackScores.maxExperimentsDescription", {
+                          max: MAX_MAX_EXPERIMENTS,
+                        })}
                       </Description>
                       <FormMessage />
                     </FormItem>
@@ -271,7 +275,7 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
             name="chartType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Visualization</FormLabel>
+                <FormLabel>{t("feedbackScores.visualizationLabel")}</FormLabel>
                 <FormControl>
                   <VisualizationCardSelector
                     value={field.value || CHART_TYPE.bar}

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   Form,
   FormControl,
@@ -25,13 +26,6 @@ export type EditThreadTimeoutFormValues = z.infer<typeof formSchema>;
 
 const TIMEOUT_VALUES = ["PT5M", "PT10M", "PT15M", "PT20M", "PT30M", "PT1H"];
 
-const TIMEOUT_OPTIONS: DropdownOption<string>[] = TIMEOUT_VALUES.map(
-  (value) => ({
-    value,
-    label: formatIso8601Duration(value) ?? "Invalid duration",
-  }),
-);
-
 export interface EditThreadTimeoutFormProps {
   defaultValue: string;
   onSubmit: (values: EditThreadTimeoutFormValues) => void;
@@ -43,6 +37,17 @@ const EditThreadTimeoutForm: React.FC<EditThreadTimeoutFormProps> = ({
   onSubmit,
   formId,
 }) => {
+  const { t } = useTranslation("pages/settings");
+
+  const TIMEOUT_OPTIONS: DropdownOption<string>[] = TIMEOUT_VALUES.map(
+    (value) => ({
+      value,
+      label:
+        formatIso8601Duration(value) ??
+        t("settings.workspacePreferences.threadTimeout.invalidDuration"),
+    }),
+  );
+
   const form = useForm<EditThreadTimeoutFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,13 +67,13 @@ const EditThreadTimeoutForm: React.FC<EditThreadTimeoutFormProps> = ({
           name="timeout_to_mark_thread_as_inactive"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cooldown period</FormLabel>
+              <FormLabel>{t("settings.workspacePreferences.threadTimeout.formLabel")}</FormLabel>
               <FormControl>
                 <SelectBox
                   value={field.value}
                   onChange={field.onChange}
                   options={TIMEOUT_OPTIONS}
-                  placeholder="Select timeout duration"
+                  placeholder={t("settings.workspacePreferences.threadTimeout.selectPlaceholder")}
                   className="w-full"
                 />
               </FormControl>

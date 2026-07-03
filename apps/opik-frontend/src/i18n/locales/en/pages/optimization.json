@@ -1,0 +1,40 @@
+{
+  "optimization": {
+    "title": "Optimization",
+    "description": "View optimization details",
+    "tabs": {
+      "overview": "Overview",
+      "results": "Results",
+      "logs": "Logs",
+      "trials": "Trials"
+    },
+    "header": {
+      "rerun": "Rerun",
+      "stopExecution": "Stop Execution",
+      "dataset": "Dataset"
+    },
+    "kpi": {
+      "optimizationCost": "Optimization cost",
+      "total": "total"
+    },
+    "trials": {
+      "refreshTooltip": "Refresh trials list",
+      "bestTrialConfiguration": "Best trial configuration"
+    },
+    "bestPrompt": {
+      "title": "Best prompt",
+      "waitingForTrials": "Waiting for trials...",
+      "prompt": "Prompt",
+      "noPromptMessages": "No prompt messages"
+    },
+    "configuration": {
+      "title": "Configuration",
+      "testSuite": "Test suite",
+      "model": "Model",
+      "algorithm": "Algorithm",
+      "metric": "Metric",
+      "initialPrompt": "Initial prompt",
+      "noPromptMessages": "No prompt messages"
+    }
+  }
+}

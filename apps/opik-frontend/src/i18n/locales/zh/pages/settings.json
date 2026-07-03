@@ -1,0 +1,149 @@
+{
+  "settings": {
+    "title": "配置",
+    "description": "管理工作空间设置和偏好",
+    "searchPlaceholder": "按名称搜索",
+    "sections": {
+      "general": "通用",
+      "feedback": "反馈定义",
+      "environments": "环境",
+      "providers": "AI 提供商",
+      "preferences": "工作空间偏好"
+    },
+    "actions": {
+      "menuLabel": "操作菜单",
+      "edit": "编辑",
+      "clone": "克隆",
+      "delete": "删除"
+    },
+    "feedback": {
+      "title": "反馈定义",
+      "description": "定义用于评估的自定义反馈指标",
+      "create": "创建反馈定义",
+      "edit": "编辑反馈定义",
+      "delete": "删除反馈定义",
+      "empty": {
+        "title": "暂无反馈定义",
+        "description": "创建反馈定义以开始评估您的代理。",
+        "action": "添加反馈定义"
+      },
+      "columns": {
+        "name": "反馈评分",
+        "description": "描述",
+        "type": "类型",
+        "values": "值",
+        "created_at": "创建时间",
+        "created_by": "创建者"
+      },
+      "confirmDialog": {
+        "deleteSingle": {
+          "title": "删除反馈定义",
+          "description": "此操作无法撤销。已评分的跟踪数据不会受到影响。确定要继续吗？",
+          "confirmText": "删除反馈定义"
+        },
+        "deleteBatch": {
+          "title": "删除反馈定义",
+          "description": "此操作无法撤销。已评分的跟踪数据不会受到影响。确定要继续吗？",
+          "confirmText": "删除反馈定义"
+        }
+      },
+      "fields": {
+        "name": "名称",
+        "type": "类型",
+        "range": "范围"
+      }
+    },
+    "providers": {
+      "title": "AI 提供商",
+      "description": "配置AI模型提供商",
+      "add": "添加配置",
+      "addProvider": "添加提供商",
+      "noProvidersTitle": "暂无 AI 提供商",
+      "noSearchResults": "无搜索结果",
+      "noProvidersDescription": "配置 AI 提供商以使用在线测试和在线评分。",
+      "readOnlyLabel": "只读提供商",
+      "columns": {
+        "name": "名称",
+        "base_url": "URL",
+        "created_at": "创建时间",
+        "provider": "提供商"
+      },
+      "confirmDialog": {
+        "delete": {
+          "title": "删除配置",
+          "description": "此配置在工作空间内共享。删除后将移除所有人的访问权限。此操作无法撤销。确定要继续吗？",
+          "confirmText": "删除配置"
+        }
+      },
+      "fields": {
+        "name": "提供商名称",
+        "apiKey": "API 密钥",
+        "baseUrl": "基础 URL"
+      }
+    },
+    "environments": {
+      "title": "环境",
+      "create": "创建环境",
+      "noEnvironmentsTitle": "暂无环境",
+      "noEnvironmentsDescription": "创建环境以按部署阶段（开发、预发布、生产等）组织跟踪数据。",
+      "addEnvironment": "添加环境",
+      "atLimitTooltip": "工作空间最多可有 {{limit}} 个环境。请删除现有环境以创建新环境。",
+      "columns": {
+        "name": "名称",
+        "description": "描述",
+        "created_at": "创建时间",
+        "created_by": "创建者"
+      },
+      "confirmDialog": {
+        "deleteSingle": {
+          "title": "删除环境",
+          "description": "此操作无法撤销。现有的跟踪和跨度将保留其环境值。确定要继续吗？",
+          "confirmText": "删除环境"
+        },
+        "deleteBatch": {
+          "title": "删除环境",
+          "description": "此操作无法撤销。现有的跟踪和跨度将保留其环境值。确定要继续吗？",
+          "confirmText": "删除环境"
+        }
+      }
+    },
+    "workspacePreferences": {
+      "threadTimeout": {
+        "name": "线程在线评分规则冷却期",
+        "notSet": "未设置",
+        "dialogTitle": "编辑线程在线评分规则冷却期",
+        "dialogDescription": "设置线程最后一次活动后等待多久再运行线程级在线评分规则。这为对话提供了在自动评估前稳定的时间。",
+        "formLabel": "冷却期",
+        "selectPlaceholder": "选择超时时长",
+        "validationError": "请选择有效的超时时长（最多 7 天）",
+        "invalidDuration": "无效的时长",
+        "updateButton": "更新冷却期",
+        "toastTitle": "线程冷却期已更新",
+        "toastDescription": "线程在线评分规则将在最后活动后等待 {{duration}} 再评估线程。",
+        "goToProjects": "前往项目"
+      },
+      "truncationToggle": {
+        "name": "表格中的数据截断",
+        "enabled": "已启用",
+        "disabled": "已禁用",
+        "enableTitle": "启用数据截断？",
+        "disableTitle": "禁用数据截断？",
+        "enableDescription": "截断大数据可提升性能并启用完整分页选项。您可以随时更改此设置。",
+        "disableDescription": "禁用截断将在表格中显示完整内容。这可能会降低性能，并将分页限制为每页 {{limit}} 条。",
+        "performanceImpactTitle": "性能影响",
+        "performanceImpactDescription": "大量数据可能导致页面加载变慢和内存使用增加。",
+        "enableButton": "启用截断",
+        "disableButton": "禁用截断",
+        "toastDisabledTitle": "数据截断已禁用",
+        "toastDisabledDescription": "分页已受限以防止大数据量下的性能问题。",
+        "toastEnabledTitle": "数据截断已启用",
+        "toastEnabledDescription": "完整分页选项现已可用。"
+      },
+      "columns": {
+        "name": "偏好",
+        "value": "值"
+      },
+      "cancel": "取消"
+    }
+  }
+}

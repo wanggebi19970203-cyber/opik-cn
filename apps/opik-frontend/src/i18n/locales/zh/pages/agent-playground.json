@@ -1,0 +1,93 @@
+{
+  "agentPlayground": {
+    "title": "Agent 工作台",
+    "description": "测试和调试您的AI Agent",
+    "empty": {
+      "title": "暂无Agent",
+      "description": "创建您的第一个Agent开始使用。"
+    },
+    "actions": {
+      "run": "运行Agent",
+      "stop": "停止Agent",
+      "debug": "调试Agent"
+    },
+    "content": {
+      "agentPlayground": "Agent 工作台",
+      "connected": "已连接",
+      "disconnected": "未连接",
+      "connectedTooltip": "您的Agent已连接到Opik",
+      "stopRun": "停止运行",
+      "run": "运行",
+      "missingParams": "部分必填参数缺失",
+      "reset": "重置",
+      "moreActions": "更多操作",
+      "disconnect": "断开连接",
+      "executionInProgress": "Agent正在执行中",
+      "executionInProgressDescription": "您的Agent正在运行。现在离开将中断执行，可能导致追踪不完整。确定要离开吗？",
+      "leaveAnyway": "仍然离开",
+      "stayAndWait": "留下等待"
+    },
+    "emptyState": {
+      "connectYourAgent": "连接您的Agent",
+      "connectDescription": "将您的Agent连接到Opik，开始使用Agent工作台并提升性能。",
+      "markEntrypoint": "将您的Agent标记为入口点",
+      "markEntrypointDescription": "在您的Agent主函数上添加 @opik.track(entrypoint=True)，以便Opik检测和注册它。您也可以在Ollie侧边栏中运行 /instrument 来自动插桩您的Agent。",
+      "runConnectionCommand": "运行连接命令",
+      "runConnectionDescription": "在终端中安装并运行Opik连接器（支持Claude Code、Codex、Cursor、Windsurf等）：",
+      "waitingForConnection": "等待连接",
+      "waitingDescription": "连接后我们将自动检测您的Agent。",
+      "troubleConnecting": "连接遇到问题？",
+      "checkTroubleshooting": "查看故障排除",
+      "python": "Python",
+      "typescript": "TypeScript",
+      "terminal": "终端"
+    },
+    "inputForm": {
+      "noInputFields": "此Agent未定义输入字段。",
+      "optional": "（可选）",
+      "thisFieldIsRequired": "此字段为必填项",
+      "enterField": "输入 {{name}}..."
+    },
+    "promptCard": {
+      "cannotSavePromptChanges": "无法保存提示词更改",
+      "missingPermission": "缺少创建 {{name}} 新版本的权限",
+      "savedNewVersion": "已保存 {{name}} 的新版本",
+      "unsavedChanges": "未保存的更改",
+      "promptTemplate": "提示词模板"
+    },
+    "promptsList": {
+      "noPrompts": "此项目暂无提示词。"
+    },
+    "result": {
+      "result": "结果",
+      "viewTrace": "查看追踪",
+      "noResultsYet": "暂无结果",
+      "agentResponseAppear": "运行后Agent响应将显示在此处",
+      "runningYourAgent": "正在运行您的Agent...",
+      "resultsAppearWhenDone": "完成后结果将显示在此处。",
+      "viewTrajectoryLive": "实时查看轨迹",
+      "jobCancelled": "任务已取消",
+      "executionFailed": "执行失败",
+      "unknownError": "发生未知错误。"
+    },
+    "flowDiagram": {
+      "configure": "配置",
+      "prompts": "提示词",
+      "tools": "工具",
+      "model": "模型",
+      "params": "参数",
+      "input": "输入",
+      "run": "运行",
+      "improveWithOllie": "使用Ollie改进",
+      "analyzeTracesSuggest": "分析追踪，建议提示词调整",
+      "inspect": "检查",
+      "response": "响应",
+      "trajectory": "轨迹",
+      "latency": "延迟",
+      "tokens": "Token数",
+      "configInput": "配置 + 输入",
+      "responseTrace": "响应 + 追踪",
+      "yourAgent": "您的Agent"
+    }
+  }
+}

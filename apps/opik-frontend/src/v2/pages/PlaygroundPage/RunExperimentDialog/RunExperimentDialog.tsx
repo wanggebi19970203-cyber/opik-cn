@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import dayjs from "dayjs";
 import { Database, ListChecks } from "lucide-react";
 
@@ -65,18 +67,18 @@ interface RunExperimentDialogProps {
 const SEGMENT_COPY = {
   [DATASET_TYPE.DATASET]: {
     description:
-      "Run prompts against a dataset. Results will be scored using selected metrics.",
-    selectLabel: "Dataset",
-    submitLabel: "Use dataset",
-    emptyTooltip: "Selected dataset is empty",
+      i18next.t("pages/playground:playground.runExperiment.datasetDescription"),
+    selectLabel: i18next.t("pages/playground:playground.runExperiment.dataset"),
+    submitLabel: i18next.t("pages/playground:playground.runExperiment.datasetSubmit"),
+    emptyTooltip: i18next.t("pages/playground:playground.runExperiment.datasetEmptyTooltip"),
     showMetrics: true,
   },
   [DATASET_TYPE.TEST_SUITE]: {
     description:
-      "Run prompts against a test suite. Results will be scored using the assertions defined on the suite.",
-    selectLabel: "Test suite",
-    submitLabel: "Use test suite",
-    emptyTooltip: "Selected test suite is empty",
+      i18next.t("pages/playground:playground.runExperiment.testSuiteDescription"),
+    selectLabel: i18next.t("pages/playground:playground.runExperiment.testSuite"),
+    submitLabel: i18next.t("pages/playground:playground.runExperiment.testSuiteSubmit"),
+    emptyTooltip: i18next.t("pages/playground:playground.runExperiment.testSuiteEmptyTooltip"),
     showMetrics: false,
   },
 } as const;
@@ -111,6 +113,7 @@ const RunExperimentDialog: React.FC<RunExperimentDialogProps> = ({
   const [experimentPrefix, setExperimentPrefix] = useState("");
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
   const [didApplyDefaults, setDidApplyDefaults] = useState(false);
+  const { t } = useTranslation("pages/playground");
 
   const config = SEGMENT_COPY[selectedType];
 
@@ -394,7 +397,7 @@ const RunExperimentDialog: React.FC<RunExperimentDialogProps> = ({
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <DialogHeader className="pb-0">
-            <DialogTitle>Run experiment</DialogTitle>
+            <DialogTitle>{t("playground.runExperiment.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 overflow-y-auto pb-2">
@@ -412,7 +415,7 @@ const RunExperimentDialog: React.FC<RunExperimentDialogProps> = ({
                 className="gap-1.5"
               >
                 <Database className="size-3.5" />
-                <span>Dataset</span>
+                <span>{t("playground.runExperiment.dataset")}</span>
               </ToggleGroupItem>
               <ToggleGroupItem
                 data-testid="run-experiment-dialog-source-suite"
@@ -421,7 +424,7 @@ const RunExperimentDialog: React.FC<RunExperimentDialogProps> = ({
                 className="gap-1.5"
               >
                 <ListChecks className="size-3.5" />
-                <span>Test suite</span>
+                <span>{t("playground.runExperiment.testSuite")}</span>
               </ToggleGroupItem>
             </ToggleGroup>
 
@@ -451,7 +454,7 @@ const RunExperimentDialog: React.FC<RunExperimentDialogProps> = ({
 
                 {config.showMetrics && (
                   <div className="flex flex-col gap-1.5">
-                    <Label>Metrics</Label>
+                    <Label>{t("playground.runExperiment.metrics")}</Label>
                     <MetricSelector
                       rules={rules}
                       selectedRuleIds={selectedRuleIds}
@@ -469,12 +472,12 @@ const RunExperimentDialog: React.FC<RunExperimentDialogProps> = ({
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t("playground.runExperiment.cancel")}</Button>
             </DialogClose>
             <TooltipWrapper
               content={
                 isRunning
-                  ? "An experiment is already running"
+                  ? t("playground.runExperiment.experimentRunning")
                   : isDatasetEmpty
                     ? config.emptyTooltip
                     : undefined

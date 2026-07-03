@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { AlertTriangle, XCircle, Info } from "lucide-react";
 import { get, isObject, isString, isNumber } from "lodash";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -44,11 +45,11 @@ import {
   OPIK_ASSERTIONS_FIELD,
 } from "@/constants/datasets";
 
-const DATASET_EXPANSION_PROGRESS_MESSAGES = [
-  "Initializing AI generation...",
-  "Analyzing test suite patterns...",
-  "Generating synthetic samples...",
-  "Finalizing generated data...",
+const DATASET_EXPANSION_PROGRESS_MESSAGE_KEYS = [
+  "expansion.progress.initializing",
+  "expansion.progress.analyzingPatterns",
+  "expansion.progress.generating",
+  "expansion.progress.finalizing",
 ];
 
 const DATASET_EXPANSION_LAST_PICKED_MODEL = "opik-dataset-expansion-model";
@@ -79,6 +80,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
   suiteAssertions,
 }) => {
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
+  const { t } = useTranslation("datasets");
 
   // Model selection with persistence using the reusable hook
   const { model, modelSelectProps } = useModelSelection({
@@ -101,7 +103,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
     message: progressMessage,
     complete,
   } = useProgressSimulation({
-    messages: DATASET_EXPANSION_PROGRESS_MESSAGES,
+    messages: DATASET_EXPANSION_PROGRESS_MESSAGE_KEYS.map((key) => t(key)),
     isPending,
   });
 
@@ -239,21 +241,21 @@ const DatasetExpansionDialog: React.FunctionComponent<
       sampleCountNumber > SAMPLE_COUNT_MAX
     ) {
       setValidationError(
-        `Sample count must be between ${SAMPLE_COUNT_MIN} and ${SAMPLE_COUNT_MAX}.`,
+        t('expansion.validation.sampleCount', { min: SAMPLE_COUNT_MIN, max: SAMPLE_COUNT_MAX }),
       );
       return false;
     }
 
     if (customPrompt && customPrompt.trim().length < MIN_PROMPT_LENGTH) {
       setValidationError(
-        `Custom prompt must be at least ${MIN_PROMPT_LENGTH} characters long.`,
+        t('expansion.validation.promptLength', { min: MIN_PROMPT_LENGTH }),
       );
       return false;
     }
 
     if (!sampleData?.content?.length) {
       setValidationError(
-        "Test suite analysis is still in progress. Please wait for it to complete.",
+        t('expansion.validation.analysisInProgress'),
       );
       return false;
     }
@@ -264,7 +266,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
   const getErrorMessage = useCallback(() => {
     return (
       get(error, ["response", "data", "message"], error?.message) ||
-      "An error occurred while generating samples. Please try again."
+      t('expansion.error.default')
     );
   }, [error]);
 
@@ -320,18 +322,16 @@ const DatasetExpansionDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="comet-title-s">Expand with AI</DialogTitle>
+          <DialogTitle className="comet-title-s">{t('expansion.title')}</DialogTitle>
           <p className="comet-body-s my-4 text-muted-foreground">
-            This will generate synthetic samples based on your existing data
-            patterns. The generated samples will be available for review before
-            adding to your test suite.
+            {t('expansion.description')}
           </p>
         </DialogHeader>
         <DialogAutoScrollBody className="flex flex-col gap-4">
           {(validationError || isError) && (
             <Alert variant="destructive" size="sm" className="mb-4">
               <XCircle className="size-4" />
-              <AlertTitle>Generation Error</AlertTitle>
+              <AlertTitle>{t('expansion.error.title')}</AlertTitle>
               <AlertDescription>
                 {validationError || getErrorMessage()}
               </AlertDescription>
@@ -342,11 +342,11 @@ const DatasetExpansionDialog: React.FunctionComponent<
               <div className="flex items-center gap-3 rounded-lg border bg-gradient-to-r from-primary/5 to-primary/10 p-4">
                 <Spinner size="small" className="text-primary" />
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-primary">
-                    Analyzing test suite structure
+                    <div className="text-sm font-medium text-primary">
+                    {t('expansion.analyzing.title')}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Analyzing test suite structure and field patterns
+                    {t('expansion.analyzing.description')}
                   </div>
                 </div>
               </div>
@@ -370,10 +370,9 @@ const DatasetExpansionDialog: React.FunctionComponent<
             sampleData.content.length === 0 && (
               <Alert variant="callout" size="sm">
                 <AlertTriangle className="size-4" />
-                <AlertTitle>No test suite samples found</AlertTitle>
+                <AlertTitle>{t('expansion.empty.title')}</AlertTitle>
                 <AlertDescription>
-                  This test suite appears to be empty. Add some sample data to
-                  your test suite first before trying to expand it with AI.
+                  {t('expansion.empty.description')}
                 </AlertDescription>
               </Alert>
             )}
@@ -405,10 +404,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
                             htmlFor="fields"
                             className="text-sm font-medium"
                           >
-                            Detected test suite structure
+                            {t('expansion.structure.title')}
                           </Label>
                           <TooltipWrapper
-                            content="Choose which fields to maintain consistency for"
+                            content={t('expansion.structure.tooltip')}
                             side="top"
                           >
                             <Info className="size-3.5 cursor-help text-muted-foreground" />
@@ -418,7 +417,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-muted-foreground">
-                        Analyzed samples
+                        {t('expansion.structure.analyzedSamples')}
                       </div>
                       <div className="text-sm font-medium">
                         {datasetAnalysis?.sampleCount}
@@ -471,19 +470,16 @@ const DatasetExpansionDialog: React.FunctionComponent<
                         >
                           {showAllFields ? (
                             <>
-                              Show less ({datasetAnalysis.allFields.length - 20}{" "}
-                              hidden)
+                              {t('expansion.structure.showLess', { count: datasetAnalysis.allFields.length - 20 })}
                             </>
                           ) : (
                             <>
-                              Show all ({datasetAnalysis.allFields.length - 20}{" "}
-                              more)
+                              {t('expansion.structure.showAll', { count: datasetAnalysis.allFields.length - 20 })}
                             </>
                           )}
                         </Button>
                         <div className="text-xs text-muted-foreground">
-                          {preserveFields.length} of{" "}
-                          {datasetAnalysis.allFields.length} fields selected
+                          {t('expansion.structure.fieldsSelected', { count: preserveFields.length, total: datasetAnalysis.allFields.length })}
                         </div>
                       </div>
                     )}
@@ -501,17 +497,14 @@ const DatasetExpansionDialog: React.FunctionComponent<
                         </svg>
                         <div className="text-warning-box-text">
                           <div className="font-medium">
-                            Field preservation tips:
+                            {t('expansion.structure.tips.title')}
                           </div>
                           <div className="mt-1 space-y-1">
                             <div>
-                              • Fields appearing in ≥
-                              {Math.round(FIELD_FREQUENCY_THRESHOLD * 100)}% of
-                              samples are auto-selected
+                              {t('expansion.structure.tips.autoSelect', { threshold: Math.round(FIELD_FREQUENCY_THRESHOLD * 100) })}
                             </div>
                             <div>
-                              • Selected fields will maintain similar patterns
-                              in generated data
+                              {t('expansion.structure.tips.maintainPatterns')}
                             </div>
                           </div>
                         </div>
@@ -523,7 +516,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
             )}
 
           <div className="mt-6 space-y-2">
-            <Label htmlFor="model">Model</Label>
+            <Label htmlFor="model">{t('expansion.model')}</Label>
             <PromptModelSelect
               workspaceName={workspaceName}
               {...modelSelectProps}
@@ -532,7 +525,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sample-count">Number of samples</Label>
+            <Label htmlFor="sample-count">{t('expansion.sampleCount')}</Label>
             <Input
               id="sample-count"
               type="number"
@@ -556,19 +549,19 @@ const DatasetExpansionDialog: React.FunctionComponent<
               className="w-full"
             />
             <p className="comet-body-s text-muted-foreground">
-              Range {SAMPLE_COUNT_MIN}-{SAMPLE_COUNT_MAX}
+              {t('expansion.sampleCountRange', { min: SAMPLE_COUNT_MIN, max: SAMPLE_COUNT_MAX })}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="variation-instructions">
-              Additional instructions (optional)
+              {t('expansion.additionalInstructions')}
             </Label>
             <Textarea
               id="variation-instructions"
               value={variationInstructions}
               onChange={(e) => setVariationInstructions(e.target.value)}
-              placeholder="e.g., Create variations that test edge cases, focus on different user personas"
+              placeholder={t('expansion.additionalInstructionsPlaceholder')}
               rows={2}
               className="resize-none text-sm"
             />
@@ -599,10 +592,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
                     </div>
                     <div>
                       <div className="text-left text-sm font-medium">
-                        Generation prompt
+                        {t('expansion.prompt.title')}
                       </div>
                       <div className="text-left text-xs text-muted-foreground">
-                        Customize the prompt sent to the AI model
+                        {t('expansion.prompt.description')}
                       </div>
                     </div>
                   </div>
@@ -610,8 +603,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     <div className="text-xs text-muted-foreground">
-                      Customize the prompt that will be sent to the AI model.
-                      Use clear instructions for best results.
+                      {t('expansion.prompt.customize')}
                     </div>
                     <Textarea
                       value={customPrompt}
@@ -622,10 +614,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
                       }}
                       rows={12}
                       className="resize-none font-mono text-xs leading-relaxed"
-                      placeholder="Enter your custom prompt..."
+                      placeholder={t('expansion.prompt.placeholder')}
                     />
                     <div className="text-xs text-muted-foreground">
-                      {customPrompt.length} characters
+                      {t('expansion.prompt.charCount', { count: customPrompt.length })}
                     </div>
                   </div>
                 </AccordionContent>
@@ -636,7 +628,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
         <DialogFooter className="gap-2 sm:space-x-0">
           <DialogClose asChild>
             <Button variant="outline" size="lg" disabled={isPending}>
-              Cancel
+              {t('cancel')}
             </Button>
           </DialogClose>
           <Button
@@ -664,7 +656,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                 </div>
               </div>
             ) : (
-              "Generate samples"
+              t('expansion.generate')
             )}
           </Button>
         </DialogFooter>

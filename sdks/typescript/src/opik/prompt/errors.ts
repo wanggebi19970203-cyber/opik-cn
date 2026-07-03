@@ -1,5 +1,5 @@
 /**
- * Thrown when a requested prompt or version is not found in the backend
+ * 当请求的提示词或版本在后端中未找到时抛出
  */
 export class PromptNotFoundError extends Error {
   constructor(message: string) {
@@ -10,7 +10,7 @@ export class PromptNotFoundError extends Error {
 }
 
 /**
- * Thrown when template placeholder validation fails or variables are missing
+ * 当模板占位符验证失败或变量缺失时抛出
  */
 export class PromptPlaceholderError extends Error {
   constructor(message: string) {
@@ -21,7 +21,7 @@ export class PromptPlaceholderError extends Error {
 }
 
 /**
- * Thrown for general prompt validation failures (invalid template syntax, etc.)
+ * 通用提示词验证失败时抛出（无效模板语法等）
  */
 export class PromptValidationError extends Error {
   constructor(message: string) {
@@ -32,7 +32,7 @@ export class PromptValidationError extends Error {
 }
 
 /**
- * Thrown when referencing an environment that is not registered in the workspace.
+ * 当引用工作区中未注册的环境时抛出。
  */
 export class EnvironmentNotFoundError extends Error {
   constructor(message: string) {
@@ -43,8 +43,8 @@ export class EnvironmentNotFoundError extends Error {
 }
 
 /**
- * Thrown when attempting to access a prompt with a different template structure
- * than what exists. Template structure (text vs chat) is immutable after creation.
+ * 当尝试访问与现有模板结构不同的提示词时抛出。
+ * 模板结构（文本 vs 聊天）在创建后不可变。
  */
 export class PromptTemplateStructureMismatch extends Error {
   public readonly promptName: string;

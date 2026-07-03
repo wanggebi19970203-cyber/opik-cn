@@ -1,0 +1,155 @@
+---
+description: 为 Agent Optimizer 运行创建可靠的指标和复合目标。
+headline: 定义指标 | Opik 文档
+og:description: 学习利用指标为 Opik 优化器提供决策支持。探索预设并为你的特定用例扩展它们。
+og:site_name: Opik 文档
+og:title: 为优化定义指标 - Opik
+title: 定义指标
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/define_metrics
+---
+
+指标驱动优化器决策。本指南重点介绍从 Opik 评估目录中选取经过验证的预设的最快方式，然后展示当你的用例需要时如何扩展它们。如果你需要完整的理论，请参见[评估概念](/v1/evaluation/concepts)和[指标概览](/v1/evaluation/metrics/overview)。
+
+## 指标结构
+
+指标是一个可调用对象，签名为 `(dataset_item, llm_output) -> ScoreResult | float`。使用 `ScoreResult` 附加名称和原因。
+
+```python
+from opik.evaluation.metrics.score_result import ScoreResult
+
+def short_answer(item, output):
+    is_short = len(output) <= 200
+    return ScoreResult(
+        name="short_answer",
+        value=1.0 if is_short else 0.0,
+        reason="Answer under 200 chars" if is_short else "Answer too long"
+    )
+```
+
+## 组合指标
+
+使用 `MultiMetricObjective` 平衡多个目标（准确性、风格、安全性）。
+
+```python
+from opik_optimizer import MultiMetricObjective
+from opik.evaluation.metrics import LevenshteinRatio, AnswerRelevance
+
+objective = MultiMetricObjective(
+    weights=[0.6, 0.4],
+    metrics=[
+        lambda item, output: LevenshteinRatio().score(reference=item["answer"], output=output),
+        lambda item, output: AnswerRelevance().score(
+            context=[item["answer"]], output=output, input=item["question"]
+        ),
+    ],
+    name="accuracy_and_relevance",
+)
+```
+
+<Tip>
+  权重不需要总和为 1；选择能突出对你的用例最关键的指标的数字即可。
+</Tip>
+
+### 包含成本和持续时间指标
+
+你可以通过在复合目标中包含基于 span 的指标（如成本和持续时间）来同时优化效率和质量。这些指标需要访问 `task_span` 参数：
+
+```python
+from opik_optimizer import MultiMetricObjective
+from opik.evaluation.metrics import AnswerRelevance
+from opik_optimizer.metrics import SpanCost, SpanDuration
+
+# Regular metric without task_span
+def answer_relevance(dataset_item, llm_output):
+    metric = AnswerRelevance()
+    return metric.score(
+        context=[dataset_item["answer"]], 
+        output=llm_output, 
+        input=dataset_item["question"]
+    )
+
+# Built-in span metrics can be normalized with target= for clean multi-metric weighting.
+# invert=True (default) means lower raw value -> higher score.
+cost = SpanCost(target=0.01, invert=True, name="cost_score")
+duration = SpanDuration(target=6.0, invert=True, name="duration_score")
+
+# Combine quality, cost, and speed metrics on a common [0, 1] scale
+objective = MultiMetricObjective(
+    metrics=[answer_relevance, cost, duration],
+    weights=[0.33, 0.33, 0.33],  # equally optimize for accuracy, cost and duration/latency
+    name="quality_cost_speed",
+)
+```
+
+有关仓库中的完整端到端示例，请参见：
+[multi_metric_cost_duration_example.py](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/scripts/multi_metric_cost_duration_example.py)
+
+<Note>
+  基于 span 的指标（如 `SpanCost` 和 `SpanDuration`）在评估期间自动接收 `task_span` 参数，其中包含智能体运行的执行信息。使用原始（非归一化）成本或持续时间值时，在 `MultiMetricObjective` 中使用负权重来最小化它们。使用目标归一化指标（`target=`）时，使用正权重，因为这些分数映射到"越高越好"的尺度。
+</Note>
+
+<Note>
+  方向控制是显式的：
+  - `invert=True`（默认）用于效率指标，原始值越低分数越高。
+  - `invert=False` 如果你的目标应该奖励更高的原始值。
+  当省略 `target` 时，这些指标返回原始值（非归一化分数）。
+</Tip>
+
+## 推荐预设
+
+| 场景 | 指标 | 说明 |
+| --- | --- | --- |
+| 事实性问答 | `LevenshteinRatio` 或 `ExactMatch` | 适用于纯文本数据集；确定性且低成本。 |
+| 检索/基础 | `AnswerRelevance` | 通过 `context=[item["answer"]]` 或检索到的文档传递参考上下文。 |
+| 安全性 | `Moderation` 或自定义 LLM-as-a-judge | 与 `MultiMetricObjective` 结合以拦截不安全的回答。 |
+| 多轮对话 | [智能体轨迹评估器](/v1/evaluation/evaluate_agent_trajectory) | 评分完整对话，而不仅仅是最终输出。 |
+
+在编写自定义指标之前复用这些启发式方法——大多数已在 `opik.evaluation.metrics` 中导入。
+
+## 优化器内置指标
+
+Opik Optimizer 还提供了常见优化设置的内置指标辅助工具：
+
+| 指标 | 导入方式 | 使用场景 |
+| --- | --- | --- |
+| `LevenshteinAccuracyMetric` | `from opik_optimizer.metrics import LevenshteinAccuracyMetric` | 使用 `answer` 或 `highlights` 等数据集键进行快速字符串相似度准确性评估。 |
+| `SpanCost` | `from opik_optimizer.metrics import SpanCost` | 带有 `target=` 归一化和 `invert=` 方向控制的成本指标。 |
+| `SpanDuration` | `from opik_optimizer.metrics import SpanDuration` | 带有 `target=` 归一化和 `invert=` 方向控制的持续时间指标。 |
+
+内置指标示例：
+
+```python
+from opik_optimizer import MultiMetricObjective
+from opik_optimizer.metrics import LevenshteinAccuracyMetric, SpanCost, SpanDuration
+
+accuracy = LevenshteinAccuracyMetric(reference_key="answer")
+cost = SpanCost(target=0.01, invert=True, name="cost_score")
+duration = SpanDuration(target=6.0, invert=True, name="duration_score")
+
+objective = MultiMetricObjective(
+    metrics=[accuracy, cost, duration],
+    weights=[0.5, 0.25, 0.25],  # all metrics already normalized to [0, 1]
+    name="accuracy_cost_duration",
+)
+```
+
+## 优质指标清单
+
+- **返回解释** - 填充 `reason` 以便反思优化器可以分组失败模式。
+- **避免随机性** - 确定性指标防止优化器追逐噪声。
+- **限制运行时间** - 尽可能使用缓存的参考或轻量级模型；重型指标会减慢试验速度。
+- **记录元数据** - 如果你希望稍后可视化每个样本的属性，在 `ScoreResult` 中包含 `details`。
+
+当你超出预设的能力时，请转向[自定义指标](/v1/agent_optimization/advanced/custom_metrics)以实现 LLM-as-a-judge 流程或领域特定评分。
+
+## 测试指标
+
+1. 在启动优化之前，对少量数据集行进行空运行。
+2. 使用 `optimizer.task_evaluator.evaluate_prompt` 以你的指标评估单个提示词。
+3. 在 Opik 仪表板中检查每个样本的原因，确保它们符合预期。
+
+## 相关资源
+
+- 深入了解：[多指标优化指南](/v1/agent_optimization/optimization/define_metrics#compose-metrics)
+- API 参考：[`ScoreResult`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/ScoreResult.html)
+- 高级主题：[自定义指标](/v1/agent_optimization/advanced/custom_metrics)

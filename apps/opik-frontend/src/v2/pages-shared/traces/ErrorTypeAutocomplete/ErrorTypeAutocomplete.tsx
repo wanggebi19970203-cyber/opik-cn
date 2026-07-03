@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { TRACE_DATA_TYPE } from "@/hooks/useTracesOrSpansList";
 import Autocomplete from "@/shared/Autocomplete/Autocomplete";
@@ -19,6 +20,7 @@ const ErrorTypeAutocomplete: React.FC<ErrorTypeAutocompleteProps> = ({
   onValueChange,
   type = TRACE_DATA_TYPE.traces,
 }) => {
+  const { t } = useTranslation();
   const { items: allItems, isLoading } = useErrorTypeOptions({
     projectId,
     type,
@@ -39,7 +41,7 @@ const ErrorTypeAutocomplete: React.FC<ErrorTypeAutocompleteProps> = ({
       items={items}
       hasError={hasError}
       isLoading={isLoading}
-      placeholder="Select error type"
+      placeholder={t("tracing.errorTypeAutocomplete.selectErrorType")}
     />
   );
 };

@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import { Save } from "lucide-react";
 import { Input } from "@/ui/input";
@@ -52,6 +53,7 @@ const OptimizationsNewPromptSection: React.FC<
   onModelChange,
   onModelConfigChange,
 }) => {
+  const { t } = useTranslation("optimizations");
   const {
     permissions: { canCreatePrompts },
   } = usePermissions();
@@ -101,12 +103,12 @@ const OptimizationsNewPromptSection: React.FC<
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="comet-body-s-accented">Name</FormLabel>
+            <FormLabel className="comet-body-s-accented">{t("newPage.name")}</FormLabel>
             <FormControl>
               <Input
                 {...field}
                 onChange={(e) => onNameChange(e.target.value)}
-                placeholder="Enter optimization name, or the name will be generated automatically"
+                placeholder={t("newPage.namePlaceholder")}
                 className="h-10"
               />
             </FormControl>
@@ -117,10 +119,10 @@ const OptimizationsNewPromptSection: React.FC<
 
       <div>
         <div className="mb-2 flex h-8 items-center justify-between">
-          <Label className="comet-body-s-accented">Prompt</Label>
+          <Label className="comet-body-s-accented">{t("newPage.prompt")}</Label>
           <div className="flex h-full items-center gap-1">
             <TooltipWrapper
-              content={chatPromptData?.name || "Load chat prompt"}
+              content={chatPromptData?.name || t("newPage.loadChatPrompt")}
             >
               <div className="flex h-full min-w-40 max-w-60 flex-auto flex-nowrap">
                 <PromptsSelectBox

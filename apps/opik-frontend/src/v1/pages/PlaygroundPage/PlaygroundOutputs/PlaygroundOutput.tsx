@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ListTree } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const PlaygroundOutput = ({
   promptId,
   totalOutputs,
 }: PlaygroundOutputProps) => {
+  const { t } = useTranslation();
   const value = useOutputValueByPromptDatasetItemId(promptId);
   const isLoading = useOutputLoadingByPromptDatasetItemId(promptId);
   const stale = useOutputStaleStatusByPromptDatasetItemId(promptId);
@@ -71,14 +73,14 @@ const PlaygroundOutput = ({
     );
   };
 
-  const outputLabel = totalOutputs === 1 ? "Output" : "Outputs";
+  const outputLabel = totalOutputs === 1 ? t("playground.outputs.output") : t("playground.outputs.outputs");
 
   return (
     <div className="size-full min-w-[var(--min-prompt-width)]">
       <p className="comet-body-s-accented my-3">{outputLabel}</p>
       <div className="comet-body-s group relative min-h-52 rounded-lg border bg-background p-3">
         {traceId && playgroundProject?.id && (
-          <TooltipWrapper content="Click to open original trace">
+          <TooltipWrapper content={t("playground.outputCell.openTrace")}>
             <Button
               size="icon-xs"
               variant="outline"

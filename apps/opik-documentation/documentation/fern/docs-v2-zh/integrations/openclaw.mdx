@@ -1,0 +1,99 @@
+---
+description: 安装并配置 OpenClaw 社区插件，将 LLM、工具和 Agent 跟踪数据导出到 Opik。
+headline: OpenClaw | Opik 文档
+og:description: 通过 @opik/opik-openclaw 插件将 OpenClaw 连接到 Opik。
+og:site_name: Opik 文档
+og:title: OpenClaw 集成 - Opik
+title: 使用 Opik 对 OpenClaw 进行可观测性监控
+---
+
+[OpenClaw](https://github.com/openclaw/openclaw) 可以通过社区插件包 `@opik/opik-openclaw` 将跟踪数据发送到 Opik。
+
+此集成可捕获以下内容：
+
+- LLM 跨度（`llm_input`、`llm_output`）
+- 工具跨度（`before_tool_call`、`after_tool_call`）
+- Agent 级别的运行元数据（`agent_end`、使用量/成本诊断）
+
+## 前置条件
+
+- [OpenClaw](https://github.com/openclaw/openclaw) 版本 `2026.3.2` 或更高版本。
+- Opik 项目/工作区详细信息（适用于云部署或企业部署）。
+
+## 配置步骤
+
+<Steps>
+  <Step title="1. 安装插件">
+    ```bash
+    openclaw plugins install @opik/opik-openclaw
+    ```
+  </Step>
+  <Step title="2. 配置插件">
+    ```bash
+    openclaw opik configure
+    ```
+
+    此命令会验证您的 Opik URL、验证 API 密钥访问权限（如需要）、启用插件并写入插件级别的配置。
+  </Step>
+  <Step title="3. 检查状态并重启 OpenClaw 网关">
+    ```bash
+    openclaw opik status
+    openclaw gateway restart
+    ```
+  </Step>
+</Steps>
+
+## 高级配置（手动 JSON）
+
+仅在需要显式签入或模板化插件配置时使用此方式。
+有关最新的插件特定选项，请参阅 [opik-openclaw](https://github.com/comet-ml/opik-openclaw)。
+
+将以下内容添加到您的 OpenClaw 配置中：
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "opik": {
+        "enabled": true,
+        "config": {
+          "enabled": true,
+          "apiUrl": "https://www.comet.com/opik/api",
+          "apiKey": "your-api-key",
+          "projectName": "openclaw",
+          "workspaceName": "default",
+          "tags": ["openclaw"]
+        }
+      }
+    }
+  }
+}
+```
+
+也支持使用环境变量作为备选方案：
+
+- `OPIK_API_KEY`
+- `OPIK_URL_OVERRIDE`
+- `OPIK_PROJECT_NAME`
+- `OPIK_WORKSPACE`
+
+## 验证配置
+
+<Steps>
+  <Step title="1. 检查插件状态">
+    ```bash
+    openclaw opik status
+    ```
+  </Step>
+  <Step title="2. 发送消息并在 Opik 中验证跟踪数据">
+    通过 OpenClaw 发送一条消息，并在配置的 Opik 项目仪表板中验证跟踪数据是否出现。
+  </Step>
+</Steps>
+
+## 已知限制
+
+某些 OpenClaw 内置执行路径目前会在没有 `sessionKey` 的情况下发出 `after_tool_call`。该插件使用尽力而为的回退机制（单个活跃跟踪或最近的活跃会话），当多个会话并发运行时可能会导致工具跨度的错误关联。
+
+## 后续步骤
+
+有关 OTEL 原生管道，请参阅 [OpenTelemetry 集成](/integrations/opentelemetry)。

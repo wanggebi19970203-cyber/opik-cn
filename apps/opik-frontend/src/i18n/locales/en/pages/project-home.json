@@ -1,0 +1,78 @@
+{
+  "projectHome": {
+    "title": "Project home",
+    "description": "Project overview and quick actions",
+    "stats": {
+      "traces": "Traces",
+      "datasets": "Datasets",
+      "experiments": "Experiments"
+    }
+  },
+  "projectPage": {
+    "somethingWentWrong": "Something went wrong",
+    "failedToLoad": "Failed to load the project. Please try again later.",
+    "backToProjects": "Back to Projects",
+    "projectNotFound": "This project could not be found",
+    "projectNotFoundMessage": "The project you're looking for doesn't exist or has been deleted."
+  },
+  "dailyBriefing": {
+    "title": "Daily briefing",
+    "active": "Active",
+    "inactive": "Inactive",
+    "paused": "Paused",
+    "runningReport": "Running report...",
+    "runningReportHint": "It might take a few minutes",
+    "scheduled": "Scheduled: {{time}}",
+    "runNow": "Run now",
+    "briefingFailed": "Briefing failed",
+    "runAgain": "Run again",
+    "reactivateDailyBriefing": "Reactivate daily briefing",
+    "reactivate": "Reactivate",
+    "actionCount": "{{count}} action",
+    "actionCount_plural": "{{count}} actions",
+    "settings": "Briefing settings",
+    "emptyTitle": "Daily recommendations to improve your agent",
+    "emptyDescription": "Every day Ollie reviews the last 24 hours of your project — summarizing what changed, flagging anomalies, and suggesting what to do next.",
+    "turnOn": "Turn on daily briefing",
+    "turnOnDialogTitle": "Turn on daily briefing?",
+    "turnOnDialogDescription": "Ollie will run every day at {{time}}, reviewing your traces and telling you exactly what to improve.",
+    "turnOnDialogTokenInfo": "Runs on your Ollie tokens. You can turn it off at any time.",
+    "turnOnDialogLearnMore": "Learn more",
+    "turnOnDialogRunImmediately": "Run the first report immediately on activation",
+    "turnOnDialogRunImmediatelyDescription": "You can customize the schedule time and report instructions in settings.",
+    "turnOnDialogCancel": "Cancel",
+    "turnOnDialogConfirm": "Turn on",
+    "noBriefingsYet": "No briefings yet",
+    "nextBriefingScheduled": "Next briefing is scheduled for {{time}}.",
+    "showMore": "Show more",
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "dayAtTime": "{{day}} at {{time}}",
+    "settingsDialog": {
+      "title": "Daily briefing settings",
+      "active": "Daily briefing active",
+      "activeDescription": "Turn off to pause automated reports. You can reactivate at any time.",
+      "paused": "Daily briefing is paused",
+      "pausedDescription": "Turn on to resume automated reports.",
+      "scheduledFor": "Scheduled for",
+      "customInstructions": "Custom instructions",
+      "customInstructionsPlaceholder": "Add custom instructions to tailor the report",
+      "billing": "Billing",
+      "billingDescription": "Runs on your Ollie tokens.",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes"
+    }
+  },
+  "recentActivity": {
+    "title": "Recent activity",
+    "tracesLogged": "Traces logged {{time}}",
+    "optimizationCreated": "Optimization run created",
+    "experimentCreated": "Experiment created",
+    "datasetUpdated": "Dataset updated",
+    "testSuiteUpdated": "Test suite updated",
+    "promptCreated": "Prompt created",
+    "alertTriggered": "Alert triggered",
+    "noActivityYet": "No activity yet",
+    "noActivityDescription": "Tracks meaningful activity in this project — new artifacts, updates, and triggered alerts."
+  }
+}

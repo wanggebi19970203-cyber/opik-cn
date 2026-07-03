@@ -10,6 +10,7 @@ import { Input } from "@/ui/input";
 import { Description } from "@/ui/description";
 import { Button } from "@/ui/button";
 import CustomHeadersField from "./CustomHeadersField";
+import { useTranslation } from "react-i18next";
 
 type BedrockProviderDetailsProps = {
   form: UseFormReturn<AIProviderFormType>;
@@ -20,6 +21,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
   form,
   isEdit = false,
 }) => {
+  const { t } = useTranslation("llm");
   return (
     <div className="flex flex-col gap-4 pb-4">
       {!isEdit && (
@@ -31,11 +33,11 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">Provider name</Label>
+                <Label htmlFor="providerName">{t("llm:bedrockProvider.providerName")}</Label>
                 <FormControl>
                   <Input
                     id="providerName"
-                    placeholder="Bedrock us-east-1"
+                    placeholder={t("llm:bedrockProvider.providerNamePlaceholder")}
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     disabled={isEdit}
@@ -46,8 +48,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
                 </FormControl>
                 <FormMessage />
                 <Description>
-                  A unique identifier for this provider instance (e.g.,
-                  &quot;Bedrock us-east-1&quot;).
+                  {t("llm:bedrockProvider.providerNameDescription")}
                 </Description>
               </FormItem>
             );
@@ -88,11 +89,11 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">API key</Label>
+              <Label htmlFor="apiKey">{t("llm:bedrockProvider.apiKey")}</Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
-                  placeholder="API key"
+                  placeholder={t("llm:bedrockProvider.apiKey")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -132,11 +133,11 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">Models list</Label>
+              <Label htmlFor="models">{t("llm:bedrockProvider.modelsList")}</Label>
               <FormControl>
                 <Input
                   id="models"
-                  placeholder="Models list"
+                  placeholder={t("llm:bedrockProvider.modelsList")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -146,7 +147,7 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Comma separated list of available models. Example:
+                {t("llm:bedrockProvider.modelsListDescription")}
                 {`"openai.gpt-oss-20b-1:0,mistral.ministral-3-3b-instruct"`}
               </Description>
             </FormItem>

@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ExternalLink, Plus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -46,6 +47,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
   const [search, setSearch] = useState("");
   const tagsRef = useRef<HTMLDivElement>(null);
   const deletingRef = useRef(false);
+  const { t } = useTranslation("pages/playground");
 
   const {
     permissions: { canUpdateOnlineEvaluationRules },
@@ -142,7 +144,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
 
   const renderTriggerContent = () => {
     if (rules.length === 0 || selectedRules.length === 0) {
-      return <span className="truncate text-muted-slate">Select metrics</span>;
+      return <span className="truncate text-muted-slate">{t("playground.metricSelector.selectMetrics")}</span>;
     }
 
     return (
@@ -202,7 +204,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
           <SearchInput
             searchText={search}
             setSearchText={setSearch}
-            placeholder="Search"
+            placeholder={t("playground.metricSelector.search")}
             variant="ghost"
           />
           <Separator className="mt-1" />
@@ -211,12 +213,11 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
           {hasNoRules ? (
             <div className="flex min-h-[120px] flex-col items-center justify-center px-4 py-2 text-center">
               <div className="comet-body-s-accented pb-1 text-foreground">
-                No metrics available
+                {t("playground.metricSelector.noMetricsAvailable")}
               </div>
               {canUsePlayground && canUpdateOnlineEvaluationRules && (
                 <div className="comet-body-s text-muted-slate">
-                  Create an online evaluation rule for the Playground project to
-                  generate metrics for your outputs.
+                  {t("playground.metricSelector.noMetricsAvailableDesc")}
                 </div>
               )}
             </div>
@@ -238,7 +239,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                     </div>
                   </TooltipWrapper>
                   <div className="flex shrink-0 items-center justify-center rounded">
-                    <TooltipWrapper content="Open in a new tab">
+                    <TooltipWrapper content={t("playground.metricSelector.openInNewTab")}>
                       <Button
                         type="button"
                         variant="minimal"
@@ -266,7 +267,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
             </>
           ) : (
             <div className="flex h-20 items-center justify-center text-muted-foreground">
-              No metrics found
+              {t("playground.metricSelector.noMetricsFound")}
             </div>
           )}
         </div>
@@ -286,7 +287,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="comet-body-s truncate">
-                    {selectedCount} of {rules.length} selected
+                    {selectedCount} of {rules.length} {t("playground.metricSelector.selected")}
                   </div>
                 </div>
               </div>
@@ -302,7 +303,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                 }}
               >
                 <Plus className="size-3.5 shrink-0" />
-                Add new
+                {t("playground.metricSelector.addNew")}
               </ListAction>
             </>
           )}

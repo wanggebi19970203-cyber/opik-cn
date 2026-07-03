@@ -1,4 +1,5 @@
 import { NotebookText, Hash, Trophy, ChartNoAxesCombined } from "lucide-react";
+import i18next from "i18next";
 import {
   WidgetResolver,
   WidgetComponents,
@@ -21,6 +22,8 @@ import ExperimentsLeaderboardWidget from "./ExperimentsLeaderboardWidget/Experim
 import ExperimentsLeaderboardWidgetEditor from "./ExperimentsLeaderboardWidget/ExperimentsLeaderboardWidgetEditor";
 import { widgetHelpers as experimentLeaderboardHelpers } from "./ExperimentsLeaderboardWidget/helpers";
 
+const t = (key: string) => i18next.t(key, { ns: "dashboards" });
+
 export const widgetResolver: WidgetResolver = (
   type: string,
 ): WidgetComponents => {
@@ -32,8 +35,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: projectMetricsHelpers.getDefaultConfig,
         calculateTitle: projectMetricsHelpers.calculateTitle,
         metadata: {
-          title: "Time series",
-          description: "Visualize trends in project metrics over time.",
+          title: t("widgetTypes.timeSeries"),
+          description: t("widgetTypes.timeSeriesDescription"),
           icon: <ChartNoAxesCombined className="size-4" />,
           category: WIDGET_CATEGORY.OBSERVABILITY,
           iconColor: "text-chart-blue",
@@ -47,9 +50,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: textMarkdownHelpers.getDefaultConfig,
         calculateTitle: textMarkdownHelpers.calculateTitle,
         metadata: {
-          title: "Markdown",
-          description:
-            "Add markdown or text for explanations, labels, or annotations.",
+          title: t("widgetTypes.markdown"),
+          description: t("widgetTypes.markdownDescription"),
           icon: <NotebookText className="size-4" />,
           category: WIDGET_CATEGORY.GENERAL,
           iconColor: "text-chart-red",
@@ -63,8 +65,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: projectStatsCardHelpers.getDefaultConfig,
         calculateTitle: projectStatsCardHelpers.calculateTitle,
         metadata: {
-          title: "Single metric",
-          description: "Highlight key project numbers at a glance.",
+          title: t("widgetTypes.singleMetric"),
+          description: t("widgetTypes.singleMetricDescription"),
           icon: <Hash className="size-4" />,
           category: WIDGET_CATEGORY.OBSERVABILITY,
           iconColor: "text-chart-green",
@@ -78,8 +80,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: experimentsFeedbackScoresHelpers.getDefaultConfig,
         calculateTitle: experimentsFeedbackScoresHelpers.calculateTitle,
         metadata: {
-          title: "Metrics",
-          description: "Visualize experiment metrics over time or across runs.",
+          title: t("widgetTypes.metrics"),
+          description: t("widgetTypes.metricsDescription"),
           icon: <ChartNoAxesCombined className="size-4" />,
           category: WIDGET_CATEGORY.EVALUATION,
           iconColor: "text-chart-blue",
@@ -93,9 +95,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: experimentLeaderboardHelpers.getDefaultConfig,
         calculateTitle: experimentLeaderboardHelpers.calculateTitle,
         metadata: {
-          title: "Leaderboard",
-          description:
-            "Rank and compare experiments across multiple metrics in a sortable table.",
+          title: t("widgetTypes.leaderboard"),
+          description: t("widgetTypes.leaderboardDescription"),
           icon: <Trophy className="size-4" />,
           category: WIDGET_CATEGORY.EVALUATION,
           iconColor: "text-chart-yellow",
@@ -109,9 +110,8 @@ export const widgetResolver: WidgetResolver = (
         getDefaultConfig: textMarkdownHelpers.getDefaultConfig,
         calculateTitle: textMarkdownHelpers.calculateTitle,
         metadata: {
-          title: "Markdown",
-          description:
-            "Add markdown or text for explanations, labels, or annotations.",
+          title: t("widgetTypes.markdown"),
+          description: t("widgetTypes.markdownDescription"),
           icon: <NotebookText className="size-4" />,
           category: WIDGET_CATEGORY.GENERAL,
           iconColor: "text-chart-red",

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { BooleanParam, StringParam, useQueryParam } from "use-query-params";
 import { ColumnPinningState } from "@tanstack/react-table";
 import useLocalStorageState from "use-local-storage-state";
@@ -93,6 +94,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
   experiments,
   isPending,
 }) => {
+  const { t } = useTranslation("pages/trial");
   const [search = "", setSearch] = useQueryParam("searchConfig", StringParam, {
     updateType: "replaceIn",
   });
@@ -232,10 +234,10 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
   }, [rows, search, onlyDiff, isCompare]);
 
   const noDataText = search
-    ? "No search results"
+    ? t("promptTab.noSearchResults")
     : isCompare
-      ? "These trials have no prompt"
-      : "This trial has no prompt";
+      ? t("promptTab.noPromptMultiple")
+      : t("promptTab.noPromptSingle");
 
   const resizeConfig = useMemo(
     () => ({
@@ -261,7 +263,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("promptTab.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -271,7 +273,9 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">Show differences only</Label>
+                <Label htmlFor="show-doff-only">
+                  {t("promptTab.showDifferencesOnly")}
+                </Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

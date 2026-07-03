@@ -1,0 +1,198 @@
+---
+description: 一个交互式 CLI 工具，用于快速将 Opik SDK 集成到您的 Node.js/TypeScript
+  项目中，支持自动配置和设置。
+headline: Opik TS | Opik 文档
+og:description: 在 Node.js 应用中轻松配置 Opik 可观测性。自动检测设置、管理包并为 LLM 集成启用追踪。
+og:site_name: Opik 文档
+og:title: 使用 Opik TS SDK 简化 Node.js 开发
+title: Opik TS - 交互式设置工具
+---
+
+Opik TS 是一个交互式命令行工具，可简化将 Opik 可观测性添加到 Node.js 和 TypeScript 应用的过程。它会自动检测您的项目设置、安装依赖项并为 LLM 集成配置追踪。
+
+## 功能特性
+
+- **智能检测**：自动检测项目设置（包管理器、TypeScript 配置、现有集成）
+- **包管理**：支持 npm、yarn、pnpm 和 bun
+- **环境配置**：创建或更新 `.env` 文件，配置正确的 Opik 设置
+
+## 快速开始
+
+### 基本用法
+
+在项目目录中运行 CLI：
+
+```bash
+npx opik-ts configure
+```
+
+CLI 将引导您完成以下步骤：
+
+1. **项目检测**：识别您的包管理器和项目结构
+2. **依赖安装**：安装 Opik SDK 和集成包
+3. **环境设置**：配置 API 密钥和环境变量
+4. **代码生成**：在项目根目录设置 Opik 客户端
+5. **格式化**：可选择应用 Prettier 格式化
+
+### 系统要求
+
+- **Node.js**：版本 18.17.0 或更高
+- **包管理器**：npm、yarn、pnpm 或 bun
+- **支持的项目类型**：
+  - Node.js 应用程序
+  - TypeScript 项目
+  - Express/Fastify API
+
+## CLI 选项
+
+CLI 支持多个命令行选项用于自定义：
+
+| 选项              | 类型    | 默认值            | 描述                                                           | 环境变量                |
+| ----------------- | ------- | ----------------- | -------------------------------------------------------------- | ----------------------- |
+| `--help`          | boolean | -                 | 显示帮助信息                                                   | -                       |
+| `--version`       | boolean | -                 | 显示版本号                                                     | -                       |
+| `--debug`         | boolean | `false`           | 启用详细日志用于故障排除                                       | `OPIK_TS_DEBUG`         |
+| `--default`       | boolean | `true`            | 对所有提示使用默认选项（非交互模式）                           | `OPIK_TS_DEFAULT`       |
+| `--force-install` | boolean | `false`           | 即使对等依赖检查失败也强制安装包                               | `OPIK_TS_FORCE_INSTALL` |
+| `--install-dir`   | string  | 当前目录          | 指定自定义安装目录                                             | `OPIK_TS_INSTALL_DIR`   |
+| `--use-local`     | boolean | `false`           | 跳过部署选择，配置为本地开发                                   | `OPIK_TS_USE_LOCAL`     |
+
+### 示例
+
+**详细调试模式：**
+
+```bash
+npx opik-ts configure --debug
+```
+
+**使用默认值的非交互模式：**
+
+```bash
+npx opik-ts configure --default
+```
+
+**在指定目录安装：**
+
+```bash
+npx opik-ts configure --install-dir=./my-app
+```
+
+**强制安装（跳过对等依赖检查）：**
+
+```bash
+npx opik-ts configure --force-install
+```
+
+**本地开发设置：**
+
+```bash
+npx opik-ts configure --use-local
+```
+
+这将跳过部署选择步骤，自动为本地开发配置环境（localhost:5173）。
+
+## 环境配置
+
+CLI 会自动创建或更新您的 `.env` 文件，包含必要的配置：
+
+```bash
+# Opik 配置
+OPIK_API_KEY=your-api-key-here
+OPIK_URL_OVERRIDE=https://www.comet.com/opik/api
+OPIK_PROJECT_NAME=default
+OPIK_WORKSPACE=default
+```
+
+<Tip>
+  CLI 会在设置过程中提示您输入 API 密钥。对于 Opik Cloud，
+  您可以从 [Opik 控制面板](https://www.comet.com/opik) 获取 API 密钥。
+  对于自托管实例，请将 `OPIK_URL_OVERRIDE` 设置为您的服务器地址。
+</Tip>
+
+## 故障排除
+
+### 权限错误
+
+如果在安装过程中遇到权限错误：
+
+```bash
+# 使用 --force-install 绕过对等依赖检查
+npx opik-ts configure --force-install
+```
+
+### 包管理器问题
+
+如果 CLI 无法检测到您的包管理器：
+
+1. 确保项目目录中有 `package.json` 文件
+2. 尝试使用调试模式运行 CLI：`npx opik-ts configure --debug`
+3. 通过提示手动选择您的包管理器
+
+### 环境变量设置
+
+如果环境变量未正确设置：
+
+1. 检查 `.env` 文件是否在项目根目录创建
+2. 确保您的应用程序加载了环境变量（例如使用 `dotenv`）
+3. 运行 CLI 后重启开发服务器
+
+### 集成不工作
+
+如果追踪未出现在 Opik 中：
+
+1. 验证您的 `OPIK_API_KEY` 是否正确
+2. 检查 `OPIK_URL_OVERRIDE` 是否指向正确的端点
+3. 确保在应用退出前调用 `flush()`：
+   ```typescript
+   await trackedClient.flush();
+   ```
+
+### 调试模式
+
+启用详细日志以排除问题：
+
+```bash
+npx opik-ts configure --debug
+```
+
+这将显示以下详细信息：
+
+- 项目检测结果
+- 包安装步骤
+- 文件修改
+- 配置更改
+
+## CI/CD 集成
+
+对于自动化部署，使用非交互模式：
+
+```bash
+# 在 CI/CD 流水线中
+npx opik-ts configure --default --force-install
+```
+
+提前设置环境变量：
+
+```bash
+export OPIK_API_KEY="your-api-key"
+export OPENAI_API_KEY="your-openai-key"
+npx opik-ts configure --default
+```
+
+## 后续步骤
+
+运行 CLI 后：
+
+1. **启动应用**：运行您的应用程序并进行 LLM 调用以在 Opik 中查看追踪
+2. **探索追踪**：访问 [Opik 控制面板](https://www.comet.com/opik) 查看追踪
+3. **添加自定义 Span**：了解[手动追踪](/tracing/advanced/log_traces)以进行自定义检测
+4. **设置评估**：为 LLM 输出配置[评估指标](/evaluation/overview)
+5. **生产监控**：为应用程序设置[生产监控](/tracing/dashboards/production_monitoring)
+
+## 更多资源
+
+- [TypeScript SDK 概述](/reference/typescript-sdk/overview)
+- [OpenAI TypeScript 集成](/integrations/openai-typescript)
+- [LangChain TypeScript 集成](/integrations/langchainjs)
+- [Vercel AI SDK 集成](/integrations/vercel-ai-sdk)
+- [GitHub 仓库](https://github.com/comet-ml/opik)

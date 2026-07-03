@@ -1,0 +1,10 @@
+{
+  "datasetItems": {
+    "title": "数据集项目",
+    "description": "查看和管理数据集项目",
+    "empty": {
+      "title": "暂无项目",
+      "description": "向您的数据集添加项目。"
+    }
+  }
+}

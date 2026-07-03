@@ -1,0 +1,278 @@
+---
+description: 自托管 Opik 部署中常见问题的故障排查指南。
+headline: 故障排查 | Opik 文档
+og:description: 了解如何解决自托管 Opik 部署中的常见问题，包括 ClickHouse Zookeeper 元数据丢失及其症状。
+og:site_name: Opik 文档
+og:title: 自托管 Opik 部署故障排查
+title: 故障排查
+---
+
+本指南涵盖自托管 Opik 部署中常见的故障排查场景。
+
+## 常见问题
+
+### ClickHouse 迁移失败：缺少集群宏
+
+#### 问题描述
+
+Opik 要求 ClickHouse 配置集群宏（cluster macros），即使是单节点部署也是如此。Opik 迁移使用 `ON CLUSTER '{cluster}'` 子句来确保 DDL 操作在集群中的所有节点上一致执行。
+
+如果您的 ClickHouse 实例中未配置 `{cluster}` 宏，迁移将失败并显示以下错误：
+
+```
+Code: 139. DB::Exception: No macro 'cluster' in config.
+```
+
+**症状：**
+
+- 后端启动失败或进入 CrashLoopBackOff 状态
+- 后端日志中出现迁移错误
+- 错误信息：`Code: 139. DB::Exception: No macro 'cluster' in config.`
+
+#### 自动配置
+
+**Opik Helm Chart 和 Docker Compose 部署会自动配置所需的集群宏。** 如果您使用的是 Opik 提供的部署配置，应该不会遇到此问题。
+
+#### 需要手动配置
+
+如果您运行的是自己的 ClickHouse 实例（未使用 Opik 的 Helm chart 或 Docker Compose），则需要自行配置集群宏。
+
+##### 1. 添加集群宏配置
+
+将 `{cluster}` 宏添加到 ClickHouse 配置文件中。具体位置取决于您的 ClickHouse 安装方式：
+
+**对于标准 ClickHouse 安装：**
+
+将宏添加到 `/etc/clickhouse-server/config.d/macros.xml`（或您对应的配置目录）：
+
+```xml
+<clickhouse>
+    <macros>
+        <cluster>single_node_cluster</cluster>
+        <shard>1</shard>
+        <replica>clickhouse</replica>
+    </macros>
+</clickhouse>
+```
+
+<Callout intent="info">
+  **注意**：对于单节点部署，`<cluster>` 可以使用任意值。`single_node_cluster` 仅为示例。对于多节点集群，请使用与 `<remote_servers>` 配置匹配的实际集群名称。
+</Callout>
+
+##### 2. 重启 ClickHouse
+
+添加配置后，重启 ClickHouse 使更改生效：
+
+##### 3. 验证配置
+
+您可以通过连接到 ClickHouse 并运行以下命令来验证宏是否已配置：
+
+```sql
+SELECT * FROM system.macros WHERE macro = 'cluster';
+```
+
+您应该能看到包含宏名称和值的一行记录。
+
+##### 4. 重新执行迁移
+
+重启 ClickHouse 后，重新执行后端部署或迁移。后端应在 ClickHouse 就绪后自动重试。
+
+### ClickHouse Zookeeper 元数据丢失
+
+#### 问题描述
+
+如果 Zookeeper 丢失了 ClickHouse 表的元数据路径，您将在 ClickHouse 日志中看到协调异常，也可能在 opik-backend 服务日志中看到。这些错误表明 Zookeeper 无法找到表的元数据路径。
+
+**症状：**
+
+ClickHouse 日志中出现的错误信息会传播到 opik-backend 服务：
+
+```
+Code: 999. Coordination::Exception: Coordination error: No node, path /clickhouse/tables/0/default/DATABASECHANGELOG/log. (KEEPER_EXCEPTION)
+```
+
+这表明 Zookeeper 丢失了一个或多个 ClickHouse 表的元数据路径。
+
+#### 恢复步骤
+
+按照以下步骤恢复 Zookeeper 中的 ClickHouse 表元数据：
+
+##### 1. 清理 Zookeeper 路径（如有需要）
+
+如果 Zookeeper 中只有部分表路径缺失，您需要手动删除现有路径。连接到 Zookeeper Pod 并使用 Zookeeper CLI：
+
+```bash
+# 连接到 Zookeeper Pod
+kubectl exec -it cometml-production-opik-zookeeper-0 -- zkCli.sh -server localhost:2181
+
+# 删除所有 ClickHouse 表路径
+deleteall /clickhouse/tables
+```
+
+<Callout intent="warning">
+  **警告**：此操作会删除 Zookeeper 中的所有表元数据。请谨慎操作。
+</Callout>
+
+##### 2. 重启 ClickHouse
+
+重启 ClickHouse Pod，使其感知 Zookeeper 中已无元数据：
+
+```bash
+kubectl rollout restart statefulset/chi-opik-clickhouse-cluster-0-0
+```
+
+##### 3. 恢复副本定义
+
+连接到第一个 ClickHouse 副本并恢复每个表的副本定义：
+
+```bash
+# 连接到第一个 ClickHouse 副本
+kubectl exec -it chi-opik-clickhouse-cluster-0-0-0 -- clickhouse-client
+```
+
+<Callout intent="warning">
+  **重要**：Opik 的 schema 名称通常为 `opik`，但可能因安装方式不同而有所差异。在继续之前，请在 ClickHouse 中运行 `SHOW DATABASES;` 来验证您的 schema 名称。在后续所有命令中使用该数据库名称。
+</Callout>
+
+对每个表执行 `SYSTEM RESTORE REPLICA` 命令：
+
+```sql
+-- 恢复系统表
+SYSTEM RESTORE REPLICA default.DATABASECHANGELOG;
+SYSTEM RESTORE REPLICA default.DATABASECHANGELOGLOCK;
+
+-- 验证您的 Opik 数据库名称
+SHOW DATABASES;
+
+-- 列出所有 Opik 表（如果不同，请将 'opik' 替换为您的实际 schema 名称）
+USE opik;
+SHOW TABLES;
+
+-- 恢复每个 Opik 表
+SYSTEM RESTORE REPLICA opik.attachments;
+SYSTEM RESTORE REPLICA opik.automation_rule_evaluator_logs;
+SYSTEM RESTORE REPLICA opik.comments;
+SYSTEM RESTORE REPLICA opik.dataset_items;
+SYSTEM RESTORE REPLICA opik.experiment_items;
+SYSTEM RESTORE REPLICA opik.experiments;
+SYSTEM RESTORE REPLICA opik.feedback_scores;
+SYSTEM RESTORE REPLICA opik.guardrails;
+SYSTEM RESTORE REPLICA opik.optimizations;
+SYSTEM RESTORE REPLICA opik.project_configurations;
+SYSTEM RESTORE REPLICA opik.spans;
+SYSTEM RESTORE REPLICA opik.traces;
+SYSTEM RESTORE REPLICA opik.trace_threads;
+SYSTEM RESTORE REPLICA opik.workspace_configurations;
+```
+
+<Callout intent="info">
+  **注意**：具体的表列表可能因 Opik 版本不同而有所差异。使用 `SHOW DATABASES;` 或 `\d` 命令列出数据库中的所有表，并逐一恢复。
+</Callout>
+
+##### 4. 再次重启 ClickHouse
+
+再次重启 ClickHouse 以确保其：
+- 重新建立与 Zookeeper 的连接
+- 验证并同步新恢复的元数据
+- 自动恢复正常复制操作
+
+```bash
+kubectl rollout restart statefulset/chi-opik-clickhouse-cluster-0-0
+```
+
+##### 5. 验证恢复结果
+
+重启完成后，验证副本状态是否正常：
+
+```sql
+-- 检查表创建
+SHOW CREATE TABLE opik.attachments;
+
+-- 验证副本状态
+SELECT table, is_readonly, replica_is_active, zookeeper_exception
+FROM system.replicas;
+```
+
+**预期结果：**
+- `is_readonly = 0`（表可写）
+- `replica_is_active = 1`（副本处于活跃状态）
+- `zookeeper_exception = ''`（无异常）
+
+您也可以从 Zookeeper 端进行验证：
+
+```bash
+# 连接到 Zookeeper CLI
+kubectl exec -it cometml-production-opik-zookeeper-0 -- zkCli.sh -server localhost:2181
+
+# 列出表（示例路径 - 请根据您的数据库名称进行调整）
+ls /clickhouse/tables/0/<database_name>/<table_name>
+```
+
+## 诊断命令
+
+### 连接到 ClickHouse
+
+直接连接到 ClickHouse Pod 进行诊断：
+
+```bash
+# 连接到第一个副本
+kubectl exec -it chi-opik-clickhouse-cluster-0-0-0 -- clickhouse-client
+
+# 连接到第二个副本（如果运行多个副本）
+kubectl exec -it chi-opik-clickhouse-cluster-0-1-0 -- clickhouse-client
+```
+
+### 连接到 Zookeeper
+
+直接连接到 Zookeeper Pod：
+
+```bash
+# 连接到 Zookeeper Pod
+kubectl exec -it cometml-production-opik-zookeeper-0 -- bash
+
+# 运行 Zookeeper 客户端命令
+zkCli.sh -server localhost:2181
+```
+
+常用 Zookeeper 命令：
+
+```bash
+# 列出 Zookeeper 中的表
+kubectl exec -it cometml-production-opik-zookeeper-0 -- \
+  zkCli.sh -server localhost:2181 ls /clickhouse/tables/0/opik
+
+# 从 Zookeeper 中删除特定表
+kubectl exec -it cometml-production-opik-zookeeper-0 -- \
+  zkCli.sh -server localhost:2181 \
+  deleteall /clickhouse/tables/0/opik/optimizations
+```
+
+## 预防措施与最佳实践
+
+为避免 Zookeeper 元数据丢失问题：
+
+1. **定期备份**：定期备份 ClickHouse 数据。详见 [高级 ClickHouse 备份](/self-host/backup) 指南。
+
+2. **监控**：设置 Zookeeper 健康状态和 ClickHouse 副本状态的监控。对 `system.replicas` 中的 `zookeeper_exception` 设置告警。
+
+3. **资源分配**：确保 Zookeeper 拥有足够的资源（CPU、内存、磁盘）以可靠地维护元数据。
+
+4. **持久化存储**：为 Zookeeper 使用持久化卷，防止 Pod 重启时数据丢失。
+
+5. **副本验证**：使用上述诊断查询定期检查副本状态。
+
+## 获取帮助
+
+如果您按照本指南操作后仍有问题：
+
+1. 查看 [Opik GitHub Issues](https://github.com/comet-ml/opik/issues) 中是否有类似问题
+2. 检查 ClickHouse 和 Zookeeper 日志以获取更多错误详情
+3. 在 GitHub 上提交新 issue，包含以下信息：
+   - **Opik 版本**：
+     - 后端版本（opik-backend）
+     - 前端版本（opik-frontend）
+     - Helm chart 版本（如通过 Helm 部署）
+   - ClickHouse 版本
+   - Zookeeper 版本
+   - 所有服务的错误日志（ClickHouse、Zookeeper、opik-backend）
+   - 重现问题的步骤

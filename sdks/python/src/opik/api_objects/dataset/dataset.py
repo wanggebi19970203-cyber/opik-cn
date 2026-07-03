@@ -44,10 +44,8 @@ LOGGER = logging.getLogger(__name__)
 
 class DatasetExportOperations(abc.ABC):
     """
-    Abstract base class providing export operations for dataset items.
-
-    This class defines the common interface for exporting dataset items,
-    shared by both Dataset (current state) and DatasetVersion (specific version).
+    提供数据集项目导出操作的抽象基类。
+    该类定义了导出数据集项目的通用接口，由Dataset（当前状态）和DatasetVersion（特定版本）共享。
     """
 
     @abc.abstractmethod
@@ -59,37 +57,37 @@ class DatasetExportOperations(abc.ABC):
         filter_string: Optional[str] = None,
     ) -> Iterator[dataset_item.DatasetItem]:
         """
-        Stream dataset items as DatasetItem objects.
+        以DatasetItem对象的形式流式传输数据集项目。
 
         Args:
-            nb_samples: Maximum number of items to retrieve.
-            batch_size: Maximum number of items to fetch per batch.
-            dataset_item_ids: Optional list of specific item IDs to retrieve.
-            filter_string: Optional OQL filter string to filter dataset items.
+            nb_samples: 要检索的最大项目数。
+            batch_size: 每批次要获取的最大项目数。
+            dataset_item_ids: 可选的特定项目ID列表，用于检索。
+            filter_string: 可选的OQL过滤字符串，用于过滤数据集项目。
 
         Yields:
-            DatasetItem objects one at a time.
+            每次生成一个DatasetItem对象。
         """
         raise NotImplementedError
 
     def to_pandas(self) -> "pd.DataFrame":
         """
-        Convert the dataset items to a pandas DataFrame.
+        将数据集项目转换为pandas DataFrame。
 
-        Requires the `pandas` library to be installed.
+        需要安装 `pandas` 库。
 
         Returns:
-            A pandas DataFrame containing all items.
+            包含所有项目的pandas DataFrame。
         """
         dataset_items = list(self.__internal_api__stream_items_as_dataclasses__())
         return converters.to_pandas(dataset_items, keys_mapping={})
 
     def to_json(self) -> str:
         """
-        Convert the dataset items to a JSON string.
+        将数据集项目转换为JSON字符串。
 
         Returns:
-            A JSON string representation of all items.
+            所有项目的JSON字符串表示。
         """
         dataset_items = list(self.__internal_api__stream_items_as_dataclasses__())
         return converters.to_json(dataset_items, keys_mapping={})
@@ -100,27 +98,27 @@ class DatasetExportOperations(abc.ABC):
         filter_string: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Retrieve dataset items as a list of dictionaries.
+        以字典列表的形式检索数据集项目。
 
         Args:
-            nb_samples: Maximum number of items to retrieve. If not set, all items are returned.
-            filter_string: Optional OQL filter string to filter dataset items.
-                Supports filtering by tags, data fields, metadata, etc.
+            nb_samples: 要检索的最大项目数。如果未设置，则返回所有项目。
+            filter_string: 可选的OQL过滤字符串，用于过滤数据集项目。
+                支持按标签、数据字段、元数据等进行过滤。
 
-                Supported columns include:
-                - `id`, `source`, `trace_id`, `span_id`: String fields
-                - `data`: Dictionary field (use dot notation, e.g., "data.category")
-                - `tags`: List field (use "contains" operator)
-                - `created_at`, `last_updated_at`: DateTime fields (ISO 8601 format)
-                - `created_by`, `last_updated_by`: String fields
+                支持的列包括：
+                - `id`, `source`, `trace_id`, `span_id`: 字符串字段
+                - `data`: 字典字段（使用点表示法，例如 "data.category"）
+                - `tags`: 列表字段（使用 "contains" 运算符）
+                - `created_at`, `last_updated_at`: 日期时间字段（ISO 8601格式）
+                - `created_by`, `last_updated_by`: 字符串字段
 
-                Examples:
-                - `tags contains "failed"` - Items with 'failed' tag
-                - `data.category = "test"` - Items with specific data field value
-                - `created_at >= "2024-01-01T00:00:00Z"` - Items created after date
+                示例：
+                - `tags contains "failed"` - 包含 'failed' 标签的项目
+                - `data.category = "test"` - 具有特定数据字段值的项目
+                - `created_at >= "2024-01-01T00:00:00Z"` - 在指定日期之后创建的项目
 
         Returns:
-            A list of dictionaries representing the dataset items.
+            表示数据集项目的字典列表。
         """
         dataset_items_as_dicts = [
             {"id": item.id, **item.get_content()}
@@ -135,26 +133,24 @@ class DatasetExportOperations(abc.ABC):
         self,
     ) -> Optional[dataset_version_public.DatasetVersionPublic]:
         """
-        Get version information for experiment association.
+        获取用于实验关联的版本信息。
 
         Returns:
-            DatasetVersionPublic containing version metadata (id, version_name, etc.).
-            For Dataset, returns info about the current/latest version, or None if no version exists.
-            For DatasetVersion, returns info about this specific version.
+            包含版本元数据（id, version_name等）的DatasetVersionPublic。
+            对于Dataset，返回当前/最新版本的信息，如果不存在版本则返回None。
+            对于DatasetVersion，返回此特定版本的信息。
         """
         raise NotImplementedError
 
 
 class DatasetVersion(DatasetExportOperations):
     """
-    A read-only view of a specific dataset version.
+    特定数据集版本的只读视图。
 
-    This class provides access to dataset items at a specific version point in time.
-    It supports reading version metadata and retrieving items, but does not allow
-    mutations to the dataset.
+    该类提供对特定时间点数据集项目的访问。
+    它支持读取版本元数据和检索项目，但不允许对数据集进行修改。
 
-    This object should not be created directly. Use :meth:`Dataset.get_dataset_version`
-    to obtain an instance.
+    不应直接创建此对象。请使用 :meth:`Dataset.get_dataset_version` 获取实例。
     """
 
     def __init__(
@@ -175,92 +171,92 @@ class DatasetVersion(DatasetExportOperations):
 
     @property
     def dataset_name(self) -> str:
-        """The name of the dataset this version belongs to."""
+        """此版本所属数据集的名称。"""
         return self._dataset_name
 
     @property
     def project_name(self) -> Optional[str]:
-        """The name of the project this dataset belongs to."""
+        """此数据集所属项目的名称。"""
         return self._project_name
 
     @property
     def name(self) -> str:
-        """The name of the dataset this version belongs to (alias for dataset_name)."""
+        """此版本所属数据集的名称（dataset_name的别名）。"""
         return self._dataset_name
 
     @property
     def dataset_id(self) -> str:
-        """The unique identifier of the dataset this version belongs to."""
+        """此版本所属数据集的唯一标识符。"""
         return self._dataset_id
 
     @property
     def id(self) -> str:
-        """The unique identifier of the dataset this version belongs to (alias for dataset_id)."""
+        """此版本所属数据集的唯一标识符（dataset_id的别名）。"""
         return self._dataset_id
 
     @property
     def version_id(self) -> Optional[str]:
-        """The unique identifier of this specific version."""
+        """此特定版本的唯一标识符。"""
         return self._version_info.id
 
     @property
     def dataset_items_count(self) -> Optional[int]:
-        """Total number of items in this version (alias for items_total)."""
+        """此版本中的项目总数（items_total的别名）。"""
         return self._version_info.items_total
 
     @property
     def version_hash(self) -> Optional[str]:
-        """The unique hash identifier of this version."""
+        """此版本的唯一哈希标识符。"""
         return self._version_info.version_hash
 
     @property
     def version_name(self) -> Optional[str]:
-        """The sequential version name (e.g., 'v1', 'v2')."""
+        """顺序版本名称（例如 'v1', 'v2'）。"""
         return self._version_info.version_name
 
     @property
     def tags(self) -> Optional[List[str]]:
-        """Tags associated with this version."""
+        """与此版本关联的标签。"""
         return self._version_info.tags
 
     @property
     def is_latest(self) -> Optional[bool]:
-        """Whether this is the latest version of the dataset."""
+        """这是否是数据集的最新版本。"""
         return self._version_info.is_latest
 
     @property
     def items_total(self) -> Optional[int]:
-        """Total number of items in this version."""
+        """此版本中的项目总数。"""
         return self._version_info.items_total
 
     @property
     def items_added(self) -> Optional[int]:
-        """Number of items added since the previous version."""
+        """自上一版本以来添加的项目数。"""
         return self._version_info.items_added
 
     @property
     def items_modified(self) -> Optional[int]:
-        """Number of items modified since the previous version."""
+        """自上一版本以来修改的项目数。"""
         return self._version_info.items_modified
 
     @property
     def items_deleted(self) -> Optional[int]:
-        """Number of items deleted since the previous version."""
+        """自上一版本以来删除的项目数。"""
         return self._version_info.items_deleted
 
     @property
     def change_description(self) -> Optional[str]:
-        """Description of changes in this version."""
+        """此版本更改的描述。"""
         return self._version_info.change_description
 
     @property
     def created_at(self) -> Optional[datetime.datetime]:
-        """Timestamp when this version was created."""
+        """创建此版本的时间戳。"""
         return self._version_info.created_at
 
     @property
     def created_by(self) -> Optional[str]:
-        """User who created this version."""
+        """创建此版本的用户。"""
         return self._version_info.created_by
 
     @override
@@ -287,10 +283,10 @@ class DatasetVersion(DatasetExportOperations):
         self,
     ) -> Optional[dataset_version_public.DatasetVersionPublic]:
         """
-        Get version information for this specific dataset version.
+        获取此特定数据集版本的版本信息。
 
         Returns:
-            DatasetVersionPublic containing this version's metadata.
+            包含此版本元数据的DatasetVersionPublic。
         """
         return self._version_info
 
@@ -299,25 +295,23 @@ class DatasetVersion(DatasetExportOperations):
         evaluator_model: Optional[str] = None,
     ) -> List[Any]:
         """
-        Get suite-level evaluators for this dataset version.
+        获取此数据集版本的套件级评估器。
 
-        DatasetVersion does not support suite-level evaluators, so this always
-        returns an empty list.
+        DatasetVersion不支持套件级评估器，因此始终返回空列表。
 
         Returns:
-            Empty list.
+            空列表。
         """
         return []
 
     def get_execution_policy(self) -> execution_policy.ExecutionPolicy:
         """
-        Get the execution policy for this dataset version.
+        获取此数据集版本的执行策略。
 
-        DatasetVersion does not support suite-level execution policy, so this
-        returns the default execution policy.
+        DatasetVersion不支持套件级执行策略，因此返回默认执行策略。
 
         Returns:
-            Default execution policy.
+            默认执行策略。
         """
         return execution_policy.DEFAULT_EXECUTION_POLICY.copy()
 
@@ -333,7 +327,7 @@ class Dataset(DatasetExportOperations):
         client: Optional[Any] = None,
     ) -> None:
         """
-        A Dataset object. This object should not be created directly, instead use :meth:`opik.Opik.create_dataset` or :meth:`opik.Opik.get_dataset`.
+        Dataset对象。不应直接创建此对象，请使用 :meth:`opik.Opik.create_dataset` 或 :meth:`opik.Opik.get_dataset`。
         """
         self._name = name
         self._description = description
@@ -344,13 +338,11 @@ class Dataset(DatasetExportOperations):
 
         self._id_to_hash: Dict[str, str] = {}
         self._hashes: Set[str] = set()
-        # True when the local hash cache is consistent with the backend.
-        # Directly-constructed Datasets (create_dataset, test-suite helpers,
-        # unit tests) start synced — there's nothing on the backend we haven't
-        # seen locally. The backend-fetch factories (`from_public`,
-        # `rest_operations.get_datasets`) flip this to False so dedup does a
-        # one-shot sync on the first `insert()` instead of paying an N+1
-        # sync at list time.
+        # 当本地哈希缓存与后端一致时为True。
+        # 直接构建的Dataset（create_dataset, test-suite helpers, unit tests）
+        # 开始时已同步——后端没有本地未见过的内容。后端获取工厂（`from_public`、
+        # `rest_operations.get_datasets`）将其设为False，以便去重在第一次`insert()`
+        # 时进行一次性同步，而不是在列表时支付N+1同步。
         self._hashes_synced: bool = True
 
     @classmethod
@@ -361,12 +353,10 @@ class Dataset(DatasetExportOperations):
         rest_client: rest_api_client.OpikApi,
         client: Optional[Any] = None,
     ) -> "Dataset":
-        """Build a Dataset from a backend response, resolving the actual project.
+        """从后端响应构建Dataset，解析实际项目。
 
-        The backend may find the dataset via workspace-wide fallback even when
-        the caller's project_name doesn't match the dataset's actual project.
-        This method uses project_id from the response to resolve the real
-        project name, so downstream calls target the correct project.
+        即使调用者的project_name与数据集的实际项目不匹配，后端也可能通过工作区范围的回退找到数据集。
+        此方法使用响应中的project_id来解析真实的项目名称，以便下游调用指向正确的项目。
         """
         actual_project_name: Optional[str] = None
         if dataset_fern.project_id is not None:
@@ -382,39 +372,39 @@ class Dataset(DatasetExportOperations):
             dataset_items_count=dataset_fern.dataset_items_count,
             client=client,
         )
-        # Backend may already hold items we haven't seen; lazy-sync on first
-        # insert so content-hash dedup still works without paying a sync now.
+        # 后端可能已持有我们未见过的项目；在首次插入时延迟同步，
+        # 以便内容哈希去重仍然有效，而无需立即支付同步开销。
         dataset_.__internal_api__hashes_synced__ = False
         return dataset_
 
     @functools.cached_property
     def id(self) -> str:
-        """The id of the dataset"""
+        """数据集的ID"""
         return self._rest_client.datasets.get_dataset_by_identifier(
             dataset_name=self._name, project_name=self._project_name
         ).id
 
     @property
     def name(self) -> str:
-        """The name of the dataset."""
+        """数据集的名称。"""
         return self._name
 
     @property
     def project_name(self) -> Optional[str]:
-        """The name of the project this dataset belongs to."""
+        """此数据集所属项目的名称。"""
         return self._project_name
 
     @property
     def description(self) -> Optional[str]:
-        """The description of the dataset."""
+        """数据集的描述。"""
         return self._description
 
     @property
     def dataset_items_count(self) -> Optional[int]:
         """
-        The total number of items in the dataset.
+        数据集中的项目总数。
 
-        If the count is not cached locally, it will be fetched from the backend.
+        如果计数未在本地缓存，则将从后端获取。
         """
         if self._dataset_items_count is None:
             dataset_info = self._rest_client.datasets.get_dataset_by_id(id=self.id)
@@ -424,13 +414,12 @@ class Dataset(DatasetExportOperations):
 
     def get_current_version_name(self) -> Optional[str]:
         """
-        Get the current version name of the dataset.
+        获取数据集的当前版本名称。
 
-        The version name is fetched from the backend and reflects the latest
-        committed version after any mutation operations (insert, update, delete).
+        版本名称从后端获取，反映任何修改操作（插入、更新、删除）后最新的已提交版本。
 
         Returns:
-            The current version name (e.g., 'v1', 'v2'), or None if no version exists.
+            当前版本名称（例如 'v1', 'v2'），如果不存在版本则返回None。
         """
         version_info = self.get_version_info()
         return version_info.version_name if version_info else None
@@ -440,11 +429,11 @@ class Dataset(DatasetExportOperations):
         self,
     ) -> Optional[dataset_version_public.DatasetVersionPublic]:
         """
-        Get version information for the current (latest) dataset version.
+        获取当前（最新）数据集版本的版本信息。
 
         Returns:
-            DatasetVersionPublic containing the current version's metadata,
-            or None if no version exists yet.
+            包含当前版本元数据的DatasetVersionPublic，
+            如果尚不存在版本则返回None。
         """
         versions_response = None
         try:
@@ -469,15 +458,15 @@ class Dataset(DatasetExportOperations):
         evaluator_model: Optional[str] = None,
     ) -> List[Any]:
         """
-        Get suite-level evaluators from the current dataset version.
+        从当前数据集版本获取套件级评估器。
 
-        Converts EvaluatorItemPublic objects from the BE into LLMJudge instances.
+        将来自后端的EvaluatorItemPublic对象转换为LLMJudge实例。
 
         Args:
-            evaluator_model: Optional model name to use for LLMJudge evaluators.
+            evaluator_model: 可选的模型名称，用于LLMJudge评估器。
 
         Returns:
-            List of LLMJudge instances extracted from the version.
+            从版本中提取的LLMJudge实例列表。
         """
         from opik.evaluation.suite_evaluators import llm_judge
         from opik.evaluation.suite_evaluators.llm_judge import (
@@ -516,10 +505,10 @@ class Dataset(DatasetExportOperations):
         self,
     ) -> execution_policy.ExecutionPolicy:
         """
-        Get suite-level execution policy from the current dataset version.
+        从当前数据集版本获取套件级执行策略。
 
         Returns:
-            ExecutionPolicy dict with runs_per_item and pass_threshold.
+            包含runs_per_item和pass_threshold的ExecutionPolicy字典。
         """
         version_info = self.get_version_info()
         if version_info is not None and version_info.execution_policy is not None:
@@ -537,10 +526,10 @@ class Dataset(DatasetExportOperations):
 
     def get_tags(self) -> List[str]:
         """
-        Get the tags for this dataset.
+        获取此数据集的标签。
 
         Returns:
-            List of tag strings.
+            标签字符串列表。
         """
         dataset_fern = self._rest_client.datasets.get_dataset_by_identifier(
             dataset_name=self._name, project_name=self._project_name
@@ -550,13 +539,13 @@ class Dataset(DatasetExportOperations):
     def _convert_to_rest_item(
         self, item: dataset_item.DatasetItem
     ) -> rest_dataset_item.DatasetItemWrite:
-        """Convert a DatasetItem to REST API format.
+        """将DatasetItem转换为REST API格式。
 
         Args:
-            item: The DatasetItem to convert.
+            item: 要转换的DatasetItem。
 
         Returns:
-            DatasetItemWrite object ready for REST API.
+            准备好用于REST API的DatasetItemWrite对象。
         """
         evaluators = None
         if item.evaluators:
@@ -592,13 +581,12 @@ class Dataset(DatasetExportOperations):
         batch: List[rest_dataset_item.DatasetItemWrite],
         batch_group_id: str,
     ) -> None:
-        """Insert a batch of dataset items with automatic retry on rate limit errors.
+        """插入一批数据集项目，在遇到速率限制错误时自动重试。
 
         Args:
-            batch: List of dataset items to insert.
-            batch_group_id: UUIDv7 identifier that groups all batches from a single
-                user operation together. All batches sent as part of one insert/update
-                call share the same batch_group_id.
+            batch: 要插入的数据集项目列表。
+            batch_group_id: UUIDv7标识符，将来自单个用户操作的所有批次组合在一起。
+                作为一次插入/更新调用的一部分发送的所有批次共享相同的batch_group_id。
         """
         rest_helpers.ensure_rest_api_call_respecting_rate_limit(
             lambda: self._rest_client.datasets.create_or_update_dataset_items(
@@ -613,14 +601,12 @@ class Dataset(DatasetExportOperations):
     def __internal_api__insert_items_as_dataclasses__(
         self, items: List[dataset_item.DatasetItem]
     ) -> None:
-        # Lazy-sync against the backend the first time we insert into a
-        # dataset that was fetched from the backend (list or get-by-name
-        # factory), so content-hash dedup still works without paying an
-        # N+1 sync at list time.
+        # 第一次插入从后端获取的数据集时（list或get-by-name工厂）
+        # 进行延迟同步，以便内容哈希去重仍然有效，而无需在列表时支付N+1同步。
         if not self._hashes_synced:
             self.__internal_api__sync_hashes__()
 
-        # Remove duplicates if they already exist
+        # 如果已存在重复项则删除
         deduplicated_items: List[dataset_item.DatasetItem] = []
         for item in items:
             item_hash = item.content_hash()
@@ -650,99 +636,16 @@ class Dataset(DatasetExportOperations):
             LOGGER.debug("Sending dataset items batch of size %d", len(batch))
             self._insert_batch_with_retry(batch, batch_group_id=batch_group_id)
 
-        # Invalidate the cached count so it will be fetched from backend on next access
+        # 使缓存的计数失效，以便下次访问时从后端获取
+        # 使缓存的计数失效，以便下次访问时从后端获取
         self._dataset_items_count = None
-
-    def insert(self, items: Sequence[Dict[str, Any]]) -> None:
-        """
-        Insert new items into the dataset. A new dataset version will be created.
-
-        Args:
-            items: List of dicts (which will be converted to dataset items)
-                to add to the dataset.
-        """
-        dataset_items: List[dataset_item.DatasetItem] = [  # type: ignore
-            (dataset_item.DatasetItem(**item) if isinstance(item, dict) else item)
-            for item in items
-        ]
-        self.__internal_api__insert_items_as_dataclasses__(dataset_items)
-
-    @property
-    def __internal_api__hashes_synced__(self) -> bool:
-        """Whether the local hash cache is in sync with the backend.
-
-        `__init__` defaults this to True (a freshly constructed Dataset
-        has no backend state to sync). Factory paths that construct a
-        Dataset from an existing backend state (`from_public`,
-        `rest_operations.get_datasets`) flip it to False so the first
-        :meth:`insert` triggers a one-shot sync instead of paying an
-        N+1 sync at list time.
-        """
-        return self._hashes_synced
-
-    @__internal_api__hashes_synced__.setter
-    def __internal_api__hashes_synced__(self, value: bool) -> None:
-        self._hashes_synced = value
-
-    def __internal_api__sync_hashes__(self) -> None:
-        """Updates all the hashes in the dataset"""
-        LOGGER.debug("Start hash sync in dataset")
-
-        self._id_to_hash = {}
-        self._hashes = set()
-
-        for item in self.__internal_api__stream_items_as_dataclasses__():
-            item_hash = item.content_hash()
-            self._id_to_hash[item.id] = item_hash  # type: ignore
-            self._hashes.add(item_hash)
-
-        self._hashes_synced = True
-        LOGGER.debug("Finish hash sync in dataset")
-
-    def update(self, items: List[Dict[str, Any]]) -> None:
-        """
-        Update existing items in the dataset.
-
-        Args:
-            items: List of DatasetItem objects to update in the dataset. You need to provide the full item object as it will override what has been supplied previously.
-
-        Raises:
-            DatasetItemUpdateOperationRequiresItemId: If any item in the list is missing an id.
-        """
-        for item in items:
-            if "id" not in item:
-                raise exceptions.DatasetItemUpdateOperationRequiresItemId(
-                    "Missing id for dataset item to update: %s", item
-                )
-
-        self.insert(items)
-
-    def _delete_batch_with_retry(
-        self,
-        batch: List[str],
-        batch_group_id: str,
-    ) -> None:
-        """Delete a batch of dataset items with automatic retry on rate limit errors.
-
-        Args:
-            batch: List of item IDs to delete.
-            batch_group_id: UUIDv7 identifier that groups all batches from a single
-                user operation together. All batches sent as part of one delete
-                call share the same batch_group_id.
-        """
-        rest_helpers.ensure_rest_api_call_respecting_rate_limit(
-            lambda: self._rest_client.datasets.delete_dataset_items(
-                item_ids=batch, batch_group_id=batch_group_id
-            )
-        )
-        LOGGER.debug("Successfully deleted dataset items batch of size %d", len(batch))
 
     def delete(self, items_ids: List[str]) -> None:
         """
-        Delete items from the dataset. A new dataset version will be created.
+        从数据集中删除项目。将创建一个新的数据集版本。
 
         Args:
-            items_ids: List of item ids to delete.
+            items_ids: 要删除的项目ID列表。
         """
         batches = sequence_splitter.split_into_batches(
             items_ids, max_length=constants.DATASET_ITEMS_MAX_BATCH_SIZE
@@ -760,12 +663,12 @@ class Dataset(DatasetExportOperations):
                     self._hashes.discard(hash)
                     del self._id_to_hash[item_id]
 
-        # Invalidate the cached count so it will be fetched from backend on next access
+        # 使缓存的计数失效，以便下次访问时从后端获取
         self._dataset_items_count = None
 
     def clear(self) -> None:
         """
-        Delete all items from the given dataset. A new dataset version will be created.
+        删除给定数据集中的所有项目。将创建一个新的数据集版本。
         """
         item_ids = [
             item.id
@@ -784,22 +687,21 @@ class Dataset(DatasetExportOperations):
         filter_string: Optional[str] = None,
     ) -> Iterator[dataset_item.DatasetItem]:
         """
-        Stream dataset items as a generator instead of loading all at once.
+        以生成器的形式流式传输数据集项目，而不是一次性加载所有项目。
 
-        This method yields dataset items one at a time, enabling evaluation to start
-        processing items before the entire dataset is downloaded. This is particularly
-        useful for large datasets with heavy payloads (images, videos, audio).
+        此方法每次生成一个数据集项目，使评估能够在整个数据集下载之前开始处理项目。
+        这对于具有大型负载（图像、视频、音频）的大型数据集特别有用。
 
         Args:
-            nb_samples: Maximum number of items to retrieve. If None, all items are streamed.
-            batch_size: Maximum number of items to fetch per batch from the backend.
-                        If None, uses the default value from constants.DATASET_STREAM_BATCH_SIZE.
-            dataset_item_ids: Optional list of specific item IDs to retrieve. If provided,
-                            only items with matching IDs will be yielded.
-            filter_string: Optional OQL filter string to filter dataset items.
+            nb_samples: 要检索的最大项目数。如果为None，则流式传输所有项目。
+            batch_size: 每批次从后端获取的最大项目数。
+                        如果为None，则使用constants.DATASET_STREAM_BATCH_SIZE的默认值。
+            dataset_item_ids: 可选的特定项目ID列表，用于检索。如果提供，
+                            只有具有匹配ID的项目将被生成。
+            filter_string: 可选的OQL过滤字符串，用于过滤数据集项目。
 
         Yields:
-            DatasetItem objects one at a time
+            每次生成一个DatasetItem对象
         """
         return rest_operations.stream_dataset_items(
             rest_client=self._rest_client,
@@ -820,12 +722,12 @@ class Dataset(DatasetExportOperations):
     ) -> None:
         """
         Args:
-            json_array: json string of format: "[{...}, {...}, {...}]" where every dictionary
-                is to be transformed into dataset item
-            keys_mapping: dictionary that maps json keys to item fields names
-                Example: {'Expected output': 'expected_output'}
-            ignore_keys: if your json dicts contain keys that are not needed for DatasetItem
-                construction - pass them as ignore_keys argument
+            json_array: 格式为 "[{...}, {...}, {...}]" 的json字符串，其中每个字典
+                将被转换为数据集项目。
+            keys_mapping: 将json键映射到项目字段名称的字典。
+                示例: {'Expected output': 'expected_output'}
+            ignore_keys: 如果您的json字典包含DatasetItem构造不需要的键，
+                请将它们作为ignore_keys参数传递。
         """
         keys_mapping = {} if keys_mapping is None else keys_mapping
         ignore_keys = [] if ignore_keys is None else ignore_keys
@@ -843,14 +745,14 @@ class Dataset(DatasetExportOperations):
         ignore_keys: Optional[List[str]] = None,
     ) -> None:
         """
-        Read JSONL from a file and insert it into the dataset.
+        从文件读取JSONL并将其插入数据集。
 
         Args:
-            file_path: Path to the JSONL file
-            keys_mapping: dictionary that maps json keys to item fields names
-                Example: {'Expected output': 'expected_output'}
-            ignore_keys: if your json dicts contain keys that are not needed for DatasetItem
-                construction - pass them as ignore_keys argument
+            file_path: JSONL文件的路径。
+            keys_mapping: 将json键映射到项目字段名称的字典。
+                示例: {'Expected output': 'expected_output'}
+            ignore_keys: 如果您的json字典包含DatasetItem构造不需要的键，
+                请将它们作为ignore_keys参数传递。
         """
         keys_mapping = {} if keys_mapping is None else keys_mapping
         ignore_keys = [] if ignore_keys is None else ignore_keys
@@ -864,14 +766,14 @@ class Dataset(DatasetExportOperations):
         ignore_keys: Optional[List[str]] = None,
     ) -> None:
         """
-        Requires: `pandas` library to be installed.
+        需要安装 `pandas` 库。
 
         Args:
-            dataframe: pandas dataframe
-            keys_mapping: Dictionary that maps dataframe column names to dataset item field names.
-                Example: {'Expected output': 'expected_output'}
-            ignore_keys: if your dataframe contains columns that are not needed for DatasetItem
-                construction - pass them as ignore_keys argument
+            dataframe: pandas dataframe。
+            keys_mapping: 将dataframe列名映射到数据集项目字段名称的字典。
+                示例: {'Expected output': 'expected_output'}
+            ignore_keys: 如果您的dataframe包含DatasetItem构造不需要的列，
+                请将它们作为ignore_keys参数传递。
         """
         keys_mapping = {} if keys_mapping is None else keys_mapping
         ignore_keys = [] if ignore_keys is None else ignore_keys
@@ -882,20 +784,19 @@ class Dataset(DatasetExportOperations):
 
     def get_version_view(self, version_name: str) -> DatasetVersion:
         """
-        Get a read-only view of a specific dataset version.
+        获取特定数据集版本的只读视图。
 
-        The returned DatasetVersion object allows reading version metadata and
-        retrieving items via :meth:`DatasetVersion.get_items`, but does not support
-        mutations.
+        返回的DatasetVersion对象允许读取版本元数据并通过 :meth:`DatasetVersion.get_items` 检索项目，
+        但不支持修改。
 
         Args:
-            version_name: The version name (e.g., 'v1', 'v2').
+            version_name: 版本名称（例如 'v1', 'v2'）。
 
         Returns:
-            A read-only DatasetVersion object for accessing the specified version.
+            用于访问指定版本的只读DatasetVersion对象。
 
         Raises:
-            opik.exceptions.DatasetVersionNotFound: If the specified version does not exist.
+            opik.exceptions.DatasetVersionNotFound: 如果指定的版本不存在。
 
         Example:
             >>> dataset = client.get_dataset("my_dataset")

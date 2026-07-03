@@ -1,0 +1,147 @@
+---
+description: 从这里开始将 Opik 集成到基于 Pipecat 的实时语音智能体应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Pipecat | Opik 文档
+og:description: 学习如何将 Opik 与 Pipecat 集成，实现实时语音智能体的监控和追踪，增强 AI 系统的可观测性。
+og:site_name: Opik 文档
+og:title: 将 Opik 与 Pipecat 集成以增强 AI
+title: 使用 Opik 实现 Pipecat 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/pipecat
+---
+
+[Pipecat](https://github.com/pipecat-ai/pipecat) 是一个开源 Python 框架，用于构建实时语音和多模态对话 AI 智能体。由 Daily 开发，它支持完全可编程的 AI 语音智能体和多模态交互，为希望构建对话 AI 系统的开发者提供灵活的解决方案。
+
+本指南介绍如何将 Opik 与 Pipecat 集成，实现实时语音智能体的可观测性和追踪，使你能够在 Opik 仪表板中监控、调试和优化 Pipecat 智能体。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=pipecat&utm_campaign=opik) 提供托管版本的 Opik 平台，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=pipecat&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=pipecat&utm_campaign=opik)。
+
+<Frame>
+  <img src="/img/tracing/pipecat_integration.png" />
+</Frame>
+
+## 快速开始
+
+要将 Pipecat 集成与 Opik 一起使用，你需要安装 Pipecat 和所需的 OpenTelemetry 包：
+
+```bash
+pip install pipecat-ai[daily,webrtc,silero,cartesia,deepgram,openai,tracing] opentelemetry-exporter-otlp-proto-http websockets
+```
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+    </Tab>
+</Tabs>
+
+## 在 Pipecat 中使用 Opik
+
+对于基本示例，你需要一个 OpenAI API key。可以将其设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+
+或通过编程方式设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+在你的 Pipecat 应用程序中通过设置 OpenTelemetry 检测和配置管道任务来启用追踪。有关 Pipecat OpenTelemetry 实现的完整详情，请参阅[官方 Pipecat OpenTelemetry 文档](https://docs.pipecat.ai/server/utilities/opentelemetry)：
+
+```python
+# 使用 http 导出器初始化 OpenTelemetry
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from pipecat.utils.tracing.setup import setup_tracing
+
+# 从 .env 自动配置
+exporter = OTLPSpanExporter()
+
+setup_tracing(
+    service_name="pipecat-demo",
+    exporter=exporter,
+)
+
+# 在 PipelineTask 中启用追踪
+task = PipelineTask(
+    pipeline,
+    params=PipelineParams(
+        allow_interruptions=True,
+        enable_metrics=True,  # 某些服务指标需要
+    ),
+    enable_tracing=True,  # 启用轮次和对话追踪
+    conversation_id="customer-123",  # 可选 - 如果未提供将自动生成
+)
+```
+
+## 追踪结构
+
+Pipecat 按照对话的自然结构组织层级追踪，如其 [OpenTelemetry 指南](https://docs.pipecat.ai/server/utilities/opentelemetry) 中所述：
+
+```
+对话 (conversation_id)
+├── 轮次
+│   ├── stt (语音转文本)
+│   ├── llm (语言模型)
+│   └── tts (文本转语音)
+└── 轮次
+    ├── stt
+    ├── llm
+    └── tts
+```
+
+此结构允许你跟踪对话的完整生命周期，并测量各个轮次和服务的延迟。
+
+## 理解追踪
+
+基于 Pipecat 的 [OpenTelemetry 实现](https://docs.pipecat.ai/server/utilities/opentelemetry)，追踪包括：
+
+- **对话 Span**：带有对话 ID 和类型的顶层 span
+- **轮次 Span**：带有轮次编号、持续时间和中断状态的单个对话轮次
+- **服务 Span**：带有丰富属性的详细服务操作：
+  - **LLM 服务**：模型、输入/输出 token、响应文本、工具配置、TTFB 指标
+  - **TTS 服务**：语音 ID、字符数、合成文本、TTFB 指标
+  - **STT 服务**：转录文本、语言检测、语音活动检测
+- **性能指标**：每个服务的首字节时间 (TTFB) 和处理持续时间
+
+## 结果查看
+
+一旦你的 Pipecat 应用程序通过 Opik 进行追踪，你就可以在 Opik UI 中查看 OpenTelemetry 追踪。你将看到：
+
+- Pipecat 发送的层级对话和轮次结构
+- 带有 Pipecat 包含的属性（LLM token、TTS 字符数、STT 转录）的服务级 span
+- Pipecat 提供的性能指标，如处理持续时间和首字节时间
+- 标准的 OpenTelemetry 追踪可视化和搜索功能
+
+### 获取帮助
+
+- 查阅 [Pipecat OpenTelemetry 文档](https://docs.pipecat.ai/server/utilities/opentelemetry) 了解追踪设置和配置
+- 查看 [OpenTelemetry Python 文档](https://opentelemetry.io/docs/instrumentation/python/) 了解通用 OTEL 设置
+- 访问 [Pipecat GitHub 仓库](https://github.com/pipecat-ai/pipecat) 了解框架特定问题
+- 查阅 Opik 文档了解追踪查看和 OpenTelemetry 端点配置
+
+## 进一步改进
+
+如果你希望我们改进此集成，只需在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。

@@ -52,7 +52,7 @@ import static com.comet.opik.utils.ValidationUtils.NULL_OR_NOT_BLANK;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Attachments", description = "Attachments related resources")
+@Tag(name = "Attachments", description = "附件相关资源")
 public class AttachmentResource {
 
     private final @NonNull AttachmentService attachmentService;
@@ -62,10 +62,10 @@ public class AttachmentResource {
     @Path("/upload-start")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(operationId = "startMultiPartUpload", summary = "Start multipart attachment upload", description = "Start multipart attachment upload", responses = {
-            @ApiResponse(responseCode = "200", description = "MultipartUploadResponse", content = @Content(schema = @Schema(implementation = StartMultipartUploadResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "startMultiPartUpload", summary = "开始分片附件上传", description = "开始分片附件上传", responses = {
+            @ApiResponse(responseCode = "200", description = "分片上传响应", content = @Content(schema = @Schema(implementation = StartMultipartUploadResponse.class))),
+            @ApiResponse(responseCode = "401", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问被禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response startMultiPartUpload(
             @RequestBody(content = @Content(schema = @Schema(implementation = StartMultipartUploadRequest.class))) @Valid StartMultipartUploadRequest request) {
@@ -84,10 +84,10 @@ public class AttachmentResource {
     @Path("/upload-complete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(operationId = "completeMultiPartUpload", summary = "Complete multipart attachment upload", description = "Complete multipart attachment upload", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "completeMultiPartUpload", summary = "完成分片附件上传", description = "完成分片附件上传", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "401", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问被禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response completeMultiPartUpload(
             @RequestBody(content = @Content(schema = @Schema(implementation = CompleteMultipartUploadRequest.class))) @Valid CompleteMultipartUploadRequest request) {
@@ -106,15 +106,15 @@ public class AttachmentResource {
     @Path("/upload")
     @Consumes("*/*")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(operationId = "uploadAttachment", summary = "Upload attachment to MinIO", description = "Upload attachment to MinIO", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "uploadAttachment", summary = "上传附件到 MinIO", description = "上传附件到 MinIO", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "401", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问被禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response uploadAttachment(
             InputStream inputStream,
             @QueryParam("file_name") @NotNull String fileName,
-            @QueryParam("project_name") @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "If null, the default project is used") String projectName,
+            @QueryParam("project_name") @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "如果为空，则使用默认项目") String projectName,
             @QueryParam("mime_type") String mimeType,
             @QueryParam("entity_type") @NotNull EntityType entityType,
             @QueryParam("entity_id") @NotNull UUID entityId) throws IOException {
@@ -142,10 +142,10 @@ public class AttachmentResource {
     @GET
     @Path("/list")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(operationId = "attachmentList", summary = "Attachments list for entity", description = "Attachments list for entity", responses = {
-            @ApiResponse(responseCode = "200", description = "Attachment Resource", content = @Content(schema = @Schema(implementation = Attachment.AttachmentPage.class))),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "attachmentList", summary = "获取实体的附件列表", description = "获取实体的附件列表", responses = {
+            @ApiResponse(responseCode = "200", description = "附件资源", content = @Content(schema = @Schema(implementation = Attachment.AttachmentPage.class))),
+            @ApiResponse(responseCode = "401", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问被禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response attachmentList(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
@@ -177,10 +177,10 @@ public class AttachmentResource {
     @GET
     @Path("/download")
     @Produces("*/*")
-    @Operation(operationId = "downloadAttachment", summary = "Download attachment from MinIO", description = "Download attachment from MinIO", responses = {
-            @ApiResponse(responseCode = "200", description = "Attachment Resource", content = @Content(schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "downloadAttachment", summary = "从 MinIO 下载附件", description = "从 MinIO 下载附件", responses = {
+            @ApiResponse(responseCode = "200", description = "附件资源", content = @Content(schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "401", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问被禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response downloadAttachment(
             @QueryParam(WORKSPACE_QUERY_PARAM) String workspaceName,
@@ -217,10 +217,10 @@ public class AttachmentResource {
     @Path("/delete")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(operationId = "deleteAttachments", summary = "Delete attachments", description = "Delete attachments", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "deleteAttachments", summary = "删除附件", description = "删除附件", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "401", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问被禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response deleteAttachments(
             @RequestBody(content = @Content(schema = @Schema(implementation = CompleteMultipartUploadRequest.class))) @Valid DeleteAttachmentsRequest request) {

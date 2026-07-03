@@ -1,0 +1,148 @@
+---
+headline: 平台架构 | Opik 文档
+og:description: 了解 Opik 的架构如何利用多个服务处理后端、前端和数据管理，优化性能和可扩展性。
+og:site_name: Opik 文档
+og:title: 平台架构 - Opik
+subtitle: Opik 平台架构概览
+title: 平台架构
+---
+
+Opik 的架构由多个服务组成，每个服务负责特定的角色，包括：
+
+- **Java 后端服务**：Java 25 + Dropwizard — REST API、身份验证、业务逻辑和数据库迁移。
+- **Python 后端服务**：Flask + Gunicorn — 评估器执行、沙盒代码执行和优化工作流。
+- **前端应用**：TypeScript + React SPA，由 Nginx 提供服务，同时将 API 请求反向代理到后端。
+- **SDK**：Python 和 TypeScript 客户端，批量处理遥测数据并通过 REST/HTTP 发送到后端。
+- **数据存储**：
+  - ClickHouse 用于大规模分析数据（trace、span、实验、反馈分数）。
+    - 配合 Zookeeper 进行集群协调。
+    - 在 Kubernetes 中由 Altinity ClickHouse Operator 管理。
+  - MySQL 用于事务数据（项目、数据集、提示词、工作空间）。
+  - Redis 用于缓存、速率限制、分布式锁和流（在线评估、实验聚合、任务队列）。
+  - MinIO（兼容 S3）用于对象存储（附件、工件、文件上传）。
+
+<Frame>
+  <img src="/img/self-host/architecture.png" alt="架构图" />
+</Frame>
+
+## Java 后端服务
+
+Opik 的主后端使用 Java 25 LTS 和 Dropwizard，构建为 RESTful Web 服务，提供核心功能的公共 API 端点。完整的 API 文档可在[此处](/reference/rest-api/overview)查看。
+
+主要职责：
+
+- **REST API**：暴露 trace、span、实验、数据集、提示词、反馈分数等端点。
+- **身份验证和授权**：工作空间范围的权限控制，支持 API 密钥和基于会话的身份验证。
+- **数据库管理**：连接 ClickHouse（通过 R2DBC 响应式驱动）进行分析，连接 MySQL（通过 JDBI）进行事务状态管理，连接 Redis（通过 Redisson）进行缓存和流处理，连接 MinIO 进行文件存储。
+- **事件处理**：内存事件总线（Guava AsyncEventBus）配合虚拟线程，加上 Redis Streams 用于分布式异步工作流（如在线评分和实验聚合）。
+- **Schema 迁移**：基于 Liquibase 的迁移，同时支持 MySQL 和 ClickHouse，启动时自动运行。
+- **LLM 代理**：集成多个 LLM 提供商（OpenAI、Anthropic、Google Gemini 等），用于 Playground 和 LLM-as-judge 评估器。
+
+在可观测性方面，Opik 使用 OpenTelemetry，因其厂商中立的方法和对多种语言及框架的广泛支持。它为所有服务和应用程序收集遥测数据提供了统一、一致的方式。
+
+_完整的后端代码库可在 GitHub 的 [`apps/opik-backend`](https://github.com/comet-ml/opik/tree/main/apps/opik-backend) 文件夹中找到。_
+
+## Python 后端服务
+
+Opik 包含一个 Python 后端服务（Flask + Gunicorn），处理需要 Python 执行的工作负载：
+
+- **评估器**：在沙盒子进程中执行自定义 Python 评估代码，支持可配置的超时、内存限制和网络隔离。
+- **优化工作室**：运行基于 LLM 的优化和提示词工程工作流，支持并发任务管理。
+- **后台任务**：使用 Redis Queue（RQ）进行异步任务处理，包括评估运行和优化任务。
+
+Java 后端调用 Python 后端执行评估器，两个服务共享 Redis 进行任务协调。
+
+_完整的 Python 后端代码库可在 GitHub 的 [`apps/opik-python-backend`](https://github.com/comet-ml/opik/tree/main/apps/opik-python-backend) 文件夹中找到。_
+
+## 前端应用
+
+Opik 的前端是一个 TypeScript + React 单页应用，使用 Vite 构建，由 Nginx 提供服务。Nginx 服务器承担两个角色：
+
+- **静态文件服务**：提供构建后的 React SPA，支持 SPA 风格路由（回退到 `index.html`）。
+- **API 反向代理**：将 `/api/*` 请求路由到 Java 后端，去除 `/api` 前缀并代理到 8080 端口。包括对流式端点的 WebSocket 升级支持。
+
+前端使用 TanStack Router 进行基于文件的路由，使用 TanStack React Query 进行服务端状态管理，使用 Zustand 进行客户端状态管理。
+
+_完整的前端代码库可在 GitHub 的 [`apps/opik-frontend`](https://github.com/comet-ml/opik/tree/main/apps/opik-frontend) 文件夹中找到。_
+
+## SDK
+
+Opik 提供 Python 和 TypeScript 的 SDK。两个 SDK 都实现了异步批处理以优化网络效率——它们积累单个 trace 和 span 操作，并将它们作为批量请求发送到后端的批处理端点（`POST /v1/private/traces/batch`、`POST /v1/private/spans/batch` 等）。
+
+| | Python SDK | TypeScript SDK |
+|---|---|---|
+| **HTTP 客户端** | httpx | fetch API |
+| **批处理** | 消息队列 + 批管理器，带内存上限批处理（50MB） | 基于防抖的批队列（默认 300ms / 100 条） |
+| **重试** | 指数退避（0.5s–10s） | 默认 2 次重试 |
+
+_SDK 代码库可在 GitHub 的 [`sdks/python`](https://github.com/comet-ml/opik/tree/main/sdks/python)（Python SDK）和 [`sdks/typescript`](https://github.com/comet-ml/opik/tree/main/sdks/typescript)（TypeScript SDK）中找到。_
+
+## ClickHouse
+
+ClickHouse 是一个面向列的 OLAP 数据库，针对大规模数据集的快速分析进行了优化。Opik 使用 ClickHouse 存储需要近实时摄取和分析查询的数据：
+
+- Trace 和 span（LLM 调用记录）
+- 反馈分数和评估结果
+- 实验项目和结果
+- 数据集条目
+
+后端通过 HTTP（端口 8123）连接 ClickHouse，使用响应式 R2DBC 驱动进行非阻塞查询。启用了异步插入以实现高吞吐量摄取，支持可配置的批处理和去重。
+
+在 Kubernetes 部署中，ClickHouse 由 [Altinity ClickHouse Operator](https://github.com/Altinity/clickhouse-operator) 管理，负责集群配置、扩展和监控。Zookeeper 提供分布式协调以实现副本同步。
+
+<Frame>
+  <img src="/img/self-host/clickhouse-schema.png" alt="ClickHouse Schema" />
+</Frame>
+<em>
+  <small>Liquibase 自动化 schema 管理</small>
+</em>
+
+## MySQL
+
+Opik 使用 MySQL 进行符合 ACID 的事务存储，用于数据量较低但关键的数据：
+
+- 工作空间和用户管理
+- 项目元数据
+- 数据集和提示词定义（支持版本控制）
+- 反馈定义
+- 自动化规则和告警配置
+
+后端通过 JDBC 连接并使用连接池，支持 AWS RDS 的 IAM 身份验证用于云部署。
+
+<Frame>
+  <img src="/img/self-host/mysql-schema.png" alt="MySQL Schema" />
+</Frame>
+<em>
+  <small>Liquibase 自动化 schema 管理</small>
+</em>
+
+## Redis
+
+Redis 在 Opik 架构中承担多个角色：
+
+- **分布式缓存**：高速查找会话、API 密钥解析和频繁访问的数据。
+- **分布式锁**：协调后端副本之间对共享资源的安全访问（可配置 TTL）。
+- **速率限制**：令牌桶速率限制，为每个用户和工作空间强制执行吞吐量限制。
+- **流**：Redis Streams 驱动异步工作流：
+  - *在线评估*：消费者组处理 LLM-as-judge 评分和 Python 评估器结果，支持自动消息认领以实现容错。
+  - *实验聚合*：在分布式后端实例之间进行防抖的实验指标重计算。
+- **任务队列**：Redis Queue（RQ）协调 Java 后端和 Python 后端之间的后台任务，用于评估器执行和优化任务。
+
+## MinIO（兼容 S3 的存储）
+
+Opik 使用 MinIO 作为兼容 S3 的对象存储，用于不适合存储在关系型或分析数据库中的二进制数据：
+
+- Trace 附件（日志、截图等）
+- 数据集文件上传（CSV 导入）
+- 实验工件
+- 自定义评估代码
+
+在生产部署中，MinIO 可以替换为任何兼容 S3 的存储服务（如 AWS S3、Google Cloud Storage）。
+
+## 可观测性
+
+Opik 构建在开源基础设施之上（MySQL、Redis、ClickHouse、Kubernetes），使其能够轻松集成流行的可观测性工具栈，如 Grafana 和 Prometheus：
+
+- **OpenTelemetry**：所有三个应用服务（Java 后端、Python 后端和前端 Nginx）都支持 OpenTelemetry 插桩。可以部署可选的 OpenTelemetry Collector 来聚合 trace 和指标，并将它们转发到 Jaeger、Grafana 或任何兼容 OTLP 的后端。
+- **ClickHouse Operator**：提供实时性能监控和指标导出到 Grafana/Prometheus。
+- **标准监控**：MySQL、Redis 和 Kubernetes 都有完善的监控策略文档，支持 Prometheus exporter 和 Grafana 仪表板。

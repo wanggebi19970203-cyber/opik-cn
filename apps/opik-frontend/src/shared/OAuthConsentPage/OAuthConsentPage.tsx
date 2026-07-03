@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import useOAuthAuthorizeContext from "@/api/oauth/useOAuthAuthorizeContext";
 import useOAuthConsentMutation from "@/api/oauth/useOAuthConsentMutation";
 import { OAuthAuthorizeContext, OAuthWorkspaceInfo } from "@/api/oauth/types";
@@ -24,6 +25,7 @@ import {
 } from "./helpers";
 
 const OAuthConsentPage: React.FC = () => {
+  const { t } = useTranslation();
   const params = useMemo(() => parseParams(window.location.search), []);
   const { toast } = useToast();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
@@ -45,8 +47,8 @@ const OAuthConsentPage: React.FC = () => {
     return (
       <FullPage>
         <ConsentError
-          title="Invalid authorization request"
-          description="Required parameters are missing. Restart the authorization flow from your AI host."
+          title={t("common.shared.invalidAuthorizationRequest")}
+          description={t("common.shared.invalidAuthorizationRequestDesc")}
         />
       </FullPage>
     );
@@ -64,8 +66,8 @@ const OAuthConsentPage: React.FC = () => {
     return (
       <FullPage>
         <ConsentError
-          title="Authorization unavailable"
-          description="We couldn't load the authorization details. Your session may have expired or the client is not registered. Sign in again and retry from your AI host."
+          title={t("common.shared.authorizationUnavailable")}
+          description={t("common.shared.authorizationUnavailableDesc")}
         />
       </FullPage>
     );
@@ -81,8 +83,8 @@ const OAuthConsentPage: React.FC = () => {
     const workspace = workspaces.find((w) => w.id === effectiveWorkspaceId);
     if (!workspace) {
       toast({
-        title: "Select a workspace",
-        description: "Choose which workspace to grant access to.",
+        title: t("common.shared.selectWorkspace"),
+        description: t("common.shared.selectWorkspaceDesc"),
         variant: "destructive",
       });
       return;
@@ -91,19 +93,18 @@ const OAuthConsentPage: React.FC = () => {
       onSuccess: ({ redirect_to }) => {
         if (!navigateToRedirect(redirect_to)) {
           toast({
-            title: "Could not complete authorization",
-            description:
-              "The redirect target is invalid. Restart the authorization flow from your AI host.",
+            title: t("common.shared.couldNotCompleteAuthorization"),
+            description: t("common.shared.redirectTargetInvalid"),
             variant: "destructive",
           });
         }
       },
       onError: (error) => {
         toast({
-          title: "Could not complete authorization",
+          title: t("common.shared.couldNotCompleteAuthorization"),
           description: extractErrorMessage(
             error,
-            "The server rejected the consent. Please retry from your AI host.",
+            t("common.shared.serverRejectedConsent"),
           ),
           variant: "destructive",
         });
@@ -114,9 +115,8 @@ const OAuthConsentPage: React.FC = () => {
   const handleDeny = () => {
     if (!denyAndRedirect(params.redirect_uri, params.state)) {
       toast({
-        title: "Could not complete authorization",
-        description:
-          "The redirect target is invalid. Restart the authorization flow from your AI host.",
+        title: t("common.shared.couldNotCompleteAuthorization"),
+        description: t("common.shared.redirectTargetInvalid"),
         variant: "destructive",
       });
     }
@@ -136,9 +136,7 @@ const OAuthConsentPage: React.FC = () => {
           ) : null}
           <CardTitle>{data.client_name}</CardTitle>
           <CardDescription>
-            wants access to your Opik workspace. Approving grants the AI host
-            full access to data in the selected workspace, with your existing
-            permissions.
+            {t("common.shared.wantsAccessToWorkspace")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -154,10 +152,10 @@ const OAuthConsentPage: React.FC = () => {
             onClick={handleDeny}
             disabled={consent.isPending}
           >
-            Deny
+            {t("common.shared.deny")}
           </Button>
           <Button onClick={handleAllow} disabled={!canAllow}>
-            {consent.isPending ? "Approving…" : "Allow"}
+            {consent.isPending ? t("common.shared.approving") : t("common.shared.allow")}
           </Button>
         </CardFooter>
       </Card>
@@ -170,18 +168,19 @@ const WorkspacePicker: React.FC<{
   value: string | null;
   onChange: (id: string) => void;
 }> = ({ workspaces, value, onChange }) => {
+  const { t } = useTranslation();
+
   if (workspaces.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No eligible workspaces. Create one in Opik before approving this
-        request.
+        {t("common.shared.noEligibleWorkspaces")}
       </p>
     );
   }
 
   return (
     <div className="space-y-3">
-      <Label>Workspace</Label>
+      <Label>{t("common.shared.workspace")}</Label>
       <RadioGroup value={value ?? undefined} onValueChange={onChange}>
         {workspaces.map((w) => (
           <div key={w.id} className="flex items-center space-x-2">

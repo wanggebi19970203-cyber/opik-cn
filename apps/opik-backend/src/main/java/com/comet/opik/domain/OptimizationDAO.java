@@ -96,12 +96,11 @@ class OptimizationDAOImpl implements OptimizationDAO {
             SETTINGS log_comment = '<log_comment>'""";
 
     /**
-     * Returns workspaces with at least one orphan optimization, ordered by smallest count first.
-     * An optimization is orphan when its latest row has {@code project_id = ''} — dedup against the
-     * {@code ReplacingMergeTree} versions via {@code GROUP BY id + argMax(project_id, last_updated_at)}.
-     * Demo names and the env-excluded workspaces are filtered out at the DB so the service only
-     * iterates workspaces it can actually migrate. Mirrors D1's
-     * {@code FIND_ELIGIBLE_EXPERIMENT_WORKSPACES} shape.
+     * 返回至少有一个孤立优化的工作区，按数量从小到大排序。
+     * 当优化的最新行的 {@code project_id = ''} 时，该优化被视为孤立——通过
+     * {@code GROUP BY id + argMax(project_id, last_updated_at)} 对 {@code ReplacingMergeTree}
+     * 版本进行去重。演示名称和环境排除的工作区在数据库层面过滤，因此服务层只遍历
+     * 可以实际迁移的工作区。与 D1 的 {@code FIND_ELIGIBLE_EXPERIMENT_WORKSPACES} 结构一致。
      */
     private static final String FIND_ELIGIBLE_OPTIMIZATION_WORKSPACES = """
             SELECT
@@ -126,10 +125,10 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * V1 optimization (id, dataset_id) pairs in the workspace, demo-excluded. The service needs
-     * the {@code dataset_id} so it can run Path B (cross-DB dataset lookup) for optimizations that
-     * Path A (experiments) does not classify, without an extra ClickHouse round-trip. Dedups
-     * ReplacingMergeTree versions via {@code argMax} so an in-flight write does not double-count.
+     * 工作区中的 V1 优化 (id, dataset_id) 对，排除演示数据。服务层需要 {@code dataset_id}
+     * 以便对 Path A（实验）未分类的优化执行 Path B（跨数据库数据集查找），
+     * 无需额外的 ClickHouse 往返。通过 {@code argMax} 对 ReplacingMergeTree 版本去重，
+     * 防止进行中的写入被重复计数。
      */
     private static final String FIND_ORPHAN_OPTIMIZATIONS_IN_WORKSPACE = """
             SELECT
@@ -144,23 +143,20 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Path A inference: for each orphan optimization in {@code :optimization_ids}, returns the
-     * inferred {@code project_id}, the {@code distinct_project_count} of referencing projects, and a
-     * sorted {@code project_breakdown} ({@code projectId=count,...}) included in the log entry for
-     * each assignment.
+     * Path A 推断：对 {@code :optimization_ids} 中的每个孤立优化，返回推断的
+     * {@code project_id}、引用项目的 {@code distinct_project_count}，以及包含在
+     * 每次分配日志条目中的排序 {@code project_breakdown}（{@code projectId=count,...}）。
      *
-     * <p>Inference reads {@code experiments.project_id} (set by D1's experiment-project migration);
-     * experiments still at {@code project_id = ''} are excluded, so an optimization whose
-     * experiments are all unmigrated does not appear in the result and the service treats it as
-     * no-inference (falling through to Path B and ultimately to the workspace's Default Project).
-     * With one referencing project the choice is unambiguous; with several, the dominant project
-     * wins, ordered by {@code (count DESC, last_activity DESC, project_id ASC)} so repeated runs
-     * produce the same result — mirroring the dataset migration (OPIK-6701).
+     * <p>推断读取 {@code experiments.project_id}（由 D1 的实验-项目迁移设置）；
+     * 仍然为 {@code project_id = ''} 的实验会被排除，因此实验全部未迁移的优化
+     * 不会出现在结果中，服务层将其视为无推断（回退到 Path B，最终使用工作区的默认项目）。
+     * 当只有一个引用项目时选择是明确的；有多个时，主导项目胜出，
+     * 按 {@code (count DESC, last_activity DESC, project_id ASC)} 排序，因此重复运行
+     * 会产生相同结果——与数据集迁移 (OPIK-6701) 一致。
      *
-     * <p>The inner {@code argMax(project_id, last_updated_at) GROUP BY id} removes duplicate
-     * ReplacingMergeTree row versions: while a migration is in progress the table can briefly hold
-     * both the previous and the updated row for an experiment, and taking the latest keeps the
-     * outer aggregates from counting it twice.
+     * <p>内部的 {@code argMax(project_id, last_updated_at) GROUP BY id} 去除重复的
+     * ReplacingMergeTree 行版本：迁移进行中时，表可能短暂同时保存实验的旧行和更新行，
+     * 取最新版本可防止外层聚合计数两次。
      */
     private static final String COMPUTE_OPTIMIZATION_PROJECT_MAPPING_VIA_EXPERIMENTS = """
             WITH arraySort(proj -> (-proj.1, -proj.2, proj.3),
@@ -197,13 +193,13 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Re-INSERT the latest row per id with overridden {@code project_id}, {@code last_updated_by}
-     * and {@code last_updated_at}. Uses {@code SELECT * REPLACE} so any future column added to
-     * {@code optimizations} is automatically copied without a schema-drift fix to this query —
-     * mirrors D1's {@code ExperimentDAO.BATCH_SET_PROJECT_ID}.
+     * 将每个 id 的最新行重新 INSERT，覆盖 {@code project_id}、{@code last_updated_by}
+     * 和 {@code last_updated_at}。使用 {@code SELECT * REPLACE}，因此未来添加到
+     * {@code optimizations} 的任何列都会被自动复制，无需修改此查询的 schema——
+     * 与 D1 的 {@code ExperimentDAO.BATCH_SET_PROJECT_ID} 一致。
      *
-     * <p>The outer {@code WHERE project_id = ''} guards idempotency: an optimization that already
-     * has a non-empty {@code project_id} is skipped, so re-running the migration is safe.
+     * <p>外层的 {@code WHERE project_id = ''} 保证幂等性：已有非空 {@code project_id}
+     * 的优化会被跳过，因此重复运行迁移是安全的。
      */
     private static final String BATCH_SET_PROJECT_ID = """
             INSERT INTO optimizations
@@ -1015,9 +1011,9 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     /**
-     * Checks for V1 (workspace-scoped) optimizations excluding known demo names.
-     * ClickHouse string comparison is case-sensitive — every known casing of a demo name
-     * must be listed explicitly in {@link DemoData#OPTIMIZATIONS}.
+     * 检查是否存在 V1（工作区范围）的优化，排除已知的演示名称。
+     * ClickHouse 字符串比较区分大小写——演示名称的每种已知大小写形式
+     * 必须在 {@link DemoData#OPTIMIZATIONS} 中显式列出。
      */
     @Override
     public Mono<Boolean> hasVersion1Optimizations(
@@ -1075,16 +1071,13 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     /**
-     * Path A inference row mapper. The SQL filters out experiments with
-     * {@code experiment_project_id = ''} via {@code HAVING}, so under normal conditions every row
-     * carries a non-blank project_id. The defensive {@code Optional.ofNullable(...).filter(...)}
-     * guards a narrow concurrency window: a writer that flips the only matching experiment's
-     * {@code project_id} to {@code ''} between the {@code HAVING} evaluation and the row
-     * materialisation could leave the column blank in the result. In that case we drop the row
-     * (via {@code Mono::justOrEmpty}), and the service treats the optimization as no-inference —
-     * it falls through to Path B (dataset lookup) and ultimately to the workspace's Default
-     * Project. Callers therefore must tolerate an optimization being absent from the Flux even
-     * when its id was in the input set.
+     * Path A 推断行映射器。SQL 通过 {@code HAVING} 过滤掉 {@code experiment_project_id = ''}
+     * 的实验，因此正常情况下每行都有非空的 project_id。防御性的 {@code Optional.ofNullable(...).filter(...)}
+     * 保护一个窄并发窗口：写入者在 {@code HAVING} 求值和行物化之间将唯一匹配实验的
+     * {@code project_id} 翻转为 {@code ''} 可能导致结果中该列为空。在这种情况下我们
+     * 丢弃该行（通过 {@code Mono::justOrEmpty}），服务层将该优化视为无推断——
+     * 回退到 Path B（数据集查找），最终使用工作区的默认项目。因此调用方必须容忍
+     * 优化不在 Flux 中，即使其 id 在输入集合中。
      */
     @Override
     public Flux<OptimizationProjectMapping> computeOptimizationProjectMappingViaExperiments(Set<UUID> optimizationIds) {

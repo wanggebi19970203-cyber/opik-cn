@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { GuardrailTypes, PiiSupportedEntities } from "@/types/guardrails";
 
 export interface GuardrailConfig {
@@ -14,9 +15,8 @@ export interface GuardrailConfig {
 export const guardrailsMap: Record<GuardrailTypes, GuardrailConfig> = {
   [GuardrailTypes.TOPIC]: {
     id: "topic-guardrail",
-    title: "Topic guardrail",
-    hintText:
-      "The topic guardrail is designed to prevent the model from generating responses on certain topics that might be inappropriate, unsafe, unethical, or outside its intended scope.",
+    title: i18next.t("common:guardrails.topicGuardrail"),
+    hintText: i18next.t("common:guardrails.topicGuardrailHint"),
     enabled: true,
     threshold: 0.8,
     entities: [],
@@ -29,9 +29,8 @@ export const guardrailsMap: Record<GuardrailTypes, GuardrailConfig> = {
   },
   [GuardrailTypes.PII]: {
     id: "pii-guardrail",
-    title: "PII guardrail",
-    hintText:
-      "The PII (Personally Identifiable Information) guardrail is designed to prevent the model from generating, storing, or processing sensitive personal data that could identify individuals.",
+    title: i18next.t("common:guardrails.piiGuardrail"),
+    hintText: i18next.t("common:guardrails.piiGuardrailHint"),
     enabled: true,
     threshold: 0.5,
     entities: [

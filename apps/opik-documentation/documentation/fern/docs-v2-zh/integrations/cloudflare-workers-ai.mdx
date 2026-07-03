@@ -1,0 +1,117 @@
+---
+description: 从这里开始将 Opik 集成到基于 Cloudflare Workers AI 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Cloudflare Workers AI | Opik 文档
+og:description: 通过 Opik 的无缝集成监控和调试您的 Cloudflare Workers AI 应用，实现全面的追踪和可视化。
+og:site_name: Opik 文档
+og:title: 优化 Cloudflare Workers AI 追踪 - Opik
+title: 使用 Opik 实现 Cloudflare Workers AI 可观测性
+---
+
+Opik 与 [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) 提供无缝集成，让您可以追踪、监控和调试您的 Cloudflare Workers AI 应用。
+
+## 功能特性
+
+- **全面追踪**：自动追踪 Cloudflare Workers AI 请求
+- **层级可视化**：以具有父子关系的结构化追踪查看您的 Cloudflare Workers AI 请求
+- **自定义标签**：添加自定义标签以组织和筛选您的追踪
+
+## 安装
+
+### 方式一：使用 npm
+
+```bash
+npm install opik
+```
+
+### 方式二：使用 yarn
+
+```bash
+yarn add opik
+```
+
+### 环境要求
+
+- Node.js ≥ 18
+- Opik SDK
+
+### 启用 Node.js 兼容模式
+
+Opik SDK 需要在 Cloudflare Workers AI 中启用 Node.js 兼容模式。您可以通过在 `wrangler.toml` 文件中添加以下内容来启用：
+
+```json
+{
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "compatibility_date": "2024-09-23"
+}
+```
+
+详情请参阅 [Cloudflare 文档](https://developers.cloudflare.com/workers/runtime-apis/nodejs/)。
+
+## 基本用法
+
+### 与 LLM 调用配合使用
+
+以下是将 Opik SDK 与 Cloudflare Workers AI 配合使用的示例：
+
+```typescript
+/**
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run `npm run dev` in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8787/ to see your worker in action
+ * - Run `npm run deploy` to publish your worker
+ *
+ * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
+ * `Env` object can be regenerated with `npm run cf-typegen`.
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
+ */
+import { Opik } from 'opik';
+
+const client = new Opik({
+	apiKey: '<API-KEY>',
+	apiUrl: 'https://www.comet.com/opik/api',
+	projectName: 'demo-cloudflare-workers-ai',
+	workspaceName: '<YOUR-WORKSPACE>',
+});
+
+export default {
+	async fetch(request, env) {
+		const input = 'What is the origin of the phrase Hello, World';
+		const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+			prompt: input,
+		});
+
+		const someTrace = client.trace({
+			name: `Trace`,
+			input: {
+				prompt: input,
+			},
+			output: {
+				response: response,
+			},
+		});
+
+		const someSpan = someTrace.span({
+			name: `Span`,
+			type: 'llm',
+			input: {
+				prompt: input,
+			},
+			output: {
+				response: response,
+			},
+		});
+		someSpan.end();
+
+		someTrace.end();
+
+		await client.flush();
+
+		return new Response(JSON.stringify(response));
+	},
+} satisfies ExportedHandler<Env>;
+
+```

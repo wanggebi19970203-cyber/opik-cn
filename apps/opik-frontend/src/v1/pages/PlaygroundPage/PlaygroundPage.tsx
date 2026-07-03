@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import PlaygroundOutputs from "@/v1/pages/PlaygroundPage/PlaygroundOutputs/PlaygroundOutputs";
 import { usePlaygroundDataset } from "@/hooks/usePlaygroundDataset";
@@ -15,6 +16,7 @@ import { COMPOSED_PROVIDER_TYPE } from "@/types/providers";
 import useNavigationBlocker from "@/hooks/useNavigationBlocker";
 
 const PlaygroundPage = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [setupDialogOpen, setSetupDialogOpen] = useState(false);
   const [hasCheckedInitialProviders, setHasCheckedInitialProviders] =
@@ -29,13 +31,13 @@ const PlaygroundPage = () => {
   const { DialogComponent } = useNavigationBlocker({
     condition: isRunning,
     title: datasetId
-      ? "Experiment execution in progress"
-      : "Prompt execution in progress",
+      ? t("playground.navigationBlocker.experimentInProgressTitle")
+      : t("playground.navigationBlocker.promptInProgressTitle"),
     description: datasetId
-      ? "Your experiment is currently running. Leaving now will interrupt the execution and may result in incomplete experiment items. Are you sure you want to leave?"
-      : "Your prompt is currently running. Leaving now will interrupt the execution and may result in incomplete traces. Are you sure you want to leave?",
-    confirmText: "Leave anyway",
-    cancelText: "Stay and wait",
+      ? t("playground.navigationBlocker.experimentInProgressDescription")
+      : t("playground.navigationBlocker.promptInProgressDescription"),
+    confirmText: t("playground.navigationBlocker.confirmText"),
+    cancelText: t("playground.navigationBlocker.cancelText"),
   });
 
   const { data: providerKeysData, isPending: isPendingProviderKeys } =

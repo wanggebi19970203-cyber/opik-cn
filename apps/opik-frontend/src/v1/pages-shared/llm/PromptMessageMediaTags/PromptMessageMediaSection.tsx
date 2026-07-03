@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Paperclip, Video, Music } from "lucide-react";
 import { Button } from "@/ui/button";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -27,6 +28,8 @@ const PromptMessageMediaSection: React.FC<PromptMessageMediaSectionProps> = ({
   promptVariables,
   disabled = false,
 }) => {
+  const { t } = useTranslation("prompt");
+  const { t: tCommon } = useTranslation("common");
   const [openPopover, setOpenPopover] = useState<string | null>(null);
 
   const handlePopoverChange = (type: string, isOpen: boolean) => {
@@ -40,7 +43,7 @@ const PromptMessageMediaSection: React.FC<PromptMessageMediaSectionProps> = ({
       <div className="group flex items-center gap-2">
         <div className="flex items-center gap-1">
           <Paperclip className="size-3.5" />
-          <span className="comet-body-s">Add file...</span>
+          <span className="comet-body-s">{t("promptMessageMediaSection.addFile")}</span>
         </div>
         <div
           className={cn(
@@ -57,7 +60,7 @@ const PromptMessageMediaSection: React.FC<PromptMessageMediaSectionProps> = ({
             onOpenChange={(isOpen) => handlePopoverChange("image", isOpen)}
             promptVariables={promptVariables}
           >
-            <TooltipWrapper content="Image">
+            <TooltipWrapper content={tCommon("media.image")}>
               <Button
                 type="button"
                 variant="minimal"
@@ -78,7 +81,7 @@ const PromptMessageMediaSection: React.FC<PromptMessageMediaSectionProps> = ({
             onOpenChange={(isOpen) => handlePopoverChange("video", isOpen)}
             promptVariables={promptVariables}
           >
-            <TooltipWrapper content="Video">
+            <TooltipWrapper content={tCommon("media.video")}>
               <Button
                 type="button"
                 variant="minimal"
@@ -99,7 +102,7 @@ const PromptMessageMediaSection: React.FC<PromptMessageMediaSectionProps> = ({
             onOpenChange={(isOpen) => handlePopoverChange("audio", isOpen)}
             promptVariables={promptVariables}
           >
-            <TooltipWrapper content="Audio">
+            <TooltipWrapper content={tCommon("media.audio")}>
               <Button
                 type="button"
                 variant="minimal"

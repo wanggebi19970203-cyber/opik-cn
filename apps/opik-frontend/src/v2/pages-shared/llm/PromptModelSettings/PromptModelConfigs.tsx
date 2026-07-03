@@ -31,6 +31,7 @@ import CustomModelConfigs from "@/v2/pages-shared/llm/PromptModelSettings/provid
 import ExplainerDescription from "@/shared/ExplainerDescription/ExplainerDescription";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
 import { parseComposedProviderType } from "@/lib/provider";
+import { useTranslation } from "react-i18next";
 
 interface PromptModelConfigsProps {
   provider: COMPOSED_PROVIDER_TYPE;
@@ -51,6 +52,7 @@ const PromptModelConfigs = ({
   onChange,
   disabled: disabledProp = false,
 }: PromptModelConfigsProps) => {
+  const { t } = useTranslation();
   const provider: PROVIDER_TYPE =
     parseComposedProviderType(composedProviderType);
 
@@ -120,7 +122,7 @@ const PromptModelConfigs = ({
 
   return (
     <DropdownMenu>
-      <TooltipWrapper content="Model parameters">
+      <TooltipWrapper content={t("promptModelConfigs.modelParameters")}>
         <DropdownMenuTrigger asChild>
           <Button variant={variant} size={size} disabled={disabled}>
             <Settings2 />

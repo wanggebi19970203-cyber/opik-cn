@@ -1,0 +1,11 @@
+{
+  "evaluation": {
+    "title": "Evaluation",
+    "description": "Evaluate model performance",
+    "metrics": {
+      "hallucination": "Hallucination",
+      "relevance": "Relevance",
+      "toxicity": "Toxicity"
+    }
+  }
+}

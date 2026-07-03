@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 
 import ThumbDownFilled from "@/icons/thumbs-down-filled.svg?react";
@@ -25,6 +26,7 @@ const TraceSessionFeedback: React.FC<TraceSessionFeedbackProps> = ({
   traceId,
   onOptimisticUpdate,
 }) => {
+  const { t } = useTranslation("tracing");
   const { mutate: updateMutation, isPending: isUpdatePending } =
     useTraceAnalyzerFeedbackSetMutation();
   const { mutate: deleteMutation, isPending: isDeletePending } =
@@ -83,8 +85,8 @@ const TraceSessionFeedback: React.FC<TraceSessionFeedbackProps> = ({
               onClick={deleteFeedback}
               aria-label={
                 state === SESSION_FEEDBACK_VALUE.like
-                  ? "Remove positive feedback"
-                  : "Remove negative feedback"
+                  ? t("aiAssistant.removePositiveFeedback")
+                  : t("aiAssistant.removeNegativeFeedback")
               }
             >
               {state === SESSION_FEEDBACK_VALUE.like ? (
@@ -94,7 +96,7 @@ const TraceSessionFeedback: React.FC<TraceSessionFeedbackProps> = ({
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Click to remove feedback</TooltipContent>
+          <TooltipContent>{t("aiAssistant.clickToRemoveFeedback")}</TooltipContent>
         </Tooltip>
       ) : (
         // If no feedback given yet, show both buttons
@@ -106,12 +108,12 @@ const TraceSessionFeedback: React.FC<TraceSessionFeedbackProps> = ({
                 size="icon-2xs"
                 disabled={isPending}
                 onClick={() => updateFeedback(SESSION_FEEDBACK_VALUE.like)}
-                aria-label="Rate conversation positively"
+                aria-label={t("aiAssistant.ratePositively")}
               >
                 <ThumbsUp />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Rate conversation positively</TooltipContent>
+            <TooltipContent>{t("aiAssistant.ratePositively")}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -121,12 +123,12 @@ const TraceSessionFeedback: React.FC<TraceSessionFeedbackProps> = ({
                 size="icon-2xs"
                 disabled={isPending}
                 onClick={() => updateFeedback(SESSION_FEEDBACK_VALUE.dislike)}
-                aria-label="Rate conversation negatively"
+                aria-label={t("aiAssistant.rateNegatively")}
               >
                 <ThumbsDown />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Rate conversation negatively</TooltipContent>
+            <TooltipContent>{t("aiAssistant.rateNegatively")}</TooltipContent>
           </Tooltip>
         </div>
       )}

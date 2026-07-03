@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import JsonView from "react18-json-view";
 import { ListTree } from "lucide-react";
@@ -22,6 +23,7 @@ import TextAndMediaContentRenderer from "./TextAndMediaContentRenderer";
 const CompareExperimentsOutputCell: React.FC<
   CellContext<ExperimentsCompare, unknown>
 > = (context) => {
+  const { t } = useTranslation("experiments");
   const { custom } = context.column.columnDef.meta ?? {};
   const { openTrace, outputKey = "" } = (custom ?? {}) as CustomMeta;
   const experimentCompare = context.row.original;
@@ -60,7 +62,7 @@ const CompareExperimentsOutputCell: React.FC<
     return (
       <>
         {isTraceVisible && (
-          <TooltipWrapper content="Click to open original trace">
+          <TooltipWrapper content={t("clickToOpenOriginalTrace")}>
             <Button
               size="icon-xs"
               variant="outline"

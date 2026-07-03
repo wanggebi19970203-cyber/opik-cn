@@ -1,0 +1,55 @@
+---
+description: 在 Opik 中分析优化试验、失败模式和改进。
+headline: 仪表板结果 | Opik 文档
+og:description: 在 Opik 中探索优化结果。了解每次运行后的变更，做出明智的提示词发布决策。
+og:site_name: Opik 文档
+og:title: 仪表板结果 - Opik
+title: 仪表板结果
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/dashboard_results
+---
+
+每次优化运行后，访问 Opik 仪表板以了解发生了什么变化，并决定是否发布新提示词。
+
+## 导航到你的运行
+
+1. 打开 [https://www.comet.com/opik](https://www.comet.com/opik)。
+2. 在左侧导航中，点击 **Evaluation** 下的 **Optimization runs**。
+3. 选择你关注的运行（按数据集 + 优化器分组）。详情视图显示图表、试验、提示词和每个样本的追踪。
+
+## 关键面板
+
+<AccordionGroup>
+  <Accordion title="优化进度图表">
+    按时间顺序绘制每个试验分数，并高亮当前最佳提示词。悬停可查看精确值和百分比改进。
+  </Accordion>
+  <Accordion title="试验表格">
+    列出每个试验、使用的优化器、提示词 JSON 和每个试验的分数。点击试验行可展开数据集项和关联的追踪。
+  </Accordion>
+  <Accordion title="示例与追踪">
+    展开试验后，你可以检查该试验中运行的每个数据集项以及相应的追踪树（工具调用、附件等）。
+  </Accordion>
+  <Accordion title="失败模式（仅反思类运行）">
+    HRPO 运行添加了一个聚类相似失败的面板。展开聚类可查看指标原因和样本追踪。
+  </Accordion>
+  <Accordion title="数据集覆盖范围">
+    确认每个试验采样了多少数据集行，以便你判断统计显著性。
+  </Accordion>
+</AccordionGroup>
+
+## 复用结果
+
+虽然 UI 目前侧重于分析，但你可以在运行完成后随时从 SDK 中直接获取提示词和历史记录：
+
+```python
+# result is the OptimizationResult returned by your optimizer call
+optimized_prompt = result.prompt
+history = result.history
+```
+
+使用 `optimized_prompt` 更新你的应用程序，使用 `history` 构建自定义报告或将证据附加到 Pull Request。
+
+## 后续步骤
+
+- 将导出的提示词回填到你的应用程序。
+- 将仪表板或截图附加到你的 PR，让审查者了解改进。
+- 使用 [Optimization Studio](/v1/agent_optimization/optimization_studio) 进行 UI 驱动的运行和比较。

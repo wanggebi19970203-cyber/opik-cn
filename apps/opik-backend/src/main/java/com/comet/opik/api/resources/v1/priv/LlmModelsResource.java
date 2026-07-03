@@ -24,14 +24,14 @@ import java.util.Map;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "LLM Models", description = "LLM model registry resources")
+@Tag(name = "LLM Models", description = "LLM模型注册表资源")
 public class LlmModelsResource {
 
     private final @NonNull LlmModelRegistryService registryService;
 
     @GET
-    @Operation(operationId = "getLlmModels", summary = "Get LLM models", description = "Get the list of supported LLM models grouped by provider", responses = {
-            @ApiResponse(responseCode = "200", description = "LLM models by provider", content = @Content(schema = @Schema(implementation = Map.class)))})
+    @Operation(operationId = "getLlmModels", summary = "获取LLM模型", description = "获取按提供商分组的已支持LLM模型列表", responses = {
+            @ApiResponse(responseCode = "200", description = "按提供商分组的LLM模型", content = @Content(schema = @Schema(implementation = Map.class)))})
     public Response getModels() {
         return Response.ok()
                 .entity(registryService.getRegistry())

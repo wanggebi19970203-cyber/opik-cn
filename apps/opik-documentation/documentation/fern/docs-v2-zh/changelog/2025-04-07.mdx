@@ -1,0 +1,26 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板：**
+
+- 在输入和输出字段的代码块中新增搜索功能。
+- 在 trace 和 span 表格中新增按反馈评分排序：
+  <Frame>
+    <img src="/img/changelog/2025-04-07/sort_feedback.gif" />
+  </Frame>
+- 在实验表格中新增按反馈评分排序。
+
+**Python 和 JS / TS SDK**：
+
+- 发布了与 [Google ADK 框架](https://google.github.io/adk-docs/)的新集成。
+- 清理了 usage 信息，如果它已经是 `Usage` 字段的一部分，则从 metadata 字段中移除。
+- 新增对 `Rouge` 指标的支持 - 感谢 @rohithmsr ！
+- 更新了 LangChain 回调 `OpikTracer()`，以结构化方式而非原始文本记录数据。这在使用 LangGraph 时特别有用。
+- 更新了 LangChainJS 集成，添加了更多示例和小修复。
+- 更新了 OpenAI 集成以支持 Responses API。
+- 引入了新的 AggregatedMetric 指标，可用于计算实验中指标的聚合。
+- 为 LLamaIndex 流式方法添加了日志记录。
+- 在 Opik.Prompt 对象上新增 `text` 属性。
+
+_发布版本_：`1.6.14`、`1.7.0`、`1.7.1`、`1.7.2`

@@ -1,0 +1,23 @@
+{
+  "automationLogs": {
+    "title": "Automation logs",
+    "logs": "Logs",
+    "description": "View automation execution history",
+    "empty": {
+      "title": "No logs yet",
+      "description": "Automation logs will appear here."
+    },
+    "noRuleParams": "No rule parameters set.",
+    "noLogsForRule": "There are no logs for this rule.",
+    "columns": {
+      "timestamp": "Timestamp",
+      "level": "Level",
+      "message": "Message"
+    },
+    "actions": {
+      "refreshTooltip": "Refresh logs list",
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all"
+    }
+  }
+}

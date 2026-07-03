@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useVisibleTags } from "@/hooks/useVisibleTags";
 import ColoredTag, { ColoredTagProps } from "@/shared/ColoredTag/ColoredTag";
 import { Separator } from "@/ui/separator";
@@ -18,6 +19,7 @@ const TagListTooltipContent: React.FC<TagListTooltipContentProps> = ({
   size = "sm",
   hint,
 }) => {
+  const { t } = useTranslation();
   const { visibleItems, hasMoreItems, remainingCount } = useVisibleTags(
     tags,
     maxDisplayCount,
@@ -35,7 +37,7 @@ const TagListTooltipContent: React.FC<TagListTooltipContentProps> = ({
       ))}
       {hasMoreItems && (
         <span className="text-xs italic text-muted-foreground">
-          ... and {remainingCount} more
+          {t("common.tags.andMoreItems", { count: remainingCount })}
         </span>
       )}
 

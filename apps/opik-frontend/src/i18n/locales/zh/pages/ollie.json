@@ -1,0 +1,11 @@
+{
+  "ollie": {
+    "title": "Opik 连接",
+    "description": "将您的代码库连接到 Opik",
+    "features": {
+      "codebase": "代码库分析",
+      "integration": "集成指南",
+      "monitoring": "实时监控"
+    }
+  }
+}

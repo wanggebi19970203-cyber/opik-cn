@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 import { useNavigate } from "@tanstack/react-router";
@@ -59,14 +60,8 @@ type DatasetListPageProps = {
 
 const TYPE_CONFIG = {
   dataset: {
-    title: "Datasets",
     docsUrl: "/evaluation/advanced/manage_datasets",
     entityName: "datasets",
-    createButtonText: "Create dataset",
-    noDataText: "There are no datasets yet",
-    emptyStateTitle: "No datasets yet",
-    emptyStateDescription:
-      "Get started by creating your first dataset.\nDefine inputs and expected outputs to evaluate and optimize your agent.",
     storagePrefix: "datasets",
     typeFilter: [
       {
@@ -83,15 +78,9 @@ const TYPE_CONFIG = {
     detailParamName: "datasetId" as const,
   },
   test_suite: {
-    title: "Test suites",
     // TODO: replace with test suites documentation URL once it exists
     docsUrl: "/evaluation/advanced/manage_datasets",
     entityName: "test suites",
-    createButtonText: "Create test suite",
-    noDataText: "There are no test suites yet",
-    emptyStateTitle: "No test suites yet",
-    emptyStateDescription:
-      "Get started by creating your first test suite.\nDefine test cases with expected outputs and scoring to compare and optimize your configurations.",
     storagePrefix: "test-suites",
     typeFilter: [
       {
@@ -227,6 +216,7 @@ const getRowId = (d: Dataset) => d.id;
 const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
   type,
 }) => {
+  const { t } = useTranslation("datasets");
   const config = TYPE_CONFIG[type];
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
@@ -305,7 +295,9 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
   const isTableLoading =
     isPending || (isPlaceholderData && datasets.length === 0);
   const isEmpty = !isTableLoading && noData && datasets.length === 0;
-  const noDataText = noData ? config.noDataText : "No search results";
+  const noDataText = noData
+    ? t(type === "dataset" ? "listPage.noDatasetsYet" : "listPage.noTestSuitesYet")
+    : t("addToDataset.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -431,13 +423,13 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
         <h1 className="comet-body-accented truncate break-words">
-          {config.title}
+          {t(type === "dataset" ? "listPage.datasets" : "listPage.testSuites")}
         </h1>
         {canCreateDatasets && !isEmpty && (
           <CreateEntityMenu onSelect={handleCreateClick}>
             <Button variant="default" size="xs">
               <Plus className="mr-1 size-4" />
-              {config.createButtonText}
+              {t(type === "dataset" ? "listPage.createDataset" : "listPage.createTestSuite")}
             </Button>
           </CreateEntityMenu>
         )}
@@ -446,8 +438,8 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
         <DatasetEmptyState
           lightImageUrl={emptyTestSuitesLightUrl}
           darkImageUrl={emptyTestSuitesDarkUrl}
-          title={config.emptyStateTitle}
-          description={config.emptyStateDescription}
+          title={t(type === "dataset" ? "listPage.emptyDatasetTitle" : "listPage.emptyTestSuiteTitle")}
+          description={t(type === "dataset" ? "listPage.emptyDatasetDescription" : "listPage.emptyTestSuiteDescription")}
           canCreate={canCreateDatasets}
           onSelect={handleCreateClick}
           docsUrl={buildDocsUrl(config.docsUrl)}
@@ -459,7 +451,7 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
               <SearchInput
                 searchText={search!}
                 setSearchText={setSearch}
-                placeholder="Search by name"
+                placeholder={t("listPage.searchByName")}
                 className="w-[320px]"
                 dimension="sm"
               ></SearchInput>
@@ -508,7 +500,7 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
                     variant="link"
                     onClick={() => handleCreateClick("upload")}
                   >
-                    {config.createButtonText}
+                    {t(type === "dataset" ? "listPage.createDataset" : "listPage.createTestSuite")}
                   </Button>
                 )}
               </DataTableNoData>

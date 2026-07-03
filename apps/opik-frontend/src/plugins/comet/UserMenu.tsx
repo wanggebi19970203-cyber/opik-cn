@@ -1,5 +1,6 @@
 import { useState } from "react";
 import copy from "clipboard-copy";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   Copy,
@@ -55,6 +56,7 @@ import useUserPermission from "@/plugins/comet/useUserPermission";
 import UserMenuAppLinks from "@/plugins/comet/UserMenuAppLinks";
 
 const UserMenu = () => {
+  const { t } = useTranslation("common");
   const { toast } = useToast();
   const { theme, themeOptions, CurrentIcon, handleThemeSelect } =
     useThemeOptions();
@@ -142,7 +144,7 @@ const UserMenu = () => {
       >
         <DropdownMenuSubTrigger className="cursor-pointer">
           <UserPlus className="mr-2 size-4" />
-          <span>Invite members</span>
+          <span>{t("collaborators.inviteMembers")}</span>
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <InviteUsersPopover
@@ -174,7 +176,7 @@ const UserMenu = () => {
             <a href={buildUrl("account-settings", opikWorkspaceName)}>
               <DropdownMenuItem className="cursor-pointer">
                 <Settings className="mr-2 size-4" />
-                <span>Account settings</span>
+                <span>{t("labels.accountSettings")}</span>
               </DropdownMenuItem>
             </a>
             {isOrganizationAdmin ? (
@@ -194,7 +196,7 @@ const UserMenu = () => {
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="cursor-pointer">
                   <KeyRound className="mr-2 size-4" />
-                  <span>API Key</span>
+                  <span>{t("labels.apiKey")}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent className="w-64">
@@ -208,7 +210,7 @@ const UserMenu = () => {
                           onClick={() => {
                             copy(user.apiKeys[0]);
                             toast({
-                              description: "Successfully copied API Key",
+                              description: t("messages.apiKeyCopied"),
                             });
                           }}
                         >
@@ -239,7 +241,7 @@ const UserMenu = () => {
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="flex cursor-pointer items-center">
                 <CurrentIcon className="mr-2 size-4" />
-                <span>Theme</span>
+                <span>{t("labels.theme")}</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent>
@@ -271,7 +273,7 @@ const UserMenu = () => {
                 }}
               >
                 <Sparkles className="mr-2 size-4" />
-                <span>New Opik experience</span>
+                <span>{t("labels.newOpikExperience")}</span>
                 <Switch
                   checked={hasOptedIn}
                   className="pointer-events-none ml-auto"
@@ -294,7 +296,7 @@ const UserMenu = () => {
             }}
           >
             <LogOut className="mr-2 size-4" />
-            <span>Logout</span>
+            <span>{t("buttons.logout")}</span>
           </DropdownMenuItem>
           {APP_VERSION && (
             <>
@@ -303,11 +305,11 @@ const UserMenu = () => {
                 className="cursor-pointer justify-center text-light-slate"
                 onClick={() => {
                   copy(APP_VERSION);
-                  toast({ description: "Successfully copied version" });
+                  toast({ description: t("messages.versionCopied") });
                 }}
               >
                 <span className="comet-body-xs-accented truncate ">
-                  VERSION {APP_VERSION}
+                  {t("collaborators.versionPrefix", { version: APP_VERSION })}
                 </span>
                 <Copy className="ml-2 size-3 shrink-0" />
               </DropdownMenuItem>

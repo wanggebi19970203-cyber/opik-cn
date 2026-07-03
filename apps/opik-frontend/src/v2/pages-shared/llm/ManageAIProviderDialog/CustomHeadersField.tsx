@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import KeyValueFieldArray from "@/shared/KeyValueFieldArray/KeyValueFieldArray";
 import { AIProviderFormType } from "@/v2/pages-shared/llm/ManageAIProviderDialog/schema";
+import { useTranslation } from "react-i18next";
 
 type KeyValueFieldName = "headers" | "queryParams";
 
@@ -25,21 +26,29 @@ type CustomHeadersFieldProps = {
 const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
   form,
   name = "headers",
-  label = "Custom headers (optional)",
-  keyPlaceholder = "Header name",
-  valuePlaceholder = "Header value",
-  addButtonLabel = "Add header",
-  description = "Custom providers may require additional headers beyond the API key. Add them here as key-value pairs.",
+  label,
+  keyPlaceholder,
+  valuePlaceholder,
+  addButtonLabel,
+  description,
 }) => {
+  const { t } = useTranslation("llm");
+
+  const effectiveLabel = label ?? t("llm:customHeadersField.customHeaders");
+  const effectiveKeyPlaceholder = keyPlaceholder ?? t("llm:customHeadersField.headerName");
+  const effectiveValuePlaceholder = valuePlaceholder ?? t("llm:customHeadersField.headerValue");
+  const effectiveAddButtonLabel = addButtonLabel ?? t("llm:customHeadersField.addHeader");
+  const effectiveDescription = description ?? t("llm:customHeadersField.customHeadersDescription");
+
   return (
     <KeyValueFieldArray<AIProviderFormType>
       form={form}
       name={name}
-      label={label}
-      description={description}
-      keyPlaceholder={keyPlaceholder}
-      valuePlaceholder={valuePlaceholder}
-      addButtonLabel={addButtonLabel}
+      label={effectiveLabel}
+      description={effectiveDescription}
+      keyPlaceholder={effectiveKeyPlaceholder}
+      valuePlaceholder={effectiveValuePlaceholder}
+      addButtonLabel={effectiveAddButtonLabel}
       // Custom LLM schema requires an `id` string on every row to satisfy
       // the Zod contract shared with the load/save serialization helpers.
       newItem={() => ({ key: "", value: "", id: uuidv4() })}

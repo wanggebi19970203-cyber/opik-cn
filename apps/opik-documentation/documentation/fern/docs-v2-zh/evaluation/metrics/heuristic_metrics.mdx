@@ -1,0 +1,542 @@
+---
+description: 描述 Opik 提供的所有内置启发式指标
+headline: 启发式指标 | Opik 文档
+og:description: 使用启发式指标评估语言模型输出，确保文本生成的质量和一致性。
+og:site_name: Opik 文档
+og:title: 语言模型的启发式指标 - Opik
+title: 启发式指标
+---
+
+启发式指标是基于规则的评估方法，允许您检查语言模型输出的特定方面。这些指标使用预定义的标准或模式来评估生成文本的质量、一致性或特征。它们有两种类型：
+
+- **Token 或字符串启发式指标** - 作用于单轮对话，将候选输出与参考或手工编写的规则进行比较。
+- **对话启发式指标** - 分析完整对话记录，发现助手轮次中的退化或遗忘事实等问题。
+
+### 字符串和 Token 启发式指标
+
+| 指标 | 描述 |
+| --- | --- |
+| BERTScore | 上下文嵌入相似度；Levenshtein 的稳健替代方案。 |
+| ChrF | 字符 n-gram F 分数（支持 chrF 和 chrF++）。 |
+| Contains | 检查输出是否包含特定子字符串（区分大小写或不区分大小写）。 |
+| CorpusBLEU | 计算跨多个候选的语料库级 BLEU 分数。 |
+| Equals | 检查输出是否与期望字符串完全匹配。 |
+| GLEU | 在 0-1 范围内评估流畅度和语法正确性。 |
+| IsJson | 确保输出可以解析为 JSON。 |
+| JSDivergence | Token 分布之间的 Jensen-Shannon 相似度。 |
+| JSDistance | Token 分布之间的原始 Jensen-Shannon 散度。 |
+| KLDivergence | Token 分布之间的 Kullback-Leibler 散度。 |
+| LanguageAdherenceMetric | 检查文本是否符合预期的语言代码。 |
+| LevenshteinRatio | 计算输出与参考之间的归一化 Levenshtein 相似度。 |
+| Readability | 报告 Flesch 阅读难度和 Flesch-Kincaid 年级水平。 |
+| RegexMatch | 根据正则表达式模式验证输出。 |
+| ROUGE | 计算 ROUGE 变体（rouge1、rouge2、rougeL、rougeLsum）。 |
+| SentenceBLEU | 计算单句 BLEU 分数，与一个或多个参考进行比较。 |
+| Sentiment | 使用 NLTK 的 VADER 词典对情感进行评分（compound、pos/neu/neg）。 |
+| SpearmanRanking | 两个等长排名的 Spearman 等级相关性。 |
+| Tone | 标记语气问题，如消极、大喊或禁用短语。 |
+
+### 对话启发式指标
+
+| 指标 | 描述 |
+| --- | --- |
+| Conversation Degeneration | 检测对话中的重复和低熵响应（由 `ConversationDegenerationMetric` 实现）。 |
+| Knowledge Retention | 检查最后的助手回复是否保留了用户在早期轮次中提供的事实。 |
+
+> [!TIP]
+> 这些指标在单个对话记录上运行，不需要参考标准。如果您需要 BLEU/ROUGE/METEOR 风格的比较，请组合一个自定义的 `ConversationThreadMetric`，包装单轮启发式指标（`SentenceBLEU`、`ROUGE`、`METEOR`）。
+
+## 为 LLM 响应评分
+
+您可以通过初始化指标然后调用 `score` 方法来为 LLM 响应评分：
+
+```python
+from opik.evaluation.metrics import Contains
+
+metric = Contains(name="contains_hello", case_sensitive=True)
+
+score = metric.score(output="Hello world !", reference="Hello")
+
+print(score)
+```
+
+## 指标
+
+### Equals
+
+`Equals` 指标可用于检查 LLM 的输出是否与特定字符串完全匹配。使用方式如下：
+
+```python
+from opik.evaluation.metrics import Equals
+
+metric = Equals()
+
+score = metric.score(output="Hello world !", reference="Hello, world !")
+print(score)
+```
+
+### Contains
+
+`Contains` 指标可用于检查 LLM 的输出是否包含特定子字符串。使用方式如下：
+
+```python
+from opik.evaluation.metrics import Contains
+
+metric = Contains(case_sensitive=False)
+
+score = metric.score(output="Hello world !", reference="Hello")
+print(score)
+```
+
+### RegexMatch
+
+`RegexMatch` 指标可用于检查 LLM 的输出是否匹配指定的正则表达式模式。使用方式如下：
+
+```python
+from opik.evaluation.metrics import RegexMatch
+
+metric = RegexMatch(regex="^[a-zA-Z0-9]+$")
+
+score = metric.score("Hello world !")
+print(score)
+```
+
+### IsJson
+
+`IsJson` 指标可用于检查 LLM 的输出是否有效。使用方式如下：
+
+```python
+from opik.evaluation.metrics import IsJson
+
+metric = IsJson(name="is_json_metric")
+
+score = metric.score(output='{"key": "some_valid_sql"}')
+print(score)
+```
+
+### LevenshteinRatio
+
+`LevenshteinRatio` 指标在 0-1 范围内衡量输出与参考字符串的相似度（1.0 表示完全相同）。当精确匹配过于严格但您仍想惩罚较大偏差时，该指标很有用。
+
+```python
+from opik.evaluation.metrics import LevenshteinRatio
+
+metric = LevenshteinRatio()
+
+score = metric.score(output="Hello world !", reference="hello")
+print(score)
+```
+
+### BLEU
+
+BLEU（双语评估替补）指标估计 LLM 输出与一个或多个参考翻译的接近程度。Opik 提供两个单独的类：
+
+- `SentenceBLEU` - 单句 BLEU
+- `CorpusBLEU` - 语料库级 BLEU
+
+两者都依赖于底层的 NLTK BLEU 实现，支持可选的平滑方法、权重和可变 n-gram 阶数。
+
+您需要安装 nltk 库：
+
+```bash
+pip install nltk
+```
+
+使用 `SentenceBLEU` 计算单个候选与一个（或多个）参考之间的单句 BLEU：
+
+```python
+from opik.evaluation.metrics import SentenceBLEU
+
+metric = SentenceBLEU(n_grams=4, smoothing_method="method1")
+
+# 单个参考
+score = metric.score(
+    output="Hello world!",
+    reference="Hello world"
+)
+print(score.value, score.reason)
+
+# 多个参考
+score = metric.score(
+    output="Hello world!",
+    reference=["Hello planet", "Hello world"]
+)
+print(score.value, score.reason)
+
+```
+
+使用 `CorpusBLEU` 计算多个候选与多个参考的语料库级 BLEU。每个候选及其参考按列表中的索引对齐：
+
+```python
+from opik.evaluation.metrics import CorpusBLEU
+
+metric = CorpusBLEU()
+
+outputs = ["Hello there", "This is a test."]
+references = [
+    # 第一个候选的两个参考
+    ["Hello world", "Hello there"],
+    # 第二个候选的一个参考
+    "This is a test."
+]
+
+score = metric.score(output=outputs, reference=references)
+print(score.value, score.reason)
+```
+
+您还可以自定义 n-gram、平滑方法或权重：
+
+```python
+from opik.evaluation.metrics import SentenceBLEU
+
+metric = SentenceBLEU(
+    n_grams=4,
+    smoothing_method="method2",
+    weights=[0.25, 0.25, 0.25, 0.25]
+)
+
+score = metric.score(
+    output="The cat sat on the mat",
+    reference=["The cat is on the mat", "A cat sat here on the mat"]
+)
+print(score.value, score.reason)
+```
+
+**注意：** 如果任何候选或参考为空，SentenceBLEU 或 CorpusBLEU 将引发 MetricComputationError。请相应地处理或验证输入。
+
+### ROUGE
+
+`ROUGE` 支持多种开箱即用的变体：`rouge1`、`rouge2`、`rougeL` 和 `rougeLsum`。您可以通过 `rouge_type` 参数切换变体，并可选择启用词干提取或句子分割。
+
+```python
+from opik.evaluation.metrics import ROUGE
+
+metric = ROUGE(rouge_type="rougeLsum", use_stemmer=True)
+score = metric.score(
+    output="The quick brown fox jumps over the lazy dog.",
+    reference="A quick brown fox leapt over a very lazy dog."
+)
+print(score.value, score.reason)
+```
+
+使用此指标时需要安装 `rouge-score`：
+
+```bash
+pip install rouge-score
+```
+
+### GLEU
+
+`GLEU` 使用 n-gram 重叠来评估语法流畅度。当您关注流畅度而非精确的词汇匹配时，该指标很有用。
+
+```python
+from opik.evaluation.metrics import GLEU
+
+metric = GLEU(min_len=1, max_len=4)
+score = metric.score(
+    output="I has a pen",
+    reference=["I have a pen"]
+)
+print(score.value, score.reason)
+```
+
+需要安装 `nltk`：
+
+```bash
+pip install nltk
+```
+
+### BERTScore
+
+`BERTScore` 使用上下文嵌入来比较文本，为 token 级相似度指标提供了稳健的替代方案。它生成精确率、召回率和 F1 分数（Opik 默认报告 F1）。
+
+```python
+from opik.evaluation.metrics import BERTScore
+
+metric = BERTScore(model_type="microsoft/deberta-xlarge-mnli")
+score = metric.score(
+    output="The cat sits on the mat.",
+    reference="A cat is sitting on a mat."
+)
+print(score.value, score.reason)
+```
+
+使用前需要安装可选依赖：
+
+```bash
+pip install bert-score
+```
+
+### ChrF
+
+`ChrF` 计算字符 n-gram F 分数（`chrF` / `chrF++`）。调整 `beta`、`char_order` 和 `word_order` 以在两种变体之间切换。
+
+```python
+from opik.evaluation.metrics import ChrF
+
+metric = ChrF(beta=2.0, char_order=6, word_order=2)
+score = metric.score(
+    output="The cat sat on the mat",
+    reference="A cat sits upon the mat"
+)
+print(score.value, score.reason)
+```
+
+此指标依赖于 NLTK：
+
+```bash
+pip install nltk
+```
+
+### 分布指标
+
+基于直方图的指标比较候选文本和参考文本之间的 token 分布。当您想要匹配风格、词汇或主题覆盖范围时，它们很有帮助。
+
+#### JSDivergence
+
+返回 `1 - Jensen-Shannon 散度`，给出 0.0 到 1.0 之间的相似度分数。
+
+```python
+from opik.evaluation.metrics import JSDivergence
+
+metric = JSDivergence()
+score = metric.score(
+    output="Dogs chase balls",
+    reference="Cats chase toys"
+)
+print(score.value, score.reason)
+```
+
+#### JSDistance
+
+包装相同的计算，但返回原始散度（0.0 表示分布相同）。
+
+```python
+from opik.evaluation.metrics import JSDistance
+
+metric = JSDistance()
+score = metric.score(output="hello world", reference="hello there")
+print(score.value, score.reason)
+```
+
+#### KLDivergence
+
+计算 KL 散度，支持可选的平滑和方向控制。
+
+```python
+from opik.evaluation.metrics import KLDivergence
+
+metric = KLDivergence(direction="avg")
+score = metric.score(output="a b b", reference="a a b")
+print(score.value, score.reason)
+```
+
+### 语言遵循度
+
+`LanguageAdherenceMetric` 检查文本是否符合预期的 ISO 语言代码。它可以使用 fastText 语言识别模型或自定义检测器函数。
+
+```python
+from opik.evaluation.metrics import LanguageAdherenceMetric
+
+metric = LanguageAdherenceMetric(
+    expected_language="en",
+    model_path="/path/to/lid.176.ftz",
+)
+score = metric.score(output="Hello, how are you?")
+print(score.value, score.reason, score.metadata)
+```
+
+使用默认检测器时，需要安装 `fasttext` 并下载语言 ID 模型：
+
+```bash
+pip install fasttext
+```
+
+### 可读性
+
+`Readability` 使用 `textstat` 包计算 Flesch 阅读难度（0-100）和 Flesch-Kincaid 年级水平。该指标返回归一化到 `[0, 1]` 的阅读难度分数。
+
+```python
+from opik.evaluation.metrics import Readability
+
+metric = Readability()
+score = metric.score(output="This is a simple explanation of the payment process.")
+print(score.value, score.reason)
+print(score.metadata["flesch_kincaid_grade"])
+```
+
+使用此指标时需要安装可选依赖：
+
+```bash
+pip install textstat
+```
+
+传递 `enforce_bounds=True` 以及 `min_grade` 和/或 `max_grade` 可将指标转换为严格的防护栏，只有当文本满足您的年级限制时才报告 1.0。
+
+### Spearman 排名
+
+`SpearmanRanking` 衡量两个排名的一致程度。它返回 `[0, 1]` 范围内的归一化相关性分数。
+
+```python
+from opik.evaluation.metrics import SpearmanRanking
+
+metric = SpearmanRanking()
+score = metric.score(
+    output=["doc3", "doc1", "doc2"],
+    reference=["doc1", "doc2", "doc3"],
+)
+print(score.value, score.metadata["rho"])
+```
+
+### 语气
+
+`Tone` 标记听起来具有攻击性、消极或违反禁用短语列表的输出。您可以调整情感阈值、大写比例和感叹号限制。
+
+```python
+from opik.evaluation.metrics import Tone
+
+metric = Tone(max_exclamations=1)
+score = metric.score(output="THIS IS TERRIBLE!!!")
+print(score.value, score.reason)
+print(score.metadata)
+```
+
+### 情感
+
+情感指标使用 NLTK 的 VADER（效价感知词典和情感推理器）情感分析器来分析文本的情感。它返回积极、中性、消极和综合情感分数。
+
+您需要安装 nltk 库和 vader_lexicon：
+
+```bash
+pip install nltk
+python -m nltk.downloader vader_lexicon
+```
+
+使用 `Sentiment` 来分析文本的情感：
+
+```python
+from opik.evaluation.metrics import Sentiment
+
+metric = Sentiment()
+
+# 分析情感
+score = metric.score(output="I love this product! It's amazing.")
+print(score.value)  # 综合分数（例如 0.8802）
+print(score.metadata)  # 所有情感分数（pos、neu、neg、compound）
+print(score.reason)  # 情感说明
+
+# 消极情感示例
+score = metric.score(output="This is terrible, I hate it.")
+print(score.value)  # 消极综合分数（例如 -0.7650）
+```
+
+该指标返回：
+- `value`：综合情感分数（-1.0 到 1.0）
+- `metadata`：包含所有情感分数的字典：
+  - `pos`：积极情感（0.0-1.0）
+  - `neu`：中性情感（0.0-1.0）
+  - `neg`：消极情感（0.0-1.0）
+  - `compound`：归一化综合分数（-1.0 到 1.0）
+
+综合分数是 -1.0（极其消极）到 1.0（极其积极）之间的归一化分数，评分标准：
+- >= 0.05：积极情感
+- > -0.05 且 < 0.05：中性情感
+- <= -0.05：消极情感
+
+### ROUGE
+
+[ROUGE（面向召回的摘要评估替补）](<https://en.wikipedia.org/wiki/ROUGE_(metric)>) 指标估计 LLM 输出与一个或多个参考摘要的接近程度，通常用于评估摘要和文本生成任务。它测量输出字符串与参考字符串之间的重叠度，支持多种 ROUGE 类型。此指标是 Google Research ROUGE 实现的包装器，基于 `rouge-score` 库。您需要安装 rouge-score 库：
+
+```bash
+pip install rouge-score
+```
+
+使用方式如下：
+
+```python
+from opik.evaluation.metrics import ROUGE
+
+metric = ROUGE()
+
+# 单个参考
+score = metric.score(
+    output="Hello world!",
+    reference="Hello world"
+)
+print(score.value, score.reason)
+
+# 多个参考
+score = metric.score(
+    output="Hello world!",
+    reference=["Hello planet", "Hello world"]
+)
+print(score.value, score.reason)
+```
+
+您可以使用以下参数自定义 ROUGE 指标：
+
+- **`rouge_type` (str)**：要计算的 ROUGE 分数类型。必须是以下之一：
+  - `rouge1`：基于 unigram 的评分
+  - `rouge2`：基于 bigram 的评分
+  - `rougeL`：基于最长公共子序列的评分
+  - `rougeLsum`：基于句子分割的 ROUGE-L 分数
+
+  _默认值_：`rouge1`
+
+- **`use_stemmer` (bool)**：是否在 ROUGE 计算中使用词干提取。
+  _默认值_：`False`
+
+- **`split_summaries` (bool)**：是否将摘要拆分为句子。
+  _默认值_：`False`
+
+- **`tokenizer` (Any | None)**：用于句子分割的自定义分词器。
+  _默认值_：`None`
+
+```python
+from opik.evaluation.metrics import ROUGE
+
+metric = ROUGE(
+    rouge_type="rouge2",
+    use_stemmer=True
+)
+
+score = metric.score(
+    output="The cats sat on the mats",
+    reference=["The cat is on the mat", "A cat sat here on the mat"]
+)
+print(score.value, score.reason)
+```
+
+### AggregatedMetric
+
+您可以使用 AggregatedMetric 函数来计算实验中每个项目的多个指标的平均值。
+
+您可以这样定义指标：
+
+```python
+from opik.evaluation.metrics import AggregatedMetric, Hallucination, GEval
+
+metric = AggregatedMetric(
+  name="average_score",
+  metrics=[
+    Hallucination(),
+    GEval(
+      task_introduction="Identify factual inaccuracies",
+      evaluation_criteria="Return a score of 1 if there are inaccuracies, 0 otherwise"
+    )
+  ],
+  aggregator=lambda metric_results: sum([score_result.value for score_result in metric_results]) / len(metric_results)
+)
+```
+
+#### 参考文献
+
+- [理解 ROUGE 指标](https://www.linkedin.com/pulse/mastering-rouge-matrix-your-guide-large-language-model-mamdouh/)
+- [Google Research ROUGE 实现](https://github.com/google-research/google-research/tree/master/rouge)
+- [Hugging Face ROUGE 指标](https://huggingface.co/spaces/evaluate-metric/rouge)
+
+#### 注意事项
+
+- 该指标不区分大小写。
+- ROUGE 分数对于比较文本摘要模型或评估文本相似度很有用。
+- 在某些情况下，考虑使用词干提取以改进评估。

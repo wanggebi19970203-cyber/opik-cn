@@ -1,4 +1,5 @@
 import React from "react";
+import i18next from "i18next";
 
 import { SPAN_TYPE } from "@/types/traces";
 import { DropdownOption } from "@/types/shared";
@@ -34,15 +35,18 @@ const renderSpanTypeOption = (option: DropdownOption<SPAN_TYPE>) => {
   );
 };
 
-export const getSpanTypeFilterConfig = (isGuardrailsEnabled: boolean) => ({
-  type: {
-    keyComponentProps: {
-      options: getSpanTypeOptions(isGuardrailsEnabled),
-      placeholder: "Select type",
-      renderOption: renderSpanTypeOption,
+export const getSpanTypeFilterConfig = (isGuardrailsEnabled: boolean) => {
+  const t = i18next.getFixedT(null, "tracing");
+  return {
+    type: {
+      keyComponentProps: {
+        options: getSpanTypeOptions(isGuardrailsEnabled),
+        placeholder: t("treeToolbar.selectType"),
+        renderOption: renderSpanTypeOption,
+      },
     },
-  },
-});
+  };
+};
 
 /**
  * Predicate to check if a filter is a tool span filter.

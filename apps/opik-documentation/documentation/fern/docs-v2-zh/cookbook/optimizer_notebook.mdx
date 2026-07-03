@@ -1,0 +1,306 @@
+---
+---
+
+# Opik Agent 优化器简介
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目范围的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+您将需要：
+
+1. 一个 Comet 账户，用于查看 Opik 可视化（免费！）- [comet.com](https://comet.com)
+2. 一个 OpenAI 账户，用于使用 LLM
+[platform.openai.com/settings/organization/api-keys](https://platform.openai.com/settings/organization/api-keys)
+
+
+## 设置
+
+此 pip 安装大约需要一分钟。
+
+
+```python
+%pip install opik-optimizer --quiet
+```
+
+让我们确保拥有正确的版本：
+
+
+```python
+import opik_optimizer
+
+opik_optimizer.__version__
+```
+
+版本应为 1.0.6 或更高。
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=langchain&utm_campaign=opik)并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik)了解更多信息。
+
+输入您的 Comet API 密钥，然后输入"Y"使用您自己的工作区：
+
+
+```python
+import opik
+
+# Configure Opik
+opik.configure()
+```
+
+对于此示例，我们将使用 OpenAI 模型，因此需要设置 OpenAI API 密钥：
+
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+要优化任何提示，我们需要三样基本东西：
+
+1. 起始提示
+2. 指标
+3. 数据集
+
+## 数据集
+
+在此实验中，我们将使用 **HotPotQA** 数据集。该数据集被设计为对常规 LLM 来说难以处理。该数据集被称为"**多跳**"数据集，因为回答问题涉及多个推理步骤和多个工具调用，LLM 需要推断关系、组合信息或基于组合上下文得出结论。
+
+示例：
+
+> "与加利福尼亚接壤的州的首都是什么？"
+
+您需要找到与加利福尼亚接壤的州，然后查找每个州的首府。
+
+该数据集包含约 113,000 个此类众包问题，这些问题被构建为需要两篇维基百科文章的引言段落来回答。
+
+**注意：**"HotPot"这个名字来自于作者构思该数据集的餐厅。
+
+
+```python
+from opik_optimizer.demo import get_or_create_dataset
+
+dataset = get_or_create_dataset("hotpot-300")
+```
+
+让我们查看一些数据集项目：
+
+
+```python
+rows = dataset.get_items()
+rows[0]
+```
+
+我们看到每个项目都有一个"question"和"answer"。一些答案简短直接，一些则更复杂：
+
+
+```python
+rows[1]
+```
+
+## Opik 项目
+
+Opik 中的所有 LLM 追踪都保存在一个"项目"中。我们将把它们都放在以下项目名称下：
+
+
+```python
+project_name = "optimize-workshop-2025"
+```
+
+## 指标
+
+为优化选择一个好的指标很棘手。对于这些示例，我们将选择一个能够展示改进并提供分数梯度的指标。不过一般来说，这个指标不是优化运行的最佳选择。
+
+我们将使用"编辑距离"又名"Levenshtein 距离"：
+
+
+```python
+from opik.evaluation.metrics import LevenshteinRatio
+
+metric = LevenshteinRatio(project_name=project_name)
+```
+
+该指标需要两样东西：LLM 的 `output` 和 `reference`（真实值）：
+
+
+```python
+metric.score("Hello", "Hello")
+```
+
+
+```python
+metric.score("Hello!", "Hello")
+```
+
+"Hello!"和"Hello"之间的编辑距离为 1。以下是 .91 的计算方式：
+
+
+```python
+edit_distance = 1
+
+1 - edit_distance / (len("Hello1") + len("Hello"))
+```
+
+更多信息请参阅：[Levenshtein 距离](https://en.wikipedia.org/wiki/Levenshtein_distance)
+
+## 配置
+
+要创建使用 Opik Agent 优化器所需的配置，您需要三样东西：
+
+1. 初始提示
+2. 指标包装器
+
+我们将从一个相当糟糕的提示开始...这样我们就可以优化它！
+
+
+```python
+from opik_optimizer import ChatPrompt
+
+initial_prompt = ChatPrompt(
+    system="Provide an answer to the question",
+    user="{question}",
+)
+```
+
+指标包装器：
+
+
+```python
+def levenshtein_ratio(dataset_item, llm_output):
+    metric = LevenshteinRatio(project_name=project_name)
+    return metric.score(
+        reference=dataset_item["answer"], # This must match dataset field
+        output=llm_output,
+)
+```
+
+如您所见，指标包装器由我们选择的指标组成。它接受数据集项目（数据集中的字典行）和 LLM 的输出。使用不同数据集时应替换"answer"。
+
+## FewShotBayesianOptimizer
+
+FewShotBayesianOptimizer 名称表示两件事：
+
+1. 它将生成聊天提示，或如幻灯片中描述的 FewShot 示例。
+2. 其次，它描述了如何搜索这些 FewShot 示例的最佳集合。
+
+要使用此优化器，我们导入它并创建一个实例，传入项目名称和模型参数：
+
+
+```python
+from opik_optimizer import (
+    FewShotBayesianOptimizer,
+)
+
+optimizer = FewShotBayesianOptimizer(
+    model="openai/gpt-4o",  # LiteLLM name
+    min_examples=3,
+    max_examples=8,
+    n_threads=4,
+    seed=42,
+)
+```
+
+好的，让我们优化那个提示！
+
+
+```python
+result = optimizer.optimize_prompt(
+    prompt=initial_prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    n_trials=10,
+    n_samples=50,
+)
+```
+
+
+```python
+result.display()
+```
+
+
+```python
+result.get_run_link()
+```
+
+优化器做得很好！
+
+您应该看到正确百分比从约 15% 提高到约 50%（或更高！）。
+
+我们发现了什么？结果是一系列消息：
+
+
+```python
+result.details["chat_messages"]
+```
+
+## Opik 可视化 UI
+
+当您创建优化运行时，您会在 Opik UI 中看到它（无论是本地运行还是托管运行）。
+
+如果您访问 `comet.com/opik/YOURID/optimizations` 页面，您会在列表顶部看到您的运行：
+
+<img src="https://raw.githubusercontent.com/comet-ml/opik/refs/heads/main/sdks/opik_optimizer/docs/images/optimizer-ui.png" width="500px">
+
+在页面顶部，您会看到指标分数的运行历史，选择了最新的数据集。
+
+如果您点击您的运行，您会看到在此优化运行期间运行的一组试验。页面顶部是此试验的分数。在右上角您会看到目前最佳：
+
+<img src="https://raw.githubusercontent.com/comet-ml/opik/refs/heads/main/sdks/opik_optimizer/docs/images/optimize-trials.png" width="500px">
+
+如果您点击一个试验，您会看到该试验的提示：
+
+<img src="https://raw.githubusercontent.com/comet-ml/opik/refs/heads/main/sdks/opik_optimizer/docs/images/optimizer-prompt.png" width="500px">
+
+从试验页面您还可以查看试验项目，甚至深入查看（将鼠标悬停在行的"Evaluation task"列上）以查看追踪。
+
+## 使用优化后的提示
+
+我们如何使用优化后的结果？
+
+
+一旦我们有了"chat_messages"，我们可以执行以下操作：
+
+
+```python
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+
+opik_logger = OpikLogger()
+litellm.callbacks = [opik_logger]
+
+
+def query(question, chat_messages):
+    messages = chat_messages[:-1]  # Cut off the last one
+    # replace it with question in proper format:
+    messages.append({"role": "user", "content": '{"question": "%s"}"}' % question)
+
+    response = litellm.completion(
+        model="gpt-4o-mini",
+        temperature=0.1,
+        max_tokens=5000,
+        messages=messages,
+    )
+    return response.choices[0].message.content
+```
+
+
+```python
+query("When was David Chalmers born?", result.details["chat_messages"])
+```
+
+
+```python
+query("What weighs more: a baby elephant or an SUV?", result.details["chat_messages"])
+```
+
+如果它说"elephant"，那是不正确的！
+
+我们需要使用带有工具的代理来获得更好的答案。
+
+# 后续步骤
+
+您可以尝试其他优化器。更多详情请参阅 [Opik Agent 优化器文档](https://www.comet.com/docs/opik/agent_optimization/overview)。

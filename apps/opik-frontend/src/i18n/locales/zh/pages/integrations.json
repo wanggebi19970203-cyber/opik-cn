@@ -1,0 +1,12 @@
+{
+  "integrations": {
+    "title": "集成",
+    "description": "连接您喜爱的工具",
+    "categories": {
+      "frameworks": "框架",
+      "models": "模型提供商",
+      "gateways": "网关",
+      "tools": "工具"
+    }
+  }
+}

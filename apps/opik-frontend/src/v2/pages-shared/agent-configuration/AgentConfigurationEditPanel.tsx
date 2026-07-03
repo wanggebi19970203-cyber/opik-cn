@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { ArrowRight, GitCompare, Pencil, Undo2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { ConfigHistoryItem } from "@/types/agent-configs";
 import { Button } from "@/ui/button";
@@ -12,7 +13,6 @@ import AgentConfigurationEditView, {
 } from "./AgentConfigurationEditView";
 import ExpandAllToggle from "./fields/ExpandAllToggle";
 import { useFieldsCollapse } from "./fields/useFieldsCollapse";
-import { PROMPT_SAVE_NEW_VERSION_TOOLTIP } from "@/constants/prompts";
 
 type AgentConfigurationEditPanelProps = {
   open: boolean;
@@ -25,6 +25,7 @@ type AgentConfigurationEditPanelProps = {
 const AgentConfigurationEditPanel: React.FC<
   AgentConfigurationEditPanelProps
 > = ({ open, onOpenChange, item, projectId, onSaved }) => {
+  const { t } = useTranslation("agent-optimization");
   const viewRef = useRef<AgentConfigurationEditViewHandle>(null);
   const [view, setView] = useState<"edit" | "diff">("edit");
   const [description, setDescription] = useState("");
@@ -56,7 +57,7 @@ const AgentConfigurationEditPanel: React.FC<
     setView("edit");
   };
 
-  const title = "New agent configuration";
+  const title = t("agentOptimization.editPanel.newConfiguration");
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && handleClose()}>
@@ -68,7 +69,7 @@ const AgentConfigurationEditPanel: React.FC<
           <SheetTopBar variant="form" title={title}>
             <Tag variant="gray" className="flex items-center gap-1 px-1.5 py-1">
               <Pencil className="size-3" />
-              From {item.name}
+              {t("agentOptimization.editPanel.fromVersion", { name: item.name })}
             </Tag>
           </SheetTopBar>
         }
@@ -76,7 +77,7 @@ const AgentConfigurationEditPanel: React.FC<
         <div className="min-h-0 flex-1 overflow-y-auto px-6">
           {view === "edit" && (
             <Textarea
-              placeholder="Add version notes"
+              placeholder={t("agentOptimization.editPanel.addVersionNotes")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="mb-4 min-h-[55px]"
@@ -87,12 +88,12 @@ const AgentConfigurationEditPanel: React.FC<
               <h3 className="comet-body-accented flex items-center gap-1">
                 {view === "diff" ? (
                   <>
-                    Compare {item.name}
+                    {t("agentOptimization.editPanel.compareWith", { name: item.name })}
                     <ArrowRight className="size-3.5" />
-                    current changes
+                    {t("agentOptimization.editPanel.currentChanges")}
                   </>
                 ) : (
-                  "Edit fields"
+                  t("agentOptimization.editPanel.editFields")
                 )}
               </h3>
               <Button
@@ -104,12 +105,12 @@ const AgentConfigurationEditPanel: React.FC<
                 {view === "edit" ? (
                   <>
                     <GitCompare className="mr-1 size-3" />
-                    Show diff
+                    {t("agentOptimization.editPanel.showDiff")}
                   </>
                 ) : (
                   <>
                     <Undo2 className="mr-1 size-3" />
-                    Back to edit
+                    {t("agentOptimization.editPanel.backToEdit")}
                   </>
                 )}
               </Button>
@@ -140,7 +141,7 @@ const AgentConfigurationEditPanel: React.FC<
             onClick={handleClose}
             disabled={state.isSaving}
           >
-            Cancel
+            {t("agentOptimization.editPanel.cancel")}
           </Button>
           <Button
             size="sm"
@@ -152,7 +153,7 @@ const AgentConfigurationEditPanel: React.FC<
               state.isEmpty
             }
           >
-            {state.isSaving ? "Saving…" : PROMPT_SAVE_NEW_VERSION_TOOLTIP}
+            {state.isSaving ? t("agentOptimization.editPanel.saving") : t("agentOptimization.editPanel.saveNewVersion")}
           </Button>
         </div>
       </SheetContent>

@@ -1,0 +1,50 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是我们在过去几周做出的最相关的改进：
+
+## 实验分组
+即时按模型、provider 或自定义元数据组织和比较实验，以发现最佳性能者、识别慢速配置并发现获胜的参数组合。新的分组功能为每个组提供聚合统计信息，使跨数百个实验分析模式变得更加容易。
+
+<Frame>
+  <img src="/img/changelog/2025-08-22/experiment-grouping.png" alt="实验分组界面" />
+</Frame>
+
+## 扩展的模型支持
+添加了对 144+ 新模型的支持，包括：
+  - OpenAI 的 GPT-5 和 GPT-4.1-mini
+  - Anthropic Claude Opus 4.1
+  - Grok 4
+  - DeepSeek v3
+  - Qwen 3
+
+## 简化的引导流程
+全新的快速入门体验，包含 AI 辅助安装、交互式设置指南，以及即时访问团队协作功能和支持。
+
+<Frame>
+  <img src="/img/changelog/2025-08-22/onboarding.png" alt="新引导体验" />
+</Frame>
+
+## 集成
+增强了对领先 AI 框架的支持，包括：
+  - **LangChain**：改进了 token 使用追踪功能
+  - **Bedrock**：Bedrock 模型的全面成本追踪
+
+## 自定义 Trace 过滤器
+高级过滤功能，支持 trace 和 span 过滤器中的列表式键，实现精确的数据分段和 LLM 操作分析。
+
+## 性能优化
+  - Python 评分性能改进，包含预热机制
+  - 优化了 ClickHouse 异步插入参数
+  - 改进了批量中 spans 和 traces 的去重
+
+## SDK 改进
+  - Python SDK 配置错误处理改进
+  - 在评估任务输入中添加了数据集和数据集项 ID
+  - 更新了 OpenTelemetry 集成
+
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.8.16...1.8.33)
+
+_发布版本_: `1.8.16`, `1.8.17`, `1.8.18`, `1.8.19`, `1.8.20`, `1.8.21`, `1.8.22`, `1.8.23`, `1.8.24`, `1.8.25`, `1.8.26`, `1.8.27`, `1.8.28`, `1.8.29`, `1.8.30`, `1.8.31`, `1.8.32`, `1.8.33`

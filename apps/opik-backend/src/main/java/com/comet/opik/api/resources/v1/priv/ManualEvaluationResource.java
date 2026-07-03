@@ -30,9 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 
 /**
- * REST resource for manually triggering evaluation rules on traces, threads, and spans.
- * Allows users to run online evaluation metrics on specific entities without sampling,
- * directly from the UI.
+ * 用于手动触发追踪、线程和跨度上评估规则的REST资源。
+ * 允许用户在不进行采样的情况下，直接从UI对特定实体运行在线评估指标。
  */
 @Path("/v1/private/manual-evaluation")
 @Produces(MediaType.APPLICATION_JSON)
@@ -40,7 +39,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @jakarta.inject.Inject)
-@Tag(name = "Manual Evaluation", description = "Manual evaluation resources for traces, threads, and spans")
+@Tag(name = "Manual Evaluation", description = "追踪、线程和跨度的手动评估资源")
 public class ManualEvaluationResource {
 
     private final @NonNull ManualEvaluationService manualEvaluationService;
@@ -48,10 +47,10 @@ public class ManualEvaluationResource {
 
     @POST
     @Path("/traces")
-    @Operation(operationId = "evaluateTraces", summary = "Manually evaluate traces", description = "Manually trigger evaluation rules on selected traces. Bypasses sampling and enqueues all specified traces for evaluation.", responses = {
-            @ApiResponse(responseCode = "202", description = "Accepted - Evaluation request queued successfully", content = @Content(schema = @Schema(implementation = ManualEvaluationResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request or missing automation rules", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found - Project not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "evaluateTraces", summary = "手动评估追踪", description = "手动触发选定追踪上的评估规则。绕过采样，将所有指定追踪加入评估队列。", responses = {
+            @ApiResponse(responseCode = "202", description = "已接受 - 评估请求已成功加入队列", content = @Content(schema = @Schema(implementation = ManualEvaluationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误 - 无效请求或缺少自动化规则", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到 - 项目未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ONLINE_EVALUATION_RULE_UPDATE)
     public Response evaluateTraces(
@@ -78,10 +77,10 @@ public class ManualEvaluationResource {
 
     @POST
     @Path("/threads")
-    @Operation(operationId = "evaluateThreads", summary = "Manually evaluate threads", description = "Manually trigger evaluation rules on selected threads. Bypasses sampling and enqueues all specified threads for evaluation.", responses = {
-            @ApiResponse(responseCode = "202", description = "Accepted - Evaluation request queued successfully", content = @Content(schema = @Schema(implementation = ManualEvaluationResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request or missing automation rules", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found - Project not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "evaluateThreads", summary = "手动评估线程", description = "手动触发选定线程上的评估规则。绕过采样，将所有指定线程加入评估队列。", responses = {
+            @ApiResponse(responseCode = "202", description = "已接受 - 评估请求已成功加入队列", content = @Content(schema = @Schema(implementation = ManualEvaluationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误 - 无效请求或缺少自动化规则", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到 - 项目未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ONLINE_EVALUATION_RULE_UPDATE)
     public Response evaluateThreads(
@@ -108,10 +107,10 @@ public class ManualEvaluationResource {
 
     @POST
     @Path("/spans")
-    @Operation(operationId = "evaluateSpans", summary = "Manually evaluate spans", description = "Manually trigger evaluation rules on selected spans. Bypasses sampling and enqueues all specified spans for evaluation.", responses = {
-            @ApiResponse(responseCode = "202", description = "Accepted - Evaluation request queued successfully", content = @Content(schema = @Schema(implementation = ManualEvaluationResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request - Invalid request or missing automation rules", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found - Project not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "evaluateSpans", summary = "手动评估跨度", description = "手动触发选定跨度上的评估规则。绕过采样，将所有指定跨度加入评估队列。", responses = {
+            @ApiResponse(responseCode = "202", description = "已接受 - 评估请求已成功加入队列", content = @Content(schema = @Schema(implementation = ManualEvaluationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误 - 无效请求或缺少自动化规则", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到 - 项目未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RateLimited
     @RequiredPermissions(WorkspaceUserPermission.ONLINE_EVALUATION_RULE_UPDATE)
     public Response evaluateSpans(

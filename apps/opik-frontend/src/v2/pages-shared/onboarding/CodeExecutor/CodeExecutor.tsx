@@ -14,6 +14,7 @@ import useRunCodeSnippet from "./useRunCodeSnippet";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { FINAL_LOG_TEMPLATE } from "@/integrations/integration-logs";
+import { useTranslation } from "react-i18next";
 
 export enum SUPPORTED_LANGUAGE {
   json = "json",
@@ -50,6 +51,7 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
   highlightedLines,
   onRunCodeCallback,
 }) => {
+  const { t } = useTranslation();
   const theme = useCodemirrorTheme();
   const LineHighlightExtension = useCodemirrorLineHighlight({
     lines: highlightedLines,
@@ -99,13 +101,13 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
             ) : (
               <ChevronDown className="size-4" />
             )}{" "}
-            Console
+            {t("codeExecutor.console")}
           </Button>
         </div>
         <div className="flex items-center gap-2">
           {isRunning ? (
             <Button size="sm" className="h-7 gap-2 px-4" disabled>
-              Running...
+              {t("codeExecutor.running")}
             </Button>
           ) : (
             <Button onClick={onRunCode} size="sm" className="h-7 gap-2 px-4">
@@ -114,9 +116,9 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
           )}
 
           <CopyButton
-            message="Successfully copied code"
+            message={t("integrationExplorer.codeCopiedSuccessfully")}
             text={copyData || data}
-            tooltipText="Copy code"
+            tooltipText={t("integrationExplorer.copyCode")}
             className="h-7"
           />
         </div>
@@ -128,8 +130,7 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
         >
           <div className="comet-body-s gap-4 text-balance px-4 py-3 font-code">
             <div className="text-foreground-secondary">
-              Welcome to Opik! Click <span className="text-green-700">Run</span>{" "}
-              to execute the code sample
+              {t("codeExecutor.welcomeMessage", { run: <span className="text-green-700">Run</span> })}
             </div>
             {consoleOutput.map((log) => {
               if (log === FINAL_LOG_TEMPLATE) {
@@ -138,8 +139,7 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
                     key={FINAL_LOG_TEMPLATE}
                     className="gap-2 py-4 text-foreground-secondary"
                   >
-                    OPIK: Your LLM calls have been logged to your Opik
-                    dashboard,
+                    {t("codeExecutor.loggedToDashboard")}
                     <Button
                       size="sm"
                       variant="link"
@@ -154,7 +154,7 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
                         }}
                         onClick={onRunCodeCallback}
                       >
-                        view them here 🚀
+                        {t("codeExecutor.viewThemHere")}
                       </Link>
                     </Button>
                   </div>

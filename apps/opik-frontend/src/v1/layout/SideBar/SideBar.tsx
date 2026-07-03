@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 import { Bolt, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import useAppStore from "@/store/AppStore";
 import { OnChangeFn } from "@/types/shared";
 import { Button } from "@/ui/button";
@@ -18,14 +19,6 @@ import SideBarMenuItems from "./SideBarMenuItems";
 
 const HOME_PATH = "/$workspaceName/home";
 
-const CONFIGURATION_ITEM: MenuItem = {
-  id: "configuration",
-  path: "/$workspaceName/configuration",
-  type: MENU_ITEM_TYPE.router,
-  icon: Bolt,
-  label: "Configuration",
-};
-
 type SideBarProps = {
   expanded: boolean;
   setExpanded: OnChangeFn<boolean | undefined>;
@@ -35,10 +28,19 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
   expanded,
   setExpanded,
 }) => {
+  const { t } = useTranslation("navigation");
   const { activeWorkspaceName: workspaceName } = useAppStore();
   const SidebarInviteDevButton = usePluginsStore(
     (state) => state.SidebarInviteDevButton,
   );
+
+  const configurationItem: MenuItem = {
+    id: "configuration",
+    path: "/$workspaceName/configuration",
+    type: MENU_ITEM_TYPE.router,
+    icon: Bolt,
+    label: t("menu.configuration"),
+  };
 
   const logo = <Logo expanded={expanded} />;
 
@@ -46,7 +48,7 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
     const bottomItems = [
       <SidebarMenuItem
         key="configuration"
-        item={CONFIGURATION_ITEM}
+        item={configurationItem}
         expanded={expanded}
         compact
       />,

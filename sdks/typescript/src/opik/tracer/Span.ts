@@ -78,13 +78,13 @@ export class Span {
   ) => {
     const projectName = this.data.projectName ?? this.opik.config.projectName;
 
-    // environment is trace-scoped; strip any caller-supplied value so JS/any callers
-    // can't override it — the parent span's environment is applied unconditionally below.
+    // 环境变量(environment)的作用域限定在追踪(trace)级别；移除调用者提供的值，防止JS/任何调用者覆盖它
+    // 父级span的环境变量将在下方被无条件应用。
     const { environment: _env, ...spanDataWithoutEnv } = spanData as { environment?: string };
     if (_env !== undefined && _env !== this.data.environment) {
       logger.warn(
-        `You are attempting to log data into a nested span under the environment "${_env}". ` +
-          `However, the environment "${this.data.environment ?? ""}" from the parent span will be used instead.`
+        `您正在尝试将数据记录到环境 "${_env}" 下的嵌套跨度中。` +
+          `但是，将使用父级跨度的环境 "${this.data.environment ?? ""}" 替代。`
       );
     }
     const spanWithId: SavedSpan = {

@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { CellContext } from "@tanstack/react-table";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import useProviderKeysDeleteMutation from "@/api/provider-keys/useProviderKeysDe
 const AIProvidersRowActionsCell: React.FunctionComponent<
   CellContext<ProviderObject, unknown>
 > = (context) => {
+  const { t } = useTranslation("pages/settings");
   const resetKeyRef = useRef(0);
   const providerKey = context.row.original;
   const [open, setOpen] = useState<boolean | number>(false);
@@ -44,7 +46,7 @@ const AIProvidersRowActionsCell: React.FunctionComponent<
         stopClickPropagation
       >
         <span className="pr-2 text-xs text-muted-foreground">
-          Read-only provider
+          {t("settings.providers.readOnlyLabel")}
         </span>
       </CellWrapper>
     );
@@ -68,15 +70,15 @@ const AIProvidersRowActionsCell: React.FunctionComponent<
         open={open === 1}
         setOpen={setOpen}
         onConfirm={deleteProviderKeyHandler}
-        title="Delete configuration"
-        description="This configuration is shared across the workspace. Deleting it will remove access for everyone. This action can't be undone. Are you sure you want to proceed?"
-        confirmText="Delete configuration"
+        title={t("settings.providers.confirmDialog.delete.title")}
+        description={t("settings.providers.confirmDialog.delete.description")}
+        confirmText={t("settings.providers.confirmDialog.delete.confirmText")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("settings.actions.menuLabel")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -88,7 +90,7 @@ const AIProvidersRowActionsCell: React.FunctionComponent<
             }}
           >
             <Pencil className="mr-2 size-4" />
-            Edit
+            {t("settings.actions.edit")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -99,7 +101,7 @@ const AIProvidersRowActionsCell: React.FunctionComponent<
             variant="destructive"
           >
             <Trash className="mr-2 size-4" />
-            Delete
+            {t("settings.actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

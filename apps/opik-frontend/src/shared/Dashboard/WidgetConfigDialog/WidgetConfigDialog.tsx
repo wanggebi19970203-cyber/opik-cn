@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ const WidgetConfigDialog: React.FunctionComponent<WidgetConfigDialogProps> = ({
   widgetId,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const isEditMode = !!widgetId;
   const editorRef = useRef<WidgetEditorHandle>(null);
 
@@ -105,7 +107,9 @@ const WidgetConfigDialog: React.FunctionComponent<WidgetConfigDialogProps> = ({
     onOpenChange(false);
   };
 
-  const dialogTitle = isEditMode ? "Edit widget" : "Add widget";
+  const dialogTitle = isEditMode
+    ? t("common:dashboard.editWidget")
+    : t("common:dashboard.addWidget");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -148,10 +152,12 @@ const WidgetConfigDialog: React.FunctionComponent<WidgetConfigDialogProps> = ({
 
         <DialogFooter className="flex flex-row justify-end gap-2 border-t pt-4 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t("common:buttons.cancel")}
           </Button>
           <Button onClick={handleSave} disabled={!previewWidget}>
-            {isEditMode ? "Save changes" : "Add widget"}
+            {isEditMode
+              ? t("common:dashboard.saveChanges")
+              : t("common:dashboard.addWidget")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -15,6 +16,7 @@ interface OpenSMELinkButtonProps {
 const OpenSMELinkButton: React.FunctionComponent<OpenSMELinkButtonProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const {
@@ -27,7 +29,7 @@ const OpenSMELinkButton: React.FunctionComponent<OpenSMELinkButtonProps> = ({
   if (!canAnnotateTraceSpanThread && !hasFeedbackDefinitions) return null;
 
   return (
-    <TooltipWrapper content="Start annotating">
+    <TooltipWrapper content={t("annotationQueue.openSME.tooltip")}>
       <Link
         to="/$workspaceName/sme"
         params={{ workspaceName }}
@@ -38,7 +40,7 @@ const OpenSMELinkButton: React.FunctionComponent<OpenSMELinkButtonProps> = ({
       >
         <Button size="sm">
           <ExternalLink className="mr-1.5 size-3.5" />
-          Annotate
+          {t("annotationQueue.openSME.button")}
         </Button>
       </Link>
     </TooltipWrapper>

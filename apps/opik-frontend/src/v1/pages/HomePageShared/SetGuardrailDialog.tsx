@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import SideDialog from "@/shared/SideDialog/SideDialog";
 import { SheetTitle } from "@/ui/sheet";
 import ApiKeyCard from "@/v1/pages-shared/onboarding/ApiKeyCard/ApiKeyCard";
@@ -24,6 +25,7 @@ const SetGuardrailDialog: React.FC<SetGuardrailDialogProps> = ({
   setOpen,
   projectName,
 }) => {
+  const { t } = useTranslation();
   const {
     state: guardrailsState,
     updateThreshold,
@@ -53,12 +55,9 @@ const SetGuardrailDialog: React.FC<SetGuardrailDialogProps> = ({
     <SideDialog open={open} setOpen={setOpen}>
       <div className="pb-20">
         <div className="pb-8">
-          <SheetTitle>Set a guardrail</SheetTitle>
+          <SheetTitle>{t("home.guardrails.setAGuardrail")}</SheetTitle>
           <div className="comet-body-s m-auto mt-4 w-[700px] self-center text-center text-muted-slate">
-            Guardrails help you protect your application from risks inherent in
-            LLMs. Use them to check the inputs and outputs of your LLM calls,
-            and detect issues like off-topic answers or leaking sensitive
-            information.
+            {t("home.guardrails.guardrailsDescription")}
           </div>
         </div>
         <div className="m-auto flex w-full max-w-[1250px] items-start gap-6">
@@ -110,7 +109,7 @@ const SetGuardrailDialog: React.FC<SetGuardrailDialogProps> = ({
           <div className="flex w-[250px] shrink-0 flex-col gap-6 self-start">
             <ApiKeyCard />
             <DocsLinkCard
-              description="Learn how to configure your guardrails in our docs."
+              description={t("home.guardrails.learnGuardrailsDocs")}
               link={GUARDRAIL_DOCS_LINK}
             />
           </div>

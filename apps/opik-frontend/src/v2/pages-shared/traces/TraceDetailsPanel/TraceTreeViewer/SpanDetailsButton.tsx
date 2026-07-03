@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { MoreVertical } from "lucide-react";
 
 import { DropdownOption, OnChangeFn } from "@/types/shared";
@@ -19,20 +20,6 @@ import { FeatureToggleKeys } from "@/types/feature-toggles";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import { getSelectAllCheckedState } from "@/lib/utils";
 
-const OPTIONS: DropdownOption<TREE_DATABLOCK_TYPE>[] = [
-  { label: "Duration", value: TREE_DATABLOCK_TYPE.DURATION },
-  { label: "Cost", value: TREE_DATABLOCK_TYPE.ESTIMATED_COST },
-  { label: "Model", value: TREE_DATABLOCK_TYPE.MODEL },
-  { label: "Number of tokens", value: TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS },
-  { label: "Tokens breakdown", value: TREE_DATABLOCK_TYPE.TOKENS_BREAKDOWN },
-  { label: "Number of scores", value: TREE_DATABLOCK_TYPE.NUMBER_OF_SCORES },
-  {
-    label: "Number of comments",
-    value: TREE_DATABLOCK_TYPE.NUMBER_OF_COMMENTS,
-  },
-  { label: "Number of tags", value: TREE_DATABLOCK_TYPE.NUMBER_OF_TAGS },
-];
-
 type SpanDetailsButtonProps = {
   config: TreeNodeConfig;
   onConfigChange: OnChangeFn<TreeNodeConfig>;
@@ -42,18 +29,30 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
   config,
   onConfigChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const isGuardrailsEnabled = useIsFeatureEnabled(
     FeatureToggleKeys.GUARDRAILS_ENABLED,
   );
 
-  const options = useMemo(() => {
+  const options: DropdownOption<TREE_DATABLOCK_TYPE>[] = useMemo(() => {
+    const base: DropdownOption<TREE_DATABLOCK_TYPE>[] = [
+      { label: t("treeToolbar.duration"), value: TREE_DATABLOCK_TYPE.DURATION },
+      { label: t("treeToolbar.cost"), value: TREE_DATABLOCK_TYPE.ESTIMATED_COST },
+      { label: t("treeToolbar.model"), value: TREE_DATABLOCK_TYPE.MODEL },
+      { label: t("treeToolbar.numberOfTokens"), value: TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS },
+      { label: t("treeToolbar.tokensBreakdown"), value: TREE_DATABLOCK_TYPE.TOKENS_BREAKDOWN },
+      { label: t("treeToolbar.numberOfScores"), value: TREE_DATABLOCK_TYPE.NUMBER_OF_SCORES },
+      { label: t("treeToolbar.numberOfComments"), value: TREE_DATABLOCK_TYPE.NUMBER_OF_COMMENTS },
+      { label: t("treeToolbar.numberOfTags"), value: TREE_DATABLOCK_TYPE.NUMBER_OF_TAGS },
+    ];
+
     return isGuardrailsEnabled
       ? [
-          { label: "Guardrails", value: TREE_DATABLOCK_TYPE.GUARDRAILS },
-          ...OPTIONS,
+          { label: t("treeToolbar.guardrails"), value: TREE_DATABLOCK_TYPE.GUARDRAILS },
+          ...base,
         ]
-      : OPTIONS;
-  }, [isGuardrailsEnabled]);
+      : base;
+  }, [isGuardrailsEnabled, t]);
 
   const toggleColumns = useCallback(
     (value: boolean) => {
@@ -77,7 +76,7 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
 
   return (
     <DropdownMenu>
-      <TooltipWrapper content="More options">
+      <TooltipWrapper content={t("treeToolbar.moreOptions")}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon-2xs">
             <MoreVertical className="size-3" />
@@ -113,7 +112,7 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
               }))
             }
           >
-            Timeline
+            {t("treeToolbar.timeline")}
           </DropdownMenuCustomCheckboxItem>
         </div>
         <DropdownMenuSeparator />
@@ -123,7 +122,7 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
           onCheckedChange={() => toggleColumns(!allSelected)}
         >
           <div className="w-full break-words py-2">
-            {selectedCount} of {totalCount} selected
+            {t("treeToolbar.selectedOfTotal", { selected: selectedCount, total: totalCount })}
           </div>
         </DropdownMenuCustomCheckboxItem>
       </DropdownMenuContent>

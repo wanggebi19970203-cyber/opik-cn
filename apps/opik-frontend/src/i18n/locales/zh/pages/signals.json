@@ -1,0 +1,87 @@
+{
+  "signals": {
+    "title": "信号",
+    "description": "监控和分析数据信号",
+    "empty": {
+      "title": "暂无信号",
+      "description": "信号将显示在这里。"
+    },
+    "page": {
+      "lastScan": "上次扫描: {{date}}",
+      "noRunsYet": "暂无运行记录",
+      "runDiagnostic": "运行诊断",
+      "resolvedIssues": "已解决的问题",
+      "diagnostics": "诊断",
+      "autoDaily": "自动 · 每日",
+      "manual": "手动",
+      "settings": "设置",
+      "turnOnAutoDiagnostic": "开启自动诊断"
+    },
+    "diagnosticsSettings": {
+      "title": "诊断设置",
+      "dailyDiagnosticsOn": "每日诊断已开启",
+      "dailyDiagnosticsDescription": "关闭以暂停自动诊断。您可以随时重新激活。",
+      "billing": "计费",
+      "billingDescription": "使用您的 Ollie 令牌。",
+      "viewBilling": "查看计费",
+      "cancel": "取消",
+      "saveChanges": "保存更改"
+    },
+    "turnOnDiagnostic": {
+      "title": "开启每日诊断？",
+      "description": "首次诊断立即运行。之后每天 {{time}} 运行 — 我们将审查您的追踪并标记需要修复的问题。使用您的 Ollie 令牌。可随时关闭。",
+      "learnMore": "了解更多",
+      "cancel": "取消",
+      "runFirstDiagnostic": "运行首次诊断"
+    },
+    "page": {
+      "lastScan": "上次扫描: {{date}}",
+      "noRunsYet": "暂无运行记录",
+      "runDiagnostic": "运行诊断",
+      "resolvedIssues": "已解决的问题",
+      "diagnostics": "诊断",
+      "autoDaily": "自动 \u00b7 每日",
+      "manual": "手动",
+      "settings": "设置",
+      "turnOnAutoDiagnostic": "开启自动诊断"
+    },
+    "stats": {
+      "affectedTraces": "受影响的追踪",
+      "openIssues": "待处理问题",
+      "resolvedThisWeek": "本周已解决"
+    },
+    "issues": {
+      "sortByLastSeen": "按最后出现时间",
+      "sortByOccurrences": "按出现次数",
+      "sortBySeverity": "按严重程度",
+      "issues": "问题",
+      "runningDiagnostic": "正在运行诊断",
+      "runningDescription": "我们正在分析您的追踪以检测问题。结果将自动更新 \u2014 您可以离开此页面。",
+      "detailSubtitle": "您将看到摘要、受影响的追踪以及 Ollie 的修复建议。",
+      "issueDetailsPlaceholder": "问题详情将显示在这里",
+      "runningFirstDiagnostic": "正在运行首次诊断",
+      "nothingResolvedYet": "暂无已解决问题",
+      "nothingResolvedDescription": "您解决的问题将显示在这里。可以随时重新打开。",
+      "backToOpenIssues": "返回待处理问题",
+      "allClear": "一切正常",
+      "allClearDescription": "运行新的诊断以检查是否有新问题。",
+      "runDiagnostic": "运行诊断"
+    },
+    "issueDetail": {
+      "resolve": "标记已解决",
+      "reopen": "重新打开",
+      "firstSeen": "首次出现",
+      "lastSeen": "最后出现",
+      "occurrences": "出现次数",
+      "usersImpacted": "受影响用户",
+      "summary": "摘要",
+      "ollieFix": "Ollie 修复建议",
+      "continueWithOllie": "继续使用 Ollie",
+      "occurrenceOverTime": "随时间变化",
+      "affectedTracesSample": "受影响追踪样本"
+    },
+    "occurrenceChart": {
+      "label": "出现次数"
+    }
+  }
+}

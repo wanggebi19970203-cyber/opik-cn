@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Code2, MessageSquare, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -34,6 +35,7 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
   labelClassName,
   children,
 }) => {
+  const { t } = useTranslation("prompt");
   const [showRawView, setShowRawView] = useState(false);
 
   const messages = useMemo<ChatMessage[]>(
@@ -80,12 +82,12 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
           {showRawView ? (
             <>
               <MessageSquare className="mr-1.5 size-3.5" />
-              Message view
+              {t("promptTemplateView.messageView")}
             </>
           ) : (
             <>
               <Code2 className="mr-1.5 size-3.5" />
-              Raw view
+              {t("promptTemplateView.rawView")}
             </>
           )}
         </Button>
@@ -101,12 +103,12 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
         {showRawView ? (
           <>
             <Type className="mr-1.5 size-3.5" />
-            Pretty view
+            {t("promptTemplateView.prettyView")}
           </>
         ) : (
           <>
             <Code2 className="mr-1.5 size-3.5" />
-            Raw view
+            {t("promptTemplateView.rawView")}
           </>
         )}
       </Button>
@@ -152,7 +154,7 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
         <div className={cn("comet-body-s-accented", labelClassName)}>
-          {isChatPrompt ? "Chat messages" : "Prompt"}
+          {isChatPrompt ? t("promptTemplateView.chatMessages") : t("promptTemplateView.prompt")}
         </div>
         {renderToggleButton()}
       </div>

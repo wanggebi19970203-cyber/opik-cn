@@ -1,0 +1,212 @@
+---
+headline: 评估对话线程 | Opik 文档
+og:description: 使用 Python SDK 中的 evaluate_threads 函数在 Opik 中评估和优化对话线程，提升多轮对话质量。
+og:site_name: Opik 文档
+og:title: 有效评估对话线程 - Opik
+subtitle: 评估对话线程的分步指南
+title: 评估对话线程
+---
+
+当您使用支持 LLM 代理的框架运行多轮对话时，Opik 集成会自动将相关的 trace 分组为对话线程，并使用适合每个框架的参数。
+
+本指南将介绍如何使用 Python SDK 中的 `evaluate_threads` 函数在 Opik 中评估和优化对话线程。
+
+<Note>
+完整的 API 参考文档，请参阅 [`evaluate_threads` API 参考](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/evaluate_threads.html)。
+</Note>
+
+## 使用 Python SDK
+
+Python SDK 提供了简单高效的方式来使用 `evaluate_threads` 函数评估和优化对话线程。该函数允许您指定过滤字符串以选择特定线程进行评估，指定要应用于每个线程的指标列表，并返回包含评估结果和反馈分数的 `ThreadsEvaluationResult` 对象。
+
+最重要的是，该函数**会自动将反馈分数上传到 Opik 中的 trace！**
+因此，评估完成后，您还可以[在 UI 中查看结果](#using-opik-ui-to-view-results)。
+
+要运行线程评估，可以使用以下代码：
+
+```python
+from opik.evaluation import evaluate_threads
+from opik.evaluation.metrics import ConversationalCoherenceMetric, UserFrustrationMetric
+
+# Initialize the evaluation metrics
+conversation_coherence_metric = ConversationalCoherenceMetric()
+user_frustration_metric = UserFrustrationMetric()
+
+# Run the threads evaluation
+results = evaluate_threads(
+    project_name="ai_team",
+    filter_string='id = "0197ad2a"',
+    eval_project_name="ai_team_evaluation",
+    metrics=[
+        conversation_coherence_metric,
+        user_frustration_metric,
+    ],
+    trace_input_transform=lambda x: x["input"],
+    trace_output_transform=lambda x: x["output"],
+)
+```
+
+<Tip>
+想要创建自定义对话指标？请查阅[自定义对话指标指南](/evaluation/metrics/custom_conversation_metric)，了解如何构建用于评估多轮对话的专用指标。
+</Tip>
+
+### 理解转换参数
+
+线程由多个 trace 组成，每个 trace 都有输入和输出。在实际场景中，这些通常包含用户消息和代理响应。然而，trace 的输入和输出很少是简单的字符串——它们通常是复杂的数据结构，具体格式取决于您的代理框架。
+
+为了处理这种复杂性，您需要提供 `trace_input_transform` 和 `trace_output_transform` 函数。这些是**关键参数**，用于告诉 Opik 如何从您的框架特定的 trace 结构中提取消息内容。
+
+#### 为什么需要转换函数
+
+不同的代理框架对 trace 数据的结构化方式不同：
+- **LangChain** 可能将消息存储在 `{"messages": [{"content": "..."}]}` 中
+- **CrewAI** 可能使用 `{"task": {"description": "..."}}`
+- **自定义实现** 可以是您定义的任何结构
+
+如果没有转换函数，Opik 将无法知道在 trace 数据中哪里可以找到实际的用户问题和代理响应。
+
+#### 转换函数的工作原理
+
+通过使用这些函数，Opik 评估引擎会将您选择用于评估的线程转换为所有 Opik 线程评估指标所期望的标准化格式：
+
+```json
+[
+    {
+        "role": "user",
+        "content": "input string from trace 1"
+    },
+    {
+        "role": "assistant",
+        "content": "output string from trace 1"
+    },
+    {
+        "role": "user",
+        "content": "input string from trace 2"
+    },
+    {
+        "role": "assistant",
+        "content": "output string from trace 2"
+    }
+]
+```
+
+**示例：**
+
+如果您的 trace 输入具有以下结构：
+
+```json
+{
+    "content": {
+        "user_question": "Tell me about your service?"
+    },
+    "metadata": {...}
+}
+```
+
+则您的 `trace_input_transform` 应该是：
+
+```python
+lambda x: x["content"]["user_question"]
+```
+
+<Tip>
+不想处理转换，因为您的 trace 没有一致的格式？尝试使用基于 LLM 的转换，语言模型擅长处理这类任务！
+</Tip>
+
+#### 使用过滤字符串
+
+`evaluate_threads` 函数接受过滤字符串作为参数。该字符串用于选择需要评估的线程。例如，如果您只想评估具有特定 ID 的线程，可以使用以下过滤字符串：
+
+```python
+filter_string='id = "0197ad2a"'
+```
+
+您可以使用 `AND` 运算符组合多个过滤字符串。例如，如果您只想评估具有特定 ID 且在某个日期之后创建的线程，可以使用以下过滤字符串：
+
+```python
+filter_string='id = "0197ad2a" AND start_time > "2024-01-01T00:00:00Z"'
+```
+
+**支持的过滤字段和运算符**
+
+`evaluate_threads` 函数在 `filter_string` 中支持以下过滤字段，使用 Opik 查询语言 (OQL)。
+所有字段和运算符与 `search_traces` 和 `search_spans` 支持的相同：
+
+| 字段                       | 类型       | 运算符                                                                      |
+| ------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `id`                      | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `name`                    | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `created_by`              | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `thread_id`               | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `type`                    | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `model`                   | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `provider`                | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `status`                  | String     | `=`, `contains`, `not_contains`                                             |
+| `start_time`              | DateTime   | `=`, `>`, `<`, `>=`, `<=`                                                   |
+| `end_time`                | DateTime   | `=`, `>`, `<`, `>=`, `<=`                                                   |
+| `input`                   | String     | `=`, `contains`, `not_contains`                                             |
+| `output`                  | String     | `=`, `contains`, `not_contains`                                             |
+| `metadata`                | Dictionary | `=`, `contains`, `>`, `<`                                                   |
+| `feedback_scores`         | Numeric    | `=`, `>`, `<`, `>=`, `<=`, `is_empty`, `is_not_empty`                      |
+| `tags`                    | List       | `contains`                                                                  |
+| `usage.total_tokens`      | Numeric    | `=`, `!=`, `>`, `<`, `>=`, `<=`                                             |
+| `usage.prompt_tokens`     | Numeric    | `=`, `!=`, `>`, `<`, `>=`, `<=`                                             |
+| `usage.completion_tokens` | Numeric    | `=`, `!=`, `>`, `<`, `>=`, `<=`                                             |
+| `duration`                | Numeric    | `=`, `!=`, `>`, `<`, `>=`, `<=`                                             |
+| `number_of_messages`      | Numeric    | `=`, `!=`, `>`, `<`, `>=`, `<=`                                             |
+| `total_estimated_cost`    | Numeric    | `=`, `!=`, `>`, `<`, `>=`, `<=`                                             |
+
+**规则：**
+
+- 字符串值必须用双引号包裹
+- DateTime 字段需要 ISO 8601 格式（例如 "2024-01-01T00:00:00Z"）
+- 嵌套对象使用点号表示法：`metadata.model`、`feedback_scores.accuracy`
+- 多个条件可以使用 `AND` 组合（不支持 OR）
+
+`feedback_scores` 字段是一个字典，其中键是指标名称，值是指标值。
+您可以使用它根据反馈分数过滤线程。例如，如果您只想评估具有特定用户挫折感分数的线程，可以使用以下过滤字符串：
+
+```python
+filter_string='feedback_scores.user_frustration_score >= 0.5'
+```
+
+其中 `user_frustration_score` 是用户挫折感指标的名称，`0.5` 是过滤的阈值。
+
+<Tip>
+**最佳实践**：如果您使用 SDK 进行线程评估，可以通过设置定时 cron 作业并配合过滤器来自动生成特定 trace 的反馈分数，从而实现自动化。
+</Tip>
+
+## 使用 Opik UI 查看结果
+
+评估完成后，您可以在 Opik UI 中访问评估结果。
+不仅可以看到分数值，还可以查看 LLM 评判者给出这些值的推理过程！
+
+<Frame>
+  <img src="/img/evaluation/threads_user_frustration_score.png" />
+</Frame>
+
+<Note>
+  **SDK 评估与手动反馈：**
+  - 使用 SDK 的 `evaluate_threads` 函数时，只有标记为"非活跃"（冷却期结束后）的线程才会被评估。这确保您评分的是完整的对话。
+  - 您可以随时通过 UI 或 API 为任何线程手动添加反馈分数，无论其状态如何。
+  - 对于线程级别的在线评估规则（自动评分），Opik 会在最后一次活动后等待可配置的"冷却期"，然后再运行规则。
+</Note>
+
+## 线程的多值反馈分数
+
+**基于团队的线程评估**使多个评估者能够独立对对话线程进行评分，为多轮对话质量提供更可靠的评估。
+
+**线程评估的主要优势：**
+
+- **对话复杂性评分** - 多个评审者可以评估对话轮次中的不同方面，如连贯性、用户满意度和目标完成度
+- **减少评估偏差** - 通过团队共识来减轻评判对话质量时的个人主观性
+- **线程特定指标** - 团队可以协作评估对话特定的方面，如挫折感水平、话题偏移和解决成功率
+
+这种协作方式对于对话线程尤其有价值，因为对话质量、上下文维护和用户体验评估通常需要多个专家视角。
+
+## 后续步骤
+
+有关可用于对对话线程评分的指标的更多详情，请参阅[对话指标](/evaluation/metrics/conversation_threads_metrics)页面。
+
+您还可以定义自定义指标来评估对话线程，包括 LLM-as-a-Judge (LLM-J) 推理指标，详见以下章节：
+[自定义对话指标指南](/evaluation/metrics/custom_conversation_metric)。

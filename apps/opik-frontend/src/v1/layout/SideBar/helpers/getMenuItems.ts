@@ -11,6 +11,7 @@ import {
   SparklesIcon,
   UserPen,
 } from "lucide-react";
+import { TFunction } from "i18next";
 import {
   MENU_ITEM_TYPE,
   MenuItemGroup,
@@ -22,12 +23,14 @@ const getMenuItems = ({
   canViewDatasets,
   canUsePlayground,
   canViewOptimizationRuns,
+  t,
 }: {
   canViewExperiments: boolean;
   canViewDashboards: boolean;
   canViewDatasets: boolean;
   canUsePlayground: boolean;
   canViewOptimizationRuns: boolean;
+  t: TFunction;
 }): MenuItemGroup[] => {
   return [
     {
@@ -38,7 +41,7 @@ const getMenuItems = ({
           path: "/$workspaceName/home",
           type: MENU_ITEM_TYPE.router,
           icon: LucideHome,
-          label: "Home",
+          label: t("menu.home"),
         },
         ...(canViewDashboards
           ? [
@@ -47,7 +50,7 @@ const getMenuItems = ({
                 path: "/$workspaceName/dashboards",
                 type: MENU_ITEM_TYPE.router,
                 icon: ChartLine,
-                label: "Dashboards",
+                label: t("menu.dashboards"),
                 count: "dashboards",
               },
             ]
@@ -56,21 +59,21 @@ const getMenuItems = ({
     },
     {
       id: "observability",
-      label: "Observability",
+      label: t("groups.observability"),
       items: [
         {
           id: "projects",
           path: "/$workspaceName/projects",
           type: MENU_ITEM_TYPE.router,
           icon: LayoutGrid,
-          label: "Projects",
+          label: t("menu.projects"),
           count: "projects",
         },
       ],
     },
     {
       id: "evaluation",
-      label: "Evaluation",
+      label: t("groups.evaluation"),
       items: [
         ...(canViewExperiments
           ? [
@@ -79,7 +82,7 @@ const getMenuItems = ({
                 path: "/$workspaceName/experiments" as const,
                 type: MENU_ITEM_TYPE.router,
                 icon: FlaskConical,
-                label: "Experiments" as const,
+                label: t("menu.experiments"),
                 count: "experiments" as const,
               },
             ]
@@ -91,7 +94,7 @@ const getMenuItems = ({
                 path: "/$workspaceName/test-suites",
                 type: MENU_ITEM_TYPE.router,
                 icon: ListChecks,
-                label: "Datasets",
+                label: t("menu.datasets"),
                 count: "test_suites",
               },
             ]
@@ -101,21 +104,21 @@ const getMenuItems = ({
           path: "/$workspaceName/annotation-queues",
           type: MENU_ITEM_TYPE.router,
           icon: UserPen,
-          label: "Annotation queues",
+          label: t("menu.annotation_queues"),
           count: "annotation_queues",
         },
       ],
     },
     {
       id: "prompt_engineering",
-      label: "Prompt engineering",
+      label: t("groups.promptEngineering"),
       items: [
         {
           id: "prompts",
           path: "/$workspaceName/prompts",
           type: MENU_ITEM_TYPE.router,
           icon: FileTerminal,
-          label: "Prompt library",
+          label: t("menu.prompts"),
           count: "prompts",
         },
         ...(canUsePlayground
@@ -123,9 +126,9 @@ const getMenuItems = ({
               {
                 id: "playground",
                 path: "/$workspaceName/playground",
-                type: MENU_ITEM_TYPE.router as const,
+                type: MENU_ITEM_TYPE.router,
                 icon: Blocks,
-                label: "Playground",
+                label: t("menu.playground"),
               },
             ]
           : []),
@@ -135,14 +138,14 @@ const getMenuItems = ({
       ? [
           {
             id: "optimization",
-            label: "Optimization",
+            label: t("groups.optimization"),
             items: [
               {
                 id: "optimizations",
                 path: "/$workspaceName/optimizations",
                 type: MENU_ITEM_TYPE.router,
                 icon: SparklesIcon,
-                label: "Optimization studio",
+                label: t("menu.optimizationStudio"),
                 count: "optimizations",
                 showIndicator: "optimizations_running",
               },
@@ -152,14 +155,14 @@ const getMenuItems = ({
       : []),
     {
       id: "production",
-      label: "Production",
+      label: t("groups.production"),
       items: [
         {
           id: "online_evaluation",
           path: "/$workspaceName/online-evaluation",
           type: MENU_ITEM_TYPE.router,
           icon: Brain,
-          label: "Online evaluation",
+          label: t("menu.online_evaluation"),
           count: "rules",
         },
         {
@@ -167,7 +170,7 @@ const getMenuItems = ({
           path: "/$workspaceName/alerts",
           type: MENU_ITEM_TYPE.router,
           icon: Bell,
-          label: "Alerts",
+          label: t("menu.alerts"),
           count: "alerts",
         },
       ],

@@ -6,6 +6,7 @@ import {
 } from "@/types/welcome-wizard";
 import { WELCOME_WIZARD_QUERY_KEY } from "./useWelcomeWizardStatus";
 import { useToast } from "@/ui/use-toast";
+import i18next from "i18next";
 
 const submitWelcomeWizard = async (submission: WelcomeWizardSubmission) => {
   const { data } = await api.post<WelcomeWizardTracking>(
@@ -29,7 +30,7 @@ export default function useWelcomeWizardSubmitMutation() {
     },
     onError: (error) => {
       toast({
-        description: "Failed to submit welcome wizard.",
+        description: i18next.t("common:welcomeWizard.failedToSubmit"),
         variant: "destructive",
       });
       console.error("Failed to submit welcome wizard:", error);

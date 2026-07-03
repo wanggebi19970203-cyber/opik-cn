@@ -1,0 +1,125 @@
+---
+headline: Agent Playground | Opik 文档
+og:description: 在本地运行 Agent 的同时连接 Opik，实现完整的追踪、调试和可观测性
+og:site_name: Opik 文档
+og:title: Agent Playground — Opik
+title: Agent Playground
+---
+
+Agent Playground 允许您在本地机器上运行 Agent，同时连接到 Opik。每次 Agent 执行都会被完整追踪——您可以在 Opik UI 中查看 LLM 调用、延迟、Token 用量以及完整的执行图。
+
+除了运行 Agent，Playground 还允许您直接从[提示词库](/development/prompt-library/overview)中调整提示词和参数，无需修改代码。对结果满意后，保存新配置，您的 Agent 会自动应用。
+
+<video
+  src="/img/v2/observability/agent-sandbox-demo.mp4"
+  width="854"
+  height="480"
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="auto"
+/>
+
+## 快速开始
+
+<Steps>
+  <Step title="将 Agent 标记为入口点">
+    将 Agent 的主函数标记为入口点。Opik 会自动检测函数签名并将其注册为可运行的 Agent。
+
+    <CodeBlocks>
+      ```python title="Python"
+      import opik
+
+      @opik.track(entrypoint=True, project_name="my-agent")
+      def my_agent(query: str, max_results: int = 5) -> str:
+          # Your agent logic here
+          return result
+      ```
+
+      ```ts title="TypeScript"
+      import { track } from "opik";
+
+      const myAgent = track(
+        {
+          entrypoint: true,
+          name: "my-agent",
+          params: [
+            { name: "query", type: "string" },
+            { name: "maxResults", type: "number" },
+          ],
+        },
+        async (query: string, maxResults: number = 5): Promise<string> => {
+          // Your agent logic here
+          return result;
+        }
+      );
+      ```
+    </CodeBlocks>
+
+    参数类型会在 UI 中显示为输入字段。在 Python 中，类型通过类型注解推断；在 TypeScript 中，需要通过 `params` 选项显式提供。
+  </Step>
+  <Step title="启动 Playground">
+    ```bash
+    opik endpoint --project my-agent -- python3 my_agent.py
+    ```
+
+    CLI 会验证入口点是否存在，打开浏览器配对流程，注册您的 Agent，并开始轮询任务。
+
+    <Tip>
+      `opik` CLI 以 Python 包形式分发。通过 `pip install opik` 安装——即使您的 Agent 使用 TypeScript 编写，也需要安装此包。
+    </Tip>
+  </Step>
+  <Step title="与 Agent 对话">
+    连接成功后，UI 会显示您的运行器及其已注册的 Agent。选择一个 Agent，填写输入参数，然后点击**运行**。Agent 在您的本地机器上执行，结果连同完整的追踪信息会显示在 UI 中。
+  </Step>
+  <Step title="迭代优化提示词和参数">
+    切换到 Agent Playground 页面的**配置**选项卡，调整提示词、模型参数或工具定义——无需离开 Playground，也无需修改代码。
+
+    您的更改尚未保存。再次运行 Agent 时，Playground 会使用未保存的配置，以便您立即看到效果。尝试不同的提示词，比较各次运行的结果，满意后再保存配置。您的 Agent 会自动应用新设置。
+  </Step>
+</Steps>
+
+## Playground 工作原理
+
+<Frame>
+  <img src="/img/v2/observability/agent-sandbox.png" alt="Agent Playground UI 显示已连接的运行器、输入字段和执行结果" />
+</Frame>
+
+Playground 中的每次运行都会生成完整的追踪——每个 LLM 调用、工具调用和子步骤都会作为 Span 捕获，包含输入、输出、延迟和 Token 成本。运行中 Agent 的日志会实时流式传输到 UI，您可以随时观察执行过程。
+
+Playground 通过心跳监测运行器状态，并在断开连接时自动更新状态。启用 `--watch` 后，文件变更会被检测到，您的 Agent 会自动重新注册，无需重启进程。对于 CI 或编程式设置，使用 `--headless` 可完全跳过浏览器配对流程。
+
+## 故障排除
+
+**"No entrypoint found" 错误**
+
+确保至少有一个函数使用 `@opik.track(entrypoint=True)`（Python）或 `track({ entrypoint: true }, fn)`（TypeScript）装饰。入口点必须可从当前工作目录中发现。
+
+**配对超时**
+
+浏览器配对会话在 5 分钟后过期。重新运行命令以生成新会话。请确保 Opik 环境变量设置正确——详见[可观测性快速入门](/tracing/getting-started)了解配置详情。
+
+**运行器断开连接**
+
+Opik 使用心跳监测来检测断开连接。如果运行器在 UI 中显示为已断开，请检查进程是否仍在本地运行以及网络连接是否稳定。
+
+## 常见问题
+
+<AccordionGroup>
+  <Accordion title="opik connect 和 opik endpoint 有什么区别？">
+    它们的用途不同：
+
+    - **`opik connect`** 启动一个轻量级桥接守护进程，为 [Ollie](/ollie) 提供对您仓库的远程访问权限。Ollie 可以读取源文件、提出代码修改建议并重新运行 Agent——所有操作都在 Opik UI 中完成。它本身不运行 Agent 进程。
+
+    - **`opik endpoint`** 运行您的 Agent 进程并将其连接到 Agent Playground。您可以从 UI 提交输入、查看带有完整追踪的结果，并在不修改代码的情况下迭代[提示词库](/development/prompt-library/overview)。
+
+    您可以同时使用两者：`opik endpoint` 在 Playground 中运行和测试 Agent，`opik connect` 让 Ollie 检查和编辑代码。
+  </Accordion>
+</AccordionGroup>
+
+## 后续步骤
+
+- [Ollie](/ollie) — 使用 Ollie 配合 `opik connect` 来调试和改进 Agent 代码
+- [使用 Ollie 调试 Agent](/tracing/debug-agents) — 调试-修复-验证工作流
+- [可观测性快速入门](/tracing/getting-started) — 配置 Opik 环境

@@ -1,0 +1,195 @@
+---
+description: 从这里开始将 Opik 集成到基于 Predibase 的生成式 AI 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Predibase | Opik 文档
+og:description: 学习如何在 Predibase 上设置账户，使用 Opik 平台有效地微调和部署开源 LLM。
+og:site_name: Opik 文档
+og:title: 使用 Opik 在 Predibase 上微调 LLM
+title: 使用 Opik 实现 Predibase 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/predibase
+---
+
+Predibase 是一个用于微调和部署开源大语言模型（LLM）的平台。它基于开源的 [LoRAX](https://loraexchange.ai/) 构建。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=predibase&utm_campaign=opik) 提供托管版本的 Opik 平台，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=predibase&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=predibase&utm_campaign=opik)。
+
+## 跟踪 LLM 调用
+
+Predibase 可用于部署开源 LLM，并作为 LangChain 中的模型提供商。我们将利用 Opik 与 LangChain 的集成来跟踪使用 Predibase 模型进行的 LLM 调用。
+
+## 快速开始
+
+### 安装
+
+要使用 Opik 与 Predibase 的集成，你需要安装 `opik`、`predibase` 和 `langchain` 包。可以使用 pip 安装：
+
+```bash
+pip install opik predibase langchain
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/v1/tracing/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs Cloud vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置 Predibase
+
+你还需要将 `PREDIBASE_API_TOKEN` 环境变量设置为你的 Predibase API token。可以将其设置为环境变量：
+
+```bash
+export PREDIBASE_API_TOKEN=<your-predibase-api-token>
+```
+
+或通过编程方式设置：
+
+```python
+import os
+import getpass
+
+if "PREDIBASE_API_TOKEN" not in os.environ:
+    os.environ["PREDIBASE_API_TOKEN"] = getpass.getpass("Enter your Predibase API token: ")
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，你需要使用 LangChain 集成中的 `OpikTracer` 包装 Predibase 模型。使用包装后的模型进行调用时，所有调用都将记录到 Opik：
+
+```python
+import os
+from langchain_community.llms import Predibase
+from opik.integrations.langchain import OpikTracer
+
+os.environ["OPIK_PROJECT_NAME"] = "predibase-integration-demo"
+
+# 创建 Opik 追踪器
+opik_tracer = OpikTracer(tags=["predibase", "langchain"])
+
+# 创建 Predibase 模型
+model = Predibase(
+    model="mistral-7b",
+    predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
+)
+
+# 使用 Opik 追踪测试模型
+response = model.invoke(
+    "Can you recommend me a nice dry wine?",
+    config={
+        "temperature": 0.5,
+        "max_new_tokens": 1024,
+        "callbacks": [opik_tracer]
+    }
+)
+print(response)
+```
+
+除了将 OpikTracer 传递给 invoke 方法外，你也可以在创建 `Predibase` 对象时定义它：
+
+```python
+model = Predibase(
+    model="mistral-7b",
+    predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
+).with_config({"callbacks": [opik_tracer]})
+```
+
+<Tip>
+  你可以在我们的 [LangChain 集成指南](/v1/integrations/langchain) 中了解更多关于 Opik 与 LangChain 集成的信息。
+</Tip>
+
+追踪现在将在 Opik UI 中可用，供进一步分析。
+
+<Frame>
+  <img src="/img/tracing/predibase_opik_trace.png" />
+</Frame>
+
+## 高级用法
+
+### SequentialChain 示例
+
+现在，让我们创建一个更复杂的链并使用 Opik 追踪运行它：
+
+```python
+from langchain.chains import LLMChain, SimpleSequentialChain
+from langchain_core.prompts import PromptTemplate
+
+# 概要链
+template = """You are a playwright. Given the title of play, it is your job to write a synopsis for that title.
+
+Title: {title}
+Playwright: This is a synopsis for the above play:"""
+prompt_template = PromptTemplate(input_variables=["title"], template=template)
+synopsis_chain = LLMChain(llm=model, prompt=prompt_template)
+
+# 评论链
+template = """You are a play critic from the New York Times. Given the synopsis of play, it is your job to write a review for that play.
+
+Play Synopsis:
+{synopsis}
+Review from a New York Times play critic of the above play:"""
+prompt_template = PromptTemplate(input_variables=["synopsis"], template=template)
+review_chain = LLMChain(llm=model, prompt=prompt_template)
+
+# 整体链
+overall_chain = SimpleSequentialChain(
+    chains=[synopsis_chain, review_chain], verbose=True
+)
+
+# 使用 Opik 追踪运行链
+review = overall_chain.run("Tragedy at sunset on the beach", callbacks=[opik_tracer])
+print(review)
+```
+
+### 访问已记录的追踪
+
+我们可以访问 Opik 追踪器收集的追踪 ID：
+
+```python
+traces = opik_tracer.created_traces()
+print("Collected trace IDs:", [trace.id for trace in traces])
+
+# 刷新追踪以确保所有数据被记录
+opik_tracer.flush()
+```
+
+### 微调 LLM 示例
+
+最后，让我们使用微调模型并结合 Opik 追踪：
+
+**注意：** 要使用微调模型，你需要有权访问该模型以及正确的模型 ID。除非更新 `model` 和 `adapter_id`，否则以下代码将返回 `NotFoundError`。
+
+```python
+fine_tuned_model = Predibase(
+    model="my-base-LLM",
+    predibase_api_key=os.environ.get("PREDIBASE_API_TOKEN"),
+    predibase_sdk_version=None,
+    adapter_id="my-finetuned-adapter-id",
+    adapter_version=1,
+    **{
+        "api_token": os.environ.get("HUGGING_FACE_HUB_TOKEN"),
+        "max_new_tokens": 5,
+    },
+)
+
+# 配置 Opik 追踪器
+fine_tuned_model = fine_tuned_model.with_config({"callbacks": [opik_tracer]})
+
+# 调用微调模型
+response = fine_tuned_model.invoke(
+    "Can you help categorize the following emails into positive, negative, and neutral?",
+    **{"temperature": 0.5, "max_new_tokens": 1024},
+)
+print(response)
+
+# 最终刷新以确保所有追踪被记录
+opik_tracer.flush()
+```
+
+## 跟踪微调训练运行
+
+如果你使用 Predibase 微调 LLM，我们建议使用 Predibase 与 Comet 实验管理功能的集成。你可以在 Predibase 文档的 [Comet 集成指南](https://docs.predibase.com/integrations/comet) 中了解更多关于如何设置的信息。如果你已经在使用实验跟踪平台，值得检查它是否与 Predibase 有集成。

@@ -1,0 +1,524 @@
+{
+  "datasets": {
+    "title": "数据集",
+    "description": "管理用于评估和实验的数据集",
+    "create": "创建数据集",
+    "edit": "编辑数据集",
+    "delete": "删除数据集",
+    "empty": {
+      "title": "暂无数据集",
+      "description": "创建您的第一个数据集开始使用。",
+      "action": "创建您的第一个数据集"
+    },
+    "fields": {
+      "name": "数据集名称",
+      "description": "数据集描述"
+    },
+    "columns": {
+      "name": "名称",
+      "description": "描述",
+      "itemCount": "项目数量",
+      "lastUpdated": "最后更新",
+      "created": "创建时间",
+      "id": "ID",
+      "tags": "标签",
+      "mostRecentExperiment": "最近实验",
+      "mostRecentOptimization": "最近优化",
+      "createdBy": "创建者"
+    },
+    "actions": {
+      "view": "查看数据集",
+      "items": "查看项目",
+      "export": "导出数据集",
+      "import": "导入项目"
+    },
+    "editSidebar": {
+      "editDataset": "编辑数据集",
+      "editTestSuite": "编辑测试套件",
+      "name": "名称",
+      "nameYourDataset": "为数据集命名...",
+      "nameYourTestSuite": "为测试套件命名...",
+      "description": "描述",
+      "optional": "(可选)",
+      "datasetDescription": "数据集描述",
+      "testSuiteDescription": "测试套件描述",
+      "cancel": "取消",
+      "saving": "保存中...",
+      "saveChanges": "保存更改"
+    },
+    "addItem": {
+      "title": "添加套件项目",
+      "addRecord": "添加记录",
+      "data": "数据",
+      "invalidJson": "无效的 JSON",
+      "cancel": "取消",
+      "saveChanges": "保存更改",
+      "discardChangesTitle": "放弃更改？",
+      "discardChangesDescription": "您有未保存的更改。是否要放弃并关闭？",
+      "keepEditing": "继续编辑",
+      "discardChanges": "放弃更改"
+    },
+    "removeItems": {
+      "title": "移除套件项目",
+      "description": "这些项目将从当前套件视图中删除。更改在您保存并创建新版本之前不会生效。",
+      "confirmText": "移除套件项目",
+      "dontShowAgain": "不再显示此消息",
+      "cancel": "取消"
+    },
+    "actionsPanel": {
+      "expandWithAi": "使用 AI 扩展",
+      "manageTags": "管理标签",
+      "delete": "删除",
+      "samplesAddedToDraft": "样本已添加到草稿",
+      "samplesAddedDescription": "已将 {{count}} 个样本添加到您的草稿更改中"
+    },
+    "exportPanel": {
+      "preparingDownload": "正在准备下载",
+      "downloadReady": "下载就绪",
+      "closeExportPanel": "关闭导出面板？",
+      "closeExportPanelDescription": "您有正在准备中的导出任务。关闭此面板将隐藏进度，完成后您不会收到通知。",
+      "closeAnyway": "仍然关闭",
+      "keepOpen": "保持打开",
+      "exportFailed": "导出失败",
+      "exportFailedDescription": "导出测试套件 \"{{datasetName}}\" 失败",
+      "download": "下载",
+      "dismiss": "关闭",
+      "failed": "失败",
+      "ready": "就绪",
+      "exporting": "导出中..."
+    },
+    "rowActions": {
+      "actionsMenu": "操作菜单",
+      "edit": "编辑",
+      "download": "下载",
+      "delete": "删除",
+      "deleteTitle": "删除 {{entityName}}",
+      "deleteDescription": "删除此 {{entityName}} 将同时移除其所有项目。任何关联的实验将被移至\"已删除的测试套件\"分组。此操作无法撤销。确定要继续吗？",
+      "deleteConfirmText": "删除 {{entityName}}",
+      "exportFailed": "导出失败",
+      "exportFailedDescription": "启动测试套件导出失败。请重试。"
+    },
+    "batchActions": {
+      "deleteTitle": "删除 {{entityName}}",
+      "deleteDescription": "删除这些 {{entityName}} 将同时移除其所有项目。任何关联的实验将被移至\"已删除的测试套件\"分组。此操作无法撤销。确定要继续吗？",
+      "deleteConfirmText": "删除 {{entityName}}"
+    },
+    "itemActions": {
+      "actionsMenu": "操作菜单",
+      "shareItem": "分享 {{itemName}}",
+      "copyItemId": "复制 {{itemName}} ID",
+      "deleteItem": "删除 {{itemName}}"
+    },
+    "itemsActions": {
+      "exportDisabled": "此安装已禁用导出功能"
+    },
+    "addToDataset": {
+      "title": "添加到测试套件",
+      "selectTestSuite": "选择测试套件",
+      "createNewTestSuite": "创建新测试套件",
+      "addToTestSuite": "添加到测试套件",
+      "cancel": "取消",
+      "noSearchResults": "无搜索结果",
+      "noTestSuitesYet": "暂无测试套件",
+      "noValidRows": "没有可添加为测试套件项目的行。缺少输入字段。",
+      "partialValidRows": "只有包含输入字段的行才会被添加为测试套件项目。",
+      "tracesAddedToTestSuite": "追踪已添加到测试套件",
+      "spansAddedToTestSuite": "跨度已添加到测试套件",
+      "itemsAddedToTestSuite": "项目已添加到测试套件",
+      "traceMetadataConfig": "追踪元数据配置",
+      "spanMetadataConfig": "跨度元数据配置",
+      "nestedSpans": "嵌套跨度",
+      "tags": "标签",
+      "feedbackScores": "反馈分数",
+      "comments": "评论",
+      "usageMetrics": "使用指标",
+      "metadata": "元数据"
+    },
+    "feedbackDefinition": {
+      "createTitle": "创建新的反馈定义",
+      "editTitle": "编辑反馈定义",
+      "cloneTitle": "克隆反馈定义",
+      "createSubmit": "创建反馈定义",
+      "updateSubmit": "更新反馈定义",
+      "name": "名称",
+      "namePlaceholder": "反馈定义名称",
+      "description": "描述",
+      "descriptionPlaceholder": "反馈定义描述",
+      "type": "类型",
+      "cancel": "取消",
+      "boolean": "布尔值",
+      "booleanDescription": "使用二元标签（如\"通过\"、\"失败\"）来评估输出。",
+      "categorical": "分类",
+      "categoricalDescription": "使用标签（如\"有帮助\"、\"中立\"、\"无帮助\"）来分类输出。",
+      "numerical": "数值",
+      "numericalDescription": "使用数值范围（如 1-5）对输出进行量化评分。",
+      "copySuffix": "副本",
+      "passLabel": "通过",
+      "failLabel": "失败",
+      "trueLabel": "真值标签",
+      "falseLabel": "假值标签",
+      "categories": "分类",
+      "addCategory": "添加分类",
+      "min": "最小值",
+      "max": "最大值"
+    },
+    "addEditDialog": {
+      "name": "名称",
+      "namePlaceholder": "名称",
+      "description": "描述",
+      "descriptionPlaceholder": "描述",
+      "cancel": "取消",
+      "uploadLabel": "上传 CSV 或 JSON 文件",
+      "fileCantBeUploaded": "文件无法上传",
+      "fileCantBeUploadedDescription": "此文件无法上传，因为未通过验证。如果继续，{{typeLabel}} 将在没有任何项目的情况下创建。您可以稍后手动添加项目，或返回上传有效文件。",
+      "createEmpty": "创建空{{typeLabel}}",
+      "goBack": "返回",
+      "typeLabelTestSuite": "测试套件",
+      "typeLabelDataset": "数据集",
+      "editTitle": "编辑",
+      "createTitle": "新建",
+      "updateButton": "更新",
+      "createButton": "创建",
+      "uploadAccepted": "{{format}} 上传已接受",
+      "uploadAcceptedDescription": "您的 {{format}} 文件正在后台处理。项目将在就绪后自动显示。如果未看到，请尝试刷新页面。",
+      "uploadError": "上传 {{format}} 文件时出错",
+      "uploadErrorDescription": "上传 {{format}} 文件失败",
+      "nameAlreadyExists": "此名称已存在",
+      "errorSaving": "保存出错",
+      "failedToSave": "保存失败"
+    },
+    "testSuite": {
+      "defaultRunsPerItem": "默认每项运行次数",
+      "defaultPassThreshold": "默认通过阈值",
+      "assertionPlaceholder": "例如：响应应准确且引用来源",
+      "executionPolicyLabel": "执行策略"
+    },
+    "itemEditor": {
+      "enterTextForField": "输入此字段的文本…",
+      "urlCopiedToClipboard": "URL 已成功复制到剪贴板",
+      "recordIdCopiedToClipboard": "记录 ID 已成功复制到剪贴板",
+      "record": "记录",
+      "recordLowercase": "记录",
+      "media": "媒体",
+      "data": "数据"
+    },
+    "listPage": {
+      "datasets": "数据集",
+      "testSuites": "测试套件",
+      "createDataset": "创建数据集",
+      "createTestSuite": "创建测试套件",
+      "noDatasetsYet": "暂无数据集",
+      "noTestSuitesYet": "暂无测试套件",
+      "emptyDatasetTitle": "暂无数据集",
+      "emptyDatasetDescription": "创建您的第一个数据集开始使用。\n定义输入和预期输出，以评估和优化您的智能体。",
+      "emptyTestSuiteTitle": "暂无测试套件",
+      "emptyTestSuiteDescription": "创建您的第一个测试套件开始使用。\n定义带有预期输出和评分的测试用例，以比较和优化您的配置。",
+      "searchByName": "按名称搜索"
+    },
+    "header": {
+      "backToTestSuites": "返回测试套件",
+      "backToDatasets": "返回数据集",
+      "draft": "草稿",
+      "testSuite": "测试套件",
+      "dataset": "数据集",
+      "discardChanges": "放弃更改",
+      "saveChanges": "保存更改",
+      "testSettings": "测试设置",
+      "testCase": "测试用例",
+      "record": "记录",
+      "globalAssertions": "{{count}} 个全局断言"
+    },
+    "navigation": {
+      "unsavedChanges": "未保存的更改",
+      "unsavedChangesDescription": "您有未保存的草稿更改。确定要离开吗？",
+      "leaveWithoutSaving": "不保存直接离开",
+      "stay": "留下"
+    },
+    "discardDialog": {
+      "title": "放弃更改",
+      "description": "放弃将移除此{{entityName}}的所有未保存编辑。此操作无法撤销。确定要继续吗？",
+      "confirmText": "放弃更改"
+    },
+    "tabs": {
+      "testCases": "测试用例",
+      "records": "记录",
+      "versionHistory": "版本历史"
+    },
+    "itemsTab": {
+      "allItemsDeleted": "此页面上的所有{{itemName}}已被删除",
+      "noItemsYet": "暂无{{itemName}}",
+      "search": "搜索",
+      "searchItems": "搜索项目",
+      "saveChangesToSearch": "保存更改后搜索",
+      "saveChangesToFilter": "保存更改后筛选",
+      "saveChangesToNavigate": "保存更改后翻页",
+      "loadingTitle": "您的{{entityName}}仍在加载中",
+      "loadingDescription": "随着更多数据变为可用，部分结果或计数可能会更新。您可以在完整{{entityName}}加载期间继续浏览。",
+      "loadedTitle": "您的{{entityName}}已完全加载",
+      "loadedDescription": "所有项目现已可用。",
+      "emptyDescription": "添加{{itemName}}以运行评估并衡量性能。",
+      "addNewItem": "添加新{{itemName}}"
+    },
+    "createSidebar": {
+      "created": "{{entityName}}已创建",
+      "createdDescription": "\"{{name}}\"已准备就绪。",
+      "goTo": "前往{{entityLabel}}",
+      "name": "名称",
+      "namePlaceholder": "为您的{{entityLabel}}命名...",
+      "description": "描述",
+      "optional": "(可选)",
+      "descriptionPlaceholder": "{{entityName}}描述",
+      "file": "文件",
+      "advancedOptions": "高级选项",
+      "cancel": "取消",
+      "creating": "创建中...",
+      "createEntity": "创建{{entityLabel}}",
+      "docs": "文档"
+    },
+    "createMenu": {
+      "uploadFile": "上传文件",
+      "importFromCsvJson": "从 CSV 或 JSON 文件导入",
+      "useSdk": "使用 SDK",
+      "defineInCode": "在代码中定义和管理"
+    },
+    "emptyState": {
+      "viewDocs": "查看文档"
+    },
+    "csvDropzone": {
+      "removeFile": "移除文件",
+      "dropFileOr": "拖放文件到此处，或",
+      "browseFiles": "浏览文件",
+      "preferSdk": "CSV 或 JSON。更喜欢使用代码？",
+      "useSdk": "使用 SDK"
+    },
+    "uploadField": {
+      "description": "拖放 CSV 或 JSON 文件上传，或",
+      "fileReady": "{{format}} 文件已准备上传"
+    },
+    "uploadDescription": {
+      "supportedFormats": "支持格式：.csv、.json、.jsonl/.ndjson。文件最大 {{fileSizeLimit}}MB，将在后台处理。",
+      "learnMore": "了解更多"
+    },
+    "overrideVersion": {
+      "title": "检测到版本冲突",
+      "description": "您在编辑时创建了另一个版本。是否要覆盖最新版本？",
+      "confirmText": "覆盖并保存",
+      "cancelText": "取消"
+    },
+    "generatedSamples": {
+      "diversity": {
+        "high": "高",
+        "medium": "中",
+        "low": "低"
+      },
+      "description": "描述",
+      "assertions": "断言",
+      "title": "生成的样本 ({{count}})",
+      "empty": {
+        "title": "没有可显示的样本",
+        "description": "未生成任何样本。这可能表示生成过程存在问题。请尝试重新生成样本。"
+      },
+      "summary": {
+        "title": "生成摘要",
+        "generatedBy": "由 {{model}} 生成",
+        "unknownModel": "未知",
+        "totalSamples": "总样本数",
+        "fieldsPerSample": "每样本字段数",
+        "dataDiversity": "数据多样性"
+      },
+      "selection": {
+        "selected": "已选择 {{selected}} / {{total}}",
+        "showSample": "显示样本 ({{count}})",
+        "showAll": "显示全部 ({{count}})"
+      },
+      "sample": "样本 {{number}}",
+      "showMore": "显示更多 {{count}} 个样本",
+      "cancel": "取消",
+      "addToEntity": "添加 {{count}} 个样本到 {{entityName}}"
+    },
+    "expansion": {
+      "progress": {
+        "initializing": "正在初始化 AI 生成...",
+        "analyzingPatterns": "正在分析 {{entityName}} 模式...",
+        "generating": "正在生成合成样本...",
+        "finalizing": "正在完成生成数据..."
+      },
+      "title": "使用 AI 扩展",
+      "description": "这将基于您现有的数据模式生成合成样本。生成的样本将在添加到您的{{entityName}}之前可供审核。",
+      "error": {
+        "title": "生成错误",
+        "default": "生成样本时发生错误。请重试。"
+      },
+      "analyzing": {
+        "title": "正在分析{{entityName}}结构",
+        "description": "正在分析{{entityName}}结构和字段模式"
+      },
+      "empty": {
+        "title": "未找到{{entityName}}样本",
+        "description": "此{{entityName}}似乎为空。请先添加一些样本数据，然后再尝试使用 AI 扩展。"
+      },
+      "structure": {
+        "title": "检测到的{{entityName}}结构",
+        "tooltip": "选择要保持一致性的字段",
+        "analyzedSamples": "已分析样本",
+        "showLess": "显示更少 ({{count}} 个已隐藏)",
+        "showAll": "显示全部 (还有 {{count}} 个)",
+        "fieldsSelected": "已选择 {{count}} / {{total}} 个字段",
+        "tips": {
+          "title": "字段保留提示：",
+          "autoSelect": "• 出现在 ≥{{threshold}}% 样本中的字段将自动选中",
+          "maintainPatterns": "• 选中的字段将在生成的数据中保持相似的模式"
+        }
+      },
+      "model": "模型",
+      "sampleCount": "样本数量",
+      "sampleCountRange": "范围 {{min}}-{{max}}",
+      "additionalInstructions": "附加说明（可选）",
+      "additionalInstructionsPlaceholder": "例如：创建测试边界情况的变体，关注不同的用户角色",
+      "prompt": {
+        "title": "生成提示词",
+        "description": "自定义发送给 AI 模型的提示词",
+        "customize": "自定义将发送给 AI 模型的提示词。使用清晰的说明以获得最佳效果。",
+        "placeholder": "输入您的自定义提示词...",
+        "charCount": "{{count}} 个字符"
+      },
+      "cancel": "取消",
+      "generate": "生成样本",
+      "validation": {
+        "sampleCount": "样本数量必须在 {{min}} 到 {{max}} 之间。",
+        "promptLength": "自定义提示词必须至少 {{min}} 个字符。",
+        "analysisInProgress": "分析仍在进行中。请等待完成。"
+      }
+    },
+    "useDataset": {
+      "loadIntoPlayground": {
+        "title": "将{{entityName}}加载到 Playground",
+        "description": "将此{{entityName}}加载到 Playground 将替换任何未保存的更改。此操作无法撤销。",
+        "confirmText": "加载{{entityName}}"
+      },
+      "emptyTooltip": "此{{entityName}}为空",
+      "runIn": "运行于",
+      "openInPlayground": "在 Playground 中打开",
+      "openInPlaygroundDescription": "在您的{{entityName}}上测试提示词并交互式运行评估",
+      "runExperiment": "运行实验",
+      "runExperimentDescription": "使用此{{entityName}}通过 Python SDK 运行实验"
+    },
+    "versionHistory": {
+      "noData": {
+        "title": "暂无版本历史",
+        "description": "创建数据集版本后，版本历史将显示在这里"
+      }
+    },
+    "versionHistoryTab": {
+      "version": "版本",
+      "changesSummary": "变更摘要",
+      "versionNote": "版本说明",
+      "tags": "标签",
+      "itemCount": "项目数量",
+      "createdAt": "创建时间",
+      "createdBy": "创建者"
+    },
+    "versionChangeSummary": {
+      "itemsAdded": "已添加项目",
+      "itemsModified": "已修改项目",
+      "itemsDeleted": "已删除项目"
+    },
+    "feedbackDefinitionDetails": {
+      "trueLabel": "真值标签",
+      "falseLabel": "假值标签",
+      "passLabel": "通过",
+      "failLabel": "失败",
+      "categories": "分类",
+      "namePlaceholder": "名称",
+      "addCategory": "添加分类",
+      "min": "最小值",
+      "max": "最大值",
+      "minPlaceholder": "最小值",
+      "maxPlaceholder": "最大值"
+    },
+    "datasetItemsSave": {
+      "newVersionCreated": "新版本已创建",
+      "newVersionCreatedDescription": "您的更改已保存为新版本。您现在可以在 SDK 或 Playground 中使用它来运行实验。",
+      "runExperimentInSdk": "在 SDK 中运行实验",
+      "runExperimentInPlayground": "在 Playground 中运行实验"
+    },
+    "versionForm": {
+      "versionNote": "版本说明（可选）",
+      "versionNotePlaceholder": "描述此版本中的更改",
+      "tags": "标签"
+    },
+    "addVersion": {
+      "title": "保存更改",
+      "description": "保存更改将创建一个新版本。您可以在实验或 Playground 中使用它。之前的版本将保留在版本历史中。",
+      "cancel": "取消",
+      "saveChanges": "保存更改"
+    },
+    "editVersion": {
+      "title": "编辑版本",
+      "description": "编辑版本说明和标签以保持数据集版本的组织性。",
+      "cancel": "取消",
+      "updateVersion": "更新版本"
+    },
+    "versionActions": {
+      "restore": {
+        "title": "恢复版本",
+        "description": "恢复此版本将基于版本 {{versionName}} 创建一个新版本。所有先前的版本将保留在历史中。",
+        "draftWarning": "您有未保存的草稿更改将被丢弃。此操作无法撤销。",
+        "discardAndRestore": "丢弃并恢复",
+        "confirmText": "恢复版本",
+        "action": "恢复"
+      },
+      "actionsMenu": "操作菜单",
+      "edit": "编辑"
+    },
+    "testSuiteItem": {
+      "addTestCase": "添加测试用例",
+      "editTestCase": "编辑测试用例",
+      "testCase": "测试用例",
+      "urlCopiedToClipboard": "URL 已成功复制到剪贴板",
+      "itemIdCopiedToClipboard": "项目 ID 已成功复制到剪贴板"
+    },
+    "testSuiteItemForm": {
+      "description": "描述",
+      "descriptionPlaceholder": "描述此测试用例...",
+      "data": "数据",
+      "mustBeJsonObject": "必须是 JSON 对象",
+      "invalidJson": "无效的 JSON"
+    },
+    "testSuiteSettings": {
+      "title": "测试设置",
+      "defaultRunsPerItem": "默认每项运行次数",
+      "defaultPassThreshold": "默认通过阈值",
+      "runsPerItemDescription": "设置每项运行的次数。",
+      "passThresholdDescription": "定义必须成功的运行次数。",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "assertionsCount": {
+      "customAssertions": "自定义断言"
+    },
+    "executionPolicy": {
+      "mustPass": "{{runs}} 次运行中必须通过 {{threshold}} 次"
+    },
+    "copyId": "复制 ID",
+    "actionsMenu": "操作菜单",
+    "delete": "删除",
+    "deselectAll": "取消全选",
+    "selectAll": "全选",
+    "saveToVersion": "保存更改"
+  },
+  "datasetVersionSelectBox": {
+    "noTestSuitesAvailable": "暂无测试套件",
+    "createTestSuiteHint": "创建一个包含示例的测试套件来评估您的提示词。",
+    "testSuiteEmpty": "此测试套件为空",
+    "noVersions": "暂无版本",
+    "selectTestSuite": "选择测试套件",
+    "searchTestSuites": "搜索测试套件"
+  },
+  "redirectDatasets": {
+    "testSuiteNotFound": "找不到此测试套件",
+    "testSuiteNotFoundMessage": "您要查找的测试套件不存在或已被删除。",
+    "backToHome": "返回首页",
+    "noTestSuiteParams": "未设置测试套件参数"
+  }
+}

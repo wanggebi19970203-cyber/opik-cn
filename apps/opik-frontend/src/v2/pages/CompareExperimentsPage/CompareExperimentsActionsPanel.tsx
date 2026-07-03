@@ -3,6 +3,7 @@ import get from "lodash/get";
 import slugify from "slugify";
 import uniq from "lodash/uniq";
 import first from "lodash/first";
+import { useTranslation } from "react-i18next";
 
 import EvaluateExperimentTracesButton from "@/v2/pages/CompareExperimentsPage/EvaluateExperimentTracesButton/EvaluateExperimentTracesButton";
 import ExportToButton from "@/shared/ExportToButton/ExportToButton";
@@ -102,6 +103,7 @@ type CompareExperimentsActionsPanelProps = {
 const CompareExperimentsActionsPanel: React.FC<
   CompareExperimentsActionsPanelProps
 > = ({ getDataForExport, selectedRows = [], columnsToExport, experiments }) => {
+  const { t } = useTranslation("pages/compare-experiments");
   const disabled = !selectedRows?.length;
   const isExportEnabled = useIsFeatureEnabled(FeatureToggleKeys.EXPORT_ENABLED);
 
@@ -202,7 +204,7 @@ const CompareExperimentsActionsPanel: React.FC<
           generateFileName={generateFileName}
           tooltipContent={
             !isExportEnabled
-              ? "Export functionality is disabled for this installation"
+              ? t("compareExperiments.actions.exportDisabled")
               : undefined
           }
         />

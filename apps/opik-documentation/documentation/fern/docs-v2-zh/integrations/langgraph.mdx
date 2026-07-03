@@ -1,0 +1,437 @@
+---
+description: 从这里开始将 Opik 集成到基于 LangGraph 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: LangGraph | Opik 文档
+og:description: 通过 Opik 的集成，轻松捕获 LangGraph 应用的详细洞察，在开发和生产环境中进行日志记录和追踪。
+og:site_name: Opik 文档
+og:title: 将 LangGraph 与 Opik 集成实现无缝追踪
+title: 使用 Opik 实现 LangGraph 可观测性
+---
+
+Opik 提供与 LangGraph 的无缝集成，使您能够轻松记录和追踪基于 LangGraph 的应用。通过使用 `OpikTracer` 回调，您可以在开发和生产环境中自动捕获 LangGraph 图执行的详细信息。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=langgraph&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=langgraph&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=langgraph&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+要将 [`OpikTracer`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/OpikTracer.html) 与 LangGraph 一起使用，您需要安装 `opik` 和 `langgraph` 包。可以使用 pip 进行安装：
+
+```bash
+pip install opik langgraph langchain
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版** 设置
+- **配置文件** 和环境变量
+
+## 在 LangGraph 中使用 Opik
+
+Opik 提供两种方式来追踪 LangGraph 应用。我们推荐使用 `track_langgraph` 函数以获得更简单的体验，但如果您需要更多控制，也可以直接使用 `OpikTracer` 回调。
+
+### 方式一：使用 `track_langgraph`（推荐）
+
+追踪 LangGraph 应用最简单的方式是使用 [`track_langgraph`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/track_langgraph.html) 函数。此函数只需包装一次您的编译图，之后所有后续调用都会自动追踪，无需传递回调：
+
+```python
+from typing import List, Annotated
+from pydantic import BaseModel
+from opik.integrations.langchain import OpikTracer, track_langgraph
+from langchain_core.messages import HumanMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+
+# 创建 LangGraph 图
+class State(BaseModel):
+    messages: Annotated[list, add_messages]
+
+def chatbot(state):
+    # 通常 LLM 调用会在这里执行
+    return {"messages": "Hello, how can I help you today?"}
+
+graph = StateGraph(State)
+graph.add_node("chatbot", chatbot)
+graph.add_edge(START, "chatbot")
+graph.add_edge("chatbot", END)
+app = graph.compile()
+
+# 创建 OpikTracer 并追踪图 - 无需再传递回调！
+# 图的可视化会由 track_langgraph 自动提取
+opik_tracer = OpikTracer(
+    tags=["production"],
+    metadata={"version": "1.0"}
+)
+app = track_langgraph(app, opik_tracer)
+
+# 现在所有调用都会被自动追踪
+for s in app.stream({"messages": [HumanMessage(content = "How to use LangGraph ?")]}):
+    print(s)
+
+# 这里也不需要回调！
+result = app.invoke({"messages": [HumanMessage(content = "How to use LangGraph ?")]})
+```
+
+这与其他 Opik 集成的工作方式类似（如 OpenAI、Anthropic 等），只需包装一次客户端或对象，然后正常使用即可。
+
+### 方式二：使用 `OpikTracer` 回调
+
+如果您需要更细粒度的控制，或者希望为不同的调用使用不同的追踪器，可以直接使用 [`OpikTracer`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/OpikTracer.html) 回调：
+
+```python
+from typing import List, Annotated
+from pydantic import BaseModel
+from opik.integrations.langchain import OpikTracer
+from langchain_core.messages import HumanMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+
+# 创建 LangGraph 图
+class State(BaseModel):
+    messages: Annotated[list, add_messages]
+
+def chatbot(state):
+    # 通常 LLM 调用会在这里执行
+    return {"messages": "Hello, how can I help you today?"}
+
+graph = StateGraph(State)
+graph.add_node("chatbot", chatbot)
+graph.add_edge(START, "chatbot")
+graph.add_edge("chatbot", END)
+app = graph.compile()
+
+# 创建 OpikTracer
+opik_tracer = OpikTracer()
+
+# 将 OpikTracer 回调传递给每次调用
+for s in app.stream({"messages": [HumanMessage(content = "How to use LangGraph ?")]},
+                      config={"callbacks": [opik_tracer]}):
+    print(s)
+
+result = app.invoke({"messages": [HumanMessage(content = "How to use LangGraph ?")]},
+                      config={"callbacks": [opik_tracer]})
+```
+
+### 在 UI 中查看追踪
+
+使用任一方式启用追踪后，您将开始在 Opik UI 中看到追踪信息：
+
+<Frame>
+  <img src="/img/cookbook/langgraph_cookbook.png" />
+</Frame>
+
+## 实际示例：分类工作流
+
+让我们通过一个实际示例来展示如何将 LangGraph 与 Opik 结合用于分类工作流。此示例演示了如何创建一个带有条件路由的图并追踪其执行过程。
+
+### 设置环境
+
+首先，让我们使用必要的依赖项设置环境：
+
+```python
+import opik
+
+# 配置 Opik
+opik.configure(use_local=False)
+```
+
+### 创建 LangGraph 工作流
+
+我们将创建一个包含 3 个节点的 LangGraph 工作流，演示条件路由：
+
+```python
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, Optional
+
+# 定义图状态
+class GraphState(TypedDict):
+    question: Optional[str] = None
+    classification: Optional[str] = None
+    response: Optional[str] = None
+
+# 创建节点函数
+def classify(question: str) -> str:
+    return "greeting" if question.startswith("Hello") else "search"
+
+def classify_input_node(state):
+    question = state.get("question", "").strip()
+    classification = classify(question)
+    return {"classification": classification}
+
+def handle_greeting_node(state):
+    return {"response": "Hello! How can I help you today?"}
+
+def handle_search_node(state):
+    question = state.get("question", "").strip()
+    search_result = f"Search result for '{question}'"
+    return {"response": search_result}
+
+# 创建工作流
+workflow = StateGraph(GraphState)
+workflow.add_node("classify_input", classify_input_node)
+workflow.add_node("handle_greeting", handle_greeting_node)
+workflow.add_node("handle_search", handle_search_node)
+
+# 添加条件路由
+def decide_next_node(state):
+    return (
+        "handle_greeting"
+        if state.get("classification") == "greeting"
+        else "handle_search"
+    )
+
+workflow.add_conditional_edges(
+    "classify_input",
+    decide_next_node,
+    {"handle_greeting": "handle_greeting", "handle_search": "handle_search"},
+)
+
+workflow.set_entry_point("classify_input")
+workflow.add_edge("handle_greeting", END)
+workflow.add_edge("handle_search", END)
+
+app = workflow.compile()
+```
+
+### 使用 Opik 追踪执行
+
+现在让我们使用 `track_langgraph` 启用 Opik 追踪来执行工作流：
+
+```python
+from opik.integrations.langchain import OpikTracer, track_langgraph
+
+# 创建 OpikTracer 并追踪图
+# 图的可视化会由 track_langgraph 自动提取
+opik_tracer = OpikTracer(
+    project_name="classification-workflow"
+)
+app = track_langgraph(app, opik_tracer)
+
+# 执行工作流 - 无需回调！
+inputs = {"question": "Hello, how are you?"}
+result = app.invoke(inputs)
+print(result)
+
+# 使用不同的输入测试 - 仍然自动追踪
+inputs = {"question": "What is machine learning?"}
+result = app.invoke(inputs)
+print(result)
+```
+
+图的执行现在已记录在 Opik 平台上，可以在 UI 中查看。追踪将显示图中完整的执行路径，包括分类决策和选择的响应路径。
+
+## 与 Opik 追踪上下文的兼容性
+
+LangGraph 追踪与 Opik 的追踪上下文无缝集成，允许您在图节点中调用 `@track` 装饰的函数（以及大多数其他 Opik 原生集成），并将它们自动附加到追踪树中。
+
+### 同步执行（invoke）
+
+对于使用 `invoke()` 的同步图执行，一切开箱即用。您可以从 LangGraph 节点访问当前的 span/trace，并在其中调用被追踪的函数：
+
+```python
+import opik_context
+from opik import track
+from opik.integrations.langchain import OpikTracer, track_langgraph
+from langgraph.graph import StateGraph, START, END
+
+@track
+def process_data(value: int) -> int:
+    """自定义追踪函数，将被附加到追踪树中。"""
+    return value * 2
+
+def my_node(state):
+    current_trace_data = opik_context.get_current_trace_data()
+    current_span_data = opik_context.get_current_span_data()  # 将返回 `my_node` 的 span，由 OpikTracer 创建
+
+    # 此追踪函数调用将自动成为追踪树的一部分
+    result = process_data(state["value"])
+    return {"value": result}
+
+# 构建并执行图
+graph = StateGraph(dict)
+graph.add_node("processor", my_node)
+graph.add_edge(START, "processor")
+graph.add_edge("processor", END)
+
+app = graph.compile()
+opik_tracer = OpikTracer()
+app = track_langgraph(app, opik_tracer)
+
+# 同步执行 - 追踪函数自动工作
+result = app.invoke({"value": 21})
+```
+
+### 异步执行（ainvoke）
+
+对于使用 `ainvoke()` 的异步图执行，您需要使用 `extract_current_langgraph_span_data` 辅助函数显式传播追踪上下文到 `@track` 装饰的函数：
+
+<Accordion title="为什么异步执行需要这样做？">
+这是由于 LangChain 框架的限制，在异步场景中不会自动在回调（如 `OpikTracer`）和节点代码之间共享执行上下文。需要通过分布式请求头显式传播追踪上下文，以实现跨异步边界的无缝追踪。
+</Accordion>
+
+```python
+from opik import track
+from opik.integrations.langchain import OpikTracer, track_langgraph, extract_current_langgraph_span_data
+from langgraph.graph import StateGraph, START, END
+
+@track
+def process_data(value: int) -> int:
+    """自定义追踪函数，在异步上下文中需要分布式追踪头。"""
+    return value * 2
+
+async def my_async_node(state, config):
+    # 从 LangGraph 配置中提取当前 span 数据。由于 LangGraph 平台在上下文传播方面的限制，此处 opik_context 不可用。
+    span_data = extract_current_langgraph_span_data(config)
+    
+    # 传递分布式追踪头以将追踪函数附加到追踪树
+    result = process_data(
+        state["value"],
+        opik_distributed_trace_headers=span_data.get_distributed_trace_headers()  # 所有追踪函数隐式支持此参数
+    )
+    return {"value": result}
+
+# 构建并执行图
+graph = StateGraph(dict)
+graph.add_node("processor", my_async_node)
+graph.add_edge(START, "processor")
+graph.add_edge("processor", END)
+
+app = graph.compile()
+opik_tracer = OpikTracer()
+app = track_langgraph(app, opik_tracer)
+
+# 异步执行 - 需要显式传播追踪上下文
+result = await app.ainvoke({"value": 21})
+```
+
+或者，如果您不想使用 `@track` 装饰器，可以使用带有分布式请求头的 `opik.start_as_current_span` 上下文管理器：
+
+```python
+import opik
+from opik.integrations.langchain import OpikTracer, track_langgraph, extract_current_langgraph_span_data
+from langgraph.graph import StateGraph, START, END
+
+async def my_async_node(state, config):
+    span_data = extract_current_langgraph_span_data(config)
+    
+    # 使用带有分布式请求头的上下文管理器
+    with opik.start_as_current_span(
+        name="custom_operation",
+        input={"input": state["value"]},
+        opik_distributed_trace_headers=span_data.get_distributed_trace_headers()
+    ) as span_data:
+        # 您的自定义逻辑
+        result = state["value"] * 2
+        span_data.output = {"output": result}
+    
+    return {"value": result}
+
+# 构建并执行图
+graph = StateGraph(dict)
+graph.add_node("processor", my_async_node)
+graph.add_edge(START, "processor")
+graph.add_edge("processor", END)
+
+app = graph.compile()
+opik_tracer = OpikTracer()
+app = track_langgraph(app, opik_tracer)
+
+result = await app.ainvoke({"value": 21})
+```
+
+
+## 记录线程
+
+当您使用 [LangGraph 持久化](https://langchain-ai.github.io/langgraph/concepts/persistence/#threads)运行多轮对话时，Opik 会使用 LangGraph 的 thread_id 作为 Opik 的 thread_id。以下是一个示例：
+
+```python
+import sqlite3
+from langgraph.checkpoint.sqlite import SqliteSaver
+from typing import Annotated
+from pydantic import BaseModel
+from opik.integrations.langchain import OpikTracer, track_langgraph
+from langchain_core.messages import HumanMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langchain.chat_models import init_chat_model
+
+llm = init_chat_model("openai:gpt-4.1")
+
+
+# 创建 LangGraph 图
+class State(BaseModel):
+    messages: Annotated[list, add_messages]
+
+
+def chatbot(state):
+    # 通常 LLM 调用会在这里执行
+    return {"messages": [llm.invoke(state.messages)]}
+
+
+graph = StateGraph(State)
+graph.add_node("chatbot", chatbot)
+graph.add_edge(START, "chatbot")
+graph.add_edge("chatbot", END)
+
+# 创建新的 SqliteSaver 实例
+# 注意：check_same_thread=False 是可以的，因为实现使用了锁来确保线程安全。
+conn = sqlite3.connect("checkpoints.sqlite", check_same_thread=False)
+memory = SqliteSaver(conn)
+
+app = graph.compile(checkpointer=memory)
+
+# 创建 OpikTracer 并追踪图
+opik_tracer = OpikTracer()
+app = track_langgraph(app, opik_tracer)
+
+thread_id = "e424a45e-7763-443a-94ae-434b39b67b72"
+config = {"configurable": {"thread_id": thread_id}}
+
+# 初始化状态
+state = State(**app.get_state(config).values) or State(messages=[])
+print("STATE", state)
+
+# 添加用户消息
+state.messages.append(HumanMessage(content="Hello, my name is Bob, how are you doing ?"))
+# state.messages.append(HumanMessage(content="What is my name ?"))
+
+result = app.invoke(state, config=config)
+
+print("Result", result)
+```
+
+## 更新已记录的追踪
+
+您可以使用 [`OpikTracer.created_traces`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/OpikTracer.html#opik.integrations.langchain.OpikTracer.created_traces) 方法访问由 OpikTracer 回调收集的追踪 ID：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer()
+
+# 调用 LangGraph 的 stream 或 invoke 函数
+
+traces = opik_tracer.created_traces()
+print([trace.id for trace in traces])
+```
+
+然后可以将这些追踪 ID 与 [`Opik.log_traces_feedback_scores`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.log_traces_feedback_scores) 方法结合使用，以更新已记录的追踪。
+
+## 高级用法
+
+`OpikTracer` 对象有一个 `flush` 方法，可用于确保在退出脚本之前所有追踪都已记录到 Opik 平台。此方法将在所有追踪记录完成或超时（以先到者为准）后返回。
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer()
+opik_tracer.flush()
+```

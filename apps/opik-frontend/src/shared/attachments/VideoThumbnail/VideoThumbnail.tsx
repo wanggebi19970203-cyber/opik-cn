@@ -2,6 +2,7 @@ import React from "react";
 import { VideoIcon } from "lucide-react";
 import ReactPlayer from "react-player/lazy";
 import { useInView } from "react-intersection-observer";
+import { useTranslation } from "react-i18next";
 
 import { useVideoThumbnail } from "@/hooks/useVideoThumbnail";
 
@@ -62,15 +63,18 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({ url, alt }) => (
  * Loading state indicator
  * Shows animated skeleton while thumbnail is being generated
  */
-const LoadingState = React.forwardRef<HTMLDivElement>((_, ref) => (
-  <ThumbnailContainer ref={ref}>
-    <div
-      className={STYLES.loadingSkeleton}
-      role="status"
-      aria-label="Loading video thumbnail"
-    />
-  </ThumbnailContainer>
-));
+const LoadingState = React.forwardRef<HTMLDivElement>((_, ref) => {
+  const { t } = useTranslation("common");
+  return (
+    <ThumbnailContainer ref={ref}>
+      <div
+        className={STYLES.loadingSkeleton}
+        role="status"
+        aria-label={t("videoThumbnail.loadingVideoThumbnail")}
+      />
+    </ThumbnailContainer>
+  );
+});
 LoadingState.displayName = "LoadingState";
 
 /**
@@ -106,15 +110,18 @@ const FallbackVideoPlayer: React.FC<{ url: string }> = ({ url }) => {
  * Error/fallback state indicator
  * Shows video icon when thumbnail generation fails and video can't be loaded
  */
-const ErrorState = React.forwardRef<HTMLDivElement>((_, ref) => (
-  <ThumbnailContainer ref={ref}>
-    <VideoIcon
-      className={STYLES.icon}
-      strokeWidth={VIDEO_ICON_STROKE_WIDTH}
-      aria-label="Video thumbnail unavailable"
-    />
-  </ThumbnailContainer>
-));
+const ErrorState = React.forwardRef<HTMLDivElement>((_, ref) => {
+  const { t } = useTranslation("common");
+  return (
+    <ThumbnailContainer ref={ref}>
+      <VideoIcon
+        className={STYLES.icon}
+        strokeWidth={VIDEO_ICON_STROKE_WIDTH}
+        aria-label={t("videoThumbnail.videoThumbnailUnavailable")}
+      />
+    </ThumbnailContainer>
+  );
+});
 ErrorState.displayName = "ErrorState";
 
 /**

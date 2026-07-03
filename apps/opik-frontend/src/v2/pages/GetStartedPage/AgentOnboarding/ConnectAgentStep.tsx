@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import useLocalStorageState from "use-local-storage-state";
 import { ArrowRight, MonitorPlay, Undo2 } from "lucide-react";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
@@ -39,6 +40,7 @@ const TRACE_POLL_INTERVAL = 5000;
 const FIRST_TRACE_TRACKED_KEY = "agent-onboarding-first-trace-tracked";
 
 const ConnectAgentStep: React.FC = () => {
+  const { t } = useTranslation("pages/get-started");
   const { goToStep, agentName } = useAgentOnboarding();
   const InviteDevButton = usePluginsStore((state) => state.InviteDevButton);
   const apiKey = useUserApiKey();
@@ -143,12 +145,12 @@ const ConnectAgentStep: React.FC = () => {
       showOllieTab
         ? {
             value: "connect-to-ollie",
-            label: "AI-assisted setup",
+            label: t("getStarted.connectAgent.aiAssistedSetup"),
             content: <ConnectToOllieTab connected={connected} />,
           }
         : {
             value: "install-with-ai",
-            label: "AI-assisted setup",
+            label: t("getStarted.connectAgent.aiAssistedSetup"),
             content: (
               <InstallWithAITab
                 traceReceived={traceReceived}
@@ -158,7 +160,7 @@ const ConnectAgentStep: React.FC = () => {
           },
       {
         value: "manual-integration",
-        label: "Manual setup",
+        label: t("getStarted.connectAgent.manualSetup"),
         content: (
           <ManualIntegrationList
             onSelectIntegration={setSelectedIntegrationId}
@@ -170,7 +172,7 @@ const ConnectAgentStep: React.FC = () => {
         ),
       },
     ],
-    [showOllieTab, connected, traceReceived, manualCategory, agentName],
+    [showOllieTab, connected, traceReceived, manualCategory, agentName, t],
   );
 
   if (selectedIntegration) {
@@ -187,17 +189,18 @@ const ConnectAgentStep: React.FC = () => {
             data-fs-element="OnboardingIntegrationBack"
           >
             <Undo2 className="mr-1 size-3" />
-            Back to integrations
+            {t("getStarted.connectAgent.backToIntegrations")}
           </Button>
         }
         showFooterSeparator
         footer={
           <div className="flex w-full flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <span className="comet-body-xs-accented">Need some help?</span>
+              <span className="comet-body-xs-accented">
+                {t("getStarted.connectAgent.needSomeHelp")}
+              </span>
               <span className="comet-body-xs text-muted-slate">
-                Get help from your team or ours. Choose the option that works
-                best for you.
+                {t("getStarted.connectAgent.helpDescription")}
               </span>
             </div>
             <div className="flex gap-2.5">
@@ -212,7 +215,7 @@ const ConnectAgentStep: React.FC = () => {
               >
                 <a href={SLACK_LINK} target="_blank" rel="noopener noreferrer">
                   <Slack className="mr-1.5 size-3" />
-                  Get help in Slack
+                  {t("getStarted.connectAgent.getHelpInSlack")}
                 </a>
               </Button>
               <Button
@@ -229,7 +232,7 @@ const ConnectAgentStep: React.FC = () => {
                   rel="noopener noreferrer"
                 >
                   <MonitorPlay className="mr-1.5 size-3" />
-                  Watch our tutorial
+                  {t("getStarted.connectAgent.watchTutorial")}
                 </a>
               </Button>
             </div>
@@ -243,8 +246,8 @@ const ConnectAgentStep: React.FC = () => {
 
   return (
     <AgentOnboardingCard
-      title={`Set up Opik for ${agentName}`}
-      description="Connect your repo so Opik can help set up tracing, or instrument your code manually."
+      title={t("getStarted.connectAgent.setUpOpikFor", { agentName })}
+      description={t("getStarted.connectAgent.description")}
       headerContent={
         <div className="flex flex-col gap-3">
           <Separator />
@@ -259,7 +262,7 @@ const ConnectAgentStep: React.FC = () => {
             id="onboarding-step2-view-traces"
             data-fs-element="onboarding-step2-view-traces"
           >
-            Explore Opik
+            {t("getStarted.connectAgent.exploreOpik")}
             <ArrowRight className="size-3.5" />
           </Button>
         ) : (

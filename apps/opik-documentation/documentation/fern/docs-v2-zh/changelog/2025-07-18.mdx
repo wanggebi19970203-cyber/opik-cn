@@ -1,0 +1,92 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+## 对话线程级别 LLM-as-a-Judge
+
+我们现在支持**对话线程级别的 LLM-as-a-Judge 指标**！
+
+我们实现了**对话线程的在线评估**，能够评估**人类与 Agent 之间的完整对话**。
+
+这使得可以规模化地衡量用户满意度、目标达成度、对话轮次质量、澄清请求率、与用户意图的对齐度等指标。
+
+我们还实现了**对话线程的 Python 指标支持**，让你对指标定义拥有完全的代码控制权。
+
+<Frame>
+    <img src="/img/changelog/2025-07-18/ThreadOnlineScore.png" alt="对话线程在线评分界面" />
+</Frame>
+
+为了提高趋势可见性并帮助检测 Agent 在生产环境中运行时这些指标的峰值，我们在指标仪表板中添加了对话线程反馈评分和对话线程时长组件。
+这些新增功能使监控实时环境中的变化更加容易。
+
+<Frame>
+    <img src="/img/changelog/2025-07-18/ThreadMetrics.png" alt="对话线程指标界面" />
+</Frame>
+
+
+## 改进的 Trace 检查体验
+一旦你识别出有问题的会话或 traces，我们通过以下改进使其更容易检查和分析：
+
+- Trace 树的字段选择器：快速选择在 trace 视图中显示哪些字段。
+- Span 类型过滤器：按类型过滤 spans 以聚焦重要内容。
+- 改进的 Agent 图：现在支持全页视图和缩放，便于导航。
+- 自由文本搜索：不受约束地跨 traces 和 spans 自由搜索。
+- 更好的搜索可用性：搜索结果现在会高亮显示，并且在代码块中支持本地搜索。
+
+<Frame>
+    <img src="/img/changelog/2025-07-18/ThreadImprovements.png" alt="对话线程改进界面" />
+</Frame>
+
+## Spans 标签页改进
+Spans 标签页提供了更清晰、更全面的 Agent 活动视图，帮助你分析跨对话线程的工具和子 Agent 使用情况，发现趋势，更容易地识别延迟异常。
+
+新增内容：
+- LLM 调用 → Spans：我们将 LLM 调用标签页重命名为 Spans，以反映更广泛的覆盖范围和更丰富的洞察。
+- 统一视图：在一个地方查看所有 spans，包括 LLM 调用、工具、护栏等。
+- Span 类型过滤器：按类型快速过滤 spans，聚焦最重要的内容。
+- 可自定义列：通过将关键 span 类型添加为专用列来突出显示。
+
+这些改进使检查 Agent 行为和性能更加快速便捷，一目了然。
+
+<Frame>
+    <img src="/img/changelog/2025-07-18/SpansTableFilter.png" alt="Spans 表格过滤界面" />
+</Frame>
+
+## 实验改进
+
+缓慢的模型响应时间会导致令人沮丧的用户体验，并在生产系统中造成隐藏的瓶颈。
+然而，在实验阶段早期识别延迟问题往往很困难，因为缺乏对模型性能的清晰可见性。
+
+为了解决这个问题，我们在实验引擎中添加了 Duration 作为监控模型延迟的关键指标。
+你现在可以在实验和实验详情视图中将 Duration 作为可选列。
+这使得更容易早期识别响应缓慢的模型或配置，从而在影响用户之前主动解决潜在的性能风险。
+
+<Frame>
+    <img src="/img/changelog/2025-07-18/ExperimentDuration.png" alt="实验时长界面" />
+</Frame>
+
+
+## 增强的数据组织和标签
+
+随着使用量增长和数据量增加，有效的数据管理变得至关重要。
+我们添加了多项功能使团队工作流更加便捷：
+- Prompts 的标签、过滤和列排序支持
+- 数据集的标签、过滤和列排序支持
+- 能够在 Traces 和 Spans 表中为多个项目添加标签
+
+## 新模型支持
+
+我们添加了对以下模型的支持：
+- OpenAI GPT-4.1 和 GPT-4.1-mini 模型
+- Anthropic Claude 4 Sonnet 模型
+
+## 集成更新
+
+我们增强了多项集成：
+- 为 Google ADK Agents 构建图表
+- 更新 Langchain 集成，在使用 Google Generative AI 模型时记录 provider、model 和 usage
+- 在 Langchain 集成中实现 Groq LLM usage 追踪支持
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.8.0...1.8.6)
+
+_发布版本_: `1.8.0`, `1.8.1`, `1.8.2`, `1.8.3`, `1.8.4`, `1.8.5`, `1.8.6`

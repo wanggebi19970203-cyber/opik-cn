@@ -1,0 +1,185 @@
+---
+description: 从这里开始将 Opik 集成到基于 OpenAI 的生成式 AI 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: OpenAI | Opik 文档
+og:description: 使用 Opik 的追踪功能和官方 OpenAI Node.js SDK 轻松监控和调试 OpenAI API 调用。
+og:site_name: Opik 文档
+og:title: 无缝 OpenAI 集成 - Opik
+title: 使用 Opik 实现 OpenAI (TypeScript) 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/openai-typescript
+---
+
+Opik 通过 `opik-openai` 包与官方 [OpenAI Node.js SDK](https://github.com/openai/openai-node) 无缝集成，允许你追踪、监控和调试 OpenAI API 调用。
+
+## 功能特性
+
+- **全面追踪**：自动追踪 OpenAI API 调用，包括聊天补全、嵌入、图像等
+- **层级可视化**：以具有父子关系的结构化追踪查看 OpenAI 请求
+- **详细元数据捕获**：记录模型名称、提示、补全、token 使用量和自定义元数据
+- **错误处理**：捕获并可视化 OpenAI API 交互过程中遇到的错误
+- **自定义标签**：添加自定义标签以组织和筛选追踪
+- **流式支持**：完全支持流式响应，逐 token 追踪
+
+## 安装
+
+### 方式一：使用 npm
+
+```bash
+npm install opik-openai openai
+```
+
+### 方式二：使用 yarn
+
+```bash
+yarn add opik-openai openai
+```
+
+### 要求
+
+- Node.js >= 18
+- OpenAI SDK (`openai` >= 6.0.1)
+- Opik SDK (`opik` 对等依赖)
+
+## 基本用法
+
+### 与 OpenAI 客户端一起使用
+
+要追踪 OpenAI API 调用，你需要使用 `trackOpenAI` 函数包装 OpenAI 客户端实例：
+
+```typescript
+import OpenAI from "openai";
+import { trackOpenAI } from "opik-openai";
+
+// 初始化原始 OpenAI 客户端
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// 使用 Opik 追踪包装客户端
+const trackedOpenAI = trackOpenAI(openai);
+
+// 像使用原始客户端一样使用被追踪的客户端
+const completion = await trackedOpenAI.chat.completions.create({
+  model: "gpt-5",
+  messages: [{ role: "user", content: "Hello, how can you help me today?" }],
+});
+
+console.log(completion.choices[0].message.content);
+
+// 确保在应用终止前发送所有追踪
+await trackedOpenAI.flush();
+```
+
+### 使用流式响应
+
+该集成完全支持 OpenAI 的流式响应：
+
+```typescript
+import OpenAI from "openai";
+import { trackOpenAI } from "opik-openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const trackedOpenAI = trackOpenAI(openai);
+
+async function streamingExample() {
+  // 创建流式聊天补全
+  const stream = await trackedOpenAI.chat.completions.create({
+    model: "gpt-5-nano",
+    messages: [{ role: "user", content: "What is streaming?" }],
+    stream: true,
+    // 在流中包含使用量
+    stream_options: {
+      include_usage: true,
+    },
+  });
+
+  // 处理流
+  let streamedContent = "";
+  for await (const chunk of stream) {
+    const content = chunk.choices[0]?.delta?.content || "";
+    process.stdout.write(content);
+    streamedContent += content;
+  }
+
+  console.log("\nStreaming complete!");
+
+  // 完成后不要忘记刷新
+  await trackedOpenAI.flush();
+}
+
+streamingExample();
+```
+
+## 高级配置
+
+`trackOpenAI` 函数接受一个可选的配置对象来自定义集成：
+
+```typescript
+import OpenAI from "openai";
+import { trackOpenAI } from "opik-openai";
+import { Opik } from "opik";
+
+// 可选：创建自定义 Opik 客户端
+const customOpikClient = new Opik({
+  apiKey: "YOUR_OPIK_API_KEY", // 如果不使用环境变量
+  projectName: "openai-integration-project",
+});
+
+const existingOpikTrace = customOpikClient.trace({
+  name: `Trace`,
+  input: {
+    prompt: `Hello, world!`,
+  },
+  output: {
+    response: `Hello, world!`,
+  },
+});
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// 使用选项配置被追踪的客户端
+const trackedOpenAI = trackOpenAI(openai, {
+  // 可选：应用于所有追踪的标签数组
+  traceMetadata: {
+    tags: ["openai", "production", "user-query"],
+
+    // 可选：包含在所有追踪中的元数据
+    environment: "production",
+    version: "1.2.3",
+    component: "recommendation-engine",
+  },
+
+  // 可选：生成/追踪的自定义名称
+  generationName: "ProductRecommendationService",
+
+  // 可选：预配置的 Opik 客户端
+  // 如果未提供，将使用单例实例
+  client: customOpikClient,
+
+  // 可选：用于层级关系的父追踪
+  parent: existingOpikTrace,
+});
+
+// 使用配置的选项使用被追踪的客户端
+const response = await trackedOpenAI.embeddings.create({
+  model: "text-embedding-ada-002",
+  input: "This is a sample text for embeddings",
+});
+
+// 关闭现有追踪
+existingOpikTrace.end();
+
+// 在应用退出前刷新
+await trackedOpenAI.flush();
+```
+
+## 故障排除
+
+**缺少追踪**：确保你的 OpenAI 和 Opik API key 正确，并且在应用退出前调用了 `await trackedOpenAI.flush()`。
+
+**数据不完整**：对于流式响应，确保在结束应用之前消费了整个流。
+
+**层级追踪**：要创建正确的父子关系，当你希望 OpenAI 调用成为另一个追踪的子级时，请在配置中使用 `parent` 选项。
+
+**性能影响**：Opik 集成对 OpenAI API 调用添加的开销极小。

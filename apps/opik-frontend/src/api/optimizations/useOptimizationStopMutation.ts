@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import i18next from "i18next";
 import api, {
   OPTIMIZATION_KEY,
   OPTIMIZATIONS_KEY,
@@ -33,10 +34,10 @@ const useOptimizationStopMutation = () => {
       const message =
         error.response?.data?.message ??
         error.message ??
-        "Failed to stop the optimization. Please try again.";
+        i18next.t("common:messages.failedToStopOptimization");
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });
@@ -54,7 +55,7 @@ const useOptimizationStopMutation = () => {
       });
 
       toast({
-        description: "Optimization stopped successfully",
+        description: i18next.t("common:messages.optimizationStoppedSuccessfully"),
       });
     },
   });

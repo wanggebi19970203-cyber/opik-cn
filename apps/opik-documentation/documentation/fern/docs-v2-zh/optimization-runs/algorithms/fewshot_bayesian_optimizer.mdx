@@ -1,0 +1,125 @@
+---
+description: 了解如何使用 Few-Shot Bayesian Optimizer 使用贝叶斯优化技术为您的聊天提示词找到最优的少样本示例。
+headline: Few-Shot Bayesian | Opik 文档
+og:description: 了解使用 FewShotBayesianOptimizer 优化提示词示例，通过贝叶斯技术增强聊天模型性能。
+og:site_name: Opik 文档
+og:title: Few-Shot 贝叶斯优化技术 - Opik
+subtitle: 使用贝叶斯技术为聊天提示词优化少样本示例。
+title: Few-Shot 贝叶斯优化器
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/algorithms/fewshot_bayesian_optimizer
+---
+
+FewShotBayesianOptimizer 是一个复杂的提示词优化工具，使用贝叶斯优化技术将示例问题中的相关示例添加到系统提示词中。
+
+<Note>
+  当您的主要目标是找到最佳数量和组合的少样本示例（演示）来配合您的主要指令提示词时，`FewShotBayesianOptimizer` 是一个很好的选择，特别适用于**聊天模型**。如果您的任务性能严重依赖于上下文示例的质量和相关性，此优化器是理想的选择。
+</Note>
+
+## 工作原理
+
+`FewShotBayesianOptimizer` 使用贝叶斯优化来找到最佳的少样本示例集和数量，以配合您的基础指令提示词用于聊天模型。它使用 [Optuna](https://optuna.org/)（一个超参数优化框架）来指导搜索最佳的少样本示例集和数量。
+
+<Frame>
+  <img src="/img/agent_optimization/fewshot_bayesian_optimizer.png" alt="FewShot 贝叶斯优化器" />
+</Frame>
+
+## 快速开始
+
+您可以按照以下步骤使用 `FewShotBayesianOptimizer` 来优化提示词：
+
+```python maxLines=1000
+from opik_optimizer import FewShotBayesianOptimizer
+from opik.evaluation.metrics import LevenshteinRatio
+from opik_optimizer import datasets, ChatPrompt
+
+# Initialize optimizer
+optimizer = FewShotBayesianOptimizer(
+    model="openai/gpt-4",
+    model_parameters={
+        "temperature": 0.1,
+        "max_tokens": 5000
+    },
+)
+
+# Prepare dataset
+dataset = datasets.hotpot(count=300)
+
+# Define metric and prompt (see docs for more options)
+def levenshtein_ratio(dataset_item, llm_output):
+    return LevenshteinRatio().score(reference=dataset_item["answer"], output=llm_output)
+
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "Provide an answer to the question."},
+        {"role": "user", "content": "{question}"}
+    ]
+)
+
+# Run optimization
+results = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    n_samples=100
+)
+
+# Access results
+results.display()
+```
+
+## 配置选项
+
+### 优化器参数
+
+优化器具有以下参数：
+
+<ParamField path="model" type="str" optional={true} default="openai/gpt-5-nano">用于优化器内部推理的 LiteLLM 模型名称（生成少样本模板）</ParamField>
+<ParamField path="model_parameters" type="dict[str, typing.Any] | None" optional={true}>可选的 LiteLLM 参数字典，用于优化器的内部 LLM 调用。常用参数：temperature、max_tokens、max_completion_tokens、top_p。</ParamField>
+<ParamField path="min_examples" type="int" optional={true} default="2">提示词中包含的最少示例数</ParamField>
+<ParamField path="max_examples" type="int" optional={true} default="8">提示词中包含的最多示例数</ParamField>
+<ParamField path="n_threads" type="int" optional={true} default="8">并行评估的线程数</ParamField>
+<ParamField path="verbose" type="int" optional={true} default="1">控制内部日志/进度条（0=关闭，1=开启）</ParamField>
+<ParamField path="seed" type="int" optional={true} default="42">用于可重复性的随机种子</ParamField>
+
+### `optimize_prompt` 参数
+
+`optimize_prompt` 方法具有以下参数：
+
+<ParamField path="prompt" type="ChatPrompt">要优化的提示词</ParamField>
+<ParamField path="dataset" type="Dataset">要优化的 Opik 数据集</ParamField>
+<ParamField path="metric" type="Callable">用于评估的指标函数</ParamField>
+<ParamField path="experiment_config" type="dict | None" optional={true}>可选的实验配置，用于记录额外的元数据</ParamField>
+<ParamField path="n_samples" type="int | float | str | None" optional={true}>每次评估使用的数据集项数。使用计数（如 `50`）、分数（如 `0.1`）、百分比（如 "10%"），或 "all"/"full"/None 表示完整数据集。</ParamField>
+<ParamField path="n_samples_minibatch" type="int | None" optional={true}>可选的内部循环小批量样本数（默认为 n_samples）。</ParamField>
+<ParamField path="n_samples_strategy" type="str | None" optional={true}>子采样的采样策略（默认："random_sorted"）。</ParamField>
+<ParamField path="auto_continue" type="bool" optional={true} default="False">是否自动继续优化</ParamField>
+<ParamField path="agent_class" type="type[opik_optimizer.optimizable_agent.OptimizableAgent] | None" optional={true}>可选的代理类</ParamField>
+<ParamField path="project_name" type="str" optional={true} default="Optimization">用于记录跟踪的 Opik 项目名称（默认："Optimization"）</ParamField>
+<ParamField path="max_trials" type="int" optional={true} default="10">贝叶斯优化的试验次数（默认：10）</ParamField>
+<ParamField path="args" type="Any" />
+<ParamField path="kwargs" type="Any" />
+
+
+### 模型支持
+
+使用 `FewShotBayesianOptimizer` 时需要考虑两个模型：
+- `FewShotBayesianOptimizer.model`：用于生成少样本模板和占位符的模型。
+- `ChatPrompt.model`：用于评估提示词的模型。
+
+`model` 参数接受任何 LiteLLM 支持的模型字符串（例如，`"gpt-4o"`、`"azure/gpt-4"`、`"anthropic/claude-3-opus"`、`"gemini/gemini-1.5-pro"`）。您还可以使用 `model_parameters` 参数传入额外的模型参数：
+
+```python
+optimizer = FewShotBayesianOptimizer(
+    model="anthropic/claude-3-opus-20240229",
+    model_parameters={
+        "temperature": 0.7,
+        "max_tokens": 4096
+    }
+)
+```
+
+## 后续步骤
+
+1. 探索特定的[优化器](/v1/agent_optimization/algorithms/overview)了解算法详情。
+2. 参阅 [FAQ](/v1/agent_optimization/faq) 了解常见问题和故障排除。
+3. 参阅 [API 参考](/v1/agent_optimization/advanced/api_reference)了解详细配置选项。

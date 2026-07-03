@@ -1,0 +1,18 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板：**
+
+- 更新了实验页面中的反馈评分界面，使标注实验结果更加便捷。
+- 修复了实验侧边栏中 base64 编码图片的问题。
+- 改进了具有非常大负载（25MB+）的 trace 的 trace 表格和 trace 侧边栏的加载速度。
+
+**Python 和 JS / TS SDK**：
+
+- 通过更好的解析改进了 LLM as a Judge 指标的鲁棒性。
+- 修复了在 VertexAI 上托管的 Anthropic 模型的 usage 跟踪。
+- 使用 LiteLLM 时，如果未指定模型提供商或模型，我们会回退使用 LiteLLM 的成本。
+- 在 LangGraph 集成中新增对 `thread_id` 的支持。
+
+_发布版本_：`1.7.4`、`1.7.5`、`1.7.6`、`1.7.7` 和 `1.7.8`。

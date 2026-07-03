@@ -1,0 +1,105 @@
+---
+headline: 批处理与更新操作 | Opik 文档
+og:description: 了解批处理如何影响更新操作，以及在使用 Opik Python SDK 时如何避免数据丢失。
+og:site_name: Opik 文档
+og:title: 批处理与更新操作
+title: 批处理与更新操作
+---
+
+默认情况下，Opik Python SDK 会对 trace 和 span 的创建请求进行批处理，以提高数据摄入吞吐量。虽然这是大多数场景下的推荐设置，但在创建后立即更新 span 或 trace 时可能会出现问题。
+
+## 可能出现的问题
+
+当批处理启用时，创建请求会被排队并批量发送到服务器。如果你在 span 或 trace 的批处理创建请求刷新之前调用 `.end()` 或 `.update()`，更新请求可能会先到达服务器。由于服务器尚未记录该 span 或 trace，更新将被静默丢弃，导致数据丢失。
+
+此问题仅影响底层客户端 API（`client.trace()`、`client.span()`、`client.update_trace()`、`client.update_span()`、`.end()`、`.update()`）。[`@track` 装饰器](/tracing/advanced/log_traces) 和 [`start_as_current_span` 上下文管理器](/tracing/advanced/log_traces) 会自动处理生命周期，不受此问题影响。
+
+## 推荐方案
+
+### 使用装饰器或上下文管理器（推荐）
+
+创建和管理 span 及 trace 最安全的方式是使用 [`@track` 装饰器或 `start_as_current_span` 上下文管理器](/tracing/advanced/log_traces)。它们在单次操作中完成整个生命周期——创建、数据捕获和终结——无需单独的更新步骤。
+
+```python
+import opik
+
+# 使用 @track 装饰器
+@opik.track
+def my_llm_call(prompt: str) -> str:
+    response = call_llm(prompt)
+    return response
+
+# 使用上下文管理器
+with opik.start_as_current_span(name="my_span") as span:
+    result = call_llm("Hello")
+```
+
+### 重新发送完整数据进行覆盖
+
+如果需要使用底层客户端 API，可以使用相同的 ID 再次调用 `client.trace()` 或 `client.span()` 并传入完整数据。后端将每次创建请求视为 upsert 操作——如果已存在相同 ID 的 trace 或 span，新数据将完全覆盖旧数据。这避免了竞态条件，因为你不依赖于在原始创建之后单独到达的更新。
+
+```python
+import datetime
+import opik
+
+client = opik.Opik()
+
+# 第一次调用——创建 trace（批处理）
+trace = client.trace(
+    name="my_trace",
+    input={"prompt": "Hello"},
+)
+
+# ... 执行其他操作 ...
+
+# 使用相同 ID 的第二次调用——用完整数据覆盖 trace
+client.trace(
+    id=trace.id,
+    name="my_trace",
+    input={"prompt": "Hello"},
+    output={"response": "Hi there"},
+    end_time=datetime.datetime.now(datetime.timezone.utc),
+)
+```
+
+此方法同样适用于 span——使用相同的 `id` 和 `trace_id` 调用 `client.span()` 即可覆盖。
+
+### 禁用批处理
+
+如果你的工作流需要先创建 span 然后立即更新（例如，添加仅在异步操作完成后才可用的输出数据），可以禁用批处理。这将确保每个创建请求立即发送，后续更新总能在服务器上找到对应的 span。
+
+```python
+import opik
+
+client = opik.Opik(batching=False)
+
+trace = client.trace(name="my_trace", input={"prompt": "Hello"})
+span = trace.span(name="llm_call", input={"prompt": "Hello"})
+
+# 安全调用 .end()，因为创建请求已立即发送
+span.end(output={"response": "Hi there"})
+trace.end(output={"response": "Hi there"})
+```
+
+<Warning>
+禁用批处理会降低数据摄入吞吐量。仅在需要在创建后立即调用 `.end()` 或 `.update()` 时使用此选项。
+</Warning>
+
+### 抑制警告
+
+如果在创建后较长时间才调用 `.end()` 或 `.update()`（例如，在长时间运行的操作完成后），批处理的创建请求早已刷新，不存在数据丢失风险。此时可以通过设置环境变量来抑制警告：
+
+```bash
+export OPIK_SUPPRESS_BATCHING_UPDATE_WARNING=true
+```
+
+或在 Opik 配置文件（`~/.opik.config`）中设置：
+
+```ini
+[opik]
+suppress_batching_update_warning = true
+```
+
+## 使用集成
+
+所有 Opik 集成（LangChain、LlamaIndex、DSPy、OpenAI、Anthropic 等）都在内部处理 span 和 trace 的生命周期，不受此问题影响。如果你正在使用集成，无需任何更改。

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -89,6 +90,7 @@ const AgentRunnerInputForm: React.FC<AgentRunnerInputFormProps> = ({
   isRunning,
   onValidityChange,
 }) => {
+  const { t } = useTranslation("pages/agent-playground");
   const schema = useMemo(() => buildSchema(fields), [fields]);
 
   const {
@@ -139,7 +141,7 @@ const AgentRunnerInputForm: React.FC<AgentRunnerInputFormProps> = ({
     <form id="agent-runner-form" onSubmit={onFormSubmit}>
       {fields.length === 0 ? (
         <div className="flex flex-col items-center py-8 text-muted-slate">
-          <p className="comet-body-s">No input fields defined by this agent.</p>
+          <p className="comet-body-s">{t("inputForm.noInputFields")}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -175,7 +177,7 @@ const AgentRunnerInputForm: React.FC<AgentRunnerInputFormProps> = ({
                   </span>
                   {!isFieldRequired(field) && (
                     <span className="comet-body-xs text-muted-slate">
-                      (optional)
+                      {t("inputForm.optional")}
                     </span>
                   )}
                 </div>
@@ -193,14 +195,18 @@ const AgentRunnerInputForm: React.FC<AgentRunnerInputFormProps> = ({
                     ) : normalized === "object" ? (
                       <Textarea
                         {...register(field.name)}
-                        placeholder={`Enter ${field.name}...`}
+                        placeholder={t("inputForm.enterField", {
+                          name: field.name,
+                        })}
                         rows={4}
                         disabled={isRunning}
                       />
                     ) : (
                       <Input
                         {...register(field.name)}
-                        placeholder={`Enter ${field.name}...`}
+                        placeholder={t("inputForm.enterField", {
+                          name: field.name,
+                        })}
                         inputMode={
                           normalized === "numeric-int"
                             ? "numeric"

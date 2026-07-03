@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Share } from "lucide-react";
 import copy from "clipboard-copy";
@@ -10,22 +11,24 @@ type ShareURLButtonProps = {
 };
 
 const ShareURLButton: React.FunctionComponent<ShareURLButtonProps> = ({
-  message = "URL successfully copied to clipboard",
+  message,
   size = "sm",
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
+  const defaultMessage = t("common.shared.urlCopiedToClipboard");
 
   const shareClickHandler = useCallback(() => {
     toast({
-      description: message,
+      description: message || defaultMessage,
     });
     copy(window.location.href);
-  }, [message, toast]);
+  }, [message, defaultMessage, toast]);
 
   return (
     <Button variant="outline" size={size} onClick={shareClickHandler}>
       <Share className={size === "2xs" ? "mr-1 size-3.5" : "mr-2 size-4"} />
-      Share
+      {t("common.shared.share")}
     </Button>
   );
 };

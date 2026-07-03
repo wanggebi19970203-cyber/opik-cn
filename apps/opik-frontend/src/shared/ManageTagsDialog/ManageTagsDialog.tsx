@@ -6,6 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { Tag as TagIcon, Plus, Check, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -47,6 +48,7 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
   isAllItemsSelected = false,
   totalCount,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [newTags, setNewTags] = useState<Set<string>>(new Set());
   const [tagsToRemove, setTagsToRemove] = useState<Set<string>>(new Set());
@@ -59,8 +61,8 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
   useEffect(() => {
     if (isOverLimit && open) {
       toast({
-        title: "Error",
-        description: `You can only add tags to up to ${MAX_ENTITIES} items at a time. Please select fewer items.`,
+        title: t("common.tags.entityLimitErrorTitle"),
+        description: t("common.tags.entityLimitError", { count: MAX_ENTITIES }),
         variant: "destructive",
       });
       setOpen(false);
@@ -105,8 +107,8 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
 
     if (newTags.has(trimmedTag)) {
       toast({
-        title: "Tag already added",
-        description: `Tag "${trimmedTag}" is already in the list`,
+        title: t("common.tags.tagAlreadyAdded"),
+        description: t("common.tags.tagAlreadyAddedDescription", { tag: trimmedTag }),
         variant: "destructive",
       });
       return;
@@ -117,8 +119,8 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
       tagCounts.get(trimmedTag) === entities.length
     ) {
       toast({
-        title: "Tag already exists",
-        description: `Tag "${trimmedTag}" is already applied to all selected items`,
+        title: t("common.tags.tagAlreadyExists"),
+        description: t("common.tags.tagAlreadyExistsDescription", { tag: trimmedTag }),
         variant: "destructive",
       });
       return;
@@ -160,8 +162,8 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
     const maxTagCount = Math.max(...allTagsAfterUpdate);
     if (maxTagCount > MAX_TAGS) {
       toast({
-        title: "Tag limit exceeded",
-        description: `An item can only have up to ${MAX_TAGS} tags`,
+        title: t("common.tags.tagLimitExceeded"),
+        description: t("common.tags.tagLimitExceededDescription", { count: MAX_TAGS }),
         variant: "destructive",
       });
       return;
@@ -171,13 +173,13 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
       await onUpdate(Array.from(newTags), Array.from(tagsToRemove));
 
       const removedMsg =
-        tagsToRemove.size > 0 ? `${tagsToRemove.size} removed` : "";
-      const addedMsg = newTags.size > 0 ? `${newTags.size} added` : "";
+        tagsToRemove.size > 0 ? `${tagsToRemove.size} ${t("common.tags.removed")}` : "";
+      const addedMsg = newTags.size > 0 ? `${newTags.size} ${t("common.tags.added")}` : "";
       const separator = removedMsg && addedMsg ? ", " : "";
 
       toast({
-        title: "Tags updated",
-        description: `${removedMsg}${separator}${addedMsg} from/to ${entities.length} items`,
+        title: t("common.tags.tagsUpdated"),
+        description: t("common.tags.tagsUpdatedDescription", { removed: removedMsg, separator, added: addedMsg, count: entities.length }),
       });
       handleClose();
     } catch {
@@ -207,10 +209,9 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
         }}
       >
         <DialogHeader>
-          <DialogTitle>Manage shared tags</DialogTitle>
+          <DialogTitle>{t("common.tags.manageSharedTags")}</DialogTitle>
           <p className="mt-2 text-sm text-muted-foreground">
-            Add or remove tags shared by all selected items. Changes apply to
-            every item.
+            {t("common.tags.manageSharedTagsDescription")}
           </p>
         </DialogHeader>
 
@@ -297,20 +298,20 @@ const ManageTagsDialog: React.FunctionComponent<ManageTagsDialogProps> = ({
                 data-testid="add-tag-button"
               >
                 <Plus className="mr-0.5 inline-block size-3.5" />
-                Add tag
+                {t("common.tags.addTag")}
               </Tag>
             )}
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
-            Cancel
+            {t("common.tags.cancel")}
           </Button>
           <Button
             onClick={handleUpdateTags}
             disabled={newTags.size === 0 && tagsToRemove.size === 0}
           >
-            Update tags for {itemCount} {itemCount === 1 ? "item" : "items"}
+            {t("common.tags.updateTagsForItems", { count: itemCount, item: itemCount === 1 ? t("common.tags.item") : t("common.tags.items") })}
           </Button>
         </DialogFooter>
       </DialogContent>

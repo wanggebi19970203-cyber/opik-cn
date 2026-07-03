@@ -7,39 +7,39 @@ from .. import constants, helpers
 
 class EvaluatorItem(pydantic.BaseModel):
     """
-    An evaluator configuration for a dataset item.
+    数据集项的评估器配置。
     """
 
     model_config = pydantic.ConfigDict(extra="allow", strict=False)
 
     name: str
-    """The name of the evaluator."""
+    """评估器的名称。"""
 
     type: str
-    """The type of evaluator (e.g., 'llm_judge', 'code_metric')."""
+    """评估器类型（如 'llm_judge'、'code_metric'）。"""
 
     config: Dict[str, Any]
-    """The evaluator configuration."""
+    """评估器配置。"""
 
 
 class ExecutionPolicyItem(pydantic.BaseModel):
     """
-    Execution policy for a dataset item.
+    数据集项的执行策略。
     """
 
     model_config = pydantic.ConfigDict(extra="allow", strict=False)
 
     runs_per_item: Optional[int] = None
-    """Number of times to run the task for this item."""
+    """该数据集项的任务执行次数。"""
 
     pass_threshold: Optional[int] = None
-    """Minimum number of runs that must pass for the item to pass."""
+    """该数据集项通过所需的最少通过次数。"""
 
 
 class DatasetItem(pydantic.BaseModel):
     """
-    A DatasetItem object representing an item in a dataset.
-    The format is flexible.
+    表示数据集中一个数据项的 DatasetItem 对象。
+    格式是灵活的。
     """
 
     model_config = pydantic.ConfigDict(extra="allow", strict=False)
@@ -47,40 +47,40 @@ class DatasetItem(pydantic.BaseModel):
     id: pydantic.SkipValidation[str] = pydantic.Field(
         default_factory=helpers.generate_id
     )
-    """The unique identifier for this dataset item."""
+    """此数据集项的唯一标识符。"""
 
     trace_id: Optional[str] = None
-    """The ID of the trace associated with this dataset item."""
+    """与此数据集项关联的 trace ID。"""
 
     span_id: Optional[str] = None
-    """The ID of the span associated with this dataset item."""
+    """与此数据集项关联的 span ID。"""
 
     source: str = constants.DATASET_SOURCE_SDK
-    """The source of the dataset item. Defaults to DATASET_SOURCE_SDK."""
+    """数据集项的来源。默认为 DATASET_SOURCE_SDK。"""
 
     description: Optional[str] = None
-    """Optional description of the dataset item."""
+    """数据集项的可选描述。"""
 
     evaluators: Optional[List[EvaluatorItem]] = None
-    """List of evaluators configured for this dataset item."""
+    """为此数据集项配置的评估器列表。"""
 
     execution_policy: Optional[ExecutionPolicyItem] = None
-    """Execution policy for this dataset item."""
+    """此数据集项的执行策略。"""
 
     def get_content(
         self,
         include_id: bool = False,
     ) -> Dict[str, Any]:
         """
-        Get the data content of the dataset item (extra fields).
+        获取数据集项的数据内容（额外字段）。
 
-        Note: evaluators and execution_policy are not included in data content
+        注意：evaluators 和 execution_policy 不包含在数据内容中。
 
         Args:
-            include_id: Whether to include the item ID in the content.
+            include_id: 是否在内容中包含数据项 ID。
 
         Returns:
-            Dictionary containing the item's extra fields.
+            包含数据项额外字段的字典。
         """
         content = {**self.model_extra}
         if include_id:

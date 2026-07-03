@@ -19,7 +19,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class OpikTracer(tracing.Tracer):
-    """Bridge between Haystack tracer and Opik for tracing pipeline operations."""
+    """Haystack 追踪器与 Opik 之间的桥接器，用于追踪管道操作。"""
 
     def __init__(
         self,
@@ -28,14 +28,13 @@ class OpikTracer(tracing.Tracer):
         project_name: Optional[str] = None,
     ) -> None:
         """
-        Initialize OpikTracer.
+        初始化 OpikTracer。
 
         Args:
-            opik_client: Deprecated. The client is now resolved lazily via
-                ``opik.get_global_client()``. This parameter is accepted
-                for backwards compatibility but ignored.
-            name: The name of the pipeline or component.
-            project_name: The name of the project for tracing (optional).
+            opik_client: 已弃用。客户端现在通过 ``opik.get_global_client()`` 延迟解析。
+                此参数为向后兼容而保留，但会被忽略。
+            name: 管道或组件的名称。
+            project_name: 用于追踪的项目名称（可选）。
         """
         if not tracing.tracer.is_content_tracing_enabled:
             LOGGER.warning(
@@ -53,6 +52,7 @@ class OpikTracer(tracing.Tracer):
 
     @property
     def _opik_client(self) -> opik.Opik:
+        """获取 Opik 全局客户端实例。"""
         return opik.get_global_client()
 
     @contextlib.contextmanager
@@ -62,6 +62,17 @@ class OpikTracer(tracing.Tracer):
         tags: Optional[Dict[str, Any]] = None,
         parent_span: Optional[opik_span_bridge.OpikSpanBridge] = None,
     ) -> Iterator[tracing.Span]:
+        """
+        创建追踪上下文管理器。
+
+        Args:
+            operation_name: 操作名称。
+            tags: 可选的标签字典。
+            parent_span: 可选的父 Span。
+
+        Yields:
+            OpikSpanBridge 实例。
+        """
         tags = tags or {}
         span_name = tags.get(constants.COMPONENT_NAME_KEY, operation_name)
 
@@ -83,12 +94,17 @@ class OpikTracer(tracing.Tracer):
     def _create_span_or_trace(
         self, operation_name: str, span_name: str
     ) -> opik_span_bridge.OpikSpanBridge:
-        """Create a span or trace based on existing context using span_creation_handler."""
-        # For pipeline operations, use the pipeline name, otherwise use component name
+        """
+        根据现有上下文创建 Span 或 Trace。
+
+        使用 span_creation_handler 处理上下文，对于管道操作使用管道名称，
+        否则使用组件名称。
+        """
+        # 对于管道操作使用管道名称，否则使用组件名称
         final_name = self._name if "pipeline.run" in operation_name else span_name
         metadata = {"created_from": "haystack", "operation": operation_name}
 
-        # Always use span_creation_handler - it handles existing context properly
+        # 始终使用 span_creation_handler - 它能正确处理现有上下文
         start_span_parameters = arguments_helpers.StartSpanParameters(
             name=final_name,
             type="general",
@@ -115,7 +131,18 @@ class OpikTracer(tracing.Tracer):
         operation_name: str,
         tags: Dict[str, Any],
     ) -> opik_span_bridge.OpikSpanBridge:
-        """Create a child span from a parent span."""
+        """
+        从父 Span 创建子 Span。
+
+        Args:
+            parent_span: 父 Span 桥接器。
+            span_name: Span 名称。
+            operation_name: 操作名称。
+            tags: 标签字典。
+
+        Returns:
+            新创建的子 Span 桥接器。
+        """
         parent_data = parent_span.get_opik_span_or_trace_data()
         span_type: SpanType = (
             "llm"
@@ -132,13 +159,17 @@ class OpikTracer(tracing.Tracer):
         return opik_span_bridge.OpikSpanBridge(span_data)
 
     def _finalize_span(self, span: opik_span_bridge.OpikSpanBridge) -> None:
-        """Finalize span by updating metadata and ending the span."""
+        """
+        完成 Span：更新元数据并结束 Span。
+
+        将数据发送到后端（如果追踪处于活动状态），并从上下文中移除 Span。
+        """
         try:
             span_or_trace_data = span.get_opik_span_or_trace_data()
             span.apply_component_metadata()
             span_or_trace_data.init_end_time()
 
-            # Send data to backend if tracing is active
+            # 如果追踪处于活动状态，将数据发送到后端
             if tracing_runtime_config.is_tracing_active():
                 if isinstance(span_or_trace_data, opik_trace.TraceData):
                     self._opik_client.__internal_api__trace__(
@@ -158,15 +189,15 @@ class OpikTracer(tracing.Tracer):
                 self._context.pop()
 
     def flush(self) -> None:
-        """Flush the Opik client to send pending data."""
+        """刷新 Opik 客户端以发送待处理的数据。"""
         self._opik_client.flush()
 
     def current_span(self) -> Optional[opik_span_bridge.OpikSpanBridge]:
-        """Return the current active span."""
+        """返回当前活动的 Span。"""
         return self._context[-1] if self._context else None
 
     def get_project_url(self) -> Optional[str]:
-        """Return the URL to the tracing data."""
+        """返回追踪数据的项目 URL。"""
         span = self.current_span()
         if not span:
             return None
@@ -182,7 +213,7 @@ class OpikTracer(tracing.Tracer):
         )
 
     def get_trace_id(self) -> Optional[str]:
-        """Return the trace id of the current trace."""
+        """返回当前追踪的 Trace ID。"""
         span = self.current_span()
         if not span:
             return None

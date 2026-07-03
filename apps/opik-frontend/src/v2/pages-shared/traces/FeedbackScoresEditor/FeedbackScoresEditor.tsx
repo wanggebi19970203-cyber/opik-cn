@@ -7,6 +7,7 @@ import { sortBy } from "lodash";
 import { Button } from "@/ui/button";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, InfoIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import AnnotateRow from "../TraceDetailsPanel/TraceAnnotateViewer/AnnotateRow";
 import { cn } from "@/lib/utils";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
@@ -46,17 +47,19 @@ type FeedbackScoresEditorHeaderProps = {
 const getTitleOfScores = ({
   isThread,
   isTrace,
+  t,
 }: {
   isThread?: boolean;
   isTrace?: boolean;
+  t: (key: string) => string;
 }): string => {
   if (isThread) {
-    return "Your thread scores";
+    return t("annotate.yourThreadScores");
   }
   if (isTrace) {
-    return "Your trace scores";
+    return t("annotate.yourTraceScores");
   }
-  return "Your span scores";
+  return t("annotate.yourSpanScores");
 };
 
 const FeedbackScoresEditorHeader: React.FC<FeedbackScoresEditorHeaderProps> = ({
@@ -64,7 +67,8 @@ const FeedbackScoresEditorHeader: React.FC<FeedbackScoresEditorHeaderProps> = ({
   isThread = false,
   title: customTitle,
 }) => {
-  const title = customTitle ?? getTitleOfScores({ isThread, isTrace });
+  const { t } = useTranslation("tracing");
+  const title = customTitle ?? getTitleOfScores({ isThread, isTrace, t });
   return (
     <div className="flex items-center gap-1 pb-2">
       <span className="comet-body-s-accented truncate">{title}</span>
@@ -76,6 +80,7 @@ const FeedbackScoresEditorHeader: React.FC<FeedbackScoresEditorHeaderProps> = ({
 const FeedbackScoresEditorFooter: React.FC<FeedbackScoresEditorFooterProps> = ({
   entityCopy,
 }) => {
+  const { t } = useTranslation("tracing");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
@@ -84,7 +89,7 @@ const FeedbackScoresEditorFooter: React.FC<FeedbackScoresEditorFooterProps> = ({
         <InfoIcon className="size-3" />
       </div>
       <div className="leading-relaxed">
-        Set up
+        {t("annotate.setupCustomScores")}
         <Button
           size="sm"
           variant="link"
@@ -100,11 +105,11 @@ const FeedbackScoresEditorFooter: React.FC<FeedbackScoresEditorFooterProps> = ({
             target="_blank"
             rel="noopener noreferrer"
           >
-            custom human review scores
+            {t("annotate.customHumanReviewScores")}
             <ExternalLink className="size-3" />
           </Link>
         </Button>
-        to annotate your {entityCopy}.
+        {t("annotate.toAnnotateYour", { entity: entityCopy })}
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import usePromptVersionsWithLabels from "@/v2/pages-shared/version-history/usePr
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import PromptLibraryMenu from "@/v2/pages-shared/llm/PromptLibraryMenu/PromptLibraryMenu";
 import LoadedPromptDisplay from "@/v2/pages-shared/llm/LoadedPromptDisplay/LoadedPromptDisplay";
+import { useTranslation } from "react-i18next";
 
 const DEFAULT_LOADED_PROMPTS = 1000;
 const MAX_LOADED_PROMPTS = 10000;
@@ -63,6 +64,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
   compact = false,
   enableVersionSelect = false,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [isLoadedMore, setIsLoadedMore] = useState(false);
   const isClearable = clearable && Boolean(value);
@@ -116,26 +118,26 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
     () =>
       asNewOption ? (
         <div className="flex w-full items-center text-foreground">
-          <span className="truncate">Save as a new prompt</span>
+          <span className="truncate">{t("addNewPromptVersionDialog.saveAsNew")}</span>
         </div>
       ) : (
         <div className="flex w-full items-center text-light-slate">
           <FileTerminal className="mr-2 size-4" />
           <span className="truncate font-normal">
             {filterByTemplateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT
-              ? "Load chat prompt"
-              : "Load a prompt"}
+              ? t("promptsSelectBox.loadChatPrompt")
+              : t("promptsSelectBox.loadPrompt")}
           </span>
         </div>
       ),
     [asNewOption, filterByTemplateStructure],
   );
 
-  let searchPlaceholder = "Search";
+  let searchPlaceholder = t("promptModelSelect.searchModel");
   if (filterByTemplateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT) {
-    searchPlaceholder = "Search chat prompt";
+    searchPlaceholder = t("promptsSelectBox.searchChatPrompt");
   } else if (filterByTemplateStructure === PROMPT_TEMPLATE_STRUCTURE.TEXT) {
-    searchPlaceholder = "Search text prompt";
+    searchPlaceholder = t("promptsSelectBox.searchTextPrompt");
   }
 
   const actionPanel = useMemo(() => {
@@ -149,7 +151,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
           }}
         >
           <Plus className="size-3.5 shrink-0" />
-          Save as new
+          {t("addNewPromptVersionDialog.saveAsNew")}
         </ListAction>
       </>
     ) : undefined;
@@ -158,7 +160,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
   if (compact) {
     if (value) {
       const promptFromList = prompts.find((p) => p.id === value);
-      const displayName = promptName ?? promptFromList?.name ?? "Loaded prompt";
+      const displayName = promptName ?? promptFromList?.name ?? t("promptTab.loadPrompt");
 
       return (
         <CompactLoadedPrompt
@@ -183,7 +185,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
         enableVersionSelect={enableVersionSelect}
         trigger={
           <div>
-            <TooltipWrapper content="Load prompt">
+            <TooltipWrapper content={t("promptTab.loadPrompt")}>
               <Button
                 variant="minimal"
                 size="icon-2xs"
@@ -204,7 +206,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
       isClearable={isClearable}
       onClear={() => onValueChange(undefined)}
       disabled={disabled}
-      clearTooltip="Remove prompt selection"
+      clearTooltip={t("promptsSelectBox.removePromptSelection")}
       buttonSize="icon-sm"
     >
       <LoadableSelectBox

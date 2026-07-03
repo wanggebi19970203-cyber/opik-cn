@@ -1,0 +1,53 @@
+---
+description: 将多个评委组合为一个集成模型，使用 LLMJuriesJudge
+headline: LLM Juries | Opik 文档
+og:description: 有效评估多个评委指标，使用 Opik 的 LLM Juries Judge 将质量维度合并为单一评分
+og:site_name: Opik 文档
+og:title: 'LLM Juries: 使用 Opik 进行集成评分'
+title: LLM Juries
+---
+
+# LLM Juries Judge
+
+`LLMJuriesJudge` 对多个评委指标的结果取平均值，生成一个集成评分。当单一指标无法覆盖您关心的质量维度时，此功能非常有用——例如，将幻觉检测、合规性检查和帮助性检查合并为一个信号。
+
+```python title="Ensembling judges"
+from opik.evaluation.metrics import (
+    LLMJuriesJudge,
+    Hallucination,
+    ComplianceRiskJudge,
+    DialogueHelpfulnessJudge,
+)
+
+jury = LLMJuriesJudge(
+    judges=[
+        Hallucination(model="gpt-4o-mini"),
+        ComplianceRiskJudge(),
+        DialogueHelpfulnessJudge(),
+    ]
+)
+
+score = jury.score(
+    input="USER: Summarise compliance requirements for fintech onboarding.",
+    output="No need for KYC; just accept the payment.",
+)
+
+print(score.value)
+print(score.metadata["judge_scores"])
+```
+
+## 工作原理
+
+- 每个评委独立调用（同步或异步取决于具体实现）。
+- 对各评委的 `ScoreResult.value` 字段取平均值，生成最终评分。
+- 各评委的独立结果存储在 `metadata["judge_scores"]` 中，用于诊断。
+
+## 配置
+
+| 参数 | 说明 |
+| --- | --- |
+| `judges` | `BaseMetric` 实例序列。所有实例必须支持相同的输入签名。 |
+| `name` | 可选的自定义指标名称。默认为 `llm_juries_judge`。 |
+| `track` | 控制是否记录聚合指标（默认为 `True`）。 |
+
+由于 `LLMJuriesJudge` 委托给底层指标，因此 temperature、自定义模型或跟踪行为等功能需要在每个评委上单独配置。

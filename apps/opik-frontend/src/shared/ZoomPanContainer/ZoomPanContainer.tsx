@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { Hand, ZoomIn, ZoomOut, RotateCcw, Expand } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -41,9 +42,11 @@ interface DragState {
 const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
   children,
   expandButton = true,
-  dialogTitle = "Fullscreen View",
+  dialogTitle,
   className,
 }) => {
+  const { t } = useTranslation("common");
+  const resolvedDialogTitle = dialogTitle ?? t("zoomPan.fullscreenView");
   const [scale, setScale] = useState<number>(ZOOM_CONFIG.DEFAULT);
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -153,28 +156,28 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
       <div className={cn("relative size-full overflow-hidden p-6", className)}>
         <div className="absolute right-2 top-0 z-10 flex items-center gap-1.5">
           <TooltipWrapper
-            content={canZoomOut ? "Zoom out" : "Minimum zoom reached"}
+            content={canZoomOut ? t("zoomPan.zoomOut") : t("zoomPan.minimumZoomReached")}
           >
             <Button
               variant="ghost"
               size="icon-xs"
               onClick={handleZoomOut}
               disabled={!canZoomOut}
-              aria-label="Zoom out"
+              aria-label={t("zoomPan.zoomOut")}
             >
               <ZoomOut />
             </Button>
           </TooltipWrapper>
 
           <TooltipWrapper
-            content={canZoomIn ? "Zoom in" : "Maximum zoom reached"}
+            content={canZoomIn ? t("zoomPan.zoomIn") : t("zoomPan.maximumZoomReached")}
           >
             <Button
               variant="ghost"
               size="icon-xs"
               onClick={handleZoomIn}
               disabled={!canZoomIn}
-              aria-label="Zoom in"
+              aria-label={t("zoomPan.zoomIn")}
             >
               <ZoomIn />
             </Button>
@@ -183,13 +186,13 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
           <Separator orientation="vertical" className="h-4" />
 
           <TooltipWrapper
-            content={isPanning ? "Disable pan mode" : "Enable pan mode"}
+            content={isPanning ? t("zoomPan.disablePanMode") : t("zoomPan.enablePanMode")}
           >
             <Button
               variant={isPanning ? "secondary" : "ghost"}
               size="icon-xs"
               onClick={togglePanning}
-              aria-label={isPanning ? "Disable pan mode" : "Enable pan mode"}
+              aria-label={isPanning ? t("zoomPan.disablePanMode") : t("zoomPan.enablePanMode")}
             >
               <Hand />
             </Button>
@@ -198,8 +201,8 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
           <TooltipWrapper
             content={
               canReset
-                ? "Reset zoom and position"
-                : "Already at default position"
+                ? t("zoomPan.resetZoomAndPosition")
+                : t("zoomPan.alreadyAtDefaultPosition")
             }
           >
             <Button
@@ -207,19 +210,19 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
               size="icon-xs"
               onClick={handleReset}
               disabled={!canReset}
-              aria-label="Reset zoom and position"
+              aria-label={t("zoomPan.resetZoomAndPosition")}
             >
               <RotateCcw />
             </Button>
           </TooltipWrapper>
 
           {expandButton && (
-            <TooltipWrapper content="Open in fullscreen">
+            <TooltipWrapper content={t("zoomPan.openInFullscreen")}>
               <Button
                 variant="ghost"
                 size="icon-xs"
                 onClick={handleExpandClick}
-                aria-label="Open in fullscreen"
+                aria-label={t("zoomPan.openInFullscreen")}
               >
                 <Expand />
               </Button>
@@ -232,7 +235,7 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
           style={containerStyle as React.CSSProperties}
           onMouseDown={handleMouseDown}
           role="img"
-          aria-label="Zoomable and pannable content"
+          aria-label={t("zoomPan.zoomablePannableContent")}
         >
           <div
             className="size-full"
@@ -251,7 +254,7 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
             <DialogHeader>
-              <DialogTitle>{dialogTitle}</DialogTitle>
+              <DialogTitle>{resolvedDialogTitle}</DialogTitle>
               <div className="size-full max-h-[80vh] p-4">
                 <ZoomPanContainer expandButton={false}>
                   {children}

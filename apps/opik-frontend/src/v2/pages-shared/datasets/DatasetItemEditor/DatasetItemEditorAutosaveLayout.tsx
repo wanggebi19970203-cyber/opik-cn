@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import copy from "clipboard-copy";
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
 import ResizableSidePanelTopBar from "@/shared/ResizableSidePanel/ResizableSidePanelTopBar";
@@ -27,6 +28,7 @@ const truncateId = (id: string): string => {
 const DatasetItemEditorAutosaveLayout: React.FC<
   DatasetItemEditorAutosaveLayoutProps
 > = ({ datasetItemId, isOpen, onClose }) => {
+  const { t } = useTranslation("datasets");
   const {
     isPending,
     handleFieldChange,
@@ -51,17 +53,17 @@ const DatasetItemEditorAutosaveLayout: React.FC<
 
   const handleShare = useCallback(() => {
     toast({
-      description: "URL successfully copied to clipboard",
+      description: t("itemEditor.urlCopiedToClipboard"),
     });
     copy(window.location.href);
-  }, [toast]);
+  }, [toast, t]);
 
   const handleCopyId = useCallback(() => {
     toast({
-      description: "Record ID successfully copied to clipboard",
+      description: t("itemEditor.recordIdCopiedToClipboard"),
     });
     copy(datasetItemId);
-  }, [datasetItemId, toast]);
+  }, [datasetItemId, toast, t]);
 
   const handleDeleteItemConfirm = useCallback(() => {
     handleDelete(onClose);
@@ -81,7 +83,7 @@ const DatasetItemEditorAutosaveLayout: React.FC<
           title={
             <TooltipWrapper content={datasetItemId}>
               <span>
-                Record{" "}
+                {t("itemEditor.record")}{" "}
                 <span className="comet-body-s text-muted-slate">
                   {truncateId(datasetItemId)}
                 </span>
@@ -92,7 +94,7 @@ const DatasetItemEditorAutosaveLayout: React.FC<
         >
           <DatasetItemActionsDropdown
             datasetItemId={datasetItemId}
-            itemName="record"
+            itemName={t("itemEditor.recordLowercase")}
             onShare={handleShare}
             onCopyId={handleCopyId}
             onDelete={handleDeleteItemConfirm}
@@ -122,7 +124,7 @@ const DatasetItemEditorAutosaveLayout: React.FC<
           </div>
           {hasMedia && (
             <div className="border-b px-6 py-4">
-              <div className="mb-2 text-sm font-medium">Media</div>
+              <div className="mb-2 text-sm font-medium">{t("itemEditor.media")}</div>
               <ImagesListWrapper media={media} />
             </div>
           )}

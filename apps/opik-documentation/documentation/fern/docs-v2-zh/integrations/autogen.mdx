@@ -1,0 +1,185 @@
+---
+description: 从这里开始将 Opik 集成到您的基于 AutoGen 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Autogen | Opik 文档
+og:description: 使用 Autogen 的企业级框架构建强大的 AI 代理，内置日志记录和可观观测性功能，适用于高效的多代理系统。
+og:site_name: Opik 文档
+og:title: 使用 Autogen 构建 AI 代理 - Opik
+title: 使用 Opik 实现 AutoGen 的可观测性
+---
+
+[Autogen](https://microsoft.github.io/autogen/stable/) 是由 Microsoft 构建和维护的 AI 代理和应用框架。
+
+Autogen 的主要优势在于其企业级架构，内置日志记录和可观测性功能，使其成为需要强大监控和调试能力的生产级多代理系统的理想选择。
+
+<Frame>
+  <img src="/img/tracing/autogen_integration.png" alt="Autogen 追踪" />
+</Frame>
+
+## 快速开始
+
+要使用 Autogen 与 Opik 的集成，您需要安装以下软件包：
+
+```bash
+pip install -U "autogen-agentchat" "autogen-ext[openai]" opik opentelemetry-sdk opentelemetry-instrumentation-openai opentelemetry-exporter-otlp
+```
+
+此外，您需要设置以下环境变量来配置 OpenTelemetry 集成：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果您使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您想将数据记录到不同的工作区，也可以将 `Comet-Workspace` 参数更新为其他值。
+        </Tip>
+    </Tab>
+    <Tab value="企业部署" title="企业部署">
+        如果您使用 Opik 的企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果您想将数据记录到不同的工作区，也可以将 `Comet-Workspace` 参数更新为其他值。
+        </Tip>
+    </Tab>
+    <Tab value="自托管实例" title="自托管实例">
+
+    如果您自托管 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 Autogen 中使用 Opik
+
+Autogen 库包含一些关于如何与 OpenTelemetry 兼容工具集成的示例，您可以在此了解更多：
+
+1. 如果您使用 [autogen-core](https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/telemetry.html)
+2. 如果您使用 [autogen_agentchat](https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tracing.html)
+
+在下面的示例中，我们将重点介绍更易于使用的 `autogen_agentchat` 库：
+
+```python
+# 首先配置 OpenTelemetry
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter
+)
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+
+def setup_telemetry():
+    """使用 HTTP 导出器配置 OpenTelemetry"""
+    # 创建包含服务名称和其他元数据的资源
+    resource = Resource.create({
+        "service.name": "autogen-demo",
+        "service.version": "1.0.0",
+        "deployment.environment": "development"
+    })
+
+    # 使用资源创建 TracerProvider
+    provider = TracerProvider(resource=resource)
+
+    # 使用 OTLPSpanExporter 创建 BatchSpanProcessor
+    processor = BatchSpanProcessor(
+        OTLPSpanExporter()
+    )
+    provider.add_span_processor(processor)
+
+    # 设置 TracerProvider
+    trace.set_tracer_provider(provider)
+
+    # 插桩 OpenAI 调用
+    OpenAIInstrumentor().instrument()
+
+# 现在可以定义和调用 Agent
+import asyncio
+from autogen_agentchat.agents import AssistantAgent
+from autogen_agentchat.ui import Console
+from autogen_ext.models.openai import OpenAIChatCompletionClient
+
+
+# 定义模型客户端。您可以使用其他实现了 `ChatCompletionClient` 接口的模型客户端。
+model_client = OpenAIChatCompletionClient(
+    model="gpt-4o",
+    # api_key="YOUR_API_KEY",
+)
+
+# 定义代理可以使用的简单函数工具。
+# 在此示例中，我们使用模拟天气工具进行演示。
+async def get_weather(city: str) -> str:
+    """获取给定城市的天气。"""
+    return f"The weather in {city} is 73 degrees and Sunny."
+
+
+# 定义一个 AssistantAgent，包含模型、工具、系统消息，并启用反思功能。系统消息通过自然语言指导代理。
+agent = AssistantAgent(
+    name="weather_agent",
+    model_client=model_client,
+    tools=[get_weather],
+    system_message="You are a helpful assistant.",
+    reflect_on_tool_use=True,
+    model_client_stream=True,  # 启用从模型客户端流式传输 token。
+)
+
+
+# 运行代理并将消息流式传输到控制台。
+async def main() -> None:
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("agent_conversation") as span:
+        task = "What is the weather in New York?"
+
+        span.set_attribute("input", task) # 手动记录问题
+        res = await Console(agent.run_stream(task=task))
+
+        # 手动记录响应
+        span.set_attribute("output", res.messages[-1].content)
+
+        # 关闭与模型客户端的连接。
+        await model_client.close()
+
+
+if __name__ == "__main__":
+    setup_telemetry()
+    asyncio.run(main())
+```
+
+## 进一步改进
+
+如果您希望我们改进此集成，请在 [Github](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。

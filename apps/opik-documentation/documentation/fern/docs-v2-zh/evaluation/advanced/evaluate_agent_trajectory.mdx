@@ -1,0 +1,358 @@
+---
+headline: 评估智能体轨迹 | Opik 文档
+og:description: 评估智能体轨迹以优化工具选择和推理路径，确保智能体在部署到生产环境前具备高效行为。
+og:site_name: Opik 文档
+og:title: 有效评估智能体轨迹 - Opik
+subtitle: 评估智能体轨迹的分步指南
+title: 评估智能体轨迹
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时请务必指定 `project_name`，以确保它们与正确的项目关联。
+</Note>
+
+评估智能体不仅仅是检查最终输出。你需要评估**轨迹**——智能体为得出答案所采取的步骤，包括工具选择、推理链和中间决策。
+
+智能体轨迹评估可以帮助你发现工具选择错误、识别低效的推理路径，并在智能体部署到生产环境之前优化其行为。
+
+<Frame>
+  <img
+  src="/img/evaluation/agent_trajectory.png"
+  alt="显示多个步骤和工具调用的智能体轨迹"
+  caption="显示多个步骤和工具调用的智能体轨迹"
+  />
+</Frame>
+
+
+## 前置条件
+
+在评估智能体轨迹之前，你需要：
+
+1. **已安装并配置 Opik SDK** — 参见[快速入门](/quickstart)进行设置
+2. **已启用可观测性的智能体** — 你的智能体必须已集成 Opik 追踪功能
+3. **测试数据集** — 包含预期智能体行为的示例
+
+如果你的智能体尚未启用追踪，请参见[记录追踪](/tracing/advanced/log_traces)先添加可观测性。
+
+### 安装 Opik SDK
+
+要安装 Opik Python SDK，可以运行以下命令：
+
+```bash
+pip install opik
+```
+
+然后可以通过运行以下命令来配置 SDK：
+
+```bash
+opik configure
+```
+
+这将提示你输入 API 密钥和工作空间，如果是自托管则需要输入实例 URL。
+
+### 为智能体添加可观测性
+
+为了能够评估智能体的轨迹，你需要为智能体添加追踪功能。这将允许我们捕获智能体的轨迹并进行评估。
+
+<CodeBlocks>
+    ```python title="LangChain" language="python" {2,4,22} maxLines=25
+    from langchain.agents import create_agent
+    from opik.integrations.langchain import OpikTracer
+
+    opik_tracer = OpikTracer()
+
+    def get_weather(city: str) -> str:
+        """Get weather for a given city."""
+        return f"It's always sunny in {city}!"
+
+    agent = create_agent(
+        model="openai:gpt-4o",
+        tools=[get_weather],
+        system_prompt="You are a helpful assistant"
+    )
+
+    # Run the agent
+    agent.invoke(
+        {"messages": [{
+            "role": "user",
+            "content": "what is the weather in sf"
+        }]},
+        config={"callbacks": [opik_tracer]}
+    )
+    ```
+
+    ```python title="OpenAI" language="python" {4,5,7,24,29} maxLines=25
+    import json
+    import openai
+
+    from opik import track
+    from opik.integrations.openai import track_openai
+
+    openai_client = track_openai(openai.OpenAI())
+
+    # Define tools
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "description": "Get weather for a given city.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"city": {"type": "string"}},
+                }
+            }
+        }
+    ]
+
+    @track(type="tool")
+    def get_weather(city: str) -> str:
+        """Get weather for a given city."""
+        return f"It's always sunny in {city}!"
+
+    @track
+    def agent_with_tools(user_input: str):
+        messages = [{"role": "user", "content": user_input}]
+
+        while True:
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                tools=tools,
+                tool_choice="auto"
+            )
+
+            if response.choices[0].finish_reason == "tool_calls":
+                messages.append(response.choices[0].message)
+
+                for tool_call in response.choices[0].message.tool_calls:    
+                    tool_name = tool_call.function.name
+                    tool_args = json.loads(tool_call.function.arguments)
+                    tool_result = get_weather(tool_args["city"])
+                    user_input = f"The weather in {tool_args['city']} is {tool_result}"
+
+                    messages.append({
+                        "role": "tool",
+                        "content": tool_result,
+                        "tool_call_id": tool_call.id
+                    })
+            else:
+                break
+            
+        return messages
+    ```
+</CodeBlocks>
+
+<Tip>
+如果你使用的是特定的智能体框架，如 CrewAI、LangGraph 或 OpenAI Agents，请查看我们的[集成文档](/integrations/overview)获取框架特定的设置说明。
+</Tip>
+
+## 评估智能体轨迹
+
+为了评估智能体的轨迹，我们需要创建数据集、定义评估指标，然后运行评估。
+
+### 创建数据集
+
+我们将创建一个包含一组用户问题和智能体应该调用的预期工具的数据集：
+
+```python
+from opik import Opik
+
+client = Opik()
+dataset = client.get_or_create_dataset(name="agent_tool_selection", project_name="my-project")
+dataset.insert([
+    {
+        "input": "What is 25 * 17?",
+        "expected_tool": []
+    },
+    {
+        "input": "What is the weather in SF?",
+        "expected_tool": ["get_weather"]
+    },
+    {
+        "input": "What is the weather in NY?",
+        "expected_tool": ["get_weather"]
+    }
+])
+```
+
+<Tip>
+数据集项的格式非常灵活，你可以在每个项中包含任何字段。
+</Tip>
+
+### 定义评估指标
+
+在本任务中，我们将测量`严格工具遵循度`，该指标衡量智能体按照预期顺序使用预期工具的遵循程度。
+
+该指标的关键是使用可选的 `task_span` 参数，该参数适用于所有自定义指标，可用于访问智能体的轨迹：
+
+<CodeBlocks>
+    ```python title="严格工具遵循度指标" maxLines=1000
+    from opik.evaluation.metrics import BaseMetric, score_result
+    from opik.message_processing.emulation.models import SpanModel
+    from typing import List
+
+    class StrictToolAdherenceMetric(BaseMetric):
+        def __init__(self, name: str = "strict_tool_adherence"):
+            self.name = name
+
+        def find_tools(self, task_span):
+            """Find all tool spans in the SpanModel hierarchy."""
+            tools_used = []
+            
+            def extract_tools_from_spans(spans):
+                """Recursively extract tools from spans list."""
+                for span in spans:
+                    # Check if this span is a tool
+                    if span.type == "tool" and span.name:
+                        tools_used.append(span.name)
+                    
+                    # Recursively check nested spans
+                    if span.spans:
+                        extract_tools_from_spans(span.spans)
+            
+            # Start the recursive search from the top level spans
+            if task_span.spans:
+                extract_tools_from_spans(task_span.spans)
+            
+            return tools_used
+
+        def score(self, task_span: SpanModel,
+                  expected_tool: List[str], **kwargs):
+            # Find tool calls in trajectory
+            tool_used = self.find_tools(task_span)
+
+            if tool_used == expected_tool:
+                return score_result.ScoreResult(
+                    value=1.0,
+                    name=self.name,
+                    reason=f"Correct: used {tool_used}"
+                )
+            else:
+                return score_result.ScoreResult(
+                    value=0.0,
+                    name=self.name,
+                    reason=f"Used {tool_used}, expected {expected_tool}"
+                )
+                
+    ```
+
+    ```python title="工具遵循度指标" maxLines=1000
+    from opik.evaluation.metrics import BaseMetric, score_result
+    from opik.message_processing.emulation.models import SpanModel
+    from typing import List
+
+    class ToolAdherenceMetric(BaseMetric):
+        def __init__(self, name: str = "tool_adherence"):
+            self.name = name
+
+        def find_tools(self, task_span):
+            """Recursively find all tool spans in the SpanModel hierarchy."""
+            tools_used = []
+            
+            def extract_tools_from_spans(spans):
+                """Recursively extract tools from spans list."""
+                for span in spans:
+                    # Check if this span is a tool
+                    if span.type == "tool" and span.name:
+                        tools_used.append(span.name)
+                    
+                    # Recursively check nested spans
+                    if span.spans:
+                        extract_tools_from_spans(span.spans)
+            
+            # Start the recursive search from the task_span's spans
+            if task_span.spans:
+                extract_tools_from_spans(task_span.spans)
+            
+            return tools_used
+
+        def score(self, task_span: SpanModel,
+                  expected_tool: List[str], **kwargs):
+            # Find tool calls in trajectory
+            tool_used = self.find_tools(task_span)
+
+            if set(tool_used) == set(expected_tool):
+                return score_result.ScoreResult(
+                    value=1.0,
+                    name=self.name,
+                    reason=f"Correct: used {tool_used}"
+                )
+            else:
+                return score_result.ScoreResult(
+                    value=0.0,
+                    name=self.name,
+                    reason=f"Used {tool_used}, expected {expected_tool}"
+                )
+    ```
+</CodeBlocks>
+
+### 运行评估
+
+让我们定义评估任务，该任务将运行智能体并返回助手的响应：
+
+<CodeBlocks>
+    ```python title="LangChain" maxLines=1000
+    def evaluation_task(dataset_item: dict) -> dict:
+        res = agent.invoke(
+            {"messages": [{
+                "role": "user",
+                "content": dataset_item["input"]
+            }]},
+            config={"callbacks": [opik_tracer]}
+        )
+        
+        return {"output": res['messages'][-1].content}
+    ```
+
+    ```python title="OpenAI" maxLines=1000
+    def evaluation_task(dataset_item: dict) -> dict:
+        res = agent_with_tools(dataset_item["input"])
+        return {"output": messages[-1]['content']}
+    ```
+</CodeBlocks>
+
+现在我们有了数据集和指标，可以运行评估了：
+
+```python title="运行评估" maxLines=1000
+from opik.evaluation import evaluate
+
+# Run the evaluation
+experiment = evaluate(
+    dataset=dataset,
+    task=evaluation_task,
+    scoring_metrics=[StrictToolAdherenceMetric()],
+    project_name="my-project"
+)
+```
+
+### 分析结果
+
+Opik 实验仪表板提供了一套丰富的工具，帮助你分析轨迹评估的结果。
+
+你可以在 Opik UI 中查看评估结果：
+
+<Frame caption="显示工具选择分数的实验结果">
+    <video
+        src="/img/evaluation/agent_trajectory_4k.mp4"
+        autoPlay
+        muted
+        loop
+        preload="auto"
+        controls
+        playsInline
+        style={{ width: '100%', height: 'auto' }}
+    />
+</Frame>
+
+<Tip>
+如果你点击特定的测试用例行，可以使用 `Trace` 按钮查看智能体执行的完整轨迹。
+</Tip>
+
+## 后续步骤
+
+现在你已经可以评估智能体轨迹了：
+
+- 了解[任务跨度指标](/evaluation/metrics/task_span_metrics)以获取高级轨迹分析模式
+- 使用[智能体优化](/development/optimization-runs/overview)优化你的智能体
+- 使用[生产环境监控](/tracing/dashboards/production_monitoring)在生产环境中监控智能体

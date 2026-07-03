@@ -1,29 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ChartLine, ChartBarBig } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { CHART_TYPE } from "@/constants/chart";
 import CardSelector, { CardOption } from "@/shared/CardSelector/CardSelector";
 import CustomPentagon from "@/icons/custom-pentagon.svg?react";
-
-const ALL_OPTIONS: Record<CHART_TYPE, CardOption> = {
-  [CHART_TYPE.line]: {
-    value: CHART_TYPE.line,
-    label: "Line chart",
-    icon: <ChartLine className="size-4" />,
-    iconColor: "text-chart-blue",
-  },
-  [CHART_TYPE.bar]: {
-    value: CHART_TYPE.bar,
-    label: "Bar chart",
-    icon: <ChartBarBig className="size-4" />,
-    iconColor: "text-chart-yellow",
-  },
-  [CHART_TYPE.radar]: {
-    value: CHART_TYPE.radar,
-    label: "Radar chart",
-    icon: <CustomPentagon className="size-4" />,
-    iconColor: "text-chart-blue",
-  },
-};
 
 interface VisualizationCardSelectorProps {
   value: string;
@@ -38,6 +18,32 @@ const VisualizationCardSelector: React.FC<VisualizationCardSelectorProps> = ({
   types,
   className,
 }) => {
+  const { t } = useTranslation("dashboards");
+
+  const ALL_OPTIONS: Record<CHART_TYPE, CardOption> = useMemo(
+    () => ({
+      [CHART_TYPE.line]: {
+        value: CHART_TYPE.line,
+        label: t("visualization.lineChart"),
+        icon: <ChartLine className="size-4" />,
+        iconColor: "text-chart-blue",
+      },
+      [CHART_TYPE.bar]: {
+        value: CHART_TYPE.bar,
+        label: t("visualization.barChart"),
+        icon: <ChartBarBig className="size-4" />,
+        iconColor: "text-chart-yellow",
+      },
+      [CHART_TYPE.radar]: {
+        value: CHART_TYPE.radar,
+        label: t("visualization.radarChart"),
+        icon: <CustomPentagon className="size-4" />,
+        iconColor: "text-chart-blue",
+      },
+    }),
+    [t],
+  );
+
   const options = types.map((type) => ALL_OPTIONS[type]);
 
   return (

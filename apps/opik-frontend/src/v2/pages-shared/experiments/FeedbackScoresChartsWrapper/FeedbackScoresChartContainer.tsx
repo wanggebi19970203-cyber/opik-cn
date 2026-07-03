@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import isEmpty from "lodash/isEmpty";
 import isString from "lodash/isString";
 import uniq from "lodash/uniq";
@@ -32,6 +33,7 @@ type FeedbackScoresChartContainerProps = {
 const FeedbackScoresChartContainer: React.FC<
   FeedbackScoresChartContainerProps
 > = ({ className, chartData, chartId, chartName, subtitle }) => {
+  const { t } = useTranslation("experiments");
   const isPending = !chartData;
   const noData = useMemo(() => {
     if (isPending) return false;
@@ -158,7 +160,7 @@ const FeedbackScoresChartContainer: React.FC<
       return (
         <NoData
           className="min-h-32 text-light-slate"
-          message="No scores to show"
+          message={t("noScoresToShow")}
         />
       );
     }

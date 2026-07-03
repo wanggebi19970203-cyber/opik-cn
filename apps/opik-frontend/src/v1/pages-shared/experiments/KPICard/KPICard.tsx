@@ -1,5 +1,6 @@
 import React from "react";
 import { Clock, Coins, LucideIcon, PenLine } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import MetricComparisonCell from "@/v1/pages-shared/experiments/MetricComparisonCell/MetricComparisonCell";
 import { PercentageTrendType } from "@/shared/PercentageTrend/PercentageTrend";
@@ -20,15 +21,18 @@ export const KPICard: React.FunctionComponent<KPICardProps> = ({
   icon: Icon,
   label,
   children,
-}) => (
-  <div className="rounded-lg border bg-muted/20 p-4">
-    <div className="mb-2 flex items-center gap-2">
-      <Icon className="size-4 text-muted-slate" />
-      <span className="comet-body-s text-muted-slate">{label}</span>
+}) => {
+  const { t } = useTranslation("experiments");
+  return (
+    <div className="rounded-lg border bg-muted/20 p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <Icon className="size-4 text-muted-slate" />
+        <span className="comet-body-s text-muted-slate">{t(label)}</span>
+      </div>
+      {children}
     </div>
-    {children}
-  </div>
-);
+  );
+};
 
 type MetricKPICardProps = {
   icon: LucideIcon;
@@ -68,25 +72,28 @@ export type MetricKPICardConfig = {
 export const getMetricKPICardConfigs = (options?: {
   isTestSuite?: boolean;
   objectiveName?: string;
-}): MetricKPICardConfig[] => [
-  {
-    key: "score",
-    icon: PenLine,
-    label: getObjectiveLabel(options?.isTestSuite, options?.objectiveName),
-    formatter: formatAsPercentage,
-  },
-  {
-    key: "latency",
-    icon: Clock,
-    label: "Latency",
-    formatter: formatAsDuration,
-    trend: "inverted",
-  },
-  {
-    key: "cost",
-    icon: Coins,
-    label: "Runtime cost",
-    formatter: formatAsCurrency,
-    trend: "inverted",
-  },
-];
+}): MetricKPICardConfig[] => {
+  // Note: labels using t() must be resolved inside the component rendering these configs
+  return [
+    {
+      key: "score",
+      icon: PenLine,
+      label: getObjectiveLabel(options?.isTestSuite, options?.objectiveName),
+      formatter: formatAsPercentage,
+    },
+    {
+      key: "latency",
+      icon: Clock,
+      label: "latency", // i18n key
+      formatter: formatAsDuration,
+      trend: "inverted",
+    },
+    {
+      key: "cost",
+      icon: Coins,
+      label: "runtimeCost", // i18n key
+      formatter: formatAsCurrency,
+      trend: "inverted",
+    },
+  ];
+};

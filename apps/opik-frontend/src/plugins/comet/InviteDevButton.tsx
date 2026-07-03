@@ -1,4 +1,5 @@
 import { UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button, type ButtonProps } from "@/ui/button";
 import useInviteMembersURL from "@/plugins/comet/useInviteMembersURL";
 
@@ -8,6 +9,7 @@ export type InviteDevButtonProps = {
 };
 
 const InviteDevButton: React.FC<InviteDevButtonProps> = ({ onClick, size }) => {
+  const { t } = useTranslation();
   const inviteMembersURL = useInviteMembersURL();
 
   if (!inviteMembersURL) {
@@ -24,7 +26,7 @@ const InviteDevButton: React.FC<InviteDevButtonProps> = ({ onClick, size }) => {
     >
       <a href={inviteMembersURL} target="_blank" rel="noopener noreferrer">
         <UserPlus className="mr-2 size-4" />
-        <span>Invite a developer</span>
+        <span>{t("common.messages.inviteADeveloper")}</span>
       </a>
     </Button>
   );

@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
   hasError,
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [filterValue, setFilterValue] = useState("");
   const [openProviderMenu, setOpenProviderMenu] = useState<string | null>(null);
@@ -122,7 +124,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
             "border-destructive": hasError,
           })}
         >
-          <SelectValue placeholder="Select an LLM model">
+          <SelectValue placeholder={t('optimizations.modelSelect.placeholder')}>
             <div className="flex items-center gap-2">
               {selectedGroup && (
                 <selectedGroup.icon className="min-w-3.5 text-foreground" />
@@ -140,7 +142,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
             <Input
               ref={inputRef}
               className="outline-0"
-              placeholder="Search model"
+              placeholder={t('optimizations.modelSelect.searchPlaceholder')}
               value={filterValue}
               variant="ghost"
               onChange={(e) => setFilterValue(e.target.value)}
@@ -151,7 +153,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
           <div className="flex-1 overflow-y-auto">
             {filteredOptions.length === 0 ? (
               <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-                No search results
+                {t('optimizations.modelSelect.noSearchResults')}
               </div>
             ) : filterValue ? (
               filteredOptions.map((group) => (

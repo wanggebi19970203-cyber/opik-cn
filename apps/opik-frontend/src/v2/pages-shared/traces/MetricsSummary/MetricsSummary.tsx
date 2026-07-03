@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import { Braces, AlertTriangle, Clock, Coins, LucideIcon } from "lucide-react";
 import { ValueType } from "recharts/types/component/DefaultTooltipContent";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/date";
@@ -38,7 +39,7 @@ import { DateRangeValue } from "@/shared/DateRangeSelect";
 type MetricCardDef = {
   type: KpiMetricType;
   icon: LucideIcon;
-  label: string;
+  labelKey: string;
   formatter: (value: number) => string;
   trend: PercentageTrendType;
   deltaUnit?: DeltaUnit;
@@ -48,14 +49,14 @@ const METRIC_CARDS: MetricCardDef[] = [
   {
     type: "count",
     icon: Braces,
-    label: "",
+    labelKey: "",
     formatter: (v) => v.toLocaleString(),
     trend: "direct",
   },
   {
     type: "errors",
     icon: AlertTriangle,
-    label: "Error rate",
+    labelKey: "metrics.errorRate",
     formatter: (v: number) =>
       `${parseFloat(v < 1 ? v.toFixed(2) : v.toFixed(1))}%`,
     trend: "inverted",
@@ -64,14 +65,14 @@ const METRIC_CARDS: MetricCardDef[] = [
   {
     type: "avg_duration",
     icon: Clock,
-    label: "Avg duration",
+    labelKey: "metrics.avgDuration",
     formatter: formatDuration,
     trend: "inverted",
   },
   {
     type: "total_cost",
     icon: Coins,
-    label: "Total cost",
+    labelKey: "metrics.totalCost",
     formatter: (v) => formatCost(v, { noValue: "$0" }),
     trend: "inverted",
   },
@@ -175,16 +176,19 @@ const ChartPlaceholderBars: React.FC = () => (
   </div>
 );
 
-const ChartEmptyState: React.FC = () => (
-  <div className="relative">
-    <ChartPlaceholderBars />
-    <div className="absolute inset-0 flex items-center justify-center">
-      <span className="comet-body-s text-muted-slate">
-        No data from this period
-      </span>
+const ChartEmptyState: React.FC = () => {
+  const { t } = useTranslation("tracing");
+  return (
+    <div className="relative">
+      <ChartPlaceholderBars />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="comet-body-s text-muted-slate">
+          {t("metrics.noDataFromPeriod")}
+        </span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const REFETCH_INTERVAL = 30000;
 
@@ -233,6 +237,7 @@ const MetricsSummary: React.FC<MetricsSummaryProps> = ({
   dateRange,
   logsSource,
 }) => {
+  const { t } = useTranslation("tracing");
   const [selectedMetric, setSelectedMetric] = useState<KpiMetricType>("count");
 
   const chartIntervalConfig = useMemo(() => {
@@ -341,7 +346,7 @@ const MetricsSummary: React.FC<MetricsSummaryProps> = ({
         {filteredCards.map((card, index) => {
           const metric = metricsMap.get(card.type);
           const currentValue = metric?.current_value ?? 0;
-          const label = card.type === "count" ? countLabel : card.label;
+          const label = card.type === "count" ? countLabel : t(card.labelKey);
           const isFirst = index === 0;
           const isLast = index === filteredCards.length - 1;
 

@@ -1,0 +1,120 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## 告警
+我们推出了**告警**——一种强大的方式，当重要事件发生时（错误、反馈评分、prompt 变更等），从你的 Opik 工作区获取自动 webhook 通知。Opik 现在会向你的端点发送 HTTP POST，包含丰富的结构化事件数据，你可以将其路由到任何地方。
+
+现在，你可以让 Opik 成为端到端工作流的无缝组成部分！通过新的告警功能，你可以：
+- **近乎实时地发现生产错误**
+- **追踪反馈评分**以监控模型质量和用户满意度
+- **审计工作区中的 prompt 变更**
+- **将事件导入**你现有的工作流和 CI/CD 流水线
+
+这只是 v1.0！我们将继续添加事件和高级过滤、阈值以及更细粒度的控制，始终基于社区反馈。
+
+<Frame>
+  <img src="/img/changelog/2025-10-21/Alerts.png" alt="告警配置界面，展示 webhook 设置和事件类型" />
+</Frame>
+
+在此阅读完整文档 - [告警指南](/v1/production/alerts)
+
+
+## 扩展的多模态图像支持
+
+我们在平台上添加了更好的图像支持！
+
+### 新增内容
+
+**1. LLM as a Judge 在线评估中的图像支持** - LLM as a Judge 评估现在支持图像与文本一起使用，使你能够评估视觉模型和多模态应用。上传图像并获取关于文本和视觉内容的综合反馈。
+
+**2. 增强的 Playground 体验** - Playground 现在支持图像输入，允许你在运行完整评估之前使用图像测试 prompts。非常适合试验视觉模型和多模态 prompts。
+
+**3. 改进的数据展示** - 数据表中的 Base64 图像预览、trace 视图中更好的图像处理，以及多模态内容的增强美化格式。
+
+<Frame>
+  <img src="/img/changelog/2025-10-21/EvaluateWithImages.png" alt="LLM Judge 评估界面，展示多模态评估的图像支持" />
+</Frame>
+
+官方文档链接：[使用图像评估 traces](/v1/production/rules#evaluating-traces-with-images) 和[在 Playground 中使用图像](/v1/prompt_engineering/playground#using-images-in-the-playground)
+
+
+## Opik 优化器更新
+
+**1. 支持多指标优化** - 支持同时优化多个指标，包含全面的前端和后端变更。阅读[更多](/v1/agent_optimization/optimization/define_metrics#compose-metrics)
+
+**2. HRPO（分层反思 Prompt 优化器）** - 具有自我反思能力的新优化器。在此[了解更多](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer)
+
+
+## 增强的反馈和标注体验
+
+**1. 改进的标注队列导出** - 增强了标注队列的导出功能：无缝导出你标注的数据以进行进一步分析。
+
+**2. 标注队列用户体验增强**
+- **快捷键导航** - 改进了整个界面的键盘导航，提供快速标注体验
+- **返回标注队列按钮** - 轻松导航回标注队列
+- **恢复功能** - 从上次中断的地方继续标注工作
+- **从 Traces 创建队列** - 直接从 trace 表创建标注队列
+
+**3. 内联反馈编辑** - 使用我们的新内联编辑功能，在数据表中直接快速编辑用户反馈。悬停在反馈单元格上显示编辑选项，使标注工作流更快更直观。
+
+<Frame>
+  <img src="/img/changelog/2025-10-21/InlineUserFeedback.png" alt="内联反馈编辑界面，展示悬停触发的数据表编辑选项" />
+</Frame>
+
+阅读更多关于我们的[标注队列](/v1/evaluation/annotation_queues)
+
+## 用户体验增强
+
+**1. 深色模式优化** - 改进了 UI 组件的深色模式样式，提供更好的视觉一致性和用户体验。
+
+<Frame>
+  <img src="/img/changelog/2025-10-21/DarkMode.png" alt="深色模式界面，展示 UI 组件改进的样式和视觉一致性" />
+</Frame>
+
+**2. 增强的 Prompt 可读性** - 界面中长 prompts 的格式化和显示更好，使其更易于阅读和理解。
+
+**3. 改进的在线评估页面** - 在在线评估页面添加了搜索、过滤和排序功能，改善数据管理。
+
+**4. 更好的 token 和成本控制**
+- **对话线程成本显示** - 在对话线程侧边栏标题中显示成本信息
+- **求和统计** - 在 traces 表的成本和 token 列中显示求和统计。
+
+<Frame>
+  <img src="/img/changelog/2025-10-21/TotalCost.png" alt="总成本显示，展示对话线程侧边栏标题中的成本信息和求和统计" />
+</Frame>
+
+<Frame>
+  <img src="/img/changelog/2025-10-21/TotalDuration.png" alt="总时长显示，展示时长统计和时间信息" />
+</Frame>
+
+**5. 过滤感知的指标聚合** - 实验详情表中更好的实验项过滤，改善数据控制。
+
+**6. 美化模式增强** - 改进了输入/输出显示的美化模式，产品中具有更好的格式化和可读性。
+
+
+## TypeScript SDK 更新
+- **Opik 配置工具** - 新的 `opik-ts` 配置工具，具有引导式开发者体验和本地标志支持
+- **Prompt 管理** - 全面的 prompt 管理实现
+- **LangChain 集成** - 将 LangChain 集成与 Python 架构对齐
+
+## Python SDK 改进
+- **上下文管理器** - 用于 span 和 trace 创建的新上下文管理器
+- **Bedrock 集成** - 增强了 Bedrock 集成，支持 invoke_model
+- **Trace 更新** - 新的 `update_trace()` 方法，更方便地修改 traces
+- **并行 Agent 支持** - 在 ADK 集成中支持记录并行 Agents
+- **增强的反馈评分处理**，具有更好的类别支持
+
+## 集成更新
+**1. OpenTelemetry 改进**
+- **对话线程 ID 支持** - 在 OpenTelemetry 端点中添加了 thread_id 支持
+- **遥测中的系统信息** - 增强了遥测中的系统信息
+
+**2. 模型支持更新** - 添加了对 [Claude Haiku 4.5](https://www.anthropic.com/news/claude-haiku-4-5) 的支持，并更新了平台的模型定价信息。
+
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.8.62...1.8.83)
+
+_发布版本_: `1.8.63`, `1.8.64`, `1.8.65`, `1.8.66`, `1.8.67`, `1.8.68`, `1.8.69`, `1.8.70`, `1.8.71`, `1.8.72`, `1.8.73`, `1.8.74`, `1.8.75`, `1.8.76`, `1.8.77`, `1.8.78`, `1.8.79`, `1.8.80`, `1.8.81`, `1.8.82`, `1.8.83`

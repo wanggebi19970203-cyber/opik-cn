@@ -24,38 +24,106 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * 注解队列服务接口
+ * 提供注解队列的创建、查询、更新和删除等操作
+ */
 @ImplementedBy(AnnotationQueueServiceImpl.class)
 public interface AnnotationQueueService {
 
+    /**
+     * 创建单个注解队列
+     * @param annotationQueue 注解队列信息
+     * @return 创建的注解队列ID
+     */
     Mono<UUID> create(AnnotationQueue annotationQueue);
 
+    /**
+     * 批量创建注解队列
+     * @param batch 批量创建请求
+     * @return 成功创建的注解队列数量
+     */
     Mono<Integer> createBatch(AnnotationQueueBatch batch);
 
+    /**
+     * 根据ID查找注解队列
+     * @param id 注解队列ID
+     * @return 注解队列信息
+     */
     Mono<AnnotationQueue> findById(@NonNull UUID id);
 
+    /**
+     * 更新注解队列
+     * @param id 注解队列ID
+     * @param updateRequest 更新请求
+     * @return 更新操作的结果
+     */
     Mono<Void> update(@NonNull UUID id, @NonNull AnnotationQueueUpdate updateRequest);
 
+    /**
+     * 分页查询注解队列
+     * @param page 页码
+     * @param size 每页大小
+     * @param searchCriteria 查询条件
+     * @return 注解队列分页结果
+     */
     Mono<AnnotationQueue.AnnotationQueuePage> find(int page, int size, AnnotationQueueSearchCriteria searchCriteria);
 
+    /**
+     * 向注解队列添加项目
+     * @param queueId 注解队列ID
+     * @param itemIds 项目ID集合
+     * @return 成功添加的项目数量
+     */
     Mono<Long> addItems(UUID queueId, Set<UUID> itemIds);
 
+    /**
+     * 从注解队列移除项目
+     * @param queueId 注解队列ID
+     * @param itemIds 项目ID集合
+     * @return 成功移除的项目数量
+     */
     Mono<Long> removeItems(UUID queueId, Set<UUID> itemIds);
 
+    /**
+     * 批量删除注解队列
+     * @param ids 注解队列ID集合
+     * @return 成功删除的注解队列数量
+     */
     Mono<Long> deleteBatch(Set<UUID> ids);
 
+    /**
+     * 尝试锁定注解队列中的项目
+     * @param queueId 注解队列ID
+     * @param itemId 项目ID
+     * @return 锁定响应
+     */
     Mono<LockResponse> tryLockItem(UUID queueId, UUID itemId);
 }
 
+/**
+ * 注解队列服务实现类
+ * 实现注解队列的CRUD操作、批量处理和项目锁定功能
+ */
 @Singleton
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Slf4j
 class AnnotationQueueServiceImpl implements AnnotationQueueService {
 
+    /** 注解队列数据访问对象 */
     private final @NonNull AnnotationQueueDAO annotationQueueDAO;
+    /** 注解队列项目锁定服务 */
     private final @NonNull AnnotationQueueItemLockService lockService;
+    /** ID生成器 */
     private final @NonNull IdGenerator idGenerator;
+    /** 项目服务 */
     private final @NonNull ProjectService projectService;
 
+    /**
+     * 创建单个注解队列
+     * @param annotationQueue 注解队列信息
+     * @return 创建的注解队列ID
+     */
     @Override
     public Mono<UUID> create(AnnotationQueue annotationQueue) {
         annotationQueue = prepareAnnotationQueue(annotationQueue);
@@ -65,12 +133,17 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
+    /**
+     * 批量创建注解队列
+     * @param batch 批量创建请求
+     * @return 成功创建的注解队列数量
+     */
     @Override
     @WithSpan
     public Mono<Integer> createBatch(@NonNull AnnotationQueueBatch batch) {
-        log.info("Creating annotation queue batch with '{}' items", batch.annotationQueues().size());
+        log.info("创建包含 '{}' 个项目的注解队列批次", batch.annotationQueues().size());
 
-        // Generate IDs and prepare annotation queues
+        // 生成ID并准备注解队列
         List<AnnotationQueue> processedQueues = batch.annotationQueues().stream()
                 .map(this::prepareAnnotationQueue)
                 .toList();
@@ -80,20 +153,31 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
+    /**
+     * 根据ID查找注解队列
+     * @param id 注解队列ID
+     * @return 注解队列信息
+     */
     @Override
     @WithSpan
     public Mono<AnnotationQueue> findById(@NonNull UUID id) {
-        log.debug("Finding annotation queue by id '{}'", id);
+        log.debug("根据ID '{}' 查找注解队列", id);
 
         return annotationQueueDAO.findById(id)
                 .switchIfEmpty(Mono.error(createNotFoundError(id)))
                 .flatMap(this::enhanceWithProjectName)
-                .doOnSuccess(queue -> log.debug("Found annotation queue with id '{}'", id))
-                .doOnError(error -> log.info("Annotation queue not found with id '{}'", id));
+                .doOnSuccess(queue -> log.debug("找到ID为 '{}' 的注解队列", id))
+                .doOnError(error -> log.info("未找到ID为 '{}' 的注解队列", id));
     }
 
+    /**
+     * 更新注解队列
+     * @param id 注解队列ID
+     * @param updateRequest 更新请求
+     * @return 更新操作的结果
+     */
     public Mono<Void> update(@NonNull UUID id, @NonNull AnnotationQueueUpdate updateRequest) {
-        log.info("Updating annotation queue with id '{}'", id);
+        log.info("更新ID为 '{}' 的注解队列", id);
 
         return IdGenerator
                 .validateVersionAsync(id, "AnnotationQueue")
@@ -113,40 +197,59 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
                 }));
     }
 
+    /**
+     * 分页查询注解队列
+     * @param page 页码
+     * @param size 每页大小
+     * @param searchCriteria 查询条件
+     * @return 注解队列分页结果
+     */
     @Override
     @WithSpan
     public Mono<AnnotationQueue.AnnotationQueuePage> find(int page, int size,
             AnnotationQueueSearchCriteria searchCriteria) {
-        log.info("Finding annotation queues by '{}', page '{}', size '{}'", searchCriteria, page, size);
+        log.info("根据 '{}' 查询注解队列，页码 '{}'，每页大小 '{}'", searchCriteria, page, size);
 
         return annotationQueueDAO.find(page, size, searchCriteria)
                 .flatMap(this::enhancePageWithProjectNames)
-                .doOnSuccess(result -> log.debug("Found annotation queues by '{}', count '{}', page '{}', size '{}'",
+                .doOnSuccess(result -> log.debug("根据 '{}' 查询注解队列，数量 '{}'，页码 '{}'，每页大小 '{}'",
                         searchCriteria, result.content().size(), page, size))
-                .doOnError(error -> log.info("Failed to find annotation queues by '{}'", searchCriteria, error));
+                .doOnError(error -> log.info("根据 '{}' 查询注解队列失败", searchCriteria, error));
     }
 
+    /**
+     * 向注解队列添加项目
+     * @param queueId 注解队列ID
+     * @param itemIds 项目ID集合
+     * @return 成功添加的项目数量
+     */
     @WithSpan
     @Override
     public Mono<Long> addItems(@NonNull UUID queueId, @NonNull Set<UUID> itemIds) {
         if (itemIds.isEmpty()) {
-            log.debug("Item ids list is empty, returning");
+            log.debug("项目ID列表为空，直接返回");
             return Mono.just(0L);
         }
 
         return annotationQueueDAO.findQueueInfoById(queueId)
                 .switchIfEmpty(Mono.error(createNotFoundError(queueId)))
                 .flatMap(queue -> annotationQueueDAO.addItems(queueId, itemIds, queue.projectId()))
-                .doOnSuccess(addedCount -> log.debug("Successfully added '{}' items to annotation queue with id '{}'",
+                .doOnSuccess(addedCount -> log.debug("成功向ID为 '{}' 的注解队列添加 '{}' 个项目",
                         addedCount, queueId))
-                .doOnError(error -> log.info("Failed to add items to annotation queue with id '{}'", queueId, error));
+                .doOnError(error -> log.info("向ID为 '{}' 的注解队列添加项目失败", queueId, error));
     }
 
+    /**
+     * 从注解队列移除项目
+     * @param queueId 注解队列ID
+     * @param itemIds 项目ID集合
+     * @return 成功移除的项目数量
+     */
     @Override
     @WithSpan
     public Mono<Long> removeItems(@NonNull UUID queueId, @NonNull Set<UUID> itemIds) {
         if (itemIds.isEmpty()) {
-            log.debug("Item ids list is empty, returning");
+            log.debug("项目ID列表为空，直接返回");
             return Mono.just(0L);
         }
 
@@ -154,27 +257,38 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
                 .switchIfEmpty(Mono.error(createNotFoundError(queueId)))
                 .flatMap(queue -> annotationQueueDAO.removeItems(queueId, itemIds, queue.projectId()))
                 .doOnSuccess(removedCount -> log.debug(
-                        "Successfully removed '{}' items from annotation queue with id '{}'", removedCount, queueId))
-                .doOnError(error -> log.info("Failed to remove items from annotation queue with id '{}'", queueId,
+                        "成功从ID为 '{}' 的注解队列移除 '{}' 个项目", removedCount, queueId))
+                .doOnError(error -> log.info("从ID为 '{}' 的注解队列移除项目失败", queueId,
                         error));
     }
 
+    /**
+     * 批量删除注解队列
+     * @param ids 注解队列ID集合
+     * @return 成功删除的注解队列数量
+     */
     @Override
     @WithSpan
     public Mono<Long> deleteBatch(@NonNull Set<UUID> ids) {
         if (ids.isEmpty()) {
-            log.debug("Annotation queue ids list is empty, returning");
+            log.debug("注解队列ID列表为空，直接返回");
             return Mono.just(0L);
         }
 
-        log.info("Deleting annotation queue batch with '{}' items", ids.size());
+        log.info("删除包含 '{}' 个项目的注解队列批次", ids.size());
 
         return annotationQueueDAO.deleteBatch(ids)
                 .subscribeOn(Schedulers.boundedElastic())
-                .doOnSuccess(deletedCount -> log.debug("Successfully deleted '{}' annotation queues", deletedCount))
-                .doOnError(error -> log.info("Failed to delete annotation queue batch", error));
+                .doOnSuccess(deletedCount -> log.debug("成功删除 '{}' 个注解队列", deletedCount))
+                .doOnError(error -> log.info("删除注解队列批次失败", error));
     }
 
+    /**
+     * 尝试锁定注解队列中的项目
+     * @param queueId 注解队列ID
+     * @param itemId 项目ID
+     * @return 锁定响应
+     */
     @Override
     @WithSpan
     public Mono<LockResponse> tryLockItem(@NonNull UUID queueId, @NonNull UUID itemId) {
@@ -198,13 +312,18 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    /**
+     * 为注解队列填充项目名称
+     * @param annotationQueue 注解队列信息
+     * @return 包含项目名称的注解队列信息
+     */
     private Mono<AnnotationQueue> enhanceWithProjectName(AnnotationQueue annotationQueue) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
             List<Project> projects = projectService.findByIds(workspaceId, Set.of(annotationQueue.projectId()));
             if (projects.isEmpty()) {
-                log.warn("Project not found for annotation queue '{}' with project id '{}'",
+                log.warn("未找到注解队列 '{}' 对应的项目，项目ID '{}'",
                         annotationQueue.id(), annotationQueue.projectId());
                 return Mono.just(annotationQueue);
             }
@@ -216,6 +335,11 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    /**
+     * 为分页结果中的注解队列填充项目名称
+     * @param page 注解队列分页结果
+     * @return 包含项目名称的注解队列分页结果
+     */
     private Mono<AnnotationQueue.AnnotationQueuePage> enhancePageWithProjectNames(
             AnnotationQueue.AnnotationQueuePage page) {
         if (page.content().isEmpty()) {
@@ -225,20 +349,20 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
-            // Extract all unique project IDs
+            // 提取所有唯一的项目ID
             Set<UUID> projectIds = page.content().stream()
                     .map(AnnotationQueue::projectId)
                     .collect(Collectors.toSet());
 
-            // Create mapping from project ID to project name
+            // 创建项目ID到项目名称的映射
             Map<UUID, String> projectIdToNameMap = projectService.findIdToNameByIds(workspaceId, projectIds);
 
-            // Enhance all annotation queues with project names
+            // 为所有注解队列填充项目名称
             List<AnnotationQueue> enhancedQueues = page.content().stream()
                     .map(queue -> {
                         String projectName = projectIdToNameMap.get(queue.projectId());
                         if (projectName == null) {
-                            log.warn("Project not found for annotation queue '{}' with project id '{}'",
+                            log.warn("未找到注解队列 '{}' 对应的项目，项目ID '{}'",
                                     queue.id(), queue.projectId());
                         }
                         return queue.toBuilder()
@@ -247,18 +371,23 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
                     })
                     .toList();
 
-            // Return enhanced page
+            // 返回增强后的分页结果
             return Mono.just(page.toBuilder()
                     .content(enhancedQueues)
                     .build());
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    /**
+     * 准备注解队列数据，生成ID并设置默认值
+     * @param annotationQueue 原始注解队列信息
+     * @return 处理后的注解队列信息
+     */
     private AnnotationQueue prepareAnnotationQueue(AnnotationQueue annotationQueue) {
         UUID id = annotationQueue.id() == null ? idGenerator.generateId() : annotationQueue.id();
         IdGenerator.validateVersion(id, "AnnotationQueue");
 
-        log.debug("Preparing annotation queue with id '{}', name '{}', project '{}'",
+        log.debug("准备注解队列，ID '{}'，名称 '{}'，项目 '{}'",
                 id, annotationQueue.name(), annotationQueue.projectId());
 
         return annotationQueue.toBuilder()
@@ -270,8 +399,13 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
                 .build();
     }
 
+    /**
+     * 创建未找到异常
+     * @param id 注解队列ID
+     * @return NotFoundException 异常对象
+     */
     private NotFoundException createNotFoundError(UUID id) {
-        var message = "Annotation queue not found: '%s'".formatted(id);
+        var message = "未找到注解队列: '%s'".formatted(id);
         log.info(message);
         return new NotFoundException(message);
     }

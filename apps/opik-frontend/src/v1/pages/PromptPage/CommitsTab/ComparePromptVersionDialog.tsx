@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import last from "lodash/last";
 import first from "lodash/first";
 import isEqual from "fast-deep-equal";
+import { useTranslation } from "react-i18next";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 import TextDiff from "@/shared/CodeDiff/TextDiff";
@@ -24,6 +25,7 @@ type ComparePromptVersionDialogProps = {
 const ComparePromptVersionDialog: React.FunctionComponent<
   ComparePromptVersionDialogProps
 > = ({ open, setOpen, versions }) => {
+  const { t } = useTranslation();
   const [baseVersion, setBaseVersion] = useState<PromptVersion | undefined>(
     last(versions),
   );
@@ -203,7 +205,7 @@ const ComparePromptVersionDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[880px]">
         <DialogHeader>
-          <DialogTitle>Compare prompts</DialogTitle>
+          <DialogTitle>{t("prompt:compare.comparePrompts")}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4 pb-2">
           <div className="grid grid-cols-2 gap-4">

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCcw, Settings2 } from "lucide-react";
 
 import { Input } from "@/ui/input";
@@ -48,6 +49,8 @@ const EvaluationCriteriaSection: React.FunctionComponent<
   defaultRunsPerItem,
   defaultPassThreshold,
 }) => {
+  const { t } = useTranslation("common");
+
   const runsInput = useClampedIntegerInput({
     value: runsPerItem,
     min: 1,
@@ -72,7 +75,7 @@ const EvaluationCriteriaSection: React.FunctionComponent<
       onClick={onOpenSettings}
     >
       <Settings2 className="size-3.5 shrink-0" />
-      Manage global assertions
+      {t("shared.manageGlobalAssertions")}
     </button>
   ) : undefined;
 
@@ -96,7 +99,7 @@ const EvaluationCriteriaSection: React.FunctionComponent<
       <div className="flex items-start overflow-hidden rounded-md border">
         <div className="flex flex-1 gap-4 p-3">
           <div className="flex flex-1 flex-col gap-1">
-            <Label className="comet-body-xs-accented">Runs for this item</Label>
+            <Label className="comet-body-xs-accented">{t("shared.runsForThisItem")}</Label>
             <Input
               dimension="sm"
               className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -112,11 +115,11 @@ const EvaluationCriteriaSection: React.FunctionComponent<
               onKeyDown={runsInput.onKeyDown}
             />
             <span className="comet-body-xs text-light-slate">
-              Sets how many times this item runs.
+              {t("shared.runsForThisItemDescription")}
             </span>
           </div>
           <div className="flex flex-1 flex-col gap-1">
-            <Label className="comet-body-xs-accented">Pass threshold</Label>
+            <Label className="comet-body-xs-accented">{t("shared.passThreshold")}</Label>
             <Input
               dimension="sm"
               className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -132,15 +135,15 @@ const EvaluationCriteriaSection: React.FunctionComponent<
               onKeyDown={thresholdInput.onKeyDown}
             />
             <span className="comet-body-xs text-light-slate">
-              Define how many runs must succeed.
+              {t("shared.passThresholdDescription")}
             </span>
           </div>
         </div>
         <TooltipWrapper
           content={
             useGlobalPolicy
-              ? "Already using the suite's defaults"
-              : `Revert to suite defaults (runs: ${defaultRunsPerItem}, threshold: ${defaultPassThreshold})`
+              ? t("shared.alreadyUsingSuiteDefaults")
+              : t("shared.revertToSuiteDefaults", { runs: defaultRunsPerItem, threshold: defaultPassThreshold })
           }
         >
           <button

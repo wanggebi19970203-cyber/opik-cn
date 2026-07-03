@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ColumnData, ROW_HEIGHT } from "@/types/shared";
 import DataTableRowHeightSelector from "@/shared/DataTableRowHeightSelector/DataTableRowHeightSelector";
 import ColumnsButton from "@/shared/ColumnsButton/ColumnsButton";
@@ -28,10 +29,11 @@ const OptimizationTrialsControls: React.FC<OptimizationTrialsControlsProps> = ({
   columnsOrder,
   onColumnsOrderChange,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   return (
     <div className="flex items-center gap-2">
       <RefreshButton
-        tooltip="Refresh trials list"
+        tooltip={t("optimization.trials.refreshTooltip")}
         isFetching={isFetching}
         onRefresh={onRefresh}
       />

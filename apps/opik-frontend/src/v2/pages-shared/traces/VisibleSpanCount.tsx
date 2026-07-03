@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Span, Trace } from "@/types/traces";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -21,6 +22,7 @@ const VisibleSpanCount: React.FC<VisibleSpanCountProps> = ({
   total,
   spans,
 }) => {
+  const { t } = useTranslation("tracing");
   const [hidden] = useHideSpansPreference();
   // Count hidden over spans only — `total` excludes the trace root, so counting it here
   // (treeData includes the trace) would undercount `displayed` if a trace were ever hidden.
@@ -34,13 +36,13 @@ const VisibleSpanCount: React.FC<VisibleSpanCountProps> = ({
 
   if (displayed < total) {
     return (
-      <TooltipWrapper content={`${total} spans in total`}>
-        <span className={LABEL_CLASS}>Spans ({displayed})</span>
+      <TooltipWrapper content={t("visibleSpanCount.spansTotal", { total })}>
+        <span className={LABEL_CLASS}>{t("visibleSpanCount.spansLabel", { count: displayed })}</span>
       </TooltipWrapper>
     );
   }
 
-  return <span className={LABEL_CLASS}>Spans ({total})</span>;
+  return <span className={LABEL_CLASS}>{t("visibleSpanCount.spansLabel", { count: total })}</span>;
 };
 
 export default VisibleSpanCount;

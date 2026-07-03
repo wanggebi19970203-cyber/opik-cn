@@ -1,5 +1,6 @@
 import React from "react";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import VerticallySplitCellWrapper, {
   CustomMeta,
@@ -15,13 +16,16 @@ import {
 import { RunStatus } from "@/types/test-suites";
 import { isAggregatedItem } from "@/lib/trials";
 
-const STATUS_DISPLAY: Record<
-  RunStatus,
-  { label: string; variant: TagProps["variant"] }
-> = {
-  [RunStatus.PASSED]: { label: "Passed", variant: "green" },
-  [RunStatus.FAILED]: { label: "Failed", variant: "pink" },
-  [RunStatus.SKIPPED]: { label: "Skipped", variant: "gray" },
+const STATUS_VARIANT_MAP: Record<RunStatus, TagProps["variant"]> = {
+  [RunStatus.PASSED]: "green",
+  [RunStatus.FAILED]: "pink",
+  [RunStatus.SKIPPED]: "gray",
+};
+
+const STATUS_I18N_KEY: Record<RunStatus, string> = {
+  [RunStatus.PASSED]: "passed",
+  [RunStatus.FAILED]: "failed",
+  [RunStatus.SKIPPED]: "skipped",
 };
 
 type StatusInfo = {
@@ -124,6 +128,7 @@ const StatusTag: React.FC<StatusInfo & { tagSize?: TagProps["size"] }> = ({
   totalCount,
   tagSize = "md",
 }) => {
+  const { t } = useTranslation("experiments");
   const isMultiRun = totalCount > 1;
 
   if (!status) {
@@ -133,11 +138,11 @@ const StatusTag: React.FC<StatusInfo & { tagSize?: TagProps["size"] }> = ({
   return (
     <AssertionsBreakdownTooltip assertionsByRun={assertionsByRun}>
       <Tag
-        variant={STATUS_DISPLAY[status].variant}
+        variant={STATUS_VARIANT_MAP[status]}
         size={tagSize}
         className="cursor-default"
       >
-        {STATUS_DISPLAY[status].label}
+        {t(STATUS_I18N_KEY[status])}
         {isMultiRun && ` (${passedCount}/${totalCount})`}
       </Tag>
     </AssertionsBreakdownTooltip>

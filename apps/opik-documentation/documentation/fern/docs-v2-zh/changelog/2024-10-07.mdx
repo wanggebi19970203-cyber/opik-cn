@@ -1,0 +1,16 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 在项目页面新增 `Updated At` 列
+- 新增在 trace 页面按 token 使用量筛选的支持
+
+**SDK：**
+
+- 在会话中首次记录 trace 时，新增指向 trace 项目的链接
+- 调用 `evaluate` 方法时新增指向实验页面的链接
+- 在 `opik.Opik` 客户端和 `opik.track` 装饰器中新增 `project_name` 参数
+- 在 `evaluate` 方法中新增 `nb_samples` 参数，用于指定评估使用的样本数量
+- 发布了 LiteLLM 集成

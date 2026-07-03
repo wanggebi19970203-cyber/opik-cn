@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AxiosError, HttpStatusCode } from "axios";
 import get from "lodash/get";
+import i18next from "i18next";
 
 import { useActiveProjectId } from "@/store/AppStore";
 import useDatasetCreateMutation from "@/api/datasets/useDatasetCreateMutation";
@@ -130,9 +131,17 @@ const useDatasetForm = ({
     name.length > 0 &&
     (isEdit || hideUpload || !csvRequired || hasValidUploadFile);
 
-  const typeLabel = type === DATASET_TYPE.TEST_SUITE ? "test suite" : "dataset";
-  const title = isEdit ? "Edit" : "Create new";
-  const buttonText = isEdit ? "Update" : "Create new";
+  const t = i18next.getFixedT(null, "datasets");
+  const typeLabel =
+    type === DATASET_TYPE.TEST_SUITE
+      ? t("datasets.addEditDialog.typeLabelTestSuite")
+      : t("datasets.addEditDialog.typeLabelDataset");
+  const title = isEdit
+    ? t("datasets.addEditDialog.editTitle")
+    : t("datasets.addEditDialog.createTitle");
+  const buttonText = isEdit
+    ? t("datasets.addEditDialog.updateButton")
+    : t("datasets.addEditDialog.createButton");
 
   const fileSizeLimit = FILE_SIZE_LIMIT_IN_MB;
 
@@ -198,17 +207,23 @@ const useDatasetForm = ({
       const handlers = {
         onSuccess: () => {
           toast({
-            title: `${label} upload accepted`,
-            description: `Your ${label} file is being processed in the background. Items will appear automatically when ready. If you don't see them, try refreshing the page.`,
+            title: t("datasets.addEditDialog.uploadAccepted", {
+              format: label,
+            }),
+            description: t("datasets.addEditDialog.uploadAcceptedDescription", {
+              format: label,
+            }),
           });
         },
         onError: (error: unknown) => {
           console.error(`Error uploading ${label} file:`, error);
           toast({
-            title: `Error uploading ${label} file`,
+            title: t("datasets.addEditDialog.uploadError", { format: label }),
             description: getApiErrorMessage(
               error,
-              `Failed to upload ${label} file`,
+              t("datasets.addEditDialog.uploadErrorDescription", {
+                format: label,
+              }),
             ),
             variant: "destructive",
           });
@@ -294,12 +309,14 @@ const useDatasetForm = ({
         get(error, ["message"]);
 
       if (statusCode === HttpStatusCode.Conflict) {
-        setNameError("This name already exists");
+        setNameError(t("datasets.addEditDialog.nameAlreadyExists"));
         onNameConflict?.();
       } else {
         toast({
-          title: "Error saving",
-          description: errorMessage || `Failed to ${action}`,
+          title: t("datasets.addEditDialog.errorSaving"),
+          description:
+            errorMessage ||
+            t("datasets.addEditDialog.failedToSave", { action }),
           variant: "destructive",
         });
         setOpen(false);

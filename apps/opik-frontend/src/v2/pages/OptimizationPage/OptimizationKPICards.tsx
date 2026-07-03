@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Coins } from "lucide-react";
 
 import {
   KPICard,
   MetricKPICard,
-  getMetricKPICardConfigs,
+  useMetricKPICardConfigs,
 } from "@/v2/pages-shared/experiments/KPICard/KPICard";
 import {
   formatAsDuration,
@@ -28,6 +29,7 @@ type ElapsedDurationProps = {
 const ElapsedDuration: React.FunctionComponent<ElapsedDurationProps> = ({
   startTime,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -41,7 +43,7 @@ const ElapsedDuration: React.FunctionComponent<ElapsedDurationProps> = ({
 
   return (
     <span className="comet-body-xs text-muted-slate">
-      {formatAsDuration(elapsed)} total
+      {formatAsDuration(elapsed)} {t("optimization.kpi.total")}
     </span>
   );
 };
@@ -67,6 +69,7 @@ const OptimizationKPICards: React.FunctionComponent<
   optimizationCreatedAt,
   isInProgress,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const kpiData = useMemo(() => {
     const totalOptCost = experiments.reduce(
       (sum, e) => sum + (e.total_estimated_cost ?? 0),
@@ -93,7 +96,7 @@ const OptimizationKPICards: React.FunctionComponent<
     return new Date(optimizationCreatedAt).getTime();
   }, [optimizationCreatedAt]);
 
-  const configs = getMetricKPICardConfigs({ isTestSuite, objectiveName });
+  const configs = useMetricKPICardConfigs({ isTestSuite, objectiveName });
 
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -112,7 +115,7 @@ const OptimizationKPICards: React.FunctionComponent<
         );
       })}
 
-      <KPICard icon={Coins} label="Optimization cost">
+      <KPICard icon={Coins} label={t("optimization.kpi.optimizationCost")}>
         <div className="flex items-baseline gap-1.5">
           <span className="comet-body-s-accented">
             {kpiData.totalOptCost > 0
@@ -125,7 +128,7 @@ const OptimizationKPICards: React.FunctionComponent<
             kpiData.totalDuration != null &&
             kpiData.totalDuration > 0 && (
               <span className="comet-body-xs text-muted-slate">
-                {formatAsDuration(kpiData.totalDuration)} total
+                {formatAsDuration(kpiData.totalDuration)} {t("optimization.kpi.total")}
               </span>
             )
           )}

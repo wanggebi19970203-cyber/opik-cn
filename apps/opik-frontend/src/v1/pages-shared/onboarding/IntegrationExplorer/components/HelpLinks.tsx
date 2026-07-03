@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { cn } from "@/lib/utils";
 import { Blocks, MonitorPlay, MousePointerClick } from "lucide-react";
@@ -88,6 +89,7 @@ const InviteDevButton: React.FC = () => {
 InviteDevButton.displayName = "HelpLinks.InviteDev";
 
 const SlackButton: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Button
       className="flex-1"
@@ -98,7 +100,7 @@ const SlackButton: React.FC = () => {
     >
       <a href={SLACK_LINK} target="_blank" rel="noopener noreferrer">
         <Slack className="mr-2 size-4" />
-        <span>Get help in Slack</span>
+        <span>{t('integrationExplorer.getHelpInSlack')}</span>
       </a>
     </Button>
   );
@@ -106,6 +108,7 @@ const SlackButton: React.FC = () => {
 SlackButton.displayName = "HelpLinks.Slack";
 
 const PlaygroundButton: React.FC = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
@@ -118,7 +121,7 @@ const PlaygroundButton: React.FC = () => {
     >
       <Link to={"/$workspaceName/playground"} params={{ workspaceName }}>
         <Blocks className="mr-2 size-4" />
-        Try our Playground
+        {t('integrationExplorer.tryPlayground')}
       </Link>
     </Button>
   );
@@ -126,6 +129,7 @@ const PlaygroundButton: React.FC = () => {
 PlaygroundButton.displayName = "HelpLinks.Playground";
 
 const DemoProjectButton: React.FC = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
@@ -143,7 +147,7 @@ const DemoProjectButton: React.FC = () => {
         }}
       >
         <MousePointerClick className="mr-2 size-4" />
-        Explore our Demo project
+        {t('integrationExplorer.exploreDemoProject')}
       </Link>
     </Button>
   );
@@ -151,6 +155,7 @@ const DemoProjectButton: React.FC = () => {
 DemoProjectButton.displayName = "HelpLinks.DemoProject";
 
 const WatchTutorialButton: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Button
       className="flex-1"
@@ -161,7 +166,7 @@ const WatchTutorialButton: React.FC = () => {
     >
       <a href={VIDEO_TUTORIAL_LINK} target="_blank" rel="noopener noreferrer">
         <MonitorPlay className="mr-2 size-4" />
-        <span>Watch our tutorial</span>
+        <span>{t('integrationExplorer.watchTutorial')}</span>
       </a>
     </Button>
   );

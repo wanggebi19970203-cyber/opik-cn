@@ -1,6 +1,7 @@
 import React from "react";
 import { Alert, AlertDescription } from "@/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import InstructionsContent from "@/v1/pages-shared/annotation-queues/InstructionsContent";
 import ScoresContent from "@/v1/pages-shared/annotation-queues/ScoresContent";
@@ -9,6 +10,7 @@ import ReturnToAnnotationQueueButton from "../ReturnToAnnotationQueueButton";
 import { useSMEFlow } from "../SMEFlowContext";
 
 const GetStartedView: React.FC = () => {
+  const { t } = useTranslation("sme");
   const {
     annotationQueue,
     canStartAnnotation,
@@ -29,11 +31,10 @@ const GetStartedView: React.FC = () => {
       header={
         <>
           <h1 className="comet-title-xl mb-1">
-            Welcome to {annotationQueue?.name ?? "opik annotation"}
+            {t("getStartedView.welcomeTo", { name: annotationQueue?.name ?? "opik annotation" })}
           </h1>
           <div className="comet-body-s mt-2 text-muted-slate">
-            You&apos;ve been invited to review examples of AI responses in this
-            queue and share your feedback.
+            {t("getStartedView.invitedToReview")}
           </div>
         </>
       }
@@ -43,11 +44,11 @@ const GetStartedView: React.FC = () => {
           <div className="flex gap-2">
             {canStartAnnotation ? (
               <Button onClick={handleStartAnnotating}>
-                {processedCount > 0 ? "Resume annotating" : "Start annotating"}
+                {processedCount > 0 ? t("getStartedView.resumeAnnotating") : t("getStartedView.startAnnotating")}
               </Button>
             ) : allItemsCompleted ? (
               <Button onClick={handleReviewAnnotations}>
-                Review annotations
+                {t("getStartedView.reviewAnnotations")}
               </Button>
             ) : null}
           </div>
@@ -59,20 +60,18 @@ const GetStartedView: React.FC = () => {
           <Alert variant="destructive">
             <AlertCircle className="size-4" />
             <AlertDescription>
-              All items in this annotation queue have already been processed and
-              do not require additional annotation.
+              {t("getStartedView.allItemsProcessed")}
             </AlertDescription>
           </Alert>
         )}
         <div>
-          <h2 className="comet-title-l mb-4">Instructions</h2>
+          <h2 className="comet-title-l mb-4">{t("getStartedView.instructions")}</h2>
           <InstructionsContent annotationQueue={annotationQueue} />
         </div>
         <div>
-          <h2 className="comet-title-l mb-1">Feedback options</h2>
+          <h2 className="comet-title-l mb-1">{t("getStartedView.feedbackOptions")}</h2>
           <div className="comet-body-s mb-4 text-muted-slate">
-            Here are the types of feedback you can give when reviewing
-            responses, along with the possible values for each.
+            {t("getStartedView.feedbackOptionsDescription")}
           </div>
           <ScoresContent annotationQueue={annotationQueue} />
         </div>

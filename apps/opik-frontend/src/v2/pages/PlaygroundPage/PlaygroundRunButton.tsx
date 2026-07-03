@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Pause, Play } from "lucide-react";
 
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -20,6 +21,7 @@ const PlaygroundRunButton = ({
 }: PlaygroundRunButtonProps) => {
   const prompt = usePromptById(promptId);
   const isPromptRunning = useIsPromptRunning(promptId);
+  const { t } = useTranslation("pages/playground");
 
   const hasEmptyMessages = prompt?.messages.some(
     (m) => !m.content || m.content.length === 0,
@@ -28,10 +30,10 @@ const PlaygroundRunButton = ({
 
   let promptRunDisabledReason: string | null = null;
   if (!prompt?.model) {
-    promptRunDisabledReason = "Please select an LLM model for this prompt";
+    promptRunDisabledReason = t("playground.prompt.selectModel");
   } else if (hasEmptyMessages) {
     promptRunDisabledReason =
-      "Message is empty. Please add some text to proceed";
+      t("playground.prompt.emptyMessage");
   }
 
   return (
@@ -46,7 +48,7 @@ const PlaygroundRunButton = ({
           Stop
         </Button>
       ) : (
-        <TooltipWrapper content={promptRunDisabledReason ?? "Run this prompt"}>
+        <TooltipWrapper content={promptRunDisabledReason ?? t("playground.prompt.runTooltip")}>
           <Button
             size="2xs"
             variant="outline"

@@ -1,4 +1,5 @@
 import { KeyboardEvent, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Select,
   SelectContent,
@@ -52,13 +53,15 @@ interface DatasetVersionSelectBoxProps {
 }
 
 function DatasetEmptyState() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex min-h-[120px] flex-col items-center justify-center px-4 py-2 text-center">
       <div className="comet-body-s-accented pb-1 text-foreground">
-        No test suites available
+        {t("datasetVersionSelectBox.noTestSuitesAvailable")}
       </div>
       <div className="comet-body-s text-muted-slate">
-        Create a test suite with examples to evaluate your prompt on.
+        {t("datasetVersionSelectBox.createTestSuiteHint")}
       </div>
     </div>
   );
@@ -73,6 +76,7 @@ function DatasetVersionSelectBox({
   showClearButton = true,
   buttonClassName,
 }: DatasetVersionSelectBoxProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const resetDialogKeyRef = useRef(0);
 
@@ -176,7 +180,7 @@ function DatasetVersionSelectBox({
 
           {isEmpty ? (
             <div className="relative flex w-8 shrink-0 justify-center self-stretch rounded pt-3">
-              <TooltipWrapper content="This test suite is empty">
+              <TooltipWrapper content={t("datasetVersionSelectBox.testSuiteEmpty")}>
                 <Info className="size-3.5 text-light-slate" />
               </TooltipWrapper>
             </div>
@@ -209,7 +213,7 @@ function DatasetVersionSelectBox({
                   </div>
                 ) : versions.length === 0 ? (
                   <div className="comet-body-s flex min-w-40 items-center justify-center py-2 text-muted-slate">
-                    No versions
+                    {t("datasetVersionSelectBox.noVersions")}
                   </div>
                 ) : (
                   versions.map((version) => (
@@ -242,7 +246,7 @@ function DatasetVersionSelectBox({
       if (search) {
         return (
           <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-            No search results
+            {t("common.selectBox.noSearchResults")}
           </div>
         );
       }
@@ -257,10 +261,10 @@ function DatasetVersionSelectBox({
             <SelectSeparator />
             <div className="flex items-center justify-between border-t border-border px-4 py-2">
               <div className="comet-body-s text-light-slate">
-                Showing first {DEFAULT_LOADED_DATASETS} items.
+                {t("common.selectBox.showingFirstItems", { count: DEFAULT_LOADED_DATASETS })}
               </div>
               <Button variant="link" onClick={loadMore} type="button">
-                Load more
+                {t("common.selectBox.loadMore")}
               </Button>
             </div>
           </>
@@ -297,7 +301,7 @@ function DatasetVersionSelectBox({
           open={isSelectOpen}
           disabled={disabled}
         >
-          <TooltipWrapper content={displayValue ?? "Select a test suite"}>
+          <TooltipWrapper content={displayValue ?? t("datasetVersionSelectBox.selectTestSuite")}>
             <SelectTrigger
               className={cn(
                 "size-full w-[220px] data-[placeholder]:text-light-slate h-[32px] py-0",
@@ -312,7 +316,7 @@ function DatasetVersionSelectBox({
                   <div className="flex w-full items-center text-light-slate">
                     <Database className="mr-2 size-4" />
                     <span className="truncate font-normal">
-                      Select a test suite
+                      {t("datasetVersionSelectBox.selectTestSuite")}
                     </span>
                   </div>
                 }
@@ -342,7 +346,7 @@ function DatasetVersionSelectBox({
                 <Input
                   ref={inputRef}
                   className="outline-0"
-                  placeholder="Search test suites"
+                  placeholder={t("datasetVersionSelectBox.searchTestSuites")}
                   value={search}
                   variant="ghost"
                   onChange={(e) => setSearch(e.target.value)}
@@ -360,7 +364,7 @@ function DatasetVersionSelectBox({
                     }}
                   >
                     <Plus className="size-3.5 shrink-0" />
-                    Add new
+                    {t("common.buttons.add")}
                   </ListAction>
                 </>
               )}

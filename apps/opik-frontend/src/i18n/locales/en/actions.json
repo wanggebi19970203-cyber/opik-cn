@@ -1,0 +1,90 @@
+{
+  "actions": {
+    "create": {
+      "project": "Create project",
+      "dataset": "Create dataset",
+      "experiment": "Create experiment",
+      "prompt": "Create prompt",
+      "testSuite": "Create test suite",
+      "view": "Create view",
+      "dashboard": "Create dashboard",
+      "alert": "Create alert",
+      "rule": "Create rule",
+      "queue": "Create annotation queue"
+    },
+    "delete": {
+      "project": "Delete project",
+      "projects": "Delete projects",
+      "dataset": "Delete dataset",
+      "experiment": "Delete experiment",
+      "prompt": "Delete prompt",
+      "prompts": "Delete prompts",
+      "testSuite": "Delete test suite",
+      "view": "Delete view",
+      "optimizations": "Delete optimizations",
+      "alerts": "Delete alerts"
+    },
+    "edit": {
+      "project": "Edit project",
+      "dataset": "Edit dataset",
+      "experiment": "Edit experiment",
+      "prompt": "Edit prompt",
+      "view": "Edit view"
+    },
+    "duplicate": {
+      "view": "Duplicate view",
+      "prompt": "Duplicate prompt"
+    },
+    "compare": {
+      "experiments": "Compare experiments",
+      "prompts": "Compare prompts",
+      "commits": "Compare commits"
+    },
+    "export": {
+      "dataset": "Export dataset",
+      "traces": "Export traces",
+      "results": "Export results"
+    },
+    "import": {
+      "dataset": "Import dataset"
+    },
+    "run": {
+      "experiment": "Run experiment",
+      "evaluation": "Run evaluation",
+      "now": "Run now",
+      "again": "Re-run"
+    },
+    "annotate": {
+      "start": "Start annotating",
+      "resume": "Resume annotating"
+    },
+    "copy": {
+      "url": "Copy URL",
+      "id": "Copy ID",
+      "code": "Copy code",
+      "prompt": "Copy prompt"
+    },
+    "view": {
+      "details": "View details",
+      "logs": "View logs",
+      "history": "View history"
+    },
+    "add": {
+      "widget": "Add a widget",
+      "firstWidget": "Add your first widget",
+      "item": "Add item",
+      "items": "Add items"
+    },
+    "save": {
+      "changes": "Save changes"
+    },
+    "back": {
+      "toPrompts": "Back to prompts"
+    },
+    "clearAll": "Clear all",
+    "addFilter": "Add filter",
+    "addGroup": "Add group",
+    "exportAsCsv": "Export as CSV",
+    "exportAsJson": "Export as JSON"
+  }
+}

@@ -1,0 +1,61 @@
+---
+description: 从这里开始将 Opik 集成到您的 Dify 生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Dify | Opik 文档
+og:description: 了解如何将 Dify 与 Opik 连接，以有效监控应用性能并优化配置。
+og:site_name: Opik 文档
+og:title: 将 Dify 与 Opik 连接 - 监控您的应用
+title: 使用 Opik 实现 Dify 可观测性
+---
+
+了解如何将 Opik 与 Dify 连接，以监控应用性能。
+
+## 配置说明
+
+按照以下简单步骤将 Dify 与 Opik 连接：
+
+1. 选择您要监控的 Dify 应用
+2. 从侧边菜单中选择 **Monitoring**
+3. 点击 **Tracing app performance**
+4. 点击 Opik 旁的 **Configure**
+5. 根据您的 Opik 版本输入连接信息：
+
+<Frame>
+  <img src="/img/tracing/dify_configuration.png" />
+</Frame>
+
+<Tabs>
+<Tab value="Hosted Opik" title="托管版 Opik">
+
+填写以下字段：
+
+- **API Key**：您的 Comet API Key
+- **Project**：您偏好的项目名称（如留空将自动创建）
+- **Workspace**：您的 Comet 工作区名称（必须已存在）
+- **URL**：您的 Opik 安装 URL（确保以 `/api/` 结尾）
+
+</Tab>
+
+<Tab value="Self-Hosted Opik" title="自托管 Opik">
+
+填写以下字段：
+
+- **API Key**：留空
+- **Project**：您偏好的项目名称（如留空将自动创建）
+- **Workspace**：输入 `default`
+- **URL**：您的 Opik 安装 URL（确保以 `/api/` 结尾）
+
+</Tab>
+
+</Tabs>
+
+## 如何查看追踪数据
+
+配置完成后，您可以通过以下方式查看应用追踪数据：
+
+1. 从侧边菜单打开 **Monitoring** 部分
+2. 找到并点击右上角的 **OPIK** 按钮
+3. 选择 **View** 以打开 Opik 项目仪表盘
+
+<Frame>
+  <img src="/img/tracing/dify_view_project.png" />
+</Frame>

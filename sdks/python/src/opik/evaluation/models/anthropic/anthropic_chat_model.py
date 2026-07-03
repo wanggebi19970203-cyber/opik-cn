@@ -27,12 +27,12 @@ class AnthropicChatModel(base_model.OpikBaseModel):
         **completion_kwargs: Any,
     ) -> None:
         """
-        Initializes the Anthropic model using the native anthropic Python SDK.
+        使用原生 anthropic Python SDK 初始化 Anthropic 模型。
 
         Args:
-            model_name: The name of the model. Use "anthropic/" prefix or bare model name.
-            track: Whether to track the model calls via Opik tracing.
-            completion_kwargs: Additional arguments always passed to messages.create().
+            model_name: 模型名称。使用 "anthropic/" 前缀或裸模型名称。
+            track: 是否通过 Opik 追踪模型调用。
+            completion_kwargs: 始终传递给 messages.create() 的额外参数。
         """
         import anthropic
 
@@ -49,13 +49,11 @@ class AnthropicChatModel(base_model.OpikBaseModel):
                     self._completion_kwargs["tool_choice"]
                 )
             )
-        # The same shape mismatch can come in at construction time
-        # (`AnthropicChatModel(tools=[...])` or via the factory). The
-        # per-call path normalizes `filtered_extra["tools"]` in
-        # `_build_call_kwargs`, but `self._completion_kwargs["tools"]`
-        # gets merged in alongside it without that translation —
-        # without normalizing here, OpenAI-shape specs passed at init
-        # would still reach the Anthropic SDK unchanged.
+        # 同样的格式不匹配可能在构造时出现（`AnthropicChatModel(tools=[...])`
+        # 或通过工厂）。每次调用路径在 `_build_call_kwargs` 中规范化
+        # `filtered_extra["tools"]`，但 `self._completion_kwargs["tools"]`
+        # 会在没有该转换的情况下合并进来 —— 如果不在此规范化，初始化时传入的
+        # OpenAI 风格规范仍会原样到达 Anthropic SDK。
         if "tools" in self._completion_kwargs:
             self._completion_kwargs["tools"] = message_adapter.normalize_tools(
                 self._completion_kwargs["tools"]
@@ -90,14 +88,12 @@ class AnthropicChatModel(base_model.OpikBaseModel):
         return message["content"]
 
     def _effective_tool_names(self, call_kwargs: Dict[str, Any]) -> List[str]:
-        """Names of every tool registered for this call.
+        """本次调用注册的所有工具名称。
 
-        Mirrors the precedence of `_build_call_kwargs` (`{**self._completion_kwargs, **filtered_extra}`):
-        per-call `tools` override constructor-time `tools` rather than
-        merge. Returned names go to the response parser, so a real tool
-        call (`read` / `scan` / `search`) doesn't get misclassified as
-        the structured-output finalizer when both arrive as `tool_use`
-        blocks. Used by both the sync and async paths.
+        镜像 `_build_call_kwargs` 的优先级（`{**self._completion_kwargs, **filtered_extra}`）：
+        每次调用的 `tools` 覆盖构造时的 `tools` 而非合并。返回的名称传递给响应解析器，
+        使得真正的工具调用（`read` / `scan` / `search`）在两者同时以 `tool_use` 块
+        到达时不会被误分类为结构化输出终结器。同步和异步路径均使用。
         """
         effective_tools = call_kwargs.get("tools", self._completion_kwargs.get("tools"))
         return message_adapter.extract_tool_names(effective_tools)
@@ -223,27 +219,25 @@ class AnthropicChatModel(base_model.OpikBaseModel):
         system_text, non_system_messages = message_adapter.extract_system_messages(
             messages
         )
-        # Translate OpenAI-shape `role: "tool"` follow-ups and
-        # assistant `tool_calls` into Anthropic's content-block form
-        # before they hit the API — see `normalize_messages` for the
-        # full mapping.
+        # 在到达 API 之前，将 OpenAI 风格的 `role: "tool"` 后续消息和
+        # assistant `tool_calls` 翻译为 Anthropic 的内容块格式
+        # —— 完整映射详见 `normalize_messages`。
         non_system_messages = message_adapter.normalize_messages(non_system_messages)
 
         filtered_extra = message_adapter.filter_unsupported_params(
             extra_kwargs, self._unsupported_warned
         )
-        # OpenAI-style `tool_choice` ("auto" / "none" / "required" /
-        # `{"type": "function", ...}`) needs to be translated to the
-        # Anthropic object form — the agentic loop emits the OpenAI
-        # shape because that's the cross-provider convention.
+        # OpenAI 风格的 `tool_choice`（"auto" / "none" / "required" /
+        # `{"type": "function", ...}`）需要翻译为 Anthropic 对象形式
+        # —— agentic 循环发出 OpenAI 格式，因为这是跨提供商约定。
         if "tool_choice" in filtered_extra:
             filtered_extra["tool_choice"] = message_adapter.normalize_tool_choice(
                 filtered_extra["tool_choice"]
             )
-        # Same provider mismatch on `tools`: OpenAI wraps each spec in
-        # `{type: "function", function: {...}}`; Anthropic's newer
-        # schema requires `{type: "custom", name, description,
-        # input_schema}` and rejects the `function` discriminator.
+        # `tools` 同样存在提供商不匹配：OpenAI 将每个规范包装在
+        # `{type: "function", function: {...}}` 中；Anthropic 的新 schema
+        # 要求 `{type: "custom", name, description, input_schema}` 并拒绝
+        # `function` 鉴别器。
         if "tools" in filtered_extra:
             filtered_extra["tools"] = message_adapter.normalize_tools(
                 filtered_extra["tools"]

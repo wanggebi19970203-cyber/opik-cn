@@ -1,0 +1,101 @@
+---
+description: 从这里开始将 Opik 集成到基于 Flowise 的 GenAI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Flowise | Opik 文档
+og:description: 使用 Flowise 的拖放界面创建 AI 代理。利用 Opik 分析聊天流并有效提升用户体验。
+og:site_name: Opik 文档
+og:title: 使用 Opik 构建 AI 工作流 - Flowise
+title: 使用 Opik 实现 Flowise 可观测性
+---
+
+Flowise AI 是一个可视化 LLM 构建器，允许您通过拖放界面创建 AI 代理和工作流。通过 Opik 集成，您可以分析和排查聊天流和代理流，从而提升性能和用户体验。
+
+<Tip>
+  这是一个原生 UI 集成，直接在 Flowise AI 界面中运行。设置集成无需编写 Python 代码。
+</Tip>
+
+## 概述
+
+Flowise AI 提供了构建 AI 应用的可视化界面，Opik 集成则为您的 AI 工作流提供全面的分析和监控功能。此集成允许您直接从 Flowise AI 界面跟踪性能指标、监控用户交互并分析对话流程。
+
+## 设置说明
+
+### 1. 访问配置
+
+1. 在聊天流或代理流的右上角，点击 **Settings** > **Configuration**
+
+2. 导航到 **Analyse Chatflow** 部分
+
+   ![Flowise 分析部分](/img/tracing/flowise/analytic-2.png)
+
+3. 您将看到分析提供商列表，包括 Opik
+
+### 2. 配置 Opik 集成
+
+1. 从分析提供商列表中点击 **Opik**
+
+2. 为 Opik 创建凭据：
+
+   - **API Key**：您的 Opik API 密钥（从 Opik 工作区获取）
+   - **Workspace**：您的 Opik 工作区名称
+   - **Project**：您的 Opik 项目名称
+   - **Server URL**：您的 Opik 服务器 URL（如果使用自托管）
+
+   ![Opik 配置字段](/img/tracing/flowise/opik-1.png)
+
+3. 根据需要填写其他配置详情
+
+4. 将提供商设置为 **ON**
+
+   ![分析提供商已启用](/img/tracing/flowise/opik-2.png)
+
+   ![分析配置完成](/img/tracing/flowise/opik-3.png)
+
+### 3. 验证集成
+
+配置完成后，您可以使用 Opik UI 仪表板分析聊天流和代理流。集成将自动开始跟踪：
+
+- 用户交互
+- 代理响应
+- 性能指标
+- 错误率
+- 对话流程
+
+![Opik UI 仪表板](/img/tracing/flowise/opik-4.png)
+
+## 跟踪内容
+
+在 Flowise AI 中启用 Opik 集成后，系统会自动捕获以下数据：
+
+- **聊天流/代理流执行**：包含输入和输出的完整工作流运行
+- **用户交互**：所有用户消息和系统响应
+- **性能指标**：响应时间和执行时长
+- **错误跟踪**：执行期间的任何故障或异常
+- **对话上下文**：完整对话历史和流程状态
+
+## 在 Opik 中查看数据
+
+设置集成后，您可以在 Opik 仪表板中查看 Flowise AI 数据：
+
+1. **Traces（跟踪）**：每次聊天流或代理流执行都会创建一个跟踪
+2. **Spans（跨度）**：工作流中的各个步骤和交互
+3. **Metrics（指标）**：性能和使用统计
+4. **Feedback（反馈）**：手动标注和评估
+
+## 后续步骤
+
+设置 Flowise AI 集成后：
+
+1. **测试集成**：运行几个测试聊天流以验证数据是否被正确捕获
+2. **探索分析**：使用 Opik 仪表板分析工作流性能
+3. **设置监控**：为性能问题或错误配置告警
+4. **优化工作流**：利用洞察改进 AI 应用
+
+## 获取帮助
+
+如果您在 Flowise AI 集成中遇到问题：
+
+1. 查阅 [Opik 文档](/tracing/concepts)
+2. 查看 [Flowise AI 文档](https://docs.flowiseai.com)
+3. 联系 Opik 技术支持获取帮助
+
+Flowise AI 与 Opik 的集成为您提供强大的分析能力，帮助您高效地构建、监控和优化 AI 应用。

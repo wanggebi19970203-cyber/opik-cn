@@ -1,0 +1,126 @@
+---
+headline: 贡献概览 | Opik 文档
+og:description: 通过提交错误报告、建议功能或改进文档来为 Opik 做出贡献，共同提升项目质量。
+og:site_name: Opik 文档
+og:title: 为 Opik 做贡献 - 加入我们的开源社区
+title: 贡献概览
+---
+
+# 为 Opik 做贡献
+
+我们很高兴你有兴趣为 Opik 做出贡献！贡献的方式有很多，从编写代码到改进文档，甚至帮助我们完善开发者工具。
+
+## 如何参与
+
+<CardGroup>
+  <Card
+    title="报告问题和功能建议"
+    icon="fa-regular fa-bugs"
+    href="#提交新问题或功能请求"
+  >
+    通过提交错误报告和建议新功能来帮助我们改进。
+  </Card>
+  <Card title="贡献文档" icon="fa-regular fa-book" href="/contributing/guides/documentation">
+    改进我们的指南、教程和参考资料。
+  </Card>
+  <Card
+    title="本地开发环境搭建"
+    icon="fa-regular fa-laptop-code"
+    href="/contributing/guides/local-development"
+  >
+    使用 Docker、本地进程或手动配置搭建本地 Opik 开发环境。
+  </Card>
+  <Card title="贡献 Python SDK" icon="fa-brands fa-python" href="/contributing/guides/python-sdk">
+    增强我们的 Opik Python 库。
+  </Card>
+  <Card title="贡献 TypeScript SDK" icon="fa-brands fa-js" href="/contributing/guides/typescript-sdk">
+    帮助改进我们的 Opik TypeScript 库。
+  </Card>
+  <Card
+    title="贡献 Opik Agent 优化器"
+    icon="fa-regular fa-robot"
+    href="/contributing/guides/agent-optimizer-sdk"
+  >
+    参与我们的 Agent 优化工具开发。
+  </Card>
+  <Card title="贡献前端" icon="fa-regular fa-window-maximize" href="/contributing/guides/frontend">
+    为 Opik Web 应用开发新功能和 UI 改进。
+  </Card>
+  <Card title="贡献后端" icon="fa-regular fa-server" href="/contributing/guides/backend">
+    参与驱动 Opik 的核心 Java 服务开发。
+  </Card>
+  <Card title="参与赏金计划" icon="fa-regular fa-gem" href="/contributing/developer-programs/bounties">
+    赏金计划目前已暂停。请在此查看状态更新。
+  </Card>
+  <Card title="传播推广" icon="fa-regular fa-bullhorn">
+    分享你对 Opik 的使用体验和见解。欢迎在 [Comet Chat](https://chat.comet.com) 上告诉我们！
+  </Card>
+</CardGroup>
+
+另外，请查阅我们的[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。
+
+## 提交新问题或功能请求
+
+这是帮助我们改进 Opik 的重要方式！
+
+<AccordionGroup>
+  <Accordion title="提交新的错误报告">
+    在提交新问题之前，请先查看[现有问题](https://github.com/comet-ml/opik/issues)以避免重复。
+
+    为了帮助我们理解你遇到的问题，请提供：
+    1. 复现问题的清晰步骤。
+    2. 如适用，提供复现问题的最小代码片段。
+    这将帮助我们更快地诊断和修复问题。
+
+  </Accordion>
+  <Accordion title="提交新的功能请求">
+    欢迎提出功能请求！为了帮助我们理解你期望的功能，请提供：
+    1. 请求背后的简短动机说明。
+    2. 你期望功能的详细描述，包括相关代码片段（如适用）。
+
+    如果你有条件为该功能提交 PR，请随时发起！
+
+  </Accordion>
+</AccordionGroup>
+
+## 项目结构与架构
+
+Opik 是一个包含多个服务和 SDK 的 monorepo。常见的贡献者入口点包括：
+
+- `apps/opik-backend`：核心 Java 后端 API/服务
+- `apps/opik-frontend`：React 前端应用
+- `apps/opik-documentation`：文档网站和文档源
+- `apps/opik-guardrails-backend`、`apps/opik-python-backend`、`apps/opik-sandbox-executor-python`：辅助后端和运行时服务
+- `sdks/python`、`sdks/typescript`、`sdks/opik_optimizer`：SDK 和优化器工具
+- `tests_end_to_end`：端到端测试套件和辅助服务
+
+Opik 依赖于：ClickHouse（存储 traces、spans、feedback）、MySQL（元数据）和 Redis（缓存）。
+
+本地开发环境使用便捷脚本（Linux/Mac 使用 `./opik.sh`，Windows 使用 `.\opik.ps1`）自动管理 Docker Compose。高级用法请参阅 GitHub 上的 [deployment/docker-compose/README.md](https://github.com/comet-ml/opik/blob/main/deployment/docker-compose/README.md)。
+
+## 开发者工具与 AI 辅助
+
+为了帮助 AI 助手（如 Cursor）更好地理解我们的代码库，我们提供了上下文文件：
+
+- **通用上下文**：[`https://www.comet.com/docs/opik/llms.txt`](https://www.comet.com/docs/opik/llms.txt) - 提供适用于大多数查询的通用概览。
+- **完整上下文**：[`https://www.comet.com/docs/opik/llms-full.txt`](https://www.comet.com/docs/opik/llms-full.txt) - 提供更全面的上下文以获得深入的辅助支持。
+
+你可以将 AI 工具指向这些 URL，为它们提供关于 Opik 的相关信息。
+
+## AI 辅助贡献（强制披露）
+
+允许使用 AI 辅助和 AI 生成内容。人类作者对代码的正确性、许可合规性和安全性承担全部责任。
+
+规则：
+
+- 始终运行相关测试/linter 检查涉及的代码。
+- 始终明确说明人类/用户与产出内容的交互方式。
+- 始终检查先前的 issue、pull-request 和代码库中是否存在现有解决方案。
+- 始终处理系统生成的审查意见（Baz、Greptile）。
+- 禁止提交未经审查的 AI 输出。
+- 禁止在生成/公开内容中包含密钥、令牌、私有提示词、内部系统指令或客户敏感数据。
+- 禁止在公开 issue/PR 中披露漏洞、利用步骤或事件详情。请使用私有的维护者/安全渠道。
+- 你必须确保每个 PR 在描述中包含 AI 披露水印块：如果使用了 AI，请在 PR 描述中包含简要的 `## AI Assistance` 说明，注明工具/模型、使用范围和已确认的人工验证（如有）；如果未使用 AI，则完全省略该部分。
+
+_请查阅我们的[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)（如尚未查阅）。
+在[热门功能请求](https://github.com/comet-ml/opik/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22)上留言表达你的支持。_

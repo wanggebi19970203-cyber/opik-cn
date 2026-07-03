@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FileTerminal, TriangleAlert, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ const DatasetCsvDropzone: React.FC<DatasetCsvDropzoneProps> = ({
   onUseSdk,
   disabled = false,
 }) => {
+  const { t } = useTranslation("datasets");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   // Track the latest dropped name so we can show a chip even when the file
@@ -72,7 +74,7 @@ const DatasetCsvDropzone: React.FC<DatasetCsvDropzoneProps> = ({
             type="button"
             onClick={clearFile}
             className="shrink-0 text-light-slate hover:text-foreground"
-            aria-label="Remove file"
+            aria-label={t("csvDropzone.removeFile")}
           >
             <X className="size-3.5" />
           </button>
@@ -127,7 +129,7 @@ const DatasetCsvDropzone: React.FC<DatasetCsvDropzoneProps> = ({
       />
       <div className="flex flex-col items-center gap-1 text-center">
         <p className="comet-body-s">
-          Drop file here, or{" "}
+          {t("csvDropzone.dropFileOr")}{" "}
           <button
             type="button"
             className="text-primary hover:underline group-hover:underline"
@@ -137,11 +139,11 @@ const DatasetCsvDropzone: React.FC<DatasetCsvDropzoneProps> = ({
             }}
             disabled={disabled}
           >
-            Browse files
+            {t("csvDropzone.browseFiles")}
           </button>
         </p>
         <p className="comet-body-xs text-muted-slate">
-          CSV or JSON. Prefer to use code instead?{" "}
+          {t("csvDropzone.preferSdk")}{" "}
           <button
             type="button"
             className="underline hover:text-foreground"
@@ -150,7 +152,7 @@ const DatasetCsvDropzone: React.FC<DatasetCsvDropzoneProps> = ({
               onUseSdk();
             }}
           >
-            Use SDK
+            {t("csvDropzone.useSdk")}
           </button>
         </p>
       </div>

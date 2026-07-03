@@ -1,0 +1,210 @@
+---
+description: 从这里开始将 Opik 集成到您的 BeeAI 生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: BeeAI | Opik 文档
+og:description: 使用 BeeAI 轻量级框架简化 AI 代理开发，提供简洁的 API 和强大的工具，实现高效生产部署。
+og:site_name: Opik 文档
+og:title: 使用 Opik 轻松构建 AI 代理
+title: BeeAI (TypeScript) 的 Opik 可观测性方案
+---
+
+[BeeAI](https://beeai.dev/) 是一个代理框架，旨在简化 AI 代理的开发，专注于简洁性和性能。它提供了简洁的 API，内置工具使用、对话管理和可扩展架构支持。
+
+BeeAI 的主要优势在于其轻量级设计，使得创建和部署 AI 代理变得简单，避免了不必要的复杂性，同时保持了生产环境所需的强大功能。
+
+<Frame>
+  <img src="/img/tracing/beeai_typescript_integration.png" alt="BeeAI TypeScript 追踪" />
+</Frame>
+
+## 快速开始
+
+要将 BeeAI 集成与 Opik 配合使用，您需要安装 BeeAI 和所需的 OpenTelemetry 包。
+
+### 安装
+
+#### 方式一：使用 npm
+
+```bash
+npm install beeai-framework@0.1.13 @ai-sdk/openai @arizeai/openinference-instrumentation-beeai @opentelemetry/sdk-node dotenv
+```
+
+#### 方式二：使用 yarn
+
+```bash
+yarn add beeai-framework@0.1.13 @ai-sdk/openai @arizeai/openinference-instrumentation-beeai @opentelemetry/sdk-node dotenv
+```
+
+<Info>
+**版本兼容性**：BeeAI 检测目前支持 `beeai-framework` 0.1.13 版本。使用更新版本可能会导致兼容性问题。
+</Info>
+
+### 系统要求
+
+- Node.js ≥ 18
+- BeeAI 框架 (`beeai-framework`)
+- BeeAI 的 OpenInference 检测库 (`@arizeai/openinference-instrumentation-beeai`)
+- OpenTelemetry Node.js SDK (`@opentelemetry/sdk-node`)
+
+## 环境配置
+
+根据您的 Opik 部署方式配置环境变量：
+
+目的：
+通过 OTLP 将 BeeAI OpenInference 跨度路由到 Opik。无破坏性变更：现有的 BeeAI 配置将继续工作；这些设置仅用于向 Opik 发送追踪数据。
+
+适用场景：
+当您使用 `@arizeai/openinference-instrumentation-beeai` 运行 BeeAI (TypeScript) 时。
+
+必填字段：
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `OTEL_EXPORTER_OTLP_HEADERS`（云/企业版需要 `Authorization`、`Comet-Workspace`）
+
+可选字段：
+- `OTEL_EXPORTER_OTLP_HEADERS` 中的 `projectName`（推荐）
+- 用于采样/资源标签的其他 OpenTelemetry 环境变量
+
+最小有效输入：
+- 针对您部署模式的端点
+- 用于认证和路由的匹配头部
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        # 您的 LLM API 密钥
+        export OPENAI_API_KEY="your-openai-api-key"
+        
+        # Opik 配置
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪数据记录到特定项目，您可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            您也可以将 `Comet-Workspace` 参数更新为其他值，
+            以便将数据记录到不同的工作区。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        # 您的 LLM API 密钥
+        export OPENAI_API_KEY="your-openai-api-key"
+
+        # Opik 配置
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪数据记录到特定项目，您可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            您也可以将 `Comet-Workspace` 参数更新为其他值，
+            以便将数据记录到不同的工作区。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash
+        # 您的 LLM API 密钥
+        export OPENAI_API_KEY="your-openai-api-key"
+
+        # Opik 配置
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+    </Tab>
+
+</Tabs>
+
+## 在 BeeAI 中使用 Opik
+
+设置 BeeAI 的 OpenTelemetry 检测：
+
+```typescript
+import "dotenv/config";
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { BeeAIInstrumentation } from "@arizeai/openinference-instrumentation-beeai";
+import * as beeaiFramework from "beeai-framework";
+
+// 初始化 BeeAI 检测
+const beeAIInstrumentation = new BeeAIInstrumentation();
+
+// 配置并启动 OpenTelemetry SDK
+const sdk = new NodeSDK({
+  traceExporter: new OTLPTraceExporter(),
+  instrumentations: [beeAIInstrumentation],
+});
+sdk.start();
+
+// 手动修补 BeeAI 框架（追踪收集所需）
+beeAIInstrumentation.manuallyInstrument(beeaiFramework);
+
+// 现在可以正常使用 BeeAI
+import { ReActAgent } from "beeai-framework/agents/react";
+import { OpenAIChatModel } from "beeai-framework/adapters/openai/backend/chat";
+import { WikipediaTool } from "beeai-framework/tools/search/wikipedia";
+import { OpenMeteoTool } from "beeai-framework/tools/weather/openmeteo";
+import { TokenMemory } from "beeai-framework/memory";
+
+// 初始化 OpenAI 语言模型
+const llm = new OpenAIChatModel("gpt-5-nano", {
+  temperature: 0.7,
+});
+
+// 为代理创建工具
+const tools = [
+  new WikipediaTool(),
+  new OpenMeteoTool(),
+];
+
+// 创建带记忆功能的 ReAct 代理
+const agent = new ReActAgent({
+  llm,
+  tools,
+  memory: new TokenMemory({ llm }),
+});
+
+// 运行代理
+async function main() {
+  const response = await agent.run({
+    prompt: "I'm planning a trip to Barcelona, Spain. Can you research key attractions and landmarks I should visit, and also tell me what the current weather conditions are like there?",
+    execution: {
+      maxRetriesPerStep: 3,
+      totalMaxRetries: 10,
+      maxIterations: 5,
+    },
+  });
+  
+  console.log("Agent Response:", response.result.text);
+  return response;
+}
+
+// 运行示例
+main();
+```
+
+## 验证
+
+1. 启动应用程序并运行一次代理请求。
+2. 确认 OTLP 导出成功。
+3. 在 Opik 中验证预期工作区/项目下的追踪数据。
+
+## 参考资源
+
+- [BeeAI 框架](https://beeai.dev/)
+- [OpenInference BeeAI 检测库](https://www.npmjs.com/package/@arizeai/openinference-instrumentation-beeai)
+- [OpenTelemetry JS OTLP 导出器](https://opentelemetry.io/docs/languages/js/exporters/)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)
+
+## 改进建议
+
+如果您对 BeeAI 集成有任何疑问或改进建议，请在我们的 GitHub 仓库中[提交 issue](https://github.com/comet-ml/opik/issues/new/choose)。

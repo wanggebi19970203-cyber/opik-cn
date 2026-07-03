@@ -1,0 +1,105 @@
+{
+  "testSuiteItems": {
+    "title": "Test suite items",
+    "description": "View and manage test suite items",
+    "empty": {
+      "title": "No items yet",
+      "description": "Add items to your test suite."
+    },
+    "editTestSuite": {
+      "dialogTitle": "Edit test suite",
+      "name": "Name",
+      "namePlaceholder": "Enter test suite name",
+      "nameRequired": "Name is required",
+      "description": "Description",
+      "descriptionPlaceholder": "Dataset description",
+      "defaultRunsPerItem": "Default runs per item",
+      "defaultPassThreshold": "Default pass threshold",
+      "cancel": "Cancel",
+      "updateTestSuite": "Update test suite"
+    },
+    "addItemPanel": {
+      "addSuiteItem": "Add suite item",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes",
+      "discardChangesTitle": "Discard changes?",
+      "discardChangesDescription": "You have unsaved changes. Do you want to discard them and close?",
+      "keepEditing": "Keep editing",
+      "discardChanges": "Discard changes"
+    },
+    "itemForm": {
+      "description": "Description",
+      "describeItemPlaceholder": "Describe this item...",
+      "data": "Data",
+      "mustBeJsonObject": "Must be a JSON object",
+      "invalidJson": "Invalid JSON",
+      "runsForItem": "Runs for this item",
+      "globalDefaultIs": "Global default is {{value}}",
+      "passThreshold": "Pass threshold",
+      "manageGlobalAssertions": "Manage global assertions"
+    },
+    "itemPanel": {
+      "actionsMenu": "Actions menu",
+      "urlCopiedToClipboard": "URL successfully copied to clipboard",
+      "shareItem": "Share item",
+      "itemIdCopiedToClipboard": "Item ID successfully copied to clipboard",
+      "copyItemId": "Copy item ID",
+      "deleteItem": "Delete item",
+      "addSuiteItem": "Add suite item",
+      "suiteItem": "Suite item"
+    },
+    "page": {
+      "unsavedChanges": "Unsaved changes",
+      "unsavedDraftDescription": "You have unsaved draft changes. Are you sure you want to leave?",
+      "leaveWithoutSaving": "Leave without saving",
+      "stay": "Stay",
+      "newVersionCreated": "New version created",
+      "newVersionDescription": "Your changes have been saved as a new version. You can now use it to run experiments in the SDK or the Playground.",
+      "runExperimentSdk": "Run experiment in the SDK",
+      "runExperimentPlayground": "Run experiment in the Playground",
+      "draft": "Draft",
+      "testSuite": "Test suite",
+      "dataset": "Dataset",
+      "discardChanges": "Discard changes",
+      "discardChangesDescription": "Discarding will remove all unsaved edits to this {{type}}. This action can't be undone. Are you sure you want to want to continue?",
+      "saveChanges": "Save changes",
+      "items": "Items",
+      "versionHistory": "Version history",
+      "globalAssertion": "global assertion",
+      "globalAssertions": "global assertions",
+      "settings": "Settings"
+    },
+    "itemsTab": {
+      "saveChangesToSearch": "Save changes to search",
+      "saveChangesToFilter": "Save changes to filter",
+      "search": "Search",
+      "suiteItems": "suite items",
+      "datasetItems": "dataset items",
+      "allDeletedOnPage": "All {{itemLabel}} on this page have been deleted",
+      "noItemsYet": "There are no {{itemLabel}} yet",
+      "addSuiteItem": "Add suite item",
+      "suiteStillLoading": "Your suite is still loading",
+      "datasetStillLoading": "Your dataset is still loading",
+      "loadingDescription": "Some results or counts may update as more data becomes available. You can continue exploring while the full {{type}} loads.",
+      "suiteFullyLoaded": "Your suite fully loaded",
+      "datasetFullyLoaded": "Your dataset fully loaded",
+      "allItemsAvailable": "All items are now available.",
+      "saveChangesToNavigate": "Save changes to navigate pages",
+      "checkDocumentation": "Check our documentation"
+    },
+    "useTestSuiteDropdown": {
+      "testSuite": "test suite",
+      "dataset": "dataset",
+      "loadIntoPlayground": "Load {{type}} into playground",
+      "loadDescription": "Loading this {{type}} into the Playground will replace any unsaved changes. This action cannot be undone.",
+      "loadTestSuite": "Load test suite",
+      "loadDataset": "Load dataset",
+      "useSuite": "Use suite",
+      "useDataset": "Use dataset",
+      "openInPlayground": "Open in Playground",
+      "testPromptsOver": "Test prompts over your {{type}} and run evaluations interactively",
+      "runAnExperiment": "Run an experiment",
+      "runExperimentDescription": "Use this {{type}} to run an experiment using the Python SDK"
+    }
+  }
+}

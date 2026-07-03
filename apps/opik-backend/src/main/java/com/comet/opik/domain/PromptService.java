@@ -123,13 +123,21 @@ public interface PromptService {
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 class PromptServiceImpl implements PromptService {
 
+    /** 提示ID或名称已存在 */
     private static final String ALREADY_EXISTS = "Prompt id or name already exists";
+    /** 提示版本已存在 */
     private static final String VERSION_ALREADY_EXISTS = "Prompt version already exists";
+    /** 商业智能事件：提示版本已创建 */
     private static final String BI_EVENT_PROMPT_VERSION_CREATED = "prompt_version_created";
+    /** 提示未找到 */
     private static final String PROMPT_NOT_FOUND = "Prompt not found";
+    /** 提示版本未找到 */
     private static final String PROMPT_VERSION_NOT_FOUND = "Prompt version not found";
+    /** 提示版本锁的格式：prompt_version:工作区ID:提示ID */
     private static final String PROMPT_VERSION_LOCK = "prompt_version:%s:%s";
+    /** 蒙版版本不能设置环境 */
     private static final String MASK_ENV_NOT_ALLOWED = "environment cannot be set on a mask version";
+    /** 环境和蒙版ID互斥 */
     private static final String ENV_MASK_MUTUALLY_EXCLUSIVE = "environment and mask_id are mutually exclusive";
 
     private final @NonNull Provider<RequestContext> requestContext;
@@ -279,8 +287,8 @@ class PromptServiceImpl implements PromptService {
         Prompt prompt = findByName(workspaceId, name, projectId);
 
         if (prompt != null) {
-            // For existing prompts, ignore the templateStructure parameter and use the existing prompt's structure.
-            // Template structure is immutable after prompt creation.
+            // 对于已存在的提示，忽略templateStructure参数，使用现有提示的结构
+            // 模板结构在提示创建后不可变
             log.debug(
                     "Prompt '{}' already exists with template_structure '{}'. Ignoring requested template_structure '{}'.",
                     name, prompt.templateStructure().getValue(),
@@ -375,7 +383,7 @@ class PromptServiceImpl implements PromptService {
             if (createPromptVersion.version().commit() != null) {
                 return handler.withError(this::newVersionConflict);
             } else {
-                // only retry if commit is not provided
+                // 仅在未提供commit时重试
                 return handler.onErrorDo(() -> {
                     var savedPromptVersion = retryableCreateVersion(workspaceId, createPromptVersion, prompt,
                             userName);
@@ -912,18 +920,18 @@ class PromptServiceImpl implements PromptService {
         log.info("Restoring prompt version with id '{}' for prompt id '{}' on workspace_id '{}'",
                 versionId, promptId, workspaceId);
 
-        // Get the version to restore
+        // 获取要恢复的版本
         PromptVersion versionToRestore = getVersionById(versionId);
 
-        // Verify the version belongs to the specified prompt
+        // 验证版本是否属于指定的提示
         if (!versionToRestore.promptId().equals(promptId)) {
             throw new NotFoundException("Prompt version not found for the specified prompt");
         }
 
-        // Get the prompt to get its name
+        // 获取提示以获取其名称
         Prompt prompt = getById(promptId);
 
-        // Create a new version with the content from the old version
+        // 使用旧版本的内容创建新版本
         UUID newVersionId = idGenerator.generateId();
         String newCommit = CommitUtils.getCommit(newVersionId);
 
@@ -934,8 +942,8 @@ class PromptServiceImpl implements PromptService {
                 .commit(newCommit)
                 .createdBy(userName)
                 .changeDescription("Restored from version " + versionRef)
-                .tags(null) // Don't propagate tags to restored version
-                .environments(null) // Don't propagate environment ownership to restored version
+                .tags(null) // 不将标签传播到恢复的版本
+                .environments(null) // 不将环境所有权传播到恢复的版本
                 .build();
 
         PromptVersion restoredVersion = withPromptVersionLock(workspaceId, promptId,

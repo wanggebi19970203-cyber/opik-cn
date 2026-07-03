@@ -1,0 +1,10 @@
+{
+  "datasetItems": {
+    "title": "Dataset items",
+    "description": "View and manage dataset items",
+    "empty": {
+      "title": "No items yet",
+      "description": "Add items to your dataset."
+    }
+  }
+}

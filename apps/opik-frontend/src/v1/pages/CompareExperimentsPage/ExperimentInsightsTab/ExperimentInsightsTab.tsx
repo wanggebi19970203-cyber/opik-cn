@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import DashboardContent from "@/v1/pages-shared/dashboards/DashboardContent/DashboardContent";
 import ShareDashboardButton from "@/v1/pages-shared/dashboards/ShareDashboardButton/ShareDashboardButton";
@@ -24,6 +25,7 @@ interface ExperimentInsightsTabProps {
 const ExperimentInsightsTab: React.FunctionComponent<
   ExperimentInsightsTabProps
 > = ({ experimentsIds }) => {
+  const { t } = useTranslation();
   const loadDashboardFromBackend = useDashboardStore(
     (state) => state.loadDashboardFromBackend,
   );
@@ -81,7 +83,7 @@ const ExperimentInsightsTab: React.FunctionComponent<
         <div className="flex shrink-0 items-center gap-2">
           <CompareExperimentsButton
             variant="outline"
-            tooltipContent="Select experiments to compare"
+            tooltipContent={t("experiments.selectExperimentsToCompare")}
           />
           <Separator orientation="vertical" className="mx-2 h-4" />
           <ShareDashboardButton />

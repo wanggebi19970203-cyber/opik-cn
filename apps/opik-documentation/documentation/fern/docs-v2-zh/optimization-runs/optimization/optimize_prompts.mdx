@@ -1,0 +1,150 @@
+---
+description: 选择合适的优化器，运行实验，发布更好的提示词。
+headline: 优化提示词 | Opik 文档
+og:description: 使用经过验证的技术增强你的提示词优化过程，实现更好的性能和效率。
+og:site_name: Opik 文档
+og:title: 使用 Opik 有效优化提示词
+title: 优化提示词
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/optimize_prompts
+---
+
+每当你需要改进提示词（单轮或智能体）并希望有一个可重复的过程而非手动调整时，使用此操作手册。
+
+## 1. 建立基线
+
+- 使用你的生产指标记录当前提示词和分数。
+- 记录至少 10 个代表性数据集行，以便优化器可以泛化。
+- 捕获延迟和 token 成本——优化不应意外地使它们退化。
+
+## 2. 选择优化器
+
+| 场景 | 推荐优化器 |
+| --- | --- |
+| 一般提示词文案编辑 | [MetaPrompt](/v1/agent_optimization/algorithms/metaprompt_optimizer) |
+| 复杂失败分析 | [HRPO](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer) |
+| 需要多样化候选方案 | [Evolutionary](/v1/agent_optimization/algorithms/evolutionary_optimizer) |
+| Few-shot 密集型提示词 | [Few-Shot Bayesian](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer) |
+| 调优采样参数 | [参数优化器](/v1/agent_optimization/algorithms/parameter_optimizer) |
+
+## 3. 配置运行
+
+```python
+from opik_optimizer import HRPO
+
+optimizer = HRPO(
+    model="openai/gpt-4o",
+    max_parallel_batches=4,
+    seed=42,
+)
+result = optimizer.optimize_prompt(
+    prompt=my_prompt,
+    dataset=my_dataset,
+    metric=answer_quality,
+    max_trials=5,
+    n_samples=50,
+)
+```
+
+- 在优化器上设置 `project_name` 以按团队或项目分组运行。
+- 从 `max_trials` = 3–5 开始。确认指标可靠后再增加。
+- 使用 `n_samples` 在早期探索期间限制成本；在推广提示词之前在完整数据集上重新运行。
+- 对于具有内部循环评估的优化器（HRPO、GEPA），设置 `n_samples_minibatch` 以保持这些步骤轻量。
+- 使用 `n_samples_strategy` 保持子采样确定性（默认：`"random_sorted"`）。
+
+### 优化工具（MCP）
+
+工具优化现在单独记录。当你想改进 MCP 工具描述而不更改提示词文本时使用它。
+
+- [优化工具（MCP）](/v1/agent_optimization/optimization/optimize_tools)
+
+### 针对提示词中的特定部分（高级）
+
+如果你需要比角色更精细的控制（例如，仅优化特定的 assistant 消息），使用 `prompt_segments` 按段 ID 提取和更新部分。
+
+意图/触发：当你需要将更改限制在确切的消息段时使用段级更新。
+
+- 必需参数：`prompt`、`dataset`、`metric`
+- 可选参数：段更新参数（`updates` 传递给 `prompt_segments.apply_segment_updates`）
+- 最小有效负载：`optimizer.optimize_prompt(prompt=updated_prompt, dataset=my_dataset, metric=answer_quality)`
+
+```python
+from opik_optimizer.utils import prompt_segments
+
+segments = prompt_segments.extract_prompt_segments(my_prompt)
+for segment in segments:
+    print(segment.segment_id, segment.role)
+
+# Update only message:1 (second message)
+updates = {"message:1": "User question: {user_query}"}
+updated_prompt = prompt_segments.apply_segment_updates(my_prompt, updates)
+
+# Use the updated prompt in optimization (the original prompt is unchanged)
+result = optimizer.optimize_prompt(
+    prompt=updated_prompt,
+    dataset=my_dataset,
+    metric=answer_quality,
+)
+```
+
+### 同时优化多个提示词
+
+你可以传递 `ChatPrompt` 对象的字典来优化协调的提示词包（例如多智能体设置或必须保持同步的 system/user 提示词对）。每个键命名一个提示词，并在优化过程中保留。
+
+```python
+from opik_optimizer import MetaPromptOptimizer, ChatPrompt
+
+prompts = {
+    "researcher": ChatPrompt(
+        name="researcher",
+        messages=[
+            {"role": "system", "content": "Gather facts and cite sources."},
+            {"role": "user", "content": "{question}"},
+        ],
+    ),
+    "synthesizer": ChatPrompt(
+        name="synthesizer",
+        messages=[
+            {"role": "system", "content": "Summarize findings clearly."},
+            {"role": "user", "content": "{question}"},
+        ],
+    ),
+}
+
+optimizer = MetaPromptOptimizer(model="openai/gpt-4o-mini", prompts_per_round=2)
+result = optimizer.optimize_prompt(
+    prompt=prompts,
+    dataset=my_dataset,
+    metric=answer_quality,
+    max_trials=3,
+)
+```
+
+`result.prompt` 返回按相同名称键控的字典，以便你可以一起更新每个智能体提示词。
+
+## 4. 评估结果
+
+- 比较 `result.score` 与 `result.initial_score` 以确保实质性改进。
+- 查看 `history` 属性了解退化原因。
+- 使用[仪表板结果](/v1/agent_optimization/optimization/dashboard_results)可视化每个试验的性能。
+
+## 5. 安全发布
+
+<Steps>
+  <Step title="导出提示词">
+    `result.prompt` 返回表现最佳的 `ChatPrompt`。将其序列化为 JSON 并检入你的代码仓库。
+  </Step>
+  <Step title="自动化回归测试">
+    使用较小的数据集将优化器运行接入 CI，为未来的提示词编辑提供保障。
+  </Step>
+  <Step title="在生产中监控">
+    使用 Opik 追踪追踪新提示词，确认真实世界性能与实验结果匹配。
+  </Step>
+</Steps>
+
+## 相关指南
+
+- [Optimization Studio](/v1/agent_optimization/optimization_studio)
+- [定义数据集](/v1/agent_optimization/optimization/define_datasets)
+- [定义指标](/v1/agent_optimization/optimization/define_metrics)
+- [链式优化器](/v1/agent_optimization/advanced/chaining_optimizers)
+- [避免过拟合](/v1/agent_optimization/optimization/define_datasets#trainvalidation-splits) - 通过使用单独的验证数据集防止你的提示词记忆训练数据

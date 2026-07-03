@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { StringParam, useQueryParam } from "use-query-params";
 
 import useDatasetById from "@/api/datasets/useDatasetById";
@@ -60,6 +61,7 @@ import { useState } from "react";
 const POLLING_INTERVAL_MS = 3000;
 
 function DatasetItemsPage(): React.ReactElement {
+  const { t } = useTranslation("datasets");
   const datasetId = useDatasetEntityIdFromURL();
   const activeProjectId = useActiveProjectId();
 
@@ -113,11 +115,10 @@ function DatasetItemsPage(): React.ReactElement {
 
   const { DialogComponent } = useNavigationBlocker({
     condition: hasDraft,
-    title: "Unsaved changes",
-    description:
-      "You have unsaved draft changes. Are you sure you want to leave?",
-    confirmText: "Leave without saving",
-    cancelText: "Stay",
+    title: t("navigation.unsavedChanges"),
+    description: t("navigation.unsavedChangesDescription"),
+    confirmText: t("navigation.leaveWithoutSaving"),
+    cancelText: t("navigation.stay"),
   });
 
   const {
@@ -156,7 +157,7 @@ function DatasetItemsPage(): React.ReactElement {
       dataset: {
         ...dataset,
         id: datasetId,
-        tags: (dataset?.tags ?? []).filter((t) => t !== tag),
+        tags: (dataset?.tags ?? []).filter((tagItem) => tagItem !== tag),
       },
     });
   };
@@ -232,8 +233,11 @@ function DatasetItemsPage(): React.ReactElement {
       bulkAddItems(items.map((item) => buildDraftItemFromSample(item, now)));
       const plural = items.length !== 1 ? "s" : "";
       toast({
-        title: "Samples added to draft",
-        description: `${items.length} sample${plural} added to your draft changes`,
+        title: t("actionsPanel.samplesAddedToDraft"),
+        description: t("actionsPanel.samplesAddedDescription", {
+          count: items.length,
+          plural,
+        }),
       });
     },
     [bulkAddItems, toast],
@@ -294,9 +298,9 @@ function DatasetItemsPage(): React.ReactElement {
         open={discardDialogOpen}
         setOpen={setDiscardDialogOpen}
         onConfirm={handleDiscardChanges}
-        title="Discard changes"
-        description={`Discarding will remove all unsaved edits to this ${entityName}. This action can't be undone. Are you sure you want to continue?`}
-        confirmText="Discard changes"
+        title={t("discardDialog.title")}
+        description={t("discardDialog.description", { entityName })}
+        confirmText={t("discardDialog.confirmText")}
         confirmButtonVariant="destructive"
       />
       <OverrideVersionDialog
@@ -352,10 +356,10 @@ function DatasetItemsPage(): React.ReactElement {
       <Tabs value={tab ?? "items"} onValueChange={setTab}>
         <TabsList variant="segmented-primary">
           <TabsTrigger variant="segmented-primary" value="items">
-            {isTestSuite ? "Test cases" : "Records"}
+            {isTestSuite ? t("tabs.testCases") : t("tabs.records")}
           </TabsTrigger>
           <TabsTrigger variant="segmented-primary" value="version-history">
-            Version history
+            {t("tabs.versionHistory")}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="items">

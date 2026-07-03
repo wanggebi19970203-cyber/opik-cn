@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import posthog from "posthog-js";
+import i18next from "i18next";
 import { STEP_IDENTIFIERS } from "./constants";
 import useSubmitOnboardingAnswerMutation from "@/api/feedback/useSubmitOnboardingAnswerMutation";
 
@@ -19,7 +20,7 @@ const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 export const useOnboarding = () => {
   const context = useContext(OnboardingContext);
   if (!context) {
-    throw new Error("useOnboarding must be used within OnboardingProvider");
+    throw new Error(i18next.t("common.errors.useOnboardingMustBeUsedWithinProvider"));
   }
   return context;
 };
@@ -86,7 +87,7 @@ export const OnboardingProvider: React.FunctionComponent<
 
     const stepKey = STEP_IDENTIFIERS[currentStep];
 
-    submitAnswer.mutate({ answer: "Skipped", step: stepKey });
+    submitAnswer.mutate({ answer: i18next.t("common.buttons.skip"), step: stepKey });
 
     const nextStep =
       currentStep === 3

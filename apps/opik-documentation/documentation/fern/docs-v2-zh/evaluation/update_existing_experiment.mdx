@@ -1,0 +1,216 @@
+---
+headline: 重新运行现有实验 | Opik 文档
+og:description: 了解如何在 Opik 中通过更改名称、配置和分数来更新现有实验。
+og:site_name: Opik 文档
+og:title: 在 Opik 中重新运行实验：更新名称和分数
+subtitle: 指导你完成更新现有实验的过程
+title: 重新运行现有实验
+canonical-url: https://www.comet.com/docs/opik/evaluation/advanced/evaluate_your_llm
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目范围的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+你可以通过多种方式更新现有实验：
+
+1. **更新实验名称和配置** — 更改实验名称或更新其配置元数据
+2. **更新实验分数** — 为实验项添加新分数或重新计算现有分数
+
+## 更新实验名称和配置
+
+你可以从 Opik UI 和 SDK 更新实验的名称和配置。
+
+### 从 Opik UI
+
+从 UI 更新实验：
+
+1. 导航到**实验**页面
+2. 找到要更新的实验
+3. 点击实验行上的 **...** 菜单按钮
+4. 从下拉菜单中选择**编辑**
+
+<Frame>
+  <img src="/img/evaluation/edit_experiment.png" />
+</Frame>
+
+5. 更新实验名称和/或配置（JSON 格式）
+6. 点击**更新实验**保存更改
+
+<Frame>
+  <img src="/img/evaluation/edit_experiment_dialog.png" />
+</Frame>
+
+配置以 JSON 格式存储，对于跟踪模型名称、temperature、prompt 模板或与实验相关的任何其他元数据很有用。
+
+### 从 Python SDK
+
+使用 `update_experiment` 方法更新实验的名称和配置：
+
+```python
+import opik
+
+client = opik.Opik()
+
+# 更新实验名称
+client.update_experiment(
+    id="experiment-id",
+    name="Updated Experiment Name"
+)
+
+# 更新实验配置
+client.update_experiment(
+    id="experiment-id",
+    experiment_config={
+        "model": "gpt-4",
+        "temperature": 0.7,
+        "prompt_template": "Answer the following question: {question}"
+    }
+)
+
+# 同时更新名称和配置
+client.update_experiment(
+    id="experiment-id",
+    name="Updated Experiment Name",
+    experiment_config={
+        "model": "gpt-4",
+        "temperature": 0.7
+    }
+)
+```
+
+### 从 TypeScript SDK
+
+使用 `updateExperiment` 方法更新实验的名称和配置：
+
+```typescript
+import { Opik } from "opik";
+
+const opik = new Opik();
+
+// 更新实验名称
+await opik.updateExperiment("experiment-id", {
+  name: "Updated Experiment Name"
+});
+
+// 更新实验配置
+await opik.updateExperiment("experiment-id", {
+  experimentConfig: {
+    model: "gpt-4",
+    temperature: 0.7,
+    promptTemplate: "Answer the following question: {question}"
+  }
+});
+
+// 同时更新名称和配置
+await opik.updateExperiment("experiment-id", {
+  name: "Updated Experiment Name",
+  experimentConfig: {
+    model: "gpt-4",
+    temperature: 0.7
+  }
+});
+```
+
+## 更新实验分数
+
+有时你可能想用新分数更新现有实验，或更新实验的现有分数。你可以使用 [`evaluate_experiment` 函数](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/evaluate_existing.html)来完成。
+
+此函数将在现有实验项上重新运行评分指标并更新分数：
+
+```python
+from opik.evaluation import evaluate_experiment
+from opik.evaluation.metrics import Hallucination
+
+hallucination_metric = Hallucination()
+
+# 将 "my-experiment" 替换为你的实验名称，可在 Opik UI 中找到
+evaluate_experiment(experiment_name="my-experiment", scoring_metrics=[hallucination_metric])
+```
+
+<Tip>
+  `evaluate_experiment` 函数可用于更新实验的现有分数。如果你使用与现有分数同名的评分指标，分数将被新值更新。
+</Tip>
+
+<Note>
+  你还可以在使用 `experiment_scoring_functions` 参数更新实验时计算实验级聚合指标。
+  了解更多关于[实验级指标](/v1/evaluation/evaluate_your_llm#computing-experiment-level-metrics)。
+</Note>
+
+## 示例
+
+### 创建实验
+
+假设你正在构建一个聊天机器人，并想计算一组示例对话的幻觉分数。为此，你将使用 `evaluate` 函数创建第一个实验：
+
+```python
+import opik
+from opik import Opik, track
+from opik.evaluation import evaluate
+from opik.evaluation.metrics import Hallucination
+from opik.integrations.openai import track_openai
+import openai
+
+opik.configure(project_name="my-project")
+
+# 定义要评估的任务
+openai_client = track_openai(openai.OpenAI())
+
+MODEL = "gpt-3.5-turbo"
+
+@track
+def your_llm_application(input: str) -> str:
+    response = openai_client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": input}],
+    )
+
+    return response.choices[0].message.content
+
+# 定义评估任务
+def evaluation_task(x):
+    return {
+        "output": your_llm_application(x['input'])
+    }
+
+# 创建简单数据集
+client = Opik()
+dataset = client.get_or_create_dataset(name="Existing experiment dataset", project_name="my-project")
+dataset.insert([
+    {"input": "What is the capital of France?"},
+    {"input": "What is the capital of Germany?"},
+])
+
+# 定义指标
+hallucination_metric = Hallucination()
+
+
+evaluation = evaluate(
+    experiment_name="Existing experiment example",
+    dataset=dataset,
+    task=evaluation_task,
+    scoring_metrics=[hallucination_metric],
+    project_name="my-project",
+    experiment_config={
+        "model": MODEL
+    }
+)
+
+experiment_name = evaluation.experiment_name
+print(f"Experiment name: {experiment_name}")
+```
+
+<Tip>在我们的 [LLM 评估指南](/v1/evaluation/evaluate_your_llm)中了解更多关于 `evaluate` 函数。</Tip>
+
+### 更新实验
+
+创建第一个实验后，你意识到还想计算每个示例的审核分数。你可以用新的评分指标重新运行实验，但这意味着重新运行输出。相反，你可以用新的评分指标简单地更新实验：
+
+```python
+from opik.evaluation import evaluate_experiment
+from opik.evaluation.metrics import Moderation
+
+moderation_metric = Moderation()
+
+evaluate_experiment(experiment_name="already_existing_experiment", scoring_metrics=[moderation_metric])
+```

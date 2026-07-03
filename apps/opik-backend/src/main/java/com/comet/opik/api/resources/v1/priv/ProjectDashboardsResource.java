@@ -43,7 +43,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project related resources")
+@Tag(name = "Projects", description = "项目相关资源")
 public class ProjectDashboardsResource {
 
     private final @NonNull DashboardService service;
@@ -52,8 +52,8 @@ public class ProjectDashboardsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @GET
-    @Operation(operationId = "findDashboardsByProject", summary = "Find dashboards by project", description = "Find dashboards scoped to a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Dashboard page", content = @Content(schema = @Schema(implementation = DashboardPage.class)))
+    @Operation(operationId = "findDashboardsByProject", summary = "按项目查找仪表盘", description = "查找指定项目下的仪表盘", responses = {
+            @ApiResponse(responseCode = "200", description = "仪表盘分页", content = @Content(schema = @Schema(implementation = DashboardPage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.DASHBOARD_VIEW)
     @JsonView(Dashboard.View.Public.class)
@@ -61,7 +61,7 @@ public class ProjectDashboardsResource {
             @PathParam("projectId") UUID projectId,
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter dashboards by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤仪表盘（部分匹配，不区分大小写）") String name,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
 

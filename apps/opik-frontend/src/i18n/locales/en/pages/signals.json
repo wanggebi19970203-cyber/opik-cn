@@ -1,0 +1,87 @@
+{
+  "signals": {
+    "title": "Signals",
+    "description": "Monitor and analyze data signals",
+    "empty": {
+      "title": "No signals yet",
+      "description": "Signals will appear here."
+    },
+    "page": {
+      "lastScan": "Last scan: {{date}}",
+      "noRunsYet": "No runs yet",
+      "runDiagnostic": "Run diagnostic",
+      "resolvedIssues": "Resolved issues",
+      "diagnostics": "Diagnostics",
+      "autoDaily": "Auto · Daily",
+      "manual": "Manual",
+      "settings": "Settings",
+      "turnOnAutoDiagnostic": "Turn on auto-diagnostic"
+    },
+    "diagnosticsSettings": {
+      "title": "Diagnostics settings",
+      "dailyDiagnosticsOn": "Daily diagnostics on",
+      "dailyDiagnosticsDescription": "Turn off to pause automated diagnostics. You can reactivate at any time.",
+      "billing": "Billing",
+      "billingDescription": "Runs on your Ollie tokens.",
+      "viewBilling": "View billing",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes"
+    },
+    "turnOnDiagnostic": {
+      "title": "Turn on daily diagnostic?",
+      "description": "First diagnostic runs now. Then every day at {{time}} — we'll review your traces and flag issues to fix. Runs on your Ollie tokens. Turn off anytime.",
+      "learnMore": "Learn more",
+      "cancel": "Cancel",
+      "runFirstDiagnostic": "Run first diagnostic"
+    },
+    "page": {
+      "lastScan": "Last scan: {{date}}",
+      "noRunsYet": "No runs yet",
+      "runDiagnostic": "Run diagnostic",
+      "resolvedIssues": "Resolved issues",
+      "diagnostics": "Diagnostics",
+      "autoDaily": "Auto \u00b7 Daily",
+      "manual": "Manual",
+      "settings": "Settings",
+      "turnOnAutoDiagnostic": "Turn on auto-diagnostic"
+    },
+    "stats": {
+      "affectedTraces": "Affected traces",
+      "openIssues": "Open issues",
+      "resolvedThisWeek": "Resolved this week"
+    },
+    "issues": {
+      "sortByLastSeen": "By last seen",
+      "sortByOccurrences": "By occurrences",
+      "sortBySeverity": "By severity",
+      "issues": "Issues",
+      "runningDiagnostic": "Running diagnostic",
+      "runningDescription": "We\u2019re analyzing your traces to detect issues. Results will update automatically \u2014 you can leave this page.",
+      "detailSubtitle": "You\u2019ll see a summary, affected traces, and Ollie\u2019s suggested fix.",
+      "issueDetailsPlaceholder": "Your issue details will appear here",
+      "runningFirstDiagnostic": "Running your first diagnostic",
+      "nothingResolvedYet": "Nothing resolved yet",
+      "nothingResolvedDescription": "Issues you resolve will show up here. You can reopen them anytime.",
+      "backToOpenIssues": "Back to open issues",
+      "allClear": "All clear",
+      "allClearDescription": "Run a new diagnostic to check for anything new.",
+      "runDiagnostic": "Run diagnostic"
+    },
+    "issueDetail": {
+      "resolve": "Resolve",
+      "reopen": "Reopen",
+      "firstSeen": "First seen",
+      "lastSeen": "Last seen",
+      "occurrences": "Occurrences",
+      "usersImpacted": "Users impacted",
+      "summary": "Summary",
+      "ollieFix": "Ollie fix",
+      "continueWithOllie": "Continue with Ollie",
+      "occurrenceOverTime": "Occurrence over time",
+      "affectedTracesSample": "Affected traces sample"
+    },
+    "occurrenceChart": {
+      "label": "Occurrences"
+    }
+  }
+}

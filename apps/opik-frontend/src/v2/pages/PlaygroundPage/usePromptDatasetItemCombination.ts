@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useCallback } from "react";
 import { LogProcessor } from "@/api/playground/createLogPlaygroundProcessor";
 import { DatasetItem } from "@/types/datasets";
@@ -63,7 +64,7 @@ const transformMessageIntoProviderMessage = (
   );
 
   if (notDefinedVariables.length > 0) {
-    throw new Error(`${notDefinedVariables.join(", ")} not defined`);
+    throw new Error(i18next.t("common.playground.variablesNotDefined", { variables: notDefinedVariables.join(", ") }));
   }
 
   // Handle content based on type

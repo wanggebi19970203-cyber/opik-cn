@@ -1,0 +1,22 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 现在可以在 Opik 主页查看项目的反馈评分
+- 在快速入门页面新增行高亮
+- 允许用户下载实验为 CSV 和 JSON 文件以进行进一步分析
+
+**Python SDK**：
+
+- 更新 `evaluate_*` 方法，使反馈评分在计算后立即记录，而非像之前那样在实验结束时记录
+- 发布了新的[有用性指标](/v1/evaluation/metrics/usefulness)
+- 当 Opik 日志记录被禁用时，不再显示关于缺少 API 密钥的警告消息
+- 新增列出工作区中数据集的方法
+- 新增列出链接到数据集的实验的方法
+
+**JS / TS SDK**：
+
+- 正式发布 SDK 的第一个版本 - 更多信息请参阅[此处](/v1/tracing/log_traces#logging-with-the-js--ts-sdk)
+- 支持使用底层 Opik 客户端和实验性装饰器记录 trace

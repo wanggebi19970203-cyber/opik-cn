@@ -19,6 +19,7 @@ import SelectBox from "@/shared/SelectBox/SelectBox";
 import { Label } from "@/ui/label";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import isNil from "lodash/isNil";
+import { useTranslation } from "react-i18next";
 
 interface AnthropicModelConfigsProps {
   configs: LLMAnthropicConfigsType;
@@ -31,6 +32,7 @@ const AnthropicModelConfigs = ({
   onChange,
   model,
 }: AnthropicModelConfigsProps) => {
+  const { t } = useTranslation();
   const showThinkingEffort = supportsAnthropicThinkingEffort(model);
   const showSamplingParams = supportsSamplingParams(model);
   const thinkingEffortOptions = getAnthropicThinkingEffortOptions(model);
@@ -89,9 +91,9 @@ const AnthropicModelConfigs = ({
               max={1}
               step={0.01}
               defaultValue={DEFAULT_ANTHROPIC_CONFIGS.TEMPERATURE}
-              label="Temperature"
+              label={t("sharedModelConfigs.temperature")}
               tooltip={
-                <PromptModelConfigsTooltipContent text="Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive. Note: Anthropic models require using either Temperature OR Top P, not both." />
+                <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.anthropicTemperatureTooltip")} />
               }
             />
           </div>
@@ -104,7 +106,7 @@ const AnthropicModelConfigs = ({
                 aria-label="Clear temperature to use Top P"
               >
                 <X className="mr-1 size-3" />
-                Clear to use Top P
+                {t("sharedModelConfigs.clearToUseTopP")}
               </Button>
             </div>
           )}
@@ -122,9 +124,9 @@ const AnthropicModelConfigs = ({
         max={64000}
         step={1}
         defaultValue={DEFAULT_ANTHROPIC_CONFIGS.MAX_COMPLETION_TOKENS}
-        label="Max output tokens"
+        label={t("sharedModelConfigs.maxOutputTokens")}
         tooltip={
-          <PromptModelConfigsTooltipContent text="The maximum number of tokens to generate shared between the prompt and completion. The exact limit varies by model. (One token is roughly 4 characters for standard English text)." />
+          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxOutputTokensTooltip")} />
         }
       />
 
@@ -142,9 +144,9 @@ const AnthropicModelConfigs = ({
               max={1}
               step={0.01}
               defaultValue={DEFAULT_ANTHROPIC_CONFIGS.TOP_P}
-              label="Top P"
+              label={t("sharedModelConfigs.topP")}
               tooltip={
-                <PromptModelConfigsTooltipContent text="Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered. Note: Anthropic models require using either Temperature OR Top P, not both." />
+                <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.anthropicTopPTooltip")} />
               }
             />
           </div>
@@ -157,7 +159,7 @@ const AnthropicModelConfigs = ({
                 aria-label="Clear Top P to use temperature"
               >
                 <X className="mr-1 size-3" />
-                Clear to use Temperature
+                {t("sharedModelConfigs.clearToUseTemperature")}
               </Button>
             </div>
           )}
@@ -172,9 +174,9 @@ const AnthropicModelConfigs = ({
         max={10}
         step={0.1}
         defaultValue={DEFAULT_ANTHROPIC_CONFIGS.THROTTLING}
-        label="Throttling (seconds)"
+        label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text="Minimum time in seconds between consecutive requests to avoid rate limiting" />
+          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
         }
       />
 
@@ -189,9 +191,9 @@ const AnthropicModelConfigs = ({
         max={20}
         step={1}
         defaultValue={DEFAULT_ANTHROPIC_CONFIGS.MAX_CONCURRENT_REQUESTS}
-        label="Max concurrent requests"
+        label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text="Maximum number of requests that can run simultaneously. Set to 1 for sequential execution, higher values for parallel processing" />
+          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
         }
       />
 
@@ -199,9 +201,9 @@ const AnthropicModelConfigs = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Label htmlFor="thinkingEffort" className="text-sm font-medium">
-              Thinking effort
+              {t("anthropicModelConfigs.thinkingEffort")}
             </Label>
-            <ExplainerIcon description="Controls how much effort Claude puts into thinking before responding. Higher effort produces more thorough analysis but takes longer. Uses adaptive thinking mode." />
+            <ExplainerIcon description={t("anthropicModelConfigs.thinkingEffortDescription")} />
           </div>
           <SelectBox
             id="thinkingEffort"
@@ -210,7 +212,7 @@ const AnthropicModelConfigs = ({
               onChange({ thinkingEffort: value })
             }
             options={thinkingEffortOptions}
-            placeholder="Select thinking effort"
+            placeholder={t("anthropicModelConfigs.selectThinkingEffort")}
           />
         </div>
       )}

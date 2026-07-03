@@ -8,7 +8,7 @@ const ExperimentsPageGuard = () => {
 
   return (
     <NoAccessPageGuard
-      resourceName="experiments"
+      resourceNameKey="navigation.noAccess.resourceExperiments"
       canViewPage={canViewExperiments}
     />
   );

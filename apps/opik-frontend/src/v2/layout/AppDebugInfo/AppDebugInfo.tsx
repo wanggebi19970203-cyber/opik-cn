@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "@/ui/use-toast";
 import { APP_VERSION } from "@/constants/app";
@@ -12,6 +13,7 @@ import usePluginsStore from "@/store/PluginsStore";
 const DEBUGGER_MODE_KEY = "comet-debugger-mode"; // Same key used in EM for consistency
 
 const AppDebugInfo = () => {
+  const { t } = useTranslation();
   const [showAppDebugInfo, setShowAppDebugInfo] = useState(
     () => localStorage.getItem(DEBUGGER_MODE_KEY) === "true",
   );
@@ -42,12 +44,12 @@ const AppDebugInfo = () => {
             className="flex items-center gap-1"
             onClick={() => {
               copy(APP_VERSION);
-              toast({ description: "Successfully copied Opik version" });
+              toast({ description: t("navigation.debug.copiedVersion") });
             }}
           >
             <span className="comet-body-xs-accented flex items-center gap-1 truncate">
               <OpikIcon className="size-4" />
-              OPIK VERSION {APP_VERSION}
+              {t("navigation.debug.opikVersion")} {APP_VERSION}
             </span>
             <Copy className="size-3 shrink-0" />
           </div>

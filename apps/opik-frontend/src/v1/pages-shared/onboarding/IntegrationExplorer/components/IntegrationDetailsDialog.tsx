@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -32,6 +33,7 @@ type IntegrationDetailsDialogProps = {
 const IntegrationDetailsDialog: React.FunctionComponent<
   IntegrationDetailsDialogProps
 > = ({ selectedIntegration, onClose }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const apiKey = useUserApiKey();
   const variant = useFeatureFlagVariantKey("run-button-activation-test");
@@ -76,30 +78,28 @@ const IntegrationDetailsDialog: React.FunctionComponent<
       <DialogContent className="max-w-[920px] gap-2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            {selectedIntegration.title} Integration
+            {selectedIntegration.title} {t('integrationExplorer.integration')}
           </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
           <div className="comet-body-s mb-6 text-muted-slate">
-            It all starts with a trace. Follow these quick steps to log your
-            first set of LLM calls so you can use Opik to analyze them and
-            improve performance.{" "}
+            {t('integrationExplorer.detailsDescription')}{" "}
             <a
               href={selectedIntegration.docsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
             >
-              Read full guide
+              {t('integrationExplorer.readFullGuide')}
               <ExternalLink className="size-3" />
             </a>{" "}
-            in our docs.
+            {t('integrationExplorer.inOurDocs')}
           </div>
 
           <IntegrationStep
             title={`${INSTALL_OPIK_SECTION_TITLE}.`}
-            description="Install Opik from the command line using pip."
+            description={t('integrationExplorer.installOpikDescription')}
             className="mb-6"
           >
             <div className="min-h-7">
@@ -107,7 +107,7 @@ const IntegrationDetailsDialog: React.FunctionComponent<
             </div>
           </IntegrationStep>
           <IntegrationStep
-            title={`2. Run the following code to get started with ${selectedIntegration.title}`}
+            title={t('integrationExplorer.runCodeWithIntegration', { title: selectedIntegration.title })}
             className="mb-6"
           >
             {shouldShowCodeExecutor ? (
@@ -133,8 +133,8 @@ const IntegrationDetailsDialog: React.FunctionComponent<
 
           <HelpLinks
             onCloseParentDialog={onClose}
-            title="Need some help?"
-            description="Get help from your team or ours. Choose the option that works best for you."
+            title={t('integrationExplorer.needSomeHelp')}
+            description={t('integrationExplorer.needSomeHelpDescription')}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

@@ -2,6 +2,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/ui/hover-card";
 import { TraceFeedbackScore } from "@/types/traces";
 import React from "react";
 import isNumber from "lodash/isNumber";
+import { useTranslation } from "react-i18next";
 import ColoredTagNew from "../ColoredTag/ColoredTagNew";
 import { cn } from "@/lib/utils";
 import { formatScoreDisplay } from "@/lib/feedback-scores";
@@ -23,6 +24,8 @@ const FeedbackScoreHoverCard: React.FC<FeedbackScoreHoverCardProps> = ({
   children,
   hidden,
 }) => {
+  const { t } = useTranslation("common");
+
   if (hidden) return <>{children}</>;
 
   return (
@@ -48,7 +51,7 @@ const FeedbackScoreHoverCard: React.FC<FeedbackScoreHoverCardProps> = ({
               </div>
               {areAggregatedScores && (
                 <div className="comet-body-xs leading-none text-slate-400">
-                  Aggregated scores
+                  {t("feedbackScoreHoverCard.aggregatedScores")}
                 </div>
               )}
             </div>

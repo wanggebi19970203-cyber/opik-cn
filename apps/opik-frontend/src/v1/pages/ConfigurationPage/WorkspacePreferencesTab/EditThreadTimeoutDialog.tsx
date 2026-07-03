@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import {
   Dialog,
@@ -33,6 +34,7 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
   defaultValue,
   onSubmit,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -46,8 +48,8 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
     );
 
     toast({
-      title: "Thread cooldown period updated",
-      description: `Thread online scoring rules will wait ${formattedDuration} after the last activity before evaluating threads.`,
+      title: t("settings.workspacePreferences.threadTimeout.toastTitle"),
+      description: t("settings.workspacePreferences.threadTimeout.toastDescription", { duration: formattedDuration }),
       actions: [
         <ToastAction
           variant="link"
@@ -64,7 +66,7 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
             });
           }}
         >
-          Go to projects
+          {t("settings.workspacePreferences.threadTimeout.goToProjects")}
         </ToastAction>,
       ],
     });
@@ -75,12 +77,10 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle>
-            Edit thread online scoring rule cooldown period
+            {t("settings.workspacePreferences.threadTimeout.dialogTitle")}
           </DialogTitle>
           <DialogDescription>
-            Set how long to wait after the last activity in a thread before
-            running thread-level online scoring rules. This gives conversations
-            time to settle before automatic evaluation.
+            {t("settings.workspacePreferences.threadTimeout.dialogDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -92,14 +92,14 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("settings.workspacePreferences.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"
             variant="default"
             form={EDIT_THREAD_TIMEOUT_FORM_ID}
           >
-            Update cooldown period
+            {t("settings.workspacePreferences.threadTimeout.updateButton")}
           </Button>
         </DialogFooter>
       </DialogContent>

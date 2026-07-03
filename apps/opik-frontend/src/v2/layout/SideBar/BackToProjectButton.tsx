@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Undo2 } from "lucide-react";
 
 import { useActiveProjectId, useActiveWorkspaceName } from "@/store/AppStore";
@@ -14,6 +15,7 @@ interface BackToProjectButtonProps {
 const BackToProjectButton: React.FC<BackToProjectButtonProps> = ({
   expanded,
 }) => {
+  const { t } = useTranslation("navigation");
   const navigate = useNavigate();
   const workspaceName = useActiveWorkspaceName();
   const activeProjectId = useActiveProjectId();
@@ -25,12 +27,10 @@ const BackToProjectButton: React.FC<BackToProjectButtonProps> = ({
 
   const hasActiveProject = !!activeProjectId;
   const label = activeProject
-    ? `Back to ${activeProject.name}`
-    : "Back to project";
-  // When disabled, explain why via tooltip so the affordance isn't a dead-end.
-  // In collapsed mode we always want a tooltip (to surface the hidden label).
+    ? t("backToProject.backToName", { name: activeProject.name })
+    : t("backToProject.backToProject");
   const tooltipContent = !hasActiveProject
-    ? "Select a project on the Projects page"
+    ? t("backToProject.selectProjectHint")
     : !expanded
       ? label
       : null;

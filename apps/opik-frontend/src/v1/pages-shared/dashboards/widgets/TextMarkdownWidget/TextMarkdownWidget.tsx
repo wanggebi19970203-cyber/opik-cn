@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useTranslation } from "react-i18next";
 
 import DashboardWidget from "@/shared/Dashboard/DashboardWidget/DashboardWidget";
 import { useDashboardStore, selectReadOnly } from "@/store/DashboardStore";
@@ -9,6 +10,7 @@ import { DashboardWidgetComponentProps } from "@/types/dashboard";
 const TextMarkdownWidget: React.FunctionComponent<
   DashboardWidgetComponentProps
 > = ({ sectionId, widgetId, preview = false }) => {
+  const { t } = useTranslation("dashboards");
   const readOnly = useDashboardStore(selectReadOnly);
   const widget = useDashboardStore(
     useShallow((state) => {
@@ -31,8 +33,8 @@ const TextMarkdownWidget: React.FunctionComponent<
     if (!content || content.trim() === "") {
       return (
         <DashboardWidget.EmptyState
-          title="No content"
-          message="Click edit to add markdown content to this widget"
+          title={t("markdown.noContent")}
+          message={t("markdown.noContentMessage")}
         />
       );
     }

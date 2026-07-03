@@ -1,0 +1,11 @@
+{
+  "production": {
+    "title": "生产",
+    "description": "生产环境监控和管理",
+    "features": {
+      "alerts": "告警",
+      "rules": "规则",
+      "monitoring": "监控"
+    }
+  }
+}

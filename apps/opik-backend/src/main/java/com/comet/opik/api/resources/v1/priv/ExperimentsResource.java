@@ -97,7 +97,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Experiments", description = "Experiment resources")
+@Tag(name = "Experiments", description = "实验资源")
 public class ExperimentsResource {
 
     private final @NonNull ExperimentService experimentService;
@@ -114,9 +114,9 @@ public class ExperimentsResource {
     private final @NonNull ExperimentExecutionService experimentExecutionService;
 
     @GET
-    @Operation(operationId = "findExperiments", summary = "Find experiments", description = "Find experiments", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiments resource", content = @Content(schema = @Schema(implementation = Experiment.ExperimentPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findExperiments", summary = "查找实验", description = "查找实验列表", responses = {
+            @ApiResponse(responseCode = "200", description = "实验资源", content = @Content(schema = @Schema(implementation = Experiment.ExperimentPage.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.EXPERIMENT_VIEW)
     @JsonView(Experiment.View.Public.class)
@@ -126,15 +126,15 @@ public class ExperimentsResource {
             @QueryParam("datasetId") UUID datasetId,
             @QueryParam("optimization_id") UUID optimizationId,
             @QueryParam("types") String typesQueryParam,
-            @QueryParam("name") @Schema(description = "Filter experiments by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤实验（部分匹配，不区分大小写）") String name,
             @QueryParam("dataset_deleted") boolean datasetDeleted,
             @QueryParam("prompt_id") UUID promptId,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("project_deleted") boolean projectDeleted,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters,
-            @QueryParam("experiment_ids") @Schema(description = "Filter experiments by a list of experiment IDs") String experimentIds,
-            @QueryParam("force_sorting") @DefaultValue("false") @Schema(description = "Force sorting even when exceeding the endpoint result set limit. May result in slower queries") boolean forceSorting) {
+            @QueryParam("experiment_ids") @Schema(description = "按实验ID列表过滤实验") String experimentIds,
+            @QueryParam("force_sorting") @DefaultValue("false") @Schema(description = "即使超过端点结果集限制也强制排序。可能导致查询变慢") boolean forceSorting) {
 
         List<SortingField> sortingFields = sortingFactory.newSorting(sorting);
 
@@ -171,7 +171,7 @@ public class ExperimentsResource {
                 .experimentIds(experimentIdsParsed)
                 .build();
 
-        log.info("Finding experiments by '{}', page '{}', size '{}'", experimentSearchCriteria, page, size);
+        log.info("根据条件 '{}' 查找实验，页码 '{}'，每页大小 '{}'", experimentSearchCriteria, page, size);
         var experiments = experimentService.find(page, size, experimentSearchCriteria)
                 .map(experimentPage -> {
                     if (!forceSorting && metadata.cannotUseDynamicSorting()) {
@@ -181,7 +181,7 @@ public class ExperimentsResource {
                 })
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Found experiments by '{}', count '{}', page '{}', size '{}'",
+        log.info("已找到实验，条件 '{}'，数量 '{}'，页码 '{}'，每页大小 '{}'",
                 experimentSearchCriteria, experiments.size(), page, size);
 
         return Response.ok().entity(experiments).build();
@@ -189,22 +189,22 @@ public class ExperimentsResource {
 
     @GET
     @Path("/groups")
-    @Operation(operationId = "findExperimentGroups", summary = "Find experiment groups", description = "Find experiments grouped by specified fields", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiment groups", content = @Content(schema = @Schema(implementation = ExperimentGroupResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findExperimentGroups", summary = "查找实验分组", description = "按指定字段分组查找实验", responses = {
+            @ApiResponse(responseCode = "200", description = "实验分组", content = @Content(schema = @Schema(implementation = ExperimentGroupResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response findGroups(
             @QueryParam("groups") String groupsQueryParam,
             @QueryParam("types") String typesQueryParam,
-            @QueryParam("name") @Schema(description = "Filter experiments by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤实验（部分匹配，不区分大小写）") String name,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("project_deleted") Boolean projectDeleted,
             @QueryParam("filters") String filters) {
 
-        // Parse and validate groups parameter using GroupingFactory
+        // 使用GroupingFactory解析和验证groups参数
         List<GroupBy> groups = groupingFactory.newGrouping(groupsQueryParam);
 
-        // Parse optional parameters
+        // 解析可选参数
         var types = Optional.ofNullable(typesQueryParam)
                 .map(queryParam -> ParamsValidator.get(queryParam, ExperimentType.class, "types"))
                 .orElse(null);
@@ -220,33 +220,33 @@ public class ExperimentsResource {
                 .projectDeleted(projectDeleted)
                 .build();
 
-        log.info("Finding experiment groups by criteria '{}'", experimentGroupCriteria);
+        log.info("根据条件 '{}' 查找实验分组", experimentGroupCriteria);
         var groupResponse = experimentService.findGroups(experimentGroupCriteria)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Found experiment groups, total top-level groups: {}", groupResponse.content().size());
+        log.info("已找到实验分组，顶层分组总数: {}", groupResponse.content().size());
 
         return Response.ok().entity(groupResponse).build();
     }
 
     @GET
     @Path("/groups/aggregations")
-    @Operation(operationId = "findExperimentGroupsAggregations", summary = "Find experiment groups with aggregations", description = "Find experiments grouped by specified fields with aggregation metrics", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiment groups with aggregations", content = @Content(schema = @Schema(implementation = ExperimentGroupAggregationsResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findExperimentGroupsAggregations", summary = "查找带聚合的实验分组", description = "按指定字段分组查找实验并包含聚合指标", responses = {
+            @ApiResponse(responseCode = "200", description = "带聚合的实验分组", content = @Content(schema = @Schema(implementation = ExperimentGroupAggregationsResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response findGroupsAggregations(
             @QueryParam("groups") String groupsQueryParam,
             @QueryParam("types") String typesQueryParam,
-            @QueryParam("name") @Schema(description = "Filter experiments by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤实验（部分匹配，不区分大小写）") String name,
             @QueryParam("project_id") UUID projectId,
-            @QueryParam("project_deleted") @Schema(description = "Filter experiments by deleted projects") Boolean projectDeleted,
+            @QueryParam("project_deleted") @Schema(description = "按已删除项目过滤实验") Boolean projectDeleted,
             @QueryParam("filters") String filters) {
 
-        // Parse and validate groups parameter using GroupingFactory
+        // 使用GroupingFactory解析和验证groups参数
         List<GroupBy> groups = groupingFactory.newGrouping(groupsQueryParam);
 
-        // Parse optional parameters
+        // 解析可选参数
         var types = Optional.ofNullable(typesQueryParam)
                 .map(queryParam -> ParamsValidator.get(queryParam, ExperimentType.class, "types"))
                 .orElse(null);
@@ -262,11 +262,11 @@ public class ExperimentsResource {
                 .projectDeleted(projectDeleted)
                 .build();
 
-        log.info("Finding experiment groups aggregations by criteria '{}'", experimentGroupCriteria);
+        log.info("根据条件 '{}' 查找实验分组聚合", experimentGroupCriteria);
         var groupAggregationsResponse = experimentService.findGroupsAggregations(experimentGroupCriteria)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Found experiment groups aggregations, total top-level groups: {}",
+        log.info("已找到实验分组聚合，顶层分组总数: {}",
                 groupAggregationsResponse.content().size());
 
         return Response.ok().entity(groupAggregationsResponse).build();
@@ -274,24 +274,24 @@ public class ExperimentsResource {
 
     @GET
     @Path("/{id}")
-    @Operation(operationId = "getExperimentById", summary = "Get experiment by id", description = "Get experiment by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiment resource", content = @Content(schema = @Schema(implementation = Experiment.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getExperimentById", summary = "根据ID获取实验", description = "根据ID获取实验", responses = {
+            @ApiResponse(responseCode = "200", description = "实验资源", content = @Content(schema = @Schema(implementation = Experiment.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RequiredPermissions(WorkspaceUserPermission.EXPERIMENT_VIEW)
     @JsonView(Experiment.View.Public.class)
     public Response get(@PathParam("id") UUID id) {
 
-        log.info("Getting experiment by id '{}'", id);
+        log.info("根据ID '{}' 获取实验", id);
         var experiment = experimentService.getById(id)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Got experiment by id '{}', datasetId '{}'", experiment.id(), experiment.datasetId());
+        log.info("已获取实验，ID '{}'，数据集ID '{}'", experiment.id(), experiment.datasetId());
         return Response.ok().entity(experiment).build();
     }
 
     @POST
-    @Operation(operationId = "createExperiment", summary = "Create experiment", description = "Create experiment", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createExperiment", summary = "创建实验", description = "创建新实验", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/experiments/{id}", schema = @Schema(implementation = String.class))})})
     @RequiredPermissions(WorkspaceUserPermission.EXPERIMENT_CREATE)
     @RateLimited
@@ -299,88 +299,88 @@ public class ExperimentsResource {
             @RequestBody(content = @Content(schema = @Schema(implementation = Experiment.class))) @JsonView(Experiment.View.Write.class) @NotNull @Valid Experiment experiment,
             @Context UriInfo uriInfo) {
         var workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Creating experiment with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
+        log.info("创建实验，ID '{}'，名称 '{}'，数据集名称 '{}'，工作区 '{}'",
                 experiment.id(), experiment.name(), experiment.datasetName(), workspaceId);
         var id = experimentService.create(experiment)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
         var uri = uriInfo.getAbsolutePathBuilder().path("/%s".formatted(id)).build();
-        log.info("Created experiment with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
+        log.info("已创建实验，ID '{}'，名称 '{}'，数据集名称 '{}'，工作区 '{}'",
                 id, experiment.name(), experiment.datasetName(), workspaceId);
         return Response.created(uri).build();
     }
 
     @PATCH
     @Path("/{id}")
-    @Operation(operationId = "updateExperiment", summary = "Update experiment by id", description = "Update experiment by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "updateExperiment", summary = "根据ID更新实验", description = "根据ID更新实验", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RateLimited
     public Response update(@PathParam("id") UUID id,
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentUpdate.class))) @NotNull @Valid ExperimentUpdate experimentUpdate) {
         var workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Updating experiment with id '{}', workspaceId '{}'", id, workspaceId);
+        log.info("更新实验，ID '{}'，工作区 '{}'", id, workspaceId);
         experimentService.update(id, experimentUpdate)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Updated experiment with id '{}', workspaceId '{}'", id, workspaceId);
+        log.info("已更新实验，ID '{}'，工作区 '{}'", id, workspaceId);
         return Response.noContent().build();
     }
 
     @PATCH
     @Path("/batch")
-    @Operation(operationId = "batchUpdateExperiments", summary = "Batch update experiments", description = "Update multiple experiments", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "batchUpdateExperiments", summary = "批量更新实验", description = "批量更新多个实验", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RateLimited
     public Response batchUpdate(
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentBatchUpdate.class))) @Valid @NotNull ExperimentBatchUpdate batchUpdate) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Batch updating '{}' experiments on workspaceId '{}'", batchUpdate.ids().size(), workspaceId);
+        log.info("批量更新 '{}' 个实验，工作区 '{}'", batchUpdate.ids().size(), workspaceId);
 
         experimentService.batchUpdate(batchUpdate)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Batch updated '{}' experiments on workspaceId '{}'", batchUpdate.ids().size(), workspaceId);
+        log.info("已批量更新 '{}' 个实验，工作区 '{}'", batchUpdate.ids().size(), workspaceId);
 
         return Response.noContent().build();
     }
 
     @POST
     @Path("/delete")
-    @Operation(operationId = "deleteExperimentsById", summary = "Delete experiments by id", description = "Delete experiments by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")})
+    @Operation(operationId = "deleteExperimentsById", summary = "根据ID删除实验", description = "根据ID删除实验", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     public Response deleteExperimentsById(
             @RequestBody(content = @Content(schema = @Schema(implementation = DeleteIdsHolder.class))) @NotNull @Valid DeleteIdsHolder request) {
 
-        log.info("Deleting experiments, count '{}'", request.ids());
+        log.info("删除实验，数量 '{}'", request.ids());
         experimentService.delete(request.ids())
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Deleted experiments, count '{}'", request.ids());
+        log.info("已删除实验，数量 '{}'", request.ids());
         return Response.noContent().build();
     }
 
     @POST
     @Path("/finish")
-    @Operation(operationId = "finishExperiments", summary = "Finish experiments", description = "Finish experiments and trigger alert events", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "finishExperiments", summary = "完成实验", description = "完成实验并触发告警事件", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RateLimited
     public Response finishExperiments(
             @RequestBody(content = @Content(schema = @Schema(implementation = DeleteIdsHolder.class))) @NotNull @Valid IdsHolder request) {
 
-        log.info("Finishing experiments, count '{}'", request.ids().size());
+        log.info("完成实验，数量 '{}'", request.ids().size());
         experimentService.finishExperiments(request.ids())
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Finished experiments, count '{}'", request.ids().size());
+        log.info("已完成实验，数量 '{}'", request.ids().size());
 
         return Response.noContent().build();
     }
@@ -388,8 +388,8 @@ public class ExperimentsResource {
     @POST
     @Path("/stream")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(operationId = "streamExperiments", summary = "Stream experiments", description = "Stream experiments", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiments stream or error during process", content = @Content(array = @ArraySchema(schema = @Schema(anyOf = {
+    @Operation(operationId = "streamExperiments", summary = "流式传输实验", description = "流式传输实验数据", responses = {
+            @ApiResponse(responseCode = "200", description = "实验流或处理过程中的错误", content = @Content(array = @ArraySchema(schema = @Schema(anyOf = {
                     Experiment.class,
                     ErrorMessage.class
             }), maxItems = 2000)))
@@ -399,31 +399,31 @@ public class ExperimentsResource {
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentStreamRequest.class))) @NotNull @Valid ExperimentStreamRequest request) {
         var workspaceId = requestContext.get().getWorkspaceId();
         var userName = requestContext.get().getUserName();
-        log.info("Streaming experiments by '{}', workspaceId '{}', userName '{}'", request, workspaceId, userName);
+        log.info("流式传输实验，条件 '{}'，工作区 '{}'，用户名 '{}'", request, workspaceId, userName);
         var experiments = experimentService.get(request)
                 .contextWrite(ctx -> ctx.put(RequestContext.USER_NAME, userName)
                         .put(RequestContext.WORKSPACE_ID, workspaceId));
         var stream = streamer.getOutputStream(experiments);
-        log.info("Streamed experiments by '{}', workspaceId '{}', userName '{}'", request, workspaceId, userName);
+        log.info("已流式传输实验，条件 '{}'，工作区 '{}'，用户名 '{}'", request, workspaceId, userName);
         return stream;
     }
 
-    // Experiment Item Resources
+    // 实验条目资源
 
     @GET
     @Path("/items/{id}")
-    @Operation(operationId = "getExperimentItemById", summary = "Get experiment item by id", description = "Get experiment item by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiment item resource", content = @Content(schema = @Schema(implementation = ExperimentItem.class))),
-            @ApiResponse(responseCode = "404", description = "Not found", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+    @Operation(operationId = "getExperimentItemById", summary = "根据ID获取实验条目", description = "根据ID获取实验条目", responses = {
+            @ApiResponse(responseCode = "200", description = "实验条目资源", content = @Content(schema = @Schema(implementation = ExperimentItem.class))),
+            @ApiResponse(responseCode = "404", description = "未找到", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @JsonView(ExperimentItem.View.Public.class)
     public Response getExperimentItem(@PathParam("id") UUID id) {
 
-        log.info("Getting experiment item by id '{}'", id);
+        log.info("根据ID '{}' 获取实验条目", id);
         var experimentItem = experimentItemService.get(id)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Got experiment item by id '{}', experimentId '{}', datasetItemId '{}', traceId '{}'",
+        log.info("已获取实验条目，ID '{}'，实验ID '{}'，数据集条目ID '{}'，追踪ID '{}'",
                 experimentItem.id(),
                 experimentItem.experimentId(),
                 experimentItem.datasetItemId(),
@@ -434,8 +434,8 @@ public class ExperimentsResource {
     @POST
     @Path("/items/stream")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Operation(operationId = "streamExperimentItems", summary = "Stream experiment items", description = "Stream experiment items", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiment items stream or error during process", content = @Content(array = @ArraySchema(schema = @Schema(anyOf = {
+    @Operation(operationId = "streamExperimentItems", summary = "流式传输实验条目", description = "流式传输实验条目", responses = {
+            @ApiResponse(responseCode = "200", description = "实验条目流或处理过程中的错误", content = @Content(array = @ArraySchema(schema = @Schema(anyOf = {
                     ExperimentItem.class,
                     ErrorMessage.class
             }), maxItems = 2000)))
@@ -444,7 +444,7 @@ public class ExperimentsResource {
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentItemStreamRequest.class))) @NotNull @Valid ExperimentItemStreamRequest request) {
         var workspaceId = requestContext.get().getWorkspaceId();
         var userName = requestContext.get().getUserName();
-        log.info("Streaming experiment items by '{}', workspaceId '{}'", request, workspaceId);
+        log.info("流式传输实验条目，条件 '{}'，工作区 '{}'", request, workspaceId);
         var criteria = ExperimentItemSearchCriteria.builder()
                 .experimentName(request.experimentName())
                 .limit(request.limit())
@@ -456,20 +456,20 @@ public class ExperimentsResource {
                 .contextWrite(ctx -> ctx.put(RequestContext.USER_NAME, userName)
                         .put(RequestContext.WORKSPACE_ID, workspaceId));
         var stream = streamer.getOutputStream(items);
-        log.info("Streamed experiment items by '{}', workspaceId '{}'", request, workspaceId);
+        log.info("已流式传输实验条目，条件 '{}'，工作区 '{}'", request, workspaceId);
         return stream;
     }
 
     @POST
     @Path("/items")
-    @Operation(operationId = "createExperimentItems", summary = "Create experiment items", description = "Create experiment items", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")})
+    @Operation(operationId = "createExperimentItems", summary = "创建实验条目", description = "创建实验条目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")})
     @RateLimited
     @UsageLimited
     public Response createExperimentItems(
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentItemsBatch.class))) @NotNull @Valid ExperimentItemsBatch request) {
 
-        // Generate ids for items without ids before the retryable operation
+        // 在可重试操作之前为没有ID的条目生成ID
         Set<ExperimentItem> newRequest = request.experimentItems()
                 .stream()
                 .map(item -> {
@@ -479,47 +479,47 @@ public class ExperimentsResource {
                     return item;
                 }).collect(Collectors.toSet());
 
-        log.info("Creating experiment items, count '{}'", newRequest.size());
+        log.info("创建实验条目，数量 '{}'", newRequest.size());
         experimentItemService.create(newRequest)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .retryWhen(RetryUtils.handleConnectionError())
                 .block();
-        log.info("Created experiment items, count '{}'", newRequest.size());
+        log.info("已创建实验条目，数量 '{}'", newRequest.size());
         return Response.noContent().build();
     }
 
     @POST
     @Path("/items/delete")
-    @Operation(operationId = "deleteExperimentItems", summary = "Delete experiment items", description = "Delete experiment items", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "deleteExperimentItems", summary = "删除实验条目", description = "删除实验条目", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     public Response deleteExperimentItems(
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentItemsDelete.class))) @NotNull @Valid ExperimentItemsDelete request) {
 
-        log.info("Deleting experiment items, count '{}'", request.ids().size());
+        log.info("删除实验条目，数量 '{}'", request.ids().size());
         experimentItemService.delete(request.ids())
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Deleted experiment items, count '{}'", request.ids().size());
+        log.info("已删除实验条目，数量 '{}'", request.ids().size());
         return Response.noContent().build();
     }
 
     @PUT
     @Path("/items/bulk")
-    @Operation(operationId = "experimentItemsBulk", summary = "Record experiment items in bulk", description = "Record experiment items in bulk with traces, spans, and feedback scores. "
+    @Operation(operationId = "experimentItemsBulk", summary = "批量记录实验条目", description = "批量记录实验条目，包含追踪、Span和反馈评分。"
             +
-            "Maximum request size is 4MB.", responses = {
-                    @ApiResponse(responseCode = "204", description = "No content"),
-                    @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-                    @ApiResponse(responseCode = "409", description = "Conflict", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-                    @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = com.comet.opik.api.error.ErrorMessage.class))),
+            "最大请求大小为4MB。", responses = {
+                    @ApiResponse(responseCode = "204", description = "无内容"),
+                    @ApiResponse(responseCode = "400", description = "请求参数错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "409", description = "冲突", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "422", description = "无法处理的内容", content = @Content(schema = @Schema(implementation = com.comet.opik.api.error.ErrorMessage.class))),
             })
     @RateLimited
     @UsageLimited
     public Response experimentItemsBulk(
             @RequestBody(content = @Content(schema = @Schema(implementation = ExperimentItemBulkUpload.class))) @NotNull @Valid @JsonView(ExperimentItemBulkUpload.View.ExperimentItemBulkWriteView.class) ExperimentItemBulkUpload request) {
 
-        log.info("Recording experiment items in bulk, count '{}', experimentId '{}'", request.items().size(),
+        log.info("批量记录实验条目，数量 '{}'，实验ID '{}'", request.items().size(),
                 request.experimentId());
 
         List<ExperimentItemBulkRecord> items = request.items()
@@ -538,21 +538,19 @@ public class ExperimentsResource {
                 .projectName(request.projectName())
                 .build();
 
-        // The service resolves the project (explicit project_name, else derived from the existing experiment
-        // or dataset, else the default project) and reports which deprecated fallback (if any) it used.
+        // 服务层解析项目（显式project_name，否则从现有实验或数据集派生，否则使用默认项目），并报告使用了哪个已弃用的回退。
         ExperimentItemBulkIngestionService.ProjectFallback fallback = experimentItemBulkIngestionService
                 .ingest(experiment, request.projectName(), items)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .retryWhen(RetryUtils.handleConnectionError())
                 .block();
 
-        log.info("Recorded experiment items in bulk, count '{}', experimentId '{}'", request.items().size(),
+        log.info("已批量记录实验条目，数量 '{}'，实验ID '{}'", request.items().size(),
                 request.experimentId());
 
         Response.ResponseBuilder responseBuilder = Response.noContent();
 
-        // Surface the deprecated implicit-fallback as the X-Opik-Deprecation header (on the request thread, so
-        // the request-scoped fallback message can be set/read safely — same mechanism as other resources).
+        // 将已弃用的隐式回退作为X-Opik-Deprecation头返回（在请求线程上，因此可以安全地设置/读取请求范围的回退消息——与其他资源相同的机制）。
         switch (fallback) {
             case DATASET -> {
                 requestContext.get().setWorkspaceFallbackFor("Dataset", request.datasetName());
@@ -564,7 +562,7 @@ public class ExperimentsResource {
                             + "project '%s'. This fallback is deprecated, please provide project_name.")
                             .formatted(ProjectService.DEFAULT_PROJECT));
             case NONE -> {
-                // no deprecation
+                // 无弃用信息
             }
         }
 
@@ -573,8 +571,8 @@ public class ExperimentsResource {
 
     @GET
     @Path("/feedback-scores/names")
-    @Operation(operationId = "findFeedbackScoreNames", summary = "Find Feedback Score names", description = "Find Feedback Score names", responses = {
-            @ApiResponse(responseCode = "200", description = "Feedback Scores resource", content = @Content(schema = @Schema(implementation = FeedbackScoreNames.class)))
+    @Operation(operationId = "findFeedbackScoreNames", summary = "查找反馈评分名称", description = "查找反馈评分名称", responses = {
+            @ApiResponse(responseCode = "200", description = "反馈评分资源", content = @Content(schema = @Schema(implementation = FeedbackScoreNames.class)))
     })
     @JsonView({FeedbackDefinition.View.Public.class})
     public Response findFeedbackScoreNames(
@@ -587,13 +585,13 @@ public class ExperimentsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Find feedback score names by experiment_ids '{}', project_id '{}', on workspaceId '{}'",
+        log.info("根据实验IDs '{}' 和项目ID '{}' 查找反馈评分名称，工作区 '{}'",
                 experimentIds, projectId, workspaceId);
         FeedbackScoreNames feedbackScoreNames = feedbackScoreService
                 .getExperimentsFeedbackScoreNames(experimentIds, projectId)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Found feedback score names '{}' by experiment_ids '{}', project_id '{}', on workspaceId '{}'",
+        log.info("已找到反馈评分名称 '{}'，实验IDs '{}'，项目ID '{}'，工作区 '{}'",
                 feedbackScoreNames.scores().size(), experimentIds, projectId, workspaceId);
 
         return Response.ok(feedbackScoreNames).build();
@@ -601,8 +599,8 @@ public class ExperimentsResource {
 
     @POST
     @Path("/execute")
-    @Operation(operationId = "executeExperiment", summary = "Create and execute experiment", description = "Creates experiments for each prompt variant and asynchronously processes all dataset items", responses = {
-            @ApiResponse(responseCode = "202", description = "Experiments created and processing started", content = @Content(schema = @Schema(implementation = ExperimentExecutionResponse.class))),
+    @Operation(operationId = "executeExperiment", summary = "创建并执行实验", description = "为每个提示变体创建实验并异步处理所有数据集条目", responses = {
+            @ApiResponse(responseCode = "202", description = "实验已创建并开始处理", content = @Content(schema = @Schema(implementation = ExperimentExecutionResponse.class))),
     })
     @RequiredPermissions(WorkspaceUserPermission.EXPERIMENT_VIEW)
     public Response execute(@NotNull @Valid ExperimentExecutionRequest request) {
@@ -610,7 +608,7 @@ public class ExperimentsResource {
         var workspaceId = context.getWorkspaceId();
         var userName = context.getUserName();
 
-        log.info("Executing experiment for dataset '{}', workspaceId '{}', prompts '{}'",
+        log.info("为数据集 '{}' 执行实验，工作区 '{}'，提示数量 '{}'",
                 request.datasetName(), workspaceId, request.prompts().size());
 
         var response = experimentExecutionService.createAndExecute(request)

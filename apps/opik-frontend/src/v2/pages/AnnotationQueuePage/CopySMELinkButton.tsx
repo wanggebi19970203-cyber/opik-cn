@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import copy from "clipboard-copy";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import { Button } from "@/ui/button";
 import { useToast } from "@/ui/use-toast";
@@ -15,23 +16,23 @@ interface CopySMELinkButtonProps {
 const CopySMELinkButton: React.FC<CopySMELinkButtonProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation("pages/annotation-queue");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { toast } = useToast();
 
   const handleCopySMELink = useCallback(() => {
     copy(generateSMEURL(workspaceName, annotationQueue.id));
     toast({
-      title: "Annotation queue link copied to clipboard",
-      description:
-        "Share this queue with your annotators so they can start annotating and provide feedback to improve the evaluation of your LLM application.",
+      title: t("annotationQueue.copyLink.toastTitle"),
+      description: t("annotationQueue.copyLink.toastDescription"),
     });
-  }, [annotationQueue.id, toast, workspaceName]);
+  }, [annotationQueue.id, toast, workspaceName, t]);
 
   return (
-    <TooltipWrapper content="Share annotation queue link">
+    <TooltipWrapper content={t("annotationQueue.copyLink.tooltip")}>
       <Button size="sm" variant="outline" onClick={handleCopySMELink}>
         <Copy className="mr-1.5 size-3.5" />
-        Share
+        {t("annotationQueue.copyLink.button")}
       </Button>
     </TooltipWrapper>
   );

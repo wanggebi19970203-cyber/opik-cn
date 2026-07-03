@@ -1,0 +1,1362 @@
+---
+headline: Prompts | Opik 文档
+og:description: 学习使用 Opik TypeScript SDK 对 LLM 提示模板进行版本控制、存储和格式化，
+  实现与代码库的无缝集成。
+og:site_name: Opik 文档
+og:title: 使用 Opik 高效管理 Prompts
+title: Prompts
+---
+
+<Note>
+  在 Opik 2.0 中，prompts 是项目级别的。创建 prompt 时请确保指定 `projectName`，以便将其关联到正确的项目。
+</Note>
+
+Opik TypeScript SDK 提供了全面的 prompt 管理功能，用于对 LLM 提示模板进行版本控制、存储和格式化。Opik 中的 prompts 会自动进行版本控制，允许您跟踪随时间的变化，同时与代码库无缝集成。
+
+## 简介
+
+Opik 支持两种类型的 prompts：
+
+- **文本 Prompts**：用于单轮交互的简单字符串模板
+- **聊天 Prompts**：用于对话式 AI 的结构化消息模板，支持多模态内容（文本、图像、视频）
+
+每个 prompt：
+
+- 具有唯一名称和自动生成的版本
+- 支持 Mustache 或 Jinja2 模板语法
+- 跟踪元数据、标签和变更描述
+- 维护完整的版本历史
+- 支持版本比较和回滚
+
+## 快速开始
+
+本节介绍文本 prompts。有关结构化消息的聊天 prompts，请参阅[聊天 Prompts](#chat-prompts) 部分。
+
+### 创建第一个 Prompt
+
+使用 `createPrompt` 方法创建文本 prompt：
+
+```typescript
+import { Opik, PromptType } from "opik";
+
+const client = new Opik();
+
+const prompt = await client.createPrompt({
+  name: "greeting-prompt",
+  prompt: "Hello {{name}}, your score is {{score}}",
+  type: PromptType.MUSTACHE,
+  metadata: { version: "1.0" },
+  tags: ["greetings"],
+  projectName: "my-project",
+});
+
+console.log(`Created prompt with version: ${prompt.version}`);
+```
+
+### 获取 Prompts
+
+通过名称或特定版本获取 prompts：
+
+```typescript
+// 获取最新版本
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+
+if (prompt) {
+  console.log(`Template: ${prompt.prompt}`);
+  console.log(`Version: ${prompt.version}`);
+}
+
+// 通过顺序版本标识符获取特定版本（"v<N>"）
+const oldVersion = await client.getPrompt({
+  name: "greeting-prompt",
+  version: "v1",
+});
+```
+
+### 格式化 Prompts
+
+Opik 支持两个强大的模板引擎：
+
+- **[Mustache](https://mustache.github.io/)** - 简单的无逻辑模板，使用 `{{variable}}` 占位符（默认）
+- **[Jinja2](https://jinja.palletsprojects.com/)** - 高级模板引擎，支持使用 `{% %}` 块和 `{{ }}` 变量进行控制流
+
+`format()` 方法可用于 `Prompt` 和 `PromptVersion` 实例：
+
+```typescript
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+
+// 使用变量格式化
+const text = prompt.format({ name: "Alice", score: 95 });
+// 返回: "Hello Alice, your score is 95"
+
+// 格式化也适用于 PromptVersion 对象
+const versions = await prompt.getVersions();
+const previousVersion = versions[1];
+const oldText = previousVersion.format({ name: "Alice", score: 95 });
+```
+
+**模板语法示例：**
+
+```typescript
+// Mustache 语法（默认）
+await client.createPrompt({
+  name: "mustache-prompt",
+  prompt: "Hello {{name}}, your score is {{score}}",
+  type: PromptType.MUSTACHE,
+  projectName: "my-project",
+});
+
+// Jinja2 语法用于高级模板
+await client.createPrompt({
+  name: "jinja2-prompt",
+  prompt: "Hello {{ name }}! {% if premium %}Premium user{% endif %}",
+  type: PromptType.JINJA2,
+  projectName: "my-project",
+});
+```
+
+## 核心操作
+
+### 创建和更新
+
+#### 理解版本创建
+
+`createPrompt` 方法会根据内容变化智能处理版本控制：
+
+**以下情况会创建新版本：**
+
+- 模板内容（`prompt`）发生变化
+- 元数据发生变化（深度相等检查）
+- 模板类型（`type`）发生变化
+
+**以下情况不会创建新版本（返回现有版本）：**
+
+- 模板、元数据和类型完全相同
+- 仅 `tags` 或 `description` 不同
+
+```typescript
+// 第一次调用 - 创建新 prompt，版本为 1
+const prompt1 = await client.createPrompt({
+  name: "greeting-prompt",
+  prompt: "Hello {{name}}, your score is {{score}}",
+  type: PromptType.MUSTACHE,
+  metadata: { version: "1.0" },
+  tags: ["greetings"],
+  projectName: "my-project",
+});
+
+// 相同的模板、元数据和类型 - 返回现有版本
+const prompt2 = await client.createPrompt({
+  name: "greeting-prompt",
+  prompt: "Hello {{name}}, your score is {{score}}", // 相同
+  metadata: { version: "1.0" }, // 相同
+  type: PromptType.MUSTACHE, // 相同
+  tags: ["updated-tags"], // 不同的标签不会触发新版本
+  projectName: "my-project",
+});
+console.log(prompt2.version === prompt1.version); // true
+
+// 模板发生变化 - 创建新版本 2
+const prompt3 = await client.createPrompt({
+  name: "greeting-prompt",
+  prompt: "Hi {{name}}, score: {{score}}", // 不同的模板
+  changeDescription: "Simplified greeting message",
+  projectName: "my-project",
+});
+
+// 元数据发生变化 - 创建新版本 3
+const prompt4 = await client.createPrompt({
+  name: "greeting-prompt",
+  prompt: "Hi {{name}}, score: {{score}}", // 与版本 2 相同
+  metadata: { version: "2.0" }, // 不同的元数据触发新版本
+  changeDescription: "Updated metadata",
+  projectName: "my-project",
+});
+```
+
+<Note>
+  版本创建由**模板内容**、**元数据**或**类型**的变化触发。仅更改 `tags`、`name` 或 `description` 不会创建新版本 - 请使用 `updateProperties()` 进行这些更改。
+</Note>
+
+#### 更新 Prompt 属性
+
+更新 prompt 元数据而不创建新版本：
+
+```typescript
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+
+// 更新名称、描述或标签
+await prompt.updateProperties({
+  name: "welcome-prompt",
+  description: "Updated greeting template",
+  tags: ["welcome", "production", "v2"],
+});
+
+console.log(`Updated prompt name: ${prompt.name}`);
+```
+
+<Note>
+  更新属性（`name`、`description`、`tags`）**不会**创建新版本。只有**模板内容**、**元数据**或**类型**的变化才会触发版本创建。
+</Note>
+
+### 检索和搜索
+
+#### 使用 Opik 查询语言搜索
+
+使用 [Opik 查询语言 (OQL)](/reference/typescript-sdk/opik-query-language) 搜索和过滤 prompts - 这是一种强大的类似 SQL 的语法，可精确查找所需的 prompts。
+
+**支持的字段：**
+
+| 字段                 | 类型     | 描述                   | 示例                                    |
+| -------------------- | -------- | ---------------------- | --------------------------------------- |
+| `id`                 | String   | 唯一的 prompt 标识符   | `id = "prompt-123"`                     |
+| `name`               | String   | Prompt 名称            | `name contains "greeting"`              |
+| `description`        | String   | Prompt 描述            | `description contains "template"`       |
+| `tags`               | List     | Prompt 标签            | `tags contains "production"`            |
+| `template_structure` | String   | Prompt 类型（文本或聊天）| `template_structure = "chat"`           |
+| `created_by`         | String   | 创建者邮箱/标识符      | `created_by = "user@example.com"`       |
+| `created_at`         | DateTime | 创建时间戳             | `created_at > "2024-01-01"`             |
+| `last_updated_by`    | String   | 最后更新者邮箱/标识符  | `last_updated_by = "admin@example.com"` |
+| `last_updated_at`    | DateTime | 最后更新时间戳         | `last_updated_at > "2024-01-01"`        |
+
+**搜索示例：**
+
+```typescript
+// 搜索所有 prompts（无过滤条件）
+const allPrompts = await client.searchPrompts();
+
+// 按精确名称搜索
+const prompts = await client.searchPrompts('name = "greeting-prompt"');
+
+// 按名称模式搜索
+const chatPrompts = await client.searchPrompts('name contains "chat"');
+
+// 按标签搜索
+const prodPrompts = await client.searchPrompts('tags contains "production"');
+
+// 按创建者搜索
+const myPrompts = await client.searchPrompts(
+  'created_by = "alice@company.com"',
+);
+
+// 按 prompt 类型过滤
+const chatPrompts = await client.searchPrompts('template_structure = "chat"');
+const textPrompts = await client.searchPrompts('template_structure = "text"');
+
+// 组合过滤条件
+const prodChatPrompts = await client.searchPrompts(
+  'template_structure = "chat" AND tags contains "production"',
+);
+```
+
+### 删除 Prompts
+
+```typescript
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+
+// 删除 prompt 及其所有版本
+await prompt.delete();
+
+// 或按 ID 删除多个 prompts
+await client.deletePrompts([prompt.id, anotherPrompt.id]);
+```
+
+## 版本管理
+
+### 理解版本
+
+#### 版本元数据和属性
+
+访问全面的版本信息：
+
+```typescript
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+const versions = await prompt.getVersions();
+const latest = versions[0];
+
+// 版本属性
+console.log(`ID: ${latest.id}`);
+console.log(`Version: ${latest.version}`);
+console.log(`Template: ${latest.prompt}`);
+console.log(`Created: ${latest.createdAt}`);
+console.log(`Creator: ${latest.createdBy}`);
+console.log(`Type: ${latest.type}`);
+console.log(`Change: ${latest.changeDescription}`);
+
+// 格式化的版本信息
+console.log(latest.getVersionInfo());
+// 输出: [abc123de] 2024-01-15 by user@example.com - Initial version
+
+// 人类可读的时间
+console.log(latest.getVersionAge());
+// 输出: "2 days ago"
+```
+
+#### 查看版本历史
+
+```typescript
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+
+// 获取所有版本
+const versions = await prompt.getVersions();
+
+console.log(`Total versions: ${versions.length}`);
+
+versions.forEach((version) => {
+  console.log(version.getVersionInfo());
+  // 输出: [abc123de] 2024-01-15 by user@example.com - Initial version
+});
+```
+
+### 使用版本
+
+#### 获取特定版本
+
+```typescript
+// 方式 1：直接从客户端获取特定版本
+const oldVersion = await client.getPrompt({
+  name: "greeting-prompt",
+  version: "v1",
+});
+
+if (oldVersion) {
+  const text = oldVersion.format({ name: "Bob", score: 88 });
+  console.log(`Version ${oldVersion.version} output: ${text}`);
+}
+
+// 方式 2：从现有 prompt 实例固定到特定版本
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+const v1 = await prompt.getVersion("v1");
+
+if (v1) {
+  console.log(v1.format({ name: "Alice", score: 95 }));
+}
+
+// 方式 3：遍历版本历史并直接在 PromptVersion 对象上使用 format()
+const versions = await prompt.getVersions();
+const previousVersion = versions[1];
+
+// PromptVersion 也有 format() 方法
+const formattedText = previousVersion.format({ name: "Charlie", score: 92 });
+console.log(formattedText);
+```
+
+#### 比较版本
+
+```typescript
+const versions = await prompt.getVersions();
+
+if (versions.length >= 2) {
+  const current = versions[0]; // 例如 "v3"
+  const previous = versions[1]; // 例如 "v2"
+
+  // 比较版本（记录差异并返回）。差异标签显示顺序版本标识符（例如 "[v3]" / "[v2]"）。
+  const diff = current.compareTo(previous);
+  console.log(diff);
+  /* 输出:
+   * - Other version [v2]
+   * + Current version [v3]
+   * @@ -1,2 +1,2 @@
+   * - Hello {{name}}, welcome!
+   * + Hello {{name}}, your score is {{score}}
+   */
+}
+```
+
+#### 恢复先前版本
+
+```typescript
+const prompt = await client.getPrompt({ name: "greeting-prompt" });
+const versions = await prompt.getVersions();
+
+// 选择要恢复的版本 - 例如，前一个版本
+const [, previousVersion] = versions;
+
+if (previousVersion) {
+  // 恢复会创建一个带有旧内容的新版本
+  const restoredPrompt = await prompt.useVersion(previousVersion);
+
+  console.log(`Restored to version: ${restoredPrompt.version}`);
+  console.log(`Template: ${restoredPrompt.prompt}`);
+}
+```
+
+## 高级用法
+
+### 与追踪集成
+
+Prompts 与 Opik 的追踪功能无缝协作：
+
+```typescript
+import { Opik, track } from "opik";
+
+const client = new Opik();
+
+@track
+async function generateGreeting(userName: string, userScore: number) {
+  // 获取 prompt
+  const prompt = await client.getPrompt({ name: "greeting-prompt" });
+
+  // 格式化
+  const message = prompt.format({
+    name: userName,
+    score: userScore,
+  });
+
+  // 与您的 LLM 一起使用
+  const response = await llmClient.complete(message);
+
+  return response;
+}
+```
+
+### 最佳实践
+
+#### 将 Prompts 存储在代码中
+
+将 prompts 与代码一起进行版本控制：
+
+```typescript
+// prompts/greeting.ts
+export const GREETING_TEMPLATE = "Hello {{name}}, your score is {{score}}";
+
+// 在您的应用程序中
+import { GREETING_TEMPLATE } from "./prompts/greeting";
+
+const prompt = await client.createPrompt({
+  name: "greeting",
+  prompt: GREETING_TEMPLATE,
+  metadata: { version: "1.0" },
+  projectName: "my-project",
+});
+```
+
+#### 使用有意义的版本描述
+
+```typescript
+const prompt = await client.createPrompt({
+  name: "summary-prompt",
+  prompt: updatedTemplate,
+  changeDescription: "Added support for multi-language summaries",
+  metadata: { sprint: "Q1-2024" },
+  projectName: "my-project",
+});
+```
+
+#### 为 Prompts 添加标签
+
+```typescript
+const prompt = await client.createPrompt({
+  name: "production-greeting",
+  prompt: template,
+  tags: ["production", "customer-facing", "v2"],
+  projectName: "my-project",
+});
+
+// 稍后按标签搜索
+const prodPrompts = await client.searchPrompts('tags contains "production"');
+```
+
+## 聊天 Prompts
+
+聊天 prompts 是为对话式 AI 应用设计的结构化消息模板。它们支持多种消息角色（system、user、assistant）和多模态内容，包括文本、图像和视频。
+
+### 主要特性
+
+- **结构化消息**：将 prompts 组织为带有角色（system、user、assistant）的消息列表
+- **多模态支持**：在同一 prompt 中包含图像、视频和文本
+- **变量替换**：使用 Mustache (`{{variable}}`) 或 Jinja2 语法
+- **版本控制**：消息变化时自动进行版本控制
+- **模板验证**：可选的模板占位符验证
+
+### 创建聊天 Prompts
+
+使用 `createChatPrompt` 方法创建聊天 prompts：
+
+```typescript
+import { Opik, PromptType } from "opik";
+
+const client = new Opik();
+
+// 定义带有变量的聊天消息
+const messages = [
+  {
+    role: "system",
+    content: "You are a helpful assistant specializing in {{domain}}.",
+  },
+  {
+    role: "user",
+    content: "Explain {{topic}} in simple terms.",
+  },
+];
+
+// 创建聊天 prompt
+const chatPrompt = await client.createChatPrompt({
+  name: "educational-assistant",
+  messages: messages,
+  type: PromptType.MUSTACHE,
+  metadata: { category: "education" },
+  tags: ["education", "assistant"],
+  projectName: "my-project",
+});
+
+console.log(`Created chat prompt with version: ${chatPrompt.version}`);
+```
+
+### 格式化聊天 Prompts
+
+使用变量格式化聊天 prompts 以获得可直接使用的消息数组：
+
+```typescript
+const chatPrompt = await client.getChatPrompt({
+  name: "educational-assistant",
+});
+
+if (chatPrompt) {
+  // 使用变量格式化消息
+  const formattedMessages = chatPrompt.format({
+    domain: "physics",
+    topic: "quantum entanglement",
+  });
+
+  console.log(formattedMessages);
+  // 输出:
+  // [
+  //   { role: "system", content: "You are a helpful assistant specializing in physics." },
+  //   { role: "user", content: "Explain quantum entanglement in simple terms." }
+  // ]
+}
+```
+
+### 多轮对话
+
+创建多轮对话模板：
+
+```typescript
+const messages = [
+  {
+    role: "system",
+    content: "You are a customer support agent for {{company}}.",
+  },
+  {
+    role: "user",
+    content: "I have an issue with {{product}}.",
+  },
+  {
+    role: "assistant",
+    content: "I'd be happy to help with your {{product}}. Can you describe the issue?",
+  },
+  {
+    role: "user",
+    content: "{{issue_description}}",
+  },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "customer-support-flow",
+  messages: messages,
+  projectName: "my-project",
+});
+
+// 使用特定值格式化
+const formatted = chatPrompt.format({
+  company: "Acme Corp",
+  product: "Widget Pro",
+  issue_description: "It won't turn on",
+});
+```
+
+### 多模态聊天 Prompts
+
+聊天 prompts 支持用于视觉模型的多模态内容：
+
+#### 图像分析
+
+```typescript
+// 带有图像内容的聊天 prompt
+const messages = [
+  {
+    role: "system",
+    content: "You analyze images and provide detailed descriptions.",
+  },
+  {
+    role: "user",
+    content: [
+      { type: "text", text: "What's in this image of {{subject}}?" },
+      {
+        type: "image_url",
+        image_url: {
+          url: "{{image_url}}",
+          detail: "high",
+        },
+      },
+    ],
+  },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "image-analyzer",
+  messages: messages,
+  projectName: "my-project",
+});
+
+// 使用变量格式化
+const formatted = chatPrompt.format(
+  {
+    subject: "a sunset",
+    image_url: "https://example.com/sunset.jpg",
+  },
+  { vision: true }, // 支持的模态
+);
+```
+
+#### 视频分析
+
+```typescript
+// 带有视频内容的聊天 prompt
+const messages = [
+  {
+    role: "system",
+    content: "You analyze videos and provide insights.",
+  },
+  {
+    role: "user",
+    content: [
+      { type: "text", text: "Analyze this video: {{description}}" },
+      {
+        type: "video_url",
+        video_url: {
+          url: "{{video_url}}",
+          mime_type: "video/mp4",
+        },
+      },
+    ],
+  },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "video-analyzer",
+  messages: messages,
+  projectName: "my-project",
+});
+
+// 使用变量格式化
+const formatted = chatPrompt.format(
+  {
+    description: "traffic analysis",
+    video_url: "https://example.com/traffic.mp4",
+  },
+  { vision: true, video: true },
+);
+```
+
+#### 混合内容
+
+```typescript
+// 带有多张图像和文本的聊天 prompt
+const messages = [
+  {
+    role: "user",
+    content: [
+      { type: "text", text: "Compare these two images:" },
+      {
+        type: "image_url",
+        image_url: { url: "{{image1_url}}" },
+      },
+      { type: "text", text: "and" },
+      {
+        type: "image_url",
+        image_url: { url: "{{image2_url}}" },
+      },
+      { type: "text", text: "What are the main differences?" },
+    ],
+  },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "image-comparison",
+  messages: messages,
+  projectName: "my-project",
+});
+
+const formatted = chatPrompt.format(
+  {
+    image1_url: "https://example.com/before.jpg",
+    image2_url: "https://example.com/after.jpg",
+  },
+  { vision: true },
+);
+```
+
+<Note>
+  格式化多模态 prompts 时，您可以指定 `supportedModalities` 来控制内容的呈现方式：
+
+- 如果支持某种模态（例如 `{ vision: true }`），则保留结构化内容
+- 如果不支持某种模态，则将其替换为文本占位符（例如 `<<<image>>><<</image>>>`）
+
+这允许您将同一 prompt 模板与可能支持或不支持某些模态的不同模型一起使用。
+
+</Note>
+
+### 获取聊天 Prompts
+
+通过名称或特定版本获取聊天 prompts：
+
+```typescript
+// 获取最新版本
+const chatPrompt = await client.getChatPrompt({
+  name: "educational-assistant",
+});
+
+if (chatPrompt) {
+  console.log(`Messages: ${JSON.stringify(chatPrompt.messages)}`);
+  console.log(`Version: ${chatPrompt.version}`);
+}
+
+// 通过顺序版本标识符获取特定版本（"v<N>"）
+const oldVersion = await client.getChatPrompt({
+  name: "educational-assistant",
+  version: "v1",
+});
+```
+
+### 搜索聊天 Prompts
+
+使用 `template_structure` 过滤器专门搜索聊天 prompts：
+
+```typescript
+// 仅搜索聊天 prompts
+const chatPrompts = await client.searchPrompts(
+  'template_structure = "chat" AND name contains "assistant"',
+);
+
+for (const prompt of chatPrompts) {
+  console.log(`Chat prompt: ${prompt.name}`);
+}
+
+// 仅搜索文本 prompts
+const textPrompts = await client.searchPrompts('template_structure = "text"');
+```
+
+如果不使用 `template_structure` 过滤器，`searchPrompts` 将同时返回文本和聊天 prompts。
+
+### 聊天 Prompts 的模板类型
+
+聊天 prompts 支持两种模板类型：
+
+#### Mustache（默认）
+
+```typescript
+import { PromptType } from "opik";
+
+const messages = [
+  {
+    role: "user",
+    content: "Hello {{name}}, you live in {{city}}.",
+  },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "mustache-example",
+  messages: messages,
+  type: PromptType.MUSTACHE, // 默认
+  projectName: "my-project",
+});
+
+const formatted = chatPrompt.format({
+  name: "Alice",
+  city: "Paris",
+});
+// 结果: [{ role: "user", content: "Hello Alice, you live in Paris." }]
+```
+
+#### Jinja2
+
+```typescript
+import { PromptType } from "opik";
+
+const messages = [
+  {
+    role: "user",
+    content: `
+      {% if is_premium %}
+      Hello {{ name }}, welcome to our premium service!
+      {% else %}
+      Hello {{ name }}, welcome!
+      {% endif %}
+    `,
+  },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "jinja-example",
+  messages: messages,
+  type: PromptType.JINJA2,
+  projectName: "my-project",
+});
+
+// 高级用户
+const formatted1 = chatPrompt.format({
+  name: "Alice",
+  is_premium: true,
+});
+// 结果包含: "Hello Alice, welcome to our premium service!"
+
+// 普通用户
+const formatted2 = chatPrompt.format({
+  name: "Bob",
+  is_premium: false,
+});
+// 结果包含: "Hello Bob, welcome!"
+```
+
+<Note>
+  Jinja2 模板支持高级功能，如条件语句、循环和过滤器，使其在复杂 prompt 逻辑中更加强大。然而，Mustache 模板更简单且更易于移植。
+</Note>
+
+### 聊天 Prompt 版本控制
+
+聊天 prompts 在消息变化时会自动进行版本控制：
+
+```typescript
+// 创建初始版本
+const messagesV1 = [
+  { role: "system", content: "You are helpful." },
+  { role: "user", content: "Hi!" },
+];
+
+const chatPrompt = await client.createChatPrompt({
+  name: "greeting-prompt",
+  messages: messagesV1,
+  projectName: "my-project",
+});
+
+console.log(`Created ${chatPrompt.version}`);
+
+// 使用新消息更新 - 创建新版本
+const messagesV2 = [
+  { role: "system", content: "You are a helpful assistant." },
+  { role: "user", content: "Hello {{name}}!" },
+];
+
+const chatPromptV2 = await client.createChatPrompt({
+  name: "greeting-prompt",
+  messages: messagesV2,
+  changeDescription: "Added personalization with name variable",
+  projectName: "my-project",
+});
+
+console.log(`Created ${chatPromptV2.version}`);
+
+// 获取版本历史
+const versions = await chatPrompt.getVersions();
+console.log(`Total versions: ${versions.length}`);
+```
+
+### 聊天 Prompts 的版本管理
+
+聊天 prompts 支持与文本 prompts 相同的版本管理功能：
+
+```typescript
+const chatPrompt = await client.getChatPrompt({
+  name: "greeting-prompt",
+});
+
+// 获取所有版本
+const versions = await chatPrompt.getVersions();
+
+// 通过顺序标识符获取特定版本（"v<N>"）
+const oldVersion = await client.getChatPrompt({
+  name: "greeting-prompt",
+  version: "v1",
+});
+
+// 比较版本
+if (versions.length >= 2) {
+  const current = versions[0];
+  const previous = versions[1];
+  const diff = current.compareTo(previous);
+  console.log(diff);
+}
+
+// 恢复先前版本
+const [, previousVersion] = versions;
+if (previousVersion) {
+  const restoredPrompt = await chatPrompt.useVersion(previousVersion);
+  console.log(`Restored to version: ${restoredPrompt.version}`);
+}
+```
+
+### 更新聊天 Prompt 属性
+
+更新聊天 prompt 元数据而不创建新版本：
+
+```typescript
+const chatPrompt = await client.getChatPrompt({
+  name: "greeting-prompt",
+});
+
+// 更新名称、描述或标签
+await chatPrompt.updateProperties({
+  name: "welcome-prompt",
+  description: "Updated greeting template",
+  tags: ["welcome", "production", "v2"],
+});
+
+console.log(`Updated prompt name: ${chatPrompt.name}`);
+```
+
+<Note>
+  更新属性（`name`、`description`、`tags`）**不会**创建新版本。只有**消息**、**元数据**或**类型**的变化才会触发版本创建。
+</Note>
+
+
+## API 参考
+
+### OpikClient 方法
+
+#### `createPrompt(options)`
+
+创建新 prompt 或在内容未更改时返回现有版本。
+
+**参数：**
+
+- `options.name: string` - Prompt 名称（必需）
+- `options.prompt: string` - 模板内容（必需）
+- `options.type?: PromptType` - 模板引擎（默认：`MUSTACHE`）
+- `options.promptId?: string` - 可选的 prompt ID
+- `options.description?: string` - 可选的描述
+- `options.metadata?: JsonNode` - 可选的元数据
+- `options.changeDescription?: string` - 版本变更描述
+- `options.tags?: string[]` - 可选的标签
+
+**返回：** `Promise<Prompt>` - 创建的或现有的 prompt
+
+#### `getPrompt(options)`
+
+通过名称获取 prompt，可选择指定特定版本。
+
+**参数：**
+
+- `options.name: string` - Prompt 名称（必需）
+- `options.version?: string` - 顺序版本标识符（例如 `"v3"`）。如果省略，则返回最新版本。
+
+**返回：** `Promise<Prompt | null>` - Prompt 实例，如果未找到则返回 null
+
+#### `searchPrompts(filterString?)`
+
+使用可选的 OQL 过滤器搜索 prompts。
+
+**参数：**
+
+- `filterString?: string` - 可选的 OQL 过滤表达式
+
+**返回：** `Promise<Prompt[]>` - 匹配的 prompts 数组
+
+**支持的 OQL 字段：**
+
+- `id`、`name`、`created_by`：字符串字段
+- `tags`：列表字段（使用 "contains" 运算符）
+
+**运算符：** `=`、`!=`、`contains`、`not_contains`、`starts_with`、`ends_with`、`>`、`<`
+
+#### `deletePrompts(ids)`
+
+删除多个 prompts 及其所有版本。
+
+**参数：**
+
+- `ids: string[]` - 要删除的 prompt IDs 数组
+
+**返回：** `Promise<void>`
+
+#### `updatePromptVersionTags(versionIds, options?)`
+
+在单个批量操作中更新一个或多个 prompt 版本的标签。
+
+**参数：**
+
+- `versionIds: string[]` - 要更新的 prompt 版本 IDs 数组
+- `options.tags?: string[] | null` - 要设置或合并的标签：
+  - `[]` - 清除所有标签（当 `mergeTags` 为 false 或未指定时）
+  - `['tag1', 'tag2']` - 设置或合并标签（基于 `mergeTags`）
+  - `null` / 省略 - 保持现有标签不变
+- `options.mergeTags?: boolean` - 如果为 `true`，将新标签添加到现有标签（并集）。如果为 `false`（默认），则替换所有现有标签。
+
+**返回：** `Promise<void>`
+
+**示例：**
+
+```typescript
+// 替换多个版本上的所有标签（默认行为）
+await client.updatePromptVersionTags(["version-id-1", "version-id-2"], {
+  tags: ["production", "v2"],
+});
+
+// 将新标签与现有标签合并
+await client.updatePromptVersionTags(["version-id-1"], {
+  tags: ["hotfix"],
+  mergeTags: true,
+});
+
+// 清除所有标签
+await client.updatePromptVersionTags(["version-id-1"], {
+  tags: [],
+});
+```
+
+#### `createChatPrompt(options)`
+
+创建新聊天 prompt 或在内容未更改时返回现有版本。
+
+**参数：**
+
+- `options.name: string` - 聊天 prompt 名称（必需）
+- `options.messages: ChatMessage[]` - 带有角色和内容的聊天消息数组（必需）
+- `options.type?: PromptType` - 模板引擎（默认：`MUSTACHE`）
+- `options.promptId?: string` - 可选的 prompt ID
+- `options.description?: string` - 可选的描述
+- `options.metadata?: JsonNode` - 可选的元数据
+- `options.changeDescription?: string` - 版本变更描述
+- `options.tags?: string[]` - 可选的标签
+
+**返回：** `Promise<ChatPrompt>` - 创建的或现有的聊天 prompt
+
+**ChatMessage 格式：**
+
+```typescript
+interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string | ContentPart[];
+}
+
+interface ContentPart {
+  type: "text" | "image_url" | "video_url";
+  text?: string; // 用于 text 类型
+  image_url?: { url: string; detail?: string }; // 用于 image_url 类型
+  video_url?: { url: string; mime_type?: string }; // 用于 video_url 类型
+}
+```
+
+#### `getChatPrompt(options)`
+
+通过名称获取聊天 prompt，可选择指定特定版本。
+
+**参数：**
+
+- `options.name: string` - 聊天 prompt 名称（必需）
+- `options.version?: string` - 顺序版本标识符（例如 `"v3"`）。如果省略，则返回最新版本。
+
+**返回：** `Promise<ChatPrompt | null>` - ChatPrompt 实例，如果未找到则返回 null
+
+### Prompt 类
+
+#### 方法
+
+##### `format(variables)`
+
+使用提供的变量格式化 prompt 模板。
+
+**参数：**
+
+- `variables: Record<string, unknown>` - 要替换的变量
+
+**返回：** `string` - 格式化的 prompt 文本
+
+**抛出：** 如果缺少必需变量（仅限 Mustache），则抛出 `PromptValidationError`
+
+##### `getVersions(options?)`
+
+获取此 prompt 的所有版本历史记录，支持可选的过滤、排序和搜索。
+
+**参数：**
+
+- `options.search?: string` - 针对模板内容和变更描述的自由文本搜索
+- `options.filters?: string` - JSON 编码的过滤器数组。每个条目为 `{ field, operator, value }`。
+- `options.sorting?: string` - JSON 编码的排序数组。每个条目为 `{ field, direction }`，其中 `direction` 为 `"ASC"` 或 `"DESC"`。
+
+**支持的过滤字段：**
+
+| 字段 | 类型 | 运算符 |
+|------|------|--------|
+| `id` | String | `=`、`!=`、`contains`、`not_contains`、`starts_with`、`ends_with`、`>`、`<` |
+| `template` | String | `=`、`!=`、`contains`、`not_contains`、`starts_with`、`ends_with`、`>`、`<` |
+| `change_description` | String | `=`、`!=`、`contains`、`not_contains`、`starts_with`、`ends_with`、`>`、`<` |
+| `created_by` | String | `=`、`!=`、`contains`、`not_contains`、`starts_with`、`ends_with`、`>`、`<` |
+| `type` | Enum | `=`、`!=` |
+| `tags` | List | `contains` |
+| `created_at` | DateTime | `>=`、`<=`、`>`、`<`（ISO 8601） |
+
+**返回：** `Promise<PromptVersion[]>` - 所有匹配版本的数组（默认最新版本在前）
+
+**示例：**
+
+```typescript
+// 获取所有版本
+const versions = await prompt.getVersions();
+
+// 按模板或变更描述内容搜索
+const searched = await prompt.getVersions({ search: "customer" });
+
+// 按标签过滤
+const prodVersions = await prompt.getVersions({
+  filters: JSON.stringify([
+    { field: "tags", operator: "contains", value: "production" },
+  ]),
+});
+
+// 按多个标签过滤（AND 逻辑）
+const stable = await prompt.getVersions({
+  filters: JSON.stringify([
+    { field: "tags", operator: "contains", value: "production" },
+    { field: "tags", operator: "contains", value: "stable" },
+  ]),
+});
+
+// 按模板内容过滤
+const customerVersions = await prompt.getVersions({
+  filters: JSON.stringify([
+    { field: "template", operator: "contains", value: "customer" },
+  ]),
+});
+
+// 按日期过滤
+const recentVersions = await prompt.getVersions({
+  filters: JSON.stringify([
+    { field: "created_at", operator: ">=", value: "2024-01-01T00:00:00Z" },
+  ]),
+});
+
+// 按创建日期排序（最旧的在前）
+const oldest = await prompt.getVersions({
+  sorting: JSON.stringify([{ field: "created_at", direction: "ASC" }]),
+});
+
+// 按模板内容字母顺序排序
+const alphabetical = await prompt.getVersions({
+  sorting: JSON.stringify([{ field: "template", direction: "ASC" }]),
+});
+
+// 组合搜索、过滤和排序
+const results = await prompt.getVersions({
+  search: "customer",
+  filters: JSON.stringify([
+    { field: "tags", operator: "contains", value: "production" },
+  ]),
+  sorting: JSON.stringify([{ field: "created_at", direction: "DESC" }]),
+});
+```
+
+##### `getVersion(version)`
+
+返回固定到此 prompt 特定版本的 `Prompt` 实例。接受顺序版本标识符（例如 `"v3"`）（首选）或提交哈希（已弃用；保留以向后兼容）。匹配 `/^v\d+$/` 的输入被视为版本号；其他输入被视为提交。
+
+**参数：**
+
+- `version: string` - 顺序版本（`"v<N>"`）或提交哈希（已弃用）
+
+**返回：** `Promise<Prompt | null>` - 固定到该版本的 Prompt 实例，如果未找到则返回 `null`
+
+```typescript
+// 首选：通过顺序版本标识符获取
+const v3 = await prompt.getVersion("v3");
+
+// 已弃用：通过提交哈希获取
+const byCommit = await prompt.getVersion("abc123de");
+```
+
+##### `useVersion(version)`
+
+通过创建带有旧内容的新版本来恢复特定版本。
+
+**参数：**
+
+- `version: PromptVersion` - 要恢复的版本对象
+
+**返回：** `Promise<Prompt>` - 带有恢复内容的新 prompt 实例
+
+##### `updateProperties(updates)`
+
+更新 prompt 属性而不创建新版本。
+
+**参数：**
+
+- `updates.name?: string` - 新的 prompt 名称
+- `updates.description?: string` - 新的描述
+- `updates.tags?: string[]` - 新的标签数组
+
+**返回：** `Promise<this>` - 此 prompt 实例（用于链式调用）
+
+##### `delete()`
+
+删除此 prompt 及其所有版本。
+
+**返回：** `Promise<void>`
+
+#### 属性
+
+- `id: string` - 唯一的 prompt 标识符
+- `name: string` - Prompt 名称
+- `prompt: string` - 当前模板内容
+- `version?: string` - 顺序版本标识符（例如 `"v3"`）
+- `type: PromptType` - 模板引擎类型
+- `description?: string` - Prompt 描述
+- `tags?: readonly string[]` - Prompt 标签
+- `metadata?: JsonNode` - Prompt 元数据
+- `changeDescription?: string` - 最新版本变更描述
+
+### PromptVersion 类
+
+#### 方法
+
+##### `format(variables)`
+
+使用提供的变量格式化此版本的模板。
+
+**参数：**
+
+- `variables: Record<string, unknown>` - 要替换的变量
+
+**返回：** `string` - 格式化的 prompt 文本
+
+##### `getVersionInfo()`
+
+获取适合显示的格式化版本信息字符串。包括版本标识符（例如 `"v3"`）、创建日期、创建者和变更描述。
+
+**返回：** `string` — 格式：`"[v3] YYYY-MM-DD by user@email.com - Change description"`
+
+##### `getVersionAge()`
+
+获取人类可读的版本年龄。
+
+**返回：** `string` - 格式："2 days ago"、"Today" 等
+
+##### `compareTo(other)`
+
+将此版本的模板与另一个版本进行比较。差异将记录到终端并返回。差异中的标签使用顺序版本标识符（例如 `"[v3]"`）。
+
+**参数：**
+
+- `other: PromptVersion` - 要比较的版本
+
+**返回：** `string` - 显示更改的 Git 风格统一差异
+
+#### 属性
+
+- `id: string` - 版本唯一标识符
+- `name: string` - 关联的 prompt 名称
+- `prompt: string` - 此版本的模板内容
+- `version?: string` - 顺序版本标识符（例如 `"v3"`）
+- `type: PromptType` - 模板引擎类型
+- `tags?: string[]` - 与此版本关联的标签
+- `metadata?: JsonNode` - 版本元数据
+- `changeDescription?: string` - 版本变更描述
+- `createdAt?: Date` - 创建时间戳
+- `createdBy?: string` - 创建者标识符
+
+### ChatPrompt 类
+
+`ChatPrompt` 类扩展了 `BasePrompt`，提供了用于管理结构化消息 prompts 的聊天特定功能。
+
+#### 方法
+
+##### `format(variables, supportedModalities?)`
+
+使用提供的变量格式化聊天 prompt 消息。
+
+**参数：**
+
+- `variables: Record<string, unknown>` - 要在消息内容中替换的变量
+- `supportedModalities?: SupportedModalities` - 可选的模态支持配置
+
+**SupportedModalities 格式：**
+
+```typescript
+interface SupportedModalities {
+  vision?: boolean; // 支持图像内容（默认：true）
+  video?: boolean; // 支持视频内容（默认：true）
+}
+```
+
+**返回：** `ChatMessage[]` - 格式化的聊天消息数组
+
+**抛出：** 如果缺少必需变量（仅限 Mustache），则抛出 `PromptValidationError`
+
+**示例：**
+
+```typescript
+const formatted = chatPrompt.format(
+  { name: "Alice", topic: "AI" },
+  { vision: true, video: false },
+);
+```
+
+##### `getVersions(options?)`
+
+获取此聊天 prompt 的所有版本历史记录，支持可选的过滤、排序和搜索。接受与 `Prompt.getVersions()` 方法相同的选项。
+
+**参数：**
+
+- `options.search?: string` - 要与模板内容和变更描述匹配的搜索文本
+- `options.sorting?: string` - 排序表达式
+- `options.filters?: string` - JSON 编码的过滤器数组（格式与 `Prompt.getVersions` 相同）
+
+**返回：** `Promise<PromptVersion[]>` - 所有匹配版本的数组（最新版本在前）
+
+##### `getVersion(version)`
+
+返回固定到此聊天 prompt 特定版本的 `ChatPrompt` 实例。接受顺序版本标识符（例如 `"v3"`）（首选）或提交哈希（已弃用；保留以向后兼容）。匹配 `/^v\d+$/` 的输入被视为版本号；其他输入被视为提交。
+
+**参数：**
+
+- `version: string` - 顺序版本（`"v<N>"`）或提交哈希（已弃用）
+
+**返回：** `Promise<ChatPrompt | null>` - 固定到该版本的 ChatPrompt 实例，如果未找到则返回 `null`
+
+```typescript
+// 首选：通过顺序版本标识符获取
+const v3 = await chatPrompt.getVersion("v3");
+
+// 已弃用：通过提交哈希获取
+const byCommit = await chatPrompt.getVersion("abc123de");
+```
+
+##### `useVersion(version)`
+
+通过创建带有旧内容的新版本来恢复特定版本。
+
+**参数：**
+
+- `version: PromptVersion` - 要恢复的版本对象
+
+**返回：** `Promise<ChatPrompt>` - 带有恢复内容的新聊天 prompt 实例
+
+##### `updateProperties(updates)`
+
+更新聊天 prompt 属性而不创建新版本。
+
+**参数：**
+
+- `updates.name?: string` - 新的 prompt 名称
+- `updates.description?: string` - 新的描述
+- `updates.tags?: string[]` - 新的标签数组
+
+**返回：** `Promise<this>` - 此聊天 prompt 实例（用于链式调用）
+
+##### `delete()`
+
+删除此聊天 prompt 及其所有版本。
+
+**返回：** `Promise<void>`
+
+#### 属性
+
+- `id: string` - 唯一的聊天 prompt 标识符
+- `name: string` - 聊天 prompt 名称
+- `messages: ChatMessage[]` - 带有角色和内容的聊天消息数组
+- `version?: string` - 顺序版本标识符（例如 `"v3"`）
+- `type: PromptType` - 模板引擎类型
+- `description?: string` - 聊天 prompt 描述
+- `tags?: readonly string[]` - 聊天 prompt 标签
+- `metadata?: JsonNode` - 聊天 prompt 元数据
+- `changeDescription?: string` - 最新版本变更描述

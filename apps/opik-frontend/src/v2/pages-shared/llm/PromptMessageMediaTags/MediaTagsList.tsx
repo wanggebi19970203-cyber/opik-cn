@@ -8,6 +8,7 @@ import {
   isImageBase64String,
   isVideoBase64String,
 } from "@/lib/images";
+import { useTranslation } from "react-i18next";
 
 export type MediaType = "image" | "video" | "audio";
 
@@ -35,6 +36,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
   editable = true,
   preview = true,
 }) => {
+  const { t } = useTranslation("llm");
   const icon = useMemo(() => {
     if (type === "image") {
       return <Image className="size-3.5 shrink-0" />;
@@ -61,7 +63,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
       return (
         <div className="flex max-w-[240px] flex-col gap-2">
           <p className="comet-body-s text-muted-foreground">
-            Preview not available
+            {t("llm:mediaTagsList.previewNotAvailable")}
           </p>
           <p className="comet-body-xs truncate text-muted-foreground">
             {value}
@@ -75,7 +77,7 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
         <div className="flex max-w-[240px] flex-col gap-2">
           <img
             src={value}
-            alt="Image preview"
+            alt={t("llm:mediaTagsList.imagePreview")}
             className="max-h-24 rounded border object-contain"
             onError={(event) => {
               event.currentTarget.style.display = "none";

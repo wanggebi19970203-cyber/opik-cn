@@ -16,6 +16,7 @@ import isNumber from "lodash/isNumber";
 import isArray from "lodash/isArray";
 import get from "lodash/get";
 import uniq from "lodash/uniq";
+import { useTranslation } from "react-i18next";
 import {
   useMetricDateRangeWithQueryAndStorage,
   MetricDateRangeSelect,
@@ -394,9 +395,11 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
   projectId,
   projectName = "",
   logsSource,
-  title = "Logs",
+  title,
 }) => {
+  const { t } = useTranslation("tracing");
   const type = TRACE_DATA_TYPE.traces;
+  const resolvedTitle = title ?? t("traceLogs.logs");
   const truncationEnabled = useTruncationEnabled();
 
   const {
@@ -900,7 +903,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
       <SheetContent
         ref={setSheetContentRef}
         className="flex w-screen flex-col shadow-none sm:max-w-full"
-        header={<SheetTopBar variant="info" title={title} />}
+        header={<SheetTopBar variant="info" title={resolvedTitle} />}
         onEscapeKeyDown={(e) => {
           if (traceId) {
             e.preventDefault();
@@ -913,7 +916,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
               <SearchInput
                 searchText={search as string}
                 setSearchText={setSearch}
-                placeholder="Search traces..."
+                placeholder={t("traceLogs.searchTraces")}
                 className="w-[320px]"
                 dimension="sm"
               />
@@ -943,7 +946,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
                 maxDate={maxDate}
               />
               <RefreshButton
-                tooltip="Refresh traces list"
+                tooltip={t("traceLogs.refreshTracesList")}
                 isFetching={isFetching}
                 onRefresh={() => {
                   refetch();
@@ -976,8 +979,8 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
               isEmpty={showEmptyState}
               emptyState={
                 <DataTableEmptyContent
-                  title="There are no traces yet"
-                  description="Traces will appear here once your agent starts receiving requests."
+                  title={t("traceLogs.noTracesYet")}
+                  description={t("traceLogs.noTracesDescription")}
                   lightImageUrl={emptyLogsLightUrl}
                   darkImageUrl={emptyLogsDarkUrl}
                 />

@@ -1,0 +1,107 @@
+---
+description: 从这里开始将 Opik 集成到基于 Qianfan 的生成式 AI 应用程序中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Qianfan | Opik 文档
+og:description: 学习如何使用 OpenAI SDK 将 Opik 与 Qianfan 的 OpenAI 兼容端点集成。
+og:site_name: Opik 文档
+og:title: 将 Opik 与 Qianfan 集成实现 AI 可观测性
+title: 使用 Opik 实现 Qianfan 的可观测性
+---
+
+[百度千帆](https://cloud.baidu.com/doc/qianfan/index.html) 提供 OpenAI 兼容的 API 端点用于托管模型访问。本指南介绍如何使用 OpenAI SDK 配合 Opik 来追踪和评估千帆调用。
+
+## 快速开始
+
+首先，确保你已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+你需要一个千帆 API key 和一个 OpenAI 兼容的 base URL。千帆 OpenAI 兼容的 base URL 是：
+
+`https://api.baiduqianfan.ai/v1`
+
+请参阅[千帆文档](https://intl.cloud.baidu.com/en/doc/qianfan/s/qm8qxemze-intl-en)了解最新的设置步骤和模型列表。
+
+## 追踪千帆 API 调用
+
+```python
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用你的千帆 base URL 初始化 OpenAI 客户端
+client = OpenAI(
+    base_url="https://api.baiduqianfan.ai/v1",
+    api_key="<QIANFAN_BEARER_TOKEN>",  # 千帆 bearer token
+    default_headers={"appid": "<QIANFAN_APP_ID>"}  # 可选的千帆 appid
+)
+client = track_openai(client)
+
+response = client.chat.completions.create(
+    model="ernie-4.0-turbo-8k",  # 使用千帆中的模型名称
+    messages=[
+        {"role": "user", "content": "Hello, world!"}
+    ],
+    temperature=0.7,
+    max_tokens=100
+)
+
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 与 @track 装饰器一起使用
+
+你可以将被追踪的客户端与 Opik 的 `@track` 装饰器结合使用，实现端到端追踪：
+
+```python
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.baiduqianfan.ai/v1",
+    api_key="<QIANFAN_BEARER_TOKEN>",  # 千帆 bearer token
+    default_headers={"appid": "<QIANFAN_APP_ID>"}  # 可选的千帆 appid
+)
+client = track_openai(client)
+
+@track
+def summarize_report(text: str) -> str:
+    response = client.chat.completions.create(
+        model="ernie-4.0-turbo-8k",
+        messages=[
+            {"role": "user", "content": text}
+        ]
+    )
+
+    return response.choices[0].message.content
+
+summary = summarize_report("Summarize this report in 3 bullets.")
+print(summary)
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **身份验证错误**：确认你的 API key 有效且有权访问千帆
+2. **模型未找到**：验证模型名称与千帆中可用的模型匹配
+3. **Base URL 问题**：确保你使用的是千帆的 OpenAI 兼容端点
+
+### 获取帮助
+
+- 查阅[千帆文档](https://cloud.baidu.com/doc/qianfan/index.html)
+- 查阅 Opik 追踪文档了解设置详情：[/v1/tracing/sdk_configuration](/v1/tracing/sdk_configuration)
+
+## 后续步骤
+
+将千帆与 Opik 集成后，你可以：
+
+- [评估 LLM 应用程序](/v1/evaluation/overview)
+- [创建数据集](/v1/evaluation/manage_datasets)
+- [收集反馈](/v1/tracing/annotate_traces)
+- [监控追踪](/v1/tracing/concepts)
+
+有关 OpenAI 兼容 API 的更多信息，请参阅 [OpenAI 集成指南](/v1/integrations/openai)。

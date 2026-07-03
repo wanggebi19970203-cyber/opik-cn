@@ -4,6 +4,7 @@ import map from "lodash/map";
 import get from "lodash/get";
 import isEmpty from "lodash/isEmpty";
 import isString from "lodash/isString";
+import i18next from "i18next";
 import {
   DASHBOARD_TYPE,
   DashboardSection,
@@ -22,7 +23,7 @@ export const MIN_MAX_EXPERIMENTS = 1;
 export const MAX_MAX_EXPERIMENTS = 100;
 export const DEFAULT_MAX_EXPERIMENTS = 10;
 
-const DEFAULT_SECTION_NAME = "New section";
+const getDefaultSectionName = () => i18next.t("common:dashboard.newSection");
 
 const TEMPLATE_ID_PREFIX = "template:";
 
@@ -37,7 +38,7 @@ export const isTemplateId = (id: string | null): boolean => {
 export const WIDGET_TYPES = WIDGET_TYPE;
 
 export const generateEmptySection = (
-  title = DEFAULT_SECTION_NAME,
+  title = getDefaultSectionName(),
 ): DashboardSection => {
   return {
     id: uniqid(),
@@ -48,7 +49,7 @@ export const generateEmptySection = (
 };
 
 export const generateEmptyDashboard = (): DashboardState => {
-  const defaultSection = generateEmptySection("Overview");
+  const defaultSection = generateEmptySection(i18next.t("common:dashboard.overview"));
 
   return {
     version: DASHBOARD_VERSION,

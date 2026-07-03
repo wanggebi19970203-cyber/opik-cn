@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { TraceFeedbackScore } from "@/types/traces";
 import FeedbackScoreTag from "@/shared/FeedbackScoreTag/FeedbackScoreTag";
@@ -29,6 +30,7 @@ const ThreadAnnotations: React.FC<ThreadAnnotationsProps> = ({
   setActiveSection,
   feedbackScores,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canAnnotateTraceSpanThread },
   } = usePermissions();
@@ -67,8 +69,8 @@ const ThreadAnnotations: React.FC<ThreadAnnotationsProps> = ({
 
   return (
     <DetailsActionSectionLayout
-      title="Thread scores"
-      closeTooltipContent="Close annotate"
+      title={t("annotate.threadScores")}
+      closeTooltipContent={t("detailsPanel.closeAnnotate")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
       explainer={EXPLAINERS_MAP[EXPLAINER_ID.what_are_feedback_scores]}
@@ -77,7 +79,7 @@ const ThreadAnnotations: React.FC<ThreadAnnotationsProps> = ({
         {hasFeedbackScores && (
           <>
             <div className="comet-body-s-accented truncate px-6 pt-4">
-              Thread scores
+              {t("annotate.threadScores")}
             </div>
             <div className="flex flex-wrap gap-2 px-6 py-2">
               {feedbackScores.map((score) => {

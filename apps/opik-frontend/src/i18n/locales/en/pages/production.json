@@ -1,0 +1,11 @@
+{
+  "production": {
+    "title": "Production",
+    "description": "Production monitoring and management",
+    "features": {
+      "alerts": "Alerts",
+      "rules": "Rules",
+      "monitoring": "Monitoring"
+    }
+  }
+}

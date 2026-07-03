@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
 import { Button } from "@/ui/button";
 import Loader from "@/shared/Loader/Loader";
@@ -22,6 +23,7 @@ const AddDatasetItemSidebar: React.FC<AddDatasetItemSidebarProps> = ({
   setOpen,
   columns,
 }) => {
+  const { t } = useTranslation("datasets");
   const handleClose = useCallback(() => setOpen(false), [setOpen]);
 
   // Fetch dataset item data (for create mode, no datasetItemId)
@@ -109,7 +111,7 @@ const AddDatasetItemSidebar: React.FC<AddDatasetItemSidebarProps> = ({
           <div className="relative size-full overflow-y-auto p-6 pt-4">
             <div className="border-b pb-4">
               <div className="flex items-center justify-between gap-2">
-                <div className="comet-title-accented">Add suite item</div>
+                <div className="comet-title-accented">{t("addItem.title")}</div>
                 <div className="flex items-center gap-2">
                   <Button
                     type="submit"
@@ -117,10 +119,10 @@ const AddDatasetItemSidebar: React.FC<AddDatasetItemSidebarProps> = ({
                     variant="default"
                     size="sm"
                   >
-                    Save changes
+                    {t("addItem.saveChanges")}
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDiscard}>
-                    Cancel
+                    {t("addItem.cancel")}
                   </Button>
                 </div>
               </div>
@@ -139,10 +141,10 @@ const AddDatasetItemSidebar: React.FC<AddDatasetItemSidebarProps> = ({
         setOpen={handleDialogOpenChange}
         onConfirm={cancel}
         onCancel={confirm}
-        title="Discard changes?"
-        description="You have unsaved changes. Do you want to discard them and close?"
-        confirmText="Keep editing"
-        cancelText="Discard changes"
+        title={t("addItem.discardChangesTitle")}
+        description={t("addItem.discardChangesDescription")}
+        confirmText={t("addItem.keepEditing")}
+        cancelText={t("addItem.discardChanges")}
         confirmButtonVariant="default"
       />
     </>

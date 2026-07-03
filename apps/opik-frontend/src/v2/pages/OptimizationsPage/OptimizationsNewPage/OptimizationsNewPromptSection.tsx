@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import { Save } from "lucide-react";
 import { usePermissions } from "@/contexts/PermissionsContext";
@@ -56,6 +57,7 @@ const OptimizationsNewPromptSection: React.FC<
   const {
     permissions: { canCreatePrompts },
   } = usePermissions();
+  const { t } = useTranslation("pages/optimizations");
 
   const [selectedChatPromptId, setSelectedChatPromptId] = useState<
     string | undefined
@@ -107,12 +109,12 @@ const OptimizationsNewPromptSection: React.FC<
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="comet-body-s-accented">Name</FormLabel>
+            <FormLabel className="comet-body-s-accented">{t("optimizations.newPage.name")}</FormLabel>
             <FormControl>
               <Input
                 {...field}
                 onChange={(e) => onNameChange(e.target.value)}
-                placeholder="Enter optimization name, or the name will be generated automatically"
+                placeholder={t("optimizations.newPage.namePlaceholder")}
                 className="h-10"
               />
             </FormControl>
@@ -124,7 +126,7 @@ const OptimizationsNewPromptSection: React.FC<
       <div>
         <div className="mb-2 flex h-8 items-center justify-between gap-2">
           <div className="flex shrink-0 items-center gap-0.5">
-            <Label className="comet-body-s-accented">Prompt</Label>
+            <Label className="comet-body-s-accented">{t("optimizations.newPage.prompt")}</Label>
             <PromptsSelectBox
               compact
               projectId={projectId}

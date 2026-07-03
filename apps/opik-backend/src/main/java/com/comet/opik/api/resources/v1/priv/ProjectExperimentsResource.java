@@ -50,7 +50,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project related resources")
+@Tag(name = "Projects", description = "项目相关资源")
 public class ProjectExperimentsResource {
 
     private final @NonNull ExperimentService experimentService;
@@ -60,9 +60,9 @@ public class ProjectExperimentsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @GET
-    @Operation(operationId = "findExperimentsByProject", summary = "Find experiments by project", description = "Find experiments scoped to a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Experiments page", content = @Content(schema = @Schema(implementation = Experiment.ExperimentPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findExperimentsByProject", summary = "按项目查找实验", description = "查找指定项目下的实验", responses = {
+            @ApiResponse(responseCode = "200", description = "实验分页", content = @Content(schema = @Schema(implementation = Experiment.ExperimentPage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.EXPERIMENT_VIEW)
     @JsonView(Experiment.View.Public.class)
@@ -73,12 +73,12 @@ public class ProjectExperimentsResource {
             @QueryParam("datasetId") UUID datasetId,
             @QueryParam("optimization_id") UUID optimizationId,
             @QueryParam("types") String typesQueryParam,
-            @QueryParam("name") @Schema(description = "Filter experiments by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤实验（部分匹配，不区分大小写）") String name,
             @QueryParam("dataset_deleted") boolean datasetDeleted,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters,
-            @QueryParam("experiment_ids") @Schema(description = "Filter experiments by a list of experiment IDs") String experimentIds,
-            @QueryParam("force_sorting") @DefaultValue("false") @Schema(description = "Force sorting even when exceeding the endpoint result set limit. May result in slower queries") boolean forceSorting) {
+            @QueryParam("experiment_ids") @Schema(description = "按实验 ID 列表过滤实验") String experimentIds,
+            @QueryParam("force_sorting") @DefaultValue("false") @Schema(description = "即使超出端点结果集限制也强制排序，可能导致查询变慢") boolean forceSorting) {
 
         List<SortingField> sortingFields = sortingFactory.newSorting(sorting);
 

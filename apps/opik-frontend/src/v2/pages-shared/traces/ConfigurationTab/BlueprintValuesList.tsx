@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { BlueprintValue, BlueprintValueType } from "@/types/agent-configs";
 import { formatBlueprintValue } from "@/utils/agent-configurations";
@@ -14,9 +15,9 @@ import {
   useFieldsCollapse,
 } from "@/v2/pages-shared/agent-configuration/fields/useFieldsCollapse";
 
-const renderScalarValue = (v: BlueprintValue) => {
+const renderScalarValue = (v: BlueprintValue, t: (key: string) => string) => {
   if (v.value === null || v.value === undefined) {
-    return <div className="comet-body-xs text-light-slate">No value</div>;
+    return <div className="comet-body-xs text-light-slate">{t("common.messages.noValue")}</div>;
   }
   return (
     <div className="comet-body-s whitespace-pre-wrap break-words text-foreground">
@@ -34,6 +35,7 @@ const BlueprintValuesList: React.FC<BlueprintValuesListProps> = ({
   values,
   controller: externalController,
 }) => {
+  const { t } = useTranslation();
   const collapsibleKeys = useMemo(() => collectMultiLineKeys(values), [values]);
   const internalController = useFieldsCollapse({ collapsibleKeys });
   const controller = externalController ?? internalController;
@@ -67,7 +69,7 @@ const BlueprintValuesList: React.FC<BlueprintValuesListProps> = ({
               />
             ) : fieldExpandable && !fieldExpanded ? null : (
               <div className="rounded-md border bg-primary-foreground px-3 py-2">
-                {renderScalarValue(v)}
+                {renderScalarValue(v, t)}
               </div>
             )}
           </FieldSection>

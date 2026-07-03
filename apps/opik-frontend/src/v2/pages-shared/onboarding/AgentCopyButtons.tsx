@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/ui/tooltip";
 import { useActiveWorkspaceName, useUserApiKey } from "@/store/AppStore";
+import { useTranslation } from "react-i18next";
 
 type CopyButtonConfig = {
   key: string;
@@ -24,6 +25,7 @@ type AgentCopyButtonsProps = {
 const AgentCopyButtons: React.FC<AgentCopyButtonsProps> = ({
   agentName = "",
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useActiveWorkspaceName();
   const apiKey = useUserApiKey();
 
@@ -41,7 +43,7 @@ const AgentCopyButtons: React.FC<AgentCopyButtonsProps> = ({
       value: workspaceName,
       icon: Layers,
       iconClassName: "text-emerald-600",
-      tooltip: "Copy workspace",
+      tooltip: t("agentCopyButtons.copyWorkspace"),
     },
     ...(agentName
       ? [
@@ -50,7 +52,7 @@ const AgentCopyButtons: React.FC<AgentCopyButtonsProps> = ({
             value: agentName,
             icon: Clipboard,
             iconClassName: "text-pink-500",
-            tooltip: "Copy project name",
+            tooltip: t("agentCopyButtons.copyProjectName"),
           },
         ]
       : []),
@@ -61,7 +63,7 @@ const AgentCopyButtons: React.FC<AgentCopyButtonsProps> = ({
             value: apiKey,
             icon: Key,
             iconClassName: "text-amber-500",
-            tooltip: "Copy the API key",
+            tooltip: t("agentCopyButtons.copyApiKey"),
           },
         ]
       : []),

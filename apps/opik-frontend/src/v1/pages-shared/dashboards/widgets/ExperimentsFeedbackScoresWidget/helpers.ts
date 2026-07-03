@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { CHART_TYPE } from "@/constants/chart";
 import { ExperimentsFeedbackScoresWidgetType } from "@/types/dashboard";
 import { Groups } from "@/types/groups";
@@ -5,11 +6,11 @@ import { COLUMN_DATASET_ID, COLUMN_METADATA_ID } from "@/types/shared";
 import { EXPERIMENT_IDS_FILTER_FIELD } from "@/lib/filters";
 import { DEFAULT_MAX_EXPERIMENTS } from "@/lib/dashboard/utils";
 
-const DEFAULT_TITLE = "Experiment metrics";
+const DEFAULT_TITLE = i18next.t("dashboard.experimentMetrics");
 
 const GROUP_FIELD_LABELS: Record<string, string> = {
-  [COLUMN_DATASET_ID]: "Test suite",
-  [COLUMN_METADATA_ID]: "Configuration",
+  [COLUMN_DATASET_ID]: i18next.t("dashboard.testSuite"),
+  [COLUMN_METADATA_ID]: i18next.t("dashboard.configuration"),
 };
 
 const getGroupByLabel = (groups: Groups | undefined): string | null => {
@@ -25,14 +26,14 @@ const getGroupByLabel = (groups: Groups | undefined): string | null => {
 
 const getMetricsLabel = (feedbackScores: string[] | undefined): string => {
   if (!feedbackScores || feedbackScores.length === 0) {
-    return "metrics";
+    return i18next.t("dashboard.metricsDefault");
   }
 
   if (feedbackScores.length === 1) {
     return feedbackScores[0];
   }
 
-  return `${feedbackScores.length} metrics`;
+  return `${feedbackScores.length} ${i18next.t("dashboard.metricsPlural")}`;
 };
 
 const buildSelectedExperimentsTitle = (
@@ -44,7 +45,7 @@ const buildSelectedExperimentsTitle = (
   }
 
   const metricsLabel = getMetricsLabel(feedbackScores);
-  return `Selected experiments - ${metricsLabel}`;
+  return `${i18next.t("dashboard.selectedExperiments")} - ${metricsLabel}`;
 };
 
 const buildFilterAndGroupTitle = (
@@ -56,15 +57,15 @@ const buildFilterAndGroupTitle = (
   const groupByLabel = getGroupByLabel(groups);
   const metricsLabel = getMetricsLabel(feedbackScores);
 
-  if (metricsLabel === "metrics") {
+  if (metricsLabel === i18next.t("dashboard.metricsDefault")) {
     return DEFAULT_TITLE;
   }
 
   let baseLabel: string;
   if (hasFilters) {
-    baseLabel = `Filtered ${metricsLabel.toLowerCase()}`;
+    baseLabel = `${i18next.t("dashboard.filtered")} ${metricsLabel.toLowerCase()}`;
     if (feedbackScores && feedbackScores.length === 1) {
-      baseLabel = `Filtered ${metricsLabel}`;
+      baseLabel = `${i18next.t("dashboard.filtered")} ${metricsLabel}`;
     }
   } else if (feedbackScores && feedbackScores.length === 1) {
     baseLabel = metricsLabel;
@@ -73,7 +74,7 @@ const buildFilterAndGroupTitle = (
   }
 
   if (hasGroups && groupByLabel) {
-    return `${baseLabel} grouped by ${groupByLabel}`;
+    return `${baseLabel} ${i18next.t("dashboard.groupedBy")} ${groupByLabel}`;
   }
 
   return baseLabel;

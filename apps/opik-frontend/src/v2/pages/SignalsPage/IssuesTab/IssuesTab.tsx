@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { StringParam, useQueryParam } from "use-query-params";
 import { ChevronDown, Inbox, PartyPopper, Radar, Undo2 } from "lucide-react";
@@ -32,31 +33,13 @@ import IssueDetail from "@/v2/pages/SignalsPage/IssuesTab/IssueDetail";
 import IssueSeverityBadge from "@/v2/pages/SignalsPage/IssuesTab/IssueSeverityBadge";
 import IssuesSkeleton from "@/v2/pages/SignalsPage/IssuesTab/IssuesSkeleton";
 
-const SORT_OPTIONS: { value: string; label: string; sorting: Sorting }[] = [
-  {
-    value: "last_seen",
-    label: "By last seen",
-    sorting: [{ id: "last_seen", desc: true }],
-  },
-  {
-    value: "total_occurrences",
-    label: "By occurrences",
-    sorting: [{ id: "total_occurrences", desc: true }],
-  },
-  {
-    value: "severity",
-    label: "By severity",
-    sorting: [{ id: "severity", desc: false }],
-  },
-];
+const SORT_OPTIONS_SORTING: Record<string, Sorting> = {
+  last_seen: [{ id: "last_seen", desc: true }],
+  total_occurrences: [{ id: "total_occurrences", desc: true }],
+  severity: [{ id: "severity", desc: false }],
+};
 
 const PAGE_SIZE = 100;
-
-const RUNNING_DESC =
-  "We're analyzing your traces to detect issues. Results will update automatically — you can leave this page.";
-
-const DETAIL_SUBTITLE =
-  "You'll see a summary, affected traces, and Ollie's suggested fix.";
 
 const ListColumn: React.FC<{
   title: React.ReactNode;
@@ -136,6 +119,7 @@ const ListEmptyState: React.FC<{
 );
 
 const DetailPlaceholder: React.FC = () => {
+  const { t } = useTranslation("pages/signals");
   const { themeMode } = useTheme();
   const Icon =
     themeMode === THEME_MODE.DARK
@@ -146,10 +130,10 @@ const DetailPlaceholder: React.FC = () => {
       <Icon className="h-[68px] w-[63px] text-[#F3F4FE]" />
       <div className="flex flex-col gap-1">
         <span className="comet-body-s-accented text-foreground">
-          Your issue details will appear here
+          {t("signals.issues.issueDetailsPlaceholder")}
         </span>
         <span className="comet-body-xs text-muted-slate">
-          {DETAIL_SUBTITLE}
+          {t("signals.issues.detailSubtitle")}
         </span>
       </div>
     </div>
@@ -173,10 +157,33 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
   onRunDiagnostic,
   onShowOpenIssues,
 }) => {
+  const { t } = useTranslation("pages/signals");
+
+  const sortOptions = useMemo(
+    () => [
+      {
+        value: "last_seen",
+        label: t("signals.issues.sortByLastSeen"),
+        sorting: SORT_OPTIONS_SORTING.last_seen,
+      },
+      {
+        value: "total_occurrences",
+        label: t("signals.issues.sortByOccurrences"),
+        sorting: SORT_OPTIONS_SORTING.total_occurrences,
+      },
+      {
+        value: "severity",
+        label: t("signals.issues.sortBySeverity"),
+        sorting: SORT_OPTIONS_SORTING.severity,
+      },
+    ],
+    [t],
+  );
+
   const status = showResolved
     ? AGENT_INSIGHTS_ISSUE_STATUS.resolved
     : AGENT_INSIGHTS_ISSUE_STATUS.open;
-  const [sortValue, setSortValue] = useState<string>(SORT_OPTIONS[0].value);
+  const [sortValue, setSortValue] = useState<string>("last_seen");
   const [activeIssueId, setActiveIssueId] = useQueryParam(
     "issue",
     StringParam,
@@ -185,10 +192,10 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
 
   const sorting = useMemo(
     () =>
-      SORT_OPTIONS.find((o) => o.value === sortValue)?.sorting ?? [
+      sortOptions.find((o) => o.value === sortValue)?.sorting ?? [
         { id: "last_seen", desc: true },
       ],
-    [sortValue],
+    [sortValue, sortOptions],
   );
 
   const { data, isPending } = useAgentInsightsIssuesList(
@@ -227,7 +234,8 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
   const issueCount = data?.total ?? issues.length;
   const titleNode = (
     <span className="comet-body-xs-accented">
-      Issues{issueCount > 0 && ` (${issueCount})`}
+      {t("signals.issues.issues")}
+      {issueCount > 0 && ` (${issueCount})`}
     </span>
   );
 
@@ -237,7 +245,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {SORT_OPTIONS.map((option) => (
+        {sortOptions.map((option) => (
           <SelectItem
             key={option.value}
             value={option.value}
@@ -268,10 +276,10 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
               <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                 <div className="flex flex-col gap-0.5">
                   <span className="comet-body-s-accented text-foreground">
-                    Running diagnostic
+                    {t("signals.issues.runningDiagnostic")}
                   </span>
                   <span className="comet-body-xs text-muted-slate">
-                    {RUNNING_DESC}
+                    {t("signals.issues.runningDescription")}
                   </span>
                 </div>
                 <RunningBar />
@@ -299,8 +307,8 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
               <Radar className="size-4 text-black dark:text-white" />
             </IconTile>
           }
-          title="Running your first diagnostic"
-          description={RUNNING_DESC}
+          title={t("signals.issues.runningFirstDiagnostic")}
+          description={t("signals.issues.runningDescription")}
         >
           <RunningBar />
         </ListEmptyState>
@@ -316,8 +324,8 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
               <Inbox className="size-3.5 text-black dark:text-white" />
             </IconTile>
           }
-          title="Nothing resolved yet"
-          description="Issues you resolve will show up here. You can reopen them anytime."
+          title={t("signals.issues.nothingResolvedYet")}
+          description={t("signals.issues.nothingResolvedDescription")}
         >
           {onShowOpenIssues && (
             <Button
@@ -327,7 +335,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
               className="h-auto select-none gap-1.5 self-start px-0"
             >
               <Undo2 className="size-3" />
-              Back to open issues
+              {t("signals.issues.backToOpenIssues")}
             </Button>
           )}
         </ListEmptyState>
@@ -342,8 +350,8 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
             <PartyPopper className="size-3.5 text-black dark:text-white" />
           </IconTile>
         }
-        title="All clear"
-        description="Run a new diagnostic to check for anything new."
+        title={t("signals.issues.allClear")}
+        description={t("signals.issues.allClearDescription")}
       >
         {onRunDiagnostic && (
           <Button
@@ -353,7 +361,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
             className="h-auto select-none gap-1.5 self-start px-0"
           >
             <Radar className="size-3" />
-            Run diagnostic
+            {t("signals.issues.runDiagnostic")}
           </Button>
         )}
       </ListEmptyState>

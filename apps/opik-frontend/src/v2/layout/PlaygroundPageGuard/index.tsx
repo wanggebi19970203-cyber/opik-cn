@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import NoAccessPageGuard from "@/v2/layout/NoAccessPageGuard/NoAccessPageGuard";
 
 const PlaygroundPageGuard = () => {
+  const { t } = useTranslation("navigation");
   const {
     permissions: { canUsePlayground },
   } = usePermissions();
@@ -9,7 +11,7 @@ const PlaygroundPageGuard = () => {
   return (
     <NoAccessPageGuard
       canViewPage={canUsePlayground}
-      message="You don't have permissions to use playground in this workspace."
+      message={t("noAccess.noPermissionsPlayground")}
     />
   );
 };

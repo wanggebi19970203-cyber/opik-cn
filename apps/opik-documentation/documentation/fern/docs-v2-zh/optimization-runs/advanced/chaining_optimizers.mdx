@@ -1,0 +1,74 @@
+---
+description: 按顺序运行多个优化器，以平衡探索和微调。
+headline: 链接优化器 | Opik 文档
+og:description: 了解通过链接 MetaPrompt 和 Parameter 优化器来优化工作流，以提高项目中的性能和微调效果。
+og:site_name: Opik 文档
+og:title: 链接优化器 - Opik
+title: 链接优化器
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/advanced/chaining_optimizers
+---
+
+某些项目受益于连续运行两个或更多优化器。例如，使用 MetaPrompt 改进措辞，然后使用 Parameter 优化器微调采样设置。本指南解释了为什么您可能链接运行、权衡取舍，以及用于在阶段之间传递提示词和元数据的 API。
+
+## 策略模式
+
+| 流水线 | 为什么运行它 | 优点 | 缺点 | 复杂度 |
+| --- | --- | --- | --- | --- |
+| HRPO → Parameter | 现有长/复杂提示词场景：HRPO 的反射分析找到故障模式；然后 Parameter 优化器在改进的提示词上收紧参数。 | 非常适合具有大量现有复杂性的遗留提示词。有助于生成可解释的变更日志。 | 需要带有丰富 `reason` 字符串的指标；两个阶段增加成本。 | 中等 |
+| Evolutionary → Few-Shot Bayesian | 冷启动场景：先探索许多提示词架构，然后让 Few-Shot Bayesian 为获胜结构选择最佳示例组合。 | 高多样性 followed by 精确的示例选择。 | Evolutionary 运行成本高；Bayesian 阶段依赖于精心策划的数据集。 | 高 |
+| MetaPrompt → Parameter | 基线提示词需要润色加上采样调整。 | 以最少的配置快速获得收益；可以在一小时内运行。 | 对故障模式的洞察不如反射流水线。 | 低。 |
+| Evolutionary → Parameter | 寻找新颖的提示词，然后通过调优 temperature/top_p 挤出成本/延迟。 | 平衡创意与生产就绪性。 | 两个重量级优化循环；确保预算余量。 | 高。 |
+
+## 示例流水线
+
+```python
+from opik_optimizer import MetaPromptOptimizer, ParameterOptimizer, ChatPrompt
+from opik_optimizer.parameter_optimizer import ParameterSearchSpace
+
+meta = MetaPromptOptimizer(model="openai/gpt-4o")
+parameter = ParameterOptimizer(model="openai/gpt-4o")
+
+meta_result = meta.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=metric,
+    max_trials=4,
+)
+
+# Reuse the optimized prompt from the first stage
+optimized_prompt = prompt.with_messages(meta_result.prompt)
+
+search_space = ParameterSearchSpace(parameters=[
+    {"name": "temperature", "distribution": "float", "low": 0.1, "high": 0.9},
+    {"name": "top_p", "distribution": "float", "low": 0.7, "high": 1.0},
+])
+
+final_result = parameter.optimize_parameter(
+    prompt=optimized_prompt,
+    dataset=dataset,
+    metric=metric,
+    parameter_space=search_space,
+    max_trials=20,
+)
+```
+
+## 检查清单
+
+- **在阶段之间冻结数据集和指标**，以保持比较公平。
+- **一致使用验证数据集** – 如果您在第一阶段提供了 `validation_dataset`，请在后续阶段使用相同的分割，以确保公平比较并避免过拟合。
+- **记录流水线元数据**（例如，`experiment_config={"pipeline": "hierarchical_then_param"}`），以便仪表板显示来源。
+- **预算 token** – 链接运行会增加成本；从较小的 `n_samples` 开始，一旦结果看起来有希望再增加。
+- **重用 OptimizationResult** – 每个优化器返回一个 `OptimizationResult`，因此您可以直接将 `result.prompt`（以及 `result.details`、`result.history`）传递到下一阶段，而无需重建状态。
+
+## 自动化提示
+
+- 使用 Makefile 或 CI 工作流运行阶段 1 → 阶段 2，并设置清晰的检查点。
+- 将中间提示词与元数据（优化器、分数、数据集）一起存储在版本控制中。
+- 使用从 `final_result.history` 生成的摘要报告通知利益相关者。
+
+## 相关文档
+
+- [优化提示词](/v1/agent_optimization/optimization/optimize_prompts)
+- [Few-Shot 贝叶斯优化器](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer)
+- [HRPO（层次反射提示词优化器）](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer)
+- [参数优化器](/v1/agent_optimization/algorithms/parameter_optimizer)

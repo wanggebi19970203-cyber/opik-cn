@@ -1,0 +1,116 @@
+---
+description: 从这里开始将 Opik 集成到基于 VoltAgent 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: VoltAgent | Opik 文档
+og:description: 使用 VoltAgent 有效构建和管理 AI 代理，利用模块化设计实现工具集成和内存管理。
+og:site_name: Opik 文档
+og:title: VoltAgent 框架 - 使用 Opik 构建 AI 代理
+title: 使用 Opik 实现 VoltAgent 可观测性
+---
+
+VoltAgent 是一个代理框架，旨在简化 AI 代理的创建和管理，内置工具使用、内存管理和多代理协调支持。它提供了灵活的架构，用于构建生产就绪的 AI 代理系统。
+
+VoltAgent 的主要优势在于其模块化设计，允许开发者轻松创建、自定义和部署具有全面工具集成和内存功能的 AI 代理。
+
+
+## 快速开始
+
+要使用 VoltAgent 与 Opik 的集成，你需要安装 VoltAgent 和所需的 OpenTelemetry 包：
+
+```bash
+npm install @voltagent/core @opentelemetry/api @opentelemetry/sdk-trace @opentelemetry/exporter-trace-otlp-http
+```
+
+## 环境配置
+
+根据你的 Opik 部署方式配置环境变量：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果你使用的是 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪日志记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            你也可以将 `Comet-Workspace` 参数更新为其他值，
+            以便将数据记录到不同的工作空间。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        如果你使用的是 Opik 企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪日志记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            你也可以将 `Comet-Workspace` 参数更新为其他值，
+            以便将数据记录到不同的工作空间。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+
+    如果你使用的是自托管的 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将追踪日志记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+        环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 VoltAgent 中使用 Opik
+
+为 VoltAgent 设置 OpenTelemetry 检测：
+
+```typescript
+import { trace, SpanStatusCode } from "@opentelemetry/api";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
+// Configure the OTLP exporter
+const otlpExporter = new OTLPTraceExporter();
+
+// Set up the tracer provider
+const provider = new NodeTracerProvider();
+provider.addSpanProcessor(new BatchSpanProcessor(otlpExporter));
+provider.register();
+
+// Your VoltAgent code will now automatically send traces to Opik
+import { Agent } from "@voltagent/core";
+
+const agent = new Agent();
+// ... agent configuration
+```
+
+## 更多改进
+
+如果你对 VoltAgent 集成有任何问题或建议，请在我们的 GitHub 仓库中[提交 issue](https://github.com/comet-ml/opik/issues/new/choose)。

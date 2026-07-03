@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import get from "lodash/get";
 import isEmpty from "lodash/isEmpty";
 import {
@@ -48,6 +49,7 @@ const PlaygroundOutputTable = ({
   isLoadingDatasetItems,
   isFetchingData,
 }: PlaygroundOutputTableProps) => {
+  const { t } = useTranslation();
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
     Record<string, number>
   >(COLUMNS_WIDTH_KEY, {
@@ -58,8 +60,8 @@ const PlaygroundOutputTable = ({
     useIncrementalDatasetHydration(datasetItems);
 
   const noDataMessage = isLoadingDatasetItems
-    ? "Loading..."
-    : "No dataset items";
+    ? t("playground.outputs.loading")
+    : t("playground.outputs.noDatasetItems");
 
   const rows = useMemo(() => {
     if (isLoadingDatasetItems) {
@@ -110,7 +112,7 @@ const PlaygroundOutputTable = ({
     // Add tags column
     inputColumns.push({
       id: "tags",
-      label: "Tags",
+      label: t("playground.outputTable.tags"),
       type: COLUMN_TYPE.list,
       iconType: "tags",
       accessorFn: (row) => row.tags || [],
@@ -121,7 +123,7 @@ const PlaygroundOutputTable = ({
       columnHelper.group({
         id: "variables",
         meta: {
-          header: "Variables",
+          header: t("playground.outputTable.variables"),
         },
         header: SectionHeader,
         columns: convertColumnDataToColumn<
@@ -134,7 +136,7 @@ const PlaygroundOutputTable = ({
     const outputColumns = promptIds.map((promptId, promptIdx) => {
       return {
         id: `output-${promptId}`,
-        label: `Output ${getAlphabetLetter(promptIdx)}`,
+        label: t("playground.outputTable.outputPrefix", { letter: getAlphabetLetter(promptIdx) }),
         type: COLUMN_TYPE.string,
         cell: PlaygroundOutputCell as never,
         minSize: 350,
@@ -154,7 +156,7 @@ const PlaygroundOutputTable = ({
         columnHelper.group({
           id: "playground-output",
           meta: {
-            header: "Output",
+            header: t("playground.outputTable.output"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -175,7 +177,7 @@ const PlaygroundOutputTable = ({
     }
 
     return retVal;
-  }, [datasetColumns, promptIds]);
+  }, [t, datasetColumns, promptIds]);
 
   const resizeConfig = useMemo(
     () => ({

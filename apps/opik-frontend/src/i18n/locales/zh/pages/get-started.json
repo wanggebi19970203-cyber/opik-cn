@@ -1,0 +1,73 @@
+{
+  "getStarted": {
+    "title": "快速开始",
+    "description": "学习如何使用 Opik",
+    "steps": {
+      "install": "安装 Opik",
+      "configure": "配置环境",
+      "firstTrace": "创建第一个追踪",
+      "evaluate": "运行第一次评估"
+    },
+    "resources": {
+      "documentation": "文档",
+      "tutorials": "教程",
+      "examples": "示例"
+    },
+    "agentName": {
+      "title": "为项目命名",
+      "description": "这将创建一个用于存放追踪和实验的项目。",
+      "projectName": "项目名称",
+      "placeholder": "我的项目",
+      "creating": "创建中",
+      "continue": "继续",
+      "createError": "创建项目失败，请重试。",
+      "altText": "引导插图"
+    },
+    "connectAgent": {
+      "setUpOpikFor": "为 {{agentName}} 设置 Opik",
+      "description": "连接您的代码仓库以帮助设置追踪，或手动接入您的代码。",
+      "aiAssistedSetup": "AI辅助设置",
+      "manualSetup": "手动设置",
+      "backToIntegrations": "返回集成列表",
+      "needSomeHelp": "需要帮助？",
+      "helpDescription": "从您的团队或我们这里获取帮助。选择最适合您的方式。",
+      "getHelpInSlack": "在Slack中获取帮助",
+      "watchTutorial": "观看教程",
+      "exploreOpik": "探索 Opik"
+    },
+    "connectToOllie": {
+      "description": "Ollie 是 Opik 的 AI 编程助手。当您连接代码仓库后，Ollie 可以检查您的代码、帮助添加 Opik 追踪并引导您完成设置。",
+      "installOpik": "安装 Opik",
+      "connectRepo": "将代码仓库连接到 Ollie",
+      "repoConnected": "仓库已连接",
+      "waitingForRepo": "等待您的仓库连接\u2026",
+      "connectedDescription": "Ollie 现在可以检查您的代码并帮助您在 Opik 中设置追踪。",
+      "notConnectedDescription": "在您的仓库中运行上述命令。连接后，Ollie 可以检查您的代码并帮助完成设置。",
+      "connectTroubleshooting": "连接故障排除"
+    },
+    "demoLoading": {
+      "creatingDemoProject": "正在创建演示项目…",
+      "settingUpSampleTraces": "正在设置示例追踪…",
+      "preparingData": "正在为您准备数据…",
+      "almostReady": "即将完成…",
+      "tryAgain": "重试",
+      "takingLonger": "演示数据加载时间超出预期。",
+      "backToSetup": "返回设置"
+    },
+    "manualIntegration": {
+      "allIntegrations": "所有集成",
+      "llmProviders": "LLM 提供商",
+      "frameworksAndTools": "框架和工具",
+      "useOpikSkills": "使用 Opik 技能",
+      "viewAll": "查看全部"
+    },
+    "selectIntent": {
+      "welcome": "欢迎使用 Opik - 让我们帮您完成设置",
+      "whereAreYou": "您目前的情况是？",
+      "hasAgent": "我有 AI Agent 或 LLM 应用",
+      "hasAgentDescription": "连接它并精确追踪您的 Agent 每次运行的行为。",
+      "noAgent": "我还没有 AI Agent",
+      "altText": "引导插图"
+    }
+  }
+}

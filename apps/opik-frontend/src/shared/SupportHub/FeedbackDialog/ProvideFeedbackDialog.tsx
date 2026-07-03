@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -22,6 +23,7 @@ type ProvideFeedbackDialogProps = {
 const ProvideFeedbackDialog: React.FunctionComponent<
   ProvideFeedbackDialogProps
 > = ({ open, setOpen }) => {
+  const { t } = useTranslation();
   const [feedback, setFeedback] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -42,12 +44,12 @@ const ProvideFeedbackDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Provide feedback</DialogTitle>
+          <DialogTitle>{t("common.feedback.provideFeedback")}</DialogTitle>
         </DialogHeader>
 
         <div className="size-full overflow-y-auto pb-4">
           <Label htmlFor="provideFeedback text-foreground-secondary">
-            Share your thoughts!
+            {t("common.feedback.shareYourThoughts")}
           </Label>
           <Textarea
             id="provideFeedback"
@@ -57,30 +59,28 @@ const ProvideFeedbackDialog: React.FunctionComponent<
         </div>
 
         <div className="comet-body-s-accented">
-          Would you like to chat with us?
+          {t("common.feedback.chatWithUs")}
         </div>
         <div className="comet-body-s max-w-[570px] text-muted-slate">
-          We are always happy to get feedback from our users during a quick
-          call. If you would like to chat with us, please enter your details
-          below.
+          {t("common.feedback.chatDescription")}
         </div>
 
         <div className="flex flex-row items-center gap-4 pb-4">
           <div className="w-full">
-            <Label htmlFor="name">Your name</Label>
+            <Label htmlFor="name">{t("common.feedback.yourName")}</Label>
             <Input
               id="name"
-              placeholder="Name"
+              placeholder={t("common.labels.name")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="w-full">
-            <Label htmlFor="email">Your email</Label>
+            <Label htmlFor="email">{t("common.feedback.yourEmail")}</Label>
             <Input
               id="email"
-              placeholder="Email"
+              placeholder={t("common.labels.email")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -89,7 +89,7 @@ const ProvideFeedbackDialog: React.FunctionComponent<
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("common.buttons.cancel")}</Button>
           </DialogClose>
           <DialogClose asChild>
             <Button
@@ -103,7 +103,7 @@ const ProvideFeedbackDialog: React.FunctionComponent<
                 });
               }}
             >
-              Send feedback
+              {t("common.feedback.sendFeedback")}
             </Button>
           </DialogClose>
         </DialogFooter>

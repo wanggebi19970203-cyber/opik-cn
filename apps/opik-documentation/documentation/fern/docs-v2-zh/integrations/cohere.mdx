@@ -1,0 +1,142 @@
+---
+description: 从这里开始将 Opik 集成到基于 Cohere 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Cohere | Opik 文档
+og:description: 了解如何使用 OpenAI SDK 将 Opik 与 Cohere 集成，在 Opik 项目中高效跟踪和评估 API 调用。
+og:site_name: Opik 文档
+og:title: 将 Cohere 模型与 Opik 集成以增强跟踪能力
+title: 使用 Opik 实现 Cohere 可观测性
+---
+
+[Cohere](https://cohere.com/) 提供最先进的大语言模型，擅长文本生成、摘要、分类和检索增强生成（RAG）。
+
+本指南介绍如何通过 OpenAI SDK 兼容性 API 将 Opik 与 Cohere 集成。通过将 opik 提供的 `track_openai` 方法与 Cohere 的兼容性端点配合使用，您可以轻松地在 Opik 项目中跟踪和评估 Cohere API 调用，Opik 会自动记录输入提示词、使用的模型、token 用量和生成的响应。
+
+## 快速开始
+
+### 配置 Opik
+
+要开始跟踪 Cohere LLM 调用，您需要安装 `opik` 和 `openai` 两个包。可以使用 pip 进行安装：
+
+```bash
+pip install opik openai
+```
+
+此外，您可以使用 `opik configure` 命令配置 Opik，该命令会提示您输入正确的本地服务器地址，或者如果您使用云平台，则需要输入 API 密钥：
+
+```bash
+opik configure
+```
+
+### 配置 Cohere
+
+您需要将 Cohere API 密钥设置为环境变量：
+
+```bash
+export COHERE_API_KEY="YOUR_API_KEY"
+```
+
+## 跟踪 Cohere API 调用
+
+利用 OpenAI 兼容性 API，在初始化客户端时将基础 URL 替换为 Cohere 的端点：
+
+```python
+import os
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ.get("COHERE_API_KEY"),
+    base_url="https://api.cohere.ai/compatibility/v1"  # Cohere 兼容性 API 端点
+)
+
+client = track_openai(client)
+
+response = client.chat.completions.create(
+    model="command-r7b-12-2024",  # 替换为所需的 Cohere 模型
+    messages=[
+        {"role": "system", "content": "You are an assistant."},
+        {"role": "user", "content": "Why is tracking and evaluation of LLMs important?"}
+    ],
+    temperature=0.7,
+    max_tokens=100
+)
+
+print(response.choices[0].message.content)
+```
+
+`track_openai` 会自动跟踪和记录 API 调用，包括输入提示词、使用的模型和生成的响应。您可以在 Opik 项目仪表板中查看这些日志。
+
+<Frame>
+  <img src="/img/tracing/cohere_integration.png" />
+</Frame>
+
+## 在跟踪函数中使用 Cohere
+
+如果您在使用 [`@track`](/tracing/advanced/log_traces#using-function-decorators) 装饰器跟踪的函数中使用 Cohere，可以正常使用已跟踪的客户端：
+
+```python
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+import os
+
+client = OpenAI(
+    api_key=os.environ.get("COHERE_API_KEY"),
+    base_url="https://api.cohere.ai/compatibility/v1"
+)
+tracked_client = track_openai(client)
+
+@track
+def generate_story(prompt):
+    response = tracked_client.chat.completions.create(
+        model="command-r7b-12-2024",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    response = tracked_client.chat.completions.create(
+        model="command-r7b-12-2024",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+generate_opik_story()
+```
+
+<Frame>
+  <img src="/img/tracing/cohere_trace_decorator.png" />
+</Frame>
+
+## 支持的 Cohere 模型
+
+`track_openai` 包装器配合 Cohere 兼容性 API 支持以下 Cohere 模型：
+
+- `command-r7b-12-2024` - Command R 7B 模型
+- `command-r-plus` - Command R Plus 模型
+- `command-r` - Command R 模型
+- `command-light` - Command Light 模型
+- `command` - Command 模型
+
+## 支持的 OpenAI 方法
+
+`track_openai` 包装器在与 Cohere 配合使用时支持以下 OpenAI 方法：
+
+- `client.chat.completions.create()`，包括对 stream=True 模式的支持
+- `client.beta.chat.completions.parse()`
+- `client.beta.chat.completions.stream()`
+- `client.responses.create()`
+
+如果您希望跟踪其他 OpenAI 方法，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

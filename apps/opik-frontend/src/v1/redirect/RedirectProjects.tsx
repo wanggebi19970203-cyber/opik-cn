@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Loader from "@/shared/Loader/Loader";
 import { StringParam, useQueryParams } from "use-query-params";
 import useAppStore from "@/store/AppStore";
@@ -8,6 +9,7 @@ import NoData from "@/shared/NoData/NoData";
 import { Button } from "@/ui/button";
 
 const RedirectProjects = () => {
+  const { t } = useTranslation();
   const [query] = useQueryParams({
     id: StringParam,
     name: StringParam,
@@ -42,12 +44,12 @@ const RedirectProjects = () => {
     return (
       <NoData
         icon={<div className="comet-title-m mb-1 text-foreground">404</div>}
-        title="This project could not be found"
-        message="The project you’re looking for doesn’t exist or has been deleted."
+        title={t("messages.projectNotFound")}
+        message={t("messages.projectNotFoundDescription")}
       >
         <div className="pt-5">
           <Link to="/$workspaceName/home" params={{ workspaceName }}>
-            <Button>Back to Home</Button>
+            <Button>{t("buttons.backToHome")}</Button>
           </Link>
         </div>
       </NoData>
@@ -55,7 +57,7 @@ const RedirectProjects = () => {
   }
 
   if (!query.id && !query.name) {
-    return <NoData message="No project params set" />;
+    return <NoData message={t("messages.noProjectParamsSet")} />;
   }
 
   return <Loader />;

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import get from "lodash/get";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import api, { DATASETS_REST_ENDPOINT } from "@/api/api";
 import { Filters } from "@/types/filters";
@@ -57,10 +58,12 @@ const useDatasetItemBatchDeleteMutation = () => {
     onSuccess: (_, { ids, isAllItemsSelected }) => {
       const isSingle = !isAllItemsSelected && ids.length === 1;
       toast({
-        title: isSingle ? "Suite item removed" : "Suite items removed",
+        title: isSingle
+          ? i18next.t("common:messages.suiteItemRemoved")
+          : i18next.t("common:messages.suiteItemsRemoved"),
         description: isSingle
-          ? "The suite item has been removed. Don't forget to save your changes to create a new version."
-          : "The suite items have been removed. Don't forget to save your changes to create a new version.",
+          ? i18next.t("common:messages.suiteItemRemovedDescription")
+          : i18next.t("common:messages.suiteItemsRemovedDescription"),
       });
     },
     onError: (error: AxiosError) => {
@@ -71,7 +74,7 @@ const useDatasetItemBatchDeleteMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

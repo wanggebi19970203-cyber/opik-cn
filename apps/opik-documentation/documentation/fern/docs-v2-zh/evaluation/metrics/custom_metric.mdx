@@ -1,0 +1,372 @@
+---
+description: 描述如何创建自定义指标以在 Opik 评估平台中使用
+headline: 自定义指标 | Opik 文档
+og:description: 在 Opik 中定义自定义指标，使其与您的业务 KPI 保持一致，并捕获领域特定目标的细微差别。
+og:site_name: Opik 文档
+og:title: Opik 中的自定义指标，提供定制化洞察
+title: 自定义指标
+toc_max_heading_level: 4
+---
+
+# 自定义指标
+
+Opik 允许您定义自己的自定义指标，当开箱即用的指标无法满足需求时，这一点尤为重要。
+
+## 何时创建自定义指标
+
+在以下情况下，定义自己的指标尤为适用：
+
+- 您有领域特定的目标
+- 标准指标无法捕获您所需的细微差别
+- 您希望与业务 KPI 保持一致
+- 您正在尝试新的评估方法
+
+如果您想编写"LLM 作为评判者"指标，可以使用 [G-Eval 指标](/evaluation/metrics/g_eval) 或从头创建自己的指标。
+
+## 编写自定义指标
+
+要定义自定义指标，您需要继承 `BaseMetric` 类并实现 `score` 方法以及可选的 `ascore` 方法：
+
+```python
+from typing import Any
+
+from opik.evaluation.metrics import base_metric, score_result
+from opik.message_processing.emulation.models import SpanModel
+
+
+class MyCustomMetric(base_metric.BaseMetric):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    def score(self, input: str, output: str, task_span: SpanModel, **ignored_kwargs: Any) -> score_result.ScoreResult:
+        # 在此处添加您的逻辑
+        
+        return score_result.ScoreResult(
+            value=0,
+            name=self.name,
+            reason="Optional reason for the score"
+        )
+```
+
+score 方法可以访问以下参数：
+1. 展平的数据集项：如果您的数据集项格式为 `{"input": "...", "expected_output": "..."}`，score 方法将接收 `input` 和 `expected_output` 参数。
+2. 任务输出：如果您的任务输出格式为 `{"output": "..."}`，score 方法将接收 `output` 参数。
+3. 任务 span：如果您定义了名为 `task_span` 的参数，我们将把完整的评估任务轨迹传递给您的 score 方法。如果您不需要访问轨迹数据，建议不定义 `task_span` 参数。
+
+`score` 方法应返回 `ScoreResult` 对象。`ascore` 方法是可选的，可在需要时用于异步计算。
+
+<Tip>
+  您也可以在自定义指标中返回 `ScoreResult` 对象列表。当您希望为给定的输入输出对返回多个分数时，这非常有用。
+</Tip>
+
+现在您可以使用自定义指标来评估 LLM 输出：
+
+```python
+metric = MyCustomMetric()
+
+metric.score(input="What is the capital of France?", output="Paris")
+```
+
+此外，该指标现在可以在 `evaluate` 函数中使用，详见此处：[评估 LLM](/evaluation/advanced/evaluate_your_llm)。
+
+#### 示例：在自定义指标中访问轨迹数据
+
+您可以使用 `task_span` 参数在自定义指标中访问轨迹数据。
+
+```python
+from opik.evaluation.metrics import base_metric, score_result
+from opik.message_processing.emulation.models import SpanModel
+
+class MyCustomMetric(base_metric.BaseMetric):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    def score(self, task_span: SpanModel, **ignored_kwargs: Any) -> score_result.ScoreResult:
+        # 在此处添加您的逻辑
+
+        return score_result.ScoreResult(
+            value=0,
+            name=self.name,
+            reason="Optional reason for the score"
+        )
+```
+
+<Tip>
+  为了访问完整的轨迹数据，请确保您已将评估任务与 Opik 的追踪功能集成。您可以在[评估智能体轨迹](/evaluation/advanced/evaluate_agent_trajectory)指南中了解更多关于如何评估智能体轨迹的信息。
+</Tip>
+
+
+#### 示例：使用 OpenAI 模型创建指标
+
+您可以通过创建继承 `BaseMetric` 类并实现 `score` 方法的类来实现自定义指标。
+
+```python
+import json
+from typing import Any
+
+from openai import OpenAI
+from opik.evaluation.metrics import base_metric, score_result
+
+
+class LLMJudgeMetric(base_metric.BaseMetric):
+    def __init__(self, name: str = "Factuality check", model_name: str = "gpt-4o"):
+        super().__init__(name)
+        self.llm_client = OpenAI()
+        self.model_name = model_name
+        self.prompt_template = """
+        You are an impartial judge evaluating the following claim for factual accuracy.
+        Analyze it carefully and provide a binary score: true if the claim is accurate,
+        false if it is inaccurate or contains errors. The format of your response
+        should be a JSON object with no additional text or backticks.
+
+        The format of your response should be a JSON object with no additional text or backticks that follows the format:
+        {{
+            "score": <true or false>
+        }}
+
+        Claim to evaluate: {output}
+
+        Response:
+        """
+
+    def score(self, output: str, **ignored_kwargs: Any) -> score_result.ScoreResult:
+        """
+        Score the output of an LLM.
+
+        Args:
+            output: The output of an LLM to score.
+            **ignored_kwargs: Any additional keyword arguments. This is important so that the metric can be used in the `evaluate` function.
+        """
+        # Construct the prompt based on the output of the LLM
+        prompt = self.prompt_template.format(output=output)
+
+        # Generate and parse the response from the LLM
+        response = self.llm_client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        response_dict = json.loads(response.choices[0].message.content)
+
+        # Parse the response and convert to integer for logging
+        response_score = (
+            response_dict["score"]
+            if isinstance(response_dict["score"], bool)
+            else str(response_dict["score"]).strip().lower() == "true"
+        )
+
+        return score_result.ScoreResult(
+            name=self.name,
+            value=response_score
+        )
+```
+
+然后您可以使用此指标来评估 LLM 输出：
+
+```python
+metric = LLMJudgeMetric()
+
+metric.score(output="Paris is the capital of France")
+```
+
+在此示例中，我们使用 OpenAI Python 客户端调用 LLM。您不必使用 OpenAI Python 客户端，可以修改上面的代码示例以使用您有权访问的任何 LLM 客户端。
+
+#### 示例：支持多种 LLM 提供商
+
+为了支持多种 LLM 提供商，我们建议使用 `litellm` 库来调用 LLM。这使您能够支持数百种模型，而无需维护自定义 LLM 客户端。
+
+Opik 提供了 `LitellmChatModel` 类，它封装了 `litellm` 库，可在您的自定义指标中使用：
+
+```python
+import json
+from typing import Any
+
+from opik.evaluation.metrics import base_metric, score_result
+from opik.evaluation import models
+
+
+class LLMJudgeMetric(base_metric.BaseMetric):
+    def __init__(self, name: str = "Factuality check", model_name: str = "gpt-4o"):
+        super().__init__(name)
+
+        self.llm_client = models.LiteLLMChatModel(model_name=model_name)
+
+        self.prompt_template = """
+        You are an impartial judge evaluating the following claim for factual accuracy. Analyze it carefully
+        and respond with a number between 0 and 1: 1 if completely accurate, 0.5 if mixed accuracy, or 0 if inaccurate.
+        Then provide one brief sentence explaining your ruling.
+
+        The format of the your response should be a JSON object with no additional text or backticks that follows the format:
+        {{
+            "score": <score between 0 and 1>,
+            "reason": "<reason for the score>"
+        }}
+
+        Claim to evaluate: {output}
+
+        Response:
+        """
+
+    def score(self, output: str, **ignored_kwargs: Any) -> score_result.ScoreResult:
+        """
+        Score the output of an LLM.
+
+        Args:
+            output: The output of an LLM to score.
+            **ignored_kwargs: Any additional keyword arguments. This is important so that the metric can be used in the `evaluate` function.
+        """
+        # Construct the prompt based on the output of the LLM
+        prompt = self.prompt_template.format(output=output)
+
+        # Generate and parse the response from the LLM
+        response = self.llm_client.generate_string(input=prompt)
+
+        response_dict = json.loads(response)
+
+        return score_result.ScoreResult(
+            name=self.name,
+            value=response_dict["score"],
+            reason=response_dict["reason"]
+        )
+```
+
+然后您可以使用此指标来评估 LLM 输出：
+
+```python
+metric = LLMJudgeMetric()
+
+metric.score(output="Paris is the capital of France")
+```
+
+#### 示例：创建返回多个分数的指标
+
+您可以实现一个返回多个分数的指标，在评估中使用时，这些分数将在 UI 中显示为单独的列。
+
+为此，请将您的 `score` 方法设置为返回 `ScoreResult` 对象列表。
+
+```python
+from typing import Any, List
+
+from opik.evaluation.metrics import base_metric, score_result
+
+class MultiScoreCustomMetric(base_metric.BaseMetric):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    def score(self, input: str, output: str, **ignored_kwargs: Any) -> List[score_result.ScoreResult]:
+        # 在此处添加您的逻辑
+
+        return [score_result.ScoreResult(
+            value=0,
+            name=self.name,
+            reason="Optional reason for the score"
+        ),
+        score_result.ScoreResult(
+            value=1,
+            name=f"{self.name}-2",
+            reason="Optional reason for the score"
+        )]
+```
+
+#### 示例：强制结构化输出
+
+在上面的示例中，我们要求 LLM 返回 JSON 对象。但由于这并未强制执行，LLM 可能会返回非结构化响应。为了避免这种情况，您可以使用 `litellm` 库来强制结构化输出。这将使我们的自定义指标更加健壮，更不容易失败。
+
+为此，我们在 `LLMJudgeBinaryResult` 类中定义期望 LLM 返回的响应格式，并将其传递给 LiteLLM 客户端：
+
+```python
+import json
+from pydantic import BaseModel
+from typing import Any
+
+from opik.evaluation.metrics import base_metric, score_result
+from opik.evaluation import models
+
+class LLMJudgeBinaryResult(BaseModel):
+    score: bool
+    reason: str
+
+class LLMJudgeMetric(base_metric.BaseMetric):
+    def __init__(self, name: str = "Factuality check", model_name: str = "gpt-4o"):
+        super().__init__(name)
+        self.llm_client = models.LiteLLMChatModel(model_name=model_name)
+        self.prompt_template = """
+        You are an impartial judge evaluating the following claim for factual accuracy. Analyze it carefully and provide a binary score: true if the claim is accurate, false if it is inaccurate or contains errors. Then provide one brief sentence explaining your ruling.
+
+         The format of the your response should be a json with no backticks that returns:
+
+        {{
+            "score": <true or false>,
+            "reason": "<reason for the score>"
+        }}
+
+        Claim to evaluate: {output}
+
+        Response:
+        """
+
+    def score(self, output: str, **ignored_kwargs: Any) -> score_result.ScoreResult:
+        """
+        Score the output of an LLM.
+
+        Args:
+            output: The output of an LLM to score.
+            **ignored_kwargs: Any additional keyword arguments. This is important so that the metric can be used in the `evaluate` function.
+        """
+        # Construct the prompt based on the output of the LLM
+        prompt = self.prompt_template.format(output=output)
+
+        # Generate and parse the response from the LLM
+        response = self.llm_client.generate_string(input=prompt, response_format=LLMJudgeBinaryResult)
+        response_dict = json.loads(response)
+
+        return score_result.ScoreResult(
+            name=self.name,
+            value=response_dict["score"],
+            reason=response_dict["reason"]
+        )
+```
+
+与前面的示例类似，您可以使用此指标来评估 LLM 输出：
+
+```python
+metric = LLMJudgeMetric()
+
+metric.score(output="Paris is the capital of France")
+```
+
+## 使用 G-Eval 创建自定义指标
+
+[G-Eval](/evaluation/metrics/g_eval) 允许您为指标指定一组标准，它将使用思维链提示技术创建评估步骤并返回分数。
+您可以在[此处](/evaluation/metrics/g_eval)了解更多关于此高级指标的信息。
+
+要使用 G-Eval，您需要指定任务介绍和评估标准：
+
+```python
+from opik.evaluation.metrics import GEval
+
+metric = GEval(
+    task_introduction="You are an expert judge tasked with evaluating the faithfulness of an AI-generated answer to the given context.",
+    evaluation_criteria="""
+        The OUTPUT must not introduce new information beyond what's provided in the CONTEXT.
+        The OUTPUT must not contradict any information given in the CONTEXT.
+
+        Return only a score between 0 and 1.
+    """,
+)
+```
+
+## 自定义对话指标
+
+对于评估多轮对话和对话系统，您需要专门的对话指标。这些指标评估整个对话线程，而不是单个输入输出对。
+
+请在[自定义对话指标指南](/evaluation/metrics/custom_conversation_metric)中了解如何创建自定义对话指标。
+
+## 后续步骤
+
+创建自定义指标只是为 LLM 应用构建全面评估系统的开始。在本指南中，您已经学习了如何使用不同的方法创建自定义指标，从简单指标到复杂的"LLM 作为评判者"实现，包括用于多轮对话评估的专门对话线程指标。
+
+接下来，您可能需要：
+
+- 按照[评估 LLM 应用](/evaluation/advanced/evaluate_your_llm)指南**评估您的 LLM 应用**
+- 使用[评估对话线程指南](/evaluation/evaluate_threads)**评估对话线程**
+- 在[指标概览](/evaluation/metrics/overview)中**探索内置指标**

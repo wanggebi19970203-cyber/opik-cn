@@ -1,0 +1,11 @@
+{
+  "observability": {
+    "title": "可观测性",
+    "description": "监控和观察您的应用程序",
+    "features": {
+      "tracing": "追踪",
+      "metrics": "指标",
+      "logging": "日志"
+    }
+  }
+}

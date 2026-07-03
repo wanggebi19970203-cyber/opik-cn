@@ -5,6 +5,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
 import { UnifiedMediaItem } from "@/hooks/useUnifiedMedia";
@@ -55,6 +56,7 @@ const MessagesTab: React.FunctionComponent<MessagesTabProps> = ({
   isLoading,
   scrollContainerRef,
 }) => {
+  const { t } = useTranslation("tracing");
   const { messages: combinedMessages, usage } = useMemo(
     () => mapAndCombineMessages(transformedInput, transformedOutput),
     [transformedInput, transformedOutput],
@@ -174,18 +176,18 @@ const MessagesTab: React.FunctionComponent<MessagesTabProps> = ({
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">
-        {isAllExpanded ? "Collapse all" : "Expand all"}
+        {isAllExpanded ? t("treeToolbar.collapseAll") : t("treeToolbar.expandAll")}
       </TooltipContent>
     </Tooltip>
   );
 
   const copyButton = (
     <CopyButton
-      message="Successfully copied messages"
+      message={t("messages.copiedSuccessfully")}
       variant="outline"
       size="icon-2xs"
       text={copyText}
-      tooltipText="Copy messages"
+      tooltipText={t("messages.copyMessages")}
     />
   );
 
@@ -251,7 +253,7 @@ const MessagesTab: React.FunctionComponent<MessagesTabProps> = ({
       <div className="overflow-hidden">
         <div className="flex h-8 items-center justify-between">
           <div className="comet-body-s-accented flex min-w-40 items-center pr-3 text-foreground">
-            LLM messages
+            {t("messages.llmMessages")}
           </div>
           <div className="flex flex-1 items-center justify-end gap-2">
             {combinedMessages.length > 0 && expandCollapseButton}
@@ -271,7 +273,7 @@ const MessagesTab: React.FunctionComponent<MessagesTabProps> = ({
               )}
             </>
           ) : (
-            <div className="text-sm text-muted-foreground">No messages</div>
+            <div className="text-sm text-muted-foreground">{t("messages.noMessages")}</div>
           )}
         </div>
       </div>

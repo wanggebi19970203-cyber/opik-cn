@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-
+import { useTranslation } from "react-i18next";
 import CometIcon from "@/icons/comet.svg?react";
 import { usePingBackend } from "@/api/debug/useIsAlive";
 import useIsNetworkOnline from "@/hooks/useIsNetworkOnline";
@@ -7,6 +7,7 @@ import { WifiOffIcon, WifiIcon, SatelliteDishIcon } from "lucide-react";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 
 const AppNetworkStatus = () => {
+  const { t } = useTranslation();
   const isNetworkOnline = useIsNetworkOnline();
   const { data: pingResponse, isError } = usePingBackend(isNetworkOnline);
   const rtt = pingResponse?.rtt;
@@ -19,7 +20,7 @@ const AppNetworkStatus = () => {
       {isConnectedToBackend && (
         <div className="flex items-center gap-1">
           <SatelliteDishIcon className="size-4" />
-          <TooltipWrapper content="Round-trip time (RTT) to ping backend server">
+          <TooltipWrapper content={t("navigation.network.rttTooltip")}>
             <span className="comet-body-xs-accented">RTT: {rttInSeconds}s</span>
           </TooltipWrapper>
         </div>
@@ -35,8 +36,8 @@ const AppNetworkStatus = () => {
           <TooltipWrapper
             content={
               isConnectedToBackend
-                ? "Connected to backend server"
-                : "Not connected to backend server"
+                ? t("navigation.network.connectedToBackend")
+                : t("navigation.network.notConnectedToBackend")
             }
           >
             <span>
@@ -55,8 +56,8 @@ const AppNetworkStatus = () => {
         <TooltipWrapper
           content={
             isNetworkOnline
-              ? "Connected to network"
-              : "Not connected to network"
+              ? t("navigation.network.connectedToNetwork")
+              : t("navigation.network.notConnectedToNetwork")
           }
         >
           {isNetworkOnline ? (

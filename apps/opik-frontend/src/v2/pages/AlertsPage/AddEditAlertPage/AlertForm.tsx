@@ -3,6 +3,7 @@ import get from "lodash/get";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { buildFullBaseUrl, cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -34,6 +35,7 @@ type AlertFormProps = {
 };
 
 const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
+  const { t } = useTranslation("pages/alerts");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
@@ -41,8 +43,8 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
   const alertUpdateMutation = useAlertUpdateMutation();
 
   const isEdit = Boolean(alert);
-  const title = isEdit ? "Edit alert" : "Create a new alert";
-  const submitText = isEdit ? "Update alert" : "Create alert";
+  const title = isEdit ? t("alerts.edit") : t("alerts.createNew");
+  const submitText = isEdit ? t("alerts.update") : t("alerts.create");
   const isPending =
     alertCreateMutation.isPending || alertUpdateMutation.isPending;
 
@@ -111,11 +113,10 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
 
   const { DialogComponent } = useNavigationBlocker({
     condition: !canLeavePage,
-    title: "You have unsaved changes",
-    description:
-      "If you leave now, your changes will be lost. Are you sure you want to continue?",
-    confirmText: "Leave without saving",
-    cancelText: "Stay on page",
+    title: t("alerts.confirmDialog.unsavedChanges.title"),
+    description: t("alerts.confirmDialog.unsavedChanges.description"),
+    confirmText: t("alerts.confirmDialog.unsavedChanges.confirmText"),
+    cancelText: t("alerts.confirmDialog.unsavedChanges.cancelText"),
   });
 
   const onSubmit = useCallback(() => {
@@ -162,7 +163,7 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
             className="min-h-56"
             message={
               <div className="comet-body-s-accented text-center">
-                {isEdit ? "Updating alert..." : "Creating alert..."}
+                {isEdit ? t("alerts.loading.updating") : t("alerts.loading.creating")}
               </div>
             }
           />
@@ -185,7 +186,7 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
                     const validationErrors = get(formState.errors, ["name"]);
                     return (
                       <FormItem>
-                        <Label>Name</Label>
+                        <Label>{t("alerts.fields.name")}</Label>
                         <FormControl>
                           <Input
                             className={cn({
@@ -193,7 +194,7 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
                                 validationErrors?.message,
                               ),
                             })}
-                            placeholder="Name"
+                            placeholder={t("alerts.fields.name")}
                             {...field}
                           />
                         </FormControl>
@@ -213,11 +214,10 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
                           htmlFor="enabled"
                           className="comet-body-s-accented"
                         >
-                          Enable alert
+                          {t("alerts.fields.enabled")}
                         </Label>
                         <Description>
-                          Enable to send automatic notifications to the
-                          specified URL for selected events.
+                          {t("alerts.fields.enabledDescription")}
                         </Description>
                       </div>
                       <FormControl>
@@ -266,7 +266,7 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
                   onClick={handleNavigateBack}
                   disabled={form.formState.isSubmitting || isPending}
                 >
-                  Cancel
+                  {t("alerts.fields.cancel")}
                 </Button>
               </div>
             </form>

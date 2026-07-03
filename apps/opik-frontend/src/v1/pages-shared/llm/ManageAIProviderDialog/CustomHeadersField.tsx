@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import { Label } from "@/ui/label";
 import { AIProviderFormType } from "@/v1/pages-shared/llm/ManageAIProviderDialog/schema";
@@ -18,8 +19,10 @@ type CustomHeadersFieldProps = {
 
 const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
   form,
-  description = "Custom providers may require additional headers beyond the API key. Add them here as key-value pairs.",
+  description,
 }) => {
+  const { t } = useTranslation("prompt");
+  const resolvedDescription = description ?? t("customHeadersField.defaultDescription");
   return (
     <FormField
       control={form.control}
@@ -49,7 +52,7 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
 
         return (
           <FormItem>
-            <Label>Custom headers (optional)</Label>
+            <Label>{t("customHeadersField.customHeadersOptional")}</Label>
             <div className="flex flex-col gap-2">
               {headers.map((header, index) => {
                 const keyError = getHeaderError(index, "key");
@@ -60,7 +63,7 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <Input
-                          placeholder="Header name"
+                          placeholder={t("customHeadersField.headerNamePlaceholder")}
                           value={header.key}
                           onChange={(e) =>
                             updateHeader(
@@ -81,7 +84,7 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
                       </div>
                       <div className="flex-1">
                         <Input
-                          placeholder="Header value"
+                          placeholder={t("customHeadersField.headerValuePlaceholder")}
                           value={header.value}
                           onChange={(e) =>
                             updateHeader(header.id, header.key, e.target.value)
@@ -117,10 +120,10 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
                 className="w-fit"
               >
                 <Plus className="mr-1.5 size-3.5" />
-                Add header
+                {t("customHeadersField.addHeader")}
               </Button>
             </div>
-            <Description>{description}</Description>
+            <Description>{resolvedDescription}</Description>
             <FormMessage />
           </FormItem>
         );

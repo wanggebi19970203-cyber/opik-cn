@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
 import {
@@ -20,12 +21,13 @@ export type UploadFieldProps = {
 
 const UploadField: React.FC<UploadFieldProps> = ({
   onFileSelect,
-  description = "Drop a file to upload or",
+  description,
   errorText,
   successText,
   accept = ".csv",
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | undefined>(undefined);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -88,7 +90,7 @@ const UploadField: React.FC<UploadFieldProps> = ({
         />
         <CloudUpload className="-mr-0.5 size-[18px] " />
         <div className="flex items-center gap-2">
-          <span className="comet-body-s-accented">{description}</span>
+          <span className="comet-body-s-accented">{description ?? t("common.upload.dropFileToUpload")}</span>
           <Button
             type="button"
             size="sm"
@@ -96,7 +98,7 @@ const UploadField: React.FC<UploadFieldProps> = ({
             disabled={disabled}
             onClick={() => !disabled && fileInputRef.current?.click()}
           >
-            Browse
+            {t("common.upload.browse")}
           </Button>
         </div>
       </div>

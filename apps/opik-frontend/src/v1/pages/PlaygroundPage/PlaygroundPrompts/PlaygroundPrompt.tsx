@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { CopyPlus, Trash, Save } from "lucide-react";
 import last from "lodash/last";
 import { useQueryClient } from "@tanstack/react-query";
@@ -75,6 +76,7 @@ const PlaygroundPrompt = ({
   modelResolver,
   scrollToPromptRef,
 }: PlaygroundPromptProps) => {
+  const { t } = useTranslation();
   const checkedIfModelIsValidRef = useRef(false);
   const queryClient = useQueryClient();
 
@@ -304,7 +306,7 @@ const PlaygroundPrompt = ({
         </p>
 
         <div className="flex h-full flex-1 items-center justify-end gap-1">
-          <TooltipWrapper content={chatPromptData?.name || "Load chat prompt"}>
+          <TooltipWrapper content={chatPromptData?.name || t("playground.prompt.loadPrompt")}>
             <div className="flex h-full min-w-40 max-w-60 flex-auto flex-nowrap">
               <PromptsSelectBox
                 value={selectedChatPromptId}
@@ -352,7 +354,7 @@ const PlaygroundPrompt = ({
             onChange={handleUpdateConfig}
           />
           <Separator orientation="vertical" className="h-6" />
-          <TooltipWrapper content="Duplicate a prompt">
+          <TooltipWrapper content={t("playground.prompt.duplicatePrompt")}>
             <Button
               variant="outline"
               size="icon-sm"
@@ -362,7 +364,7 @@ const PlaygroundPrompt = ({
             </Button>
           </TooltipWrapper>
 
-          <TooltipWrapper content="Delete a prompt">
+          <TooltipWrapper content={t("playground.prompt.removePrompt")}>
             <Button
               variant="outline"
               size="icon-sm"

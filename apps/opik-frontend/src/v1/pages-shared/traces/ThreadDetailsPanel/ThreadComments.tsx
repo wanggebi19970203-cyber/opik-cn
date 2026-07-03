@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   DetailsActionSectionValue,
   DetailsActionSectionLayout,
@@ -24,6 +25,7 @@ const ThreadComments: React.FC<ThreadCommentsProps> = ({
   threadId,
   projectId,
 }) => {
+  const { t } = useTranslation("tracing");
   const threadCommentsBatchDeleteMutation =
     useThreadCommentsBatchDeleteMutation();
   const createThreadCommentMutation = useCreateThreadCommentMutation();
@@ -55,8 +57,8 @@ const ThreadComments: React.FC<ThreadCommentsProps> = ({
 
   return (
     <DetailsActionSectionLayout
-      title="Comments"
-      closeTooltipContent="Close comments"
+      title={t("detailsPanel.comments")}
+      closeTooltipContent={t("detailsPanel.closeComments")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
     >

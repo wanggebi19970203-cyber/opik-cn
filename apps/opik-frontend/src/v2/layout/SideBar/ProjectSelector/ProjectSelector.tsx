@@ -7,6 +7,7 @@ import {
   Plus,
   Trash,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ interface ProjectSelectorProps {
 const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   expanded = true,
 }) => {
+  const { t } = useTranslation("navigation");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -92,7 +94,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
       <button className="flex w-full items-center gap-1.5 px-1 py-0.5">
         <Spinner size="xs" />
         <span className="comet-body-s flex-1 text-left text-muted-slate">
-          Loading…
+          {t("projectSelector.loading")}
         </span>
       </button>
     </PopoverTrigger>
@@ -102,9 +104,11 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     <PopoverTrigger asChild>
       <button
         className="flex items-center gap-0.5 text-light-slate"
-        aria-label="Open project selector"
+        aria-label={t("projectSelector.openProjectSelector")}
       >
-        <span className="comet-body-xs-accented">Project</span>
+        <span className="comet-body-xs-accented">
+          {t("projectSelector.project")}
+        </span>
         {open ? (
           <ChevronUp className="size-3.5" />
         ) : (
@@ -126,7 +130,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
         <div className="flex min-w-0 flex-1 flex-col items-stretch">
           <div className="flex items-center gap-0.5">
             <span className="comet-body-xs-accented text-light-slate">
-              Project
+              {t("projectSelector.project")}
             </span>
             <span className="shrink-0 text-light-slate">
               {open ? (
@@ -137,7 +141,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
             </span>
           </div>
           <span className="comet-body-s-accented truncate text-left text-muted-slate">
-            Select project
+            {t("projectSelector.selectProject")}
           </span>
         </div>
       </button>
@@ -222,12 +226,12 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   const renderCollapsedTrigger = () => (
     <div className="relative w-fit self-center">
       {renderCollapsedIcon()}
-      <TooltipWrapper content="Switch project" side="right">
+      <TooltipWrapper content={t("projectSelector.switchProject")} side="right">
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             size="icon-4xs"
-            aria-label="Open project selector"
+            aria-label={t("projectSelector.openProjectSelector")}
             className="absolute -bottom-1 -right-1 text-foreground-secondary shadow-sm"
           >
             {open ? <ChevronUp /> : <ChevronDown />}
@@ -250,7 +254,9 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
             maxHeight: "var(--radix-popover-content-available-height)",
           }}
         >
-          <DropdownMenuLabel size="sm">Projects</DropdownMenuLabel>
+          <DropdownMenuLabel size="sm">
+            {t("projectSelector.projects")}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-1" />
           <div className="px-0.5" onKeyDown={(e) => e.stopPropagation()}>
             <SearchInput
@@ -295,7 +301,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                 }}
               >
                 <Plus className="size-3.5 shrink-0 text-light-slate" />
-                <span>New project</span>
+                <span>{t("projectSelector.newProject")}</span>
               </ListAction>
             </>
           )}
@@ -324,6 +330,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
   onSelect,
   onDelete,
 }) => {
+  const { t } = useTranslation("navigation");
   const resetKeyRef = useRef(0);
   const [openDialog, setOpenDialog] = useState<boolean | number>(false);
 
@@ -354,9 +361,9 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
         open={openDialog === 1}
         setOpen={setOpenDialog}
         onConfirm={handleDelete}
-        title="Delete project"
-        description="Deleting a project will also remove all the traces and their data. This action can't be undone. Are you sure you want to continue?"
-        confirmText="Delete project"
+        title={t("projectSelector.deleteProject")}
+        description={t("projectSelector.deleteProjectDescription")}
+        confirmText={t("projectSelector.deleteProject")}
         confirmButtonVariant="destructive"
       />
       <Link
@@ -411,7 +418,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
                   }}
                 >
                   <Pencil className="mr-1.5 size-3.5 text-light-slate" />
-                  Edit
+                  {t("projectSelector.edit")}
                 </DropdownMenuItem>
               )}
               {canCreateProjects && canDelete && <DropdownMenuSeparator />}
@@ -426,7 +433,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({
                   }}
                 >
                   <Trash className="mr-1.5 size-3.5" />
-                  Delete
+                  {t("projectSelector.delete")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

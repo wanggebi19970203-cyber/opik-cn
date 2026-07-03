@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowUpRight,
   CircleCheck,
@@ -31,23 +32,6 @@ type IssueDetailProps = {
   canConfigure: boolean;
 };
 
-const STATUS_ACTIONS: {
-  status: AGENT_INSIGHTS_ISSUE_STATUS;
-  label: string;
-  icon: React.ElementType;
-}[] = [
-  {
-    status: AGENT_INSIGHTS_ISSUE_STATUS.resolved,
-    label: "Resolve",
-    icon: CircleCheck,
-  },
-  {
-    status: AGENT_INSIGHTS_ISSUE_STATUS.open,
-    label: "Reopen",
-    icon: Undo2,
-  },
-];
-
 const MetaItem: React.FC<{
   icon: React.ElementType;
   label: string;
@@ -79,12 +63,26 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
   projectId,
   canConfigure,
 }) => {
+  const { t } = useTranslation("pages/signals");
   const { data: detail } = useAgentInsightsIssue({
     issueId: issue.id,
     projectId,
   });
 
   const updateMutation = useUpdateAgentInsightsIssueMutation();
+
+  const statusActions = [
+    {
+      status: AGENT_INSIGHTS_ISSUE_STATUS.resolved,
+      label: t("signals.issueDetail.resolve"),
+      icon: CircleCheck,
+    },
+    {
+      status: AGENT_INSIGHTS_ISSUE_STATUS.open,
+      label: t("signals.issueDetail.reopen"),
+      icon: Undo2,
+    },
+  ];
 
   const setStatus = (status: AGENT_INSIGHTS_ISSUE_STATUS) =>
     updateMutation.mutate({ issueId: issue.id, projectId, status });
@@ -122,24 +120,24 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
         </div>
         {canConfigure && (
           <div className="flex shrink-0 items-center gap-1">
-            {STATUS_ACTIONS.filter(
-              (action) => action.status !== issue.status,
-            ).map(({ status, label, icon: Icon }, index) => (
-              <React.Fragment key={status}>
-                {index > 0 && (
-                  <Separator orientation="vertical" className="h-4" />
-                )}
-                <Button
-                  variant="ghost"
-                  size="2xs"
-                  disabled={updateMutation.isPending}
-                  onClick={() => setStatus(status)}
-                >
-                  <Icon className="mr-1 size-3" />
-                  {label}
-                </Button>
-              </React.Fragment>
-            ))}
+            {statusActions
+              .filter((action) => action.status !== issue.status)
+              .map(({ status, label, icon: Icon }, index) => (
+                <React.Fragment key={status}>
+                  {index > 0 && (
+                    <Separator orientation="vertical" className="h-4" />
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="2xs"
+                    disabled={updateMutation.isPending}
+                    onClick={() => setStatus(status)}
+                  >
+                    <Icon className="mr-1 size-3" />
+                    {label}
+                  </Button>
+                </React.Fragment>
+              ))}
           </div>
         )}
       </div>
@@ -149,31 +147,31 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
           {issue.first_seen && (
             <MetaItem
               icon={Eye}
-              label="First seen"
+              label={t("signals.issueDetail.firstSeen")}
               value={formatDate(issue.first_seen)}
             />
           )}
           {issue.last_seen && (
             <MetaItem
               icon={EyeOff}
-              label="Last seen"
+              label={t("signals.issueDetail.lastSeen")}
               value={formatDate(issue.last_seen)}
             />
           )}
           <MetaItem
             icon={Hash}
-            label="Occurrences"
+            label={t("signals.issueDetail.occurrences")}
             value={issue.total_occurrences.toLocaleString()}
           />
           <MetaItem
             icon={Users}
-            label="Users impacted"
+            label={t("signals.issueDetail.usersImpacted")}
             value={issue.users_impacted.toLocaleString()}
           />
         </div>
 
         {issue.description && (
-          <SectionCard title="Summary">
+          <SectionCard title={t("signals.issueDetail.summary")}>
             <p className="comet-body-xs text-foreground">{issue.description}</p>
           </SectionCard>
         )}
@@ -184,7 +182,7 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
             title={
               <span className="flex items-center gap-1.5 text-muted-slate">
                 <OllieOwl className="size-4 text-[var(--color-ollie)]" />
-                Ollie fix
+                {t("signals.issueDetail.ollieFix")}
               </span>
             }
           >
@@ -197,19 +195,19 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
               className="mt-1 self-start"
               onClick={handleContinueWithOllie}
             >
-              Continue with Ollie
+              {t("signals.issueDetail.continueWithOllie")}
               <ArrowUpRight className="ml-1.5 size-3" />
             </Button>
           </SectionCard>
         )}
 
         {details.length > 0 && (
-          <SectionCard title="Occurrence over time">
+          <SectionCard title={t("signals.issueDetail.occurrenceOverTime")}>
             <OccurrenceChart data={details} />
           </SectionCard>
         )}
 
-        <SectionCard title="Affected traces sample">
+        <SectionCard title={t("signals.issueDetail.affectedTracesSample")}>
           <AffectedTracesSample
             projectId={projectId}
             traceIds={exampleTraceIds}

@@ -1,0 +1,132 @@
+---
+description: 查找关于 Opik Agent Optimizer 的常见问题答案，包括优化器选择、配置、使用和最佳实践。
+headline: 常见问题 | Opik 文档
+og:description: 使用 Opik 的高级优化算法增强你的提示词和智能体性能，获得更好的结果。
+og:site_name: Opik 文档
+og:title: 使用 Opik 优化你的智能体
+subtitle: 关于 Opik Agent Optimizer 的常见问题
+title: 优化器常见问题
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/faq
+---
+
+## 入门
+
+<AccordionGroup>
+  <Accordion title="为什么我应该使用 Opik Agent Optimizer？">
+    Agent Optimizer 提供了一个统一接口，使用前沿优化算法优化**你现有的提示词和智能体**。除了让你使用 GEPA 等前沿学术优化器外，我们还提供了一套基于生产应用内部开发的算法。
+
+    优化器将帮助你提升智能体性能，无需手动提示词工程。你还可以使用优化器减小智能体中提示词的大小，在保持性能的同时降低成本和延迟。
+  </Accordion>
+  <Accordion title="如何开始使用优化器？">
+  要开始使用，你需要：
+  1. 要优化的提示词
+  2. 用于优化的数据集示例，最少可以从 10 个开始
+  3. 评估提示词性能的指标
+
+  准备好后，请查看[快速入门指南](/v1/agent_optimization/quickstart)运行你的第一次优化。
+  </Accordion>
+  <Accordion title="你能帮我优化我的提示词吗？">
+  是的，我们非常乐意帮你为你的用例设置 Opik Optimizer！你可以加入我们的 [Slack 社区](https://chat.comet.com)在那里寻求帮助。
+  </Accordion>
+</AccordionGroup>
+
+## 优化算法
+
+<AccordionGroup>
+  <Accordion title="支持哪些优化算法？">
+  Opik Agent Optimizer 支持多种优化算法，包括：
+  - [HRPO（分层反思提示词优化器）](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer)
+  - [GEPA 优化](/v1/agent_optimization/algorithms/gepa_optimizer)
+  - [进化优化](/v1/agent_optimization/algorithms/evolutionary_optimizer)
+  - [Few-shot 贝叶斯优化](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer)
+  - [MetaPrompt 优化](/v1/agent_optimization/algorithms/metaprompt_optimizer)
+
+  如果你希望我们添加新的优化算法，只需在我们的 [GitHub 仓库](https://github.com/comet-ml/opik/issues)上创建一个 issue，我们会很乐意添加！
+  </Accordion>
+  <Accordion title="如何为我的任务选择合适的优化器？">
+  选择使用哪个优化器取决于你的具体需求。根据经验，我们建议从 [HRPO（分层反思提示词优化器）](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer)开始，因为它已被证明是大多数任务的强基线。
+
+  你也可以尝试使用：
+  1. GEPA：这是表现最好的学术优化器之一，如果你有复杂任务，这是一个好选择。
+  2. FewShotBayesianOptimizer：如果你的任务在提示词和响应的格式上相当重复，这是一个好选择。
+  
+  </Accordion>
+  <Accordion title="我应该运行优化多长时间？">
+  虽然某些优化运行时间较短，但优化通常需要几个小时才能完成。在开始时，我们建议将 `max_trials` 参数设置为合理的数量，然后根据情况进行增减。
+  </Accordion>
+  <Accordion title="我需要多少数据集样本？">
+  所需样本数量取决于你的任务。根据经验，我们建议至少从 10 个样本开始。样本越多，优化越准确。
+  </Accordion>
+  <Accordion title="优化支持哪些模型？">
+  Opik Agent Optimizer 使用 [LiteLLM](https://docs.litellm.ai/) 支持 100+ LLM 提供商，包括：
+  - **OpenAI**（GPT-4o、GPT-4o-mini、o1、o3-mini）
+  - **Anthropic**（Claude 3.5 Sonnet、Claude 3 Opus）
+  - **Google Gemini**（Gemini 2.0 Flash、Gemini 1.5 Pro）
+  - **Azure OpenAI**
+  - **Ollama**（本地模型如 Llama 3、Mistral）
+  - **OpenRouter**（访问多个提供商）
+
+  模型使用 LiteLLM 格式：`provider/model-name`（例如 `gemini/gemini-2.0-flash`）。
+
+  <Tip>
+    参见[配置 LLM 提供商](/v1/agent_optimization/optimization/configure_models)指南了解每个提供商的详细设置说明和示例。
+  </Tip>
+  </Accordion>
+  <Accordion title="性能没有提升怎么办？">
+  你可以尝试以下几种方法来提升优化性能：
+  1. 检查你的优化指标，理想情况下它应该为模型提供有洞察力的评分 `reason`。通过提高指标质量，优化器将能够做出更好的优化。
+  2. 检查你的数据集，理想情况下它应该是覆盖你想要优化的不同场景的多样化示例集。
+  3. 为 ChatPrompt 模型和优化器使用更强大的模型，随着模型变得更强大，它们将能够生成更好的优化。
+  </Accordion>
+</AccordionGroup>
+
+## 常见错误
+
+关于频繁的设置和使用错误，请前往[已知问题](/v1/agent_optimization/known_issues)。我们在那里维护错误目录，以便修复和版本说明集中在一处。
+
+## 开放挑战与高级话题
+
+<AccordionGroup>
+  <Accordion title="为什么一些优化后的提示词看起来像乱码？">
+    研究表明，"邪恶双胞胎"提示词和不寻常的分隔符尽管难以理解但可能表现良好。优化器不加区分地探索搜索空间，因此高性能的指令并不总是人类可读的。当可解释性很重要时，优先选择包含推理链的算法（如 HRPO），或通过自定义指标强制结构化。
+  </Accordion>
+  <Accordion title="优化器在 API 调用方面的成本如何？">
+    成本差异很大。反思密集型优化器（例如 HRPO、GEPA）每次试验可能多次调用 LLM，而 MetaPrompt/Few-Shot Bayesian 则较轻量。从较小的 `n_samples` 和 `max_trials` 开始，监控 API 使用情况，并查看[基准测试](/v1/agent_optimization/algorithms/benchmarks)页面了解样本效率说明。
+  </Accordion>
+  <Accordion title="优化后的提示词能跨任务泛化吗？">
+    优化器根据你提供的数据集调优提示词。如果数据集缺乏覆盖范围，提示词可能会过拟合。使用多样化数据集，考虑链式优化器（例如 Evolutionary → Few-Shot Bayesian）以鼓励泛化，并在发布前在未见过的样本上重新评估。
+  </Accordion>
+  <Accordion title="如何在优化过程中避免过拟合？">
+    为防止过拟合，在调用 `optimize_prompt()` 时使用 `validation_dataset` 参数。这会将你的数据分为训练集（用于生成提示词改进）和验证集（用于评估候选提示词）。优化器将使用训练数据集了解失败模式并生成改进，然后使用验证数据集对候选方案排名。这与标准机器学习实践一致，有助于确保优化后的提示词能泛化到未见过的数据。
+
+    ```python
+    result = optimizer.optimize_prompt(
+        prompt=my_prompt,
+        dataset=training_dataset,  # Used for analysis and improvements
+        validation_dataset=validation_dataset,  # Used for ranking candidates
+        metric=my_metric,
+        max_trials=5,
+    )
+    ```
+
+    如果你不提供验证数据集，优化器将对训练和验证使用相同的数据集，这可能导致在该特定数据集上过拟合。为获得最佳效果，请按 70/30 或 80/20 的比例在训练集和验证集之间分配数据。
+  </Accordion>
+  <Accordion title="我可以针对多个目标（准确性、成本、安全性等）进行优化吗？">
+    可以——使用 `MultiMetricObjective` 或自定义启发式方法组合指标，让优化器权衡多个目标。对于复杂的权衡，在指标原因中捕获人类偏好，或探索 GEPA 等 Pareto 感知优化器，它们能展示准确性和成本之间的权衡。
+  </Accordion>
+  <Accordion title="多模态或智能体工作流怎么办？">
+    Opik 支持优化处理图像/视频的提示词，以及使用 LangGraph、Google ADK 或 MCP 工具链构建的智能体。使用[优化智能体](/v1/agent_optimization/optimization/optimize_agents)和[优化多模态](/v1/agent_optimization/optimization/optimize_multimodal)指南获取特定模态的建议。
+  </Accordion>
+  <Accordion title="优化器指标有多可靠？">
+    基于 LLM 的指标可能会有噪声。尽可能包含确定性检查，并确保你的 `ScoreResult.reason` 信息丰富，以便反思优化器能够识别真正的失败模式。参见[定义指标](/v1/agent_optimization/optimization/define_metrics)和[自定义指标](/v1/agent_optimization/advanced/custom_metrics)了解最佳实践。
+  </Accordion>
+  <Accordion title="有安全性或道德方面的考虑吗？">
+    有。在优化处理敏感内容的提示词时，将对齐约束融入你的数据集/指标中（例如审核分数），并在部署前手动检查输出。多目标设置有助于在准确性的基础上强制安全性。
+  </Accordion>
+</AccordionGroup>
+
+## 后续步骤
+
+- 探索 [API 参考](/v1/agent_optimization/advanced/api_reference)了解详细技术文档。
+- 查看[优化算法](/v1/agent_optimization/algorithms/overview)下的各个优化器页面。
+- 查看[快速入门指南](/v1/agent_optimization/quickstart)。

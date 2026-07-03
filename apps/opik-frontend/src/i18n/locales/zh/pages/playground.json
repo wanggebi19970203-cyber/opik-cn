@@ -1,0 +1,131 @@
+{
+  "playground": {
+    "title": "工作台",
+    "description": "交互式测试和实验提示词",
+    "empty": {
+      "title": "暂无消息",
+      "description": "开始对话以测试您的提示词。"
+    },
+    "fields": {
+      "systemPrompt": "系统提示词",
+      "userMessage": "用户消息",
+      "model": "模型",
+      "temperature": "温度",
+      "maxTokens": "最大令牌数"
+    },
+    "actions": {
+      "send": "发送",
+      "clear": "清除对话",
+      "reset": "重置工作台",
+      "save": "保存为提示词"
+    },
+    "header": {
+      "run": "运行",
+      "rerun": "重新运行",
+      "stopAll": "全部停止",
+      "runExperiment": "运行实验",
+      "loading": "加载中...",
+      "resetTooltip": "重置工作台",
+      "stopTooltip": "停止运行中的提示词",
+      "runTooltip": "运行您的提示词",
+      "rerunTooltip": "在数据集上重新运行实验",
+      "playgroundLogs": "工作台日志"
+    },
+    "runDisabled": {
+      "selectModel": "请为您的提示词选择一个 LLM 模型",
+      "emptyMessages": "部分消息为空，请添加文本后再继续",
+      "mediaNotSupported": "部分提示词包含媒体内容，但所选模型不支持媒体输入",
+      "datasetRemoved": "您的数据集已被删除，请选择其他数据集"
+    },
+    "prompt": {
+      "loadPrompt": "加载提示词",
+      "removePrompt": "移除提示词",
+      "selectModel": "请为此提示词选择一个 LLM 模型",
+      "emptyMessage": "消息为空，请添加文本后再继续",
+      "runTooltip": "运行此提示词"
+    },
+    "leaveExperiment": {
+      "title": "离开实验模式？",
+      "descriptionWithExperiments": "您将返回提示词迭代模式。您的实验结果已保存，可随时在",
+      "descriptionSimple": "您将返回提示词迭代模式。",
+      "experimentsPage": "实验",
+      "pageSuffix": "页面查看。",
+      "confirmText": "离开"
+    },
+    "resetConfirm": {
+      "title": "重置工作台",
+      "description": "重置工作台将丢弃所有未保存的提示词。此操作无法撤销。确定要继续吗？",
+      "confirmText": "重置工作台"
+    },
+    "metricSelector": {
+      "search": "搜索",
+      "selectMetrics": "选择指标",
+      "noMetricsAvailable": "暂无可用指标",
+      "noMetricsAvailableDesc": "为工作台项目创建在线评估规则，以生成输出指标。",
+      "noMetricsFound": "未找到指标",
+      "selected": "已选择",
+      "addNew": "新增",
+      "openInNewTab": "在新标签页中打开"
+    },
+    "outputs": {
+      "loading": "加载中...",
+      "noDatasetItems": "暂无数据集项",
+      "testSuiteLoading": "测试套件仍在加载中",
+      "testSuiteLoadingDesc": "实验将会运行，但在加载完成前可能无法使用完整的测试套件。",
+      "testSuiteLoaded": "测试套件已完全加载",
+      "testSuiteLoadedDesc": "所有项目现已可用。"
+    },
+    "progress": {
+      "running": "步骤 1：收集 LLM 输出",
+      "evaluating": "步骤 2：评估断言",
+      "progress": "进度",
+      "completed": "已完成"
+    },
+    "runExperiment": {
+      "title": "运行实验",
+      "dataset": "数据集",
+      "testSuite": "测试套件",
+      "datasetDescription": "针对数据集运行提示词。结果将使用所选指标进行评分。",
+      "testSuiteDescription": "针对测试套件运行提示词。结果将使用套件上定义的断言进行评分。",
+      "datasetSubmit": "使用数据集",
+      "testSuiteSubmit": "使用测试套件",
+      "datasetEmptyTooltip": "所选数据集为空",
+      "testSuiteEmptyTooltip": "所选测试套件为空",
+      "metrics": "指标",
+      "cancel": "取消",
+      "experimentRunning": "已有实验正在运行"
+    },
+    "emptyDataset": {
+      "noDatasets": "暂无数据集",
+      "createDataset": "创建数据集",
+      "noTestSuites": "暂无测试套件",
+      "createTestSuite": "创建测试套件"
+    },
+    "outputCell": {
+      "openTrace": "点击打开原始追踪",
+      "outputLastRun": "输出（上次运行）："
+    },
+    "outputTable": {
+      "variables": "变量",
+      "output": "输出",
+      "outputPrefix": "输出 {{letter}}",
+      "tags": "标签"
+    },
+    "navigationBlocker": {
+      "experimentInProgressTitle": "实验执行中",
+      "promptInProgressTitle": "提示词执行中",
+      "experimentInProgressDescription": "您的实验正在运行中。现在离开将中断执行，可能导致实验项目不完整。确定要离开吗？",
+      "promptInProgressDescription": "您的提示词正在运行中。现在离开将中断执行，可能导致追踪不完整。确定要离开吗？",
+      "confirmText": "仍然离开",
+      "cancelText": "继续等待"
+    },
+    "actionErrors": {
+      "error": "错误",
+      "timeout": "超时",
+      "assertionPollingTimeout": "断言评估轮询在 5 分钟后超时",
+      "assertionPollingFailed": "轮询断言评估状态失败",
+      "experimentPollingTimeout": "实验完成轮询在 5 分钟后超时",
+      "experimentPollingFailed": "轮询实验完成状态失败"
+    }
+  }
+}

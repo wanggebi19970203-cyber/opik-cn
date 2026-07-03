@@ -1,0 +1,197 @@
+---
+description: 设计、版本化和验证用于优化运行的数据集。
+headline: 定义数据集 | Opik 文档
+og:description: 了解如何在 Opik 中定义和管理数据集，有效引导优化器获得更好的结果。
+og:site_name: Opik 文档
+og:title: 在 Opik 中定义数据集 - 优化的基础
+title: 定义数据集
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/define_datasets
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是按项目划分作用域的。创建数据集和运行实验时请务必指定 `project_name`，以确保它们关联到正确的项目。
+</Note>
+
+优化器针对存储在 Opik 中的数据集评估候选提示词。如果你是 Opik 数据集的新手，请从[管理数据集](/v1/evaluation/manage_datasets)开始；本页重点介绍帮助你入门的具体技巧。
+
+数据集是优化器 SDK 的关键组件，作为使用优化器运行和评估（评分）每个数据集项以开发更好结果的核心要素。没有数据集，就无法引导优化器判断什么是好的和坏的。
+
+## 数据集模式
+
+每个项都是一个 JSON 对象。必需的键取决于你的提示词模板；可选的键有助于分析。模式是可选的——只定义你的提示词或指标实际消费的字段。
+
+| 字段 | 用途 |
+| --- | --- |
+| `inputs`（例如 `question`、`context`） | 替换到你的 `ChatPrompt` 占位符中的值。 |
+| `answer` / `label` | 指标使用的真实标签。 |
+| `metadata` | 用于标记场景、拆分或难度的任意字典。 |
+
+## 创建或加载数据集
+
+<Steps>
+  <Step title="通过 SDK 创建">
+    ```python
+    import opik
+
+    client = opik.Opik()
+    dataset = client.get_or_create_dataset(name="agent-opt-support", project_name="my-project")
+    dataset.insert([
+        {"question": "Summarize Opik.", "answer": "Opik is an LLM observability platform."},
+        {"question": "List two optimizer types.", "answer": "MetaPrompt and HRPO."},
+    ])
+    ```
+  </Step>
+  <Step title="从文件上传">
+    - 准备一个 CSV 或 Parquet 文件，列标题与你的提示词变量匹配。
+    - 通过 Python（例如 pandas）加载文件并调用 `dataset.insert(...)` 或 [Dataset SDK](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/Dataset.html) 中的相关辅助方法。
+    - 在 UI 中验证行是否包含 `metadata`（如果你计划按场景筛选）。
+  </Step>
+  <Step title="使用内置样本">
+    优化器 SDK 提供了现成的数据集用于快速实验：
+    ```python
+    from opik_optimizer import datasets
+    hotpot = datasets.hotpot(count=300)
+    tiny = datasets.tiny_test()
+    ```
+    这些数据集位于 `sdks/opik_optimizer/src/opik_optimizer/datasets` 中，与 Notebook 示例一致。大多数辅助方法接受常见的切片控制，例如：
+    - `split`（例如 `"train"`、`"validation"`）
+    - `count` 和 `start`（切片大小 + 洗牌后的偏移量）
+    - `seed`（确定性洗牌）
+    - `filter_by`（切片前筛选行）
+    一些辅助方法还暴露 `prefer_presets` 以覆盖数据集定义的预设。
+  </Step>
+</Steps>
+
+## 筛选数据集行
+
+使用 `filter_by` 在切片前选择行的子集。筛选器支持：
+- 精确匹配（`{"task_id": "e57337a4"}`）
+- 成员关系（`{"type": {"bridge", "comparison"}}`）
+- 可调用对象（`{"task_id": lambda value: value.startswith("e57")}`）
+
+```python
+from opik_optimizer.datasets import arc_agi2, hotpot
+
+dataset = arc_agi2(
+    split="train",
+    count=1,
+    prefer_presets=False,
+    filter_by={"task_id": "e57337a4"},
+)
+
+dataset = hotpot(
+    split="validation",
+    count=100,
+    filter_by={"type": {"bridge", "comparison"}},
+)
+```
+
+## 使用 Hugging Face 数据集
+
+如果你已有 Hugging Face 数据集，可以将其导入 Opik 并与任何优化器一起使用：
+
+```python
+from datasets import load_dataset
+import opik
+
+hf = load_dataset("your-org/your-dataset", split="train")
+records = [
+    {"question": row["question"], "answer": row["answer"]}
+    for row in hf.select(range(200))
+]
+
+client = opik.Opik()
+dataset = client.get_or_create_dataset("your-hf-train", project_name="my-project")
+dataset.insert(records)
+```
+
+你还可以按照 `sdks/opik_optimizer/src/opik_optimizer/datasets` 中的模式（使用 `DatasetSpec` + `DatasetHandle`）用自定义辅助方法包装 Hugging Face 数据集，以获得与内置数据集相同的 `split`/`count`/`filter_by` 接口。
+
+## 训练/验证拆分
+
+**过拟合**发生在优化后的提示词在训练示例上表现良好但无法泛化到新的未见过数据时。为防止这种情况，请将数据集拆分为单独的集合：
+
+- **训练数据集**（70-80%）：优化器用于生成提示词改进
+- **验证数据集**（20-30%）：用于在优化期间评估和排名候选提示词，帮助选择泛化良好的提示词
+- **测试数据集**（可选，单独）：完全保留到优化之后，用于衡量最终的真实世界性能
+
+优化器使用训练集进行学习，使用验证集进行选择，确保最佳提示词不仅适用于训练示例。
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Create training dataset (70-80% of your data)
+training_dataset = client.get_or_create_dataset(name="agent-opt-train", project_name="my-project")
+training_dataset.insert([
+    {"question": "What is Opik?", "answer": "Opik is an LLM observability platform."},
+    {"question": "List optimizer types.", "answer": "MetaPrompt, Evolutionary, etc."},
+    # ... more training examples
+])
+
+# Create validation dataset (20-30% of your data)
+validation_dataset = client.get_or_create_dataset(name="agent-opt-val", project_name="my-project")
+validation_dataset.insert([
+    {"question": "Explain Opik's purpose.", "answer": "Opik helps monitor LLMs."},
+    {"question": "Name two optimizers.", "answer": "GEPA and Few-Shot Bayesian."},
+    # ... more validation examples
+])
+
+# Use both during optimization
+result = optimizer.optimize_prompt(
+    prompt=my_prompt,
+    dataset=training_dataset,
+    validation_dataset=validation_dataset,
+    metric=my_metric,
+)
+```
+
+**拆分建议：**
+- **70/30 或 80/20** 是训练/验证拆分的标准比例
+- **确保两个集合的多样性**以覆盖不同场景
+- **保持验证数据在提示词开发期间不可见**
+- **在两个集合中使用相同的分布**以确保有效评估
+
+### 在保留数据上测试
+
+优化完成后，在完全保留的测试数据集上评估最终提示词，确认它能泛化到生产场景：
+
+```python
+from opik.evaluation import evaluate_prompt
+
+# After optimization, test on unseen data
+test_dataset = client.get_dataset(name="agent-opt-test")
+
+test_results = evaluate_prompt(
+    prompt=result.prompt,  # Best prompt from optimization
+    dataset=test_dataset,
+    scoring_metrics=[my_metric],
+    task_threads=4,
+    project_name="my-project",
+)
+
+print(f"Test score: {test_results.mean_scores}")
+```
+
+这个最终测试分数让你有信心确认改进将转移到真实世界的使用中。
+
+## 最佳实践
+
+- **在优化运行期间保持数据集不可变**；如果需要添加行，请创建新数据集版本。
+- **使用验证数据集**避免过拟合——按 70/30 或 80/20 的比例在训练集和验证集之间分配数据。
+- **记录上下文字段**（如果你运行 RAG 风格的提示词），以便失败分析可以发现缺失的段落。
+- **通过 metadata 跟踪拆分**（例如 `metadata["split"] = "eval"`），为单独数据集之外提供额外的组织方式。
+- **记录所有权**使用数据集描述，让团队知道谁管理每个集合。
+- **保持模式与提示词同步**——如果你的提示词期望 `{context}`，请确保每个数据集行定义该键或在优化器中提供默认值。
+
+## 验证清单
+
+- 在上传前后确认 Opik **Datasets** 标签页中的行数（或通过 Python 运行 `len(dataset.get_items())`）。
+- 在仪表板的 Dataset viewer 中抽查行。
+- 如果行包含多模态资产或工具负载，确认它们在运行优化后出现在追踪树中。
+- 使用少量数据行运行初始小批量优化，端到端验证一切正常。
+
+## 后续步骤
+
+使用[定义指标](/v1/agent_optimization/optimization/define_metrics)定义你将如何评分结果，然后按照[优化提示词](/v1/agent_optimization/optimization/optimize_prompts)启动实验。对于领域特定的评分，使用额外字段扩展数据集，并在[自定义指标](/v1/agent_optimization/advanced/custom_metrics)中引用它们。

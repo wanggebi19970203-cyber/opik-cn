@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import isUndefined from "lodash/isUndefined";
 import { JsonParam, NumberParam, useQueryParam } from "use-query-params";
 
@@ -23,6 +24,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 import { MAX_EXPERIMENTS_LOADED } from "@/lib/optimizations";
 
 const TrialPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("trial");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const {
     permissions: { canViewDatasets },
@@ -163,10 +165,10 @@ const TrialPage: React.FunctionComponent = () => {
           >
             <TabsList variant="underline">
               <TabsTrigger variant="underline" value="results">
-                Results
+                {t("tabs.results", "Results")}
               </TabsTrigger>
               <TabsTrigger variant="underline" value="configuration">
-                Configuration
+                {t("tabs.configuration", "Configuration")}
               </TabsTrigger>
             </TabsList>
           </PageBodyStickyContainer>
@@ -190,7 +192,7 @@ const TrialPage: React.FunctionComponent = () => {
             {canViewDatasets && (
               <>
                 <PageBodyStickyContainer direction="horizontal" limitWidth>
-                  <h2 className="comet-title-s mb-4">Evaluation results</h2>
+                  <h2 className="comet-title-s mb-4">{t("evaluationResults", "Evaluation results")}</h2>
                 </PageBodyStickyContainer>
                 <TrialItemsTab
                   objectiveName={optimization?.objective_name}

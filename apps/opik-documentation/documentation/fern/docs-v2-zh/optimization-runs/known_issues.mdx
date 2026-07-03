@@ -1,0 +1,159 @@
+---
+description: 运行 Opik Optimizer 时当前依赖的已知运行时问题。
+headline: 已知问题
+title: 已知问题
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/known_issues
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是按项目划分作用域的。创建数据集和运行实验时请务必指定 `project_name`，以确保它们关联到正确的项目。
+</Note>
+
+## 已知问题
+
+<AccordionGroup>
+  <Accordion title="速率限制器错误（pyrate-limiter 4.x）">
+    如果安装了 `pyrate-limiter` 4.x，你可能会看到 `TypeError: Limiter.__init__() got an unexpected keyword argument 'raise_when_fail'`。该版本移除了我们的优化器仍在传递的旧版标志。
+
+    **解决方法**：将 `pyrate-limiter` 固定到 3.x 版本：
+    ```bash
+    pip install "pyrate-limiter>=3.0.0,<4.0.0"
+    ```
+
+    **已在以下版本修复**：`3.0.0`（2026-01-26）。升级 SDK 即可完全移除旧版标志。
+  </Accordion>
+
+  <Accordion title="tqdm / rich 进度条错误（tqdm >= 4.71）">
+    `convert_tqdm_to_rich.<locals>._tqdm_to_track() missing 1 required positional argument: 'iterable'` 来自 `tqdm` >= 4.71 更改了我们依赖的包装器签名。
+
+    **解决方法**：将 `tqdm` 固定到 4.70.0：
+    ```bash
+    pip install tqdm==4.70.0
+    ```
+
+    **已在以下版本修复**：`3.0.0`（2026-01-26）。
+  </Accordion>
+
+  <Accordion title="Pydantic 序列化警告">
+    当 LiteLLM 序列化字段少于模式的 `Message` 对象时（LiteLLM/Pydantic v2 的上游变更），会发出 `PydanticSerializationUnexpectedValue`。我们抑制了该警告，因为负载仍然有效。
+
+    **解决方法**：避免使用受影响的 LiteLLM 版本：
+    ```bash
+    pip install --upgrade "litellm<1.81.1"
+    ```
+
+    **已在以下版本修复**：`3.0.0`（2026-01-26）。
+  </Accordion>
+
+  <Accordion title="litellm → OpenAI 连接错误（1.81.x）">
+    `litellm.InternalServerError: OpenAIException - Connection error.` 已在 LiteLLM `1.81.*` 中复现。这些版本可能会破坏 Opik Optimizer 内部的 OpenAI 评估流程。
+ 
+    **解决方法**：
+    ```bash
+    pip install --upgrade "litellm<1.81.0"
+    ```
+
+    **已在以下版本修复**：`3.0.0`（2026-01-26）。
+  </Accordion>
+</AccordionGroup>
+
+## 常见错误
+
+<AccordionGroup>
+  <Accordion title="ValueError: Prompt must be a ChatPrompt object">
+    当你向优化器的 `optimize_prompt()` 方法传递了错误的类型时会出现此错误。
+
+    **解决方案**：确保使用 `ChatPrompt` 类来定义你的提示词：
+    ```python
+    from opik_optimizer import ChatPrompt
+
+    prompt = ChatPrompt(
+        messages=[
+            {"role": "system", "content": "Your system prompt here"},
+            {"role": "user", "content": "Your user prompt with {variable}"},
+        ],
+        model="gpt-4",
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="ValueError: Dataset must be a Dataset object">
+    当传递给优化器的数据集不是正确的 `Dataset` 对象时会出现此错误。
+
+    **解决方案**：使用 `Dataset` 类创建你的数据集：
+    ```python
+    import opik
+
+    client = opik.Opik()
+    dataset = client.get_or_create_dataset(name="your-dataset-name", project_name="my-project")
+    dataset.insert(
+        [
+            {"input": "example 1", "output": "expected 1"},
+            {"input": "example 2", "output": "expected 2"},
+        ]
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="ValueError: Metric must be a function">
+    当指标参数不可调用或签名不正确时会出现此错误。
+
+    **解决方案**：确保你的指标是一个接受 `dataset_item` 和 `llm_output` 作为参数并返回 `ScoreResult` 的函数：
+    ```python
+    from opik.evaluation.metrics import ScoreResult
+
+    def my_metric(dataset_item, llm_output):
+        # Your scoring logic here
+        score = calculate_score(dataset_item, llm_output)
+        return ScoreResult(
+            name="my-metric",
+            value=score,
+            reason="Explanation for the score",
+        )
+    ```
+  </Accordion>
+
+  <Accordion title="ValueError: Missing required key in prompt">
+    当你的提示词模板包含与数据集字段不匹配的占位符（例如 `{variable}`）时会出现此错误。
+
+    **解决方案**：确保提示词中的所有占位符与数据集中的键匹配：
+    ```python
+    # Prompt with {question} placeholder
+    prompt = ChatPrompt(
+        user="Answer: {question}",
+        model="gpt-4",
+    )
+
+    # Dataset must have 'question' field
+    dataset = Dataset.from_list(
+        [
+            {"question": "What is AI?", "output": "..."},
+        ]
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="ImportError: gepa package is required for GepaOptimizer">
+    当尝试使用 `GepaOptimizer` 但未安装所需的 `gepa` 包时会出现此错误。
+
+    **解决方案**：安装 gepa 包：
+    ```bash
+    pip install gepa
+    ```
+  </Accordion>
+
+  <Accordion title="Exception: Make sure you have provider API key set">
+    当环境中未配置 LLM 提供商 API 密钥时通常会出现此错误。
+
+    **解决方案**：为你的 LLM 提供商设置适当的环境变量：
+    ```bash
+    # For OpenAI
+    export OPENAI_API_KEY="your-api-key"
+
+    # For Anthropic
+    export ANTHROPIC_API_KEY="your-api-key"
+
+    # For other providers, check the LiteLLM documentation
+    ```
+  </Accordion>
+</AccordionGroup>

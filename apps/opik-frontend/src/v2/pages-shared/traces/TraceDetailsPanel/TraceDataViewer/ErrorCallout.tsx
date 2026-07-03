@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import ErrorTriangle from "@/icons/error-triangle.svg?react";
 import { BaseTraceDataErrorInfo } from "@/types/traces";
 import CodeBlock from "./CodeBlock";
@@ -12,6 +13,7 @@ const ErrorCallout: React.FunctionComponent<ErrorCalloutProps> = ({
   error,
   search,
 }) => {
+  const { t } = useTranslation("tracing");
   if (!error) return null;
 
   return (
@@ -21,7 +23,7 @@ const ErrorCallout: React.FunctionComponent<ErrorCalloutProps> = ({
           <span className="flex size-4 shrink-0 items-center justify-center text-destructive">
             <ErrorTriangle width={12} height={12} />
           </span>
-          Error
+          {t("detailsTab.error")}
         </span>
       }
       data={error}

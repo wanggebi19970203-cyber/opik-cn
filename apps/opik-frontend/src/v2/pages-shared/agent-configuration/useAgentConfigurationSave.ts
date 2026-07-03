@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import React, { useCallback, useRef, useState } from "react";
 
 import {
@@ -49,18 +50,18 @@ export const validateNewField = (
   siblingKeys: ReadonlySet<string>,
 ): string => {
   const key = field.key.trim();
-  if (!key) return "Field name is required";
+  if (!key) return i18next.t("common:agentConfig.fieldNameRequired");
   if (!BLUEPRINT_FIELD_NAME_PATTERN.test(key))
-    return "Use letters, digits and underscore; start with a letter or underscore";
-  if (existingKeys.has(key)) return "A field with this name already exists";
-  if (siblingKeys.has(key)) return "Duplicate field name in the new fields";
+    return i18next.t("common:agentConfig.fieldNamePattern");
+  if (existingKeys.has(key)) return i18next.t("common:agentConfig.fieldNameAlreadyExists");
+  if (siblingKeys.has(key)) return i18next.t("common:agentConfig.duplicateFieldName");
   if (field.type === BlueprintValueType.PROMPT) {
     if (field.promptStructure === PROMPT_TEMPLATE_STRUCTURE.TEXT) {
-      return field.value.trim() ? "" : "Prompt must not be empty";
+      return field.value.trim() ? "" : i18next.t("common:messages.promptMustNotBeEmpty");
     }
-    if (field.messages.length === 0) return "Add at least one message";
+    if (field.messages.length === 0) return i18next.t("common:agentConfig.addAtLeastOneMessage");
     if (field.messages.every(isMessageEmpty))
-      return "Messages must not be empty";
+      return i18next.t("common:messages.messagesMustNotBeEmpty");
     return "";
   }
   if (field.type !== BlueprintValueType.BOOLEAN) {
@@ -278,8 +279,8 @@ export const useAgentConfigurationSave = ({
         newCommits = await saveDirtyPromptVersions(removed);
       } catch {
         toast({
-          title: "Failed to save prompt versions",
-          description: "Please try again",
+          title: i18next.t("common:agentConfig.failedToSavePromptVersions"),
+          description: i18next.t("common:agentConfig.pleaseTryAgain"),
           variant: "destructive",
         });
         return null;

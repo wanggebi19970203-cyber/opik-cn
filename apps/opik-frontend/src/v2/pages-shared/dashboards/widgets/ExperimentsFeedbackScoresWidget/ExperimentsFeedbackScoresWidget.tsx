@@ -1,4 +1,5 @@
 import React, { memo, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 import isEmpty from "lodash/isEmpty";
 import isNumber from "lodash/isNumber";
@@ -42,7 +43,7 @@ import {
 import { SCORE_TYPE_FEEDBACK, SCORE_TYPE_EXPERIMENT } from "@/types/shared";
 
 const MAX_EXPERIMENTS_LIMIT = 100;
-const PASS_RATE_LABEL = "Pass rate";
+const PASS_RATE_LABEL_KEY = "feedbackScores.passRate";
 
 type DataRecord = {
   entityId: string;
@@ -88,7 +89,8 @@ function transformGroupedExperimentsToChartData(
     | { content: Record<string, ExperimentsGroupNodeWithAggregations> }
     | undefined,
   validGroups: Groups,
-  feedbackScores?: string[],
+  feedbackScores: string[] | undefined,
+  passRateLabel: string,
 ): ChartData {
   if (!groupsAggregationsData?.content) {
     return { data: [], lines: [] };
@@ -149,8 +151,8 @@ function transformGroupedExperimentsToChartData(
 
         // pass_rate is a top-level metric, not subject to feedbackScores filtering
         if (isNumber(value.aggregations.pass_rate)) {
-          scores[PASS_RATE_LABEL] = value.aggregations.pass_rate;
-          allLines.push(PASS_RATE_LABEL);
+          scores[passRateLabel] = value.aggregations.pass_rate;
+          allLines.push(passRateLabel);
         }
 
         if (Object.keys(scores).length > 0) {
@@ -176,7 +178,8 @@ function transformGroupedExperimentsToChartData(
 
 function transformUngroupedExperimentsToChartData(
   experiments: Experiment[],
-  feedbackScores?: string[],
+  feedbackScores: string[] | undefined,
+  passRateLabel: string,
 ): ChartData {
   const allLines: string[] = [];
   const labelsMap: Record<string, string> = {};
@@ -205,8 +208,8 @@ function transformUngroupedExperimentsToChartData(
 
     // pass_rate is a top-level metric, not subject to feedbackScores filtering
     if (isTestSuiteExperiment(experiment) && isNumber(experiment.pass_rate)) {
-      scores[PASS_RATE_LABEL] = experiment.pass_rate;
-      allLines.push(PASS_RATE_LABEL);
+      scores[passRateLabel] = experiment.pass_rate;
+      allLines.push(passRateLabel);
     }
 
     return {
@@ -227,6 +230,8 @@ function transformUngroupedExperimentsToChartData(
 const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
   DashboardWidgetComponentProps
 > = ({ sectionId, widgetId, preview = false }) => {
+  const { t } = useTranslation("dashboards");
+  const passRateLabel = t(PASS_RATE_LABEL_KEY);
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const readOnly = useDashboardStore(selectReadOnly);
 
@@ -336,6 +341,7 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
         groupsAggregationsData,
         validGroups,
         feedbackScores,
+        passRateLabel,
       );
     }
 
@@ -343,6 +349,7 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
       return transformUngroupedExperimentsToChartData(
         experimentsData.content,
         feedbackScores,
+        passRateLabel,
       );
     }
 
@@ -353,6 +360,7 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
     validGroups,
     experimentsData?.content,
     feedbackScores,
+    passRateLabel,
   ]);
 
   const isPending = hasGroups
@@ -366,7 +374,7 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
   const hasMoreThanLimit = !hasGroups && totalExperiments > experimentsListSize;
 
   const warningMessage = hasMoreThanLimit
-    ? `Showing first ${experimentsListSize} of ${totalExperiments} experiments`
+    ? t("feedbackScores.showingFirstN", { count: experimentsListSize, total: totalExperiments })
     : undefined;
 
   const isRadarOrBar =
@@ -443,17 +451,17 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
         feedbackScores && feedbackScores.length > 0;
 
       const emptyMessage = hasFeedbackScoresFilter
-        ? "No data available for selected metrics"
-        : "Configure filters to display experiment metrics";
+        ? t("feedbackScores.noDataForMetrics")
+        : t("feedbackScores.configureFiltersMessage");
 
       return (
         <DashboardWidget.EmptyState
-          title="No data available"
+          title={t("feedbackScores.noDataAvailable")}
           message={emptyMessage}
           action={
             !preview && !readOnly ? (
               <DashboardWidget.EmptyState.EditAction
-                label="Configure widget"
+                label={t("feedbackScores.configureWidget")}
                 onClick={handleEdit}
               />
             ) : undefined

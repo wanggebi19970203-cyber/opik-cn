@@ -1,15 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import OwlArt from "@/shared/OwlArt";
 import { AssistantSurfaceVariant } from "@/types/assistant-sidebar";
-
-const MESSAGES = [
-  "Ollie is waking up\u2026",
-  "Loading traces\u2026",
-  "Crunching evaluation data\u2026",
-  "Almost ready\u2026",
-] as const;
 
 const ROTATION_INTERVAL_MS = 2200;
 
@@ -26,16 +20,27 @@ interface OllieLoaderProps {
 export function OllieLoader({
   variant = "page",
 }: OllieLoaderProps): React.ReactElement {
+  const { t } = useTranslation("common");
   const [index, setIndex] = useState(0);
   const showText = variant !== "collapsed";
+
+  const messages = useMemo(
+    () => [
+      t("ollie.wakingUp"),
+      t("ollie.loadingTraces"),
+      t("ollie.crunchingData"),
+      t("ollie.almostReady"),
+    ],
+    [t],
+  );
 
   useEffect(() => {
     if (!showText) return;
     const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % MESSAGES.length);
+      setIndex((current) => (current + 1) % messages.length);
     }, ROTATION_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [showText]);
+  }, [showText, messages]);
 
   const owlSize = OWL_SIZE[variant];
 
@@ -62,7 +67,7 @@ export function OllieLoader({
               key={index}
               className="inline-block motion-safe:animate-ollie-text-in"
             >
-              {MESSAGES[index]}
+              {messages[index]}
             </span>
           </p>
         )}

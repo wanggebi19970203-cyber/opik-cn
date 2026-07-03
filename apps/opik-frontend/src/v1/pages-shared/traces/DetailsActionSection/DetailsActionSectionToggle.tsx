@@ -3,6 +3,7 @@ import { Button } from "@/ui/button";
 import { DetailsActionSectionValue, DetailsActionSection } from "./types";
 import { MessageSquareMore, PenLine, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export enum ButtonLayoutSize {
   Large = "lg",
@@ -19,19 +20,22 @@ const formatCounter = (
   return isLargeLayout(layoutSize) ? `(${count})` : String(count);
 };
 
-const configMap = {
-  [DetailsActionSection.Annotations]: {
-    icon: <PenLine className="size-3.5" />,
-    tooltip: "Feedback scores",
-  },
-  [DetailsActionSection.Comments]: {
-    icon: <MessageSquareMore className="size-3.5" />,
-    tooltip: "Comments",
-  },
-  [DetailsActionSection.AIAssistants]: {
-    icon: <Sparkles className="size-3.5" />,
-    tooltip: "AI-powered trace analysis",
-  },
+const useConfigMap = () => {
+  const { t } = useTranslation("tracing");
+  return {
+    [DetailsActionSection.Annotations]: {
+      icon: <PenLine className="size-3.5" />,
+      tooltip: t("annotate.feedbackScores"),
+    },
+    [DetailsActionSection.Comments]: {
+      icon: <MessageSquareMore className="size-3.5" />,
+      tooltip: t("detailsPanel.comments"),
+    },
+    [DetailsActionSection.AIAssistants]: {
+      icon: <Sparkles className="size-3.5" />,
+      tooltip: t("aiAssistant.debugWithOpikAssist"),
+    },
+  };
 };
 
 type DetailsActionSectionToggleProps = {
@@ -52,6 +56,7 @@ const DetailsActionSectionToggle: React.FC<DetailsActionSectionToggleProps> = ({
   disabled,
   tooltipContent,
 }) => {
+  const configMap = useConfigMap();
   const showFullActionLabel = isLargeLayout(layoutSize);
 
   return (

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import isNumber from "lodash/isNumber";
 import isUndefined from "lodash/isUndefined";
 
@@ -8,7 +9,7 @@ export const RE_FETCH_INTERVAL = 30000;
 
 export const ALL_PROJECTS_PROJECT = {
   id: "all",
-  name: "All projects",
+  name: i18next.t("home.allProjects"),
 } as Project;
 
 export type DataRecord = {

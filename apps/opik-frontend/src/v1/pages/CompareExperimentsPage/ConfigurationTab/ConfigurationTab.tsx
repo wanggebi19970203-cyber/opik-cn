@@ -7,6 +7,7 @@ import uniq from "lodash/uniq";
 import toLower from "lodash/toLower";
 import find from "lodash/find";
 import { flattie } from "flattie";
+import { useTranslation } from "react-i18next";
 
 import { COLUMN_TYPE, ColumnData } from "@/types/shared";
 import DataTable from "@/shared/DataTable/DataTable";
@@ -39,7 +40,7 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 export const DEFAULT_COLUMNS: ColumnData<CompareConfig>[] = [
   {
     id: "name",
-    label: "Name",
+    label: "compareExperiments.configuration.name",
     type: COLUMN_TYPE.string,
   },
 ];
@@ -55,6 +56,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   experiments,
   isPending,
 }) => {
+  const { t } = useTranslation("compare-experiments");
   const [search = "", setSearch] = useQueryParam("searchConfig", StringParam, {
     updateType: "replaceIn",
   });
@@ -146,10 +148,10 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   }, [rows, search, onlyDiff, isCompare]);
 
   const noDataText = search
-    ? "No search results"
+    ? t("compareExperiments.configuration.noSearchResults")
     : isCompare
-      ? "These experiments have no configuration"
-      : "This experiment has no configuration";
+      ? t("compareExperiments.configuration.noConfigMultiple")
+      : t("compareExperiments.configuration.noConfigSingle");
 
   const resizeConfig = useMemo(
     () => ({
@@ -181,7 +183,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("compareExperiments.configuration.searchPlaceholder")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -192,7 +194,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">Show differences only</Label>
+                <Label htmlFor="show-doff-only">{t("compareExperiments.configuration.showDifferencesOnly")}</Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

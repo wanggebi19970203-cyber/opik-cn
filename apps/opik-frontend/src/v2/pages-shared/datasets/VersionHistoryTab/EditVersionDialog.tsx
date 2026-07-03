@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -27,6 +28,7 @@ const EditVersionDialog: React.FC<EditVersionDialogProps> = ({
   version,
   datasetId,
 }) => {
+  const { t } = useTranslation("datasets");
   const editMutation = useEditDatasetVersionMutation();
 
   // All existing tags are immutable - user can only add new tags
@@ -68,12 +70,11 @@ const EditVersionDialog: React.FC<EditVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit version</DialogTitle>
+          <DialogTitle>{t("editVersion.title")}</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          Edit the version note and tags to keep your dataset versions
-          organized.
+          {t("editVersion.description")}
         </p>
 
         <VersionForm
@@ -90,14 +91,14 @@ const EditVersionDialog: React.FC<EditVersionDialogProps> = ({
             onClick={handleCancel}
             disabled={editMutation.isPending}
           >
-            Cancel
+            {t("editVersion.cancel")}
           </Button>
           <Button
             type="submit"
             form={EDIT_VERSION_FORM_ID}
             disabled={editMutation.isPending}
           >
-            Update version
+            {t("editVersion.updateVersion")}
           </Button>
         </DialogFooter>
       </DialogContent>

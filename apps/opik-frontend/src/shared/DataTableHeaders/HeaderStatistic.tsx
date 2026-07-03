@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import get from "lodash/get";
 import find from "lodash/find";
@@ -36,21 +37,6 @@ const PERCENTILE_VALUES = [
   AGGREGATION_VALUE.P99,
 ] as const;
 
-const PERCENTILE_OPTIONS: DropdownOption<string>[] = [
-  {
-    label: "Percentile 50",
-    value: AGGREGATION_VALUE.P50,
-  },
-  {
-    label: "Percentile 90",
-    value: AGGREGATION_VALUE.P90,
-  },
-  {
-    label: "Percentile 99",
-    value: AGGREGATION_VALUE.P99,
-  },
-];
-
 // Columns that should display sum alongside avg
 const COLUMNS_WITH_SUM = [
   "total_estimated_cost",
@@ -74,6 +60,14 @@ const HeaderStatistic: React.FC<HeaderStatisticProps> = ({
   tooltipFormater,
   supportsPercentiles = false,
 }) => {
+  const { t } = useTranslation();
+
+  const percentileOptions: DropdownOption<string>[] = [
+    { label: t("common:aggregation.percentile50"), value: AGGREGATION_VALUE.P50 },
+    { label: t("common:aggregation.percentile90"), value: AGGREGATION_VALUE.P90 },
+    { label: t("common:aggregation.percentile99"), value: AGGREGATION_VALUE.P99 },
+  ];
+
   const formatTooltip = (value: number) =>
     tooltipFormater ? tooltipFormater(value) : String(value);
 
@@ -176,11 +170,11 @@ const HeaderStatistic: React.FC<HeaderStatisticProps> = ({
     const options: DropdownOption<string>[] = [];
 
     if (statistic?.type === STATISTIC_AGGREGATION_TYPE.AVG) {
-      options.push({ label: "Average", value: AGGREGATION_VALUE.AVG });
+      options.push({ label: t("common:aggregation.average"), value: AGGREGATION_VALUE.AVG });
     }
 
     if (shouldDisplaySum && sumValue !== null) {
-      options.push({ label: "Sum", value: AGGREGATION_VALUE.SUM });
+      options.push({ label: t("common:aggregation.sum"), value: AGGREGATION_VALUE.SUM });
     }
 
     return options;
@@ -232,7 +226,7 @@ const HeaderStatistic: React.FC<HeaderStatisticProps> = ({
 
               {/* Render percentile options */}
               {shouldDisplayPercentiles &&
-                PERCENTILE_OPTIONS.map((option) => (
+                percentileOptions.map((option) => (
                   <DropdownMenuCheckboxItem
                     key={option.value}
                     onSelect={() =>
@@ -290,7 +284,7 @@ const HeaderStatistic: React.FC<HeaderStatisticProps> = ({
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {PERCENTILE_OPTIONS.map((option) => {
+            {percentileOptions.map((option) => {
               return (
                 <DropdownMenuCheckboxItem
                   key={option.value}

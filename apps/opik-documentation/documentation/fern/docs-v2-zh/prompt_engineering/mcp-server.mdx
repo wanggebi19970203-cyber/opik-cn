@@ -1,0 +1,388 @@
+---
+headline: Opik 的 MCP 服务器 | Opik 文档
+og:description: 通过 Claude Code、Cursor 和 VS Code Copilot 配置 Opik 的 Python MCP 服务器，从 AI 宿主中读取 trace、记录评分和管理 prompt。
+og:site_name: Opik 文档
+og:title: 集成 Opik 的 MCP 服务器
+title: Opik 的 MCP 服务器
+---
+
+Opik 的 [MCP 服务器](https://github.com/comet-ml/opik-mcp)将你的 AI 宿主
+（Claude Code、Cursor、VS Code Copilot、MCP Inspector）直接连接到你的 Opik
+工作区——在聊天中读取 trace、记录评分、保存 prompt 版本，以及向 Ollie 提问。
+
+## 使用 Opik CLI 快速设置
+
+连接 MCP 服务器最快的方式是使用 Opik CLI。它会自动检测你的 AI
+宿主（Claude Code、Cursor、VS Code Copilot），为你的 Opik 部署选择合适的服务器并完成配置。
+
+<Tip>
+不想使用 CLI？你可以手动配置任何宿主——跳转到
+[手动设置](#manual-setup)。
+</Tip>
+
+<Steps>
+  <Step title="安装 Opik CLI">
+    CLI 随 `opik` Python 包一起提供。`opik mcp` 命令需要
+    **2.1.3 或更高版本**：
+
+    ```bash
+    pip install --upgrade "opik>=2.1.3"
+    ```
+  </Step>
+  <Step title="配置 MCP 服务器">
+    ```bash
+    opik mcp configure
+    ```
+
+    该命令会复用你现有的 Opik 配置（`~/.opik.config`）。如果你
+    尚未配置 Opik，向导会先帮你完成配置。
+
+    `opik configure` 在设置结束时也会提供运行此命令的选项：
+
+    > 为 AI 助手（Claude Code、Cursor、VS Code）设置 Opik MCP 服务器？(y/N)
+  </Step>
+  <Step title="重启 AI 宿主并验证">
+    重启你的 AI 宿主，然后在聊天中输入 **"list my Opik projects"** 来
+    确认连接是否正常。
+
+    <Note>
+    如果你的宿主未被检测到，请使用下方的[手动设置](#manual-setup)。
+    </Note>
+  </Step>
+</Steps>
+
+## 检查设置
+
+每个 AI 宿主都维护自己的一份 MCP 配置副本，当你的 Opik 配置发生变化时不会自动更新。要查看每个已检测到的宿主指向哪个服务器——以及是否仍与当前 Opik 配置匹配——请运行：
+
+```bash
+opik mcp status
+```
+
+该命令会打印你当前活跃的 Opik 配置，以及每个已配置 Opik MCP 服务器的助手：配置文件位置、连接的服务器（托管或本地）、工作区，以及是否与 Opik 配置不一致。
+
+```text
+Your Opik configuration
+    File          ~/.opik.config
+    Environment   https://www.comet.com/opik/api
+    Workspace     my-workspace
+
+Opik MCP server — configured for 1 AI assistant:
+
+  Claude Code
+    Config        ~/.claude.json
+    Connection    Hosted (HTTP + OAuth)
+    Reports to    https://www.comet.com/opik/api/v1/mcp
+    Status        ✓ in sync with your Opik configuration
+```
+
+如果某个宿主的配置已过期，会标记为 `✗ OUT OF SYNC`——重新运行
+`opik mcp configure` 即可修复。
+
+<Warning>
+宿主在其进程生命周期内会保持 MCP 连接。更改 Opik 配置或重新运行 `opik mcp configure` 后，**请重启 AI
+宿主**以使其使用更新后的设置重新连接。
+</Warning>
+
+仅查看当前活跃的 Opik 配置（文件路径、环境、工作区）：
+
+```bash
+opik configure status
+```
+
+## Opik Cloud 和自托管部署
+
+无论你使用 Opik Cloud、自托管还是本地安装，`opik mcp configure` 的工作方式相同——它会自动为你的部署设置合适的服务器。
+
+### Opik Cloud（托管服务器）
+
+在 [Opik Cloud](https://www.comet.com/opik) 上，CLI 通过 HTTP 注册**托管 MCP
+服务器**。你的 AI 宿主在首次连接时通过浏览器中的 OAuth 流程登录，因此：
+
+- 宿主配置中**不存储 API 密钥**——通过浏览器中的 OAuth 进行身份验证。
+- **不需要 `uv`**——无需运行本地进程。
+- 工作区在 OAuth 登录时选择，因此托管服务器在 `opik mcp status` 中不显示工作区。
+
+### 自托管和本地（本地服务器）
+
+如果你的环境没有可用的托管服务器，CLI 会设置
+**本地服务器**，通过 `uvx opik-mcp` 按需运行。这需要
+[`uv`](https://docs.astral.sh/uv/)——使用 `brew install uv`（macOS）
+或 `curl -LsSf https://astral.sh/uv/install.sh | sh` 安装。
+
+## 手动设置
+
+如果你更喜欢手动配置，或者你的宿主未被检测到？请在下方手动配置任何宿主。
+
+<Note>
+你可以手动添加两种服务器。[`opik mcp configure`](#quick-setup-with-the-opik-cli)
+会为你选择合适的服务器，但你也可以直接在 AI 宿主的 MCP 设置中添加：
+
+- **托管服务器**（HTTP + OAuth）——适用于 Opik Cloud 及任何提供此功能的部署。不存储 API 密钥；通过浏览器登录。
+- **本地服务器**（`uvx opik-mcp`，stdio）——在你的机器上运行，凭据通过宿主的 `env` 块传递。
+</Note>
+
+### 托管服务器（Opik Cloud）
+
+托管服务器通过 HTTP 连接，在首次连接时通过浏览器中的 OAuth 流程登录——宿主配置中不存储 API 密钥。将你的宿主指向部署的 MCP 端点，即你的 Opik API 基础地址加上 `/v1/mcp`。在
+Opik Cloud 上，该地址为 `https://www.comet.com/opik/api/v1/mcp`。
+
+<Tabs>
+    <Tab title="Claude Code">
+
+    使用一条命令添加服务器：
+
+    ```bash
+    claude mcp add --transport http opik-mcp https://www.comet.com/opik/api/v1/mcp
+    ```
+
+    或直接编辑 `~/.claude.json`：
+
+    ```json
+    {
+      "mcpServers": {
+        "opik-mcp": {
+          "type": "http",
+          "url": "https://www.comet.com/opik/api/v1/mcp"
+        }
+      }
+    }
+    ```
+
+    重启 Claude Code，在提示时完成浏览器登录，然后在聊天中输入：
+    **"list my Opik projects"**。
+
+    </Tab>
+    <Tab title="Cursor">
+
+    编辑 `~/.cursor/mcp.json`（全局）或 `.cursor/mcp.json`（项目）：
+
+    ```json
+    {
+      "mcpServers": {
+        "opik-mcp": {
+          "type": "http",
+          "url": "https://www.comet.com/opik/api/v1/mcp"
+        }
+      }
+    }
+    ```
+
+    重新加载 Cursor，在提示时完成浏览器登录。
+
+    </Tab>
+    <Tab title="VS Code Copilot">
+
+    在工作区中创建或打开 `.vscode/mcp.json`：
+
+    ```json
+    {
+      "servers": {
+        "opik-mcp": {
+          "type": "http",
+          "url": "https://www.comet.com/opik/api/v1/mcp"
+        }
+      }
+    }
+    ```
+
+    重新加载窗口，在提示时完成浏览器登录。
+
+    </Tab>
+</Tabs>
+
+### 本地服务器（uvx）
+
+本地服务器通过 `uvx opik-mcp` 按需运行（需要
+[`uv`](https://docs.astral.sh/uv/)），凭据通过宿主的 `env` 块传递。
+
+<Note>
+`opik-mcp` 现在是一个 Python 包。如果你之前使用的是基于 npx 的
+JavaScript 服务器，请使用下方的 `uvx opik-mcp` 命令替代
+`npx -y opik-mcp`。
+</Note>
+
+<Tip>
+`OPIK_WORKSPACE` 是**可选的**——你可以完全省略 `OPIK_WORKSPACE` 行/键，
+服务器会使用 `default` 工作区（适用于本地/OSS 安装）。下方的代码片段为完整性包含了该配置；仅在连接到命名的云工作区时才需要设置。
+</Tip>
+
+<Tabs>
+    <Tab title="Claude Code">
+
+    使用一条命令添加服务器：
+
+    ```bash
+    claude mcp add --transport stdio opik-mcp \
+      --env OPIK_API_KEY=<your-key> \
+      --env OPIK_WORKSPACE=<your-workspace> \
+      -- uvx opik-mcp
+    ```
+
+    或直接编辑 `~/.claude.json`：
+
+    ```json
+    {
+      "mcpServers": {
+        "opik-mcp": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["opik-mcp"],
+          "env": {
+            "OPIK_API_KEY": "<your-key>",
+            "OPIK_WORKSPACE": "<your-workspace>"
+          }
+        }
+      }
+    }
+    ```
+
+    重启 Claude Code，使用 `/mcp` 验证（`opik-mcp` 应显示为
+    已连接），然后在聊天中输入：**"list my Opik projects"**。
+
+    </Tab>
+    <Tab title="Cursor">
+
+    编辑 `~/.cursor/mcp.json`（全局）或 `.cursor/mcp.json`（项目），或打开
+    **Cmd+Shift+J -> Features -> Model Context Protocol**：
+
+    ```json
+    {
+      "mcpServers": {
+        "opik-mcp": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["opik-mcp"],
+          "env": {
+            "OPIK_API_KEY": "<your-key>",
+            "OPIK_WORKSPACE": "<your-workspace>"
+          }
+        }
+      }
+    }
+    ```
+
+    重新加载 Cursor；MCP 面板中 `opik-mcp` 旁的绿点表示
+    连接已建立。在聊天中输入：**"list my Opik projects"**。
+
+    <Tip>
+    **Cursor 60 秒超时。** Cursor 强制执行严格的工具调用超时，且不会因进度通知而重置。长时间的 `ask_ollie` 调用在 Cursor 上会失败——请参阅[已知宿主限制](#known-host-limits)。
+    </Tip>
+
+    </Tab>
+    <Tab title="VS Code Copilot">
+
+    在工作区中创建或打开 `.vscode/mcp.json`（或运行
+    **MCP: Open User Configuration** 命令将其添加为全局配置）：
+
+    ```json
+    {
+      "servers": {
+        "opik-mcp": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["opik-mcp"],
+          "env": {
+            "OPIK_API_KEY": "<your-key>",
+            "OPIK_WORKSPACE": "<your-workspace>"
+          }
+        }
+      }
+    }
+    ```
+
+    重新加载窗口。Copilot Chat 的 **MCP** 指示器在服务器可达后会显示 `opik-mcp`。在聊天中输入：**"list my Opik projects"**。
+
+    </Tab>
+    <Tab title="MCP Inspector">
+
+    用于手动测试或调试，使用 inspector 连接 `opik-mcp`：
+
+    ```bash
+    OPIK_API_KEY=<your-key> OPIK_WORKSPACE=<your-workspace> \
+      npx @modelcontextprotocol/inspector uvx opik-mcp
+    ```
+
+    Inspector 会在浏览器中打开，你可以直接调用每个工具。
+
+    </Tab>
+</Tabs>
+
+<Tip>
+**自托管 Opik。** 在 `env` 块中添加 `COMET_URL_OVERRIDE`（如果 Opik 部署在非默认路径，还需添加 `OPIK_URL`）。`ask_ollie` 和 `run_experiment` 仅在 Comet Cloud 上可用——在自托管环境中这些调用会在分发时失败；请直接使用 `read` / `list` / `write`。
+</Tip>
+
+## 使用 MCP 服务器
+
+### 工具概览
+
+| 工具 | 用途 |
+|---|---|
+| `read` | 通过 id / 名称 / `opik://` URI 进行通用读取。 |
+| `list` | 通用列表，支持可选的名称过滤和分页。 |
+| `ask_ollie` | 通过 Opik 产品内助手进行调查或综合分析。 |
+| `write` | 通用写入——记录 trace/span、评分、评论、保存 prompt、管理测试套件和实验。 |
+| `schema` | 自省写操作的 schema（供 LLM 构造有效的请求载荷）。 |
+| `run_experiment` | 通过 Ollie 端到端运行评估实验。 |
+
+### 浏览工作区
+
+> list my Opik projects
+
+> what was the most recent trace logged to the "demo" project?
+
+> show me trace `<trace-id>`
+
+### 评分、评论、保存 prompt
+
+> score trace `<trace-id>` 0.9 on helpfulness with reason "great recovery"
+
+> comment "retry with temperature=0" on span `<span-id>`
+
+> save the following text as a new version of the "rerank-system" prompt: ...
+
+有关完整的写操作及其载荷格式，请在宿主中输入
+**"show me the schema for trace.create"**（调用 `schema` 工具）或参阅
+[README](https://github.com/comet-ml/opik-mcp#tools)。
+
+### 向 Ollie 提问
+
+用于调查性或跨实体的问题：
+
+> why are spans in the "demo" project slower this week than last?
+
+> compare experiments "rerank-v2" and "rerank-v3" on factuality
+
+`ask_ollie` 会返回一个 `thread_id`，你可以在后续提问中传回以保持
+上下文。有关 Ollie 本身的更多信息，请参阅 [Ollie](/ollie)。
+在共享工作区中运行写入类 prompt 之前，请参阅下方的
+[Ollie 和自动批准](#ollie--auto-approve)。
+
+## Ollie 和自动批准
+
+默认情况下，Ollie 在流式处理过程中执行的写入操作（评分、评论、prompt
+版本、测试套件项）不需要逐个确认。每个自动批准的写入都会作为 JSON 审计行记录在 `opik_mcp.audit`
+Python logger 中。
+
+如需改为手动确认，请在服务器的 `env` 块中设置 `OPIK_MCP_AUTO_APPROVE=disabled`。Ollie 的确认请求会以类型化错误的形式呈现，你可以手动重新发出。
+
+`ask_ollie` 和 `run_experiment` 仅在 Comet Cloud 上可用——在
+自托管环境中这些调用会在分发时失败；请直接使用 `read` / `list` / `write`。
+
+## 已知宿主限制
+
+- **Cursor 强制执行 60 秒的硬性工具调用超时**，且不会因进度通知而重置。长时间的 `ask_ollie` 调用在 Cursor 上会失败。对于
+  长时间运行的调查，请使用 Claude Code 或 VS Code Copilot。
+
+## 示例对话
+
+使用 Claude Code 的典型调查流程：
+
+> **你：** 为什么实验 "gpt-4o-rerank-v3" 在事实性方面出现了退化？
+>
+> **Claude：** *（调用 `ask_ollie`）* 有三条 trace 失败，因为 reranker
+> 丢弃了系统消息。其余 12 条 trace 的评分高于 0.8……
+>
+> **你：** 对最后 3 条 trace 评分 0.2，原因 "dropped system message"。
+>
+> **Claude：** *（调用 `write`，执行 `score.create` x3）* 完成——已在 trace `<id-1>`、`<id-2>`、`<id-3>` 上记录三条评分。

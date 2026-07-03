@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { MessageCircleWarning } from "lucide-react";
 import uniqid from "uniqid";
+import { useTranslation } from "react-i18next";
 
 import useFeedbackDefinitionCreateMutation from "@/api/feedback-definitions/useFeedbackDefinitionCreateMutation";
 import useFeedbackDefinitionUpdateMutation from "@/api/feedback-definitions/useFeedbackDefinitionUpdateMutation";
@@ -34,25 +35,31 @@ import FeedbackDefinitionDetails from "./FeedbackDefinitionDetails";
 import ExplainerCallout from "@/shared/ExplainerCallout/ExplainerCallout";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v1/constants/explainers";
 
-const TYPE_OPTIONS = [
+const TYPE_OPTIONS_KEYS = [
   {
     value: FEEDBACK_DEFINITION_TYPE.boolean,
-    label: "Boolean",
-    description: 'Use binary labels (e.g. "Pass", "Fail") to evaluate outputs.',
+    labelKey: "feedbackDefinition.boolean",
+    descriptionKey: "feedbackDefinition.booleanDescription",
   },
   {
     value: FEEDBACK_DEFINITION_TYPE.categorical,
-    label: "Categorical",
-    description:
-      'Use labels (e.g. "Helpful", "Neutral", "Unhelpful") to classify outputs.',
+    labelKey: "feedbackDefinition.categorical",
+    descriptionKey: "feedbackDefinition.categoricalDescription",
   },
   {
     value: FEEDBACK_DEFINITION_TYPE.numerical,
-    label: "Numerical",
-    description:
-      "Use a numerical range (e.g. 1–5) to rate outputs quantitatively.",
+    labelKey: "feedbackDefinition.numerical",
+    descriptionKey: "feedbackDefinition.numericalDescription",
   },
 ];
+
+function getTypeOptions(t: (key: string) => string) {
+  return TYPE_OPTIONS_KEYS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+    description: t(opt.descriptionKey),
+  }));
+}
 
 function isValidFeedbackDefinition(
   feedbackDefinition: CreateFeedbackDefinition | null,
@@ -90,6 +97,7 @@ type AddEditFeedbackDefinitionDialogProps = {
 const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
   AddEditFeedbackDefinitionDialogProps
 > = ({ open, setOpen, feedbackDefinition, mode = "create", onCreated }) => {
+  const { t } = useTranslation("datasets");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const feedbackDefinitionCreateMutation =
     useFeedbackDefinitionCreateMutation();
@@ -122,13 +130,13 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
   const isEdit = mode === "edit";
   const title =
     mode === "clone"
-      ? "Clone feedback definition"
+      ? t("feedbackDefinition.cloneTitle")
       : mode === "edit"
-        ? "Edit feedback definition"
-        : "Create a new feedback definition";
+        ? t("feedbackDefinition.editTitle")
+        : t("feedbackDefinition.createTitle");
   const submitText = isEdit
-    ? "Update feedback definition"
-    : "Create feedback definition";
+    ? t("feedbackDefinition.updateSubmit")
+    : t("feedbackDefinition.createSubmit");
 
   const composedFeedbackDefinition = useMemo(() => {
     if (!details) return null;
@@ -196,7 +204,7 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
             />
           )}
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="feedbackDefinitionName">Name</Label>
+            <Label htmlFor="feedbackDefinitionName">{t("feedbackDefinition.name")}</Label>
             <div className="flex items-center">
               <Popover>
                 <PopoverTrigger asChild>
@@ -213,17 +221,17 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
               <Input
                 id="feedbackDefinitionName"
                 className="flex-1 rounded-l-none"
-                placeholder="Feedback definition name"
+                placeholder={t("feedbackDefinition.namePlaceholder")}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
               />
             </div>
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="feedbackDefinitionDescription">Description</Label>
+            <Label htmlFor="feedbackDefinitionDescription">{t("feedbackDefinition.description")}</Label>
             <Textarea
               id="feedbackDefinitionDescription"
-              placeholder="Feedback definition description"
+              placeholder={t("feedbackDefinition.descriptionPlaceholder")}
               className="min-h-20"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -231,7 +239,7 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
             />
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="feedbackDefinitionType">Type</Label>
+            <Label htmlFor="feedbackDefinitionType">{t("feedbackDefinition.type")}</Label>
             <SelectBox
               id="feedbackDefinitionType"
               value={type}
@@ -239,7 +247,7 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
                 setDetails(undefined);
                 setType(type as CreateFeedbackDefinition["type"]);
               }}
-              options={TYPE_OPTIONS}
+              options={getTypeOptions(t)}
             />
           </div>
           <div className="flex flex-col gap-4">
@@ -252,7 +260,7 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("feedbackDefinition.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"

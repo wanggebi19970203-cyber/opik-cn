@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { KeyRound } from "lucide-react";
 import { Input } from "@/ui/input";
 import CopyButton from "@/shared/CopyButton/CopyButton";
@@ -9,6 +10,7 @@ type ApiKeyInputProps = {
 };
 
 const ApiKeyInput: React.FunctionComponent<ApiKeyInputProps> = ({ apiKey }) => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-row items-center">
       <KeyRound className="mr-3 size-6" />
@@ -21,9 +23,9 @@ const ApiKeyInput: React.FunctionComponent<ApiKeyInputProps> = ({ apiKey }) => {
         }}
       />
       <CopyButton
-        message="Successfully copied API key"
+        message={t("common.messages.apiKeyCopied")}
         text={apiKey}
-        tooltipText="Copy API key"
+        tooltipText={t("common.buttons.copyApiKey")}
       />
     </div>
   );

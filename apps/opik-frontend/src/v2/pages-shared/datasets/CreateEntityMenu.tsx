@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Code2, FileTerminal, LucideIcon } from "lucide-react";
 
 import {
@@ -18,20 +19,22 @@ export type CreateEntityOption = {
   description: string;
 };
 
-export const CREATE_ENTITY_OPTIONS: CreateEntityOption[] = [
+export const getCreateEntityOptions = (
+  t: (key: string) => string,
+): CreateEntityOption[] => [
   {
     mode: "upload",
     Icon: FileTerminal,
     iconClassName: "text-chart-burgundy",
-    title: "Upload a file",
-    description: "Import from a CSV or JSON file",
+    title: t("createMenu.uploadFile"),
+    description: t("createMenu.importFromCsvJson"),
   },
   {
     mode: "sdk",
     Icon: Code2,
     iconClassName: "text-chart-green",
-    title: "Use SDK",
-    description: "Define and manage in code",
+    title: t("createMenu.useSdk"),
+    description: t("createMenu.defineInCode"),
   },
 ];
 
@@ -45,11 +48,14 @@ const CreateEntityMenu: React.FC<CreateEntityMenuProps> = ({
   children,
   onSelect,
   align = "end",
-}) => (
+}) => {
+  const { t } = useTranslation("datasets");
+  const options = getCreateEntityOptions(t);
+  return (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
     <DropdownMenuContent align={align} className="w-80">
-      {CREATE_ENTITY_OPTIONS.map(
+      {options.map(
         ({ mode, Icon, iconClassName, title, description }) => (
           <DropdownMenuItem
             key={mode}
@@ -80,6 +86,7 @@ const CreateEntityMenu: React.FC<CreateEntityMenuProps> = ({
       )}
     </DropdownMenuContent>
   </DropdownMenu>
-);
+  );
+};
 
 export default CreateEntityMenu;

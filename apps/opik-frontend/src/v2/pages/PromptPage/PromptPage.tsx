@@ -17,8 +17,10 @@ import PageBodyScrollContainer from "@/v2/layout/PageBodyScrollContainer/PageBod
 import PageBodyStickyContainer from "@/shared/PageBodyStickyContainer/PageBodyStickyContainer";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import ExperimentsTab from "./ExperimentsTab/ExperimentsTab";
+import { useTranslation } from "react-i18next";
 
 const PromptPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/prompt");
   const [tab, setTab] = useQueryParam("tab", StringParam);
 
   const {
@@ -52,7 +54,7 @@ const PromptPage: React.FunctionComponent = () => {
         <div className="flex min-w-0 items-center gap-2">
           <BackButton
             to="/$workspaceName/projects/$projectId/prompts"
-            tooltip="Back to prompts"
+            tooltip={t("backToPrompts")}
           />
           <h1 className="comet-title-xs truncate break-words">{promptName}</h1>
         </div>
@@ -93,11 +95,11 @@ const PromptPage: React.FunctionComponent = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="segmented-primary">
             <TabsTrigger variant="segmented-primary" value="prompt">
-              Prompt
+              {t("tabs.prompt")}
             </TabsTrigger>
             {canViewExperiments && (
               <TabsTrigger variant="segmented-primary" value="experiments">
-                Experiments
+                {t("tabs.experiments")}
                 <ExplainerIcon
                   className="ml-1"
                   {...EXPLAINERS_MAP[

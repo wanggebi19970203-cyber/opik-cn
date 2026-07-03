@@ -1,0 +1,295 @@
+---
+headline: SAML SSO 配置 | Opik 文档
+og:description: 了解如何为您的 Opik 组织配置基于 SAML 的单点登录，支持企业级身份提供商。
+og:site_name: Opik 文档
+og:title: '在 Opik 中配置 SAML SSO：分步指南'
+subtitle: 使用身份提供商设置基于 SAML 的单点登录
+title: SAML SSO
+---
+
+SAML（安全断言标记语言）SSO 允许用户通过组织的身份提供商（IdP）进行身份验证。本指南将引导您为 Opik 组织配置 SAML SSO。
+
+<Note>
+SAML SSO 适用于企业版计划。此功能在开源部署中不可用。如果您希望为 Opik 部署启用此功能，请[联系我们](https://www.comet.com/site/about-us/contact-us/)。
+</Note>
+
+## 前提条件
+
+开始之前，请确保您已具备：
+
+- Opik 的**组织管理员权限**
+- 身份提供商（Okta、Azure AD、OneLogin 等）的**管理员权限**
+- 组织已启用**企业版计划**
+- 要用于 SSO 的**电子邮件域名**（例如 `company.com`）
+
+## 配置概述
+
+设置 SAML SSO 涉及两个主要步骤：
+
+1. **配置 IdP**：在身份提供商中将 Opik 添加为 SAML 应用程序。
+2. **配置 Opik**：在 Opik 管理后台中输入 IdP 的 SAML 设置。
+
+## 步骤一：选择 Opik 的服务提供商（SP）URL
+
+选择匹配的服务提供商（SP）URL，并在 Opik 和身份提供商（IdP）中同时输入。
+
+1. 在 Opik 中，导航至 **管理后台** > **组织** > **身份验证**。
+2. 开启 **启用 SSO 身份验证**。SP 和 IdP 表单字段仅在启用 SSO 后才会显示。
+3. 将 **SP 实体 ID** 和 **SP ACS URL** 设置为相同的 URL，格式为 `https://<your-app-base-url>/sso/saml/acs/<organization-id>`。应用基础 URL 是您访问管理后台时使用的来源地址（例如 `https://www.comet.com`）。组织 ID 可在管理后台 URL 中查看。最后一个路径段在内部用作 SAML 响应路由到您组织的路由键。
+
+<Tip>
+**SP 实体 ID** 和 **SP ACS URL** 使用相同的值，并在步骤二中将相同的值输入到 IdP 中。
+</Tip>
+
+## 步骤二：配置身份提供商
+
+在 IdP 中将 Opik 添加为新的 SAML 应用程序。具体步骤因提供商而异，但通常需要：
+
+1. 创建新的 SAML 应用程序。
+2. 输入 Opik 的 SP 实体 ID 和 ACS URL。
+3. 配置属性映射（见下文）。
+4. 下载或复制 IdP 元数据（实体 ID、SSO URL、证书）。
+
+### 必需属性映射
+
+您的 IdP 必须在 SAML 断言中发送以下属性：
+
+| 属性名称 | 描述 | 是否必需 |
+| --- | --- | --- |
+| `guid` | 用户的唯一标识符 | 是 |
+| `email` | 用户的电子邮件地址 | 是 |
+| `firstName` | 用户的名 | 建议 |
+| `lastName` | 用户的姓 | 建议 |
+
+### 工作区同步属性（可选）
+
+如果您希望根据 IdP 属性自动将用户分配到工作区：
+
+| 属性名称 | 描述 |
+| --- | --- |
+| `workspaces` | 以逗号分隔的工作区名称列表 |
+| `groups` | 用户的组成员身份（可映射到工作区） |
+
+<Note>
+属性名称可能需要在 IdP 中配置为自定义属性或声明。具体配置取决于您的身份提供商。
+</Note>
+
+## 步骤三：配置 Opik
+
+IdP 配置完成后，在 Opik 中输入相关设置：
+
+1. 导航至 **管理后台** > **组织** > **身份验证**。
+2. 选择 **SAML** 作为 SSO 协议。
+3. 输入以下设置：
+
+### 必需的 SAML 设置
+
+| 字段 | 描述 | 示例 |
+| --- | --- | --- |
+| **域名** | SSO 用户的电子邮件域名 | `company.com` |
+| **SP 实体 ID** | 您的服务提供商实体 ID | `https://<your-app-base-url>/sso/saml/acs/<organization-id>` |
+| **SP ACS URL** | 断言消费者服务 URL | `https://<your-app-base-url>/sso/saml/acs/<organization-id>` |
+| **IdP 实体 ID** | 您的 IdP 实体 ID | `https://idp.company.com/...` |
+| **IdP SSO URL** | 用户进行身份验证的 URL | `https://idp.company.com/sso/saml` |
+| **IdP X.509 证书** | 用于签名验证的公共证书 | `-----BEGIN CERTIFICATE-----...` |
+
+### 可选的 SAML 设置
+
+| 字段 | 描述 | 默认值 |
+| --- | --- | --- |
+| **SP 私钥** | 用于签名请求的私钥 | 非必需 |
+| **同步工作区** | 启用自动工作区分配 | 禁用 |
+| **IdP 调试** | 启用详细日志以便故障排查 | 禁用 |
+| **默认工作区** | 没有工作区属性的用户的工作区 | 组织默认 |
+
+## 字段参考
+
+### SP 实体 ID
+
+服务提供商实体 ID 用于向您的 IdP 唯一标识 Opik。该值应为：
+
+- 形如 `https://<your-app-base-url>/sso/saml/acs/<organization-id>` 的 URL，与 SP ACS URL 设置为相同的值。
+- 在 Opik 的 SSO 配置表单和 IdP 的 SAML 应用程序配置中输入完全相同的值。
+- 在 Opik 和 IdP 之间保持一致（区分大小写）。
+
+### ACS URL（断言消费者服务）
+
+ACS URL 是 IdP 在成功身份验证后发送 SAML 断言的地址：
+
+- 必须是 HTTPS URL。
+- 在 Opik 和 IdP 配置之间必须完全匹配。
+- Opik 在处理断言时会验证此 URL。
+
+### IdP 实体 ID
+
+您的身份提供商的唯一标识符。可在 IdP 的 SAML 元数据或配置中找到：
+
+- **Okta**：在 SAML 设置说明或元数据 XML 中查找。
+- **Azure AD**：SAML 配置中的"标识符（实体 ID）"。
+- **OneLogin**：SSO 设置中的"颁发者 URL"。
+
+### IdP SSO URL
+
+用户被重定向进行身份验证的 URL。这是 SAML 身份验证流程的入口点：
+
+- 通常以 `/sso/saml` 或类似路径结尾。
+- 在 IdP 的 SAML 配置或元数据中查找。
+
+### IdP X.509 证书
+
+用于验证 SAML 断言签名的公共证书：
+
+- 必须是 PEM 格式（以 `-----BEGIN CERTIFICATE-----` 开头）。
+- 从 IdP 的 SAML 配置中下载。
+- 如果 IdP 正在轮换密钥，可以提供多个证书。
+
+<Warning>
+**证书过期**：SAML 证书会过期。请监控到期日期并在到期前更新，以避免身份验证中断。
+</Warning>
+
+## 工作区同步
+
+启用工作区同步，根据 IdP 属性自动将用户分配到工作区。
+
+### 启用工作区同步
+
+1. 在 SSO 配置中，启用 **同步工作区**。
+2. 配置 IdP 以 SAML 属性的形式发送工作区信息。
+3. 将属性映射到 Opik 工作区名称。
+
+### 工作区同步的工作原理
+
+当用户通过启用工作区同步的 SAML 进行身份验证时：
+
+1. Opik 从 SAML 断言中读取工作区属性。
+2. 用户被添加到指定的工作区（如果不存在则创建）。
+3. 用户从属性中未列出的工作区中移除。
+
+<Warning>
+**工作区同步覆盖**：启用后，工作区同步会在每次登录时覆盖手动分配的工作区。用户只能访问 IdP 指定的工作区。
+</Warning>
+
+### 工作区的属性格式
+
+工作区属性应包含以逗号分隔的工作区名称列表：
+
+```
+engineering,data-science,ml-platform
+```
+
+请确保工作区名称完全匹配（区分大小写）。
+
+## IdP 专属配置指南
+
+<Tabs>
+<Tab value="okta" title="Okta">
+
+### 配置 Okta
+
+1. 在 Okta 管理控制台中，进入 **应用程序** > **创建应用集成**。
+2. 选择 **SAML 2.0** 并点击 **下一步**。
+3. 输入应用名称（例如 "Opik"）并点击 **下一步**。
+4. 配置 SAML 设置：
+   - **单点登录 URL**：Opik 中的 ACS URL
+   - **受众 URI（SP 实体 ID）**：Opik 中的 SP 实体 ID
+   - **名称 ID 格式**：EmailAddress
+   - **应用程序用户名**：Email
+5. 添加属性声明：
+   - `guid` → `user.id`
+   - `email` → `user.email`
+   - `firstName` → `user.firstName`
+   - `lastName` → `user.lastName`
+6. 完成向导并分配用户/组。
+7. 将 **IdP 颁发者**、**单点登录 URL** 和 **X.509 证书**复制到 Opik。
+
+</Tab>
+<Tab value="azure-ad" title="Azure AD">
+
+### 配置 Azure AD
+
+1. 在 Azure 门户中，进入 **Azure Active Directory** > **企业应用程序**。
+2. 点击 **新建应用程序** > **创建你自己的应用程序**。
+3. 选择 **集成你在库中找不到的任何其他应用程序**。
+4. 进入 **单一登录** > **SAML**。
+5. 编辑 **基本 SAML 配置**：
+   - **标识符（实体 ID）**：Opik 中的 SP 实体 ID
+   - **回复 URL（ACS URL）**：Opik 中的 ACS URL
+6. 编辑 **属性和声明**：
+   - 确保已配置 `email` 声明
+   - 为 `guid`、`firstName`、`lastName` 添加自定义声明
+7. 下载 **证书（Base64）**。
+8. 将 **Azure AD 标识符** 和 **登录 URL** 复制到 Opik。
+
+</Tab>
+<Tab value="onelogin" title="OneLogin">
+
+### 配置 OneLogin
+
+1. 在 OneLogin 管理后台中，进入 **应用程序** > **添加应用**。
+2. 搜索 "SAML Custom Connector (Advanced)" 并添加。
+3. 配置应用程序：
+   - **受众（EntityID）**：Opik 中的 SP 实体 ID
+   - **ACS URL**：Opik 中的 ACS URL
+   - **ACS URL 验证器**：您的 ACS URL（正则表达式转义）
+4. 进入 **参数** 并添加：
+   - `guid` → User ID
+   - `email` → Email
+   - `firstName` → First Name
+   - `lastName` → Last Name
+5. 进入 **SSO** 标签页并复制：
+   - **颁发者 URL** → IdP 实体 ID
+   - **SAML 2.0 端点** → IdP SSO URL
+   - **X.509 证书** → IdP 证书
+
+</Tab>
+</Tabs>
+
+## 测试配置
+
+在配置完 Opik 和 IdP 之后：
+
+1. **打开无痕/隐私浏览器窗口**（避免缓存的会话）。
+2. 导航到 Opik 的登录页面。
+3. 输入使用您配置域名的电子邮件地址。
+4. 您应该会被重定向到 IdP 进行身份验证。
+5. 身份验证完成后，您应该会被重定向回 Opik 并成功登录。
+
+<Tip>
+**调试模式**：如果遇到问题，请在 SSO 配置中启用 **IdP 调试** 以查看详细日志。
+</Tip>
+
+## 故障排查
+
+### 常见问题
+
+| 问题 | 可能原因 | 解决方案 |
+| --- | --- | --- |
+| "无效的 SAML 响应" | 证书不匹配 | 验证 IdP 证书是否正确复制 |
+| 用户未重定向到 IdP | 域名未配置 | 检查域名设置是否与用户电子邮件匹配 |
+| "用户未找到" | 缺少必需属性 | 验证 `guid` 和 `email` 属性是否已映射 |
+| 工作区分配错误 | 属性映射问题 | 检查工作区属性格式和同步设置 |
+| 证书验证错误 | 证书已过期 | 更新 IdP 证书 |
+
+### 故障排查检查清单
+
+1. **验证域名配置**：确保电子邮件域名与 SSO 配置匹配。
+2. **检查实体 ID**：SP 和 IdP 的实体 ID 必须完全匹配（区分大小写）。
+3. **验证 ACS URL**：ACS URL 在 Opik 和 IdP 中必须完全一致。
+4. **检查属性映射**：确保 IdP 发送了 `guid` 和 `email` 属性。
+5. **检查证书格式**：证书应为带头部的 PEM 格式。
+6. **启用调试测试**：启用 IdP 调试以查看详细错误信息。
+7. **检查 IdP 日志**：查看身份提供商的日志中的 SAML 错误。
+
+### 获取帮助
+
+如果问题仍然存在：
+
+1. 启用 IdP 调试并收集调试日志。
+2. 捕获 SAML 断言（可在浏览器开发者工具或 IdP 日志中获取）。
+3. 将日志和断言发送给 Opik 支持团队以获取帮助。
+
+## 后续步骤
+
+- [配置 OIDC](/administration/authentication/oidc) 作为替代的 SSO 方法。
+- [设置 JWT 身份验证](/administration/authentication/jwt) 以进行编程访问。
+- [管理用户](/administration/admin-dashboard/users) 及其工作区分配。

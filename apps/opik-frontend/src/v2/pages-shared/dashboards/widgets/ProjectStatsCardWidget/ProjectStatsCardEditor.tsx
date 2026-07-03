@@ -4,6 +4,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { get } from "lodash";
@@ -45,6 +46,7 @@ import useTracesOrSpansScoresColumns from "@/hooks/useTracesOrSpansScoresColumns
 import { TRACE_DATA_TYPE } from "@/constants/traces";
 
 const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
+  const { t } = useTranslation("dashboards");
   const widgetData = useDashboardStore(
     (state) => state.previewWidget!,
   ) as DashboardWidget & ProjectStatsCardWidget;
@@ -154,7 +156,7 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
             const validationErrors = get(formState.errors, ["projectId"]);
             return (
               <FormItem>
-                <FormLabel>Project</FormLabel>
+                <FormLabel>{t("statsCard.projectLabel")}</FormLabel>
                 <FormControl>
                   <ProjectsSelectBox
                     className={cn("flex-1", {
@@ -181,7 +183,7 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
             const validationErrors = get(formState.errors, ["source"]);
             return (
               <FormItem>
-                <FormLabel>Source</FormLabel>
+                <FormLabel>{t("statsCard.sourceLabel")}</FormLabel>
                 <FormControl>
                   <SelectBox
                     className={cn({
@@ -193,7 +195,7 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                       handleSourceChange(value);
                     }}
                     options={SOURCE_OPTIONS}
-                    placeholder="Select source"
+                    placeholder={t("statsCard.selectSource")}
                     renderOption={renderSourceOption}
                     renderTrigger={renderSourceTrigger}
                   />
@@ -210,12 +212,12 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
           render={({ field, formState }) => {
             const validationErrors = get(formState.errors, ["metric"]);
             const placeholder = isPending
-              ? "Loading available metrics..."
-              : "Select a metric";
+              ? t("statsCard.loadingMetrics")
+              : t("statsCard.selectMetric");
 
             return (
               <FormItem>
-                <FormLabel>Metric type</FormLabel>
+                <FormLabel>{t("statsCard.metricTypeLabel")}</FormLabel>
                 <FormControl>
                   <LoadableSelectBox
                     buttonClassName={cn({

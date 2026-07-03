@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import ResourceLink, {
   RESOURCE_TYPE,
@@ -29,8 +30,9 @@ const NavigationTag: React.FunctionComponent<NavigationTagProps> = ({
   prefix,
   suffix,
 }) => {
+  const { t } = useTranslation();
   const resourceLabel = RESOURCE_MAP[resource].label;
-  const defaultTooltipContent = `Navigate to ${resourceLabel}: ${name}`;
+  const defaultTooltipContent = t("common.shared.navigateTo", { resource: resourceLabel, name });
 
   return (
     <ResourceLink

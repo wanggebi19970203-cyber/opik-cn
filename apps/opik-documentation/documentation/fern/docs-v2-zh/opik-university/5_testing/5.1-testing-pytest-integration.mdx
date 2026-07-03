@@ -1,0 +1,48 @@
+---
+headline: PyTest 集成 | Opik 文档
+og:description: 学习在 Opik 中无缝集成 PyTest，以增强您的测试工作流程并确保可靠的软件性能。
+og:site_name: Opik 文档
+og:title: 将 PyTest 与 Opik 集成以实现高效测试
+title: PyTest 集成
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div style={{
+    position: 'relative',
+    paddingBottom: '56.25%', // 16:9 aspect ratio
+    height: 0,
+    overflow: 'hidden',
+    maxWidth: '100%',
+    marginBottom: '20px'
+}}>
+    <iframe
+        src="https://www.loom.com/embed/03831837e44f49a6b7a9bbbe407c29e2?sid=3cb6fbde-7d26-4d0f-a142-820c9e2da651"
+        frameborder="0"
+        webkitallowfullscreen
+        mozallowfullscreen
+        allowfullscreen
+        style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+        }}
+    />
+</div>
+
+## 将 LLM 测试集成到您的开发工作流程中
+
+本视频演示如何将 Opik 的 [PyTest](/v1/testing/pytest_integration) 功能集成到您的开发工作流程中，将传统软件[测试](/v1/testing/pytest_integration)与 LLM 应用测试连接起来。使用真实的通话摘要器 Streamlit 应用示例，您将学习如何编写回归测试以确保新功能不会破坏现有 LLM 功能，同时从测试用例创建全面的[数据集](/v1/evaluation/manage_datasets)以进行持续[评估](/v1/evaluation/overview)。
+
+## 关键亮点
+
+- **LLM 单元[测试](/v1/testing/pytest_integration)**：使用 [`@llm_unit`](/v1/testing/pytest_integration#advanced-usage) 装饰器将任何 [PyTest](/v1/testing/pytest_integration) 函数转换为 LLM 测试，自动捕获[追踪](/v1/tracing/log_traces)并发送到 Opik 项目
+- **灵活的[集成](/v1/integrations/overview)**：与 [`@track`](/v1/tracing/log_traces#decorators) 装饰的函数和[集成](/v1/integrations/overview)包装的客户端（如 [`track_openai`](/v1/integrations/openai)）配合使用，提供全面的测试覆盖
+- **混合[测试](/v1/testing/pytest_integration)策略**：根据您的特定需求，在同一测试套件中组合传统单元测试、模拟 LLM 调用和真实 API 调用
+- **成本感知 CI/CD**：在 CI/CD 管道中使用真实 LLM 调用时注意 API 成本 - 考虑仅在本地或选择性地运行昂贵的测试
+- **累积[数据集](/v1/evaluation/manage_datasets)创建**：所有测试用例自动贡献到集中的"tests"[数据集](/v1/evaluation/manage_datasets)，提供全面的测试覆盖文档
+- **回归预防**：编写测试以确保新代码不会破坏现有 LLM 功能，在迭代时维护应用稳定性
+- **真实示例**：使用具有实际 Streamlit 集成和多个测试场景的通话摘要器应用进行实际演示
+- **[追踪](/v1/tracing/log_traces)集成**：测试[追踪](/v1/tracing/log_traces)与 Opik 的[实验](/v1/evaluation/evaluate_your_llm)和[数据集](/v1/evaluation/manage_datasets)系统无缝集成，提供[反馈分数](/v1/tracing/annotate_traces)和成功[指标](/v1/evaluation/metrics/overview)
+- **文件路径跟踪**：每个测试结果引用确切的测试函数文件路径，使调试和维护变得简单

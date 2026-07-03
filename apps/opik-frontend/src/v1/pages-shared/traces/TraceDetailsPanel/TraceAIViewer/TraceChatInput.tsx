@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import TextareaAutosize from "react-textarea-autosize";
 import { Info, Play, Square } from "lucide-react";
@@ -24,6 +25,7 @@ const TraceChatInput: React.FC<TraceChatInputProps> = ({
   onUpdateChat,
   onButtonClick,
 }) => {
+  const { t } = useTranslation("tracing");
   const { value } = chat;
   const isDisabledButton = !value && !isRunning;
 
@@ -43,7 +45,7 @@ const TraceChatInput: React.FC<TraceChatInputProps> = ({
     <div className="min-w-72 max-w-full">
       <div className="relative">
         <TextareaAutosize
-          placeholder="Type your message"
+          placeholder={t("aiAssistant.typeYourMessage")}
           value={value}
           onChange={(event) => onUpdateChat({ value: event.target.value })}
           onKeyDown={handleKeyDown}
@@ -52,7 +54,7 @@ const TraceChatInput: React.FC<TraceChatInputProps> = ({
           maxRows={10}
         />
         <TooltipWrapper
-          content={isRunning ? "Stop chat" : "Send message"}
+          content={isRunning ? t("aiAssistant.stopChat") : t("aiAssistant.sendMessage")}
           hotkeys={isDisabledButton ? undefined : RUN_HOT_KEYS}
         >
           <Button

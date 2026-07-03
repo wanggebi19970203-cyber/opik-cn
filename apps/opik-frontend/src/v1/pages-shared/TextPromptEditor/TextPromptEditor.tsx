@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Eye, FileText } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
@@ -23,21 +24,25 @@ interface TextPromptEditorProps {
 const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
   value,
   onChange,
-  label = "Prompt",
+  label,
   labelClassName,
-  placeholder = "Prompt",
+  placeholder,
   showDescription = true,
   currentImages = [],
   currentVideos = [],
   currentAudios = [],
 }) => {
+  const { t } = useTranslation();
   const [showPrettyView, setShowPrettyView] = useState(false);
+
+  const effectiveLabel = label ?? t("textPromptEditor.prompt");
+  const effectivePlaceholder = placeholder ?? t("textPromptEditor.prompt");
 
   return (
     <div className="flex flex-col gap-2 pb-4">
       <div className="flex items-center justify-between gap-0.5">
         <Label htmlFor="template" className={labelClassName}>
-          {label}
+          {effectiveLabel}
         </Label>
         <Button
           variant="ghost"
@@ -47,12 +52,12 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
           {showPrettyView ? (
             <>
               <FileText className="mr-1.5 size-3.5" />
-              Edit view
+              {t("textPromptEditor.editView")}
             </>
           ) : (
             <>
               <Eye className="mr-1.5 size-3.5" />
-              Pretty view
+              {t("textPromptEditor.prettyView")}
             </>
           )}
         </Button>
@@ -66,7 +71,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
           <Textarea
             id="template"
             className="comet-code"
-            placeholder={placeholder}
+            placeholder={effectivePlaceholder}
             value={value}
             onChange={(event) => onChange(event.target.value)}
           />
@@ -82,7 +87,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
       )}
       {!showPrettyView && currentImages.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Images</Label>
+          <Label>{t("textPromptEditor.images")}</Label>
           <MediaTagsList
             type="image"
             items={currentImages}
@@ -93,7 +98,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
       )}
       {!showPrettyView && currentVideos.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Videos</Label>
+          <Label>{t("textPromptEditor.videos")}</Label>
           <MediaTagsList
             type="video"
             items={currentVideos}
@@ -104,7 +109,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
       )}
       {!showPrettyView && currentAudios.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Audios</Label>
+          <Label>{t("textPromptEditor.audios")}</Label>
           <MediaTagsList
             type="audio"
             items={currentAudios}

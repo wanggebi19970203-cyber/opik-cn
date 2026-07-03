@@ -1,0 +1,427 @@
+---
+description: 从这里开始将 Opik 集成到基于 LangChain 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: LangChain | Opik 文档
+og:description: 使用 Opik 的自动日志记录功能，在 LangChain 应用中无缝捕获详细洞察并跟踪成本。
+og:site_name: Opik 文档
+og:title: 使用 Opik 释放 LangChain 的潜力
+title: LangChain（Python）的可观测性 - Opik
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+Opik 提供与 LangChain 的无缝集成，让您轻松记录和跟踪基于 LangChain 的应用程序。通过使用 `OpikTracer` 回调，您可以自动捕获 LangChain 运行的详细信息，包括链中每个步骤的输入、输出、元数据和成本跟踪。
+
+## 核心特性
+
+- **自动成本跟踪**：支持主流 LLM 提供商（OpenAI、Anthropic、Google AI、AWS Bedrock 等）
+- **完全兼容**：与 `@opik.track` 装饰器配合使用，实现混合跟踪方案
+- **线程支持**：通过 `thread_id` 参数支持对话式应用
+- **分布式跟踪**：支持多服务应用
+- **LangGraph 兼容**：支持复杂的图结构工作流
+- **评估与测试**：支持自动化 LLM 应用测试
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=langchain&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=langchain&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=langchain&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+要在 LangChain 中使用 `OpikTracer`，您需要安装 `opik` 和 `langchain` 包。可以使用 pip 安装：
+
+```bash
+pip install opik langchain langchain_openai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版**设置
+- **配置文件**和环境变量
+
+## 使用 OpikTracer
+
+以下是如何在 LangChain 链中使用 `OpikTracer` 回调的基本示例：
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from opik.integrations.langchain import OpikTracer
+
+# 初始化跟踪器
+opik_tracer = OpikTracer(project_name="langchain-examples")
+
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+prompt = ChatPromptTemplate.from_messages([
+    ("human", "Translate the following text to French: {text}")
+])
+chain = prompt | llm
+
+result = chain.invoke(
+    {"text": "Hello, how are you?"},
+    config={"callbacks": [opik_tracer]}
+)
+print(result.content)
+```
+
+`OpikTracer` 将自动将运行及其详细信息记录到 Opik，包括输入提示、输出以及链中每个步骤的元数据。
+
+有关详细参数信息，请参阅 [OpikTracer SDK 参考文档](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/OpikTracer.html)。
+
+## 实践示例：带评估的 Text-to-SQL
+
+让我们通过一个实际示例来演示如何将 LangChain 与 Opik 结合用于文本到 SQL 查询生成任务。本示例展示如何创建合成数据集、构建 LangChain 链以及评估应用程序。
+
+### 环境设置
+
+首先，设置环境并安装必要的依赖：
+
+```python
+import os
+import getpass
+import opik
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 配置 Opik
+opik.configure(use_local=False)
+os.environ["OPIK_PROJECT_NAME"] = "langchain-integration-demo"
+
+# 设置 API 密钥
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+### 创建合成数据集
+
+我们将为文本到 SQL 任务创建一个合成问题数据集：
+
+```python
+import json
+from langchain_community.utilities import SQLDatabase
+
+# 下载并设置 Chinook 数据库
+import requests
+
+url = "https://github.com/lerocha/chinook-database/raw/master/ChinookDatabase/DataSources/Chinook_Sqlite.sqlite"
+filename = "./data/chinook/Chinook_Sqlite.sqlite"
+
+folder = os.path.dirname(filename)
+if not os.path.exists(folder):
+    os.makedirs(folder)
+
+if not os.path.exists(filename):
+    response = requests.get(url)
+    with open(filename, "wb") as file:
+        file.write(response.content)
+    print("Chinook database downloaded")
+
+db = SQLDatabase.from_uri(f"sqlite:///{filename}")
+
+# 使用 OpenAI 创建合成问题
+client = OpenAI()
+openai_client = track_openai(client)
+
+prompt = """
+Create 20 different example questions a user might ask based on the Chinook Database.
+These questions should be complex and require the model to think. They should include complex joins and window functions to answer.
+Return the response as a json object with a "result" key and an array of strings with the question.
+"""
+
+completion = openai_client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+synthetic_questions = json.loads(completion.choices[0].message.content)["result"]
+
+# 在 Opik 中创建数据集
+opik_client = opik.Opik()
+dataset = opik_client.get_or_create_dataset(name="synthetic_questions", project_name="my-project")
+dataset.insert([{"question": question} for question in synthetic_questions])
+```
+
+### 构建 LangChain 链
+
+现在创建用于 SQL 查询生成的 LangChain 链：
+
+```python
+from langchain.chains import create_sql_query_chain
+from langchain_openai import ChatOpenAI
+from opik.integrations.langchain import OpikTracer
+
+# 创建带有 OpikTracer 的 LangChain 链
+opik_tracer = OpikTracer(tags=["sql_generation"])
+
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+chain = create_sql_query_chain(llm, db).with_config({"callbacks": [opik_tracer]})
+
+# 测试链
+response = chain.invoke({"question": "How many employees are there?"})
+print(response)
+```
+
+### 评估应用程序
+
+创建自定义评估指标并测试应用程序：
+
+```python
+import opik
+from opik import track
+from opik.evaluation import evaluate
+from opik.evaluation.metrics import base_metric, score_result
+from typing import Any
+
+opik.configure(project_name="my-project")
+
+class ValidSQLQuery(base_metric.BaseMetric):
+    def __init__(self, name: str, db: Any):
+        self.name = name
+        self.db = db
+
+    def score(self, output: str, **ignored_kwargs: Any):
+        try:
+            db.run(output)
+            return score_result.ScoreResult(
+                name=self.name, value=1, reason="Query ran successfully"
+            )
+        except Exception as e:
+            return score_result.ScoreResult(name=self.name, value=0, reason=str(e))
+
+# 设置评估
+valid_sql_query = ValidSQLQuery(name="valid_sql_query", db=db)
+dataset = opik_client.get_dataset("synthetic_questions")
+
+@track()
+def llm_chain(input: str) -> str:
+    response = chain.invoke({"question": input})
+    return response
+
+def evaluation_task(item):
+    response = llm_chain(item["question"])
+    return {"output": response}
+
+# 运行评估
+res = evaluate(
+    experiment_name="SQL question answering",
+    dataset=dataset,
+    task=evaluation_task,
+    scoring_metrics=[valid_sql_query],
+    nb_samples=20,
+    project_name="my-project",
+)
+```
+
+评估结果现在已上传到 Opik 平台，可以在界面中查看。
+
+<Frame>
+  <img src="/img/cookbook/langchain_cookbook.png" />
+</Frame>
+
+## 成本跟踪
+
+`OpikTracer` 自动跟踪 LangChain 应用中使用的所有支持的 LLM 模型的 token 使用量和成本。
+
+成本信息会自动捕获并显示在 Opik 界面中，包括：
+
+- Token 使用详情
+- 基于模型定价的每次请求成本
+- 总跟踪成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看支持的模型和提供商完整列表。
+</Tip>
+
+对于带成本跟踪的流式传输，请确保设置 `stream_usage=True`：
+
+```python
+from langchain_openai import ChatOpenAI
+from opik.integrations.langchain import OpikTracer
+
+llm = ChatOpenAI(
+    model="gpt-4o",
+    streaming=True,
+    stream_usage=True,  # 流式传输时需要此设置以跟踪成本
+)
+
+opik_tracer = OpikTracer()
+
+for chunk in llm.stream("Hello", config={"callbacks": [opik_tracer]}):
+    print(chunk.content, end="")
+```
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面查看支持的模型和提供商完整列表。
+</Tip>
+
+## 设置标签和元数据
+
+您可以自定义 `OpikTracer` 回调以包含额外的元数据、日志选项和对话线程：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer(
+    tags=["langchain", "production"],
+    metadata={"use-case": "customer-support", "version": "1.0"},
+    thread_id="conversation-123",  # 用于对话式应用
+    project_name="my-langchain-project"
+)
+```
+
+## 访问已记录的跟踪
+
+您可以使用 [`created_traces`](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/OpikTracer.html) 方法访问 `OpikTracer` 回调收集的跟踪：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer()
+
+# 调用 LangChain 对象
+traces = opik_tracer.created_traces()
+print([trace.id for trace in traces])
+```
+
+`created_traces` 方法返回的跟踪是 [`Trace`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/Trace.html#opik.api_objects.trace.Trace) 类的实例，可用于更新跟踪的元数据、反馈分数和标签。
+
+### 访问已记录跟踪的内容
+
+要访问已记录跟踪的内容，需要使用 [`Opik.get_trace_content`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.get_trace_content) 方法：
+
+```python
+import opik
+from opik.integrations.langchain import OpikTracer
+opik_client = opik.Opik()
+
+opik_tracer = OpikTracer()
+
+
+# 调用 LangChain 对象
+
+# 获取已记录跟踪的内容
+traces = opik_tracer.created_traces()
+for trace in traces:
+    content = opik_client.get_trace_content(trace.id)
+    print(content)
+```
+
+### 更新和评分已记录的跟踪
+
+您可以在跟踪创建后更新其元数据、反馈分数和标签。可以使用 `created_traces` 方法访问跟踪，然后使用 [`update`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/Trace.html#opik.api_objects.trace.Trace.update) 方法和 [`log_feedback_score`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/Trace.html#opik.api_objects.trace.Trace.log_feedback_score) 方法进行更新：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer(project_name="langchain-examples")
+
+# ... 调用 LangChain 对象
+
+traces = opik_tracer.created_traces()
+
+for trace in traces:
+    trace.update(tags=["my-tag"])
+    trace.log_feedback_score(name="user-feedback", value=0.5)
+```
+
+## 与 @track 装饰器的兼容性
+
+`OpikTracer` 与 `@track` 装饰器完全兼容，允许您创建混合跟踪方案：
+
+```python
+import opik
+from langchain_openai import ChatOpenAI
+from opik.integrations.langchain import OpikTracer
+
+@opik.track
+def my_langchain_workflow(user_input: str) -> str:
+    llm = ChatOpenAI(model="gpt-4o")
+    opik_tracer = OpikTracer()
+
+    # LangChain 调用将在现有跟踪中创建 span
+    response = llm.invoke(user_input, config={"callbacks": [opik_tracer]})
+    return response.content
+
+result = my_langchain_workflow("What is machine learning?")
+```
+
+## 线程支持
+
+使用 `thread_id` 参数将相关的对话或交互分组：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+# 所有具有相同 thread_id 的跟踪将被分组在一起
+opik_tracer = OpikTracer(thread_id="user-session-123")
+```
+
+## 分布式跟踪
+
+对于多服务/线程/进程应用，您可以使用分布式跟踪头连接跨服务的跟踪：
+
+```python
+from opik import opik_context
+from opik.integrations.langchain import OpikTracer
+from opik.types import DistributedTraceHeadersDict
+
+# 在接收分布式跟踪头的服务中
+# distributed_headers 字典可以在"父"服务中通过 `opik_context.get_distributed_trace_headers()` 获取
+distributed_headers = DistributedTraceHeadersDict(
+    opik_trace_id="trace-id-from-upstream",
+    opik_parent_span_id="parent-span-id-from-upstream"
+)
+
+opik_tracer = OpikTracer(distributed_headers=distributed_headers)
+
+# LangChain 操作将附加到现有的分布式跟踪
+chain.invoke(input_data, config={"callbacks": [opik_tracer]})
+```
+
+<Tip>在[分布式跟踪指南](/tracing/advanced/log_distributed_traces)中了解更多关于分布式跟踪的信息。</Tip>
+
+## LangGraph 集成
+
+对于 LangGraph 应用，Opik 提供专门的支持。`OpikTracer` 与 LangGraph 无缝协作，您还可以可视化图定义：
+
+```python
+from langgraph.graph import StateGraph
+from opik.integrations.langchain import OpikTracer
+
+# 您的 LangGraph 设置
+graph = StateGraph(...)
+compiled_graph = graph.compile()
+
+opik_tracer = OpikTracer()
+result = compiled_graph.invoke(
+    input_data,
+    config={"callbacks": [opik_tracer]}
+)
+```
+
+<Tip>有关详细的 LangGraph 集成示例，请参阅 [LangGraph 集成指南](/integrations/langgraph)。</Tip>
+
+## 高级用法
+
+`OpikTracer` 对象有一个 `flush` 方法，可用于确保在退出脚本前将所有跟踪记录到 Opik 平台。此方法会在所有跟踪记录完成或达到超时时间时返回（以先到者为准）。
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer()
+opik_tracer.flush()
+```
+
+## 重要说明
+
+1. **异步流式传输**：如果使用异步流式传输模式（调用 `.astream()` 方法），由于 LangChain 对此模式的限制，跟踪界面中的 `input` 字段可能为空。但是，您可以在该链的嵌套 span 中找到输入数据。
+
+2. **带成本跟踪的流式传输**：如果计划在 LLM 调用中使用流式传输并希望计算 LLM 调用的 token/成本，需要显式设置 `stream_usage=True`：

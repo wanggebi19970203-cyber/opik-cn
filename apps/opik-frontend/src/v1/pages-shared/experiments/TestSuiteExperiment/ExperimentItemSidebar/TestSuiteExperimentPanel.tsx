@@ -3,6 +3,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import sortBy from "lodash/sortBy";
 import copy from "clipboard-copy";
 import { Copy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import NoData from "@/shared/NoData/NoData";
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
@@ -46,6 +47,7 @@ export const TestSuiteExperimentPanel: React.FC<
   isTraceDetailsOpened,
 }) => {
   const { toast } = useToast();
+  const { t } = useTranslation("experiments");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const { data: nonTruncatedData } = useCompareExperimentsList(
@@ -100,7 +102,7 @@ export const TestSuiteExperimentPanel: React.FC<
   const copyClickHandler = useCallback(() => {
     if (activeExperimentsCompare?.id) {
       toast({
-        description: "ID successfully copied to clipboard",
+        description: t('idCopiedToClipboard'),
       });
       copy(activeExperimentsCompare?.id);
     }
@@ -156,7 +158,7 @@ export const TestSuiteExperimentPanel: React.FC<
       <ShareURLButton />
       <Button size="sm" variant="outline" onClick={copyClickHandler}>
         <Copy className="mr-2 size-4" />
-        Copy ID
+        {t('copyId')}
       </Button>
     </div>
   );

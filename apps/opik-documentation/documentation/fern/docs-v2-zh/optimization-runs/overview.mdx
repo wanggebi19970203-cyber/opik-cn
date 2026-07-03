@@ -1,0 +1,96 @@
+---
+description: 了解 Opik 的自动化 LLM 提示词和智能体优化 SDK。探索 MetaPrompt、Few-shot 贝叶斯和进化优化算法以提升性能。
+headline: Opik Agent Optimizer | Opik 文档
+keywords: LLM optimization, prompt engineering, agent optimization, MetaPrompt, Few-shot
+  learning, Bayesian optimization, Evolutionary algorithms, DSPy
+og:description: 使用 Opik 优化 SDK 自动化调优提示词和智能体工作流，提升性能和效率。
+og:image: /img/agent_optimization/introducing.png
+og:site_name: Opik 文档
+og:title: 使用 Opik Agent Optimizer 优化提示词
+title: 智能体优化
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/overview
+---
+
+**Opik Agent Optimizer** 是一款开箱即用的开源智能体和提示词优化 SDK。它利用你已记录到 Opik 的数据集、指标和追踪数据，自动调优提示词、工具和智能体工作流。无需手动编辑指令和重新运行评估，只需选择一个优化器（MetaPrompt、HRPO、Evolutionary、GEPA 等），即可在线或在 Docker 和 Kubernetes 中完全离线地自动迭代优化。
+
+<Frame>
+  <img src="/img/agent_optimization/dashboard.png" alt="Opik Agent Optimizer 仪表板显示优化进度" />
+</Frame>
+
+## 为什么团队选择 Opik Agent Optimizer
+
+- **自动提示词优化** - 端到端工作流，几分钟内安装完成，可在本地或你的技术栈中运行。
+- **开源且框架无关** - 无供应商锁定，在同一 SDK 中使用 Opik 的第一方优化器或社区热门方案如 GEPA。
+- **智能体感知** - 优化范围超越系统提示词，包括 MCP 工具签名、函数调用模式和多步骤智能体工作流。
+- **深度可观测性** - 每次试验都将提示词、工具调用、追踪和指标原因记录到 Opik，让你自信地解释和发布变更。
+
+## 核心能力
+
+<CardGroup cols={2}>
+  <Card title="优化器套件" href="/v1/agent_optimization/algorithms/overview" icon="fa-solid fa-diagram-project" iconPosition="left">
+    MetaPrompt、HRPO、Few-Shot Bayesian、Evolutionary、GEPA、参数调优。无需更改工作流即可切换优化器。
+  </Card>
+  <Card title="多智能体 + 多提示词" href="/v1/agent_optimization/optimization/optimize_agents" icon="fa-solid fa-people-group" iconPosition="left">
+    优化完整的智能体系统，包括多个提示词、工具和编排逻辑，而不仅仅是单个系统消息。
+  </Card>
+  <Card title="工具与函数调用" href="/v1/agent_optimization/algorithms/tool_optimization" icon="fa-solid fa-screwdriver-wrench" iconPosition="left">
+    使用相同的指标和数据集，同时优化工具模式、函数调用和提示词文本。
+  </Card>
+  <Card title="仪表板分析" href="/v1/agent_optimization/optimization/dashboard_results" icon="fa-solid fa-chart-line" iconPosition="left">
+    跟踪试验、候选方案、数据集和追踪级证据，自信地解释和发布改进。
+  </Card>
+  <Card title="Optimization Studio" href="/v1/agent_optimization/optimization_studio" icon="fa-solid fa-wand-magic-sparkles" iconPosition="left">
+    直接从 UI 运行优化器工作流，支持无代码配置和结果审查。
+  </Card>
+  <Card title="安全与离线" href="/v1/self-host/overview" icon="fa-solid fa-shield-halved" iconPosition="left">
+    在本地或 Opik Docker 内运行 SDK，确保数据保留在你的网络内。
+  </Card>
+</CardGroup>
+
+## 工作原理
+
+<Steps>
+  <Step title="1. 准备数据和指标">
+    使用 Opik 数据集（CSV 上传、API 或追踪导出）加上确定性指标/`ScoreResult` 函数。参见[定义数据集](/v1/agent_optimization/optimization/define_datasets)和[定义指标](/v1/agent_optimization/optimization/define_metrics)。
+  </Step>
+  <Step title="2. 选择优化器">
+    为你的任务选择最佳算法（参见[优化算法](/v1/agent_optimization/algorithms/overview)）。所有优化器暴露相同的 API，因此你可以轻松切换或链式运行。
+  </Step>
+  <Step title="3. 检查与发布">
+    结果会出现在 Opik 仪表板的 **Evaluation → Optimization runs** 中，你可以在推广变更之前比较提示词、失败模式和数据集覆盖范围。
+  </Step>
+</Steps>
+
+## 快速开始
+
+- 想要无代码工作流？使用 [Optimization Studio](/v1/agent_optimization/optimization_studio) 从 Opik UI 运行优化。
+- 按照[快速入门](/v1/agent_optimization/quickstart)在本地运行你的第一次优化。
+- 偏好 Notebook？启动[快速入门 Notebook](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook)。
+- 需要特定场景的指导？探索[实践手册](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook)。
+
+## 优化算法
+
+优化器实现了专有和开源的优化算法。每种算法各有优劣，我们建议首先尝试 GEPA 或 HRPO（分层反思提示词优化器）：
+
+| **算法**                                                                               | **描述**                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [MetaPrompt 优化](/v1/agent_optimization/algorithms/metaprompt_optimizer)              | 使用 LLM（"推理模型"）对初始指令提示词进行批判和迭代优化。适用于一般提示词措辞、清晰度和结构改进。**支持 [MCP 工具调用优化](/v1/agent_optimization/algorithms/tool_optimization)。** |
+| [HRPO（分层反思提示词优化器）](/v1/agent_optimization/algorithms/hierarchical_adaptive_optimizer) | 使用分层根因分析，通过批量分析失败、综合发现和解决已识别的失败模式来系统性地改进提示词。最适合需要基于理解失败原因进行系统性优化的复杂提示词。 |
+| [Few-shot 贝叶斯优化](/v1/agent_optimization/algorithms/fewshot_bayesian_optimizer) | 专为聊天模型设计，使用贝叶斯优化（Optuna）找到最佳数量和组合的 few-shot 示例（演示），作为系统提示词的补充。                      |
+| [进化优化](/v1/agent_optimization/algorithms/evolutionary_optimizer)          | 采用遗传算法进化提示词群体。可以发现新颖的提示词结构，支持多目标优化（例如，分数与长度）。可使用 LLM 进行高级变异/交叉。 |
+| [GEPA 优化](/v1/agent_optimization/algorithms/gepa_optimizer)                   | 封装外部 GEPA 包，使用反思模型为单轮任务优化单个系统提示词。需要 `pip install gepa`。                                         |
+| [参数优化](/v1/agent_optimization/algorithms/parameter_optimizer)                   | 使用贝叶斯优化优化 LLM 调用参数（temperature、top_p 等）。使用 Optuna 进行高效参数搜索，包含全局和局部搜索阶段。最适合在不更改提示词的情况下调优模型行为。                                         |
+
+<Tip>
+  想看数据？查看新的[优化器基准测试](/v1/agent_optimization/algorithms/benchmarks)页面，获取最新的性能表和自行运行基准测试套件的说明。
+</Tip>
+
+## 后续步骤
+
+1. 探索具体的[优化器](/v1/agent_optimization/algorithms/overview)了解算法详情。
+2. 参阅[常见问题](/v1/agent_optimization/faq)了解常见问题和故障排除。
+3. 参阅 [API 参考](/v1/agent_optimization/advanced/api_reference)了解详细配置选项。
+
+<Info>
+  想看 Opik Agent Optimizer 的实际效果？查看我们的[示例项目和实践手册](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook)，获取可运行的 Colab Notebook，涵盖真实世界的优化工作流，包括 HotPotQA 和合成数据生成。
+</Info>

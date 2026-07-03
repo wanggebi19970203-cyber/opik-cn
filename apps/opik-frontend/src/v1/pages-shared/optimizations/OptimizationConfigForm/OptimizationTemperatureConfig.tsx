@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Settings2 } from "lucide-react";
 import isUndefined from "lodash/isUndefined";
 
@@ -26,6 +27,7 @@ interface OptimizationTemperatureConfigProps {
 const OptimizationTemperatureConfig: React.FC<
   OptimizationTemperatureConfigProps
 > = ({ model, size = "icon-sm", configs, onChange, disabled = false }) => {
+  const { t } = useTranslation();
   const isReasoning = isReasoningModel(model);
   const hasTemperature = !isUndefined(configs.temperature);
 
@@ -51,13 +53,13 @@ const OptimizationTemperatureConfig: React.FC<
             max={isReasoning ? 1 : 2}
             step={0.01}
             defaultValue={isReasoning ? 1 : DEFAULT_OPEN_AI_CONFIGS.TEMPERATURE}
-            label="Temperature"
+            label={t('optimizations.temperatureConfig.label')}
             tooltip={
               <PromptModelConfigsTooltipContent
                 text={
                   isReasoning
-                    ? "Reasoning models require temperature = 1.0. This setting controls randomness in completions."
-                    : "Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive."
+                    ? t('optimizations.temperatureConfig.reasoningTooltip')
+                    : t('optimizations.temperatureConfig.defaultTooltip')
                 }
               />
             }

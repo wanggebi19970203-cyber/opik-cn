@@ -1,0 +1,345 @@
+---
+headline: 通过 SDK、REST 和 UI 导出 | Opik 文档
+og:description: 学习使用 Opik SDK、REST 和 UI 导出追踪和 Span，以进行模型微调和深入分析。
+og:site_name: Opik 文档
+og:title: 使用 Opik 高效导出数据
+title: 通过 SDK、REST 和 UI 导出
+toc_max_heading_level: 4
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/export-data
+---
+
+使用 Opik 时，能够导出追踪、Span 和线程非常重要，这样你就可以使用它们来微调模型或进行更深入的分析。
+
+你可以使用以下方式导出记录到 Opik 平台的数据：
+
+1. 使用 Opik SDK：你可以使用 Python SDK 方法（[`Opik.search_traces`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_traces)、[`Opik.search_spans`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_spans) 和 [`Opik.search_threads`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_threads)）或 TypeScript SDK 方法（`client.searchTraces()`）来导出追踪、Span 和线程。
+2. 使用 Opik REST API：你可以使用 [`/traces`](/reference/rest-api/traces/get-traces-by-project) 和 [`/spans`](/reference/rest-api/spans/get-spans-by-project) 端点来导出追踪和 Span。
+3. 使用 UI：选择要导出的追踪或 Span 后，可以在 `Actions` 下拉菜单中点击 `Export CSV` 按钮。
+
+<Tip>
+  推荐的数据导出方式是使用 Opik Python SDK
+  （[`Opik.search_traces`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_traces)、
+  [`Opik.search_spans`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_spans)
+  和
+  [`Opik.search_threads`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_threads)）
+  或 TypeScript SDK（`client.searchTraces()`）中的 SDK 方法。
+</Tip>
+
+## 使用 Opik SDK
+
+### 导出追踪
+
+Python SDK 的 [`Opik.search_traces`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_traces) 方法和 TypeScript SDK 的 `client.searchTraces()` 方法允许你导出项目中的所有追踪或搜索特定追踪并导出。
+
+#### 导出所有追踪
+
+要导出所有追踪，你需要指定一个高于项目中追踪总数的 `max_results` / `maxResults` 值：
+
+<Tabs>
+  <Tab value="Python" title="Python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    traces = client.search_traces(project_name="Default project", max_results=1000000)
+    ```
+
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const traces = await client.searchTraces({
+      projectName: "Default project",
+      maxResults: 1000000
+    });
+    ```
+
+  </Tab>
+</Tabs>
+
+#### 搜索特定追踪
+
+你可以使用 `filter_string`（Python）/ `filterString`（TypeScript）参数来搜索特定追踪：
+
+<Tabs>
+  <Tab value="Python" title="Python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    traces = client.search_traces(
+      project_name="Default project",
+      filter_string='input contains "Opik"'
+    )
+
+    # 如需要可转换为 Dict
+    traces = [trace.dict() for trace in traces]
+    ```
+
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const traces = await client.searchTraces({
+      projectName: "Default project",
+      filterString: 'input contains "Opik"'
+    });
+    ```
+
+  </Tab>
+</Tabs>
+
+### 使用 Opik 查询语言（OQL）过滤
+
+所有搜索方法（`search_traces`、`search_spans` 和 `search_threads`）都接受一个 `filter_string`（Python）/ `filterString`（TypeScript）参数，使用 Opik 查询语言（OQL）：
+
+```
+"<COLUMN> <OPERATOR> <VALUE> [AND <COLUMN> <OPERATOR> <VALUE>]*"
+```
+
+**规则：**
+
+- 字符串值必须用双引号包裹
+- 多个条件可以用 `AND` 组合（不支持 OR）
+- DateTime 字段需要 ISO 8601 格式（如 `"2024-01-01T00:00:00Z"`）
+- 对嵌套字段使用点表示法：`metadata.model`、`feedback_scores.accuracy`
+
+每种实体类型支持不同的过滤列。下面的表格列出了每种类型的可用列。
+
+#### Trace 列
+
+| 列名                    | 类型       | 操作符                                                                   |
+| ------------------------- | ---------- | --------------------------------------------------------------------------- |
+| `id`                      | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `name`                    | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `input`, `output`         | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `thread_id`               | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `guardrails`              | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `experiment_id`           | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `start_time`, `end_time`  | DateTime   | `=`, `!=`, `>`, `>=`, `<`, `<=`                                             |
+| `created_at`, `last_updated_at` | DateTime | `=`, `!=`, `>`, `>=`, `<`, `<=`                                        |
+| `metadata`                | Dictionary | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `>=`, `<`, `<=` |
+| `input_json`, `output_json` | Dictionary | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `>=`, `<`, `<=` |
+| `feedback_scores`         | Numeric    | `=`, `!=`, `>`, `>=`, `<`, `<=`, `is_empty`, `is_not_empty`                |
+| `span_feedback_scores`    | Numeric    | `=`, `!=`, `>`, `>=`, `<`, `<=`, `is_empty`, `is_not_empty`                |
+| `tags`                    | List       | `=`, `!=`, `contains`, `not_contains`, `is_empty`, `is_not_empty`           |
+| `annotation_queue_ids`    | List       | `=`, `!=`, `contains`, `not_contains`, `is_empty`, `is_not_empty`           |
+| `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens` | Numeric | `=`, `!=`, `>`, `>=`, `<`, `<=` |
+| `duration`, `total_estimated_cost`, `llm_span_count` | Numeric | `=`, `!=`, `>`, `>=`, `<`, `<=`              |
+| `error_info`              | Container  | `is_empty`, `is_not_empty`                                                  |
+
+#### Span 列
+
+| 列名                    | 类型       | 操作符                                                                   |
+| ------------------------- | ---------- | --------------------------------------------------------------------------- |
+| `id`                      | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `name`                    | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `input`, `output`         | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `model`                   | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `provider`                | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `trace_id`                | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `type`                    | Enum       | `=`, `!=`                                                                   |
+| `start_time`, `end_time`  | DateTime   | `=`, `!=`, `>`, `>=`, `<`, `<=`                                             |
+| `metadata`                | Dictionary | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `>=`, `<`, `<=` |
+| `input_json`, `output_json` | Dictionary | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `>=`, `<`, `<=` |
+| `feedback_scores`         | Numeric    | `=`, `!=`, `>`, `>=`, `<`, `<=`, `is_empty`, `is_not_empty`                |
+| `tags`                    | List       | `=`, `!=`, `contains`, `not_contains`, `is_empty`, `is_not_empty`           |
+| `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens` | Numeric | `=`, `!=`, `>`, `>=`, `<`, `<=` |
+| `duration`, `total_estimated_cost` | Numeric | `=`, `!=`, `>`, `>=`, `<`, `<=`                                  |
+| `error_info`              | Container  | `is_empty`, `is_not_empty`                                                  |
+
+#### 线程列
+
+| 列名                    | 类型       | 操作符                                                                   |
+| ------------------------- | ---------- | --------------------------------------------------------------------------- |
+| `id`                      | String     | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `first_message`, `last_message` | String | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `status`                  | Enum       | `=`, `!=`                                                                   |
+| `start_time`, `end_time`  | DateTime   | `=`, `!=`, `>`, `>=`, `<`, `<=`                                             |
+| `created_at`, `last_updated_at` | DateTime | `=`, `!=`, `>`, `>=`, `<`, `<=`                                        |
+| `feedback_scores`         | Numeric    | `=`, `!=`, `>`, `>=`, `<`, `<=`, `is_empty`, `is_not_empty`                |
+| `tags`                    | List       | `=`, `!=`, `contains`, `not_contains`, `is_empty`, `is_not_empty`           |
+| `annotation_queue_ids`    | List       | `=`, `!=`, `contains`, `not_contains`, `is_empty`, `is_not_empty`           |
+| `duration`, `number_of_messages` | Numeric | `=`, `!=`, `>`, `>=`, `<`, `<=`                                       |
+
+<Tabs>
+  <Tab value="Python" title="Python">
+    ```python
+    import opik
+
+    client = opik.Opik(project_name="Default project")
+
+    # Trace 过滤
+    traces = client.search_traces(filter_string='input contains "Opik"')
+    traces = client.search_traces(filter_string='start_time >= "2024-01-01T00:00:00Z"')
+    traces = client.search_traces(filter_string='usage.total_tokens > 1000')
+    traces = client.search_traces(filter_string='metadata.model = "gpt-4o"')
+    traces = client.search_traces(filter_string='feedback_scores.user_rating is_not_empty')
+    traces = client.search_traces(filter_string='tags contains "production"')
+
+    # 线程过滤
+    threads = client.search_threads(filter_string='number_of_messages >= 5')
+    threads = client.search_threads(filter_string='first_message contains "hello"')
+    threads = client.search_threads(filter_string='status = "active"')
+    ```
+
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik({ projectName: "Default project" });
+
+    // Trace 过滤
+    const t1 = await client.searchTraces({ filterString: 'input contains "Opik"' });
+    const t2 = await client.searchTraces({ filterString: 'start_time >= "2024-01-01T00:00:00Z"' });
+    const t3 = await client.searchTraces({ filterString: 'usage.total_tokens > 1000' });
+    const t4 = await client.searchTraces({ filterString: 'metadata.model = "gpt-4o"' });
+    const t5 = await client.searchTraces({ filterString: 'feedback_scores.user_rating is_not_empty' });
+    const t6 = await client.searchTraces({ filterString: 'tags contains "production"' });
+    ```
+
+  </Tab>
+</Tabs>
+
+<Tip>
+如果你的 `feedback_scores` 键包含空格，你需要用双引号包裹它：
+
+`'feedback_scores."My Score" > 0'`
+
+如果 `feedback_scores` 键同时包含空格和双引号，你需要将双引号转义为 `""`：
+
+`'feedback_scores."Score ""with"" Quotes" > 0'`
+
+或使用不同的引号，用三引号包裹，如下所示：
+
+`'''feedback_scores.'Accuracy "Happy Index"' < 0.8'''`
+
+</Tip>
+
+### 导出 Span
+
+你可以使用 [`Opik.search_spans`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_spans) 方法导出 Span。此方法允许你根据 `trace_id` 或过滤字符串搜索 Span。
+
+#### 基于 `trace_id` 导出 Span
+
+要导出与特定追踪关联的所有 Span，可以使用 `trace_id` 参数：
+
+```python
+import opik
+
+client = opik.Opik()
+
+spans = client.search_spans(
+  project_name="Default project",
+  trace_id="067092dc-e639-73ff-8000-e1c40172450f"
+)
+```
+
+#### 搜索特定 Span
+
+你可以使用 `filter_string` 参数来搜索特定 Span：
+
+```python
+import opik
+
+client = opik.Opik()
+
+spans = client.search_spans(
+  project_name="Default project",
+  filter_string='input contains "Opik"'
+)
+```
+
+### 导出线程
+
+你可以使用 [`Opik.search_threads`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.search_threads) 方法导出线程。此方法允许你在项目中搜索对话线程。
+
+#### 导出所有线程
+
+要导出所有线程，你需要指定一个高于项目中线程总数的 `max_results` 值：
+
+```python
+import opik
+
+client = opik.Opik()
+
+threads = client.search_threads(project_name="Default project", max_results=1000000)
+```
+
+#### 搜索特定线程
+
+你可以使用 `filter_string` 参数来搜索特定线程：
+
+```python
+import opik
+
+client = opik.Opik()
+
+# 通过 ID 搜索特定线程
+threads = client.search_threads(
+  project_name="Default project",
+  filter_string='id = "thread_123"'
+)
+
+# 搜索消息较多的线程
+threads = client.search_threads(
+  project_name="Default project",
+  filter_string='number_of_messages >= 5'
+)
+
+# 搜索具有特定反馈分数的线程
+threads = client.search_threads(
+  project_name="Default project",
+  filter_string='feedback_scores.user_satisfaction > 0.8'
+)
+
+# 按标签搜索线程
+threads = client.search_threads(
+  project_name="Default project",
+  filter_string='tags contains "important"'
+)
+```
+
+## 使用 Opik REST API
+
+要使用 Opik REST API 导出追踪，可以使用 [`/traces`](/reference/rest-api/traces/get-traces-by-project) 端点和 [`/spans`](/reference/rest-api/spans/get-spans-by-project) 端点。这些端点是分页的，因此你需要发出多个请求来检索所有想要的追踪或 Span。
+
+要搜索特定追踪或 Span，可以使用 `filter` 参数。虽然这是一个字符串参数，但它不遵循与 Opik SDK 中 `filter_string` 参数相同的格式。相反，它是一个具有以下格式的 JSON 对象列表：
+
+```json
+[
+  {
+    "field": "name",
+    "type": "string",
+    "operator": "=",
+    "value": "Opik"
+  }
+]
+```
+
+<Warning>
+  `filter` 参数是为 Opik UI 设计的，因此灵活性有限。如果你需要更多灵活性，请在
+  [GitHub](https://github.com/comet-ml/opik/issues) 上提交问题，我们可以提供帮助。
+</Warning>
+
+## 使用 UI
+
+要从 UI 将追踪导出为 CSV 文件，只需选择要导出的追踪或 Span，然后在 `Actions` 下拉菜单中点击 `Export CSV`：
+
+<Frame>
+  <img src="/img/tracing/download_traces.png" />
+</Frame>
+
+<Tip>
+  UI 每次只允许导出最多 100 条追踪或 Span，因为它与追踪表格的页面大小关联。
+  如果需要导出更多追踪或 Span，我们建议使用 Opik SDK。
+</Tip>

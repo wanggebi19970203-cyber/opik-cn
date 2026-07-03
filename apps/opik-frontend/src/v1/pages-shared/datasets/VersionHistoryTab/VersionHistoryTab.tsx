@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ColumnPinningState } from "@tanstack/react-table";
 import { keepPreviousData } from "@tanstack/react-query";
 
@@ -27,51 +28,52 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
   left: ["version_name"],
 };
 
-const COLUMNS: ColumnData<DatasetVersion>[] = [
-  {
-    id: "version_name",
-    label: "Version",
-    type: COLUMN_TYPE.string,
-  },
-  {
-    id: "change_summary",
-    label: "Changes summary",
-    type: COLUMN_TYPE.string,
-    iconType: COLUMN_TYPE.list,
-    cell: VersionChangeSummaryCell as never,
-  },
-  {
-    id: "change_description",
-    label: "Version note",
-    type: COLUMN_TYPE.string,
-  },
-  {
-    id: "tags",
-    label: "Tags",
-    type: COLUMN_TYPE.list,
-    iconType: "tags",
-    cell: ListCell as never,
-  },
-  {
-    id: "items_total",
-    label: "Item count",
-    type: COLUMN_TYPE.number,
-    accessorFn: (row) => row.items_total.toLocaleString(),
-  },
-  {
-    id: "created_at",
-    label: "Created at",
-    type: COLUMN_TYPE.time,
-    cell: TimeCell as never,
-  },
-  {
-    id: "created_by",
-    label: "Created by",
-    type: COLUMN_TYPE.string,
-  },
-];
-
 const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
+  const { t } = useTranslation("datasets");
+
+  const COLUMNS: ColumnData<DatasetVersion>[] = useMemo(() => [
+    {
+      id: "version_name",
+      label: t("datasets.versionHistoryTab.version"),
+      type: COLUMN_TYPE.string,
+    },
+    {
+      id: "change_summary",
+      label: t("datasets.versionHistoryTab.changesSummary"),
+      type: COLUMN_TYPE.string,
+      iconType: COLUMN_TYPE.list,
+      cell: VersionChangeSummaryCell as never,
+    },
+    {
+      id: "change_description",
+      label: t("datasets.versionHistoryTab.versionNote"),
+      type: COLUMN_TYPE.string,
+    },
+    {
+      id: "tags",
+      label: t("datasets.versionHistoryTab.tags"),
+      type: COLUMN_TYPE.list,
+      iconType: "tags",
+      cell: ListCell as never,
+    },
+    {
+      id: "items_total",
+      label: t("datasets.versionHistoryTab.itemCount"),
+      type: COLUMN_TYPE.number,
+      accessorFn: (row) => row.items_total.toLocaleString(),
+    },
+    {
+      id: "created_at",
+      label: t("datasets.versionHistoryTab.createdAt"),
+      type: COLUMN_TYPE.time,
+      cell: TimeCell as never,
+    },
+    {
+      id: "created_by",
+      label: t("datasets.versionHistoryTab.createdBy"),
+      type: COLUMN_TYPE.string,
+    },
+  ], [t]);
   const {
     permissions: { canEditDatasets },
   } = usePermissions();
@@ -132,9 +134,9 @@ const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
         getRowId={getRowId}
         columnPinning={DEFAULT_COLUMN_PINNING}
         noData={
-          <DataTableNoData title="No version history yet">
+          <DataTableNoData title={t("datasets.versionHistory.noData.title")}>
             <div className="text-sm text-muted-foreground">
-              Version history will appear here when you create dataset versions
+              {t("datasets.versionHistory.noData.description")}
             </div>
           </DataTableNoData>
         }

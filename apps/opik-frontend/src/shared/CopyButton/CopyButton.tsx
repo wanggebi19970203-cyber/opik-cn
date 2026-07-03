@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cva, VariantProps } from "class-variance-authority";
 import { Button } from "@/ui/button";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -38,8 +39,8 @@ type CopyButtonProps = {
 
 const CopyButton: React.FunctionComponent<CopyButtonProps> = ({
   text,
-  message = "Copied",
-  tooltipText = "Copy",
+  message,
+  tooltipText,
   successIconTimeout = 3000,
   variant = "ghost",
   className,
@@ -47,6 +48,10 @@ const CopyButton: React.FunctionComponent<CopyButtonProps> = ({
   id,
   "data-fs-element": dataFsElement,
 }) => {
+  const { t } = useTranslation("common");
+  const resolvedMessage = message ?? t("messages.copied");
+  const resolvedTooltipText = tooltipText ?? t("buttons.copy");
+
   const { toast } = useToast();
   const [showSuccessIcon, setShowSuccessIcon] = useState(false);
 
@@ -62,11 +67,11 @@ const CopyButton: React.FunctionComponent<CopyButtonProps> = ({
 
   const copyClickHandler = useCallback(() => {
     toast({
-      description: message,
+      description: resolvedMessage,
     });
     copy(text);
     setShowSuccessIcon(true);
-  }, [message, text, toast]);
+  }, [resolvedMessage, text, toast]);
 
   if (showSuccessIcon) {
     return (
@@ -76,9 +81,9 @@ const CopyButton: React.FunctionComponent<CopyButtonProps> = ({
     );
   }
 
-  if (tooltipText) {
+  if (resolvedTooltipText) {
     return (
-      <TooltipWrapper content={tooltipText}>
+      <TooltipWrapper content={resolvedTooltipText}>
         <Button
           size={size}
           variant={variant}

@@ -1,0 +1,99 @@
+---
+headline: 管理控制台 | Opik 文档
+og:description: 了解如何访问和使用 Opik 管理控制台来管理组织设置。
+og:site_name: Opik 文档
+og:title: 'Opik 管理控制台：访问和导航指南'
+subtitle: 如何访问和使用组织管理控制台
+title: 管理控制台
+---
+
+管理控制台是 Opik 中管理组织的核心枢纽。组织管理员可以在此管理用户、工作区、身份验证设置等。
+
+<Note>
+**访问要求**：您必须拥有**管理员**组织角色才能访问管理控制台。如果在菜单中看不到管理员选项，请联系组织管理员。
+</Note>
+
+## 访问管理控制台
+
+打开管理控制台：
+
+1. 点击顶部导航栏中的**工作区选择器**
+2. 点击组织名称旁边的**设置图标**
+
+<Frame>
+  <img src="/img/administration/access_admin_dashboard.png" alt="访问管理控制台" />
+</Frame>
+
+## 控制台各部分
+
+管理控制台提供以下各部分的访问：
+
+### 工作区
+
+管理组织内的工作区：
+
+- **查看所有工作区**：查看组织中所有工作区的列表。
+- **创建工作区**：为不同团队或项目添加新工作区。
+- **删除工作区**：移除不再需要的工作区。
+
+详情请参阅[工作区](/administration/admin-dashboard/workspaces)。
+
+### 用户
+
+管理组织的用户访问权限：
+
+- **查看成员**：查看组织中的所有用户及其角色。
+- **查看待处理邀请**：查看组织的待处理邀请。
+- **移除用户**：撤销不再属于组织的用户的访问权限。
+- **更改角色**：更新组织级别的用户角色。
+
+详情请参阅[用户](/administration/admin-dashboard/users)。
+
+### 角色与权限
+
+配置工作区级别的访问控制：
+
+- **查看工作区角色**：查看可用角色及其权限。
+- **创建自定义角色**：根据组织需求定义自定义角色。
+- **管理权限**：了解和配置权限层级。
+
+详情请参阅[角色和权限](/administration/roles_and_permissions)。
+
+### 身份验证
+
+为组织设置单点登录身份验证：
+
+- **SAML 配置**：配置基于 SAML 的 SSO 与身份提供商。
+- **OIDC 配置**：设置 OpenID Connect 身份验证。
+- **JWT 身份验证**：配置基于 JWT 令牌的身份验证。
+
+详情请参阅[身份验证概述](/administration/authentication/overview)。
+
+### 服务账户
+
+管理对 Opik 的编程访问：
+
+- **创建服务账户**：为自动化系统和 CI/CD 流水线设置账户。
+- **管理 API 密钥**：生成、重新生成和撤销 API 密钥。
+- **配置工作区访问权限**：定义每个服务账户可访问的工作区。
+
+详情请参阅[服务账户](/administration/admin-dashboard/service_accounts)。
+
+### 计费
+
+<Note>
+计费管理在 Opik Cloud 和企业版计划中可用。开源部署中不可使用此功能。如有计费问题，请[联系我们](https://www.comet.com/site/about-us/contact-us/)。
+</Note>
+
+管理组织的订阅和计费：
+
+- **查看当前计划**：查看组织的订阅级别和使用情况。
+- **升级计划**：升级到更高级别以获取更多功能或容量。
+- **管理支付方式**：更新信用卡或账单信息。
+- **查看发票**：访问历史发票和付款记录。
+
+## 后续步骤
+
+- 管理组织中的[工作区](/administration/admin-dashboard/workspaces)。
+- [邀请用户](/administration/admin-dashboard/users)并分配角色。
+- 为组织[配置 SSO](/administration/authentication/overview)。

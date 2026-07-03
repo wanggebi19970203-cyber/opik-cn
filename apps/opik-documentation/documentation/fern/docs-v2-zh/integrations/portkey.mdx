@@ -1,0 +1,176 @@
+---
+description: 开始将 Portkey 与 Opik 集成，获取企业级 LLM 网关能力，支持高级路由和故障转移功能。
+headline: Portkey | Opik 文档
+og:description: 学习如何通过 OpenAI SDK 封装将 Portkey 与 Opik 集成，记录所有 LLM 调用以实现全面的可观测性。
+og:site_name: Opik 文档
+og:title: 将 Portkey 与 Opik 集成，构建企业级 LLM 网关
+title: 使用 Opik 对 Portkey 进行可观测性监控
+---
+
+[Portkey](https://portkey.ai/) 是一个企业级 AI 网关，提供统一接口访问 200+ 种大语言模型，支持智能路由、自动故障转移、负载均衡和全面的可观测性等高级功能。
+
+## 网关概述
+
+Portkey 提供企业级功能来管理 LLM API 访问，包括：
+
+- **250+ 种 AI 模型**：单一一致的 API，连接来自 OpenAI、Anthropic、Google、Azure、AWS 等的模型
+- **多模态支持**：语言、视觉、音频和图像模型
+- **高级路由**：故障转移、负载均衡、基于元数据的条件路由和提供商权重
+- **智能缓存**：简单缓存和语义缓存，降低延迟和成本
+- **安全与治理**：护栏、安全密钥管理（虚拟密钥）、基于角色的访问控制
+- **合规性**：符合 SOC2、HIPAA、GDPR 标准，支持数据隐私控制
+- **可观测性**：请求/响应日志记录、延迟跟踪、成本指标、错误率和吞吐量监控
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=portkey&utm_campaign=opik) 提供 Opik 平台的托管版本。[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=portkey&utm_campaign=opik)并获取 API Key。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=portkey&utm_campaign=opik)了解更多信息。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik`、`openai` 和 `portkey-ai` 包：
+
+```bash
+pip install opik openai portkey-ai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)了解详细说明：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Portkey
+
+您需要 Portkey API 密钥和 LLM 提供商的虚拟密钥。可以从 [Portkey 控制面板](https://app.portkey.ai/)获取。
+
+将 API 密钥设置为环境变量：
+
+```bash
+export PORTKEY_API_KEY="YOUR_PORTKEY_API_KEY"
+export PORTKEY_VIRTUAL_KEY="YOUR_PORTKEY_VIRTUAL_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "PORTKEY_API_KEY" not in os.environ:
+    os.environ["PORTKEY_API_KEY"] = getpass.getpass("Enter your Portkey API key: ")
+
+if "PORTKEY_VIRTUAL_KEY" not in os.environ:
+    os.environ["PORTKEY_VIRTUAL_KEY"] = getpass.getpass("Enter your Portkey virtual key: ")
+```
+
+## 记录 LLM 调用
+
+由于 Portkey 提供兼容 OpenAI 的 API，我们可以使用 [Opik OpenAI SDK 封装](/integrations/openai)自动将 Portkey 调用作为生成记录到 Opik 中。
+
+### 简单 LLM 调用
+
+```python
+import os
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+from portkey_ai import PORTKEY_GATEWAY_URL, createHeaders
+
+client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+    base_url=PORTKEY_GATEWAY_URL,
+    default_headers=createHeaders(
+        api_key=os.environ["PORTKEY_API_KEY"],
+        provider="@OPENAI_PROVIDER"
+    )
+)
+
+# Wrap the client with Opik tracking
+client = track_openai(client, project_name="portkey-integration-demo")
+
+# Make a chat completion request
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a knowledgeable AI assistant."},
+        {"role": "user", "content": "What is the largest city in France?"}
+    ]
+)
+
+# Print the assistant's reply
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 与 `@track` 装饰器配合使用
+
+如果 LLM 管道中有多个步骤，可以使用 `@track` 装饰器记录每个步骤的追踪。如果在某个步骤中调用了 Portkey，该 LLM 调用将与对应步骤关联：
+
+```python
+import os
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+from portkey_ai import PORTKEY_GATEWAY_URL, createHeaders
+
+# Create an OpenAI client configured for Portkey
+client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+    base_url=PORTKEY_GATEWAY_URL,
+    default_headers=createHeaders(
+        api_key=os.environ["PORTKEY_API_KEY"],
+        provider="@OPENAI_PROVIDER"
+    )
+)
+
+# Wrap the client with Opik tracking
+client = track_openai(client, project_name="portkey-integration-demo")
+
+@track
+def generate_response(prompt: str):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a knowledgeable AI assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def refine_response(initial_response: str):
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You enhance and polish text responses."},
+            {"role": "user", "content": f"Please improve this response: {initial_response}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track(project_name="portkey-integration-demo")
+def generate_and_refine(prompt: str):
+    # First LLM call: Generate initial response
+    initial = generate_response(prompt)
+    
+    # Second LLM call: Refine the response
+    refined = refine_response(initial)
+    
+    return refined
+
+# Example usage
+result = generate_and_refine("Explain quantum computing in simple terms.")
+```
+
+追踪将显示具有层级跨度的嵌套 LLM 调用。
+
+## 进一步改进
+
+如果您对 Portkey 集成有改进建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

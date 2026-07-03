@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { MoreHorizontal, Trash, Loader2 } from "lucide-react";
 import { useToast } from "@/ui/use-toast";
 
@@ -52,6 +53,7 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
   setActiveSection,
   spans,
 }) => {
+  const { t } = useTranslation("tracing");
   const [chat, setChat] = useState<{
     value: string;
     messages: TraceAnalyzerLLMMessage[];
@@ -160,12 +162,12 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
 
   const predefinedPrompts = useMemo(
     () => [
-      "Give me a summary of this trace",
-      "What went wrong or looks suspicious here?",
-      "Where did errors or unexpected behavior occur?",
-      "How can I reduce costs?",
+      t("aiAssistant.summaryPrompt"),
+      t("aiAssistant.suspiciousPrompt"),
+      t("aiAssistant.errorsPrompt"),
+      t("aiAssistant.reduceCostsPrompt"),
     ],
-    [],
+    [t],
   );
 
   const runStreaming = useTraceAnalyzerRunStreaming({
@@ -476,11 +478,10 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-3 py-2">
         <div className="comet-title-m text-center text-foreground">
-          Debug your trace with OpikAssist
+          {t("aiAssistant.debugWithOpikAssist")}
         </div>
         <div className="comet-body-s mb-8 text-center text-muted-slate">
-          Get AI-powered help spotting issues, understanding behavior, or
-          debugging problems. Start with a sample question or ask your own.
+          {t("aiAssistant.debugDescription")}
         </div>
         {predefinedPrompts.map((prompt) => (
           <Button
@@ -499,11 +500,11 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
 
   return (
     <DetailsActionSectionLayout
-      title="OpikAssist"
-      closeTooltipContent="Close OpikAssist"
+      title={t("aiAssistant.opikAssist")}
+      closeTooltipContent={t("detailsPanel.closeOpikAssist")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
-      tag={<Tag variant="green">Beta</Tag>}
+      tag={<Tag variant="green">{t("aiAssistant.beta")}</Tag>}
       button={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -518,7 +519,7 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
               disabled={noMessages}
             >
               <Trash className="mr-2 size-4" />
-              Clear conversation
+              {t("aiAssistant.clearConversation")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -548,7 +549,7 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
                     <div className="relative min-w-[20%] max-w-[90%] rounded-t-xl rounded-br-xl bg-muted/30 px-4 py-2">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Loader2 className="size-3 animate-spin" />
-                        <span className="comet-body-xs">Thinking</span>
+                        <span className="comet-body-xs">{t("aiAssistant.thinking")}</span>
                       </div>
                     </div>
                   </div>
@@ -562,7 +563,7 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
                       onOptimisticUpdate={handleOptimisticFeedbackUpdate}
                     />
                     <span className="comet-body-xs text-muted-slate">
-                      Rate this conversation
+                      {t("aiAssistant.rateThisConversation")}
                     </span>
                   </div>
                 )}
@@ -589,9 +590,9 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
         open={showClearConfirm}
         setOpen={setShowClearConfirm}
         onConfirm={handleDeleteSession}
-        title="Clear conversation?"
-        description="This will remove the current AI assistant session for this trace. You cannot undo this action."
-        confirmText="Clear"
+        title={t("aiAssistant.clearConversationConfirm")}
+        description={t("aiAssistant.clearConversationDescription")}
+        confirmText={t("aiAssistant.clear")}
         confirmButtonVariant="destructive"
       />
     </DetailsActionSectionLayout>

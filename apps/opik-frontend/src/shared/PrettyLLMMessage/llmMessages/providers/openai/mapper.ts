@@ -1,4 +1,5 @@
 import PrettyLLMMessage from "@/shared/PrettyLLMMessage";
+import i18next from "i18next";
 import {
   FormatMapper,
   LLMMessageDescriptor,
@@ -119,15 +120,15 @@ const generateMessageId = (index: number, prefix: string = "msg"): string => {
  */
 const getImageName = (url: string, index: number): string => {
   if (url.startsWith("data:")) {
-    return `Image ${index + 1}`;
+    return i18next.t("llmMapper.image", { index: index + 1 });
   }
   try {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
     const filename = pathname.split("/").pop();
-    return filename || `Image ${index + 1}`;
+    return filename || i18next.t("llmMapper.image", { index: index + 1 });
   } catch {
-    return `Image ${index + 1}`;
+    return i18next.t("llmMapper.image", { index: index + 1 });
   }
 };
 
@@ -202,7 +203,7 @@ const processMultimodalContent = (
         const audioData = item.input_audio.data;
         const audioName = isPlaceholder(audioData)
           ? audioData
-          : `Audio ${index + 1}`;
+          : i18next.t("llmMapper.audio", { index: index + 1 });
         audios.push({
           url: audioData,
           name: audioName,
@@ -256,7 +257,7 @@ const mapToolCalls = (
         component: PrettyLLMMessage.CodeBlock,
         props: {
           code: "",
-          label: toolCall.function?.name ?? `unknown tool`,
+          label: toolCall.function?.name ?? i18next.t("llmMapper.unknownTool"),
         },
       });
       return;
@@ -305,7 +306,7 @@ const formatAsToolResult = (
     component: PrettyLLMMessage.CodeBlock,
     props: {
       code: formattedContent,
-      label: name || "Tool result",
+      label: name || i18next.t("llmMapper.toolResult"),
     },
   };
 };

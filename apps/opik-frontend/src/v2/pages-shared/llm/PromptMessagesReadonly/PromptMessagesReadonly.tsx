@@ -4,6 +4,7 @@ import { useHeightTruncation } from "@/hooks/useHeightTruncation";
 import { Button } from "@/ui/button";
 import MediaTagsList from "@/v2/pages-shared/llm/PromptMessageMediaTags/MediaTagsList";
 import ChatMessageCard from "@/v2/pages-shared/llm/ChatMessageCard/ChatMessageCard";
+import { useTranslation } from "react-i18next";
 
 export interface ChatMessage {
   role: string;
@@ -81,6 +82,7 @@ export const PromptMessageCard: React.FC<PromptMessageCardProps> = ({
   message,
   truncate = false,
 }) => {
+  const { t } = useTranslation("llm");
   const { text, images, videos, audios } = React.useMemo(
     () => getTextAndMedia(message.content),
     [message.content],
@@ -111,7 +113,7 @@ export const PromptMessageCard: React.FC<PromptMessageCardProps> = ({
           onClick={toggle}
           className="h-auto self-start p-0 text-xs"
         >
-          {isExpanded ? "Show less" : "Show more"}
+          {isExpanded ? t("llm:promptMessagesReadonly.showLess") : t("llm:promptMessagesReadonly.showMore")}
         </Button>
       )}
       {hasMedia && (

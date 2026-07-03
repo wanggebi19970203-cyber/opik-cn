@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState, useMemo } from "react";
 import { Info, Pencil } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -32,6 +33,7 @@ interface PromptTabInterface {
 }
 
 const PromptTab = ({ prompt }: PromptTabInterface) => {
+  const { t } = useTranslation();
   const {
     permissions: { canUsePlayground },
   } = usePermissions();
@@ -122,7 +124,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           onClick={() => setOpenUseThisPrompt(true)}
         >
           <Info className="mr-1.5 size-3.5" />
-          Use this prompt
+          {t("prompt:promptImprovement.useThisPrompt")}
         </Button>
         {canUsePlayground && (
           <TryInPlaygroundButton
@@ -142,7 +144,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           onClick={() => handleOpenEditPrompt(true)}
         >
           <Pencil className="mr-1.5 size-3.5" />
-          Edit prompt
+          {t("prompt:promptTab.edit")}
         </Button>
       </div>
 
@@ -156,7 +158,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           {activeVersion?.metadata && (
             <>
               <p className="comet-body-s-accented mt-4 text-foreground">
-                Metadata
+                {t("prompt:compare.metadata")}
               </p>
               <CodeHighlighter
                 data={JSON.stringify(activeVersion.metadata, null, 2)}
@@ -168,7 +170,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           {activeVersion?.change_description && (
             <>
               <p className="comet-body-s-accented mt-4 text-foreground">
-                Commit message
+                {t("prompt:editPrompt.versionNotes")}
               </p>
               <div className="comet-body-s flex w-full whitespace-pre-wrap break-all rounded-md bg-primary-foreground p-3">
                 {activeVersion.change_description}
@@ -183,15 +185,15 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
               updateVersionTags(versionTags.filter((t) => t !== tag))
             }
             align="start"
-            tooltipText="Version tags list"
-            placeholderText="New version tag"
-            addButtonText="Add version tag"
-            tagType="version tag"
+            tooltipText={t("prompt:promptTab.versionTagsList")}
+            placeholderText={t("prompt:promptTab.newVersionTag")}
+            addButtonText={t("prompt:promptTab.addVersionTag")}
+            tagType={t("prompt:promptTab.versionTag")}
           />
         </div>
         <div className="w-[380px] shrink-0">
           <div className="comet-body-s-accented mb-2 flex items-center gap-1 text-foreground">
-            Commit history
+            {t("prompt:promptTab.commitHistory")}
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_commit_history]}
             />

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import {
@@ -35,6 +36,7 @@ const entityTypeMap: Record<string, string> = {
 const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
   SetInactiveConfirmDialogProps
 > = ({ open, setOpen, onDeleteFeedbackScore, row, entityType }) => {
+  const { t } = useTranslation("tracing");
   const [dontAskAgain, setDontAskAgain] = useFeedbackScoreDeletePreference();
 
   const onConfirm = () => {
@@ -45,13 +47,12 @@ const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Remove feedback score</DialogTitle>
+          <DialogTitle>{t("feedbackScoreTable.removeFeedbackScore")}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <div className="comet-body-s text-muted-slate">
-            Removing a feedback score from {entityTypeMap[entityType]}{" "}
-            can&apos;t be undone. Are you sure you want to continue?
+            {t("feedbackScoreTable.removeFeedbackScoreDescription", { entity: entityTypeMap[entityType] })}
           </div>
           <Label
             key="dont-ask-again"
@@ -64,7 +65,7 @@ const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
             />
 
             <div className="comet-body-s text-muted-slate">
-              Don&apos;t ask me again
+              {t("feedbackScoreTable.dontAskAgain")}
             </div>
           </Label>
         </div>
@@ -72,12 +73,12 @@ const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("addToDataset.cancel")}
             </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button type="submit" variant="destructive" onClick={onConfirm}>
-              Remove score
+              {t("feedbackScoreTable.removeScore")}
             </Button>
           </DialogClose>
         </DialogFooter>

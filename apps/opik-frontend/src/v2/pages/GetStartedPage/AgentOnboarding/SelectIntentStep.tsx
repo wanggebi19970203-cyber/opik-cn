@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
@@ -15,6 +16,7 @@ import onboardingImageLightUrl from "/images/onboarding_image_light.svg";
 import onboardingImageDarkUrl from "/images/onboarding_image_dark.svg";
 
 const SelectIntentStep: React.FC = () => {
+  const { t } = useTranslation("pages/get-started");
   const { goToStep } = useAgentOnboarding();
   const { themeMode } = useTheme();
   const workspaceName = useActiveWorkspaceName();
@@ -53,9 +55,11 @@ const SelectIntentStep: React.FC = () => {
       <div className="w-full max-w-[480px]">
         <div className="flex flex-col gap-1.5">
           <p className="comet-body-s text-muted-slate">
-            Welcome to Opik - let&apos;s get you set up
+            {t("getStarted.selectIntent.welcome")}
           </p>
-          <h2 className="comet-title-m">Where are you right now?</h2>
+          <h2 className="comet-title-m">
+            {t("getStarted.selectIntent.whereAreYou")}
+          </h2>
         </div>
 
         <div className="flex flex-col gap-3 pt-6">
@@ -69,10 +73,10 @@ const SelectIntentStep: React.FC = () => {
             className="rounded-lg border border-border bg-background p-4 text-left transition-colors hover:border-primary hover:bg-muted"
           >
             <p className="comet-body-s font-medium">
-              I have an AI agent or LLM app
+              {t("getStarted.selectIntent.hasAgent")}
             </p>
             <p className="comet-body-s mt-1 text-muted-slate">
-              Connect it and track exactly what your agent does on every run.
+              {t("getStarted.selectIntent.hasAgentDescription")}
             </p>
           </button>
 
@@ -81,7 +85,7 @@ const SelectIntentStep: React.FC = () => {
             className="rounded-lg border border-border bg-background p-4 text-left transition-colors hover:border-primary hover:bg-muted"
           >
             <p className="comet-body-s font-medium">
-              I don&apos;t have an AI agent yet
+              {t("getStarted.selectIntent.noAgent")}
             </p>
           </button>
         </div>
@@ -90,7 +94,7 @@ const SelectIntentStep: React.FC = () => {
       <div className="hidden flex-1 items-center justify-center lg:flex">
         <img
           src={illustrationUrl}
-          alt="Onboarding illustration"
+          alt={t("getStarted.selectIntent.altText")}
           className="h-auto max-h-[400px] max-w-full object-contain"
         />
       </div>

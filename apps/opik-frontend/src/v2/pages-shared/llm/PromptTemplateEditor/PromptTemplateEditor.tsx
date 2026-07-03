@@ -15,6 +15,7 @@ import {
   ChatViewMode,
   PromptTemplateEditorState,
 } from "./usePromptTemplateEditor";
+import { useTranslation } from "react-i18next";
 
 const CHAT_VIEW_OPTIONS: Array<{
   value: ChatViewMode;
@@ -39,6 +40,7 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
   editor,
   textMinHeightClassName,
 }) => {
+  const { t } = useTranslation();
   const isJsonMode = editor.chatViewMode === "json";
 
   // The textarea doesn't fill the wrapper's min-height, so clicks in the
@@ -52,7 +54,7 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
     return (
       <div className="space-y-1.5">
         <FormFieldCard
-          title="Chat messages"
+          title={t("promptTemplateEditor.chatMessages")}
           actions={
             <>
               <FormFieldModeSelect
@@ -92,7 +94,7 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
         </FormFieldCard>
         {isJsonMode && !editor.isRawJsonValid && (
           <p className="comet-body-s text-destructive" role="alert">
-            Message format is invalid.
+            {t("promptTemplateEditor.messageFormatInvalid")}
           </p>
         )}
       </div>
@@ -102,7 +104,7 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
   return (
     <div className="space-y-1.5">
       <FormFieldCard
-        title="Prompt"
+        title={t("promptTemplateEditor.prompt")}
         actions={<CodeBlockCopy text={editor.template} />}
       >
         <div
@@ -113,14 +115,13 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
             ref={textareaRef}
             value={editor.template}
             onChange={editor.setTemplate}
-            placeholder="Type your prompt..."
+            placeholder={t("promptTemplateEditor.placeholder")}
             className="comet-code"
           />
         </div>
       </FormFieldCard>
       <p className="comet-body-xs text-light-slate">
-        Use mustache syntax to reference test suite variables in your prompt.
-        Example: {"{{question}}"}.
+        {t("promptTemplateEditor.variableSyntaxHint", { example: "{{question}}" })}
       </p>
     </div>
   );

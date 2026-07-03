@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { UserPen, MessageCircleWarning, Plus } from "lucide-react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { Thread, Trace } from "@/types/traces";
 import useAppStore, { useActiveProjectId } from "@/store/AppStore";
@@ -41,6 +42,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canCreateAnnotationQueues },
   } = usePermissions();
@@ -99,15 +101,14 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
   const handleAddSuccess = useCallback(
     (queue: AnnotationQueue) => {
       toast({
-        title: "Items added to annotation queue",
-        description:
-          "Start annotating your items and provide feedback to improve the evaluation of your LLM application.",
+        title: t("addToQueue.itemsAdded"),
+        description: t("addToQueue.itemsAddedDescription"),
         actions: [
           <ToastAction
             variant="link"
             size="sm"
             className="px-0"
-            altText="Go to annotation queue"
+            altText={t("addToQueue.goToQueue")}
             key="Go to annotation queue"
             onClick={() =>
               navigate({
@@ -120,7 +121,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
               })
             }
           >
-            Go to annotation queue
+            {t("addToQueue.goToQueue")}
           </ToastAction>,
         ],
       });
@@ -160,8 +161,8 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
 
     if (queues.length === 0) {
       const text = search
-        ? "No search results"
-        : "There are no annotation queues in this project yet";
+        ? t("addToQueue.noSearchResults")
+        : t("addToQueue.noQueuesYet");
 
       return (
         <div className="comet-body-s flex h-32 items-center justify-center text-muted-slate">
@@ -215,7 +216,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
         <Alert className="mt-4">
           <MessageCircleWarning />
           <AlertDescription>
-            There are no rows that can be added to annotation queues.
+            {t("addToQueue.noValidRows")}
           </AlertDescription>
         </Alert>
       );
@@ -229,7 +230,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg pb-8 sm:max-w-[560px]">
           <DialogHeader>
-            <DialogTitle>Add to annotation queue</DialogTitle>
+            <DialogTitle>{t("addToQueue.title")}</DialogTitle>
           </DialogHeader>
           <div className="w-full overflow-hidden">
             <ExplainerDescription
@@ -237,7 +238,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
               {...EXPLAINERS_MAP[EXPLAINER_ID.what_are_annotation_queues]}
             />
             <div className="my-2 flex items-center justify-between">
-              <h3 className="comet-title-xs">Select an annotation queue</h3>
+              <h3 className="comet-title-xs">{t("addToQueue.selectQueue")}</h3>
               {canCreateAnnotationQueues && (
                 <Button
                   variant="ghost"
@@ -249,7 +250,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
                   disabled={noValidRows}
                 >
                   <Plus className="mr-1 size-4" />
-                  Create annotation queue
+                  {t("addToQueue.createQueue")}
                 </Button>
               )}
             </div>

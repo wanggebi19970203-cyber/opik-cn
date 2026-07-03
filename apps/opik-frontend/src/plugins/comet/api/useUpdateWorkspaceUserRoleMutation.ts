@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import { WORKSPACE_USERS_ROLES_QUERY_KEY } from "./useWorkspaceUsersRoles";
 
@@ -15,7 +16,7 @@ const extractServerMessage = (error: unknown): string => {
   return (
     axiosError?.response?.data?.message ||
     axiosError?.response?.data?.msg ||
-    "Failed to update workspace user role."
+    i18next.t("common:comet.failedToUpdateWorkspaceUserRole")
   );
 };
 
@@ -41,7 +42,7 @@ export function useUpdateWorkspaceUserRoleMutation() {
     mutationKey: ["workspace", "update-user-role"],
     mutationFn: updateWorkspaceUserRoleRequest,
     onSuccess: (_, variables) => {
-      toast({ description: "User role has been successfully updated." });
+      toast({ description: i18next.t("common:comet.userRoleUpdatedSuccessfully") });
       queryClient.invalidateQueries({
         queryKey: [
           WORKSPACE_USERS_ROLES_QUERY_KEY,

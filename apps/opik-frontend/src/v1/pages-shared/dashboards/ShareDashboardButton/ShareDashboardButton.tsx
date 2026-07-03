@@ -3,25 +3,26 @@ import copy from "clipboard-copy";
 import { Button } from "@/ui/button";
 import { useToast } from "@/ui/use-toast";
 import { Copy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 
 const ShareDashboardButton: React.FC = () => {
+  const { t } = useTranslation("dashboards");
   const { toast } = useToast();
 
   const handleCopyLink = useCallback(() => {
     copy(window.location.href);
     toast({
-      title: "Dashboard link copied to clipboard",
-      description:
-        "Share this link with others to give them access to this dashboard view.",
+      title: t("share.copiedTitle"),
+      description: t("share.copiedDescription"),
     });
-  }, [toast]);
+  }, [toast, t]);
 
   return (
-    <TooltipWrapper content="Share dashboard link">
+    <TooltipWrapper content={t("share.tooltip")}>
       <Button size="sm" variant="outline" onClick={handleCopyLink}>
         <Copy className="mr-1.5 size-3.5" />
-        Share
+        {t("share.button")}
       </Button>
     </TooltipWrapper>
   );

@@ -1,0 +1,425 @@
+---
+headline: 数据集版本迁移 | Opik 文档
+og:description: 了解升级到 Opik 1.9.92 或更高版本时的自动数据集版本迁移流程，包括配置、监控和恢复步骤。
+og:site_name: Opik 文档
+og:title: Opik 中的数据集版本迁移
+subtitle: 了解自动数据集版本迁移流程
+title: 数据集版本迁移
+---
+
+# 数据集版本迁移
+
+从 Opik `1.9.92` 版本开始，平台包含一个**自动迁移流程**，以支持增强的数据集版本管理功能。首次启动 Opik `1.9.92` 或更高版本时，此迁移将自动运行。
+
+<Callout intent="info">
+  **迁移时长**：与典型的 Liquibase 迁移不同，数据迁移可能需要 **2-10 分钟**，具体取决于数据集的大小。这是正常现象。
+</Callout>
+
+## 概述
+
+数据集版本迁移是一个**三阶段的自动流程**：
+
+### 1. Liquibase 模式迁移（自动）
+在应用启动期间自动运行，将现有数据集迁移到 ClickHouse 中的新版本管理模式。
+
+### 2. MySQL 计数器迁移（自动，建议完成后禁用）
+迁移 MySQL 中的数据集版本计数器。通过 `DATASET_VERSION_ITEMS_TOTAL_MIGRATION_ENABLED` 控制（默认启用）。
+
+**建议**：升级成功完成后，您可以**选择性地禁用此标志**，以防止迁移作业在后续重启时运行。但这**不是必需的** —— 首次成功运行后，迁移会自动检测所有数据是否已迁移，并变为空操作（不执行任何操作）：
+
+```yaml
+# 成功迁移后禁用
+DATASET_VERSION_ITEMS_TOTAL_MIGRATION_ENABLED: false
+```
+
+### 3. 惰性迁移（可选数据校准）
+由 `DATASET_VERSIONING_MIGRATION_LAZY_ENABLED` 控制的可选安全机制（默认禁用）。
+
+**何时启用**：仅在迁移期间由于并发写入导致数据遗漏时使用。这处理了在迁移过程中创建的数据集未被 Liquibase 迁移处理的边缘情况。
+
+**工作原理**：启用后，每次数据集 CRUD 操作都会检查该数据集是否已迁移。如果未迁移，会在该操作期间自动迁移。这意味着您只需通过 UI 或 API 访问未迁移的数据集，它就会自动完成迁移。
+
+**使用方法**：如果您知道某个特定数据集未迁移，可临时启用此标志并访问该数据集。建议在所有数据集对齐（拥有第一个版本）后禁用此标志，但这**不是强制要求** —— 检查仅针对被访问的数据集运行，对于已迁移的数据集会变为空操作（检查会发现它们已迁移并跳过）。
+
+## 迁移期间的预期行为
+
+### 首次启动 1.9.92+ 版本
+
+**预期时间线**：迁移通常需要 **2-10 分钟**，由于数据处理需求，比标准 Liquibase 迁移时间更长。
+
+在此期间，您可能会在日志中看到类似以下的瞬态错误：
+
+```
+Causing: liquibase.exception.DatabaseException: ClickHouse exception, code: 159, host: clickhouse-opik-clickhouse, port: 8123; Read timed out [Failed SQL: (159) INSERT INTO opik_prod.dataset_item_versions
+```
+
+<Callout intent="info">
+  **这些错误是预期的且是瞬态的。** 系统会在迁移过程完成后自动恢复。无需人工干预。
+</Callout>
+
+### 迁移流程时间线
+
+自动迁移按以下顺序执行：
+
+1. **应用启动** (t=0s)
+2. **Liquibase 迁移开始**（立即）
+   - 迁移 ClickHouse 中的数据集模式
+   - 持续时间：2-10 分钟（取决于数据量）
+3. **启动延迟**（默认：应用启动后 30 秒）
+4. **MySQL 计数器迁移开始**（启动延迟后）
+   - 分批处理数据集版本
+   - 更新 MySQL 中的 `items_total` 字段
+5. **迁移完成**，自动执行，无停机时间
+
+## 配置选项
+
+所有配置通过环境变量完成。**默认值适用于大多数部署，无需更改。**
+
+### MySQL 计数器迁移（建议完成后禁用）
+
+控制 MySQL 数据集版本计数器迁移。**升级成功完成后应禁用此选项。**
+
+| 环境变量 | 默认值 | 描述 |
+|---------------------|---------|-------------|
+| `DATASET_VERSION_ITEMS_TOTAL_MIGRATION_ENABLED` | `true` | 启动时启用 MySQL 计数器迁移。**成功升级后禁用。** |
+| `DATASET_VERSION_ITEMS_TOTAL_MIGRATION_BATCH_SIZE` | `100` | 每批处理的数据集版本数量 |
+| `DATASET_VERSION_ITEMS_TOTAL_MIGRATION_LOCK_TIMEOUT_SECONDS` | `3600` | 锁超时时间（秒）（1 小时） |
+| `DATASET_VERSION_ITEMS_TOTAL_MIGRATION_STARTUP_DELAY_SECONDS` | `30` | 启动后开始迁移前的延迟时间 |
+| `DATASET_VERSION_ITEMS_TOTAL_MIGRATION_JOB_TIMEOUT_SECONDS` | `3600` | 整个迁移作业的最大时间（1 小时） |
+
+### 惰性迁移（可选数据校准）
+
+控制可能在并发写入期间遗漏的数据集的可选数据校准。**仅在怀疑迁移期间有数据遗漏时启用。**
+
+| 环境变量 | 默认值 | 描述 |
+|---------------------|---------|-------------|
+| `DATASET_VERSIONING_MIGRATION_LAZY_ENABLED` | `false` | 启用惰性迁移以校准遗漏的数据集（首次访问时迁移） |
+
+## 迁移后步骤
+
+### 步骤 1：验证迁移完成
+
+监控后端日志以确认成功完成：
+
+```bash
+# Kubernetes
+kubectl logs -n opik deployment/opik-backend -f | grep -i "migration"
+
+# Docker Compose
+docker-compose logs -f backend | grep -i "migration"
+```
+
+查找完成消息：
+
+```
+Dataset version items_total migration completed successfully
+```
+
+### 步骤 2：可选禁用 MySQL 计数器迁移
+
+看到完成消息后，您可以**选择性地禁用 MySQL 计数器迁移标志**。这不是必需的，因为迁移在首次成功运行后会自动变为空操作，但您可以选择禁用它以保持清晰：
+
+```yaml
+# Docker Compose
+services:
+  backend:
+    environment:
+      - DATASET_VERSION_ITEMS_TOTAL_MIGRATION_ENABLED=false
+```
+
+```yaml
+# Kubernetes/Helm
+component:
+  backend:
+    env:
+      DATASET_VERSION_ITEMS_TOTAL_MIGRATION_ENABLED: "false"
+```
+
+如果选择禁用，请重启后端服务以应用更改。
+
+### 步骤 3：验证数据完整性
+
+迁移完成后，验证以下内容：
+1. 您的数据集可访问且包含所有预期数据
+2. 每个数据集在 UI 或 API 中都有第一个版本（版本 1）
+
+#### 附加验证查询
+
+您可以运行以下查询来验证迁移是否成功完成：
+
+**验证 ClickHouse 表之间的项目计数是否匹配：**
+
+```sql
+-- 两个查询应返回相同的计数
+SELECT count(distinct id) from dataset_items;
+SELECT count(distinct id) from dataset_item_versions;
+```
+
+**验证所有 MySQL 数据集版本计数器已更新：**
+
+```sql
+-- 应返回空结果集（0 行）
+-- 返回的任何行表示版本的 items_total 迁移不完整
+SELECT count(id)
+FROM dataset_versions
+WHERE items_total = -1;
+```
+
+**如需全面验证**，请参考 [test_dataset_versioning_migration.sql](https://github.com/comet-ml/opik/blob/main/apps/opik-backend/src/main/resources/liquibase/test_dataset_versioning_migration.sql) 脚本，其中包含以下附加检查：
+- 验证所有数据集是否已创建版本 1
+- 验证 'latest' 标签是否正确分配
+- 检查数据集元数据完整性
+- 确认 ClickHouse 数据一致性
+
+## 故障排除与恢复
+
+### 场景 1：迁移时间超过预期
+
+**症状：**
+- 迁移运行超过 10 分钟
+- 长时间后日志中无完成消息
+
+**根本原因：**
+- 数据集项目数量非常大
+- ClickHouse 或 MySQL 性能问题
+- 资源限制（CPU、内存、磁盘 I/O）
+
+**恢复步骤：**
+
+1. **检查迁移是否仍在进行：**
+   ```bash
+   # 监控后端日志查看进度
+   kubectl logs -n opik deployment/opik-backend -f | grep -i "migration"
+   ```
+
+2. **如果迁移卡住，增加超时时间：**
+   ```yaml
+   # 为大型部署扩展超时时间
+   DATASET_VERSION_ITEMS_TOTAL_MIGRATION_LOCK_TIMEOUT_SECONDS: "7200"  # 2 小时
+   DATASET_VERSION_ITEMS_TOTAL_MIGRATION_JOB_TIMEOUT_SECONDS: "7200"   # 2 小时
+   ```
+
+3. **检查数据库健康状态：**
+   ```bash
+   # 验证 ClickHouse 是否响应
+   kubectl exec -it chi-opik-clickhouse-cluster-0-0-0 -- clickhouse-client -q "SELECT 1"
+   
+   # 检查 MySQL 连接
+   kubectl exec -it mysql-pod -- mysql -u opik -p -e "SELECT 1"
+   ```
+
+4. **调整配置后重启后端服务：**
+   ```bash
+   # Kubernetes
+   kubectl rollout restart deployment/opik-backend -n opik
+   
+   # Docker Compose
+   docker-compose restart backend
+   ```
+
+### 场景 2：迁移期间的瞬态超时错误
+
+**症状：**
+```
+liquibase.exception.DatabaseException: ClickHouse exception, code: 159
+Read timed out
+```
+
+**发生了什么：**
+
+这些超时错误在迁移过程中是**预期的且是瞬态的**。它们发生的原因是：
+- Liquibase 迁移正在向 ClickHouse 大量写入数据
+- 数据迁移期间的临时资源竞争
+- 2-10 分钟迁移窗口内的正常行为
+
+**恢复步骤：**
+
+<Callout intent="success">
+  **只需等待迁移完成。** 这些错误是临时的，系统会自动恢复。无需人工干预。
+</Callout>
+
+**如果错误持续超过 15-20 分钟：**
+
+1. **在日志中检查迁移进度：**
+   ```bash
+   # Kubernetes
+   kubectl logs -n opik deployment/opik-backend -f | grep -i "migration"
+   
+   # Docker Compose
+   docker-compose logs -f backend | grep -i "migration"
+   ```
+
+2. **验证 ClickHouse 是否响应：**
+   ```bash
+   # 检查 ClickHouse 是否健康
+   kubectl exec -it chi-opik-clickhouse-cluster-0-0-0 -- clickhouse-client -q "SELECT 1"
+   ```
+
+3. **如果 ClickHouse 无响应，检查资源：**
+   ```bash
+   # 检查 ClickHouse CPU 和内存使用情况
+   kubectl top pod -n opik | grep clickhouse
+   ```
+
+4. **仅当 ClickHouse 严重资源受限时，考虑在迁移期间临时增加资源。**
+
+### 场景 3：迁移后数据丢失
+
+**症状：**
+- 部分数据集未迁移
+- 用户报告数据不完整
+
+**根本原因：**
+- 迁移期间的并发写入
+- 迁移作业在完成前被中断
+
+**恢复步骤：**
+
+1. **启用惰性迁移**以校准遗漏数据：
+   ```yaml
+   # Docker Compose
+   services:
+     backend:
+       environment:
+         - DATASET_VERSIONING_MIGRATION_LAZY_ENABLED=true
+   ```
+   
+   ```yaml
+   # Kubernetes/Helm
+   component:
+     backend:
+       env:
+         DATASET_VERSIONING_MIGRATION_LAZY_ENABLED: "true"
+   ```
+
+2. **重启后端服务：**
+   ```bash
+   # Kubernetes
+   kubectl rollout restart deployment/opik-backend -n opik
+   
+   # Docker Compose
+   docker-compose restart backend
+   ```
+
+3. **访问受影响的数据集**，通过 UI 或 API 触发这些特定数据集的惰性迁移。
+
+4. **监控日志**查看惰性迁移活动：
+   ```bash
+   kubectl logs -n opik deployment/opik-backend -f | grep -i "lazy.*migration"
+   ```
+
+5. **校准完成后，禁用惰性迁移：**
+   ```yaml
+   DATASET_VERSIONING_MIGRATION_LAZY_ENABLED: "false"
+   ```
+
+6. **重启后端**以应用更改。
+
+### 场景 4：无法禁用迁移标志
+
+**症状：**
+- 禁用标志后迁移仍继续运行
+- 每次重启都出现完成消息
+
+**根本原因：**
+- 配置未正确应用
+- 使用了错误的环境变量名
+- 配置更改后未重启后端
+
+**恢复步骤：**
+
+1. **验证确切的环境变量名：**
+   ```yaml
+   # 正确的变量名
+   DATASET_VERSION_ITEMS_TOTAL_MIGRATION_ENABLED: "false"
+   ```
+
+2. **检查配置是否已应用：**
+   ```bash
+   # Kubernetes - 检查环境变量
+   kubectl get pod -n opik -l app=opik-backend -o jsonpath='{.items[0].spec.containers[0].env[*]}'
+   
+   # Docker Compose - 检查容器环境
+   docker-compose exec backend env | grep DATASET_VERSION
+   ```
+
+3. **确保配置更改后已重启后端：**
+   ```bash
+   # Kubernetes
+   kubectl rollout restart deployment/opik-backend -n opik
+   kubectl rollout status deployment/opik-backend -n opik
+   
+   # Docker Compose
+   docker-compose restart backend
+   ```
+
+4. **监控日志确认迁移已跳过：**
+   ```bash
+   kubectl logs -n opik deployment/opik-backend -f | grep -i "migration"
+   ```
+
+   您应该看到指示迁移已禁用或跳过的日志。
+
+## 最佳实践
+
+### 迁移前
+
+1. **在升级到 1.9.92+ 版本前备份数据库**
+   - 参见 [高级 ClickHouse 备份](/self-host/backup) 指南
+   - 同时备份 MySQL 数据
+
+2. **审查资源分配：**
+   - 确保有足够的 CPU、内存和磁盘空间
+   - 考虑 2-10 分钟的迁移窗口
+
+3. **规划迁移窗口：**
+   - 在低流量时段安排升级
+   - 通知用户预期的 2-10 分钟迁移时间
+
+### 迁移期间
+
+1. **在首次启动期间积极监控日志**
+2. **迁移进行中不要重启后端**
+3. **如出现问题，验证数据库连接性**
+
+### 迁移后
+
+1. **通过检查日志中的成功消息验证完成**
+2. **可选禁用 MySQL items_total 迁移标志**（不是必需的 —— 首次运行后变为空操作）
+3. **使用验证查询验证数据完整性：**
+   - 比较 ClickHouse 表之间的项目计数
+   - 验证所有 MySQL 计数器已更新（无 `items_total = -1`）
+   - 通过 UI 和 API 测试数据集访问
+4. **保持惰性迁移禁用**，除非需要数据校准
+
+## 监控迁移进度
+
+### 检查迁移状态
+
+监控后端日志以跟踪迁移进度：
+
+```bash
+# Kubernetes
+kubectl logs -n opik deployment/opik-backend -f | grep -i "migration"
+
+# Docker Compose
+docker-compose logs -f backend | grep -i "migration"
+```
+
+### 预期日志消息
+
+迁移期间，您应该看到指示以下内容的日志：
+
+```
+Starting dataset versioning items_total migration...
+Processing dataset versions batch...
+Migration completed successfully, processed X dataset versions
+Dataset version items_total migration completed successfully
+```
+
+## 附加资源
+
+- [故障排除](/self-host/troubleshooting) - 通用故障排除指南
+- [扩展 Opik](/self-host/scaling) - 性能优化指南
+- [Kubernetes 部署](/self-host/kubernetes) - Helm chart 配置
+- [高级 ClickHouse 备份](/self-host/backup) - 数据库备份流程

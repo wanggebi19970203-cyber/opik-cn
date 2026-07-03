@@ -16,7 +16,7 @@ class GEvalScoreFormat(pydantic.BaseModel):
 
 
 def _freeze_for_cache(value: Any) -> Any:
-    """Convert nested structures into hashable representations for caching."""
+    """将嵌套结构转换为可哈希的表示形式以用于缓存。"""
 
     if isinstance(value, dict):
         return tuple(
@@ -31,25 +31,24 @@ def _freeze_for_cache(value: Any) -> Any:
 
 class GEval(base_metric.BaseMetric):
     """
-    Generalised evaluation metric that prompts an LLM to grade another LLM output.
+    通用评估指标，通过提示 LLM 对另一个 LLM 的输出进行评分。
 
-    GEval builds a reusable chain-of-thought using the provided
-    ``task_introduction`` and ``evaluation_criteria`` prompts, then requests a
-    final score and rationale for each evaluated output.
+    GEval 使用提供的 ``task_introduction`` 和 ``evaluation_criteria`` 提示构建
+    可复用的思维链，然后为每个被评估的输出请求最终分数和理由。
 
     Args:
-        task_introduction: Instruction describing the evaluator's persona/purpose.
-        evaluation_criteria: Detailed rubric presented to the evaluator.
-        model: Optional model identifier or ``OpikBaseModel`` for the judge.
-        name: Display name for the metric result. Defaults to ``"g_eval_metric"``.
-        track: Whether to automatically track metric results. Defaults to ``True``.
-        project_name: Optional tracking project name.
-        temperature: Sampling temperature forwarded to the judge model.
-        seed: Optional seed for reproducible generation (if supported by the model).
-        reasoning_effort: Optional reasoning effort level for the model. Applies to
-            providers/models that expose a reasoning_effort parameter (e.g. OpenAI
-            gpt-5 family). Supported values typically include "minimal", "low",
-            "medium", "high". Defaults to None (provider default applies — typically "medium" for OpenAI reasoning models). Pass explicitly if you want to cut token spend on reasoning.
+        task_introduction: 描述评估者角色/目的的指令。
+        evaluation_criteria: 呈现给评估者的详细评分标准。
+        model: 可选的模型标识符或 ``OpikBaseModel`` 实例，用于评判。
+        name: 指标结果的显示名称。默认为 ``"g_eval_metric"``。
+        track: 是否自动追踪指标结果。默认为 ``True``。
+        project_name: 可选的追踪项目名称。
+        temperature: 传递给评判模型的采样温度。
+        seed: 可选的随机种子，用于可复现的生成（如果模型支持）。
+        reasoning_effort: 可选的模型推理努力级别。适用于暴露 reasoning_effort 参数的
+            提供商/模型（如 OpenAI gpt-5 系列）。支持的值通常包括 "minimal"、"low"、
+            "medium"、"high"。默认为 None（使用提供商默认值——OpenAI 推理模型通常为 "medium"）。
+            如果需要减少推理 token 消耗，请显式传递此参数。
 
     Example:
         >>> from opik.evaluation.metrics.llm_judges.g_eval.metric import GEval
@@ -203,15 +202,14 @@ class GEval(base_metric.BaseMetric):
         **ignored_kwargs: Any,
     ) -> score_result.ScoreResult:
         """
-        Calculate the G-Eval score for the given LLM's output.
+        计算给定 LLM 输出的 G-Eval 分数。
 
         Args:
-            output: The LLM's output to evaluate.
-            **ignored_kwargs: Additional keyword arguments that are ignored.
+            output: 待评估的 LLM 输出。
+            **ignored_kwargs: 被忽略的额外关键字参数。
 
         Returns:
-            score_result.ScoreResult: A ScoreResult object containing the G-Eval score
-            (between 0.0 and 1.0) and a reason for the score.
+            score_result.ScoreResult: 包含 G-Eval 分数（0.0 到 1.0 之间）和分数原因的 ScoreResult 对象。
         """
         messages = template.build_query_messages(
             task_introduction=self.task_introduction,
@@ -251,8 +249,7 @@ class GEval(base_metric.BaseMetric):
         **ignored_kwargs: Any,
     ) -> score_result.ScoreResult:
         """
-        Async variant of :meth:`score`, evaluating the provided LLM output using
-        the configured judge model and returning a ``ScoreResult``.
+        :meth:`score` 的异步版本，使用配置的评判模型评估提供的 LLM 输出并返回 ``ScoreResult``。
         """
         messages = template.build_query_messages(
             task_introduction=self.task_introduction,
@@ -289,15 +286,15 @@ class GEval(base_metric.BaseMetric):
 
 class GEvalPreset(GEval):
     """
-    Pre-configured GEval variant with author-provided prompt templates.
+    预配置的 GEval 变体，带有作者提供的提示模板。
 
     Args:
-        preset: Key name from ``GEVAL_PRESETS`` describing the evaluation rubric.
-        model: Optional model identifier or ``OpikBaseModel`` instance.
-        track: Whether to automatically track metric results. Defaults to ``True``.
-        project_name: Optional tracking project name.
-        temperature: Sampling temperature forwarded to the judge model.
-        name: Optional override for the metric name (defaults to preset name).
+        preset: 来自 ``GEVAL_PRESETS`` 的键名，描述评估标准。
+        model: 可选的模型标识符或 ``OpikBaseModel`` 实例。
+        track: 是否自动追踪指标结果。默认为 ``True``。
+        project_name: 可选的追踪项目名称。
+        temperature: 传递给评判模型的采样温度。
+        name: 可选的指标名称覆盖（默认为预设名称）。
 
     Example:
         >>> from opik.evaluation.metrics.llm_judges.g_eval.metric import GEvalPreset

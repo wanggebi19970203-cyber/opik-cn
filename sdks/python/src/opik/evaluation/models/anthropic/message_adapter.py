@@ -1,4 +1,4 @@
-"""Adapt OpenAI-style messages to Anthropic API conventions."""
+"""将 OpenAI 风格消息适配为 Anthropic API 约定。"""
 
 from __future__ import annotations
 
@@ -10,28 +10,23 @@ import pydantic
 
 LOGGER = logging.getLogger(__name__)
 
-# Parameters accepted by anthropic.messages.create().
+# anthropic.messages.create() 接受的参数。
 #
-# Notable omission — `reasoning_effort` (OpenAI-shape extended-thinking
-# knob). It's deliberately not listed, so `filter_unsupported_params`
-# drops it silently. The LiteLLM path translates `reasoning_effort` →
-# `thinking={"type": "enabled", "budget_tokens": N}` (and applies a
-# conditional drop when an explicit non-1 `temperature` would conflict —
-# see `LiteLLMChatModel._remove_unnecessary_not_supported_params`). The
-# native path here intentionally does NOT mirror that translation: the
-# effort→budget mapping is LiteLLM's convention, not Anthropic's, so
-# encoding it here would tie us to LiteLLM's choices.
+# 显著遗漏 —— `reasoning_effort`（OpenAI 风格的扩展思考控制参数）。
+# 故意不列出，以便 `filter_unsupported_params` 静默丢弃它。LiteLLM 路径
+# 将 `reasoning_effort` → `thinking={"type": "enabled", "budget_tokens": N}`
+# （并在显式非 1 的 `temperature` 冲突时条件性丢弃 —— 参见
+# `LiteLLMChatModel._remove_unnecessary_not_supported_params`）。此处的原生路径
+# 故意不镜像该转换：effort→budget 映射是 LiteLLM 的约定而非 Anthropic 的，
+# 在此编码会将我们绑定到 LiteLLM 的选择。
 #
-# Practical consequence — for users who want extended thinking on the
-# native adapter, pass `thinking={...}` directly (you'd also need to
-# add it to this set so it isn't filtered) instead of relying on
-# `reasoning_effort`. Same-model, swap-adapters behavior therefore
-# diverges when the caller sets `reasoning_effort` with a non-
-# conflicting temperature: native drops it, LiteLLM keeps it. See the
-# discussion on the `temperature=0` rationale in
-# `suite_evaluators/agentic/loop.py` for why this hasn't surfaced via
-# the agentic judge (the loop pins `temperature=0`, which forces both
-# paths into the drop branch and hides the asymmetry).
+# 实际影响 —— 对于希望在原生适配器上使用扩展思考的用户，请直接传递
+# `thinking={...}`（还需将其添加到此集合中以免被过滤），而非依赖
+# `reasoning_effort`。因此，当调用方设置 `reasoning_effort` 且温度不冲突时，
+# 同模型切换适配器的行为会 diverge：原生丢弃，LiteLLM 保留。参见
+# `suite_evaluators/agentic/loop.py` 中关于 `temperature=0` 理由的讨论，
+# 了解为何此问题未通过 agentic judge 暴露（循环固定 `temperature=0`，
+# 迫使两条路径进入丢弃分支，隐藏了不对称性）。
 _SUPPORTED_PARAMS: frozenset[str] = frozenset(
     {
         "model",
@@ -50,24 +45,18 @@ _SUPPORTED_PARAMS: frozenset[str] = frozenset(
 
 
 def _parse_tool_call_arguments(arguments: Any) -> Dict[str, Any]:
-    """Decode an OpenAI tool call's `arguments` field into a dict.
+    """将 OpenAI 工具调用的 `arguments` 字段解码为字典。
 
-    OpenAI emits `arguments` as a JSON-encoded string; Anthropic's
-    `tool_use.input` is specified as a JSON object — top-level
-    arrays, scalars, or nulls are rejected by the API. This helper
-    only returns dicts:
+    OpenAI 将 `arguments` 作为 JSON 编码字符串发出；Anthropic 的 `tool_use.input`
+    指定为 JSON 对象 —— 顶层的数组、标量或 null 会被 API 拒绝。此辅助函数仅返回字典：
 
-    - Dict in → dict out.
-    - JSON-encoded dict string → decoded dict.
-    - Anything else (top-level list/scalar/null, malformed JSON,
-      non-string non-dict values) → empty dict.
+    - 字典输入 → 字典输出。
+    - JSON 编码的字典字符串 → 解码后的字典。
+    - 其他任何值（顶层列表/标量/null、格式错误的 JSON、非字符串非字典值）→ 空字典。
 
-    We fall back to `{}` rather than raising. The Anthropic SDK will
-    surface a schema-mismatch error against the tool's `input_schema`
-    if the call actually needed structured arguments, which is more
-    actionable than "your tool arguments aren't an object." Forwarding
-    a list/scalar here, on the other hand, would short-circuit the
-    SDK's validation with an opaque 400.
+    回退到 `{}` 而非抛出异常。如果调用确实需要结构化参数，Anthropic SDK 会针对
+    工具的 `input_schema` 暴露模式不匹配错误，这比"你的工具参数不是对象"更具可操作性。
+    另一方面，在此转发列表/标量会以不透明的 400 错误短路 SDK 的验证。
     """
     if isinstance(arguments, dict):
         return arguments
@@ -84,27 +73,22 @@ def _parse_tool_call_arguments(arguments: Any) -> Dict[str, Any]:
 def normalize_messages(
     messages: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """Translate OpenAI-shape conversation history to Anthropic shape.
+    """将 OpenAI 格式的对话历史翻译为 Anthropic 格式。
 
-    Two transformations are required for any history that includes
-    tool round-trips (i.e. the agentic loop's follow-up turns):
+    对于包含工具往返（即 agentic 循环的后续轮次）的历史，需要两种转换：
 
-    1. `{"role": "tool", "tool_call_id": X, "content": ...}` becomes a
-       `{"type": "tool_result", "tool_use_id": X, "content": ...}`
-       block inside a user message. Anthropic rejects the `tool` role
-       outright ("Allowed roles are 'user' or 'assistant'").
+    1. `{"role": "tool", "tool_call_id": X, "content": ...}` 变为用户消息内的
+       `{"type": "tool_result", "tool_use_id": X, "content": ...}` 块。
+       Anthropic 直接拒绝 `tool` 角色（"Allowed roles are 'user' or 'assistant'"）。
 
-    2. `{"role": "assistant", "content": ..., "tool_calls": [...]}`
-       becomes an assistant message whose `content` is a list of
-       blocks — optional `text` block first, then one `tool_use` block
-       per call (with the JSON-decoded `input`).
+    2. `{"role": "assistant", "content": ..., "tool_calls": [...]}` 变为 assistant 消息，
+       其 `content` 为块列表 —— 可选的 `text` 块在前，然后每次调用一个 `tool_use` 块
+       （带 JSON 解码的 `input`）。
 
-    Consecutive tool messages are coalesced into a single user message
-    with multiple `tool_result` blocks — Anthropic requires this when
-    the prior assistant turn emitted multiple `tool_use` blocks. The
-    rest of the message shapes (system, plain user, assistant text)
-    pass through unchanged so the diff against pre-loop callers stays
-    small.
+    连续的 tool 消息合并为包含多个 `tool_result` 块的单条用户消息 ——
+    当前一个 assistant 轮次发出多个 `tool_use` 块时，Anthropic 要求如此。
+    其他消息形状（system、普通 user、assistant 文本）原样传递，
+    以保持与循环前调用方的差异最小。
     """
     result: List[Dict[str, Any]] = []
     pending_tool_results: List[Dict[str, Any]] = []
@@ -132,8 +116,7 @@ def normalize_messages(
             tool_calls = msg.get("tool_calls") or []
             text_content = msg.get("content")
             if not tool_calls:
-                # Pure text assistant message — keep the simple
-                # string-content shape Anthropic accepts.
+                # 纯文本 assistant 消息 —— 保持 Anthropic 接受的简单字符串内容格式。
                 result.append({"role": "assistant", "content": text_content})
                 continue
             blocks: List[Dict[str, Any]] = []
@@ -154,10 +137,8 @@ def normalize_messages(
             result.append({"role": "assistant", "content": blocks})
             continue
 
-        # Pass-through for any other role (`user`, plus anything
-        # `extract_system_messages` left in place — system is normally
-        # split off before this runs, but it's not catastrophic if it
-        # ends up here).
+        # 透传任何其他角色（`user`，以及 `extract_system_messages` 遗留的内容
+        # —— system 通常在此运行前已分离，但即使出现在此处也无大碍）。
         result.append(msg)
 
     flush_tool_results()
@@ -167,10 +148,9 @@ def normalize_messages(
 def extract_system_messages(
     messages: List[Dict[str, Any]],
 ) -> Tuple[Optional[str], List[Dict[str, Any]]]:
-    """Separate system messages from conversation messages.
+    """将 system 消息与对话消息分离。
 
-    Anthropic requires system content as a top-level parameter rather than
-    a message with role="system".
+    Anthropic 要求 system 内容作为顶层参数而非 role="system" 的消息。
     """
     system_parts: List[str] = []
     non_system: List[Dict[str, Any]] = []
@@ -184,11 +164,10 @@ def extract_system_messages(
 
 
 def pydantic_to_output_config(model: Type[pydantic.BaseModel]) -> Dict[str, Any]:
-    """Build an Anthropic ``output_config`` dict from a pydantic model.
+    """从 pydantic 模型构建 Anthropic ``output_config`` 字典。
 
-    Uses the native ``json_schema`` output format (SDK >=0.85) which
-    constrains the model to produce JSON matching the schema directly,
-    without the tool_use indirection.
+    使用原生 ``json_schema`` 输出格式（SDK >=0.85），约束模型直接生成
+    匹配 schema 的 JSON，无需 tool_use 间接层。
     """
     schema = model.model_json_schema()
     schema.pop("title", None)
@@ -223,19 +202,17 @@ def filter_unsupported_params(
     return filtered
 
 
-# OpenAI accepts `tool_choice` as a bare string ("auto" / "none" /
-# "required") or as an object naming a specific function; Anthropic
-# requires the object form in all cases and uses different keys. The
-# agentic loop emits OpenAI-style values because that's the dominant
-# convention, so we translate at the adapter seam rather than
-# threading provider awareness up through the caller.
+# OpenAI 接受 `tool_choice` 为裸字符串（"auto" / "none" / "required"）
+# 或命名特定函数的对象；Anthropic 在所有情况下都要求对象形式且使用不同的键。
+# agentic 循环发出 OpenAI 风格的值因为这是主流约定，因此我们在适配器边界翻译，
+# 而非将提供商感知穿透到调用方。
 #
-# Mapping rationale:
-# - "auto" → {"type": "auto"} (let the model decide)
-# - "none" → {"type": "none"} (forbid tool use)
-# - "required" → {"type": "any"} (force *some* tool, no specific one)
+# 映射理由：
+# - "auto" → {"type": "auto"}（让模型决定）
+# - "none" → {"type": "none"}（禁止使用工具）
+# - "required" → {"type": "any"}（强制使用某个工具，不指定具体哪个）
 # - {"type": "function", "function": {"name": X}} → {"type": "tool",
-#   "name": X} (force a specific tool by name)
+#   "name": X}（按名称强制使用特定工具）
 _OPENAI_TO_ANTHROPIC_TOOL_CHOICE_STR: Dict[str, Dict[str, str]] = {
     "auto": {"type": "auto"},
     "none": {"type": "none"},
@@ -244,20 +221,18 @@ _OPENAI_TO_ANTHROPIC_TOOL_CHOICE_STR: Dict[str, Dict[str, str]] = {
 
 
 def _normalize_one_tool(tool: Any) -> Any:
-    """Translate one OpenAI-style tool spec to Anthropic's shape.
+    """将一个 OpenAI 风格的工具规范翻译为 Anthropic 格式。
 
-    OpenAI:
+    OpenAI：
         {"type": "function", "function": {
             "name": ..., "description": ..., "parameters": {...}
         }}
-    Anthropic (`type: "custom"` discriminator required by the newer
-    schema; the `function` value is rejected by the API):
+    Anthropic（新 schema 要求 `type: "custom"` 鉴别器；API 拒绝 `function` 值）：
         {"type": "custom", "name": ..., "description": ...,
          "input_schema": {...}}
 
-    Already-Anthropic-shaped tools (anything that isn't OpenAI's
-    `type=function` wrapper) pass through unchanged so callers who
-    hand-build the native spec aren't disturbed.
+    已经是 Anthropic 格式的工具（任何非 OpenAI `type=function` 包装器的内容）
+    原样传递，以免干扰手动构建原生规范的调用方。
     """
     if not isinstance(tool, dict):
         return tool
@@ -266,9 +241,8 @@ def _normalize_one_tool(tool: Any) -> Any:
     function = tool.get("function") or {}
     name = function.get("name")
     if not isinstance(name, str):
-        # Malformed OpenAI spec — let the SDK surface the error
-        # rather than silently rewriting it into something Anthropic
-        # would also reject.
+        # 格式错误的 OpenAI 规范 —— 让 SDK 暴露错误，而非静默重写为
+        # Anthropic 同样会拒绝的内容。
         return tool
     translated: Dict[str, Any] = {
         "type": "custom",
@@ -282,13 +256,11 @@ def _normalize_one_tool(tool: Any) -> Any:
 
 
 def extract_tool_names(tools: Any) -> List[str]:
-    """Pull the `name` field out of each tool spec.
+    """从每个工具规范中提取 `name` 字段。
 
-    Tolerates both OpenAI shape (`tool["function"]["name"]`) and the
-    Anthropic-native shape (`tool["name"]`) so callers can use this
-    before or after `normalize_tools` runs. Skips entries missing a
-    name rather than raising — the SDK will surface those errors via
-    its own validation.
+    兼容 OpenAI 格式（`tool["function"]["name"]`）和 Anthropic 原生格式
+    （`tool["name"]`），因此调用方可在 `normalize_tools` 运行前后使用。
+    跳过缺少名称的条目而非抛出异常 —— SDK 会通过自身的验证暴露这些错误。
     """
     if not isinstance(tools, list):
         return []
@@ -307,10 +279,9 @@ def extract_tool_names(tools: Any) -> List[str]:
 
 
 def normalize_tools(tools: Any) -> Any:
-    """Translate a list of OpenAI-style tool specs to Anthropic shape.
+    """将 OpenAI 风格的工具规范列表翻译为 Anthropic 格式。
 
-    Non-list values pass through untouched so callers passing `None`
-    or other sentinel-ish values aren't surprised.
+    非列表值原样传递，以免传入 `None` 或其他哨兵值的调用方受到意外影响。
     """
     if not isinstance(tools, list):
         return tools
@@ -318,17 +289,15 @@ def normalize_tools(tools: Any) -> Any:
 
 
 def normalize_tool_choice(value: Any) -> Any:
-    """Translate OpenAI-style `tool_choice` values into Anthropic's
-    object form. Pass-through for already-correct shapes and for
-    unrecognized values (let the SDK surface the error rather than
-    silently dropping it).
+    """将 OpenAI 风格的 `tool_choice` 值翻译为 Anthropic 对象形式。
+    已正确格式和无法识别的值原样传递（让 SDK 暴露错误而非静默丢弃）。
     """
     if isinstance(value, str):
         return _OPENAI_TO_ANTHROPIC_TOOL_CHOICE_STR.get(value, value)
     if isinstance(value, dict):
-        # OpenAI's "force this specific function" shape:
+        # OpenAI 的"强制使用此特定函数"格式：
         #   {"type": "function", "function": {"name": "read"}}
-        # Anthropic equivalent:
+        # Anthropic 等效格式：
         #   {"type": "tool", "name": "read"}
         if value.get("type") == "function":
             function = value.get("function") or {}

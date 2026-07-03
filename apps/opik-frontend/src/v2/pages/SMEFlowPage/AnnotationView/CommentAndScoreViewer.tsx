@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useHotkeys } from "react-hotkeys-hook";
 import { CircleCheck, Eye } from "lucide-react";
 import FeedbackScoresEditor from "@/v2/pages-shared/traces/FeedbackScoresEditor/FeedbackScoresEditor";
@@ -29,6 +30,7 @@ const isFromEditableElement = (keyboardEvent: KeyboardEvent): boolean => {
 };
 
 const CommentAndScoreViewer: React.FC = () => {
+  const { t } = useTranslation();
   const {
     currentItem,
     currentAnnotationState,
@@ -114,7 +116,7 @@ const CommentAndScoreViewer: React.FC = () => {
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-muted-slate">
         <CircleCheck className="size-5 text-success" />
         <p className="comet-body-xs max-w-[250px]">
-          This item has already been scored by the required number of annotators
+          {t("sme.commentAndScoreViewer.alreadyScoredByOthers")}
         </p>
       </div>
     );
@@ -125,7 +127,7 @@ const CommentAndScoreViewer: React.FC = () => {
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center text-muted-slate">
         <Eye className="size-5 text-orange-400" />
         <p className="comet-body-xs max-w-[250px]">
-          This item is currently being reviewed by another annotator
+          {t("sme.commentAndScoreViewer.beingReviewedByOther")}
         </p>
       </div>
     );
@@ -136,7 +138,7 @@ const CommentAndScoreViewer: React.FC = () => {
       {canAnnotateTraceSpanThread && (
         <>
           <div className="flex items-center justify-between gap-1 pb-2">
-            <span className="comet-body-s-accented truncate">Comments</span>
+            <span className="comet-body-s-accented truncate">{t("sme.commentAndScoreViewer.comment")}</span>
             <TooltipWrapper
               content={SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].description}
               hotkeys={[SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].display]}
@@ -150,7 +152,7 @@ const CommentAndScoreViewer: React.FC = () => {
           </div>
           <UserCommentForm.StandaloneTextareaField
             ref={textareaRef}
-            placeholder="Add a comment..."
+            placeholder={t("sme.commentAndScoreViewer.addCommentPlaceholder")}
             value={currentAnnotationState.comment?.text || ""}
             onValueChange={updateComment}
           />
@@ -168,7 +170,7 @@ const CommentAndScoreViewer: React.FC = () => {
             header={
               <div className="flex items-center gap-1 pb-2">
                 <span className="comet-body-s-accented truncate">
-                  Feedback scores
+                  {t("sme.commentAndScoreViewer.feedbackScores")}
                 </span>
                 <ExplainerIcon
                   {...EXPLAINERS_MAP[EXPLAINER_ID.feedback_scores_hotkeys]}

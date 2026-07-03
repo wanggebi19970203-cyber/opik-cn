@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import {
   OPTIMIZER_TYPE,
   METRIC_TYPE,
@@ -128,42 +129,41 @@ export const OPTIMIZATION_MESSAGE_TYPE_OPTIONS = [
 export const OPTIMIZER_OPTIONS = [
   {
     value: OPTIMIZER_TYPE.GEPA,
-    label: "GEPA optimizer",
-    description: "Tries many prompt variations and keeps the best ones.",
+    label: i18next.t("common.constants.optimizations.optimizerOptions.gepa.label"),
+    description: i18next.t("common.constants.optimizations.optimizerOptions.gepa.description"),
   },
   {
     value: OPTIMIZER_TYPE.HIERARCHICAL_REFLECTIVE,
-    label: "Hierarchical Reflective",
-    description: "Analyzes failures and rewrites prompts to fix issues.",
+    label: i18next.t("common.constants.optimizations.optimizerOptions.hierarchicalReflective.label"),
+    description: i18next.t("common.constants.optimizations.optimizerOptions.hierarchicalReflective.description"),
   },
 ];
 
 export const OPTIMIZATION_METRIC_OPTIONS = [
   {
     value: METRIC_TYPE.EQUALS,
-    label: "Equals",
-    description: "Checks for an exact match with the expected output.",
+    label: i18next.t("common.constants.optimizations.metricOptions.equals.label"),
+    description: i18next.t("common.constants.optimizations.metricOptions.equals.description"),
   },
   {
     value: METRIC_TYPE.JSON_SCHEMA_VALIDATOR,
-    label: "JSON Schema Validator",
-    description: "Validates output structure against a JSON schema.",
+    label: i18next.t("common.constants.optimizations.metricOptions.jsonSchemaValidator.label"),
+    description: i18next.t("common.constants.optimizations.metricOptions.jsonSchemaValidator.description"),
   },
   {
     value: METRIC_TYPE.G_EVAL,
-    label: "Custom (G-Eval)",
-    description: "Uses an LLM to score outputs with custom criteria.",
+    label: i18next.t("common.constants.optimizations.metricOptions.gEval.label"),
+    description: i18next.t("common.constants.optimizations.metricOptions.gEval.description"),
   },
   {
     value: METRIC_TYPE.LEVENSHTEIN,
-    label: "Levenshtein",
-    description: "Measures edit distance between output and expected text.",
+    label: i18next.t("common.constants.optimizations.metricOptions.levenshtein.label"),
+    description: i18next.t("common.constants.optimizations.metricOptions.levenshtein.description"),
   },
   {
     value: METRIC_TYPE.NUMERICAL_SIMILARITY,
-    label: "Numerical Similarity",
-    description:
-      "Compares numeric output against a reference value. Closer values score higher.",
+    label: i18next.t("common.constants.optimizations.metricOptions.numericalSimilarity.label"),
+    description: i18next.t("common.constants.optimizations.metricOptions.numericalSimilarity.description"),
   },
 ];
 
@@ -304,9 +304,8 @@ const OPIK_CHATBOT_DATASET_ITEMS: DemoDatasetItem[] = [
 export const OPTIMIZATION_DEMO_TEMPLATES: OptimizationTemplate[] = [
   {
     id: "opik-chatbot",
-    title: "Demo template - Opik Chatbot",
-    description:
-      "Train a chatbot to answer Opik questions and decline off-topic requests",
+    title: i18next.t("common.constants.optimizations.demoTemplate.title"),
+    description: i18next.t("common.constants.optimizations.demoTemplate.description"),
     name: "Opik chatbot optimization",
     dataset_id: "",
     dataset_items: OPIK_CHATBOT_DATASET_ITEMS,

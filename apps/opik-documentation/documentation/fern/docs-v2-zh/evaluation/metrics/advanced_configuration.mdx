@@ -1,0 +1,89 @@
+---
+description: 通过异步评分、评估器温度和 logprob 处理来微调 Opik 指标
+headline: 高级配置 | Opik 文档
+og:description: 使用高级用户控制选项配置 Opik 的指标，实现定制化评估。了解异步评分和对数概率处理。
+og:site_name: Opik 文档
+og:title: 高级配置 - Opik
+title: 高级配置
+---
+
+# 高级配置
+
+Opik 的指标提供了若干高级用户控制选项，使你能够根据工作流程定制评估行为。本指南涵盖最常见的调整方式：异步评分、评估器随机性和对数概率处理。
+
+## 使用 `ascore` 进行异步评分
+
+每个内置指标都继承自 `BaseMetric`，该基类定义了 `score` 的异步对应方法 `ascore`。当你需要在异步管道中运行评估，或者底层提供者（如 LangChain、Ragas）需要事件循环时，请使用该方法。
+
+```python title="Awaiting an async metric"
+import asyncio
+
+from opik.evaluation.metrics import Hallucination
+
+metric = Hallucination()
+
+async def evaluate_async():
+    result = await metric.ascore(
+        input="What is the capital of France?",
+        output="The capital is Berlin.",
+    )
+    return result
+
+score = asyncio.run(evaluate_async())
+print(score.value, score.reason)
+```
+
+在同步代码中，你仍然可以调用 `score` — Opik 会在需要时自动在底层运行异步实现。当与异步框架集成时（FastAPI 端点、流式代理或使用 `nest_asyncio` 的 Notebook），建议使用显式的 `await metric.ascore(...)` 形式。
+
+## 控制评估器温度
+
+基于 GEval 的评估器接受 `temperature` 参数。较低的温度通过保持评估器的确定性来提高可复现性；较高的温度会探索更多评分标准变体，可能发现边界情况。
+
+```python title="Custom temperature"
+from opik.evaluation.metrics import ComplianceRiskJudge
+
+deterministic = ComplianceRiskJudge(temperature=0.0)
+exploratory = ComplianceRiskJudge(temperature=0.4)
+```
+
+Opik 会根据 `(task, criteria, model, completion_kwargs)` 组合缓存评估器的思维链提示。更改 `temperature` 或其他 LiteLLM 关键字参数（如 `top_p`）会产生新的缓存条目，确保实验之间相互隔离。
+
+## 对数概率与评估器模型
+
+当 LiteLLM 后端支持 `logprobs` 和 `top_logprobs` 时，Opik 会自动请求这些参数以稳定 GEval 分数（与原始论文一致）。如果切换到不支持对数概率的模型，指标仍然可以工作 — 分数仅基于原始判断结果计算。
+
+你可以在运行时检查评估器的能力：
+
+```python
+metric = ComplianceRiskJudge(model="gpt-4o-mini")
+print("logprobs" in metric._model.supported_params)
+```
+
+如果需要传递额外的 LiteLLM 选项（例如 `response_format` 或 `frequency_penalty`），请手动实例化 `LiteLLMChatModel` 并将其传递给指标：
+
+```python title="Custom LiteLLM configuration"
+from opik.evaluation.models.litellm import LiteLLMChatModel
+from opik.evaluation.metrics import Hallucination
+
+custom_provider = LiteLLMChatModel(
+    model_name="gpt-4o-mini",
+    temperature=0.2,
+    frequency_penalty=0.3,
+)
+
+metric = Hallucination(model=custom_provider)
+```
+
+由于模型指纹是缓存键的一部分，更改这些关键字参数会强制生成新的评估器评分标准。
+
+## 追踪控制
+
+大多数指标接受 `track` 和 `project_name` 关键字参数，使你能够决定每次运行是否写入 Opik 以及归属于哪个项目：
+
+```python
+metric = DialogueHelpfulnessJudge(track=False)
+```
+
+当在 LLM 评估器指标（如 `Hallucination`、`AnswerRelevance` 或 `DialogueHelpfulnessJudge`）上设置 `track=False` 时，会同时禁用指标的 `score` 方法和评估器使用的底层 LLM 模型调用的追踪。这确保了追踪行为的一致性 — 如果你为某个指标禁用追踪，所有相关的 LLM 调用也会从追踪记录中排除。
+
+在本地运行快速的临时实验时可以禁用追踪，或者设置 `project_name="llm-migration"` 将评估按项目计划分组。

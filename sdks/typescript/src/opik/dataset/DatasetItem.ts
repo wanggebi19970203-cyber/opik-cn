@@ -12,10 +12,10 @@ export type DatasetItemData = JsonNode & {
 };
 
 /**
- * A DatasetItem object representing an item in a dataset.
- * The format is flexible, allowing for additional properties.
+ * 表示数据集中条目的 DatasetItem 对象。
+ * 格式灵活，允许附加属性。
  *
- * @template T The type of custom data stored in the dataset item
+ * @template T 数据集条目中存储的自定义数据类型
  */
 export class DatasetItem<T extends DatasetItemData = DatasetItemData> {
   public readonly id: string;
@@ -55,10 +55,10 @@ export class DatasetItem<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Gets the content of this dataset item as a JSON object.
+   * 以 JSON 对象形式获取此数据集条目的内容。
    *
-   * @param includeId Whether to include the ID in the content
-   * @returns The content as a JSON object, with ID included if true
+   * @param includeId 是否在内容中包含 ID
+   * @returns JSON 对象形式的内容，如果为 true 则包含 ID
    */
   public getContent(includeId: true): T & { id: string };
   public getContent(includeId?: false): T;
@@ -71,8 +71,8 @@ export class DatasetItem<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Computes a hash of the item's content for deduplication.
-   * @returns A promise resolving to the content hash
+   * 计算条目内容的哈希值用于去重。
+   * @returns 解析为内容哈希值的 Promise
    */
   async contentHash(): Promise<string> {
     const content: Record<string, unknown> = { ...this.getContent() };
@@ -99,9 +99,9 @@ export class DatasetItem<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Converts this DatasetItem to the API model format.
+   * 将此 DatasetItem 转换为 API 模型格式。
    *
-   * @returns A DatasetItemWrite object suitable for API operations
+   * @returns 适用于 API 操作的 DatasetItemWrite 对象
    */
   public toApiModel(): DatasetItemWrite {
     return {
@@ -117,10 +117,10 @@ export class DatasetItem<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Creates a DatasetItem from an API model.
+   * 从 API 模型创建 DatasetItem。
    *
-   * @param model The API model to convert
-   * @returns A new DatasetItem instance
+   * @param model 要转换的 API 模型
+   * @returns 新的 DatasetItem 实例
    */
   public static fromApiModel<T extends DatasetItemData = DatasetItemData>(
     model: DatasetItemWrite

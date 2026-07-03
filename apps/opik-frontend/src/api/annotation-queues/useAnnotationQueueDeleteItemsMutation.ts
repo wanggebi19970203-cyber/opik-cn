@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import get from "lodash/get";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import api, {
   ANNOTATION_QUEUES_REST_ENDPOINT,
@@ -34,7 +35,7 @@ const useAnnotationQueueDeleteItemsMutation = () => {
 
     onSuccess: () => {
       toast({
-        description: "Items deleted from annotation queue successfully",
+        description: i18next.t("common:messages.itemsDeletedFromAnnotationQueue"),
       });
     },
     onError: (error: AxiosError) => {
@@ -45,8 +46,8 @@ const useAnnotationQueueDeleteItemsMutation = () => {
       );
 
       toast({
-        title: "Error",
-        description: `Failed to delete items from annotation queue: ${message}`,
+        title: i18next.t("common:labels.error"),
+        description: `${i18next.t("common:messages.failedToDeleteItemsFromAnnotationQueue")}: ${message}`,
         variant: "destructive",
       });
     },

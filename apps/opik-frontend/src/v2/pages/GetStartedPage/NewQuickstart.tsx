@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "@tanstack/react-router";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
+import { useTranslation } from "react-i18next";
 import useLocalStorageState from "use-local-storage-state";
 import AgentOnboardingOverlay from "./AgentOnboarding/AgentOnboardingOverlay";
 import {
@@ -62,6 +63,7 @@ const AgentOnboardingQuickstart: React.FC = () => {
 };
 
 const NewQuickstart: React.FC = () => {
+  const { t } = useTranslation();
   // Variants: "control" = agent onboarding modal with Opik skills tab; "connect-to-ollie" = agent onboarding modal with Connect to Ollie tab; "manual" = skip the modal and render the full integrations page. Undefined (PostHog unavailable) falls back to "control".
   const variant =
     useFeatureFlagVariantKey(AI_ASSISTED_OPIK_SKILLS_FEATURE_FLAG_KEY) ??
@@ -128,7 +130,7 @@ const NewQuickstart: React.FC = () => {
       return (
         <DemoLoadingContent
           onRetry={() => setShowDemoLoading(false)}
-          retryLabel="Back to setup"
+          retryLabel={t("getStarted.demoLoading.backToSetup")}
           onComplete={() => setManualOnboardingDone(true)}
         />
       );

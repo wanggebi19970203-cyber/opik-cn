@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 import { BlueprintValue } from "@/types/agent-configs";
 import { LLM_MESSAGE_ROLE, LLMMessage } from "@/types/llm";
@@ -46,6 +47,7 @@ const BlueprintValuePromptCompact = forwardRef<
     { value, projectId, isEditing = false, onDirtyChange, tone, expanded },
     ref,
   ) => {
+    const { t } = useTranslation("agent-optimization");
     const [draftTemplate, setDraftTemplate] = useState("");
     const [draftMessages, setDraftMessages] = useState<LLMMessage[]>([]);
     const initialTemplate = useRef("");
@@ -165,9 +167,9 @@ const BlueprintValuePromptCompact = forwardRef<
               }
               return true;
             });
-            if (hasEmpty) return "Messages must not be empty";
+            if (hasEmpty) return t("agentOptimization.newFieldEditor.messagesEmptyError");
           } else {
-            if (!draftTemplate.trim()) return "Prompt must not be empty";
+            if (!draftTemplate.trim()) return t("agentOptimization.newFieldEditor.promptEmptyError");
           }
           return null;
         },

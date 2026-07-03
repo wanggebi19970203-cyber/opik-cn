@@ -1,0 +1,98 @@
+---
+description: 从这里开始将 Opik LLM Gateway 集成到你的生成式 AI 应用程序中，使用统一的 API 格式实现集中式 LLM 提供商访问。
+headline: Opik LLM Gateway | Opik 文档
+og:description: 学习如何使用 Opik LLM Gateway 通过一致的 OpenAI 兼容 API 格式集中访问多个 LLM 提供商。
+og:site_name: Opik 文档
+og:title: 集成 Opik LLM Gateway 实现集中式 LLM 访问
+title: 使用 Opik 实现 Opik LLM Gateway 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/opik-llm-gateway
+---
+
+Opik LLM Gateway 是一个轻量级代理服务器，可用于使用 OpenAI 格式查询不同的 LLM API。它专为**开发和测试目的**而设计，提供了一种通过单一端点访问多个 LLM 提供商的集中方式。
+
+## Gateway 概述
+
+LLM gateway 是一个代理服务器，将请求转发到 LLM API 并返回响应。当你希望集中访问 LLM 提供商或使用一致的请求和响应格式从单一端点查询多个 LLM 提供商时，这非常有用。
+
+Opik LLM Gateway 支持 OpenAI 兼容的 API 格式，使其易于与使用 OpenAI API 结构的现有应用程序集成。
+
+<Warning>
+  Opik LLM Gateway 目前处于测试阶段，可能会有变更。
+</Warning>
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=opik-llm-gateway&utm_campaign=opik) 提供托管版本的 Opik 平台。[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=opik-llm-gateway&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=opik-llm-gateway&utm_campaign=opik)。
+
+## 快速开始
+
+### 配置 LLM 提供商凭证
+
+要使用 Opik LLM Gateway，你需要先在 Opik UI 中配置 LLM 提供商凭证。完成后，你就可以使用 Opik gateway 查询 LLM 提供商。
+
+### 使用 Opik LLM Gateway
+
+配置好 LLM 提供商凭证后，你可以向 Opik LLM Gateway 端点发送请求：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+    ```bash
+    curl -L 'https://www.comet.com/opik/api/v1/private/chat/completions' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: text/event-stream' \
+    -H 'Comet-Workspace: <OPIK_WORKSPACE>' \
+    -H 'authorization: <OPIK_API_KEY>' \
+    -d '{
+        "model": "<LLM_MODEL>",
+        "messages": [
+            {
+                "role": "user",
+                "content": "What is Opik ?"
+            }
+        ],
+        "temperature": 1,
+        "stream": false,
+        "max_tokens": 10000
+    }'
+    ```
+    </Tab>
+    <Tab value="Opik self-hosted" title="Opik 自托管">
+    ```bash
+    curl -L 'http://localhost:5173/api/v1/private/chat/completions' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: text/event-stream' \
+    -d '{
+        "model": "<LLM_MODEL>",
+        "messages": [
+            {
+                "role": "user",
+                "content": "What is Opik ?"
+            }
+        ],
+        "temperature": 1,
+        "stream": false,
+        "max_tokens": 10000
+    }'
+    ```
+    </Tab>
+</Tabs>
+
+### 请求参数
+
+Opik LLM Gateway 接受请求体中的以下参数：
+
+- **`model`**：LLM 模型标识符（在 Opik UI 中配置）
+- **`messages`**：包含 `role` 和 `content` 字段的消息对象数组
+- **`temperature`**：采样温度（0-2）
+- **`stream`**：布尔值，启用流式响应
+- **`max_tokens`**：要生成的最大 token 数
+
+### 响应格式
+
+Gateway 返回 OpenAI 兼容格式的响应，使其易于与现有应用程序集成。
+
+## 进一步改进
+
+如果你有改进 Opik LLM Gateway 的建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告诉我们。

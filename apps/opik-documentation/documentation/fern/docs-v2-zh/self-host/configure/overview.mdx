@@ -1,0 +1,86 @@
+---
+headline: 概览 | Opik 文档
+og:description: 了解如何在您的基础设施上自托管 Opik，获得完整功能访问权限，包括追踪和评估，无需用户管理。
+og:site_name: Opik 文档
+og:title: '自托管 Opik：部署选项与功能'
+subtitle: 自托管 Opik 的高层概览
+title: 概览
+---
+
+您可以通过 [Comet 托管云服务](https://comet.com) 使用 Opik，也可以在自己的基础设施上自托管 Opik。选择自托管 Opik 时，您可以使用 Opik 的所有功能，包括追踪、评估等，但不包含用户管理功能。
+
+如果选择自托管 Opik，您可以在两种部署选项中进行选择：
+
+1. [本地安装](/self-host/local_deployment)：适合入门使用，但不适合生产环境。
+2. [Kubernetes 安装](/self-host/kubernetes)：生产就绪的 Opik 平台，运行在 Kubernetes 集群上。
+
+## 快速开始
+
+如果您想在本地试用 Opik，我们推荐使用本地安装脚本。假设您已安装 `git` 和 `docker`，只需一行代码即可开始：
+
+<Tabs>
+ <Tab value="Linux / Mac" title="Linux / Mac">
+```bash
+# 克隆 Opik 仓库
+git clone https://github.com/comet-ml/opik.git
+
+# 进入 opik 文件夹
+
+cd opik
+
+# 启动 Opik 平台
+
+./opik.sh
+
+```
+
+</Tab>
+<Tab value="Windows" title="Windows">
+
+```powershell
+# 克隆 Opik 仓库
+git clone https://github.com/comet-ml/opik.git
+
+# 进入 opik 文件夹
+cd opik
+
+# 启动 Opik 平台
+powershell -ExecutionPolicy ByPass -c ".\opik.ps1"
+```
+
+</Tab>
+</Tabs>
+
+Opik 将在以下地址可用
+
+<a href="http://localhost:5173" target="_blank">
+  http://localhost:5173
+</a>
+您本地机器上记录的所有追踪数据将保存到此本地 Opik 实例中。为了将追踪和其他数据记录到您的 Opik 实例，您需要确保 Opik Python SDK 配置为指向刚刚启动的 Opik 服务器。可以通过运行以下命令完成配置：
+
+```bash
+# 配置 Python SDK 指向本地 Opik 平台
+export OPIK_BASE_URL=http://localhost:5173/api
+```
+
+或在 Python 中：
+
+```python
+import os
+
+os.environ["OPIK_BASE_URL"] = "http://localhost:5173/api"
+```
+
+如需了解更多关于管理本地 Opik 部署的信息，请参阅[本地部署指南](/self-host/local_deployment)。
+
+## SDK 版本兼容性
+
+对于自托管部署，我们建议保持 Opik 服务器和 SDK 为最新版本以获得最佳兼容性。Python SDK (`opik`)、TypeScript SDK (`opik`) 和 Opik Agent Optimizer SDK (`opik-optimizer`) 设计为与最新的 Opik 服务器版本配合使用。较旧的 SDK 版本可能不支持较新的服务器功能，而较新的 SDK 版本可能需要最低服务器版本。请查看[更新日志](https://www.comet.com/docs/opik/changelog)了解版本兼容性说明。
+
+## 高级部署选项
+
+如果您想在 Kubernetes 集群上部署 Opik，我们建议按照[此处](/self-host/kubernetes)的 Kubernetes 部署指南进行操作。
+
+## Comet 托管部署
+
+Opik 平台由 Comet 团队开发和维护。如果您正在寻找托管部署解决方案，请随时联系 Comet 团队：sales@comet.com，或访问 [Comet 网站](https://comet.com)了解更多信息。

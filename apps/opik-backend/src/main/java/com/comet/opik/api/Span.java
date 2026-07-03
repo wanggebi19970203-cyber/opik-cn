@@ -37,7 +37,7 @@ public record Span(
                 ExperimentItemBulkUpload.View.ExperimentItemBulkWriteView.class}) UUID id,
         @JsonView({
                 Span.View.Public.class,
-                Span.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "If null, the default project is used") String projectName,
+                Span.View.Write.class}) @Pattern(regexp = NULL_OR_NOT_BLANK, message = "must not be blank") @Schema(description = "如果为null，则使用默认项目") String projectName,
         @JsonView({Span.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) UUID projectId,
         @JsonView({Span.View.Public.class,
                 Span.View.Write.class}) @NotNull(groups = {Span.View.Write.class}) UUID traceId,
@@ -80,9 +80,9 @@ public record Span(
                 ExperimentItemBulkUpload.View.ExperimentItemBulkWriteView.class}) @DecimalMin("0.0") BigDecimal totalEstimatedCost,
         String totalEstimatedCostVersion,
         @JsonView({
-                Span.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Duration in milliseconds as a decimal number to support sub-millisecond precision") Double duration,
+                Span.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "持续时间（毫秒），十进制数以支持亚毫秒精度") Double duration,
         @JsonView({Span.View.Public.class, Span.View.Write.class,
-                ExperimentItemBulkUpload.View.ExperimentItemBulkWriteView.class}) @Schema(description = "Time to first token in milliseconds") @PositiveOrZero Double ttft,
+                ExperimentItemBulkUpload.View.ExperimentItemBulkWriteView.class}) @Schema(description = "首token时间（毫秒）") @PositiveOrZero Double ttft,
         @JsonView({Span.View.Public.class, Span.View.Write.class,
                 ExperimentItemBulkUpload.View.ExperimentItemBulkWriteView.class}) Source source,
         @JsonView({Span.View.Public.class, Span.View.Write.class,

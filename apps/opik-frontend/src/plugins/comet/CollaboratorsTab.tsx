@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import useLocalStorageState from "use-local-storage-state";
 import { UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import useAllWorkspaceMembers from "@/plugins/comet/useWorkspaceMembers";
 import useWorkspaceUsersPermissions from "@/plugins/comet/api/useWorkspaceUsersPermissions";
 import useOrganizationMembers from "@/plugins/comet/api/useOrganizationMembers";
@@ -36,43 +37,44 @@ import { WorkspaceRolesProvider } from "./WorkspaceRolesContext";
 const COLUMNS_WIDTH_KEY = "workspace-members-columns-width";
 const WARNING_COLUMN_ID = "warning";
 
-const DEFAULT_COLUMNS: ColumnData<WorkspaceMember>[] = [
-  {
-    id: "userName",
-    label: "Name / User name",
-    type: COLUMN_TYPE.string,
-    accessorFn: (row) => row.userName || "-",
-  },
-  {
-    id: "email",
-    label: "Email",
-    type: COLUMN_TYPE.string,
-  },
-  {
-    id: "joinedAt",
-    label: "Joined",
-    type: COLUMN_TYPE.time,
-    accessorFn: (row) => {
-      if (!row.joinedAt) return "";
-      return new Date(row.joinedAt).toISOString();
-    },
-    cell: TimeCell as never,
-  },
-  {
-    id: WARNING_COLUMN_ID,
-    label: "Warning",
-    type: COLUMN_TYPE.errors,
-    cell: WorkspaceMemberWarningCell as never,
-  },
-  {
-    id: "role",
-    label: "Workspace role",
-    type: COLUMN_TYPE.category,
-    cell: WorkspaceRoleCell as never,
-  },
-];
-
 const CollaboratorsTab = () => {
+  const { t } = useTranslation("common");
+
+  const DEFAULT_COLUMNS: ColumnData<WorkspaceMember>[] = [
+    {
+      id: "userName",
+      label: t("labels.nameOrUsername"),
+      type: COLUMN_TYPE.string,
+      accessorFn: (row) => row.userName || "-",
+    },
+    {
+      id: "email",
+      label: t("labels.email"),
+      type: COLUMN_TYPE.string,
+    },
+    {
+      id: "joinedAt",
+      label: t("labels.joined"),
+      type: COLUMN_TYPE.time,
+      accessorFn: (row) => {
+        if (!row.joinedAt) return "";
+        return new Date(row.joinedAt).toISOString();
+      },
+      cell: TimeCell as never,
+    },
+    {
+      id: WARNING_COLUMN_ID,
+      label: t("labels.warning"),
+      type: COLUMN_TYPE.errors,
+      cell: WorkspaceMemberWarningCell as never,
+    },
+    {
+      id: "role",
+      label: t("labels.workspaceRole"),
+      type: COLUMN_TYPE.category,
+      cell: WorkspaceRoleCell as never,
+    },
+  ];
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
     Record<string, number>
   >(COLUMNS_WIDTH_KEY, {
@@ -195,7 +197,7 @@ const CollaboratorsTab = () => {
       return {
         id: uniqueName,
         role: isPermissionsManagementEnabled
-          ? userRoleData?.roleName || "No role assigned"
+          ? userRoleData?.roleName || t("messages.noRoleAssigned")
           : role,
         roleId: userRoleData?.roleId,
         isAdmin: memberInOrganization?.role === ORGANIZATION_ROLE_TYPE.admin,
@@ -261,7 +263,7 @@ const CollaboratorsTab = () => {
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search by name, email, or role"
+          placeholder={t("placeholders.searchByNameEmailOrRole")}
           className="w-[320px]"
           dimension="sm"
         />
@@ -277,7 +279,7 @@ const CollaboratorsTab = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="default" size="sm">
               <UserPlus className="mr-1.5 size-3.5" />
-              Add users
+              {t("buttons.addUsers")}
             </Button>
           </DropdownMenuTrigger>
           <InviteUsersPopover

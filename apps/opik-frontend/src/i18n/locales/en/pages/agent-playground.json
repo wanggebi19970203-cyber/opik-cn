@@ -1,0 +1,93 @@
+{
+  "agentPlayground": {
+    "title": "Agent playground",
+    "description": "Test and debug your AI agents",
+    "empty": {
+      "title": "No agents yet",
+      "description": "Create your first agent to get started."
+    },
+    "actions": {
+      "run": "Run agent",
+      "stop": "Stop agent",
+      "debug": "Debug agent"
+    },
+    "content": {
+      "agentPlayground": "Agent playground",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "connectedTooltip": "Your agent is connected to Opik",
+      "stopRun": "Stop run",
+      "run": "Run",
+      "missingParams": "Some required parameters are missing",
+      "reset": "Reset",
+      "moreActions": "More actions",
+      "disconnect": "Disconnect",
+      "executionInProgress": "Agent execution in progress",
+      "executionInProgressDescription": "Your agent is currently running. Leaving now will interrupt the execution and may result in an incomplete trace. Are you sure you want to leave?",
+      "leaveAnyway": "Leave anyway",
+      "stayAndWait": "Stay and wait"
+    },
+    "emptyState": {
+      "connectYourAgent": "Connect your agent",
+      "connectDescription": "Link your agent to Opik to start using the Agent playground and improve performance.",
+      "markEntrypoint": "Mark your agent as an entrypoint",
+      "markEntrypointDescription": "Add @opik.track(entrypoint=True) to your agent's main function so Opik can detect and register it. You can also run /instrument in the Ollie sidebar to auto-instrument your agent.",
+      "runConnectionCommand": "Run the connection command",
+      "runConnectionDescription": "Install and run the Opik connector in your terminal (works with Claude Code, Codex, Cursor, Windsurf, and more):",
+      "waitingForConnection": "Waiting for connection",
+      "waitingDescription": "We'll automatically detect your agent once it's connected.",
+      "troubleConnecting": "Trouble connecting?",
+      "checkTroubleshooting": "Check troubleshooting",
+      "python": "Python",
+      "typescript": "TypeScript",
+      "terminal": "Terminal"
+    },
+    "inputForm": {
+      "noInputFields": "No input fields defined by this agent.",
+      "optional": "(optional)",
+      "thisFieldIsRequired": "This field is required",
+      "enterField": "Enter {{name}}..."
+    },
+    "promptCard": {
+      "cannotSavePromptChanges": "Cannot save prompt changes",
+      "missingPermission": "Missing permission to create new versions of {{name}}",
+      "savedNewVersion": "Saved new version of {{name}}",
+      "unsavedChanges": "Unsaved changes",
+      "promptTemplate": "Prompt template"
+    },
+    "promptsList": {
+      "noPrompts": "No prompts in this project yet."
+    },
+    "result": {
+      "result": "Result",
+      "viewTrace": "View trace",
+      "noResultsYet": "No results yet",
+      "agentResponseAppear": "The agent response will appear here after a run",
+      "runningYourAgent": "Running your agent...",
+      "resultsAppearWhenDone": "Results will appear here when it's done.",
+      "viewTrajectoryLive": "View trajectory live",
+      "jobCancelled": "Job cancelled",
+      "executionFailed": "Execution failed",
+      "unknownError": "An unknown error occurred."
+    },
+    "flowDiagram": {
+      "configure": "Configure",
+      "prompts": "Prompts",
+      "tools": "Tools",
+      "model": "Model",
+      "params": "Params",
+      "input": "Input",
+      "run": "Run",
+      "improveWithOllie": "Improve with Ollie",
+      "analyzeTracesSuggest": "Analyze traces, suggest prompt tweaks",
+      "inspect": "Inspect",
+      "response": "Response",
+      "trajectory": "Trajectory",
+      "latency": "Latency",
+      "tokens": "Tokens",
+      "configInput": "Config + Input",
+      "responseTrace": "Response + trace",
+      "yourAgent": "Your agent"
+    }
+  }
+}

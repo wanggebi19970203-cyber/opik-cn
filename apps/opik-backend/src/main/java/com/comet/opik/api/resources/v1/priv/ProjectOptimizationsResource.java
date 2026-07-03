@@ -44,7 +44,7 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project related resources")
+@Tag(name = "Projects", description = "项目相关资源")
 public class ProjectOptimizationsResource {
 
     private final @NonNull OptimizationService optimizationService;
@@ -52,9 +52,9 @@ public class ProjectOptimizationsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @GET
-    @Operation(operationId = "findOptimizationsByProject", summary = "Find optimizations by project", description = "Find optimizations scoped to a project", responses = {
-            @ApiResponse(responseCode = "200", description = "Optimizations page", content = @Content(schema = @Schema(implementation = Optimization.OptimizationPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "findOptimizationsByProject", summary = "按项目查找优化任务", description = "查找指定项目下的优化任务", responses = {
+            @ApiResponse(responseCode = "200", description = "优化任务分页", content = @Content(schema = @Schema(implementation = Optimization.OptimizationPage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @JsonView(Optimization.View.Public.class)
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_VIEW)
@@ -64,7 +64,7 @@ public class ProjectOptimizationsResource {
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
             @QueryParam("dataset_id") UUID datasetId,
             @QueryParam("dataset_name") String datasetName,
-            @QueryParam("name") @Schema(description = "Filter optimizations by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤优化任务（部分匹配，不区分大小写）") String name,
             @QueryParam("dataset_deleted") Boolean datasetDeleted,
             @QueryParam("filters") String filters) {
 

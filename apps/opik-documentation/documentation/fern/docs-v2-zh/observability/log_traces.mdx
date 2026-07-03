@@ -1,0 +1,1070 @@
+---
+headline: 记录追踪 | Opik 文档
+og:description: 使用追踪功能监控 LLM 应用的流程，借助 Opik 强大的工具识别问题并优化性能。
+og:site_name: Opik 文档
+og:title: 使用 Opik 记录追踪 - 增强可观测性
+title: 记录追踪
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/log_traces
+---
+
+<Tip>
+  如果你是 Opik 新手，我们建议先查看[快速入门](/v1/quickstart)指南，它将引导你完成记录第一个 LLM 调用的过程。
+</Tip>
+
+LLM 应用是复杂的系统，不仅仅是调用 LLM API，通常还涉及检索、预处理和后处理步骤。
+追踪是一种帮助你理解应用流程并识别应用中可能导致问题的特定位置的工具。
+
+Opik 的追踪功能不仅允许你跟踪应用发出的所有 LLM 调用，还可以跟踪其他任何涉及的步骤。
+
+<Frame>
+  <img src="/img/tracing/introduction.png" />
+</Frame>
+
+Opik 使用我们的 [TypeScript SDK](/reference/typescript-sdk/overview)、
+[Python SDK](https://www.comet.com/docs/opik/python-sdk-reference/)、[一流的 OpenTelemetry 支持](/v1/integrations/opentelemetry)
+以及 [REST API](/reference/rest-api/overview) 支持 Agent 可观测性。
+
+<Tip>
+  我们建议从其中一个集成开始以快速上手，你可以在[集成概览](/v1/integrations/overview)页面找到完整的集成列表。
+</Tip>
+
+本指南不会介绍如何跟踪聊天对话，你可以在[记录对话](/v1/tracing/log_chat_conversations)指南中了解更多信息。
+
+## 启用 Agent 可观测性
+
+### 1. 安装 SDK
+
+在为应用添加可观测性之前，你需要先安装并配置 Opik SDK。
+
+<Tabs>
+    <Tab value="TypeScript SDK" title="TypeScript SDK" language="typescript">
+
+    ```bash
+    npm install opik
+    ```
+
+    然后你可以在 `.env` 文件中设置 Opik 环境变量：
+
+    ```bash
+    # 在 .env 文件中设置 OPIK_API_KEY 和 OPIK_WORKSPACE
+    OPIK_API_KEY=your_api_key_here
+    OPIK_WORKSPACE=your_workspace_name
+
+    # 如果使用 Opik Cloud，以下为可选配置：
+    OPIK_URL_OVERRIDE=https://www.comet.com/opik/api
+    ```
+
+    </Tab>
+    <Tab value="Python SDK" title="Python SDK" language="python">
+
+    ```bash
+    # 安装 SDK
+    pip install opik
+    ```
+
+    然后你可以使用 `opik configure` CLI 命令配置 SDK，或者在 Jupyter Notebook 中调用
+    [`opik.configure`](https://www.comet.com/docs/opik/python-sdk-reference/configure.html)。
+
+    </Tab>
+    <Tab value="OpenTelemetry" title="OpenTelemetry">
+
+    你需要为 OpenTelemetry 设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+    export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+
+    # 如果使用自托管实例：
+    # export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    </Tab>
+
+</Tabs>
+
+<Tip>
+  Opik 是开源的，可以使用 Docker 在本地托管，请参阅[自托管指南](/v1/self-host/overview)开始使用。或者，你可以在
+  [Comet](https://www.comet.com/signup?from=llm) 上创建账户使用我们的托管平台。
+</Tip>
+
+### 2. 使用集成
+
+安装并配置 Opik SDK 后，你可以开始使用它来跟踪 Agent 调用：
+
+<Tabs>
+  <Tab title="OpenAI (TS)" value="openai-ts-sdk" language="typescript">
+    如果你使用 OpenAI TypeScript SDK，可以通过以下方式集成：
+
+    <Steps>
+      <Step>
+        安装 Opik TypeScript SDK：
+
+        ```bash
+        npm install opik-openai
+        ```
+      </Step>
+      <Step>
+        使用环境变量配置 Opik TypeScript SDK：
+
+        ```bash
+        export OPIK_API_KEY="<your-api-key>" # 仅在使用 Opik Cloud 版本时需要
+        export OPIK_URL_OVERRIDE="https://www.comet.com/opik/api" # Cloud 版本
+        # export OPIK_URL_OVERRIDE="http://localhost:5173/api" # 自托管
+        ```
+      </Step>
+      <Step>
+        使用 `trackOpenAI` 函数包装你的 OpenAI 客户端：
+
+        ```typescript
+        import OpenAI from "openai";
+        import { trackOpenAI } from "opik-openai";
+
+        // 初始化原始 OpenAI 客户端
+        const openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        // 使用 Opik 跟踪包装客户端
+        const trackedOpenAI = trackOpenAI(openai);
+
+        // 像使用原始客户端一样使用跟踪后的客户端
+        const completion = await trackedOpenAI.chat.completions.create({
+          model: "gpt-4",
+          messages: [{ role: "user", content: "Hello, how can you help me today?" }],
+        });
+        console.log(completion.choices[0].message.content);
+
+        // 确保在应用终止前发送所有追踪数据
+        await trackedOpenAI.flush();
+        ```
+
+        使用 `trackedOpenAI` 发起的所有 OpenAI 调用现在都会被记录到 Opik。
+
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="OpenAI (Python)" value="openai-python-sdk" language="python">
+    如果你使用 OpenAI Python SDK，可以通过以下方式集成：
+
+    <Steps>
+      <Step>
+        安装 Opik Python SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        配置 Opik Python SDK，如果使用 Opik Cloud 会提示输入 API key，如果使用自托管则提示输入 Opik 服务器地址：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `track_openai` 函数包装你的 OpenAI 客户端：
+
+        ```python
+        from opik.integrations.openai import track_openai
+        from openai import OpenAI
+
+        # 包装你的 OpenAI 客户端
+        openai_client = OpenAI()
+        openai_client = track_openai(openai_client)
+        ```
+
+        使用 `openai_client` 发起的所有 OpenAI 调用现在都会被记录到 Opik。
+
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="AI Vercel SDK" value="ai-vercel-sdk" language="typescript">
+    如果你使用 AI Vercel SDK，可以通过以下方式集成：
+
+    <Steps>
+      <Step>
+        安装 Opik Vercel 集成：
+
+        ```bash
+        npm install opik-vercel
+        ```
+      </Step>
+      <Step>
+        使用环境变量配置 Opik AI Vercel SDK 并设置 Opik API key：
+
+        ```bash
+        export OPIK_API_KEY="<your-api-key>"
+        export OPIK_URL_OVERRIDE="https://www.comet.com/opik/api" # Cloud 版本
+        # export OPIK_URL_OVERRIDE="http://localhost:5173/api" # 自托管
+        ```
+      </Step>
+      <Step>
+        使用 AI SDK 初始化 OpikExporter：
+
+        ```ts
+        import { openai } from "@ai-sdk/openai";
+        import { generateText } from "ai";
+        import { NodeSDK } from "@opentelemetry/sdk-node";
+        import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+        import { OpikExporter } from "opik-vercel";
+
+        // 使用 Opik 设置 OpenTelemetry
+        const sdk = new NodeSDK({
+          traceExporter: new OpikExporter(),
+          instrumentations: [getNodeAutoInstrumentations()],
+        });
+        sdk.start();
+
+        // 启用遥测的 AI SDK 调用
+        const result = await generateText({
+          model: openai("gpt-4o"),
+          prompt: "What is love?",
+          experimental_telemetry: { isEnabled: true },
+        });
+
+        console.log(result.text);
+        ```
+
+        所有带有 `experimental_telemetry: { isEnabled: true }` 的 AI SDK 调用现在都会被记录到 Opik。
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="ADK" value="adk-python" language="python">
+    如果你使用 ADK，可以通过以下方式集成：
+
+    <Steps>
+      <Step>
+        安装 Opik SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        在终端运行 `opik configure` 命令配置 Opik SDK：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `OpikTracer` 装饰器包装你的 ADK Agent：
+
+        ```python
+        from opik.integrations.adk import OpikTracer, track_adk_agent_recursive
+
+        opik_tracer = OpikTracer()
+
+        # 定义你的 ADK Agent
+
+        # 使用 OpikTracer 包装你的 ADK Agent
+        track_adk_agent_recursive(agent, opik_tracer)
+        ```
+
+        所有 ADK Agent 调用现在都会被记录到 Opik。
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="LangGraph" value="langgraph" language="python">
+    如果你使用 LangGraph，可以通过以下方式集成：
+
+    <Steps>
+      <Step>
+        安装 Opik SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        在终端运行 `opik configure` 命令配置 Opik SDK：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `OpikTracer` 装饰器包装你的 LangGraph 图：
+
+        ```python
+        from opik.integrations.langchain import OpikTracer
+
+        # 创建你的 LangGraph 图
+        graph = ...
+        app = graph.compile(...)
+
+        # 使用 OpikTracer 包装你的 LangGraph 图
+        opik_tracer = OpikTracer(graph=app.get_graph(xray=True))
+
+        # 将 OpikTracer 回调传递给 invoke 函数
+        result = app.invoke({"messages": [HumanMessage(content = "How to use LangGraph ?")]},
+                      config={"callbacks": [opik_tracer]})
+        ```
+
+        所有 LangGraph 调用现在都会被记录到 Opik。
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="函数装饰器" value="python-function-decorator" language="python">
+    如果你使用 Python 函数装饰器，可以通过以下方式集成：
+
+    <Steps>
+      <Step>
+        安装 Opik Python SDK：
+
+        ```bash
+        pip install opik
+        ```
+      </Step>
+      <Step>
+        配置 Opik Python SDK：
+
+        ```bash
+        opik configure
+        ```
+      </Step>
+      <Step>
+        使用 `@track` 装饰器包装你的函数：
+
+        ```python
+        from opik import track
+
+        @track
+        def my_function(input: str) -> str:
+            return input
+        ```
+
+        对 `my_function` 的所有调用现在都会被记录到 Opik。这对任何函数都适用，包括嵌套函数，
+        大多数集成也支持此功能（只需使用 `@track` 装饰器包装任何父函数即可）。
+      </Step>
+    </Steps>
+
+  </Tab>
+    <Tab title="AI 向导" value="ai-installation">
+    <div style={{"display": "flex", "flexDirection": "row", "gap": "1rem", "alignItems": "center", "justifyContent": "space-between"}}>
+      <span style={{"& p": {"margin": "0rem"}}}>
+        <p style={{"margin": "0rem", "fontStyle": "italic"}}>使用此预构建提示词更快地与 Opik 集成</p>
+      </span>
+      <Button intent="primary" href="cursor:////anysphere.cursor-deeplink/prompt?text=%23+OPIK+Agentic+Onboarding%0A%0A%23%23+Goals%0A%0AYou+must+help+me%3A%0A%0A1.+Integrate+the+Opik+client+with+my+existing+LLM+application%0A2.+Set+up+tracing+for+my+LLM+calls+and+chains%0A%0A%23%23+Rules%0A%0ABefore+you+begin%2C+you+must+understand+and+strictly+adhere+to+these+core+principles%3A%0A%0A1.+Code+Preservation+%26+Integration+Guidelines%3A%0A%0A+++-+Existing+business+logic+must+remain+untouched+and+unmodified%0A+++-+Only+add+Opik-specific+code+%28decorators%2C+imports%2C+handlers%2C+env+vars%29%0A+++-+Integration+must+be+non-invasive+and+backwards+compatible%0A%0A2.+Process+Requirements%3A%0A%0A+++-+Follow+the+workflow+steps+sequentially+without+deviation%0A+++-+Validate+completion+of+each+step+before+proceeding%0A+++-+Request+explicit+approval+for+any+workflow+modifications%0A%0A3.+Documentation+%26+Resources%3A%0A%0A+++-+Reference+official+Opik+documentation+at+https%3A%2F%2Fwww.comet.com%2Fdocs%2Fopik%2Fquickstart.md%0A+++-+Follow+Opik+best+practices+and+recommended+patterns%0A+++-+Maintain+detailed+integration+notes+and+configuration+details%0A%0A4.+Testing+%26+Validation%3A%0A+++-+Verify+Opik+integration+without+impacting+existing+functionality%0A+++-+Validate+tracing+works+correctly+for+all+LLM+interactions%0A+++-+Ensure+proper+error+handling+and+logging%0A%0A%23%23+Integration+Workflow%0A%0A%23%23%23+Step+1%3A+Language+and+Compatibility+Check%0A%0AFirst%2C+analyze+the+codebase+to+identify%3A%0A%0A1.+Primary+programming+language+and+frameworks%0A2.+Existing+LLM+integrations+and+patterns%0A%0ACompatibility+Requirements%3A%0A%0A-+Supported+Languages%3A+Python%2C+JavaScript%2FTypeScript%0A%0AIf+the+codebase+uses+unsupported+languages%3A%0A%0A-+Stop+immediately%0A-+Inform+me+that+the+codebase+is+unsupported+for+AI+integration%0A%0AOnly+proceed+to+Step+2+if%3A%0A%0A-+Language+is+Python+or+JavaScript%2FTypeScript%0A%0A%23%23%23+Step+2%3A+Codebase+Discovery+%26+Entrypoint...">
+        <div style={{"display": "flex", "flexDirection": "row", "gap": "1rem", "alignItems": "center"}}>
+          <svg xmlns="http://www.w3.org/2000/svg" id="Ebene_1" version="1.1" viewBox="0 0 466.73 532.09">
+            <path style={{"fill": "#edecec"}} class="st0" d="M457.43,125.94L244.42,2.96c-6.84-3.95-15.28-3.95-22.12,0L9.3,125.94c-5.75,3.32-9.3,9.46-9.3,16.11v247.99c0,6.65,3.55,12.79,9.3,16.11l213.01,122.98c6.84,3.95,15.28,3.95,22.12,0l213.01-122.98c5.75-3.32,9.3-9.46,9.3-16.11v-247.99c0-6.65-3.55-12.79-9.3-16.11h-.01ZM444.05,151.99l-205.63,356.16c-1.39,2.4-5.06,1.42-5.06-1.36v-233.21c0-4.66-2.49-8.97-6.53-11.31L24.87,145.67c-2.4-1.39-1.42-5.06,1.36-5.06h411.26c5.84,0,9.49,6.33,6.57,11.39h-.01Z"/>
+          </svg>
+          在 Cursor 中打开
+        </div>
+      </Button>
+    </div>
+
+    预构建提示词将引导你完成集成过程，安装 Opik SDK 并为你的代码添加监控。它支持 Python 和 TypeScript 代码库，
+    如果你使用其他语言，请告诉我们，我们可以帮助你。
+
+    集成完成后，只需运行你的应用程序，你就会开始在 Opik 控制台中看到追踪数据。
+  </Tab>
+  <Tab title="其他" value="other" language="other">
+    Opik 与最流行的框架和库有超过 30 个集成，你可以在[这里](/v1/integrations/overview)找到完整的集成列表。例如：
+
+    - [Dify](/v1/integrations/dify)
+    - [Agno](/v1/integrations/agno)
+    - [Ollama](/v1/integrations/ollama)
+
+    如果你使用的框架或库不在列表中，你仍然可以使用函数装饰器或 Opik 客户端记录追踪数据，
+    请查看[记录追踪](/v1/tracing/log_traces)指南了解更多信息。
+
+  </Tab>
+</Tabs>
+
+<Tip>
+  Opik 与大多数流行的框架和库有超过 40 个集成。你可以在集成[概览页面](/v1/integrations/overview)找到完整的集成列表。
+</Tip>
+
+如果你想对日志记录过程有更多控制，可以使用底层 SDK 来记录追踪和 Span。
+
+### 3. 分析你的 Agent
+
+现在你已经为 Agent 启用了可观测性，可以开始在 Opik 中审查和分析 Agent 调用。在 Opik UI 中，你可以审查每次 Agent 调用，查看 [Agent 图](/v1/tracing/log_agent_graphs)并审查 Agent 发起的所有工具调用。
+
+<Frame>
+  <img src="/img/tracing/tracing_agent_overview.png" />
+</Frame>
+
+下一步，你可以创建[离线评估](/v1/evaluation/evaluate_prompt)来评估 Agent 在固定样本集上的性能。
+
+## 高级用法
+
+### 使用函数装饰器
+
+函数装饰器是为现有应用添加 Opik 日志记录的好方法。当你为函数添加 `@track` 装饰器时，Opik 会为该函数调用创建一个 Span 并记录输入参数和函数输出。如果检测到被装饰的函数在另一个被装饰的函数内被调用，会为内部函数创建嵌套 Span。
+
+虽然装饰器在 Python 中最受欢迎，但我们在 TypeScript SDK 中也支持它们：
+
+<Tabs>
+    <Tab title="TypeScript" value="typescript" language="typescript">
+        TypeScript 从版本 5 开始支持装饰器，但使用仍不普遍。
+        Opik TypeScript SDK 也支持装饰器，但目前仍被视为实验性功能。
+
+        ```typescript maxLines=100
+        import { track } from "opik";
+
+        class TranslationService {
+            @track({ type: "llm" })
+            async generateText() {
+                // 你的 LLM 调用
+                return "Generated text";
+            }
+
+            @track({ name: "translate" })
+            async translate(text: string) {
+                // 你的翻译逻辑
+                return `Translated: ${text}`;
+            }
+
+            @track({ name: "process", projectName: "translation-service" })
+            async process() {
+                const text = await this.generateText();
+                return this.translate(text);
+            }
+        }
+    ```
+
+    <Info>
+        你还可以为被装饰函数记录的每个追踪和/或 Span 指定自定义 `tags`、`metadata` 和/或 `thread_id`。更多信息请参阅
+        [使用 opik_args 参数记录额外数据](#logging-additional-data)
+    </Info>
+
+    </Tab>
+    <Tab title="Python" value="python" language="python">
+        你可以为应用中的任何函数添加 `@track` 装饰器，不仅跟踪 LLM 调用，还可以跟踪应用中的任何其他步骤：
+
+        ```python maxLines=100
+        import opik
+        import openai
+
+        client = openai.OpenAI()
+
+        @opik.track
+        def retrieve_context(input_text):
+            # 你的检索逻辑，这里我们只是返回一个硬编码的字符串列表
+            context =[
+                "What specific information are you looking for?",
+                "How can I assist you with your interests today?",
+                "Are there any topics you'd like to explore?",
+            ]
+            return context
+
+        @opik.track
+        def generate_response(input_text, context):
+            full_prompt = (
+                f" If the user asks a non-specific question, use the context to provide a relevant response.\n"
+                f"Context: {', '.join(context)}\n"
+                f"User: {input_text}\n"
+                f"AI:"
+            )
+
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": full_prompt}]
+            )
+            return response.choices[0].message.content
+
+        @opik.track(name="my_llm_application")
+        def llm_chain(input_text):
+            context = retrieve_context(input_text)
+            response = generate_response(input_text, context)
+
+            return response
+
+        # 使用 LLM 链
+        result = llm_chain("Hello, how are you?")
+        print(result)
+        ```
+
+        使用 track 装饰器时，你可以使用 `opik_args` 参数或
+        [`opik_context`](https://www.comet.com/docs/opik/python-sdk-reference/opik_context/index.html)
+        模块自定义与追踪和 Span 关联的数据。当你想指定对话线程 ID、标签和元数据时特别有用。
+
+        <CodeBlocks>
+            ```python title="opik_context module"
+            import opik
+
+            @opik.track
+            def llm_chain(text: str) -> str:
+                opik_context.update_current_trace(
+                    tags=["llm_chatbot"],
+                    metadata={"version": "1.0", "method": "simple"},
+                    thread_id="conversation-123",
+                    feedback_scores=[
+                        {
+                            "name": "user_feedback",
+                            "value": 1
+                        }
+                    ],
+                )
+                opik_context.update_current_span(
+                    metadata={"model": "gpt-4o"},
+                )
+                return f"Processed: {text}"
+            ```
+
+            ```python title="opik_args parameter"
+            import opik
+
+            @opik.track
+            def llm_chain(text: str) -> str:
+                # LLM 链代码
+                # ...
+                return f"Processed: {text}"
+
+            # 使用 opik_args 调用 - 不会传递给函数
+            result = llm_chain(
+                "hello world",
+                opik_args={
+                    "span": {
+                        "tags": ["llm", "agent"],
+                        "metadata": {"version": "1.0", "method": "simple"}
+                    },
+                    "trace": {
+                        "thread_id": "conversation-123",
+                        "tags": ["user-session"],
+                        "metadata": {"user_id": "user-456"}
+                    }
+                }
+            )
+
+            print(result)
+            ```
+        </CodeBlocks>
+
+        <Tip>
+            如果你在函数调用中指定 opik_args 参数，可以将配置传播到嵌套函数。
+        </Tip>
+    </Tab>
+
+</Tabs>
+
+### 使用底层 SDK
+
+如果你需要对日志记录过程有完全的控制，可以使用底层 SDK 来记录追踪和 Span：
+
+<Tabs>
+    <Tab title="Typescript" value="typescript" language="typescript">
+        你可以使用 [`Opik`](/reference/typescript-sdk/overview) 客户端来记录追踪和 Span：
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik({
+            apiUrl: "https://www.comet.com/opik/api",
+            apiKey: "your-api-key", // 仅在使用 Opik Cloud 时需要
+            projectName: "your-project-name",
+            workspaceName: "your-workspace-name", // 可选
+        });
+
+        // 记录一个包含 LLM Span 的追踪
+        const trace = client.trace({
+            name: `Trace`,
+            input: {
+                prompt: `Hello!`,
+            },
+            output: {
+                response: `Hello, world!`,
+            },
+        });
+
+        const span = trace.span({
+            name: `Span`,
+            type: "llm",
+            input: {
+                prompt: `Hello, world!`,
+            },
+            output: {
+                response: `Hello, world!`,
+            },
+        });
+
+        // 刷新客户端以发送所有追踪和 Span
+        await client.flush();
+        ```
+
+        <Tip>
+            确保在 `.env` 文件中为 Opik 客户端定义环境变量，
+            你可以在[这里](/v1/tracing/sdk_configuration)找到更多配置信息。
+        </Tip>
+    </Tab>
+    <Tab title="Python" value="python" language="python">
+        如果你想完全控制记录到 Opik 的数据，可以使用
+        [`Opik`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html) 客户端。
+
+
+        记录追踪和 Span 可以通过首先使用
+        [`Opik.trace`](https://www.comet.com/docs/opik/python-sdk-reference/Opik.html#opik.Opik.trace)
+        创建追踪，然后使用
+        [`Trace.span`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/Trace.html#opik.api_objects.trace.Trace.span)
+        方法为追踪添加 Span 来实现：
+
+        ```python
+        from opik import Opik
+
+        client = Opik(project_name="Opik client demo")
+
+        # 创建追踪
+        trace = client.trace(
+            name="my_trace",
+            input={"user_question": "Hello, how are you?"},
+            output={"response": "Comment ça va?"}
+        )
+
+        # 添加 Span
+        trace.span(
+            name="Add prompt template",
+            input={"text": "Hello, how are you?", "prompt_template": "Translate the following text to French: {text}"},
+            output={"text": "Translate the following text to French: hello, how are you?"}
+        )
+
+        # 添加 LLM 调用
+        trace.span(
+            name="llm_call",
+            type="llm",
+            input={"prompt": "Translate the following text to French: hello, how are you?"},
+            output={"response": "Comment ça va?"}
+        )
+
+        # 结束追踪
+        trace.end()
+        ```
+
+        <Note>
+        建议在完成追踪和 Span 后调用 `trace.end()` 和 `span.end()`，以确保结束时间被正确记录。
+        </Note>
+
+        Opik 的日志功能专为生产环境设计。为优化性能，所有日志操作在后台线程中执行。
+
+        如果你想确保所有追踪在退出程序前被记录到 Opik，可以使用 `opik.Opik.flush` 方法：
+
+        ```python
+        from opik import Opik
+
+        client = Opik()
+
+        # 记录一些追踪
+        client.flush()
+        ```
+
+    </Tab>
+
+</Tabs>
+
+### 使用上下文管理器记录追踪/Span
+
+如果你使用底层 SDK，可以使用上下文管理器来记录追踪和 Span。上下文管理器提供了一种简洁且 Python 风格的方式来管理追踪和 Span 的生命周期，确保正确的清理和错误处理。
+
+<Tabs>
+    <Tab title="Python" value="python" language="python">
+        Opik 提供了两个主要的日志记录上下文管理器：
+
+        #### `opik.start_as_current_trace()`
+
+        使用此上下文管理器创建和管理追踪。追踪代表应用的整体执行流程。
+
+        详细 API 参考请见 [`opik.start_as_current_trace`](https://www.comet.com/docs/opik/python-sdk-reference/context_manager/start_as_current_trace.html)。
+
+        ```python
+        import opik
+
+        # 基本追踪创建
+        with opik.start_as_current_trace("my-trace", project_name="my-project") as trace:
+            # 你的应用逻辑
+            trace.input = {"user_query": "What is the weather?"}
+            trace.output = {"response": "It's sunny today!"}
+            trace.tags = ["weather", "api-call"]
+            trace.metadata = {"model": "gpt-4", "temperature": 0.7}
+        ```
+
+        **参数：**
+        - `name` (str)：追踪名称
+        - `input` (Dict[str, Any], 可选)：追踪的输入数据
+        - `output` (Dict[str, Any], 可选)：追踪的输出数据
+        - `tags` (List[str], 可选)：用于分类追踪的标签
+        - `metadata` (Dict[str, Any], 可选)：额外的元数据
+        - `project_name` (str, 可选)：项目名称（回退到活跃项目上下文，再到客户端配置）
+        - `thread_id` (str, 可选)：多线程应用的线程标识符
+        - `flush` (bool, 可选)：是否立即刷新数据（默认：False）
+
+        #### `opik.start_as_current_span()`
+
+        使用此上下文管理器在追踪内创建和管理 Span。Span 代表单独的操作或函数调用。
+
+        详细 API 参考请见 [`opik.start_as_current_span`](https://www.comet.com/docs/opik/python-sdk-reference/context_manager/start_as_current_span.html)。
+
+        ```python
+        import opik
+
+        # 基本 Span 创建
+        with opik.start_as_current_span("llm-call", type="llm", project_name="my-project") as span:
+            # 你的 LLM 调用
+            span.input = {"prompt": "Explain quantum computing"}
+            span.output = {"response": "Quantum computing is..."}
+            span.model = "gpt-4"
+            span.provider = "openai"
+            span.usage = {
+                "prompt_tokens": 10,
+                "completion_tokens": 50,
+                "total_tokens": 60
+            }
+        ```
+
+        **参数：**
+        - `name` (str)：Span 名称
+        - `type` (SpanType, 可选)：Span 类型（"general"、"tool"、"llm"、"guardrail" 等）
+        - `input` (Dict[str, Any], 可选)：Span 的输入数据
+        - `output` (Dict[str, Any], 可选)：Span 的输出数据
+        - `tags` (List[str], 可选)：用于分类 Span 的标签
+        - `metadata` (Dict[str, Any], 可选)：额外的元数据
+        - `project_name` (str, 可选)：项目名称
+        - `model` (str, 可选)：LLM Span 的模型名称
+        - `provider` (str, 可选)：LLM Span 的提供商名称
+        - `flush` (bool, 可选)：是否立即刷新数据
+
+        #### 嵌套上下文管理器
+
+        你可以在追踪内嵌套 Span 以创建层级结构：
+
+        ```python
+        import opik
+
+        with opik.start_as_current_trace("chatbot-conversation", project_name="chatbot") as trace:
+            trace.input = {"user_message": "Help me with Python"}
+            
+            # 第一个 Span：处理用户输入
+            with opik.start_as_current_span("process-input", type="general") as span:
+                span.input = {"raw_input": "Help me with Python"}
+                span.output = {"processed_input": "Python programming help request"}
+            
+            # 第二个 Span：生成响应
+            with opik.start_as_current_span("generate-response", type="llm") as span:
+                span.input = {"prompt": "Python programming help request"}
+                span.output = {"response": "I'd be happy to help with Python!"}
+                span.model = "gpt-4"
+                span.provider = "openai"
+            
+            trace.output = {"final_response": "I'd be happy to help with Python!"}
+        ```
+
+        #### 错误处理
+
+        上下文管理器自动处理错误并确保正确的清理：
+
+        ```python
+        import opik
+
+        try:
+            with opik.start_as_current_trace("risky-operation", project_name="my-project") as trace:
+                trace.input = {"data": "important data"}
+                # 这将引发异常
+                result = 1 / 0
+                trace.output = {"result": result}
+        except ZeroDivisionError:
+            # 追踪仍然被正确关闭和记录
+            print("Error occurred, but trace was logged")
+        ```
+
+        #### 动态参数更新
+
+        你可以在上下文管理器内部和外部修改追踪和 Span 参数：
+
+        ```python
+        import opik
+
+        # 在上下文管理器外部设置参数
+        with opik.start_as_current_trace(
+            "dynamic-trace",
+            input={"initial": "data"},
+            tags=["initial-tag"],
+            project_name="my-project"
+        ) as trace:
+            # 在上下文管理器内部覆盖参数
+            trace.input = {"updated": "data"}
+            trace.tags = ["updated-tag", "new-tag"]
+            trace.metadata = {"custom": "metadata"}
+            
+            # 最终追踪将使用更新后的值
+        ```
+
+        #### 刷新控制
+
+        控制数据何时发送到 Opik：
+
+        ```python
+        import opik
+
+        # 立即刷新
+        with opik.start_as_current_trace("immediate-trace", flush=True) as trace:
+            trace.input = {"data": "important"}
+            # 退出上下文时数据立即发送
+
+        # 延迟刷新（默认）
+        with opik.start_as_current_trace("deferred-trace", flush=False) as trace:
+            trace.input = {"data": "less urgent"}
+            # 数据稍后异步发送或在程序退出时发送
+        ```
+
+    </Tab>
+</Tabs>
+
+#### 最佳实践
+
+1. **使用描述性名称**：为追踪和 Span 选择清晰、描述性的名称，说明它们代表什么。
+
+2. **设置适当的类型**：使用正确的 Span 类型（"llm"、"retrieval"、"general" 等）以帮助过滤和分析。
+
+3. **包含相关元数据**：添加对调试和分析有用的元数据，如模型名称、参数和自定义指标。
+
+4. **优雅处理错误**：让上下文管理器处理清理，但确保你的应用逻辑适当地处理错误。
+
+5. **使用项目组织**：按项目组织追踪，保持 Opik 控制台整洁有序。
+
+6. **考虑性能**：仅在需要立即获取数据时使用 `flush=True`，因为它会触发同步、立即的数据上传，可能降低应用性能。
+
+
+### 记录到特定项目
+
+默认情况下，追踪被记录到 `Default Project` 项目。你可以通过几种方式更改追踪记录的项目：
+
+<Tabs>
+    <Tab title="Typescript" value="typescript" language="typescript">
+    你可以使用 `OPIK_PROJECT_NAME` 环境变量设置追踪记录的项目，或向 `Opik` 客户端传递参数。
+
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik({
+        projectName: "my_project",
+        // apiKey: "my_api_key",
+        // apiUrl: "https://www.comet.com/opik/api",
+        // workspaceName: "my_workspace",
+    });
+    ```
+    </Tab>
+    <Tab title="Python" value="python" language="python">
+        你可以使用 `OPIK_PROJECT_NAME` 环境变量设置追踪记录的项目。
+
+        如果使用函数装饰器，可以在装饰器参数中设置项目：
+
+        ```python
+        @track(project_name="my_project")
+        def my_function():
+            pass
+        ```
+
+        如果使用底层 SDK，可以在 `Opik` 客户端构造函数中设置项目：
+
+        ```python
+        from opik import Opik
+
+        client = Opik(project_name="my_project")
+        ```
+    </Tab>
+
+</Tabs>
+
+### 项目名称解析（Python SDK）
+
+项目名称根据是否存在活跃的项目上下文以不同方式确定。
+
+#### 当没有活跃项目上下文时
+
+这适用于**顶层** `@track` 装饰的函数调用、`Opik()` 客户端或在任何追踪上下文之外使用的原生集成（如 `track_openai`、`OpikTracer`）。项目名称按以下顺序解析：
+
+1. **显式 `project_name` 参数** — 直接传递给 `@track(project_name="...")`、`Opik(project_name="...")`、`OpikTracer(project_name="...")` 或客户端方法如 `client.trace(project_name="...")`
+2. **客户端配置** — 来自 `OPIK_PROJECT_NAME` 环境变量或 `~/.opik.config` 文件
+3. **默认值** — 回退到 `"Default Project"`（会记录一次警告提醒你配置项目名称）
+
+第一个运行的 `@track(project_name="...")` 或 `opik.project_context("...")` 调用将为所有嵌套操作建立**活跃项目上下文**。
+
+#### 当项目上下文活跃时
+
+一旦建立了项目上下文（由父级 `@track(project_name="...")` 或 `opik.project_context("...")` 建立），**所有嵌套操作都使用上下文项目名称**。包括：
+
+- 嵌套的 `@track` 装饰函数 — 即使它们传递了不同的 `project_name`，外层上下文优先（会记录警告）
+- 原生集成（如 `OpikTracer`、`track_openai`） — 如果在活跃上下文内初始化，上下文项目会覆盖集成的 `project_name` 参数（会记录警告）
+- `Opik()` 客户端方法 — 如果使用显式 `project_name` 调用如 `client.trace(project_name="...")`，显式参数优先；如果省略 `project_name`，则使用上下文项目
+
+这确保单个执行流程中的所有追踪和 Span 被记录到同一个项目。
+
+#### `@track` 上下文传播
+
+当在顶层函数上使用 `@track(project_name="...")` 时，它会为整个调用树设置项目上下文：
+
+```python
+from opik import track
+
+@track(project_name="my-agent")
+def agent(query):
+    context = retrieve(query)
+    return generate(context)
+
+@track
+def retrieve(query):
+    # 从父上下文继承 "my-agent"
+    ...
+
+@track
+def generate(context):
+    # 也从父上下文继承 "my-agent"
+    ...
+```
+
+如果嵌套函数指定了不同的 `project_name`，它将被忽略，外层项目被保留：
+
+```python
+@track(project_name="my-agent")
+def agent(query):
+    helper(query)  # 仍然记录到 "my-agent"，而不是 "other-project"
+
+@track(project_name="other-project")
+def helper(query):
+    # 会记录警告：将使用外层项目 "my-agent"
+    ...
+```
+
+#### `opik.project_context()`
+
+`opik.project_context()` 上下文管理器为块内所有 Opik 操作设置项目名称 — `@track` 装饰的函数、原生集成和 `Opik()` 客户端调用（当未显式传递 `project_name` 时）：
+
+```python
+import opik
+
+with opik.project_context("customer-support"):
+    # @track 装饰的函数和原生集成
+    # 都使用 "customer-support" 作为项目名称
+    my_agent(query)
+```
+
+嵌套规则相同：第一个运行的 `project_context` 或 `@track(project_name=...)` 拥有上下文。使用不同项目名称的内部调用将被忽略（会记录警告）。
+
+<Warning>
+当脚本将 `@track` 追踪与其他 Opik API 调用（如 `evaluate()`、`get_or_create_dataset()` 或 `Prompt()`）结合使用时，如果项目名称未一致设置，追踪和 API 对象可能会落入不同项目。确保传递给 `opik.configure(project_name=...)` 的值（控制 `@track` 追踪的目的地）与显式传递给每个 API 调用的 `project_name` 参数匹配：
+
+```python
+import opik
+
+opik.configure(project_name="my-project")
+
+dataset = client.get_or_create_dataset(name="my-dataset", project_name="my-project")
+
+evaluation = evaluate(
+    dataset=dataset,
+    task=evaluation_task,
+    project_name="my-project",  # 必须与上面 opik.configure 的值匹配
+    ...
+)
+```
+</Warning>
+
+### 刷新追踪和 Span
+
+此过程是可选的，仅在运行短期脚本或调试为什么追踪和 Span 未被记录到 Opik 时需要。
+
+<Tabs>
+    <Tab title="Typescript" value="typescript" language="typescript">
+        由于 Typescript SDK 专为生产环境设计，我们会批量处理追踪和 Span，并在后台发送到 Opik。
+
+        如果你运行的是短期脚本，可以使用 `Opik` 客户端的 `flush` 方法将追踪刷新到 Opik。
+
+        ```typescript
+        import { Opik } from "opik";
+
+        const client = new Opik();
+        client.flush();
+        ```
+    </Tab>
+    <Tab title="Python" value="python" language="python">
+        由于 Python SDK 专为生产环境设计，我们会批量处理追踪和 Span，并在后台发送到 Opik。
+
+        如果你运行的是短期脚本，可以使用 `Opik` 客户端的 `flush` 方法将追踪刷新到 Opik。
+
+        ```python maxLines=100
+        from opik import Opik
+
+        client = Opik()
+        client.flush()
+        ```
+
+        你还可以在使用 `@track` 装饰器时将 `flush` 参数设置为 `True`，以确保追踪在程序退出前被刷新到 Opik。
+
+        ```python
+        from opik import track
+
+        @track(flush=True)
+        def llm_chain(input_text):
+            # LLM 链代码
+            # ...
+            return f"Processed: {input_text}"
+        ```
+    </Tab>
+
+</Tabs>
+
+### 禁用日志记录过程
+
+<Tabs>
+    <Tab title="Typescript" value="typescript" language="typescript">
+        你可以使用 `OPIK_TRACK_DISABLE` 环境变量全局禁用日志记录过程
+        （也可以在配置文件中设置 `track_disable`，或向 `Opik` 客户端构造函数传递 `trackDisable: true`）。
+
+        如果需要更多控制，还可以使用 `setTracingActive` 函数动态禁用日志记录过程。
+
+        ```typescript
+        import {
+          isTracingActive,
+          setTracingActive,
+          resetTracingToConfigDefault,
+        } from "opik";
+
+        // 检查追踪标志的当前状态
+        console.log(isTracingActive());
+
+        // 禁用日志记录过程
+        setTracingActive(false);
+
+        // 重新启用日志记录过程
+        setTracingActive(true);
+
+        // 重置为配置解析的值（OPIK_TRACK_DISABLE / trackDisable）
+        resetTracingToConfigDefault();
+        ```
+
+        当追踪被禁用时，所有追踪功能都会关闭 — `track` 装饰器、集成和手动 `client.trace()` 调用都会停止向 Opik 发送数据。
+    </Tab>
+    <Tab title="Python" value="python" language="python">
+        你可以使用 `OPIK_TRACK_DISABLE` 环境变量全局禁用日志记录过程。
+
+        如果需要更多控制，还可以使用 `set_tracing_active` 函数动态禁用日志记录过程。
+
+        ```python
+        import opik
+
+        # 检查追踪标志的当前状态
+        print(opik.is_tracing_active())
+
+        # 禁用日志记录过程
+        opik.set_tracing_active(False)
+
+        # 重新启用日志记录过程
+        print(opik.set_tracing_active(True))
+        ```
+    </Tab>
+
+</Tabs>
+
+## 后续步骤
+
+为 Agent 设置好可观测性后，你可以更进一步：
+
+- [记录聊天对话](/v1/tracing/log_chat_conversations)
+- [记录用户反馈](/v1/tracing/annotate_traces)
+- [设置在线评估指标](/v1/production/rules)

@@ -1,0 +1,42 @@
+---
+description: 使用 PromptUncertaintyJudge 评估提示词模糊性
+headline: 提示词不确定性 | Opik 文档
+og:description: 使用 Opik 的 PromptUncertaintyJudge 评估有风险的用户请求，提升模型清晰度和决策能力。
+og:site_name: Opik 文档
+og:title: 提示词不确定性评分 - Opik
+title: 提示词不确定性
+---
+
+# 提示词不确定性
+
+提示词不确定性评分帮助您在有风险或不明确的用户请求到达生产模型之前进行分类处理。`PromptUncertaintyJudge` 可以突出显示可能导致助手混淆的缺失上下文或冲突指令。
+
+对原始提示词运行此判断器，以决定是否请求澄清、转交人工处理，或分配给更强大的模型。
+
+```python title="分类处理复杂提示词"
+from opik.evaluation.metrics import PromptUncertaintyJudge
+
+prompt = (
+    "Summarise the attached 200-page legal agreement into a single bullet, "
+    "guaranteeing there are no omissions."
+)
+
+uncertainty = PromptUncertaintyJudge().score(input=prompt)
+
+print(uncertainty.value, uncertainty.reason)
+```
+
+## 输入参数
+
+判断器通过 `input` 关键字参数接受单个字符串。您可以通过关键字参数传递额外的元数据（数据集行内容、提示词 ID）——这些将被转发给底层基础指标用于跟踪。
+
+## 配置
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 如需更大的评估器，可替换为任意 LiteLLM 聊天模型。 |
+| `temperature` | `0.0` | 较低的值提高可复现性；较高的值探索更多解释。 |
+| `track` | `True` | 禁用后将跳过评估日志记录。 |
+| `project_name` | `None` | 记录结果时覆盖项目名称。 |
+
+评估器输出 0 到 10 之间的整数（由 Opik 归一化为 0–1）。检查 `reason` 文本获取理由和各标准的反馈，当分数超过阈值时触发后续自动化流程。

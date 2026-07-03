@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { DropdownMenuItem } from "@/ui/dropdown-menu";
 import { Separator } from "@/ui/separator";
 import SearchInput from "@/shared/SearchInput/SearchInput";
@@ -21,6 +22,7 @@ const SEARCH_OPTION_THRESHOLD = 5;
 const SingleSelectChipPopoverContent: React.FC<
   SingleSelectChipPopoverContentProps
 > = ({ definition, value, onSelect, onClear }) => {
+  const { t } = useTranslation("common");
   const [search, setSearch] = useState("");
   const showSearch = definition.options.length > SEARCH_OPTION_THRESHOLD;
 
@@ -42,7 +44,7 @@ const SingleSelectChipPopoverContent: React.FC<
           <SearchInput
             searchText={search}
             setSearchText={setSearch}
-            placeholder="Search"
+            placeholder={t("singleSelectChip.search")}
             dimension="sm"
             variant="ghost"
           />
@@ -52,7 +54,7 @@ const SingleSelectChipPopoverContent: React.FC<
       <div className="min-h-0 flex-1 overflow-y-auto">
         {filteredOptions.length === 0 && (
           <div className="comet-body-s flex h-32 w-full items-center justify-center text-muted-slate">
-            No search results
+            {t("singleSelectChip.noSearchResults")}
           </div>
         )}
         {filteredOptions.map((option) => {
@@ -75,10 +77,10 @@ const SingleSelectChipPopoverContent: React.FC<
                 <span className="truncate text-sm">{option.label}</span>
               </TooltipWrapper>
               {isSelected && (
-                <TooltipWrapper content="Clear filter">
+                <TooltipWrapper content={t("singleSelectChip.clearFilter")}>
                   <button
                     type="button"
-                    aria-label="Clear filter"
+                    aria-label={t("singleSelectChip.clearFilter")}
                     onClick={(event) => {
                       event.stopPropagation();
                       onClear();

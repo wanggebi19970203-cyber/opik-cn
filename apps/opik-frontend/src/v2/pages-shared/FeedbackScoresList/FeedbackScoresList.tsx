@@ -1,5 +1,6 @@
 import React from "react";
 import { PenLine } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import FeedbackScoreTag from "@/shared/FeedbackScoreTag/FeedbackScoreTag";
@@ -15,11 +16,12 @@ const FeedbackScoresList: React.FunctionComponent<FeedbackScoresListProps> = ({
   scores,
   className,
 }) => {
+  const { t } = useTranslation("common");
   if (scores.length === 0) return null;
 
   return (
     <div className={cn("flex min-h-7 items-center", className)}>
-      <TooltipWrapper content="Feedback scores">
+      <TooltipWrapper content={t("feedbackScoresList.feedbackScores")}>
         <PenLine className="mx-1 size-3.5 shrink-0 text-muted-slate" />
       </TooltipWrapper>
       <div className="flex gap-1.5 overflow-x-auto">

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Copy, MoreHorizontal, Share, Trash } from "lucide-react";
 import copy from "clipboard-copy";
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
@@ -40,30 +41,31 @@ interface DatasetItemEditorActionsPanelProps {
 const DatasetItemEditorActionsPanel: React.FC<
   DatasetItemEditorActionsPanelProps
 > = ({ datasetItemId, onShare, onCopyId, onDelete }) => {
+  const { t } = useTranslation("datasets");
   return (
     <div className="flex flex-auto items-center justify-end pl-6">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon-sm">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("datasets.itemActions.actionsMenu")}</span>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={onShare}>
             <Share className="mr-2 size-4" />
-            Share item
+            {t("datasets.itemActions.shareItem", { itemName: t("datasets.itemEditor.recordLowercase") })}
           </DropdownMenuItem>
           <TooltipWrapper content={datasetItemId} side="left">
             <DropdownMenuItem onClick={onCopyId}>
               <Copy className="mr-2 size-4" />
-              Copy item ID
+              {t("datasets.itemActions.copyItemId", { itemName: t("datasets.itemEditor.record") })}
             </DropdownMenuItem>
           </TooltipWrapper>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onDelete}>
             <Trash className="mr-2 size-4" />
-            Delete item
+            {t("datasets.itemActions.deleteItem", { itemName: t("datasets.itemEditor.recordLowercase") })}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -74,6 +76,7 @@ const DatasetItemEditorActionsPanel: React.FC<
 const DatasetItemEditorAutosaveLayout: React.FC<
   DatasetItemEditorAutosaveLayoutProps
 > = ({ datasetItemId, isOpen, onClose }) => {
+  const { t } = useTranslation("datasets");
   const {
     isPending,
     handleFieldChange,
@@ -98,17 +101,17 @@ const DatasetItemEditorAutosaveLayout: React.FC<
 
   const handleShare = useCallback(() => {
     toast({
-      description: "URL successfully copied to clipboard",
+      description: t("datasets.itemEditor.urlCopiedToClipboard"),
     });
     copy(window.location.href);
-  }, [toast]);
+  }, [toast, t]);
 
   const handleCopyId = useCallback(() => {
     toast({
-      description: "Item ID successfully copied to clipboard",
+      description: t("datasets.itemEditor.recordIdCopiedToClipboard"),
     });
     copy(datasetItemId);
-  }, [datasetItemId, toast]);
+  }, [datasetItemId, toast, t]);
 
   const handleDeleteItemConfirm = useCallback(() => {
     handleDelete(onClose);
@@ -143,7 +146,7 @@ const DatasetItemEditorAutosaveLayout: React.FC<
           <div className="sticky top-0 z-10 border-b bg-background p-6 pb-4">
             <TooltipWrapper content={datasetItemId}>
               <div className="comet-body-accented">
-                Dataset item{" "}
+                {t("datasets.itemEditor.record")}{" "}
                 <span className="comet-body-s text-muted-slate">
                   {truncateId(datasetItemId)}
                 </span>
@@ -159,7 +162,7 @@ const DatasetItemEditorAutosaveLayout: React.FC<
           </div>
           {hasMedia && (
             <div className="border-b px-6 py-4">
-              <div className="mb-2 text-sm font-medium">Media</div>
+              <div className="mb-2 text-sm font-medium">{t("datasets.itemEditor.media")}</div>
               <ImagesListWrapper media={media} />
             </div>
           )}

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import { Label } from "@/ui/label";
 import EyeInput from "@/shared/EyeInput/EyeInput";
@@ -23,6 +24,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
   form,
   isEdit = false,
 }) => {
+  const { t } = useTranslation("prompt");
   return (
     <div className="flex flex-col gap-4 pb-4">
       <p className="comet-body-s text-muted-slate">
@@ -37,7 +39,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">Provider name</Label>
+                <Label htmlFor="providerName">{t("customProviderDetails.providerName")}</Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -52,9 +54,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
                 </FormControl>
                 <FormMessage />
                 <Description>
-                  {
-                    'A unique identifier for this provider instance (e.g., "ollama", "vLLM", "LM-Studio").'
-                  }
+                  {t("customProviderDetails.providerNameDescription")}
                 </Description>
               </FormItem>
             );
@@ -69,7 +69,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="url">URL</Label>
+              <Label htmlFor="url">{t("customProviderDetails.url")}</Label>
               <FormControl>
                 <Input
                   id="url"
@@ -95,11 +95,11 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">API key</Label>
+              <Label htmlFor="apiKey">{t("customProviderDetails.apiKey")}</Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
-                  placeholder="API key"
+                  placeholder={t("customProviderDetails.apiKeyPlaceholder")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -109,8 +109,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Custom providers may not require an API key, depending on your
-                server setup. Learn more in the{" "}
+                {t("customProviderDetails.apiKeyDescription")}{" "}
                 <Button
                   variant="link"
                   size="sm"
@@ -122,7 +121,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
                     target="_blank"
                     rel="noreferrer"
                   >
-                    documentation
+                    {t("customProviderDetails.documentation")}
                   </a>
                 </Button>
                 .
@@ -139,11 +138,11 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">Models list</Label>
+              <Label htmlFor="models">{t("customProviderDetails.modelsList")}</Label>
               <FormControl>
                 <Input
                   id="models"
-                  placeholder="Models list"
+                  placeholder={t("customProviderDetails.modelsListPlaceholder")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -153,7 +152,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Comma separated list of available models. Example:
+                {t("customProviderDetails.modelsListDescription")}
                 {`"meta-llama/Meta-Llama-3.1-70B,mistralai/Mistral-7B"`}
               </Description>
             </FormItem>

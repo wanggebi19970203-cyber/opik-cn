@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Span, Trace } from "@/types/traces";
 import { Button } from "@/ui/button";
@@ -17,6 +18,7 @@ type HiddenSpansToggleProps = {
 // nothing when the tree has no such spans. Shares its state with the rendering panel via
 // the persisted preference, so no state needs to be threaded through the toolbar.
 const HiddenSpansToggle: React.FC<HiddenSpansToggleProps> = ({ spans }) => {
+  const { t } = useTranslation("tracing");
   const [hidden, setHidden] = useHideSpansPreference();
   const canHide = useMemo(() => hasHiddenSpans(spans), [spans]);
 
@@ -26,8 +28,8 @@ const HiddenSpansToggle: React.FC<HiddenSpansToggleProps> = ({ spans }) => {
     <TooltipWrapper
       content={
         hidden
-          ? "Some spans are hidden. Click to show all spans."
-          : "Showing all spans. Click to hide non-essential spans."
+          ? t("hiddenSpans.someHidden")
+          : t("hiddenSpans.allVisible")
       }
     >
       <Button

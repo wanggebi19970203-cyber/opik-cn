@@ -27,6 +27,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * 提示词数据访问对象（DAO）接口。
+ * 提供提示词的 CRUD 操作、版本管理、批量查询和迁移支持等功能。
+ * 使用 JDBI 框架实现 SQL 映射。
+ *
+ * @see Prompt
+ * @see PromptVersionLink
+ */
 @RegisterColumnMapper(PromptVersionColumnMapper.class)
 @RegisterConstructorMapper(Prompt.class)
 @RegisterArgumentFactory(UUIDArgumentFactory.class)
@@ -35,9 +43,13 @@ import java.util.UUID;
 public interface PromptDAO {
 
     /**
-     * Checks for V1 (workspace-scoped) prompts excluding known demo names.
-     * MySQL utf8mb4_unicode_ci collation makes the NOT IN comparison case-insensitive,
-     * so demo name variants differing only in casing are automatically excluded.
+     * 检查是否存在 V1（工作区范围）提示词，排除已知的演示名称。
+     * MySQL 的 utf8mb4_unicode_ci 排序规则使 NOT IN 比较不区分大小写，
+     * 因此仅大小写不同的演示名称变体会被自动排除。
+     *
+     * @param workspaceId    工作区ID
+     * @param demoPromptNames 演示提示词名称列表
+     * @return 如果存在非演示的 V1 提示词则返回 true
      */
     @SqlQuery("""
             SELECT EXISTS(
@@ -50,11 +62,26 @@ public interface PromptDAO {
     boolean hasVersion1Prompts(
             @Bind("workspaceId") String workspaceId, @BindList("demoPromptNames") List<String> demoPromptNames);
 
+    /**
+     * 保存新的提示词记录。
+     *
+     * @param workspaceId 工作区ID
+     * @param prompt      提示词对象
+     */
     @SqlUpdate("INSERT INTO prompts (id, name, description, created_by, last_updated_by, workspace_id, project_id, tags, template_structure) "
             +
             "VALUES (:bean.id, :bean.name, :bean.description, :bean.createdBy, :bean.lastUpdatedBy, :workspace_id, :bean.projectId, :bean.tags, :bean.templateStructure)")
     void save(@Bind("workspace_id") String workspaceId, @BindMethods("bean") Prompt prompt);
 
+    /**
+     * 根据ID查找提示词，包含版本数量统计、最新版本和可选的请求版本信息。
+     *
+     * @param id          提示词ID
+     * @param workspaceId 工作区ID
+     * @param maskId      可选的掩码版本ID
+     * @param environment 可选的环境名称
+     * @return 提示词对象，包含版本信息
+     */
     @SqlQuery("""
             WITH pv_for_prompt AS (
                 SELECT pv.*
@@ -138,14 +165,42 @@ public interface PromptDAO {
             @Define("mask_id") @Bind("mask_id") UUID maskId,
             @Define("environment") @Bind("environment") String environment);
 
+    /**
+     * 根据ID查找提示词（简化版本，不指定掩码和环境）。
+     *
+     * @param id          提示词ID
+     * @param workspaceId 工作区ID
+     * @return 提示词对象
+     */
     default Prompt findById(UUID id, String workspaceId) {
         return findById(id, workspaceId, null, null);
     }
 
+    /**
+     * 根据ID查找提示词（指定掩码版本）。
+     *
+     * @param id          提示词ID
+     * @param workspaceId 工作区ID
+     * @param maskId      掩码版本ID
+     * @return 提示词对象
+     */
     default Prompt findById(UUID id, String workspaceId, UUID maskId) {
         return findById(id, workspaceId, maskId, null);
     }
 
+    /**
+     * 分页查询提示词列表，支持按名称模糊搜索、项目过滤、自定义排序和过滤条件。
+     *
+     * @param name         可选的名称搜索关键词
+     * @param workspaceId  工作区ID
+     * @param projectId    可选的项目ID
+     * @param offset       分页偏移量
+     * @param limit        每页数量
+     * @param sortingFields 可选的排序字段
+     * @param filters      可选的过滤条件
+     * @param filterMapping 过滤条件参数映射
+     * @return 提示词列表
+     */
     @SqlQuery("""
             SELECT
                 *
@@ -237,6 +292,13 @@ public interface PromptDAO {
             """)
     @UseStringTemplateEngine
     @AllowUnusedBindings
+    /**
+     * 根据ID集合批量查找提示词，包含每个提示词的最新版本信息。
+     *
+     * @param ids         提示词ID集合
+     * @param workspaceId 工作区ID
+     * @return 提示词列表，包含最新版本信息
+     */
     List<Prompt> findByIds(@Define("ids") @BindList("ids") Set<UUID> ids, @Bind("workspace_id") String workspaceId);
 
     @SqlQuery("""
@@ -261,11 +323,29 @@ public interface PromptDAO {
             """)
     @UseStringTemplateEngine
     @AllowUnusedBindings
+    /**
+     * 统计符合过滤条件的提示词数量。
+     *
+     * @param name         可选的名称搜索关键词
+     * @param workspaceId  工作区ID
+     * @param projectId    可选的项目ID
+     * @param filters      可选的过滤条件
+     * @param filterMapping 过滤条件参数映射
+     * @return 符合条件的提示词数量
+     */
     long count(@Define("name") @Bind("name") String name, @Bind("workspace_id") String workspaceId,
             @Define("project_id") @Bind("project_id") UUID projectId,
             @Define("filters") String filters,
             @BindMap Map<String, Object> filterMapping);
 
+    /**
+     * 根据名称查找提示词。
+     *
+     * @param name        提示词名称
+     * @param workspaceId 工作区ID
+     * @param projectId   可选的项目ID
+     * @return 提示词对象，不存在时返回 null
+     */
     @SqlQuery("SELECT * FROM prompts WHERE name = :name AND workspace_id = :workspace_id" +
             " <if(project_id)> AND project_id = :project_id <endif>")
     @UseStringTemplateEngine
@@ -273,6 +353,14 @@ public interface PromptDAO {
     Prompt findByName(@Bind("name") String name, @Bind("workspace_id") String workspaceId,
             @Define("project_id") @Bind("project_id") UUID projectId);
 
+    /**
+     * 更新提示词的名称、描述和标签。
+     *
+     * @param workspaceId   工作区ID
+     * @param updatedPrompt 更新后的提示词对象
+     * @param tags          可选的标签集合，为 null 时保留原标签
+     * @return 实际更新的记录数
+     */
     @SqlUpdate("UPDATE prompts SET name = :bean.name, description = :bean.description, last_updated_by = :bean.lastUpdatedBy, "
             +
             " tags = COALESCE(:tags, tags) " +
@@ -282,12 +370,32 @@ public interface PromptDAO {
     int update(@Bind("workspace_id") String workspaceId, @BindMethods("bean") Prompt updatedPrompt,
             @Bind("tags") Set<String> tags);
 
+    /**
+     * 根据ID删除单个提示词。
+     *
+     * @param id          提示词ID
+     * @param workspaceId 工作区ID
+     * @return 实际删除的记录数
+     */
     @SqlUpdate("DELETE FROM prompts WHERE id = :id AND workspace_id = :workspace_id")
     int delete(@Bind("id") UUID id, @Bind("workspace_id") String workspaceId);
 
+    /**
+     * 根据ID集合批量删除提示词。
+     *
+     * @param ids         提示词ID集合
+     * @param workspaceId 工作区ID
+     */
     @SqlUpdate("DELETE FROM prompts WHERE id IN (<ids>) AND workspace_id = :workspaceId")
     void delete(@BindList("ids") Set<UUID> ids, @Bind("workspaceId") String workspaceId);
 
+    /**
+     * 更新提示词的最后更新时间和最后更新者。
+     *
+     * @param id            提示词ID
+     * @param workspaceId   工作区ID
+     * @param lastUpdatedBy 最后更新者用户名
+     */
     @SqlUpdate("UPDATE prompts SET last_updated_by = :lastUpdatedBy, last_updated_at = CURRENT_TIMESTAMP(6) WHERE id = :id AND workspace_id = :workspaceId")
     void updateLastUpdatedAt(@Bind("id") UUID id, @Bind("workspaceId") String workspaceId,
             @Bind("lastUpdatedBy") String lastUpdatedBy);
@@ -337,6 +445,13 @@ public interface PromptDAO {
             INNER JOIN prompts p ON pvc.prompt_id = p.id AND p.workspace_id = pvc.workspace_id
             LEFT JOIN ver_envs ve ON ve.version_id = pvc.id
             """)
+    /**
+     * 根据提交哈希查找提示词及其对应版本信息。
+     *
+     * @param commit      提交哈希值
+     * @param workspaceId 工作区ID
+     * @return 包含指定提交版本的提示词列表
+     */
     List<Prompt> findByCommit(@Bind("commit") String commit, @Bind("workspace_id") String workspaceId);
 
     @SqlQuery("""
@@ -351,6 +466,14 @@ public interface PromptDAO {
             LIMIT :limit
             """)
     @RegisterConstructorMapper(value = RecentActivity.RecentPromptVersion.class)
+    /**
+     * 查找指定项目下最近的提示词版本，用于最近活动展示。
+     *
+     * @param workspaceId 工作区ID
+     * @param projectId   项目ID
+     * @param limit       返回结果的最大数量
+     * @return 最近的提示词版本列表
+     */
     List<RecentActivity.RecentPromptVersion> findRecentPromptVersionsByProjectId(
             @Bind("workspace_id") String workspaceId,
             @Bind("project_id") UUID projectId,
@@ -371,17 +494,29 @@ public interface PromptDAO {
     @UseStringTemplateEngine
     @AllowUnusedBindings
     @RegisterRowMapper(PromptVersionLinkRowMapper.class)
+    /**
+     * 根据提交哈希集合查找关联的提示词版本链接信息。
+     *
+     * @param commits     提交哈希集合
+     * @param workspaceId 工作区ID
+     * @return 提示词版本链接列表
+     */
     List<PromptVersionLink> findPromptsByCommits(
             @Define("commits") @BindList("commits") Collection<String> commits,
             @Bind("workspace_id") String workspaceId);
 
     /**
-     * Per-workspace orphan-prompt counts for the prompt project migration eligibility scan.
-     * Returns workspaces with at least one non-demo prompt whose {@code project_id IS NULL},
-     * smallest-first so a single cycle can drain low-volume workspaces. Demo prompts are
-     * excluded via {@link DemoData#PROMPTS} (utf8mb4_unicode_ci is case-insensitive so a single
-     * canonical entry covers all casings). The optional {@code excluded_workspace_ids} bind
-     * folds the migration's env-var exclusion list and the persisted trap list into one query.
+     * 查询每个工作区的孤立提示词数量，用于提示词项目迁移资格扫描。
+     * 返回至少有一个非演示提示词且 {@code project_id IS NULL} 的工作区，
+     * 按数量从小到大排序，以便单次循环可以处理低容量工作区。演示提示词通过
+     * {@link DemoData#PROMPTS} 排除（utf8mb4_unicode_ci 不区分大小写，
+     * 因此单个规范条目涵盖所有大小写变体）。可选的 {@code excluded_workspace_ids}
+     * 绑定参数将迁移的环境变量排除列表和持久化的陷阱列表合并为一个查询。
+     *
+     * @param limit               返回结果的最大数量
+     * @param demoPromptNames     演示提示词名称列表
+     * @param excludedWorkspaceIds 需要排除的工作区ID集合
+     * @return 符合条件的工作区列表，按孤立提示词数量升序排列
      */
     @SqlQuery("""
             SELECT
@@ -404,10 +539,15 @@ public interface PromptDAO {
             @Define("excluded_workspace_ids") @BindList(value = "excluded_workspace_ids", onEmpty = BindList.EmptyHandling.NULL_VALUE) Set<String> excludedWorkspaceIds);
 
     /**
-     * Returns up to {@code :limit} orphan, non-demo prompt IDs for a single workspace. The cap
-     * bounds the per-workspace-per-cycle memory and the size of the ClickHouse {@code IN} list
-     * in the downstream classification query. Workspaces with more orphans than the cap are
-     * drained over subsequent cycles — the eligibility scan finds them again until none remain.
+     * 返回单个工作区中最多 {@code :limit} 个孤立的非演示提示词ID。
+     * 该上限限制了每个工作区每轮循环的内存使用量以及下游分类查询中
+     * ClickHouse {@code IN} 列表的大小。孤立提示词数量超过上限的工作区
+     * 将在后续循环中逐步处理——资格扫描会重复发现它们，直到没有剩余。
+     *
+     * @param workspaceId     工作区ID
+     * @param demoPromptNames 演示提示词名称列表
+     * @param limit           返回结果的最大数量
+     * @return 孤立提示词ID列表
      */
     @SqlQuery("""
             SELECT id
@@ -425,10 +565,16 @@ public interface PromptDAO {
             @Bind("limit") int limit);
 
     /**
-     * Idempotent batch assignment. The {@code project_id IS NULL} predicate is the concurrency
-     * guard — a concurrent user write that has already set the column to a different value is
-     * preserved, and re-runs of the migration are no-ops on already-assigned rows. The schema's
-     * {@code ON UPDATE CURRENT_TIMESTAMP(6)} on {@code last_updated_at} stamps the row time.
+     * 幂等的批量赋值操作。{@code project_id IS NULL} 谓词是并发保护条件——
+     * 已被并发用户写入设置为其他值的记录会被保留，迁移任务重复运行时对已赋值的
+     * 记录不会产生影响（空操作）。表结构中 {@code last_updated_at} 字段上的
+     * {@code ON UPDATE CURRENT_TIMESTAMP(6)} 会自动更新行的时间戳。
+     *
+     * @param workspaceId 工作区ID
+     * @param promptIds   需要赋值的提示词ID集合
+     * @param projectId   要设置的项目ID
+     * @param userName    操作用户名
+     * @return 实际更新的记录数
      */
     @SqlUpdate("""
             UPDATE prompts

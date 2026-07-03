@@ -1,0 +1,133 @@
+---
+description: 从这里开始将 Opik 集成到您的基于 AISuite 的 GenAI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: AISuite | Opik 文档
+og:description: 学习如何将 Opik 与 aisuite SDK 集成，以有效跟踪 API 调用、记录提示词、模型使用情况和响应。
+og:site_name: Opik 文档
+og:title: 将 AISuite 与 Opik 集成实现无缝跟踪
+title: 使用 Opik 实现 AISuite 可观测性
+---
+
+本指南介绍如何将 Opik 与 aisuite Python SDK 集成。通过使用 opik 提供的 `track_aisuite` 方法，您可以轻松地在 Opik 项目中跟踪和评估 aisuite API 调用，Opik 将自动记录输入提示词、使用的模型、token 使用量和生成的响应。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=aisuite&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=aisuite&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=aisuite&utm_campaign=opik) 了解更多信息。
+
+## 快速开始
+
+### 安装
+
+首先，确保您已安装 `opik` 和 `aisuite` 包：
+
+```bash
+pip install opik "aisuite[openai]"
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置 AISuite
+
+要配置 AISuite，您需要拥有 OpenAI API Key。您可以在[此页面查找或创建您的 OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)。
+
+您可以将其设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，您需要使用 `track_aisuite` 包装 AISuite 客户端。使用该包装客户端进行调用时，所有调用都将被记录到 Opik：
+
+```python
+from opik.integrations.aisuite import track_aisuite
+import aisuite as ai
+
+client = track_aisuite(ai.Client(), project_name="aisuite-integration-demo")
+
+messages = [
+    {"role": "user", "content": "Write a short two sentence story about Opik."},
+]
+
+response = client.chat.completions.create(
+    model="openai:gpt-4o",
+    messages=messages,
+    temperature=0.75
+)
+print(response.choices[0].message.content)
+```
+
+<Frame>
+  <img src="/img/cookbook/aisuite_trace_cookbook.png" />
+</Frame>
+
+## 高级用法
+
+### 与 `@track` 装饰器配合使用
+
+如果您的 LLM 管道中有多个步骤，可以使用 `@track` 装饰器记录每个步骤的 trace。如果在其中一个步骤中调用了 AISuite，该 LLM 调用将与相应步骤关联：
+
+```python
+from opik import track
+from opik.integrations.aisuite import track_aisuite
+import aisuite as ai
+
+client = track_aisuite(ai.Client(), project_name="aisuite-integration-demo")
+
+@track
+def generate_story(prompt):
+    res = client.chat.completions.create(
+        model="openai:gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}]
+    )
+    return res.choices[0].message.content
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    res = client.chat.completions.create(
+        model="openai:gpt-3.5-turbo", messages=[{"role": "user", "content": prompt}]
+    )
+    return res.choices[0].message.content
+
+@track(project_name="aisuite-integration-demo")
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+# 执行多步骤管道
+generate_opik_story()
+```
+
+现在可以在 UI 中查看 trace，其中包含显示不同步骤之间关系的层级 span：
+
+<Frame>
+  <img src="/img/cookbook/aisuite_trace_decorator_cookbook.png" />
+</Frame>
+
+## 支持的 aisuite 方法
+
+`track_aisuite` 包装器支持以下 aisuite 方法：
+
+- `aisuite.Client.chat.completions.create()`
+
+如果您希望跟踪其他 aisuite 方法，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

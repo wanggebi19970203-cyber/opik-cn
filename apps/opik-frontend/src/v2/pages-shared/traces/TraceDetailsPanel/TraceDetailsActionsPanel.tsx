@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import copy from "clipboard-copy";
 import FileSaver from "file-saver";
 import { json2csv } from "json-2-csv";
@@ -87,6 +88,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
   setActiveSection,
   horizontalNavigation,
 }) => {
+  const { t } = useTranslation("tracing");
   const [popupOpen, setPopupOpen] = useState(false);
   const isAIInspectorEnabled = useIsFeatureEnabled(
     FeatureToggleKeys.TOGGLE_OPIK_AI_ENABLED,
@@ -196,13 +198,13 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
 
         FileSaver.saveAs(blob, fileName);
         toast({
-          title: "Export successful",
-          description: `Exported ${fileSuffix} to ${format.toUpperCase()}`,
+          title: t("actions.exportSuccessful"),
+          description: t("actions.exportedToFormat", { type: fileSuffix, format: format.toUpperCase() }),
         });
       } catch (error) {
         toast({
-          title: "Export failed",
-          description: get(error, "message", "Failed to export"),
+          title: t("actions.exportFailed"),
+          description: get(error, "message", t("actions.failedToExport")),
           variant: "destructive",
         });
       }
@@ -218,14 +220,14 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
       onClose={onClose}
     >
       {isAIInspectorEnabled && (
-        <TooltipWrapper content="Debug your trace with AI assistance (OpikAssist)">
+        <TooltipWrapper content={t("actions.debugTraceWithAI")}>
           <Button
             variant="outline"
             size="2xs"
             onClick={() => setActiveSection(DetailsActionSection.AIAssistants)}
           >
             <Sparkles className="size-3.5 shrink-0" />
-            <span className="ml-1.5">Improve with Ollie</span>
+            <span className="ml-1.5">{t("actions.improveWithOllie")}</span>
           </Button>
         </TooltipWrapper>
       )}
@@ -240,34 +242,34 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem
             onClick={() => {
-              toast({ description: "URL copied to clipboard" });
+              toast({ description: t("actions.urlCopiedToClipboard") });
               copy(window.location.href);
             }}
           >
             <Share className="mr-2 size-4" />
-            Share
+            {t("actions.share")}
           </DropdownMenuItem>
           <TooltipWrapper content={traceId} side="left">
             <DropdownMenuItem
               onClick={() => {
-                toast({ description: "Trace ID copied to clipboard" });
+                toast({ description: t("actions.traceIdCopiedToClipboard") });
                 copy(traceId);
               }}
             >
               <Copy className="mr-2 size-4" />
-              Copy trace ID
+              {t("actions.copyTraceId")}
             </DropdownMenuItem>
           </TooltipWrapper>
           {spanId && (
             <TooltipWrapper content={spanId} side="left">
               <DropdownMenuItem
                 onClick={() => {
-                  toast({ description: "Span ID copied to clipboard" });
+                  toast({ description: t("actions.spanIdCopiedToClipboard") });
                   copy(spanId);
                 }}
               >
                 <Copy className="mr-2 size-4" />
-                Copy span ID
+                {t("actions.copySpanId")}
               </DropdownMenuItem>
             </TooltipWrapper>
           )}
@@ -280,7 +282,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
                 disabled={!isExportEnabled}
               >
                 <Download className="mr-2 size-4" />
-                Export as {format.toUpperCase()}
+                {t("actions.exportAs", { format: format.toUpperCase() })}
               </DropdownMenuItem>
             );
 
@@ -304,7 +306,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
                 variant="destructive"
               >
                 <Trash className="mr-2 size-4" />
-                Delete trace
+                {t("actions.deleteTrace")}
               </DropdownMenuItem>
             </>
           )}
@@ -316,9 +318,9 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
           open={popupOpen}
           setOpen={setPopupOpen}
           onConfirm={handleTraceDelete}
-          title="Delete trace"
-          description="Deleting a trace will also remove the trace data from related experiment samples. This action can't be undone. Are you sure you want to continue?"
-          confirmText="Delete trace"
+          title={t("actions.deleteTrace")}
+          description={t("actions.deleteTraceDescription")}
+          confirmText={t("actions.deleteTrace")}
           confirmButtonVariant="destructive"
         />
       )}
@@ -329,7 +331,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
 
       {canNavigateToExperiment && experiment && (
         <TooltipWrapper
-          content={`View this item in experiment: ${experiment.name}`}
+          content={t("actions.viewInExperiment", { name: experiment.name })}
         >
           <Button
             variant="outline"
@@ -349,20 +351,20 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
               })
             }
           >
-            Experiment
+            {t("actions.experiment")}
             <ArrowUpRight className="ml-1 size-3.5" />
           </Button>
         </TooltipWrapper>
       )}
 
       {hasThread && (
-        <TooltipWrapper content="Go to thread">
+        <TooltipWrapper content={t("actions.goToThread")}>
           <Button
             variant="outline"
             size="2xs"
             onClick={() => setThreadId!(threadId)}
           >
-            Thread
+            {t("actions.thread")}
             <ArrowUpRight className="ml-1 size-3.5" />
           </Button>
         </TooltipWrapper>

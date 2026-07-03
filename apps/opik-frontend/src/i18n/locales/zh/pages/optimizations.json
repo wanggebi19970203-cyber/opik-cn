@@ -1,0 +1,194 @@
+{
+  "optimizations": {
+    "title": "优化工作室",
+    "optimizationRuns": "优化运行",
+    "description": "追踪和管理优化实验",
+    "create": "创建优化运行",
+    "delete": "删除优化运行",
+    "empty": {
+      "title": "暂无优化运行",
+      "description": "创建您的第一个优化运行开始使用。",
+      "action": "创建您的第一个优化运行",
+      "pageDescription": "尝试不同的提示词版本，查看哪个效果最佳。优化运行帮助您提升准确性、一致性和用户体验。",
+      "noSearchResults": "无搜索结果"
+    },
+    "emptyState": {
+      "runDemoExample": "运行示例演示",
+      "runDemoExampleDesc": "从一个预配置的客服聊天机器人优化示例开始。",
+      "startOptimizationRun": "启动优化运行",
+      "startOptimizationRunDesc": "创建自定义优化工作流来测试和改进您的提示词。",
+      "optimizeViaSdk": "通过 SDK 优化",
+      "optimizeViaSdkDesc": "生成以编程方式运行自定义优化的入门代码。",
+      "viewDocs": "查看文档"
+    },
+    "fields": {
+      "name": "运行名称",
+      "dataset": "数据集",
+      "algorithm": "算法",
+      "model": "模型"
+    },
+    "columns": {
+      "name": "名称",
+      "dataset": "数据集",
+      "datasetName": "数据集名称",
+      "algorithm": "算法",
+      "status": "状态",
+      "duration": "时长",
+      "created": "创建时间",
+      "startTime": "开始时间",
+      "passRate": "通过率",
+      "accuracy": "准确率",
+      "latency": "延迟",
+      "cost": "成本",
+      "optCost": "优化成本"
+    },
+    "filters": {
+      "testSuite": "测试套件"
+    },
+    "actions": {
+      "view": "查看运行",
+      "stop": "停止运行",
+      "rerun": "重新运行",
+      "delete": "删除"
+    },
+    "actionsMenu": "操作菜单",
+    "status": {
+      "running": "运行中",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    },
+    "searchPlaceholder": "按数据集名称搜索",
+    "refreshTooltip": "刷新优化运行列表",
+    "confirmDialog": {
+      "deleteSingle": {
+        "title": "删除优化",
+        "description": "删除优化运行将移除其所有试验和相关数据。相关追踪不受影响。此操作无法撤销。确定要继续吗？",
+        "confirmText": "删除优化"
+      },
+      "deleteBatch": {
+        "title": "删除优化",
+        "description": "删除这些优化运行将移除其所有试验和相关数据。相关追踪不受影响。此操作无法撤销。确定要继续吗？",
+        "confirmText": "删除优化"
+      }
+    },
+    "newPage": {
+      "title": "优化提示词",
+      "cancel": "取消",
+      "starting": "启动中...",
+      "optimizePrompt": "优化提示词",
+      "name": "名称",
+      "namePlaceholder": "输入优化名称，否则将自动生成",
+      "prompt": "提示词",
+      "loadChatPrompt": "加载聊天提示词",
+      "loadingOptimization": "加载优化中...",
+      "preparingDataset": "准备数据集中..."
+    },
+    "configSidebar": {
+      "algorithm": "算法",
+      "selectAlgorithm": "选择算法",
+      "dataset": "数据集",
+      "selectDataset": "选择数据集",
+      "metric": "指标",
+      "selectMetric": "选择指标"
+    },
+    "addDialog": {
+      "title": "启动优化运行",
+      "description": "选择测试套件，选择您想要使用的优化器，我们将为您改进提示词",
+      "optimizationAlgorithms": "优化算法",
+      "selectTestSuite": "选择测试套件",
+      "selectTestSuitePlaceholder": "选择测试套件",
+      "createOptimizationRun": "3. 创建优化运行",
+      "metaOptimizer": "元优化器",
+      "metaOptimizerDesc": "使用元学习优化提示词。",
+      "fewShotBayesian": "少样本贝叶斯优化器",
+      "fewShotBayesianDesc": "使用少样本学习和贝叶斯优化来优化提示词。",
+      "evolutionary": "进化优化器",
+      "evolutionaryDesc": "使用进化算法优化提示词。",
+      "gepa": "GEPA 优化器",
+      "gepaDesc": "应用遗传帕累托搜索与反思引导。"
+    },
+    "algorithmConfigs": {
+      "title": "算法设置",
+      "description": "配置所选优化算法的参数",
+      "algorithmModel": "算法模型",
+      "usePromptModel": "使用提示词模型",
+      "algorithmModelDescription": "优化器用于自身推理的模型。默认使用提示词模型。",
+      "verbose": "详细输出",
+      "seed": "随机种子",
+      "seedTooltip": "用于可重复性的随机种子。使用相同的种子可在多次运行中获得一致的结果。",
+      "convergenceThreshold": "收敛阈值",
+      "convergenceThresholdTooltip": "判断优化何时收敛的阈值。较低的值需要更高的精度 (0-1)",
+      "populationSize": "种群大小",
+      "populationSizeTooltip": "每一代中的候选解数量",
+      "numberOfGenerations": "迭代代数",
+      "numberOfGenerationsTooltip": "运行多少代进化迭代",
+      "mutationRate": "变异率",
+      "mutationRateTooltip": "候选解发生随机变化的概率 (0-1)",
+      "crossoverRate": "交叉率",
+      "crossoverRateTooltip": "组合两个解的概率 (0-1)",
+      "tournamentSize": "锦标赛大小",
+      "tournamentSizeTooltip": "每轮选择中竞争的候选解数量",
+      "elitismSize": "精英保留数",
+      "elitismSizeTooltip": "每一代中保持不变的最优解数量",
+      "adaptiveMutation": "自适应变异",
+      "enableMultiObjectiveOptimization": "启用多目标优化",
+      "enableLlmCrossover": "启用 LLM 交叉",
+      "outputStyleGuidance": "输出风格指导",
+      "outputStyleGuidancePlaceholder": "例如：简洁、正式、技术性",
+      "inferOutputStyle": "推断输出风格",
+      "numberOfThreads": "线程数",
+      "numberOfThreadsTooltip": "用于加速优化的并行线程"
+    },
+    "temperatureConfig": {
+      "label": "温度",
+      "reasoningTooltip": "推理模型要求温度 = 1.0。此设置控制补全的随机性。",
+      "defaultTooltip": "控制随机性：降低温度会减少补全的随机性。当温度接近零时，模型将变得确定性和重复性。"
+    },
+    "modelSelect": {
+      "noProviders": "尚未配置 AI 提供商。",
+      "configureProvider": "配置提供商",
+      "askAdmin": "请工作区管理员添加提供商以选择模型。",
+      "noSearchResults": "无搜索结果",
+      "placeholder": "选择 LLM 模型",
+      "searchPlaceholder": "搜索模型",
+      "manageProviders": "管理 AI 提供商"
+    },
+    "metricConfigs": {
+      "title": "指标设置",
+      "description": "配置所选评估指标的参数",
+      "referenceKey": "引用键",
+      "referenceKeyPlaceholder": "例如：expected_output",
+      "referenceKeyAdvancedPlaceholder": "例如：answer 或 $.scores[?(@.name=='Useful')].value",
+      "referenceKeyScorePlaceholder": "例如：score 或 $.feedback_scores[?(@.name=='Useful')].value",
+      "caseSensitiveComparison": "区分大小写比较",
+      "pythonCode": "Python 代码",
+      "pythonCodeDescription": "定义一个继承 BaseMetric 的类，包含一个 score 方法，该方法接受 output（LLM 响应）和 **kwargs（数据集字段），返回 ScoreResult。",
+      "taskIntroduction": "任务介绍",
+      "taskIntroductionPlaceholder": "描述任务上下文和您正在评估的内容...",
+      "evaluationCriteria": "评估标准",
+      "evaluationCriteriaPlaceholder": "定义评估标准：准确性、完整性、相关性...",
+      "datasetVariablesAvailable": "可用：",
+      "clickToUse": "点击使用"
+    },
+    "logs": {
+      "title": "日志",
+      "lastUpdatedAt": "最后更新于",
+      "newLogsAvailable": "有新日志可用",
+      "waitingForLogs": "等待日志...",
+      "loadingLogs": "加载日志...",
+      "willAppearShortly": "日志即将显示",
+      "noLogsAvailable": "暂无日志",
+      "autoScrollEnabled": "自动滚动已启用",
+      "clickToScrollToBottom": "点击滚动到底部",
+      "refreshLogs": "刷新日志",
+      "fullscreen": "全屏"
+    },
+    "studioTemplates": {
+      "title": "运行优化",
+      "or": "或",
+      "optimizeYourOwnPrompt": "优化您自己的提示词",
+      "optimizeYourOwnPromptDescription": "从零开始，配置您自己的优化设置。"
+    }
+  }
+}

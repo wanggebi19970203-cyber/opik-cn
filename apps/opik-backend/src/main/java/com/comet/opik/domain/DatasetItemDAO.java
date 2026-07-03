@@ -76,10 +76,10 @@ public interface DatasetItemDAO {
             boolean mergeTags);
 
     /**
-     * Retrieves the column definitions (column names and their types) for the dataset items' data field.
+     * 获取数据集条目数据字段的列定义（列名及其类型）。
      *
-     * @param datasetId The ID of the dataset
-     * @return A Mono containing a map of column names to their types
+     * @param datasetId 数据集的ID
+     * @return 包含列名到类型映射的Mono
      */
     Mono<Map<String, List<String>>> getColumns(UUID datasetId);
 }
@@ -256,7 +256,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             """;
 
     /**
-     * Counts dataset items only if there's a matching experiment item.
+     * 仅在存在匹配的实验项时统计数据集条目数量。
      */
     private static final String SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_COUNT = """
             WITH feedback_scores_deduped AS (
@@ -395,11 +395,11 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             """;
 
     /**
-     * Gets the following relationships:
+     * 获取以下关系：
      * - dataset_item - experiment_items -> 1:N
      * - experiment_item - trace -> 1:1
      * - trace - feedback_scores -> 1:N
-     * And groups everything together resembling the following rough JSON structure:
+     * 并将所有内容聚合为类似以下粗略JSON结构的形式：
      *  {
      *      "dataset_item" : {
      *          "id": "some_id",
@@ -1126,7 +1126,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                 template.add("lastRetrievedId", lastRetrievedId);
             }
 
-            // Add filter support
+            // 添加过滤器支持
             if (CollectionUtils.isNotEmpty(filters)) {
                 FilterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM)
                         .ifPresent(datasetItemFilters -> template.add("dataset_item_filters", datasetItemFilters));
@@ -1141,7 +1141,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                 statement.bind("lastRetrievedId", lastRetrievedId);
             }
 
-            // Bind filter parameters
+            // 绑定过滤器参数
             if (CollectionUtils.isNotEmpty(filters)) {
                 FilterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
             }
@@ -1243,15 +1243,15 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             var template = getSTWithLogComment(DELETE_DATASET_ITEM, "delete_dataset_items", workspaceId,
                     userName, hasIds ? ids.size() : 0);
 
-            // Add ids or filters to template
-            // Delete by specific IDs (mutually exclusive with dataset_id + filters)
+            // 添加ids或过滤器到模板
+            // 按指定ID删除（与dataset_id + 过滤器互斥）
             if (hasIds) {
                 template.add("ids", true);
             } else {
-                // Delete by dataset_id with optional filters (mutually exclusive with ids)
+                // 按dataset_id删除，可选过滤器（与ids互斥）
                 template.add("dataset_id", true);
 
-                // Add additional filters if provided
+                // 如果提供了额外过滤器则添加
                 if (CollectionUtils.isNotEmpty(filters)) {
                     Optional<String> datasetItemFiltersOpt = filterQueryBuilder.toAnalyticsDbFilters(filters,
                             FilterStrategy.DATASET_ITEM);
@@ -1265,350 +1265,13 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             var statement = connection.createStatement(query)
                     .bind("workspace_id", workspaceId);
 
-            // Bind ids if provided
+            // 如果提供了ids则绑定
             if (hasIds) {
                 statement.bind("ids", ids.stream().map(UUID::toString).toArray(String[]::new));
             } else {
                 statement.bind("dataset_id", datasetId.toString());
 
-                // Bind filter parameters if provided
-                if (CollectionUtils.isNotEmpty(filters)) {
-                    filterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
-                }
-            }
-
-            String segmentOperation = hasIds ? "delete_dataset_items" : "delete_dataset_items_by_filters";
-            Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, segmentOperation);
-
-            String successMessage = hasIds
-                    ? "Completed delete for '%s' dataset items".formatted(ids.size())
-                    : "Completed delete for dataset items matching filters";
-
-            return Flux.from(statement.execute())
-                    .flatMap(Result::getRowsUpdated)
-                    .reduce(0L, Long::sum)
-                    .doFinally(signalType -> endSegment(segment))
-                    .doOnSuccess(__ -> log.info(successMessage));
-        }));
-    }
-
-    private ST newFindTemplate(String query, DatasetItemSearchCriteria datasetItemSearchCriteria, String queryName,
-            String workspaceId) {
-        var template = getSTWithLogComment(query, queryName, workspaceId, "", "");
-
-        Optional.ofNullable(datasetItemSearchCriteria.filters())
-                .ifPresent(filters -> {
-                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM)
-                            .ifPresent(datasetItemFilters -> template.add("dataset_item_filters", datasetItemFilters));
-
-                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.EXPERIMENT_ITEM)
-                            .ifPresent(experimentItemFilters -> template.add("experiment_item_filters",
-                                    experimentItemFilters));
-
-                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.FEEDBACK_SCORES)
-                            .ifPresent(scoresFilters -> template.add("feedback_scores_filters", scoresFilters));
-
-                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.FEEDBACK_SCORES_IS_EMPTY)
-                            .ifPresent(feedbackScoreIsEmptyFilters -> template.add("feedback_scores_empty_filters",
-                                    feedbackScoreIsEmptyFilters));
-                });
-
-        Optional.ofNullable(datasetItemSearchCriteria.search())
-                .filter(s -> !s.isBlank())
-                .ifPresent(searchText -> template.add("search_filter",
-                        filterQueryBuilder.buildDatasetItemSearchFilter(searchText)));
-
-        return template;
-    }
-
-    private void bindSearchCriteria(DatasetItemSearchCriteria datasetItemSearchCriteria, Statement statement) {
-        Optional.ofNullable(datasetItemSearchCriteria.filters())
-                .ifPresent(filters -> {
-                    filterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
-                    filterQueryBuilder.bind(statement, filters, FilterStrategy.EXPERIMENT_ITEM);
-                    filterQueryBuilder.bind(statement, filters, FilterStrategy.FEEDBACK_SCORES);
-                    filterQueryBuilder.bind(statement, filters, FilterStrategy.FEEDBACK_SCORES_IS_EMPTY);
-                });
-
-        Optional.ofNullable(datasetItemSearchCriteria.search())
-                .filter(s -> !s.isBlank())
-                .ifPresent(searchText -> filterQueryBuilder.bindSearchTerms(statement, searchText));
-    }
-
-    @Override
-    @WithSpan
-    public Mono<DatasetItemPage> getItems(
-            @NonNull DatasetItemSearchCriteria datasetItemSearchCriteria, int page, int size) {
-
-        boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
-
-        // Choose the appropriate query and segment names based on experiment IDs
-        String query = hasExperimentIds ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS : SELECT_DATASET_ITEMS;
-        String summarySegmentName = hasExperimentIds
-                ? "select_dataset_items_experiments_filters_summary"
-                : "select_dataset_items_filters_summary";
-        String contentSegmentName = hasExperimentIds
-                ? "select_dataset_items_experiments_filters"
-                : "select_dataset_items_filters";
-
-        Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, summarySegmentName);
-
-        Mono<Set<Column>> columnsMono = mapColumnsField(datasetItemSearchCriteria);
-        Mono<Long> countMono = getCount(datasetItemSearchCriteria);
-
-        return Mono.zip(countMono, columnsMono)
-                .doFinally(signalType -> endSegment(segment))
-                .flatMap(results -> asyncTemplate
-                        .nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
-
-                            Segment segmentContent = startSegment(DATASET_ITEMS, CLICKHOUSE, contentSegmentName);
-
-                            var selectTemplate = newFindTemplate(query, datasetItemSearchCriteria, contentSegmentName,
-                                    workspaceId);
-                            selectTemplate = ImageUtils.addTruncateToTemplate(selectTemplate,
-                                    datasetItemSearchCriteria.truncate());
-                            selectTemplate = selectTemplate.add("truncationSize",
-                                    configuration.getResponseFormatting().getTruncationSize());
-
-                            // Add sorting if present
-                            var finalTemplate = selectTemplate;
-                            var itemFieldMapping = datasetItemSearchCriteria.sortingFields() != null
-                                    ? filterQueryBuilder
-                                            .buildDatasetItemFieldMapping(datasetItemSearchCriteria.sortingFields())
-                                    : null;
-
-                            if (datasetItemSearchCriteria.sortingFields() != null) {
-                                Optional.ofNullable(
-                                        sortingQueryBuilder.toOrderBySql(datasetItemSearchCriteria.sortingFields(),
-                                                itemFieldMapping))
-                                        .ifPresent(sortFields -> {
-                                            // feedback_scores is now exposed at outer query level via argMax(tfs.feedback_scores, ei.created_at)
-                                            // so we don't need to map it to tfs.feedback_scores anymore
-                                            finalTemplate.add("sort_fields", sortFields);
-                                        });
-                            }
-
-                            var hasDynamicKeys = datasetItemSearchCriteria.sortingFields() != null
-                                    && sortingQueryBuilder.hasDynamicKeys(datasetItemSearchCriteria.sortingFields(),
-                                            itemFieldMapping);
-
-                            var selectStatement = connection.createStatement(finalTemplate.render())
-                                    .bind("datasetId", datasetItemSearchCriteria.datasetId())
-                                    .bind("limit", size)
-                                    .bind("offset", (page - 1) * size)
-                                    .bind("workspace_id", workspaceId);
-
-                            // Only bind experimentIds and entityType if we have experiment IDs
-                            if (hasExperimentIds) {
-                                selectStatement = selectStatement.bind("experimentIds",
-                                        datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new))
-                                        .bind("entityType", datasetItemSearchCriteria.entityType().getType());
-                            }
-
-                            // Bind dynamic sorting keys if present
-                            if (hasDynamicKeys) {
-                                selectStatement = sortingQueryBuilder.bindDynamicKeys(selectStatement,
-                                        datasetItemSearchCriteria.sortingFields(), itemFieldMapping);
-                            }
-
-                            bindSearchCriteria(datasetItemSearchCriteria, selectStatement);
-
-                            Long total = results.getT1();
-                            Set<Column> columns = results.getT2();
-
-                            return Flux.from(selectStatement.execute())
-                                    .doFinally(signalType -> endSegment(segmentContent))
-                                    .flatMap(DatasetItemResultMapper::mapItem)
-                                    .collectList()
-                                    .onErrorResume(e -> handleSqlError(e, List.of()))
-                                    .flatMap(
-                                            items -> Mono
-                                                    .just(new DatasetItemPage(items, page, items.size(), total, columns,
-                                                            sortingFactory.getSortableFields())));
-                        })));
-    }
-
-    private Mono<Long> getCount(DatasetItemSearchCriteria datasetItemSearchCriteria) {
-        // Choose the appropriate count query based on whether we have experiment IDs
-        boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
-        String countQuery = hasExperimentIds
-                ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_COUNT
-                : SELECT_DATASET_ITEMS_COUNT;
-
-        Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, "select_dataset_items_filters_columns");
-
-        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
-
-            var countTemplate = newFindTemplate(countQuery, datasetItemSearchCriteria, "get_count", workspaceId);
-
-            var statement = connection.createStatement(countTemplate.render())
-                    .bind("datasetId", datasetItemSearchCriteria.datasetId())
-                    .bind("workspace_id", workspaceId);
-
-            // Only bind experimentIds if we have them
-            if (hasExperimentIds) {
-                statement = statement.bind("experimentIds",
-                        datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new));
-            }
-
-            bindSearchCriteria(datasetItemSearchCriteria, statement);
-
-            return Flux.from(statement.execute())
-                    .flatMap(DatasetItemResultMapper::mapCount)
-                    .reduce(0L, Long::sum)
-                    .onErrorResume(e -> handleSqlError(e, 0L))
-                    .doFinally(signalType -> endSegment(segment));
-        }));
-    }
-
-    private Mono<Set<Column>> mapColumnsField(DatasetItemSearchCriteria datasetItemSearchCriteria) {
-        Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, "select_dataset_items_filters_columns");
-
-        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
-            var template = getSTWithLogComment(SELECT_DATASET_ITEMS_COLUMNS_BY_DATASET_ID, "map_columns_field",
-                    workspaceId, userName, "");
-            return Mono.from(connection.createStatement(template.render())
-                    .bind("datasetId", datasetItemSearchCriteria.datasetId())
-                    .bind("workspace_id", workspaceId)
-                    .execute())
-                    .flatMap(result -> DatasetItemResultMapper.mapColumns(result, "data"));
-        }))
-                .doFinally(signalType -> endSegment(segment));
-    }
-
-    private <T> Mono<T> handleSqlError(Throwable e, T defaultValue) {
-        // A user-supplied malformed JSON path is rejected by ClickHouse; treat it as an empty result.
-        if (ErrorUtils.isMalformedJsonPath(e)) {
-            return Mono.just(defaultValue);
-        }
-        return Mono.error(e);
-    }
-
-    @WithSpan
-    public Mono<com.comet.opik.api.ProjectStats> getExperimentItemsStats(
-            @NonNull UUID datasetId,
-            @NonNull Set<UUID> experimentIds,
-            List<ExperimentsComparisonFilter> filters) {
-        log.info("Getting experiment items stats for dataset '{}' and experiments '{}' with filters '{}'", datasetId,
-                experimentIds, filters);
-
-        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
-            var template = getSTWithLogComment(SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_STATS,
-                    "get_experiment_items_stats", workspaceId, userName, experimentIds.size());
-            template.add("dataset_id", datasetId);
-            if (!experimentIds.isEmpty()) {
-                template.add("experiment_ids", true);
-            }
-
-            applyFiltersToTemplate(template, filters);
-
-            String sql = template.render();
-            log.debug("Experiment items stats query: '{}'", sql);
-
-            Statement statement = connection.createStatement(sql)
-                    .bind("workspace_id", workspaceId);
-            bindStatementParameters(statement, datasetId, experimentIds, filters);
-
-            return Flux.from(statement.execute())
-                    .flatMap(result -> Flux.from(result.map(
-                            (row, rowMetadata) -> com.comet.opik.domain.stats.StatsMapper
-                                    .mapExperimentItemsStats(row))))
-                    .singleOrEmpty();
-        }))
-                .doOnError(error -> log.error("Failed to get experiment items stats", error));
-    }
-
-    private void applyFiltersToTemplate(ST template, List<ExperimentsComparisonFilter> filters) {
-        Optional.ofNullable(filters)
-                .ifPresent(filtersParam -> {
-                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.EXPERIMENT_ITEM)
-                            .ifPresent(experimentItemFilters -> template.add("experiment_item_filters",
-                                    experimentItemFilters));
-
-                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES)
-                            .ifPresent(feedbackScoresFilters -> template.add("feedback_scores_filters",
-                                    feedbackScoresFilters));
-
-                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES_IS_EMPTY)
-                            .ifPresent(feedbackScoresEmptyFilters -> template.add("feedback_scores_empty_filters",
-                                    feedbackScoresEmptyFilters));
-
-                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.DATASET_ITEM)
-                            .ifPresent(datasetItemFilters -> template.add("dataset_item_filters",
-                                    datasetItemFilters));
-                });
-    }
-
-    private void bindStatementParameters(Statement statement, UUID datasetId, Set<UUID> experimentIds,
-            List<ExperimentsComparisonFilter> filters) {
-        statement.bind("dataset_id", datasetId);
-        if (!experimentIds.isEmpty()) {
-            statement.bind("experiment_ids", experimentIds.toArray(UUID[]::new));
-        }
-
-        Optional.ofNullable(filters)
-                .ifPresent(filtersParam -> {
-                    // Bind all filters - the builder will handle both regular and aggregated filters
-                    filterQueryBuilder.bind(statement, filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.EXPERIMENT_ITEM);
-                    filterQueryBuilder.bind(statement, filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES);
-                    filterQueryBuilder.bind(statement, filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES_IS_EMPTY);
-                    filterQueryBuilder.bind(statement, filtersParam,
-                            com.comet.opik.domain.filter.FilterStrategy.DATASET_ITEM);
-                });
-    }
-
-    @Override
-    @WithSpan
-    public Mono<Void> bulkUpdate(Set<UUID> ids, UUID datasetId, List<DatasetItemFilter> filters,
-            @NonNull DatasetItemUpdate update, boolean mergeTags) {
-        boolean hasIds = CollectionUtils.isNotEmpty(ids);
-        // Empty filters array means "select all items", null means not provided
-        boolean hasFilters = filters != null;
-
-        Preconditions.checkArgument(hasIds || hasFilters, "Either ids or filters must be provided");
-
-        if (hasIds) {
-            log.info("Bulk updating '{}' dataset items by IDs", ids.size());
-        } else {
-            log.info("Bulk updating dataset items by filters for dataset '{}'", datasetId);
-        }
-
-        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
-            var template = newBulkUpdateTemplate(update, BULK_UPDATE, mergeTags, "bulk_update", workspaceId);
-
-            // Add ids or filters to template
-            if (hasIds) {
-                template.add("ids", true);
-            } else {
-                // When using filters, dataset_id is required
-                template.add("dataset_id", true);
-                filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM)
-                        .ifPresent(datasetItemFilters -> template.add("dataset_item_filters", datasetItemFilters));
-            }
-
-            var query = template.render();
-            var statement = connection.createStatement(query)
-                    .bind("user_name", userName)
-                    .bind("workspace_id", workspaceId);
-
-            // Bind ids if provided
-            if (hasIds) {
-                statement.bind("ids", ids);
-            } else {
-                // Bind dataset_id when using filters
-                statement.bind("dataset_id", datasetId);
-            }
-
-            bindBulkUpdateParams(update, statement);
-
-            // Bind filter parameters if provided
+                // 如果提供了过滤器参数则绑定
             if (hasFilters) {
                 filterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
             }
@@ -1673,7 +1336,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                     .flatMap(result -> result.map((row, rowMetadata) -> {
                         @SuppressWarnings("unchecked")
                         Map<String, List<String>> columns = (Map<String, List<String>>) row.get("columns", Map.class);
-                        // Use LinkedHashMap to preserve insertion order
+                        // 使用LinkedHashMap保持插入顺序
                         return columns != null
                                 ? new LinkedHashMap<>(columns)
                                 : new LinkedHashMap<String, List<String>>();

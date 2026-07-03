@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
   ChevronRight,
@@ -75,6 +76,7 @@ const AgentRunnerPromptCard = forwardRef<
   AgentRunnerPromptCardHandle,
   AgentRunnerPromptCardProps
 >(({ prompt }, ref) => {
+  const { t } = useTranslation("pages/agent-playground");
   const activeProjectId = useActiveProjectId();
   const { toast } = useToast();
   const {
@@ -168,7 +170,7 @@ const AgentRunnerPromptCard = forwardRef<
           onSuccess: (v) => setPickedVersionId(v.id),
         });
         toast({
-          description: `Saved new version of ${prompt.name}`,
+          description: t("promptCard.savedNewVersion", { name: prompt.name }),
         });
         setIsSaveDialogOpen(false);
       } catch {
@@ -198,8 +200,10 @@ const AgentRunnerPromptCard = forwardRef<
         if (hasUnsavedChanges) {
           if (!canCreatePrompts) {
             toast({
-              title: "Cannot save prompt changes",
-              description: `Missing permission to create new versions of ${prompt.name}`,
+              title: t("promptCard.cannotSavePromptChanges"),
+              description: t("promptCard.missingPermission", {
+                name: prompt.name,
+              }),
               variant: "destructive",
             });
             throw new Error("Missing permission to save prompt version");
@@ -286,7 +290,7 @@ const AgentRunnerPromptCard = forwardRef<
         <AutoResizeTextarea
           value={draftTemplate}
           onChange={setDraftTemplate}
-          placeholder="Prompt template"
+          placeholder={t("promptCard.promptTemplate")}
         />
       </div>
     );

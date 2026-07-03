@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import NoAccessPageGuard from "@/v2/layout/NoAccessPageGuard/NoAccessPageGuard";
 
 const OptimizationStudioPageGuard = () => {
+  const { t } = useTranslation("navigation");
   const {
     permissions: { canUseOptimizationStudio },
   } = usePermissions();
@@ -9,7 +11,7 @@ const OptimizationStudioPageGuard = () => {
   return (
     <NoAccessPageGuard
       canViewPage={canUseOptimizationStudio}
-      message="You don't have permissions to start new optimization runs in this workspace."
+      message={t("noAccess.noPermissionsOptimization")}
     />
   );
 };

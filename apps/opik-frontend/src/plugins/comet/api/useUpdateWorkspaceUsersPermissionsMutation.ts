@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
 import { AxiosError } from "axios";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import { UserPermission } from "../types";
 
@@ -22,7 +23,7 @@ const extractServerMessage = (error: unknown): string => {
   return (
     axiosError?.response?.data?.message ||
     axiosError?.response?.data?.msg ||
-    "Failed to update workspace user permissions"
+    i18next.t("common:comet.failedToUpdatePermissions")
   );
 };
 
@@ -45,7 +46,7 @@ export function useUpdateWorkspaceUsersPermissionsMutation() {
     mutationKey: ["workspace", "update-users-permissions"],
     mutationFn: updateWorkspaceUsersPermissionsRequest,
     onSuccess: (_, variables) => {
-      toast({ description: "Permissions updated successfully" });
+      toast({ description: i18next.t("common:comet.permissionsUpdatedSuccessfully") });
       queryClient.invalidateQueries({
         queryKey: [
           "workspace-permissions",

@@ -1,0 +1,147 @@
+---
+headline: 实战手册 - 评估幻觉指标 | Opik 文档
+og:description: 学习使用 LLM 评估 SDK 评估幻觉指标，并使用 Opik 提升模型性能。
+og:site_name: Opik 文档
+og:title: 使用 Opik 评估幻觉指标
+title: 实战手册 - 评估幻觉指标
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+# 评估 Opik 的幻觉指标
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目范围的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+在本指南中，我们将评估 LLM 评估 SDK 中包含的幻觉指标，这将展示如何在平台中使用 `evaluation` 功能以及 SDK 中包含的幻觉指标的质量。
+
+## 在 Comet.com 上创建账户
+
+[Comet](https://www.comet.com/site/?from=llm&utm_source=opik&utm_medium=colab&utm_content=eval_hall&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=eval_hall&utm_campaign=opik)并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](/v1/self-host/overview?from=llm&utm_source=opik&utm_medium=colab&utm_content=eval_hall&utm_campaign=opik)了解更多信息。
+
+
+```python
+%pip install opik pyarrow pandas fsspec huggingface_hub --upgrade --quiet
+```
+
+
+```python
+import opik
+
+opik.configure(use_local=False)
+```
+
+## 准备环境
+
+首先，我们将配置 OpenAI API 密钥并创建一个新的 Opik 数据集
+
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+我们将使用 [HaluEval 数据集](https://huggingface.co/datasets/pminervini/HaluEval?library=pandas)，根据这篇[论文](https://arxiv.org/pdf/2305.11747)，ChatGPT 检测到 86.2% 的幻觉。第一步将在平台中创建一个数据集，以便我们可以跟踪评估结果。
+
+由于 SDK 中的插入方法会去重项目，我们可以插入 50 个项目，如果项目已存在，Opik 将自动移除它们。
+
+
+```python
+# Create dataset
+import opik
+import pandas as pd
+
+client = opik.Opik()
+
+# Create dataset
+dataset = client.get_or_create_dataset(name="HaluEval", description="HaluEval dataset", project_name="my-project")
+
+# Insert items into dataset
+df = pd.read_parquet(
+    "hf://datasets/pminervini/HaluEval/general/data-00000-of-00001.parquet"
+)
+df = df.sample(n=50, random_state=42)
+
+dataset_records = [
+    {
+        "input": x["user_query"],
+        "llm_output": x["chatgpt_response"],
+        "expected_hallucination_label": x["hallucination"],
+    }
+    for x in df.to_dict(orient="records")
+]
+
+dataset.insert(dataset_records)
+```
+
+## 评估幻觉指标
+
+为了评估 Opik 幻觉指标的性能，我们将定义：
+
+- 评估任务：我们的评估任务将使用数据集中的数据，返回使用 Opik 幻觉指标计算的幻觉分数。
+- 评分指标：我们将使用 `Equals` 指标来检查计算的幻觉分数是否与预期输出匹配。
+
+通过这种方式定义评估任务，我们将能够了解 Opik 的幻觉指标在数据集中检测幻觉的能力。
+
+
+```python
+from opik.evaluation.metrics import Hallucination, Equals
+from opik.evaluation import evaluate
+from opik import Opik
+from opik.evaluation.metrics.llm_judges.hallucination.template import generate_query
+from typing import Dict
+
+
+# Define the evaluation task
+def evaluation_task(x: Dict):
+    metric = Hallucination()
+    try:
+        metric_score = metric.score(input=x["input"], output=x["llm_output"])
+        hallucination_score = metric_score.value
+        hallucination_reason = metric_score.reason
+    except Exception as e:
+        print(e)
+        hallucination_score = None
+        hallucination_reason = str(e)
+
+    return {
+        "hallucination_score": "yes" if hallucination_score == 1 else "no",
+        "hallucination_reason": hallucination_reason,
+    }
+
+
+# Get the dataset
+client = Opik()
+dataset = client.get_dataset(name="HaluEval")
+
+# Define the scoring metric
+check_hallucinated_metric = Equals(name="Correct hallucination score")
+
+# Add the prompt template as an experiment configuration
+experiment_config = {
+    "prompt_template": generate_query(
+        input="{input}", context="{context}", output="{output}", few_shot_examples=[]
+    )
+}
+
+res = evaluate(
+    dataset=dataset,
+    task=evaluation_task,
+    scoring_metrics=[check_hallucinated_metric],
+    experiment_config=experiment_config,
+    project_name="my-project",
+    scoring_key_mapping={
+        "reference": "expected_hallucination_label",
+        "output": "hallucination_score",
+    },
+)
+```
+
+我们可以看到幻觉指标能够检测到数据集中约 80% 的幻觉，并且我们可以看到未检测到幻觉的具体项目。
+
+![幻觉评估](https://raw.githubusercontent.com/comet-ml/opik/main/apps/opik-documentation/documentation/fern/img/cookbook/hallucination_metric_cookbook.png)

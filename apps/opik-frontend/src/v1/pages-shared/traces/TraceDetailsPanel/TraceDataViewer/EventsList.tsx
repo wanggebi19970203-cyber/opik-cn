@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import get from "lodash/get";
 import {
@@ -58,6 +59,7 @@ const mapRawEventToEventWithTimestamp = (
 };
 
 const EventsList: React.FC<EventsListProps> = ({ data, isLoading, search }) => {
+  const { t } = useTranslation("tracing");
   // Check if events exist in metadata and map them to processed events
   const rawEvents = get(data.metadata, METADATA_EVENTS_KEY);
 
@@ -84,7 +86,7 @@ const EventsList: React.FC<EventsListProps> = ({ data, isLoading, search }) => {
 
   return (
     <AccordionItem value="events" disabled={isLoading}>
-      <AccordionTrigger>Events</AccordionTrigger>
+      <AccordionTrigger>{t("detailsTab.events")}</AccordionTrigger>
       <AccordionContent>
         {isLoading ? (
           <Loader />

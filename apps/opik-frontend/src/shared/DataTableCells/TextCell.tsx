@@ -1,6 +1,7 @@
 import { CellContext } from "@tanstack/react-table";
 import get from "lodash/get";
 import isNumber from "lodash/isNumber";
+import { useTranslation } from "react-i18next";
 import { Explainer, ROW_HEIGHT } from "@/types/shared";
 import { formatNumericData, toString } from "@/lib/utils";
 import LinkifyText from "@/shared/LinkifyText/LinkifyText";
@@ -82,6 +83,7 @@ type GroupCustomMeta = {
 };
 
 const GroupTextCell = <TData,>(context: CellContext<TData, unknown>) => {
+  const { t } = useTranslation();
   const { custom } = context.column.columnDef.meta ?? {};
   const cellData = context.row.original;
   const { valueKey, labelKey, countAggregationKey, explainer } = (custom ??
@@ -102,7 +104,7 @@ const GroupTextCell = <TData,>(context: CellContext<TData, unknown>) => {
   const countText = isNumber(count) ? ` (${count})` : "";
 
   if (!hasValue) {
-    const text = "Undefined";
+    const text = t("common:labels.undefined");
 
     return (
       <CellWrapper

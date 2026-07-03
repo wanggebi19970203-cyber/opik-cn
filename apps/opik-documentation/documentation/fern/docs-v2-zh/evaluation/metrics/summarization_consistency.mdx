@@ -1,0 +1,48 @@
+---
+description: 确保自动生成的摘要忠实于原始内容
+headline: 摘要一致性 | Opik 文档
+og:description: 使用 Opik 的 SummarizationConsistencyJudge 评估生成摘要与原文的忠实度，获取准确洞察。
+og:site_name: Opik 文档
+og:title: 使用 Opik 实现摘要一致性
+title: 摘要一致性
+---
+
+# 摘要一致性评估器
+
+`SummarizationConsistencyJudge` 将生成的摘要与原始文档（或转录文本）进行比较，并评估关键事实的保留忠实度。它采用 GEval 方法：将你的指令扩展为思维链评分标准，然后在 0.0–1.0 的量表上评分（由原始 0–10 的判断归一化得出），并附带详细解释。
+
+当你自动摘要工单、研究报告或通话记录，并希望在幻觉内容到达最终用户之前捕获它们时，可以使用此评估器。
+
+```python title="检查摘要忠实度"
+from opik.evaluation.metrics import SummarizationConsistencyJudge
+
+metric = SummarizationConsistencyJudge(model="gpt-4o")
+
+payload = """CONTEXT: Acme's Q2 revenue grew 12% thanks to the launch of Product Vega.
+CONTEXT: Operating margin declined to 14% because of R&D hiring.
+SUMMARY: Acme's revenue was flat but margins improved due to new hires.
+"""
+
+score = metric.score(output=payload)
+
+print(score.value)   # 归一化后的 0.0–1.0 分数
+print(score.reason)
+```
+
+## 输入参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `input` | `str` | 可选 | 源文档或上下文。 |
+| `output` | `str` | **是** | 包含源材料和候选摘要的组合内容。 |
+
+## 配置项
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `model` | `gpt-5-nano` | 对于更长或更技术性的内容，可切换到更大的评估模型。 |
+| `temperature` | `0.0` | 保持低值以获得确定性评分；略微提高可采样不同的评价意见。 |
+| `track` | `True` | 设为 `False` 可跳过向 Opik 发送追踪数据。 |
+| `project_name` | `None` | 记录评分时可覆盖项目名称。 |
+
+评估器输出 0 到 10 之间的整数，Opik 将其归一化为 0–1；`reason` 字段包含解释判断的评分标准说明。

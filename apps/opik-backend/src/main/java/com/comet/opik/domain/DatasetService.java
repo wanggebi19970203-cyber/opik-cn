@@ -82,10 +82,10 @@ public interface DatasetService {
     List<Dataset> findByIds(Set<UUID> ids, String workspaceId);
 
     /**
-     * Bulk lookup of {@code (dataset_id → project_id)} for non-null project assignments. Used by
-     * {@code OptimizationProjectMigrationService} Path B inference: datasets whose {@code
-     * project_id} is still {@code NULL} are <b>omitted</b> from the map so callers can detect the
-     * no-inference bucket by diffing against their candidate set.
+     * 批量查找非空项目关联的 {@code (dataset_id → project_id)} 映射。
+     * 供 {@code OptimizationProjectMigrationService} 路径 B 推断使用：
+     * {@code project_id} 仍为 {@code NULL} 的数据集将从映射中<b>排除</b>，
+     * 调用方可通过与候选集的差集来识别无推断的条目。
      */
     Map<UUID, UUID> findProjectIdsByDatasetIds(Set<UUID> ids, String workspaceId);
 
@@ -300,8 +300,8 @@ class DatasetServiceImpl implements DatasetService {
             var dao = handle.attach(DatasetDAO.class);
             dao.findById(id, workspaceId).ifPresentOrElse(
                     dataset -> verifyVisibility(dataset, visibility),
-                    // Dataset not found (e.g. deleted test suite) — intentionally do not fail,
-                    // so callers can still retrieve experiment items after the dataset is gone.
+                    // 数据集未找到（例如已删除的测试套件）— 故意不抛出异常，
+                    // 以便调用方在数据集删除后仍可检索实验条目。
                     () -> log.debug("Dataset '{}' not found in workspace '{}'; skipping visibility check", id,
                             workspaceId));
             return null;
@@ -428,9 +428,9 @@ class DatasetServiceImpl implements DatasetService {
     }
 
     /**
-     * Deletes a dataset by name.
+     * 按名称删除数据集。
      * <br>
-     * The dataset items are not deleted, because they may be linked to experiments.
+     * 数据集条目不会被删除，因为它们可能与实验关联。
      **/
     @Override
     public void delete(@NonNull DatasetIdentifier identifier) {
@@ -460,9 +460,9 @@ class DatasetServiceImpl implements DatasetService {
     }
 
     /**
-     * Deletes a dataset by id.
+     * 按 ID 删除数据集。
      * <br>
-     * The dataset items are not deleted, because they may be linked to experiments.
+     * 数据集条目不会被删除，因为它们可能与实验关联。
      **/
     @Override
     public void delete(@NonNull UUID id) {
@@ -506,22 +506,22 @@ class DatasetServiceImpl implements DatasetService {
     }
 
     /**
-     * Deletes version-related data for datasets to avoid foreign key constraint violations.
+     * 删除数据集的版本相关数据，以避免外键约束冲突。
      * <p>
-     * This method must be called before deleting datasets to ensure proper cleanup of:
+     * 必须在删除数据集之前调用此方法，以确保正确清理以下内容：
      * <ul>
-     *   <li>dataset_version_tags (child table with FK to datasets)</li>
-     *   <li>dataset_versions (child table with FK to datasets)</li>
+     *   <li>dataset_version_tags（外键指向 datasets 的子表）</li>
+     *   <li>dataset_versions（外键指向 datasets 的子表）</li>
      * </ul>
      *
-     * @param handle the JDBI handle for the current transaction
-     * @param datasetIds the set of dataset IDs to delete version data for
-     * @param workspaceId the workspace ID
+     * @param handle 当前事务的 JDBI 句柄
+     * @param datasetIds 需要删除版本数据的数据集 ID 集合
+     * @param workspaceId 工作区 ID
      */
     private void deleteDatasetVersionData(Handle handle, Set<UUID> datasetIds, String workspaceId) {
         var versionDao = handle.attach(DatasetVersionDAO.class);
 
-        // Delete in the correct order to respect foreign key constraints
+        // 按正确顺序删除以遵守外键约束
         versionDao.deleteAllTagsByDatasetIds(datasetIds, workspaceId);
         versionDao.deleteAllVersionsByDatasetIds(datasetIds, workspaceId);
     }
@@ -542,7 +542,7 @@ class DatasetServiceImpl implements DatasetService {
                 .map(filterQueryBuilder::toStateSQLMapping)
                 .orElse(Map.of());
 
-        // withExperimentsOnly refers to Regular experiments only
+        // withExperimentsOnly 仅指常规实验（非测试套件等其他类型）
         if (criteria.withExperimentsOnly() || criteria.promptId() != null) {
 
             Mono<Set<UUID>> datasetIds = experimentDAO.findAllDatasetIds(criteria)
@@ -578,7 +578,7 @@ class DatasetServiceImpl implements DatasetService {
                     .build();
         }
 
-        // For now, we are not going to use the criteria.withExperimentsOnly() method due to the migration.
+        // 目前由于迁移原因，暂不使用 criteria.withExperimentsOnly() 方法。
         return template.inTransaction(READ_ONLY, handle -> {
 
             var repository = handle.attach(DatasetDAO.class);
@@ -607,14 +607,14 @@ class DatasetServiceImpl implements DatasetService {
 
         return Mono.fromCallable(() -> {
 
-            // Create a temporary table to store the dataset ids
+            // 创建临时表以存储数据集 ID
             template.inTransaction(WRITE, handle -> {
                 var repository = handle.attach(DatasetDAO.class);
                 repository.createTempTable(tableName);
                 return null;
             });
 
-            // Insert the dataset ids into the temporary table
+            // 将数据集 ID 插入临时表
             Lists.partition(List.copyOf(ids), maxExperimentInClauseSize).forEach(chunk -> {
                 template.inTransaction(WRITE, handle -> {
                     var repository = handle.attach(DatasetDAO.class);
@@ -754,8 +754,8 @@ class DatasetServiceImpl implements DatasetService {
                             OptimizationDAO.OptimizationSummary::empty);
                     var latestVersion = latestVersionsByDatasetId.get(dataset.id());
 
-                    // When versioning is enabled and a latest version exists, use itemsTotal from the version
-                    // Otherwise, fall back to the legacy dataset_items count
+                    // 当启用版本控制且存在最新版本时，使用版本中的 itemsTotal
+                    // 否则回退到旧版 dataset_items 计数
                     Long itemsCount;
                     if (featureFlags.isDatasetVersioningEnabled() && latestVersion != null
                             && latestVersion.itemsTotal() != null) {

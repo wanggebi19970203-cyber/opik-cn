@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import isNumber from "lodash/isNumber";
 import sortBy from "lodash/sortBy";
 import { Copy, Trash, X } from "lucide-react";
@@ -52,6 +53,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
   onUpdateFeedbackScore,
   onDeleteFeedbackScore,
 }) => {
+  const { t } = useTranslation("tracing");
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const { toast } = useToast();
   const userName = useLoggedInUserNameOrOpenSourceDefaultUser();
@@ -157,7 +159,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
     await copy(v);
 
     toast({
-      description: "Reason successfully copied to clipboard",
+      description: t("annotate.reasonCopied"),
     });
   };
 
@@ -187,7 +189,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
               handleChangeValue(newValue as number);
             }
           }}
-          placeholder="Score"
+          placeholder={t("annotate.score")}
           type="number"
           value={value}
           data-testid="annotate-score-input"
@@ -292,7 +294,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
               );
 
               if (!selectedOption) {
-                return <div className="truncate">Select a category</div>;
+                return <div className="truncate">{t("annotate.selectCategory")}</div>;
               }
 
               return (
@@ -357,7 +359,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
           <Button
             variant="minimal"
             size="icon-xs"
-            aria-label="Clear score"
+            aria-label={t("annotate.clearScore")}
             onClick={deleteFeedbackScore}
           >
             <X />
@@ -367,7 +369,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
 
       <div className="group/reason-field relative col-span-2 px-1 pb-1">
         <Textarea
-          placeholder="Add a reason..."
+          placeholder={t("annotate.addReason")}
           value={reasonValue}
           onChange={onReasonChange}
           onFocus={onReasonFocus}
@@ -381,7 +383,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
         />
         {feedbackScoreData?.reason && value !== "" && (
           <div className="absolute right-2 top-1 hidden gap-1 group-hover/reason-field:flex">
-            <TooltipWrapper content="Copy">
+            <TooltipWrapper content={t("common.buttons.copy", { ns: "common" })}>
               <Button
                 size="icon-2xs"
                 variant="outline"
@@ -391,7 +393,7 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
               </Button>
             </TooltipWrapper>
 
-            <TooltipWrapper content="Clear">
+            <TooltipWrapper content={t("common.buttons.clear", { ns: "common" })}>
               <Button variant="outline" size="icon-2xs" onClick={onReasonReset}>
                 <Trash />
               </Button>

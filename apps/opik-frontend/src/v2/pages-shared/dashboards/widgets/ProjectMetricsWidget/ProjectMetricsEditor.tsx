@@ -4,6 +4,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -50,81 +51,82 @@ import { CHART_TYPE } from "@/constants/chart";
 import { Filter } from "@/types/filters";
 import { BREAKDOWN_FIELD } from "@/types/dashboard";
 
-const METRIC_OPTIONS = [
+const METRIC_OPTIONS_KEYS = [
   {
     value: METRIC_NAME_TYPE.FEEDBACK_SCORES,
-    label: "Trace metrics",
+    labelKey: "metrics.traceMetrics",
     filterType: "trace" as const,
   },
   {
     value: METRIC_NAME_TYPE.TRACE_COUNT,
-    label: "Number of traces",
+    labelKey: "metrics.numberOfTraces",
     filterType: "trace" as const,
   },
   {
     value: METRIC_NAME_TYPE.TRACE_DURATION,
-    label: "Trace duration",
+    labelKey: "metrics.traceDuration",
     filterType: "trace" as const,
   },
   {
     value: METRIC_NAME_TYPE.TOKEN_USAGE,
-    label: "Token usage",
+    labelKey: "metrics.tokenUsage",
     filterType: "trace" as const,
   },
   {
     value: METRIC_NAME_TYPE.COST,
-    label: "Estimated cost",
+    labelKey: "metrics.estimatedCost",
     filterType: "trace" as const,
   },
   {
     value: METRIC_NAME_TYPE.FAILED_GUARDRAILS,
-    label: "Failed guardrails",
+    labelKey: "metrics.failedGuardrails",
     filterType: "trace" as const,
   },
   {
     value: METRIC_NAME_TYPE.THREAD_COUNT,
-    label: "Number of threads",
+    labelKey: "metrics.numberOfThreads",
     filterType: "thread" as const,
   },
   {
     value: METRIC_NAME_TYPE.THREAD_DURATION,
-    label: "Thread duration",
+    labelKey: "metrics.threadDuration",
     filterType: "thread" as const,
   },
   {
     value: METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES,
-    label: "Thread metrics",
+    labelKey: "metrics.threadMetrics",
     filterType: "thread" as const,
   },
   {
     value: METRIC_NAME_TYPE.SPAN_COUNT,
-    label: "Number of spans",
+    labelKey: "metrics.numberOfSpans",
     filterType: "span" as const,
   },
   {
     value: METRIC_NAME_TYPE.SPAN_DURATION,
-    label: "Span duration",
+    labelKey: "metrics.spanDuration",
     filterType: "span" as const,
   },
   {
     value: METRIC_NAME_TYPE.SPAN_FEEDBACK_SCORES,
-    label: "Span metrics",
+    labelKey: "metrics.spanMetrics",
     filterType: "span" as const,
   },
   {
     value: METRIC_NAME_TYPE.SPAN_TOKEN_USAGE,
-    label: "Span token usage",
+    labelKey: "metrics.spanTokenUsage",
     filterType: "span" as const,
   },
 ];
 
-const DURATION_METRIC_OPTIONS = [
-  { value: "p50", label: "P50 (Median)" },
-  { value: "p90", label: "P90" },
-  { value: "p99", label: "P99" },
+const DURATION_METRIC_OPTIONS_KEYS = [
+  { value: "p50", labelKey: "metrics.p50" },
+  { value: "p90", labelKey: "metrics.p90" },
+  { value: "p99", labelKey: "metrics.p99" },
 ];
 
 const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
+  const { t } = useTranslation("dashboards");
   const widgetData = useDashboardStore(
     (state) => state.previewWidget!,
   ) as DashboardWidget & ProjectMetricsWidget;
@@ -179,7 +181,16 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
   const hasRuntimeProjectId = !!runtimeContext.projectId;
   const projectId = runtimeContext.projectId || localProjectId || "";
 
-  const selectedMetric = METRIC_OPTIONS.find((m) => m.value === metricType);
+  const metricOptions = useMemo(
+    () => METRIC_OPTIONS_KEYS.map((o) => ({ ...o, label: t(o.labelKey) })),
+    [t],
+  );
+  const durationMetricOptions = useMemo(
+    () => DURATION_METRIC_OPTIONS_KEYS.map((o) => ({ ...o, label: t(o.labelKey) })),
+    [t],
+  );
+
+  const selectedMetric = METRIC_OPTIONS_KEYS.find((m) => m.value === metricType);
   const isTraceMetric = !metricType || selectedMetric?.filterType === "trace";
   const isThreadMetric = metricType && selectedMetric?.filterType === "thread";
   const isSpanMetric = metricType && selectedMetric?.filterType === "span";
@@ -413,7 +424,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
             const validationErrors = get(formState.errors, ["projectId"]);
             return (
               <FormItem>
-                <FormLabel>Project</FormLabel>
+                <FormLabel>{t("statsCard.projectLabel")}</FormLabel>
                 <FormControl>
                   <ProjectsSelectBox
                     className={cn("flex-1", {
@@ -440,7 +451,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
             const validationErrors = get(formState.errors, ["metricType"]);
             return (
               <FormItem>
-                <FormLabel>Metric type</FormLabel>
+                <FormLabel>{t("statsCard.metricTypeLabel")}</FormLabel>
                 <FormControl>
                   <LoadableSelectBox
                     buttonClassName={cn("w-full", {
@@ -451,8 +462,8 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                       field.onChange(value);
                       handleMetricTypeChange(value);
                     }}
-                    options={METRIC_OPTIONS}
-                    placeholder="Select a metric type"
+                    options={metricOptions}
+                    placeholder={t("statsCard.selectMetric")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -471,7 +482,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
               ]);
               return (
                 <FormItem>
-                  <FormLabel>Metrics</FormLabel>
+                  <FormLabel>{t("feedbackScores.metricsLabel")}</FormLabel>
                   <FormControl>
                     <FeedbackDefinitionsAndScoresSelectBox
                       value={field.value || []}
@@ -489,7 +500,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                       entityIds={[projectId]}
                       multiselect={true}
                       showSelectAll={true}
-                      placeholder="All metrics"
+                      placeholder={t("feedbackScores.allMetricsPlaceholder")}
                       className={cn({
                         "border-destructive": Boolean(
                           validationErrors?.message,
@@ -514,7 +525,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
               ]);
               return (
                 <FormItem>
-                  <FormLabel>Duration metrics</FormLabel>
+                  <FormLabel>{t("metrics.durationMetricsLabel")}</FormLabel>
                   <FormControl>
                     <LoadableSelectBox
                       buttonClassName={cn("w-full", {
@@ -527,11 +538,11 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                         field.onChange(value);
                         handleDurationMetricsChange(value);
                       }}
-                      options={DURATION_METRIC_OPTIONS}
-                      placeholder="All percentiles"
+                      options={durationMetricOptions}
+                      placeholder={t("metrics.allPercentiles")}
                       multiselect
                       showSelectAll
-                      selectAllLabel="All percentiles"
+                      selectAllLabel={t("metrics.allPercentiles")}
                     />
                   </FormControl>
                   <FormMessage />
@@ -549,7 +560,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
               const validationErrors = get(formState.errors, ["usageMetrics"]);
               return (
                 <FormItem>
-                  <FormLabel>Usage metrics</FormLabel>
+                  <FormLabel>{t("metrics.usageMetricsLabel")}</FormLabel>
                   <FormControl>
                     <LoadableSelectBox
                       buttonClassName={cn("w-full", {
@@ -564,10 +575,10 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                       }}
                       options={usageKeyOptions}
                       isLoading={isLoadingUsageKeys}
-                      placeholder="All usage metrics"
+                      placeholder={t("metrics.allUsageMetrics")}
                       multiselect
                       showSelectAll
-                      selectAllLabel="All usage metrics"
+                      selectAllLabel={t("metrics.allUsageMetrics")}
                     />
                   </FormControl>
                   <FormMessage />
@@ -620,8 +631,8 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
           control={form.control}
           name="chartType"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Visualization</FormLabel>
+              <FormItem>
+              <FormLabel>{t("feedbackScores.visualizationLabel")}</FormLabel>
               <FormControl>
                 <VisualizationCardSelector
                   value={field.value || CHART_TYPE.line}

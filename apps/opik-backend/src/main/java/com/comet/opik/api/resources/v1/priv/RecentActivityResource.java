@@ -40,17 +40,17 @@ import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Projects", description = "Project recent activity")
+@Tag(name = "Projects", description = "项目近期活动")
 public class RecentActivityResource {
 
     private final @NonNull RecentActivityService recentActivityService;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @GET
-    @Operation(operationId = "getRecentActivity", summary = "Get recent activity for a project", description = "Returns the most recent activity items across all entity types for a project, sorted by date descending.", responses = {
-            @ApiResponse(responseCode = "200", description = "Recent activity page", content = @Content(schema = @Schema(implementation = RecentActivity.RecentActivityPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getRecentActivity", summary = "获取项目近期活动", description = "返回项目中所有实体类型的最近活动条目，按日期降序排列。", responses = {
+            @ApiResponse(responseCode = "200", description = "近期活动分页", content = @Content(schema = @Schema(implementation = RecentActivity.RecentActivityPage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     @JsonView(RecentActivity.View.Public.class)

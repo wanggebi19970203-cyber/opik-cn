@@ -1,0 +1,530 @@
+---
+headline: 模型 | Opik 文档
+og:description: 使用 TypeScript SDK 配置评估模型，支持与各种提供商和自定义设置的无缝集成。
+og:site_name: Opik 文档
+og:title: Opik AI 中的模型配置
+title: 模型
+---
+
+<Note>
+  在 Opik 2.0 中，实验是项目级别的。在评估中使用模型时，请在 `evaluate()` 调用中指定 `projectName`，以便结果与正确的项目关联。
+</Note>
+
+TypeScript SDK 通过与 Vercel AI SDK 的直接集成提供灵活的模型配置。您可以使用简单、统一的接口访问多个提供商的模型。
+
+## 概述
+
+TypeScript SDK 支持三种方式配置评估和提示生成的模型：
+
+1. **模型 ID 字符串** - 简单的字符串标识符（例如 `"gpt-5-nano"`、`"claude-3-5-sonnet-latest"`）
+2. **LanguageModel 实例** - 预配置的 Vercel AI SDK 模型，支持自定义设置
+3. **OpikBaseModel 实现** - 针对不支持的提供商的自定义模型集成
+
+## 快速开始
+
+### 使用模型 ID 字符串
+
+最简单的方式是直接传递模型 ID 字符串：
+
+```typescript
+import { evaluatePrompt } from "opik";
+import { Hallucination } from "opik";
+
+// OpenAI 模型
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  projectName: "my-project",
+});
+
+// Anthropic 模型
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "claude-3-5-sonnet-latest",
+  projectName: "my-project",
+});
+
+// Google Gemini 模型
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gemini-2.0-flash",
+  projectName: "my-project",
+});
+
+// 在指标中使用
+const metric = new Hallucination({ model: "gpt-5-nano" });
+```
+
+### 使用 LanguageModel 实例
+
+对于高级场景，使用 Vercel AI SDK 的 LanguageModel 实例：
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { evaluatePrompt } from "opik";
+
+// 创建 LanguageModel 实例
+const customModel = openai("gpt-5-nano");
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: customModel,
+  projectName: "my-project",
+});
+```
+
+## 生成参数
+
+### 指标参数
+
+所有 LLM 评判指标在构造函数中直接支持以下生成参数：
+
+```typescript
+import { Hallucination } from "opik";
+
+const metric = new Hallucination({
+  model: "gpt-5-nano",
+  temperature: 0.3, // 控制随机性 (0.0-2.0)
+  seed: 42, // 用于可重现的输出
+  maxTokens: 1000, // 最大响应长度
+});
+
+// 在评估中使用
+const score = await metric.score({
+  input: "What is the capital of France?",
+  output: "The capital of France is Paris.",
+  context: ["France is a country in Western Europe."],
+});
+```
+
+对于高级生成参数，使用 `modelSettings`：
+
+```typescript
+import { Hallucination } from "opik";
+
+const metric = new Hallucination({
+  model: "gpt-5-nano",
+  temperature: 0.5,
+  modelSettings: {
+    topP: 0.9, // 核采样
+    topK: 50, // Top-K 采样
+    presencePenalty: 0.1, // 减少重复
+    frequencyPenalty: 0.2, // 减少短语重复
+    stopSequences: ["END"], // 自定义停止序列
+  },
+});
+```
+
+### evaluatePrompt 参数
+
+`evaluatePrompt` 函数仅支持 `temperature` 和 `seed`：
+
+```typescript
+import { evaluatePrompt } from "opik";
+import { Hallucination, AnswerRelevance } from "opik";
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  temperature: 0.7,
+  seed: 42,
+  scoringMetrics: [
+    new Hallucination({
+      model: "gpt-5-nano",
+      temperature: 0.3, // 指标中支持完整参数
+      seed: 12345,
+      maxTokens: 1000,
+    }),
+  ],
+  projectName: "my-project",
+});
+```
+
+**注意**：要完全控制所有 Vercel AI SDK 参数，请创建具有所需配置的 `LanguageModel` 实例并将其传递给 `model` 参数。请参阅下方的[使用 LanguageModel 实例](#使用-languagemodel-实例)。
+
+## 支持的提供商
+
+### OpenAI
+
+OpenAI 模型通过 `@ai-sdk/openai` 包支持。
+
+**示例模型 ID**：
+
+```typescript
+"gpt-5-nano";
+"gpt-5-mini";
+"gpt-5";
+```
+
+**用法**：
+
+```typescript
+import { evaluatePrompt } from "opik";
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  projectName: "my-project",
+});
+```
+
+有关可用模型的完整列表，请参阅 [Vercel AI SDK OpenAI 提供商文档](https://sdk.vercel.ai/providers/ai-sdk-providers/openai)。
+
+### Anthropic
+
+Anthropic 的 Claude 模型通过 `@ai-sdk/anthropic` 包支持。
+
+**示例模型 ID**：
+
+```typescript
+"claude-3-5-sonnet-latest";
+"claude-3-5-haiku-latest";
+```
+
+**用法**：
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "claude-3-5-sonnet-latest",
+  projectName: "my-project",
+});
+```
+
+有关可用模型的完整列表，请参阅 [Vercel AI SDK Anthropic 提供商文档](https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic)。
+
+### Google Gemini
+
+Google 的 Gemini 模型通过 `@ai-sdk/google` 包支持。
+
+**示例模型 ID**：
+
+```typescript
+"gemini-2.0-flash";
+"gemini-1.5-pro";
+```
+
+**用法**：
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gemini-2.0-flash",
+  projectName: "my-project",
+});
+```
+
+有关可用模型的完整列表，请参阅 [Vercel AI SDK Google 提供商文档](https://ai-sdk.dev/providers/ai-sdk-providers/google-generative-ai#model-capabilities)。
+
+## 在 Opik 中使用模型
+
+### 使用 LanguageModel 实例
+
+对于需要完整 Vercel AI SDK 功能的高级场景（如结构化输出、自定义头或提供商特定参数），直接创建 `LanguageModel` 实例：
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { evaluatePrompt } from "opik";
+import { Hallucination } from "opik";
+
+// 创建具有高级配置的模型
+const genModel = openai("gpt-5-nano", {
+  structuredOutputs: true, // 提供商特定功能
+});
+
+const evalModel = anthropic("claude-3-5-sonnet-latest");
+
+// 使用不同的模型进行生成和评估
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: genModel,
+  scoringMetrics: [new Hallucination({ model: evalModel })],
+  projectName: "my-project",
+});
+```
+
+这种方法让您完全控制通过 Opik 简单接口未暴露的 Vercel AI SDK 参数。
+
+## 在指标中使用模型
+
+LLM 评判指标接受模型配置：
+
+### 使用模型 ID 字符串
+
+```typescript
+import { Hallucination, AnswerRelevance } from "opik";
+
+// 为不同指标使用不同模型
+const hallucinationMetric = new Hallucination({ model: "gpt-5-nano" });
+const relevanceMetric = new AnswerRelevance({
+  model: "claude-3-5-sonnet-latest",
+});
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  scoringMetrics: [hallucinationMetric, relevanceMetric],
+  projectName: "my-project",
+});
+```
+
+### 使用 LanguageModel 实例
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { Hallucination } from "opik";
+
+// 为指标评估创建模型
+const judgeModel = openai("gpt-5-nano");
+
+const metric = new Hallucination({ model: judgeModel });
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  scoringMetrics: [metric],
+  projectName: "my-project",
+});
+```
+
+## 自定义模型实现
+
+对于不支持的提供商，实现 `OpikBaseModel` 接口：
+
+### OpikBaseModel 接口
+
+```typescript
+abstract class OpikBaseModel {
+  constructor(public readonly modelName: string) {}
+
+  /**
+   * 从文本提示生成字符串响应
+   */
+  abstract generateString(input: string): Promise<string>;
+
+  /**
+   * 从消息生成提供商特定格式的响应
+   */
+  abstract generateProviderResponse(messages: OpikMessage[]): Promise<unknown>;
+}
+```
+
+### 示例实现
+
+```typescript
+import { OpikBaseModel, OpikMessage } from "opik";
+
+class CustomProviderModel extends OpikBaseModel {
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor(modelName: string, apiKey: string, baseUrl: string) {
+    super(modelName);
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
+  }
+
+  async generateString(input: string): Promise<string> {
+    const messages: OpikMessage[] = [
+      {
+        role: "user",
+        content: input,
+      },
+    ];
+
+    const response = await this.generateProviderResponse(messages);
+    // 从提供商响应格式中提取文本
+    return response.choices[0].message.content;
+  }
+
+  async generateProviderResponse(messages: OpikMessage[]): Promise<unknown> {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.modelName,
+        messages: messages,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+}
+
+// 用法
+const customModel = new CustomProviderModel(
+  "custom-model-v1",
+  process.env.CUSTOM_API_KEY,
+  "https://api.custom-provider.com"
+);
+
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: customModel,
+  projectName: "my-project",
+});
+```
+
+## 模型解析
+
+SDK 按以下顺序自动解析模型：
+
+1. **如果提供字符串**：自动检测提供商并创建相应的模型
+2. **如果提供 LanguageModel**：直接使用该实例
+3. **如果提供 OpikBaseModel**：使用自定义实现
+4. **如果未定义**：默认使用 `"gpt-5-nano"`
+
+```typescript
+// 字符串 → 自动检测为 OpenAI
+model: "gpt-5-nano";
+
+// LanguageModel → 直接使用
+import { openai } from "@ai-sdk/openai";
+model: openai("gpt-5-nano");
+
+// 自定义实现
+model: new CustomProviderModel("my-model", apiKey, baseUrl);
+
+// 未定义 → 默认使用 "gpt-5-nano"
+model: undefined;
+```
+
+## 最佳实践
+
+### 1. 使用模型 ID 字符串简化操作
+
+对于大多数用例，直接使用模型 ID 字符串：
+
+```typescript
+import { Hallucination } from "opik";
+
+const metric = new Hallucination({ model: "gpt-5-nano" });
+```
+
+Opik SDK 内部处理模型配置以获得最佳评估性能。
+
+### 2. 匹配模型能力与任务
+
+根据任务要求选择模型：
+
+```typescript
+// 复杂推理：GPT-5、Claude Sonnet
+model: "gpt-5";
+model: "claude-3-5-sonnet-latest";
+
+// 快速响应：GPT-5-nano、Gemini Flash
+model: "gpt-5-nano";
+model: "gemini-2.0-flash";
+
+// 长上下文：Claude、Gemini
+model: "claude-3-5-sonnet-latest"; // 200K 上下文
+model: "gemini-1.5-pro"; // 1M 上下文
+```
+
+### 3. 为任务和指标使用不同的模型
+
+通过使用不同的模型来优化成本：
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano", // 生成成本更低
+  scoringMetrics: [
+    new Hallucination({ model: "gpt-5-mini" }), // 评估更准确
+  ],
+  projectName: "my-project",
+});
+```
+
+### 4. 配置 API 密钥
+
+为每个提供商设置环境变量：
+
+```bash
+# OpenAI
+export OPENAI_API_KEY="sk-..."
+
+# Anthropic
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Google
+export GOOGLE_API_KEY="..."
+```
+
+### 5. 处理速率限制
+
+使用适当的工作线程数以避免速率限制：
+
+```typescript
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  taskWorkers: 5, // 限制并行请求
+  projectName: "my-project",
+});
+```
+
+## 故障排除
+
+### API 密钥未找到
+
+```typescript
+// 错误：未找到提供商的 API 密钥
+
+// 解决方案：设置环境变量
+process.env.OPENAI_API_KEY = "sk-...";
+```
+
+### 模型不支持
+
+```typescript
+// 错误：不支持的模型 ID
+
+// 解决方案：使用自定义实现
+class MyModel extends OpikBaseModel {
+  // ... 实现
+}
+```
+
+### 速率限制错误
+
+```typescript
+// 错误：超出速率限制
+
+// 解决方案：减少工作线程数
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: "gpt-5-nano",
+  taskWorkers: 3, // 从默认值 10 减少
+  projectName: "my-project",
+});
+```
+
+## 另请参阅
+
+- [evaluatePrompt 函数](/reference/typescript-sdk/evaluation/evaluate_prompt_function) - 在提示评估中使用模型
+- [指标](/reference/typescript-sdk/evaluation/metrics) - 在 LLM 评判指标中使用模型
+- [Vercel AI SDK 文档](https://sdk.vercel.ai/docs) - 完整的 LanguageModel 文档

@@ -19,6 +19,7 @@ import MediaTagsList from "@/v2/pages-shared/llm/PromptMessageMediaTags/MediaTag
 import VersionTagList from "@/v2/pages-shared/version-history/VersionTagList";
 import VersionMeta from "@/v2/pages-shared/version-history/VersionMeta";
 import EnvironmentBadgeList from "@/shared/EnvironmentLabel/EnvironmentBadgeList";
+import { useTranslation } from "react-i18next";
 
 type VersionWithMaybeAuthor = PromptVersion & { created_by?: string };
 type DiffSide = "base" | "diff";
@@ -183,8 +184,9 @@ const MetadataCell: React.FC<{
   diffText: string;
   side: DiffSide;
 }> = ({ text, baseText, diffText, side }) => {
+  const { t } = useTranslation("compare-experiments");
   if (!text) {
-    return <EmptyPlaceholder>No metadata</EmptyPlaceholder>;
+    return <EmptyPlaceholder>{t("compare.noMetadata")}</EmptyPlaceholder>;
   }
   return (
     <div className="comet-code whitespace-pre-line break-words rounded-md border border-border bg-primary-foreground p-2">
@@ -235,6 +237,7 @@ const ComparePromptVersionDialog: React.FunctionComponent<
   initialBaseVersionId,
   initialDiffVersionId,
 }) => {
+  const { t } = useTranslation("pages/prompt");
   const [baseVersion, setBaseVersion] = useState<PromptVersion | undefined>(
     last(versions),
   );
@@ -375,8 +378,8 @@ const ComparePromptVersionDialog: React.FunctionComponent<
     : "";
   const sheetTitle =
     baseLabel && diffLabel
-      ? `Compare ${baseLabel} → ${diffLabel}`
-      : "Compare prompts";
+      ? t("compare.compareVersions", { base: baseLabel, diff: diffLabel })
+      : t("compare.comparePrompts");
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -389,7 +392,7 @@ const ComparePromptVersionDialog: React.FunctionComponent<
           <div className="flex flex-col gap-6 pb-2">
             {baseVersion && diffVersion && (
               <SectionContainer
-                title={isChatDiff ? "Chat messages" : "Prompt"}
+                title={isChatDiff ? t("compare.chatMessages") : t("compare.prompt")}
                 actions={
                   isChatDiff && (
                     <FormFieldModeSelect
@@ -452,7 +455,7 @@ const ComparePromptVersionDialog: React.FunctionComponent<
             )}
 
             {baseVersion && diffVersion && (
-              <SectionContainer title="Metadata">
+              <SectionContainer title={t("compare.metadata")}>
                 <HeaderRow
                   baseVersion={baseVersion}
                   diffVersion={diffVersion}

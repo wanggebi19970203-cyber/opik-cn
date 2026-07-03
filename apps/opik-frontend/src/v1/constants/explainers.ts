@@ -1,5 +1,6 @@
 import { Explainer } from "@/types/shared";
 import { buildDocsUrl } from "@/v1/lib/utils";
+import i18next from "i18next";
 import {
   EXPLAINER_ID,
   EXPLAINERS_MAP as BASE_EXPLAINERS,
@@ -36,7 +37,7 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   [EXPLAINER_ID.why_would_i_want_to_add_traces_to_an_test_suite]: {
     id: EXPLAINER_ID.why_would_i_want_to_add_traces_to_an_test_suite,
     description:
-      "Add traces to a test suite to evaluate your agent's performance using real production data.",
+      i18next.t("explainers.whyWouldIWantToAddTracesToATestSuite"),
   },
   [EXPLAINER_ID.hows_the_cost_estimated]: {
     ...BASE_EXPLAINERS[EXPLAINER_ID.hows_the_cost_estimated],

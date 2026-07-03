@@ -1,0 +1,40 @@
+---
+description: 使用 Opik Agent Optimizer 进行端到端 ARC-AGI 优化演练。
+headline: ARC-AGI 优化器教程 | Opik 文档
+og:description: 了解如何构建 ARC-AGI 任务、评估候选程序，并使用 Opik Agent Optimizer 优化提示词。
+og:site_name: Opik 文档
+og:title: ARC-AGI 优化教程
+subtitle: 使用 ARC-AGI 风格代码任务的教程示例
+title: ARC-AGI 优化教程
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/overview
+---
+
+本指南介绍 ARC-AGI，为什么它非常适合优化器驱动的提示词迭代，以及在 SDK 中找到完整可运行实现的位置。
+
+<Callout>
+  代码库入口点：[`sdks/opik_optimizer/scripts/arc_agi/tasks_optimizer.py`](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/scripts/arc_agi/tasks_optimizer.py) 和 [`sdks/opik_optimizer/scripts/arc_agi/`](https://github.com/comet-ml/opik/tree/main/sdks/opik_optimizer/scripts/arc_agi) 中的 ARC-AGI 工具。
+</Callout>
+
+## 什么是 ARC-AGI？
+
+ARC-AGI 任务是基于网格的推理谜题，测试代理从少量示例中推断转换规则的能力。它们非常适合优化，因为小的提示词更改可以显著改善跨任务的泛化能力。
+
+## 为什么在这里使用优化器？
+
+ARC-AGI 评估是确定性和可重复的，这使其非常适合迭代优化。HRPO 特别有用，因为它捕获故障模式并提出针对性修复。
+
+## SDK 实现如何工作
+
+SDK 附带了完整的 ARC-AGI 工作流，您可以在本地运行：
+
+1. **数据集加载器**：[`sdks/opik_optimizer/src/opik_optimizer/datasets/arc_agi2.py`](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/src/opik_optimizer/datasets/arc_agi2.py) 加载 ARC-AGI-2 任务并嵌入可选的网格图像。
+2. **提示词模板**：`sdks/opik_optimizer/scripts/arc_agi/prompts/` 包含系统和 HRPO 提示词模板。
+3. **评估器 + 指标**：`sdks/opik_optimizer/scripts/arc_agi/utils/code_evaluator.py` 执行候选求解器，并通过 `utils/metrics.py` 对 ARC-AGI 指标评分。
+4. **优化器连接**：`tasks_optimizer.py` 将数据集、HRPO、指标和日志连接成可重复的运行。
+
+如果您想按原样运行代码，请从 `tasks_optimizer.py` 入口点开始，并按照该文件顶部列出的 CLI 标志操作。
+
+## 后续步骤
+
+- 探索仓库中的 ARC-AGI 脚本，并替换为您自己的数据集或提示词模板。
+- 查看 `scripts/arc_agi/` 下的运行摘要，比较优化器迭代。

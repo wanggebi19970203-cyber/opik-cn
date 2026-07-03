@@ -1,0 +1,390 @@
+---
+description: 将 Agent Optimizer 连接到智能体框架。
+headline: 优化智能体 | Opik 文档
+og:description: 了解如何使用 Opik 的 Agent Optimizer 增强智能体框架，高效编排多智能体系统中的提示词和工具。
+og:site_name: Opik 文档
+og:title: 使用 Opik 优化智能体
+title: 优化智能体
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/optimize_agents
+---
+
+Opik Agent Optimizer 可以优化简单的提示词和复杂的智能体工作流。对于大多数用例，你可以直接使用 `ChatPrompt` 优化提示词。当你需要多提示词工作流、智能体编排或自定义执行逻辑时，你将使用 `OptimizableAgent` 创建自定义智能体类。
+
+## 何时使用 OptimizableAgent vs ChatPrompt
+
+**直接使用 `ChatPrompt`**（默认方式）：
+- 单提示词优化 - 优化一个提示词模板
+- 最常见的用例
+- 不需要自定义执行逻辑
+
+**使用 `OptimizableAgent`** 当你需要：
+- 多提示词工作流 - 按顺序编排多个提示词
+- 智能体框架集成 - 连接到 ADK、LangGraph、CrewAI 等
+- 自定义执行逻辑 - 特殊工具处理、异步工作流等
+
+优化器与两种方式无缝协作。优化器在优化期间反复调用你的智能体的 `invoke_agent()` 方法，传递不同的提示词候选方案进行评估。
+
+## 单提示词优化
+
+对于大多数优化任务，你可以直接使用 `ChatPrompt`，无需创建自定义智能体。优化器底层使用默认的基于 LiteLLM 的智能体。
+
+```python
+from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+from opik.evaluation.metrics import LevenshteinRatio
+from opik_optimizer.datasets import hotpot
+
+dataset = hotpot(count=300)
+
+def levenshtein_ratio(dataset_item, llm_output):
+    return LevenshteinRatio().score(
+        reference=dataset_item["answer"], 
+        output=llm_output
+    )
+
+prompt = ChatPrompt(
+    system="You are a helpful assistant.",
+    user="{question}",
+    model="openai/gpt-4o-mini"
+)
+
+optimizer = MetaPromptOptimizer(model="openai/gpt-4o")
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    max_trials=5,
+    n_samples=50
+)
+
+result.display()
+```
+
+### 用于框架集成的自定义智能体
+
+在与特定智能体框架（Google ADK、LangGraph、CrewAI 等）集成时，你将创建一个自定义 `OptimizableAgent` 子类。这允许优化器与你的框架执行模型配合工作。
+
+以下是 Google ADK 的示例：
+
+```python
+from typing import Any, TYPE_CHECKING
+from opik_optimizer import OptimizableAgent
+
+if TYPE_CHECKING:
+    from opik_optimizer.api_objects import chat_prompt
+
+class ADKAgent(OptimizableAgent):
+    project_name = "adk-agent"
+
+    def invoke_agent(
+        self,
+        prompts: dict[str, chat_prompt.ChatPrompt],
+        dataset_item: dict[str, Any],
+        allow_tool_use: bool = False,
+        seed: int | None = None,
+    ) -> str:
+        # Single-prompt agents extract the prompt from the dict
+        if len(prompts) > 1:
+            raise ValueError("ADKAgent only supports single-prompt optimization.")
+        
+        prompt = list(prompts.values())[0]
+        messages = prompt.get_messages(dataset_item)
+        
+        # Your framework-specific execution logic here
+        # ... create ADK agent, run it, return response ...
+        
+        return response
+```
+
+关键要点：
+- 从 `prompts` 字典中提取单个提示词：`prompt = list(prompts.values())[0]`
+- 获取格式化的消息：`messages = prompt.get_messages(dataset_item)`
+- 使用你的框架执行并返回响应字符串
+
+<Tip>
+  参见 `sdks/opik_optimizer/scripts/llm_frameworks/` 获取框架集成的工作示例（ADK、LangGraph、CrewAI 等）。每个脚本既是文档也是回归测试。
+</Tip>
+
+## 多提示词优化
+
+对于多步骤智能体工作流，你**必须**使用 `OptimizableAgent`，因为 `ChatPrompt` 只处理单个提示词。多提示词优化允许你优化在管道中协同工作的多个提示词。
+
+### 何时使用多提示词优化
+
+- 顺序推理工作流（分析 → 响应）
+- 多跳检索管道
+- 多步骤智能体编排
+- 一个提示词的输出馈入另一个提示词的任何工作流
+
+### 实现多提示词智能体
+
+这是一个两步工作流的简单示例，先分析输入然后生成响应：
+
+```python
+from typing import Any
+from opik_optimizer import ChatPrompt, OptimizableAgent
+from openai import OpenAI
+
+class AnalyzeRespondAgent(OptimizableAgent):
+    """Two-step agent: analyze input, then respond based on analysis."""
+    
+    def __init__(self, model: str = "gpt-4o-mini"):
+        super().__init__()
+        self.model = model
+        self.client = OpenAI()
+
+    def invoke_agent(
+        self,
+        prompts: dict[str, ChatPrompt],
+        dataset_item: dict[str, Any],
+        allow_tool_use: bool = False,
+        seed: int | None = None,
+    ) -> str:
+        # Step 1: Analyze the input
+        analyze_prompt = prompts["analyze"]
+        analyze_messages = analyze_prompt.get_messages(dataset_item)
+        
+        analyze_response = self.client.chat.completions.create(
+            model=self.model,
+            messages=analyze_messages,
+            seed=seed,
+        )
+        analysis = analyze_response.choices[0].message.content
+
+        # Step 2: Generate response based on analysis
+        respond_prompt = prompts["respond"]
+        # Pass analysis result to the respond prompt
+        respond_context = {**dataset_item, "analysis": analysis}
+        respond_messages = respond_prompt.get_messages(respond_context)
+        
+        respond_response = self.client.chat.completions.create(
+            model=self.model,
+            messages=respond_messages,
+            seed=seed,
+        )
+        
+        return respond_response.choices[0].message.content
+```
+
+### 使用多提示词智能体
+
+优化时，传递提示词字典而不是单个提示词：
+
+```python
+from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+from opik.evaluation.metrics import LevenshteinRatio
+
+# Define both prompts in the workflow
+prompts = {
+    "analyze": ChatPrompt(
+        system="You are an analysis assistant. Extract key information from the input.",
+        user="{text}",
+        model="gpt-4o-mini"
+    ),
+    "respond": ChatPrompt(
+        system="You are a response assistant. Generate a helpful response based on the analysis.",
+        user="Analysis: {analysis}\n\nOriginal question: {text}",
+        model="gpt-4o-mini"
+    ),
+}
+
+optimizer = MetaPromptOptimizer(model="openai/gpt-4o")
+result = optimizer.optimize_prompt(
+    prompt=prompts,  # Pass dict of prompts
+    agent_class=AnalyzeRespondAgent,  # Use your custom agent
+    dataset=dataset,
+    metric=levenshtein_ratio,
+    max_trials=5,
+    n_samples=50
+)
+
+result.display()
+```
+
+优化器将优化字典中的两个提示词，尝试不同的组合以提升性能。
+
+<Note>
+  提示词字典的键（如 "analyze" 和 "respond"）用于标识要优化的提示词。优化器可以优化所有提示词或根据 `optimize_prompt` 参数优化特定提示词。
+</Note>
+
+## 关键实现细节
+
+### invoke_agent() 方法签名
+
+所有 `OptimizableAgent` 子类必须实现 `invoke_agent()`：
+
+```python
+def invoke_agent(
+    self,
+    prompts: dict[str, ChatPrompt],
+    dataset_item: dict[str, Any],
+    allow_tool_use: bool = False,
+    seed: int | None = None,
+) -> str:
+    # Your implementation here
+    return response_string
+```
+
+**参数：**
+- `prompts`：将提示词名称映射到 `ChatPrompt` 对象的字典
+- `dataset_item`：用于格式化提示词消息的数据集行
+- `allow_tool_use`：是否可以执行工具（用于工具调用提示词）
+- `seed`：可选的随机种子，用于可重现性
+
+**返回值：** 将由你的指标函数评分的单个字符串输出
+
+### 从提示词中提取消息
+
+使用 `ChatPrompt.get_messages()` 用数据集值格式化提示词：
+
+```python
+messages = prompt.get_messages(dataset_item)
+# Returns list of message dicts: [{"role": "system", "content": "..."}, ...]
+```
+
+对于多提示词工作流，在调用 `get_messages()` 时传递额外上下文：
+
+```python
+# Pass intermediate results to subsequent prompts
+context = {**dataset_item, "intermediate_result": some_value}
+messages = prompt.get_messages(context)
+```
+
+### 最佳实践
+
+- **错误处理**：如果执行失败，返回有意义的错误消息
+- **模型参数**：遵守 `prompt.model` 和 `prompt.model_kwargs` 以保持一致性
+- **可重现性**：在进行 LLM 调用时使用 `seed` 参数
+- **Opik 追踪**：基类自动处理追踪，但你可以通过 `self.trace_metadata` 添加自定义元数据
+
+## 完整示例
+
+### 使用 ChatPrompt 的单提示词（默认）
+
+```python
+from opik_optimizer import ChatPrompt, EvolutionaryOptimizer
+from opik_optimizer.datasets import hotpot
+from opik.evaluation.metrics import LevenshteinRatio
+
+dataset = hotpot(count=300)
+
+def metric(dataset_item, llm_output):
+    return LevenshteinRatio().score(
+        reference=dataset_item["answer"], 
+        output=llm_output
+    )
+
+prompt = ChatPrompt(
+    system="You are a helpful assistant.",
+    user="{question}",
+    model="openai/gpt-4o-mini"
+)
+
+optimizer = EvolutionaryOptimizer(
+    model="openai/gpt-4o-mini",
+    population_size=5,
+    num_generations=3
+)
+
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=metric,
+    n_samples=50
+)
+
+result.display()
+```
+
+### 多提示词工作流
+
+```python
+from typing import Any
+from opik_optimizer import ChatPrompt, OptimizableAgent, HRPO
+from opik.evaluation.metrics import LevenshteinRatio
+from opik_optimizer.datasets import hotpot
+from openai import OpenAI
+
+class TwoStepAgent(OptimizableAgent):
+    def __init__(self, model: str = "gpt-4o-mini"):
+        super().__init__()
+        self.model = model
+        self.client = OpenAI()
+
+    def invoke_agent(
+        self,
+        prompts: dict[str, ChatPrompt],
+        dataset_item: dict[str, Any],
+        allow_tool_use: bool = False,
+        seed: int | None = None,
+    ) -> str:
+        # First step
+        step1_prompt = prompts["step1"]
+        step1_messages = step1_prompt.get_messages(dataset_item)
+        step1_response = self.client.chat.completions.create(
+            model=self.model,
+            messages=step1_messages,
+            seed=seed,
+        )
+        step1_result = step1_response.choices[0].message.content
+
+        # Second step uses result from first step
+        step2_prompt = prompts["step2"]
+        step2_context = {**dataset_item, "step1_result": step1_result}
+        step2_messages = step2_prompt.get_messages(step2_context)
+        step2_response = self.client.chat.completions.create(
+            model=self.model,
+            messages=step2_messages,
+            seed=seed,
+        )
+        
+        return step2_response.choices[0].message.content
+
+# Define multi-prompt workflow
+prompts = {
+    "step1": ChatPrompt(
+        system="Analyze the question and identify key information.",
+        user="{question}",
+        model="gpt-4o-mini"
+    ),
+    "step2": ChatPrompt(
+        system="Answer the question based on the analysis.",
+        user="Question: {question}\n\nAnalysis: {step1_result}",
+        model="gpt-4o-mini"
+    ),
+}
+
+dataset = hotpot(count=300)
+
+def metric(dataset_item, llm_output):
+    return LevenshteinRatio().score(
+        reference=dataset_item["answer"], 
+        output=llm_output
+    )
+
+optimizer = HRPO(
+    model="openai/gpt-4o-mini",
+    n_threads=2,
+    max_parallel_batches=3
+)
+
+result = optimizer.optimize_prompt(
+    prompt=prompts,
+    agent_class=TwoStepAgent,
+    dataset=dataset,
+    metric=metric,
+    max_trials=5,
+    n_samples=50
+)
+
+result.display()
+```
+
+<Info>
+  有关高级多提示词示例，请参见 `sdks/opik_optimizer/benchmarks/agents/hotpot_multihop_agent.py`，它实现了一个带有 Wikipedia 搜索的复杂多跳检索管道。
+</Info>
+
+## 后续步骤
+
+- 探索[优化算法](/v1/agent_optimization/algorithms/overview)选择合适的优化器
+- 了解[定义数据集](/v1/agent_optimization/optimization/define_datasets)和[指标](/v1/agent_optimization/optimization/define_metrics)
+- 查看 `sdks/opik_optimizer/scripts/llm_frameworks/` 中的框架特定示例

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 import useEnvironmentCreateMutation from "@/api/environments/useEnvironmentCreateMutation";
 import useEnvironmentUpdateMutation from "@/api/environments/useEnvironmentUpdateMutation";
@@ -41,6 +42,7 @@ type AddEditEnvironmentDialogProps = {
 const AddEditEnvironmentDialog: React.FunctionComponent<
   AddEditEnvironmentDialogProps
 > = ({ open, setOpen, environment, mode = "create" }) => {
+  const { t } = useTranslation("common");
   const [name, setName] = useState<string>(
     mode === "clone" && environment
       ? `${environment.name}-copy`
@@ -71,10 +73,10 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
   const nameError = useMemo(() => {
     if (!trimmedName) return "";
     if (trimmedName.length > ENVIRONMENT_NAME_MAX_LENGTH) {
-      return `Name must be ${ENVIRONMENT_NAME_MAX_LENGTH} characters or less.`;
+      return t("environmentDialog.nameMaxLengthError", { max: ENVIRONMENT_NAME_MAX_LENGTH });
     }
     if (!ENVIRONMENT_NAME_REGEX.test(trimmedName)) {
-      return "Use only letters, numbers, dashes, and underscores.";
+      return t("environmentDialog.namePatternError");
     }
     return "";
   }, [trimmedName]);
@@ -97,11 +99,11 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
   const isEdit = mode === "edit";
   const title =
     mode === "clone"
-      ? "Clone environment"
+      ? t("environmentDialog.cloneTitle")
       : isEdit
-        ? "Edit environment"
-        : "Create a new environment";
-  const submitText = isEdit ? "Update environment" : "Create environment";
+        ? t("environmentDialog.editTitle")
+        : t("environmentDialog.createTitle");
+  const submitText = isEdit ? t("environmentDialog.updateSubmit") : t("environmentDialog.createSubmit");
 
   const isValid = trimmedName.length > 0 && !nameError;
 
@@ -176,10 +178,10 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
         <DialogAutoScrollBody>
           <div onKeyDown={handleBodyKeyDown}>
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="environmentName">Name</Label>
+              <Label htmlFor="environmentName">{t("environmentDialog.nameLabel")}</Label>
               <div className="flex items-center">
                 {isColorLocked ? (
-                  <TooltipWrapper content="Color is reserved for the default environment">
+                  <TooltipWrapper content={t("environmentDialog.colorLockedTooltip")}>
                     <div
                       aria-label="Default environment color (locked)"
                       className="flex size-10 shrink-0 cursor-not-allowed items-center justify-center rounded-l-md"
@@ -198,7 +200,7 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
                     <PopoverTrigger asChild>
                       <button
                         type="button"
-                        aria-label="Change color"
+                        aria-label={t("environmentDialog.changeColor")}
                         className="size-10 shrink-0 rounded-l-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
                         style={{ backgroundColor: color }}
                       />
@@ -215,7 +217,7 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
                 <Input
                   id="environmentName"
                   className="flex-1 rounded-l-none"
-                  placeholder="e.g. staging"
+                  placeholder={t("environmentDialog.namePlaceholder")}
                   value={name}
                   onChange={(event) => handleNameChange(event.target.value)}
                   maxLength={ENVIRONMENT_NAME_MAX_LENGTH}
@@ -227,16 +229,15 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
                 </p>
               ) : (
                 <p className="comet-body-xs text-light-slate">
-                  Use letters, numbers, dashes, or underscores. Must be unique
-                  within the workspace.
+                  {t("environmentDialog.nameHint")}
                 </p>
               )}
             </div>
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="environmentDescription">Description</Label>
+              <Label htmlFor="environmentDescription">{t("environmentDialog.descriptionLabel")}</Label>
               <Textarea
                 id="environmentDescription"
-                placeholder="Optional description"
+                placeholder={t("environmentDialog.descriptionPlaceholder")}
                 className="min-h-20"
                 value={description}
                 onChange={(event) =>
@@ -249,7 +250,7 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("environmentDialog.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"

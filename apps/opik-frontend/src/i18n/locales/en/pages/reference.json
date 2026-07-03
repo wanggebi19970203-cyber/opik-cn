@@ -1,0 +1,13 @@
+{
+  "reference": {
+    "title": "Reference",
+    "description": "API and SDK reference documentation",
+    "sdk": {
+      "python": "Python SDK",
+      "typescript": "TypeScript SDK"
+    },
+    "api": {
+      "rest": "REST API"
+    }
+  }
+}

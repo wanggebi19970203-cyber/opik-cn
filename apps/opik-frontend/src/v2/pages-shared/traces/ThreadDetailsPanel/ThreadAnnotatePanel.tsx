@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { TraceFeedbackScore } from "@/types/traces";
 import { CommentItem } from "@/types/comment";
 import FeedbackScoreTag from "@/shared/FeedbackScoreTag/FeedbackScoreTag";
@@ -37,6 +38,7 @@ const ThreadAnnotatePanel: React.FC<ThreadAnnotatePanelProps> = ({
   feedbackScores,
   comments,
 }) => {
+  const { t } = useTranslation("tracing");
   const hasFeedbackScores = Boolean(feedbackScores.length);
 
   const { mutate: setThreadFeedbackScore } =
@@ -111,8 +113,8 @@ const ThreadAnnotatePanel: React.FC<ThreadAnnotatePanelProps> = ({
 
   return (
     <DetailsActionSectionLayout
-      title="Annotate"
-      closeTooltipContent="Close annotate"
+      title={t("annotate.title")}
+      closeTooltipContent={t("detailsPanel.closeAnnotate")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
     >
@@ -120,7 +122,7 @@ const ThreadAnnotatePanel: React.FC<ThreadAnnotatePanelProps> = ({
         {hasFeedbackScores && (
           <>
             <div className="comet-body-s-accented truncate px-4 pt-4">
-              Feedback scores
+              {t("annotate.feedbackScores")}
             </div>
             <div className="flex flex-wrap gap-2 px-4 py-2">
               {feedbackScores.map((score) => (
@@ -144,13 +146,13 @@ const ThreadAnnotatePanel: React.FC<ThreadAnnotatePanelProps> = ({
           onUpdateFeedbackScore={onUpdateFeedbackScore}
           onDeleteFeedbackScore={onDeleteFeedbackScore}
           className="mt-4 px-4"
-          header={<FeedbackScoresEditor.Header title="Human review" />}
+          header={<FeedbackScoresEditor.Header title={t("annotate.humanReview")} />}
           footer={<FeedbackScoresEditor.Footer entityCopy="threads" />}
         />
 
         <Separator className="m-4 w-auto" />
 
-        <div className="comet-body-s-accented truncate px-4">Comments</div>
+        <div className="comet-body-s-accented truncate px-4">{t("annotate.comments")}</div>
         <CommentsSection
           comments={comments}
           onSubmit={onCommentSubmit}

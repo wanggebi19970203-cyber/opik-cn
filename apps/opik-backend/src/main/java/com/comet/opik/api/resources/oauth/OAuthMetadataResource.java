@@ -36,14 +36,14 @@ import static com.comet.opik.domain.mcpoauth.OAuthConstants.TOKEN_PATH;
 @Consumes(MediaType.APPLICATION_JSON)
 @Timed
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "MCP OAuth", description = "MCP OAuth 2.1 Authorization Server resources")
+@Tag(name = "MCP OAuth", description = "MCP OAuth 2.1 授权服务器资源")
 public class OAuthMetadataResource {
 
     private final @NonNull OpikConfiguration opikConfig;
 
     @GET
-    @Operation(operationId = "getOAuthAuthorizationServerMetadata", summary = "Get OAuth Authorization Server Metadata", description = "Get OAuth 2.1 Authorization Server Metadata (RFC 8414)", responses = {
-            @ApiResponse(responseCode = "200", description = "Authorization Server Metadata", content = @Content(schema = @Schema(implementation = AuthorizationServerMetadata.class)))})
+    @Operation(operationId = "getOAuthAuthorizationServerMetadata", summary = "获取OAuth授权服务器元数据", description = "获取OAuth 2.1授权服务器元数据（RFC 8414）", responses = {
+            @ApiResponse(responseCode = "200", description = "授权服务器元数据", content = @Content(schema = @Schema(implementation = AuthorizationServerMetadata.class)))})
     public Response metadata() {
         McpOAuthConfig config = opikConfig.getMcpOAuth();
         String issuer = config.getIssuer();

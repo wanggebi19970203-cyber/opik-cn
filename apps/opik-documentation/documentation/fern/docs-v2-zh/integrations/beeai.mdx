@@ -1,0 +1,162 @@
+---
+description: 从这里开始将 Opik 集成到您的 BeeAI 生成式 AI 应用中，实现端到端的
+  LLM 可观测性、单元测试和优化。
+headline: BeeAI | Opik 文档
+og:description: 使用 BeeAI 的轻量级框架构建高效的 AI 智能体，借助 Opik 实现无缝的工具集成和对话管理。
+og:site_name: Opik 文档
+og:title: BeeAI 框架 - 使用 Opik 构建 AI 智能体
+title: 使用 Opik 实现 BeeAI（Python）可观测性
+---
+
+[BeeAI](https://beeai.dev/) 是一个智能体框架，旨在简化 AI 智能体的开发，注重简洁性和高性能。它提供了一套清晰的 API，内置支持工具调用、对话管理和可扩展架构。
+
+BeeAI 的主要优势在于其轻量级设计，使得创建和部署 AI 智能体变得简单，避免了不必要的复杂性，同时保持了生产环境所需的强大能力。
+
+<Frame>
+  <img src="/img/tracing/beeai_integration.png" alt="BeeAI tracing" />
+</Frame>
+
+## 快速开始
+
+要将 BeeAI 与 Opik 集成使用，您需要安装 BeeAI 和所需的 OpenTelemetry 包：
+
+```bash
+pip install beeai-framework openinference-instrumentation-beeai "beeai-framework[wikipedia]" opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp
+```
+
+## 环境配置
+
+根据您的 Opik 部署方式配置环境变量：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果您使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            您也可以将 `Comet-Workspace` 参数更新为其他值，以便将数据记录到不同的工作空间。
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业版部署">
+        如果您使用 Opik 企业版部署，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            您也可以将 `Comet-Workspace` 参数更新为其他值，以便将数据记录到不同的工作空间。
+        </Tip>
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+
+    如果您是自托管 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将追踪记录记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+        环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 BeeAI 中使用 Opik
+
+为 BeeAI 设置 OpenTelemetry 插桩：
+
+```python
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from openinference.instrumentation.beeai import (
+    BeeAIInstrumentor,
+)  # or SemanticKernelInstrumentor
+
+# Configure the OTLP exporter for Opik
+otlp_exporter = OTLPSpanExporter()
+
+
+# Set up the tracer provider
+trace.set_tracer_provider(TracerProvider())
+
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(otlp_exporter)  # OTLP for sending to Opik
+)
+
+# Instrument your framework
+BeeAIInstrumentor().instrument()  # or SemanticKernelInstrumentor().instrument()
+
+import asyncio
+from beeai_framework.agents.react import ReActAgent
+from beeai_framework.agents.types import AgentExecutionConfig
+from beeai_framework.backend.chat import ChatModel
+from beeai_framework.backend.types import ChatModelParameters
+from beeai_framework.memory import TokenMemory
+from beeai_framework.tools.search.wikipedia import WikipediaTool
+from beeai_framework.tools.weather.openmeteo import OpenMeteoTool
+
+# Initialize the language model
+llm = ChatModel.from_name(
+    "openai:gpt-4o-mini",  # or "ollama:granite3.3:8b" for local Ollama
+    ChatModelParameters(temperature=0.7),
+)
+
+# Create tools for the agent
+tools = [
+    WikipediaTool(),
+    OpenMeteoTool(),
+]
+
+# Create a ReAct agent with memory
+agent = ReActAgent(llm=llm, tools=tools, memory=TokenMemory(llm))
+
+
+# Run the agent
+async def main():
+    response = await agent.run(
+        prompt="I'm planning a trip to Barcelona, Spain. Can you research key attractions and landmarks I should visit, and also tell me what the current weather conditions are like there?",
+        execution=AgentExecutionConfig(
+            max_retries_per_step=3, total_max_retries=10, max_iterations=5
+        ),
+    )
+    print("Agent Response:", response.result.text)
+    return response
+
+
+# Run the example
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## 进一步改进
+
+如果您对 BeeAI 集成有任何问题或建议，请在我们的 GitHub 仓库[提交 Issue](https://github.com/comet-ml/opik/issues/new/choose)。

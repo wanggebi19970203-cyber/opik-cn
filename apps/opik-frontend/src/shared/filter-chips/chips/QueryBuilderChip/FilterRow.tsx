@@ -1,5 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface FilterRowProps {
@@ -14,7 +15,10 @@ export const FilterRow: React.FC<FilterRowProps> = ({
   disableRemove = false,
   children,
   className,
-}) => (
+}) => {
+  const { t } = useTranslation("common");
+
+  return (
   <div
     className={cn(
       "flex w-full items-center gap-0.5 rounded-[4px] bg-primary-100 px-1 py-0.5",
@@ -32,7 +36,7 @@ export const FilterRow: React.FC<FilterRowProps> = ({
     </div>
     <button
       type="button"
-      aria-label="Remove filter"
+      aria-label={t("filterRow.removeFilter")}
       onClick={onRemove}
       disabled={disableRemove}
       className={cn(
@@ -45,4 +49,5 @@ export const FilterRow: React.FC<FilterRowProps> = ({
       <X className="size-3" />
     </button>
   </div>
-);
+  );
+};

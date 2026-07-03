@@ -5,6 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { JsonValue } from "@/types/shared";
 import { JsonTreePopoverProps } from "./types";
@@ -50,6 +51,7 @@ const JsonTreePopover: React.FC<JsonTreePopoverProps> = ({
   searchQuery = "",
   onFocusedPathChange,
 }) => {
+  const { t } = useTranslation();
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
     () => new Set(),
   );
@@ -306,7 +308,7 @@ const JsonTreePopover: React.FC<JsonTreePopoverProps> = ({
           style={{ "--tree-max-height": MAX_HEIGHT } as React.CSSProperties}
         >
           <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-            No matching keys found
+            {t("common:jsonTree.noMatchingKeys")}
           </div>
         </div>
       );

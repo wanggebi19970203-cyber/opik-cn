@@ -1,0 +1,60 @@
+---
+title: 对话级 GEval 指标
+description: 如何在完整对话上运行基于 GEval 的评判器
+---
+
+# 对话级 GEval 指标
+
+Opik 提供了适配器，封装基于 GEval 的评判器，使其能够对整个对话线程进行评分。每个适配器都实现了 `ConversationThreadMetric` 接口，这意味着你可以将它们接入 `evaluate_threads` 或任何处理聊天记录的管道中。
+
+> [!NOTE]
+> 这些适配器保留了底层评判器的推理能力。例如，`ConversationComplianceRiskMetric` 返回与 `ComplianceRiskJudge` 相同的详细分析依据，但将分析范围限定在对话上下文中。
+
+| 指标 | 描述 | 底层评判器 |
+| --- | --- | --- |
+| `ConversationComplianceRiskMetric` | 标记受监管场景中的非事实性/不合规陈述。 | `ComplianceRiskJudge` |
+| `ConversationDialogueHelpfulnessMetric` | 评估最终助手回复的帮助程度。 | `DialogueHelpfulnessJudge` |
+| `ConversationQARelevanceMetric` | 检查回答是否直接回应了用户问题。 | `QARelevanceJudge` |
+| `ConversationSummarizationConsistencyMetric` | 衡量摘要对源对话的忠实程度。 | `SummarizationConsistencyJudge` |
+| `ConversationSummarizationCoherenceMetric` | 评估对话摘要的连贯性。 | `SummarizationCoherenceJudge` |
+| `ConversationPromptUncertaintyMetric` | 评估提示词对下游模型的模糊程度。 | `PromptUncertaintyJudge` |
+
+## 使用方法
+
+```python
+from opik.evaluation.metrics import ConversationComplianceRiskMetric
+from opik.evaluation import evaluate_threads
+
+metrics = [ConversationComplianceRiskMetric(model="gpt-4o-mini")]
+
+results = evaluate_threads(
+    dataset="my_threads_dataset",
+    metrics=metrics,
+)
+```
+
+每个适配器接受与底层 GEval 评判器相同的关键字参数（`model`、`track`、`temperature`、`project_name` 等）。
+
+### ConversationComplianceRiskMetric
+
+当最新助手回复涉及不合规或高风险领域（金融建议、医疗指导、KYC 违规等）时进行标记。底层 ComplianceRiskJudge 会审查完整对话记录，但将其判定重点放在最近的助手回复上，这使其非常适合代理将对话转交人工审核的收件箱式工作流。可与自动化路由配合使用，以便高风险线程能够立即升级处理。
+
+### ConversationDialogueHelpfulnessMetric
+
+在考虑已有对话内容后，回答"助手是否最终帮助了用户？"这一问题。该评判器会权衡用户提供的上下文、检测助手是否忽略了澄清信息，并奖励具体、可操作的回复。适用于客户支持或引导流程中追踪助手质量，这些场景中最后一个回复是交还给用户的交接点。
+
+### ConversationQARelevanceMetric
+
+评估最终回答解决用户问题的质量，即使对话有所偏离。它能捕捉微妙的回避形式（如"请参阅我们的文档"）或幻觉生成的后续内容。团队通常将其与基于检索的防护机制结合使用，确保代理的每个最终回答都基于正确的片段。
+
+### ConversationSummarizationConsistencyMetric
+
+验证自动生成的摘要是否忠实于对话记录中的事实。在对冗长的支持聊天或销售通话进行摘要时尤为有用，确保摘要不会捏造承诺或遗漏关键阻碍因素。可与人工编写的抽查结果配合使用，以优先处理需要审核的摘要。
+
+### ConversationSummarizationCoherenceMetric
+
+从写作质量的角度审视同一摘要：组织是否清晰、是否易于浏览、逻辑分组是否合理？将其与一致性评判器结合使用，确保摘要在填充 CRM 备注或工单积压之前既忠实又可读。
+
+### ConversationPromptUncertaintyMetric
+
+精确定位缺少关键上下文（如"你能完成它吗？"）或包含矛盾指令的最后一轮提示词。暴露这些情况可以让你主动向用户请求澄清，或在重新运行昂贵的评估之前用缺失的元数据补充提示词。

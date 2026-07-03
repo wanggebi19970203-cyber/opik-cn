@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import i18next from "i18next";
 
 interface UseProgressSimulationOptions {
   /**
@@ -90,7 +91,7 @@ const useProgressSimulation = ({
 
   const complete = useCallback(() => {
     setProgress(100);
-    setMessage(messages[messages.length - 1] || "Completed successfully!");
+    setMessage(messages[messages.length - 1] || i18next.t("common.hooks.useProgressSimulation.completedSuccessfully"));
   }, [messages]);
 
   return { progress, message, complete };

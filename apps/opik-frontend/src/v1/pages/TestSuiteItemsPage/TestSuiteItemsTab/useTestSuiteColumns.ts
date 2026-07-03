@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import i18next from "i18next";
 import get from "lodash/get";
 
 import { DatasetItem } from "@/types/datasets";
@@ -28,7 +29,7 @@ export function useTestSuiteColumns({
     const cols: ColumnData<DatasetItem>[] = [
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: i18next.t("common:labels.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
       },
@@ -38,19 +39,19 @@ export function useTestSuiteColumns({
       cols.push(
         {
           id: "description",
-          label: "Description",
+          label: i18next.t("common:labels.description"),
           type: COLUMN_TYPE.string,
           accessorFn: (row) => row.description ?? "",
         },
         {
           id: "last_updated_at",
-          label: "Last updated",
+          label: i18next.t("common:testSuiteColumns.lastUpdated"),
           type: COLUMN_TYPE.time,
           cell: TimeCell as never,
         },
         {
           id: "data",
-          label: "Data",
+          label: i18next.t("common:testSuiteColumns.data"),
           type: COLUMN_TYPE.dictionary,
           accessorFn: (row) => row.data,
           cell: AutodetectCell as never,
@@ -58,7 +59,7 @@ export function useTestSuiteColumns({
         },
         {
           id: "assertions",
-          label: "Assertions",
+          label: i18next.t("common:testSuiteColumns.assertions"),
           type: COLUMN_TYPE.string,
           iconType: "assertions",
           cell: AssertionsCountCell as never,
@@ -66,7 +67,7 @@ export function useTestSuiteColumns({
         },
         {
           id: "execution_policy",
-          label: "Execution policy",
+          label: i18next.t("common:testSuiteColumns.executionPolicy"),
           type: COLUMN_TYPE.string,
           iconType: "execution_policy",
           cell: ExecutionPolicyCell as never,
@@ -90,7 +91,7 @@ export function useTestSuiteColumns({
     cols.push(
       {
         id: "tags",
-        label: "Tags",
+        label: i18next.t("common:labels.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags",
         accessorFn: (row) => row.tags || [],
@@ -98,7 +99,7 @@ export function useTestSuiteColumns({
       },
       {
         id: "created_at",
-        label: "Created",
+        label: i18next.t("common:labels.created"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
@@ -107,7 +108,7 @@ export function useTestSuiteColumns({
     if (!isTestSuite) {
       cols.push({
         id: "last_updated_at",
-        label: "Last updated",
+        label: i18next.t("common:testSuiteColumns.lastUpdated"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       });
@@ -115,7 +116,7 @@ export function useTestSuiteColumns({
 
     cols.push({
       id: "created_by",
-      label: "Created by",
+      label: i18next.t("common:labels.createdBy"),
       type: COLUMN_TYPE.string,
     });
 

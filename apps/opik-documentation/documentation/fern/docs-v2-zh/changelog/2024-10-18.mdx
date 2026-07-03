@@ -1,0 +1,15 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+**Opik 控制面板**：
+
+- 在界面中新增 `Feedback modal`（反馈弹窗），方便您对平台的任何部分提供反馈。
+
+**SDK**：
+
+- 发布了新的评估指标：[GEval](/v1/evaluation/metrics/g_eval) - 这个 LLM as a Judge 指标与任务无关，可以根据您自定义的评估标准来评估任何 LLM 调用。
+- 允许用户使用 `OPIK_CONFIG_PATH` 环境变量指定 Opik 配置文件路径，更多信息请参阅 [Python SDK 配置指南](/v1/tracing/sdk_configuration#using-a-configuration-file)。
+- 现在可以在 `evaluate` 方法中配置 `project_name`，使 trace 记录到特定项目而非默认项目。
+- 新增 `Opik.search_traces` 方法用于搜索 trace，支持搜索字符串以仅返回特定 trace。
+- 对 LLM as a Judge 指标强制使用结构化输出，使其更加可靠（在解码 LLM 响应时将不再失败）。

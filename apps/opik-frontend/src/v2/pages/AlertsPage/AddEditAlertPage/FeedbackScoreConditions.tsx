@@ -2,6 +2,7 @@ import React from "react";
 import { Path, useFieldArray, UseFormReturn } from "react-hook-form";
 import { LayoutGrid, Plus, Trash } from "lucide-react";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
 
 import { FormControl, FormField, FormItem } from "@/ui/form";
 import { Input } from "@/ui/input";
@@ -76,6 +77,7 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
   eventType,
   projectId,
 }) => {
+  const { t } = useTranslation("pages/alerts");
   const groupsFieldArray = useFieldArray({
     control: form.control,
     name: `triggers.${triggerIndex}.groups` as "triggers.0.groups",
@@ -121,8 +123,8 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
           className="text-foreground hover:text-primary-hover"
           onClick={addGroup}
         >
-          <Plus className="mr-0.5 size-3" />
-          Add OR group
+           <Plus className="mr-0.5 size-3" />
+          {t("alerts.feedbackConditions.addOrGroup")}
         </Button>
       </div>
     </div>
@@ -150,6 +152,7 @@ const ConditionGroup: React.FC<ConditionGroupProps> = ({
   onRemove,
   canRemove,
 }) => {
+  const { t } = useTranslation("pages/alerts");
   const conditionsFieldArray = useFieldArray({
     control: form.control,
     name: `triggers.${triggerIndex}.groups.${groupIndex}.conditions` as "triggers.0.groups.0.conditions",
@@ -185,7 +188,7 @@ const ConditionGroup: React.FC<ConditionGroupProps> = ({
         </div>
         <DisabledTooltip
           disabled={!canRemove}
-          message="Can't remove — every alert needs at least one group with at least one condition."
+          message={t("alerts.feedbackConditions.cantRemove")}
         >
           <Button
             type="button"
@@ -194,7 +197,7 @@ const ConditionGroup: React.FC<ConditionGroupProps> = ({
             className="size-3 [&>svg]:size-3"
             onClick={onRemove}
             disabled={!canRemove}
-            aria-label="Remove group"
+            aria-label={t("alerts.feedbackConditions.removeGroup")}
           >
             <Trash />
           </Button>
@@ -224,7 +227,7 @@ const ConditionGroup: React.FC<ConditionGroupProps> = ({
           onClick={addCondition}
         >
           <Plus className="mr-0.5 size-3" />
-          Add AND condition
+          {t("alerts.feedbackConditions.addAndCondition")}
         </Button>
       </div>
     </div>
@@ -260,6 +263,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
   onDelete,
   canDelete,
 }) => {
+  const { t } = useTranslation("pages/alerts");
   const errorBase = [
     "triggers",
     triggerIndex,
@@ -379,13 +383,13 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
                     className={cn("h-8 w-full text-left font-normal", {
                       "border-destructive": Boolean(errors.window),
                     })}
-                    placeholder="Select time window"
+                    placeholder={t("alerts.triggers.selectTimeWindow")}
                     renderTrigger={(value) => {
                       const label = WINDOW_LABEL_BY_VALUE[value];
                       if (!label) return null;
                       return (
                         <span className="truncate">
-                          <span className="text-muted-slate">In the last</span>{" "}
+                          <span className="text-muted-slate">{t("alerts.triggers.inTheLast")}</span>{" "}
                           {label}
                         </span>
                       );
@@ -398,7 +402,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
         </div>
         <DisabledTooltip
           disabled={!canDelete}
-          message="Can't remove — every alert needs at least one group with at least one condition."
+           message={t("alerts.feedbackConditions.cantRemove")}
         >
           <Button
             type="button"
@@ -407,7 +411,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
             className="h-auto w-6 rounded-none border-l border-border opacity-50 hover:opacity-100"
             onClick={onDelete}
             disabled={!canDelete}
-            aria-label="Remove condition"
+            aria-label={t("alerts.feedbackConditions.removeCondition")}
           >
             <Trash />
           </Button>

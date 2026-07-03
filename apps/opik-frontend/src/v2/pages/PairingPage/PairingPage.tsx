@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/api/api";
 import PairingStatusScreen, {
@@ -159,18 +160,19 @@ function mapActivationError(err: unknown): PairingErrorKind {
 }
 
 const PairingPage: React.FC = () => {
+  const { t } = useTranslation("pages/pairing");
   const fragment = window.location.hash.slice(1);
 
   const [payload, parseError] = useMemo<
     [PairingPayload | null, string | null]
   >(() => {
-    if (!fragment) return [null, "No pairing data in URL."];
+    if (!fragment) return [null, t("page.noPairingData")];
     try {
       return [parsePairingPayload(fragment), null];
     } catch {
-      return [null, "This pairing link is invalid."];
+      return [null, t("page.invalidPairingLink")];
     }
-  }, [fragment]);
+  }, [fragment, t]);
 
   const params = new URLSearchParams(window.location.search);
   const workspaceName = params.get("workspace");

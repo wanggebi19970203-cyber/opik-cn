@@ -1,5 +1,6 @@
 import React from "react";
 import { CellContext, TableMeta } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { OnChangeFn } from "@/types/shared";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -15,6 +16,7 @@ type CustomMeta = {
 };
 
 const ExpandableTextCell = <TData,>(context: CellContext<TData, string>) => {
+  const { t } = useTranslation();
   const value = context.getValue();
   const { custom } = context.column.columnDef.meta ?? {};
   const { expandedState, setExpandedState, getShortValue, getIsExpandable } =
@@ -61,7 +63,7 @@ const ExpandableTextCell = <TData,>(context: CellContext<TData, string>) => {
           }}
           className="shrink-0"
         >
-          {isExpanded ? "Collapse" : "Expand"}
+          {isExpanded ? t("common:buttons.collapse") : t("common:buttons.expand")}
         </Button>
       )}
     </CellWrapper>

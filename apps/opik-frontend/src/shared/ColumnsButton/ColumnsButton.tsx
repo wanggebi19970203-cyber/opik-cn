@@ -1,4 +1,5 @@
 import { Columns3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button, ButtonProps } from "@/ui/button";
 import {
@@ -35,6 +36,7 @@ const ColumnsButton = <TColumnData,>({
   layout = "icon",
   size = "sm",
 }: ColumnsButtonProps<TColumnData>) => {
+  const { t } = useTranslation("common");
   const { selectedCount, totalCount } = useColumnsCount({
     columns,
     selectedColumns,
@@ -44,7 +46,7 @@ const ColumnsButton = <TColumnData,>({
 
   return (
     <DropdownMenu>
-      <TooltipWrapper content="Columns">
+      <TooltipWrapper content={t("labels.columns")}>
         <DropdownMenuTrigger asChild>
           {layout === "labeled" ? (
             <Button
@@ -53,7 +55,7 @@ const ColumnsButton = <TColumnData,>({
               data-testid="columns-button"
               className="font-normal focus-visible:border-primary focus-visible:ring-0"
             >
-              Columns
+              {t("labels.columns")}
               <div className="ml-1 rounded bg-muted-disabled px-1 text-muted-slate">
                 {selectedCount}/{totalCount}
               </div>

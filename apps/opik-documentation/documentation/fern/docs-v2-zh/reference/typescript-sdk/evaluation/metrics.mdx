@@ -1,0 +1,907 @@
+---
+headline: 指标 | Opik 文档
+og:description: 使用 Opik 指标评估 AI 模型性能，确保准确评估和明智决策。
+og:site_name: Opik 文档
+og:title: 理解 Opik 中的指标
+title: 评估指标
+---
+
+<Note>
+  在 Opik 2.0 中，实验是项目级别的。在评估中使用指标时，请在 `evaluate()` 调用中指定 `projectName`，以便结果与正确的项目关联。
+</Note>
+
+指标是 Opik 评估功能的核心组件。它们提供对 AI 模型输出的量化评估，支持客观比较和长期性能跟踪。
+
+### 什么是指标？
+
+在 Opik 中，指标是基于特定输入（如模型输出和参考答案）计算分数的函数。Opik 中的所有指标都继承自 `BaseMetric` 抽象类，该类提供验证和跟踪的核心功能。
+
+```typescript
+abstract class BaseMetric<GenericZodObjectType> {
+  public readonly name: string;
+  public readonly trackMetric: boolean;
+  public abstract readonly validationSchema: GenericZodObjectType;
+
+  abstract score(
+    input: Infer<GenericZodObjectType>
+  ):
+    | EvaluationScoreResult
+    | EvaluationScoreResult[]
+    | Promise<EvaluationScoreResult>
+    | Promise<EvaluationScoreResult[]>;
+}
+```
+
+### 指标如何计算分数
+
+每个指标必须实现 `score` 方法，该方法：
+
+1. 接收一个 `input` 对象，包含来自任务输出、数据集项和 scoringKeyMapping 的组合数据
+2. 处理输入以产生分数
+3. 返回一个 `EvaluationScoreResult` 或结果数组，包含：
+   - `name`：指标名称
+   - `value`：数值分数（通常为 0.0-1.0）
+   - `reason`：分数的人类可读解释
+
+### 指标类型
+
+Opik 支持不同类型的指标：
+
+1. **启发式指标**：基于规则的简单评估（例如精确匹配、包含、正则表达式匹配）
+2. **LLM 评判指标**：使用语言模型评估输出质量的 AI 驱动评估
+
+## 内置指标
+
+Opik 为常见评估场景提供多个内置指标：
+
+### ExactMatch
+
+检查模型输出是否与期望输出完全匹配：
+
+```typescript
+const exactMatch = new ExactMatch();
+// 使用时需要 'output' 和 'expected' 参数
+```
+
+### Contains
+
+检查模型输出是否包含特定文本：
+
+```typescript
+const contains = new Contains();
+// 使用时需要 'output' 和 'expected' 参数
+```
+
+### RegexMatch
+
+检查模型输出是否匹配正则表达式模式：
+
+```typescript
+const regexMatch = new RegexMatch();
+// 使用时需要 'output' 和 'pattern' 参数
+```
+
+### IsJson
+
+检查输出是否为有效 JSON：
+
+```typescript
+const isJson = new IsJson();
+// 使用时需要 'output' 参数
+```
+
+## 指标配置
+
+### 自定义命名和跟踪
+
+每个指标都可以配置自定义名称和跟踪选项：
+
+```typescript
+// 创建自定义名称的指标
+const exactMatch = new ExactMatch("my_exact_match");
+
+// 创建禁用跟踪的指标
+const regexMatch = new RegexMatch("custom_regex", false);
+```
+
+### 组合多个指标
+
+可以在单次评估中使用多个指标：
+
+```typescript
+const metrics = [new ExactMatch(), new Contains(), new RegexMatch()];
+
+// 在评估配置中使用
+await evaluate({
+  dataset: myDataset,
+  task: myTask,
+  scoringMetrics: metrics,
+});
+```
+
+## 输入要求
+
+### 验证模式
+
+每个指标定义一个 Zod 验证模式来指定必需的输入：
+
+```typescript
+// ExactMatch 验证模式示例
+const validationSchema = z.object({
+  output: z.string(), // 模型输出
+  expected: z.string(), // 期望输出
+});
+```
+
+验证系统确保在执行指标之前所有必需参数都存在。
+
+### 映射输入
+
+可以使用 `scoringKeyMapping` 将数据集字段和任务输出映射到指标输入：
+
+```typescript
+await evaluate({
+  dataset: myDataset,
+  task: myTask,
+  scoringMetrics: [new ExactMatch()],
+  scoringKeyMapping: {
+    // 将数据集/任务字段映射到指标参数名
+    output: "model.response",
+    expected: "dataset.answer",
+  },
+});
+```
+
+## 分数解释
+
+### 分数范围
+
+Opik 中的大多数指标返回 0.0 到 1.0 之间的分数：
+
+- 1.0：完全匹配或理想性能
+- 0.0：不匹配或完全失败
+- 中间值：部分匹配或不同程度的成功
+
+## 创建自定义指标
+
+### 实现自己的指标
+
+要创建自定义指标：
+
+1. 继承 `BaseMetric` 类
+2. 使用 Zod 定义验证模式
+3. 实现 `score` 方法
+
+以下是检查输出长度是否在指定范围内的自定义指标示例：
+
+```typescript
+import z from "zod";
+import { BaseMetric } from "@opik/sdk";
+import { EvaluationScoreResult } from "@opik/sdk";
+
+// 定义验证模式
+const validationSchema = z.object({
+  output: z.string(),
+  minLength: z.number(),
+  maxLength: z.number(),
+});
+
+// 从模式推断 TypeScript 类型
+type Input = z.infer<typeof validationSchema>;
+
+export class LengthRangeMetric extends BaseMetric {
+  public validationSchema = validationSchema;
+
+  constructor(name = "length_range", trackMetric = true) {
+    super(name, trackMetric);
+  }
+
+  async score(input: Input): Promise<EvaluationScoreResult> {
+    const { output, minLength, maxLength } = input;
+    const length = output.length;
+
+    // 计算分数（在范围内为 1.0，否则为 0.0）
+    const isWithinRange = length >= minLength && length <= maxLength;
+    const score = isWithinRange ? 1.0 : 0.0;
+
+    // 返回带解释的结果
+    return {
+      name: this.name,
+      value: score,
+      reason: isWithinRange
+        ? `输出长度 (${length}) 在范围 ${minLength}-${maxLength} 内`
+        : `输出长度 (${length}) 超出范围 ${minLength}-${maxLength}`,
+    };
+  }
+}
+```
+
+### 验证最佳实践
+
+创建自定义指标时：
+
+1. **定义清晰的验证模式**：
+
+   ```typescript
+   const validationSchema = z.object({
+     output: z.string().min(1, "输出是必需的"),
+     threshold: z.number().min(0).max(1),
+   });
+   ```
+
+2. **返回有意义的原因**：
+
+   ```typescript
+   return {
+     name: this.name,
+     value: score,
+     reason: `分数 ${score.toFixed(2)}，因为 [详细解释]`,
+   };
+   ```
+
+3. **归一化分数**到一致的范围（通常为 0.0-1.0），以便与其他指标比较
+
+## LLM 评判指标
+
+LLM 评判指标使用语言模型评估 LLM 输出的质量。与简单的启发式检查相比，这些指标提供更细致的评估。
+
+### AnswerRelevance
+
+评估输出与输入问题的相关性：
+
+```typescript
+import { AnswerRelevance } from "opik";
+
+// 使用默认模型 (gpt-5-nano)
+const metric = new AnswerRelevance();
+
+// 使用自定义模型 ID
+const metricWithModel = new AnswerRelevance({
+  model: "claude-3-5-sonnet-latest",
+});
+
+// 使用 LanguageModel 实例
+import { openai } from "@ai-sdk/openai";
+const customModel = openai("gpt-5-nano");
+const metricWithCustomModel = new AnswerRelevance({ model: customModel });
+
+// 使用方法
+const score = await metric.score({
+  input: "法国的首都是什么？",
+  output: "法国的首都是巴黎。",
+  context: ["法国是西欧的一个国家。"], // 可选
+});
+
+console.log(score.value); // 0.0 到 1.0
+console.log(score.reason); // 分数的解释
+```
+
+#### 参数
+
+- `input`（必需）：问题或提示
+- `output`（必需）：要评估的模型响应
+- `context`（可选）：用于评估的额外上下文
+
+#### 分数范围
+
+- **1.0**：完全相关 - 输出直接回答了输入
+- **0.5**：部分相关 - 输出有些相关但不完整
+- **0.0**：不相关 - 输出未回答输入
+
+### Hallucination
+
+检测输出是否包含幻觉或不忠实的信息：
+
+```typescript
+import { Hallucination } from "opik";
+
+const metric = new Hallucination();
+
+// 无上下文 - 根据通用知识检查
+const score1 = await metric.score({
+  input: "法国的首都是什么？",
+  output:
+    "法国的首都是巴黎。它以标志性的埃菲尔铁塔而闻名。",
+});
+
+// 有上下文 - 检查对所提供上下文的忠实度
+const score2 = await metric.score({
+  input: "法国的首都是什么？",
+  output:
+    "法国的首都是巴黎。它以标志性的埃菲尔铁塔而闻名。",
+  context: [
+    "法国是西欧的一个国家。它的首都是巴黎，以埃菲尔铁塔等地标而闻名。",
+  ],
+});
+
+console.log(score2.value); // 1.0 = 检测到幻觉，0.0 = 无幻觉
+console.log(score2.reason); // 分数原因数组
+```
+
+#### 参数
+
+- `input`（必需）：原始问题或提示
+- `output`（必需）：要评估的模型响应
+- `context`（可选）：用于检查的参考信息
+
+#### 分数值
+
+- **0.0**：无幻觉 - 输出忠实于上下文/事实
+- **1.0**：检测到幻觉 - 输出包含虚假或无支持的信息
+
+### Moderation
+
+检查输出是否包含有害、不当或不安全的内容：
+
+```typescript
+import { Moderation } from "opik";
+
+const metric = new Moderation();
+
+const score = await metric.score({
+  input: "告诉我安全指南",
+  output: "以下是一些安全指南...",
+});
+
+console.log(score.value); // 1.0 = 检测到有害内容，0.0 = 安全
+console.log(score.reason); // 审核决策的解释
+```
+
+#### 参数
+
+- `input`（必需）：原始提示
+- `output`（必需）：要评估的模型响应
+
+#### 分数值
+
+- **0.0**：安全 - 未检测到有害内容
+- **1.0**：有害 - 检测到不当或不安全的内容
+
+### Usefulness
+
+评估输出在解决输入方面的有用程度：
+
+```typescript
+import { Usefulness } from "opik";
+
+const metric = new Usefulness();
+
+const score = await metric.score({
+  input: "如何重置密码？",
+  output:
+    "要重置密码，请在登录页面点击"忘记密码"，输入您的电子邮件，然后按照发送到收件箱的说明操作。",
+});
+
+console.log(score.value); // 0.0 到 1.0
+console.log(score.reason); // 有用性分数的解释
+```
+
+#### 参数
+
+- `input`（必需）：问题或请求
+- `output`（必需）：要评估的模型响应
+
+#### 分数范围
+
+- **1.0**：非常有用 - 全面且可操作
+- **0.5**：有些有用 - 部分有帮助
+- **0.0**：无用 - 无助于解决输入
+
+### GEval
+
+GEval 是一个任务无关的 LLM-as-a-judge 指标，允许您定义自定义评估标准。该指标首先生成思维链 (CoT) 评估计划，然后在 0-10 量表上评分（归一化为 0.0-1.0）。
+
+```typescript
+import { GEval } from "opik";
+
+const metric = new GEval({
+  taskIntroduction: "您评估客户服务响应的礼貌程度。",
+  evaluationCriteria: "从 0（粗鲁）到 10（非常礼貌）评分。考虑语气、用词和同理心。",
+  model: "gpt-4o",
+});
+
+const score = await metric.score({
+  output: "非常感谢您的耐心！我很乐意为您解决这个问题。",
+});
+
+console.log(score.value); // 0.0 到 1.0
+console.log(score.reason); // 分数的解释
+```
+
+#### 参数
+
+- `taskIntroduction`（必需）：应评估内容的描述
+- `evaluationCriteria`（必需）：定义"好"是什么样的详细标准
+- `model`（可选）：用于评估的模型（默认为 "gpt-4o"）
+- `name`（可选）：自定义指标名称（默认为 "g_eval_metric"）
+- `temperature`（可选）：生成的采样温度
+- `seed`（可选）：用于可重现输出的种子
+- `maxTokens`（可选）：最大响应长度
+- `modelSettings`（可选）：高级模型配置
+
+#### 分数范围
+
+- **1.0**：满分（评委给出 10/10）
+- **0.5**：平均分（评委给出 5/10）
+- **0.0**：最低分（评委给出 0/10）
+
+#### 工作原理
+
+GEval 使用两阶段过程：
+
+1. **思维链生成**：根据您的任务和标准创建逐步评估说明（缓存以供重用）
+2. **评分**：使用 CoT 评估输出，返回带推理的分数
+
+使用 OpenAI 模型时，GEval 利用 logprobs 计算分数概率的加权平均值，以获得更稳健的评分。
+
+### 内置 GEval 评委
+
+Opik 为常见评估场景提供预配置的 GEval 评委。每个评委都继承 `GEval` 并带有领域特定的提示：
+
+#### QARelevanceJudge
+
+评估答案是否直接回答问题：
+
+```typescript
+import { QARelevanceJudge } from "opik";
+
+const judge = new QARelevanceJudge({ model: "gpt-4o" });
+
+const score = await judge.score({
+  output: `问题：彩虹是什么原因造成的？
+答案：彩虹是由水滴中的光折射和反射造成的。`,
+});
+
+console.log(score.value); // 相关答案得高分
+```
+
+#### SummarizationConsistencyJudge
+
+检查摘要是否忠实于源材料：
+
+```typescript
+import { SummarizationConsistencyJudge } from "opik";
+
+const judge = new SummarizationConsistencyJudge();
+
+const score = await judge.score({
+  output: `原文：公司宣布第四季度收入为 250 万美元。
+摘要：公司第四季度表现强劲，收入 250 万美元。`,
+});
+```
+
+#### SummarizationCoherenceJudge
+
+评估摘要的结构和清晰度：
+
+```typescript
+import { SummarizationCoherenceJudge } from "opik";
+
+const judge = new SummarizationCoherenceJudge();
+
+const score = await judge.score({
+  output: "摘要：首先，项目开始了。然后结束了。最后，又开始了。",
+});
+
+console.log(score.value); // 不连贯的摘要得低分
+```
+
+#### DialogueHelpfulnessJudge
+
+评估助手回复在对话上下文中的帮助程度：
+
+```typescript
+import { DialogueHelpfulnessJudge } from "opik";
+
+const judge = new DialogueHelpfulnessJudge();
+
+const transcript = `用户：如何重置密码？
+助手：访问设置并点击重置。
+用户：我看不到那个选项。
+助手：请联系支持。`;
+
+const score = await judge.score({ output: transcript });
+```
+
+#### 偏见检测评委
+
+检测响应中的各种偏见形式：
+
+```typescript
+import {
+  DemographicBiasJudge,
+  GenderBiasJudge,
+  PoliticalBiasJudge,
+  ReligiousBiasJudge,
+  RegionalBiasJudge,
+} from "opik";
+
+// 人口统计偏见
+const demographicJudge = new DemographicBiasJudge();
+const score1 = await demographicJudge.score({
+  output: "X 群体的人总是迟到。",
+});
+
+// 性别偏见
+const genderJudge = new GenderBiasJudge();
+const score2 = await genderJudge.score({
+  output: "女性天生数学更差。",
+});
+
+// 政治偏见
+const politicalJudge = new PoliticalBiasJudge();
+const score3 = await politicalJudge.score({
+  output: "投票给候选人 X，因为 Y 腐败。",
+});
+```
+
+#### 代理评估评委
+
+评估代理任务完成和工具使用：
+
+```typescript
+import { AgentTaskCompletionJudge, AgentToolCorrectnessJudge } from "opik";
+
+// 任务完成
+const taskJudge = new AgentTaskCompletionJudge();
+const score1 = await taskJudge.score({
+  output: "代理收集了报价，比较了选项，并预订了旅行。",
+});
+
+// 工具正确性
+const toolJudge = new AgentToolCorrectnessJudge();
+const score2 = await toolJudge.score({
+  output: "工具 weather_api 以 city='Paris' 调用但响应被忽略。",
+});
+```
+
+#### PromptUncertaintyJudge
+
+估计提示的模糊程度：
+
+```typescript
+import { PromptUncertaintyJudge } from "opik";
+
+const judge = new PromptUncertaintyJudge();
+
+const score = await judge.score({
+  output: "将附件中 400 页的合同用一句话总结，并保证没有错误。",
+});
+
+console.log(score.value); // 高分表示高不确定性
+```
+
+#### ComplianceRiskJudge
+
+标记受监管行业中的不合规或高风险声明：
+
+```typescript
+import { ComplianceRiskJudge } from "opik";
+
+const judge = new ComplianceRiskJudge({ model: "gpt-4o" });
+
+const score = await judge.score({
+  output: "这种药一周内治愈糖尿病。",
+});
+
+console.log(score.value); // 高分表示高风险
+```
+
+#### 可用评委
+
+所有内置 GEval 评委：
+
+- `QARelevanceJudge` - 答案与问题的相关性
+- `SummarizationConsistencyJudge` - 摘要忠实度
+- `SummarizationCoherenceJudge` - 摘要结构和清晰度
+- `DialogueHelpfulnessJudge` - 助手在对话中的帮助程度
+- `DemographicBiasJudge` - 人口统计刻板印象
+- `GenderBiasJudge` - 性别刻板印象
+- `PoliticalBiasJudge` - 政治偏见
+- `ReligiousBiasJudge` - 宗教偏见
+- `RegionalBiasJudge` - 地理/文化偏见
+- `AgentTaskCompletionJudge` - 代理任务完成度
+- `AgentToolCorrectnessJudge` - 代理工具使用正确性
+- `PromptUncertaintyJudge` - 提示模糊度
+- `ComplianceRiskJudge` - 监管合规风险
+
+## 配置 LLM 评判指标
+
+### 模型配置
+
+所有 LLM 评判指标在构造函数中接受 `model` 参数：
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+import { Hallucination } from "opik";
+
+// 使用模型 ID 字符串
+const metric1 = new Hallucination({ model: "gpt-5-nano" });
+const metric2 = new Hallucination({ model: "claude-3-5-sonnet-latest" });
+const metric3 = new Hallucination({ model: "gemini-2.0-flash" });
+
+// 使用 LanguageModel 实例
+const customModel = openai("gpt-5-nano");
+const metric4 = new Hallucination({ model: customModel });
+```
+
+### 异步评分
+
+所有 LLM 评判指标支持异步评分：
+
+```typescript
+import { AnswerRelevance } from "opik";
+
+const metric = new AnswerRelevance();
+
+// Async/await
+const score = await metric.score({
+  input: "什么是 TypeScript？",
+  output: "TypeScript 是 JavaScript 的类型超集。",
+});
+
+// Promise 链
+metric
+  .score({
+    input: "什么是 TypeScript？",
+    output: "TypeScript 是 JavaScript 的类型超集。",
+  })
+  .then((score) => console.log(score.value));
+```
+
+### 组合多个 LLM 评判指标
+
+使用多个指标进行全面评估：
+
+```typescript
+import { AnswerRelevance, Hallucination, Moderation, Usefulness } from "opik";
+import { evaluate } from "opik";
+
+await evaluate({
+  dataset: myDataset,
+  task: myTask,
+  scoringMetrics: [
+    new AnswerRelevance(),
+    new Hallucination(),
+    new Moderation(),
+    new Usefulness(),
+  ],
+});
+```
+
+### 为每个指标使用自定义模型
+
+不同指标可以使用不同的模型：
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { AnswerRelevance, Hallucination } from "opik";
+
+// 使用 GPT-4o 评估答案相关性
+const relevanceMetric = new AnswerRelevance({
+  model: openai("gpt-5-nano"),
+});
+
+// 使用 Claude 检测幻觉
+const hallucinationMetric = new Hallucination({
+  model: anthropic("claude-3-5-sonnet-latest"),
+});
+
+await evaluate({
+  dataset: myDataset,
+  task: myTask,
+  scoringMetrics: [relevanceMetric, hallucinationMetric],
+});
+```
+
+## LLM 评判指标最佳实践
+
+### 1. 使用模型 ID 字符串简化配置
+
+对于大多数用例，直接使用模型 ID 字符串：
+
+```typescript
+import { Hallucination } from "opik";
+
+const metric = new Hallucination({ model: "gpt-5-nano" });
+```
+
+Opik SDK 内部处理模型配置以获得最佳评估性能。
+
+### 2. 提供上下文以提高准确性
+
+上下文可提高评估准确性：
+
+```typescript
+// 更好：有上下文
+await metric.score({
+  input: "首都是什么？",
+  output: "首都是巴黎。",
+  context: ["法国是欧洲的一个国家。它的首都是巴黎。"],
+});
+
+// 可以：无上下文（依赖通用知识）
+await metric.score({
+  input: "法国的首都是什么？",
+  output: "首都是巴黎。",
+});
+```
+
+### 3. 选择合适的模型
+
+将模型能力与指标要求匹配：
+
+```typescript
+// 复杂推理：使用 GPT-5 或 Claude Sonnet
+const complexMetric = new AnswerRelevance({ model: "gpt-5" });
+
+// 简单检查：使用更快、更便宜的模型
+const simpleMetric = new Moderation({ model: "gpt-5-nano" });
+```
+
+### 4. 优雅处理错误
+
+LLM 调用可能失败 - 适当处理错误：
+
+```typescript
+try {
+  const score = await metric.score({
+    input: "什么是 TypeScript？",
+    output: "TypeScript 是 JavaScript 的类型超集。",
+  });
+  console.log(score);
+} catch (error) {
+  console.error("指标评估失败:", error);
+  // 实现回退或重试逻辑
+}
+```
+
+### 5. 批量评估
+
+使用 evaluate 函数进行高效的批量处理：
+
+```typescript
+// 对多个项目更高效
+await evaluate({
+  dataset: myDataset,
+  task: myTask,
+  scoringMetrics: [new Hallucination()],
+  scoringWorkers: 5, // 并行评分
+});
+
+// 对批量处理效率较低
+for (const item of datasetItems) {
+  await metric.score(item); // 顺序评分
+}
+```
+
+## 分数解释
+
+### 理解 LLM 评判分数
+
+LLM 评判指标返回结构化分数：
+
+```typescript
+interface EvaluationScoreResult {
+  name: string; // 指标名称
+  value: number; // 数值分数（通常为 0.0-1.0）
+  reason: string | string[]; // 分数的解释
+}
+```
+
+### 分数结果示例
+
+```typescript
+// AnswerRelevance
+{
+  name: "answer_relevance",
+  value: 0.95,
+  reason: "答案直接回答了问题并提供了准确信息"
+}
+
+// Hallucination
+{
+  name: "hallucination",
+  value: 0.0,
+  reason: ["所有信息都有上下文支持", "未发现矛盾"]
+}
+
+// Moderation
+{
+  name: "moderation",
+  value: 0.0,
+  reason: "内容安全且适当"
+}
+```
+
+## 生成参数
+
+### 配置温度、种子和最大令牌数
+
+所有 LLM 评判指标在构造函数中支持生成参数：
+
+```typescript
+import { Hallucination, AnswerRelevance } from "opik";
+
+// 配置生成参数
+const metric = new Hallucination({
+  model: "gpt-5-nano",
+  temperature: 0.3, // 越低 = 越确定
+  seed: 42, // 用于可重现输出
+  maxTokens: 1000, // 最大响应长度
+});
+
+// 不同指标使用不同设置
+const relevanceMetric = new AnswerRelevance({
+  model: "claude-3-5-sonnet-latest",
+  temperature: 0.7, // 越高 = 越有创造性
+  seed: 12345,
+});
+
+// 使用指标
+const score = await metric.score({
+  input: "法国的首都是什么？",
+  output: "法国的首都是巴黎。",
+  context: ["法国是西欧的一个国家。"],
+});
+```
+
+### 高级模型设置
+
+对于提供商特定的高级参数，使用 `modelSettings`：
+
+```typescript
+import { Hallucination } from "opik";
+
+const metric = new Hallucination({
+  model: "gpt-5-nano",
+  temperature: 0.5,
+  modelSettings: {
+    topP: 0.9, // 核采样
+    topK: 50, // Top-K 采样
+    presencePenalty: 0.1, // 减少重复
+    frequencyPenalty: 0.2, // 减少短语重复
+    stopSequences: ["END"], // 自定义停止序列
+  },
+});
+```
+
+对于未通过 `modelSettings` 暴露的提供商特定选项，使用 `LanguageModel` 实例：
+
+```typescript
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+
+// OpenAI 结构化输出
+const openaiModel = openai("gpt-5-nano", {
+  structuredOutputs: true,
+});
+
+// Anthropic 缓存控制
+const anthropicModel = anthropic("claude-3-5-sonnet-latest", {
+  cacheControl: true,
+});
+
+// Google Gemini 特定配置
+const googleModel = google("gemini-2.0-flash");
+
+const metric1 = new Hallucination({ model: openaiModel });
+const metric2 = new Hallucination({ model: anthropicModel });
+const metric3 = new Hallucination({ model: googleModel });
+```
+
+参见 [Vercel AI SDK 提供商文档](https://sdk.vercel.ai/providers) 了解提供商特定选项：
+
+- [OpenAI 提供商选项](https://sdk.vercel.ai/providers/ai-sdk-providers/openai)
+- [Anthropic 提供商选项](https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic)
+- [Google 提供商选项](https://sdk.vercel.ai/providers/ai-sdk-providers/google-generative-ai)
+
+## 另请参阅
+
+- [模型](/reference/typescript-sdk/evaluation/models) - 为指标配置语言模型
+- [evaluate 函数](/reference/typescript-sdk/evaluation/evaluate_function) - 在评估中使用指标
+- [evaluatePrompt 函数](/reference/typescript-sdk/evaluation/evaluate_prompt_function) - 在提示评估中使用指标

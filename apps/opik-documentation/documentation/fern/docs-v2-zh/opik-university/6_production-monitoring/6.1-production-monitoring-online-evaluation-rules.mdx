@@ -1,0 +1,48 @@
+---
+headline: 在线评估规则 | Opik 文档
+og:description: 使用 Opik 全面的在线评估规则有效监控和评估生产流程。
+og:site_name: Opik 文档
+og:title: 在线评估规则 - Opik
+title: 在线评估规则
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div style={{
+    position: 'relative',
+    paddingBottom: '56.25%', // 16:9 aspect ratio
+    height: 0,
+    overflow: 'hidden',
+    maxWidth: '100%',
+    marginBottom: '20px'
+}}>
+    <iframe
+        src="https://www.loom.com/embed/e79c927b96414955ab722dea74b6ea42?sid=10dc8363-47a1-42a1-9757-306084186977"
+        frameborder="0"
+        webkitallowfullscreen
+        mozallowfullscreen
+        allowfullscreen
+        style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+        }}
+    />
+</div>
+
+## 通过实时评估进行持续生产监控
+
+本视频介绍通过 Opik 的[在线评估规则](/v1/production/rules)进行[生产监控](/v1/production/production_monitoring)，在 LLM 应用部署后实现持续质量评估。与开发期间使用的批量[评估](/v1/evaluation/overview)不同，[在线评估规则](/v1/production/rules)在生产[追踪](/v1/tracing/log_traces)记录到 Opik 时自动对其进行近实时评分。您将学习创建自定义的[有用性](/v1/evaluation/metrics/g_eval)和[审核](/v1/evaluation/metrics/moderation) [LLM 作为评判者](/v1/evaluation/metrics/g_eval)[指标](/v1/evaluation/metrics/overview)，为生产性能提供持续见解。
+
+## 关键亮点
+
+- **实时生产评分**：在生产[追踪](/v1/tracing/log_traces)发生时自动[评估](/v1/evaluation/overview)，超越开发时的批量[评估](/v1/evaluation/overview)，实现持续[监控](/v1/production/production_monitoring)
+- **双指标类型**：根据您的需求选择[LLM 作为评判者](/v1/evaluation/metrics/g_eval)[指标](/v1/evaluation/metrics/overview)进行复杂[评估](/v1/evaluation/overview)，或选择代码[指标](/v1/evaluation/metrics/overview)进行编程评分
+- **自定义[评估](/v1/evaluation/overview)提示**：使用 mustache/handlebar 表示法创建定制的[提示](/v1/prompt_engineering/prompt_management)，注入输入/输出变量以进行上下文感知评分
+- **灵活的评分量表**：配置不同的评分范围（有用性 1-10，[审核](/v1/evaluation/metrics/moderation) 0-1），支持可自定义的输出类型（整数、浮点数、布尔值）
+- **变量映射系统**：将[评估](/v1/evaluation/overview)变量映射到数据结构中的特定字段，确保准确的上下文注入以进行评分
+- **全面的分数跟踪**：直接在[追踪](/v1/tracing/log_traces)视图中查看[评估](/v1/evaluation/overview)结果，每个分数决策都附带推理说明
+- **多规则支持**：同时运行多个[评估规则](/v1/production/rules)（有用性、[审核](/v1/evaluation/metrics/moderation)等），进行多维度质量评估
+- **生产优势**：持续[监控](/v1/production/production_monitoring)、性能退化检测、开发-生产反馈循环以及问题模式识别
+- **可操作见解**：每个分数都包含 AI 推理（例如"正确识别巴黎为首都"），有助于理解[评估](/v1/evaluation/overview)决策

@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { Path, useFieldArray, UseFormReturn } from "react-hook-form";
 import { CircleHelp, ExternalLink, Plus, WebhookIcon, X } from "lucide-react";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
 import { Label } from "@/ui/label";
 import {
@@ -35,16 +37,19 @@ type EventTriggersProps = {
   projectId: string;
 };
 
-function getThresholdLabel(eventType: ALERT_EVENT_TYPE): string {
+function getThresholdLabel(
+  eventType: ALERT_EVENT_TYPE,
+  t: TFunction<"pages/alerts", undefined>,
+): string {
   switch (eventType) {
     case ALERT_EVENT_TYPE.trace_cost:
-      return "Total cost exceeds (USD)";
+      return t("alerts.thresholdLabels.trace_cost");
     case ALERT_EVENT_TYPE.trace_errors:
-      return "Trace errors count exceeds";
+      return t("alerts.thresholdLabels.trace_errors");
     case ALERT_EVENT_TYPE.trace_latency:
-      return "Average latency exceeds (seconds)";
+      return t("alerts.thresholdLabels.trace_latency");
     default:
-      return "Threshold exceeds";
+      return t("alerts.thresholdLabels.default");
   }
 }
 
@@ -65,6 +70,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
   form,
   projectId,
 }) => {
+  const { t } = useTranslation("pages/alerts");
   const triggersError = form.formState.errors.triggers;
   const isGuardrailsEnabled = useIsFeatureEnabled(
     FeatureToggleKeys.GUARDRAILS_ENABLED,
@@ -125,7 +131,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             return (
               <FormItem className="flex-1">
                 <Label className="comet-body-s">
-                  {getThresholdLabel(eventType)}
+                  {getThresholdLabel(eventType, t)}
                 </Label>
                 <FormControl>
                   <Input
@@ -157,7 +163,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             ]);
             return (
               <FormItem className="flex-1">
-                <Label className="comet-body-s">In the last</Label>
+                <Label className="comet-body-s">{t("alerts.triggers.inTheLast")}</Label>
                 <FormControl>
                   <SelectBox
                     value={field.value as string}
@@ -166,7 +172,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                     className={cn("h-8", {
                       "border-destructive": Boolean(validationErrors?.message),
                     })}
-                    placeholder="Select time window"
+                    placeholder={t("alerts.triggers.selectTimeWindow")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -205,9 +211,9 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h3 className="comet-body-accented">Triggers</h3>
+          <h3 className="comet-body-accented">{t("alerts.triggers.title")}</h3>
           <Description>
-            Choose which platform events will trigger the alert.
+            {t("alerts.triggers.description")}
           </Description>
         </div>
 
@@ -215,7 +221,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
           <PopoverTrigger asChild>
             <Button type="button" variant="outline" size="sm">
               <Plus className="mr-1 size-3" />
-              Add trigger
+              {t("alerts.triggers.addTrigger")}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[480px] p-0" align="end">
@@ -238,11 +244,11 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                           }
                         />
                         <span className="comet-body-s-accented flex-1">
-                          {config.title}
+                          {t(`alerts.triggerTypes.${eventType}.title`)}
                         </span>
                       </div>
                       <Description className="pl-7">
-                        {config.description}
+                        {t(`alerts.triggerTypes.${eventType}.description`)}
                       </Description>
                     </label>
                   );
@@ -255,7 +261,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                 <CircleHelp className="size-4 shrink-0 text-muted-foreground" />
                 <div className="flex flex-wrap items-center gap-1 text-sm">
                   <span className="comet-body-s">
-                    Missing a trigger? Open a
+                    {t("alerts.triggers.missingTrigger")}
                   </span>
                   <a
                     href="https://github.com/comet-ml/opik/issues/new"
@@ -264,10 +270,10 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="comet-body-s">GitHub ticket</span>
+                    <span className="comet-body-s">{t("alerts.triggers.githubTicket")}</span>
                     <ExternalLink className="size-3.5" />
                   </a>
-                  <span className="comet-body-s">to let us know!</span>
+                  <span className="comet-body-s">{t("alerts.triggers.toLetUsKnow")}</span>
                 </div>
               </div>
             </div>
@@ -281,11 +287,10 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             <div className="flex flex-col items-center justify-center gap-2 py-8">
               <WebhookIcon className="size-4 text-muted-foreground" />
               <p className="comet-body-s-accented text-center">
-                No triggers selected yet
+                {t("alerts.triggers.emptyTitle")}
               </p>
               <p className="comet-body-s text-center text-muted-foreground">
-                Choose one or more events to decide when this webhook should be
-                activated
+                {t("alerts.triggers.emptyDescription")}
               </p>
             </div>
           </CardContent>
@@ -315,9 +320,9 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                         <div className="flex gap-4">
                           <div className="flex flex-1 flex-col gap-1">
                             <Label className="comet-body-s-accented">
-                              {config.title}
+                              {t(`alerts.triggerTypes.${field.eventType}.title`)}
                             </Label>
-                            <Description>{config.description}</Description>
+                            <Description>{t(`alerts.triggerTypes.${field.eventType}.description`)}</Description>
                           </div>
                         </div>
                         {isThresholdTrigger &&

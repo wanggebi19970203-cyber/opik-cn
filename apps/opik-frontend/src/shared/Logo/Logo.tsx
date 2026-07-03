@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
@@ -10,6 +11,7 @@ type LogoProps = {
 };
 
 const Logo: React.FunctionComponent<LogoProps> = ({ expanded }) => {
+  const { t } = useTranslation("common");
   const { themeMode } = useTheme();
 
   return (
@@ -19,7 +21,7 @@ const Logo: React.FunctionComponent<LogoProps> = ({ expanded }) => {
         expanded ? "h-[18px]" : "h-[18px] w-[18px]",
       )}
       src={themeMode === THEME_MODE.DARK ? imageLogoInvertedUrl : imageLogoUrl}
-      alt="opik logo"
+      alt={t("shared.opikLogo")}
     />
   );
 };

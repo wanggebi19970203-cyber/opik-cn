@@ -1,0 +1,415 @@
+---
+headline: 数据集 | Opik 文档
+og:description: 学习在 Opik 中创建和管理数据集以进行高效评估，利用 TypeScript 的类型安全和去重功能。
+og:site_name: Opik 文档
+og:title: 使用 Opik TypeScript SDK 管理数据集
+title: 数据集
+---
+
+<Note>
+  在 Opik 2.0 中，数据集是项目级别的。创建数据集时请务必指定 `projectName`，以确保数据集与正确的项目关联。
+</Note>
+
+Opik TypeScript SDK 提供了创建和管理数据集的强大功能。Opik 中的数据集是数据项的集合，可用于多种用途，包括评估。
+
+## 数据集基础
+
+Opik 中的数据集是数据项的命名集合。每个数据集：
+
+- 具有唯一标识符和名称
+- 包含共享通用结构的项目
+- 支持强大的去重功能
+- 用于评估
+
+## TypeScript 类型安全
+
+Opik SDK 的一个关键特性是对数据集提供强 TypeScript 类型支持。您可以为数据集项目定义自定义类型，以确保整个应用程序的类型安全：
+
+```typescript
+// Define a custom dataset item type
+type QuestionAnswerItem = {
+  question: string;
+  answer: string;
+  metadata: {
+    category: string;
+    difficulty: string;
+  };
+};
+
+// Create a typed dataset
+const dataset = await opik.createDataset<QuestionAnswerItem>(
+  "qa-dataset", // Dataset name
+  "Question-Answer pairs for evaluation", // Dataset description
+  "my-project" // Project name
+);
+```
+
+## 数据集操作
+
+### 创建数据集
+
+```typescript
+// Create a new dataset
+await opik.createDataset<YourItemType>(
+  "dataset-name",
+  "Optional dataset description",
+  "my-project"
+);
+
+// Get an existing dataset or create it if it doesn't exist
+const dataset = await opik.getOrCreateDataset<YourItemType>(
+  "dataset-name",
+  "Optional dataset description",
+  "my-project"
+);
+```
+
+### 管理数据集项目
+
+```typescript
+// Insert items
+await dataset.insert([
+  { id: "item1", question: "What is ML?", answer: "Machine learning is..." },
+  {
+    id: "item2",
+    question: "What is AI?",
+    answer: "Artificial intelligence is...",
+  },
+]);
+
+// Update existing items
+await dataset.update([
+  {
+    id: "item1",
+    question: "What is Machine Learning?",
+    answer: "Updated answer...",
+  },
+]);
+
+// Delete specific items
+await dataset.delete(["item1", "item2"]);
+
+// Clear all items from the dataset
+await dataset.clear();
+```
+
+<Tip>
+  Opik SDK 在向数据集插入项目时会自动处理去重。此功能确保相同的数据项不会被多次添加。
+</Tip>
+
+### 获取数据集项目
+
+```typescript
+// Get a specific number of items
+const items = await dataset.getItems(10);
+
+// Get items with pagination
+const firstBatch = await dataset.getItems(10);
+const lastItemId = firstBatch[firstBatch.length - 1].id;
+const nextBatch = await dataset.getItems(10, lastItemId);
+```
+
+### JSON 操作
+
+```typescript
+// Import items from a JSON string
+const jsonData = JSON.stringify([
+  {
+    query: "What is the capital of France?",
+    response: "Paris",
+    tags: ["geography", "europe"],
+  },
+]);
+
+// Map JSON keys to dataset item fields
+const keysMapping = {
+  query: "question", // 'query' in JSON becomes 'question' in dataset item
+  response: "answer", // 'response' in JSON becomes 'answer' in dataset item
+  tags: "metadata.tags", // 'tags' in JSON becomes 'metadata.tags' in dataset item
+};
+
+// Specify keys to ignore
+const ignoreKeys = ["irrelevant_field"];
+
+// Insert from JSON with mapping
+await dataset.insertFromJson(jsonData, keysMapping, ignoreKeys);
+
+// Export dataset to JSON with custom key mapping
+const exportMapping = { question: "prompt", answer: "completion" };
+const exportedJson = await dataset.toJson(exportMapping);
+```
+
+## 数据集版本操作
+
+数据集版本是不可变的快照。使用 `DatasetVersion` 进行可复现的评估——确保无论后续更改如何，都使用相同的数据。
+
+### 获取特定版本
+
+```typescript
+const dataset = await opik.getDataset("my-dataset");
+
+// Get a read-only view of version v2
+const v2 = await dataset.getVersionView("v2");
+
+// Access version metadata
+console.log(v2.versionName);     // "v2"
+console.log(v2.itemsTotal);      // 150
+console.log(v2.createdAt);       // Date object
+
+// Get items from this version
+const items = await v2.getItems();
+
+// Export to JSON with key mapping
+const json = await v2.toJson({ input: "question", output: "answer" });
+```
+
+### 检查当前版本
+
+```typescript
+// Get the latest version name
+const currentVersion = await dataset.getCurrentVersionName();
+// Returns: "v3" (or undefined if no versions)
+
+// Get detailed version info
+const info = await dataset.getVersionInfo();
+if (info) {
+  console.log(`${info.versionName}: ${info.itemsTotal} items`);
+  console.log(`Tags: ${info.tags?.join(", ")}`);
+}
+```
+
+### 在评估中使用
+
+将 `DatasetVersion` 传递给 `evaluate()` 以进行可复现的实验：
+
+```typescript
+import { evaluate, Opik, ExactMatch } from "opik";
+
+const opik = new Opik();
+const dataset = await opik.getDataset("qa-dataset");
+
+// Pin to a specific version
+const v2 = await dataset.getVersionView("v2");
+
+const result = await evaluate({
+  dataset: v2,  // Uses v2 items, not latest
+  task: myTask,
+  scoringMetrics: [new ExactMatch()],
+  experimentName: "Evaluation on v2",
+  projectName: "my-project",
+});
+```
+
+<Tip>
+  比较实验（A/B 测试）时，请使用相同的数据集版本，以将更改的效果与数据变化隔离开来。
+</Tip>
+
+## API 参考
+
+<Info>
+  泛型类型参数 `T` 表示 DatasetItem 类型，定义此数据集中存储的项目结构。
+</Info>
+
+### OpikClient 数据集方法
+
+#### `createDataset<T>`
+
+创建新数据集。
+
+**参数：**
+
+- `name: string` - 数据集名称
+- `description?: string` - 可选的数据集描述
+- `projectName?: string` - 可选的项目名称，用于限定数据集范围。如果未提供，则使用客户端配置的项目。
+
+**返回值：** `Promise<Dataset<T>>` - 解析为已创建 Dataset 对象的 Promise
+
+#### `getDataset<T>`
+
+按名称检索现有数据集。
+
+**参数：**
+
+- `name: string` - 要检索的数据集名称
+- `projectName?: string` - 可选的项目名称，用于限定数据集查找范围。如果未提供，则使用客户端配置的项目。
+
+**返回值：** `Promise<Dataset<T>>` - 解析为 Dataset 对象的 Promise
+
+#### `getOrCreateDataset<T>`
+
+按名称检索现有数据集，如果不存在则创建。
+
+**参数：**
+
+- `name: string` - 数据集名称
+- `description?: string` - 可选描述（仅在创建新数据集时使用）
+- `projectName?: string` - 可选的项目名称，用于限定数据集范围。如果未提供，则使用客户端配置的项目。
+
+**返回值：** `Promise<Dataset<T>>` - 解析为现有或新创建的 Dataset 对象的 Promise
+
+#### `getDatasets<T>`
+
+检索数据集列表。
+
+**参数：**
+
+- `maxResults?: number` - 可选的最大检索数量（默认值：100）
+- `projectName?: string` - 可选的项目名称，用于筛选数据集。如果未提供，则使用客户端配置的项目。
+
+**返回值：** `Promise<Dataset<T>[]>` - 解析为 Dataset 对象数组的 Promise
+
+#### `deleteDataset`
+
+按名称删除数据集。
+
+**参数：**
+
+- `name: string` - 要删除的数据集名称
+
+**返回值：** `Promise<void>`
+
+### Dataset 类方法
+
+#### `insert`
+
+向数据集插入新项目，自动去重。
+
+**参数：**
+
+- `items: T[]` - 要添加到数据集的对象列表
+
+**返回值：** `Promise<void>`
+
+#### `update`
+
+更新数据集中的现有项目。
+
+**参数：**
+
+- `items: T[]` - 要在数据集中更新的对象列表（必须包含 ID）
+
+**返回值：** `Promise<void>`
+
+#### `delete`
+
+从数据集删除项目。
+
+**参数：**
+
+- `itemIds: string[]` - 要删除的项目 ID 列表
+
+**返回值：** `Promise<void>`
+
+#### `clear`
+
+删除数据集中的所有项目。
+
+**返回值：** `Promise<void>`
+
+#### `getItems`
+
+从数据集获取项目。
+
+**参数：**
+
+- `nbSamples?: number` - 可选的获取项目数量（如果未设置，则返回所有项目）
+- `lastRetrievedId?: string` - 可选的最后获取项目 ID，用于分页
+
+**返回值：** `Promise<T[]>` - 解析为数据集项目数组的 Promise
+
+#### `insertFromJson`
+
+从 JSON 字符串向数据集插入项目。
+
+**参数：**
+
+- `jsonArray: string` - 数组格式的 JSON 字符串
+- `keysMapping?: Record<string, string>` - 可选的字典，将 JSON 键映射到数据集项目字段名
+- `ignoreKeys?: string[]` - 可选的键数组，在构建数据集项目时忽略
+
+**返回值：** `Promise<void>`
+
+#### `toJson`
+
+将数据集导出为 JSON 字符串。
+
+**参数：**
+
+- `keysMapping?: Record<string, string>` - 可选的字典，将数据集项目字段名映射到输出 JSON 键
+
+**返回值：** `Promise<string>` - 数据集中所有项目的 JSON 字符串表示
+
+### 数据集版本方法
+
+#### `getVersionView`
+
+获取特定数据集版本的只读视图。
+
+**参数：**
+
+- `versionName: string` - 版本名称（例如 "v1"、"v2"）
+
+**返回值：** `Promise<DatasetVersion<T>>`
+
+**抛出：** 如果版本不存在，抛出 `DatasetVersionNotFoundError`
+
+#### `getCurrentVersionName`
+
+获取最新版本的名称。
+
+**返回值：** `Promise<string | undefined>` - 版本名称，如果没有版本则返回 undefined
+
+#### `getVersionInfo`
+
+获取最新版本的元数据。
+
+**返回值：** `Promise<DatasetVersionPublic | undefined>` - 版本信息，如果没有则返回 undefined
+
+### DatasetVersion 类
+
+数据集在特定版本的只读视图。无法修改数据。
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
+| --- | --- | --- |
+| `name` | `string` | 数据集名称 |
+| `id` | `string` | 数据集 ID |
+| `versionId` | `string \| undefined` | 版本唯一 ID |
+| `versionName` | `string \| undefined` | 版本名称（例如 "v1"） |
+| `versionHash` | `string \| undefined` | 内容哈希 |
+| `tags` | `string[] \| undefined` | 版本标签 |
+| `isLatest` | `boolean \| undefined` | 是否为最新版本 |
+| `itemsTotal` | `number \| undefined` | 版本中的项目总数 |
+| `itemsAdded` | `number \| undefined` | 相比上一版本新增的项目数 |
+| `itemsModified` | `number \| undefined` | 相比上一版本修改的项目数 |
+| `itemsDeleted` | `number \| undefined` | 相比上一版本删除的项目数 |
+| `changeDescription` | `string \| undefined` | 版本说明 |
+| `createdAt` | `Date \| undefined` | 创建时间戳 |
+| `createdBy` | `string \| undefined` | 创建者 |
+
+#### `getItems`
+
+获取此版本的项目。
+
+**参数：**
+
+- `nbSamples?: number` - 要获取的项目数量（默认值：全部）
+
+**返回值：** `Promise<T[]>` - 数据集项目数组
+
+#### `toJson`
+
+将版本项目导出为 JSON 字符串。
+
+**参数：**
+
+- `keysMapping?: Record<string, string>` - 将字段名映射到输出键
+
+**返回值：** `Promise<string>` - JSON 字符串
+
+#### `getVersionInfo`
+
+获取完整的版本元数据对象。
+
+**返回值：** `DatasetVersionPublic` - 版本信息

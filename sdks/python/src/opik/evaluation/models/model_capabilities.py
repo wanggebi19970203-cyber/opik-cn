@@ -1,7 +1,7 @@
 """
-Capability registry for evaluation models.
+评估模型的能力注册表。
 
-The registry is designed to grow beyond vision support (e.g. audio in the future).
+该注册表设计为可扩展，不仅限于视觉支持（例如未来可支持音频）。
 """
 
 from __future__ import annotations
@@ -81,12 +81,12 @@ def vision_capability_detector(model_name: str) -> bool:
 
 def video_capability_detector(model_name: str) -> bool:
     """
-    Heuristically determine whether a model accepts video inputs.
+    启发式判断模型是否接受视频输入。
 
-    Providers rarely expose structured metadata for video support, so we fall back
-    to naming conventions (e.g. models whose names contain ``video`` or ``qwen``
-    + ``vl``). When those heuristics fail we delegate to the vision detector since
-    current SDK integrations treat video as an extension of multimodal/vision APIs.
+    提供商很少暴露视频支持的结构化元数据，因此回退到命名约定
+    （例如名称包含 ``video`` 或 ``qwen`` + ``vl`` 的模型）。
+    当启发式方法失败时，委托给视觉检测器，因为当前 SDK 集成
+    将视频视为多模态/视觉 API 的扩展。
     """
     stripped = _strip_provider_prefix(model_name)
     candidates = {model_name, stripped}
@@ -103,9 +103,7 @@ def video_capability_detector(model_name: str) -> bool:
 
 
 class ModelCapabilitiesRegistry:
-    """
-    Central registry for model capability detection.
-    """
+    """模型能力检测的中央注册表。"""
 
     def __init__(self) -> None:
         self._capability_detectors: Dict[str, CapabilityDetector] = {}
@@ -113,15 +111,11 @@ class ModelCapabilitiesRegistry:
     def register_capability_detector(
         self, capability: str, detector: CapabilityDetector
     ) -> None:
-        """
-        Register a detector callable for a capability name.
-        """
+        """为指定能力名称注册检测器可调用对象。"""
         self._capability_detectors[capability] = detector
 
     def supports(self, capability: str, model_name: Optional[str]) -> bool:
-        """
-        Return True when the supplied model name supports the requested capability.
-        """
+        """当指定的模型名称支持请求的能力时返回 True。"""
         if not model_name:
             return False
 
@@ -135,19 +129,15 @@ class ModelCapabilitiesRegistry:
             return False
 
     def supports_vision(self, model_name: Optional[str]) -> bool:
-        """
-        Convenience wrapper for vision-capable detection.
-        """
+        """视觉能力检测的便捷方法。"""
         return self.supports("vision", model_name)
 
     def supports_video(self, model_name: Optional[str]) -> bool:
-        """
-        Convenience wrapper for video-capable detection.
-        """
+        """视频能力检测的便捷方法。"""
         return self.supports("video", model_name)
 
     def add_vision_model(self, model_name: str) -> None:
-        # Extend the module-level registry used by vision_capability_detector
+        # 扩展 vision_capability_detector 使用的模块级注册表
         VISION_MODEL_PREFIXES.add(self._strip_provider_prefix(model_name).lower())
 
     def add_vision_models(self, model_names: Iterable[str]) -> None:
@@ -174,7 +164,7 @@ MODEL_CAPABILITIES_REGISTRY.register_capability_detector(
     "video", video_capability_detector
 )
 
-# Backwards compatibility shim for previous API which exposed a class with classmethods.
+# 向后兼容性垫片，适配之前暴露类方法的旧 API。
 ModelCapabilities = MODEL_CAPABILITIES_REGISTRY
 
 

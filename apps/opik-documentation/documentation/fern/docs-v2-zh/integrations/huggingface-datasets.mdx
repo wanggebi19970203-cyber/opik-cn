@@ -1,0 +1,400 @@
+---
+description: 从这里开始将 Opik 与 Hugging Face Datasets 集成，实现端到端的
+  LLM 可观测性、单元测试和优化。
+headline: Hugging Face Datasets | Opik 文档
+og:description: 了解如何将 Hugging Face 的数据集转换并导入到 Opik 中，
+  以实现高效的模型评估和优化。
+og:site_name: Opik 文档
+og:title: 将 Hugging Face Datasets 与 Opik 集成
+title: 使用 Opik 实现 Hugging Face Datasets 的可观测性
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时，请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+[Hugging Face Datasets](https://huggingface.co/docs/datasets/) 是一个库，提供对数千个机器学习和自然语言处理任务数据集的便捷访问。
+
+本指南介绍如何将 Opik 与 Hugging Face Datasets 集成，将数据集转换并导入到 Opik 中，用于模型评估和优化。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=huggingface-datasets&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=huggingface-datasets&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=huggingface-datasets&utm_campaign=opik) 了解更多信息。
+
+## 快速入门
+
+### 安装
+
+要将 Hugging Face Datasets 与 Opik 一起使用，您需要安装 `datasets` 和 `opik` 两个包：
+
+```bash
+pip install opik datasets transformers pandas tqdm huggingface_hub
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业** 设置
+- **配置文件** 和环境变量
+
+### 配置 Hugging Face
+
+要访问 Hugging Face 上的私有数据集，您需要拥有 Hugging Face token。您可以在[此页面](https://huggingface.co/settings/tokens)创建和管理您的 Hugging Face token。
+
+您可以将其设置为环境变量：
+
+```bash
+export HUGGINGFACE_HUB_TOKEN="YOUR_TOKEN"
+```
+
+或者通过代码设置：
+
+```python
+import os
+import getpass
+
+if "HUGGINGFACE_HUB_TOKEN" not in os.environ:
+    os.environ["HUGGINGFACE_HUB_TOKEN"] = getpass.getpass("Enter your Hugging Face token: ")
+
+# 设置项目名称
+os.environ["OPIK_PROJECT_NAME"] = "huggingface-datasets-integration-demo"
+```
+
+## HuggingFaceToOpikConverter
+
+该集成提供了一个工具类，用于将 Hugging Face 数据集转换为 Opik 格式：
+
+```python
+from datasets import load_dataset, Dataset as HFDataset
+from opik import Opik
+from typing import Optional, Dict, Any, List
+import json
+from tqdm import tqdm
+import warnings
+import numpy as np
+import pandas as pd
+
+warnings.filterwarnings('ignore')
+
+class HuggingFaceToOpikConverter:
+    """Utility class to convert Hugging Face datasets to Opik format."""
+
+    def __init__(self, opik_client: Opik):
+        self.opik_client = opik_client
+
+    def load_hf_dataset(
+        self,
+        dataset_name: str,
+        split: Optional[str] = None,
+        config: Optional[str] = None,
+        subset_size: Optional[int] = None,
+        **kwargs
+    ) -> HFDataset:
+        """
+        Load a dataset from Hugging Face Hub.
+
+        Args:
+            dataset_name: Name of the dataset on HF Hub
+            split: Specific split to load (train, validation, test)
+            config: Configuration/subset of the dataset
+            subset_size: Limit the number of samples
+            **kwargs: Additional arguments for load_dataset
+
+        Returns:
+            Loaded Hugging Face dataset
+        """
+        print(f"📥 Loading dataset: {dataset_name}")
+        if config:
+            print(f"   Config: {config}")
+        if split:
+            print(f"   Split: {split}")
+
+        # Load the dataset
+        dataset = load_dataset(
+            dataset_name,
+            name=config,
+            split=split,
+            **kwargs
+        )
+
+        # Limit dataset size if specified
+        if subset_size and len(dataset) > subset_size:
+            dataset = dataset.select(range(subset_size))
+            print(f"   Limited to {subset_size} samples")
+
+        print(f"   ✅ Loaded {len(dataset)} samples")
+        print(f"   Features: {list(dataset.features.keys())}")
+
+        return dataset
+```
+
+## 基本用法
+
+### 转换并上传数据集
+
+以下是将 Hugging Face 数据集转换为 Opik 格式并上传的方法：
+
+```python
+# Initialize the converter
+opik_client = Opik()
+converter = HuggingFaceToOpikConverter(opik_client)
+
+# Load a dataset from Hugging Face
+dataset = converter.load_hf_dataset(
+    dataset_name="squad",
+    split="validation",
+    subset_size=100  # Limit for demo
+)
+
+# Convert to Opik format
+opik_data = converter.convert_to_opik_format(
+    dataset=dataset,
+    input_columns=["question"],
+    output_columns=["answers"],
+    metadata_columns=["id", "title"],
+    dataset_name="squad-qa-dataset",
+    description="SQuAD question answering dataset converted from Hugging Face"
+)
+
+print(f"✅ Converted {len(opik_data)} items to Opik format!")
+```
+
+### 转换为 Opik 格式
+
+转换器提供了一个方法，用于将 Hugging Face 数据集转换为 Opik 所需的格式：
+
+```python
+def convert_to_opik_format(
+    self,
+    dataset: HFDataset,
+    input_columns: List[str],
+    output_columns: List[str],
+    metadata_columns: Optional[List[str]] = None,
+    dataset_name: str = "huggingface-dataset",
+    description: str = "Dataset converted from Hugging Face"
+) -> List[Dict[str, Any]]:
+    """
+    Convert a Hugging Face dataset to Opik format.
+
+    Args:
+        dataset: Hugging Face dataset
+        input_columns: List of column names to use as input
+        output_columns: List of column names to use as expected output
+        metadata_columns: Optional list of columns to include as metadata
+        dataset_name: Name for the Opik dataset
+        description: Description for the Opik dataset
+
+    Returns:
+        List of Opik dataset items
+    """
+    opik_items = []
+
+    for row in tqdm(dataset, desc="Converting to Opik format"):
+        # Extract input data
+        input_data = {}
+        for col in input_columns:
+            if col in dataset.features:
+                input_data[col] = self._extract_field_value(row, col)
+
+        # Extract expected output
+        expected_output = {}
+        for col in output_columns:
+            if col in dataset.features:
+                expected_output[col] = self._extract_field_value(row, col)
+
+        # Extract metadata
+        metadata = {}
+        if metadata_columns:
+            for col in metadata_columns:
+                if col in dataset.features:
+                    metadata[col] = self._extract_field_value(row, col)
+
+        # Create Opik dataset item
+        item = {
+            "input": input_data,
+            "expected_output": expected_output,
+            "metadata": metadata
+        }
+        opik_items.append(item)
+
+    return opik_items
+```
+
+## 与 @track 装饰器配合使用
+
+使用 `@track` 装饰器在处理转换后的数据集时创建完整的追踪记录：
+
+```python
+from opik import track
+
+@track
+def evaluate_qa_model(dataset_item):
+    """Evaluate a Q&A model using Hugging Face dataset."""
+    question = dataset_item["input"]["question"]
+
+    # Your model logic here (replace with actual model)
+    if 'what' in question.lower():
+        response = "This is a question asking for information."
+    elif 'how' in question.lower():
+        response = "This is a question asking for a process or method."
+    else:
+        response = "This is a general question that requires analysis."
+
+    return {
+        "question": question,
+        "response": response,
+        "expected": dataset_item["expected_output"],
+        "metadata": dataset_item["metadata"]
+    }
+
+# Evaluate on your dataset
+for item in opik_data[:5]:  # Evaluate first 5 items
+    result = evaluate_qa_model(item)
+    print(f"Question: {result['question'][:50]}...")
+```
+
+## 常用数据集示例
+
+### SQuAD（问答）
+
+```python
+# Load SQuAD dataset
+squad_dataset = converter.load_hf_dataset(
+    dataset_name="squad",
+    split="validation",
+    subset_size=50
+)
+
+# Convert to Opik format
+squad_opik = converter.convert_to_opik_format(
+    dataset=squad_dataset,
+    input_columns=["question"],
+    output_columns=["answers"],
+    metadata_columns=["id", "title"],
+    dataset_name="squad-qa-dataset",
+    description="SQuAD question answering dataset"
+)
+```
+
+### GLUE（通用语言理解）
+
+```python
+# Load GLUE SST-2 dataset
+sst2_dataset = converter.load_hf_dataset(
+    dataset_name="glue",
+    config_name="sst2",
+    split="validation",
+    subset_size=100
+)
+
+# Convert to Opik format
+sst2_opik = converter.convert_to_opik_format(
+    dataset=sst2_dataset,
+    input_columns=["sentence"],
+    output_columns=["label"],
+    metadata_columns=["idx"],
+    dataset_name="sst2-sentiment-dataset",
+    description="SST-2 sentiment analysis dataset from GLUE"
+)
+```
+
+### Common Crawl（文本分类）
+
+```python
+# Load Common Crawl dataset
+cc_dataset = converter.load_hf_dataset(
+    dataset_name="common_crawl",
+    subset_size=200
+)
+
+# Convert to Opik format
+cc_opik = converter.convert_to_opik_format(
+    dataset=cc_dataset,
+    input_columns=["text"],
+    output_columns=["language"],
+    metadata_columns=["url", "timestamp"],
+    dataset_name="common-crawl-dataset",
+    description="Common Crawl text classification dataset"
+)
+```
+
+## 查看结果
+
+将 Hugging Face 数据集转换并上传到 Opik 后，您可以在 Opik UI 中查看它们。每个数据集将包含：
+
+- 指定列的输入数据
+- 指定列的预期输出
+- 来自附加列的元数据
+- 来源信息（Hugging Face 数据集名称和拆分）
+
+## 反馈评分与评估
+
+将 Hugging Face 数据集导入 Opik 后，您可以使用 Opik 的评估框架来评估您的 LLM 应用：
+
+```python
+from opik.evaluation import evaluate
+from opik.evaluation.metrics import Hallucination
+
+# Define your evaluation task
+def evaluation_task(x):
+    return {
+        "message": x["input"]["question"],
+        "output": x["response"],
+        "reference": x["expected_output"]["answers"]
+    }
+
+# Create the Hallucination metric
+hallucination_metric = Hallucination()
+
+# Run the evaluation
+evaluation_results = evaluate(
+    experiment_name="huggingface-datasets-evaluation",
+    dataset=squad_opik,
+    task=evaluation_task,
+    scoring_metrics=[hallucination_metric],
+    project_name="my-project",
+)
+```
+
+## 环境变量
+
+请确保设置以下环境变量：
+
+```bash
+# Hugging Face Configuration (optional, for private datasets)
+export HUGGINGFACE_HUB_TOKEN="your-huggingface-token"
+
+# Opik Configuration
+export OPIK_PROJECT_NAME="your-project-name"
+export OPIK_WORKSPACE="your-workspace-name"
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **认证错误**：确保您的 Hugging Face token 正确，尤其是访问私有数据集时
+2. **数据集未找到**：验证数据集名称和配置是否正确
+3. **内存问题**：使用 `subset_size` 参数限制大型数据集
+4. **数据类型转换**：转换器处理大多数数据类型，但复杂的嵌套结构可能需要自定义处理
+
+### 获取帮助
+
+- 查阅 [Hugging Face Datasets 文档](https://huggingface.co/docs/datasets/) 了解数据集加载
+- 查阅 [Hugging Face Hub 文档](https://huggingface.co/docs/hub/) 了解认证
+- 联系 Hugging Face 支持获取数据集相关问题的帮助
+- 查阅 Opik 文档了解追踪和评估功能
+
+## 后续步骤
+
+将 Hugging Face Datasets 与 Opik 集成后，您可以：
+
+- [评估您的 LLM 应用](/evaluation/overview) 使用 Opik 的评估框架
+- [创建数据集](/evaluation/advanced/manage_datasets) 来测试和改进您的模型
+- [设置反馈收集](/tracing/advanced/annotate_traces) 来收集人工评估
+- [监控性能](/tracing/concepts) 跨不同模型和配置

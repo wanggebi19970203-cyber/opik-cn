@@ -1,0 +1,208 @@
+---
+headline: REST API 客户端 | Opik 文档
+og:description: 使用 Python SDK 的 REST API 客户端访问所有 Opik 平台功能，支持高级操作和自定义集成。
+og:site_name: Opik 文档
+og:title: REST API 客户端 - Opik Python SDK
+title: REST API 客户端
+---
+
+Opik Python SDK 包含一个完整的 REST API 客户端，提供对所有 Opik 平台功能的直接访问。这个底层客户端通过 `rest_client` 属性可用，适用于高级操作、自定义集成以及高级 SDK 未提供所需功能的场景。
+
+<Warning>
+  REST 客户端不保证与未来 SDK 版本向后兼容。虽然它提供了对当前 REST API 的便捷访问，但不建议过度依赖其 API，因为 Opik 的 REST API 契约可能会发生变化。
+</Warning>
+
+## 访问 REST 客户端
+
+REST 客户端可通过任何 Opik 实例访问：
+
+```python
+import opik
+
+# 初始化 Opik 客户端
+client = opik.Opik()
+
+# 访问 REST API 客户端
+rest_client = client.rest_client
+
+# 现在你可以使用任何可用的客户端方法
+traces = rest_client.traces.search_traces(project_name="my-project")
+```
+
+## 可用客户端
+
+REST API 按功能客户端模块组织：
+
+### 核心资源
+
+- **`traces`** - 管理 trace 及其生命周期
+- **`spans`** - 管理 trace 中的 span
+- **`datasets`** - 管理数据集和数据集条目
+- **`experiments`** - 管理实验和结果
+- **`projects`** - 管理项目和项目设置
+
+### 反馈与评估
+
+- **`feedback_definitions`** - 定义反馈评分类型
+- **`automation_rule_evaluators`** - 设置自动化评估规则
+- **`optimizations`** - 运行优化实验
+
+### 内容与资源
+
+- **`prompts`** - 管理提示模板和版本
+- **`attachments`** - 处理 trace 和 span 的文件附件
+
+### 系统与配置
+
+- **`check`** - 系统健康检查和访问验证
+- **`workspaces`** - 工作空间管理
+- **`llm_provider_key`** - LLM 提供商的 API 密钥管理
+- **`service_toggles`** - 功能标志管理
+- **`system_usage`** - 使用指标和监控
+
+### 集成
+
+- **`chat_completions`** - 聊天补全端点
+- **`open_telemetry_ingestion`** - OpenTelemetry 数据采集
+- **`guardrails`** - 内容验证和安全检查
+
+## 常见使用模式
+
+### 处理 Trace
+
+```python
+# 通过 ID 获取特定 trace
+trace = client.rest_client.traces.get_trace_by_id("trace-id")
+
+# 使用高级过滤器搜索 trace
+traces = client.rest_client.traces.search_traces(
+    project_name="my-project",
+    filters=[{
+        "field": "name",
+        "operator": "contains",
+        "value": "important"
+    }],
+    max_results=100
+)
+
+# 为 trace 添加反馈
+client.rest_client.traces.add_trace_feedback_score(
+    id="trace-id",
+    name="accuracy",
+    value=0.95,
+    source="manual"
+)
+```
+
+### 管理数据集
+
+```python
+# 分页列出所有数据集
+datasets = client.rest_client.datasets.find_datasets(
+    page=0,
+    size=20
+)
+
+# 创建新数据集
+dataset = client.rest_client.datasets.create_dataset(
+    name="evaluation-dataset",
+    description="Dataset for model evaluation",
+    project_name="my-project"
+)
+
+# 向数据集添加条目
+items = [
+    {
+        "input": {"question": "What is machine learning?"},
+        "expected_output": {"answer": "A subset of AI..."}
+    }
+]
+client.rest_client.datasets.create_or_update_dataset_items(
+    dataset_id=dataset.id,
+    items=items
+)
+```
+
+### 运行实验
+
+```python
+# 创建关联数据集的实验
+experiment = client.rest_client.experiments.create_experiment(
+    name="model-comparison",
+    dataset_name="evaluation-dataset"
+)
+
+# 添加实验结果
+client.rest_client.experiments.create_experiment_items(
+    experiment_id=experiment.id,
+    items=[{
+        "dataset_item_id": "item-id",
+        "trace_id": "trace-id",
+        "output": {"prediction": "model output"},
+        "feedback_scores": [
+            {"name": "accuracy", "value": 0.8}
+        ]
+    }]
+)
+```
+
+## 响应类型和分页
+
+大多数列表操作返回具有统一结构的分页响应：
+
+```python
+# 分页响应示例
+response = client.rest_client.datasets.find_datasets(page=0, size=10)
+
+# 访问响应数据
+datasets = response.content    # 数据集对象列表
+total_count = response.total   # 条目总数
+current_page = response.page   # 当前页码
+page_size = response.size      # 每页条目数
+```
+
+## 错误处理
+
+REST API 针对不同的错误条件抛出特定异常：
+
+```python
+from opik.rest_api.core.api_error import ApiError
+
+try:
+    trace = client.rest_client.traces.get_trace_by_id("invalid-id")
+except ApiError as e:
+    if e.status_code == 404:
+        print("Trace not found")
+    elif e.status_code == 403:
+        print("Access denied")
+    else:
+        print(f"API error: {e.status_code} - {e.body}")
+```
+
+## 何时使用 REST API
+
+在以下情况下考虑使用 REST API 客户端：
+
+- **高级过滤**：需要多重过滤条件的复杂搜索操作
+- **批量操作**：高效处理大量数据
+- **自定义集成**：构建与外部系统集成的工具
+- **原始数据访问**：针对特定用例直接处理 API 响应
+- **未支持的操作**：访问高级 SDK 中不可用的功能
+
+## 完整 API 参考
+
+有关所有 REST API 方法、参数和响应类型的完整文档，请参阅 [REST API 参考](https://www.comet.com/docs/opik/python-sdk-reference/rest_api/overview.html)。
+
+参考文档包括：
+
+- **[概述与入门](https://www.comet.com/docs/opik/python-sdk-reference/rest_api/overview.html)** - 详细使用模式和示例
+- **[API 客户端](https://www.comet.com/docs/opik/python-sdk-reference/rest_api/clients/index.html)** - 所有客户端的完整方法参考
+- **[数据类型](https://www.comet.com/docs/opik/python-sdk-reference/rest_api/objects.html)** - 响应模型和数据结构
+
+## 最佳实践
+
+1. **优先使用高级 SDK**：在使用 REST 客户端之前，先尝试主 SDK API
+2. **处理分页**：对列表操作始终实现正确的分页
+3. **错误处理**：为网络和 API 错误实现健壮的错误处理
+4. **速率限制**：批量操作时注意 API 速率限制
+5. **版本兼容性**：升级 SDK 版本时充分测试

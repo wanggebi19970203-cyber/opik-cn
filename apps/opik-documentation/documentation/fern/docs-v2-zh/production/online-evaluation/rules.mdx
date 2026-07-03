@@ -1,0 +1,190 @@
+---
+headline: 在线评估规则 | Opik 文档
+og:description: 使用 Opik 的自动化指标评估生产环境 LLM 性能，高效评分 trace 并识别问题。
+og:site_name: Opik 文档
+og:title: 在线评估规则 - Opik
+subtitle: 描述如何为生产环境 trace 定义评分规则
+title: 在线评估规则
+---
+
+<Tip>
+  在线评估指标允许您对所有生产环境 trace 进行评分，并轻松识别 LLM 生产应用中的任何问题。
+</Tip>
+
+在生产环境中使用 LLM 时，大量的 trace 意味着无法手动审查每一条 trace。Opik 允许您定义 LLM as a Judge 指标，自动对记录到平台的 LLM 调用进行评分。
+
+![Opik LLM as a Judge](/img/production/online_evaluation.gif)
+
+通过定义在所有生产环境 trace 上运行的 LLM as a Judge 指标，您将能够自动监控 LLM 调用的幻觉问题、答案相关性或任何其他特定任务指标。
+
+## 定义评分规则
+
+评分规则可以通过 UI 和 [REST API](/reference/rest-api/overview) 进行定义。
+
+要在 UI 中创建新的评分指标，首先导航到您要监控的项目。导航到 `rules` 选项卡后，您将能够创建新规则。
+
+<Frame>
+  <img src="/img/production/online_evaluation_rule_modal.png" />
+</Frame>
+
+创建新规则时，您将看到以下选项：
+
+1. **名称：** 规则的名称
+2. **采样率：** 要评分的 trace 百分比。设置为 `100%` 时，所有 trace 都将被评分。
+3. **模型：** 用于运行 LLM as a Judge 指标的模型。评估包含图像的 trace 时，请确保选择支持视觉功能的模型。
+4. **提示词：** 要使用的 LLM as a Judge 提示词。Opik 提供了一组基础提示词（幻觉检测、内容审核、答案相关性），您可以直接使用或自定义定义。提示词中的变量应使用 `{{variable_name}}` 格式。
+5. **变量映射：** 这是提示词中的变量与 trace 中值的映射关系。
+6. **评分定义：** 这是 LLM as a Judge 指标的输出格式。通过添加多个评分，您可以定义从不同维度对 LLM 输出进行评分的 LLM as a Judge 指标。
+
+### Opik 内置的 LLM as a Judge 指标
+
+Opik 预配置了 3 种不同的 LLM as a Judge 指标：
+
+1. 幻觉检测：此指标检查 LLM 输出是否包含任何幻觉信息。
+2. 内容审核：此指标检查 LLM 输出是否包含任何冒犯性内容。
+3. 答案相关性：此指标检查 LLM 输出是否与给定上下文相关。
+
+<Tip>
+  如果您希望我们在平台上添加更多 LLM as a Judge 指标，请在
+  [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue，我们将尽力添加！
+</Tip>
+
+### 编写自定义 LLM as a Judge 指标
+
+Opik 内置的 LLM as a Judge 指标非常易于使用，非常适合入门。但是，当您开始处理更复杂的任务时，可能需要编写自己的 LLM as a Judge 指标。
+
+我们通常建议您在开发阶段使用 [Opik 评估平台](/evaluation/overview) 实验 LLM as a Judge 指标。一旦找到适合您用例的指标，就可以在生产环境中使用。
+
+<Frame>
+  <img src="/img/production/online_evaluation_custom_judge.png" />
+</Frame>
+编写自定义 LLM as a Judge 指标时，您需要使用 mustache 语法指定提示词变量，即
+`{{ variable_name }}`。然后，您可以使用 `variable_mapping` 参数将这些变量映射到您的 trace 数据。当规则执行时，Opik 将用 trace 数据中的值替换变量。
+
+您可以使用 `Scoring definition` 参数控制输出格式。在此处可以定义您希望 LLM as a Judge 指标返回的评分。底层实现中，我们将结合此定义与[结构化输出](https://platform.openai.com/docs/guides/structured-outputs)功能，确保 LLM as a Judge 指标始终返回 trace 评分。
+
+### 评估包含图像的 trace
+
+LLLM as a Judge 指标可以在使用支持视觉功能的模型时评估包含图像的 trace。这对于以下场景非常有用：
+
+- 评估图像生成质量
+- 分析多模态应用中的视觉内容
+- 验证基于图像的响应
+
+要在评估提示词中引用 trace 中的图像数据：
+
+1. 在提示词编辑器中，点击 **"Images +"** 按钮添加图像变量
+2. 使用变量映射部分将图像变量映射到包含图像数据的 trace 字段
+
+<Frame>
+  <img src="/img/production/online_evaluation_rule_add_image.png" />
+</Frame>
+
+<Note>
+  使用 "Images +" 按钮添加图像时，Opik 会自动在提示词中添加新行，将图像包装在 `<<<image>>><</image>>>` 标签中。此包装在 UI 中不可见，但可确保评估期间的正确图像处理。
+</Note>
+
+**示例规则配置：**
+
+提示词：
+
+```
+评估此生成图像的质量。
+
+请根据以下标准对图像进行评分：
+1. 视觉清晰度和分辨率
+2. 与提示词的相关性
+3. 技术质量
+
+请提供 0 到 1 之间的评分。
+```
+
+变量映射：
+
+- `output_image` → `output.image_data`（trace 结构中的路径）
+
+模型：需要支持视觉功能的模型
+
+**支持的图像格式：**
+
+- 图片 URL
+- Base64 编码图像
+
+<Tip>
+  映射图像变量时，请确保 trace 字段包含受支持格式的图像数据（图片 URL 或 base64 编码图像）。
+</Tip>
+
+## 查看在线评估评分
+
+在线评估规则返回的评分将作为每条 trace 的反馈评分存储。这将允许您在 trace 侧边栏中查看这些评分，并在 Opik 仪表板中跟踪其随时间的变化。
+
+![Opik 仪表板](/img/production/opik_monitoring_dashboard.gif)
+
+您还可以从 trace 表中查看项目中所有 trace 的平均反馈评分。
+
+## 在线线程评估规则
+
+还可以定义在线程上运行的 LLM as a Judge 和自定义 Python 指标。这对于评估整个对话而不仅仅是单个 trace 非常有用。
+
+<Frame>
+  <img src="/img/production/online_evaluation_thread_rule.gif" />
+</Frame>
+
+我们为 LLM as a Judge 指标提供了内置模板，您可以使用它们对整个对话进行评分：
+1. **对话连贯性：** 此指标检查对话是否连贯并遵循逻辑流程，返回 0 到 1 之间的小数评分。
+2. **用户挫败感：** 此指标检查用户是否对对话感到沮丧，返回 0 到 1 之间的小数评分。
+3. **自定义 LLM as a Judge 指标：** 您可以使用此模板通过自定义 LLM as a Judge 指标对整个对话进行评分。默认情况下，此模板遵循最佳实践使用二元评分（true/false）。
+
+对于 LLM as a Judge 指标，请注意唯一可用的变量是 `{{context}}`，它是一个包含整个对话的字典：
+
+```json
+[
+  {
+      "role": "user",
+      "content": "Hello, how are you?"
+  },
+  {
+      "role": "assistant",
+      "content": "I'm good, thank you!"
+  }
+]
+```
+
+同样，对于 Python 指标，您可以使用 `Conversation` 对象。此对象是一个 `List[Dict]`，其中每个字典代表对话中的一条消息。
+
+```python
+[
+  {
+      "role": "user",
+      "content": "Hello, how are you?"
+  },
+  {
+      "role": "assistant",
+      "content": "I'm good, thank you!"
+  }
+]
+```
+
+对于线程的在线评分规则，Opik 会在线程中的最后一次活动后等待"冷却期"，然后再运行评估。这确保评分是在完整对话上下文上完成的。
+
+<Note>
+  默认冷却期为 15 分钟，但可以在工作区级别的"线程在线评分规则冷却期"中进行配置。
+  对于自托管安装，请设置 `OPIK_TRACE_THREAD_TIMEOUT_TO_MARK_AS_INACTIVE` 环境变量。
+</Note>
+
+## 在历史数据上运行在线评估
+
+默认情况下，新创建的在线评估规则仅对规则定义后记录的 trace 或线程运行。要在历史数据上运行规则，您可以从 UI 手动触发：
+
+1. 导航到项目的 **Traces** 或 **Threads** 选项卡。
+2. 选择要评估的 trace 或线程。
+3. 点击工具栏中的大脑图标（<Icon icon="brain" />）。
+4. 系统将提示您选择要应用于所选项目的在线评估规则。
+
+<Frame>
+  <img src="/img/production/online_evaluation_historical.png" alt="在历史 trace 上运行在线评估规则" />
+</Frame>
+
+<Note>
+  根据规则中配置的模型，评估可能需要一些时间才能完成。您可以在评估规则日志中监控进度，或在 UI 中刷新 trace/线程。
+</Note>

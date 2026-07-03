@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { CellContext } from "@tanstack/react-table";
 import { Copy, MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ type DialogState = "closed" | "edit" | "clone" | "delete";
 const EnvironmentsRowActionsCell: React.FunctionComponent<
   CellContext<Environment, unknown>
 > = (context) => {
+  const { t } = useTranslation("pages/settings");
   const resetKeyRef = useRef(0);
   const environment = context.row.original;
   const [dialog, setDialog] = useState<DialogState>("closed");
@@ -59,26 +61,26 @@ const EnvironmentsRowActionsCell: React.FunctionComponent<
         open={dialog === "delete"}
         setOpen={handleClose}
         onConfirm={deleteHandler}
-        title="Delete environment"
-        description="This action can’t be undone. Existing traces and spans will keep their environment value. Are you sure you want to continue?"
-        confirmText="Delete environment"
+        title={t("settings.environments.confirmDialog.deleteSingle.title")}
+        description={t("settings.environments.confirmDialog.deleteSingle.description")}
+        confirmText={t("settings.environments.confirmDialog.deleteSingle.confirmText")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("settings.actions.menuLabel")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={() => openDialog("edit")}>
             <Pencil className="mr-2 size-4" />
-            Edit
+            {t("settings.actions.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => openDialog("clone")}>
             <Copy className="mr-2 size-4" />
-            Clone
+            {t("settings.actions.clone")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -86,7 +88,7 @@ const EnvironmentsRowActionsCell: React.FunctionComponent<
             variant="destructive"
           >
             <Trash className="mr-2 size-4" />
-            Delete
+            {t("settings.actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

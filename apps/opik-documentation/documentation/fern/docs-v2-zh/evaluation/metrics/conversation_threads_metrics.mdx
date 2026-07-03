@@ -1,0 +1,216 @@
+---
+description: 描述与对话线程评分相关的指标
+headline: 对话指标 | Opik 文档
+og:description: 使用 Opik 的指标评估对话线程的质量，以提升助手在多轮对话中的表现并改善用户交互。
+og:site_name: Opik 文档
+og:title: 用于分析的对话指标 - Opik
+title: 对话指标
+---
+
+对话指标可用于对 Opik 通过多次追踪收集的对话线程进行质量评分。当您希望分析助手在多轮对话中的表现时，这些指标同样适用于 Opik 外部来源的对话。
+
+Opik 提供两类对话指标：
+
+1. **对话级别启发式指标** — 轻量级分析工具，直接检查对话记录本身（例如知识保持或退化检测）。当您只有生产环境对话而没有标准参考时，可以使用这些指标。
+2. **LLM 作为评判者的对话指标** — 调用 LLM 来评估对话质量、用户目标完成情况或最新助手回复中的风险。
+
+## 对话级别启发式指标
+
+| 指标 | 描述 |
+| --- | --- |
+| KnowledgeRetentionMetric | 检查最终助手回复是否保留了用户早期提供的信息。 |
+| ConversationDegenerationMetric | 检测对话中的重复和退化模式。 |
+
+### 知识保持指标
+
+`KnowledgeRetentionMetric` 对对话进行操作，比较最后一条助手消息对用户早期注入的信息的保留程度。这对于需要遵守指令或保持重要约束的代理防护非常有用。
+
+```python
+from opik.evaluation.metrics import KnowledgeRetentionMetric
+
+metric = KnowledgeRetentionMetric(turns_to_consider=5)
+score = metric.score(conversation=my_thread)
+print(score.value, score.reason)
+```
+
+### 对话退化指标
+
+`ConversationDegenerationMetric` 检测对话中的重复短语、缺乏变化或低熵回复。它是防止模型陷入循环或中断对话的轻量级防护措施。
+
+```python
+from opik.evaluation.metrics import ConversationDegenerationMetric
+
+metric = ConversationDegenerationMetric()
+score = metric.score(conversation=my_thread)
+```
+
+## LLM 作为评判者的对话指标
+
+| 指标 | 描述 |
+| --- | --- |
+| ConversationalCoherenceMetric | 评估对话滑动窗口中的连贯性和相关性。 |
+| SessionCompletenessQuality | 检查用户的高层目标是否得到满足。 |
+| UserFrustrationMetric | 估计用户在交互过程中的挫败程度。 |
+| ConversationComplianceRiskMetric | 对最后一条助手回复应用合规风险评判。 |
+| ConversationDialogueHelpfulnessMetric | 评估最终助手回复的帮助程度。 |
+| ConversationQARelevanceMetric | 检查最终回答是否回应了用户的请求。 |
+| ConversationSummarizationConsistencyMetric | 评估对话摘要与原始对话的一致性。 |
+| ConversationSummarizationCoherenceMetric | 评估对话摘要的结构和流畅度。 |
+| ConversationPromptPerplexityMetric | 在对话级别估计提示的难度。 |
+| ConversationPromptUncertaintyMetric | 在线程评估中标记模糊的提示。 |
+
+这些指标基于使用 LLM 评估用户与助手之间对话轮次的理念。Opik 提供了一个提示模板，自动包装对话记录、评判标准和评估步骤。默认使用 `gpt-5-nano` 模型评估回复，但您可以通过设置 `model` 参数切换到任何 LiteLLM 支持的后端。更多信息请参阅[为 LLM 作为评判者指标自定义模型](/evaluation/metrics/custom_model)指南。
+
+<Tip>
+  上述基于 GEval 的对话适配器位于
+  `opik.evaluation.metrics.conversation.llm_judges.g_eval_wrappers` 模块中。它们接受与底层评判器相同的
+  关键字参数（例如 `model`、`temperature`）。详见
+  [对话级别 GEval 指标](/evaluation/metrics/g_eval_conversation_metrics) 以获取更深入的说明。
+</Tip>
+
+<Tip>
+  需要跨对话的基于参考的评分，如 BLEU、ROUGE 或 METEOR？
+  组合您自己的 `ConversationThreadMetric` 并直接复用单轮启发式指标
+  （`SentenceBLEU`、`ROUGE`、`METEOR`）。
+</Tip>
+
+### ConversationalCoherenceMetric
+
+`ConversationalCoherenceMetric` 评估对话的逻辑流畅性。它构建一个滑动窗口的对话轮次，并让 LLM 评估最后一条助手消息是否连贯且相关。返回 0.0 到 1.0 之间的分数，可选择返回详细原因。
+
+```python title="对话连贯性示例"
+from opik.evaluation.metrics import ConversationalCoherenceMetric
+
+conversation = [
+    {
+        "role": "user",
+        "content": "I need to book a flight to New York and find a hotel.",
+    },
+    {
+        "role": "assistant",
+        "content": "I can help you with that. For flights to New York, what dates are you looking to travel?",
+    },
+    {
+        "role": "user",
+        "content": "Next weekend, from Friday to Sunday.",
+    },
+    {
+        "role": "assistant",
+        "content": "Great! I recommend checking airlines like Delta, United, or JetBlue for flights to New York next weekend. For hotels, what's your budget range and preferred location in New York?",
+    },
+    {
+        "role": "user",
+        "content": "Around $200 per night, preferably in Manhattan.",
+    },
+    {
+        "role": "assistant",
+        "content": "For Manhattan hotels around $200/night, you might want to look at options like Hotel Beacon, Pod 51, or CitizenM Times Square. These are well-rated options in that price range. Would you like more specific recommendations for any of these?",
+    },
+]
+
+metric = ConversationalCoherenceMetric(model="gpt-5-nano", window_size=8, include_reason=True)
+result = metric.score(conversation)
+print(result.value)
+print(result.reason)
+```
+
+### SessionCompletenessQuality
+
+`SessionCompletenessQuality` 捕获对话是否满足了用户的高层目标。该指标让 LLM 从对话线程中提取意图，判断完成情况，并汇总结果。
+
+```python title="会话完整性示例"
+from opik.evaluation.metrics import SessionCompletenessQuality
+
+conversation = [
+    {
+        "role": "user",
+        "content": "I need to book a flight to New York and find a hotel.",
+    },
+    {
+        "role": "assistant",
+        "content": "I can help you with that. For flights to New York, what dates are you looking to travel?",
+    },
+    {
+        "role": "user",
+        "content": "Next weekend, from Friday to Sunday.",
+    },
+    {
+        "role": "assistant",
+        "content": "Great! I recommend checking airlines like Delta, United, or JetBlue for flights to New York next weekend. For hotels, what's your budget range and preferred location in New York?",
+    },
+    {
+        "role": "user",
+        "content": "Around $200 per night, preferably in Manhattan.",
+    },
+    {
+        "role": "assistant",
+        "content": "For Manhattan hotels around $200/night, you might want to look at options like Hotel Beacon, Pod 51, or CitizenM Times Square. These are well-rated options in that price range. Would you like more specific recommendations for any of these?",
+    },
+]
+
+metric = SessionCompletenessQuality(model="gpt-5-nano")
+result = metric.score(conversation)
+print(result.value)
+print(result.reason)
+```
+
+### UserFrustrationMetric
+
+`UserFrustrationMetric` 估计用户感到挫败的可能性（例如由于重复或被忽略的请求）。它使用 LLM 扫描对话窗口，并报告 0.0（未挫败）到 1.0（非常挫败）之间的值。
+
+```python title="用户挫败感示例"
+from opik.evaluation.metrics import UserFrustrationMetric
+
+conversation = [
+    {
+        "role": "user",
+        "content": "How do I center a div using CSS?",
+    },
+    {
+        "role": "assistant",
+        "content": "There are many ways to center elements in CSS.",
+    },
+    {
+        "role": "user",
+        "content": "Okay... can you show me one?",
+    },
+    {
+        "role": "assistant",
+        "content": "Sure. It depends on the context — are you centering horizontally, vertically, or both?",
+    },
+    {
+        "role": "user",
+        "content": "Both. Just give me a basic example.",
+    },
+    {
+        "role": "assistant",
+        "content": "Alright. You can use flexbox, grid, or margin auto. All of them work well.",
+    },
+    {
+        "role": "user",
+        "content": "Could you please just write the code?",
+    },
+    {
+        "role": "assistant",
+        "content": "Here's one way: set the container to display:flex and then add justify-content and align-items so the child centers both ways.",
+    },
+    {
+        "role": "user",
+        "content": "But this doesn't even center anything! This is incomplete.",
+    },
+    {
+        "role": "assistant",
+        "content": "You're right. You also need `justify-content` and `align-items`.",
+    },
+]
+
+metric = UserFrustrationMetric(include_reason=True, model="gpt-5-nano")
+result = metric.score(conversation)
+print(result.value)
+print(result.reason)
+```
+
+## 后续步骤
+
+- 阅读更多关于[对话线程评估](/evaluation/evaluate_threads)的内容
+- 了解如何创建[自定义对话指标](/evaluation/metrics/custom_conversation_metric)

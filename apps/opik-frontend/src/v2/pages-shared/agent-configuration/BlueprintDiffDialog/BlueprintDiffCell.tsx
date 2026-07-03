@@ -1,5 +1,6 @@
 import React from "react";
 import { GitCommitVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import usePromptByCommit from "@/api/prompts/usePromptByCommit";
@@ -83,6 +84,7 @@ export const ValueCellContent: React.FC<{
   diffText: string;
   mode: DiffMode;
 }> = ({ baseText, diffText, mode }) => {
+  const { t } = useTranslation("agent-optimization");
   if (mode === "changed") {
     return (
       <div className={valueBoxClass(mode)}>
@@ -106,7 +108,7 @@ export const ValueCellContent: React.FC<{
         tokenText(mode),
       )}
     >
-      {text || <span className="italic text-muted-slate">(empty)</span>}
+      {text || <span className="italic text-muted-slate">{t("agentOptimization.diffCell.empty")}</span>}
     </div>
   );
 };
@@ -139,6 +141,7 @@ export const PromptCellContent: React.FC<{
   diff: PromptSide;
   mode: DiffMode;
 }> = ({ base, diff, mode }) => {
+  const { t } = useTranslation("agent-optimization");
   const { data: basePrompt, isLoading: baseLoading } = usePromptByCommit(
     { commitId: base.commit },
     { enabled: !!base.commit && base.template === undefined },
@@ -200,7 +203,7 @@ export const PromptCellContent: React.FC<{
           {mode === "changed" ? (
             <TextDiff content1={baseText} content2={diffText} mode="words" />
           ) : (
-            text || <span className="italic text-muted-slate">(empty)</span>
+            text || <span className="italic text-muted-slate">{t("agentOptimization.diffCell.empty")}</span>
           )}
         </div>
       </div>

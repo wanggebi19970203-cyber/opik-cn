@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
 import { Button } from "@/ui/button";
@@ -38,6 +39,7 @@ const AddTestSuiteItemPanelContent: React.FC<{
   onClose: () => void;
   onOpenSettings: () => void;
 }> = ({ columns, onClose, onOpenSettings }) => {
+  const { t } = useTranslation("test-suite-items");
   const [tags, setTags] = useState<string[]>([]);
 
   const addItem = useAddItem();
@@ -100,7 +102,7 @@ const AddTestSuiteItemPanelContent: React.FC<{
     <>
       <div className="flex size-full flex-col">
         <div className="shrink-0 border-b bg-background p-6 pb-4">
-          <div className="comet-body-accented">Add suite item</div>
+          <div className="comet-body-accented">{t("addItemPanel.addSuiteItem")}</div>
           <TagListRenderer
             tags={tags}
             onAddTag={(tag) => setTags((prev) => [...prev, tag])}
@@ -137,7 +139,7 @@ const AddTestSuiteItemPanelContent: React.FC<{
               }
             }}
           >
-            Cancel
+            {t("addItemPanel.cancel")}
           </Button>
           <Button
             variant="default"
@@ -145,7 +147,7 @@ const AddTestSuiteItemPanelContent: React.FC<{
             type="submit"
             form={ADD_SUITE_ITEM_FORM_ID}
           >
-            Save changes
+            {t("addItemPanel.saveChanges")}
           </Button>
         </div>
       </div>
@@ -155,10 +157,10 @@ const AddTestSuiteItemPanelContent: React.FC<{
         setOpen={() => cancel()}
         onConfirm={cancel}
         onCancel={confirm}
-        title="Discard changes?"
-        description="You have unsaved changes. Do you want to discard them and close?"
-        confirmText="Keep editing"
-        cancelText="Discard changes"
+        title={t("addItemPanel.discardChangesTitle")}
+        description={t("addItemPanel.discardChangesDescription")}
+        confirmText={t("addItemPanel.keepEditing")}
+        cancelText={t("addItemPanel.discardChanges")}
         confirmButtonVariant="default"
       />
     </>

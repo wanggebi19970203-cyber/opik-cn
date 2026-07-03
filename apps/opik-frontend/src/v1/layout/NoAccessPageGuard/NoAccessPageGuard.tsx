@@ -1,4 +1,5 @@
 import { Outlet, useRouter } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import useAppStore from "@/store/AppStore";
 import NoData from "@/shared/NoData/NoData";
 import { Button } from "@/ui/button";
@@ -12,12 +13,14 @@ interface NoAccessPageGuardProps {
 
 const NoAccessPageGuard: React.FC<NoAccessPageGuardProps> = ({
   canViewPage,
-  resourceName = "this resource",
+  resourceName,
   message,
   children,
 }) => {
+  const { t } = useTranslation("navigation");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const router = useRouter();
+  const resolvedResourceName = resourceName ?? t("noAccess.thisResource");
 
   if (!canViewPage) {
     const routerState = router.state;
@@ -39,17 +42,17 @@ const NoAccessPageGuard: React.FC<NoAccessPageGuardProps> = ({
     return (
       <NoData
         icon={<div className="comet-title-m mb-1 text-foreground">403</div>}
-        title="Access denied"
+        title={t("noAccess.accessDenied")}
         message={
           message ??
-          `You don't have permissions to view ${resourceName} in this workspace.`
+          t("noAccess.noPermissionsForResource", { resource: resolvedResourceName })
         }
       >
         <div className="flex gap-2 pt-5">
-          <Button onClick={handleGoHome}>Go to home</Button>
+          <Button onClick={handleGoHome}>{t("noAccess.goToHome")}</Button>
           {canGoBack && (
             <Button variant="outline" onClick={handleGoBack}>
-              Go back
+              {t("noAccess.goBack")}
             </Button>
           )}
         </div>

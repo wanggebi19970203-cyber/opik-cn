@@ -1,0 +1,103 @@
+{
+  "compareExperiments": {
+    "title": "比较实验",
+    "description": "并排比较实验结果",
+    "tabs": {
+      "experimentItems": "实验项目",
+      "insights": "洞察",
+      "configuration": "配置",
+      "feedbackScores": "反馈分数"
+    },
+    "metrics": {
+      "score": "分数",
+      "latency": "延迟",
+      "cost": "成本"
+    },
+    "actions": {
+      "exportDisabled": "此安装的导出功能已禁用",
+      "evaluate": "评估"
+    },
+    "dialog": {
+      "title": "比较实验",
+      "searchPlaceholder": "按名称搜索",
+      "noSearchResults": "无搜索结果",
+      "cancel": "取消",
+      "compareCount": "比较 {{count}} 个{{type}}",
+      "selectExperiment": "选择实验"
+    },
+    "details": {
+      "backToExperiments": "返回实验列表",
+      "compareCount": "比较 ({{count}})",
+      "baselineOf": "基准",
+      "comparedAgainst": "对比",
+      "testSuite": "测试套件",
+      "dataset": "数据集",
+      "prompt": "提示词",
+      "experimentLogs": "实验日志",
+      "passRate": "{{rate}}% 通过率",
+      "deletedTestSuite": "已删除的测试套件",
+      "goToPrompt": "前往 {{name}}",
+      "goToTraces": "前往 traces",
+      "viewAllTraces": "查看此实验的所有 traces"
+    },
+    "viewer": {
+      "noRelatedTrace": "未找到相关 trace",
+      "traceDeletedMessage": "该 trace 可能已被删除或未创建",
+      "openTraceTooltip": "点击打开原始 trace",
+      "trace": "Trace"
+    },
+    "comments": {
+      "title": "评论"
+    },
+    "dataset": {
+      "testSuiteItem": "测试套件项目",
+      "viewInTestSuite": "在测试套件中查看",
+      "viewItemTooltip": "在测试套件中查看此项目",
+      "keys": "键",
+      "selectedCount": "已选择 {{selected}} / {{total}}",
+      "media": "媒体",
+      "selectedData": "已选数据"
+    },
+    "configuration": {
+      "name": "名称",
+      "noSearchResults": "无搜索结果",
+      "noConfigMultiple": "这些实验没有配置",
+      "noConfigSingle": "此实验没有配置",
+      "searchPlaceholder": "按名称搜索",
+      "showDifferencesOnly": "仅显示差异"
+    },
+    "feedbackScores": {
+      "scoreName": "反馈分数",
+      "noScoresMultiple": "这些实验没有反馈分数",
+      "noScoresSingle": "此实验没有反馈分数"
+    },
+    "items": {
+      "itemId": "项目 ID",
+      "testSuiteItemId": "ID (测试套件项目)",
+      "datasetItemId": "数据集项目 ID",
+      "duration": "持续时间",
+      "comments": "评论",
+      "evaluationTask": "评估任务",
+      "feedbackScores": "反馈分数",
+      "noData": "所选实验没有数据",
+      "selectScore": "选择分数",
+      "totalTokens": "总 token 数",
+      "estimatedCost": "预估成本",
+      "testSuite": "测试套件",
+      "dataset": "数据集",
+      "experiments": "实验",
+      "name": "名称",
+      "evaluationTaskLastTrial": "评估任务（最后一次尝试）",
+      "result": "结果",
+      "output": "输出",
+      "searchTestSuiteItems": "搜索测试套件项目",
+      "searchDatasetItems": "搜索数据集项目"
+    },
+    "experiment": "个实验",
+    "experiments": "个实验",
+    "panel": {
+      "idCopiedToClipboard": "ID 已成功复制到剪贴板",
+      "copyId": "复制 ID"
+    }
+  }
+}

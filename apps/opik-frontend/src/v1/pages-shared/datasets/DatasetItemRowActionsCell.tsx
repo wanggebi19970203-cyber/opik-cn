@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { CellContext } from "@tanstack/react-table";
 import { MoreHorizontal, Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -18,6 +19,7 @@ import { useDatasetItemDeletePreference } from "./hooks/useDatasetItemDeletePref
 export const DatasetItemRowActionsCell: React.FC<
   CellContext<DatasetItem, unknown>
 > = (context) => {
+  const { t } = useTranslation("datasets");
   const datasetItem = context.row.original;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [dontAskAgain] = useDatasetItemDeletePreference();
@@ -50,14 +52,14 @@ export const DatasetItemRowActionsCell: React.FC<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t('actionsMenu')}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
             <Trash className="mr-2 size-4" />
-            Delete
+            {t('delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

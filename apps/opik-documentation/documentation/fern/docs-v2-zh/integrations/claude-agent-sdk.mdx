@@ -1,0 +1,107 @@
+---
+description: 配置 Claude Code 遥测和 OTLP 导出设置，明确信号类型及与 Opik 的兼容性说明。
+headline: Claude Agent SDK | Opik 文档
+og:description: Claude 遥测通过环境变量配置；本指南说明 Opik 端点模式和信号注意事项。
+og:site_name: Opik 文档
+og:title: Claude Agent SDK 集成 - Opik
+title: 使用 Opik 实现 Claude Agent SDK 的可观测性
+---
+
+Claude Code 遥测通过环境变量进行配置。
+
+## 适用场景
+
+当您需要配置 Claude Code 的官方 OpenTelemetry 设置，并将端点/请求头值与您的 Opik 部署模式对齐时，请使用本指南。
+
+<Callout type="warning">
+Claude Code 的监控文档目前描述的是 OTel <b>指标(metrics)</b> 和 <b>事件/日志(events/logs)</b> 导出器。Opik 的追踪视图基于跨度(span)。如果您的目标是在 Opik 中进行追踪可视化，请确认您的管道能够发出跨度数据。
+</Callout>
+
+## Opik OTLP 端点模式
+
+有关端点/请求头的完整详情，请参阅 [Opik OpenTelemetry 概述](/integrations/opentelemetry)。
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需的请求头：
+        - `Authorization`
+        - `Comet-Workspace`
+
+        可选的请求头：
+        - `projectName`（推荐用于确定性路由）
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=<your-workspace>,projectName=<your-project-name>'
+        ```
+
+        必需的请求头：
+        - `Authorization`
+        - `Comet-Workspace`
+
+        可选的请求头：
+        - `projectName`
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+        必需的请求头：
+        - 默认无（取决于您的认证配置）
+
+        可选的请求头：
+        - `projectName`（推荐）
+        - 如果您的实例启用了认证，则需要认证请求头
+    </Tab>
+</Tabs>
+
+## Claude 遥测配置（官方模式）
+
+目的：
+启用 Claude Code 遥测，并将支持的 OTel 信号路由到您的收集器/后端。
+
+适用条件：
+您通过环境变量启用遥测来运行 Claude Code。
+
+必需字段：
+- `CLAUDE_CODE_ENABLE_TELEMETRY=1`
+- 至少一个导出器（`OTEL_METRICS_EXPORTER` 或 `OTEL_LOGS_EXPORTER`）
+
+可选字段：
+- `OTEL_EXPORTER_OTLP_PROTOCOL`
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `OTEL_EXPORTER_OTLP_HEADERS`
+- 每个信号的单独覆盖，例如 `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`
+
+最小有效配置：
+
+```bash wordWrap
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_METRICS_EXPORTER=otlp
+export OTEL_LOGS_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+# 如果您的收集器/导出路径需要认证，则此项为可选
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer <token>"
+claude
+```
+
+## 验证
+
+1. 启用遥测并启动 Claude。
+2. 确认您的 OTLP 后端接收到 `claude_code.*` 指标/事件。
+3. 如果目标是 Opik 追踪视图，请验证您的管道发出了跨度数据；仅凭指标/日志不会显示为追踪。
+
+## 参考资料
+
+- [Claude Code 监控（官方）](https://code.claude.com/docs/en/monitoring-usage)
+- [Opik OpenTelemetry 概述](/integrations/opentelemetry)
+- [OpenTelemetry SDK 环境变量](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/)

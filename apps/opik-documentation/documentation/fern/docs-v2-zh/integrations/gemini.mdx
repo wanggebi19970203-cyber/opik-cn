@@ -1,0 +1,253 @@
+---
+description: 从这里开始将 Opik 集成到您的 Google Gemini 生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Gemini | Opik 文档
+og:description: 了解如何使用 Google VertexAI 将 Gemini 模型与 Opik 集成，以增强 AI 开发和模型追踪能力。
+og:site_name: Opik 文档
+og:title: VertexAI 中的 Gemini 模型 - Opik 集成
+title: 使用 Opik 实现 Google Gemini（Python）的可观测性
+---
+
+[Gemini](https://aistudio.google.com/welcome) 是由 Google DeepMind 开发的多模态大语言模型系列。
+
+## VertexAI 支持
+
+Opik 同时支持 [Google VertexAI](https://cloud.google.com/vertex-ai?hl=en)，这是 Google 的全托管 AI 开发平台，通过 `google-genai` 包提供对 Gemini 模型的访问。使用 VertexAI 时，您可以使用相同的 `track_genai` 包装器配合为 VertexAI 配置的 `google-genai` 客户端，无论您使用的是直接的 Google AI API 还是通过 VertexAI 企业平台，都可以追踪和监控您的 Gemini 模型调用。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=gemini&utm_campaign=opik) 提供了 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=gemini&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=gemini&utm_campaign=opik) 了解更多信息。
+
+## 快速开始
+
+### 安装
+
+首先，确保您已安装 `opik` 和 `google-genai` 包：
+
+```bash
+pip install opik google-genai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业** 设置
+- **配置文件** 和环境变量
+
+### 配置 Gemini
+
+要配置 Gemini，您需要拥有 Gemini API 密钥。请参阅[以下文档页面](https://ai.google.dev/gemini-api/docs/api-key)了解如何获取。
+
+您可以将其设置为环境变量：
+
+```bash
+export GOOGLE_API_KEY="YOUR_API_KEY"
+```
+
+或者在代码中设置：
+
+```python
+import os
+import getpass
+
+if "GOOGLE_API_KEY" not in os.environ:
+    os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Gemini API key: ")
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，您需要使用 `track_genai` 包装 Gemini 客户端。使用包装后的客户端进行调用时，所有调用都将被记录到 Opik：
+
+```python
+from google import genai
+from opik.integrations.genai import track_genai
+
+os.environ["OPIK_PROJECT_NAME"] = "gemini-integration-demo"
+
+client = genai.Client()
+gemini_client = track_genai(client)
+
+prompt = """
+Write a short two sentence story about Opik.
+"""
+
+response = gemini_client.models.generate_content(
+    model="gemini-2.0-flash-001", contents=prompt
+)
+print(response.text)
+```
+
+<Frame>
+  <img src="/img/cookbook/gemini_trace_cookbook.png" />
+</Frame>
+
+## 与 VertexAI 一起使用
+
+要将 Opik 与 VertexAI 一起使用，请为 VertexAI 配置 `google-genai` 客户端并使用 `track_genai` 包装：
+
+```python
+from google import genai
+from opik.integrations.genai import track_genai
+
+# Configure for VertexAI
+PROJECT_ID = "your-project-id"
+LOCATION = "us-central1"
+
+client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+vertexai_client = track_genai(client)
+
+# Set project name for organization
+os.environ["OPIK_PROJECT_NAME"] = "vertexai-integration-demo"
+
+# Use the wrapped client
+response = vertexai_client.models.generate_content(
+    model="gemini-2.0-flash-001",
+    contents="Write a short story about AI observability."
+)
+print(response.text)
+```
+
+<Frame>
+  <img src="/img/cookbook/vertexai_trace_cookbook.png" />
+</Frame>
+
+## 高级用法
+
+### 与 `@track` 装饰器一起使用
+
+如果您的 LLM 管道中有多个步骤，可以使用 `@track` 装饰器记录每个步骤的追踪。如果在这些步骤中调用了 Gemini，LLM 调用将与相应的步骤关联：
+
+```python
+from opik import track
+
+@track
+def generate_story(prompt):
+    response = gemini_client.models.generate_content(
+        model="gemini-2.0-flash-001", contents=prompt
+    )
+    return response.text
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    response = gemini_client.models.generate_content(
+        model="gemini-2.0-flash-001", contents=prompt
+    )
+    return response.text
+
+@track
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+# Execute the multi-step pipeline
+generate_opik_story()
+```
+
+现在可以在 UI 中查看追踪，层级化的 span 显示了不同步骤之间的关系：
+
+<Frame>
+  <img src="/img/cookbook/gemini_trace_decorator_cookbook.png" />
+</Frame>
+
+## 多模态内容附件
+
+`track_genai` 包装器会自动将多模态内容部分（图像、音频、视频）记录为追踪中的附件。当您向 Gemini 模型发送图像或其他媒体时，它们会被捕获并可直接在 Opik UI 中与追踪数据一起查看。
+
+这使得以下操作变得简单：
+- 审查发送给模型的确切媒体内容
+- 调试多模态提示
+- 审计模型输入以确保合规性
+
+## 视频生成（Veo）
+
+`track_genai` 包装器还支持 Google 的 Veo 视频生成 API。当您生成视频时，Opik 会自动追踪视频创建过程，并在保存时将生成的视频记录为附件。
+
+```python
+import os
+import time
+import opik
+from opik import track, opik_context
+from opik.integrations.genai import track_genai
+import google.genai as genai
+from google.genai.types import HttpOptions, GenerateVideosConfig
+
+os.environ["OPIK_PROJECT_NAME"] = "genai-video-demo"
+
+# Configure for VertexAI (required for Veo)
+client = genai.Client(
+    vertexai=True,
+    http_options=HttpOptions(api_version="v1"),
+)
+genai_client = track_genai(client)
+
+
+@track
+def generate_video(
+    prompt: str,
+    number_of_videos: int = 1,
+    duration_seconds: int = 4,
+    resolution: str = "720p",
+    generate_audio: bool = False,
+) -> dict:
+    """Generate a video using Google's Veo model."""
+    # Create video
+    operation = genai_client.models.generate_videos(
+        model="veo-3.1-fast-generate-preview",
+        prompt=prompt,
+        config=GenerateVideosConfig(
+            duration_seconds=duration_seconds,
+            resolution=resolution,
+            generate_audio=generate_audio,
+            number_of_videos=number_of_videos,
+        ),
+    )
+
+    # Wait for completion
+    with opik.start_as_current_span(name="wait_for_completion") as span:
+        while not operation.done:
+            time.sleep(10)
+            operation = genai_client.operations.get(operation)
+            result = {"name": operation.name, "done": operation.done}
+            opik_context.update_current_span(output=result)
+
+    # Download all videos if generation succeeded
+    if operation.response and operation.response.generated_videos:
+        output_paths = []
+        for i, generated_video in enumerate(operation.response.generated_videos):
+            output_path = f"output_video_{i}.mp4"
+            generated_video.video.save(output_path)
+            output_paths.append(output_path)
+        result["output_paths"] = output_paths
+
+    return result
+
+
+# Generate videos
+generate_video("A golden retriever playing in the snow", number_of_videos=2)
+```
+
+追踪将显示完整的视频生成工作流程，包括视频创建、轮询以及作为附件的生成视频：
+
+<Frame>
+  <img src="/img/tracing/google_genai_veo_trace.png" />
+</Frame>
+
+## 成本追踪
+
+`track_genai` 包装器会自动追踪所有支持的 Google AI 模型的 token 使用量和成本。
+
+成本信息会自动捕获并显示在 Opik UI 中，包括：
+
+- Token 使用详情
+- 基于 Google AI 定价的每请求成本
+- 总追踪成本
+
+<Tip>
+  在[支持的模型](/tracing/advanced/cost_tracking)页面上查看支持的模型和提供商的完整列表。
+</Tip>

@@ -1,0 +1,290 @@
+---
+description: 描述如何为 Opik 的内置 LLM as a Judge 指标使用自定义模型
+headline: 自定义模型 | Opik 文档
+og:description: 了解如何利用 Opik 的模型无关指标进行 LLM 评估，借助 LiteLLM 库增强灵活性。
+og:site_name: Opik 文档
+og:title: 自定义模型指标 - Opik
+title: 自定义模型
+toc_max_heading_level: 4
+---
+
+Opik 提供了一组 LLM as a Judge 指标，这些指标设计为模型无关，可与任何 LLM 配合使用。为此，我们使用 [LiteLLM 库](https://github.com/BerriAI/litellm) 来抽象 LLM 调用。
+
+默认情况下，Opik 使用 `gpt-5-nano` 模型。但是，您可以在初始化指标时通过设置 `model` 参数更改为 [LiteLLM](https://docs.litellm.ai/docs/providers) 支持的任何模型：
+
+```python
+from opik.evaluation.metrics import Hallucination
+
+hallucination_metric = Hallucination(
+    model="gpt-4o-mini"
+)
+```
+
+## 使用 LiteLLM 支持的模型
+
+要使用 LiteLLM 支持的多种模型，您还需要传递额外的参数。为此，您可以使用 [LiteLLMChatModel](https://www.comet.com/docs/opik/python-sdk-reference/Objects/LiteLLMChatModel.html) 类并将其传递给指标：
+
+```python
+from opik.evaluation.metrics import Hallucination
+from opik.evaluation import models
+
+model = models.LiteLLMChatModel(
+    model_name="<model_name>"
+)
+
+hallucination_metric = Hallucination(
+    model=model
+)
+```
+
+## 使用 OpenAI 兼容的提供商
+
+许多 LLM 提供商（如 SiliconFlow、Together AI、Groq 等）提供的 API 与 OpenAI API 格式兼容。您可以通过 LiteLLM 的 [`openai/` 提供商前缀](https://docs.litellm.ai/docs/providers/openai_compatible) 并设置相应的环境变量，在 Opik 的 LLM-as-a-Judge 指标中使用这些提供商。
+
+当您的提供商已支持 OpenAI API 格式时，这比[创建自定义模型类](#创建自定义模型类)更简单。
+
+将 `OPENAI_API_KEY` 设置为提供商的 API 密钥，将 `OPENAI_BASE_URL` 设置为提供商的 API 端点，然后在指定模型名称时使用 `openai/` 前缀：
+
+```python
+import os
+from opik.evaluation.metrics import Hallucination
+
+# 配置 OpenAI 兼容提供商
+os.environ["OPENAI_API_KEY"] = "your-provider-api-key"
+os.environ["OPENAI_BASE_URL"] = "https://api.your-provider.com/v1"
+
+# 使用 openai/ 前缀和提供商的模型名称
+hallucination_metric = Hallucination(
+    model="openai/your-model-name"
+)
+
+score = hallucination_metric.score(
+    input="What is the capital of France?",
+    output="The capital of France is Paris, a city known for its iconic Eiffel Tower.",
+    context=["Paris is the capital and most populous city of France."]
+)
+print(f"Hallucination score: {score.value}")
+```
+
+`openai/` 前缀告诉 LiteLLM 使用配置的基础 URL 以 OpenAI 兼容的 API 格式进行调用。这种方法适用于任何接受 `model` 参数的指标，包括 `Hallucination`、`Moderation`、`AnswerRelevance` 等。
+
+有关支持的提供商和配置选项的完整列表，请参阅 [LiteLLM OpenAI 兼容提供商文档](https://docs.litellm.ai/docs/providers/openai_compatible)。
+
+## 创建自定义模型类
+
+Opik 的 LLM-as-a-Judge 指标（如 [`Hallucination`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/Hallucination.html)）设计为可与各种语言模型配合使用。虽然 Opik 通过 LiteLLM 开箱即用地支持多种模型，但您可以通过创建自定义模型类来集成任何 LLM。这涉及子类化 [`opik.evaluation.models.OpikBaseModel`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/OpikBaseModel.html#opik.evaluation.models.OpikBaseModel) 并实现其必需的方法。
+
+### [`OpikBaseModel`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/OpikBaseModel.html#opik.evaluation.models.OpikBaseModel) 接口
+
+[`OpikBaseModel`](https://www.comet.com/docs/opik/python-sdk-reference/Objects/OpikBaseModel.html#opik.evaluation.models.OpikBaseModel) 是一个抽象基类，定义了 Opik 指标与 LLM 交互的接口。要创建兼容的自定义模型，您必须实现以下方法：
+
+1.  `__init__(self, model_name: str)`:
+    使用给定的模型名称初始化基础模型。
+2.  `generate_string(self, input: str, **kwargs: Any) -> str`:
+    从模型生成字符串输出的简化接口。
+3.  `generate_provider_response(self, **kwargs: Any) -> Any`:
+    生成提供商特定的响应。可用于与底层模型提供商（如 OpenAI、Anthropic）交互并获取原始输出。
+
+### 为 OpenAI 兼容 API 实现自定义模型
+
+以下是与暴露 OpenAI 兼容 API 端点的 LLM 服务交互的自定义模型类示例。
+
+```python
+import requests
+from typing import Any
+
+from opik.evaluation.models import OpikBaseModel
+
+class CustomOpenAICompatibleModel(OpikBaseModel):
+    def __init__(self, model_name: str, api_key: str, base_url: str):
+        super().__init__(model_name)
+        self.api_key = api_key
+        self.base_url = base_url # e.g., "https://api.openai.com/v1/chat/completions"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def generate_string(self, input: str, **kwargs: Any) -> str:
+        """
+        This method is used as part of LLM as a Judge metrics to take a string prompt, pass it to
+        the model as a user message and return the model's response as a string.
+        """
+        conversation = [
+            {
+                "content": input,
+                "role": "user",
+            },
+        ]
+
+        provider_response = self.generate_provider_response(messages=conversation, **kwargs)
+        return provider_response["choices"][0]["message"]["content"]
+
+    def generate_provider_response(self, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
+        """
+        This method is used as part of LLM as a Judge metrics to take a list of AI messages, pass it to
+        the model and return the full model response.
+        """
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+        }
+
+        response = requests.post(self.base_url, headers=self.headers, json=payload)
+
+        response.raise_for_status()
+        return response.json()
+```
+
+**实现的关键注意事项：**
+
+- **API 端点和负载**：如果您的 LLM 提供商与常见的 OpenAI 结构不同，请调整 `base_url` 和 JSON 负载以匹配其要求。
+- **模型名称**：传递给 `__init__` 的 `model_name` 用作 API 调用中的 `model` 参数。请确保此名称与 LLM 服务上可用的模型匹配。
+
+### 将自定义模型与 [`Hallucination`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/Hallucination.html) 指标配合使用
+
+要使用自定义模型和 [`Hallucination`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/Hallucination.html) 指标运行评估，
+您首先需要实例化 `CustomOpenAICompatibleModel` 类并将其传递给 [`Hallucination`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/Hallucination.html) 类。
+然后可以通过调用 [`Hallucination.score()`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/Hallucination.html) 方法启动评估。
+
+```python
+from opik.evaluation.metrics import Hallucination
+
+# 确保这些设置安全，例如通过环境变量
+API_KEY = os.getenv("MY_CUSTOM_LLM_API_KEY")
+BASE_URL = "YOUR_LLM_CHAT_COMPLETIONS_ENDPOINT" # e.g., "https://api.openai.com/v1/chat/completions"
+MODEL_NAME = "your-model-name" # e.g., "gpt-3.5-turbo"
+
+# 初始化自定义模型
+my_custom_model = CustomOpenAICompatibleModel(
+    model_name=MODEL_NAME,
+    api_key=API_KEY,
+    base_url=BASE_URL
+)
+
+# 使用自定义模型初始化 Hallucination 指标
+hallucination_metric = Hallucination(
+    model=my_custom_model
+)
+
+# 示例用法：
+evaluation = hallucination_metric.score(
+    input="What is the capital of Mars?",
+    output="The capital of Mars is Ares City, a bustling metropolis.",
+    context=["Mars is a planet in our solar system. It does not currently have any established cities or a designated capital."]
+)
+print(f"Hallucination Score: {evaluation.value}") # Expected: 1.0 (hallucination detected)
+print(f"Reason: {evaluation.reason}")
+```
+
+**实现的关键注意事项：**
+
+- **ScoreResult 输出**：[`Hallucination.score()`](https://www.comet.com/docs/opik/python-sdk-reference/evaluation/metrics/Hallucination.html) 返回一个 ScoreResult 对象，包含指标名称（`name`）、分数值（`value`）、可选解释（`reason`）、元数据（`metadata`）和失败标志（`scoring_failed`）。
+
+## TypeScript：使用 Vercel AI SDK 模型
+
+TypeScript SDK 与 Vercel AI SDK 无缝集成，允许您直接将语言模型与 Opik 的评估指标配合使用。有关全面的模型配置（包括支持的提供商、生成参数和高级设置），请参阅[模型参考](/reference/typescript-sdk/evaluation/models)。
+
+### 使用 OpikBaseModel 创建自定义模型
+
+对于不支持的 LLM 提供商，请实现 `OpikBaseModel` 接口：
+
+```typescript
+import { OpikBaseModel, OpikMessage } from "opik/evaluation/models";
+
+class CustomProviderModel extends OpikBaseModel {
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor(modelName: string, apiKey: string, baseUrl: string) {
+    super(modelName);
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
+  }
+
+  async generateString(input: string): Promise<string> {
+    // 将字符串输入转换为消息格式
+    const messages: OpikMessage[] = [
+      {
+        role: "user",
+        content: input,
+      },
+    ];
+
+    // 调用提供商 API
+    const response = await this.generateProviderResponse(messages);
+
+    // 从响应中提取文本
+    return response.choices[0].message.content;
+  }
+
+  async generateProviderResponse(messages: OpikMessage[]): Promise<unknown> {
+    // 向自定义提供商发送 API 请求
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.modelName,
+        messages: messages,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+}
+```
+
+### 使用自定义模型
+
+实现后，您可以像使用其他模型一样使用自定义模型：
+
+```typescript
+import { Hallucination } from "opik";
+import { evaluatePrompt } from "opik";
+
+// 初始化自定义模型
+const customModel = new CustomProviderModel(
+  "custom-model-v1",
+  process.env.CUSTOM_API_KEY!,
+  "https://api.custom-provider.com"
+);
+
+// 与指标配合使用
+const metric = new Hallucination({ model: customModel });
+
+const score = await metric.score({
+  input: "What is the capital of Mars?",
+  output: "The capital of Mars is Ares City, a bustling metropolis.",
+  context: [
+    "Mars is a planet in our solar system. It does not currently have any established cities or a designated capital.",
+  ],
+});
+
+console.log(`Hallucination Score: ${score.value}`); // Expected: 1.0 (hallucination detected)
+console.log(`Reason: ${score.reason}`);
+
+// 与 evaluatePrompt 配合使用
+await evaluatePrompt({
+  dataset,
+  messages: [{ role: "user", content: "{{input}}" }],
+  model: customModel,
+  scoringMetrics: [metric],
+});
+```
+
+### 最佳实践
+
+实现自定义模型时：
+
+1. **实现两个必需的方法**：确保自定义模型实现 `generateString()` 和 `generateProviderResponse()` 方法
+2. **优雅处理错误**：将 API 调用包装在 try-catch 块中，并提供有意义的错误消息
+3. **安全配置 API 密钥**：将 API 密钥存储在环境变量中，切勿硬编码
+
+有关标准模型用法和配置，请参阅[模型参考](/reference/typescript-sdk/evaluation/models)。

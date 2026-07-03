@@ -1,0 +1,189 @@
+---
+headline: 实验 | Opik 文档
+og:description: 通过将执行数据与数据集关联，使用 Opik 评估和比较 LLM 应用程序，实现结构化分析和性能追踪。
+og:site_name: Opik 文档
+og:title: Opik 中用于 LLM 性能评估的实验功能
+title: 实验
+---
+
+<Note>
+  在 Opik 2.0 中，实验是按项目划分作用域的。运行实验时请确保指定 `projectName`，以便将其关联到正确的项目。
+</Note>
+
+Opik 中的实验功能允许您将 trace（执行数据）与数据集条目关联，为评估和比较奠定基础。实验功能使您能够追踪、分析和比较 LLM 应用程序在不同版本、模型或配置下的性能表现。
+
+## 什么是实验？
+
+Opik 中的实验将 trace（LLM 执行记录）与数据集条目相关联，创建一种连接关系以支持结构化评估和分析。这种连接使您能够：
+
+- 使用相同数据集比较不同的 LLM 实现
+- 使用各种指标评估模型性能
+- 随时间追踪改进或退化情况
+- 分析不同版本的反馈评分
+
+## 创建和管理实验
+
+TypeScript SDK 通过 `OpikClient` 类提供了多种方法来创建和管理实验。
+
+### 获取实验
+
+```typescript
+// Get all experiments with a specific name
+const experiments = await opik.getExperimentsByName("my-experiment");
+
+// Get a single experiment by name (first match if multiple exist)
+const experiment = await opik.getExperiment("my-experiment");
+
+// Get all experiments associated with a dataset
+const datasetExperiments = await opik.getDatasetExperiments("my-dataset", 100); // Optional maxResults parameter (default: 100)
+```
+
+### 更新实验
+
+```typescript
+// Update experiment name
+await opik.updateExperiment("experiment-id", {
+  name: "Updated Experiment Name"
+});
+
+// Update experiment configuration
+await opik.updateExperiment("experiment-id", {
+  experimentConfig: {
+    model: "gpt-5",
+    temperature: 0.7,
+    promptTemplate: "Answer the following question: {question}"
+  }
+});
+
+// Update both name and configuration
+await opik.updateExperiment("experiment-id", {
+  name: "Updated Experiment Name",
+  experimentConfig: {
+    model: "gpt-5",
+    temperature: 0.7
+  }
+});
+```
+
+### 删除实验
+
+```typescript
+// Delete an experiment by ID
+await opik.deleteExperiment("experiment-id");
+```
+
+## 使用实验条目
+
+实验条目是将数据集条目与 trace 关联的核心组件。这些连接使您能够分析 LLM 应用程序在特定输入上的表现。
+
+### 创建实验条目
+
+```typescript
+import { ExperimentItemReferences } from "opik";
+
+// Get an existing experiment
+const experiment = await opik.getExperiment("my-experiment");
+
+// Create references between dataset items and traces
+const experimentItems = [
+  new ExperimentItemReferences({
+    datasetItemId: "dataset-item-1",
+    traceId: "trace-id-1",
+  }),
+  new ExperimentItemReferences({
+    datasetItemId: "dataset-item-2",
+    traceId: "trace-id-2",
+  }),
+];
+
+// Insert the experiment items
+await experiment.insert(experimentItems);
+```
+
+### 检索实验条目
+
+```typescript
+// Get all items in an experiment
+const allItems = await experiment.getItems();
+
+// Get a limited number of items
+const limitedItems = await experiment.getItems({ maxResults: 50 });
+
+// Get items with truncated data (improves performance for large datasets)
+const truncatedItems = await experiment.getItems({ truncate: true });
+```
+
+## 实验 URL
+
+获取在 Opik Web 界面中查看实验的 URL：
+
+```typescript
+const url = await experiment.getUrl();
+console.log(`View experiment at: ${url}`);
+```
+
+## 数据结构
+
+### Experiment
+
+表示 Opik 中将 trace 与数据集条目关联的实验：
+
+```typescript
+class Experiment {
+  readonly id: string; // Unique identifier of the experiment
+  readonly name?: string; // Optional name of the experiment
+  readonly datasetName: string; // Name of the dataset associated with the experiment
+
+  // Creates new experiment items by linking traces with dataset items
+  insert(experimentItemReferences: ExperimentItemReferences[]): Promise<void>;
+
+  // Retrieves experiment items with options for pagination and data truncation
+  getItems(options?: {
+    maxResults?: number; // Maximum number of items to retrieve
+    truncate?: boolean; // Whether to truncate large data fields
+  }): Promise<ExperimentItemContent[]>;
+
+  // Gets the URL to view the experiment in the Opik web interface
+  getUrl(): Promise<string>;
+}
+```
+
+### ExperimentItemReferences
+
+将数据集条目与 trace 关联的引用：
+
+```typescript
+interface ExperimentItemReferences {
+  readonly datasetItemId: string; // ID of the dataset item
+  readonly traceId: string; // ID of the trace
+}
+```
+
+### ExperimentItemContent
+
+实验条目的内容，包含评估数据和反馈评分：
+
+```typescript
+interface ExperimentItemContent {
+  readonly id?: string; // Experiment item ID
+  readonly datasetItemId: string; // Dataset item ID
+  readonly traceId: string; // Trace ID
+  readonly datasetItemData?: JsonListStringCompare; // Dataset item data
+  readonly evaluationTaskOutput?: JsonListStringCompare; // Evaluation task output
+  readonly feedbackScores: FeedbackScore[]; // Feedback scores for the item
+}
+```
+
+### FeedbackScore
+
+表示实验条目的反馈评分：
+
+```typescript
+interface FeedbackScore {
+  categoryName: string; // Category of the feedback
+  name: string; // Name of the feedback metric
+  reason?: string; // Optional reason for the score
+  value: number; // Score value
+  source: string; // Source of the feedback
+}
+```

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import get from "lodash/get";
 
 import useCompareExperimentsList from "@/api/datasets/useCompareExperimentsList";
@@ -15,6 +16,7 @@ interface PlaygroundTestSuiteLastRunOutputProps {
 const PlaygroundTestSuiteLastRunOutput: React.FunctionComponent<
   PlaygroundTestSuiteLastRunOutputProps
 > = ({ experimentId, datasetItemId, datasetId }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const { data } = useCompareExperimentsList(
@@ -73,7 +75,7 @@ const PlaygroundTestSuiteLastRunOutput: React.FunctionComponent<
   return (
     <div className="flex flex-col gap-1">
       {runCount > 1 && (
-        <span className="comet-body-s text-muted-gray">Output (last run):</span>
+        <span className="comet-body-s text-muted-gray">{t("playground.outputCell.outputLastRun")}</span>
       )}
       <MarkdownPreview>{output}</MarkdownPreview>
     </div>

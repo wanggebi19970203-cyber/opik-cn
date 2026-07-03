@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
@@ -23,8 +24,9 @@ const PageEmptyState: React.FC<PageEmptyStateProps> = ({
   primaryActionLabel,
   onPrimaryAction,
   docsUrl,
-  docsLabel = "View docs",
+  docsLabel,
 }) => {
+  const { t } = useTranslation();
   const { themeMode } = useTheme();
   const imageUrl = themeMode === THEME_MODE.DARK ? darkImageUrl : lightImageUrl;
 
@@ -46,7 +48,7 @@ const PageEmptyState: React.FC<PageEmptyStateProps> = ({
         {docsUrl && (
           <Button variant="secondary" size="sm" asChild>
             <a href={docsUrl} target="_blank" rel="noreferrer">
-              {docsLabel}
+              {docsLabel ?? t("common.buttons.viewDocs")}
               <ExternalLink className="ml-1.5 size-3.5" />
             </a>
           </Button>

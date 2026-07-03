@@ -5,6 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { Info, MessageCircleWarning } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -159,6 +160,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
   defaultScope,
   mode,
 }) => {
+  const { t } = useTranslation();
   const {
     permissions: { canUpdateOnlineEvaluationRules },
   } = usePermissions();
@@ -346,11 +348,11 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
   const isEdit = mode === "edit";
   const isClone = mode === "clone";
   const title = isEdit
-    ? "Edit rule"
+    ? t("common.automations.editRule")
     : isClone
-      ? "Clone evaluation rule"
-      : "Create a new rule";
-  const submitText = isEdit ? "Update rule" : "Create rule";
+      ? t("common.automations.cloneEvaluationRule")
+      : t("common.automations.createNewRule");
+  const submitText = isEdit ? t("common.automations.updateRule") : t("common.automations.createRule");
 
   const isCodeMetricEditBlock = !isCodeMetricEnabled && !isLLMJudge && isEdit;
 
@@ -523,7 +525,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                     ]);
                     return (
                       <FormItem>
-                        <Label>Name</Label>
+                        <Label>{t("common.labels.name")}</Label>
                         <FormControl>
                           <Input
                             className={cn({
@@ -531,7 +533,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                                 validationErrors?.message,
                               ),
                             })}
-                            placeholder="Rule name"
+                            placeholder={t("common.automations.ruleName")}
                             {...field}
                           />
                         </FormControl>
@@ -551,7 +553,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
 
                       return (
                         <FormItem className="min-w-0 flex-1">
-                          <Label>Projects</Label>
+                          <Label>{t("common.automations.projects")}</Label>
                           <FormControl>
                             <ProjectsSelectBox
                               align="start"
@@ -579,8 +581,8 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                       render={({ field }) => (
                         <FormItem className="min-w-0 flex-1">
                           <Label className="flex items-center">
-                            Scope{" "}
-                            <TooltipWrapper content="Choose whether the evaluation rule scores the entire thread, each individual trace, or each span. Thread-level rules assess the full conversation, trace-level rules evaluate one model response at a time, and span-level rules evaluate individual operations within a trace.">
+                            {t("common.annotationQueues.scope")}{" "}
+                            <TooltipWrapper content={t("common.automations.scopeTooltip")}>
                               <Info className="ml-1 size-4 text-light-slate" />
                             </TooltipWrapper>
                           </Label>
@@ -591,7 +593,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                               disabled={isEdit}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select scope" />
+                                <SelectValue placeholder={t("common.automations.selectScope")} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value={EVALUATORS_RULE_SCOPE.trace}>
@@ -629,10 +631,10 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                           htmlFor="enabled"
                           className="text-sm font-medium"
                         >
-                          Enable rule
+                          {t("common.automations.enableRule")}
                         </Label>
                         <Description>
-                          Enable or disable this evaluation rule
+                          {t("common.automations.enableRuleDescription")}
                         </Description>
                       </div>
                       <FormControl>
@@ -652,7 +654,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                     name="uiType"
                     render={({ field }) => (
                       <FormItem>
-                        <Label>Type</Label>
+                        <Label>{t("common.labels.type")}</Label>
                         <FormControl>
                           <div className="flex">
                             <ToggleGroup
@@ -687,18 +689,18 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                             >
                               <ToggleGroupItem
                                 value={UI_EVALUATORS_RULE_TYPE.llm_judge}
-                                aria-label="LLM-as-judge"
+                                aria-label={t("common.automations.llmAsJudge")}
                               >
-                                LLM-as-judge
+                                {t("common.automations.llmAsJudge")}
                               </ToggleGroupItem>
                               {isCodeMetricEnabled &&
                                 (!isSpanScope ||
                                   (isSpanScope && isSpanPythonCodeEnabled)) && (
                                   <ToggleGroupItem
                                     value={UI_EVALUATORS_RULE_TYPE.python_code}
-                                    aria-label="Code metric"
+                                    aria-label={t("common.automations.codeMetric")}
                                   >
-                                    Code metric
+                                    {t("common.automations.codeMetric")}
                                   </ToggleGroupItem>
                                 )}
                             </ToggleGroup>
@@ -740,10 +742,10 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
           </DialogAutoScrollBody>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t("common.automations.cancel")}</Button>
             </DialogClose>
             {isCodeMetricEditBlock ? (
-              <TooltipWrapper content="Code metric cannot be updated. This feature is not available for this environment">
+              <TooltipWrapper content={t("common.automations.codeMetricCannotBeUpdated")}>
                 <span>
                   <Button type="submit" disabled>
                     {submitText}
@@ -764,11 +766,10 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
         setOpen={setIsOpen}
         onCancel={cancel}
         onConfirm={confirm}
-        title="You’re about to lose your changes"
-        description={`If you change the evaluation scope, your current rule settings — including prompt, model, and variable mappings — will be reset.
-Are you sure you want to continue?`}
-        cancelText="Cancel"
-        confirmText="Reset and continue"
+        title={t("common.automations.youReAboutToLoseChanges")}
+        description={t("common.automations.loseChangesDescription")}
+        cancelText={t("common.buttons.cancel")}
+        confirmText={t("common.automations.resetAndContinue")}
       />
     </>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Tag, Trash } from "lucide-react";
 import slugify from "slugify";
 import { Button } from "@/ui/button";
@@ -35,6 +36,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
   projectName,
   projectId,
 }) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const [open, setOpen] = useState<boolean | number>(false);
 
@@ -86,9 +88,9 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
           open={open === 2}
           setOpen={setOpen}
           onConfirm={deleteTracesHandler}
-          title="Delete traces"
-          description="Deleting these traces will also remove their data from related experiment samples. This action cannot be undone. Are you sure you want to continue?"
-          confirmText="Delete traces"
+          title={t("tracing.actions.deleteTraces")}
+          description={t("tracing.actions.deleteTracesDescription")}
+          confirmText={t("tracing.actions.deleteTraces")}
           confirmButtonVariant="destructive"
         />
       )}
@@ -121,7 +123,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
         dataType={type === TRACE_DATA_TYPE.traces ? "traces" : "spans"}
       />
       {canLogTraceSpanThread && (
-        <TooltipWrapper content="Manage tags">
+        <TooltipWrapper content={t("tracing.actions.manageTags")}>
           <Button
             variant="outline"
             size="icon-sm"
@@ -151,12 +153,12 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
         generateFileName={generateFileName}
         tooltipContent={
           !isExportEnabled
-            ? "Export functionality is disabled for this installation"
+            ? t("tracing.actions.exportDisabled")
             : undefined
         }
       />
       {type === TRACE_DATA_TYPE.traces && canDeleteTraces && (
-        <TooltipWrapper content="Delete">
+        <TooltipWrapper content={t("tracing.actions.delete")}>
           <Button
             variant="outline"
             size="icon-sm"

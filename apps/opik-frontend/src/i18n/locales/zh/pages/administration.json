@@ -1,0 +1,16 @@
+{
+  "administration": {
+    "title": "管理",
+    "description": "管理用户和工作空间设置",
+    "users": {
+      "title": "用户",
+      "invite": "邀请用户",
+      "roles": "角色"
+    },
+    "workspace": {
+      "title": "工作空间",
+      "settings": "设置",
+      "members": "成员"
+    }
+  }
+}

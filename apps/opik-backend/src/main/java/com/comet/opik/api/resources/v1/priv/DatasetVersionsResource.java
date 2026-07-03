@@ -41,8 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.UUID;
 
 /**
- * Sub-resource for dataset version operations.
- * Handles all endpoints under /datasets/{id}/versions
+ * 数据集版本操作的子资源。
+ * 处理 /datasets/{id}/versions 下的所有端点
  */
 @Slf4j
 @Produces(MediaType.APPLICATION_JSON)
@@ -55,9 +55,9 @@ public class DatasetVersionsResource {
     private final @NonNull FeatureFlags featureFlags;
 
     @GET
-    @Operation(operationId = "listDatasetVersions", summary = "List dataset versions", description = "Get paginated list of versions for a dataset, ordered by creation time (newest first)", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset versions", content = @Content(schema = @Schema(implementation = DatasetVersionPage.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "listDatasetVersions", summary = "列出数据集版本", description = "获取数据集的分页版本列表，按创建时间排序（最新优先）", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集版本列表", content = @Content(schema = @Schema(implementation = DatasetVersionPage.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @JsonView(DatasetVersion.View.Public.class)
     public Response listVersions(
@@ -78,10 +78,10 @@ public class DatasetVersionsResource {
 
     @POST
     @Path("/retrieve")
-    @Operation(operationId = "retrieveDatasetVersion", summary = "Retrieve dataset version by name", description = "Get a specific version by its version name (e.g., 'v1', 'v373'). This is more efficient than paginating through all versions for large datasets.", responses = {
-            @ApiResponse(responseCode = "200", description = "Dataset version", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Version not found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+    @Operation(operationId = "retrieveDatasetVersion", summary = "根据名称获取数据集版本", description = "通过版本名称获取特定版本（如 'v1'、'v373'）。对于大型数据集，此方式比分页遍历所有版本更高效。", responses = {
+            @ApiResponse(responseCode = "200", description = "数据集版本", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
     })
     @RateLimited
     @JsonView(DatasetVersion.View.Public.class)
@@ -102,11 +102,11 @@ public class DatasetVersionsResource {
 
     @PATCH
     @Path("/hash/{versionHash}")
-    @Operation(operationId = "updateDatasetVersion", summary = "Update dataset version", description = "Update a dataset version's change_description and/or add new tags", responses = {
-            @ApiResponse(responseCode = "200", description = "Version updated successfully", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found - Version not found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict - Tag already exists", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "updateDatasetVersion", summary = "更新数据集版本", description = "更新数据集版本的变更描述和/或添加新标签", responses = {
+            @ApiResponse(responseCode = "200", description = "版本更新成功", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到 - 版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突 - 标签已存在", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     @JsonView(DatasetVersion.View.Public.class)
@@ -125,11 +125,11 @@ public class DatasetVersionsResource {
 
     @POST
     @Path("/hash/{versionHash}/tags")
-    @Operation(operationId = "createVersionTag", summary = "Create version tag", description = "Add a tag to a specific dataset version for easy reference (e.g., 'baseline', 'v1.0', 'production')", responses = {
-            @ApiResponse(responseCode = "204", description = "Tag created successfully"),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "404", description = "Not Found - Version not found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Conflict - Tag already exists", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
+    @Operation(operationId = "createVersionTag", summary = "创建版本标签", description = "为特定数据集版本添加标签以便于引用（如 'baseline'、'v1.0'、'production'）", responses = {
+            @ApiResponse(responseCode = "204", description = "标签创建成功"),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "未找到 - 版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "冲突 - 标签已存在", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))
     })
     @RateLimited
     public Response createTag(
@@ -150,8 +150,8 @@ public class DatasetVersionsResource {
 
     @DELETE
     @Path("/{versionHash}/tags/{tag}")
-    @Operation(operationId = "deleteVersionTag", summary = "Delete version tag", description = "Remove a tag from a dataset version. The version itself is not deleted, only the tag reference.", responses = {
-            @ApiResponse(responseCode = "204", description = "Tag deleted successfully"),
+    @Operation(operationId = "deleteVersionTag", summary = "删除版本标签", description = "从数据集版本中移除标签。版本本身不会被删除，仅移除标签引用。", responses = {
+            @ApiResponse(responseCode = "204", description = "标签删除成功"),
     })
     @RateLimited
     public Response deleteTag(
@@ -172,9 +172,9 @@ public class DatasetVersionsResource {
 
     @GET
     @Path("/diff")
-    @Operation(operationId = "compareDatasetVersions", summary = "Compare latest version with draft", description = "Compare the latest committed dataset version with the current draft state. This endpoint provides insights into changes made since the last version was committed. The comparison calculates additions, modifications, deletions, and unchanged items between the latest version snapshot and current draft.", responses = {
-            @ApiResponse(responseCode = "200", description = "Diff computed successfully", content = @Content(schema = @Schema(implementation = DatasetVersionDiff.class))),
-            @ApiResponse(responseCode = "404", description = "Version not found")})
+    @Operation(operationId = "compareDatasetVersions", summary = "比较最新版本与草稿", description = "比较最新已提交的数据集版本与当前草稿状态。此端点提供自上次版本提交以来所做更改的洞察。比较计算最新版本快照与当前草稿之间的新增、修改、删除和未更改项。", responses = {
+            @ApiResponse(responseCode = "200", description = "差异计算成功", content = @Content(schema = @Schema(implementation = DatasetVersionDiff.class))),
+            @ApiResponse(responseCode = "404", description = "版本未找到")})
     @RateLimited
     public Response compareVersions() {
         featureFlags.checkDatasetVersioningEnabled();
@@ -194,9 +194,9 @@ public class DatasetVersionsResource {
 
     @POST
     @Path("/restore")
-    @Operation(operationId = "restoreDatasetVersion", summary = "Restore dataset to a previous version", description = "Restores the dataset to a previous version state by creating a new version with items copied from the specified version. If the version is already the latest, returns it as-is (no-op).", responses = {
-            @ApiResponse(responseCode = "200", description = "Version restored successfully", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
-            @ApiResponse(responseCode = "404", description = "Version not found", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))})
+    @Operation(operationId = "restoreDatasetVersion", summary = "将数据集恢复到指定版本", description = "通过创建一个从指定版本复制项目的新版本，将数据集恢复到之前的版本状态。如果该版本已是最新版本，则原样返回（无操作）。", responses = {
+            @ApiResponse(responseCode = "200", description = "版本恢复成功", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
+            @ApiResponse(responseCode = "404", description = "版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))})
     @RateLimited
     @JsonView(DatasetVersion.View.Public.class)
     public Response restoreVersion(

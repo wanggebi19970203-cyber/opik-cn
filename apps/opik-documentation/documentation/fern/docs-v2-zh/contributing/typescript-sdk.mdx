@@ -1,0 +1,142 @@
+---
+headline: TypeScript SDK | Opik 文档
+og:description: 了解如何通过查阅指南和项目结构有效为 Opik TypeScript SDK 做贡献。
+og:site_name: Opik 文档
+og:title: 为 TypeScript SDK 做贡献 - Opik
+title: TypeScript SDK
+canonical-url: https://www.comet.com/docs/opik/contributing/guides/typescript-sdk
+---
+
+# 为 TypeScript SDK 做贡献
+
+本指南将帮助你开始为 Opik TypeScript SDK 做贡献。
+
+<Tip>
+  在开始之前，请查阅我们的通用[贡献概述](/v1/contributing/overview)和[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。
+</Tip>
+
+## 项目结构
+
+TypeScript SDK 位于 `sdks/typescript` 目录中。以下是关键文件和目录的概述：
+
+- `src/`：包含主要源代码
+- `tests/`：包含测试文件
+- `examples/`：包含 SDK 的使用示例
+- `package.json`：项目依赖和脚本
+- `tsconfig.json`：TypeScript 配置
+- `tsup.config.ts`：构建配置
+- `vitest.config.ts`：测试配置
+
+## 搭建
+
+<Steps>
+  <Step title="本地搭建 Opik">
+    要开发和测试 TypeScript SDK 功能，你需要一个运行中的本地 Opik 实例：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+      ```bash
+      # 从仓库根目录
+      ./opik.sh --port-mapping
+      ```
+      </Tab>
+      <Tab title="Windows">
+      ```powershell
+      # 从仓库根目录
+      .\opik.ps1 --port-mapping
+      ```
+      </Tab>
+    </Tabs>
+
+    **注意：** `--port-mapping` 标志会暴露所有服务端口（包括 MySQL 3306、ClickHouse 8123、Redis 6379），这对调试很有用。TypeScript SDK 通过前端服务中的 API 网关（nginx）路由流量。
+
+    你的本地 Opik 服务器将在 `http://localhost:5173` 可访问。
+  </Step>
+
+  <Step title="安装依赖">```bash cd sdks/typescript npm install ```</Step>
+  <Step title="构建 SDK">```bash npm run build ```</Step>
+  <Step title="运行测试">```bash npm test ```</Step>
+</Steps>
+
+## 开发工作流程
+
+<Steps>
+  <Step title="创建新分支">为你的更改创建新分支</Step>
+  <Step title="进行更改">实现你的更改</Step>
+  <Step title="添加测试">为新功能添加测试</Step>
+  <Step title="运行测试套件">运行测试套件确保一切正常</Step>
+  <Step title="构建 SDK">构建 SDK 确保编译正确</Step>
+  <Step title="提交 PR">提交拉取请求</Step>
+</Steps>
+
+## 测试
+
+我们使用 Vitest 进行测试。测试位于 `tests/` 目录中。添加新功能时：
+
+<Steps>
+  <Step title="编写单元测试">为你的更改编写单元测试</Step>
+  <Step title="运行测试">确保所有测试通过 `npm test`</Step>
+  <Step title="检查覆盖率">保持或提高测试覆盖率</Step>
+</Steps>
+
+## 构建
+
+SDK 使用 tsup 构建。构建命令：
+
+```bash
+npm run build
+```
+
+这将在 `dist/` 目录中创建分发文件。
+
+## 文档
+
+添加新功能或进行更改时：
+
+<Steps>
+  <Step title="更新 README">如有必要更新 README.md</Step>
+  <Step title="添加 JSDoc">为新函数和类添加 JSDoc 注释</Step>
+  <Step title="添加示例">在 `examples/` 目录中包含示例</Step>
+  <Step title="更新文档">
+    如有必要更新主文档。详情请参阅[文档指南](documentation)。
+  </Step>
+</Steps>
+
+## 代码风格
+
+我们使用 ESLint 进行代码风格强制。配置位于 `eslint.config.js`。提交 PR 之前：
+
+<Steps>
+  <Step title="运行 linter">运行 `npm run lint` 检查风格问题</Step>
+  <Step title="修复问题">修复所有 linting 错误</Step>
+  <Step title="检查风格">确保你的代码遵循项目的风格指南</Step>
+</Steps>
+
+## 拉取请求流程
+
+<Steps>
+  <Step title="Fork 仓库">Fork 仓库</Step>
+  <Step title="创建分支">创建你的功能分支</Step>
+  <Step title="进行更改">进行你的更改</Step>
+  <Step title="运行检查">运行测试和 linting</Step>
+  <Step title="提交 PR">提交拉取请求</Step>
+</Steps>
+
+你的 PR 应该：
+
+- 有清晰的更改描述
+- 包含新功能的测试
+- 通过所有 CI 检查
+- 遵循项目的编码标准
+
+## 需要帮助？
+
+如果你需要帮助或有疑问：
+
+- 在 GitHub 上提交 issue
+- 加入我们的 [Comet Chat](https://chat.comet.com) 社区
+- 查阅现有文档
+
+---
+
+_请在贡献之前查阅我们的[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。_

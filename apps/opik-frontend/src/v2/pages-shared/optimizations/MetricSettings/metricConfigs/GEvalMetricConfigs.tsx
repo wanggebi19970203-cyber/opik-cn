@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { EditorView } from "@codemirror/view";
 
 import GEvalField from "./GEvalField";
@@ -19,6 +20,7 @@ const GEvalMetricConfigs = ({
   onChange,
   datasetVariables = [],
 }: GEvalMetricConfigsProps) => {
+  const { t } = useTranslation("optimizations");
   const taskIntroEditorRef = useRef<EditorView | null>(null);
   const evalCriteriaEditorRef = useRef<EditorView | null>(null);
   const lastFocusedEditorRef = useRef<EditorView | null>(null);
@@ -41,11 +43,11 @@ const GEvalMetricConfigs = ({
     <div className="flex w-72 flex-col gap-6">
       <GEvalField
         id="task_introduction"
-        label="Task introduction"
+        label={t("optimizations.metricConfigs.taskIntroduction")}
         explainer={EXPLAINERS_MAP[EXPLAINER_ID.geval_task_introduction]}
         value={configs.task_introduction ?? ""}
         onChange={(value) => onChange({ ...configs, task_introduction: value })}
-        placeholder="Describe the task context and what you're evaluating..."
+        placeholder={t("optimizations.metricConfigs.taskIntroductionPlaceholder")}
         editorRef={taskIntroEditorRef}
         onFocus={() => {
           lastFocusedEditorRef.current = taskIntroEditorRef.current;
@@ -54,13 +56,13 @@ const GEvalMetricConfigs = ({
 
       <GEvalField
         id="evaluation_criteria"
-        label="Evaluation criteria"
+        label={t("optimizations.metricConfigs.evaluationCriteria")}
         explainer={EXPLAINERS_MAP[EXPLAINER_ID.geval_evaluation_criteria]}
         value={configs.evaluation_criteria ?? ""}
         onChange={(value) =>
           onChange({ ...configs, evaluation_criteria: value })
         }
-        placeholder="Define evaluation criteria: accuracy, completeness, relevance..."
+        placeholder={t("optimizations.metricConfigs.evaluationCriteriaPlaceholder")}
         editorRef={evalCriteriaEditorRef}
         onFocus={() => {
           lastFocusedEditorRef.current = evalCriteriaEditorRef.current;

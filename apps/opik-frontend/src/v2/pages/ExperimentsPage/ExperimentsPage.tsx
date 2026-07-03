@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Plus } from "lucide-react";
 import { JsonParam, useQueryParam } from "use-query-params";
@@ -17,6 +18,7 @@ import emptyExperimentsLightUrl from "/images/empty-experiments-light.svg";
 import emptyExperimentsDarkUrl from "/images/empty-experiments-dark.svg";
 
 const ExperimentsPage: React.FC = () => {
+  const { t } = useTranslation("pages/experiments");
   const activeProjectId = useActiveProjectId();
   const resetDialogKeyRef = useRef(0);
   const [query] = useQueryParam("new", JsonParam);
@@ -55,7 +57,7 @@ const ExperimentsPage: React.FC = () => {
           limitWidth
         >
           <h1 className="comet-body-accented truncate break-words">
-            Experiments
+            {t("experiments.title")}
           </h1>
           {canCreateExperiments && (
             <Button
@@ -64,7 +66,7 @@ const ExperimentsPage: React.FC = () => {
               onClick={handleNewExperimentClick}
             >
               <Plus className="mr-1 size-4" />
-              Create experiment
+              {t("experiments.create")}
             </Button>
           )}
         </PageBodyStickyContainer>
@@ -72,11 +74,9 @@ const ExperimentsPage: React.FC = () => {
           <PageEmptyState
             lightImageUrl={emptyExperimentsLightUrl}
             darkImageUrl={emptyExperimentsDarkUrl}
-            title="No experiments yet"
-            description={
-              "Get started by creating your first experiment.\nCompare prompts and models, evaluate results, and track performance over time."
-            }
-            primaryActionLabel="Create your first experiment"
+            title={t("experiments.empty.title")}
+            description={t("experiments.empty.description")}
+            primaryActionLabel={t("experiments.empty.action")}
             onPrimaryAction={handleNewExperimentClick}
             docsUrl={buildDocsUrl("/evaluation/overview")}
           />

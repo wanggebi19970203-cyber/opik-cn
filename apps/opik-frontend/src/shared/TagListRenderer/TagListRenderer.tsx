@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Tag } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button, ButtonProps } from "@/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import { Input } from "@/ui/input";
@@ -59,13 +60,14 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
   align = "end",
   size = "md",
   className,
-  tooltipText = "Tags list",
-  placeholderText = "New tag",
-  addButtonText = "Add tag",
+  tooltipText,
+  placeholderText,
+  addButtonText,
   tagType = "tag",
   canAdd = true,
   tagVariant,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [newTag, setNewTag] = useState<string>("");
@@ -73,6 +75,10 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
   const hasTags = tags.length > 0 || immutableTags.length > 0;
 
   const tagSizeConfig = TAG_SIZE_CONFIG[size];
+
+  const effectiveTooltipText = tooltipText ?? t("common.tags.tagsList");
+  const effectivePlaceholderText = placeholderText ?? t("common.tags.newTag");
+  const effectiveAddButtonText = addButtonText ?? t("common.tags.addTag");
 
   const isImmutableTag = (tag: string): boolean =>
     immutableTags.some((t) => t.toLowerCase() === tag.toLowerCase());
@@ -82,8 +88,10 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
 
     if (tags.includes(newTag) || isImmutableTag(newTag)) {
       toast({
-        title: "Error",
-        description: `The ${tagType} "${newTag}" already exists`,
+        title: t("common.labels.error"),
+        description: t("common.tags.tagAlreadyExistsDescription", {
+          tag: newTag,
+        }),
         variant: "destructive",
       });
       return;
@@ -106,7 +114,7 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
         className,
       )}
     >
-      <TooltipWrapper content={tooltipText}>
+      <TooltipWrapper content={effectiveTooltipText}>
         <Tag className={`${tagSizeConfig.iconClassName} text-muted-slate`} />
       </TooltipWrapper>
       {[...immutableTags].sort().map((tag) => (
@@ -141,7 +149,7 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
           <PopoverContent className="w-[420px] p-6" align={align}>
             <div className="flex gap-2">
               <Input
-                placeholder={placeholderText}
+                placeholder={effectivePlaceholderText}
                 value={newTag}
                 onChange={(event) => setNewTag(event.target.value)}
                 onKeyDown={(event) => {
@@ -151,7 +159,7 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
                 }}
               />
               <Button variant="default" onClick={handleAddTag}>
-                {addButtonText}
+                {effectiveAddButtonText}
               </Button>
             </div>
           </PopoverContent>

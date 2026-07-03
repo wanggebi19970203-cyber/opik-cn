@@ -1,0 +1,47 @@
+---
+description: 了解如何从 Opik 跟踪生成合成问答数据，并通过交互式笔记本使用 MetaPromptOptimizer 优化提示词。
+headline: 合成数据优化器 | Opik 文档
+og:description: 了解在交互式 Colab 笔记本中使用 MetaPromptOptimizer 生成合成问答数据并优化提示词。
+og:site_name: Opik 文档
+og:title: 使用 Opik 优化合成数据生成
+subtitle: 使用合成数据集的高级示例笔记本
+title: 合成数据优化器 Cookbook
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/overview
+---
+
+<Info>
+  此页面是合成数据工作流的高级入口点。使用笔记本或 SDK 脚本端到端运行完整示例。
+</Info>
+
+## 启动示例
+
+<Note>
+  笔记本是在浏览器中探索合成数据优化的最快方式。
+</Note>
+
+| 平台 | 启动链接 |
+| --- | --- |
+| **Google Colab（首选）** | [<img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab" style="vertical-align: middle; display: inline-block;"/>](https://colab.research.google.com/github/comet-ml/opik/blob/main/sdks/opik_optimizer/notebooks/OpikSyntheticDataOptimizer.ipynb) |
+| **GitHub** | [在 GitHub 上查看笔记本](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/notebooks/OpikSyntheticDataOptimizer.ipynb) |
+
+## 此示例涵盖的内容
+
+- 从 Opik 跟踪生成合成问答数据集
+- 使用 TinyQA（通过 [tinyqabenchmarkpp](https://pypi.org/project/tinyqabenchmarkpp/)）和 TinyQA++ 等变体
+- 使用 MetaPrompt 在合成数据上优化提示词
+- 在 Opik UI 中查看结果
+
+## 完整实现的位置
+
+<Callout>
+  笔记本：[`sdks/opik_optimizer/notebooks/OpikSyntheticDataOptimizer.ipynb`](https://github.com/comet-ml/opik/blob/main/sdks/opik_optimizer/notebooks/OpikSyntheticDataOptimizer.ipynb)
+</Callout>
+
+<Callout>
+  SDK 代码库：浏览 `sdks/opik_optimizer/` 了解数据集工具、指标和优化器实现。
+</Callout>
+
+## 后续步骤
+
+- 运行笔记本并替换为您自己的跟踪或数据集。
+- 探索[定义数据集](/v1/agent_optimization/optimization/define_datasets)和[定义指标](/v1/agent_optimization/optimization/define_metrics)以获得更深入的控制。

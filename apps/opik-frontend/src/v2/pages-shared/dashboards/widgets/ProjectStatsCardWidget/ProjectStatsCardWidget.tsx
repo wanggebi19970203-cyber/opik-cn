@@ -1,4 +1,5 @@
 import React, { memo, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
 
 import DashboardWidget from "@/shared/Dashboard/DashboardWidget/DashboardWidget";
@@ -48,6 +49,7 @@ const renderMetricDisplay = (
 const ProjectStatsCardWidget: React.FunctionComponent<
   DashboardWidgetComponentProps
 > = ({ sectionId, widgetId, preview = false }) => {
+  const { t } = useTranslation("dashboards");
   const readOnly = useDashboardStore(selectReadOnly);
   const runtimeContext = useDashboardStore(
     useShallow((state) => {
@@ -146,7 +148,7 @@ const ProjectStatsCardWidget: React.FunctionComponent<
   const editAction =
     !preview && !readOnly ? (
       <DashboardWidget.EmptyState.EditAction
-        label="Configure widget"
+        label={t("statsCard.configureWidget")}
         onClick={handleEdit}
       />
     ) : undefined;
@@ -155,8 +157,8 @@ const ProjectStatsCardWidget: React.FunctionComponent<
     if (!projectId) {
       return (
         <DashboardWidget.EmptyState
-          title="Project not configured"
-          message="This widget needs a project to display data. Set one in the widget settings."
+          title={t("statsCard.projectNotConfigured")}
+          message={t("statsCard.projectNotConfiguredMessage")}
           action={editAction}
         />
       );
@@ -165,8 +167,8 @@ const ProjectStatsCardWidget: React.FunctionComponent<
     if (!source || !metric) {
       return (
         <DashboardWidget.EmptyState
-          title="No metric selected"
-          message="Choose a metric to display in this widget"
+          title={t("statsCard.noMetricSelected")}
+          message={t("statsCard.noMetricSelectedMessage")}
           action={editAction}
         />
       );
@@ -186,8 +188,8 @@ const ProjectStatsCardWidget: React.FunctionComponent<
     if (error) {
       return (
         <DashboardWidget.EmptyState
-          title="Error loading data"
-          message={error.message || "Failed to load metric data"}
+          title={t("statsCard.errorLoadingData")}
+          message={error.message || t("statsCard.failedToLoadMetric")}
         />
       );
     }
@@ -195,8 +197,8 @@ const ProjectStatsCardWidget: React.FunctionComponent<
     if (!data?.stats) {
       return (
         <DashboardWidget.EmptyState
-          title="No data available"
-          message="No statistics available for this metric"
+          title={t("statsCard.noDataAvailable")}
+          message={t("statsCard.noStatisticsMessage")}
         />
       );
     }
@@ -209,7 +211,7 @@ const ProjectStatsCardWidget: React.FunctionComponent<
       const scoreValue = feedbackScoreStat?.value as number | undefined;
 
       return renderMetricDisplay(
-        `Average ${scoreName}`,
+        t("statsCard.averageScore", { name: scoreName }),
         scoreValue !== undefined ? formatScoreDisplay(scoreValue) : "-",
       );
     }
@@ -219,8 +221,8 @@ const ProjectStatsCardWidget: React.FunctionComponent<
     if (!metricDef) {
       return (
         <DashboardWidget.EmptyState
-          title="Invalid metric"
-          message={`Unknown metric: ${metric}`}
+          title={t("statsCard.invalidMetric")}
+          message={t("statsCard.unknownMetric", { metric })}
         />
       );
     }

@@ -1,0 +1,194 @@
+{
+  "optimizations": {
+    "title": "Optimization Studio",
+    "optimizationRuns": "Optimization runs",
+    "description": "Track and manage optimization experiments",
+    "create": "Create optimization run",
+    "delete": "Delete optimization run",
+    "empty": {
+      "title": "No optimization runs yet",
+      "description": "Create your first optimization run to get started.",
+      "action": "Create your first optimization run",
+      "pageDescription": "Try different prompt versions and see what performs best. Optimization runs help you improve accuracy, consistency, and user experience.",
+      "noSearchResults": "No search results"
+    },
+    "emptyState": {
+      "runDemoExample": "Run a demo example",
+      "runDemoExampleDesc": "Start with a pre-configured optimization example for a support chatbot.",
+      "startOptimizationRun": "Start an optimization run",
+      "startOptimizationRunDesc": "Create a custom optimization workflow to test and improve your prompts.",
+      "optimizeViaSdk": "Optimize via SDK",
+      "optimizeViaSdkDesc": "Generate starter code for running a custom optimization programmatically.",
+      "viewDocs": "View docs"
+    },
+    "fields": {
+      "name": "Run name",
+      "dataset": "Dataset",
+      "algorithm": "Algorithm",
+      "model": "Model"
+    },
+    "columns": {
+      "name": "Name",
+      "dataset": "Dataset",
+      "datasetName": "Dataset name",
+      "algorithm": "Algorithm",
+      "status": "Status",
+      "duration": "Duration",
+      "created": "Created",
+      "startTime": "Start time",
+      "passRate": "Pass rate",
+      "accuracy": "Accuracy",
+      "latency": "Latency",
+      "cost": "Cost",
+      "optCost": "Opt. cost"
+    },
+    "filters": {
+      "testSuite": "Test suite"
+    },
+    "actions": {
+      "view": "View run",
+      "stop": "Stop run",
+      "rerun": "Re-run",
+      "delete": "Delete"
+    },
+    "actionsMenu": "Actions menu",
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "searchPlaceholder": "Search by dataset name",
+    "refreshTooltip": "Refresh optimizations list",
+    "confirmDialog": {
+      "deleteSingle": {
+        "title": "Delete optimization",
+        "description": "Deleting an optimization run will remove all its trials and their data. Related traces won't be affected. This action can't be undone. Are you sure you want to continue?",
+        "confirmText": "Delete optimization"
+      },
+      "deleteBatch": {
+        "title": "Delete optimizations",
+        "description": "Deleting these optimization runs will remove all their trials and associated data. Related traces won't be affected. This action cannot be undone. Are you sure you want to continue?",
+        "confirmText": "Delete optimizations"
+      }
+    },
+    "newPage": {
+      "title": "Optimize a prompt",
+      "cancel": "Cancel",
+      "starting": "Starting...",
+      "optimizePrompt": "Optimize prompt",
+      "name": "Name",
+      "namePlaceholder": "Enter optimization name, or the name will be generated automatically",
+      "prompt": "Prompt",
+      "loadChatPrompt": "Load chat prompt",
+      "loadingOptimization": "Loading optimization...",
+      "preparingDataset": "Preparing a dataset..."
+    },
+    "configSidebar": {
+      "algorithm": "Algorithm",
+      "selectAlgorithm": "Select algorithm",
+      "dataset": "Dataset",
+      "selectDataset": "Select a dataset",
+      "metric": "Metric",
+      "selectMetric": "Select metric"
+    },
+    "addDialog": {
+      "title": "Start optimization run",
+      "description": "Select a test suite, choose the optimizer you would like to use, and we will improve your prompt for you",
+      "optimizationAlgorithms": "Optimization algorithms",
+      "selectTestSuite": "Select test suite",
+      "selectTestSuitePlaceholder": "Select a test suite",
+      "createOptimizationRun": "3. Create an Optimization run",
+      "metaOptimizer": "Meta optimizer",
+      "metaOptimizerDesc": "Optimizes prompts using meta learning.",
+      "fewShotBayesian": "Few-shot Bayesian optimizer",
+      "fewShotBayesianDesc": "Optimizes prompts using few-shot learning and Bayesian optimization.",
+      "evolutionary": "Evolutionary optimizer",
+      "evolutionaryDesc": "Optimizes prompts using evolution.",
+      "gepa": "GEPA optimizer",
+      "gepaDesc": "Applies Genetic-Pareto search with reflection guidance."
+    },
+    "algorithmConfigs": {
+      "title": "Algorithm settings",
+      "description": "Configure parameters for the selected optimization algorithm",
+      "algorithmModel": "Algorithm model",
+      "usePromptModel": "Use prompt model",
+      "algorithmModelDescription": "The model the optimizer uses for its own reasoning. Defaults to the prompt model.",
+      "verbose": "Verbose",
+      "seed": "Seed",
+      "seedTooltip": "Random seed for reproducibility. Use the same seed to get consistent results across runs.",
+      "convergenceThreshold": "Convergence threshold",
+      "convergenceThresholdTooltip": "Threshold for determining when optimization has converged. Lower values require more precision (0-1)",
+      "populationSize": "Population size",
+      "populationSizeTooltip": "Number of candidate solutions in each generation",
+      "numberOfGenerations": "Number of generations",
+      "numberOfGenerationsTooltip": "How many iterations of evolution to run",
+      "mutationRate": "Mutation rate",
+      "mutationRateTooltip": "Probability of random changes to candidate solutions (0-1)",
+      "crossoverRate": "Crossover rate",
+      "crossoverRateTooltip": "Probability of combining two solutions (0-1)",
+      "tournamentSize": "Tournament size",
+      "tournamentSizeTooltip": "Number of candidates competing in each selection round",
+      "elitismSize": "Elitism size",
+      "elitismSizeTooltip": "Number of best solutions preserved unchanged in each generation",
+      "adaptiveMutation": "Adaptive mutation",
+      "enableMultiObjectiveOptimization": "Enable multi-objective optimization",
+      "enableLlmCrossover": "Enable LLM crossover",
+      "outputStyleGuidance": "Output style guidance",
+      "outputStyleGuidancePlaceholder": "e.g., concise, formal, technical",
+      "inferOutputStyle": "Infer output style",
+      "numberOfThreads": "Number of threads",
+      "numberOfThreadsTooltip": "Parallel threads for faster optimization"
+    },
+    "temperatureConfig": {
+      "label": "Temperature",
+      "reasoningTooltip": "Reasoning models require temperature = 1.0. This setting controls randomness in completions.",
+      "defaultTooltip": "Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive."
+    },
+    "modelSelect": {
+      "noProviders": "No AI providers configured yet.",
+      "configureProvider": "Configure a provider",
+      "askAdmin": "Ask a workspace admin to add one to choose a model.",
+      "noSearchResults": "No search results",
+      "placeholder": "Select an LLM model",
+      "searchPlaceholder": "Search model",
+      "manageProviders": "Manage AI providers"
+    },
+    "metricConfigs": {
+      "title": "Metric settings",
+      "description": "Configure parameters for the selected evaluation metric",
+      "referenceKey": "Reference key",
+      "referenceKeyPlaceholder": "e.g., expected_output",
+      "referenceKeyAdvancedPlaceholder": "e.g., answer or $.scores[?(@.name=='Useful')].value",
+      "referenceKeyScorePlaceholder": "e.g., score or $.feedback_scores[?(@.name=='Useful')].value",
+      "caseSensitiveComparison": "Case sensitive comparison",
+      "pythonCode": "Python code",
+      "pythonCodeDescription": "Define a class that extends BaseMetric with a score method that takes output (the LLM response) and **kwargs (dataset fields), returning a ScoreResult.",
+      "taskIntroduction": "Task introduction",
+      "taskIntroductionPlaceholder": "Describe the task context and what you're evaluating...",
+      "evaluationCriteria": "Evaluation criteria",
+      "evaluationCriteriaPlaceholder": "Define evaluation criteria: accuracy, completeness, relevance...",
+      "datasetVariablesAvailable": "Available:",
+      "clickToUse": "Click to use"
+    },
+    "logs": {
+      "title": "Logs",
+      "lastUpdatedAt": "Last updated at",
+      "newLogsAvailable": "New logs available",
+      "waitingForLogs": "Waiting for logs...",
+      "loadingLogs": "Loading logs...",
+      "willAppearShortly": "Logs will appear shortly",
+      "noLogsAvailable": "No logs available",
+      "autoScrollEnabled": "Auto-scroll enabled",
+      "clickToScrollToBottom": "Click to scroll to bottom",
+      "refreshLogs": "Refresh logs",
+      "fullscreen": "Fullscreen"
+    },
+    "studioTemplates": {
+      "title": "Run an optimization",
+      "or": "or",
+      "optimizeYourOwnPrompt": "Optimize your own prompt",
+      "optimizeYourOwnPromptDescription": "Start from scratch and configure your own optimization settings."
+    }
+  }
+}

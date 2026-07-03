@@ -1,0 +1,265 @@
+---
+headline: 成本跟踪 | Opik 文档
+og:description: 使用 Opik 仪表板监控和分析 LLM 应用中的成本模式，识别异常并优化支出。
+og:site_name: Opik 文档
+og:title: 使用 Opik 跟踪 LLM 应用的成本
+title: 成本跟踪
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/cost_tracking
+---
+
+Opik 通过测量所有追踪中的 Token 使用量来跟踪和监控 LLM 应用的成本。使用 Opik 仪表板，你可以分析支出模式并快速识别成本异常。Opik 中所有成本均以美元估算和显示。
+
+## 在仪表板中监控成本
+
+你可以使用 Opik 仪表板在三个层级查看成本：Span、追踪和项目。每个层级提供不同视角的应用成本结构。
+
+### Span 级成本
+
+各个 Span 显示追踪中每个 LLM Span 的计算成本（以美元为单位）：
+
+<Frame>
+  <img src="/img/tracing/cost_tracking_span.png" />
+</Frame>
+
+### 追踪级成本
+
+如果你使用了 Opik 的集成，我们会自动聚合追踪内所有 Span 的成本来计算追踪总成本：
+
+<Frame>
+  <img src="/img/tracing/cost_tracking_trace_view.png" />
+</Frame>
+
+### 项目级分析
+
+在以下位置跟踪项目的总体成本：
+
+1. 主项目视图，通过 Estimated Cost 列：
+
+   <Frame>
+     <img src="/img/tracing/cost_tracking_project.png" />
+   </Frame>
+
+2. 项目 Metrics 选项卡，显示成本随时间的趋势：
+   <Frame>
+     <img src="/img/tracing/cost_tracking_project_metrics.png" />
+   </Frame>
+
+## 以编程方式获取成本
+
+你可以以编程方式获取 Span 和追踪的估算成本。请注意，如果 Span 或追踪使用了不支持的模型，成本将为 `None`。有关导出追踪和 Span 的更多方式，请参阅[导出追踪和 Span](/v1/tracing/export_data)。
+
+### 获取 Span 成本
+
+```python
+import opik
+
+client = opik.Opik()
+
+span = client.get_span_content("<SPAN_ID>")
+# 返回以美元为单位的估算成本，不支持的模型返回 None
+print(span.total_estimated_cost)
+```
+
+### 获取追踪成本
+
+```python
+import opik
+
+client = opik.Opik()
+
+trace = client.get_trace_content("<TRACE_ID>")
+# 返回以美元为单位的估算成本，不支持的模型返回 None
+print(trace.total_estimated_cost)
+```
+
+## 手动设置提供商和模型名称
+
+如果你没有使用 Opik 的集成，Opik 仍然可以计算成本。为此，你需要确保 Span 类型为 `llm`，并传递以下信息：
+
+1. `provider`：提供商名称，通常是 `openai`、`anthropic` 或 `google_ai`（最新的提供商列表可在 `opik.LLMProvider` 枚举对象中找到）
+2. `model`：模型名称
+3. `usage`：此 LLM 调用的输入、输出和总 Token 数
+
+然后你可以更新代码来记录追踪和 Span：
+
+<Tabs>
+<Tab title="函数装饰器" value="Function decorator">
+如果使用函数装饰器，你需要使用 `update_current_span` 方法：
+
+```python
+from opik import track, opik_context
+
+@track(type="llm") # 注意 - 指定类型很重要
+def llm_call(input):
+  opik_context.update_current_span(
+    provider="openai",
+    model="gpt-3.5-turbo",
+    usage={
+      "prompt_tokens": 4,
+      "completion_tokens": 6,
+      "total_tokens": 10
+    }
+  )
+  return "Hello, world!"
+
+llm_call("Hello world!")
+```
+
+</Tab>
+<Tab title="底层 Python SDK" value="Low level Python SDK">
+
+使用底层 Python SDK 时，你需要更新 `client.span` 或 `trace.span` 方法：
+
+```python
+import opik
+
+client = opik.Opik()
+
+trace = client.trace(
+  name="custom_trace",
+  input={"text": "Hello world!"},
+)
+
+# 记录 LLM 调用
+span = trace.span(
+  name="llm_call",
+  type="llm",
+  input={"text": "Hello world!"},
+  output={"response": "Hello world!"},
+  provider="openai",
+  model="gpt-3.5-turbo",
+  usage={
+    "prompt_tokens": 4,
+    "completion_tokens": 6,
+    "total_tokens": 10
+  }
+)
+```
+
+</Tab>
+</Tabs>
+
+## 手动设置 Span 成本
+
+当需要设置自定义成本或使用不支持的模型时，你可以手动设置 Span 的成本。根据你的用例，有两种方法：
+
+### 在创建 Span 时设置成本
+
+如果你手动创建 Span，可以在创建时直接设置成本：
+
+```python
+from opik import track, opik_context
+
+@track
+def llm_call(input):
+  opik_context.update_current_span(
+    total_cost=0.05,
+  )
+  return "Hello, world!"
+
+llm_call("Hello world!")
+```
+
+### 在 Span 完成后更新成本
+
+使用 Opik 集成时，Span 会自动创建和关闭，阻止在打开时进行更新。但是，你可以之后使用 `update_span` 方法更新成本。这对于实现定期成本估算任务非常有效：
+
+```python
+from opik import Opik
+from opik.rest_api.types.span_public import SpanPublic
+
+# 为不同模型定义你自己的成本映射
+TOKEN_COST = {
+    ("openai.chat", "gpt-4o-2024-08-06"): {
+        "input_tokens": 2.5e-06,
+        "output_tokens": 1e-05,
+    }
+}
+
+# 此部分将根据你的用例自定义，这里仅作示例
+def compute_cost_for_span(span: SpanPublic):
+    provider = span.provider or span.input.get("ai.model.provider")
+    model = span.model or span.output.get("gen_ai.response.model")
+    usage = span.usage
+
+    if (provider, model) in TOKEN_COST:
+        model_cost = TOKEN_COST[(provider, model)]
+        cost = (
+            usage["input_tokens"] * model_cost["input_tokens"]
+            + usage["output_tokens"] * model_cost["output_tokens"]
+        )
+        return cost
+    return None
+
+def update_span_costs(project_name, trace_id=None):
+    opik_client = Opik()
+
+    # 查找没有估算成本的 LLM Span
+    spans = opik_client.search_spans(
+        project_name=project_name,
+        trace_id=trace_id,
+        filter_string='type="llm" and total_estimated_cost=0',
+    )
+
+    for span in spans:
+        cost = compute_cost_for_span(span)
+
+        if cost:
+            print(f"Updating span {span.id} of trace {span.trace_id} with cost: {cost}")
+            opik_client.update_span(
+                trace_id=span.trace_id,
+                parent_span_id=span.parent_span_id,
+                project_name=project_name,
+                id=span.id,
+                total_cost=cost,
+            )
+
+# 在 CRON 任务中使用示例
+if __name__ == "__main__":
+    update_span_costs("your-project-name")
+```
+
+这种方法在以下情况下特别有用：
+
+- 使用尚未被自动成本跟踪支持的模型或提供商
+- 你与提供商有自定义定价协议
+- 你想要跟踪模型使用之外的额外成本
+- 你需要将成本估算作为后台进程实现
+- 使用自动管理 Span 的集成
+
+<Tip>
+  你可以将成本更新函数作为 CRON 任务运行，自动更新在创建时没有成本信息的 Span 的成本。这在生产环境中特别有价值，因为所有 Span 的准确成本数据至关重要。
+</Tip>
+
+## 支持的模型、提供商和集成
+
+Opik 目前为以下 Python SDK 集成中的所有 LLM 调用自动计算成本：
+
+- [Google ADK 集成](/v1/integrations/adk)
+- [AWS Bedrock 集成](/v1/integrations/bedrock)
+- [LangChain 集成](/v1/integrations/langchain)
+- [OpenAI 集成](/v1/integrations/openai)
+- [LiteLLM 集成](https://docs.litellm.ai/docs/observability/opik_integration)
+- [Anthropic 集成](/v1/integrations/anthropic)
+- [CrewAI 集成](/v1/integrations/crewai)
+- [Google AI 集成](/v1/integrations/gemini)
+- [Haystack 集成](/v1/integrations/haystack)
+- [LlamaIndex 集成](/v1/integrations/llama_index)
+
+### 支持的提供商
+
+成本跟踪支持以下 LLM 提供商（定义在 `opik.LLMProvider` 枚举中）：
+
+- **OpenAI** (`openai`) - 由 OpenAI 托管的模型 (https://platform.openai.com)
+- **Anthropic** (`anthropic`) - 由 Anthropic 托管的模型 (https://www.anthropic.com)
+- **Anthropic on Vertex AI** (`anthropic_vertexai`) - 由 Google Vertex AI 托管的 Anthropic 模型
+- **Google AI** (`google_ai`) - 由 Google AI Studio 托管的 Gemini 模型 (https://ai.google.dev/aistudio)
+- **Google Vertex AI** (`google_vertexai`) - 由 Google Vertex AI 托管的 Gemini 模型 (https://cloud.google.com/vertex-ai)
+- **AWS Bedrock** (`bedrock`) - 由 AWS Bedrock 托管的模型 (https://aws.amazon.com/bedrock)
+- **Groq** (`groq`) - 由 Groq 托管的模型 (https://groq.com)
+
+你可以在[model_prices_and_context_window.json 文件](https://github.com/comet-ml/opik/blob/main/apps/opik-backend/src/main/resources/model_prices_and_context_window.json)中找到这些提供商支持的完整模型列表。
+
+<Tip>
+  我们正在积极扩展成本跟踪支持。需要支持其他模型或提供商？请[提交功能请求](https://github.com/comet-ml/opik/issues)以帮助我们确定开发优先级。
+</Tip>

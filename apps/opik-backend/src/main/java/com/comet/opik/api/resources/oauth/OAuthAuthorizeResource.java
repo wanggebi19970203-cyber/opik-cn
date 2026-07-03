@@ -48,7 +48,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "MCP OAuth", description = "MCP OAuth 2.1 Authorization Server resources")
+@Tag(name = "MCP OAuth", description = "MCP OAuth 2.1 授权服务器资源")
 public class OAuthAuthorizeResource {
 
     private final @NonNull OAuthAuthorizationService authorizationService;
@@ -56,8 +56,8 @@ public class OAuthAuthorizeResource {
 
     @GET
     @Path("/authorize")
-    @Operation(operationId = "authorize", summary = "OAuth Authorization Endpoint", description = "OAuth 2.1 authorization endpoint (RFC 6749 §3.1). Validates the client and PKCE parameters, then redirects to the login or consent page", responses = {
-            @ApiResponse(responseCode = "302", description = "Redirect to login, consent, or client redirect_uri with an error")})
+    @Operation(operationId = "authorize", summary = "OAuth授权端点", description = "OAuth 2.1授权端点（RFC 6749 §3.1）。验证客户端和PKCE参数，然后重定向到登录或授权同意页面", responses = {
+            @ApiResponse(responseCode = "302", description = "重定向到登录、授权同意页面或客户端redirect_uri（带错误）")})
     public Response authorize(
             @QueryParam(PARAM_CLIENT_ID) @NotBlank String clientId,
             @QueryParam(PARAM_REDIRECT_URI) @NotBlank String redirectUri,
@@ -88,8 +88,8 @@ public class OAuthAuthorizeResource {
 
     @GET
     @Path("/authorize/context")
-    @Operation(operationId = "getAuthorizeContext", summary = "Get Authorization Consent Context", description = "Get the client details, eligible workspaces, and a CSRF token used to render the consent screen", responses = {
-            @ApiResponse(responseCode = "200", description = "Authorization consent context", content = @Content(schema = @Schema(implementation = AuthorizeContext.class)))})
+    @Operation(operationId = "getAuthorizeContext", summary = "获取授权同意上下文", description = "获取客户端详情、可用工作区以及用于渲染授权同意页面的CSRF令牌", responses = {
+            @ApiResponse(responseCode = "200", description = "授权同意上下文", content = @Content(schema = @Schema(implementation = AuthorizeContext.class)))})
     public Response context(
             @QueryParam(PARAM_CLIENT_ID) @NotBlank String clientId,
             @QueryParam(PARAM_REDIRECT_URI) @NotBlank String redirectUri,
@@ -112,14 +112,14 @@ public class OAuthAuthorizeResource {
 
     @POST
     @Path("/authorize")
-    @Operation(operationId = "consent", summary = "Submit Authorization Consent", description = "Submit the user's consent, issue an authorization code, and return the client redirect target", responses = {
-            @ApiResponse(responseCode = "200", description = "Consent response with the client redirect target", content = @Content(schema = @Schema(implementation = ConsentResponse.class)))})
+    @Operation(operationId = "consent", summary = "提交授权同意", description = "提交用户授权同意，颁发授权码，并返回客户端重定向目标", responses = {
+            @ApiResponse(responseCode = "200", description = "包含客户端重定向目标的授权同意响应", content = @Content(schema = @Schema(implementation = ConsentResponse.class)))})
     public Response consent(@NotNull @Valid ConsentRequest request, @Context HttpHeaders headers) {
 
         Cookie csrfCookie = headers.getCookies().get(CSRF_COOKIE);
         if (csrfCookie == null || StringUtils.isBlank(csrfCookie.getValue()) || request.csrf() == null
                 || !MessageDigest.isEqual(csrfCookie.getValue().getBytes(UTF_8), request.csrf().getBytes(UTF_8))) {
-            throw new ForbiddenException("invalid csrf token");
+            throw new ForbiddenException("无效的CSRF令牌");
         }
 
         Cookie session = headers.getCookies().get(RequestContext.SESSION_COOKIE);

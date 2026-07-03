@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { OptimizationStudioConfig } from "@/types/optimizations";
@@ -43,6 +44,7 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
   optimizationId,
   bestExperiment,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { prompt, optimizer, evaluation, dataset_name, llm_model } =
     studioConfig;
@@ -58,11 +60,11 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
       >
         <div className="flex h-full flex-col overflow-auto">
           <CardHeader className="shrink-0 pb-2">
-            <CardTitle className="text-sm">Configuration</CardTitle>
+            <CardTitle className="text-sm">{t("optimization.configuration.title")}</CardTitle>
           </CardHeader>
           <CardContent className="flex shrink-0 flex-col gap-1">
             <ConfigItem
-              label="Test suite"
+              label={t("optimization.configuration.testSuite")}
               value={
                 <Link
                   to="/$workspaceName/test-suites/$suiteId"
@@ -75,13 +77,13 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
                 </Link>
               }
             />
-            <ConfigItem label="Model" value={llm_model?.model || "-"} />
+            <ConfigItem label={t("optimization.configuration.model")} value={llm_model?.model || "-"} />
             <ConfigItem
-              label="Algorithm"
+              label={t("optimization.configuration.algorithm")}
               value={optimizer?.type ? getOptimizerLabel(optimizer.type) : "-"}
             />
             <ConfigItem
-              label="Metric"
+              label={t("optimization.configuration.metric")}
               value={metric?.type ? getMetricLabel(metric.type) : "-"}
             />
             {metric?.parameters &&
@@ -98,7 +100,7 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
               )}
             {bestExperiment && (
               <ConfigItem
-                label="Best trial configuration"
+                label={t("optimization.trials.bestTrialConfiguration")}
                 value={
                   <Link
                     to="/$workspaceName/optimizations/$optimizationId/trials"
@@ -122,14 +124,14 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-auto">
         <CardHeader className="shrink-0 px-6 py-1.5">
-          <CardTitle className="text-sm">Initial prompt</CardTitle>
+          <CardTitle className="text-sm">{t("optimization.configuration.initialPrompt")}</CardTitle>
         </CardHeader>
         <CardContent className="min-h-0 flex-1">
           {messages && messages.length > 0 ? (
             <MessagesList messages={messages} />
           ) : (
             <span className="comet-body-s text-muted-slate">
-              No prompt messages
+              {t("optimization.configuration.noPromptMessages")}
             </span>
           )}
         </CardContent>

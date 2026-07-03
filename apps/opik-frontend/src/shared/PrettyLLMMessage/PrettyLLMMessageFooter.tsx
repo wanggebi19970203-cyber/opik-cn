@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { PrettyLLMMessageFooterProps } from "./types";
 
@@ -7,6 +8,7 @@ const PrettyLLMMessageFooter: React.FC<PrettyLLMMessageFooterProps> = ({
   finishReason,
   className,
 }) => {
+  const { t } = useTranslation();
   // Don't render if no data
   if (!usage && !finishReason) {
     return null;
@@ -21,13 +23,13 @@ const PrettyLLMMessageFooter: React.FC<PrettyLLMMessageFooterProps> = ({
     >
       {usage && (
         <div className="flex items-center gap-2">
-          <span className="font-medium">Max completion tokens</span>
+          <span className="font-medium">{t("common:llmMessages.maxCompletionTokens")}</span>
           <span>{usage.completion_tokens || 0}</span>
         </div>
       )}
       {finishReason && (
         <div className="flex items-center gap-2">
-          <span className="font-medium">Finish reason</span>
+          <span className="font-medium">{t("common:llmMessages.finishReason")}</span>
           <span className="capitalize">{finishReason}</span>
         </div>
       )}

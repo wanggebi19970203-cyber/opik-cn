@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useActiveWorkspaceName } from "@/store/AppStore";
 import { Separator } from "@/ui/separator";
 import { calculateWorkspaceName, cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ interface WorkspaceSidebarContentProps {
 const WorkspaceSidebarContent: React.FC<WorkspaceSidebarContentProps> = ({
   expanded,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useActiveWorkspaceName();
   const SidebarWorkspaceSelectorComponent = usePluginsStore(
     (state) => state.SidebarWorkspaceSelector,
@@ -26,7 +28,7 @@ const WorkspaceSidebarContent: React.FC<WorkspaceSidebarContentProps> = ({
 
   const displayName = calculateWorkspaceName(workspaceName);
 
-  const menuGroups = getWorkspaceSidebarMenuItems({ canViewDashboards });
+  const menuGroups = getWorkspaceSidebarMenuItems({ canViewDashboards, t });
 
   const initial = (displayName || workspaceName).charAt(0).toUpperCase();
 
@@ -39,7 +41,7 @@ const WorkspaceSidebarContent: React.FC<WorkspaceSidebarContentProps> = ({
       </span>
       <div className="flex min-w-0 flex-col">
         <span className="comet-body-xs-accented text-light-slate">
-          Workspace
+          {t("navigation.menu.workspace")}
         </span>
         <span className="comet-body-s-accented truncate text-foreground">
           {displayName}

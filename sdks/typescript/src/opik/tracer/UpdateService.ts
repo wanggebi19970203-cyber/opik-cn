@@ -13,8 +13,8 @@ function isChatPrompt(p: BasePrompt): p is ChatPrompt {
 }
 
 /**
- * Service for processing trace and span updates with prompts support.
- * Handles serialization of prompts and merging into metadata.
+ * 用于处理带有提示词支持的追踪和跨度更新的服务。
+ * 处理提示词的序列化和合并到元数据中。
  */
 export class UpdateService {
   private static serializePromptToInfoDict(prompt: BasePrompt): PromptInfoDict {
@@ -40,12 +40,11 @@ export class UpdateService {
   }
 
   /**
-   * Converts JsonListString to an object suitable for merging, or null when
-   * the value cannot be represented as a plain object (arrays, non-JSON strings).
-   * A null return signals "not mergeable" so callers can preserve the original value.
+   * 将 JsonListString 转换为适合合并的对象，当值无法表示为普通对象（数组、非 JSON 字符串）时返回 null。
+   * 返回 null 表示"不可合并"，调用者可以保留原始值。
    *
-   * @param metadata - Metadata in JsonListString format
-   * @returns Object representation of metadata, null if conversion is not possible (arrays, unparseable strings)
+   * @param metadata - JsonListString 格式的元数据
+   * @returns 元数据的对象表示，如果转换不可能（数组、无法解析的字符串）则返回 null
    */
   private static normalizeMetadata(
     metadata: OpikApi.JsonListString | undefined
@@ -73,9 +72,8 @@ export class UpdateService {
   }
 
   /**
-   * Returns true when the given prompt is already recorded in metadata OR when
-   * metadata is not a plain object (in which case injection should be skipped to
-   * avoid discarding the original value).
+   * 当给定的提示词已记录在元数据中，或者元数据不是普通对象时返回 true
+   * （此时应跳过注入以避免丢弃原始值）。
    */
   static promptAlreadyInjected(
     metadata: OpikApi.JsonListString | undefined,
@@ -92,14 +90,14 @@ export class UpdateService {
   }
 
   /**
-   * Merges prompts into metadata under "opik_prompts" key.
-   * Preserves existing metadata and new metadata fields when they are objects.
-   * Non-object metadata (strings/arrays) will be replaced with prompt metadata.
+   * 将提示词合并到元数据的 "opik_prompts" 键下。
+   * 当它们是对象时，保留现有元数据和新元数据字段。
+   * 非对象元数据（字符串/数组）将被替换为提示词元数据。
    *
-   * @param existingMetadata - Current metadata from trace/span
-   * @param newMetadata - New metadata from update call
-   * @param prompts - Array of Prompt objects to serialize
-   * @returns Merged metadata with prompts
+   * @param existingMetadata - 来自追踪/跨度的当前元数据
+   * @param newMetadata - 来自更新调用的新元数据
+   * @param prompts - 要序列化的 Prompt 对象数组
+   * @returns 包含提示词的已合并元数据
    */
   private static mergePromptsIntoMetadata(
     existingMetadata: OpikApi.JsonListString | undefined,

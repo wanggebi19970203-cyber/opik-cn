@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import useLocalStorageState from "use-local-storage-state";
 import { Copy, RotateCcw, Save, Wand2 } from "lucide-react";
 import isUndefined from "lodash/isUndefined";
@@ -74,6 +75,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
   improvePromptConfig,
   disabled = false,
 }) => {
+  const { t } = useTranslation("prompt");
   const {
     permissions: { canCreatePrompts },
   } = usePermissions();
@@ -110,10 +112,10 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
   const hasModel = Boolean(improvePromptConfig?.model?.trim());
   const isPromptButtonDisabled = !hasModel;
   const promptButtonTooltip = !hasModel
-    ? "Configure model first"
+    ? t("llmPromptMessageActions.configureModelFirst")
     : hasContent
-      ? "Improve prompt with AI"
-      : "Generate prompt with AI";
+      ? t("llmPromptMessageActions.improvePromptWithAi")
+      : t("llmPromptMessageActions.generatePromptWithAi");
 
   const handleOpenWizard = useCallback(() => {
     setShowImproveWizard(true);
@@ -135,9 +137,9 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
         // Validate model and provider are configured
         if (!hasModel) {
           toast({
-            title: "Model configuration required",
+            title: t("llmPromptMessageActions.modelConfigurationRequired"),
             description:
-              "Please configure a model and provider before improving the prompt. Select a model from the dropdown above.",
+              t("llmPromptMessageActions.modelConfigurationRequiredDescription"),
           });
           return;
         }
@@ -194,17 +196,17 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
       const jsonString = convertMessageToMessagesJson(message);
       await navigator.clipboard.writeText(jsonString);
       toast({
-        title: "Copied to clipboard",
-        description: "Prompt copied successfully",
+        title: t("llmPromptMessageActions.copiedToClipboard"),
+        description: t("llmPromptMessageActions.promptCopiedSuccessfully"),
       });
     } catch (error) {
       toast({
-        title: "Failed to copy",
-        description: "Could not copy to clipboard",
+        title: t("llmPromptMessageActions.failedToCopy"),
+        description: t("llmPromptMessageActions.couldNotCopyToClipboard"),
         variant: "destructive",
       });
     }
-  }, [message, toast]);
+  }, [message, toast, t]);
 
   const resetDisabled =
     !promptId ||
@@ -231,7 +233,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
     ? !datasetId
       ? PROMPT_UNSAVED_TOOLTIP
       : PROMPT_UNSAVED_EXPERIMENT_TOOLTIP
-    : "Save changes";
+    : t("llmPromptMessageActions.saveChanges");
 
   const onPromptSelectBoxOpenChange = useCallback(
     (open: boolean) => {
@@ -252,13 +254,13 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
           ? resetHandler()
           : handleUpdateExternalPromptId(tempPromptIdRef.current);
       },
-      title: isReset ? "Reset prompt" : "Load prompt",
+      title: isReset ? t("llmPromptMessageActions.resetPrompt") : t("llmPromptMessageActions.loadPrompt"),
       description: isReset
-        ? "Resetting the prompt will discard all unsaved changes. This action can’t be undone. Are you sure you want to continue?"
-        : "You have unsaved changes in your message field. Loading a new prompt will overwrite them with the prompt’s content. This action cannot be undone.",
-      confirmText: isReset ? "Reset prompt" : "Load prompt",
+        ? t("llmPromptMessageActions.resetPromptDescription")
+        : t("llmPromptMessageActions.loadPromptDescription"),
+      confirmText: isReset ? t("llmPromptMessageActions.resetPrompt") : t("llmPromptMessageActions.loadPrompt"),
     };
-  }, [handleUpdateExternalPromptId, open, resetHandler]);
+  }, [handleUpdateExternalPromptId, open, resetHandler, t]);
 
   // This effect is used to set the visibility of hold actions
   // based on the prompt select box state and save warning
@@ -331,7 +333,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
                 disabled={disabled || isPromptButtonDisabled}
               >
                 <Wand2 className="mr-2 size-4" />
-                Generate prompt
+                {t("llmPromptMessageActions.generatePrompt")}
               </Button>
             </span>
           </TooltipWrapper>
@@ -347,7 +349,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
                 disabled={disabled || isPromptButtonDisabled}
               >
                 <Wand2 className="mr-2 size-4" />
-                Improve prompt
+                {t("llmPromptMessageActions.improvePrompt")}
               </Button>
             </span>
           </TooltipWrapper>
@@ -372,7 +374,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
             disabled={disabled}
           />
         </div>
-        <TooltipWrapper content="Discard changes">
+        <TooltipWrapper content={t("llmPromptMessageActions.discardChanges")}>
           <Button
             variant="outline"
             size="icon-sm"
@@ -401,7 +403,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
           </Button>
         </TooltipWrapper>
 
-        <TooltipWrapper content="Copy prompt">
+        <TooltipWrapper content={t("llmPromptMessageActions.copyPrompt")}>
           <Button
             variant="outline"
             size="icon-sm"

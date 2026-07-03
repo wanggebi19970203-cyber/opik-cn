@@ -1,17 +1,11 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useActiveWorkspaceName } from "@/store/AppStore";
 import useDemoProject from "@/api/projects/useDemoProject";
 import useProgressSimulation from "@/hooks/useProgressSimulation";
 import OwlArt from "@/shared/OwlArt";
 import { Button } from "@/ui/button";
-
-const LOADING_LABELS = [
-  "Creating demo project…",
-  "Setting up sample traces…",
-  "Preparing some data for you…",
-  "Almost ready…",
-];
 
 interface DemoLoadingContentProps {
   onRetry: () => void;
@@ -21,10 +15,21 @@ interface DemoLoadingContentProps {
 
 const DemoLoadingContent: React.FC<DemoLoadingContentProps> = ({
   onRetry,
-  retryLabel = "Try again",
+  retryLabel,
   onComplete,
 }) => {
+  const { t } = useTranslation("pages/get-started");
   const workspaceName = useActiveWorkspaceName();
+
+  const loadingLabels = useMemo(
+    () => [
+      t("getStarted.demoLoading.creatingDemoProject"),
+      t("getStarted.demoLoading.settingUpSampleTraces"),
+      t("getStarted.demoLoading.preparingData"),
+      t("getStarted.demoLoading.almostReady"),
+    ],
+    [t],
+  );
   const navigate = useNavigate();
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -39,7 +44,7 @@ const DemoLoadingContent: React.FC<DemoLoadingContentProps> = ({
   );
 
   const { message } = useProgressSimulation({
-    messages: LOADING_LABELS,
+    messages: loadingLabels,
     isPending: !pollExpired,
     loop: true,
   });
@@ -64,10 +69,10 @@ const DemoLoadingContent: React.FC<DemoLoadingContentProps> = ({
         <div className="flex flex-col items-center gap-4">
           <OwlArt className="size-[72px]" />
           <p className="comet-body-s text-center text-muted-slate">
-            Demo data is taking longer than expected.
+            {t("getStarted.demoLoading.takingLonger")}
           </p>
           <Button variant="outline" size="sm" onClick={onRetry}>
-            {retryLabel}
+            {retryLabel ?? t("getStarted.demoLoading.tryAgain")}
           </Button>
         </div>
       </div>
@@ -79,7 +84,7 @@ const DemoLoadingContent: React.FC<DemoLoadingContentProps> = ({
       <div className="flex flex-col items-center gap-4">
         <OwlArt className="size-[72px]" />
         <p className="font-code text-sm text-muted-slate">
-          {message || LOADING_LABELS[0]}
+          {message || loadingLabels[0]}
         </p>
       </div>
     </div>

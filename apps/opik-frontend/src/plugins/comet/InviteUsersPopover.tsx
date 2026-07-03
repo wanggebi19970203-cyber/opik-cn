@@ -1,5 +1,6 @@
 import React from "react";
 import { Mail } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import useCurrentOrganization from "@/plugins/comet/useCurrentOrganization";
 import useWorkspace from "@/plugins/comet/useWorkspace";
 import { useOpikWorkspaceName } from "@/store/AppStore";
@@ -31,6 +32,7 @@ const InviteUsersPopover: React.FC<InviteUsersPopoverProps> = ({
   side = "bottom",
   asSubContent = false,
 }) => {
+  const { t } = useTranslation("common");
   const opikWorkspaceName = useOpikWorkspaceName();
   const workspace = useWorkspace(opikWorkspaceName);
   const workspaceId = workspace?.workspaceId;
@@ -85,8 +87,7 @@ const InviteUsersPopover: React.FC<InviteUsersPopoverProps> = ({
     if (!searchQuery || isQueryTooShort) {
       return (
         <div className="comet-body-s flex h-full items-center justify-center text-muted-slate">
-          Enter an email address, or search by username ({MIN_USERNAME_LENGTH}+
-          characters) for users in your organization
+          {t("collaborators.searchHint", { minLength: MIN_USERNAME_LENGTH })}
         </div>
       );
     }
@@ -97,8 +98,7 @@ const InviteUsersPopover: React.FC<InviteUsersPopoverProps> = ({
     if (!hasResults && !showEmailRow && !isLoading) {
       return (
         <div className="comet-body-s flex h-full items-center justify-center text-muted-slate">
-          No users found. Enter an email address to invite, or search by
-          username for organization members
+          {t("collaborators.noUsersFound")}
         </div>
       );
     }
@@ -161,14 +161,14 @@ const InviteUsersPopover: React.FC<InviteUsersPopoverProps> = ({
     <>
       <div className="mb-3">
         <h3 className="comet-title-s">
-          Invite to {workspaceName || "workspace"}
+          {t("collaborators.inviteTo", { workspaceName: workspaceName || t("labels.workspace") })}
         </h3>
       </div>
       <div className="space-y-3">
         <SearchInput
           searchText={searchQuery}
           setSearchText={setSearchQuery}
-          placeholder="Search by username or email"
+          placeholder={t("placeholders.searchByUsernameOrEmail")}
         />
         <div className="h-[200px]">{renderUserList()}</div>
       </div>

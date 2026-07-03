@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { TraceFeedbackScore } from "@/types/traces";
 import { InfoIcon } from "lucide-react";
 import { Button } from "@/ui/button";
@@ -12,6 +13,7 @@ const ThreadFeedbackScoresInfo: React.FC<ThreadFeedbackScoresInfoProps> = ({
   feedbackScores,
   onAddHumanReview,
 }) => {
+  const { t } = useTranslation("tracing");
   if (!feedbackScores || feedbackScores.length === 0) {
     return null;
   }
@@ -37,14 +39,14 @@ const ThreadFeedbackScoresInfo: React.FC<ThreadFeedbackScoresInfoProps> = ({
           </a>
         </Button>
         your threads, or manually annotate your thread with */}
-        Use the SDK or manually annotate your thread with
+        {t("thread.useSdkOrAnnotateThread")}
         <Button
           size="sm"
           variant="link"
           className="comet-body-xs inline-flex h-auto gap-0.5 px-1"
           onClick={onAddHumanReview}
         >
-          human review
+          {t("thread.humanReviewLink")}
         </Button>
         .
       </div>

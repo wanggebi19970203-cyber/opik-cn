@@ -1,0 +1,164 @@
+---
+description: 从这里开始将 Vercel AI Gateway 与 Opik 集成，通过边缘优化的性能统一访问多个 AI 提供商。
+headline: Vercel AI Gateway | Opik 文档
+og:description: 学习如何使用 OpenAI SDK 包装器将 Vercel AI Gateway 与 Opik 集成，记录所有 LLM 调用以实现全面可观测性。
+og:site_name: Opik 文档
+og:title: 将 Vercel AI Gateway 与 Opik 集成实现边缘优化的 AI
+title: 使用 Opik 实现 Vercel AI Gateway 的可观测性
+canonical-url: https://www.comet.com/docs/opik/integrations/vercel-ai-gateway
+---
+
+[Vercel AI Gateway](https://vercel.com/docs/ai-gateway) 提供了一个统一的接口来访问多个 AI 提供商，具有边缘优化的性能、内置缓存和全面的分析功能。它专为与 Vercel 的边缘基础设施无缝协作而设计。
+
+## Gateway 概述
+
+Vercel AI Gateway 提供企业级功能来管理 AI API 访问，包括：
+
+- **统一 API**：通过 Vercel 的 AI Gateway 使用最少的代码更改访问跨提供商的数百个模型
+- **透明定价**：token 无加价，支持"自带密钥"
+- **自动故障转移**：高可靠性，当主提供商不可用时自动路由到备用提供商
+- **低延迟**：通过 Vercel 的全球边缘网络实现低于 20ms 的路由延迟
+- **智能缓存**：通过智能缓存降低成本并提高响应时间
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=vercel-ai-gateway&utm_campaign=opik) 提供托管版本的 Opik 平台。[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=vercel-ai-gateway&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=vercel-ai-gateway&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保你已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/v1/tracing/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs Cloud vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置 Vercel AI Gateway
+
+你需要在 Vercel 项目中设置 Vercel AI Gateway。请按照 [Vercel AI Gateway 设置指南](https://vercel.com/docs/ai-gateway) 配置你的 gateway。
+
+将你的 API key 设置为环境变量：
+
+```bash
+export VERCEL_AI_GATEWAY_URL="YOUR_VERCEL_AI_GATEWAY_URL"
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+
+或通过编程方式设置：
+
+```python
+import os
+import getpass
+
+if "VERCEL_AI_GATEWAY_URL" not in os.environ:
+    os.environ["VERCEL_AI_GATEWAY_URL"] = input("Enter your Vercel AI Gateway URL: ")
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 记录 LLM 调用
+
+由于 Vercel AI Gateway 提供 OpenAI 兼容的 API，我们可以使用 [Opik OpenAI SDK 包装器](/v1/integrations/openai) 自动将 Vercel AI Gateway 调用记录为 Opik 中的生成。
+
+### 简单 LLM 调用
+
+```python
+import os
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 Vercel AI Gateway 的 base URL 创建 OpenAI 客户端
+client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+    base_url=os.environ["VERCEL_AI_GATEWAY_URL"]
+)
+
+# 使用 Opik 追踪包装客户端
+client = track_openai(client, project_name="vercel-ai-gateway-demo")
+
+# 发送聊天补全请求
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a knowledgeable AI assistant."},
+        {"role": "user", "content": "What is the largest city in France?"}
+    ]
+)
+
+# 打印助手的回复
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 与 `@track` 装饰器一起使用
+
+如果你的 LLM 管道中有多个步骤，可以使用 `@track` 装饰器记录每个步骤的追踪。如果在其中一个步骤中调用了 Vercel AI Gateway，该 LLM 调用将与相应的步骤关联：
+
+```python
+import os
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 Vercel AI Gateway 的 base URL 创建并包装 OpenAI 客户端
+client = OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+    base_url=os.environ["VERCEL_AI_GATEWAY_URL"]
+)
+client = track_openai(client)
+
+@track
+def generate_response(prompt: str):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a knowledgeable AI assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def refine_response(initial_response: str):
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You enhance and polish text responses."},
+            {"role": "user", "content": f"Please improve this response: {initial_response}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track(project_name="vercel-ai-gateway-demo")
+def generate_and_refine(prompt: str):
+    # 第一次 LLM 调用：生成初始响应
+    initial = generate_response(prompt)
+    
+    # 第二次 LLM 调用：优化响应
+    refined = refine_response(initial)
+    
+    return refined
+
+# 示例用法
+result = generate_and_refine("Explain quantum computing in simple terms.")
+```
+
+追踪将显示带有层级 span 的嵌套 LLM 调用。
+
+## 进一步改进
+
+如果你有改进 Vercel AI Gateway 集成的建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告诉我们。

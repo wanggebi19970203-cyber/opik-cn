@@ -1,0 +1,208 @@
+---
+headline: 护栏 | Opik 文档
+og:description: 使用 Opik 中的护栏监控您的 LLM 调用，以防止风险并确保应用程序输出的安全。
+og:site_name: Opik 文档
+og:title: LLM 护栏 - Opik
+title: 护栏
+---
+
+<Tip>
+  此功能目前仅在 Opik 的 **自托管** 安装版本中可用。托管部署的支持即将推出。
+</Tip>
+
+护栏帮助您保护应用程序免受 LLM 固有风险的影响。
+使用它们来检查 LLM 调用的输入和输出，检测诸如偏离主题的回答或敏感信息泄露等问题。
+
+<Frame>
+  <img src="/img/production/guardrails_results.gif" />
+</Frame>
+
+# 工作原理
+
+从概念上讲，我们需要为每个输入和输出确定是否存在一系列风险，并对其采取相应措施。
+
+理想的方法取决于问题类型，旨在选择准确性、延迟和成本的最佳组合。
+
+常用的方法有三种：
+
+1. **启发式或传统 NLP 模型**：适用于检查 PII（个人身份信息）或竞争对手提及
+2. **小型语言模型**：适用于保持主题相关性
+3. **大型语言模型**：适用于检测幻觉等复杂问题
+
+# 护栏类型
+
+OpenAI 或 Anthropic 等提供商已内置针对有害或恶意内容等风险的护栏，对于绝大多数用户来说通常是理想的选择。
+Opik 护栏旨在覆盖残余风险，这些风险通常具有很强的用户特定性，需要更详细的配置。
+
+## PII 护栏
+
+PII 护栏检查敏感信息，如姓名、年龄、地址、电子邮件、电话号码或信用卡详情。
+可以在 SDK 调用中配置具体的实体类型，请参阅参考文档了解更多。
+
+_此处使用的方法利用传统 NLP 模型进行分词和命名实体识别。_
+
+## 主题护栏
+
+主题护栏确保输入和输出保持在主题范围内。
+您可以在 SDK 调用中配置允许或禁止的主题，请参阅参考文档了解更多。
+
+_此护栏依赖于小型语言模型，具体来说是零样本分类器。_
+
+## 自定义护栏
+
+自定义护栏允许您使用自定义模型、自定义库或自定义业务逻辑定义自己的护栏，并将响应记录到 Opik。下面是一个过滤竞争对手品牌的基本示例：
+
+```python
+import opik
+import opik.opik_context
+import traceback
+
+# Brand mention detection
+competitor_brands = [
+    "OpenAI",
+    "Anthropic",
+    "Google AI",
+    "Microsoft Copilot",
+    "Amazon Bedrock",
+    "Hugging Face",
+    "Mistral AI",
+    "Meta AI",
+]
+
+opik_client = opik.Opik()
+
+
+def custom_guardrails(generation: str, trace_id: str) -> str:
+    # Start the guardrail span first so the duration is accurately captured
+    guardrail_span = opik_client.span(name="Guardrail", input={"generation": generation}, type="guardrail", trace_id=trace_id)
+
+    # Custom guardrail logic - detect competitor brand mentions
+    found_brands = []
+    for brand in competitor_brands:
+        if brand.lower() in generation.lower():
+            found_brands.append(brand)
+
+    # The key `guardrail_result` is required by Opik guardrails and must be either "passed" or "failed"
+    if found_brands:
+        guardrail_result = "failed"
+        output = {"guardrail_result": guardrail_result, "found_brands": found_brands}
+    else:
+        guardrail_result = "passed"
+        output = {"guardrail_result": guardrail_result}
+
+    # Log the spans
+    guardrail_span.end(output=output)
+
+    # Upload the guardrail data for project-level metrics
+    guardrail_data = {
+        "project_name": opik_client._project_name,
+        "entity_id": trace_id,
+        "secondary_id": guardrail_span.id,
+        "name": "TOPIC", # Supports either "TOPIC" or "PII"
+        "result": guardrail_result,
+        "config": {"blocked_brands": competitor_brands},
+        "details": output,
+    }
+    try:
+        opik_client.rest_client.guardrails.create_guardrails(guardrails=[guardrail_data])
+    except Exception as e:
+        traceback.print_exc()
+
+    return generation
+
+
+@opik.track
+def main():
+    good_generation = "You should use our AI platform for your machine learning projects!"
+    custom_guardrails(good_generation, opik.opik_context.get_current_trace_data().id)
+
+    bad_generation = "You might want to try OpenAI or Google AI for your project instead."
+    custom_guardrails(bad_generation, opik.opik_context.get_current_trace_data().id)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+运行上面的自定义护栏示例后，您可以在 Opik 仪表板中查看结果。护栏 span 将与您的 trace 一起显示，展示检测到的品牌提及以及护栏是否通过。
+
+<Frame>
+  <img src="/img/production/custom-guardrails-dashboard.png" />
+</Frame>
+
+# 快速开始
+
+## 运行护栏后端
+
+您可以通过运行以下命令启动护栏后端：
+
+```bash
+./opik.sh --guardrails
+```
+
+## 使用 Python SDK
+
+<Frame>
+  <img src="/img/production/guardrails_editor.gif" />
+</Frame>
+
+```python
+from opik.guardrails import Guardrail, PII, Topic
+from opik import exceptions
+
+guardrail = Guardrail(
+    guards=[
+        Topic(restricted_topics=["finance", "health"], threshold=0.9),
+        PII(blocked_entities=["CREDIT_CARD", "PERSON"]),
+    ]
+)
+
+llm_response = "You should buy some NVIDIA stocks!"
+
+try:
+    guardrail.validate(llm_response)
+except exceptions.GuardrailValidationFailed as e:
+    print(e)
+```
+
+护栏失败的直接结果是抛出异常，您的应用程序代码需要处理该异常。
+
+该调用是阻塞的，因为护栏的主要目的是防止应用程序继续处理可能不理想的响应。
+
+### 防护流式响应和长输入
+
+您可以重复调用 `guardrail.validate` 来逐块验证响应，或验证响应的部分内容或组合。
+结果将作为额外的 span 添加到同一个 trace 中。
+
+```python
+for chunk in response:
+    try:
+        guardrail.validate(chunk)
+    except exceptions.GuardrailValidationFailed as e:
+        print(e)
+```
+
+## 处理结果
+
+### 检查特定 trace
+
+当护栏在 LLM 调用上失败时，Opik 会自动将信息添加到 trace 中。
+您可以筛选项目中的 trace，仅查看那些未通过护栏的 trace。
+
+<Frame>
+  <img src="/img/production/guardrails_example.png" />
+</Frame>
+
+### 分析趋势
+
+您还可以在项目的指标（Metrics）部分查看每个护栏的失败频率。
+
+## 性能和限制注意事项
+
+如果可用，护栏后端会自动使用 GPU。
+强烈建议在 GPU 节点上运行护栏后端用于生产环境。
+
+当前限制：
+
+- 主题护栏：最大输入大小为 1024 个 token
+- 主题护栏和 PII 护栏目前仅支持英语

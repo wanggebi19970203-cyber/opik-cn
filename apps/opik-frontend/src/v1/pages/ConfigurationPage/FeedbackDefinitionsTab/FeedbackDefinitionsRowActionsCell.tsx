@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { Copy, MoreHorizontal, Pencil, Trash } from "lucide-react";
 
@@ -19,6 +20,7 @@ import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 const FeedbackDefinitionsRowActionsCell: React.FunctionComponent<
   CellContext<FeedbackDefinition, unknown>
 > = (context) => {
+  const { t } = useTranslation();
   const resetKeyRef = useRef(0);
   const feedbackDefinition = context.row.original;
   const [open, setOpen] = useState<boolean | number>(false);
@@ -52,15 +54,15 @@ const FeedbackDefinitionsRowActionsCell: React.FunctionComponent<
         open={open === 1}
         setOpen={setOpen}
         onConfirm={deleteFeedbackDefinitionHandler}
-        title="Delete feedback definition"
-        description="This action can’t be undone. Existing scored traces won’t be affected. Are you sure you want to continue?"
-        confirmText="Delete feedback definition"
+        title={t("settings.feedback.confirmDialog.deleteSingle.title")}
+        description={t("settings.feedback.confirmDialog.deleteSingle.description")}
+        confirmText={t("settings.feedback.confirmDialog.deleteSingle.confirmText")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("settings.actions.menuLabel")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -72,7 +74,7 @@ const FeedbackDefinitionsRowActionsCell: React.FunctionComponent<
             }}
           >
             <Pencil className="mr-2 size-4" />
-            Edit
+            {t("settings.actions.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
@@ -81,7 +83,7 @@ const FeedbackDefinitionsRowActionsCell: React.FunctionComponent<
             }}
           >
             <Copy className="mr-2 size-4" />
-            Clone
+            {t("settings.actions.clone")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -92,7 +94,7 @@ const FeedbackDefinitionsRowActionsCell: React.FunctionComponent<
             variant="destructive"
           >
             <Trash className="mr-2 size-4" />
-            Delete
+            {t("settings.actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

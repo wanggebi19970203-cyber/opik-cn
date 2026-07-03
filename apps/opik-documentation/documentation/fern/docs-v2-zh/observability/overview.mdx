@@ -1,0 +1,138 @@
+---
+headline: 可观测性概述 | Opik 文档
+og:description: 使用 Opik 可观测性平台监控、调试和优化您的 LLM 应用，支持追踪、跨度和对话
+og:site_name: Opik 文档
+og:title: 可观测性概述 — Opik
+title: 可观测性概述
+---
+
+<Tip>
+  如果您想直接查看代码，请前往[快速开始](/tracing/getting-started)指南，五分钟内即可添加追踪功能。
+</Tip>
+
+LLM 应用不仅仅是单个 API 调用。一个典型的智能体涉及检索步骤、工具调用、提示组装、多次 LLM 调用和后处理——所有这些在运行时都是不可见的。当出现问题时，您需要查看每个步骤具体发生了什么。
+
+Opik 为您的智能体处理的每个请求提供完整可见性。每次 LLM 调用、每次工具调用、每个检索步骤都被捕获为可检查、搜索和分析的追踪记录。
+
+<Frame>
+  <img src="/img/v2/observability/traces_overview.png" />
+</Frame>
+
+## 为什么使用 Opik 进行可观测性
+
+没有可观测性的 LLM 应用调试意味着猜测。您看到最终输出，但不知道模型为何产生幻觉、哪个检索步骤返回了不相关的上下文，或延迟在哪里飙升。
+
+使用 Opik，您可以：
+
+- **查看每个请求的完整执行路径**——从用户输入到工具调用和 LLM 完成，再到最终响应
+- **快速定位生产问题**——按状态、延迟、成本或自定义标签过滤和搜索追踪记录，秒级定位问题
+- **跟踪成本和延迟趋势**——监控跨模型和提供商的 Token 使用量和支出
+- **捕获多轮对话**——将相关追踪记录分组到线程中，了解交互如何在各轮之间演进
+- **闭环反馈**——为追踪记录附加人工或自动化评分，并将其用于驱动评估
+
+## 可捕获内容
+
+<CardGroup cols={3}>
+  <Card title="追踪与跨度" href="/tracing/concepts" icon="fa-regular fa-diagram-project">
+    完整的执行树，包含每个步骤的输入、输出、时间和元数据
+  </Card>
+  <Card title="对话" href="/tracing/advanced/log_chat_conversations" icon="fa-regular fa-comments">
+    多轮线程，将相关追踪记录分组为连贯的会话
+  </Card>
+  <Card title="成本跟踪" href="/tracing/advanced/cost_tracking" icon="fa-regular fa-dollar-sign">
+    按模型、提供商和追踪记录细分的 Token 使用量和支出
+  </Card>
+  <Card title="媒体与附件" href="/tracing/advanced/log_multimodal_traces" icon="fa-regular fa-image">
+    与追踪记录一起记录的图像、音频、视频和文件
+  </Card>
+  <Card title="用户反馈" href="/tracing/advanced/annotate_traces" icon="fa-regular fa-thumbs-up">
+    附加到单个追踪记录的定性和定量评分
+  </Card>
+  <Card title="智能体图" href="/tracing/advanced/log_agent_graphs" icon="fa-regular fa-share-nodes">
+    可视化执行图，展示智能体步骤之间的连接
+  </Card>
+</CardGroup>
+
+## 工作原理
+
+<Steps>
+  <Step title="连接您的项目">
+    从智能体目录运行 `opik connect` 将其与 Opik 配对：
+
+    ```bash
+    opik connect --project <YOUR_PROJECT_NAME>
+    ```
+  </Step>
+  <Step title="为代码添加追踪">
+    添加追踪的最快方式是使用 [opik-skills](https://github.com/comet-ml/opik-skills)——安装该技能，让您的编码智能体处理其余工作：
+
+    ```bash
+    npx skills add comet-ml/opik-skills
+    ```
+
+    然后询问您的编码智能体：
+
+    ```
+    使用 /instrument 命令为我的智能体添加 Opik 追踪。
+    ```
+
+    这适用于 Claude Code、Cursor、Codex、OpenCode 和其他编码智能体。您也可以使用 SDK 手动添加追踪：
+
+    <CodeBlocks>
+      ```python title="Python"
+      import opik
+
+      @opik.track
+      def my_agent(user_message):
+          context = retrieve_context(user_message)
+          response = call_llm(user_message, context)
+          return response
+      ```
+
+      ```ts title="TypeScript"
+      import { Opik } from "opik";
+      const client = new Opik();
+
+      const myAgent = client.track({
+        name: "my-agent",
+        fn: async (userMessage: string) => {
+          const context = await retrieveContext(userMessage);
+          return await callLlm(userMessage, context);
+        },
+      });
+      ```
+    </CodeBlocks>
+  </Step>
+  <Step title="在仪表板中查看追踪记录">
+    每个请求都会创建包含详细跨度级信息的追踪记录。您可以检查完整的执行树、查看每个步骤的输入和输出，并按持续时间、成本、状态或标签进行过滤。
+
+    <Frame>
+      <img src="/img/v2/home/traces_page_for_quickstart.png" />
+    </Frame>
+  </Step>
+  <Step title="分析与改进">
+    使用追踪记录调试故障、识别慢速步骤并跟踪质量趋势。附加反馈评分、对数据集运行评估，并使用 [Ollie](/tracing/debug-agents)（Opik 的 AI 助手）自动帮助定位问题根源。
+  </Step>
+</Steps>
+
+## 集成
+
+Opik 为 Python、TypeScript 和 OpenTelemetry 中的 30+ 框架提供一流支持——因此您可以开始捕获追踪记录，而无需更改应用程序的构建方式。
+
+<CardGroup cols={3}>
+  <Card title="LangChain" href="/integrations/langchain" icon={<img src="/img/tracing/langchain.svg" />} iconPosition="left"/>
+  <Card title="LlamaIndex" href="/integrations/llama_index" icon={<img src="/img/tracing/llamaindex.svg" />} iconPosition="left"/>
+  <Card title="Anthropic" href="/integrations/anthropic" icon={<img src="/img/tracing/anthropic.svg" />} iconPosition="left"/>
+  <Card title="AWS Bedrock" href="/integrations/bedrock" icon={<img src="/img/tracing/bedrock.svg" />} iconPosition="left"/>
+  <Card title="Google Gemini" href="/integrations/gemini" icon={<img src="/img/tracing/gemini.svg" />} iconPosition="left"/>
+  <Card title="CrewAI" href="/integrations/crewai" icon={<img src="/img/tracing/crewai.svg" />} iconPosition="left"/>
+</CardGroup>
+
+**[查看所有集成 →](/integrations/overview)**
+
+## 后续步骤
+
+- [快速开始](/tracing/getting-started)——几分钟内为您的智能体添加可观测性
+- [概念](/tracing/concepts)——了解追踪、跨度、线程和反馈评分
+- [使用 Ollie 调试智能体](/tracing/debug-agents)——使用 AI 辅助的根因分析
+- [成本跟踪](/tracing/advanced/cost_tracking)——监控 Token 使用量和支出

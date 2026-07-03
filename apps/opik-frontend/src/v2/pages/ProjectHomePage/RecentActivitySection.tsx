@@ -1,4 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   FlaskConical,
   Database,
@@ -18,7 +20,7 @@ import useRecentActivity from "@/api/projects/useRecentActivity";
 import { ActivityType, RecentActivityItem } from "@/types/recent-activity";
 
 type ActivityConfigEntry = {
-  label: string | ((item: RecentActivityItem) => string);
+  label: string | ((item: RecentActivityItem, t: TFunction) => string);
   icon: LucideIcon;
   color: string;
   getLink: (item: RecentActivityItem, base: string) => string;
@@ -26,47 +28,47 @@ type ActivityConfigEntry = {
 
 const ACTIVITY_CONFIG: Record<ActivityType, ActivityConfigEntry> = {
   [ActivityType.TRACE_DAILY]: {
-    label: (item) =>
-      `Traces logged ${lowerFirst(
-        formatRelativeDateTime(item.created_at, false),
-      )}`,
+    label: (item, t) =>
+      t("recentActivity.tracesLogged", {
+        time: lowerFirst(formatRelativeDateTime(item.created_at, false)),
+      }),
     icon: ListTree,
     color: "text-chart-teal",
     getLink: (_item, base) => `${base}/logs?logsType=traces`,
   },
   [ActivityType.OPTIMIZATION]: {
-    label: "Optimization run created",
+    label: "recentActivity.optimizationCreated",
     icon: Sparkles,
     color: "text-chart-burgundy",
     getLink: (item, base) => `${base}/optimizations/${item.id}`,
   },
   [ActivityType.EXPERIMENT]: {
-    label: "Experiment created",
+    label: "recentActivity.experimentCreated",
     icon: FlaskConical,
     color: "text-chart-green",
     getLink: (item, base) =>
       `${base}/experiments/${item.resource_id}/compare?experiments=["${item.id}"]`,
   },
   [ActivityType.DATASET_VERSION]: {
-    label: "Dataset updated",
+    label: "recentActivity.datasetUpdated",
     icon: Database,
     color: "text-chart-purple",
     getLink: (item, base) => `${base}/datasets/${item.id}/items`,
   },
   [ActivityType.TEST_SUITE_VERSION]: {
-    label: "Test suite updated",
+    label: "recentActivity.testSuiteUpdated",
     icon: ListChecks,
     color: "text-chart-purple",
     getLink: (item, base) => `${base}/test-suites/${item.id}/items`,
   },
   [ActivityType.PROMPT_VERSION]: {
-    label: "Prompt created",
+    label: "recentActivity.promptCreated",
     icon: FileTerminal,
     color: "text-chart-blue",
     getLink: (item, base) => `${base}/prompts/${item.id}`,
   },
   [ActivityType.ALERT_EVENT]: {
-    label: "Alert triggered",
+    label: "recentActivity.alertTriggered",
     icon: AlertTriangle,
     color: "text-chart-red",
     getLink: (item, base) => `${base}/alerts/${item.id}`,
@@ -74,6 +76,7 @@ const ACTIVITY_CONFIG: Record<ActivityType, ActivityConfigEntry> = {
 };
 
 function ActivityItem({ item }: { item: RecentActivityItem }) {
+  const { t } = useTranslation("pages/project-home");
   const { workspaceName, projectId } = useParams({ strict: false }) as {
     workspaceName: string;
     projectId: string;
@@ -92,8 +95,8 @@ function ActivityItem({ item }: { item: RecentActivityItem }) {
       <span className="comet-body-xs min-w-0 flex-1 truncate">
         <span className="comet-body-xs-accented">
           {typeof config.label === "function"
-            ? config.label(item)
-            : config.label}
+            ? config.label(item, t)
+            : t(config.label)}
           :
         </span>{" "}
         <span className="text-muted-foreground">{item.name}</span>
@@ -120,19 +123,20 @@ function LoadingSkeleton() {
 }
 
 function EmptyState() {
+  const { t } = useTranslation("pages/project-home");
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border bg-background py-12">
       <img src={activityCloudIcon} alt="" className="mb-4 size-10" />
-      <p className="text-sm font-medium">No activity yet</p>
+      <p className="text-sm font-medium">{t("recentActivity.noActivityYet")}</p>
       <p className="mt-2 text-xs text-muted-foreground">
-        Tracks meaningful activity in this project — new artifacts, updates, and
-        triggered alerts.
+        {t("recentActivity.noActivityDescription")}
       </p>
     </div>
   );
 }
 
 export default function RecentActivitySection() {
+  const { t } = useTranslation("pages/project-home");
   const { projectId } = useParams({ strict: false }) as {
     projectId: string;
   };
@@ -143,7 +147,7 @@ export default function RecentActivitySection() {
 
   return (
     <section>
-      <h2 className="comet-body-s-accented mb-1.5">Recent activity</h2>
+      <h2 className="comet-body-s-accented mb-1.5">{t("recentActivity.title")}</h2>
       {isPending ? (
         <LoadingSkeleton />
       ) : !items.length ? (

@@ -1,0 +1,171 @@
+---
+description: 从这里开始将 Opik 集成到基于 Ollama 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Ollama | Opik 文档
+og:description: 使用 Ollama 的 Python 包、LangChain 或 OpenAI 兼容模式，在本地机器上部署和交互 AI 模型。
+og:site_name: Opik 文档
+og:title: 使用 Ollama 在本地运行 AI 模型 - Opik
+title: 使用 Opik 实现 Ollama 可观测性
+---
+
+[Ollama](https://ollama.com/) 允许用户在本地机器上运行、交互和部署 AI 模型，无需复杂的基础设施或云服务依赖。
+
+有多种方式可以从 Python 与 Ollama 进行交互，包括但不限于 [ollama Python 包](https://pypi.org/project/ollama/)、[LangChain](https://python.langchain.com/docs/integrations/providers/ollama/) 或使用 [OpenAI 库](https://docs.ollama.com/api/openai-compatibility#openai-python-library)。我们将介绍如何在每种方式中追踪您的 LLM 调用。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=ollama&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=ollama&utm_campaign=opik)并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=ollama&utm_campaign=opik)。
+
+## 快速开始
+
+### 配置 Ollama
+
+在开始之前，您需要运行一个 Ollama 实例。您可以按照[快速入门指南](https://github.com/ollama/ollama/blob/main/README.md#quickstart)安装 Ollama，它会自动启动 Ollama API 服务器。如果 Ollama 服务器未运行，可以使用 `ollama serve` 命令启动。
+
+Ollama 运行后，您可以通过执行 `ollama pull llama3.1` 来下载 llama3.1 模型。有关 Ollama 上所有可用模型的完整列表，请参阅 [Ollama 模型库](https://ollama.com/library)。
+
+### 安装
+
+您还需要安装 Opik。可以通过以下命令安装：
+
+```bash
+pip install opik
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版**设置
+- **配置文件**和环境变量
+
+## 追踪使用 Ollama Python 包发起的调用
+
+首先需要安装 Ollama Python 包：
+
+```bash
+pip install --quiet --upgrade ollama
+```
+
+然后使用 `track` 装饰器将所有追踪日志记录到 Opik：
+
+```python
+import ollama
+from opik import track, opik_context
+
+@track(tags=['ollama', 'python-library'])
+def ollama_llm_call(user_message: str):
+    # Create the Ollama model
+    response = ollama.chat(model='llama3.1', messages=[
+        {
+            'role': 'user',
+            'content': user_message,
+        },
+    ])
+
+    opik_context.update_current_span(
+        metadata={
+            'model': response['model'],
+            'eval_duration': response['eval_duration'],
+            'load_duration': response['load_duration'],
+            'prompt_eval_duration': response['prompt_eval_duration'],
+            'prompt_eval_count': response['prompt_eval_count'],
+            'done': response['done'],
+            'done_reason': response['done_reason'],
+        },
+        usage={
+            'completion_tokens': response['eval_count'],
+            'prompt_tokens': response['prompt_eval_count'],
+            'total_tokens': response['eval_count'] + response['prompt_eval_count']
+        }
+    )
+    return response['message']
+
+ollama_llm_call("Say this is a test")
+```
+
+追踪记录现在将显示在 Opik 平台中。
+
+## 追踪使用 OpenAI 发起的 Ollama 调用
+
+Ollama 兼容 OpenAI 格式，可与 OpenAI Python 库配合使用。因此，您可以利用 Opik 的 OpenAI 集成来追踪 Ollama 调用：
+
+```python
+from openai import OpenAI
+from opik.integrations.openai import track_openai
+import os
+
+os.environ["OPIK_PROJECT_NAME"] = "ollama-integration"
+
+# Create an OpenAI client
+client = OpenAI(
+    base_url='http://localhost:11434/v1/',
+    # required but ignored
+    api_key='ollama',
+)
+
+# Log all traces made to with the OpenAI client to Opik
+client = track_openai(client)
+
+# call the local ollama model using the OpenAI client
+chat_completion = client.chat.completions.create(
+    messages=[
+        {
+            'role': 'user',
+            'content': 'Say this is a test',
+        }
+    ],
+    model='llama3.1',
+)
+
+print(chat_completion.choices[0].message.content)
+```
+
+本地 LLM 调用现在已被追踪并记录到 Opik。
+
+## 追踪使用 LangChain 发起的 Ollama 调用
+
+要追踪通过 LangChain 发起的 Ollama 调用，首先需要安装 `langchain-ollama` 包：
+
+```bash
+pip install --quiet --upgrade langchain-ollama langchain
+```
+
+现在您可以使用 `OpikTracer` 类将所有通过 LangChain 发起的 Ollama 调用记录到 Opik：
+
+```python
+from langchain_ollama import ChatOllama
+from opik.integrations.langchain import OpikTracer
+
+# Create the Opik tracer
+opik_tracer = OpikTracer(tags=["langchain", "ollama"])
+
+# Create the Ollama model and configure it to use the Opik tracer
+llm = ChatOllama(
+    model="llama3.1",
+    temperature=0,
+).with_config({"callbacks": [opik_tracer]})
+
+# Call the Ollama model
+messages = [
+    (
+        "system",
+        "You are a helpful assistant that translates English to French. Translate the user sentence.",
+    ),
+    (
+        "human",
+        "I love programming.",
+    ),
+]
+ai_msg = llm.invoke(messages)
+ai_msg
+```
+
+现在您可以在 Opik 应用中查看追踪记录：
+
+<Frame>
+  <img src="/img/cookbook/ollama_cookbook.png" />
+</Frame>

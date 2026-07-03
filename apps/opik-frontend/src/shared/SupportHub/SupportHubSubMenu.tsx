@@ -4,6 +4,7 @@ import {
   LifeBuoy,
   MessageCircleQuestion,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SlackIcon from "@/icons/slack.svg?react";
 
 import {
@@ -32,6 +33,7 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
   variant = "submenu",
   expanded = true,
 }) => {
+  const { t } = useTranslation();
   const { open: openQuickstart } = useLayoutDialog("quickstart");
   const { open: openFeedback } = useLayoutDialog("feedback");
 
@@ -39,7 +41,7 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
     <>
       <DropdownMenuItem onClick={openQuickstart} className="cursor-pointer">
         <GraduationCap className="mr-2 size-4" />
-        <span>Quickstart guide</span>
+        <span>{t("common.table.quickstartGuide")}</span>
       </DropdownMenuItem>
       <DropdownMenuItem asChild>
         <a
@@ -49,7 +51,7 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
           className="flex cursor-pointer items-center gap-2"
         >
           <Book className="size-4" />
-          <span>Docs</span>
+          <span>{t("common.supportHub.docs")}</span>
         </a>
       </DropdownMenuItem>
       <DropdownMenuSeparator />
@@ -61,12 +63,12 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
           className="flex cursor-pointer items-center gap-2"
         >
           <SlackIcon className="size-4" />
-          <span>Get help on Slack</span>
+          <span>{t("common.supportHub.getHelpOnSlack")}</span>
         </a>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={openFeedback} className="cursor-pointer">
         <MessageCircleQuestion className="mr-2 size-4" />
-        <span>Provide feedback</span>
+        <span>{t("common.feedback.provideFeedback")}</span>
       </DropdownMenuItem>
     </>
   );
@@ -76,7 +78,7 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
       <DropdownMenuSub>
         <DropdownMenuSubTrigger className="cursor-pointer">
           <LifeBuoy className="mr-2 size-4" />
-          <span>Support hub</span>
+          <span>{t("common.supportHub.supportHub")}</span>
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <DropdownMenuSubContent className="w-56">
@@ -90,7 +92,7 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
   const trigger = expanded ? (
     <button className="comet-body-s flex h-8 w-full items-center gap-2 rounded-md px-2.5 text-muted-slate hover:bg-primary-foreground">
       <LifeBuoy className="size-4 shrink-0" />
-      <span className="grow truncate text-left">Support hub</span>
+      <span className="grow truncate text-left">{t("common.supportHub.supportHub")}</span>
     </button>
   ) : (
     <button className="comet-body-s flex size-8 items-center justify-center rounded-md text-muted-slate hover:bg-primary-foreground">
@@ -104,7 +106,7 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
         {expanded ? (
           <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
         ) : (
-          <TooltipWrapper content="Support hub" side="right">
+          <TooltipWrapper content={t("common.supportHub.supportHub")} side="right">
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
           </TooltipWrapper>
         )}

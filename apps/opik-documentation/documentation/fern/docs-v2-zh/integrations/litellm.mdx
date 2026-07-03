@@ -1,0 +1,162 @@
+---
+description: 从这里开始将 Opik 集成到基于 LiteLLM 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: LiteLLM | Opik 文档
+og:description: 学习使用 LiteLLM 以 OpenAI 格式调用 LLM API。通过 Python SDK 或代理服务器进行配置，实现无缝集成。
+og:site_name: Opik 文档
+og:title: LiteLLM 网关 - Opik 集成
+title: 使用 Opik 实现 LiteLLM 可观测性
+---
+
+[LiteLLM](https://github.com/BerriAI/litellm) 允许你使用 OpenAI 格式调用所有 LLM API [Bedrock、Huggingface、VertexAI、TogetherAI、Azure、OpenAI、Groq 等]。使用 LiteLLM 有两种主要方式：
+
+1. 使用 [LiteLLM Python SDK](https://docs.litellm.ai/docs/#litellm-python-sdk)
+2. 使用 [LiteLLM 代理服务器（LLM 网关）](https://docs.litellm.ai/docs/#litellm-proxy-server-llm-gateway)
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=litellm&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=litellm&utm_campaign=opik) 并获取你的 API 密钥。
+
+> 你也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=litellm&utm_campaign=opik) 了解更多信息。
+
+## 快速开始
+
+### 安装
+
+首先，确保你已安装 `opik` 和 `litellm` 两个包：
+
+```bash
+pip install opik litellm
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置 LiteLLM
+
+为了使用 LiteLLM，你需要配置 LLM 提供商的 API 密钥。在本示例中，我们将使用 OpenAI。你可以在[这些页面中查找或创建你的 API 密钥](https://platform.openai.com/settings/organization/api-keys)：
+
+你可以将它们设置为环境变量：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或者通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 在 LiteLLM Python SDK 中使用 Opik
+
+### 记录 LLM 调用
+
+为了将 LLM 调用记录到 Opik，你需要创建 OpikLogger 回调。创建 OpikLogger 回调并将其添加到 LiteLLM 后，你就可以像往常一样调用 LiteLLM：
+
+```python
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+import os
+
+# Set project name for better organization
+os.environ["OPIK_PROJECT_NAME"] = "litellm-integration-demo"
+
+opik_logger = OpikLogger()
+litellm.callbacks = [opik_logger]
+
+response = litellm.completion(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "user", "content": "Why is tracking and evaluation of LLMs important?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+<Frame>
+  <img src="/img/cookbook/litellm_cookbook.png" />
+</Frame>
+
+### 在跟踪函数中记录 LLM 调用
+
+如果你在使用 [`@track`](/tracing/advanced/log_traces#using-function-decorators) 装饰器跟踪的函数中使用 LiteLLM，你需要将 `current_span_data` 作为元数据传递给 `litellm.completion` 调用：
+
+```python
+from opik import track
+from opik.opik_context import get_current_span_data
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+
+opik_logger = OpikLogger()
+litellm.callbacks = [opik_logger]
+
+@track
+def streaming_function(input):
+    messages = [{"role": "user", "content": input}]
+    response = litellm.completion(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        metadata = {
+            "opik": {
+                "current_span_data": get_current_span_data(),
+                "tags": ["streaming-test"],
+            },
+        }
+    )
+    return response
+
+response = streaming_function("Why is tracking and evaluation of LLMs important?")
+chunks = list(response)
+```
+
+## 在 LiteLLM 代理服务器中使用 Opik
+
+<Info>
+  **Opik Agent 优化器与 LiteLLM**：除了跟踪功能外，Opik Agent 优化器 SDK 还利用 LiteLLM 在其优化算法中提供全面的模型支持。这允许你使用各种 LLM（包括本地模型）来执行提示词优化任务。
+</Info>
+
+### 配置 LiteLLM 代理服务器
+
+为了配置 Opik 日志记录，你需要更新 LiteLLM `config.yaml` 配置文件中的 `litellm_settings` 部分：
+
+```yaml
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: gpt-4o
+litellm_settings:
+  success_callback: ["opik"]
+```
+
+现在你可以启动 LiteLLM 代理服务器，所有 LLM 调用都将被记录到 Opik：
+
+```bash
+litellm --config config.yaml
+```
+
+### 使用 LiteLLM 代理服务器
+
+每个发送到 LiteLLM 代理服务器的 API 调用现在都将被记录到 Opik：
+
+```bash
+curl -X POST http://localhost:4000/v1/chat/completions -H 'Authorization: Bearer sk-1234' -H "Content-Type: application/json" -d '{
+    "model": "gpt-4o",
+    "messages": [
+        {
+            "role": "user",
+            "content": "Hello!"
+        }
+    ]
+}'
+```

@@ -25,6 +25,7 @@ import { useProviderOptions } from "@/hooks/useProviderOptions";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
 import ExplainerDescription from "@/shared/ExplainerDescription/ExplainerDescription";
 import { ChevronLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface SetupProviderDialogProps {
   open: boolean;
@@ -39,6 +40,7 @@ const SetupProviderDialog: React.FC<SetupProviderDialogProps> = ({
   setOpen,
   onProviderAdded,
 }) => {
+  const { t } = useTranslation();
   const providerOptions = useProviderOptions({
     includeAddNewOptions: true,
   });
@@ -191,7 +193,7 @@ const SetupProviderDialog: React.FC<SetupProviderDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg sm:max-w-[720px]">
         <DialogHeader>
-          <DialogTitle>Add provider configuration</DialogTitle>
+          <DialogTitle>{t("setupProviderDialog.title")}</DialogTitle>
           <DialogDescription>
             <ExplainerDescription
               {...EXPLAINERS_MAP[EXPLAINER_ID.why_do_i_need_an_ai_provider]}
@@ -227,14 +229,14 @@ const SetupProviderDialog: React.FC<SetupProviderDialogProps> = ({
                 className="p-0"
               >
                 <ChevronLeft className="mr-1 size-4" />
-                Back
+                {t("setupProviderDialog.back")}
               </Button>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleCancel} type="button">
-                  Cancel
+                  {t("setupProviderDialog.cancel")}
                 </Button>
                 <Button type="submit" onClick={form.handleSubmit(handleSubmit)}>
-                  Add provider
+                  {t("setupProviderDialog.addProvider")}
                 </Button>
               </div>
             </div>

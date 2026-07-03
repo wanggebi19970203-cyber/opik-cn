@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { BooleanParam, StringParam, useQueryParam } from "use-query-params";
 import { ColumnPinningState } from "@tanstack/react-table";
 import useLocalStorageState from "use-local-storage-state";
@@ -59,6 +60,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   experiments,
   isPending,
 }) => {
+  const { t } = useTranslation("pages/trial");
   const [search = "", setSearch] = useQueryParam("searchConfig", StringParam, {
     updateType: "replaceIn",
   });
@@ -157,10 +159,10 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   }, [rows, search, onlyDiff, isCompare]);
 
   const noDataText = search
-    ? "No search results"
+    ? t("configurationTab.noSearchResults")
     : isCompare
-      ? "These trials have no configuration"
-      : "This trial has no configuration";
+      ? t("configurationTab.noConfigMultiple")
+      : t("configurationTab.noConfigSingle");
 
   const resizeConfig = useMemo(
     () => ({
@@ -194,7 +196,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("configurationTab.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -204,7 +206,9 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">Show differences only</Label>
+                <Label htmlFor="show-doff-only">
+                  {t("configurationTab.showDifferencesOnly")}
+                </Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

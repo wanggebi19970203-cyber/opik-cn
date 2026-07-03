@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { AxiosError, HttpStatusCode } from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,30 +48,31 @@ interface InsightsViewDialogProps {
   onCreateSuccess?: (dashboardId: string) => void;
 }
 
-const MODE_CONFIG = {
+const getModeConfig = (t: (key: string) => string) => ({
   create: {
-    title: "Create view",
-    buttonText: "Create view",
+    title: t("projectViews.createView"),
+    buttonText: t("projectViews.createView"),
   },
   edit: {
-    title: "Edit view",
-    buttonText: "Rename view",
+    title: t("projectViews.editView"),
+    buttonText: t("projectViews.renameView"),
   },
   clone: {
-    title: "Duplicate view",
-    buttonText: "Duplicate view",
+    title: t("projectViews.duplicateView"),
+    buttonText: t("projectViews.duplicateView"),
   },
-} as const;
-
-const FormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(100, "Name must be less than 100 characters")
-    .trim(),
 });
 
-type FormData = z.infer<typeof FormSchema>;
+const getFormSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z
+      .string()
+      .min(1, t("projectViews.nameRequired"))
+      .max(100, t("projectViews.nameMaxLength"))
+      .trim(),
+  });
+
+type FormData = { name: string };
 
 const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
   mode,
@@ -79,8 +81,9 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
   setOpen,
   onCreateSuccess,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
-  const config = MODE_CONFIG[mode];
+  const config = getModeConfig(t)[mode];
 
   const { mutate: createMutate, isPending: isCreating } =
     useInsightsViewCreateMutation({ skipDefaultError: true });
@@ -90,12 +93,13 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
   const isPending = isCreating || isUpdating;
 
   const getInitialName = () => {
-    if (mode === "clone") return `${dashboard!.name} (Copy)`;
+    if (mode === "clone") return `${dashboard!.name} ${t("dialog.copySuffix")}`;
     return dashboard?.name || "";
   };
 
+  const formSchema = getFormSchema(t);
   const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: { name: getInitialName() },
   });
@@ -104,18 +108,18 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
     (toastMode: InsightsViewDialogMode) => {
       const toastConfigs = {
         create: {
-          title: "View created",
-          description: "Start customizing it by adding widgets",
-          actionLabel: "Add your first widget",
+          title: t("projectViews.viewCreated"),
+          description: t("projectViews.viewCreatedDescription"),
+          actionLabel: t("projectViews.addYourFirstWidget"),
         },
         clone: {
-          title: "View created",
-          description: "Start customizing it by adding or editing widgets",
-          actionLabel: "Add a widget",
+          title: t("projectViews.viewCreated"),
+          description: t("projectViews.viewCreatedCloneDescription"),
+          actionLabel: t("projectViews.addAWidget"),
         },
         edit: {
-          title: "View updated",
-          description: "Your changes have been saved.",
+          title: t("projectViews.viewUpdated"),
+          description: t("projectViews.viewUpdatedDescription"),
           actionLabel: null,
         },
       } as const;
@@ -163,12 +167,12 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
       if (statusCode === HttpStatusCode.Conflict) {
         form.setError("name", {
           type: "server",
-          message: "This name already exists",
+          message: t("projectViews.nameAlreadyExists"),
         });
       } else {
         toast({
-          title: "Error saving view",
-          description: message || "Failed to save view",
+          title: t("projectViews.errorSavingView"),
+          description: message || t("projectViews.failedToSaveView"),
           variant: "destructive",
         });
       }
@@ -245,13 +249,12 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
           <DialogTitle>{config.title}</DialogTitle>
           {mode === "create" && (
             <DialogDescription>
-              Create a view to track performance and quality for this project.
-              Widgets will use the current project automatically.
+              {t("projectViews.createDescription")}
             </DialogDescription>
           )}
           {mode === "clone" && dashboard && (
             <DialogDescription>
-              {`Create a copy of ${dashboard.name} to customize it without affecting the original.`}
+              {t("projectViews.cloneDescription", { name: dashboard.name })}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -270,11 +273,11 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
 
                 return (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t("projectViews.name")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="View name"
+                        placeholder={t("projectViews.viewNamePlaceholder")}
                         className={cn({
                           "border-destructive": Boolean(
                             validationErrors?.message,
@@ -299,7 +302,7 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={isPending}>
-              Cancel
+              {t("projectViews.cancel")}
             </Button>
           </DialogClose>
 

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import uniqBy from "lodash/uniqBy";
 import { UnifiedMediaItem } from "@/hooks/useUnifiedMedia";
 import {
@@ -16,6 +17,7 @@ type AttachmentsListProps = {
 };
 
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ media }) => {
+  const { t } = useTranslation("tracing");
   const [previewData, setPreviewData] = useState<AttachmentPreviewData | null>(
     null,
   );
@@ -36,7 +38,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ media }) => {
   const hasAttachments = previewDataArray.length > 0;
   return hasAttachments ? (
     <AccordionItem value="attachments">
-      <AccordionTrigger>Attachments</AccordionTrigger>
+      <AccordionTrigger>{t("detailsTab.attachments")}</AccordionTrigger>
       <AccordionContent>
         <div className="flex flex-wrap gap-2">
           {previewDataArray.map((data) => (

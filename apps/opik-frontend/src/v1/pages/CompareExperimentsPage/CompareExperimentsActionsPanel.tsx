@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import get from "lodash/get";
 import slugify from "slugify";
 import uniq from "lodash/uniq";
@@ -88,6 +89,7 @@ type CompareExperimentsActionsPanelProps = {
 const CompareExperimentsActionsPanel: React.FC<
   CompareExperimentsActionsPanelProps
 > = ({ getDataForExport, selectedRows = [], columnsToExport, experiments }) => {
+  const { t } = useTranslation();
   const disabled = !selectedRows?.length;
   const isExportEnabled = useIsFeatureEnabled(FeatureToggleKeys.EXPORT_ENABLED);
 
@@ -186,7 +188,7 @@ const CompareExperimentsActionsPanel: React.FC<
             generateFileName={generateFileName}
             tooltipContent={
               !isExportEnabled
-                ? "Export functionality is disabled for this installation"
+                ? t("compareExperiments.actions.exportDisabled")
                 : undefined
             }
           />

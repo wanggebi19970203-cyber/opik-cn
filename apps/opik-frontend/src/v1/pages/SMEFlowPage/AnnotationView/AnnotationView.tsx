@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/ui/card";
 import { cn } from "@/lib/utils";
 import TraceDataViewer from "./TraceDataViewer";
@@ -25,6 +26,7 @@ interface AnnotationViewProps {
 const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
   header,
 }) => {
+  const { t } = useTranslation("sme");
   const {
     annotationQueue,
     currentIndex,
@@ -43,24 +45,17 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
   // Determine button label based on item completion status
   const getButtonLabel = () => {
     if (isCurrentItemProcessed) {
-      // Viewing a completed item (current item is NOT in unprocessedItems)
-      // Check if there are OTHER unprocessed items
-      // Since current item is already processed, it's not in unprocessedItems
       const hasOtherUnprocessedItems = unprocessedItems.length > 0;
 
       if (hasOtherUnprocessedItems) {
-        return "Update + next";
+        return t("annotationView.updateNext");
       } else {
-        // All items are completed - reviewing mode
-        // Show "Update + next" unless it's the last item in the queue
-        return isLastItem ? "Update + complete" : "Update + next";
+        return isLastItem ? t("annotationView.updateComplete") : t("annotationView.updateNext");
       }
     } else {
-      // Viewing a non-completed item (current item IS in unprocessedItems)
-      // Show "Submit + complete" only if this is the ONLY unprocessed item
       return unprocessedItems.length === 1
-        ? "Submit + complete"
-        : "Submit + next";
+        ? t("annotationView.submitComplete")
+        : t("annotationView.submitNext");
     }
   };
 
@@ -118,10 +113,10 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
                 )}
               >
                 {isCurrentItemProcessed && <Check className="mr-1 size-4" />}
-                {currentIndex + 1} of {queueItems.length}
+                {currentIndex + 1} {t("annotationView.of")} {queueItems.length}
               </div>
               <TooltipWrapper
-                content="Previous item"
+                content={t("annotationView.previousItem")}
                 hotkeys={[SME_HOTKEYS[SME_ACTION.PREVIOUS].display]}
               >
                 <Button
@@ -130,7 +125,7 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
                   disabled={isFirstItem}
                 >
                   <ChevronLeft className="mr-2 size-4" />
-                  Previous
+                  {t("annotationView.previous")}
                   <HotkeyDisplay
                     hotkey={SME_HOTKEYS[SME_ACTION.PREVIOUS].display}
                     variant="outline"
@@ -140,7 +135,7 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
                 </Button>
               </TooltipWrapper>
               <TooltipWrapper
-                content="Next item"
+                content={t("annotationView.nextItem")}
                 hotkeys={[SME_HOTKEYS[SME_ACTION.NEXT].display]}
               >
                 <Button
@@ -154,12 +149,12 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
                     size="sm"
                     className="mr-2"
                   />
-                  Next
+                  {t("annotationView.next")}
                   <ChevronRight className="ml-2 size-4" />
                 </Button>
               </TooltipWrapper>
               <TooltipWrapper
-                content="Submit and continue"
+                content={t("annotationView.submitAndContinue")}
                 hotkeys={[SME_HOTKEYS[SME_ACTION.DONE].display]}
               >
                 <Button

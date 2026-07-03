@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowDownToLine,
   Clock,
@@ -36,6 +37,7 @@ type OptimizationLogsProps = {
 const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
   optimization,
 }) => {
+  const { t } = useTranslation();
   const isInProgress =
     optimization?.status &&
     IN_PROGRESS_OPTIMIZATION_STATUSES.includes(optimization.status);
@@ -123,7 +125,7 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
     if (isPending && !logContent) {
       return (
         <Loader
-          message={isInProgress ? "Waiting for logs..." : "Loading logs..."}
+          message={isInProgress ? t('optimizations.logs.waitingForLogs') : t('optimizations.logs.loadingLogs')}
           className="min-h-32"
         />
       );
@@ -134,7 +136,7 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
         <div className="flex flex-1 flex-col items-center justify-center gap-2">
           {isInProgress && <Spinner size="small" />}
           <div className="comet-body-s text-muted-slate">
-            {isInProgress ? "Logs will appear shortly" : "No logs available"}
+            {isInProgress ? t('optimizations.logs.willAppearShortly') : t('optimizations.logs.noLogsAvailable')}
           </div>
         </div>
       );
@@ -160,7 +162,7 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
             className="absolute bottom-4 left-1/2 -translate-x-1/2 gap-1.5 shadow-md"
           >
             <ArrowDownToLine className="size-3.5" />
-            New logs available
+            {t('optimizations.logs.newLogsAvailable')}
           </Button>
         )}
       </div>
@@ -172,10 +174,10 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
       <CardContent className="flex h-full flex-col p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="comet-body-s-accented">Logs</h3>
+            <h3 className="comet-body-s-accented">{t('optimizations.logs.title')}</h3>
             {lastUpdatedAt && (
               <TooltipWrapper
-                content={`Last updated at ${formatDate(lastUpdatedAt, {
+                content={`${t('optimizations.logs.lastUpdatedAt')} ${formatDate(lastUpdatedAt, {
                   includeSeconds: true,
                 })}`}
               >
@@ -190,8 +192,8 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
               <TooltipWrapper
                 content={
                   isAutoScrollEnabled
-                    ? "Auto-scroll enabled"
-                    : "Click to scroll to bottom"
+                    ? t('optimizations.logs.autoScrollEnabled')
+                    : t('optimizations.logs.clickToScrollToBottom')
                 }
               >
                 <Button
@@ -204,7 +206,7 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
                 </Button>
               </TooltipWrapper>
             )}
-            <TooltipWrapper content="Refresh logs">
+            <TooltipWrapper content={t('optimizations.logs.refreshLogs')}>
               <Button
                 variant="ghost"
                 size="icon-xs"
@@ -217,7 +219,7 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
               </Button>
             </TooltipWrapper>
             {logContent && (
-              <TooltipWrapper content="Fullscreen">
+              <TooltipWrapper content={t('optimizations.logs.fullscreen')}>
                 <Button variant="ghost" size="icon-xs" onClick={openFullscreen}>
                   <Maximize2 className="size-3.5" />
                 </Button>

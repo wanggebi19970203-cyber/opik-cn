@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 
 interface PromptVariablesListProps {
@@ -10,15 +11,17 @@ interface PromptVariablesListProps {
 const PromptVariablesList: React.FC<PromptVariablesListProps> = ({
   variables,
   onVariableClick,
-  tooltipContent = "Click to insert",
+  tooltipContent,
 }) => {
+  const { t } = useTranslation("prompt");
+  const resolvedTooltipContent = tooltipContent ?? t("promptVariablesList.clickToInsert");
   if (variables.length === 0) return null;
 
   return (
     <>
       {variables.map((variable, index) => (
         <span key={variable}>
-          <TooltipWrapper content={tooltipContent}>
+          <TooltipWrapper content={resolvedTooltipContent}>
             <button
               type="button"
               className="underline underline-offset-2 hover:text-[var(--color-green)]"

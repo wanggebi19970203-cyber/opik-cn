@@ -1,0 +1,69 @@
+{
+  "trial": {
+    "title": "Trial",
+    "description": "Try Opik features",
+    "features": {
+      "tracing": "Tracing",
+      "evaluation": "Evaluation",
+      "datasets": "Datasets"
+    },
+    "tabs": {
+      "results": "Results",
+      "configuration": "Configuration"
+    },
+    "evaluationResults": "Evaluation results",
+    "configurationTab": {
+      "name": "Name",
+      "searchByName": "Search by name",
+      "showDifferencesOnly": "Show differences only",
+      "noSearchResults": "No search results",
+      "noConfigMultiple": "These trials have no configuration",
+      "noConfigSingle": "This trial has no configuration"
+    },
+    "promptTab": {
+      "name": "Name",
+      "searchByName": "Search by name",
+      "showDifferencesOnly": "Show differences only",
+      "noSearchResults": "No search results",
+      "noPromptMultiple": "These trials have no prompt",
+      "noPromptSingle": "This trial has no prompt",
+      "prompt": "Prompt",
+      "examples": "Examples"
+    },
+    "trialDetails": {
+      "trial": "Trial",
+      "trialNumber": "Trial #{{number}}",
+      "dataset": "Dataset",
+      "optimizationLogs": "Optimization logs",
+      "status": {
+        "baseline": "Baseline",
+        "passed": "Passed",
+        "pruned": "Pruned"
+      }
+    },
+    "trialItemsTab": {
+      "evaluationTask": "Evaluation task",
+      "optimizationScores": "Optimizations scores",
+      "testSuiteItemId": "Test suite item ID",
+      "testSuite": "Test suite",
+      "selectScore": "Select score",
+      "noData": "There is no data for the selected trials",
+      "all": "All",
+      "passed": "Passed",
+      "failed": "Failed"
+    },
+    "trialPassedCell": {
+      "yes": "Yes",
+      "no": "No",
+      "threshold": "threshold: {{value}}"
+    },
+    "columns": {
+      "name": "Name"
+    },
+    "sectionHeaders": {
+      "testSuite": "Test suite",
+      "evaluationTask": "Evaluation task",
+      "optimizationsScores": "Optimizations scores"
+    }
+  }
+}

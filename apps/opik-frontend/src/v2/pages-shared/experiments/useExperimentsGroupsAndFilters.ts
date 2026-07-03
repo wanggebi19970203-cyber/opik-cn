@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { JsonParam } from "use-query-params";
 import { ColumnSort } from "@tanstack/react-table";
+import i18next from "i18next";
 
 import { Groups } from "@/types/groups";
 import {
@@ -17,25 +18,32 @@ import { getTagsFilterConfig } from "@/v2/pages-shared/TagsAutocomplete/tagsFilt
 import { Filters } from "@/types/filters";
 import { GroupedExperiment } from "@/hooks/useGroupedExperimentsList";
 
-export const FILTER_AND_GROUP_COLUMNS: ColumnData<GroupedExperiment>[] = [
-  {
-    id: COLUMN_DATASET_ID,
-    label: ITEM_SOURCE_LABEL,
-    type: COLUMN_TYPE.string,
-    disposable: true,
-  },
-  {
-    id: "tags",
-    label: "Tags",
-    type: COLUMN_TYPE.list,
-    iconType: "tags",
-  },
-  {
-    id: COLUMN_METADATA_ID,
-    label: "Configuration",
-    type: COLUMN_TYPE.dictionary,
-  },
-];
+export const getFilterAndGroupColumns = (): ColumnData<GroupedExperiment>[] => {
+  const t = i18next.getFixedT(null, "experiments");
+  return [
+    {
+      id: COLUMN_DATASET_ID,
+      label: ITEM_SOURCE_LABEL,
+      type: COLUMN_TYPE.string,
+      disposable: true,
+    },
+    {
+      id: "tags",
+      label: t("experiments.columns.tags"),
+      type: COLUMN_TYPE.list,
+      iconType: "tags",
+    },
+    {
+      id: COLUMN_METADATA_ID,
+      label: t("experiments.columns.configuration"),
+      type: COLUMN_TYPE.dictionary,
+    },
+  ];
+};
+
+/** @deprecated Use getFilterAndGroupColumns() instead */
+export const FILTER_AND_GROUP_COLUMNS: ColumnData<GroupedExperiment>[] =
+  getFilterAndGroupColumns();
 
 const DEFAULT_GROUPS: Groups = [];
 
@@ -72,7 +80,9 @@ export const useExperimentsGroupsAndFilters = ({
           },
           defaultOperator: "=",
           operators: [{ label: "=", value: "=" }],
-          sortingMessage: "Last experiment created",
+          sortingMessage: i18next.getFixedT(null, "dashboards")(
+            "filters.lastExperimentCreated",
+          ),
         },
         [COLUMN_METADATA_ID]: {
           keyComponent: ExperimentsPathsAutocomplete,

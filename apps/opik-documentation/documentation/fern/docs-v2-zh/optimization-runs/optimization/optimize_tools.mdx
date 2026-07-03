@@ -1,0 +1,257 @@
+---
+title: 优化工具（MCP）
+description: 改进 MCP 工具和参数描述，无需更改提示词文本。
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/optimization/optimize_tools
+---
+
+当你想独立于提示词文本或智能体逻辑优化**工具签名**（描述 + 参数描述）时，使用本指南。
+
+## 本文涵盖
+
+- 优化 MCP 工具描述而不触及提示词内容。
+- 保持 system/assistant/user 消息固定，同时改进工具调用行为。
+- 当服务器暴露许多工具时，仅针对特定工具。
+
+<Callout title="与提示词或智能体优化分开">
+工具优化更新工具签名。提示词优化更新 system/user/assistant 内容。
+智能体优化专注于多步骤智能体逻辑。分开这些运行以隔离变更。
+</Callout>
+
+## 快速入门：纯工具优化
+
+```python
+from opik_optimizer import ChatPrompt, MetaPromptOptimizer
+
+prompt = ChatPrompt(
+    system="Use tools when needed.",
+    user="{user_query}",
+    tools=[
+        {
+            "type": "mcp",
+            "server_label": "context7",
+            "server_url": "https://mcp.context7.com/mcp",
+            "allowed_tools": ["resolve-library-id", "query-docs"],
+        }
+    ],
+)
+
+optimizer = MetaPromptOptimizer(model="openai/gpt-4o-mini")
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=my_dataset,
+    metric=answer_quality,
+    optimize_prompts=False,  # keep prompt text fixed
+    optimize_tools=True,     # optimize tool + parameter descriptions
+)
+```
+
+工具优化由所有优化器支持，**除了** `FewShotBayesianOptimizer`、`ParameterOptimizer` 和 `GepaOptimizer`（目前）。
+
+## 工具调用 + MCP 格式
+
+你可以使用支持的格式之一定义工具。工具优化将它们规范化为 function-calling 工具，同时保留原始 MCP 配置以确保可重现性。
+
+### 支持的格式
+
+| 格式 | 使用场景 | 示例 |
+| --- | --- | --- |
+| OpenAI MCP 工具条目（本地） | 在本地运行 MCP 工具服务器 | `{"type": "mcp", "server_label": "...", "command": "...", "args": [...]}` |
+| OpenAI MCP 工具条目（远程） | 调用远程 MCP 服务器 | `{"type": "mcp", "server_label": "...", "server_url": "...", "headers": {...}}` |
+| Cursor MCP 配置 | 从 Cursor `mcpServers` JSON 转换 | `cursor_mcp_config_to_tools(cursor_config)` |
+| Function 工具 | OpenAI function 格式的非 MCP 工具 | `{"type": "function", "function": {...}}` |
+
+### OpenAI MCP 工具条目（本地/远程）
+
+```python
+prompt = ChatPrompt(
+    system="Use tools when needed.",
+    user="{user_query}",
+    tools=[
+        {
+            "type": "mcp",
+            "server_label": "local_docs",
+            "command": "npx",
+            "args": ["-y", "@upstash/context7-mcp"],
+            "env": {},
+            "allowed_tools": ["resolve-library-id", "query-docs"],
+        },
+        {
+            "type": "mcp",
+            "server_label": "remote_docs",
+            "server_url": "https://mcp.context7.com/mcp",
+            "headers": {"CONTEXT7_API_KEY": "YOUR_API_KEY"},
+            "allowed_tools": ["query-docs"],
+        },
+    ],
+)
+```
+
+### Cursor MCP 配置（JSON）→ 工具
+
+```python
+from opik_optimizer.utils.toolcalling import cursor_mcp_config_to_tools
+
+cursor_config = {
+    "mcpServers": {
+        "context7": {
+            "url": "https://mcp.context7.com/mcp",
+            "headers": {"CONTEXT7_API_KEY": "YOUR_API_KEY"},
+        }
+    }
+}
+
+prompt = ChatPrompt(
+    system="Use tools when needed.",
+    user="{user_query}",
+    tools=cursor_mcp_config_to_tools(cursor_config),
+)
+```
+
+### Cursor vs OpenAI ChatPrompt 样式
+
+`ChatPrompt.tools` 直接接受 OpenAI 风格的 MCP 条目。Cursor 配置使用不同的形状（`mcpServers`），需要先转换：
+
+```python
+# OpenAI-style MCP tool entry (directly supported by ChatPrompt.tools)
+openai_tools = [
+    {
+        "type": "mcp",
+        "server_label": "context7",
+        "server_url": "https://mcp.context7.com/mcp",
+        "headers": {"CONTEXT7_API_KEY": "YOUR_API_KEY"},
+        "allowed_tools": ["resolve-library-id", "query-docs"],
+    }
+]
+
+# Cursor-style config (convert before assigning to ChatPrompt.tools)
+cursor_config = {
+    "mcpServers": {
+        "context7": {
+            "url": "https://mcp.context7.com/mcp",
+            "headers": {"CONTEXT7_API_KEY": "YOUR_API_KEY"},
+        }
+    }
+}
+```
+
+规范化后，两种样式在评估和优化期间以相同方式执行。
+
+### 混合 function + MCP 工具
+
+```python
+prompt = ChatPrompt(
+    system="Use tools when needed.",
+    user="{user_query}",
+    tools=[
+        {
+            "type": "function",
+            "function": {
+                "name": "search_wikipedia",
+                "description": "Search Wikipedia abstracts.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                    "required": ["query"],
+                },
+            },
+        },
+        {
+            "type": "mcp",
+            "server_label": "context7",
+            "server_url": "https://mcp.context7.com/mcp",
+            "allowed_tools": ["query-docs"],
+        },
+    ],
+)
+```
+
+## 仅针对特定工具
+
+当服务器暴露许多工具时，传递字典以选择你想要的子集：
+
+```python
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=my_dataset,
+    metric=answer_quality,
+    optimize_prompts=False,
+    optimize_tools={
+        "context7.resolve-library-id": True,
+        "context7.query-docs": False,
+    },
+)
+```
+
+## 工具优化限制
+
+为保持运行可控，`optimize_tools=True` 受 `DEFAULT_TOOL_CALL_MAX_TOOLS_TO_OPTIMIZE`（默认：3）限制。如果需要更多，传递字典以选择更小的工具子集。
+
+## 在优化工具时禁用工具使用
+
+如果你想优化工具描述而不在评估期间执行工具，设置 `allow_tool_use=False`：
+
+```python
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=my_dataset,
+    metric=answer_quality,
+    optimize_prompts=False,
+    optimize_tools=True,
+    allow_tool_use=False,  # do not execute tools during evaluation
+)
+```
+
+## 变更内容
+
+- 工具**描述**被更新。
+- 工具**参数描述**被更新。
+- 当 `optimize_prompts=False` 时，提示词文本保持不变。
+
+<Accordion title="优化后的工具签名存储位置">
+  优化后的工具在 `result.prompt.tools` 中返回。历史条目包含解析后的工具和原始 MCP 配置，以确保可重现性。
+</Accordion>
+
+## 何时使用工具优化
+
+| 场景 | 使用工具优化？ | 原因 |
+| --- | --- | --- |
+| MCP 客户端注入 assistant 指令 | 是 | 保持 assistant 文本固定并改进工具使用。 |
+| 提示词措辞需要改进 | 否 | 改用 `optimize_prompts`。 |
+| 多智能体工作流 | 可能 | 在智能体级更改之前单独优化工具。 |
+
+## 限制
+
+- 工具优化仅支持**单提示词**。
+- `FewShotBayesianOptimizer`、`ParameterOptimizer` 或 `GepaOptimizer` 不支持。
+
+## 故障排除
+
+### 查看工具调用调试日志
+设置优化器日志级别以显示工具调用：
+
+```bash
+export OPIK_OPTIMIZER_LOG_LEVEL=DEBUG
+```
+
+你将看到如下工具调用行：
+```
+tool: event=tool_call call=query-docs({...})
+```
+
+### 出现 "MCP remote server missing url"
+确保你的工具条目包含 `server_url`（OpenAI MCP 格式）或 `url`（Cursor 配置）。
+
+### 工具未显示
+- 验证 MCP 服务器可访问。
+- 如果使用 `allowed_tools`，确认名称与服务器的工具列表匹配。
+- 对于远程服务器，确认认证头正确。
+
+### 工具调用在评估期间缓慢或失败
+- 设置 `allow_tool_use=False` 以在不运行工具的情况下优化描述。
+- 在迭代工具描述时减少数据集大小。
+
+## 后续步骤
+
+- [优化提示词](/v1/agent_optimization/optimization/optimize_prompts)
+- [优化智能体](/v1/agent_optimization/optimization/optimize_agents)
+- [工具优化算法](/v1/agent_optimization/algorithms/tool_optimization)

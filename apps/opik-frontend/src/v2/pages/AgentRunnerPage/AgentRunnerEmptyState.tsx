@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 
 import { buildDocsUrl } from "@/v2/lib/utils";
@@ -32,6 +33,7 @@ const myAgent = track(
 );`;
 
 const AgentRunnerEmptyState: React.FC = () => {
+  const { t } = useTranslation("pages/agent-playground");
   const projectName = useActiveProjectName();
   const activeProjectId = useActiveProjectId();
   const command = `opik endpoint --project "${projectName}" -- <your app start command>`;
@@ -41,18 +43,17 @@ const AgentRunnerEmptyState: React.FC = () => {
       <div className="w-full max-w-lg">
         <div className="mb-1 flex items-center gap-2">
           <ProjectAvatar projectId={activeProjectId} size="lg" />
-          <h2 className="comet-title-m">Connect your agent</h2>
+          <h2 className="comet-title-m">{t("emptyState.connectYourAgent")}</h2>
         </div>
         <p className="comet-body-s mb-8 text-muted-slate">
-          Link your agent to Opik to start using the Agent playground and
-          improve performance.
+          {t("emptyState.connectDescription")}
         </p>
 
         <div className="flex flex-col">
           <TimelineStep number={1}>
             <div className="flex flex-col gap-2.5">
               <h4 className="comet-body-s-accented">
-                Mark your agent as an entrypoint
+                {t("emptyState.markEntrypoint")}
               </h4>
               <p className="comet-body-xs text-muted-slate">
                 Add{" "}
@@ -65,21 +66,21 @@ const AgentRunnerEmptyState: React.FC = () => {
               <Tabs defaultValue="python">
                 <TabsList variant="underline">
                   <TabsTrigger value="python" variant="underline">
-                    Python
+                    {t("emptyState.python")}
                   </TabsTrigger>
                   <TabsTrigger value="typescript" variant="underline">
-                    TypeScript
+                    {t("emptyState.typescript")}
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="python">
                   <CodeSnippet
-                    title="Python"
+                    title={t("emptyState.python")}
                     code={ENTRYPOINT_SNIPPET_PYTHON}
                   />
                 </TabsContent>
                 <TabsContent value="typescript">
                   <CodeSnippet
-                    title="TypeScript"
+                    title={t("emptyState.typescript")}
                     code={ENTRYPOINT_SNIPPET_TYPESCRIPT}
                   />
                 </TabsContent>
@@ -90,27 +91,25 @@ const AgentRunnerEmptyState: React.FC = () => {
           <TimelineStep number={2}>
             <div className="flex flex-col gap-2.5">
               <h4 className="comet-body-s-accented">
-                Run the connection command
+                {t("emptyState.runConnectionCommand")}
               </h4>
               <p className="comet-body-xs text-muted-slate">
-                Install and run the Opik connector in your terminal (works with
-                Claude Code, Codex, Cursor, Windsurf, and more):
+                {t("emptyState.runConnectionDescription")}
               </p>
-              <CodeSnippet title="Terminal" code={command} />
+              <CodeSnippet title={t("emptyState.terminal")} code={command} />
             </div>
           </TimelineStep>
 
           <TimelineStep isLast>
             <div className="flex flex-col gap-1">
               <h4 className="comet-body-s-accented text-primary">
-                Waiting for connection
+                {t("emptyState.waitingForConnection")}
               </h4>
               <p className="comet-body-xs text-muted-slate">
-                We&apos;ll automatically detect your agent once it&apos;s
-                connected.
+                {t("emptyState.waitingDescription")}
               </p>
               <p className="comet-body-xs text-muted-slate">
-                Trouble connecting?{" "}
+                {t("emptyState.troubleConnecting")}{" "}
                 <a
                   href={buildDocsUrl(
                     "/development/agent-playground",
@@ -120,7 +119,7 @@ const AgentRunnerEmptyState: React.FC = () => {
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 underline hover:text-foreground"
                 >
-                  Check troubleshooting
+                  {t("emptyState.checkTroubleshooting")}
                   <ExternalLink className="size-3" />
                 </a>
               </p>

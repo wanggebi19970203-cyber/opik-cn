@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import get from "lodash/get";
 import { StringParam, useQueryParam } from "use-query-params";
 import { Brain, Calendar, MessageSquareMore, PenLine } from "lucide-react";
@@ -60,6 +61,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
   isSpansLazyLoading,
   search,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canAnnotateTraceSpanThread },
   } = usePermissions();
@@ -207,7 +209,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
                     data-testid="data-viewer-span-scores"
                   >
                     <PenLine className="size-3.5 shrink-0 text-muted-slate" />{" "}
-                    {traceData.span_feedback_scores!.length} span scores
+                     {traceData.span_feedback_scores!.length} {t("detailsPanel.spanScores")}
                   </div>
                 </FeedbackScoreHoverCard>
               )}
@@ -273,18 +275,18 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
                 size="sm"
                 value="messages"
               >
-                Messages
+                {t("detailsPanel.messages")}
               </TabsTrigger>
             )}
             <TabsTrigger variant="segmented-primary" size="sm" value="details">
-              Details
+              {t("detailsPanel.details")}
             </TabsTrigger>
             <TabsTrigger
               variant="segmented-primary"
               size="sm"
               value="feedback_scores"
             >
-              Feedback scores
+              {t("detailsPanel.feedbackScores")}
               <ExplainerIcon
                 className="ml-1 size-3"
                 {...EXPLAINERS_MAP[EXPLAINER_ID.what_are_feedback_scores]}
@@ -296,12 +298,12 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
                 size="sm"
                 value="prompts"
               >
-                Prompts
+                {t("detailsPanel.prompts")}
               </TabsTrigger>
             )}
             {hasSpanAgentGraph && (
               <TabsTrigger variant="segmented-primary" size="sm" value="graph">
-                Agent graph
+                {t("detailsPanel.agentGraph")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -327,7 +329,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             <div className="space-y-4">
               <div>
                 <ConfigurableFeedbackScoreTable
-                  title={isTrace ? "Trace scores" : "Span scores"}
+                    title={isTrace ? t("detailsPanel.traceScores") : t("detailsPanel.spanScores")}
                   feedbackScores={data.feedback_scores}
                   onDeleteFeedbackScore={
                     canAnnotateTraceSpanThread
@@ -344,7 +346,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
               {isTrace && hasSpanFeedbackScores && traceData && (
                 <div>
                   <ConfigurableFeedbackScoreTable
-                    title="Span scores"
+                    title={t("detailsPanel.spanScores")}
                     feedbackScores={traceData.span_feedback_scores}
                     onDeleteFeedbackScore={
                       canAnnotateTraceSpanThread

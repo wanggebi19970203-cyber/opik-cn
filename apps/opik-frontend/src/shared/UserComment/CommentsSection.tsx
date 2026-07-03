@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import orderBy from "lodash/orderBy";
 import { CommentItem } from "@/types/comment";
 import { useLoggedInUserName } from "@/store/AppStore";
@@ -26,6 +27,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   listClassName,
   commentClassName,
 }) => {
+  const { t } = useTranslation();
   const userName = useLoggedInUserName();
   const {
     permissions: { canAnnotateTraceSpanThread },
@@ -43,12 +45,12 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
           onSubmit={(data) => onSubmit(data.commentText)}
           className={formClassName}
           actions={
-            <TooltipWrapper content="Submit" hotkeys={["⌘", "⏎"]}>
+            <TooltipWrapper content={t("common:buttons.submit")} hotkeys={["⌘", "⏎"]}>
               <UserCommentForm.SubmitButton />
             </TooltipWrapper>
           }
         >
-          <UserCommentForm.TextareaField placeholder="Add a comment..." />
+          <UserCommentForm.TextareaField placeholder={t("common:placeholders.addComment")} />
         </UserCommentForm>
       )}
       <div className={listClassName}>
@@ -78,8 +80,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
             </UserComment>
           ))
         ) : (
-          <div className="comet-body-s py-3 text-center text-muted-slate">
-            No comments yet
+           <div className="comet-body-s py-3 text-center text-muted-slate">
+            {t("common:comments.noCommentsYet")}
           </div>
         )}
       </div>

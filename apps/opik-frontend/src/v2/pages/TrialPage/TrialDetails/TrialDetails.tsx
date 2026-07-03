@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Experiment } from "@/types/datasets";
 import { Optimization } from "@/types/optimizations";
@@ -32,6 +33,7 @@ const TrialDetails: React.FC<TrialDetailsProps> = ({
   baselineScore,
   trialNumber,
 }) => {
+  const { t } = useTranslation("pages/trial");
   const {
     permissions: { canViewDatasets },
   } = usePermissions();
@@ -40,7 +42,9 @@ const TrialDetails: React.FC<TrialDetailsProps> = ({
 
   const experiment = experiments[0];
 
-  const title = trialNumber ? `Trial #${trialNumber}` : "Trial";
+  const title = trialNumber
+    ? t("trialDetails.trialNumber", { number: trialNumber })
+    : t("trialDetails.trial");
 
   const trialStatus: TrialStatus | undefined = useMemo(() => {
     if (!experiment) return undefined;
@@ -75,9 +79,9 @@ const TrialDetails: React.FC<TrialDetailsProps> = ({
           <Tag
             variant={STATUS_VARIANT_MAP[trialStatus]}
             size="md"
-            className="shrink-0 capitalize"
+            className="shrink-0"
           >
-            {trialStatus}
+            {t(`trialDetails.status.${trialStatus}`)}
           </Tag>
         )}
       </div>
@@ -90,7 +94,7 @@ const TrialDetails: React.FC<TrialDetailsProps> = ({
               id={experiment.dataset_id}
               name={experiment.dataset_name}
               resource={RESOURCE_TYPE.dataset}
-              prefix="Dataset"
+              prefix={t("trialDetails.dataset")}
             />
           )}
         {experiment?.project_id && (
@@ -98,7 +102,7 @@ const TrialDetails: React.FC<TrialDetailsProps> = ({
             projectId={experiment.project_id}
             logsSource={LOGS_SOURCE.optimization}
             sourceFilters={generateExperimentIdsFilter([experiment.id])}
-            title="Optimization logs"
+            title={t("trialDetails.optimizationLogs")}
           />
         )}
       </div>

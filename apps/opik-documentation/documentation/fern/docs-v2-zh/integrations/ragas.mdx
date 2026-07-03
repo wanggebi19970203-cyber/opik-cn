@@ -1,0 +1,291 @@
+---
+description: 使用 Ragas 评估指标来评估 LLM 应用质量，并自动在 Opik 中追踪结果以实现全面的性能监控。
+headline: Ragas | Opik 文档
+og:description: 了解如何将 Ragas 与 Opik 集成，以高效评估 RAG 系统并为 trace 或 span 评分。
+og:site_name: Opik 文档
+og:title: 使用 Opik 评估 RAG 系统
+title: 在 Opik 中使用 Ragas 指标评估 LLM 应用
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时请确保指定 `project_name`，以便它们关联到正确的项目。
+</Note>
+
+Opik SDK 提供了与 Ragas（一个用于评估 RAG 系统的框架）集成的简便方式。
+
+使用 Ragas 与 Opik 集成主要有两种方式：
+
+1. 使用 Ragas 为 trace 或 span 评分。
+2. 使用 Ragas 评估 RAG 管道。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=ragas&utm_campaign=opik) 提供了 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=ragas&utm_campaign=opik)并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=ragas&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先需要安装 `opik` 和 `ragas` 包：
+
+```bash
+pip install opik ragas
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云服务 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Ragas
+
+使用 Ragas 需要配置你的 LLM 提供商 API 密钥。本示例使用 OpenAI。你可以在[这些页面中查找或创建 API 密钥](https://platform.openai.com/settings/organization/api-keys)：
+
+可以通过环境变量设置：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+## 使用 Ragas 为 trace 或 span 评分
+
+Ragas 提供了一组可用于评估 RAG 管道质量的指标，支持的完整指标列表可在 [Ragas 文档](https://docs.ragas.io/en/latest/concepts/metrics/available_metrics/)中查看。
+
+你可以使用 `RagasMetricWrapper` 轻松地将 Ragas 指标与 Opik 追踪集成：
+
+```python
+# Import the required dependencies
+from ragas.metrics import AnswerRelevancy
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from opik.evaluation.metrics import RagasMetricWrapper
+
+# Initialize the Ragas metric
+llm = LangchainLLMWrapper(ChatOpenAI())
+emb = LangchainEmbeddingsWrapper(OpenAIEmbeddings())
+ragas_answer_relevancy = AnswerRelevancy(llm=llm, embeddings=emb)
+
+# Wrap the Ragas metric with RagasMetricWrapper for Opik integration
+answer_relevancy_metric = RagasMetricWrapper(
+    ragas_answer_relevancy,
+    track=True  # This enables automatic tracing in Opik
+)
+```
+
+设置好指标包装器后，你可以使用它来为 trace 或 span 评分：
+
+```python
+from opik import track
+from opik.opik_context import update_current_trace
+
+@track
+def retrieve_contexts(question):
+    # Define the retrieval function, in this case we will hard code the contexts
+    return ["Paris is the capital of France.", "Paris is in France."]
+
+@track
+def answer_question(question, contexts):
+    # Define the answer function, in this case we will hard code the answer
+    return "Paris"
+
+@track
+def rag_pipeline(question):
+    # Define the pipeline
+    contexts = retrieve_contexts(question)
+    answer = answer_question(question, contexts)
+
+    # Score the pipeline using the RagasMetricWrapper
+    score_result = answer_relevancy_metric.score(
+        user_input=question,
+        response=answer,
+        retrieved_contexts=contexts
+    )
+
+    # Add the score to the current trace
+    update_current_trace(
+        feedback_scores=[{"name": score_result.name, "value": score_result.value}]
+    )
+
+    return answer
+
+print(rag_pipeline("What is the capital of France?"))
+```
+
+在 Opik UI 中，你可以看到完整的 trace，包括分数计算：
+
+<Frame>
+  <img src="/img/tracing/ragas_opik_trace.png" />
+</Frame>
+
+## 完整示例：数据集评估
+
+对于更高级的用例，你可以使用 Ragas 指标通过 Opik 评估平台来评估整个数据集：
+
+### 1. 创建数据集
+
+```python
+from datasets import load_dataset
+import opik
+
+opik_client = opik.Opik()
+
+# Create a small dataset
+fiqa_eval = load_dataset("explodinggradients/fiqa", "ragas_eval")
+
+# Reformat the dataset to match the schema expected by the Ragas evaluate function
+hf_dataset = fiqa_eval["baseline"].select(range(3))
+dataset_items = hf_dataset.map(
+    lambda x: {
+        "user_input": x["question"],
+        "reference": x["ground_truths"][0],
+        "retrieved_contexts": x["contexts"],
+    }
+)
+dataset = opik_client.get_or_create_dataset("ragas-demo-dataset", project_name="my-project")
+dataset.insert(dataset_items)
+```
+
+### 2. 定义评估任务
+
+```python
+# Create an evaluation task
+def evaluation_task(x):
+    return {
+        "user_input": x["question"],
+        "response": x["answer"],
+        "retrieved_contexts": x["contexts"],
+    }
+```
+
+### 3. 运行评估
+
+```python
+# Use the RagasMetricWrapper directly with Opik's evaluate function
+opik.evaluation.evaluate(
+    dataset,
+    evaluation_task,
+    scoring_metrics=[answer_relevancy_metric],
+    task_threads=1,
+)
+```
+
+### 4. 替代方案：使用 Ragas 原生评估
+
+你也可以使用 Ragas 的原生评估函数并集成 Opik 追踪：
+
+```python
+from datasets import load_dataset
+from opik.integrations.langchain import OpikTracer
+from ragas.metrics import context_precision, answer_relevancy, faithfulness
+from ragas import evaluate
+
+fiqa_eval = load_dataset("explodinggradients/fiqa", "ragas_eval")
+
+# Reformat the dataset to match the schema expected by the Ragas evaluate function
+dataset = fiqa_eval["baseline"].select(range(3))
+
+dataset = dataset.map(
+    lambda x: {
+        "user_input": x["question"],
+        "reference": x["ground_truths"][0],
+        "retrieved_contexts": x["contexts"],
+    }
+)
+
+opik_tracer_eval = OpikTracer(tags=["ragas_eval"], metadata={"evaluation_run": True})
+
+result = evaluate(
+    dataset,
+    metrics=[context_precision, faithfulness, answer_relevancy],
+    callbacks=[opik_tracer_eval],
+)
+
+print(result)
+```
+
+## 使用 Ragas 指标评估 RAG 管道
+
+`RagasMetricWrapper` 也可以直接在 Opik 评估平台中使用。这种方式比创建自定义包装器更简单：
+
+### 1. 定义 Ragas 指标
+
+首先定义 Ragas 指标，本示例使用 `AnswerRelevancy`：
+
+```python
+from ragas.metrics import AnswerRelevancy
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from opik.evaluation.metrics import RagasMetricWrapper
+
+# Initialize the Ragas metric
+llm = LangchainLLMWrapper(ChatOpenAI())
+emb = LangchainEmbeddingsWrapper(OpenAIEmbeddings())
+
+ragas_answer_relevancy = AnswerRelevancy(llm=llm, embeddings=emb)
+```
+
+### 2. 创建指标包装器
+
+使用 `RagasMetricWrapper` 包装 Ragas 指标：
+
+```python
+# Create the answer relevancy scoring metric
+answer_relevancy = RagasMetricWrapper(
+    ragas_answer_relevancy,
+    track=True  # Enable tracing for the metric computation
+)
+```
+
+<Tip>
+
+如果你在 Jupyter notebook 中运行，需要在 notebook 顶部添加以下代码：
+
+```python
+import nest_asyncio
+nest_asyncio.apply()
+```
+
+</Tip>
+
+### 3. 在 Opik 评估平台中使用指标包装器
+
+现在可以直接在 Opik 评估平台中使用该指标包装器：
+
+```python
+from opik.evaluation import evaluate
+
+evaluation_task = evaluate(
+    dataset=dataset,
+    task=evaluation_task,
+    scoring_metrics=[answer_relevancy],
+    nb_samples=10,
+    project_name="my-project",
+)
+```
+
+`RagasMetricWrapper` 自动处理以下事项：
+
+- Opik 与 Ragas 之间的字段映射（例如，`input` → `user_input`，`output` → `response`）
+- Ragas 指标的异步执行
+- 当 `track=True` 时与 Opik 追踪系统的集成
+- 缺失必需字段的错误处理

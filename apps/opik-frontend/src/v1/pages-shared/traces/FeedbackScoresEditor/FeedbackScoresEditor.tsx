@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import useAppStore from "@/store/AppStore";
 import useFeedbackDefinitionsList from "@/api/feedback-definitions/useFeedbackDefinitionsList";
 import { FEEDBACK_SCORE_TYPE, TraceFeedbackScore } from "@/types/traces";
@@ -45,24 +46,27 @@ type FeedbackScoresEditorHeaderProps = {
 const getTitleOfScores = ({
   isThread,
   isTrace,
+  t,
 }: {
   isThread?: boolean;
   isTrace?: boolean;
+  t: (key: string) => string;
 }): string => {
   if (isThread) {
-    return "Your thread scores";
+    return t("annotate.yourThreadScores");
   }
   if (isTrace) {
-    return "Your trace scores";
+    return t("annotate.yourTraceScores");
   }
-  return "Your span scores";
+  return t("annotate.yourSpanScores");
 };
 
 const FeedbackScoresEditorHeader: React.FC<FeedbackScoresEditorHeaderProps> = ({
   isTrace = false,
   isThread = false,
 }) => {
-  const title = getTitleOfScores({ isThread, isTrace });
+  const { t } = useTranslation("tracing");
+  const title = getTitleOfScores({ isThread, isTrace, t });
   return (
     <div className="flex items-center gap-1 pb-2">
       <span className="comet-body-s-accented truncate">{title}</span>
@@ -74,6 +78,7 @@ const FeedbackScoresEditorHeader: React.FC<FeedbackScoresEditorHeaderProps> = ({
 const FeedbackScoresEditorFooter: React.FC<FeedbackScoresEditorFooterProps> = ({
   entityCopy,
 }) => {
+  const { t } = useTranslation("tracing");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (
@@ -82,7 +87,7 @@ const FeedbackScoresEditorFooter: React.FC<FeedbackScoresEditorFooterProps> = ({
         <InfoIcon className="size-3" />
       </div>
       <div className="leading-relaxed">
-        Set up
+        {t("annotate.setupCustomScores")}
         <Button
           size="sm"
           variant="link"
@@ -98,11 +103,11 @@ const FeedbackScoresEditorFooter: React.FC<FeedbackScoresEditorFooterProps> = ({
             target="_blank"
             rel="noopener noreferrer"
           >
-            custom human review scores
+            {t("annotate.customHumanReviewScores")}
             <ExternalLink className="size-3" />
           </Link>
         </Button>
-        to annotate your {entityCopy}.
+        {t("annotate.toAnnotateYour", { entity: entityCopy })}
       </div>
     </div>
   );

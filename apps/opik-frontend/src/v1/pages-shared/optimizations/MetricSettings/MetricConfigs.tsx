@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Settings2 } from "lucide-react";
 import isEmpty from "lodash/isEmpty";
 import {
@@ -45,6 +46,7 @@ const MetricConfigs = ({
   inline = false,
   datasetVariables = [],
 }: MetricConfigsProps) => {
+  const { t } = useTranslation();
   const getMetricForm = () => {
     if (metricType === METRIC_TYPE.EQUALS) {
       return (
@@ -130,13 +132,13 @@ const MetricConfigs = ({
       >
         <div className="mb-5 w-72">
           <div className="mb-1 flex items-center gap-1">
-            <h3 className="comet-body-s-accented">Metric settings</h3>
+            <h3 className="comet-body-s-accented">{t('optimizations.metricConfigs.title')}</h3>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_metric_settings]}
             />
           </div>
           <p className="comet-body-xs text-muted-slate">
-            Configure parameters for the selected evaluation metric
+            {t('optimizations.metricConfigs.description')}
           </p>
         </div>
         {getMetricForm()}

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -203,6 +204,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const PromptsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/prompts");
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
@@ -267,7 +269,7 @@ const PromptsPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? "There are no prompts yet" : "No search results";
+  const noDataText = noData ? t("noData.noPrompts") : t("noData.noResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -358,14 +360,14 @@ const PromptsPage: React.FunctionComponent = () => {
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
         <h1 className="comet-body-accented truncate break-words">
-          Prompt library
+          {t("title")}
         </h1>
         {canCreatePrompts && !isEmpty && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="default" size="xs">
                 <PlusIcon className="mr-1 size-4" />
-                Prompt
+                {t("dropdown.prompt")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-96">
@@ -376,9 +378,9 @@ const PromptsPage: React.FunctionComponent = () => {
               >
                 <FileText className="mr-2 size-4 shrink-0 text-[var(--color-turquoise)]" />
                 <div className="flex flex-col">
-                  <span className="comet-body-s-accented">Text prompt</span>
+                  <span className="comet-body-s-accented">{t("dropdown.textPrompt")}</span>
                   <span className="comet-body-xs text-light-slate">
-                    Simple prompts with variable substitution.
+                    {t("dropdown.textPromptDescription")}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -389,9 +391,9 @@ const PromptsPage: React.FunctionComponent = () => {
               >
                 <MessagesSquare className="mr-2 size-4 shrink-0 text-[var(--color-burgundy)]" />
                 <div className="flex flex-col">
-                  <span className="comet-body-s-accented">Chat prompt</span>
+                  <span className="comet-body-s-accented">{t("dropdown.chatPrompt")}</span>
                   <span className="comet-body-xs text-light-slate">
-                    Message-based prompts for conversational AI.
+                    {t("dropdown.chatPromptDescription")}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -403,11 +405,9 @@ const PromptsPage: React.FunctionComponent = () => {
         <div className="flex flex-1 items-center justify-center gap-12 px-8 py-10">
           <div className="flex w-full max-w-md flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <h2 className="comet-title-s text-foreground">No prompts yet</h2>
+              <h2 className="comet-title-s text-foreground">{t("empty.title")}</h2>
               <p className="comet-body-s text-muted-slate">
-                Manage your prompts outside your codebase. Version them, update
-                them without redeploying, and keep a full history of every
-                change.
+                {t("empty.manageDescription")}
               </p>
             </div>
 
@@ -423,11 +423,11 @@ const PromptsPage: React.FunctionComponent = () => {
                   <span className="flex items-center gap-2">
                     <FileText className="size-4 shrink-0 text-[var(--color-turquoise)]" />
                     <span className="comet-body-s-accented text-foreground">
-                      Create a text prompt
+                      {t("empty.createTextPrompt")}
                     </span>
                   </span>
                   <span className="comet-body-xs text-muted-slate">
-                    Start with a simple prompt with variable substitution.
+                    {t("empty.textPromptDescription")}
                   </span>
                 </button>
 
@@ -441,11 +441,11 @@ const PromptsPage: React.FunctionComponent = () => {
                   <span className="flex items-center gap-2">
                     <MessagesSquare className="size-4 shrink-0 text-[var(--color-burgundy)]" />
                     <span className="comet-body-s-accented text-foreground">
-                      Create a chat prompt
+                      {t("empty.createChatPrompt")}
                     </span>
                   </span>
                   <span className="comet-body-xs text-muted-slate">
-                    Start with a message-based prompt for conversational AI.
+                    {t("empty.chatPromptDescription")}
                   </span>
                 </button>
               </div>
@@ -458,7 +458,7 @@ const PromptsPage: React.FunctionComponent = () => {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  View docs
+                  {t("empty.viewDocs")}
                   <ExternalLink className="ml-1.5 size-3.5" />
                 </a>
               </Button>
@@ -478,7 +478,7 @@ const PromptsPage: React.FunctionComponent = () => {
               <SearchInput
                 searchText={search!}
                 setSearchText={setSearch}
-                placeholder="Search by name"
+                placeholder={t("searchPlaceholder")}
                 className="w-[320px]"
                 dimension="sm"
               ></SearchInput>
@@ -521,7 +521,7 @@ const PromptsPage: React.FunctionComponent = () => {
               <DataTableNoData title={noDataText}>
                 {noData && canCreatePrompts && (
                   <Button variant="link" onClick={() => handleNewPromptClick()}>
-                    Create prompt
+                    {t("create")}
                   </Button>
                 )}
               </DataTableNoData>

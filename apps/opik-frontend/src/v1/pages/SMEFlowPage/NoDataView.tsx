@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, FileText, RefreshCw } from "lucide-react";
 import { Card } from "@/ui/card";
 import { Alert, AlertDescription } from "@/ui/alert";
@@ -16,24 +17,24 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
   variant,
   onRetry,
 }) => {
+  const { t } = useTranslation();
+
   return (
-    <SMEFlowLayout header={<h1 className="comet-title-xl">Error</h1>}>
+    <SMEFlowLayout header={<h1 className="comet-title-xl">{t("sme.noDataView.error")}</h1>}>
       {variant === "queue-error" && (
         <div className="space-y-6">
           <Alert variant="destructive">
             <AlertCircle className="size-4" />
             <AlertDescription>
-              Unable to load annotation queue. The queue may not exist or you
-              may not have access to it.
+              {t("sme.noDataView.unableToLoadAnnotationQueue")}
             </AlertDescription>
           </Alert>
 
           <Card className="p-8 text-center">
             <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-            <h3 className="comet-title-m mb-2">Queue not available</h3>
+            <h3 className="comet-title-m mb-2">{t("sme.noDataView.queueNotAvailable")}</h3>
             <p className="comet-body-s mb-6 text-muted-slate">
-              Please check the queue link or contact your administrator for
-              access.
+              {t("sme.noDataView.checkQueueLinkOrContactAdmin")}
             </p>
           </Card>
         </div>
@@ -44,22 +45,20 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
           <Alert variant="destructive">
             <AlertCircle className="size-4" />
             <AlertDescription>
-              Unable to load items in this annotation queue. This is usually a
-              temporary issue.
+              {t("sme.noDataView.unableToLoadItems")}
             </AlertDescription>
           </Alert>
 
           <Card className="p-8 text-center">
             <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-            <h3 className="comet-title-m mb-2">Items failed to load</h3>
+            <h3 className="comet-title-m mb-2">{t("sme.noDataView.itemsFailedToLoad")}</h3>
             <p className="comet-body-s mb-6 text-muted-slate">
-              Please try again. If the problem persists, contact your
-              administrator.
+              {t("sme.noDataView.tryAgainOrContactAdmin")}
             </p>
             {onRetry && (
               <Button onClick={onRetry} variant="outline">
                 <RefreshCw className="mr-2 size-4" />
-                Retry
+                {t("common.buttons.retry")}
               </Button>
             )}
           </Card>
@@ -69,10 +68,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
       {variant === "no-queue" && (
         <Card className="p-8 text-center">
           <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-          <h3 className="comet-title-m mb-2">No annotation queue selected</h3>
+          <h3 className="comet-title-m mb-2">{t("sme.noDataView.noAnnotationQueueSelected")}</h3>
           <p className="comet-body-s mb-6 text-muted-slate">
-            To begin SME evaluation, please access this page through an
-            annotation queue link.
+            {t("sme.noDataView.toBeginSmeEvaluation")}
           </p>
         </Card>
       )}

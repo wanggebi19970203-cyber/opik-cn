@@ -1,0 +1,46 @@
+---
+headline: 匿名使用统计 | Opik 文档
+og:description: 了解如何在 Opik 中启用或禁用匿名使用统计报告，以提升平台性能和用户体验。
+og:site_name: Opik 文档
+og:title: Opik 中的匿名使用统计
+subtitle: 描述 Opik 收集的使用统计数据
+title: 匿名使用统计
+---
+
+Opik 包含一个可选的系统，用于发送关于 Opik 平台使用情况的匿名报告，这些报告不包含敏感信息，也不包含个人身份识别信息。这些信息帮助我们了解 Opik 平台的使用情况，并识别需要改进的领域。
+
+匿名使用统计报告默认启用。您可以通过将环境变量 `OPIK_USAGE_REPORT_ENABLED` 设置为 `false` 来选择退出。
+
+## 收集哪些数据？
+
+启用使用统计报告后，报告将由 Opik 团队运行和维护的服务器收集。
+
+使用统计包括以下信息：
+
+- Opik 服务器版本信息：
+  - 一个随机生成的 ID，用于唯一标识 Opik 服务器实例，例如 `bdc47d37-2256-4604-a31e-18a34567cad1`
+  - Opik 服务器版本，例如 `0.1.7`
+- Opik 用户信息：对于自托管部署，此信息不适用，因为不提供用户管理功能。
+  - 用户总数
+  - 每日用户数
+- Opik 的每日使用情况：
+  - 创建的 trace 数量
+  - 创建的实验数量
+  - 创建的数据集数量
+
+不会收集任何个人身份识别信息，也不会向 Opik 团队发送任何用户数据。发送到 Opik 团队的事件载荷格式如下：
+
+```json
+{
+  "anonymous_id": "bdc47d37-2256-4604-a31e-18a34567cad1",
+  "event_type": "opik_os_statistics_be",
+  "event_properties": {
+    "opik_app_version": "0.1.7",
+    "total_users": "1",
+    "daily_users": "1",
+    "daily_traces": "123",
+    "daily_experiments": "123",
+    "daily_datasets": "123"
+  }
+}
+```

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 import capitalize from "lodash/capitalize";
@@ -113,6 +114,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const FeedbackDefinitionsTab: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const newFeedbackDefinitionDialogKeyRef = useRef(0);
@@ -147,8 +149,8 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
   const total = data?.total ?? 0;
   const noData = !search;
   const noDataText = noData
-    ? "There are no feedback definitions yet"
-    : "No search results";
+    ? t("settings.feedback.empty.title")
+    : t("settings.providers.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -223,7 +225,7 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search by name"
+          placeholder={t("settings.searchPlaceholder")}
           className="w-[320px]"
           dimension="sm"
         ></SearchInput>
@@ -243,7 +245,7 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
             size="sm"
             onClick={handleNewFeedbackDefinitionClick}
           >
-            Create new feedback definition
+            {t("settings.feedback.create")}
           </Button>
         </div>
       </div>
@@ -261,7 +263,7 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
           <DataTableNoData title={noDataText}>
             {noData && (
               <Button variant="link" onClick={handleNewFeedbackDefinitionClick}>
-                Create new feedback definition
+                {t("settings.feedback.create")}
               </Button>
             )}
           </DataTableNoData>

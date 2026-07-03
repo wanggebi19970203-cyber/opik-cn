@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { ChevronDown, Settings2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import {
   DropdownMenu,
@@ -19,9 +20,6 @@ import { ENVIRONMENT_UNTAGGED_VALUE } from "@/lib/filters";
 
 export const ALL_ENVIRONMENTS_VALUE = "";
 
-const ALL_ENVIRONMENTS_LABEL = "All environments";
-const UNTAGGED_LABEL = "Untagged";
-
 type EnvironmentFilterSelectProps = {
   value: string;
   onChange: (value: string) => void;
@@ -31,6 +29,7 @@ const EnvironmentFilterSelect: React.FC<EnvironmentFilterSelectProps> = ({
   value,
   onChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const { data } = useEnvironmentsList();
 
@@ -43,8 +42,8 @@ const EnvironmentFilterSelect: React.FC<EnvironmentFilterSelectProps> = ({
 
   const triggerLabel = (() => {
     if (selectedEnvironment) return selectedEnvironment.name;
-    if (value === ENVIRONMENT_UNTAGGED_VALUE) return UNTAGGED_LABEL;
-    return ALL_ENVIRONMENTS_LABEL;
+    if (value === ENVIRONMENT_UNTAGGED_VALUE) return t("environmentFilter.untagged");
+    return t("environmentFilter.allEnvironments");
   })();
 
   return (
@@ -76,14 +75,14 @@ const EnvironmentFilterSelect: React.FC<EnvironmentFilterSelectProps> = ({
           selected={value === ALL_ENVIRONMENTS_VALUE}
           onSelect={() => onChange(ALL_ENVIRONMENTS_VALUE)}
         >
-          {ALL_ENVIRONMENTS_LABEL}
+          {t("environmentFilter.allEnvironments")}
         </DropdownMenuItem>
         <DropdownMenuItem
           size="sm"
           selected={value === ENVIRONMENT_UNTAGGED_VALUE}
           onSelect={() => onChange(ENVIRONMENT_UNTAGGED_VALUE)}
         >
-          {UNTAGGED_LABEL}
+          {t("environmentFilter.untagged")}
         </DropdownMenuItem>
         {environments.length > 0 && <DropdownMenuSeparator />}
         <div className="max-h-80 overflow-y-auto">
@@ -109,7 +108,7 @@ const EnvironmentFilterSelect: React.FC<EnvironmentFilterSelectProps> = ({
             search={{ tab: CONFIGURATION_TABS.ENVIRONMENTS }}
           >
             <Settings2 className="mr-2 size-3.5 shrink-0 text-muted-slate" />
-            Manage environments
+            {t("environmentFilter.manageEnvironments")}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

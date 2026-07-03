@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import useLocalStorageState from "use-local-storage-state";
 import { JsonParam, useQueryParam } from "use-query-params";
 import isObject from "lodash/isObject";
+import { useTranslation } from "react-i18next";
 
 import { PromptWithLatestVersion, PromptVersion } from "@/types/prompts";
 import useAppStore from "@/store/AppStore";
@@ -63,13 +64,13 @@ export const DEFAULT_SORTING_COLUMNS: ColumnSort[] = [
 export const DEFAULT_COLUMNS: ColumnData<PromptVersion>[] = [
   {
     id: "template",
-    label: "Prompt",
+    label: "prompt:commits.columns.prompt",
     type: COLUMN_TYPE.dictionary,
     cell: CodeCell as never,
   },
   {
     id: "metadata",
-    label: "Metadata",
+    label: "prompt:commits.columns.metadata",
     type: COLUMN_TYPE.dictionary,
     accessorFn: (row) =>
       isObject(row.metadata)
@@ -79,12 +80,12 @@ export const DEFAULT_COLUMNS: ColumnData<PromptVersion>[] = [
   },
   {
     id: "change_description",
-    label: "Commit message",
+    label: "prompt:commits.columns.commitMessage",
     type: COLUMN_TYPE.string,
   },
   {
     id: "tags",
-    label: "Version tags",
+    label: "prompt:commits.columns.versionTags",
     type: COLUMN_TYPE.list,
     iconType: "tags",
     accessorFn: (row) => row.tags || [],
@@ -92,13 +93,13 @@ export const DEFAULT_COLUMNS: ColumnData<PromptVersion>[] = [
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: "prompt:commits.columns.createdAt",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "prompt:commits.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
 ];
@@ -123,43 +124,44 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 export const FILTER_COLUMNS: ColumnData<PromptVersion>[] = [
   {
     id: "commit",
-    label: "Prompt commit",
+    label: "prompt:commits.columns.promptCommit",
     type: COLUMN_TYPE.string,
   },
   {
     id: "template",
-    label: "Prompt",
+    label: "prompt:commits.columns.prompt",
     type: COLUMN_TYPE.string,
   },
   {
     id: "change_description",
-    label: "Commit message",
+    label: "prompt:commits.columns.commitMessage",
     type: COLUMN_TYPE.string,
   },
   {
     id: "metadata",
-    label: "Metadata",
+    label: "prompt:commits.columns.metadata",
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Version tags",
+    label: "prompt:commits.columns.versionTags",
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: "prompt:commits.columns.createdAt",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "prompt:commits.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
 ];
 
 const CommitsTab = ({ prompt }: CommitsTabInterface) => {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [size, setSize] = useLocalStorageState<number>(PAGINATION_SIZE_KEY, {
     defaultValue: 10,
@@ -218,7 +220,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
     );
 
   const versions = useMemo(() => data?.content ?? [], [data?.content]);
-  const noDataText = "There are no commits yet";
+  const noDataText = t("prompt:commits.noCommitsYet");
 
   const handleRowClick = useCallback(
     (row: PromptVersion) => {
@@ -246,7 +248,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
       generateSelectColumDef<PromptVersion>(),
       mapColumnDataFields<PromptVersion, PromptVersion>({
         id: "commit",
-        label: "Prompt commit",
+        label: t("prompt:commits.columns.promptCommit"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         explainer: EXPLAINERS_MAP[EXPLAINER_ID.whats_a_prompt_commit],
@@ -261,7 +263,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
         },
       ),
     ];
-  }, [columnsOrder, selectedColumns, data?.sortable_by]);
+  }, [t, columnsOrder, selectedColumns, data?.sortable_by]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -311,7 +313,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
           <SearchInput
             searchText={searchText}
             setSearchText={handleSearchTextChange}
-            placeholder="Search in prompt or commit message"
+            placeholder={t("prompt:commits.searchPlaceholder")}
             className="w-[320px]"
             dimension="sm"
           />

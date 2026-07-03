@@ -41,7 +41,7 @@ import static com.comet.opik.infrastructure.http.CorsFactory.OPIK_PROVIDER_HEADE
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Chat Completions", description = "Chat Completions related resources")
+@Tag(name = "Chat Completions", description = "聊天补全相关资源")
 public class ChatCompletionsResource {
 
     private final @NonNull Provider<RequestContext> requestContextProvider;
@@ -50,8 +50,8 @@ public class ChatCompletionsResource {
 
     @POST
     @Produces({MediaType.SERVER_SENT_EVENTS, MediaType.APPLICATION_JSON})
-    @Operation(operationId = "createChatCompletions", summary = "Create chat completions", description = "Create chat completions", responses = {
-            @ApiResponse(responseCode = "200", description = "Chat completions response", content = {
+    @Operation(operationId = "createChatCompletions", summary = "创建聊天补全", description = "创建聊天补全", responses = {
+            @ApiResponse(responseCode = "200", description = "聊天补全响应", content = {
                     @Content(mediaType = "text/event-stream", array = @ArraySchema(schema = @Schema(type = "object", anyOf = {
                             ChatCompletionResponse.class,
                             ErrorMessage.class}))),
@@ -67,14 +67,14 @@ public class ChatCompletionsResource {
             throw new BadRequestException(LlmProviderFactory.ERROR_MODEL_NOT_SUPPORTED.formatted(request.model()));
         }
 
-        // Get the resolved model info for span tracking
+        // 获取用于跨度跟踪的已解析模型信息
         var resolvedModelInfo = llmProviderFactory.getResolvedModelInfo(request.model());
 
         if (Boolean.TRUE.equals(request.stream())) {
             log.info("Creating and streaming chat completions, workspaceId '{}', model '{}', actualModel '{}'",
                     workspaceId, request.model(), resolvedModelInfo.actualModel());
             type = MediaType.SERVER_SENT_EVENTS;
-            // Use "\n\n" separator for SSE format (each event ends with double newline)
+            // 使用 "\n\n" 分隔符的SSE格式（每个事件以双换行符结尾）
             var chunkedOutput = new ChunkedOutput<String>(String.class, "\n\n");
             chatCompletionService.createAndStreamResponse(request, workspaceId,
                     new ChunkedOutputHandlers(chunkedOutput));
@@ -86,9 +86,9 @@ public class ChatCompletionsResource {
             entity = chatCompletionService.create(request, workspaceId);
         }
 
-        // Include actual model and provider in response headers for frontend span tracking.
-        // For OPIK_FREE provider, the user-facing model name (e.g., "opik-free-model") differs
-        // from the actual model used (e.g., "gpt-4o-mini"), and these headers allow correct cost calculation.
+        // 在响应头中包含实际模型和提供商信息，用于前端跨度跟踪。
+        // 对于OPIK_FREE提供商，用户可见的模型名称（例如 "opik-free-model"）与
+        // 实际使用的模型（例如 "gpt-4o-mini"）不同，这些头信息允许正确的成本计算。
         var response = Response.ok()
                 .type(type)
                 .entity(entity)

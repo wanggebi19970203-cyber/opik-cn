@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import get from "lodash/get";
 
 import axios, { AxiosError } from "axios";
+import i18next from "i18next";
 
 import { useToast } from "@/ui/use-toast";
 import { APP_VERSION } from "@/constants/app";
@@ -37,8 +38,8 @@ const useProvideFeedbackMutation = () => {
     },
     onSuccess: () => {
       toast({
-        title: "Feedback sent",
-        description: "Thank you for sharing your thoughts with us",
+        title: i18next.t("common:messages.feedbackSent"),
+        description: i18next.t("common:messages.feedbackSentDescription"),
       });
     },
     onError: (error: AxiosError) => {
@@ -49,7 +50,7 @@ const useProvideFeedbackMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import isUndefined from "lodash/isUndefined";
 import { Database, MessageCircleWarning, Plus } from "lucide-react";
 import { keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { Span, Trace } from "@/types/traces";
 import useAppStore from "@/store/AppStore";
@@ -60,6 +61,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
   open,
   setOpen,
 }) => {
+  const { t } = useTranslation("tracing");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -120,22 +122,22 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
 
   const onItemsAdded = useCallback(
     (dataset: Dataset, hasTraces: boolean, hasSpans: boolean) => {
-      let itemType = "Items";
+      let itemType = t("addToDataset.itemsAddedToTestSuite");
       if (hasTraces && !hasSpans) {
-        itemType = "Traces";
+        itemType = t("addToDataset.tracesAddedToTestSuite");
       } else if (hasSpans && !hasTraces) {
-        itemType = "Spans";
+        itemType = t("addToDataset.spansAddedToTestSuite");
       }
 
       const explainer =
         EXPLAINERS_MAP[EXPLAINER_ID.i_added_traces_to_an_test_suite_now_what];
 
       toast({
-        title: `${itemType} added to test suite`,
+        title: itemType,
         description: explainer.description,
       });
     },
-    [toast],
+    [toast, t],
   );
 
   const addToDatasetHandler = useCallback(
@@ -217,8 +219,8 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
 
     if (datasets.length === 0) {
       const text = search
-        ? "No search results"
-        : "There are no test suites yet";
+        ? t("addToDataset.noSearchResults")
+        : t("addToDataset.noTestSuitesYet");
 
       return (
         <div className="comet-body-s flex h-32 items-center justify-center text-muted-slate">
@@ -274,8 +276,8 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
 
   const renderAlert = () => {
     const text = noValidRows
-      ? "There are no rows that can be added as test suite items. The input field is missing."
-      : "Only rows with input fields will be added as test suite items.";
+      ? t("addToDataset.noValidRows")
+      : t("addToDataset.partialValidRows");
 
     if (noValidRows || partialValid) {
       return (
@@ -320,45 +322,45 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
       <AccordionItem value="metadata" className="border-t">
         <AccordionTrigger>
           {type === "trace"
-            ? "Trace metadata configuration"
-            : "Span metadata configuration"}
+            ? t("addToDataset.traceMetadataConfig")
+            : t("addToDataset.spanMetadataConfig")}
         </AccordionTrigger>
         <AccordionContent className="px-3">
           <div className="grid grid-cols-2 gap-3">
             {includeNestedSpans &&
               renderEnrichmentCheckbox(
                 "include-spans",
-                "Nested spans",
+                t("addToDataset.nestedSpans"),
                 enrichmentOptions.includeSpans,
                 "includeSpans",
               )}
             {renderEnrichmentCheckbox(
               `include-tags${type === "span" ? "-span" : ""}`,
-              "Tags",
+              t("addToDataset.tags"),
               enrichmentOptions.includeTags,
               "includeTags",
             )}
             {renderEnrichmentCheckbox(
               `include-feedback-scores${type === "span" ? "-span" : ""}`,
-              "Feedback scores",
+              t("addToDataset.feedbackScores"),
               enrichmentOptions.includeFeedbackScores,
               "includeFeedbackScores",
             )}
             {renderEnrichmentCheckbox(
               `include-comments${type === "span" ? "-span" : ""}`,
-              "Comments",
+              t("addToDataset.comments"),
               enrichmentOptions.includeComments,
               "includeComments",
             )}
             {renderEnrichmentCheckbox(
               `include-usage${type === "span" ? "-span" : ""}`,
-              "Usage metrics",
+              t("addToDataset.usageMetrics"),
               enrichmentOptions.includeUsage,
               "includeUsage",
             )}
             {renderEnrichmentCheckbox(
               `include-metadata${type === "span" ? "-span" : ""}`,
-              "Metadata",
+              t("addToDataset.metadata"),
               enrichmentOptions.includeMetadata,
               "includeMetadata",
             )}
@@ -373,7 +375,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg sm:max-w-[560px]">
           <DialogHeader>
-            <DialogTitle>Add to test suite</DialogTitle>
+            <DialogTitle>{t("addToDataset.title")}</DialogTitle>
           </DialogHeader>
           <DialogAutoScrollBody>
             <ExplainerDescription
@@ -385,7 +387,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
             {hasOnlyTraces && renderMetadataConfiguration("trace", true)}
             {hasOnlySpans && renderMetadataConfiguration("span")}
             <div className="my-2 flex items-center justify-between">
-              <h3 className="comet-title-xs">Select a test suite</h3>
+              <h3 className="comet-title-xs">{t("addToDataset.selectTestSuite")}</h3>
               {canCreateDatasets && (
                 <Button
                   variant="ghost"
@@ -396,7 +398,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                   disabled={noValidRows}
                 >
                   <Plus className="mr-2 size-4" />
-                  Create new test suite
+                  {t("addToDataset.createNewTestSuite")}
                 </Button>
               )}
             </div>
@@ -427,7 +429,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
               onClick={() => setOpen(false)}
               disabled={fetching}
             >
-              Cancel
+              {t("addToDataset.cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -437,7 +439,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
               }}
               disabled={!selectedDataset || noValidRows || fetching}
             >
-              Add to test suite
+              {t("addToDataset.addToTestSuite")}
             </Button>
           </DialogFooter>
         </DialogContent>

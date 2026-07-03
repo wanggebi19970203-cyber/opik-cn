@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 type NoDataPageProps = {
@@ -18,6 +19,8 @@ const NoDataPage: React.FC<NoDataPageProps> = ({
   className,
   height = 60,
 }) => {
+  const { t } = useTranslation("common");
+
   return (
     <div
       style={
@@ -39,7 +42,7 @@ const NoDataPage: React.FC<NoDataPageProps> = ({
           <img
             className="m-auto max-h-full max-w-full rounded-md border object-cover"
             src={imageUrl}
-            alt="no data image"
+            alt={t("emptyStates.noDataAltText")}
           />
         </div>
         <div className="flex flex-wrap justify-center gap-2 pt-8">

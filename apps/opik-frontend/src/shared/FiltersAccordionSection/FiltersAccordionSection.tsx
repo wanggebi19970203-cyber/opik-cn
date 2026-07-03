@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Description } from "@/ui/description";
@@ -41,12 +42,16 @@ const FiltersAccordionSection = <TColumnData,>({
   config,
   filters,
   onChange,
-  label = "Filters",
-  description = "Add filters",
+  label: labelProp,
+  description: descriptionProp,
   className = "",
   errors,
   hideBorder = false,
 }: FiltersAccordionSectionProps<TColumnData>) => {
+  const { t } = useTranslation();
+  const label = labelProp ?? t("common.filters.label");
+  const description = descriptionProp ?? t("common.filters.description");
+
   const handleAddFilter = useCallback(() => {
     const newFilter: Filter = {
       ...createFilter(),
@@ -116,7 +121,7 @@ const FiltersAccordionSection = <TColumnData,>({
 
                   return (
                     <FormErrorSkeleton key={index}>
-                      Filter {index + 1}: {errorMessages.join(", ")}
+                      {t("common.filters.filterError", { index: index + 1, messages: errorMessages.join(", ") })}
                     </FormErrorSkeleton>
                   );
                 })}
@@ -131,7 +136,7 @@ const FiltersAccordionSection = <TColumnData,>({
               className="w-fit"
             >
               <Plus className="mr-1 size-3.5" />
-              Add filter
+              {t("common.filters.addFilter")}
             </Button>
           </div>
         </AccordionContent>

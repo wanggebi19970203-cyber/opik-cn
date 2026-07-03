@@ -1,0 +1,12 @@
+{
+  "integrations": {
+    "title": "Integrations",
+    "description": "Connect with your favorite tools",
+    "categories": {
+      "frameworks": "Frameworks",
+      "models": "Model Providers",
+      "gateways": "Gateways",
+      "tools": "Tools"
+    }
+  }
+}

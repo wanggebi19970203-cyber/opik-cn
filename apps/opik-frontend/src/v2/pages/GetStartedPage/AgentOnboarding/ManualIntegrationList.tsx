@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
@@ -22,15 +23,6 @@ type ManualIntegrationListProps = {
   onCategoryChange?: (category: string) => void;
 };
 
-const CATEGORY_TABS = [
-  { value: INTEGRATION_CATEGORIES.ALL, label: "All integrations" },
-  { value: INTEGRATION_CATEGORIES.LLM_PROVIDERS, label: "LLM providers" },
-  {
-    value: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
-    label: "Frameworks & tools",
-  },
-] as const;
-
 const ManualIntegrationList: React.FC<ManualIntegrationListProps> = ({
   onSelectIntegration,
   showInstallWithAI = false,
@@ -38,6 +30,7 @@ const ManualIntegrationList: React.FC<ManualIntegrationListProps> = ({
   activeCategory: controlledCategory,
   onCategoryChange,
 }) => {
+  const { t } = useTranslation("pages/get-started");
   const { agentName } = useAgentOnboarding();
   const { themeMode } = useTheme();
 
@@ -70,18 +63,27 @@ const ManualIntegrationList: React.FC<ManualIntegrationListProps> = ({
               value={INSTALL_WITH_AI}
               className="text-muted-slate"
             >
-              Use Opik skills
+              {t("getStarted.manualIntegration.useOpikSkills")}
             </ToggleGroupItem>
           )}
-          {CATEGORY_TABS.map((tab) => (
-            <ToggleGroupItem
-              key={tab.value}
-              value={tab.value}
-              className="text-muted-slate"
-            >
-              {tab.label}
-            </ToggleGroupItem>
-          ))}
+          <ToggleGroupItem
+            value={INTEGRATION_CATEGORIES.ALL}
+            className="text-muted-slate"
+          >
+            {t("getStarted.manualIntegration.allIntegrations")}
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value={INTEGRATION_CATEGORIES.LLM_PROVIDERS}
+            className="text-muted-slate"
+          >
+            {t("getStarted.manualIntegration.llmProviders")}
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value={INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS}
+            className="text-muted-slate"
+          >
+            {t("getStarted.manualIntegration.frameworksAndTools")}
+          </ToggleGroupItem>
         </ToggleGroup>
 
         {activeCategory === INSTALL_WITH_AI ? (
@@ -124,7 +126,7 @@ const ManualIntegrationList: React.FC<ManualIntegrationListProps> = ({
               data-fs-element="OnboardingIntegrationViewAll"
             >
               <span className="comet-body-s-accented truncate font-normal text-foreground">
-                View all
+                {t("getStarted.manualIntegration.viewAll")}
               </span>
               <ExternalLink className="size-3 shrink-0 text-foreground" />
             </a>

@@ -1,4 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { DropdownOption } from "@/types/shared";
 import { Checkbox } from "@/ui/checkbox";
@@ -27,24 +29,24 @@ const OPTIMIZATION_ALGORITHMS_OPTIONS: DropdownOption<OPTIMIZATION_ALGORITHMS>[]
   [
     {
       value: OPTIMIZATION_ALGORITHMS.metaPromptOptimizer,
-      label: "Meta optimizer",
-      description: "Optimizes prompts using meta learning.",
+      label: i18next.t("pages/optimizations:optimizations.addDialog.metaOptimizer"),
+      description: i18next.t("pages/optimizations:optimizations.addDialog.metaOptimizerDesc"),
     },
     {
       value: OPTIMIZATION_ALGORITHMS.fewShotOptimizer,
-      label: "Few-shot Bayesian optimizer",
+      label: i18next.t("pages/optimizations:optimizations.addDialog.fewShotBayesian"),
       description:
-        "Optimizes prompts using few-shot learning and Bayesian optimization.",
+        i18next.t("pages/optimizations:optimizations.addDialog.fewShotBayesianDesc"),
     },
     {
       value: OPTIMIZATION_ALGORITHMS.evolutionaryOptimizer,
-      label: "Evolutionary optimizer",
-      description: "Optimizes prompts using evolution.",
+      label: i18next.t("pages/optimizations:optimizations.addDialog.evolutionary"),
+      description: i18next.t("pages/optimizations:optimizations.addDialog.evolutionaryDesc"),
     },
     {
       value: OPTIMIZATION_ALGORITHMS.gepaOptimizer,
-      label: "GEPA optimizer",
-      description: "Applies Genetic-Pareto search with reflection guidance.",
+      label: i18next.t("pages/optimizations:optimizations.addDialog.gepa"),
+      description: i18next.t("pages/optimizations:optimizations.addDialog.gepaDesc"),
     },
   ];
 
@@ -265,6 +267,7 @@ type AddOptimizationDialogProps = {
 const AddOptimizationDialog: React.FunctionComponent<
   AddOptimizationDialogProps
 > = ({ open, setOpen, projectId }) => {
+  const { t } = useTranslation("pages/optimizations");
   const [isLoadedMore, setIsLoadedMore] = useState(false);
   const [datasetName, setDatasetName] = useState("");
   const [selectedModel, setSelectedModel] = useState<OPTIMIZATION_ALGORITHMS>(
@@ -354,17 +357,17 @@ const AddOptimizationDialog: React.FunctionComponent<
     <SideDialog
       open={open}
       setOpen={openChangeHandler}
-      header={<SheetTopBar variant="info" title="Start optimization run" />}
+      header={<SheetTopBar variant="info" title={t("optimizations.addDialog.title")} />}
     >
       <div className="max-h-full overflow-y-auto px-5 pb-20 pt-4">
         <div className="m-auto flex w-full items-start gap-6">
           <div className="flex w-[250px] shrink-0 flex-col gap-2">
-            <div className="comet-title-s">Optimization algorithms</div>
+            <div className="comet-title-s">{t("optimizations.addDialog.optimizationAlgorithms")}</div>
             {generateList(OPTIMIZATION_ALGORITHMS_OPTIONS)}
           </div>
           <div className="flex w-full max-w-[700px] flex-col gap-2 rounded-md border border-border p-6">
             <div className="comet-body-s text-foreground-secondary">
-              1. Select test suite
+              {t("optimizations.addDialog.selectTestSuite")}
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -372,7 +375,7 @@ const AddOptimizationDialog: React.FunctionComponent<
                   <LoadableSelectBox
                     options={options}
                     value={datasetName}
-                    placeholder="Select a test suite"
+                    placeholder={t("optimizations.addDialog.selectTestSuitePlaceholder")}
                     onChange={setDatasetName}
                     onLoadMore={
                       total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore
@@ -396,7 +399,7 @@ const AddOptimizationDialog: React.FunctionComponent<
             </div>
             <CodeHighlighter data={section1} />
             <div className="comet-body-s mt-4 text-foreground-secondary">
-              3. Create an Optimization run
+              {t("optimizations.addDialog.createOptimizationRun")}
             </div>
             <ConfiguredCodeHighlighter
               code={section3}

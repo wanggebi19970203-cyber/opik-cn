@@ -26,6 +26,7 @@ import {
   getLayoutItemSize,
 } from "@/lib/dashboard/layout";
 import { migrateDashboardConfig } from "@/lib/dashboard/migrations";
+import i18next from "i18next";
 
 interface DashboardStoreState {
   sections: DashboardSections;
@@ -254,7 +255,7 @@ export const useDashboardStore = create<DashboardStore>()(
           const newWidget: DashboardWidget = {
             ...widget,
             id: uniqid(),
-            title: `${widget.title || widget.generatedTitle || ""} (copy)`,
+            title: `${widget.title || widget.generatedTitle || ""} ${i18next.t("dashboardStore.copySuffix")}`,
           };
 
           const size = getLayoutItemSize(section.layout, widgetId);

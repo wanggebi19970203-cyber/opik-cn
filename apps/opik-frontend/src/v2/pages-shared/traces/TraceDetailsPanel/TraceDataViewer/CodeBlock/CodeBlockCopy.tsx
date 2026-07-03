@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Copy } from "lucide-react";
 import copy from "clipboard-copy";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -9,6 +10,7 @@ type CodeBlockCopyProps = {
 };
 
 const CodeBlockCopy: React.FC<CodeBlockCopyProps> = ({ text }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
@@ -20,12 +22,12 @@ const CodeBlockCopy: React.FC<CodeBlockCopyProps> = ({ text }) => {
 
   const handleClick = useCallback(() => {
     copy(text);
-    toast({ description: "Copied" });
+    toast({ description: t("common.messages.copied") });
     setCopied(true);
   }, [text, toast]);
 
   return (
-    <TooltipWrapper content="Copy">
+    <TooltipWrapper content={t("common.buttons.copy")}>
       <button
         type="button"
         onClick={handleClick}

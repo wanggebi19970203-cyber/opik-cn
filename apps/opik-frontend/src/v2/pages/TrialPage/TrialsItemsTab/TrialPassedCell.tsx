@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { RunStatus } from "@/types/test-suites";
 
@@ -23,6 +24,7 @@ type FlattenedTrialItem = {
 const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
   context,
 ) => {
+  const { t } = useTranslation("pages/trial");
   const row = context.row.original;
   const { allRuns, runSummary, executionPolicy } = row;
 
@@ -33,7 +35,7 @@ const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
     if (total_runs === 1) {
       return (
         <span className={itemPassed ? "text-success" : "text-destructive"}>
-          {itemPassed ? "Yes" : "No"}
+          {itemPassed ? t("trialPassedCell.yes") : t("trialPassedCell.no")}
         </span>
       );
     }
@@ -41,7 +43,7 @@ const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
     const passThreshold = executionPolicy?.pass_threshold ?? 1;
     return (
       <span className={itemPassed ? "text-success" : "text-destructive"}>
-        {passed_runs}/{total_runs} (threshold: {passThreshold})
+        {passed_runs}/{total_runs} ({t("trialPassedCell.threshold", { value: passThreshold })})
       </span>
     );
   }
@@ -55,7 +57,7 @@ const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
     const itemPassed = firstRun.status === RunStatus.PASSED;
     return (
       <span className={itemPassed ? "text-success" : "text-destructive"}>
-        {itemPassed ? "Yes" : "No"}
+        {itemPassed ? t("trialPassedCell.yes") : t("trialPassedCell.no")}
       </span>
     );
   }
@@ -68,7 +70,7 @@ const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
 
   return (
     <span className={itemPassed ? "text-success" : "text-destructive"}>
-      {runsPassed}/{allRuns.length} (threshold: {passThreshold})
+      {runsPassed}/{allRuns.length} ({t("trialPassedCell.threshold", { value: passThreshold })})
     </span>
   );
 };

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import i18next from "i18next";
 import isString from "lodash/isString";
 import isEmpty from "lodash/isEmpty";
 import { FiltersArraySchema } from "@/shared/FiltersAccordionSection/schema";
@@ -35,7 +36,7 @@ export const ExperimentsLeaderboardWidgetSchema = z
       return true;
     },
     {
-      message: "Ranking metric is required when ranking is enabled",
+      message: i18next.t("common:validation.rankingMetricRequired"),
       path: ["rankingMetric"],
     },
   )
@@ -48,7 +49,7 @@ export const ExperimentsLeaderboardWidgetSchema = z
       );
     },
     {
-      message: `Maximum rows is required and must be between ${MIN_MAX_EXPERIMENTS} and ${MAX_MAX_EXPERIMENTS}`,
+      message: i18next.t("common:validation.maxRowsRequired", { min: MIN_MAX_EXPERIMENTS, max: MAX_MAX_EXPERIMENTS }),
       path: ["maxRows"],
     },
   );

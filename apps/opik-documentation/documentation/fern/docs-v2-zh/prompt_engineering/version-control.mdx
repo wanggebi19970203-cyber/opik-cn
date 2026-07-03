@@ -1,0 +1,121 @@
+---
+headline: 版本控制 | Opik 文档
+og:description: 通过 Opik UI 和 SDK 创建、获取和比较 Prompt Library 版本
+og:site_name: Opik 文档
+og:title: Prompt Library 版本控制
+title: 版本控制
+---
+
+Prompt Library 中每次对提示词的修改都会创建一个新的不可变版本，按 `v1`、`v2`、`v3`… 顺序编号。版本一旦创建就无法修改——您始终拥有完整的审计跟踪。
+
+您可以通过 Opik UI 或使用 SDK 从代码中创建新版本。
+
+## 创建新版本
+
+<Tabs>
+  <Tab title="Opik UI">
+    要从 Opik 平台创建新版本：
+
+    1. 导航到项目的 **Prompt Library**
+    2. 打开要编辑的提示词
+    3. 点击 **Edit** 并更新模板
+    4. 点击 **Create new version**
+
+    新版本将立即可用。
+  </Tab>
+  <Tab title="Python SDK">
+    使用相同的 `name` 和更新后的模板再次调用 `create_prompt`（或 `create_chat_prompt`）——SDK 会自动创建下一个顺序版本：
+
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    # v1
+    client.create_prompt(
+        name="system_prompt",
+        prompt="You are a helpful assistant.",
+        project_name="my-agent",
+    )
+
+    # v2
+    client.create_prompt(
+        name="system_prompt",
+        prompt="You are a coding assistant specializing in {{language}}.",
+        project_name="my-agent",
+    )
+    ```
+
+    如果模板与最新版本完全相同，则不会创建新版本。
+  </Tab>
+  <Tab title="TypeScript SDK">
+    使用相同的 `name` 和更新后的模板再次调用 `createPrompt`（或 `createChatPrompt`）——SDK 会自动创建下一个顺序版本：
+
+    ```ts
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    // v1
+    await client.createPrompt({
+      name: "system_prompt",
+      prompt: "You are a helpful assistant.",
+      projectName: "my-agent",
+    });
+
+    // v2
+    await client.createPrompt({
+      name: "system_prompt",
+      prompt: "You are a coding assistant specializing in {{language}}.",
+      projectName: "my-agent",
+    });
+    ```
+
+    如果模板与最新版本完全相同，则不会创建新版本。
+  </Tab>
+</Tabs>
+
+## 获取特定版本
+
+传入 `version` 参数来获取特定版本，或省略该参数以获取最新版本：
+
+<CodeBlocks>
+  ```python title="Python"
+  import opik
+
+  client = opik.Opik()
+
+  # 获取特定版本
+  v3 = client.get_prompt(name="system_prompt", version="v3", project_name="my-agent")
+
+  # 获取最新版本（省略 `version`）
+  latest = client.get_prompt(name="system_prompt", project_name="my-agent")
+  ```
+
+  ```ts title="TypeScript"
+  import { Opik } from "opik";
+
+  const client = new Opik();
+
+  // 获取特定版本
+  const v3 = await client.getPrompt({
+    name: "system_prompt",
+    version: "v3",
+    projectName: "my-agent",
+  });
+
+  // 获取最新版本（省略 `version`）
+  const latest = await client.getPrompt({
+    name: "system_prompt",
+    projectName: "my-agent",
+  });
+  ```
+</CodeBlocks>
+
+## 比较版本
+
+您可以在 Opik UI 中并排比较任意两个版本，精确查看更改内容。这对于在将代理指向新版本之前审查更改非常有用。
+
+<Frame>
+  <img src="/img/v2/prompt-library/prompt-versions.png" alt="版本比较视图，显示两个版本之间提示词更改的差异" />
+</Frame>

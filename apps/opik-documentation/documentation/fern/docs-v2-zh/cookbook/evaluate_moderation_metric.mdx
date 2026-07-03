@@ -1,0 +1,154 @@
+---
+headline: 实战手册 - 评估审核指标 | Opik 文档
+og:description: 评估 LLM 评估 SDK 中的审核指标，使用 Opik 平台增强您的审核能力。
+og:site_name: Opik 文档
+og:title: 使用 Opik 评估审核指标
+title: 实战手册 - 评估审核指标
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+# 评估 Opik 的审核指标
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目范围的。创建数据集和运行实验时请确保指定 `project_name`，以便它们与正确的项目关联。
+</Note>
+
+在本指南中，我们将评估 LLM 评估 SDK 中包含的审核指标，这将展示如何在平台中使用 `evaluation` 功能以及 SDK 中包含的审核指标的质量。
+
+## 在 Comet.com 上创建账户
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=eval_mod&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup/?from=llm&utm_source=opik&utm_medium=colab&utm_content=eval_mod&utm_campaign=opik)并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=eval_mod&utm_campaign=opik)了解更多信息。
+
+
+```python
+%pip install --upgrade --quiet opik pandas
+```
+
+
+```python
+import opik
+
+opik.configure(use_local=False)
+```
+
+## 准备环境
+
+首先，我们将配置 OpenAI API 密钥并下载参考审核数据集。
+
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+我们将使用 [OpenAI 审核 API 发布数据集](https://github.com/openai/moderation-api-release/tree/main/data)，根据这篇[博客文章](https://openai.com/index/using-gpt-4-for-content-moderation/)，GPT-4o 检测到约 60% 的幻觉。第一步将在平台中创建一个数据集，以便我们可以跟踪评估结果。
+
+由于 SDK 中的插入方法会去重项目，我们可以插入 50 个项目，如果项目已存在，Opik 将自动移除它们。
+
+
+```python
+# Create dataset
+import opik
+import pandas as pd
+import requests
+from io import BytesIO
+
+client = opik.Opik()
+
+# Create dataset
+dataset = client.get_or_create_dataset(
+    name="OpenAIModerationDataset", description="OpenAI Moderation Dataset", project_name="my-project"
+)
+
+# Insert items into dataset
+url = "https://github.com/openai/moderation-api-release/raw/main/data/samples-1680.jsonl.gz"
+response = requests.get(url)
+df = pd.read_json(BytesIO(response.content), lines=True, compression="gzip")
+
+df = df.sample(n=50, random_state=42)
+
+dataset_records = []
+for x in df.to_dict(orient="records"):
+    moderation_fields = ["S", "H", "V", "HR", "SH", "S3", "H2", "V2"]
+    moderated_fields = [field for field in moderation_fields if x[field] == 1.0]
+    expected_output = "moderated" if moderated_fields else "not_moderated"
+
+    dataset_records.append(
+        {
+            "output": x["prompt"],
+            "expected_output": expected_output,
+            "moderated_fields": moderated_fields,
+        }
+    )
+
+dataset.insert(dataset_records)
+```
+
+## 评估审核指标
+
+为了评估 Opik 审核指标的性能，我们将定义：
+
+- 评估任务：我们的评估任务将使用数据集中的数据，返回使用 Opik 审核指标计算的审核分数。
+- 评分指标：我们将使用 `Equals` 指标来检查计算的审核分数是否与预期输出匹配。
+
+通过这种方式定义评估任务，我们将能够了解 Opik 的审核指标在数据集中检测审核违规的能力。
+
+我们可以使用 Opik SDK 为数据集中的每个项目计算审核分数：
+
+
+```python
+from opik.evaluation.metrics import Moderation, Equals
+from opik.evaluation import evaluate
+from opik import Opik
+from opik.evaluation.metrics.llm_judges.moderation.template import generate_query
+from typing import Dict
+
+
+# Define the evaluation task
+def evaluation_task(x: Dict):
+    metric = Moderation()
+    try:
+        metric_score = metric.score(output=x["output"])
+        moderation_score = "moderated" if metric_score.value > 0.5 else "not_moderated"
+        moderation_reason = metric_score.reason
+    except Exception as e:
+        print(e)
+        moderation_score = None
+        moderation_reason = str(e)
+
+    return {
+        "moderation_score": moderation_score,
+        "moderation_reason": moderation_reason,
+    }
+
+
+# Get the dataset
+client = Opik()
+dataset = client.get_dataset(name="OpenAIModerationDataset")
+
+# Define the scoring metric
+moderation_metric = Equals(name="Correct moderation score")
+
+# Add the prompt template as an experiment configuration
+experiment_config = {
+    "prompt_template": generate_query(output="{output}", few_shot_examples=[])
+}
+
+res = evaluate(
+    dataset=dataset,
+    task=evaluation_task,
+    scoring_metrics=[moderation_metric],
+    experiment_config=experiment_config,
+    project_name="my-project",
+    scoring_key_mapping={"reference": "expected_output", "output": "moderation_score"},
+)
+```
+
+我们能够检测到约 85% 的审核违规，这可以通过向模型提供一些额外示例来进一步改进。我们可以在 Opik UI 中查看结果细分：
+
+![审核评估](https://raw.githubusercontent.com/comet-ml/opik/main/apps/opik-documentation/documentation/fern/img/cookbook/moderation_metric_cookbook.png)

@@ -1,5 +1,6 @@
 import React from "react";
 import { ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,8 @@ const ExplainerDescription: React.FC<ExplainerDescriptionProps> = ({
   iconSize = "size-4",
   className,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className={cn(className)}>
       {title && (
@@ -42,7 +45,7 @@ const ExplainerDescription: React.FC<ExplainerDescriptionProps> = ({
           asChild
         >
           <a href={docLink} target="_blank" rel="noreferrer">
-            Read more
+            {t("common.explainer.readMore")}
             <ExternalLink className={cn("ml-1 shrink-0", iconSize)} />
           </a>
         </Button>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import Loader from "@/shared/Loader/Loader";
 import InstructionsSection from "@/v1/pages/AnnotationQueuePage/ConfigurationTab/InstructionsSection";
@@ -12,8 +13,10 @@ interface ConfigurationTabProps {
 const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation("pages/annotation-queue");
+
   if (!annotationQueue) {
-    return <Loader message="Loading queue information" />;
+    return <Loader message={t("annotationQueue.configuration.loadingMessage")} />;
   }
 
   return (

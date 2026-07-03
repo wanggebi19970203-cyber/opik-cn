@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { DownloadIcon, Expand, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn, isSameDomainUrl } from "@/lib/utils";
 import { isOpikS3AttachmentUrl } from "@/lib/attachments";
@@ -18,6 +19,7 @@ const AttachmentThumbnail: React.FC<AttachmentThumbnailProps> = ({
   previewData,
   onExpand,
 }) => {
+  const { t } = useTranslation("common");
   const { type, name, url } = previewData;
   const Icon = ATTACHMENT_ICON_MAP[type];
 
@@ -58,12 +60,12 @@ const AttachmentThumbnail: React.FC<AttachmentThumbnailProps> = ({
         </TooltipWrapper>
         <div className="-mr-1 hidden shrink-0 items-center gap-1 group-hover:flex">
           {isExpandable && (
-            <TooltipWrapper content="Open in fullscreen">
+            <TooltipWrapper content={t("attachmentThumbnail.openInFullscreen")}>
               <Button
                 variant="ghost"
                 size="icon-2xs"
                 onClick={expandClickHandler}
-                aria-label="Open in fullscreen"
+                aria-label={t("attachmentThumbnail.openInFullscreen")}
                 className="w-4"
               >
                 <Expand className="text-light-slate" />
@@ -71,7 +73,7 @@ const AttachmentThumbnail: React.FC<AttachmentThumbnailProps> = ({
             </TooltipWrapper>
           )}
           <TooltipWrapper
-            content={showDownload ? "Download" : "Open in new tab"}
+            content={showDownload ? t("attachmentThumbnail.download") : t("attachmentThumbnail.openInNewTab")}
           >
             <Button variant="ghost" size="icon-2xs" className="w-4" asChild>
               <a

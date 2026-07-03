@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/ui/button";
@@ -14,6 +15,7 @@ export const CustomUseInPlaygroundButton: React.FC<{
   className?: string;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 }> = ({ onClick, disabled, size, variant, ...props }) => {
+  const { t } = useTranslation("tracing");
   return (
     <Button
       variant="ghost"
@@ -23,7 +25,7 @@ export const CustomUseInPlaygroundButton: React.FC<{
       className="inline-flex items-center gap-2"
       {...props}
     >
-      Use in Playground
+      {t("prompts.useInPlayground")}
       <ExternalLink className="size-3.5 shrink-0" />
     </Button>
   );
@@ -48,6 +50,7 @@ const PromptContentView: React.FC<PromptContentViewProps> = ({
   templateStructure,
   playgroundButton,
 }) => {
+  const { t } = useTranslation("tracing");
   return (
     <PromptTemplateView
       template={template}
@@ -63,7 +66,7 @@ const PromptContentView: React.FC<PromptContentViewProps> = ({
               search={{ activeVersionId }}
               className="inline-flex items-center"
             >
-              View in Prompt library
+              {t("prompts.viewInPromptLibrary")}
             </Link>
           </Button>
         )}

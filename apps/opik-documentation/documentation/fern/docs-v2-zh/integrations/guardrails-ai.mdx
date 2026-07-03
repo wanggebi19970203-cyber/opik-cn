@@ -1,0 +1,100 @@
+---
+description: 开始将 Opik 集成到基于 Guardrails AI 的生成式 AI 应用中，实现验证跟踪、合规监控和护栏评估。
+headline: Guardrails AI | Opik 文档
+og:description: 学习如何将 Guardrails 验证步骤记录到 Opik，通过精确的结果跟踪增强输入和输出验证流程。
+og:site_name: Opik 文档
+og:title: 使用 Guardrails AI 验证输入 - Opik
+title: 使用 Opik 进行 Guardrails AI 验证跟踪
+---
+
+[Guardrails AI](https://github.com/guardrails-ai/guardrails) 是一个用于验证输入和输出的框架。
+
+本指南将通过一个简单示例，展示如何将 Guardrails 验证步骤作为 Trace 记录到 Opik 中，并为其添加验证结果标签。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=guardrails-ai&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=guardrails-ai&utm_campaign=opik) 并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=guardrails-ai&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `guardrails-ai`：
+
+```bash
+pip install opik guardrails-ai
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。详细说明请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)，包括：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云平台 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Guardrails AI
+
+使用 Guardrails AI 需要配置 OpenAI API Key。如果你使用其他提供商，可以替换为对应的 API Key。你可以[在此页面查找或创建 OpenAI API Key](https://platform.openai.com/settings/organization/api-keys)。
+
+可以通过环境变量设置：
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
+```
+
+还需要从 Guardrails Hub 安装礼貌性检查护栏：
+
+```bash
+guardrails hub install hub://guardrails/politeness_check
+```
+
+## 记录验证 Trace
+
+要将 Trace 记录到 Opik，需要使用 `track_guardrails` 函数对 Guard 对象进行追踪包装。
+
+```python
+from guardrails import Guard, OnFailAction
+from guardrails.hub import PolitenessCheck
+
+from opik.integrations.guardrails import track_guardrails
+
+politeness_check = PolitenessCheck(
+    llm_callable="gpt-3.5-turbo", on_fail=OnFailAction.NOOP
+)
+
+guard: Guard = Guard()
+if hasattr(guard, "use_many"):
+    guard = guard.use_many(politeness_check)
+else:
+    guard = guard.use(politeness_check)
+guard = track_guardrails(guard, project_name="guardrails-integration-example")
+
+guard.validate(
+    "Would you be so kind to pass me a cup of tea?",
+)
+guard.validate(
+    "Shut your mouth up and give me the tea.",
+)
+```
+
+每次验证操作现在都会作为 Trace 记录到 Opik 中。
+
+Trace 可在 Opik 平台中查看：
+
+<Frame>
+  <img src="/img/cookbook/guardrails_ai_traces_cookbook.png" />
+</Frame>

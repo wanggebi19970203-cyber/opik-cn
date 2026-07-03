@@ -9,6 +9,7 @@ LOGGER = logging.getLogger(__name__)
 def _initialize_aggregated_response(
     first_chunk: litellm.types.utils.ModelResponse,
 ) -> Dict[str, Any]:
+    """初始化聚合响应的数据结构。"""
     return {
         "choices": [{"index": 0, "message": {"role": "", "content": ""}}],
         "created": getattr(first_chunk, "created", 0),
@@ -21,18 +22,21 @@ def _initialize_aggregated_response(
 
 
 def _extract_role_from_delta(delta: Any, current_role: str) -> str:
+    """从 delta 对象中提取角色信息。"""
     if hasattr(delta, "role") and delta.role and not current_role:
         return delta.role
     return current_role
 
 
 def _extract_content_from_delta(delta: Any) -> Optional[str]:
+    """从 delta 对象中提取内容。"""
     if hasattr(delta, "content") and delta.content:
         return delta.content
     return None
 
 
 def _extract_finish_reason_from_choice(choice: Any) -> Optional[str]:
+    """从 choice 对象中提取完成原因。"""
     if hasattr(choice, "finish_reason") and choice.finish_reason:
         return choice.finish_reason
     return None
@@ -41,6 +45,7 @@ def _extract_finish_reason_from_choice(choice: Any) -> Optional[str]:
 def _extract_usage_from_chunk(
     chunk: litellm.types.utils.ModelResponse,
 ) -> Optional[Dict[str, Any]]:
+    """从流式响应块中提取 token 使用量信息。"""
     if not hasattr(chunk, "usage") or chunk.usage is None:
         return None
 
@@ -70,6 +75,14 @@ def _extract_usage_from_chunk(
 def aggregate(
     items: List[litellm.types.utils.ModelResponse],
 ) -> Optional[litellm.types.utils.ModelResponse]:
+    """聚合 LiteLLM 流式响应块为完整的响应对象。
+
+    参数:
+        items: 流式响应块列表。
+
+    返回:
+        聚合后的 ModelResponse 对象，如果聚合失败则返回 None。
+    """
     try:
         if not items:
             return None

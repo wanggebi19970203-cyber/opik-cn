@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { DATASET_ITEM_SOURCE, DatasetItemColumn } from "@/types/datasets";
 import { useAddItem } from "@/store/TestSuiteDraftStore";
@@ -66,11 +67,14 @@ const AddDatasetItemPanel: React.FC<AddDatasetItemPanelProps> = ({
   open,
   onClose,
   columns,
-}) => (
+}) => {
+  const { t } = useTranslation("datasets");
+
+  return (
   <AddItemPanelWrapper
     panelId="dataset-item-panel"
     formId={ADD_DATASET_ITEM_FORM_ID}
-    title="Add record"
+    title={t("addItem.addRecord")}
     open={open}
     onClose={onClose}
     initialWidth={0.4}
@@ -84,6 +88,7 @@ const AddDatasetItemPanel: React.FC<AddDatasetItemPanelProps> = ({
       />
     )}
   </AddItemPanelWrapper>
-);
+  );
+};
 
 export default AddDatasetItemPanel;

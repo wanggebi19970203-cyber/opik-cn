@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMemo } from "react";
 import { JsonParam } from "use-query-params";
 import { ColumnSort } from "@tanstack/react-table";
@@ -20,25 +21,25 @@ import { GroupedExperiment } from "@/hooks/useGroupedExperimentsList";
 export const FILTER_AND_GROUP_COLUMNS: ColumnData<GroupedExperiment>[] = [
   {
     id: COLUMN_PROJECT_ID,
-    label: "Project",
+    label: i18next.t("experiments.experiments.filterColumns.project"),
     type: COLUMN_TYPE.string,
     disposable: true,
   },
   {
     id: COLUMN_DATASET_ID,
-    label: "Test suite",
+    label: i18next.t("experiments.experiments.filterColumns.testSuite"),
     type: COLUMN_TYPE.string,
     disposable: true,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("experiments.experiments.filterColumns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Configuration",
+    label: i18next.t("experiments.experiments.filterColumns.configuration"),
     type: COLUMN_TYPE.dictionary,
   },
 ];
@@ -75,7 +76,7 @@ export const useExperimentsGroupsAndFilters = ({
           },
           defaultOperator: "=",
           operators: [{ label: "=", value: "=" }],
-          sortingMessage: "Last updated at",
+          sortingMessage: i18next.t("experiments.experiments.filterColumns.lastUpdatedAt"),
         },
         [COLUMN_DATASET_ID]: {
           keyComponent: DatasetSelectBox,
@@ -84,7 +85,7 @@ export const useExperimentsGroupsAndFilters = ({
           },
           defaultOperator: "=",
           operators: [{ label: "=", value: "=" }],
-          sortingMessage: "Last experiment created",
+          sortingMessage: i18next.t("experiments.experiments.filterColumns.lastExperimentCreated"),
         },
         [COLUMN_METADATA_ID]: {
           keyComponent: ExperimentsPathsAutocomplete,

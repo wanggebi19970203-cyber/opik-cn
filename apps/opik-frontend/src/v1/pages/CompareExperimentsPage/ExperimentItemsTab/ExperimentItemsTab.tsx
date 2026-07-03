@@ -7,6 +7,7 @@ import {
   ColumnPinningState,
   createColumnHelper,
 } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 
 import {
   CELL_VERTICAL_ALIGNMENT,
@@ -88,31 +89,32 @@ const DYNAMIC_COLUMNS_KEY = "compare-experiments-dynamic-columns";
 
 function getFilterColumns(
   isTestSuite: boolean,
+  t: (key: string) => string,
 ): ColumnData<ExperimentsCompare>[] {
   return [
     {
       id: COLUMN_ID_ID,
-      label: isTestSuite ? "ID (Test suite item)" : "Dataset item ID",
+      label: isTestSuite ? t("compareExperiments.items.testSuiteItemId") : t("compareExperiments.items.datasetItemId"),
       type: COLUMN_TYPE.string,
     },
     {
       id: COLUMN_DURATION_ID,
-      label: "Duration",
+      label: t("compareExperiments.items.duration"),
       type: COLUMN_TYPE.duration,
     },
     {
       id: COLUMN_COMMENTS_ID,
-      label: "Comments",
+      label: t("compareExperiments.items.comments"),
       type: COLUMN_TYPE.string,
     },
     {
       id: "output",
-      label: "Evaluation task",
+      label: t("compareExperiments.items.evaluationTask"),
       type: COLUMN_TYPE.string,
     },
     {
       id: COLUMN_FEEDBACK_SCORES_ID,
-      label: "Feedback scores",
+      label: t("compareExperiments.items.feedbackScores"),
       type: COLUMN_TYPE.numberDictionary,
     },
   ];
@@ -142,6 +144,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
   isTestSuite,
   datasetId: datasetIdProp,
 }) => {
+  const { t } = useTranslation("compare-experiments");
   const datasetIdFromURL = useDatasetIdFromCompareExperimentsURL();
   const datasetId = datasetIdProp ?? datasetIdFromURL;
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
@@ -219,7 +222,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
   } = useExperimentItemsSidebar(rows);
 
   const experimentsCount = experimentsIds.length;
-  const noDataText = "There is no data for the selected experiments";
+  const noDataText = t("compareExperiments.items.noData");
 
   const columnPinning = useMemo<ColumnPinningState>(
     () => ({
@@ -236,7 +239,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
           keyComponent: ExperimentsFeedbackScoresSelect,
           keyComponentProps: {
             experimentsIds,
-            placeholder: "Select score",
+            placeholder: t("compareExperiments.items.selectScore"),
           },
         },
       },
@@ -248,7 +251,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
     return [
       {
         id: COLUMN_ID_ID,
-        label: "Dataset item ID",
+        label: t("compareExperiments.items.datasetItemId"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
         verticalAlignment: calculateVerticalAlignment(experimentsCount),
@@ -271,7 +274,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
           }) as ColumnData<ExperimentsCompare>,
       ),
     ];
-  }, [dynamicDatasetColumns, experimentsCount, sortableColumns]);
+  }, [dynamicDatasetColumns, experimentsCount, sortableColumns, t]);
 
   const outputColumnsData = useMemo(() => {
     return [
@@ -293,7 +296,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       ),
       {
         id: COLUMN_DURATION_ID,
-        label: "Duration",
+        label: t("compareExperiments.items.duration"),
         type: COLUMN_TYPE.duration,
         cell: DurationCell.Compare as never,
         statisticKey: "duration",
@@ -305,7 +308,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       },
       {
         id: `${COLUMN_USAGE_ID}.total_tokens`,
-        label: "Total tokens",
+        label: t("compareExperiments.items.totalTokens"),
         type: COLUMN_TYPE.number,
         cell: CostCell.Compare as never,
         statisticKey: `${COLUMN_USAGE_ID}.total_tokens`,
@@ -318,7 +321,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       },
       {
         id: "total_estimated_cost",
-        label: "Estimated cost",
+        label: t("compareExperiments.items.estimatedCost"),
         type: COLUMN_TYPE.cost,
         cell: CostCell.Compare as never,
         statisticKey: "total_estimated_cost",
@@ -333,7 +336,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("compareExperiments.items.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell.Compare as never,
         sortable: isColumnSortable(COLUMN_COMMENTS_ID, sortableColumns),
@@ -348,6 +351,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
     experimentsIds,
     setTraceId,
     sortableColumns,
+    t,
   ]);
 
   const scoresColumnsData = useMemo(() => {
@@ -405,7 +409,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         columnHelper.group({
           id: "dataset",
           meta: {
-            header: isTestSuite ? "Test suite" : "Dataset",
+            header: isTestSuite ? t("compareExperiments.items.testSuite") : t("compareExperiments.items.dataset"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -425,7 +429,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         columnHelper.group({
           id: "experiments",
           meta: {
-            header: "Experiments",
+            header: t("compareExperiments.items.experiments"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -435,7 +439,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
             [
               {
                 id: COLUMN_EXPERIMENT_NAME_ID,
-                label: "Name",
+                label: t("compareExperiments.items.name"),
                 header: CompareExperimentsNameHeader as never,
                 cell: CompareExperimentsNameCell as never,
                 customMeta: {
@@ -455,7 +459,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         columnHelper.group({
           id: "evaluation",
           meta: {
-            header: "Evaluation task (last trial)",
+            header: t("compareExperiments.items.evaluationTaskLastTrial"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -475,7 +479,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         columnHelper.group({
           id: "scores",
           meta: {
-            header: "Feedback scores",
+            header: t("compareExperiments.items.feedbackScores"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -494,7 +498,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       retVal.push(
         mapColumnDataFields<ExperimentsCompare, ExperimentsCompare>({
           id: COLUMN_PASSED_ID,
-          label: "Result",
+          label: t("compareExperiments.items.result"),
           iconType: "result" as const,
           type: COLUMN_TYPE.string,
           cell: PassedCell as never,
@@ -520,6 +524,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
     outputColumnsOrder,
     scoresColumnsOrder,
     sortableColumns,
+    t,
   ]);
 
   const columnsToExport = useMemo(() => {
@@ -542,18 +547,18 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       ...sortBy(dynamicDatasetColumns, "label").map(
         ({ id, label, columnType }) => ({
           id,
-          label: `${label} (${isTestSuite ? "Test suite" : "Dataset"})`,
+          label: `${label} (${isTestSuite ? t("compareExperiments.items.testSuite") : t("compareExperiments.items.dataset")})`,
           type: columnType,
         }),
       ),
       ...sortBy(dynamicOutputColumns, "label").map(({ id, label }) => ({
         id,
-        label: `${label} (Output)`,
+        label: `${label} (${t("compareExperiments.items.output")})`,
         type: COLUMN_TYPE.string,
       })),
-      ...getFilterColumns(!!isTestSuite),
+      ...getFilterColumns(!!isTestSuite, t),
     ];
-  }, [dynamicDatasetColumns, dynamicOutputColumns, isTestSuite]);
+  }, [dynamicDatasetColumns, dynamicOutputColumns, isTestSuite, t]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -575,13 +580,13 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Evaluation task",
+        title: t("compareExperiments.items.evaluationTask"),
         columns: outputColumnsData,
         order: outputColumnsOrder,
         onOrderChange: setOutputColumnsOrder,
       },
       {
-        title: "Feedback scores",
+        title: t("compareExperiments.items.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
@@ -594,6 +599,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     setScoresColumnsOrder,
+    t,
   ]);
 
   const meta = useMemo(
@@ -660,7 +666,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
             searchText={search!}
             setSearchText={setSearch}
             placeholder={
-              isTestSuite ? "Search test suite items" : "Search dataset items"
+              isTestSuite ? t("compareExperiments.items.searchTestSuiteItems") : t("compareExperiments.items.searchDatasetItems")
             }
             className="w-[320px]"
             dimension="sm"

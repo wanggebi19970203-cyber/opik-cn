@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
@@ -17,6 +18,7 @@ const EvolutionaryOptimizerConfigs = ({
   configs,
   onChange,
 }: EvolutionaryOptimizerConfigsProps) => {
+  const { t } = useTranslation("optimizations");
   return (
     <div className="flex w-72 flex-col gap-6">
       <SliderInputControl
@@ -30,8 +32,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={100}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.POPULATION_SIZE}
-        label="Population size"
-        tooltip="Number of candidate solutions in each generation"
+        label={t("optimizations.algorithmConfigs.populationSize")}
+        tooltip={t("optimizations.algorithmConfigs.populationSizeTooltip")}
       />
 
       <SliderInputControl
@@ -45,8 +47,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={50}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.NUM_GENERATIONS}
-        label="Number of generations"
-        tooltip="How many iterations of evolution to run"
+        label={t("optimizations.algorithmConfigs.numberOfGenerations")}
+        tooltip={t("optimizations.algorithmConfigs.numberOfGenerationsTooltip")}
       />
 
       <SliderInputControl
@@ -60,8 +62,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={1}
         step={0.01}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.MUTATION_RATE}
-        label="Mutation rate"
-        tooltip="Probability of random changes to candidate solutions (0-1)"
+        label={t("optimizations.algorithmConfigs.mutationRate")}
+        tooltip={t("optimizations.algorithmConfigs.mutationRateTooltip")}
       />
 
       <SliderInputControl
@@ -75,8 +77,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={1}
         step={0.01}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.CROSSOVER_RATE}
-        label="Crossover rate"
-        tooltip="Probability of combining two solutions (0-1)"
+        label={t("optimizations.algorithmConfigs.crossoverRate")}
+        tooltip={t("optimizations.algorithmConfigs.crossoverRateTooltip")}
       />
 
       <SliderInputControl
@@ -90,8 +92,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={20}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.TOURNAMENT_SIZE}
-        label="Tournament size"
-        tooltip="Number of candidates competing in each selection round"
+        label={t("optimizations.algorithmConfigs.tournamentSize")}
+        tooltip={t("optimizations.algorithmConfigs.tournamentSizeTooltip")}
       />
 
       <SliderInputControl
@@ -105,8 +107,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={20}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.ELITISM_SIZE}
-        label="Elitism size"
-        tooltip="Number of best solutions preserved unchanged in each generation"
+        label={t("optimizations.algorithmConfigs.elitismSize")}
+        tooltip={t("optimizations.algorithmConfigs.elitismSizeTooltip")}
       />
 
       <div className="space-y-2">
@@ -122,7 +124,7 @@ const EvolutionaryOptimizerConfigs = ({
             }
           />
           <Label htmlFor="adaptive_mutation" className="cursor-pointer text-sm">
-            Adaptive mutation
+            {t("optimizations.algorithmConfigs.adaptiveMutation")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_adaptive_mutation]}
@@ -143,7 +145,7 @@ const EvolutionaryOptimizerConfigs = ({
             }
           />
           <Label htmlFor="enable_moo" className="cursor-pointer text-sm">
-            Enable multi-objective optimization
+            {t("optimizations.algorithmConfigs.enableMultiObjectiveOptimization")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_enable_moo]}
@@ -167,7 +169,7 @@ const EvolutionaryOptimizerConfigs = ({
             htmlFor="enable_llm_crossover"
             className="cursor-pointer text-sm"
           >
-            Enable LLM crossover
+            {t("optimizations.algorithmConfigs.enableLlmCrossover")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_enable_llm_crossover]}
@@ -178,7 +180,7 @@ const EvolutionaryOptimizerConfigs = ({
       <div className="space-y-2">
         <div className="flex items-center">
           <Label htmlFor="output_style_guidance" className="text-sm">
-            Output style guidance
+            {t("optimizations.algorithmConfigs.outputStyleGuidance")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_output_style_guidance]}
@@ -193,7 +195,7 @@ const EvolutionaryOptimizerConfigs = ({
           onChange={(e) =>
             onChange({ ...configs, output_style_guidance: e.target.value })
           }
-          placeholder="e.g., concise, formal, technical"
+          placeholder={t("optimizations.algorithmConfigs.outputStyleGuidancePlaceholder")}
           dimension="sm"
         />
       </div>
@@ -214,7 +216,7 @@ const EvolutionaryOptimizerConfigs = ({
             htmlFor="infer_output_style"
             className="cursor-pointer text-sm"
           >
-            Infer output style
+            {t("optimizations.algorithmConfigs.inferOutputStyle")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_infer_output_style]}
@@ -232,8 +234,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={16}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.N_THREADS}
-        label="Number of threads"
-        tooltip="Parallel threads for faster optimization"
+        label={t("optimizations.algorithmConfigs.numberOfThreads")}
+        tooltip={t("optimizations.algorithmConfigs.numberOfThreadsTooltip")}
       />
 
       <div className="space-y-2">
@@ -248,7 +250,7 @@ const EvolutionaryOptimizerConfigs = ({
             }
           />
           <Label htmlFor="verbose" className="cursor-pointer text-sm">
-            Verbose
+            {t("optimizations.algorithmConfigs.verbose")}
           </Label>
           <ExplainerIcon {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_verbose]} />
         </div>
@@ -262,8 +264,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={1000}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.SEED}
-        label="Seed"
-        tooltip="Random seed for reproducibility. Use the same seed to get consistent results across runs."
+        label={t("optimizations.algorithmConfigs.seed")}
+        tooltip={t("optimizations.algorithmConfigs.seedTooltip")}
       />
     </div>
   );

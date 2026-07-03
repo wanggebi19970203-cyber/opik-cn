@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import { isObjectSpan } from "@/lib/traces";
 import FeedbackScoreTag from "@/shared/FeedbackScoreTag/FeedbackScoreTag";
@@ -37,6 +38,7 @@ const AnnotatePanel: React.FC<AnnotatePanelProps> = ({
   activeSection,
   setActiveSection,
 }) => {
+  const { t } = useTranslation("tracing");
   const spanId = isSpan(data) ? data.id : undefined;
   const isTrace = !spanId;
   const hasFeedbackScores = Boolean(data.feedback_scores?.length);
@@ -126,8 +128,8 @@ const AnnotatePanel: React.FC<AnnotatePanelProps> = ({
 
   return (
     <DetailsActionSectionLayout
-      title="Annotate"
-      closeTooltipContent="Close annotate"
+      title={t("annotate.title")}
+      closeTooltipContent={t("detailsPanel.closeAnnotate")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
     >
@@ -135,7 +137,7 @@ const AnnotatePanel: React.FC<AnnotatePanelProps> = ({
         {hasFeedbackScores && (
           <>
             <div className="comet-body-s-accented truncate px-4 pt-4">
-              Feedback scores
+              {t("annotate.feedbackScores")}
             </div>
             <div className="flex flex-wrap gap-2 px-4 py-2">
               {filteredFeedbackScores.map((score) => (
@@ -159,7 +161,7 @@ const AnnotatePanel: React.FC<AnnotatePanelProps> = ({
           onUpdateFeedbackScore={onUpdateFeedbackScore}
           onDeleteFeedbackScore={onDeleteFeedbackScore}
           className="mt-4 px-4"
-          header={<FeedbackScoresEditor.Header title="Human review" />}
+          header={<FeedbackScoresEditor.Header title={t("annotate.humanReview")} />}
           footer={
             <FeedbackScoresEditor.Footer
               entityCopy={isTrace ? "traces" : "spans"}
@@ -169,7 +171,7 @@ const AnnotatePanel: React.FC<AnnotatePanelProps> = ({
 
         <Separator className="m-4 w-auto" />
 
-        <div className="comet-body-s-accented truncate px-4">Comments</div>
+        <div className="comet-body-s-accented truncate px-4">{t("annotate.comments")}</div>
         <CommentsSection
           comments={data.comments ?? []}
           onSubmit={onCommentSubmit}

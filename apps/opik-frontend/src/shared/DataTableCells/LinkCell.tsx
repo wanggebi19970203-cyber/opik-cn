@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { CellContext } from "@tanstack/react-table";
 import { Copy } from "lucide-react";
 import copy from "clipboard-copy";
+import { useTranslation } from "react-i18next";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { Button } from "@/ui/button";
@@ -18,6 +19,7 @@ type CustomMeta<TData> = {
 };
 
 const LinkCell = <TData,>(context: CellContext<TData, unknown>) => {
+  const { t } = useTranslation();
   const { custom } = context.column.columnDef.meta ?? {};
   const { callback, asId, tooltip, getIsDisabled, disabledTooltip } = (custom ??
     {}) as CustomMeta<TData>;
@@ -36,11 +38,11 @@ const LinkCell = <TData,>(context: CellContext<TData, unknown>) => {
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
       toast({
-        description: "ID copied to clipboard",
+        description: t("common:messages.idCopiedToClipboard"),
       });
       copy(String(value));
     },
-    [toast, value],
+    [toast, value, t],
   );
 
   const handleClick = useCallback(

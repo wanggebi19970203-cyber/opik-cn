@@ -14,6 +14,7 @@ import { DropdownOption } from "@/types/shared";
 import get from "lodash/get";
 import { FormControl, FormField, FormItem, FormMessage } from "@/ui/form";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type CloudAIProviderDetailsProps = {
   provider: PROVIDER_TYPE | "";
@@ -29,8 +30,9 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
   provider,
   form,
 }) => {
+  const { t } = useTranslation("llm");
   const providerName = (provider && PROVIDERS[provider]?.label + " ") || "";
-  const apiKeyLabel = `${providerName}API Key`;
+  const apiKeyLabel = t("llm:cloudProvider.apiKeyLabel", { providerName: providerName.trim() });
   const isOpenAi = provider === PROVIDER_TYPE.OPEN_AI;
 
   return (
@@ -81,7 +83,7 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
           name="openaiPipelineMode"
           render={({ field }) => (
             <FormItem className="mt-2">
-              <Label htmlFor="openaiPipelineMode">Pipeline mode</Label>
+              <Label htmlFor="openaiPipelineMode">{t("llm:cloudProvider.pipelineMode")}</Label>
               <FormControl>
                 <SelectBox
                   id="openaiPipelineMode"
@@ -92,13 +94,11 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
                     field.onChange(value)
                   }
                   options={PIPELINE_MODE_OPTIONS}
-                  placeholder="Select pipeline mode"
+                  placeholder={t("llm:cloudProvider.selectPipelineMode")}
                 />
               </FormControl>
               <span className="comet-body-s mt-1 text-light-slate">
-                Chat Completions API is the standard endpoint. Responses API
-                enables agentic tooling features (e.g. stateful tool loops,
-                reasoning summaries) on models that support it.
+                {t("llm:cloudProvider.pipelineModeDescription")}
               </span>
               <FormMessage />
             </FormItem>

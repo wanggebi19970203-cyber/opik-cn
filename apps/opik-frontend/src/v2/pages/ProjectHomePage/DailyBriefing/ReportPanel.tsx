@@ -1,5 +1,6 @@
 import MarkdownPreview from "@/shared/MarkdownPreview/MarkdownPreview";
 import { ChevronsRight, Lightbulb } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/ui/separator";
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
@@ -32,6 +33,7 @@ export default function ReportPanel({
   onClose,
   onStartConversation,
 }: ReportPanelProps) {
+  const { t } = useTranslation();
   const actions = report?.recommended_actions ?? [];
 
   return (
@@ -49,7 +51,7 @@ export default function ReportPanel({
           </button>
           <h3 className="comet-body-s-accented truncate">
             {report
-              ? `Daily briefing: ${formatRelativeDateTime(report.created_at)}`
+              ? `${t("common.labels.dailyBriefing")}: ${formatRelativeDateTime(report.created_at)}`
               : ""}
           </h3>
         </div>
@@ -58,7 +60,7 @@ export default function ReportPanel({
       <div className="flex size-full flex-col gap-2 overflow-y-auto p-4">
         {actions.length > 0 && (
           <div className="flex flex-col gap-3">
-            <h4 className="comet-title-s">Action items</h4>
+            <h4 className="comet-title-s">{t("common.labels.actionItems")}</h4>
             <div className="flex gap-3">
               {actions.map((action, i) => {
                 const style = CARD_STYLES[i % CARD_STYLES.length];
@@ -98,13 +100,13 @@ export default function ReportPanel({
 
         {report?.content ? (
           <div className="flex flex-col gap-3">
-            <h4 className="comet-title-s">What happened</h4>
+            <h4 className="comet-title-s">{t("common.labels.whatHappened")}</h4>
             <MarkdownPreview className="prose-sm py-2">
               {report.content}
             </MarkdownPreview>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No content available.</p>
+          <p className="text-sm text-muted-foreground">{t("common.messages.noContentAvailable")}</p>
         )}
       </div>
     </ResizableSidePanel>

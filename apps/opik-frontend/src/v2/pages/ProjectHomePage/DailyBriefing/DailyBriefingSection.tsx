@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Loader2, Play, Pause, Settings2 } from "lucide-react";
 import briefingBulbIcon from "@/icons/briefing-bulb.svg";
 import briefingBubbleIcon from "@/icons/briefing-bubble.svg";
@@ -26,12 +27,12 @@ import ReportPanel from "./ReportPanel";
 import TurnOnDialog from "./TurnOnDialog";
 import SettingsDialog from "./SettingsDialog";
 
-function getNextRunLabel(scheduleTimeUtc: string) {
+function getNextRunLabel(scheduleTimeUtc: string, t: (key: string, opts?: Record<string, unknown>) => string) {
   const day =
     parseUtcTimeToLocalDate(scheduleTimeUtc) > new Date()
-      ? "today"
-      : "tomorrow";
-  return `${day} at ${formatUtcTimeAsLocal(scheduleTimeUtc)}`;
+      ? t("dailyBriefing.today")
+      : t("dailyBriefing.tomorrow");
+  return t("dailyBriefing.dayAtTime", { day, time: formatUtcTimeAsLocal(scheduleTimeUtc) });
 }
 
 function LoadingSkeleton() {
@@ -45,11 +46,12 @@ function LoadingSkeleton() {
 }
 
 function StatusBadge({ enabled }: { enabled: boolean }) {
+  const { t } = useTranslation("pages/project-home");
   if (enabled) {
     return (
       <span className="flex items-center gap-1.5 text-xs">
         <span className="size-1.5 rounded-full bg-emerald-400" />
-        Active
+        {t("dailyBriefing.active")}
       </span>
     );
   }
@@ -57,16 +59,17 @@ function StatusBadge({ enabled }: { enabled: boolean }) {
   return (
     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
       <span className="size-1.5 rounded-full bg-chart-red" />
-      Inactive
+      {t("dailyBriefing.inactive")}
     </span>
   );
 }
 
 function PausedBadge() {
+  const { t } = useTranslation("pages/project-home");
   return (
     <span className="flex items-center gap-1.5 text-xs">
       <Pause className="size-3 text-chart-red" />
-      Paused
+      {t("dailyBriefing.paused")}
     </span>
   );
 }
@@ -124,12 +127,13 @@ function BriefingRow({
 }
 
 function RunningRow() {
+  const { t } = useTranslation("pages/project-home");
   return (
     <BriefingRow>
       <span>
-        <span className="font-medium">Running report...</span>{" "}
+        <span className="font-medium">{t("dailyBriefing.runningReport")}</span>{" "}
         <span className="text-muted-foreground">
-          It might take a few minutes
+          {t("dailyBriefing.runningReportHint")}
         </span>
       </span>
       <Loader2 className="size-4 animate-spin text-primary" />
@@ -144,9 +148,10 @@ function ScheduledRow({
   nextRunLabel: string;
   onRunNow: () => void;
 }) {
+  const { t } = useTranslation("pages/project-home");
   return (
     <BriefingRow dashed>
-      <span className="text-light-slate">Scheduled: {nextRunLabel}</span>
+      <span className="text-light-slate">{t("dailyBriefing.scheduled", { time: nextRunLabel })}</span>
       <Button
         variant="ghost"
         size="2xs"
@@ -154,18 +159,19 @@ function ScheduledRow({
         onClick={onRunNow}
       >
         <Play className="size-3" />
-        Run now
+        {t("dailyBriefing.runNow")}
       </Button>
     </BriefingRow>
   );
 }
 
 function FailedRow({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation("pages/project-home");
   return (
     <BriefingRow>
       <span className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="size-3.5" />
-        Briefing failed
+        {t("dailyBriefing.briefingFailed")}
       </span>
       <Button
         variant="ghost"
@@ -174,16 +180,17 @@ function FailedRow({ onRetry }: { onRetry: () => void }) {
         onClick={onRetry}
       >
         <Play className="size-3" />
-        Run again
+        {t("dailyBriefing.runAgain")}
       </Button>
     </BriefingRow>
   );
 }
 
 function PausedRow({ onReactivate }: { onReactivate: () => void }) {
+  const { t } = useTranslation("pages/project-home");
   return (
     <BriefingRow dashed>
-      <span className="text-light-slate">Reactivate daily briefing</span>
+      <span className="text-light-slate">{t("dailyBriefing.reactivateDailyBriefing")}</span>
       <Button
         variant="ghost"
         size="2xs"
@@ -191,7 +198,7 @@ function PausedRow({ onReactivate }: { onReactivate: () => void }) {
         onClick={onReactivate}
       >
         <Play className="size-3" />
-        Reactivate
+        {t("dailyBriefing.reactivate")}
       </Button>
     </BriefingRow>
   );
@@ -204,6 +211,7 @@ function ReportRow({
   report: OllieReport;
   onSelect: (report: OllieReport) => void;
 }) {
+  const { t } = useTranslation("pages/project-home");
   const actionCount = report.recommended_actions?.length ?? 0;
   return (
     <BriefingRow onClick={() => onSelect(report)}>
@@ -213,7 +221,7 @@ function ReportRow({
         </span>
         {actionCount > 0 && (
           <span className="text-muted-slate">
-            {actionCount} {actionCount === 1 ? "action" : "actions"}
+            {t("dailyBriefing.actionCount", { count: actionCount })}
           </span>
         )}
       </span>
@@ -226,6 +234,7 @@ const REPORT_PREVIEW_COUNT = 3;
 const DEFAULT_SCHEDULE_TIME = formatLocalTimeAsUtc("07:00:00");
 
 export default function DailyBriefingSection() {
+  const { t } = useTranslation("pages/project-home");
   const { projectId } = useParams({ strict: false }) as {
     projectId: string;
   };
@@ -240,7 +249,7 @@ export default function DailyBriefingSection() {
     useReportPreference({ projectId });
   const isEnabled = preference?.enabled ?? false;
   const scheduleTimeUtc = preference?.schedule_time ?? DEFAULT_SCHEDULE_TIME;
-  const nextRunLabel = getNextRunLabel(scheduleTimeUtc);
+  const nextRunLabel = getNextRunLabel(scheduleTimeUtc, t);
 
   const { data: reportsData, isPending: isReportsPending } = useReports(
     { projectId },
@@ -326,12 +335,12 @@ export default function DailyBriefingSection() {
     <section>
       <div className="mb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="comet-body-s-accented">Daily briefing</h2>
+          <h2 className="comet-body-s-accented">{t("dailyBriefing.title")}</h2>
           {!isLoading &&
             (isPaused ? <PausedBadge /> : <StatusBadge enabled={isEnabled} />)}
         </div>
         {isEnabled && (
-          <TooltipWrapper content="Briefing settings">
+          <TooltipWrapper content={t("dailyBriefing.settings")}>
             <button
               className="text-foreground hover:text-foreground"
               onClick={() => setShowSettingsDialog(true)}
@@ -347,9 +356,9 @@ export default function DailyBriefingSection() {
       {!isLoading && !isEnabled && !isPaused && (
         <EmptyState
           icon={briefingBulbIcon}
-          title="Daily recommendations to improve your agent"
-          description="Every day Ollie reviews the last 24 hours of your project — summarizing what changed, flagging anomalies, and suggesting what to do next."
-          actionLabel="Turn on daily briefing"
+          title={t("dailyBriefing.emptyTitle")}
+          description={t("dailyBriefing.emptyDescription")}
+          actionLabel={t("dailyBriefing.turnOn")}
           onAction={() => setShowTurnOnDialog(true)}
         />
       )}
@@ -357,9 +366,9 @@ export default function DailyBriefingSection() {
       {!isLoading && isEnabled && reports.length === 0 && (
         <EmptyState
           icon={briefingBubbleIcon}
-          title="No briefings yet"
-          description={`Next briefing is scheduled for ${nextRunLabel}.`}
-          actionLabel="Run now"
+          title={t("dailyBriefing.noBriefingsYet")}
+          description={t("dailyBriefing.nextBriefingScheduled", { time: nextRunLabel })}
+          actionLabel={t("dailyBriefing.runNow")}
           onAction={handleRunNow}
         />
       )}
@@ -391,7 +400,7 @@ export default function DailyBriefingSection() {
               className="mt-1 h-auto self-start p-0 text-muted-slate"
               onClick={() => setShowMore(true)}
             >
-              Show more
+              {t("dailyBriefing.showMore")}
             </Button>
           )}
         </div>

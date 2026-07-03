@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { DatasetItem } from "@/types/datasets";
 import { Button } from "@/ui/button";
@@ -35,6 +36,7 @@ const DYNAMIC_DATA_SET_ITEM_KEYS =
   "experiment-sidebar-dynamic-dataset-item-keys";
 
 const ExperimentDataset = ({ data, datasetItemId }: ExperimentDatasetProps) => {
+  const { t } = useTranslation();
   const datasetId = useDatasetIdFromCompareExperimentsURL();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -91,7 +93,7 @@ const ExperimentDataset = ({ data, datasetItemId }: ExperimentDatasetProps) => {
     <div ref={containerRef} className="min-w-72 max-w-full flex-1 pr-6 pt-4">
       <div className="flex items-center justify-between gap-2 pb-4">
         <div className="flex min-w-0 shrink items-center gap-1">
-          <h4 className="comet-body-accented truncate">Test suite item</h4>
+          <h4 className="comet-body-accented truncate">{t("compareExperiments.dataset.testSuiteItem")}</h4>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_test_suite_item]}
           />
@@ -100,19 +102,19 @@ const ExperimentDataset = ({ data, datasetItemId }: ExperimentDatasetProps) => {
           {datasetItemId && (
             <NavigationTag
               id={datasetId}
-              name="View in test suite"
+              name={t("compareExperiments.dataset.viewInTestSuite")}
               resource={RESOURCE_TYPE.datasetItem}
               search={{
                 row: datasetItemId,
               }}
-              tooltipContent="View this item in the test suite"
+              tooltipContent={t("compareExperiments.dataset.viewItemTooltip")}
               className="h-8"
             />
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {isCollapsed ? (
-                <TooltipWrapper content="Keys">
+                <TooltipWrapper content={t("compareExperiments.dataset.keys")}>
                   <Button size="icon-sm" variant="outline">
                     <Braces className="size-4" />
                   </Button>
@@ -120,7 +122,7 @@ const ExperimentDataset = ({ data, datasetItemId }: ExperimentDatasetProps) => {
               ) : (
                 <Button size="sm" variant="outline">
                   <Braces className="mr-2 size-4" />
-                  Keys
+                  {t("compareExperiments.dataset.keys")}
                 </Button>
               )}
             </DropdownMenuTrigger>

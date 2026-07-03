@@ -1,5 +1,6 @@
 import uniq from "lodash/uniq";
 import get from "lodash/get";
+import i18next from "i18next";
 
 import { Experiment } from "@/types/datasets";
 import { formatPromptVersionLabel } from "@/lib/experiments";
@@ -68,7 +69,7 @@ export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("common:labels.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     accessorFn: (row) => row.tags || [],
@@ -76,39 +77,39 @@ export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("common:experimentLabels.created"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: i18next.t("common:experimentLabels.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "duration.p50",
-    label: "Avg duration",
+    label: i18next.t("common:experimentLabels.avgDuration"),
     type: COLUMN_TYPE.duration,
     accessorFn: (row) => row.duration?.p50,
     cell: DurationCell as never,
   },
   {
     id: "duration.p90",
-    label: "Duration (p90)",
+    label: i18next.t("common:experimentLabels.durationP90"),
     type: COLUMN_TYPE.duration,
     accessorFn: (row) => row.duration?.p90,
     cell: DurationCell as never,
   },
   {
     id: "duration.p99",
-    label: "Duration (p99)",
+    label: i18next.t("common:experimentLabels.durationP99"),
     type: COLUMN_TYPE.duration,
     accessorFn: (row) => row.duration?.p99,
     cell: DurationCell as never,
   },
   {
     id: "prompt",
-    label: "Prompt",
+    label: i18next.t("common:experimentLabels.prompt"),
     type: COLUMN_TYPE.list,
     // Show the prompt name plus its version (OPIK-6838).
     accessorFn: (row) =>
@@ -128,24 +129,24 @@ export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   },
   {
     id: "trace_count",
-    label: "Trace count",
+    label: i18next.t("common:experimentLabels.traceCount"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "total_estimated_cost",
-    label: "Total estimated cost",
+    label: i18next.t("common:experimentLabels.totalEstimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
   },
   {
     id: "total_estimated_cost_avg",
-    label: "Avg cost",
+    label: i18next.t("common:experimentLabels.avgCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
   },
   {
     id: "pass_rate",
-    label: "Pass rate",
+    label: i18next.t("common:experimentLabels.passRate"),
     type: COLUMN_TYPE.number,
     iconType: "pass_rate",
     accessorFn: (row) => row.pass_rate,
@@ -224,5 +225,5 @@ export const getRankingFilters = (
 
 export const widgetHelpers = {
   getDefaultConfig,
-  calculateTitle: () => "Experiment leaderboard",
+  calculateTitle: () => i18next.t("common:experimentLabels.experimentLeaderboard"),
 };

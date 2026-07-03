@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Wand2 } from "lucide-react";
 
 import { PromptWithLatestVersion, PromptVersion } from "@/types/prompts";
@@ -27,6 +28,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
   prompt,
   activeVersion,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const workspaceName = useAppStore((s) => s.activeWorkspaceName);
@@ -58,7 +60,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
         metadata: sourceVersion?.metadata,
         projectId: activeProjectId ?? undefined,
         onSuccess: () => {
-          toast({ description: `Saved improved version of ${prompt.name}` });
+          toast({ description: t("promptImprovement.savedImprovedVersion", { name: prompt.name }) });
           setOpen(false);
         },
       });
@@ -76,7 +78,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
 
   return (
     <>
-      <TooltipWrapper content="Improve this prompt with AI">
+      <TooltipWrapper content={t("promptImprovement.improvePromptWithAi")}>
         <Button
           variant="ghost"
           size="sm"
@@ -85,7 +87,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
           onClick={() => setOpen(true)}
         >
           <Wand2 className="mr-1.5 size-3.5" />
-          Improve
+          {t("promptImprovement.improveButton")}
         </Button>
       </TooltipWrapper>
       <PromptImprovementDialog

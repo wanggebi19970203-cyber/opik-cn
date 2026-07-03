@@ -1,0 +1,11 @@
+{
+  "development": {
+    "title": "开发",
+    "description": "开发工具和功能",
+    "features": {
+      "prompts": "提示词管理",
+      "playground": "工作台",
+      "optimization": "优化"
+    }
+  }
+}

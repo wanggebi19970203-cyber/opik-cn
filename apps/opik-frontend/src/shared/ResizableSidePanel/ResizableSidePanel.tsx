@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "lucide-react";
 import isFunction from "lodash/isFunction";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -76,6 +77,7 @@ const ResizableSidePanel: React.FunctionComponent<ResizableSidePanelProps> = ({
   verticalNavigation,
   container,
 }) => {
+  const { t } = useTranslation();
   const externalContainer = usePortalContainer();
   const portalContainer = container ?? externalContainer;
   const localStorageKey = `${panelId}-side-panel-width`;
@@ -214,7 +216,8 @@ const ResizableSidePanel: React.FunctionComponent<ResizableSidePanelProps> = ({
           <div className="flex shrink-0 items-center">
             <TooltipWrapper
               content={
-                horizontalNavigation.previousTooltip ?? `Previous ${entity}`
+                horizontalNavigation.previousTooltip ??
+                t("common.shared.previousEntity", { entity })
               }
               hotkeys={LEFT_HOTKEYS}
             >
@@ -230,7 +233,10 @@ const ResizableSidePanel: React.FunctionComponent<ResizableSidePanelProps> = ({
               </Button>
             </TooltipWrapper>
             <TooltipWrapper
-              content={horizontalNavigation.nextTooltip ?? `Next ${entity}`}
+              content={
+                horizontalNavigation.nextTooltip ??
+                t("common.shared.nextEntity", { entity })
+              }
               hotkeys={RIGHT_HOTKEYS}
             >
               <Button
@@ -249,7 +255,10 @@ const ResizableSidePanel: React.FunctionComponent<ResizableSidePanelProps> = ({
         {verticalNavigation && (
           <div className="flex shrink-0 items-center">
             <TooltipWrapper
-              content={verticalNavigation.previousTooltip ?? `Up ${entity}`}
+              content={
+                verticalNavigation.previousTooltip ??
+                t("common.shared.upEntity", { entity })
+              }
               hotkeys={UP_HOTKEYS}
             >
               <Button
@@ -264,7 +273,10 @@ const ResizableSidePanel: React.FunctionComponent<ResizableSidePanelProps> = ({
               </Button>
             </TooltipWrapper>
             <TooltipWrapper
-              content={verticalNavigation.nextTooltip ?? `Down ${entity}`}
+              content={
+                verticalNavigation.nextTooltip ??
+                t("common.shared.downEntity", { entity })
+              }
               hotkeys={DOWN_HOTKEYS}
             >
               <Button
@@ -325,7 +337,7 @@ const ResizableSidePanel: React.FunctionComponent<ResizableSidePanelProps> = ({
                   <>
                     <div className="flex items-center gap-2">
                       <TooltipWrapper
-                        content={`Close ${entity}`}
+                        content={t("common.shared.closeEntity", { entity })}
                         hotkeys={ESC_HOTKEYS}
                       >
                         <Button

@@ -55,7 +55,7 @@ import java.util.UUID;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Insights Views", description = "Insights View resources")
+@Tag(name = "Insights Views", description = "洞察视图资源")
 public class InsightsViewsResource {
 
     private final @NonNull DashboardService service;
@@ -65,8 +65,8 @@ public class InsightsViewsResource {
     private final @NonNull FiltersFactory filtersFactory;
 
     @POST
-    @Operation(operationId = "createInsightsView", summary = "Create insights view", description = "Create a new insights view in a workspace", responses = {
-            @ApiResponse(responseCode = "201", description = "Created", headers = {
+    @Operation(operationId = "createInsightsView", summary = "创建洞察视图", description = "在工作区中创建新的洞察视图", responses = {
+            @ApiResponse(responseCode = "201", description = "已创建", headers = {
                     @Header(name = "Location", required = true, example = "${basePath}/v1/private/insights-views/{insightsViewId}", schema = @Schema(implementation = String.class))}, content = @Content(schema = @Schema(implementation = Dashboard.class)))
     })
     @JsonView(Dashboard.View.Public.class)
@@ -89,9 +89,9 @@ public class InsightsViewsResource {
 
     @GET
     @Path("/{insightsViewId}")
-    @Operation(operationId = "getInsightsViewById", summary = "Get insights view by id", description = "Get insights view by id", responses = {
-            @ApiResponse(responseCode = "200", description = "Insights view resource", content = @Content(schema = @Schema(implementation = Dashboard.class))),
-            @ApiResponse(responseCode = "404", description = "Insights view not found")
+    @Operation(operationId = "getInsightsViewById", summary = "根据ID获取洞察视图", description = "根据ID获取洞察视图", responses = {
+            @ApiResponse(responseCode = "200", description = "洞察视图资源", content = @Content(schema = @Schema(implementation = Dashboard.class))),
+            @ApiResponse(responseCode = "404", description = "洞察视图未找到")
     })
     @JsonView(Dashboard.View.Public.class)
     public Response getInsightsViewById(@PathParam("insightsViewId") UUID id) {
@@ -106,14 +106,14 @@ public class InsightsViewsResource {
     }
 
     @GET
-    @Operation(operationId = "findInsightsViews", summary = "Find insights views", description = "Find insights views in a workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Insights view page", content = @Content(schema = @Schema(implementation = DashboardPage.class)))
+    @Operation(operationId = "findInsightsViews", summary = "查询洞察视图列表", description = "查询工作区中的洞察视图", responses = {
+            @ApiResponse(responseCode = "200", description = "洞察视图分页", content = @Content(schema = @Schema(implementation = DashboardPage.class)))
     })
     @JsonView(Dashboard.View.Public.class)
     public Response findInsightsViews(
             @QueryParam("page") @Min(1) @DefaultValue("1") int page,
             @QueryParam("size") @Min(1) @DefaultValue("10") int size,
-            @QueryParam("name") @Schema(description = "Filter insights views by name (partial match, case insensitive)") String name,
+            @QueryParam("name") @Schema(description = "按名称过滤洞察视图（部分匹配，不区分大小写）") String name,
             @QueryParam("project_id") UUID projectId,
             @QueryParam("sorting") String sorting,
             @QueryParam("filters") String filters) {
@@ -135,10 +135,10 @@ public class InsightsViewsResource {
 
     @PATCH
     @Path("/{insightsViewId}")
-    @Operation(operationId = "updateInsightsView", summary = "Update insights view", description = "Update insights view by id. Partial updates are supported - only provided fields will be updated.", responses = {
-            @ApiResponse(responseCode = "200", description = "Updated insights view", content = @Content(schema = @Schema(implementation = Dashboard.class))),
-            @ApiResponse(responseCode = "404", description = "Insights view not found"),
-            @ApiResponse(responseCode = "409", description = "Conflict - insights view with this name already exists")
+    @Operation(operationId = "updateInsightsView", summary = "更新洞察视图", description = "根据ID更新洞察视图。支持部分更新 - 仅更新提供的字段。", responses = {
+            @ApiResponse(responseCode = "200", description = "已更新的洞察视图", content = @Content(schema = @Schema(implementation = Dashboard.class))),
+            @ApiResponse(responseCode = "404", description = "洞察视图未找到"),
+            @ApiResponse(responseCode = "409", description = "冲突 - 同名洞察视图已存在")
     })
     @JsonView(Dashboard.View.Public.class)
     @RateLimited
@@ -159,8 +159,8 @@ public class InsightsViewsResource {
 
     @DELETE
     @Path("/{insightsViewId}")
-    @Operation(operationId = "deleteInsightsView", summary = "Delete insights view", description = "Delete insights view by id", responses = {
-            @ApiResponse(responseCode = "204", description = "No content")
+    @Operation(operationId = "deleteInsightsView", summary = "删除洞察视图", description = "根据ID删除洞察视图", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容")
     })
     public Response deleteInsightsView(@PathParam("insightsViewId") UUID id) {
 
@@ -175,8 +175,8 @@ public class InsightsViewsResource {
 
     @POST
     @Path("/delete-batch")
-    @Operation(operationId = "deleteInsightsViewsBatch", summary = "Delete insights views", description = "Delete insights views batch", responses = {
-            @ApiResponse(responseCode = "204", description = "No content"),
+    @Operation(operationId = "deleteInsightsViewsBatch", summary = "批量删除洞察视图", description = "批量删除洞察视图", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
     })
     public Response deleteInsightsViewsBatch(
             @NotNull @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @Valid BatchDelete batchDelete) {

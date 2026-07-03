@@ -1,0 +1,138 @@
+---
+description: 从这里开始将 Opik 集成到基于 LangChain 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: LangChain | Opik 文档
+og:description: 通过 Opik 的全面追踪和详细元数据捕获，轻松监控和调试您的 LangChain 应用。
+og:site_name: Opik 文档
+og:title: 增强 LangChain 应用 - Opik
+title: 使用 Opik 实现 LangChain (JavaScript) 的可观测性
+---
+
+Opik 通过 `opik-langchain` 包与 [LangChain](https://js.langchain.com/) 无缝集成，让您可以追踪、监控和调试 LangChain 应用。
+
+## 功能特性
+
+- **全面追踪**：自动追踪 LLM 调用、链、工具、检索器和智能体
+- **层级可视化**：以结构化追踪视图查看 LangChain 执行过程，包含父子关系
+- **详细元数据捕获**：记录模型名称、提示词、补全结果、使用统计和自定义元数据
+- **错误处理**：在 LangChain 执行的每个步骤捕获和可视化错误
+- **自定义标签**：添加自定义标签以组织和筛选追踪记录
+
+## 安装
+
+### 方式一：使用 npm
+
+```bash
+npm install opik-langchain
+```
+
+### 方式二：使用 yarn
+
+```bash
+yarn add opik-langchain
+```
+
+### 系统要求
+
+- Node.js ≥ 18
+- LangChain (`@langchain/core` ≥ 0.3.78)
+- Opik SDK (`opik` 对等依赖)
+
+## 基本用法
+
+### 在 LLM 调用中使用
+
+在 LangChain 中有两种方式添加 OpikCallbackHandler：在构造时和在执行时。以下是两种方式的使用方法：
+
+```typescript
+import { OpikCallbackHandler } from "opik-langchain";
+import { ChatOpenAI } from "@langchain/openai";
+
+// 创建 Opik 回调处理器
+const opikHandler = new OpikCallbackHandler();
+
+// 方式一：在模型初始化时添加处理器
+const llm = new ChatOpenAI({
+  callbacks: [opikHandler], // 将用于该模型的所有调用
+});
+
+// 运行 LLM
+const response = await llm.invoke("Hello, how can you help me today?");
+
+// 方式二：在调用时添加处理器（或同时使用两种方式）
+const llmWithoutHandler = new ChatOpenAI();
+const response2 = await llmWithoutHandler.invoke("What's the weather like today?", {
+  callbacks: [opikHandler], // 仅用于此次特定调用
+});
+
+// 您也可以组合使用两种方式
+const anotherResponse = await llm.invoke("Tell me a joke", {
+  callbacks: [opikHandler], // 将同时使用构造函数处理器和此处的处理器
+});
+
+// 确保在应用终止前发送所有追踪数据
+await opikHandler.flushAsync();
+```
+
+### 为所有组件配置
+
+您还可以设置处理器以在应用中所有 LangChain 组件间共享使用：
+
+```typescript
+import { OpikCallbackHandler } from "opik-langchain";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { LLMChain } from "langchain/chains";
+import { setGlobalCallbacks } from "@langchain/core/callbacks/manager";
+
+// 创建 Opik 回调处理器
+const opikHandler = new OpikCallbackHandler({
+  tags: ["global"],
+  projectName: "langchain-app",
+});
+
+// 设置为全局处理器（将用于所有 LangChain 组件）
+setGlobalCallbacks([opikHandler]);
+
+// 这些组件现在将自动使用全局处理器
+const llm = new ChatOpenAI();
+const template = PromptTemplate.fromTemplate("Answer this question: {question}");
+const chain = new LLMChain({ llm, prompt: template });
+
+// 全局处理器会自动使用
+const result = await chain.call({ question: "What is 2+2?" });
+
+// 在应用退出前刷新数据
+await opikHandler.flushAsync();
+```
+
+## 高级配置
+
+`OpikCallbackHandler` 构造函数接受多个选项来自定义集成：
+
+```typescript
+const opikHandler = new OpikCallbackHandler({
+  // 可选：应用于所有追踪的标签数组
+  tags: ["langchain", "production", "user-query"],
+
+  // 可选：包含在所有追踪中的元数据
+  metadata: {
+    environment: "production",
+    version: "1.0.0",
+  },
+
+  // 可选：Opik 项目名称
+  projectName: "my-langchain-project",
+
+  // 可选：预配置的 Opik 客户端
+  // 如果未提供，将自动创建新客户端
+  client: customOpikClient,
+});
+```
+
+## 故障排除
+
+**追踪数据缺失**：确保在组件构造函数和每次调用中都提供了 `OpikCallbackHandler`。
+
+**层级关系不完整**：为确保正确的父子关系，请在整个应用中使用相同的处理器实例。
+
+**性能影响**：Opik 集成对 LangChain 应用的性能影响极小。

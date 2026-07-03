@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useTranslation } from "react-i18next";
 import FeedbackScoresEditor from "@/v1/pages-shared/traces/FeedbackScoresEditor/FeedbackScoresEditor";
 import UserCommentForm from "@/shared/UserComment/UserCommentForm";
 import { HotkeyDisplay } from "@/ui/hotkey-display";
@@ -23,6 +24,7 @@ const isFromEditableElement = (keyboardEvent: KeyboardEvent): boolean => {
 };
 
 const CommentAndScoreViewer: React.FC = () => {
+  const { t } = useTranslation("sme");
   const {
     currentItem,
     currentAnnotationState,
@@ -84,7 +86,7 @@ const CommentAndScoreViewer: React.FC = () => {
       {canAnnotateTraceSpanThread && (
         <>
           <div className="flex items-center justify-between gap-1 pb-2">
-            <span className="comet-body-s-accented truncate">Comment</span>
+            <span className="comet-body-s-accented truncate">{t("commentAndScoreViewer.comment")}</span>
             <TooltipWrapper
               content={SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].description}
               hotkeys={[SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].display]}
@@ -99,7 +101,7 @@ const CommentAndScoreViewer: React.FC = () => {
           </div>
           <UserCommentForm.StandaloneTextareaField
             ref={textareaRef}
-            placeholder="Add a comment..."
+            placeholder={t("commentAndScoreViewer.addCommentPlaceholder")}
             value={currentAnnotationState.comment?.text || ""}
             onValueChange={updateComment}
           />
@@ -117,7 +119,7 @@ const CommentAndScoreViewer: React.FC = () => {
             header={
               <div className="flex items-center gap-1 pb-2">
                 <span className="comet-body-s-accented truncate">
-                  Feedback scores
+                  {t("commentAndScoreViewer.feedbackScores")}
                 </span>
                 <ExplainerIcon
                   {...EXPLAINERS_MAP[EXPLAINER_ID.feedback_scores_hotkeys]}

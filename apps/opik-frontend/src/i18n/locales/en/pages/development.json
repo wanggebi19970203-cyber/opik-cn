@@ -1,0 +1,11 @@
+{
+  "development": {
+    "title": "Development",
+    "description": "Development tools and features",
+    "features": {
+      "prompts": "Prompt management",
+      "playground": "Playground",
+      "optimization": "Optimization"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import FeedbackScoreTag from "@/shared/FeedbackScoreTag/FeedbackScoreTag";
@@ -24,14 +25,15 @@ type TraceAnnotateViewerProps = {
 const TraceAnnotateViewer: React.FunctionComponent<
   TraceAnnotateViewerProps
 > = ({ data, spanId, traceId, activeSection, setActiveSection }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canAnnotateTraceSpanThread },
   } = usePermissions();
 
   const hasFeedbackScores = Boolean(data.feedback_scores?.length);
   const isTrace = !spanId;
-  const title = isTrace ? "Trace feedback scores" : "Span feedback scores";
-  const scoresSectionTitle = isTrace ? "Trace scores" : "Span scores";
+  const title = isTrace ? t("annotate.traceFeedbackScores") : t("annotate.spanFeedbackScores");
+  const scoresSectionTitle = isTrace ? t("detailsPanel.traceScores") : t("detailsPanel.spanScores");
 
   const { mutate: setTraceFeedbackScore } = useTraceFeedbackScoreSetMutation();
   const { mutate: feedbackScoreDelete } = useTraceFeedbackScoreDeleteMutation();
@@ -74,7 +76,7 @@ const TraceAnnotateViewer: React.FunctionComponent<
   return (
     <DetailsActionSectionLayout
       title={title}
-      closeTooltipContent="Close annotate"
+      closeTooltipContent={t("detailsPanel.closeAnnotate")}
       setActiveSection={setActiveSection}
       activeSection={activeSection}
       explainer={EXPLAINERS_MAP[EXPLAINER_ID.what_are_feedback_scores]}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { StringParam, useQueryParam } from "use-query-params";
 import sortBy from "lodash/sortBy";
+import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import useAnnotationQueueById from "@/api/annotation-queues/useAnnotationQueueById";
@@ -26,6 +27,7 @@ import { getScoreDisplayName } from "@/lib/feedback-scores";
 import { generateAnnotationQueueIdFilter } from "@/lib/filters";
 
 const AnnotationQueuePage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/annotation-queue");
   const [tab = "items", setTab] = useQueryParam("tab", StringParam);
 
   const annotationQueueId = useAnnotationQueueIdFromURL();
@@ -121,7 +123,7 @@ const AnnotationQueuePage: React.FunctionComponent = () => {
                 sourceFilters={generateAnnotationQueueIdFilter(
                   annotationQueue.id,
                 )}
-                title="Logs"
+                title={t("annotationQueue.navigation.logs")}
               />
             )}
           {annotationQueue?.scope === ANNOTATION_QUEUE_SCOPE.THREAD &&
@@ -129,9 +131,9 @@ const AnnotationQueuePage: React.FunctionComponent = () => {
               <NavigationTag
                 resource={RESOURCE_TYPE.threads}
                 id={annotationQueue.project_id}
-                name="Go to threads"
+                name={t("annotationQueue.navigation.goToThreads")}
                 search={annotationQueueSearch}
-                tooltipContent="View all threads for this queue"
+                tooltipContent={t("annotationQueue.navigation.viewAllThreads")}
               />
             )}
           {annotationQueue?.project_id && (
@@ -139,7 +141,7 @@ const AnnotationQueuePage: React.FunctionComponent = () => {
               id={annotationQueue.project_id}
               name={annotationQueue.project_name}
               resource={RESOURCE_TYPE.project}
-              prefix="Project"
+              prefix={t("annotationQueue.navigation.project")}
             />
           )}
           {annotationQueue && (
@@ -157,10 +159,10 @@ const AnnotationQueuePage: React.FunctionComponent = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="underline">
             <TabsTrigger variant="underline" value="items">
-              Queue items
+              {t("annotationQueue.tabs.queueItems")}
             </TabsTrigger>
             <TabsTrigger variant="underline" value="configuration">
-              Configuration
+              {t("annotationQueue.tabs.configuration")}
             </TabsTrigger>
           </TabsList>
         </PageBodyStickyContainer>

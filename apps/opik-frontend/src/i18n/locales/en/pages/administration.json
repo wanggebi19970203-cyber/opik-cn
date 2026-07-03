@@ -1,0 +1,16 @@
+{
+  "administration": {
+    "title": "Administration",
+    "description": "Manage users and workspace settings",
+    "users": {
+      "title": "Users",
+      "invite": "Invite user",
+      "roles": "Roles"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "settings": "Settings",
+      "members": "Members"
+    }
+  }
+}

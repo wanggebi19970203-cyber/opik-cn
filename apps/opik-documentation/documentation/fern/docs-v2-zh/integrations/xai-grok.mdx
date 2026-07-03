@@ -1,0 +1,296 @@
+---
+description: 从这里开始将 Opik 集成到基于 xAI Grok 的生成式 AI 应用中，实现端到端的
+  LLM 可观测性、单元测试和优化。
+headline: xAI Grok | Opik 文档
+og:description: 了解如何通过 LiteLLM 将 Opik 与 xAI Grok 集成，以便在 Opik 项目中高效跟踪
+  和评估您的 xAI API 调用。
+og:site_name: Opik 文档
+og:title: 集成 xAI Grok 与 Opik 以增强 AI 跟踪能力
+title: 使用 Opik 实现 xAI Grok 可观测性
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是项目级别的。创建数据集和运行实验时，请确保指定 `project_name`，以便它们关联到正确的项目。
+</Note>
+
+[xAI](https://x.ai/) 是由 Elon Musk 创立的 AI 公司，开发 Grok 系列大型语言模型。Grok 模型旨在访问实时信息，专注于真实性、能力和为人类带来最大利益。
+
+本指南介绍如何通过 LiteLLM 将 Opik 与 xAI Grok 集成。通过使用 Opik 提供的 LiteLLM 集成，您可以轻松地在 Opik 项目中跟踪和评估 xAI API 调用，Opik 将自动记录输入提示词、使用的模型、token 使用量和生成的响应。
+
+
+## 快速开始
+
+### 配置 Opik
+
+首先，您需要配置 Opik 将追踪数据发送到您的 Comet 项目。可以通过设置 `OPIK_PROJECT_NAME` 环境变量来实现：
+
+```bash
+export OPIK_PROJECT_NAME="your-project-name"
+export OPIK_WORKSPACE="your-workspace-name"
+```
+
+也可以调用 `opik.configure` 方法：
+
+```python
+import opik
+
+opik.configure(
+    project_name="your-project-name",
+    workspace="your-workspace-name",
+)
+```
+
+### 配置 LiteLLM
+
+安装所需的依赖包：
+
+```bash
+pip install opik litellm
+```
+
+创建 LiteLLM 配置文件（例如 `litellm_config.yaml`）：
+
+```yaml
+model_list:
+  - model_name: grok-beta
+    litellm_params:
+      model: xai/grok-beta
+      api_key: os.environ/XAI_API_KEY
+  - model_name: grok-vision-beta
+    litellm_params:
+      model: xai/grok-vision-beta
+      api_key: os.environ/XAI_API_KEY
+
+litellm_settings:
+  callbacks: ["opik"]
+```
+
+### 认证
+
+将您的 xAI API 密钥设置为环境变量：
+
+```bash
+export XAI_API_KEY="your-xai-api-key"
+```
+
+您可以从 [xAI 控制台](https://console.x.ai/) 获取 xAI API 密钥。
+
+## 使用方法
+
+### 使用 LiteLLM 代理服务器
+
+启动 LiteLLM 代理服务器：
+
+```bash
+litellm --config litellm_config.yaml
+```
+
+使用代理服务器发送请求：
+
+```python
+import openai
+
+client = openai.OpenAI(
+    api_key="anything",  # can be anything
+    base_url="http://0.0.0.0:4000"
+)
+
+response = client.chat.completions.create(
+    model="grok-beta",
+    messages=[
+        {"role": "user", "content": "What are the latest developments in AI technology?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+### 直接集成
+
+您也可以在 Python 代码中直接使用 LiteLLM：
+
+```python
+import os
+from litellm import completion
+
+# Configure Opik
+import opik
+opik.configure()
+
+# Configure LiteLLM for Opik
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+
+litellm.callbacks = ["opik"]
+
+os.environ["XAI_API_KEY"] = "your-xai-api-key"
+
+response = completion(
+    model="xai/grok-beta",
+    messages=[
+        {"role": "user", "content": "What is the current state of renewable energy adoption worldwide?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+## 支持的模型
+
+xAI 提供了多种 Grok 模型变体：
+
+- **Grok Beta**: `grok-beta` - 主要的对话式 AI 模型，支持实时信息访问
+- **Grok Vision Beta**: `grok-vision-beta` - 能够处理文本和图像的多模态模型
+- **Grok Mini**: `grok-mini` - 更小、更快的变体，针对简单任务进行了优化
+
+有关最新可用模型列表，请访问 [xAI API 文档](https://docs.x.ai/)。
+
+## 实时信息访问
+
+Grok 的关键特性之一是能够访问实时信息。这使其特别适合回答时事相关的问题：
+
+```python
+response = completion(
+    model="xai/grok-beta",
+    messages=[
+        {"role": "user", "content": "What are the latest news headlines today?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+## 视觉能力
+
+Grok Vision Beta 可以同时处理文本和图像：
+
+```python
+from litellm import completion
+
+response = completion(
+    model="xai/grok-vision-beta",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What do you see in this image?"},
+                {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}
+            ]
+        }
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+## 函数调用
+
+Grok 模型支持函数调用以增强功能：
+
+```python
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_time",
+            "description": "Get the current time in a specific timezone",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "timezone": {
+                        "type": "string",
+                        "description": "The timezone to get the time for",
+                    }
+                },
+                "required": ["timezone"],
+            },
+        },
+    }
+]
+
+response = completion(
+    model="xai/grok-beta",
+    messages=[{"role": "user", "content": "What time is it in Tokyo right now?"}],
+    tools=tools,
+)
+```
+
+## 高级功能
+
+### 温度与创造力控制
+
+控制 Grok 响应的创造力：
+
+```python
+# More creative responses
+response = completion(
+    model="xai/grok-beta",
+    messages=[{"role": "user", "content": "Write a creative story about space exploration"}],
+    temperature=0.9,
+    max_tokens=1000
+)
+
+# More factual responses
+response = completion(
+    model="xai/grok-beta",
+    messages=[{"role": "user", "content": "Explain quantum computing"}],
+    temperature=0.1,
+    max_tokens=500
+)
+```
+
+### 使用系统消息控制行为
+
+使用系统消息来引导 Grok 的行为：
+
+```python
+response = completion(
+    model="xai/grok-beta",
+    messages=[
+        {"role": "system", "content": "You are a helpful scientific advisor. Provide accurate, evidence-based information."},
+        {"role": "user", "content": "What are the current challenges in fusion energy research?"}
+    ]
+)
+```
+
+## 反馈评分与评估
+
+当您的 xAI 调用通过 Opik 记录后，您可以使用 Opik 的评估框架来评估您的 LLM 应用：
+
+```python
+from opik.evaluation import evaluate
+from opik.evaluation.metrics import Hallucination
+
+# Define your evaluation task
+def evaluation_task(x):
+    return {
+        "message": x["message"],
+        "output": x["output"],
+        "reference": x["reference"]
+    }
+
+# Create the Hallucination metric
+hallucination_metric = Hallucination()
+
+# Run the evaluation
+evaluation_results = evaluate(
+    experiment_name="xai-grok-evaluation",
+    dataset=your_dataset,
+    task=evaluation_task,
+    scoring_metrics=[hallucination_metric],
+    project_name="my-project",
+)
+```
+
+## 环境变量
+
+请确保设置以下环境变量：
+
+```bash
+# xAI Configuration
+export XAI_API_KEY="your-xai-api-key"
+
+# Opik Configuration
+export OPIK_PROJECT_NAME="your-project-name"
+export OPIK_WORKSPACE="your-workspace-name"
+```

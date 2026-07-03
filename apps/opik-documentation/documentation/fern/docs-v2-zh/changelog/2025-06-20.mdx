@@ -1,0 +1,32 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+## 集成和 SDK
+- 添加了 **CloudFlare WorkersAI** 集成（[文档](/v1/integrations/cloudflare-workers-ai)）
+- **Google ADK** 集成：追踪现在通过新的 `track_adk_agent_recursive` 功能自动传播到 Agent 系统中的所有子 Agent，无需手动为每个子 Agent 添加追踪。
+- **Google ADK** 集成：现在我们从 ADK 框架中检索会话级别信息来丰富对话线程数据。
+- **SDK 新功能！** 现在支持长时间运行的 span/traces 的实时追踪。启用后（在环境中设置 `os.environ["OPIK_LOG_START_TRACE_SPAN"] = "True"`），你可以在 UI 中实时查看 traces 和 spans 的更新，即使是仍在运行的任务。这使得调试和监控长时间运行的 Agent 更加高效便捷。
+
+## 对话线程改进
+- 在对话线程表中添加了 **Token 计数和成本指标**
+- 添加了**对话线程表所有列的排序功能**
+- 添加了从对话线程详情到所有相关 traces 的**导航功能**
+- 在 OpenAI Agents 对话线程中添加了**"美化模式"**支持
+
+## 实验改进
+- 添加了对实验中**配置元数据**过滤的支持。现在还可以在实验表中添加显示配置的新列。
+
+## Agent 优化器改进
+- Agent 优化的新公共 API
+- 添加了优化运行显示链接
+- 添加了 `optimization_context`
+
+## 安全修复
+- 修复：h11 接受了一些格式错误的 Chunked-Encoding 请求体
+- 修复：setuptools 的 PackageIndex.download 中存在路径遍历漏洞，可能导致任意文件写入
+- 修复：LiteLLM 存在不正确的授权漏洞
+
+👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.7.31...1.7.36)
+
+_发布版本_: `1.7.32`, `1.7.33`, `1.7.34`, `1.7.35`, `1.7.36`

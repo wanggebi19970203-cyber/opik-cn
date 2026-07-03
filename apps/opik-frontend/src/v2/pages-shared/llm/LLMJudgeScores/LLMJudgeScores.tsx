@@ -7,6 +7,7 @@ import { LLM_SCHEMA_TYPE, ScoresValidationError } from "@/types/llm";
 import { Button } from "@/ui/button";
 import { FormErrorSkeleton } from "@/ui/form";
 import LLMJudgeScore from "@/v2/pages-shared/llm/LLMJudgeScores/LLMJudgeScore";
+import { useTranslation } from "react-i18next";
 
 interface LLMJudgeScoresProps {
   validationErrors?: ScoresValidationError;
@@ -20,6 +21,7 @@ const LLMJudgeScores = ({
   onChange,
 }: LLMJudgeScoresProps) => {
   const generalError = get(validationErrors, "message");
+  const { t } = useTranslation("llm");
   const handleAddScore = useCallback(() => {
     onChange([
       ...scores,
@@ -72,7 +74,7 @@ const LLMJudgeScores = ({
         type="button"
       >
         <Plus className="mr-2 size-4" />
-        Add score
+        {t("llm:judgeScores.addScore")}
       </Button>
     </div>
   );

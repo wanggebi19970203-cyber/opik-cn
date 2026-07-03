@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { modifierKey, isMac } from "@/lib/utils";
 
 export enum SME_ACTION {
@@ -13,31 +14,31 @@ export const SME_HOTKEYS = {
   [SME_ACTION.PREVIOUS]: {
     key: "p",
     display: "P",
-    description: "Go to previous item",
+    description: i18next.t("common:smeFlow.hotkeys.goToPreviousItem"),
   },
   [SME_ACTION.NEXT]: {
     key: "n",
     display: "N",
-    description: "Go to next item",
+    description: i18next.t("common:smeFlow.hotkeys.goToNextItem"),
   },
   [SME_ACTION.DONE]: {
     key: `${modifierKey}+enter`,
     display: isMac ? "⌘+⏎" : "Ctrl+⏎",
-    description: "Submit and continue",
+    description: i18next.t("common:smeFlow.hotkeys.submitAndContinue"),
   },
   [SME_ACTION.FOCUS_COMMENT]: {
     key: "c",
     display: "C",
-    description: "Focus comment textarea",
+    description: i18next.t("common:smeFlow.hotkeys.focusCommentTextarea"),
   },
   [SME_ACTION.BLUR_COMMENT]: {
     key: "escape",
     display: "Esc",
-    description: "Blur comment textarea",
+    description: i18next.t("common:smeFlow.hotkeys.blurCommentTextarea"),
   },
   [SME_ACTION.FOCUS_FEEDBACK_SCORES]: {
     key: "f",
     display: "F",
-    description: "Focus first feedback score input",
+    description: i18next.t("common:smeFlow.hotkeys.focusFirstFeedbackScoreInput"),
   },
 } as const;

@@ -1,0 +1,126 @@
+{
+  "annotationQueues": {
+    "title": "Annotation queues",
+    "description": "Manage annotation queues for data labeling",
+    "create": "Create annotation queue",
+    "edit": "Edit annotation queue",
+    "delete": "Delete annotation queue",
+    "empty": {
+      "title": "No annotation queues yet",
+      "description": "Get started by creating a queue for human review.\nOrganize traces and threads, label outputs, and gather feedback to improve performance.",
+      "action": "Create your first queue"
+    },
+    "fields": {
+      "name": "Queue name",
+      "description": "Description"
+    },
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "items": "Items",
+      "status": "Status",
+      "id": "ID",
+      "project": "Project",
+      "instructions": "Instructions",
+      "scope": "Scope",
+      "createdAt": "Created at",
+      "createdBy": "Created by",
+      "lastUpdated": "Last updated",
+      "avgFeedbackScores": "Avg feedback scores",
+      "itemCount": "Item count",
+      "reviewedBy": "Reviewed by",
+      "progress": "Progress"
+    },
+    "page": {
+      "createNewQueue": "Create new queue"
+    },
+    "actions": {
+      "view": "View queue",
+      "annotate": "Start annotating",
+      "annotateQueue": "Annotate queue",
+      "resume": "Resume annotating",
+      "createQueue": "Create queue",
+      "copySharingLink": "Copy sharing link",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTooltip": "Delete",
+      "actionsMenu": "Actions menu"
+    },
+    "search": {
+      "byName": "Search by name"
+    },
+    "noData": {
+      "noQueuesYet": "There are no annotation queues yet",
+      "noSearchResults": "No search results"
+    },
+    "filters": {
+      "selectScope": "Select scope",
+      "trace": "Trace",
+      "thread": "Thread"
+    },
+    "scopeOptions": {
+      "traces": "Traces",
+      "threads": "Threads"
+    },
+    "validation": {
+      "projectRequired": "Project is required",
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name cannot exceed 255 characters"
+    },
+    "dialog": {
+      "editTitle": "Edit annotation queue",
+      "createTitle": "Create a new annotation queue",
+      "updateButton": "Update annotation queue",
+      "createButton": "Create annotation queue",
+      "nameLabel": "Name",
+      "namePlaceholder": "Annotation queue name",
+      "scopeLabel": "Scope",
+      "annotationGuidelines": "Annotation guidelines",
+      "annotationGuidelinesDescription": "Set how items are scored and labeled, and provide instructions so annotators give consistent feedback.",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Instructions for annotators",
+      "feedbackScoresLabel": "Available feedback scores (optional)",
+      "annotatorsPerItemLabel": "Number of annotators per item",
+      "annotatorsPerItemDescription": "This sets the number of annotators required to score an item before it is marked as completed in the queue.",
+      "lockTimeoutLabel": "Lock timeout (minutes)",
+      "lockTimeoutDescription": "How long an item stays reserved for an annotator while they are reviewing it. After this time, the item becomes available to other annotators. When multiple annotators are required, the item is only fully reserved once all annotator slots are occupied.",
+      "shareQueue": "Share annotation queue",
+      "shareQueueDescription": "You must invite annotators to your workspace for them to review the items. After creating the queue, you'll get a direct link to share with them.",
+      "cancel": "Cancel"
+    },
+    "deleteDialog": {
+      "title": "Delete annotation queue?",
+      "description": "Deleting an annotation queue will permanently remove it from the system. All associated data and configurations will be lost. This action can't be undone. Are you sure you want to continue?",
+      "confirmText": "Delete"
+    },
+    "batchDeleteDialog": {
+      "title": "Delete annotation queues",
+      "description": "Deleting these annotation queues will permanently remove all associated annotations and reviews. This action cannot be undone. Are you sure you want to continue?",
+      "confirmText": "Delete annotation queues"
+    },
+    "toast": {
+      "linkCopiedTitle": "Annotation queue link copied to clipboard",
+      "linkCopiedDescription": "Share this queue with your annotators so they can start annotating and provide feedback to improve the evaluation of your LLM application."
+    },
+    "progress": {
+      "byReviewer": "Progress by Reviewer"
+    },
+    "feedbackSelect": {
+      "placeholderMulti": "Select feedback definitions",
+      "placeholderSingle": "Select a feedback definition",
+      "addNew": "Add new"
+    },
+    "instructions": {
+      "noInstructions": "No instructions were provided for this annotation queue"
+    },
+    "scores": {
+      "columns": {
+        "feedbackOption": "Feedback option",
+        "description": "Description",
+        "availableValues": "Available values"
+      },
+      "commentsDescription": "Text field for open feedback or additional notes.",
+      "comments": "Comments"
+    }
+  }
+}

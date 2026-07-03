@@ -31,16 +31,16 @@ import lombok.extern.slf4j.Slf4j;
 @Timed
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Check", description = "Access check resources")
+@Tag(name = "Check", description = "访问检查资源")
 public class AuthenticationResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
 
     @POST
-    @Operation(operationId = "checkAccess", summary = "Check user access to workspace", description = "Check user access to workspace", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content"),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "checkAccess", summary = "检查用户对工作区的访问权限", description = "检查用户对工作区的访问权限", responses = {
+            @ApiResponse(responseCode = "204", description = "无内容"),
+            @ApiResponse(responseCode = "401", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response checkAccess(
             @RequestBody(content = @Content(schema = @Schema(implementation = AuthDetailsHolder.class))) @Valid AuthDetailsHolder authDetailsHolder) {
@@ -54,10 +54,10 @@ public class AuthenticationResource {
 
     @GET
     @Path("workspace")
-    @Operation(operationId = "getWorkspaceName", summary = "User's default workspace name", description = "User's default workspace name", responses = {
-            @ApiResponse(responseCode = "200", description = "Authentication resource", content = @Content(schema = @Schema(implementation = WorkspaceNameHolder.class))),
-            @ApiResponse(responseCode = "401", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "403", description = "Access forbidden", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getWorkspaceName", summary = "用户默认工作区名称", description = "用户默认工作区名称", responses = {
+            @ApiResponse(responseCode = "200", description = "认证资源", content = @Content(schema = @Schema(implementation = WorkspaceNameHolder.class))),
+            @ApiResponse(responseCode = "401", description = "错误请求", content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "403", description = "访问禁止", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public Response getWorkspaceName() {
         String workspaceName = requestContext.get().getWorkspaceName();

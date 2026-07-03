@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useActiveWorkspaceName } from "@/store/AppStore";
 import SideBarMenuItems from "@/v2/layout/SideBar/SideBarMenuItems";
 import ProjectSelector from "@/v2/layout/SideBar/ProjectSelector/ProjectSelector";
@@ -15,9 +16,10 @@ interface ProjectSidebarContentProps {
 const ProjectSidebarContent: React.FC<ProjectSidebarContentProps> = ({
   expanded,
 }) => {
+  const { t } = useTranslation();
   useActiveWorkspaceName();
 
-  const workspaceItems = getWorkspaceMenuItems();
+  const workspaceItems = getWorkspaceMenuItems(t);
 
   return (
     <>

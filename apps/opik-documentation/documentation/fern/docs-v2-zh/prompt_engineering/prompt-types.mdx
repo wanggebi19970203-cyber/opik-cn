@@ -1,0 +1,800 @@
+---
+headline: 文本提示和聊天提示 | Opik 文档
+og:description: Opik 提示库支持的两种提示结构 — 何时使用文本提示与聊天提示、多模态内容和模板引擎
+og:site_name: Opik 文档
+og:title: Opik 中的文本提示和聊天提示
+title: 文本提示和聊天提示
+---
+
+提示库支持两种提示结构：
+
+- [**文本提示**](#text-prompts) — 带变量替换的简单字符串模板，适用于单次生成。
+- [**聊天提示**](#chat-prompts) — OpenAI 格式的结构化消息列表，支持 system、user 和 assistant 角色，适用于多轮对话或 system+user 智能体，并支持多模态内容（文本、图像、视频）。
+
+<Note>
+  提示结构在创建时即固定。使用 `create_prompt`（文本）创建的提示无法转换为聊天提示，反之亦然 — 尝试转换将引发 `PromptTemplateStructureMismatch` 错误。
+</Note>
+
+## 文本提示
+
+文本提示是带有 `{{variable}}` 变量替换的单个字符串模板，适用于单轮交互或需要生成单段文本的场景。
+
+### 创建文本提示
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    prompt = client.create_prompt(
+        name="prompt-summary",
+        prompt="Write a summary of the following text: {{text}}",
+        metadata={"environment": "development"},
+        project_name="my-agent",
+    )
+
+    # Render the template
+    print(prompt.format(text="Hello, world!"))
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const prompt = await client.createPrompt({
+      name: "prompt-summary",
+      prompt: "Write a summary of the following text: {{text}}",
+      metadata: { environment: "development" },
+      projectName: "my-agent",
+    });
+
+    // Render the template
+    console.log(prompt?.format({ text: "Hello, world!" }));
+    ```
+  </Tab>
+  <Tab value="Using the UI" title="使用界面">
+    您可以在界面中创建提示：导航到提示库，点击 **Create new prompt**（创建新提示）。在弹出的对话框中输入提示名称、提示文本和可选的描述：
+
+    <Frame>
+      <img src="/img/v2/prompt-library/create-prompt-text.png" />
+    </Frame>
+
+    您可以稍后通过点击库中的提示名称并选择 **Edit prompt**（编辑提示）来修改提示。
+  </Tab>
+</Tabs>
+
+每次使用新内容调用都会创建一个新版本，该版本在库中可见：
+
+<Frame>
+  <img src="/img/v2/prompt-library/prompt-versions.png" />
+</Frame>
+
+### 获取文本提示
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    prompt = client.get_prompt(name="prompt-summary", project_name="my-agent")
+
+    # Render the template
+    print(prompt.format(text="Hello, world!"))
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const prompt = await client.getPrompt({
+      name: "prompt-summary",
+      projectName: "my-agent",
+    });
+
+    if (prompt) {
+      console.log(prompt.format({ text: "Hello, world!" }));
+    }
+    ```
+  </Tab>
+</Tabs>
+
+如果您不使用 SDK，也可以通过 [REST API](/reference/rest-api/overview) 获取提示。
+
+## 聊天提示
+
+聊天提示是带有角色（`system`、`user`、`assistant`）的结构化消息列表，其格式与 OpenAI 兼容的聊天补全 API 接受的格式相同。当您的智能体具有多轮消息结构时，聊天提示是正确的选择。
+
+### 主要特性
+
+- **结构化消息** — 将提示组织为带有角色（system、user、assistant）的消息列表
+- **多模态支持** — 在同一提示中包含图像、视频和文本
+- **变量替换** — 支持 Mustache（`{{variable}}`）或 Jinja2 语法
+- **版本控制** — 消息变更时自动创建版本
+
+### 创建聊天提示
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant specializing in {{domain}}."},
+        {"role": "user", "content": "Explain {{topic}} in simple terms."},
+    ]
+
+    chat_prompt = client.create_chat_prompt(
+        name="educational-assistant",
+        messages=messages,
+        metadata={"category": "education"},
+        project_name="my-agent",
+    )
+
+    # Render the messages with variables
+    formatted_messages = chat_prompt.format(
+        variables={
+            "domain": "physics",
+            "topic": "quantum entanglement",
+        }
+    )
+
+    print(formatted_messages)
+    # [
+    #     {"role": "system", "content": "You are a helpful assistant specializing in physics."},
+    #     {"role": "user", "content": "Explain quantum entanglement in simple terms."},
+    # ]
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const messages = [
+      {
+        role: "system",
+        content: "You are a helpful assistant specializing in {{domain}}.",
+      },
+      { role: "user", content: "Explain {{topic}} in simple terms." },
+    ];
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "educational-assistant",
+      messages,
+      metadata: { category: "education" },
+      projectName: "my-agent",
+    });
+
+    // Render the messages with variables
+    const formattedMessages = chatPrompt?.format({
+      domain: "physics",
+      topic: "quantum entanglement",
+    });
+
+    console.log(formattedMessages);
+    // [
+    //   { role: "system", content: "You are a helpful assistant specializing in physics." },
+    //   { role: "user", content: "Explain quantum entanglement in simple terms." },
+    // ]
+    ```
+  </Tab>
+  <Tab value="Using the UI" title="使用界面">
+    要在界面中创建聊天提示，请导航到提示库并点击 **Create new prompt**（创建新提示）。选择 **Chat prompt**（聊天提示）作为提示类型，然后添加带有角色（system、user、assistant）的消息：
+
+    <Frame>
+      <img src="/img/v2/prompt-library/create-prompt-chat.png" />
+    </Frame>
+  </Tab>
+</Tabs>
+
+保存后，聊天提示在提示库中有自己的视图：
+
+<Frame>
+  <img src="/img/v2/prompt-library/chat-prompt-versions.png" />
+</Frame>
+
+### 将聊天提示与 OpenAI API 配合使用
+
+`chat_prompt.format()` 的输出格式已经符合 OpenAI 聊天补全 API 的要求：
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+    from openai import OpenAI
+
+    client = opik.Opik()
+    openai_client = OpenAI()
+
+    chat_prompt = client.get_chat_prompt(
+        name="educational-assistant",
+        project_name="my-agent",
+    )
+
+    formatted_messages = chat_prompt.format(
+        variables={"domain": "physics", "topic": "quantum entanglement"},
+    )
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=formatted_messages,
+    )
+
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+    import OpenAI from "openai";
+
+    const client = new Opik();
+    const openai = new OpenAI();
+
+    const chatPrompt = await client.getChatPrompt({
+      name: "educational-assistant",
+      projectName: "my-agent",
+    });
+
+    const formattedMessages = chatPrompt?.format({
+      domain: "physics",
+      topic: "quantum entanglement",
+    });
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: formattedMessages,
+    });
+
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+</Tabs>
+
+### 多轮模板
+
+聊天提示可以捕获多轮对话流程，支持内联的助手回复和在对话任意位置使用变量：
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    messages = [
+        {"role": "system", "content": "You are a customer support agent for {{company}}."},
+        {"role": "user", "content": "I have an issue with {{product}}."},
+        {"role": "assistant", "content": "I'd be happy to help with your {{product}}. Can you describe the issue?"},
+        {"role": "user", "content": "{{issue_description}}"},
+    ]
+
+    chat_prompt = client.create_chat_prompt(
+        name="customer-support-flow",
+        messages=messages,
+        project_name="my-agent",
+    )
+
+    formatted = chat_prompt.format(
+        variables={
+            "company": "Acme Corp",
+            "product": "Widget Pro",
+            "issue_description": "It won't turn on",
+        }
+    )
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const messages = [
+      {
+        role: "system",
+        content: "You are a customer support agent for {{company}}.",
+      },
+      { role: "user", content: "I have an issue with {{product}}." },
+      {
+        role: "assistant",
+        content:
+          "I'd be happy to help with your {{product}}. Can you describe the issue?",
+      },
+      { role: "user", content: "{{issue_description}}" },
+    ];
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "customer-support-flow",
+      messages,
+      projectName: "my-agent",
+    });
+
+    const formatted = chatPrompt?.format({
+      company: "Acme Corp",
+      product: "Widget Pro",
+      issue_description: "It won't turn on",
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### 多模态内容
+
+聊天提示可以在文本旁边包含图像和视频 — 这对于支持视觉功能的模型非常有用。
+
+#### 图像分析
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    messages = [
+        {"role": "system", "content": "You analyze images and provide detailed descriptions."},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What's in this image of {{subject}}?"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "{{image_url}}",
+                        "detail": "high",
+                    },
+                },
+            ],
+        },
+    ]
+
+    chat_prompt = client.create_chat_prompt(
+        name="image-analyzer",
+        messages=messages,
+        project_name="my-agent",
+    )
+
+    formatted = chat_prompt.format(
+        variables={
+            "subject": "a sunset",
+            "image_url": "https://example.com/sunset.jpg",
+        },
+        supported_modalities={"vision": True},
+    )
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const messages = [
+      {
+        role: "system",
+        content: "You analyze images and provide detailed descriptions.",
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "What's in this image of {{subject}}?" },
+          {
+            type: "image_url",
+            image_url: {
+              url: "{{image_url}}",
+              detail: "high",
+            },
+          },
+        ],
+      },
+    ];
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "image-analyzer",
+      messages,
+      projectName: "my-agent",
+    });
+
+    const formatted = chatPrompt?.format(
+      {
+        subject: "a sunset",
+        image_url: "https://example.com/sunset.jpg",
+      },
+      { vision: true },
+    );
+    ```
+  </Tab>
+</Tabs>
+
+#### 视频分析
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    messages = [
+        {"role": "system", "content": "You analyze videos and provide insights."},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Analyze this video: {{description}}"},
+                {
+                    "type": "video_url",
+                    "video_url": {
+                        "url": "{{video_url}}",
+                        "mime_type": "video/mp4",
+                    },
+                },
+            ],
+        },
+    ]
+
+    chat_prompt = client.create_chat_prompt(
+        name="video-analyzer",
+        messages=messages,
+        project_name="my-agent",
+    )
+
+    formatted = chat_prompt.format(
+        variables={
+            "description": "traffic analysis",
+            "video_url": "https://example.com/traffic.mp4",
+        },
+        supported_modalities={"vision": True},
+    )
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const messages = [
+      {
+        role: "system",
+        content: "You analyze videos and provide insights.",
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Analyze this video: {{description}}" },
+          {
+            type: "video_url",
+            video_url: {
+              url: "{{video_url}}",
+              mime_type: "video/mp4",
+            },
+          },
+        ],
+      },
+    ];
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "video-analyzer",
+      messages,
+      projectName: "my-agent",
+    });
+
+    const formatted = chatPrompt?.format(
+      {
+        description: "traffic analysis",
+        video_url: "https://example.com/traffic.mp4",
+      },
+      { vision: true, video: true },
+    );
+    ```
+  </Tab>
+</Tabs>
+
+#### 混合内容
+
+您可以在单条消息中组合多个内容块 — 例如，两张图片和周围的文本：
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Compare these two images:"},
+                {"type": "image_url", "image_url": {"url": "{{image1_url}}"}},
+                {"type": "text", "text": "and"},
+                {"type": "image_url", "image_url": {"url": "{{image2_url}}"}},
+                {"type": "text", "text": "What are the main differences?"},
+            ],
+        },
+    ]
+
+    chat_prompt = client.create_chat_prompt(
+        name="image-comparison",
+        messages=messages,
+        project_name="my-agent",
+    )
+
+    formatted = chat_prompt.format(
+        variables={
+            "image1_url": "https://example.com/before.jpg",
+            "image2_url": "https://example.com/after.jpg",
+        },
+        supported_modalities={"vision": True},
+    )
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    const messages = [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Compare these two images:" },
+          { type: "image_url", image_url: { url: "{{image1_url}}" } },
+          { type: "text", text: "and" },
+          { type: "image_url", image_url: { url: "{{image2_url}}" } },
+          { type: "text", text: "What are the main differences?" },
+        ],
+      },
+    ];
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "image-comparison",
+      messages,
+      projectName: "my-agent",
+    });
+
+    const formatted = chatPrompt?.format(
+      {
+        image1_url: "https://example.com/before.jpg",
+        image2_url: "https://example.com/after.jpg",
+      },
+      { vision: true },
+    );
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  格式化多模态提示时，您可以指定 `supported_modalities` 来控制内容的渲染方式：
+
+  - 如果支持某种模态（例如 `{"vision": True}`），则保留结构化内容。
+  - 如果不支持某种模态，则替换为文本占位符（例如 `<<<image>>><<</image>>>`）。
+
+  这让您可以将同一个模板用于可能支持或不支持某些模态的不同模型。
+</Note>
+
+## 模板引擎
+
+文本提示和聊天提示都支持两种模板引擎进行变量替换：
+
+### Mustache（默认）
+
+Mustache 简单、可移植，适用于将变量替换到模板中的常见场景。
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+    from opik.api_objects.prompt import PromptType
+
+    client = opik.Opik()
+
+    chat_prompt = client.create_chat_prompt(
+        name="mustache-example",
+        messages=[
+            {"role": "user", "content": "Hello {{name}}, you live in {{city}}."},
+        ],
+        type=PromptType.MUSTACHE,  # Default
+        project_name="my-agent",
+    )
+
+    formatted = chat_prompt.format(variables={"name": "Alice", "city": "Paris"})
+    # [{"role": "user", "content": "Hello Alice, you live in Paris."}]
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik, PromptType } from "opik";
+
+    const client = new Opik();
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "mustache-example",
+      messages: [
+        { role: "user", content: "Hello {{name}}, you live in {{city}}." },
+      ],
+      type: PromptType.MUSTACHE, // Default
+      projectName: "my-agent",
+    });
+
+    const formatted = chatPrompt?.format({ name: "Alice", city: "Paris" });
+    // [{ role: "user", content: "Hello Alice, you live in Paris." }]
+    ```
+  </Tab>
+</Tabs>
+
+### Jinja2
+
+Jinja2 支持条件判断、循环和过滤器，当您的提示需要根据输入值进行分支时，它是更好的选择。
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+    from opik.api_objects.prompt import PromptType
+
+    client = opik.Opik()
+
+    chat_prompt = client.create_chat_prompt(
+        name="jinja-example",
+        messages=[
+            {
+                "role": "user",
+                "content": """
+                {% if is_premium %}
+                Hello {{ name }}, welcome to our premium service!
+                {% else %}
+                Hello {{ name }}, welcome!
+                {% endif %}
+                """,
+            },
+        ],
+        type=PromptType.JINJA2,
+        project_name="my-agent",
+    )
+
+    # Premium user
+    chat_prompt.format(variables={"name": "Alice", "is_premium": True})
+    # Regular user
+    chat_prompt.format(variables={"name": "Bob", "is_premium": False})
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik, PromptType } from "opik";
+
+    const client = new Opik();
+
+    const chatPrompt = await client.createChatPrompt({
+      name: "jinja-example",
+      messages: [
+        {
+          role: "user",
+          content: `
+            {% if is_premium %}
+            Hello {{ name }}, welcome to our premium service!
+            {% else %}
+            Hello {{ name }}, welcome!
+            {% endif %}
+          `,
+        },
+      ],
+      type: PromptType.JINJA2,
+      projectName: "my-agent",
+    });
+
+    // Premium user
+    chatPrompt?.format({ name: "Alice", is_premium: true });
+    // Regular user
+    chatPrompt?.format({ name: "Bob", is_premium: false });
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Jinja2 在分支提示逻辑方面更强大；Mustache 更简单，在使用相同模板的其他工具中更具可移植性。请选择适合您提示的模板引擎。
+</Note>
+
+## 搜索提示
+
+要按名称子字符串或过滤表达式发现提示，请使用 `search_prompts` / `searchPrompts`。过滤器使用 Opik 查询语言（OQL），与 Opik 其他地方使用的语法相同：
+
+<Tabs>
+  <Tab value="Python" title="Python" language="python">
+    ```python
+    import opik
+
+    client = opik.Opik()
+
+    # Search by name substring
+    summaries = client.search_prompts(
+        filter_string='name contains "summary"'
+    )
+
+    # Combine name + tags
+    filtered = client.search_prompts(
+        filter_string='name contains "summary" AND tags contains "alpha" AND tags contains "beta"',
+    )
+
+    # Only text prompts
+    text_prompts = client.search_prompts(
+        filter_string='template_structure = "text"'
+    )
+
+    # Only chat prompts
+    chat_prompts = client.search_prompts(
+        filter_string='template_structure = "chat" AND name contains "assistant"'
+    )
+
+    for prompt in filtered:
+        print(prompt.name, prompt.version, prompt.prompt)
+    ```
+  </Tab>
+  <Tab value="TypeScript" title="TypeScript" language="typescript">
+    ```typescript
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    // Search by name substring
+    const summaries = await client.searchPrompts(
+      'name contains "summary"'
+    );
+
+    // Combine name + tags
+    const filtered = await client.searchPrompts(
+      'name contains "summary" AND tags contains "alpha" AND tags contains "beta"'
+    );
+
+    // Only text prompts
+    const textPrompts = await client.searchPrompts(
+      'template_structure = "text"'
+    );
+
+    // Only chat prompts
+    const chatPrompts = await client.searchPrompts(
+      'template_structure = "chat" AND name contains "assistant"'
+    );
+
+    for (const prompt of filtered) {
+      console.log(prompt.name, prompt.version, prompt.prompt);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+`search_prompts` 返回每个匹配提示的**最新**版本。要查看单个提示的完整版本历史，请参阅[版本控制](/development/prompt-library/version-control)。
+
+### 过滤语法
+
+`filter_string` 参数接受一个或多个 `<column> <operator> <value>` 子句，用 `AND` 连接：
+
+| 列名                 | 类型   | 操作符                                                                      |
+| -------------------- | ------ | --------------------------------------------------------------------------- |
+| `id`                 | 字符串 | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `name`               | 字符串 | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `created_by`         | 字符串 | `=`, `!=`, `contains`, `not_contains`, `starts_with`, `ends_with`, `>`, `<` |
+| `tags`               | 列表   | `contains`                                                                  |
+| `template_structure` | 字符串 | `=`, `!=`（值：`"text"`、`"chat"`）                                         |
+
+**示例：**
+
+- `tags contains "production"` — 按标签过滤
+- `name contains "summary"` — 按名称子字符串过滤
+- `created_by = "user@example.com"` — 按创建者过滤
+- `tags contains "alpha" AND tags contains "beta"` — 多标签过滤（AND）
+- `template_structure = "text"` — 仅文本提示
+- `template_structure = "chat"` — 仅聊天提示

@@ -136,10 +136,10 @@ function logSuccess({
   const output = typeof result === "object" ? result : { result };
   const endTime = new Date();
 
-  // Build the update object with standard fields
+  // 构建包含标准字段的更新对象
   const spanUpdate: Record<string, unknown> = { endTime, output };
 
-  // Enrich the span with additional data if enrichSpan function is provided
+  // 如果提供了 enrichSpan 函数，则使用额外数据丰富 span
   if (enrichSpan) {
     const enrichedData = enrichSpan(result);
     Object.assign(spanUpdate, enrichedData);
@@ -287,30 +287,29 @@ type TrackOptions = {
   projectName?: string;
   type?: SpanType;
   /**
-   * Environment to tag the trace with. When the root @track creates the
-   * trace, the value is persisted on the trace and inherited by all child
-   * spans. Per-call values on nested @track calls are ignored — the
-   * trace's environment always wins.
+   * 用于标记追踪的环境标签。当根级 @track 创建追踪时，
+   * 该值会被持久化到追踪中，并被所有子 span 继承。
+   * 嵌套 @track 调用的每次调用值会被忽略——追踪的环境始终优先。
    */
   environment?: string;
   /**
-   * Optional function to enrich the span with additional data extracted from the result.
-   * Called before the span is finalized with the success result.
+   * 可选函数，用于使用从结果中提取的额外数据来丰富 span。
+   * 在 span 以成功结果最终确定之前调用。
    *
-   * @param result - The return value from the tracked function
-   * @returns An object with fields to merge into the span (usage, model, provider, metadata, etc.)
+   * @param result - 被追踪函数的返回值
+   * @returns 一个对象，包含要合并到 span 中的字段（usage, model, provider, metadata 等）
    */
   enrichSpan?: (result: any) => Record<string, unknown>;
   /**
-   * When true, registers this function as a runner entrypoint.
-   * The function will be available for remote execution via the Opik runner.
-   * Only effective when used with the function wrapper syntax: track({ entrypoint: true }, fn)
+   * 当为 true 时，将此函数注册为运行器入口点。
+   * 该函数将可通过 Opik 运行器进行远程执行。
+   * 仅在使用函数包装器语法时有效：track({ entrypoint: true }, fn)
    */
   entrypoint?: boolean;
   /**
-   * Explicit parameter descriptors for the entrypoint function.
-   * Use this when the SDK is bundled/minified (parameter names are mangled at build time).
-   * If omitted, parameter names are extracted from the function source at runtime.
+   * 入口点函数的显式参数描述符。
+   * 当 SDK 被打包/压缩时使用此选项（参数名在构建时被混淆）。
+   * 如果省略，参数名将在运行时从函数源代码中提取。
    */
   params?: Param[];
 };
@@ -336,7 +335,7 @@ export function track(
   }
 
   return function (...args: any[]): any {
-    // New decorator API: (value, context)
+    // 新版装饰器 API: (value, context)
     if (
       args.length === 2 &&
       typeof args[1] === "object" &&
@@ -355,7 +354,7 @@ export function track(
       return executeTrack(options, originalMethod);
     }
 
-    // Legacy decorator API: (target, propertyKey, descriptor)
+    // 传统装饰器 API: (target, propertyKey, descriptor)
     const [, , descriptor] = args as [
       object,
       string | symbol,

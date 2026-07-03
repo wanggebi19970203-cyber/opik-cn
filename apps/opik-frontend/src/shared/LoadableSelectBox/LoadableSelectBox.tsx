@@ -1,4 +1,5 @@
 import React, { ReactElement, useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import isFunction from "lodash/isFunction";
 import toLower from "lodash/toLower";
 import isArray from "lodash/isArray";
@@ -62,8 +63,8 @@ export type LoadableSelectBoxProps = SingleSelectProps | MultiSelectProps;
 export const LoadableSelectBox = ({
   id,
   value = "",
-  placeholder = "Select value",
-  searchPlaceholder = "Search",
+  placeholder,
+  searchPlaceholder,
   onChange,
   open: controlledOpen,
   onOpenChange,
@@ -86,12 +87,15 @@ export const LoadableSelectBox = ({
   trigger,
   ...props
 }: LoadableSelectBoxProps) => {
+  const { t } = useTranslation("common");
+  const resolvedPlaceholder = placeholder ?? t("selectBox.selectValue");
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t("placeholders.search");
   const showSelectAll =
     multiselect && "showSelectAll" in props ? props.showSelectAll : false;
   const selectAllLabel =
     multiselect && "selectAllLabel" in props && props.selectAllLabel
       ? props.selectAllLabel
-      : "All selected";
+      : t("selectBox.allSelected");
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [width, setWidth] = useState<number | undefined>();
@@ -103,9 +107,9 @@ export const LoadableSelectBox = ({
 
   const noDataText = search
     ? hasMore
-      ? `No search results for the first ${optionsCount} items`
-      : "No search results"
-    : "No data";
+      ? t("selectBox.noSearchResultsForFirstItems", { count: optionsCount })
+      : t("selectBox.noSearchResults")
+    : t("selectBox.noData");
 
   const selectedValues = useMemo(() => {
     return multiselect && isArray(value) ? value : [];
@@ -146,7 +150,7 @@ export const LoadableSelectBox = ({
     if (!selectedOptions.length) {
       return (
         <div className="truncate font-normal text-light-slate">
-          {placeholder}
+          {resolvedPlaceholder}
         </div>
       );
     }
@@ -302,7 +306,7 @@ export const LoadableSelectBox = ({
             <SearchInput
               searchText={search}
               setSearchText={setSearch}
-              placeholder={searchPlaceholder}
+              placeholder={resolvedSearchPlaceholder}
               variant="ghost"
             ></SearchInput>
             <Separator className="mt-1" />
@@ -375,7 +379,7 @@ export const LoadableSelectBox = ({
                     </TooltipWrapper>
 
                     {option.action && (
-                      <TooltipWrapper content="Open in a new tab">
+                      <TooltipWrapper content={t("selectBox.openInNewTab")}>
                         <Button
                           type="button"
                           variant="minimal"
@@ -443,8 +447,7 @@ export const LoadableSelectBox = ({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="comet-body-s truncate">
-                      {filteredSelectedCount} of {filteredOptions.length}{" "}
-                      selected
+                      {t("selectBox.selected", { selected: filteredSelectedCount, total: filteredOptions.length })}
                     </div>
                   </div>
                 </div>
@@ -453,10 +456,10 @@ export const LoadableSelectBox = ({
             {hasMoreSection && (
               <div className="flex flex-wrap items-center justify-between border-t border-border px-4">
                 <div className="comet-body-s text-light-slate">
-                  {`Showing first ${optionsCount} items.`}
+                  {t("selectBox.showingFirstItems", { count: optionsCount })}
                 </div>
                 <Button variant="link" onClick={onLoadMore} type="button">
-                  Load more
+                  {t("selectBox.loadMore")}
                 </Button>
               </div>
             )}

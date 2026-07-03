@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import sortBy from "lodash/sortBy";
 import copy from "clipboard-copy";
@@ -47,6 +48,7 @@ export const TestSuiteExperimentPanel: React.FC<
   onRowChange,
   isTraceDetailsOpened,
 }) => {
+  const { t } = useTranslation("experiments");
   const { toast } = useToast();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -102,7 +104,7 @@ export const TestSuiteExperimentPanel: React.FC<
   const copyClickHandler = useCallback(() => {
     if (activeExperimentsCompare?.id) {
       toast({
-        description: "ID successfully copied to clipboard",
+        description: t("common:messages.idCopiedToClipboard"),
       });
       copy(activeExperimentsCompare?.id);
     }
@@ -162,7 +164,7 @@ export const TestSuiteExperimentPanel: React.FC<
           <ShareURLButton size="2xs" />
           <Button size="2xs" variant="outline" onClick={copyClickHandler}>
             <Copy className="mr-1 size-3.5" />
-            Copy ID
+            {t("copyId")}
           </Button>
           <ResizableSidePanelArrowNavigation
             horizontalNavigation={horizontalNavigation}

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import isFunction from "lodash/isFunction";
 import {
   Select,
@@ -32,12 +33,14 @@ export const SelectBox = <ValueType extends string>({
   options,
   className,
   variant = "outline",
-  placeholder = "Select value",
+  placeholder,
   disabled = false,
   renderOption,
   renderTrigger,
   testId,
 }: SelectBoxProps<ValueType>) => {
+  const { t } = useTranslation("common");
+  const resolvedPlaceholder = placeholder ?? t("selectBox.selectValue");
   const variantClass =
     variant === "ghost" ? "border-0 focus:ring-0 h-9 bg-transparent" : "";
 
@@ -54,7 +57,7 @@ export const SelectBox = <ValueType extends string>({
         {isFunction(renderTrigger) ? (
           renderTrigger(value)
         ) : (
-          <SelectValue placeholder={placeholder} data-testid={testId} />
+          <SelectValue placeholder={resolvedPlaceholder} data-testid={testId} />
         )}
       </SelectTrigger>
       <SelectContent>
@@ -89,7 +92,7 @@ export const SelectBox = <ValueType extends string>({
         })}
 
         {!options.length && (
-          <div className="comet-boby-s p-2 text-light-slate">No items</div>
+          <div className="comet-boby-s p-2 text-light-slate">{t("selectBox.noItems")}</div>
         )}
       </SelectContent>
     </Select>

@@ -1,0 +1,215 @@
+---
+description: 从这里开始将 Opik 集成到您的 Harbor 基准评估运行中，实现端到端的 Agent 可观测性和分析。
+headline: Harbor | Opik 文档
+og:description: 使用 Harbor 的基准评估框架在编码任务上评估自主 LLM Agent，跟踪性能并增强能力。
+og:site_name: Opik 文档
+og:title: 使用 Harbor 评估 LLM Agent - Opik
+title: Harbor 与 Opik 的可观测性集成
+---
+
+[Harbor](https://github.com/laude-institute/harbor) 是一个用于自主 LLM Agent 的基准评估框架。它提供了标准化基础设施，用于在 SWE-bench、LiveCodeBench、Terminal-Bench 等基准上运行 Agent。
+
+> Harbor 使您能够在复杂编码任务上评估 LLM Agent，使用 ATIF（Agent 轨迹交换格式）规范跟踪其轨迹。
+
+<Frame>
+  <img src="/img/tracing/harbor_integration.png" alt="Harbor 与 Opik 集成" />
+</Frame>
+
+Opik 与 Harbor 集成，记录所有试验执行的追踪数据，包括：
+
+- **试验结果** 作为 Opik 追踪，包含计时、元数据和来自验证器奖励的反馈评分
+- **轨迹步骤** 作为嵌套 Span，展示完整的 Agent-环境交互
+- **工具调用和观察结果** 作为详细的执行记录
+- **Token 使用量和成本** 从 ATIF 指标中聚合
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=harbor&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=harbor&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=harbor&utm_campaign=opik) 了解更多信息。
+
+## 快速开始
+
+### 安装
+
+首先，确保已安装 `opik` 和 `harbor`：
+
+```bash
+pip install opik harbor
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration) 了解详细说明：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版** 设置
+- **配置文件** 和环境变量
+
+### 配置 Harbor
+
+Harbor 需要配置您要评估的 Agent 和基准。请参阅 [Harbor 文档](https://github.com/laude-institute/harbor) 了解作业配置的详细信息。
+
+## 使用 CLI
+
+将 Harbor 与 Opik 结合使用的最简单方式是通过 `opik harbor` CLI 命令。这会自动为所有试验执行启用 Opik 跟踪，无需修改代码。
+
+### 基本用法
+
+```bash
+# 使用 Opik 跟踪运行基准评估
+opik harbor run -d terminal-bench@head -a terminus_2 -m gpt-4.1
+
+# 使用配置文件
+opik harbor run -c config.yaml
+```
+
+### 指定项目名称
+
+```bash
+# 通过环境变量设置项目名称
+export OPIK_PROJECT_NAME=my-benchmark
+opik harbor run -d swebench@lite
+```
+
+### 可用 CLI 命令
+
+所有 Harbor CLI 命令均可作为子命令使用：
+
+```bash
+# 运行作业（jobs start 的别名）
+opik harbor run [HARBOR_OPTIONS]
+
+# 作业管理
+opik harbor jobs start [HARBOR_OPTIONS]
+opik harbor jobs resume -p ./jobs/my-job
+
+# 单次试验
+opik harbor trials start -p ./my-task -a terminus_2
+```
+
+### CLI 帮助
+
+```bash
+# 查看可用选项
+opik harbor --help
+opik harbor run --help
+```
+
+## 示例：SWE-bench 评估
+
+以下是使用 Opik 跟踪运行 SWE-bench 评估的完整示例：
+
+```bash
+# 配置 Opik
+opik configure
+
+# 设置项目名称
+export OPIK_PROJECT_NAME=swebench-claude-sonnet
+
+# 使用跟踪运行 SWE-bench 评估
+opik harbor run \
+    -d swebench-lite@head \
+    -a claude-code \
+    -m claude-3-5-sonnet-20241022
+```
+
+## 自定义 Agent
+
+Harbor 支持集成您自己的自定义 Agent，无需修改 Harbor 源代码。您可以创建两种类型的 Agent：
+
+- **外部 Agent** - 通过 `BaseEnvironment` 接口与环境交互，通常通过执行 bash 命令
+- **已安装 Agent** - 直接安装到容器环境中并以无头模式执行
+
+有关实现自定义 Agent 的详细信息，请参阅 [Harbor Agent 文档](https://harborframework.com/docs/agents)。
+
+### 使用 Opik 运行自定义 Agent
+
+要使用 Opik 跟踪运行自定义 Agent，请使用 `--agent-import-path` 标志：
+
+```bash
+opik harbor run -d "terminal-bench@head" --agent-import-path path.to.agent:MyCustomAgent
+```
+
+### 跟踪自定义 Agent 函数
+
+构建自定义 Agent 时，您可以在 Agent 实现的方法上使用 Opik 的 `@track` 装饰器。这些被装饰的函数将自动作为 Span 捕获到试验追踪中，让您详细了解 Agent 的内部逻辑：
+
+```python
+from harbor.agents.base import BaseAgent
+from opik import track
+
+class MyCustomAgent(BaseAgent):
+    @staticmethod
+    def name() -> str:
+        return "my-custom-agent"
+
+    @track
+    async def plan_next_action(self, observation: str) -> str:
+        # 此函数将作为 Span 出现在 Opik 中
+        # 在此添加您的规划逻辑
+        return action
+
+    @track
+    async def execute_tool(self, tool_name: str, args: dict) -> str:
+        # 此函数也将作为嵌套 Span 被跟踪
+        result = await self._run_tool(tool_name, args)
+        return result
+
+    async def run(self, instruction: str, environment, context) -> None:
+        # 您的主 Agent 循环
+        while not done:
+            observation = await environment.exec("pwd")
+            action = await self.plan_next_action(observation)
+            result = await self.execute_tool(action.tool, action.args)
+```
+
+这使您不仅可以追踪 ATIF 轨迹步骤，还可以追踪自定义 Agent 的内部决策过程。
+
+## 记录内容
+
+每次试验完成时会创建一个 Opik 追踪，包含：
+
+- 试验名称和任务信息作为追踪名称和输入
+- Agent 执行计时作为开始/结束时间
+- 验证器奖励（如通过/失败、通过的测试数）作为反馈评分
+- Agent 和模型元数据
+- 试验失败时的异常信息
+
+### 轨迹 Span
+
+集成会自动为 Agent 轨迹中的每个步骤创建 Span，让您详细了解 Agent-环境交互。每个轨迹步骤会成为一个 Span，显示：
+
+- 步骤来源（用户、Agent 或系统）
+- 消息内容
+- 工具调用及其参数
+- 来自环境的观察结果
+- 每步的 Token 使用量和成本
+- Agent 步骤的模型名称
+
+### 验证器奖励作为反馈评分
+
+Harbor 的验证器会产生类似 `{"pass": 1, "tests_passed": 5}` 的奖励。这些会自动转换为 Opik 反馈评分，使您能够：
+
+- 按通过/失败状态筛选追踪
+- 跨实验聚合指标
+- 跨基准比较 Agent 性能
+
+## 成本跟踪
+
+Harbor 集成会自动从 ATIF 轨迹指标中提取 Token 使用量和成本。如果您的 Agent 在步骤指标中记录了 `prompt_tokens`、`completion_tokens` 和 `cost_usd`，这些数据将被捕获到 Opik Span 中。
+
+## 环境变量
+
+| 变量 | 描述 |
+|----------|-------------|
+| `OPIK_PROJECT_NAME` | 追踪的默认项目名称 |
+| `OPIK_API_KEY` | Opik Cloud 的 API Key |
+| `OPIK_WORKSPACE` | 工作区名称（用于 Opik Cloud） |
+
+### 获取帮助
+
+- 查阅 [Harbor 文档](https://github.com/laude-institute/harbor) 了解 Agent 和基准设置
+- 查看 [ATIF 规范](https://www.harborframework.com/docs/agents/trajectory-format) 了解轨迹格式详情
+- 在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 Issue 咨询 Opik 集成问题

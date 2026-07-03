@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { ArrowUpRight, Loader2 } from "lucide-react";
@@ -90,6 +91,7 @@ const useTraceData = () => {
 };
 
 const TraceHeader: React.FC = () => {
+  const { t } = useTranslation("pages/sme");
   const { displayTrace, isLoading, handleOpenTrace } = useTraceData();
 
   return (
@@ -98,7 +100,9 @@ const TraceHeader: React.FC = () => {
         {isLoading && (
           <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-slate" />
         )}
-        <span className="comet-body-xs-accented shrink-0">Trace:</span>
+        <span className="comet-body-xs-accented shrink-0">
+          {t("traceDataViewer.traceLabel")}
+        </span>
         <BaseTraceDataTypeIcon type={TRACE_TYPE_FOR_TREE} />
         <TraceIdentifier
           name={displayTrace?.name}
@@ -111,7 +115,7 @@ const TraceHeader: React.FC = () => {
           size="2xs"
           onClick={() => handleOpenTrace(false)}
         >
-          Trace
+          {t("traceDataViewer.trace")}
           <ArrowUpRight className="ml-1 size-3" />
         </Button>
         {displayTrace?.has_tool_spans && (
@@ -120,7 +124,7 @@ const TraceHeader: React.FC = () => {
             size="2xs"
             onClick={() => handleOpenTrace(true)}
           >
-            Tool calls
+            {t("traceDataViewer.toolCalls")}
             <ArrowUpRight className="ml-1 size-3" />
           </Button>
         )}
@@ -130,6 +134,7 @@ const TraceHeader: React.FC = () => {
 };
 
 const TraceContent: React.FC = () => {
+  const { t } = useTranslation("pages/sme");
   const { trace, displayTrace, traceId, spanId, setSpanId, handleClose } =
     useTraceData();
 
@@ -142,21 +147,21 @@ const TraceContent: React.FC = () => {
         <div className="flex flex-col gap-3">
           {displayTrace && <AttachmentsList media={media} />}
           <CodeBlock
-            title="Input"
+            title={t("traceDataViewer.input")}
             data={transformedInput}
             prettifyConfig={{ fieldType: "input" }}
             preserveKey="syntax-highlighter-annotation-input"
             withSearch
           />
           <CodeBlock
-            title="Output"
+            title={t("traceDataViewer.output")}
             data={transformedOutput}
             prettifyConfig={{ fieldType: "output" }}
             preserveKey="syntax-highlighter-annotation-output"
             withSearch
           />
           <CodeBlock
-            title="Metadata"
+            title={t("traceDataViewer.metadata")}
             data={displayTrace?.metadata || {}}
             preserveKey="syntax-highlighter-annotation-metadata"
             withSearch

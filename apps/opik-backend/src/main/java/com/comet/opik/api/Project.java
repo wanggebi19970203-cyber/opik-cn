@@ -19,8 +19,7 @@ import java.util.UUID;
 
 @Builder(toBuilder = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-// This annotation is used to specify the strategy to be used for naming of properties for the annotated type. Required so that OpenAPI schema generation uses snake_case
-// for property names
+// 此注解用于指定被注解类型的属性命名策略。OpenAPI schema生成需要使用snake_case命名属性
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record Project(
         @JsonView({
@@ -58,7 +57,7 @@ public record Project(
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record Configuration(
-            @DurationValidation @Schema(description = "minimum precision supported is seconds, please use a duration with seconds precision or higher. Also, the max duration allowed is 7 days.") Duration timeoutToMarkThreadAsInactive) {
+            @DurationValidation @Schema(description = "支持的最小精度为秒，请使用秒级或更高精度的持续时间。最大允许持续时间为7天。") Duration timeoutToMarkThreadAsInactive) {
     }
 
     public static class View {

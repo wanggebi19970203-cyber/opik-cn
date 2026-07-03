@@ -1,0 +1,259 @@
+---
+description: 开始将 Opik 集成到基于 n8n 的工作流自动化中，实现端到端的 LLM 可观测性。
+headline: n8n | Opik 文档
+og:description: 使用 n8n 可视化连接服务和自动化任务。学习在自托管 n8n 安装中使用 OpenTelemetry 追踪执行。
+og:site_name: Opik 文档
+og:title: 使用 n8n 自动化工作流 - Opik
+title: 使用 Opik 实现 n8n 可观测性
+---
+
+[n8n](https://n8n.io) 是一个强大的工作流自动化平台，允许您通过可视化界面连接各种服务并自动化任务。借助 `n8n-observability` 包，您可以使用 OpenTelemetry 自动追踪工作流执行和节点操作。
+
+<Warning>
+  此集成仅适用于**自托管的 n8n** 安装。不兼容 n8n Cloud。
+</Warning>
+
+<Frame>
+  <img src="/img/tracing/n8n_integration.png" alt="Opik 中的 n8n 追踪" />
+</Frame>
+
+## 功能特性
+
+- 🔍 **自动追踪**工作流执行和单个节点操作
+- 📊 使用官方 Node.js SDK 的**标准 OpenTelemetry** 检测
+- 🎯 通过 n8n 钩子系统实现**零代码设置**
+- 🔌 **OTLP 兼容** - 可与 Opik 的 OpenTelemetry 端点配合使用
+- ⚙️ **可配置的** I/O 捕获、节点过滤等
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=n8n&utm_campaign=opik) 提供 Opik 平台的托管版本。[只需创建账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=n8n&utm_campaign=opik) 并获取您的 API 密钥。
+
+> 您也可以在本地运行 Opik 平台，请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=n8n&utm_campaign=opik) 了解更多信息。
+
+## Docker 快速开始
+
+最快的入门方式是使用 Docker Compose：
+
+```bash
+# 克隆并导航到示例
+git clone https://github.com/comet-ml/n8n-observability.git
+cd n8n-observability/examples/docker-compose
+
+# 设置您的 Opik API 密钥（在 https://www.comet.com/signup 免费获取）
+export OPIK_API_KEY=your_api_key_here
+
+# 构建并运行
+docker-compose up --build
+```
+
+打开 http://localhost:5678，创建工作流，然后在您的 [Opik 仪表板](https://www.comet.com) 中查看追踪！
+
+## 设置选项
+
+### Docker（推荐）
+
+创建一个自定义 Dockerfile，全局安装 `n8n-observability` 包：
+
+```dockerfile
+FROM n8nio/n8n:latest
+
+USER root
+RUN npm install -g n8n-observability
+
+ENV EXTERNAL_HOOK_FILES=/usr/local/lib/node_modules/n8n-observability/dist/hooks.cjs
+
+USER node
+```
+
+然后使用 OTLP 设置配置您的 docker-compose.yml：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```yaml
+        services:
+          n8n:
+            build: .
+            environment:
+              OTEL_EXPORTER_OTLP_ENDPOINT: "https://www.comet.com/opik/api/v1/private/otel"
+              OTEL_EXPORTER_OTLP_HEADERS: "Authorization=${OPIK_API_KEY},Comet-Workspace=default"
+              N8N_OTEL_SERVICE_NAME: "my-n8n"
+            volumes:
+              - n8n_data:/home/node/.n8n
+            ports:
+              - "5678:5678"
+
+        volumes:
+          n8n_data:
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，您可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```yaml
+            OTEL_EXPORTER_OTLP_HEADERS: "Authorization=${OPIK_API_KEY},Comet-Workspace=default,projectName=my-n8n-project"
+            ```
+        </Tip>
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```yaml
+        services:
+          n8n:
+            build: .
+            environment:
+              OTEL_EXPORTER_OTLP_ENDPOINT: "https://<comet-deployment-url>/opik/api/v1/private/otel"
+              OTEL_EXPORTER_OTLP_HEADERS: "Authorization=${OPIK_API_KEY},Comet-Workspace=default"
+              N8N_OTEL_SERVICE_NAME: "my-n8n"
+            volumes:
+              - n8n_data:/home/node/.n8n
+            ports:
+              - "5678:5678"
+
+        volumes:
+          n8n_data:
+        ```
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```yaml
+        services:
+          n8n:
+            build: .
+            environment:
+              OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:5173/api/v1/private/otel"
+              OTEL_EXPORTER_OTLP_HEADERS: "projectName=my-n8n-project"
+              N8N_OTEL_SERVICE_NAME: "my-n8n"
+            volumes:
+              - n8n_data:/home/node/.n8n
+            ports:
+              - "5678:5678"
+
+        volumes:
+          n8n_data:
+        ```
+    </Tab>
+</Tabs>
+
+### 裸机 / npm
+
+如果您直接在机器上运行 n8n：
+
+```bash
+# 全局安装
+npm install -g n8n-observability
+```
+
+然后设置所需的环境变量：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        export N8N_OTEL_SERVICE_NAME=my-n8n
+        export EXTERNAL_HOOK_FILES=$(npm root -g)/n8n-observability/dist/hooks.cjs
+
+        # 启动 n8n
+        n8n start
+        ```
+    </Tab>
+    <Tab value="Enterprise deployment" title="企业部署">
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        export N8N_OTEL_SERVICE_NAME=my-n8n
+        export EXTERNAL_HOOK_FILES=$(npm root -g)/n8n-observability/dist/hooks.cjs
+
+        # 启动 n8n
+        n8n start
+        ```
+    </Tab>
+    <Tab value="Self-hosted instance" title="自托管实例">
+        ```bash
+        export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=my-n8n-project'
+        export N8N_OTEL_SERVICE_NAME=my-n8n
+        export EXTERNAL_HOOK_FILES=$(npm root -g)/n8n-observability/dist/hooks.cjs
+
+        # 启动 n8n
+        n8n start
+        ```
+    </Tab>
+</Tabs>
+
+## 配置
+
+以下环境变量可用于配置集成：
+
+| 变量 | 用途 | 默认值 |
+| --- | --- | --- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP 导出器端点 | — |
+| `OTEL_EXPORTER_OTLP_HEADERS` | OTLP 头信息（例如认证令牌） | — |
+| `N8N_OTEL_SERVICE_NAME` | 遥测服务名称 | `n8n` |
+| `N8N_OTEL_NODE_INCLUDE` | 仅追踪列出的节点（逗号分隔） | — |
+| `N8N_OTEL_NODE_EXCLUDE` | 排除列出的节点（逗号分隔） | — |
+| `N8N_OTEL_CAPTURE_INPUT` | 捕获节点输入数据 | `true` |
+| `N8N_OTEL_CAPTURE_OUTPUT` | 捕获节点输出数据 | `true` |
+| `N8N_OTEL_AUTO_INSTRUMENT` | 启用 HTTP/Express 检测 | `false` |
+| `N8N_OTEL_METRICS` | 启用指标收集 | `false` |
+| `N8N_OTEL_DEBUG` | 启用调试日志 | `false` |
+| `EXTERNAL_HOOK_FILES` | hooks.cjs 路径（自动设置） | — |
+
+### 节点过滤
+
+您可以使用环境变量过滤哪些节点被追踪：
+
+```bash
+# 仅追踪特定节点
+export N8N_OTEL_NODE_INCLUDE="OpenAI,HTTP Request"
+
+# 排除嘈杂的节点
+export N8N_OTEL_NODE_EXCLUDE="Wait,Set"
+
+# 为保护隐私禁用 I/O 捕获
+export N8N_OTEL_CAPTURE_INPUT=false
+export N8N_OTEL_CAPTURE_OUTPUT=false
+```
+
+## 追踪内容
+
+### 工作流 Span
+
+每次工作流执行会创建一个包含以下属性的 span：
+
+- `n8n.workflow.id` - 工作流 ID
+- `n8n.workflow.name` - 工作流名称
+- `n8n.span.type` - `"workflow"`
+
+### 节点 Span
+
+每个节点操作会创建一个包含以下属性的 span：
+
+- `n8n.node.type` - 节点类型（例如 `n8n-nodes-base.httpRequest`）
+- `n8n.node.name` - 节点名称
+- `n8n.span.type` - `"llm"`、`"prompt"`、`"evaluation"` 或 undefined
+- `n8n.node.input` - JSON 输入（如果启用了捕获）
+- `n8n.node.output` - JSON 输出（如果启用了捕获）
+- `gen_ai.system` - AI 提供商（例如 `openai`、`anthropic`）
+- `gen_ai.request.model` - 模型名称（例如 `gpt-4`）
+
+## 验证安装
+
+检查包是否正确安装：
+
+```bash
+node -e "console.log(require.resolve('n8n-observability/hooks'))"
+```
+
+启动时，您应该看到类似以下的日志：
+
+```
+[otel-setup] OpenTelemetry initialized: my-n8n (OTLP export enabled, n8n spans only)
+[n8n-observability] observability ready and patches applied
+```
+
+## 进一步改进
+
+如果您希望我们改进此集成，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交新的功能请求。
+
+有关 n8n-observability 包的具体问题，请访问 [n8n-observability 仓库](https://github.com/comet-ml/n8n-observability)。

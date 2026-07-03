@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import {
   LLM_JUDGE,
   LLM_MESSAGE_ROLE,
@@ -30,11 +31,11 @@ export const PLAYGROUND_PROMPT_COLORS = [
 ];
 
 export const LLM_MESSAGE_ROLE_NAME_MAP = {
-  [LLM_MESSAGE_ROLE.system]: "System",
-  [LLM_MESSAGE_ROLE.assistant]: "Assistant",
-  [LLM_MESSAGE_ROLE.user]: "User",
+  [LLM_MESSAGE_ROLE.system]: i18next.t("common.constants.llm.roles.system"),
+  [LLM_MESSAGE_ROLE.assistant]: i18next.t("common.constants.llm.roles.assistant"),
+  [LLM_MESSAGE_ROLE.user]: i18next.t("common.constants.llm.roles.user"),
   [LLM_MESSAGE_ROLE.ai]: "AI",
-  [LLM_MESSAGE_ROLE.tool_execution_result]: "Tool execution result",
+  [LLM_MESSAGE_ROLE.tool_execution_result]: i18next.t("common.constants.llm.roles.toolExecutionResult"),
 };
 
 /**
@@ -259,8 +260,8 @@ export const THINKING_LEVEL_OPTIONS_PRO: Array<{
   label: string;
   value: "low" | "high";
 }> = [
-  { label: "Low", value: "low" },
-  { label: "High (Default)", value: "high" },
+  { label: i18next.t("common.constants.llm.thinkingLevels.low"), value: "low" },
+  { label: i18next.t("common.constants.llm.thinkingLevels.highDefault"), value: "high" },
 ];
 
 // Thinking level options for Gemini 3 Flash models (all 4 levels)
@@ -269,10 +270,10 @@ export const THINKING_LEVEL_OPTIONS_FLASH: Array<{
   label: string;
   value: "minimal" | "low" | "medium" | "high";
 }> = [
-  { label: "Minimal", value: "minimal" },
-  { label: "Low", value: "low" },
-  { label: "Medium", value: "medium" },
-  { label: "High (Default)", value: "high" },
+  { label: i18next.t("common.constants.llm.thinkingLevels.minimal"), value: "minimal" },
+  { label: i18next.t("common.constants.llm.thinkingLevels.low"), value: "low" },
+  { label: i18next.t("common.constants.llm.thinkingLevels.medium"), value: "medium" },
+  { label: i18next.t("common.constants.llm.thinkingLevels.highDefault"), value: "high" },
 ];
 
 // Legacy export for backwards compatibility.
@@ -281,9 +282,8 @@ export const THINKING_LEVEL_OPTIONS_FLASH: Array<{
 export const THINKING_LEVEL_OPTIONS = THINKING_LEVEL_OPTIONS_PRO;
 
 export const LLM_PROMPT_CUSTOM_TRACE_TEMPLATE: LLMPromptTemplate = {
-  label: "Custom LLM-as-judge",
-  description:
-    "Use our template editor to write your own LLM as a Judge metric",
+  label: i18next.t("common.constants.llm.templates.customLlmAsJudge"),
+  description: i18next.t("common.constants.llm.templates.customLlmAsJudgeDescription"),
   value: LLM_JUDGE.custom,
   messages: [
     {
@@ -315,9 +315,8 @@ export const LLM_PROMPT_CUSTOM_TRACE_TEMPLATE: LLMPromptTemplate = {
 };
 
 export const LLM_PROMPT_CUSTOM_SPAN_TEMPLATE: LLMPromptTemplate = {
-  label: "Custom LLM-as-judge",
-  description:
-    "Use our template editor to write your own LLM as a Judge metric",
+  label: i18next.t("common.constants.llm.templates.customLlmAsJudge"),
+  description: i18next.t("common.constants.llm.templates.customLlmAsJudgeDescription"),
   value: LLM_JUDGE.custom,
   messages: [
     {
@@ -349,9 +348,8 @@ export const LLM_PROMPT_CUSTOM_SPAN_TEMPLATE: LLMPromptTemplate = {
 };
 
 export const LLM_PROMPT_CUSTOM_THREAD_TEMPLATE: LLMPromptTemplate = {
-  label: "Custom LLM-as-judge",
-  description:
-    "Use our template editor to write your own LLM as a Judge metric",
+  label: i18next.t("common.constants.llm.templates.customLlmAsJudge"),
+  description: i18next.t("common.constants.llm.templates.customLlmAsJudgeDescription"),
   value: LLM_JUDGE.custom,
   messages: [
     {
@@ -442,8 +440,8 @@ export const LLM_PROMPT_CUSTOM_THREAD_TEMPLATE: LLMPromptTemplate = {
 export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
   LLM_PROMPT_CUSTOM_TRACE_TEMPLATE,
   {
-    label: "Hallucination",
-    description: "Check if the output contains any hallucinations",
+    label: i18next.t("common.constants.llm.templates.hallucination"),
+    description: i18next.t("common.constants.llm.templates.hallucinationDescription"),
     value: LLM_JUDGE.hallucination,
     messages: [
       {
@@ -492,8 +490,8 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     ],
   },
   {
-    label: "Moderation",
-    description: "Check if the output contains any harmful content",
+    label: i18next.t("common.constants.llm.templates.moderation"),
+    description: i18next.t("common.constants.llm.templates.moderationDescription"),
     value: LLM_JUDGE.moderation,
     messages: [
       {
@@ -542,8 +540,8 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     ],
   },
   {
-    label: "AnswerRelevance",
-    description: "Check if the output is relevant to the input",
+    label: i18next.t("common.constants.llm.templates.answerRelevance"),
+    description: i18next.t("common.constants.llm.templates.answerRelevanceDescription"),
     value: LLM_JUDGE.answer_relevance,
     messages: [
       {
@@ -613,9 +611,8 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     ],
   },
   {
-    label: "Structured Output Compliance",
-    description:
-      "Checks if the output follows a defined JSON or JSON-LD structure",
+    label: i18next.t("common.constants.llm.templates.structuredOutputCompliance"),
+    description: i18next.t("common.constants.llm.templates.structuredOutputComplianceDescription"),
     value: LLM_JUDGE.structure_compliance,
     messages: [
       {
@@ -649,9 +646,8 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     ],
   },
   {
-    label: "Meaning Match",
-    description:
-      "Evaluates semantic equivalence between output and ground truth",
+    label: i18next.t("common.constants.llm.templates.meaningMatch"),
+    description: i18next.t("common.constants.llm.templates.meaningMatchDescription"),
     value: LLM_JUDGE.meaning_match,
     messages: [
       {
@@ -721,8 +717,8 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
 export const LLM_PROMPT_THREAD_TEMPLATES: LLMPromptTemplate[] = [
   LLM_PROMPT_CUSTOM_THREAD_TEMPLATE,
   {
-    label: "Conversational coherence",
-    description: "Check if the output is coherent with the conversation",
+    label: i18next.t("common.constants.llm.templates.conversationalCoherence"),
+    description: i18next.t("common.constants.llm.templates.conversationalCoherenceDescription"),
     value: LLM_JUDGE.conversational_coherence,
     messages: [
       {
@@ -813,8 +809,8 @@ export const LLM_PROMPT_THREAD_TEMPLATES: LLMPromptTemplate[] = [
     ],
   },
   {
-    label: "User frustration",
-    description: "Check if the output is frustrating to the user",
+    label: i18next.t("common.constants.llm.templates.userFrustration"),
+    description: i18next.t("common.constants.llm.templates.userFrustrationDescription"),
     value: LLM_JUDGE.user_frustration,
     messages: [
       {

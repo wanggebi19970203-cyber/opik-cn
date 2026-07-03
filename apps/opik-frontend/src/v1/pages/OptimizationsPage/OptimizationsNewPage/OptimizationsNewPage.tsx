@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryParam, StringParam } from "use-query-params";
@@ -15,6 +16,7 @@ import OptimizationsNewPageContent from "./OptimizationsNewPageContent";
 import Loader from "@/shared/Loader/Loader";
 
 const OptimizationsNewPage: React.FC = () => {
+  const { t } = useTranslation("pages/optimizations");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [templateId] = useQueryParam("template", StringParam);
   const [rerunId] = useQueryParam("rerun", StringParam);
@@ -84,11 +86,11 @@ const OptimizationsNewPage: React.FC = () => {
   }, [rerunData, templateData, getOrCreateDataset, form, workspaceName]);
 
   if (Boolean(rerunId) && isRerunFetching) {
-    return <Loader message="Loading optimization..." />;
+    return <Loader message={t("optimizations.newPage.loadingOptimization")} />;
   }
 
   if (isPreparingDataset) {
-    return <Loader message="Preparing a dataset..." />;
+    return <Loader message={t("optimizations.newPage.preparingDataset")} />;
   }
 
   return (

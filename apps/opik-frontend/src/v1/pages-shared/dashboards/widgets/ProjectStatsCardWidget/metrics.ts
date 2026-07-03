@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import {
   STATISTIC_AGGREGATION_TYPE,
   COLUMN_FEEDBACK_SCORES_ID,
@@ -24,49 +25,49 @@ export type MetricOption = {
 const SHARED_METRICS: MetricDefinition[] = [
   {
     value: "duration.p50",
-    label: "P50 duration",
+    label: i18next.t("dashboards.statsCard.metrics.p50Duration"),
     type: STATISTIC_AGGREGATION_TYPE.PERCENTAGE,
     statName: "duration",
     formatter: formatDuration,
   },
   {
     value: "duration.p90",
-    label: "P90 duration",
+    label: i18next.t("dashboards.statsCard.metrics.p90Duration"),
     type: STATISTIC_AGGREGATION_TYPE.PERCENTAGE,
     statName: "duration",
     formatter: formatDuration,
   },
   {
     value: "duration.p99",
-    label: "P99 duration",
+    label: i18next.t("dashboards.statsCard.metrics.p99Duration"),
     type: STATISTIC_AGGREGATION_TYPE.PERCENTAGE,
     statName: "duration",
     formatter: formatDuration,
   },
   {
     value: "input",
-    label: "Total input count",
+    label: i18next.t("dashboards.statsCard.metrics.totalInputCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "input",
     formatter: (value: number) => value.toLocaleString(),
   },
   {
     value: "output",
-    label: "Total output count",
+    label: i18next.t("dashboards.statsCard.metrics.totalOutputCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "output",
     formatter: (value: number) => value.toLocaleString(),
   },
   {
     value: "metadata",
-    label: "Total metadata count",
+    label: i18next.t("dashboards.statsCard.metrics.totalMetadataCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "metadata",
     formatter: (value: number) => value.toLocaleString(),
   },
   {
     value: "tags",
-    label: "Average number of tags",
+    label: i18next.t("dashboards.statsCard.metrics.averageNumberOfTags"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "tags",
     formatter: formatNumericData,
@@ -74,7 +75,7 @@ const SHARED_METRICS: MetricDefinition[] = [
   },
   {
     value: "total_estimated_cost_sum",
-    label: "Total estimated cost sum",
+    label: i18next.t("dashboards.statsCard.metrics.totalEstimatedCostSum"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "total_estimated_cost_sum",
     formatter: formatCost,
@@ -83,7 +84,7 @@ const SHARED_METRICS: MetricDefinition[] = [
   },
   {
     value: "usage.completion_tokens",
-    label: "Avg output tokens",
+    label: i18next.t("dashboards.statsCard.metrics.avgOutputTokens"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "usage.completion_tokens",
     formatter: formatNumericData,
@@ -91,7 +92,7 @@ const SHARED_METRICS: MetricDefinition[] = [
   },
   {
     value: "usage.prompt_tokens",
-    label: "Avg input tokens",
+    label: i18next.t("dashboards.statsCard.metrics.avgInputTokens"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "usage.prompt_tokens",
     formatter: formatNumericData,
@@ -99,7 +100,7 @@ const SHARED_METRICS: MetricDefinition[] = [
   },
   {
     value: "usage.total_tokens",
-    label: "Avg total tokens",
+    label: i18next.t("dashboards.statsCard.metrics.avgTotalTokens"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "usage.total_tokens",
     formatter: formatNumericData,
@@ -107,7 +108,7 @@ const SHARED_METRICS: MetricDefinition[] = [
   },
   {
     value: "error_count",
-    label: "Total error count",
+    label: i18next.t("dashboards.statsCard.metrics.totalErrorCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "error_count",
     formatter: (value: number) => value.toLocaleString(),
@@ -117,21 +118,21 @@ const SHARED_METRICS: MetricDefinition[] = [
 const TRACE_SPECIFIC_METRICS: MetricDefinition[] = [
   {
     value: "trace_count",
-    label: "Total trace count",
+    label: i18next.t("dashboards.statsCard.metrics.totalTraceCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "trace_count",
     formatter: (value: number) => value.toLocaleString(),
   },
   {
     value: "thread_count",
-    label: "Total thread count",
+    label: i18next.t("dashboards.statsCard.metrics.totalThreadCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "thread_count",
     formatter: (value: number) => value.toLocaleString(),
   },
   {
     value: "llm_span_count",
-    label: "Average LLM span count",
+    label: i18next.t("dashboards.statsCard.metrics.averageLlmSpanCount"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "llm_span_count",
     formatter: formatNumericData,
@@ -139,7 +140,7 @@ const TRACE_SPECIFIC_METRICS: MetricDefinition[] = [
   },
   {
     value: "span_count",
-    label: "Average span count",
+    label: i18next.t("dashboards.statsCard.metrics.averageSpanCount"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "span_count",
     formatter: formatNumericData,
@@ -147,7 +148,7 @@ const TRACE_SPECIFIC_METRICS: MetricDefinition[] = [
   },
   {
     value: "total_estimated_cost",
-    label: "Average estimated cost per trace",
+    label: i18next.t("dashboards.statsCard.metrics.averageEstimatedCostPerTrace"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "total_estimated_cost",
     formatter: formatCost,
@@ -156,7 +157,7 @@ const TRACE_SPECIFIC_METRICS: MetricDefinition[] = [
   },
   {
     value: "guardrails_failed_count",
-    label: "Total guardrails failed count",
+    label: i18next.t("dashboards.statsCard.metrics.totalGuardrailsFailedCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "guardrails_failed_count",
     formatter: (value: number) => value.toLocaleString(),
@@ -166,14 +167,14 @@ const TRACE_SPECIFIC_METRICS: MetricDefinition[] = [
 const SPAN_SPECIFIC_METRICS: MetricDefinition[] = [
   {
     value: "span_count",
-    label: "Total span count",
+    label: i18next.t("dashboards.statsCard.metrics.totalSpanCount"),
     type: STATISTIC_AGGREGATION_TYPE.COUNT,
     statName: "span_count",
     formatter: (value: number) => value.toLocaleString(),
   },
   {
     value: "total_estimated_cost",
-    label: "Average estimated cost per span",
+    label: i18next.t("dashboards.statsCard.metrics.averageEstimatedCostPerSpan"),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "total_estimated_cost",
     formatter: formatCost,
@@ -197,7 +198,7 @@ export const getFeedbackScoreMetricOptions = (
 ): MetricOption[] => {
   return scoreNames.map((scoreName) => ({
     value: `${COLUMN_FEEDBACK_SCORES_ID}.${scoreName}`,
-    label: `Average ${scoreName}`,
+    label: i18next.t("dashboards.statsCard.averageScore", { name: scoreName }),
   }));
 };
 

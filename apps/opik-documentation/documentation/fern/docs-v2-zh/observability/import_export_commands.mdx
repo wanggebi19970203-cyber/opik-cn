@@ -1,0 +1,708 @@
+---
+headline: 通过命令行导入/导出 | Opik 文档
+og:description: 了解如何使用 Opik 的命令行工具高效地导出、导入、迁移和备份项目数据
+og:site_name: Opik 文档
+og:title: 使用 Opik 导入/导出数据 - 命令行指南
+title: 通过命令行导入/导出
+toc_max_heading_level: 4
+canonical-url: https://www.comet.com/docs/opik/tracing/advanced/migrate-data
+---
+
+导出/导入命令行功能使您能够：
+
+- **导出**：将项目中的特定追踪、span、数据集、提示词和实验导出到本地 JSON 或 CSV 文件
+- **导入**：将本地 JSON 文件中的数据导入到项目中
+- **迁移**：在项目或环境之间移动数据，包括实验和提示词
+- **备份**：创建特定项目数据的本地备份
+
+## `opik export WORKSPACE PROJECT ITEM [NAME]`
+
+将指定项目中的特定数据类型导出到本地文件。
+
+**参数：**
+- `WORKSPACE`：要导出的工作区名称
+- `PROJECT`：要导出的项目（每个数据集、提示词和实验都属于它）
+- `ITEM`：要导出的数据类型（`all`、`dataset`、`traces`、`experiment` 或 `prompt`）
+- `NAME`：要导出项目的确切名称（不与 `all` 或 `traces` 一起使用）
+
+**选项：**
+- `--path, -p`：保存导出数据的目录（默认：`opik_exports`）
+- `--max-results`：每种数据类型要导出的最大项目数（默认：1000）
+- `--filter`：应用于追踪的 OQL 过滤器字符串——适用于 `traces`、`experiment` 和 `all`
+- `--force`：即使本地已存在也重新下载项目
+- `--format`：导出数据的格式（`json` 或 `csv`，默认：`json`）
+- `--debug`：启用调试输出以显示导出过程的详细信息
+- `--no-attachments`：跳过下载附件文件
+- `--page-size INTEGER`：导出追踪时每个 API 请求获取的追踪数量（1-1000，默认：`500`）。适用于 `traces` 和 `all`。增大可减少往返次数；如果遇到持续的速率限制错误，请减小。
+
+**`all` 特定选项：**
+- `--include`：要包含的数据类型的逗号分隔列表（`datasets`、`prompts`、`traces`、`experiments`）。默认包含全部四种。
+
+**`experiment` 特定选项：**
+- `--dataset NAME`：按数据集名称过滤实验（仅导出使用此数据集的实验）
+- `--max-traces INTEGER`：要导出的最大追踪数量（限制下载的总追踪数）
+
+**示例：**
+
+{/* These examples are maintained by hand. The canonical source of truth for
+    all flags and defaults is `sdks/python/src/opik/cli/`. Re-verify against
+    `opik export --help` whenever CLI options change. *}
+
+当您想一次性导出所有数据类型时使用 `all`——适用于完整项目备份或批量迁移：
+```bash
+# Export every data type (datasets, prompts, traces, experiments)
+opik export my-workspace my-project all
+
+# Export only datasets and prompts — skip traces and experiments
+opik export my-workspace my-project all --include datasets,prompts
+
+# Export all traces logged after a given date
+opik export my-workspace my-project all --filter 'created_at >= "2024-01-01T00:00:00Z"'
+```
+
+当您需要导出特定数据类型时使用 `dataset`、`traces`、`experiment` 或 `prompt`：
+```bash
+# Export specific dataset by exact name
+opik export my-workspace my-project dataset "my-test-dataset"
+
+# Export the project's traces
+opik export my-workspace my-project traces
+
+# Export specific experiment by exact name (--force re-downloads even if local files exist)
+opik export my-workspace my-project experiment "my-experiment" --force
+
+# Export specific prompt by exact name
+opik export my-workspace my-project prompt "my-template"
+```
+
+使用 `--filter` 将导出范围缩小到时间窗口或任何 OQL 谓词——避免下载不需要的数据：
+```bash
+# Export project traces logged after a given date
+opik export my-workspace my-project traces --filter 'created_at >= "2024-01-01T00:00:00Z"'
+
+# Export project traces in a date range
+opik export my-workspace my-project traces --filter 'created_at >= "2024-01-01T00:00:00Z" AND created_at < "2024-02-01T00:00:00Z"'
+
+# Export experiment traces logged after a given date
+opik export my-workspace my-project experiment "my-experiment" --filter 'created_at >= "2024-06-01T00:00:00Z"'
+```
+
+使用实验特定选项来限定大型实验导出的范围：
+```bash
+# Export only traces from experiments that used a specific dataset
+opik export my-workspace my-project experiment "my-experiment" --dataset "my-dataset"
+
+# Cap total traces downloaded (useful for very large experiments)
+opik export my-workspace my-project experiment "my-experiment" --max-traces 100
+```
+
+当目标是电子表格或分析工具而不是重新导入时使用 `--format csv`：
+```bash
+# Export project traces as CSV for analysis in Excel, Google Sheets, or pandas
+opik export my-workspace my-project traces --format csv --path ./csv_data
+```
+
+使用 `--no-attachments` 跳过下载附件文件（当您只需要追踪/span 数据时，导出更快）：
+```bash
+# Export project traces without downloading attachments
+opik export my-workspace my-project traces --no-attachments
+
+# Export all data without attachments
+opik export my-workspace my-project all --no-attachments
+```
+
+其他选项：
+```bash
+# Save to a custom directory
+opik export my-workspace my-project dataset "my-dataset" --path ./backup_data
+
+# Combine filter, result cap, and custom path
+opik export my-workspace my-project traces --filter 'start_time >= "2024-01-01T00:00:00Z"' --max-results 100
+
+# Show detailed API call and file I/O information during export
+opik export my-workspace my-project dataset "my-dataset" --debug --force
+
+# Reduce page size if you are hitting persistent rate-limit errors on large projects
+opik export my-workspace my-project traces --page-size 100
+```
+
+## `opik import WORKSPACE PROJECT ITEM [NAME]`
+
+将本地文件中的特定数据类型导入到指定项目中。
+
+**参数：**
+- `WORKSPACE`：要导入到的工作区名称
+- `PROJECT`：要导入到的项目（每个数据集、提示词和实验都属于它）
+- `ITEM`：要导入的数据类型（`all`、`dataset`、`traces`、`experiment` 或 `prompt`）
+- `NAME`：匹配项目的名称模式（不区分大小写的子字符串匹配；不与 `all` 或 `traces` 一起使用）
+
+**选项：**
+- `--path, -p`：包含导出数据的目录（默认：`opik_exports`）
+- `--to-project NAME`：要导入到的目标项目。默认为源项目的名称（`project.json` 中记录的 `name`）。使用此选项可恢复到重命名的或临时项目。适用于 `all`、`traces`、`dataset`、`experiment` 和 `prompt`。
+- `--dry-run`：显示将要导入的内容而不实际导入
+- `--force`：丢弃迁移清单并从头重新导入所有内容
+- `--no-attachments`：跳过上传附件文件
+- `--debug`：启用调试输出以显示导入过程的详细信息
+
+**注意：** 实验导入会在可能的情况下自动重新创建实验。不需要额外的标志。
+
+**注意：** `PROJECT` 通过名称与每个导出的 `project.json` 中记录的 `name` 进行匹配（磁盘上的文件夹按项目 ID 命名）。导入使用与导出相同的 `--path`——两者都解析 `<path>/<workspace>/projects/<id>/`——因此相同的 `--path` 可以往返使用，无需路径调整。
+
+### 可恢复的导入
+
+每次导入都会自动在项目目录下的每个目标子目录中维护一个 `migration_manifest.db` SQLite 数据库（`projects/PROJECT_ID/import_manifests/<destination-key>/migration_manifest.db`）。它跟踪哪些文件已被导入以及将实验链接回其追踪所需的 ID 映射。按目标键控清单意味着将相同的导出导入到不同的 `--to-project` 目标会保持独立的恢复/完成状态。
+
+如果导入被中断（例如网络错误、Ctrl-C），只需重新运行相同的命令——它将从中断处恢复，不会创建重复项：
+
+```
+Resuming interrupted import: 142/500 file(s) already completed
+```
+
+当重新运行先前完成的导入时：
+
+```
+Import already completed. Use --force to re-import.
+```
+
+使用 `--force` 丢弃清单并从头开始。
+
+**示例：**
+
+{/* These examples are maintained by hand. The canonical source of truth for
+    all flags and defaults is `sdks/python/src/opik/cli/`. Re-verify against
+    `opik import --help` whenever CLI options change. *}
+
+基本导入——从 `opik export` 创建的默认 `opik_exports` 目录读取：
+```bash
+# Import a dataset by exact name
+opik import my-workspace my-project dataset "my-dataset"
+
+# Import the project's traces
+opik import my-workspace my-project traces
+
+# Import an experiment (automatically recreates the experiment record)
+opik import my-workspace my-project experiment "my-experiment"
+
+# Import a prompt by exact name
+opik import my-workspace my-project prompt "my-prompt"
+```
+
+当您想导入名称共享子字符串的多个项目时使用名称模式：
+```bash
+# Import every dataset whose name contains "test"
+opik import my-workspace my-project dataset "test"
+```
+
+使用 `--to-project` 导入到不同的（例如重命名的或临时的）目标项目。源文件夹仍通过 `my-project` 名称定位；数据创建在 `my-restore` 中：
+```bash
+opik import my-workspace my-project all --to-project my-restore
+```
+
+当您的导出数据不在默认的 `opik_exports` 目录中时使用 `--path`：
+```bash
+opik import my-workspace my-project dataset "my-dataset" --path ./custom-exports
+```
+
+使用 `--dry-run` 在提交前预览将要导入的内容——有助于验证名称和数量：
+```bash
+opik import my-workspace my-project traces --dry-run
+```
+
+恢复和强制——项目目录下的清单自动处理恢复；仅在需要重新开始时使用 `--force`：
+```bash
+# Interrupted import: just re-run the same command — progress is resumed from the manifest
+opik import my-workspace my-project traces --path ./migration_data
+
+# Discard the manifest and re-import everything from scratch
+opik import my-workspace my-project traces --path ./migration_data --force
+```
+
+使用 `--no-attachments` 跳过上传附件文件（当您只需要追踪/span 数据时，导入更快）：
+```bash
+# Import project traces without uploading attachments
+opik import my-workspace my-project traces --no-attachments
+
+# Import all data without attachments
+opik import my-workspace my-project all --no-attachments
+```
+
+使用 `--debug` 查看每个文件的状态和 API 调用详情：
+```bash
+opik import my-workspace my-project experiment "my-experiment" --debug
+```
+
+## 文件格式
+
+### JSON 格式（默认）
+
+导出的数据存储在具有以下结构的 JSON 文件中：
+
+```
+OUTPUT_DIR/
+└── WORKSPACE/
+    └── projects/
+        └── PROJECT_ID/
+            ├── project.json               # {"id": "PROJECT_ID", "name": "project name"}
+            ├── export_manifest.db          # created during export to track progress
+            ├── import_manifests/           # per-destination import resume state
+            │   └── <destination-key>/migration_manifest.db
+            ├── datasets/
+            │   ├── dataset_DATASET_ID_1.json
+            │   └── dataset_DATASET_ID_2.json
+            ├── prompts/
+            │   ├── prompt_PROMPT_ID_1.json
+            │   └── prompt_PROMPT_ID_2.json
+            ├── experiments/
+            │   ├── experiment_EXPERIMENT_ID_1.json
+            │   └── experiment_EXPERIMENT_ID_2.json
+            ├── trace_TRACE_ID_1.json
+            ├── trace_TRACE_ID_2.json
+            └── attachments/
+                ├── trace/<TRACE_ID>/image.png
+                └── span/<SPAN_ID>/document.pdf
+```
+
+<Note>
+文件夹和文件按 **ID** 键控，而不是按人类可读的名称。项目文件夹是项目的 UUID，每个项目文件按其自身 ID 命名（`dataset_<dataset_id>.json`、`prompt_<prompt_id>.json`、`experiment_<experiment_id>.json`、`trace_<trace_id>.json`）。人类可读的名称作为数据存在——在 `project.json` 和每个文件内部。这使得路径不受名称中常见的 `/`、`:` 或空格等字符的影响。您仍然在命令行上传递项目和项目**名称**；CLI 会为您解析名称 ↔ ID（在导入时，它会将您输入的名称与 `project.json` 中记录的 `name` 进行匹配）。
+</Note>
+
+每个追踪文件包含：
+```json
+{
+  "trace": {
+    "id": "trace-uuid",
+    "name": "trace-name",
+    "start_time": "2024-01-01T00:00:00Z",
+    "end_time": "2024-01-01T00:01:00Z",
+    "input": {...},
+    "output": {...},
+    "metadata": {...},
+    "tags": [...],
+    "thread_id": "thread-uuid"
+  },
+  "spans": [
+    {
+      "id": "span-uuid",
+      "name": "span-name",
+      "start_time": "2024-01-01T00:00:00Z",
+      "end_time": "2024-01-01T00:01:00Z",
+      "input": {...},
+      "output": {...},
+      "metadata": {...},
+      "type": "general",
+      "model": "gpt-4",
+      "provider": "openai"
+    }
+  ],
+  "attachments": [
+    {
+      "entity_type": "trace",
+      "entity_id": "trace-uuid",
+      "file_name": "image.png"
+    },
+    {
+      "entity_type": "span",
+      "entity_id": "span-uuid",
+      "file_name": "document.pdf"
+    }
+  ],
+  "downloaded_at": "2024-01-01T00:00:00Z",
+  "project_name": "source-project"
+}
+```
+
+每个评估规则文件包含：
+```json
+{
+  "id": "rule-uuid",
+  "name": "rule-name",
+  "project_id": "project-uuid",
+  "project_name": "project-name",
+  "sampling_rate": 1.0,
+  "enabled": true,
+  "filters": [...],
+  "action": "evaluator",
+  "type": "llm_as_judge",
+  "created_at": "2024-01-01T00:00:00Z",
+  "created_by": "user-id",
+  "last_updated_at": "2024-01-01T00:00:00Z",
+  "last_updated_by": "user-id",
+  "evaluator_data": {
+    "llm_as_judge_code": {
+      "prompt": "Evaluate the response...",
+      "model": "gpt-4",
+      "temperature": 0.0
+    }
+  },
+  "downloaded_at": "2024-01-01T00:00:00Z"
+}
+```
+
+每个实验文件包含：
+```json
+{
+  "experiment": {
+    "id": "experiment-uuid",
+    "name": "experiment-name",
+    "dataset_name": "dataset-name",
+    "type": "regular",
+    "metadata": {...},
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "items": [
+    {
+      "trace_id": "trace-uuid",
+      "dataset_item_id": "dataset-item-uuid",
+      "dataset_item_data": {...},
+      "feedback_scores": [...],
+      "trace_reference": {
+        "trace_id": "trace-uuid",
+        "note": "Full trace data not included to avoid duplication"
+      }
+    }
+  ],
+  "downloaded_at": "2024-01-01T00:00:00Z"
+}
+```
+
+每个提示词文件包含（文件命名为 `prompt_<id>.json`；`id` 和 `name` 存储在内部）：
+```json
+{
+  "id": "prompt-uuid",
+  "name": "prompt-name",
+  "current_version": {
+    "prompt": "Your prompt template here...",
+    "metadata": {...},
+    "type": "MUSTACHE",
+    "commit": "commit-hash"
+  },
+  "history": [
+    {
+      "prompt": "Previous version of the prompt...",
+      "metadata": {...},
+      "type": "MUSTACHE",
+      "commit": "previous-commit-hash"
+    }
+  ],
+  "downloaded_at": "2024-01-01T00:00:00Z"
+}
+```
+
+### CSV 格式
+
+使用 `--format csv` 时，数据以扁平化数据结构的 CSV 文件导出。此格式适用于：
+
+- **数据分析**：易于导入到 Excel、Google Sheets 或数据分析工具
+- **大型数据集**：对于大量追踪，存储更高效
+- **电子表格集成**：与商业智能工具直接兼容
+
+**CSV 文件结构：**
+```
+OUTPUT_DIR/
+└── WORKSPACE/
+    └── projects/
+        └── PROJECT_ID/
+            ├── project.json                       # {"id": "PROJECT_ID", "name": "project name"}
+            ├── datasets/
+            │   └── dataset_DATASET_ID.csv          # Dataset data in CSV format
+            ├── prompts/
+            │   └── prompt_PROMPT_ID.csv            # Prompt data in CSV format
+            ├── experiments/
+            │   └── experiment_EXPERIMENT_ID.csv    # Experiment data in CSV format
+            ├── trace_TRACE_ID_1.csv                # One CSV per trace, under the project folder
+            └── trace_TRACE_ID_2.csv
+```
+
+与 JSON 一样，CSV 文件按 **ID** 命名；人类可读的名称存储在文件内容和 `project.json` 中。
+
+**CSV 格式优势：**
+- **单文件**：所有数据合并为每种数据类型一个 CSV 文件
+- **扁平化结构**：嵌套的 JSON 数据使用点表示法扁平化
+- **列标题**：清晰的列名便于分析
+- **兼容性**：适用于 Excel、Google Sheets、pandas 等
+- **通用格式**：所有数据类型（数据集、追踪、实验、提示词）都支持 CSV 导出
+
+**示例 CSV 结构：**
+```csv
+trace_id,trace_name,start_time,end_time,thread_id,span_id,span_name,span_type,span_model,span_provider,input,output,metadata
+trace-123,my-trace,2024-01-01T00:00:00Z,2024-01-01T00:01:00Z,thread-456,span-789,llm-call,llm,gpt-4,openai,"{""prompt"":""Hello""}","{""response"":""Hi""}","{""tokens"":10}"
+```
+
+## 使用场景
+
+### 1. 在 Opik 安装之间迁移
+
+迁移是一个两步过程，因为源和目标通常有不同的 API 密钥。使用源凭据导出，然后使用目标凭据导入。导入期间创建的 `migration_manifest.db` 与导出数据一起传输，使导入可以安全地中断和恢复。
+
+导出写入 `<--path>/<workspace>/projects/<project_id>/`，导入读取相同的布局，因此在两侧使用相同的 `--path`。添加 `--to-project <NAME>` 可导入到不同的目标项目。
+
+要导入到与数据导出时**不同的工作区**，请将 `--path` 指向导出的工作区目录（导出的 `--path` 加上源工作区），例如 `opik export ws-a my-project all --path ./data` 写入 `./data/ws-a/...`，然后 `opik import ws-b my-project all --path ./data/ws-a` 将其导入到 `ws-b`。
+
+```bash
+# Step 1: Export from source (run with source API key / Opik URL)
+# Writes to ./migration_data/my-workspace/projects/<project_id>/
+OPIK_API_KEY=<source_key> OPIK_URL_OVERRIDE=https://source.opik.example.com \
+  opik export my-workspace my-project traces --path ./migration_data
+
+# Step 2: Import to destination (run with destination API key / Opik URL)
+# Same --path as export. If interrupted, just re-run — it resumes automatically.
+OPIK_API_KEY=<dest_key> OPIK_URL_OVERRIDE=https://dest.opik.example.com \
+  opik import my-workspace my-project traces --path ./migration_data
+```
+
+要一次迁移所有数据类型：
+
+```bash
+# Export everything (source credentials)
+OPIK_API_KEY=<source_key> opik export my-workspace my-project dataset "my-dataset" --path ./migration_data
+OPIK_API_KEY=<source_key> opik export my-workspace my-project prompt "my-prompt" --path ./migration_data
+OPIK_API_KEY=<source_key> opik export my-workspace my-project traces --path ./migration_data
+OPIK_API_KEY=<source_key> opik export my-workspace my-project experiment "my-experiment" --path ./migration_data
+
+# Import everything (destination credentials) — same --path as export.
+OPIK_API_KEY=<dest_key> opik import my-workspace my-project dataset "my-dataset" --path ./migration_data
+OPIK_API_KEY=<dest_key> opik import my-workspace my-project prompt "my-prompt" --path ./migration_data
+OPIK_API_KEY=<dest_key> opik import my-workspace my-project traces --path ./migration_data
+OPIK_API_KEY=<dest_key> opik import my-workspace my-project experiment "my-experiment" --path ./migration_data
+```
+
+### 2. 数据备份
+```bash
+# Create backup of specific data (requires knowing exact names)
+opik export my-workspace my-project dataset "my-dataset" --path ./backup_$(date +%Y%m%d)
+opik export my-workspace my-project traces --path ./backup_$(date +%Y%m%d)
+opik export my-workspace my-project experiment "my-experiment" --path ./backup_$(date +%Y%m%d)
+```
+
+### 3. 环境同步
+```bash
+# Sync from staging to production
+opik export my-workspace staging-project traces --filter 'tags contains "ready-for-prod"'
+opik import my-workspace staging-project traces
+```
+
+### 4. 数据分析
+```bash
+# Export traces for a specific time window
+opik export my-workspace my-project traces \
+  --filter 'created_at >= "2024-01-01T00:00:00Z" AND created_at < "2024-04-01T00:00:00Z"'
+
+# Export all traces logged before a cutoff date
+opik export my-workspace my-project all --filter 'created_at < "2024-01-01T00:00:00Z"'
+
+# Export recent experiment traces only
+opik export my-workspace my-project experiment "my-experiment" --filter 'created_at >= "2024-06-01T00:00:00Z"'
+```
+
+### 5. 数据集管理
+```bash
+# Export specific dataset from a project
+opik export my-workspace my-project dataset "my-dataset"
+
+# Import datasets to another project (uses default opik_exports directory)
+opik import my-workspace my-project dataset "my-dataset"
+```
+
+### 6. 使用 CSV 进行数据分析
+```bash
+# Export traces in CSV format for analysis
+opik export my-workspace my-project traces --format csv --path ./analysis_data
+
+# Export datasets in CSV format for analysis
+opik export my-workspace my-project dataset "my-dataset" --format csv --path ./analysis_data
+
+# Export experiments in CSV format for analysis
+opik export my-workspace my-project experiment "my-experiment" --format csv --path ./analysis_data
+
+# Export prompts in CSV format for analysis
+opik export my-workspace my-project prompt "my-template" --format csv --path ./analysis_data
+
+# Open in Excel or Google Sheets for analysis
+# Or use with pandas in Python (the project folder is the project ID — use a glob):
+# import pandas as pd, glob
+# df = pd.concat([pd.read_csv(f) for f in glob.glob('./analysis_data/my-workspace/projects/*/trace_*.csv')])
+```
+
+### 7. 提示词管理
+```bash
+# Export specific prompt from a project
+opik export my-workspace my-project prompt "my-template" --path ./prompt_backup
+
+# Export another prompt template
+opik export my-workspace my-project prompt "system-prompt" --path ./templates
+
+# Import prompts to another project
+opik import my-workspace my-project prompt "my-template" --path ./prompt_backup
+
+# Import with name pattern matching
+opik import my-workspace my-project prompt "production" --path ./prompt_backup
+```
+
+### 8. 实验迁移
+```bash
+# Export specific experiment from source project
+opik export my-workspace my-project experiment "my-experiment" --path ./experiment_data
+
+# Export experiment with dataset filtering
+opik export my-workspace my-project experiment "evaluation-exp" --dataset "test-dataset"
+
+# Export only traces logged after a given date
+opik export my-workspace my-project experiment "large-experiment" --filter 'created_at >= "2024-06-01T00:00:00Z"'
+
+# Export experiment with trace limit (useful for large experiments)
+opik export my-workspace my-project experiment "large-experiment" --max-traces 50
+
+# Import experiments (automatically recreates experiments)
+opik import my-workspace my-project experiment "my-experiment" --path ./experiment_data
+
+# Import experiments matching name pattern
+opik import my-workspace my-project experiment "evaluation" --path ./experiment_data
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **导入被中断，重新运行会创建重复项**
+   - 这不应该发生——导入会自动从 `projects/PROJECT_ID/import_manifests/<destination-key>/` 下的每个目标 `migration_manifest.db` 中检测并恢复
+   - 如果您没有看到"Resuming interrupted import"消息，请检查您是否指向与原始运行相同的 `--path`、项目和 `--to-project`
+   - 如果清单数据库不可读，请删除 `import_manifests/` 目录并使用 `--force` 从头开始（这将重新导入所有内容）
+
+2. **"Import already completed. Use --force to re-import."**
+   - 清单记录了先前的运行已成功完成
+   - 如果您确实需要重新导入（例如目标已被清除），请使用 `--force`
+
+3. **导入后实验项目缺失**
+   - 实验通过 ID 链接到追踪；如果追踪导入被中断且没有清单，某些映射可能会丢失
+   - 首先重新运行项目导入（它会在清单中填充追踪 ID 映射），然后重新运行实验导入
+   - 使用 `--debug` 查看匹配了多少追踪 ID
+
+4. **"No traces found"**
+   - 检查项目名称是否正确
+   - 验证您有权访问该项目
+   - 先尝试不使用过滤器
+
+5. **"Project directory not found"**
+   - 确保您已先导出数据
+   - 检查输入目录路径
+   - 验证项目名称是否匹配
+
+6. **"Opik SDK not available"**
+   - 确保 Opik 已正确安装
+   - 检查您的 Python 环境
+   - 使用 `opik healthcheck` 验证安装
+
+7. **"Dataset/Project/Experiment/Prompt not found"**
+   - 检查确切名称是否正确
+   - 验证您有权访问该项目
+   - 使用 `--debug` 获取更详细的错误信息
+
+8. **"No datasets/projects found"**
+   - 系统将显示可用项目以帮助您选择正确的名称
+   - 检查拼写和大小写
+   - 确保项目存在于工作区中
+
+9. **"Dataset not found"**
+   - 系统将显示匹配实验使用的数据集
+   - 验证数据集名称是否正确
+   - 使用 `--debug` 查看详细的搜索信息
+
+10. **导出速度慢或持续遇到速率限制**
+    - 导出器会自动重试 429 响应，在存在 `Retry-After` 头时遵循该头
+    - 减小 `--page-size`（例如 `--page-size 100`）以降低每个请求的有效负载并减少触发速率限制的机会
+    - 导出器在页面之间暂停，并使用最多 3 个并发工作线程以保持在服务器端限制内；无需额外配置
+
+### 获取帮助
+
+```bash
+# Get help for export command
+opik export --help
+
+# Get help for import command
+opik import --help
+
+# Check system health
+opik healthcheck
+```
+
+## 示例工作流
+
+以下是导出和导入追踪数据的完整示例：
+
+{/* These examples (including the pandas snippet below) are maintained by hand.
+    The canonical source of truth for all flags and defaults is
+    `sdks/python/src/opik/cli/`. Re-verify against `opik export --help` /
+    `opik import --help` whenever CLI options change. *}
+
+### JSON 格式工作流
+```bash
+# 1. Export specific data from source project (JSON format)
+opik export my-workspace my-project dataset "my-dataset" --path ./temp_data
+opik export my-workspace my-project traces --path ./temp_data
+opik export my-workspace my-project experiment "my-experiment" --path ./temp_data
+opik export my-workspace my-project prompt "my-template" --path ./temp_data
+
+# Alternative: Export experiment with specific dataset filtering
+opik export my-workspace my-project experiment "evaluation-exp" --dataset "test-dataset" --max-traces 100 --path ./temp_data
+
+# 2. Inspect the exported data (the project folder is the project ID; use a glob)
+ls ./temp_data/my-workspace/projects/*/        # project.json + datasets/ prompts/ experiments/ + trace files
+cat ./temp_data/my-workspace/projects/*/project.json   # maps the ID folder to the project name
+ls ./temp_data/my-workspace/projects/*/datasets/
+cat ./temp_data/my-workspace/projects/*/trace_*.json | head -20
+
+# 3. Dry run import to see what would be imported (same --path as export)
+opik import my-workspace my-project dataset "my-dataset" --path ./temp_data --dry-run
+opik import my-workspace my-project traces --path ./temp_data --dry-run
+opik import my-workspace my-project experiment "my-experiment" --path ./temp_data --dry-run
+opik import my-workspace my-project prompt "my-template" --path ./temp_data --dry-run
+
+# 4. Import all data — if interrupted, just re-run the same commands to resume
+opik import my-workspace my-project dataset "my-dataset" --path ./temp_data
+opik import my-workspace my-project traces --path ./temp_data
+opik import my-workspace my-project experiment "my-experiment" --path ./temp_data
+opik import my-workspace my-project prompt "my-template" --path ./temp_data
+
+# 5. Clean up temporary data
+rm -rf ./temp_data
+```
+
+### CSV 格式工作流
+```bash
+# 1. Export data in CSV format for analysis
+opik export my-workspace my-source-project traces --format csv --path ./csv_data
+opik export my-workspace my-source-project dataset "my-dataset" --format csv --path ./csv_data
+opik export my-workspace my-source-project experiment "my-experiment" --format csv --path ./csv_data
+opik export my-workspace my-source-project prompt "my-template" --format csv --path ./csv_data
+
+# 2. Inspect the CSV files (the project folder is the project ID; use a glob)
+ls ./csv_data/my-workspace/projects/*/
+ls ./csv_data/my-workspace/projects/*/datasets/
+ls ./csv_data/my-workspace/projects/*/experiments/
+ls ./csv_data/my-workspace/projects/*/prompts/
+
+# Each trace is exported to its own CSV file
+head -5 ./csv_data/my-workspace/projects/*/trace_*.csv | head -20
+head -5 ./csv_data/my-workspace/projects/*/datasets/dataset_*.csv
+
+# 3. Analyze with pandas (optional)
+python -c "
+import pandas as pd
+import glob
+
+# Read all trace CSV files and combine them (folder is the project ID — use a glob)
+trace_files = glob.glob('./csv_data/my-workspace/projects/*/trace_*.csv')
+df_traces = pd.concat([pd.read_csv(f) for f in trace_files], ignore_index=True) if trace_files else pd.DataFrame()
+dataset_files = glob.glob('./csv_data/my-workspace/projects/*/datasets/dataset_*.csv')
+df_datasets = pd.concat([pd.read_csv(f) for f in dataset_files], ignore_index=True) if dataset_files else pd.DataFrame()
+print(f'Exported {len(df_traces)} trace records from {len(trace_files)} files')
+print(f'Exported {len(df_datasets)} dataset records')
+print('Trace columns:', df_traces.columns.tolist() if not df_traces.empty else 'No traces')
+print('Dataset columns:', df_datasets.columns.tolist() if not df_datasets.empty else 'No datasets')
+"
+
+# 4. For import, you would need to convert back to JSON format
+# (CSV format is primarily for analysis, not import)
+```
+
+此工作流确保您可以安全地在工作区之间迁移所有数据，包括实验和提示词，同时保持数据完整性并提供过程可见性。CSV 格式对于数据分析和报告特别有用，而 JSON 格式保留了实验和提示词重新创建所需的完整结构。新的命令结构通过为数据集、追踪、实验和提示词提供单独的命令来更好地组织，所有命令都限定在项目范围内，使管理特定数据类型更加容易。

@@ -7,6 +7,7 @@ import {
   useId,
 } from "react";
 import AudioPlayer from "react-h5-audio-player";
+import i18next from "i18next";
 import {
   useCurrentlyPlayingId,
   useSetCurrentlyPlaying,
@@ -150,22 +151,22 @@ export const useAudioPlayer = (
       if (error) {
         switch (error.code) {
           case 1: // MEDIA_ERR_ABORTED
-            setErrorMessage("Audio loading was cancelled");
+            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioLoadingCancelled"));
             break;
           case 2: // MEDIA_ERR_NETWORK
-            setErrorMessage("Network error loading audio");
+            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.networkErrorLoadingAudio"));
             break;
           case 3: // MEDIA_ERR_DECODE
-            setErrorMessage("Audio format error");
+            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioFormatError"));
             break;
           case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
-            setErrorMessage("Audio file not available or format not supported");
+            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioFileNotAvailable"));
             break;
           default:
-            setErrorMessage("Unable to load audio file");
+            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.unableToLoadAudioFile"));
         }
       } else {
-        setErrorMessage("Audio playback error");
+        setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioPlaybackError"));
       }
     };
 

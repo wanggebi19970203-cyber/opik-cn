@@ -1,5 +1,6 @@
 import React from "react";
 import { keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import useAppStore from "@/store/AppStore";
 import SidebarMenuItem, {
@@ -25,6 +26,7 @@ interface SideBarMenuItemsProps {
 }
 
 const SideBarMenuItems: React.FC<SideBarMenuItemsProps> = ({ expanded }) => {
+  const { t } = useTranslation("navigation");
   const { activeWorkspaceName: workspaceName } = useAppStore();
   const {
     permissions: {
@@ -42,6 +44,7 @@ const SideBarMenuItems: React.FC<SideBarMenuItemsProps> = ({ expanded }) => {
     canViewDatasets,
     canUsePlayground,
     canViewOptimizationRuns,
+    t,
   });
 
   const { data: projectData } = useProjectsList(

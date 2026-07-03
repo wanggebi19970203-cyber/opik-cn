@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Database,
   FlaskConical,
@@ -87,6 +88,7 @@ const PlaygroundHeader = ({
   onStopAll,
   maxWidth,
 }: PlaygroundHeaderProps) => {
+  const { t } = useTranslation("pages/playground");
   const promptMap = usePromptMap();
   const setPromptMap = useSetPromptMap();
   const clearCreatedExperiments = useClearCreatedExperiments();
@@ -201,13 +203,13 @@ const PlaygroundHeader = ({
 
   const runDisabledReason = useMemo(() => {
     if (!allPromptsHaveModels)
-      return "Please select an LLM model for your prompts";
+      return t("playground.runDisabled.selectModel");
     if (!allMessagesNotEmpty)
-      return "Some messages are empty. Please add some text to proceed";
+      return t("playground.runDisabled.emptyMessages");
     if (hasMediaCompatibilityIssues)
-      return "Some prompts contain media but the selected model doesn't support media input";
+      return t("playground.runDisabled.mediaNotSupported");
     if (isExperimentMode && !datasetName)
-      return "Your dataset has been removed. Select another one";
+      return t("playground.runDisabled.datasetRemoved");
     return null;
   }, [
     allPromptsHaveModels,
@@ -324,7 +326,7 @@ const PlaygroundHeader = ({
         ? versionName
           ? `${datasetName} ${versionName}`
           : datasetName
-        : "Loading...";
+        : t("playground.header.loading");
 
       const TypeIcon =
         currentDatasetType === DATASET_TYPE.TEST_SUITE ? ListChecks : Database;
@@ -377,7 +379,7 @@ const PlaygroundHeader = ({
         onClick={() => setIsRunModalOpen(true)}
       >
         <FlaskConical className="mr-1 size-3.5" />
-        Run experiment
+        {t("playground.header.runExperiment")}
       </Button>
     );
   };
@@ -385,19 +387,19 @@ const PlaygroundHeader = ({
   const renderRunButton = () => {
     if (isRunning) {
       return (
-        <TooltipWrapper content="Stop running prompts">
+        <TooltipWrapper content={t("playground.header.stopTooltip")}>
           <Button size="2xs" variant="outline" onClick={onStopAll}>
             <Pause className="mr-1 size-3.5" />
-            Stop all
+            {t("playground.header.stopAll")}
           </Button>
         </TooltipWrapper>
       );
     }
 
-    const label = isExperimentMode ? "Re-run" : "Run";
+    const label = isExperimentMode ? t("playground.header.rerun") : t("playground.header.run");
     const tooltip =
       runDisabledReason ??
-      (isExperimentMode ? "Re-run experiment on dataset" : "Run your prompts");
+      (isExperimentMode ? t("playground.header.rerunTooltip") : t("playground.header.runTooltip"));
 
     return (
       <TooltipWrapper content={tooltip}>
@@ -420,20 +422,19 @@ const PlaygroundHeader = ({
 
   const leaveDescription = canViewExperiments ? (
     <>
-      You&apos;ll return to prompt iteration mode. Your experiment results are
-      saved and can be viewed anytime on the{" "}
+      {t("playground.leaveExperiment.descriptionWithExperiments")}{" "}
       <Link
         to="/$workspaceName/experiments"
         params={{ workspaceName }}
         target="_blank"
         className="underline"
       >
-        Experiments
+        {t("playground.leaveExperiment.experimentsPage")}
       </Link>{" "}
-      page.
+      {t("playground.leaveExperiment.pageSuffix")}
     </>
   ) : (
-    "You'll return to prompt iteration mode."
+    t("playground.leaveExperiment.descriptionSimple")
   );
 
   return (
@@ -443,13 +444,13 @@ const PlaygroundHeader = ({
         style={maxWidth ? { maxWidth } : undefined}
       >
         <div className="flex items-center gap-2">
-          <h1 className="comet-title-xs">Playground</h1>
+          <h1 className="comet-title-xs">{t("playground.title")}</h1>
         </div>
         <div className="flex items-center gap-2">
           {renderExperimentChipOrButton()}
           {renderRunButton()}
           <Separator orientation="vertical" className="h-5" />
-          <TooltipWrapper content="Reset playground">
+          <TooltipWrapper content={t("playground.header.resetTooltip")}>
             <Button
               variant="outline"
               size="icon-2xs"
@@ -466,7 +467,7 @@ const PlaygroundHeader = ({
               projectId={activeProjectId}
               logsSource={LOGS_SOURCE.playground}
               variant="icon"
-              title="Playground logs"
+              title={t("playground.header.playgroundLogs")}
             />
           )}
         </div>
@@ -477,9 +478,9 @@ const PlaygroundHeader = ({
         open={resetDialogOpen}
         setOpen={setResetDialogOpen}
         onConfirm={resetPlayground}
-        title="Reset playground"
-        description="Resetting the Playground will discard all unsaved prompts. This action can't be undone. Are you sure you want to continue?"
-        confirmText="Reset playground"
+        title={t("playground.resetConfirm.title")}
+        description={t("playground.resetConfirm.description")}
+        confirmText={t("playground.resetConfirm.confirmText")}
       />
 
       <ConfirmDialog
@@ -487,9 +488,9 @@ const PlaygroundHeader = ({
         open={leaveDialogOpen}
         setOpen={setLeaveDialogOpen}
         onConfirm={handleLeaveExperimentMode}
-        title="Leave experiment mode?"
+        title={t("playground.leaveExperiment.title")}
         description={leaveDescription}
-        confirmText="Leave"
+        confirmText={t("playground.leaveExperiment.confirmText")}
       />
 
       <RunExperimentDialog

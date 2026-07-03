@@ -7,6 +7,7 @@ import PromptMessagesReadonly, {
   ChatMessage,
 } from "@/v2/pages-shared/llm/PromptMessagesReadonly/PromptMessagesReadonly";
 import { PROMPT_TEMPLATE_STRUCTURE } from "@/types/prompts";
+import { useTranslation } from "react-i18next";
 
 export const parseMessagesFromTemplate = (template: unknown): ChatMessage[] => {
   try {
@@ -38,6 +39,7 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
   bareContent = false,
   children,
 }) => {
+  const { t } = useTranslation();
   const [showRawView, setShowRawView] = useState(false);
 
   const messages = useMemo<ChatMessage[]>(
@@ -84,12 +86,12 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
           {showRawView ? (
             <>
               <MessageSquare className="mr-1.5 size-3.5" />
-              Message view
+              {t("promptTemplateView.messageView")}
             </>
           ) : (
             <>
               <Code2 className="mr-1.5 size-3.5" />
-              Raw view
+              {t("promptTemplateView.rawView")}
             </>
           )}
         </Button>
@@ -105,12 +107,12 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
         {showRawView ? (
           <>
             <Type className="mr-1.5 size-3.5" />
-            Pretty view
+            {t("promptTemplateView.prettyView")}
           </>
         ) : (
           <>
             <Code2 className="mr-1.5 size-3.5" />
-            Raw view
+            {t("promptTemplateView.rawView")}
           </>
         )}
       </Button>
@@ -160,7 +162,7 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
       {!hideHeader && (
         <div className="flex items-center justify-between">
           <div className={cn("comet-body-s-accented", labelClassName)}>
-            {isChatPrompt ? "Chat messages" : "Prompt"}
+            {isChatPrompt ? t("promptTemplateView.chatMessages") : t("promptTemplateView.prompt")}
           </div>
           {renderToggleButton()}
         </div>

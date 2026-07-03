@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import isUndefined from "lodash/isUndefined";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -23,6 +24,7 @@ type CustomMeta = {
 const ComparePromptCell: React.FC<CellContext<ComparePromptConfig, unknown>> = (
   context,
 ) => {
+  const { t } = useTranslation();
   const { custom } = context.column.columnDef.meta ?? {};
   const { onlyDiff } = (custom ?? {}) as CustomMeta;
   const experimentId = context.column?.id;
@@ -41,7 +43,7 @@ const ComparePromptCell: React.FC<CellContext<ComparePromptConfig, unknown>> = (
 
   const renderContent = () => {
     if (isUndefined(data) || data === "-") {
-      return <span className="px-1.5 py-2.5 text-light-slate">No value</span>;
+      return <span className="px-1.5 py-2.5 text-light-slate">{t("common.labels.noValue")}</span>;
     }
 
     if (showDiffView) {
@@ -57,7 +59,7 @@ const ComparePromptCell: React.FC<CellContext<ComparePromptConfig, unknown>> = (
         <PromptDisplay
           data={data}
           fallback={
-            <span className="text-light-slate">Unable to parse prompt</span>
+            <span className="text-light-slate">{t("common.labels.unableToParsePrompt")}</span>
           }
         />
       </div>

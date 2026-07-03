@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import DataTable from "@/shared/DataTable/DataTable";
 import DataTablePagination from "@/shared/DataTablePagination/DataTablePagination";
@@ -58,7 +59,7 @@ const PAGINATION_SIZE_KEY = "prompts-pagination-size";
 export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "prompts.columns.name",
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
     sortable: true,
@@ -71,7 +72,7 @@ export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
   },
   {
     id: "template_structure",
-    label: "Type",
+    label: "prompts.columns.type",
     type: COLUMN_TYPE.category,
     cell: TagCell as never,
     size: 80,
@@ -86,36 +87,36 @@ export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
   },
   {
     id: "description",
-    label: "Description",
+    label: "prompts.columns.description",
     type: COLUMN_TYPE.string,
   },
   {
     id: "version_count",
-    label: "Versions",
+    label: "prompts.columns.versions",
     type: COLUMN_TYPE.number,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: "prompts.columns.tags",
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "prompts.columns.lastUpdated",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "prompts.columns.created",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "prompts.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
 ];
@@ -123,7 +124,7 @@ export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
 export const FILTER_COLUMNS: ColumnData<Prompt>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "prompts.columns.name",
     type: COLUMN_TYPE.string,
   },
   {
@@ -133,38 +134,38 @@ export const FILTER_COLUMNS: ColumnData<Prompt>[] = [
   },
   {
     id: "description",
-    label: "Description",
+    label: "prompts.columns.description",
     type: COLUMN_TYPE.string,
   },
   {
     id: "template_structure",
-    label: "Type",
+    label: "prompts.columns.type",
     type: COLUMN_TYPE.string,
   },
   {
     id: "version_count",
-    label: "Versions",
+    label: "prompts.columns.versions",
     type: COLUMN_TYPE.number,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: "prompts.columns.tags",
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "prompts.columns.lastUpdated",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "prompts.columns.created",
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "prompts.columns.createdBy",
     type: COLUMN_TYPE.string,
   },
 ];
@@ -194,6 +195,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const PromptsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -250,7 +252,7 @@ const PromptsPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? "There are no prompts yet" : "No search results";
+  const noDataText = noData ? t("prompts.noData.noPrompts") : t("prompts.noData.noResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -337,7 +339,7 @@ const PromptsPage: React.FunctionComponent = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l truncate break-words">Prompt library</h1>
+        <h1 className="comet-title-l truncate break-words">{t("prompts.title")}</h1>
       </div>
       <ExplainerDescription
         className="mb-4"
@@ -348,7 +350,7 @@ const PromptsPage: React.FunctionComponent = () => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("prompts.searchPlaceholder")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -375,7 +377,7 @@ const PromptsPage: React.FunctionComponent = () => {
           />
           {canCreatePrompts && (
             <Button variant="default" size="sm" onClick={handleNewPromptClick}>
-              Create new prompt
+              {t("prompts.create")}
             </Button>
           )}
         </div>
@@ -396,7 +398,7 @@ const PromptsPage: React.FunctionComponent = () => {
           <DataTableNoData title={noDataText}>
             {noData && canCreatePrompts && (
               <Button variant="link" onClick={handleNewPromptClick}>
-                Create new prompt
+                {t("prompts.create")}
               </Button>
             )}
           </DataTableNoData>

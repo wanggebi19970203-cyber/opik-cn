@@ -1,0 +1,40 @@
+{
+  "optimization": {
+    "title": "优化",
+    "description": "查看优化详情",
+    "tabs": {
+      "overview": "概览",
+      "results": "结果",
+      "logs": "日志",
+      "trials": "试验"
+    },
+    "header": {
+      "rerun": "重新运行",
+      "stopExecution": "停止执行",
+      "dataset": "数据集"
+    },
+    "kpi": {
+      "optimizationCost": "优化成本",
+      "total": "总计"
+    },
+    "trials": {
+      "refreshTooltip": "刷新试验列表",
+      "bestTrialConfiguration": "最佳试验配置"
+    },
+    "bestPrompt": {
+      "title": "最佳提示词",
+      "waitingForTrials": "等待试验中...",
+      "prompt": "提示词",
+      "noPromptMessages": "无提示词消息"
+    },
+    "configuration": {
+      "title": "配置",
+      "testSuite": "测试套件",
+      "model": "模型",
+      "algorithm": "算法",
+      "metric": "指标",
+      "initialPrompt": "初始提示词",
+      "noPromptMessages": "无提示词消息"
+    }
+  }
+}

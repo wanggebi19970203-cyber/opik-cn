@@ -11,6 +11,7 @@ import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
 import ExplainerDescription from "@/shared/ExplainerDescription/ExplainerDescription";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
 import { PROMPT_TEMPLATE_STRUCTURE } from "@/types/prompts";
+import { useTranslation } from "react-i18next";
 
 type UseThisPromptDialogProps = {
   open: boolean;
@@ -128,6 +129,7 @@ const UseThisPromptDialog: React.FunctionComponent<
   versionLabel,
   versionCommit,
 }) => {
+  const { t } = useTranslation("pages/prompt");
   const isChatPrompt = templateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT;
   const promptKind = isChatPrompt ? "chat prompt" : "prompt";
   const versionSuffix = versionLabel ? ` (${versionLabel})` : "";
@@ -140,8 +142,7 @@ const UseThisPromptDialog: React.FunctionComponent<
       >
         <DialogHeader>
           <DialogTitle>
-            Use this {promptKind}
-            {versionSuffix}
+            {t("usePrompt.useThisPrompt", { kind: promptKind, suffix: versionSuffix })}
           </DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
@@ -151,7 +152,7 @@ const UseThisPromptDialog: React.FunctionComponent<
           />
           <div className="flex flex-col gap-2">
             <div className="comet-body-accented mt-4">
-              Creating a {promptKind}
+              {t("usePrompt.creatingPrompt", { kind: promptKind })}
             </div>
             <CodeHighlighter
               data={
@@ -162,8 +163,8 @@ const UseThisPromptDialog: React.FunctionComponent<
             />
             <div className="comet-body-accented mt-4">
               {versionCommit
-                ? `Getting this ${promptKind}${versionSuffix}`
-                : `Getting a ${promptKind}`}
+                ? t("usePrompt.gettingThisPrompt", { kind: promptKind, suffix: versionSuffix })
+                : t("usePrompt.gettingPrompt", { kind: promptKind })}
             </div>
             <CodeHighlighter
               data={

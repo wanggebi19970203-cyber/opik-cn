@@ -1,5 +1,6 @@
 import React from "react";
 import { Plus, LineChart } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 
 interface DashboardWidgetGridEmptyProps {
@@ -10,6 +11,7 @@ interface DashboardWidgetGridEmptyProps {
 const DashboardWidgetGridEmpty: React.FunctionComponent<
   DashboardWidgetGridEmptyProps
 > = ({ onAddWidget, readOnly }) => {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-3 gap-4">
       <div className="flex min-h-[317px] items-center justify-center rounded-md border border-dashed border-border bg-background">
@@ -17,9 +19,9 @@ const DashboardWidgetGridEmpty: React.FunctionComponent<
           <div className="pb-1">
             <LineChart className="size-4 text-light-slate" />
           </div>
-          <p className="text-sm font-medium text-foreground">No widgets yet</p>
+          <p className="text-sm font-medium text-foreground">{t("common:dashboard.noWidgetsYet")}</p>
           <p className="pb-1 text-center text-sm text-muted-slate">
-            Add widgets to monitor key metrics.
+            {t("common:dashboard.addWidgetsDescription")}
           </p>
           {!readOnly && (
             <Button
@@ -29,7 +31,7 @@ const DashboardWidgetGridEmpty: React.FunctionComponent<
               className="gap-1"
             >
               <Plus className="size-3.5" />
-              Add widget
+              {t("common:dashboard.addWidget")}
             </Button>
           )}
         </div>

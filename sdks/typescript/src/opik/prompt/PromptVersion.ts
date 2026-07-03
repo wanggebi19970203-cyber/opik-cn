@@ -13,8 +13,8 @@ import { formatPromptTemplate } from "./formatting";
 import { formatChatMessagesForComparison } from "./formatting/chatMessageFormatter";
 
 /**
- * Represents a specific immutable snapshot of a prompt template at a point in time.
- * Pure data object with formatting capabilities.
+ * 表示提示词模板在某个时间点的特定不可变快照。
+ * 具有格式化功能的纯数据对象。
  */
 export class PromptVersion {
   // Public readonly properties
@@ -22,11 +22,11 @@ export class PromptVersion {
   public readonly name: string;
   public readonly prompt: string;
   /**
-   * @deprecated Legacy commit hash of this prompt version. Use {@link version} instead — `commit` is no longer surfaced in the Opik UI and is kept only for backwards compatibility with older SDK callers.
+   * @deprecated 此提示词版本的旧式提交哈希。请使用 {@link version} 替代 — `commit` 不再在 Opik UI 中显示，仅为向后兼容旧版 SDK 调用者而保留。
    */
   public readonly commit: string;
   /**
-   * Sequential version identifier of this prompt version (e.g. `"v3"`).
+   * 此提示词版本的顺序版本标识符（如 `"v3"`）。
    */
   public readonly version?: string;
   public readonly type: PromptType;
@@ -51,14 +51,14 @@ export class PromptVersion {
   }
 
   /**
-   * Format the prompt template with the provided variables
+   * 使用提供的变量格式化提示词模板
    */
   format(variables: PromptVariables): string {
     return formatPromptTemplate(this.prompt, variables, this.type);
   }
 
   /**
-   * Get human-readable version age (e.g., "2 days ago", "Today")
+   * 获取人类可读的版本年龄（如 "2 days ago"、"Today"）
    */
   getVersionAge(): string {
     if (!this.createdAt) {
@@ -69,9 +69,9 @@ export class PromptVersion {
   }
 
   /**
-   * Get formatted version information string.
-   * Format: "[v3] YYYY-MM-DD by user@email.com - Change description"
-   * (falls back to the commit hash when no version number is present).
+   * 获取格式化的版本信息字符串。
+   * 格式："[v3] YYYY-MM-DD by user@email.com - Change description"
+   * （当没有版本号时回退到提交哈希）。
    */
   getVersionInfo(): string {
     const parts: string[] = [`[${this.version ?? this.commit}]`];
@@ -93,21 +93,21 @@ export class PromptVersion {
   }
 
   /**
-   * Compare this version's template with another version and return a formatted diff.
-   * Displays a git-style unified diff showing additions, deletions, and changes.
-   * For chat prompts, provides intelligent formatting with structured message display.
-   * The diff is automatically logged to the terminal and also returned as a string.
-   * The output is colored and formatted for terminal display.
+   * 将此版本的模板与另一个版本进行比较并返回格式化的差异。
+   * 显示 git 风格的统一差异，显示添加、删除和更改。
+   * 对于聊天提示词，提供智能格式化和结构化消息显示。
+   * 差异会自动记录到终端并作为字符串返回。
+   * 输出经过着色和格式化以供终端显示。
    *
-   * @param other - The version to compare against
-   * @returns A formatted string showing the differences between versions
+   * @param other - 要比较的版本
+   * @returns 显示版本之间差异的格式化字符串
    *
    * @example
    * ```typescript
    * const versions = await prompt.getVersions();
    * const [current, previous] = versions;
    *
-   * // Logs diff to terminal and returns it
+   * // 记录差异到终端并返回
    * const diff = current.compareTo(previous);
    * ```
    */
@@ -144,7 +144,7 @@ export class PromptVersion {
   }
 
   /**
-   * Check if a prompt string is a chat prompt (JSON array of messages)
+   * 检查提示词字符串是否为聊天提示词（消息的 JSON 数组）
    */
   private isChatPrompt(prompt: string): boolean {
     try {
@@ -162,7 +162,7 @@ export class PromptVersion {
   }
 
   /**
-   * Format chat prompt string (JSON) for human-readable comparison.
+   * 格式化聊天提示词字符串（JSON）以便人类可读比较。
    */
   private formatChatPromptString(prompt: string): string {
     try {
@@ -175,7 +175,7 @@ export class PromptVersion {
   }
 
   /**
-   * Factory method to create PromptVersion from API response
+   * 从 API 响应创建 PromptVersion 的工厂方法
    */
   static fromApiResponse(
     name: string,

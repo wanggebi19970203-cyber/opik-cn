@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useCallback } from "react";
 import { Control, useController } from "react-hook-form";
 import get from "lodash/get";
+import { useTranslation } from "react-i18next";
 
 import { FormControl, FormField, FormItem, FormMessage } from "@/ui/form";
 import {
@@ -52,6 +53,7 @@ const ProjectMetricsBreakdownSection: React.FC<
   isGroupByDisabledForUsage,
   onBreakdownChange,
 }) => {
+  const { t } = useTranslation();
   const isMetadataBreakdown = breakdown.field === BREAKDOWN_FIELD.METADATA;
   const hasBreakdownField = breakdown.field !== BREAKDOWN_FIELD.NONE;
 
@@ -146,13 +148,13 @@ const ProjectMetricsBreakdownSection: React.FC<
     <Accordion type="single" collapsible className="!-mt-0 w-full">
       <AccordionItem value="groupby">
         <AccordionTrigger className="h-11 py-1.5 hover:no-underline">
-          Group by
+          {t("common.groups.label")}
         </AccordionTrigger>
         <AccordionContent className="flex flex-col gap-4 px-3 pb-3">
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <Label className="comet-body-s-accented mb-1 flex items-center gap-1">
-                Field
+                {t("common.labels.field")}
                 {isGroupByDisabled && disabledExplainer && (
                   <ExplainerIcon {...disabledExplainer} />
                 )}
@@ -242,10 +244,10 @@ const ProjectMetricsBreakdownSection: React.FC<
             </div>
             <div className="min-w-fit">
               <Label className="comet-body-s-accented mb-1 flex items-center gap-1">
-                Aggregation mode{" "}
+                {t("common.labels.aggregationMode")}{" "}
                 <ExplainerIcon
                   className="inline"
-                  description={`Choose how data is aggregated: 'Total' shows one value per group for the entire selected date range, while 'Time-based' shows values in time buckets (hourly, daily, or weekly).`}
+                  description={t("common.labels.aggregationModeDescription")}
                 />
               </Label>
               <ToggleGroup
@@ -264,17 +266,17 @@ const ProjectMetricsBreakdownSection: React.FC<
               >
                 <ToggleGroupItem
                   value="total"
-                  aria-label="Total"
+                  aria-label={t("common.labels.total")}
                   className="gap-1.5"
                 >
-                  <span>Total</span>
+                  <span>{t("common.labels.total")}</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="interval"
-                  aria-label="Time-based"
+                  aria-label={t("common.labels.timeBased")}
                   className="gap-1.5"
                 >
-                  <span>Time-based</span>
+                  <span>{t("common.labels.timeBased")}</span>
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>

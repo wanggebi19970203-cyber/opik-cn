@@ -1,0 +1,286 @@
+---
+headline: 迁移到 Opik 2.0 | 自托管 | Opik 文档
+og:description: 面向自托管 Opik 运维人员的分步指南，介绍如何运行后台迁移任务，将现有 1.x 数据分配到 Opik 2.0 的项目中。
+og:site_name: Opik 文档
+og:title: 迁移到 Opik 2.0（自托管）
+subtitle: 启用后台任务，将现有 1.x 数据迁移到项目中
+title: 迁移到 Opik 2.0
+---
+
+Opik 2.0 围绕**项目**组织所有内容。升级后创建的数据会自动归属于项目。在 Opik 1.x 上创建的数据——数据集、提示词、实验、优化、自动化规则和告警——需要运行六个后台任务，将每项数据分配到正确的项目。本页将引导你完成这些任务的运行。
+
+<Warning>
+  **正在从带有现有数据的 Opik 1.x 升级？** 最新的 Opik 镜像默认将 `TOGGLE_FORCE_WORKSPACE_VERSION` 设置为 `version_2`，这会全局加载 Opik 2.0 UI，无论你现有的实体如何。尚未分配到项目（没有 `project_id`）的 1.x 实体在运行以下迁移任务之前不会在 2.0 UI 中显示。
+</Warning>
+
+## 开始之前
+
+1. **更新到最新的 Opik 镜像。** 所有六个迁移任务都包含在 2.0 发布版本中。在启用任何标志之前，请确保你的 `opik-backend` 正在运行 2.0 镜像。
+2. **创建数据库快照。** 每个任务都会写入 MySQL 或 ClickHouse。在开始之前备份两者——ClickHouse 请参阅[高级 ClickHouse 备份](/self-host/backup)，MySQL 请使用 `mysqldump` 或你的 RDS 快照工具。
+3. **确认你的部署状态正常。** `opik-backend` 容器应该正在运行且没有重启循环，MySQL 和 ClickHouse 应处于基准负载状态。
+
+## 任务工作原理
+
+每个任务在 `opik-backend` 内以 30 秒为周期运行。它们具有以下特点：
+
+- **可在实时流量旁安全运行** — 无用户可见的锁；用户可以持续工作。
+- **可恢复** — 中途停止任务后重新启用，会从中断处继续。
+- **可停止，但不可撤回** — 已提交的写入会保留；没有回滚模式。
+
+当一个项目的关联数据跨越多个项目时，它会被分配到**主导项目**——即其运行记录引用最多的项目。当完全无法确定项目时（没有关联的运行记录，或原始项目已被删除），会回退到工作区的**默认项目**，如果缺失则按需创建。
+
+## 执行顺序
+
+<Warning>
+  请按以下顺序运行任务。数据集、提示词和优化从 `experiments.project_id` 推断其项目。
+  如果在实验任务完成之前启动它们，这些项目会被静默路由到默认项目，且**不会重试**——
+  一旦实验在稍后确定了正确的项目，它们不会被重新评估。
+</Warning>
+
+| 步骤 | 任务 | 依赖 |
+|------|------|------|
+| 1 | 实验 | 无——首先运行 |
+| 2 | 数据集、提示词 | 步骤 1 完成后 |
+| 3 | 优化 | 步骤 1 和 2 完成后 |
+| 4 | 自动化规则、告警 | 独立——随时可运行 |
+
+## 步骤 1 — 实验
+
+### 启用
+
+<Tabs>
+  <Tab title="Docker Compose">
+    在你的 `deployment/docker-compose` 目录中添加到 `docker-compose.override.yml`：
+
+    ```yaml
+    services:
+      backend:
+        environment:
+          - EXPERIMENT_PROJECT_MIGRATION_ENABLED=true
+    ```
+
+    应用：
+
+    ```bash
+    docker compose -f deployment/docker-compose/docker-compose.yml up -d backend
+    ```
+  </Tab>
+  <Tab title="Kubernetes / Helm">
+    添加到你的 Helm values 文件：
+
+    ```yaml
+    component:
+      backend:
+        env:
+          EXPERIMENT_PROJECT_MIGRATION_ENABLED: "true"
+    ```
+
+    应用：
+
+    ```bash
+    helm upgrade opik opik/opik -n opik -f values.yaml
+    ```
+  </Tab>
+</Tabs>
+
+### 等待完成
+
+<Tabs>
+  <Tab title="Docker Compose">
+    ```bash
+    docker compose -f deployment/docker-compose/docker-compose.yml logs -f backend \
+      | grep -i "experiment.*migration"
+    ```
+  </Tab>
+  <Tab title="Kubernetes / Helm">
+    ```bash
+    kubectl logs -n opik deployment/opik-backend -f | grep -i "experiment.*migration"
+    ```
+  </Tab>
+</Tabs>
+
+当以下日志行在多个周期中持续出现时，表示任务已完成：
+
+```
+No workspaces with eligible experiments found, consider disabling the job
+```
+
+### 禁用
+
+使用上述相同方法将 `EXPERIMENT_PROJECT_MIGRATION_ENABLED` 设置为 `false` 并应用。在完成信号稳定后再进行步骤 2。
+
+## 步骤 2 — 数据集和提示词
+
+在步骤 1 完成后启用两者。它们相互独立，可以并行运行。
+
+<Tabs>
+  <Tab title="Docker Compose">
+    ```yaml
+    services:
+      backend:
+        environment:
+          - DATASET_PROJECT_MIGRATION_ENABLED=true
+          - PROMPT_PROJECT_MIGRATION_ENABLED=true
+    ```
+    ```bash
+    docker compose -f deployment/docker-compose/docker-compose.yml up -d backend
+    ```
+  </Tab>
+  <Tab title="Kubernetes / Helm">
+    ```yaml
+    component:
+      backend:
+        env:
+          DATASET_PROJECT_MIGRATION_ENABLED: "true"
+          PROMPT_PROJECT_MIGRATION_ENABLED: "true"
+    ```
+    ```bash
+    helm upgrade opik opik/opik -n opik -f values.yaml
+    ```
+  </Tab>
+</Tabs>
+
+**完成信号：**
+
+```
+No workspaces with eligible datasets found, consider disabling the job
+No workspaces with orphan prompts found, consider disabling the job
+```
+
+在每个任务的完成信号稳定后，单独禁用对应的标志，然后再进行步骤 3。
+
+## 步骤 3 — 优化
+
+仅在步骤 1 和步骤 2 都完成后启用。优化从实验和数据集两者推断其项目。
+
+<Tabs>
+  <Tab title="Docker Compose">
+    ```yaml
+    services:
+      backend:
+        environment:
+          - OPTIMIZATION_PROJECT_MIGRATION_ENABLED=true
+    ```
+    ```bash
+    docker compose -f deployment/docker-compose/docker-compose.yml up -d backend
+    ```
+  </Tab>
+  <Tab title="Kubernetes / Helm">
+    ```yaml
+    component:
+      backend:
+        env:
+          OPTIMIZATION_PROJECT_MIGRATION_ENABLED: "true"
+    ```
+    ```bash
+    helm upgrade opik opik/opik -n opik -f values.yaml
+    ```
+  </Tab>
+</Tabs>
+
+**完成信号：**
+
+```
+No workspaces with eligible optimizations found, consider disabling the job
+```
+
+在信号稳定后禁用该标志。
+
+## 步骤 4 — 自动化规则和告警
+
+这些任务检查已存储在其自身行中的项目引用，不依赖其他任务。可以随时运行——在步骤 1-3 之前、期间或之后。
+
+<Tabs>
+  <Tab title="Docker Compose">
+    ```yaml
+    services:
+      backend:
+        environment:
+          - AUTOMATION_RULE_PROJECT_MIGRATION_ENABLED=true
+          - ALERT_PROJECT_MIGRATION_ENABLED=true
+    ```
+    ```bash
+    docker compose -f deployment/docker-compose/docker-compose.yml up -d backend
+    ```
+  </Tab>
+  <Tab title="Kubernetes / Helm">
+    ```yaml
+    component:
+      backend:
+        env:
+          AUTOMATION_RULE_PROJECT_MIGRATION_ENABLED: "true"
+          ALERT_PROJECT_MIGRATION_ENABLED: "true"
+    ```
+    ```bash
+    helm upgrade opik opik/opik -n opik -f values.yaml
+    ```
+  </Tab>
+</Tabs>
+
+**完成信号：**
+
+```
+No workspaces with multi-project automation rules found, consider disabling the job
+No workspaces with orphan alerts found, consider disabling the job
+```
+
+完成后禁用每个标志。
+
+## 验证迁移
+
+当所有六个任务都报告了完成信号并被禁用后，运行以下查询来确认结果。
+
+**ClickHouse — 孤立实验**（应为 0）：
+
+```sql
+SELECT countIf(project_id = '') AS orphan_experiments
+FROM experiments FINAL;
+```
+
+**MySQL — 孤立数据集**（应为 0）：
+
+```sql
+SELECT COUNT(*) FROM datasets WHERE project_id IS NULL OR project_id = '';
+```
+
+**MySQL — 孤立提示词**（应为 0）：
+
+```sql
+SELECT COUNT(*) FROM prompts WHERE project_id IS NULL;
+```
+
+**ClickHouse — 孤立优化**（应为 0）：
+
+```sql
+SELECT countIf(project_id = '') AS orphan_optimizations
+FROM optimizations FINAL;
+```
+
+**MySQL — 多项目自动化规则**（应为 0）：
+
+```sql
+SELECT COUNT(*) FROM (
+  SELECT rule_id FROM automation_rule_projects
+  GROUP BY workspace_id, rule_id HAVING COUNT(project_id) > 1
+) t;
+```
+
+**MySQL — 孤立告警**（应为 0）：
+
+```sql
+SELECT COUNT(*) FROM alerts WHERE project_id IS NULL;
+```
+
+## 故障排除
+
+| 症状 | 可能原因 | 操作 |
+|------|---------|------|
+| 日志中出现 `Could not acquire lock` | 多副本部署中的正常现象——每个周期只有一个副本运行 | 只要每个周期也出现 `success`，则无害 |
+| 多个周期后无进展 | 标志未传播 | 验证：Docker：`docker compose exec backend env \| grep MIGRATION` · Kubernetes：`kubectl exec deploy/opik-backend -n opik -- env \| grep MIGRATION` |
+| 项目意外落入默认项目 | 依赖任务在其前置任务完成前运行 | 使用 [`opik migrate`](/tracing/advanced/migrate-data) 重新分配 |
+| 运行期间 MySQL 或 ClickHouse 负载过高 | 每个周期的工作区过多 | 联系 Opik 团队——批次大小默认值可调 |
+| 任务日志中持续出现 `error` 结果 | 基础设施或连接问题 | 立即禁用任务，在后端日志中找到堆栈跟踪，解决根本问题，然后重新启用 |
+
+## 后续步骤
+
+迁移完成后，更新你的 SDK 并在 API 调用中传递 `project_name`。请参阅[升级到 Opik 2.0](/opik-v2-upgrade)获取完整的代码参考和示例。

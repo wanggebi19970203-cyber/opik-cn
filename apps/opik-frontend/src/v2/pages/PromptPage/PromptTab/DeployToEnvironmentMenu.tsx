@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
   Check,
@@ -42,6 +43,7 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
   totalVersions,
   activeEnvironments,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const {
@@ -91,10 +93,10 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
       if (!canConfigureWorkspaceSettings) return;
       if (activeEnvSet.has(envName)) {
         const next = activeEnvironments.filter((e) => e !== envName);
-        applyEnvironments(next, `Removed ${versionLabel} from ${envName}`);
+        applyEnvironments(next, t("promptTab.removedFromEnvironment", { version: versionLabel, environment: envName }));
       } else {
         const next = [...activeEnvironments, envName];
-        applyEnvironments(next, `Deployed ${versionLabel} to ${envName}`);
+        applyEnvironments(next, t("promptTab.deployedToEnvironment", { version: versionLabel, environment: envName }));
       }
     },
     [
@@ -103,18 +105,20 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
       activeEnvironments,
       versionLabel,
       applyEnvironments,
+      t,
     ],
   );
 
   const handleClearAll = useCallback(() => {
     if (!canConfigureWorkspaceSettings) return;
     if (activeEnvironments.length === 0) return;
-    applyEnvironments([], `Removed ${versionLabel} from all environments`);
+    applyEnvironments([], t("promptTab.removedFromAll", { version: versionLabel }));
   }, [
     canConfigureWorkspaceSettings,
     activeEnvironments.length,
     versionLabel,
     applyEnvironments,
+    t,
   ]);
 
   if (!canConfigureWorkspaceSettings) return null;
@@ -129,14 +133,14 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
           disabled={!versionId || isDeploying}
         >
           <CircleFadingArrowUp className="mr-1.5 size-3.5" />
-          Deploy to
+          {t("promptTab.deployTo")}
           <ChevronDown className="ml-1 size-3.5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[220px]">
         {environments.length === 0 ? (
           <DropdownMenuItem size="sm" disabled>
-            No environments configured
+            {t("promptTab.noEnvironmentsConfigured")}
           </DropdownMenuItem>
         ) : (
           environments.map((env) => {
@@ -144,7 +148,7 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
             const isActiveHere = activeEnvSet.has(env.name);
             const ownerLabel =
               !isActiveHere && owner && totalVersions > 0
-                ? `Currently v${totalVersions - owner.index}`
+                ? t("promptTab.currentlyVersion", { version: totalVersions - owner.index })
                 : "";
             return (
               <DropdownMenuItem
@@ -175,7 +179,7 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
             <DropdownMenuSeparator />
             <DropdownMenuItem size="sm" onSelect={handleClearAll}>
               <X className="mr-2 size-3.5 shrink-0 text-muted-slate" />
-              Remove from all
+              {t("promptTab.removeFromAll")}
             </DropdownMenuItem>
           </>
         )}
@@ -187,7 +191,7 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
             search={{ tab: CONFIGURATION_TABS.ENVIRONMENTS }}
           >
             <Settings2 className="mr-2 size-3.5 shrink-0 text-muted-slate" />
-            Manage environments
+            {t("promptTab.manageEnvironments")}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

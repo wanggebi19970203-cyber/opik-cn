@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, Database, UserPen } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -21,6 +22,7 @@ export type AddToDropdownProps = {
 };
 
 const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
+  const { t } = useTranslation("tracing");
   const { selectedRows, disabled = false, dataType = "traces" } = props;
   // getDataForExport is accepted for backwards compatibility but no longer used
   const resetKeyRef = useRef(0);
@@ -65,7 +67,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
             disabled={disabled}
             className="font-normal"
           >
-            Add to
+            {t("addToDropdown.addTo")}
             <ChevronDown className="ml-2 size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -79,7 +81,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
               disabled={disabled}
             >
               <Database className="mr-2 size-4" />
-              Test suite
+              {t("addToDropdown.testSuite")}
             </DropdownMenuItem>
           )}
           {showAddToQueue && (
@@ -91,7 +93,7 @@ const AddToDropdown: React.FunctionComponent<AddToDropdownProps> = (props) => {
               disabled={disabled}
             >
               <UserPen className="mr-2 size-4" />
-              Annotation queue
+              {t("addToDropdown.annotationQueue")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

@@ -1,0 +1,11 @@
+{
+  "contributing": {
+    "title": "贡献指南",
+    "description": "为 Opik 做出贡献",
+    "guides": {
+      "setup": "开发环境设置",
+      "testing": "测试",
+      "pullRequest": "Pull Request 流程"
+    }
+  }
+}

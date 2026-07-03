@@ -11,6 +11,7 @@ import { FormControl, FormField, FormItem, FormMessage } from "@/ui/form";
 import { cn } from "@/lib/utils";
 import { buildDocsUrl } from "@/v2/lib/utils";
 import { Input } from "@/ui/input";
+import { useTranslation } from "react-i18next";
 
 type VertexAIProviderDetailsProps = {
   form: UseFormReturn<AIProviderFormType>;
@@ -19,8 +20,9 @@ type VertexAIProviderDetailsProps = {
 const VertexAIProviderDetails: React.FC<VertexAIProviderDetailsProps> = ({
   form,
 }) => {
+  const { t } = useTranslation("llm");
   const providerName = PROVIDERS[PROVIDER_TYPE.VERTEX_AI].label;
-  const apiKeyLabel = `${providerName} API Key`;
+  const apiKeyLabel = t("llm:vertexProvider.apiKeyLabel", { providerName });
 
   return (
     <div className="flex flex-col gap-2 pb-4">
@@ -32,11 +34,11 @@ const VertexAIProviderDetails: React.FC<VertexAIProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">{t("llm:vertexProvider.location")}</Label>
               <FormControl>
                 <Input
                   id="location"
-                  placeholder="Location"
+                  placeholder={t("llm:vertexProvider.location")}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({
@@ -86,11 +88,10 @@ const VertexAIProviderDetails: React.FC<VertexAIProviderDetailsProps> = ({
             target="_blank"
             rel="noreferrer"
           >
-            Click here
+            {t("llm:vertexProvider.clickHere")}
           </a>
         </Button>{" "}
-        for instructions on how to create a service account and assign the
-        correct permissions.
+        {t("llm:vertexProvider.clickHereDescription")}
       </span>
     </div>
   );

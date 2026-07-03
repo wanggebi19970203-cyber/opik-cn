@@ -13,28 +13,27 @@ class ModerationResponseFormat(pydantic.BaseModel):
 
 class Moderation(base_metric.BaseMetric):
     """
-    A metric that evaluates the moderation level of an input-output pair using an LLM.
+    使用 LLM 评估输入-输出对内容审核级别的指标。
 
-    This metric uses a language model to assess the moderation level of the given input and output.
-    It returns a score between 0.0 and 1.0, where higher values indicate more appropriate content.
+    该指标使用语言模型来评估给定输入和输出的内容审核级别。
+    返回 0.0 到 1.0 之间的分数，数值越高表示内容越合规。
 
     Args:
-        model: The language model to use for moderation. Can be a string (model name) or an `opik.evaluation.models.OpikBaseModel` subclass instance.
-            `opik.evaluation.models.LiteLLMChatModel` is used by default.
-        name: The name of the metric. Defaults to "moderation_metric".
-        few_shot_examples: A list of few-shot examples to be used in the query. If None, default examples will be used.
-        track: Whether to track the metric. Defaults to True.
-        project_name: Optional project name to track the metric in for the cases when
-            there are no parent span/trace to inherit project name from.
-        seed: Optional seed value for reproducible model generation. If provided, this seed will be passed to the model for deterministic outputs.
-        temperature: Optional temperature value for model generation. If provided, this temperature will be passed to the model. If not provided, the model's default temperature will be used.
+        model: 用于内容审核的语言模型。可以是字符串（模型名称）或 `opik.evaluation.models.OpikBaseModel` 子类实例。
+            默认使用 `opik.evaluation.models.LiteLLMChatModel`。
+        name: 指标名称。默认为 "moderation_metric"。
+        few_shot_examples: 用于查询的少样本示例列表。如果为 None，将使用默认示例。
+        track: 是否追踪该指标。默认为 True。
+        project_name: 可选的项目名称，用于在没有父级 span/trace 可继承项目名称时追踪指标。
+        seed: 可选的随机种子值，用于可复现的模型生成。如果提供，此种子将传递给模型以获得确定性输出。
+        temperature: 可选的模型生成温度值。如果提供，此温度将传递给模型。如果未提供，将使用模型的默认温度。
 
     Example:
         >>> from opik.evaluation.metrics import Moderation
         >>> moderation_metric = Moderation()
         >>> result = moderation_metric.score("Hello, how can I help you?")
-        >>> print(result.value)  # A float between 0.0 and 1.0
-        >>> print(result.reason)  # Explanation for the score
+        >>> print(result.value)  # 0.0 到 1.0 之间的浮点数
+        >>> print(result.reason)  # 分数的解释说明
     """
 
     def __init__(
@@ -76,15 +75,14 @@ class Moderation(base_metric.BaseMetric):
 
     def score(self, output: str, **ignored_kwargs: Any) -> score_result.ScoreResult:
         """
-        Calculate the moderation score for the given input-output pair.
+        计算给定输入-输出对的内容审核分数。
 
         Args:
-            output: The output text to be evaluated.
-            **ignored_kwargs (Any): Additional keyword arguments that are ignored.
+            output: 待评估的输出文本。
+            **ignored_kwargs (Any): 被忽略的额外关键字参数。
 
         Returns:
-            score_result.ScoreResult: A ScoreResult object containing the moderation score
-            (between 0.0 and 1.0) and a reason for the score.
+            score_result.ScoreResult: 包含内容审核分数（0.0 到 1.0 之间）和分数原因的 ScoreResult 对象。
         """
         messages = template.build_messages(
             output=output, few_shot_examples=self.few_shot_examples
@@ -99,17 +97,16 @@ class Moderation(base_metric.BaseMetric):
         self, output: str, **ignored_kwargs: Any
     ) -> score_result.ScoreResult:
         """
-        Asynchronously calculate the moderation score for the given input-output pair.
+        异步计算给定输入-输出对的内容审核分数。
 
-        This method is the asynchronous version of :meth:`score`. For detailed documentation,
-        please refer to the :meth:`score` method.
+        此方法是 :meth:`score` 的异步版本。详细文档请参阅 :meth:`score` 方法。
 
         Args:
-            output: The output text to be evaluated.
-            **ignored_kwargs: Additional keyword arguments that are ignored.
+            output: 待评估的输出文本。
+            **ignored_kwargs: 被忽略的额外关键字参数。
 
         Returns:
-            score_result.ScoreResult: A ScoreResult object with the moderation score and reason.
+            score_result.ScoreResult: 包含内容审核分数和原因的 ScoreResult 对象。
         """
 
         messages = template.build_messages(

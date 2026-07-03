@@ -34,42 +34,42 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-@Tag(name = "Welcome Wizard", description = "Welcome wizard tracking resources")
+@Tag(name = "Welcome Wizard", description = "欢迎向导跟踪资源")
 public class WelcomeWizardResource {
 
     private final @NonNull Provider<RequestContext> requestContext;
     private final @NonNull WelcomeWizardTrackingService service;
 
     @GET
-    @Operation(operationId = "getWelcomeWizardStatus", summary = "Get welcome wizard tracking status", description = "Get welcome wizard tracking status for the current workspace", responses = {
-            @ApiResponse(responseCode = "200", description = "Welcome wizard tracking status", content = @Content(schema = @Schema(implementation = WelcomeWizardTracking.class)))})
+    @Operation(operationId = "getWelcomeWizardStatus", summary = "获取欢迎向导跟踪状态", description = "获取当前工作区的欢迎向导跟踪状态", responses = {
+            @ApiResponse(responseCode = "200", description = "欢迎向导跟踪状态", content = @Content(schema = @Schema(implementation = WelcomeWizardTracking.class)))})
     public Response getStatus() {
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Getting welcome wizard status for workspace_id '{}'", workspaceId);
+        log.info("获取工作区 '{}' 的欢迎向导状态", workspaceId);
 
         var tracking = service.getTrackingStatus(workspaceId);
 
-        log.info("Welcome wizard status for workspace_id '{}': completed={}", workspaceId,
+        log.info("工作区 '{}' 的欢迎向导状态: completed={}", workspaceId,
                 tracking.completed());
 
         return Response.ok().entity(tracking).build();
     }
 
     @POST
-    @Operation(operationId = "submitWelcomeWizard", summary = "Submit welcome wizard", description = "Submit welcome wizard with user information", responses = {
-            @ApiResponse(responseCode = "204", description = "Welcome wizard submitted successfully")})
+    @Operation(operationId = "submitWelcomeWizard", summary = "提交欢迎向导", description = "提交欢迎向导及用户信息", responses = {
+            @ApiResponse(responseCode = "204", description = "欢迎向导提交成功")})
     @RateLimited
     public Response submitWizard(
             @RequestBody(content = @Content(schema = @Schema(implementation = WelcomeWizardSubmission.class))) @Valid WelcomeWizardSubmission submission) {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Submitting welcome wizard for workspace_id '{}'", workspaceId);
+        log.info("为工作区 '{}' 提交欢迎向导", workspaceId);
 
         service.submitWizard(workspaceId, submission);
 
-        log.info("Welcome wizard submitted for workspace_id '{}'", workspaceId);
+        log.info("工作区 '{}' 的欢迎向导已提交", workspaceId);
 
         return Response.noContent().build();
     }

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { SPAN_TYPE } from "@/types/traces";
 import { DropdownOption } from "@/types/shared";
@@ -34,11 +35,11 @@ const renderSpanTypeOption = (option: DropdownOption<SPAN_TYPE>) => {
   );
 };
 
-export const getSpanTypeFilterConfig = (isGuardrailsEnabled: boolean) => ({
+export const getSpanTypeFilterConfig = (isGuardrailsEnabled: boolean, t?: (key: string) => string) => ({
   type: {
     keyComponentProps: {
       options: getSpanTypeOptions(isGuardrailsEnabled),
-      placeholder: "Select type",
+      placeholder: t ? t("spanTypeFilter.selectType") : "Select type",
       renderOption: renderSpanTypeOption,
     },
   },

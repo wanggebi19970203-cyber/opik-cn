@@ -339,10 +339,10 @@ public interface AlertDAO {
 
         @Override
         public Alert map(ResultSet rs, StatementContext ctx) throws SQLException {
-            // Parse webhook headers JSON to Map using column mapper
+            // 使用列映射器将 webhook headers 的 JSON 解析为 Map
             Map<String, String> webhookHeaders = MAP_MAPPER.map(rs, "webhook_headers", ctx);
 
-            // Build Webhook object
+            // 构建 Webhook 对象
             Webhook webhook = Webhook.builder()
                     .id(UUID.fromString(rs.getString("webhook_id")))
                     .url(rs.getString("webhook_url"))
@@ -354,13 +354,13 @@ public interface AlertDAO {
                     .lastUpdatedBy(rs.getString("webhook_last_updated_by"))
                     .build();
 
-            // Parse triggers JSON array
+            // 解析 triggers JSON 数组
             List<AlertTrigger> triggers = Optional.ofNullable(rs.getString("triggers_json"))
                     .map(JsonUtils::getJsonNodeFromString)
                     .map(this::mapTriggers)
                     .orElse(null);
 
-            // Parse alert_type using column mapper
+            // 使用列映射器解析 alert_type
             AlertType alertType = ctx.findColumnMapperFor(AlertType.class)
                     .map(mapper -> {
                         try {
@@ -372,14 +372,14 @@ public interface AlertDAO {
                     })
                     .orElse(null);
 
-            // Parse metadata JSON to Map using column mapper
+            // 使用列映射器将 metadata 的 JSON 解析为 Map
             Map<String, String> metadata = MAP_MAPPER.map(rs, "metadata", ctx);
 
             UUID projectId = Optional.ofNullable(rs.getString("project_id"))
                     .map(UUID::fromString)
                     .orElse(null);
 
-            // Build Alert object with embedded Webhook and Triggers
+            // 构建包含内嵌 Webhook 和 Triggers 的 Alert 对象
             return Alert.builder()
                     .id(UUID.fromString(rs.getString("id")))
                     .name(rs.getString("name"))
@@ -417,7 +417,7 @@ public interface AlertDAO {
 
         private AlertTrigger mapTrigger(JsonNode triggerNode) {
             try {
-                // Parse trigger configs if present
+                // 如果存在则解析 trigger configs
                 List<AlertTriggerConfig> triggerConfigs = Optional.ofNullable(triggerNode.get("trigger_configs"))
                         .map(this::mapTriggerConfigs)
                         .orElse(null);

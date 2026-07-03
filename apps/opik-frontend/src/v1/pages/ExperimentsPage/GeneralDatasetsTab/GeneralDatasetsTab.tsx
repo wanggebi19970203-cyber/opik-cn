@@ -13,6 +13,7 @@ import get from "lodash/get";
 import uniq from "lodash/uniq";
 import isNumber from "lodash/isNumber";
 import isObject from "lodash/isObject";
+import { useTranslation } from "react-i18next";
 
 import DataTable from "@/shared/DataTable/DataTable";
 import DataTablePagination from "@/shared/DataTablePagination/DataTablePagination";
@@ -125,6 +126,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 export const MAX_EXPANDED_DEEPEST_GROUPS = 5;
 
 const GeneralDatasetsTab: React.FC = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
   const resetDialogKeyRef = useRef(0);
@@ -173,7 +175,7 @@ const GeneralDatasetsTab: React.FC = () => {
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("experiments:experiments.columns.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
@@ -181,13 +183,13 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("experiments:experiments.columns.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
       },
       {
         id: COLUMN_DATASET_ID,
-        label: "Test suite",
+        label: t("experiments:experiments.columns.testSuite"),
         type: COLUMN_TYPE.string,
         cell: ResourceCell as never,
         customMeta: {
@@ -198,7 +200,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "dataset_version",
-        label: "Test suite version",
+        label: t("experiments:experiments.columns.datasetVersion"),
         type: COLUMN_TYPE.string,
         iconType: "version" as const,
         accessorFn: (row: GroupedExperiment) =>
@@ -207,7 +209,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: COLUMN_PROJECT_ID,
-        label: "Project",
+        label: t("experiments:experiments.columns.project"),
         type: COLUMN_TYPE.string,
         cell: ResourceCell as never,
         accessorFn: (row) => row.project_id,
@@ -219,18 +221,18 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("experiments:experiments.columns.created"),
         type: COLUMN_TYPE.time,
         accessorFn: (row) => formatDate(row.created_at),
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("experiments:experiments.columns.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "duration.p50",
-        label: "Duration (avg.)",
+        label: t("experiments:experiments.columns.durationAvg"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p50,
         cell: DurationCell as never,
@@ -241,7 +243,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "duration.p90",
-        label: "Duration (p90)",
+        label: t("experiments:experiments.columns.durationP90"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p90,
         cell: DurationCell as never,
@@ -252,7 +254,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "duration.p99",
-        label: "Duration (p99)",
+        label: t("experiments:experiments.columns.durationP99"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p99,
         cell: DurationCell as never,
@@ -263,7 +265,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "prompt",
-        label: "Prompt commit",
+        label: t("experiments:experiments.columns.promptCommit"),
         type: COLUMN_TYPE.list,
         accessorFn: (row) => get(row, ["prompt_versions"], []),
         cell: MultiResourceCell as never,
@@ -279,18 +281,18 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "trace_count",
-        label: "Trace count",
+        label: t("experiments:experiments.columns.traceCount"),
         type: COLUMN_TYPE.number,
         cell: TraceCountCell as never,
         aggregatedCell: TextCell.Aggregation as never,
         customMeta: {
           aggregationKey: "trace_count",
-          tooltip: "View experiment traces",
+          tooltip: t("experiments:experiments.viewExperimentTraces"),
         },
       },
       {
         id: "total_estimated_cost",
-        label: "Total estimated cost",
+        label: t("experiments:experiments.columns.totalEstimatedCost"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -300,7 +302,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "total_estimated_cost_avg",
-        label: "Cost per trace (avg.)",
+        label: t("experiments:experiments.columns.costPerTraceAvg"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -310,7 +312,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: "pass_rate",
-        label: "Pass rate",
+        label: t("experiments:experiments.columns.passRate"),
         type: COLUMN_TYPE.number,
         iconType: "pass_rate",
         accessorFn: (row) => row.pass_rate,
@@ -322,7 +324,7 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Feedback Scores",
+        label: t("experiments:experiments.columns.feedbackScores"),
         type: COLUMN_TYPE.numberDictionary,
         accessorFn: transformExperimentScores,
         cell: FeedbackScoreListCell as never,
@@ -336,20 +338,20 @@ const GeneralDatasetsTab: React.FC = () => {
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("experiments:experiments.columns.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell as never,
       },
       {
         id: "tags",
-        label: "Tags",
+        label: t("experiments:experiments.columns.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags" as const,
         cell: ListCell as never,
       },
       {
         id: COLUMN_METADATA_ID,
-        label: "Configuration",
+        label: t("experiments:experiments.columns.configuration"),
         type: COLUMN_TYPE.dictionary,
         accessorFn: (row) =>
           isObject(row.metadata)
@@ -358,7 +360,7 @@ const GeneralDatasetsTab: React.FC = () => {
         cell: CodeCell as never,
       },
     ];
-  }, []);
+  }, [t]);
 
   const { isFeedbackScoresPending, dynamicScoresColumns } =
     useExperimentsFeedbackScores();
@@ -418,8 +420,8 @@ const GeneralDatasetsTab: React.FC = () => {
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
   const noDataText = noData
-    ? "There are no experiments yet"
-    : "No search results";
+    ? t("experiments:experiments.empty.title")
+    : t("experiments:experiments.empty.description");
 
   const {
     columns,
@@ -518,8 +520,8 @@ const GeneralDatasetsTab: React.FC = () => {
           id: datasetId,
           name: [
             {
-              label: "Test suite",
-              value: datasetExperiments[0]?.dataset_name || "Undefined",
+              label: t("experiments:experiments.testSuite"),
+              value: datasetExperiments[0]?.dataset_name || t("experiments:experiments.undefined"),
             },
           ],
           experiments: datasetExperiments,
@@ -559,8 +561,8 @@ const GeneralDatasetsTab: React.FC = () => {
                   label: calculateGroupLabel(groups[index]),
                   value:
                     label === DELETED_ENTITY_LABEL
-                      ? "Deleted test suite"
-                      : label || value || "Undefined",
+                      ? t("experiments:experiments.deletedTestSuite")
+                      : label || value || t("experiments:experiments.undefined"),
                 };
               }),
               experiments: groupExperiments,
@@ -647,11 +649,12 @@ const GeneralDatasetsTab: React.FC = () => {
               <Card className="flex min-h-[208px] w-full min-w-[400px] flex-col items-center justify-center gap-2">
                 <ChartLine className="size-4 shrink-0 text-light-slate" />
                 <div className="comet-body-s-accented text-foreground">
-                  No charts to show
+                  {t("experiments:experiments.charts.noChartsToShow")}
                 </div>
                 <div className="comet-body-s text-muted-slate">
-                  Please expand a group to see its chart. You can expand up to{" "}
-                  {MAX_EXPANDED_DEEPEST_GROUPS} deepest groups simultaneously.
+                  {t("experiments:experiments.charts.expandGroupHint", {
+                    count: MAX_EXPANDED_DEEPEST_GROUPS,
+                  })}
                 </div>
               </Card>
             }
@@ -668,7 +671,7 @@ const GeneralDatasetsTab: React.FC = () => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder="Search by name"
+            placeholder={t("experiments:experiments.searchByName")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -695,7 +698,7 @@ const GeneralDatasetsTab: React.FC = () => {
             }}
           />
           <Separator orientation="vertical" className="mx-2 h-4" />
-          <TooltipWrapper content="Refresh experiments list">
+          <TooltipWrapper content={t("experiments:experiments.refreshTooltip")}>
             <Button
               variant="outline"
               size="icon-sm"
@@ -720,7 +723,7 @@ const GeneralDatasetsTab: React.FC = () => {
               onClick={handleNewExperimentClick}
             >
               <Info className="mr-1.5 size-3.5" />
-              Create new experiment
+              {t("experiments:experiments.createNewExperiment")}
             </Button>
           )}
         </div>
@@ -747,7 +750,7 @@ const GeneralDatasetsTab: React.FC = () => {
           <DataTableNoData title={noDataText}>
             {noData && canCreateExperiments && (
               <Button variant="link" onClick={handleNewExperimentClick}>
-                Create new experiment
+                {t("experiments:experiments.createNewExperiment")}
               </Button>
             )}
           </DataTableNoData>

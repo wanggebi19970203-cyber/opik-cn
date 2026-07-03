@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/ui/button";
 import { Sheet, SheetContent, SheetTopBar } from "@/ui/sheet";
@@ -26,12 +27,13 @@ const CreatePromptSheet: React.FC<CreatePromptSheetProps> = ({
   setOpen,
   templateStructure,
 }) => {
+  const { t } = useTranslation("pages/prompts");
   const workspaceName = useAppStore((s) => s.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const navigate = useNavigate();
 
   const isChatPrompt = templateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT;
-  const title = isChatPrompt ? "New chat prompt" : "New text prompt";
+  const title = isChatPrompt ? t("createSheet.newChatPrompt") : t("createSheet.newTextPrompt");
 
   const [name, setName] = useState("");
   const [metadata, setMetadata] = useState("");
@@ -147,7 +149,7 @@ const CreatePromptSheet: React.FC<CreatePromptSheetProps> = ({
       >
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 pb-6">
           <div className="space-y-1.5">
-            <Label htmlFor="promptName">Name</Label>
+            <Label htmlFor="promptName">{t("common.name")}</Label>
             <Input
               id="promptName"
               dimension="sm"
@@ -170,14 +172,14 @@ const CreatePromptSheet: React.FC<CreatePromptSheetProps> = ({
           />
 
           <div className="space-y-1.5">
-            <Label htmlFor="promptDescription">Description</Label>
+            <Label htmlFor="promptDescription">{t("common.description")}</Label>
             <AutoGrowTextarea
               id="promptDescription"
               dimension="sm"
               className="comet-body-s"
               value={description}
               onChange={setDescription}
-              placeholder="Add optional description"
+              placeholder={t("common.addOptionalDescription")}
             />
           </div>
         </div>
@@ -189,14 +191,14 @@ const CreatePromptSheet: React.FC<CreatePromptSheetProps> = ({
             onClick={() => setOpen(false)}
             disabled={isCreating}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             size="sm"
             disabled={!isValid || isCreating}
             onClick={handleCreate}
           >
-            {isCreating ? "Creating…" : "Create prompt"}
+            {isCreating ? t("createSheet.creating") : t("create")}
           </Button>
         </div>
       </SheetContent>

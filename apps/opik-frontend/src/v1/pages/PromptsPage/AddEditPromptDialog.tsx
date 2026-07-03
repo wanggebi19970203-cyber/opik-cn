@@ -4,6 +4,7 @@ import { EditorView } from "@codemirror/view";
 import { jsonLanguage } from "@codemirror/lang-json";
 import { useNavigate } from "@tanstack/react-router";
 import { Code2, FileText, MessagesSquare, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -54,6 +55,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
   setOpen,
   prompt: defaultPrompt,
 }) => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
   const [name, setName] = useState(defaultPrompt?.name || "");
@@ -93,8 +95,12 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
           ? messages.length > 0 && (!showRawView || isRawJsonValid)
           : template.length)),
   );
-  const title = isEdit ? "Edit prompt" : "Create a new prompt";
-  const submitText = isEdit ? "Update prompt" : "Create prompt";
+  const title = isEdit
+    ? t("prompts:prompts.edit")
+    : t("prompts:prompts.empty.createTextPrompt");
+  const submitText = isEdit
+    ? t("prompts:prompts.editSheet.saveChanges")
+    : t("prompts:prompts.create");
 
   const handleAddMessage = useCallback(() => {
     setMessages((prev) => {
@@ -180,17 +186,21 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
             />
           )}
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="promptName">Name</Label>
+            <Label htmlFor="promptName">
+              {t("prompts:prompts.common.name")}
+            </Label>
             <Input
               id="promptName"
-              placeholder="Prompt name"
+              placeholder={t("prompts:prompts.fields.name")}
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
           </div>
           {!isEdit && (
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="templateStructure">Prompt type</Label>
+              <Label htmlFor="templateStructure">
+                {t("prompts:prompts.dropdown.prompt")}
+              </Label>
               <ToggleGroup
                 type="single"
                 variant="ghost"
@@ -208,7 +218,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
                   className="gap-1.5"
                 >
                   <FileText className="size-3.5" />
-                  <span>Text prompt</span>
+                  <span>{t("prompts:prompts.dropdown.textPrompt")}</span>
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value={PROMPT_TEMPLATE_STRUCTURE.CHAT}
@@ -216,11 +226,11 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
                   className="gap-1.5"
                 >
                   <MessagesSquare className="size-3.5" />
-                  <span>Chat prompt</span>
+                  <span>{t("prompts:prompts.dropdown.chatPrompt")}</span>
                 </ToggleGroupItem>
               </ToggleGroup>
               <Description>
-                Choose between a simple text prompt or a chat conversation
+                {t("prompts:prompts.dropdown.textPromptDescription")}
               </Description>
             </div>
           )}
@@ -234,7 +244,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
           {!isEdit && isChatPrompt && (
             <div className="flex flex-col gap-2 pb-4">
               <div className="flex items-center justify-between gap-0.5">
-                <Label>Chat messages</Label>
+                <Label>{t("prompt:compare.chatMessages")}</Label>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -260,12 +270,12 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
                   {showRawView ? (
                     <>
                       <MessagesSquare className="mr-1.5 size-3.5" />
-                      Message view
+                      {t("prompt:promptTemplateView.messageView")}
                     </>
                   ) : (
                     <>
                       <Code2 className="mr-1.5 size-3.5" />
-                      Raw view
+                      {t("prompt:promptTemplateView.rawView")}
                     </>
                   )}
                 </Button>
@@ -295,7 +305,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
                     type="button"
                   >
                     <Plus className="mr-2 size-4" />
-                    Message
+                    {t("prompt:llmPromptMessages.message")}
                   </Button>
                 </>
               )}
@@ -310,7 +320,9 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
             >
               {!isEdit && (
                 <AccordionItem value="metadata">
-                  <AccordionTrigger>Metadata</AccordionTrigger>
+                  <AccordionTrigger>
+                    {t("prompt:compare.metadata")}
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="max-h-40 overflow-y-auto rounded-md">
                       <CodeMirror
@@ -332,15 +344,21 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
               )}
               {showInvalidJSON && (
                 <Alert variant="destructive">
-                  <AlertTitle>Metadata field is not valid</AlertTitle>
+                  <AlertTitle>
+                    {t(
+                      "prompt:addNewPromptVersionDialog.metadataFieldNotValid",
+                    )}
+                  </AlertTitle>
                 </Alert>
               )}
               <AccordionItem value="description">
-                <AccordionTrigger>Description</AccordionTrigger>
+                <AccordionTrigger>
+                  {t("prompts:prompts.fields.description")}
+                </AccordionTrigger>
                 <AccordionContent>
                   <Textarea
                     id="promptDescription"
-                    placeholder="Prompt description"
+                    placeholder={t("prompts:prompts.fields.description")}
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     maxLength={255}
@@ -352,7 +370,9 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">
+              {t("prompts:prompts.common.cancel")}
+            </Button>
           </DialogClose>
           <Button
             type="submit"

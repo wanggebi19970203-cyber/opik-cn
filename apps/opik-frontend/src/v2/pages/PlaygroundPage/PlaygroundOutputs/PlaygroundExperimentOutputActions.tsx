@@ -1,5 +1,6 @@
 import React from "react";
 import { ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import DataTablePagination from "@/shared/DataTablePagination/DataTablePagination";
@@ -27,6 +28,7 @@ const PlaygroundExperimentOutputActions = ({
   total,
   isLoadingTotal,
 }: PlaygroundExperimentOutputActionsProps) => {
+  const { t } = useTranslation();
   const isRunning = useIsRunning();
   const createdExperiments = useCreatedExperiments();
   const { navigate } = useNavigateToExperiment();
@@ -63,12 +65,12 @@ const PlaygroundExperimentOutputActions = ({
               className="text-sm text-muted-slate"
               onClick={handleNavigateToExperiments}
             >
-              <span>Experiment results</span>
+              <span>{t("common.labels.experimentResults")}</span>
               <ExternalLink className="ml-1 size-3.5 shrink-0" />
             </Button>
           ) : (
             <span className="py-[6px] pl-3 text-sm text-muted-slate">
-              Experiment results
+              {t("common.labels.experimentResults")}
             </span>
           )}
           <DataTablePagination

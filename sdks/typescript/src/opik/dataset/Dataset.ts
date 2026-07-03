@@ -36,8 +36,8 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   private cachedItemsCount: number | undefined;
 
   /**
-   * Configuration object for creating a new Dataset instance.
-   * This should not be created directly, use static factory methods instead.
+   * 创建新 Dataset 实例的配置对象。
+   * 不应直接构造，请使用静态工厂方法。
    */
   constructor(
     { name, description, id, projectName }: DatasetData,
@@ -50,9 +50,9 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Insert new items into the dataset.
+   * 向数据集中插入新条目。
    *
-   * @param items List of objects to add to the dataset
+   * @param items 要添加到数据集的对象列表
    */
   public async insert(items: T[]): Promise<void> {
     if (!items || items.length === 0) {
@@ -94,10 +94,10 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Update existing items in the dataset.
-   * You need to provide the full item object as it will override what has been supplied previously.
+   * 更新数据集中已有的条目。
+   * 需要提供完整的条目对象，因为它将覆盖之前提供的内容。
    *
-   * @param items List of objects to update in the dataset
+   * @param items 要在数据集中更新的对象列表
    */
   public async update(items: T[]): Promise<void> {
     if (!items || items.length === 0) {
@@ -115,9 +115,9 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Delete items from the dataset.
+   * 从数据集中删除条目。
    *
-   * @param itemIds List of item ids to delete
+   * @param itemIds 要删除的条目 ID 列表
    */
   public async delete(itemIds: string[]): Promise<void> {
     if (!itemIds || itemIds.length === 0) {
@@ -152,7 +152,7 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Delete all items from the dataset.
+   * 删除数据集中的所有条目。
    */
   public async clear(): Promise<void> {
     const items = await this.getItems();
@@ -166,9 +166,9 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Retrieve the tags associated with this dataset.
+   * 获取与该数据集关联的标签。
    *
-   * @returns An array of tag strings
+   * @returns 标签字符串数组
    */
   public async getTags(): Promise<string[]> {
     const datasetInfo = await this.opik.api.datasets.getDatasetByIdentifier({
@@ -179,11 +179,10 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Retrieve the total number of items in this dataset.
-   * The result is cached and only fetched from the backend on the first call
-   * or after a mutation (insert, delete, clear).
+   * 获取该数据集中的条目总数。
+   * 结果会被缓存，仅在首次调用或发生变更（插入、删除、清空）后从后端重新获取。
    *
-   * @returns The item count, or undefined if not available
+   * @returns 条目数量，如果不可用则返回 undefined
    */
   public async getItemsCount(): Promise<number | undefined> {
     if (this.cachedItemsCount === undefined) {
@@ -197,11 +196,11 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Retrieve a fixed number of dataset items.
+   * 获取指定数量的数据集条目。
    *
-   * @param nbSamples The number of samples to retrieve. If not set - all items are returned
-   * @param lastRetrievedId Optional ID of the last retrieved item for pagination
-   * @returns A list of objects representing the dataset items
+   * @param nbSamples 要获取的样本数量。如果未设置，则返回所有条目
+   * @param lastRetrievedId 可选的上次最后获取条目的 ID，用于分页
+   * @returns 表示数据集条目的对象列表
    */
   public async getItems(nbSamples?: number, lastRetrievedId?: string) {
     const datasetItems = await getDatasetItems<T>(this.opik, {
@@ -215,11 +214,11 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Retrieve raw DatasetItem objects with full metadata (evaluators, executionPolicy) preserved.
+   * 获取保留完整元数据（评估器、执行策略）的原始 DatasetItem 对象。
    *
-   * @param nbSamples The number of samples to retrieve. If not set - all items are returned
-   * @param lastRetrievedId Optional ID of the last retrieved item for pagination
-   * @returns A list of DatasetItem objects
+   * @param nbSamples 要获取的样本数量。如果未设置，则返回所有条目
+   * @param lastRetrievedId 可选的上次最后获取条目的 ID，用于分页
+   * @returns DatasetItem 对象列表
    */
   public async getRawItems(
     nbSamples?: number,
@@ -234,11 +233,11 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Insert items from a JSON string array into the dataset.
+   * 从 JSON 字符串数组中插入条目到数据集。
    *
-   * @param jsonArray JSON string of format: "[{...}, {...}, {...}]" where every object is transformed into a dataset item
-   * @param keysMapping Optional dictionary that maps JSON keys to dataset item field names (e.g., {'Expected output': 'expected_output'})
-   * @param ignoreKeys Optional array of keys that should be ignored when constructing dataset items
+   * @param jsonArray JSON 字符串，格式为: "[{...}, {...}, {...}]"，其中每个对象将被转换为数据集条目
+   * @param keysMapping 可选的字典，用于将 JSON 键映射到数据集条目字段名（例如: {'Expected output': 'expected_output'}）
+   * @param ignoreKeys 可选的键数组，在构建数据集条目时将被忽略
    */
   public async insertFromJson(
     jsonArray: string,
@@ -288,10 +287,10 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Convert the dataset to a JSON string.
+   * 将数据集转换为 JSON 字符串。
    *
-   * @param keysMapping Optional dictionary that maps dataset item field names to output JSON keys
-   * @returns A JSON string representation of all items in the dataset
+   * @param keysMapping 可选的字典，用于将数据集条目字段名映射到输出 JSON 键
+   * @returns 数据集中所有条目的 JSON 字符串表示
    */
   public async toJson(
     keysMapping: Record<string, string> = {},
@@ -316,9 +315,9 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Retrieves all items from the dataset, deduplicates them, and returns them.
+   * 对传入的条目进行去重处理，返回去重后的数据集写入对象列表。
    *
-   * @returns A list of deduplicated dataset items
+   * @returns 去重后的数据集条目列表
    */
   private async getDeduplicatedItems(items: T[]): Promise<DatasetItemWrite[]> {
     const deduplicatedItems: DatasetItemWrite[] = [];
@@ -344,7 +343,7 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Clears both hash tracking data structures
+   * 清除哈希跟踪的两个数据结构
    */
   private clearHashState(): void {
     this.idToHash.clear();
@@ -385,11 +384,11 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Get a read-only view of a specific dataset version.
+   * 获取指定数据集版本的只读视图。
    *
-   * @param versionName The version name to retrieve (e.g., "v1", "v2")
-   * @returns A DatasetVersion object for the specified version
-   * @throws DatasetVersionNotFoundError if the version doesn't exist
+   * @param versionName 要获取的版本名称（例如: "v1", "v2"）
+   * @returns 指定版本的 DatasetVersion 对象
+   * @throws DatasetVersionNotFoundError 如果版本不存在
    */
   public async getVersionView(versionName: string): Promise<DatasetVersion<T>> {
     const versionInfo = await this.findVersionByName(versionName);
@@ -402,9 +401,9 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Get the current (latest) version name.
+   * 获取当前（最新）版本名称。
    *
-   * @returns The version name (e.g., "v1") or undefined if no versions exist
+   * @returns 版本名称（例如: "v1"），如果不存在版本则返回 undefined
    */
   public async getCurrentVersionName(): Promise<string | undefined> {
     const versionInfo = await this.getVersionInfo();
@@ -412,9 +411,9 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Get the current (latest) version info.
+   * 获取当前（最新）版本信息。
    *
-   * @returns The DatasetVersionPublic object or undefined if no versions exist
+   * @returns DatasetVersionPublic 对象，如果不存在版本则返回 undefined
    */
   public async getVersionInfo(): Promise<DatasetVersionPublic | undefined> {
     try {
@@ -438,10 +437,10 @@ export class Dataset<T extends DatasetItemData = DatasetItemData> {
   }
 
   /**
-   * Find a version by its name (e.g., "v1", "v2").
+   * 根据版本名称查找版本（例如: "v1", "v2"）。
    *
-   * @param versionName The version name to find
-   * @returns The DatasetVersionPublic or undefined if not found
+   * @param versionName 要查找的版本名称
+   * @returns DatasetVersionPublic 对象，如果未找到则返回 undefined
    */
   private async findVersionByName(
     versionName: string,

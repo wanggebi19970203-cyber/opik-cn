@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import isEqual from "fast-deep-equal";
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -17,21 +18,6 @@ import { Input } from "@/ui/input";
 import { TEXT_AREA_CLASSES } from "@/ui/textarea";
 import { get } from "lodash";
 
-const SCORE_TYPE_OPTIONS: DropdownOption<LLM_SCHEMA_TYPE>[] = [
-  {
-    value: LLM_SCHEMA_TYPE.DOUBLE,
-    label: "Number",
-  },
-  {
-    value: LLM_SCHEMA_TYPE.INTEGER,
-    label: "Integer",
-  },
-  {
-    value: LLM_SCHEMA_TYPE.BOOLEAN,
-    label: "Boolean",
-  },
-];
-
 type ScoreFieldData = Omit<LLMJudgeSchema, "unsaved">;
 
 interface LLMJudgeScoreProps {
@@ -49,7 +35,23 @@ const LLMJudgeScore = ({
   onChangeScore,
   onRemoveScore,
 }: LLMJudgeScoreProps) => {
+  const { t } = useTranslation("prompt");
   const [isEditing, setIsEditing] = useState(false);
+
+  const SCORE_TYPE_OPTIONS: DropdownOption<LLM_SCHEMA_TYPE>[] = [
+    {
+      value: LLM_SCHEMA_TYPE.DOUBLE,
+      label: t("llmJudgeScore.number"),
+    },
+    {
+      value: LLM_SCHEMA_TYPE.INTEGER,
+      label: t("llmJudgeScore.integer"),
+    },
+    {
+      value: LLM_SCHEMA_TYPE.BOOLEAN,
+      label: t("llmJudgeScore.boolean"),
+    },
+  ];
   const [scoreData, setScoreData] = useState<ScoreFieldData>({
     name: score.name || "",
     description: score.description || "",
@@ -121,7 +123,7 @@ const LLMJudgeScore = ({
               <>
                 <Input
                   dimension="sm"
-                  placeholder="Score name"
+                  placeholder={t("llmJudgeScore.scoreNamePlaceholder")}
                   className={cn({
                     "border-destructive": nameErrorText,
                   })}
@@ -136,7 +138,7 @@ const LLMJudgeScore = ({
                   </FormErrorSkeleton>
                 )}
                 <TextareaAutosize
-                  placeholder="Score description"
+                  placeholder={t("llmJudgeScore.scoreDescriptionPlaceholder")}
                   value={scoreData.description}
                   onChange={(event) =>
                     onUpdateField(event.target.value, "description")
@@ -160,7 +162,7 @@ const LLMJudgeScore = ({
             />
 
             {!isEditing ? (
-              <TooltipWrapper content="Edit a score">
+              <TooltipWrapper content={t("llmJudgeScore.editScoreTooltip")}>
                 <Button
                   variant="outline"
                   size="icon-sm"
@@ -172,7 +174,7 @@ const LLMJudgeScore = ({
                 </Button>
               </TooltipWrapper>
             ) : (
-              <TooltipWrapper content="Done editing">
+              <TooltipWrapper content={t("llmJudgeScore.doneEditingTooltip")}>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -181,12 +183,12 @@ const LLMJudgeScore = ({
                   type="button"
                 >
                   <Check className="mr-1.5 size-3.5 shrink-0" />
-                  Done editing
+                  {t("llmJudgeScore.doneEditing")}
                 </Button>
               </TooltipWrapper>
             )}
 
-            <TooltipWrapper content="Delete a score">
+            <TooltipWrapper content={t("llmJudgeScore.deleteScoreTooltip")}>
               <Button
                 variant="outline"
                 size="icon-sm"

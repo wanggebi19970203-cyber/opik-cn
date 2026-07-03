@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import get from "lodash/get";
+import i18next from "i18next";
 import api, { DATASETS_REST_ENDPOINT } from "@/api/api";
 import { DatasetVersion } from "@/types/datasets";
 import { useToast } from "@/ui/use-toast";
@@ -40,10 +41,10 @@ const useCommitDatasetVersionMutation = () => {
         Array.isArray(errors) && errors.length > 0
           ? errors.join("; ")
           : get(error, ["response", "data", "message"], error.message) ||
-            "Failed to save changes. Please try again.";
+            i18next.t("common:messages.failedToSaveChanges");
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

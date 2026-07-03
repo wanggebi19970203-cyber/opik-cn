@@ -37,7 +37,9 @@ class Span:
         environment: Optional[str] = None,
     ):
         """
-        A Span object. This object should not be created directly, instead use the `span` method of a Trace (:func:`opik.Opik.span`) or another Span (:meth:`opik.Span.span`).
+        Span 对象。不应直接创建此对象，而应使用 Trace 的 `span` 方法
+        (:func:`opik.Opik.span`) 或另一个 Span 的 `span` 方法
+        (:meth:`opik.Span.span`) 来创建。
         """
         self.id = id
         self.trace_id = trace_id
@@ -63,32 +65,32 @@ class Span:
         total_cost: Optional[float] = None,
     ) -> None:
         """
-        End the span and update its attributes.
+        结束 span 并更新其属性。
 
-        This method is similar to the `update` method, but it automatically computes
-        the end time if not provided.
+        此方法类似于 `update` 方法，但它会在未提供结束时间时自动计算结束时间。
 
-        Note: with batching enabled, calling this shortly after span creation may
-        cause data loss. An alternative is to re-send a full payload via
-        ``client.span()`` with the same ID — the backend will overwrite the
-        previous value. See https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
+        注意：启用批处理后，在 span 创建后不久调用此方法可能会导致数据丢失。
+        替代方案是通过 ``client.span()`` 使用相同 ID 重新发送完整载荷——后端会
+        覆盖先前的值。参见 https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
 
         Args:
-            end_time: The end time of the span. If not provided, the current time will be used.
-            metadata: Additional metadata to be associated with the span.
-            input: The input data for the span.
-            output: The output data for the span.
-            tags: A list of tags to be associated with the span.
-            usage: Usage data for the span. In order for input, output and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionaly to original usage on the top level of the dict):  prompt_tokens, completion_tokens and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The name of LLM.
-            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our github - https://github.com/comet-ml/opik.
-                If your provider not in the list, you can still specify it but the cost tracking will not be available
-            error_info: The dictionary with error information (typically used when the span function has failed).
-            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
+            end_time: span 的结束时间。如果未提供，将使用当前时间。
+            metadata: 与 span 关联的额外元数据。
+            input: span 的输入数据。
+            output: span 的输出数据。
+            tags: 与 span 关联的标签列表。
+            usage: span 的用量数据。为了在 UI 中显示输入、输出和总 token 数，
+                用量必须包含 OpenAI 格式的键（可以在字典顶层附加传递，与原始用量并列）：
+                prompt_tokens、completion_tokens 和 total_tokens。
+                如果未找到 OpenAI 格式的键，Opik 会在用量格式可识别时尝试自动计算
+                （可在 opik.LLMProvider 枚举中查看支持的提供商格式），但不保证成功。
+            model: LLM 的名称。
+            provider: LLM 的提供商。可在 `opik.LLMProvider` 枚举中找到 Opik 官方支持
+                成本追踪的提供商。如果您的提供商不在列表中，请在我们的 GitHub 上提交 issue
+                - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍可指定，但成本追踪功能将不可用。
+            error_info: 包含错误信息的字典（通常在 span 函数执行失败时使用）。
+            total_cost: span 的成本（单位：美元）。此值优先于 Opik 根据用量计算的成本。
 
         Returns:
             None
@@ -132,29 +134,30 @@ class Span:
         total_cost: Optional[float] = None,
     ) -> None:
         """
-        Update the span attributes.
+        更新 span 的属性。
 
-        Note: with batching enabled, calling this shortly after span creation may
-        cause data loss. An alternative is to re-send a full payload via
-        ``client.span()`` with the same ID — the backend will overwrite the
-        previous value. See https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
+        注意：启用批处理后，在 span 创建后不久调用此方法可能会导致数据丢失。
+        替代方案是通过 ``client.span()`` 使用相同 ID 重新发送完整载荷——后端会
+        覆盖先前的值。参见 https://www.comet.com/docs/opik/reference/python-sdk/troubleshooting/batching-and-updates
 
         Args:
-            end_time: The end time of the span.
-            metadata: Additional metadata to be associated with the span.
-            input: The input data for the span.
-            output: The output data for the span.
-            tags: A list of tags to be associated with the span.
-            usage: Usage data for the span. In order for input, output and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionaly to original usage on the top level of the dict):  prompt_tokens, completion_tokens and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The name of LLM.
-            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our github - https://github.com/comet-ml/opik.
-                If your provider not in the list, you can still specify it but the cost tracking will not be available
-            error_info: The dictionary with error information (typically used when the span function has failed).
-            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
+            end_time: span 的结束时间。
+            metadata: 与 span 关联的额外元数据。
+            input: span 的输入数据。
+            output: span 的输出数据。
+            tags: 与 span 关联的标签列表。
+            usage: span 的用量数据。为了在 UI 中显示输入、输出和总 token 数，
+                用量必须包含 OpenAI 格式的键（可以在字典顶层附加传递，与原始用量并列）：
+                prompt_tokens、completion_tokens 和 total_tokens。
+                如果未找到 OpenAI 格式的键，Opik 会在用量格式可识别时尝试自动计算
+                （可在 opik.LLMProvider 枚举中查看支持的提供商格式），但不保证成功。
+            model: LLM 的名称。
+            provider: LLM 的提供商。可在 `opik.LLMProvider` 枚举中找到 Opik 官方支持
+                成本追踪的提供商。如果您的提供商不在列表中，请在我们的 GitHub 上提交 issue
+                - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍可指定，但成本追踪功能将不可用。
+            error_info: 包含错误信息的字典（通常在 span 函数执行失败时使用）。
+            total_cost: span 的成本（单位：美元）。此值优先于 Opik 根据用量计算的成本。
 
         Returns:
             None
@@ -233,32 +236,34 @@ class Span:
         attachments: Optional[List[attachment.Attachment]] = None,
     ) -> "Span":
         """
-        Create a new child span within the current span.
+        在当前 span 内创建一个新的子 span。
 
         Args:
-            id: The ID of the span should be in UUIDv7 format. If not provided, a new ID will be generated.
-            name: The name of the span.
-            type: The type of the span. Defaults to "general".
-            start_time: The start time of the span. If not provided, the current time will be used.
-            end_time: The end time of the span.
-            metadata: Additional metadata to be associated with the span.
-            input: The input data for the span.
-            output: The output data for the span.
-            tags: A list of tags to be associated with the span.
-            usage: Usage data for the span. In order for input, output and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionally to the original usage on the top level of the dict): prompt_tokens, completion_tokens and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The name of LLM (in this case `type` parameter should be == `llm`)
-            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our GitHub - https://github.com/comet-ml/opik.
-                If your provider is not in the list, you can still specify it, but the cost tracking will not be available
-            error_info: The dictionary with error information (typically used when the span function has failed).
-            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
-            attachments: The list of attachments to be uploaded to the span.
+            id: span 的 ID，应为 UUIDv7 格式。如果未提供，将自动生成新的 ID。
+            name: span 的名称。
+            type: span 的类型。默认为 "general"。
+            start_time: span 的开始时间。如果未提供，将使用当前时间。
+            end_time: span 的结束时间。
+            metadata: 与 span 关联的额外元数据。
+            input: span 的输入数据。
+            output: span 的输出数据。
+            tags: 与 span 关联的标签列表。
+            usage: span 的用量数据。为了在 UI 中显示输入、输出和总 token 数，
+                用量必须包含 OpenAI 格式的键（可以在字典顶层附加传递，与原始用量并列）：
+                prompt_tokens、completion_tokens 和 total_tokens。
+                如果未找到 OpenAI 格式的键，Opik 会在用量格式可识别时尝试自动计算
+                （可在 opik.LLMProvider 枚举中查看支持的提供商格式），但不保证成功。
+            model: LLM 的名称（此时 `type` 参数应设置为 `llm`）。
+            provider: LLM 的提供商。可在 `opik.LLMProvider` 枚举中找到 Opik 官方支持
+                成本追踪的提供商。如果您的提供商不在列表中，请在我们的 GitHub 上提交 issue
+                - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍可指定，但成本追踪功能将不可用。
+            error_info: 包含错误信息的字典（通常在 span 函数执行失败时使用）。
+            total_cost: span 的成本（单位：美元）。此值优先于 Opik 根据用量计算的成本。
+            attachments: 要上传到 span 的附件列表。
 
         Returns:
-            Span: The created child span object.
+            Span: 创建的子 span 对象。
         """
         return create_span(
             trace_id=self.trace_id,
@@ -294,13 +299,13 @@ class Span:
         reason: Optional[str] = None,
     ) -> None:
         """
-        Log a feedback score for the span.
+        为 span 记录反馈分数。
 
         Args:
-            name: The name of the feedback score.
-            value: The value of the feedback score.
-            category_name: The category name for the feedback score.
-            reason: The reason for the feedback score.
+            name: 反馈分数的名称。
+            value: 反馈分数的值。
+            category_name: 反馈分数的类别名称。
+            reason: 反馈分数的原因。
 
         Returns:
             None
@@ -323,8 +328,7 @@ class Span:
 
     def get_distributed_trace_headers(self) -> DistributedTraceHeadersDict:
         """
-        Returns headers dictionary to be passed into tracked
-        function on remote node.
+        返回用于传递到远程节点上被追踪函数的请求头字典。
         """
         return {"opik_parent_span_id": self.id, "opik_trace_id": self.trace_id}
 
@@ -354,20 +358,26 @@ def create_span(
     config: Optional[opik_config.OpikConfig] = None,
     environment: Optional[str] = None,
 ) -> Span:
+    """创建一个新的 span。"""
+    # 如果未提供 span_id，则生成一个新的 UUID
     span_id = span_id if span_id is not None else id_helpers.generate_id()
+    # 如果未提供开始时间，使用当前本地时间
     start_time = (
         start_time if start_time is not None else datetime_helpers.local_timestamp()
     )
 
+    # 验证并解析用量数据，使其与后端兼容
     backend_compatible_usage = validation_helpers.validate_and_parse_usage(
         usage=usage,
         logger=LOGGER,
         provider=provider,
     )
 
+    # 如果存在有效的用量数据，将其添加到元数据中
     if backend_compatible_usage is not None:
         metadata = helpers.add_usage_to_metadata(usage=usage, metadata=metadata)
 
+    # 创建 span 消息并发送到消息流
     create_span_message = messages.CreateSpanMessage(
         span_id=span_id,
         trace_id=trace_id,
@@ -392,6 +402,7 @@ def create_span(
     )
     message_streamer.put(create_span_message)
 
+    # 如果存在附件，逐个创建附件消息并发送
     if attachments is not None:
         for attachment_data in attachments:
             create_attachment_message = attachment_converters.attachment_to_message(
@@ -403,6 +414,7 @@ def create_span(
             )
             message_streamer.put(create_attachment_message)
 
+    # 返回创建的 Span 对象
     return Span(
         id=span_id,
         parent_span_id=parent_span_id,
@@ -437,15 +449,19 @@ def update_span(
     attachments: Optional[List[attachment.Attachment]] = None,
     environment: Optional[str] = None,
 ) -> None:
+    """更新一个已存在的 span。"""
+    # 验证并解析用量数据，使其与后端兼容
     backend_compatible_usage = validation_helpers.validate_and_parse_usage(
         usage=usage,
         logger=LOGGER,
         provider=provider,
     )
 
+    # 如果存在有效的用量数据，将其添加到元数据中
     if backend_compatible_usage is not None:
         metadata = helpers.add_usage_to_metadata(usage=usage, metadata=metadata)
 
+    # 创建更新 span 消息
     update_span_message = messages.UpdateSpanMessage(
         span_id=id,
         trace_id=trace_id,
@@ -465,6 +481,7 @@ def update_span(
         environment=environment,
     )
 
+    # 如果存在附件，逐个创建附件消息并发送
     if attachments is not None:
         for attachment_data in attachments:
             create_attachment_message = attachment_converters.attachment_to_message(
@@ -476,4 +493,5 @@ def update_span(
             )
             message_streamer.put(create_attachment_message)
 
+    # 发送更新消息到消息流
     message_streamer.put(update_span_message)

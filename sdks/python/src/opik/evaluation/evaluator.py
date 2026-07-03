@@ -58,11 +58,12 @@ MODALITY_SUPPORT_DOC_URL = (
 def _try_notifying_about_experiment_completion(
     experiment: experiment.Experiment,
 ) -> None:
+    """尝试通知后端实验已完成。"""
     try:
         experiment.experiments_rest_client.finish_experiments(ids=[experiment.id])
     except Exception:
         LOGGER.debug(
-            "Failed to notify backend about the experiment completion. Experiment ID: %s",
+            "无法通知后端实验已完成。实验 ID: %s",
             experiment.id,
             exc_info=True,
         )
@@ -76,23 +77,18 @@ def _materialize_for_checkpoint(
     dataset_sampler: Optional[samplers.BaseDatasetSampler],
 ) -> Tuple[Iterator[dataset_item.DatasetItem], Optional[int], Optional[List[str]]]:
     """
-    Resolve the (iterator, total, resolved_ids) tuple for the engine + the
-    resume checkpoint, without breaking lazy streaming when streaming is
-    possible.
+    为引擎和恢复检查点解析 (iterator, total, resolved_ids) 元组，
+    在可能的情况下不破坏惰性流式传输。
 
-    Three cases:
-      * Sampler (with or without explicit ids) → the iterator was already
-        built from a materialized list inside ``resolve_dataset_items``;
-        we drain it once to surface the post-sampler ids for the
-        checkpoint, then hand a fresh iterator over the same list to the
-        engine. Sampler precedence ensures the checkpoint reflects what
-        the engine actually iterated, not the raw input ids — otherwise a
-        resume would replay a different item set than the original eval.
-      * Explicit ``dataset_item_ids`` only → ids are known up front; the
-        checkpoint gets them directly and the iterator is left untouched
-        so the engine can still consume it lazily.
-      * Neither → streaming. No checkpoint needed; the iterator is passed
-        straight to the engine.
+    三种情况：
+      * 采样器（有或无显式 ids）→ 迭代器已在 ``resolve_dataset_items`` 内部
+        从物化列表构建；我们先遍历一次以获取采样后的 ids 用于检查点，
+        然后将同一列表的新迭代器交给引擎。采样器优先级确保检查点反映
+        引擎实际迭代的内容，而不是原始输入 ids — 否则恢复操作会重放
+        与原始评估不同的项目集。
+      * 仅显式 ``dataset_item_ids`` → ids 提前已知；检查点直接获取它们，
+        迭代器保持不变，引擎仍可惰性消费。
+      * 两者都没有 → 流式传输。无需检查点；迭代器直接传递给引擎。
     """
     if dataset_sampler is not None:
         materialized = list(items_iter)
@@ -130,95 +126,88 @@ def evaluate(
     blueprint_id: Optional[str] = None,
 ) -> evaluation_result.EvaluationResult:
     """
-    Performs task evaluation on a given dataset. You can use either `scoring_metrics` or `scorer_functions` to calculate
-    evaluation metrics. The scorer functions doesn't require `scoring_key_mapping` and use reserved parameters
-    to receive inputs and outputs from the task.
+    对给定数据集执行任务评估。可以使用 `scoring_metrics` 或 `scorer_functions` 来计算评估指标。
+    评分函数不需要 `scoring_key_mapping`，使用保留参数来接收任务的输入和输出。
 
     Args:
-        dataset: An Opik Dataset or DatasetVersion instance
+        dataset: Opik Dataset 或 DatasetVersion 实例
 
-        task: A callable object that takes dict with dataset item content
-            as input and returns dict which will later be used for scoring.
+        task: 可调用对象，接受包含数据集项目内容的字典作为输入，
+            返回稍后用于评分的字典。
 
-        experiment_name_prefix: The prefix to be added to automatically generated experiment names to make them unique
-            but grouped under the same prefix. For example, if you set `experiment_name_prefix="my-experiment"`,
-            the first experiment created will be named `my-experiment-<unique-random-part>`.
+        experiment_name_prefix: 添加到自动生成的实验名称前的前缀，使其唯一
+            但分组在同一前缀下。例如，如果设置 `experiment_name_prefix="my-experiment"`，
+            创建的第一个实验将命名为 `my-experiment-<unique-random-part>`。
 
-        experiment_name: The name of the experiment associated with evaluation run.
-            If None, a generated name will be used.
+        experiment_name: 与评估运行关联的实验名称。
+            如果为 None，将使用生成的名称。
 
-        project_name: Deprecated. If the dataset has a ``project_name`` set, it
-            is always used and this override is ignored (with a warning). If
-            the dataset has no ``project_name``, traces and spans are logged to
-            this project (or to ``Default Project`` when omitted).
+        project_name: 已弃用。如果数据集设置了 ``project_name``，将始终使用该值，
+            此覆盖将被忽略（并显示警告）。如果数据集没有 ``project_name``，
+            跟踪和跨度将记录到此项目（省略时记录到 ``Default Project``）。
 
-        experiment_config: The dictionary with parameters that describe experiment
+        experiment_config: 描述实验参数的字典
 
-        scoring_metrics: List of metrics to calculate during evaluation.
-            Each metric has `score(...)` method, arguments for this method
-            are taken from the `task` output, check the signature
-            of the `score` method in metrics that you need to find out which keys
-            are mandatory in `task`-returned dictionary.
-            If no value provided, the experiment won't have any scoring metrics.
+        scoring_metrics: 评估期间要计算的指标列表。
+            每个指标都有 `score(...)` 方法，该方法的参数取自 `task` 输出，
+            检查所需指标的 `score` 方法签名以了解 `task` 返回字典中哪些键是必需的。
+            如果未提供值，实验将没有任何评分指标。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
-                • dataset_item — a dictionary containing the dataset item content,
-                • task_outputs — a dictionary containing the LLM task output.
-                • task_span - the data collected during the LLM task execution [optional].
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数包含一个评分方法，接受评估引擎提供的预定义参数：
+                • dataset_item — 包含数据集项目内容的字典，
+                • task_outputs — 包含 LLM 任务输出的字典。
+                • task_span - LLM 任务执行期间收集的数据 [可选]。
 
-        verbose: an integer value that controls evaluation output logs such as summary and tqdm progress bar.
-            0 - no outputs, 1 - outputs are enabled (default), 2 - outputs are enabled and detailed statistics
-            are displayed.
+        verbose: 控制评估输出日志（如摘要和 tqdm 进度条）的整数值。
+            0 - 无输出，1 - 启用输出（默认），2 - 启用输出并显示详细统计信息。
 
-        nb_samples: number of samples to evaluate. If no value is provided, all samples in the dataset will be evaluated.
+        nb_samples: 要评估的样本数。如果未提供值，将评估数据集中的所有样本。
 
-        task_threads: number of thread workers to run tasks. If set to 1, no additional
-            threads are created, all tasks executed in the current thread sequentially.
-            are executed sequentially in the current thread.
-            Use more than 1 worker if your task object is compatible with sharing across threads.
+        task_threads: 运行任务的线程工作者数。如果设置为 1，不会创建额外的线程，
+            所有任务在当前线程中顺序执行。
+            如果您的任务对象支持跨线程共享，请使用多个工作者。
 
-        prompt: Prompt object to link with experiment. Deprecated, use `prompts` argument instead.
+        prompt: 要与实验关联的 Prompt 对象。已弃用，请改用 `prompts` 参数。
 
-        prompts: A list of Prompt objects to link with experiment.
+        prompts: 要与实验关联的 Prompt 对象列表。
 
-        scoring_key_mapping: A dictionary that allows you to rename keys present in either the dataset item or the task output
-            so that they match the keys expected by the scoring metrics. For example if you have a dataset item with the following content:
-            {"user_question": "What is Opik ?"} and a scoring metric that expects a key "input", you can use scoring_key_mapping
-            `{"input": "user_question"}` to map the "user_question" key to "input".
+        scoring_key_mapping: 允许您重命名数据集项目或任务输出中存在的键的字典，
+            以便它们与评分指标期望的键匹配。例如，如果您有以下内容的数据集项目：
+            {"user_question": "What is Opik ?"} 和期望键 "input" 的评分指标，
+            您可以使用 scoring_key_mapping `{"input": "user_question"}` 
+            将 "user_question" 键映射到 "input"。
 
-        dataset_item_ids: list of dataset item ids to evaluate. If not provided, all samples in the dataset will be evaluated.
+        dataset_item_ids: 要评估的数据集项目 ID 列表。如果未提供，将评估数据集中的所有样本。
 
-        dataset_sampler: An instance of a dataset sampler that will be used to sample dataset items for evaluation.
-            If not provided, all samples in the dataset will be evaluated.
+        dataset_sampler: 用于采样数据集项目进行评估的数据集采样器实例。
+            如果未提供，将评估数据集中的所有样本。
 
-        trial_count: number of times to run the task and evaluate the task output for every dataset item.
+        trial_count: 对每个数据集项目运行任务和评估任务输出的次数。
 
-        experiment_scoring_functions: List of callable functions that compute experiment-level scores.
-            Each function takes a list of TestResult objects and returns a list of ScoreResult objects.
-            These scores are computed after all test results are collected and represent aggregate
-            metrics across the entire experiment.
+        experiment_scoring_functions: 计算实验级别分数的可调用函数列表。
+            每个函数接受 TestResult 对象列表并返回 ScoreResult 对象列表。
+            这些分数在所有测试结果收集后计算，代表整个实验的聚合指标。
 
-        experiment_tags: Optional list of tags to associate with the experiment.
+        experiment_tags: 要与实验关联的可选标签列表。
 
-        dataset_filter_string: Optional OQL filter string to filter dataset items.
-            Supports filtering by tags, data fields, metadata, etc.
+        dataset_filter_string: 可选的 OQL 过滤字符串，用于过滤数据集项目。
+            支持按标签、数据字段、元数据等过滤。
 
-            Supported columns include:
-            - `id`, `source`, `trace_id`, `span_id`: String fields
-            - `data`: Dictionary field (use dot notation, e.g., "data.category")
-            - `tags`: List field (use "contains" operator)
-            - `created_at`, `last_updated_at`: DateTime fields (ISO 8601 format)
-            - `created_by`, `last_updated_by`: String fields
+            支持的列包括：
+            - `id`、`source`、`trace_id`、`span_id`：字符串字段
+            - `data`：字典字段（使用点表示法，例如 "data.category"）
+            - `tags`：列表字段（使用 "contains" 运算符）
+            - `created_at`、`last_updated_at`：日期时间字段（ISO 8601 格式）
+            - `created_by`、`last_updated_by`：字符串字段
 
-            Examples:
-            - `tags contains "failed"` - Items with 'failed' tag
-            - `data.category = "test"` - Items with specific data field value
-            - `created_at >= "2024-01-01T00:00:00Z"` - Items created after date
+            示例：
+            - `tags contains "failed"` - 带有 'failed' 标签的项目
+            - `data.category = "test"` - 具有特定数据字段值的项目
+            - `created_at >= "2024-01-01T00:00:00Z"` - 在日期之后创建的项目
     """
     if isinstance(dataset, test_suite_module.TestSuite):
-        # backwards compatibility for transition period
+        # 过渡期间的向后兼容性
         dataset = dataset.__internal_api__dataset__
 
     experiment_scoring_functions = (
@@ -288,7 +277,7 @@ def evaluate(
         resolved_ids=resolved_ids,
     )
 
-    # wrap scoring functions if any
+    # 如果有评分函数则包装
     scoring_metrics = _wrap_scoring_functions(
         scoring_functions=scoring_functions,
         scoring_metrics=scoring_metrics,
@@ -339,11 +328,11 @@ def __internal_api__run_test_suite__(
     ] = None,
 ) -> "suite_types.TestSuiteResult":
     """
-    Internal function that runs the full test suite evaluation pipeline:
-    task validation, evaluation, report generation, and result display.
+    运行完整测试套件评估管道的内部函数：
+    任务验证、评估、报告生成和结果展示。
 
-    Used by both ``run_tests()`` and
-    ``TestSuite.__internal_api__run_optimization_suite__()``.
+    被 ``run_tests()`` 和
+    ``TestSuite.__internal_api__run_optimization_suite__()`` 使用。
     """
     from ..api_objects.dataset.test_suite.test_suite import validate_task_result
     from ..api_objects.dataset.test_suite.report_processors import (
@@ -372,17 +361,16 @@ def __internal_api__run_test_suite__(
         experiment_name_prefix=experiment_name_prefix,
     )
 
-    # NOTE: test-suite experiments do not currently support evaluate_resume,
-    # so we deliberately do not embed resume state on them. The persistence
-    # primitives in opik.evaluation.resume.state are designed so a test-suite
-    # entrypoint can be added later without changing the schema.
+    # 注意：测试套件实验目前不支持 evaluate_resume，
+    # 因此我们故意不在其中嵌入恢复状态。opik.evaluation.resume.state 中的
+    # 持久化原语设计为可以在不更改架构的情况下稍后添加测试套件入口点。
 
     create_experiment_kwargs: Dict[str, Any] = dict(
         name=experiment_name,
         dataset_name=suite_dataset.name,
         experiment_config=experiment_config,
         prompts=prompts,
-        # TODO: OPIK-5795 - migrate DB value from 'evaluation_suite' to 'test_suite'
+        # TODO: OPIK-5795 - 将数据库值从 'evaluation_suite' 迁移到 'test_suite'
         evaluation_method="evaluation_suite",
         tags=experiment_tags,
         dataset_version_id=None,
@@ -476,37 +464,34 @@ def run_tests(
     ] = None,
 ) -> "suite_types.TestSuiteResult":
     """
-    Run a test suite against a task function.
+    对任务函数运行测试套件。
 
-    Accepts either a :class:`TestSuite` (runs against the latest version) or
-    a :class:`TestSuiteVersion` (runs against a specific version snapshot).
+    接受 :class:`TestSuite`（针对最新版本运行）或
+    :class:`TestSuiteVersion`（针对特定版本快照运行）。
 
-    The task function receives each test item's data dict and must return
-    either a dict (with ``"input"`` and ``"output"`` keys) or any other
-    value, which will be automatically wrapped as
-    ``{"input": <item data>, "output": <returned value>}``.
+    任务函数接收每个测试项目的数据字典，必须返回
+    一个字典（包含 ``"input"`` 和 ``"output"`` 键）或任何其他值，
+    该值将自动包装为 ``{"input": <item data>, "output": <returned value>}``。
 
     Args:
-        test_suite: The test suite or test suite version to run.
-        task: A callable that takes a dict and returns a result.
-        experiment_name: Optional explicit name for the experiment.
-        experiment_name_prefix: Optional prefix for auto-generated name.
-        experiment_config: Optional configuration dict for the experiment.
-        prompts: Optional list of Prompt objects to associate.
-        experiment_tags: Optional list of tags for the experiment.
-        verbose: Verbosity level. 0=silent, 1=summary, 2=detailed (default).
-        worker_threads: Number of threads for parallel task execution.
-        model: Optional model name for checking assertions.
-        generate_report: Whether to generate a JSON report file.
-        report_output_path: Optional file path for the report.
-        scoring_tool_strategy: Optional override applied to every LLMJudge
-            evaluator in the suite. One of ``"auto"`` (size+capability
-            heuristic), ``"always"`` (force agentic tool loop) or
-            ``"never"`` (force one-shot). When ``None``, each judge's own
-            configured strategy is used.
+        test_suite: 要运行的测试套件或测试套件版本。
+        task: 接受字典并返回结果的可调用对象。
+        experiment_name: 实验的可选显式名称。
+        experiment_name_prefix: 自动生成名称的可选前缀。
+        experiment_config: 实验的可选配置字典。
+        prompts: 要关联的可选 Prompt 对象列表。
+        experiment_tags: 实验的可选标签列表。
+        verbose: 详细级别。0=静默，1=摘要，2=详细（默认）。
+        worker_threads: 并行任务执行的线程数。
+        model: 用于检查断言的可选模型名称。
+        generate_report: 是否生成 JSON 报告文件。
+        report_output_path: 报告的可选文件路径。
+        scoring_tool_strategy: 应用于套件中每个 LLMJudge 评估器的可选覆盖。
+            选项包括 ``"auto"``（大小+能力启发式）、``"always"``（强制代理工具循环）
+            或 ``"never"``（强制单次执行）。当为 ``None`` 时，使用每个评估器自身配置的策略。
 
     Returns:
-        TestSuiteResult with pass/fail status based on execution policy.
+        基于执行策略的 TestSuiteResult，包含通过/失败状态。
 
     Example:
         >>> import opik
@@ -561,6 +546,7 @@ def _evaluate_task(
     experiment_scoring_functions: List[ExperimentScoreFunction],
     source: TraceSource,
 ) -> evaluation_result.EvaluationResult:
+    """执行任务评估的核心函数。"""
     start_time = time.time()
 
     with asyncio_support.async_http_connections_expire_immediately():
@@ -589,7 +575,7 @@ def _evaluate_task(
 
     total_time = time.time() - start_time
 
-    # Compute experiment scores
+    # 计算实验分数
     computed_experiment_scores = evaluation_result.compute_experiment_scores(
         experiment_scoring_functions=experiment_scoring_functions,
         test_results=test_results,
@@ -612,7 +598,7 @@ def _evaluate_task(
 
     _try_notifying_about_experiment_completion(experiment)
 
-    # Log experiment scores to backend
+    # 将实验分数记录到后端
     if computed_experiment_scores:
         experiment.log_experiment_scores(score_results=computed_experiment_scores)
 
@@ -639,12 +625,11 @@ def _apply_scoring_tool_strategy_override(
     scoring_metrics: List[base_metric.BaseMetric],
     scoring_tool_strategy: suite_evaluators_strategy.ScoringToolStrategyMode,
 ) -> None:
-    """Replace each LLMJudge's strategy selector with the suite-level override.
+    """将每个 LLMJudge 的策略选择器替换为套件级别的覆盖。
 
-    Walks the resolved evaluator list once; non-LLMJudge metrics are left
-    alone. Done after `dataset.get_evaluators(...)` returns so users keep
-    the precedence: explicit `run_tests(scoring_tool_strategy=...)` wins over
-    each judge's per-instance configuration.
+    遍历已解析的评估器列表一次；非 LLMJudge 指标保持不变。
+    在 `dataset.get_evaluators(...)` 返回后执行，因此用户保持优先级：
+    显式 `run_tests(scoring_tool_strategy=...)` 优先于每个评估器的实例配置。
     """
     for metric in scoring_metrics:
         if isinstance(metric, suite_evaluators_llm_judge_metric.LLMJudge):
@@ -672,17 +657,14 @@ def _evaluate_test_suite_task(
 
     start_time = time.time()
 
-    # Activate the local emulator so suite-level LLMJudge assertions get
-    # access to the full trace tree via the agentic tool loop. The
-    # emulator caches every trace/span logged in-process; it stays
-    # inactive at idle. We toggle for the duration of the suite run and
-    # restore prior state in `finally` so concurrent (foreign) uses of
-    # the emulator aren't disturbed.
-    # `getattr` with a default keeps this MagicMock-friendly:
-    # MagicMock auto-rejects attribute names that look like dunders
-    # (start and end with `__`), so plain attribute access raises
-    # AttributeError on mocked clients used by unit tests. Production
-    # clients always have this attribute, so the default never fires.
+    # 激活本地模拟器，以便套件级别的 LLMJudge 断言可以通过代理工具循环
+    # 访问完整的跟踪树。模拟器缓存进程中记录的每个跟踪/跨度；空闲时保持非活动状态。
+    # 我们在套件运行期间切换状态，并在 `finally` 中恢复先前状态，
+    # 以便不会干扰模拟器的并发（外部）使用。
+    # 带默认值的 `getattr` 保持 MagicMock 兼容性：
+    # MagicMock 自动拒绝看起来像双下划线（以 `__` 开头和结尾）的属性名，
+    # 因此普通属性访问会在单元测试使用的模拟客户端上引发 AttributeError。
+    # 生产客户端始终具有此属性，因此默认值永远不会触发。
     chain = getattr(client, "__internal_api__message_processor__", None)
     emulator_was_active = False
     if chain is not None:
@@ -763,43 +745,40 @@ def evaluate_experiment(
     experiment_scoring_functions: Optional[List[ExperimentScoreFunction]] = None,
     project_name: Optional[str] = None,
 ) -> evaluation_result.EvaluationResult:
-    """Update the existing experiment with new evaluation metrics. You can use either `scoring_metrics` or `scorer_functions` to calculate
-    evaluation metrics. The scorer functions doesn't require `scoring_key_mapping` and use reserved parameters
-    to receive inputs and outputs from the task. The experiment requires at least one test case.
+    """使用新的评估指标更新现有实验。可以使用 `scoring_metrics` 或 `scorer_functions` 来计算评估指标。
+    评分函数不需要 `scoring_key_mapping`，使用保留参数来接收任务的输入和输出。
+    实验至少需要一个测试用例。
 
     Args:
-        experiment_name: The name of the experiment to update.
+        experiment_name: 要更新的实验名称。
 
-        scoring_metrics: List of metrics to calculate during evaluation.
-            Each metric has `score(...)` method, arguments for this method
-            are taken from the `task` output, check the signature
-            of the `score` method in metrics that you need to find out which keys
-            are mandatory in `task`-returned dictionary.
+        scoring_metrics: 评估期间要计算的指标列表。
+            每个指标都有 `score(...)` 方法，该方法的参数取自 `task` 输出，
+            检查所需指标的 `score` 方法签名以了解 `task` 返回字典中哪些键是必需的。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
-                • dataset_item — a dictionary containing the dataset item content,
-                • task_outputs — a dictionary containing the LLM task output.
-                • task_span - the data collected during the LLM task execution [optional].
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数包含一个评分方法，接受评估引擎提供的预定义参数：
+                • dataset_item — 包含数据集项目内容的字典，
+                • task_outputs — 包含 LLM 任务输出的字典。
+                • task_span - LLM 任务执行期间收集的数据 [可选]。
 
-        scoring_threads: amount of thread workers to run scoring metrics.
+        scoring_threads: 运行评分指标的线程工作者数量。
 
-        verbose: an integer value that controls evaluation output logs such as summary and tqdm progress bar.
+        verbose: 控制评估输出日志（如摘要和 tqdm 进度条）的整数值。
 
-        scoring_key_mapping: A dictionary that allows you to rename keys present in either the dataset item or the task output
-            so that they match the keys expected by the scoring metrics. For example, if you have a dataset item with the following content:
-            {"user_question": "What is Opik ?"} and a scoring metric that expects a key "input", you can use scoring_key_mapping
-            `{"input": "user_question"}` to map the "user_question" key to "input".
+        scoring_key_mapping: 允许您重命名数据集项目或任务输出中存在的键的字典，
+            以便它们与评分指标期望的键匹配。例如，如果您有以下内容的数据集项目：
+            {"user_question": "What is Opik ?"} 和期望键 "input" 的评分指标，
+            您可以使用 scoring_key_mapping `{"input": "user_question"}` 
+            将 "user_question" 键映射到 "input"。
 
-        experiment_id: The ID of the experiment to evaluate. If not provided, the experiment will be evaluated based on the experiment name.
+        experiment_id: 要评估的实验 ID。如果未提供，将根据实验名称评估实验。
 
-        experiment_scoring_functions: List of callable functions that compute experiment-level scores.
-            Each function takes a list of TestResult objects and returns a list of ScoreResult objects.
-            These scores are computed after all test results are collected and represent aggregate
-            metrics across the entire experiment.
+        experiment_scoring_functions: 计算实验级别分数的可调用函数列表。
+            每个函数接受 TestResult 对象列表并返回 ScoreResult 对象列表。
+            这些分数在所有测试结果收集后计算，代表整个实验的聚合指标。
 
-        project_name: The name of the project to which the experiment belongs. If not provided, the default project will be used.
+        project_name: 实验所属项目的名称。如果未提供，将使用默认项目。
     """
     experiment_scoring_functions = (
         [] if experiment_scoring_functions is None else experiment_scoring_functions
@@ -835,7 +814,7 @@ def evaluate_experiment(
         client=client, trace_id=first_trace_id
     )
 
-    # wrap scoring functions if any
+    # 如果有评分函数则包装
     scoring_metrics = _wrap_scoring_functions(
         scoring_functions=scoring_functions,
         scoring_metrics=scoring_metrics,
@@ -860,7 +839,7 @@ def evaluate_experiment(
 
     client.flush()
 
-    # Compute experiment scores
+    # 计算实验分数
     computed_experiment_scores = evaluation_result.compute_experiment_scores(
         experiment_scoring_functions=experiment_scoring_functions,
         test_results=test_results,
@@ -884,7 +863,7 @@ def evaluate_experiment(
 
     _try_notifying_about_experiment_completion(experiment)
 
-    # Log experiment scores to backend
+    # 将实验分数记录到后端
     if computed_experiment_scores:
         experiment.log_experiment_scores(score_results=computed_experiment_scores)
 
@@ -921,7 +900,7 @@ def _build_prompt_evaluation_task(
             ),
         },
     )
-    # Disable placeholder validation since we pass all dataset item fields to format()
+    # 禁用占位符验证，因为我们将所有数据集项目字段传递给 format()
     chat_prompt_template_ = chat_prompt_template.ChatPromptTemplate(
         messages=messages, validate_placeholders=False
     )
@@ -984,77 +963,74 @@ def evaluate_prompt(
     dataset_filter_string: Optional[str] = None,
 ) -> evaluation_result.EvaluationResult:
     """
-    Performs prompt evaluation on a given dataset.
+    对给定数据集执行提示词评估。
 
     Args:
-        dataset: An Opik Dataset or DatasetVersion instance
+        dataset: Opik Dataset 或 DatasetVersion 实例
 
-        messages: A list of prompt messages to evaluate.
+        messages: 要评估的提示消息列表。
 
-        model: The name of the model to use for evaluation. Defaults to "gpt-3.5-turbo".
+        model: 用于评估的模型名称。默认为 "gpt-3.5-turbo"。
 
-        scoring_metrics: List of metrics to calculate during evaluation.
-            The LLM input and output will be passed as arguments to each metric `score(...)` method.
+        scoring_metrics: 评估期间要计算的指标列表。
+            LLM 输入和输出将作为参数传递给每个指标的 `score(...)` 方法。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
-                • dataset_item — a dictionary containing the dataset item content,
-                • task_outputs — a dictionary containing the LLM task output.
-                • task_span - the data collected during the LLM task execution [optional].
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数包含一个评分方法，接受评估引擎提供的预定义参数：
+                • dataset_item — 包含数据集项目内容的字典，
+                • task_outputs — 包含 LLM 任务输出的字典。
+                • task_span - LLM 任务执行期间收集的数据 [可选]。
 
-        experiment_name_prefix: The prefix to be added to automatically generated experiment names to make them unique
-            but grouped under the same prefix. For example, if you set `experiment_name_prefix="my-experiment"`,
-            the first experiment created will be named `my-experiment-<unique-random-part>`.
+        experiment_name_prefix: 添加到自动生成的实验名称前的前缀，使其唯一
+            但分组在同一前缀下。例如，如果设置 `experiment_name_prefix="my-experiment"`，
+            创建的第一个实验将命名为 `my-experiment-<unique-random-part>`。
 
-        experiment_name: name of the experiment.
+        experiment_name: 实验名称。
 
-        project_name: Deprecated. If the dataset has a ``project_name`` set, it
-            is always used and this override is ignored (with a warning). If
-            the dataset has no ``project_name``, traces and spans are logged to
-            this project (or to ``Default Project`` when omitted).
+        project_name: 已弃用。如果数据集设置了 ``project_name``，将始终使用该值，
+            此覆盖将被忽略（并显示警告）。如果数据集没有 ``project_name``，
+            跟踪和跨度将记录到此项目（省略时记录到 ``Default Project``）。
 
-        experiment_config: configuration of the experiment.
+        experiment_config: 实验配置。
 
-        verbose: an integer value that controls evaluation output logs such as summary and tqdm progress bar.
+        verbose: 控制评估输出日志（如摘要和 tqdm 进度条）的整数值。
 
-        nb_samples: number of samples to evaluate.
+        nb_samples: 要评估的样本数。
 
-        task_threads: amount of thread workers to run scoring metrics.
+        task_threads: 运行评分指标的线程工作者数量。
 
-        prompt: Prompt object to link with experiment.
+        prompt: 要与实验关联的 Prompt 对象。
 
-        dataset_item_ids: list of dataset item ids to evaluate. If not provided, all samples in the dataset will be evaluated.
+        dataset_item_ids: 要评估的数据集项目 ID 列表。如果未提供，将评估数据集中的所有样本。
 
-        dataset_sampler: An instance of a dataset sampler that will be used to sample dataset items for evaluation.
-            If not provided, all samples in the dataset will be evaluated.
+        dataset_sampler: 用于采样数据集项目进行评估的数据集采样器实例。
+            如果未提供，将评估数据集中的所有样本。
 
-        trial_count: number of times to execute the prompt and evaluate the LLM output for every dataset item.
+        trial_count: 对每个数据集项目执行提示和评估 LLM 输出的次数。
 
-        experiment_scoring_functions: List of callable functions that compute experiment-level scores.
-            Each function takes a list of TestResult objects and returns a list of ScoreResult objects.
-            These scores are computed after all test results are collected and represent aggregate
-            metrics across the entire experiment.
+        experiment_scoring_functions: 计算实验级别分数的可调用函数列表。
+            每个函数接受 TestResult 对象列表并返回 ScoreResult 对象列表。
+            这些分数在所有测试结果收集后计算，代表整个实验的聚合指标。
 
-        experiment_tags: List of tags to be associated with the experiment.
+        experiment_tags: 要与实验关联的标签列表。
 
-        dataset_filter_string: Optional OQL filter string to filter dataset items.
-            Supports filtering by tags, data fields, metadata, etc.
+        dataset_filter_string: 可选的 OQL 过滤字符串，用于过滤数据集项目。
+            支持按标签、数据字段、元数据等过滤。
 
-            Supported columns include:
-            - `id`, `source`, `trace_id`, `span_id`: String fields
-            - `data`: Dictionary field (use dot notation, e.g., "data.category")
-            - `tags`: List field (use "contains" operator)
-            - `created_at`, `last_updated_at`: DateTime fields (ISO 8601 format)
-            - `created_by`, `last_updated_by`: String fields
+            支持的列包括：
+            - `id`、`source`、`trace_id`、`span_id`：字符串字段
+            - `data`：字典字段（使用点表示法，例如 "data.category"）
+            - `tags`：列表字段（使用 "contains" 运算符）
+            - `created_at`、`last_updated_at`：日期时间字段（ISO 8601 格式）
+            - `created_by`、`last_updated_by`：字符串字段
 
-            Examples:
-            - `tags contains "failed"` - Items with 'failed' tag
-            - `data.category = "test"` - Items with specific data field value
-            - `created_at >= "2024-01-01T00:00:00Z"` - Items created after date
+            示例：
+            - `tags contains "failed"` - 带有 'failed' 标签的项目
+            - `data.category = "test"` - 具有特定数据字段值的项目
+            - `created_at >= "2024-01-01T00:00:00Z"` - 在日期之后创建的项目
     """
     if isinstance(dataset, test_suite_module.TestSuite):
-        # backwards compatibility for transition period
+        # 过渡期间的向后兼容性
         dataset = dataset.__internal_api__dataset__
 
     experiment_scoring_functions = (
@@ -1132,7 +1108,7 @@ def evaluate_prompt(
         resolved_ids=resolved_ids,
     )
 
-    # wrap scoring functions if any
+    # 如果有评分函数则包装
     scoring_metrics = _wrap_scoring_functions(
         scoring_functions=scoring_functions,
         scoring_metrics=scoring_metrics,
@@ -1167,7 +1143,7 @@ def evaluate_prompt(
 
     total_time = time.time() - start_time
 
-    # Compute experiment scores
+    # 计算实验分数
     computed_experiment_scores = evaluation_result.compute_experiment_scores(
         experiment_scoring_functions=experiment_scoring_functions,
         test_results=test_results,
@@ -1190,7 +1166,7 @@ def evaluate_prompt(
 
     _try_notifying_about_experiment_completion(experiment)
 
-    # Log experiment scores to backend
+    # 将实验分数记录到后端
     if computed_experiment_scores:
         experiment.log_experiment_scores(score_results=computed_experiment_scores)
 
@@ -1237,94 +1213,89 @@ def evaluate_optimization_trial(
     dataset_filter_string: Optional[str] = None,
 ) -> evaluation_result.EvaluationResult:
     """
-    Performs task evaluation on a given dataset.
+    对给定数据集执行任务评估。
 
     Args:
-        optimization_id: The ID of the optimization associated with the experiment.
+        optimization_id: 与实验关联的优化 ID。
 
-        dataset: An Opik Dataset or DatasetVersion instance
+        dataset: Opik Dataset 或 DatasetVersion 实例
 
-        task: A callable object that takes dict with dataset item content
-            as input and returns dict which will later be used for scoring.
+        task: 可调用对象，接受包含数据集项目内容的字典作为输入，
+            返回稍后用于评分的字典。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
-                • dataset_item — a dictionary containing the dataset item content,
-                • task_outputs — a dictionary containing the LLM task output.
-                • task_span - the data collected during the LLM task execution [optional].
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数包含一个评分方法，接受评估引擎提供的预定义参数：
+                • dataset_item — 包含数据集项目内容的字典，
+                • task_outputs — 包含 LLM 任务输出的字典。
+                • task_span - LLM 任务执行期间收集的数据 [可选]。
 
-        experiment_name_prefix: The prefix to be added to automatically generated experiment names to make them unique
-                    but grouped under the same prefix. For example, if you set `experiment_name_prefix="my-experiment"`,
-                    the first experiment created will be named `my-experiment-<unique-random-part>`.
+        experiment_name_prefix: 添加到自动生成的实验名称前的前缀，使其唯一
+            但分组在同一前缀下。例如，如果设置 `experiment_name_prefix="my-experiment"`，
+            创建的第一个实验将命名为 `my-experiment-<unique-random-part>`。
 
-        experiment_name: The name of the experiment associated with evaluation run.
-            If None, a generated name will be used.
+        experiment_name: 与评估运行关联的实验名称。
+            如果为 None，将使用生成的名称。
 
-        project_name: Deprecated. If the dataset has a ``project_name`` set, it
-            is always used and this override is ignored (with a warning). If
-            the dataset has no ``project_name``, traces and spans are logged to
-            this project (or to ``Default Project`` when omitted).
+        project_name: 已弃用。如果数据集设置了 ``project_name``，将始终使用该值，
+            此覆盖将被忽略（并显示警告）。如果数据集没有 ``project_name``，
+            跟踪和跨度将记录到此项目（省略时记录到 ``Default Project``）。
 
-        experiment_config: The dictionary with parameters that describe experiment
+        experiment_config: 描述实验参数的字典
 
-        scoring_metrics: List of metrics to calculate during evaluation.
-            Each metric has `score(...)` method, arguments for this method
-            are taken from the `task` output, check the signature
-            of the `score` method in metrics that you need to find out which keys
-            are mandatory in `task`-returned dictionary.
-            If no value provided, the experiment won't have any scoring metrics.
+        scoring_metrics: 评估期间要计算的指标列表。
+            每个指标都有 `score(...)` 方法，该方法的参数取自 `task` 输出，
+            检查所需指标的 `score` 方法签名以了解 `task` 返回字典中哪些键是必需的。
+            如果未提供值，实验将没有任何评分指标。
 
-        verbose: an integer value that controls evaluation output logs such as summary and tqdm progress bar.
-            0 - no outputs, 1 - outputs are enabled (default).
+        verbose: 控制评估输出日志（如摘要和 tqdm 进度条）的整数值。
+            0 - 无输出，1 - 启用输出（默认）。
 
-        nb_samples: number of samples to evaluate. If no value is provided, all samples in the dataset will be evaluated.
+        nb_samples: 要评估的样本数。如果未提供值，将评估数据集中的所有样本。
 
-        task_threads: number of thread workers to run tasks. If set to 1, no additional
-            threads are created, all tasks executed in the current thread sequentially.
-            are executed sequentially in the current thread.
-            Use more than 1 worker if your task object is compatible with sharing across threads.
+        task_threads: 运行任务的线程工作者数。如果设置为 1，不会创建额外的线程，
+            所有任务在当前线程中顺序执行。
+            如果您的任务对象支持跨线程共享，请使用多个工作者。
 
-        prompt: Prompt object to link with experiment. Deprecated, use `prompts` argument instead.
+        prompt: 要与实验关联的 Prompt 对象。已弃用，请改用 `prompts` 参数。
 
-        prompts: A list of Prompt objects to link with experiment.
+        prompts: 要与实验关联的 Prompt 对象列表。
 
-        scoring_key_mapping: A dictionary that allows you to rename keys present in either the dataset item or the task output
-            so that they match the keys expected by the scoring metrics. For example if you have a dataset item with the following content:
-            {"user_question": "What is Opik ?"} and a scoring metric that expects a key "input", you can use scoring_key_mapping
-            `{"input": "user_question"}` to map the "user_question" key to "input".
+        scoring_key_mapping: 允许您重命名数据集项目或任务输出中存在的键的字典，
+            以便它们与评分指标期望的键匹配。例如，如果您有以下内容的数据集项目：
+            {"user_question": "What is Opik ?"} 和期望键 "input" 的评分指标，
+            您可以使用 scoring_key_mapping `{"input": "user_question"}` 
+            将 "user_question" 键映射到 "input"。
 
-        dataset_item_ids: list of dataset item ids to evaluate. If not provided, all samples in the dataset will be evaluated.
+        dataset_item_ids: 要评估的数据集项目 ID 列表。如果未提供，将评估数据集中的所有样本。
 
-        dataset_sampler: An instance of a dataset sampler that will be used to sample dataset items for evaluation.
-            If not provided, all samples in the dataset will be evaluated.
+        dataset_sampler: 用于采样数据集项目进行评估的数据集采样器实例。
+            如果未提供，将评估数据集中的所有样本。
 
-        trial_count: number of times to execute the prompt and evaluate the LLM output for every dataset item.
+        trial_count: 对每个数据集项目执行提示和评估 LLM 输出的次数。
 
-        experiment_scoring_functions: List of callable functions that compute experiment-level scores.
-            Each function takes a list of TestResult objects and returns a list of ScoreResult objects.
-            These scores are computed after all test results are collected and represent aggregate
-            metrics across the entire experiment.
+        experiment_scoring_functions: 计算实验级别分数的可调用函数列表。
+            每个函数接受 TestResult 对象列表并返回 ScoreResult 对象列表。
+            这些分数在所有测试结果收集后计算，代表整个实验的聚合指标。
 
-        experiment_tags: A list of tags to associate with the experiment.
+        experiment_tags: 要与实验关联的标签列表。
 
-        dataset_filter_string: Optional OQL filter string to filter dataset items.
-            Supports filtering by tags, data fields, metadata, etc.
+        dataset_filter_string: 可选的 OQL 过滤字符串，用于过滤数据集项目。
+            支持按标签、数据字段、元数据等过滤。
 
-            Supported columns include:
-            - `id`, `source`, `trace_id`, `span_id`: String fields
-            - `data`: Dictionary field (use dot notation, e.g., "data.category")
-            - `tags`: List field (use "contains" operator)
-            - `created_at`, `last_updated_at`: DateTime fields (ISO 8601 format)
-            - `created_by`, `last_updated_by`: String fields
+            支持的列包括：
+            - `id`、`source`、`trace_id`、`span_id`：字符串字段
+            - `data`：字典字段（使用点表示法，例如 "data.category"）
+            - `tags`：列表字段（使用 "contains" 运算符）
+            - `created_at`、`last_updated_at`：日期时间字段（ISO 8601 格式）
+            - `created_by`、`last_updated_by`：字符串字段
 
-            Examples:
-            - `tags contains "failed"` - Items with 'failed' tag
-            - `data.category = "test"` - Items with specific data field value
-            - `created_at >= "2024-01-01T00:00:00Z"` - Items created after date
+            示例：
+            - `tags contains "failed"` - 带有 'failed' 标签的项目
+            - `data.category = "test"` - 具有特定数据字段值的项目
+            - `created_at >= "2024-01-01T00:00:00Z"` - 在日期之后创建的项目
     """
     if isinstance(dataset, test_suite_module.TestSuite):
-        # backwards compatibility for transition period
+        # 过渡期间的向后兼容性
         dataset = dataset.__internal_api__dataset__
 
     experiment_scoring_functions = (
@@ -1345,7 +1316,7 @@ def evaluate_optimization_trial(
         caller_name="evaluate_optimization_trial",
     )
 
-    # wrap scoring functions if any
+    # 如果有评分函数则包装
     scoring_metrics = _wrap_scoring_functions(
         scoring_functions=scoring_functions,
         scoring_metrics=scoring_metrics,
@@ -1429,63 +1400,49 @@ def evaluate_resume(
     task_threads: int = 16,
 ) -> evaluation_result.EvaluationResult:
     """
-    Resume an interrupted ``evaluate()`` run.
+    恢复中断的 ``evaluate()`` 运行。
 
-    Reads the resume state embedded in the existing experiment (dataset
-    version, default trial count, dataset filter string, nb_samples) and the
-    local checkpoint of resolved item ids when one was written (sampler or
-    explicit ``dataset_item_ids`` cases). Items that already have the expected
-    number of completed runs are skipped; items with fewer than expected get
-    the remaining trials executed.
+    读取现有实验中嵌入的恢复状态（数据集版本、默认试验次数、数据集过滤字符串、nb_samples）
+    以及在写入时解析的项目 ID 的本地检查点（采样器或显式 ``dataset_item_ids`` 情况）。
+    已完成预期运行次数的项目将被跳过；少于预期次数的项目将执行剩余试验。
 
-    The ``task`` and all scoring callables/mappings must be re-supplied —
-    Python callables cannot be persisted on the backend, and the
-    ``scoring_key_mapping`` is metric-aware (it names the keys specific
-    metrics expect), so it travels with those metrics.
+    ``task`` 和所有评分可调用对象/映射必须重新提供 —
+    Python 可调用对象无法在后端持久化，``scoring_key_mapping`` 是指标感知的
+    （它命名特定指标期望的键），因此它与这些指标一起传递。
 
-    The returned ``EvaluationResult`` describes the **full experiment**, not
-    just this call's slice: ``test_results`` is the union of the freshly
-    executed runs and reconstructed TestResults for items completed by
-    prior runs (using the feedback scores they already had stored).
-    ``experiment_scoring_functions`` run over that union, so aggregate
-    scores match what a fresh full ``evaluate()`` would have produced.
+    返回的 ``EvaluationResult`` 描述**完整实验**，而不仅仅是本次调用的部分：
+    ``test_results`` 是新执行的运行和先前运行完成的项目重建的 TestResults 的并集
+    （使用它们已存储的反馈分数）。``experiment_scoring_functions`` 在该并集上运行，
+    因此聚合分数与全新的完整 ``evaluate()`` 将产生的分数匹配。
 
     Args:
-        experiment_id: The id of the experiment to resume.
-        task: The callable to run for each pending dataset item. Must match
-            the one used in the original run; the framework does not enforce
-            consistency.
-        scoring_metrics: Per-item scoring metrics. Applied to runs executed
-            by this resume call. Previously-completed items keep their
-            original stored scores (no re-scoring).
-        scoring_functions: Per-item scoring functions, wrapped into metrics
-            internally. Same semantics as ``scoring_metrics``.
-        scoring_key_mapping: Dict renaming dataset/task-output keys so they
-            match the keys ``scoring_metrics`` expect. Must be consistent
-            with the metrics passed; the framework does not enforce
-            consistency with the original run.
-        experiment_scoring_functions: Aggregate scoring callables that take
-            the list of ``TestResult`` objects and return ``ScoreResult``\\ s.
-            Computed over the merged set (previously-completed + freshly
-            executed), so aggregate scores reflect the full experiment.
-        verbose: Verbosity level (0 silent, 1 default, 2 detailed stats).
-        task_threads: Number of worker threads for task execution.
+        experiment_id: 要恢复的实验 ID。
+        task: 要为每个待处理数据集项目运行的可调用对象。必须与原始运行中使用的匹配；
+            框架不强制一致性。
+        scoring_metrics: 每个项目评分指标。应用于此恢复调用执行的运行。
+            先前完成的项目保留其原始存储的分数（不重新评分）。
+        scoring_functions: 每个项目评分函数，在内部包装为指标。
+            与 ``scoring_metrics`` 语义相同。
+        scoring_key_mapping: 重命名数据集/任务输出键的字典，使其与
+            ``scoring_metrics`` 期望的键匹配。必须与传递的指标一致；
+            框架不强制与原始运行的一致性。
+        experiment_scoring_functions: 聚合评分可调用对象，接受 ``TestResult`` 对象列表
+            并返回 ``ScoreResult``。在合并集（先前完成 + 新执行）上计算，
+            因此聚合分数反映完整实验。
+        verbose: 详细级别（0 静默，1 默认，2 详细统计）。
+        task_threads: 任务执行的工作线程数。
 
     Returns:
-        ``EvaluationResult`` representing the full experiment after this
-        resume call. ``test_results`` spans both reconstructed prior items
-        and items executed by this call.
+        表示此恢复调用后完整实验的 ``EvaluationResult``。
+        ``test_results`` 涵盖重建的先前项目和此调用执行的项目。
 
     Raises:
-        opik.exceptions.ExperimentNotFound: when the experiment does not exist.
-        ExperimentNotResumable: when the experiment was created with a
-            configuration that prevents safe resume (e.g. an older SDK
-            version that did not embed resume state).
-        LocalCheckpointMissing: when the experiment requires a local
-            checkpoint of resolved ids and the checkpoint file is not on this
-            machine. Resume from the original machine that wrote the
-            checkpoint, or re-supply the original ``dataset_item_ids`` via a
-            fresh ``evaluate()`` call.
+        opik.exceptions.ExperimentNotFound: 当实验不存在时。
+        ExperimentNotResumable: 当实验使用阻止安全恢复的配置创建时
+            （例如，未嵌入恢复状态的旧 SDK 版本）。
+        LocalCheckpointMissing: 当实验需要解析 ID 的本地检查点
+            且检查点文件不在此机器上时。从写入检查点的原始机器恢复，
+            或通过新的 ``evaluate()`` 调用重新提供原始 ``dataset_item_ids``。
     """
     experiment_scoring_functions = experiment_scoring_functions or []
 
@@ -1508,9 +1465,8 @@ def evaluate_resume(
         project_name=project_name,
     )
 
-    # Snapshot already-completed runs **before** ``_evaluate_task`` starts
-    # writing new experiment items, otherwise the resume call's own fresh
-    # trials would be double-counted in the merged result.
+    # 在 ``_evaluate_task`` 开始写入新实验项目之前快照已完成的运行，
+    # 否则恢复调用自身的新试验会在合并结果中被重复计算。
     previous_test_results = resume_merge.reconstruct_previous_test_results(
         experiment=context.experiment,
         dataset_=context.dataset,
@@ -1538,12 +1494,11 @@ def evaluate_resume(
         previous_test_results=previous_test_results,
     )
 
-    # ``_evaluate_task`` already logged ``experiment_scoring_functions``
-    # over the freshly-replayed slice. Recompute over the merged set and
-    # overwrite — the final write reflects the whole experiment, which
-    # is what the user (and downstream readers) actually want. We're OK
-    # with a brief slice-only window on the backend between the two
-    # writes; rate-limit / concurrent-read risk is negligible here.
+    # ``_evaluate_task`` 已经记录了 ``experiment_scoring_functions``
+    # 在新重放的切片上。在合并集上重新计算并覆盖 —
+    # 最终写入反映整个实验，这是用户（和下游读者）实际想要的。
+    # 我们可以接受后端在两次写入之间的短暂切片窗口；
+    # 这里的速率限制/并发读取风险可以忽略不计。
     merged_scores = evaluation_result.compute_experiment_scores(
         experiment_scoring_functions=experiment_scoring_functions,
         test_results=merged.test_results,
@@ -1559,12 +1514,11 @@ def _resolve_resume_items(
     context: "resume_module.ResumeContext",
 ) -> List[dataset_item.DatasetItem]:
     """
-    Resolve the candidate item set for a resume run.
+    解析恢复运行的候选项目集。
 
-    When a local checkpoint pinned the resolved ids, use it as-is (the
-    sampler/explicit-ids decision was locked in by the original call).
-    Otherwise iterate via the original ``dataset_filter_string`` and
-    ``nb_samples``, against the version-pinned dataset.
+    当本地检查点固定了解析的 ID 时，按原样使用（采样器/显式 ID 决策
+    已被原始调用锁定）。否则通过原始 ``dataset_filter_string`` 和
+    ``nb_samples`` 迭代，针对版本固定的数据集。
     """
     if context.candidate_dataset_item_ids is not None:
         items_iter, _ = helpers.resolve_dataset_items(
@@ -1596,41 +1550,39 @@ def evaluate_on_dict_items(
     scoring_threads: int = 16,
 ) -> evaluation_result.EvaluationResultOnDictItems:
     """
-    Lightweight evaluation function that evaluates a task on dataset items (as dictionaries)
-    without requiring a Dataset object or creating an experiment.
+    轻量级评估函数，在数据集项目（作为字典）上评估任务，
+    无需 Dataset 对象或创建实验。
 
-    This function is useful for optimization scenarios where you need to evaluate many
-    candidate solutions quickly using Opik's metric infrastructure. It creates traces for
-    tracking but doesn't require experiment setup or dataset management.
+    此函数适用于需要使用 Opik 的指标基础设施快速评估多个候选解决方案的优化场景。
+    它创建跟踪用于追踪，但不需要实验设置或数据集管理。
 
     Args:
-        items: List of dataset item contents (dictionaries with the data to evaluate).
+        items: 数据集项目内容列表（包含要评估数据的字典）。
 
-        task: A callable object that takes dict with dataset item content
-            as input and returns dict which will later be used for scoring.
+        task: 可调用对象，接受包含数据集项目内容的字典作为输入，
+            返回稍后用于评分的字典。
 
-        scoring_metrics: List of metrics to calculate during evaluation.
-            Each metric's `score(...)` method will be called with arguments taken from
-            the dataset item and task output.
+        scoring_metrics: 评估期间要计算的指标列表。
+            每个指标的 `score(...)` 方法将使用从数据集项目和任务输出中获取的参数调用。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function accepts predefined arguments:
-                • dataset_item — a dictionary containing the dataset item content,
-                • task_outputs — a dictionary containing the LLM task output.
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数接受预定义参数：
+                • dataset_item — 包含数据集项目内容的字典，
+                • task_outputs — 包含 LLM 任务输出的字典。
 
-        project_name: The name of the project for logging traces.
+        project_name: 用于记录跟踪的项目名称。
 
-        verbose: Controls evaluation output logs and progress bars.
-            0 - no outputs (default), 1 - enable outputs.
+        verbose: 控制评估输出日志和进度条。
+            0 - 无输出（默认），1 - 启用输出。
 
-        scoring_key_mapping: A dictionary that allows you to rename keys present in either
-            the dataset item or the task output to match the keys expected by scoring metrics.
+        scoring_key_mapping: 允许您重命名数据集项目或任务输出中存在的键的字典，
+            以便它们与评分指标期望的键匹配。
 
-        scoring_threads: Number of thread workers to run scoring metrics.
+        scoring_threads: 运行评分指标的线程工作者数。
 
     Returns:
-        EvaluationResultOnDictItems object containing test results and providing methods
-        to aggregate scores, similar to the regular evaluation result.
+        EvaluationResultOnDictItems 对象，包含测试结果并提供聚合分数的方法，
+        类似于常规评估结果。
 
     Example:
         ```python
@@ -1643,9 +1595,9 @@ def evaluate_on_dict_items(
         ]
 
         def my_task(item):
-            # Your LLM call here
+            # 您的 LLM 调用在此
             question = item["input"]
-            # ... call model ...
+            # ... 调用模型 ...
             return {"output": model_output}
 
         result = opik.evaluate_on_dict_items(
@@ -1655,16 +1607,16 @@ def evaluate_on_dict_items(
             scoring_key_mapping={"reference": "expected_output"},
         )
 
-        # Access individual test results
+        # 访问单个测试结果
         for test_result in result.test_results:
             print(f"Score: {test_result.score_results[0].value}")
 
-        # Get aggregated statistics
+        # 获取聚合统计信息
         aggregated = result.aggregate_evaluation_scores()
         print(f"Mean equals score: {aggregated['equals_metric'].mean}")
         ```
     """
-    # Wrap scoring functions if any
+    # 如果有评分函数则包装
     scoring_metrics = _wrap_scoring_functions(
         scoring_functions=scoring_functions,
         scoring_metrics=scoring_metrics,
@@ -1672,7 +1624,7 @@ def evaluate_on_dict_items(
     )
 
     if not scoring_metrics:
-        LOGGER.warning("No scoring metrics provided for items evaluation")
+        LOGGER.warning("未提供用于项目评估的评分指标")
         return evaluation_result.EvaluationResultOnDictItems(test_results=[])
 
     client = opik_client.get_global_client()

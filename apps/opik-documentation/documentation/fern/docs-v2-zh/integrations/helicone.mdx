@@ -1,0 +1,162 @@
+---
+description: 了解如何将 Helicone 与 Opik 集成，使用标准 Helicone 集成设置来记录和监控您的 LLM 流量。
+headline: Helicone | Opik 文档
+og:description: 了解如何使用 OpenAI SDK 包装器将 Helicone 与 Opik 集成，记录所有 LLM 调用以实现全面可观测性。
+og:site_name: Opik 文档
+og:title: 将 Helicone 与 Opik 集成实现 LLM 可观测性
+title: 使用 Opik 实现 Helicone 可观测性
+---
+
+[Helicone](https://www.helicone.ai/) 是一个开源的 LLM 可观测性平台，为 LLM 应用提供监控、日志记录和分析功能。它作为应用程序与 LLM 提供商之间的代理层，提供请求日志记录、缓存、速率限制和成本跟踪等功能。
+
+## 网关概述
+
+Helicone 为 LLM 应用提供全面的可观测性层，功能包括：
+
+- **统一 API**：兼容 OpenAI 的 API，通过 Helicone 模型注册表可访问 100+ 模型
+- **智能路由**：自动故障转移和跨提供商回退，确保可靠性
+- **无速率限制**：跳过提供商层级限制，积分零加价
+- **请求日志记录**：自动记录所有 LLM 请求和响应
+- **缓存**：通过语义缓存降低成本并提升延迟表现
+- **成本跟踪**：通过统一可观测性监控不同模型和提供商的支出
+- **多提供商支持**：支持 OpenAI、Anthropic、Azure OpenAI 等
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=colab&utm_content=helicone&utm_campaign=opik) 提供 Opik 平台的托管版本。[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=colab&utm_content=helicone&utm_campaign=opik) 并获取您的 API Key。
+
+> 您也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=colab&utm_content=helicone&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+首先，确保您已安装 `opik` 和 `openai` 包：
+
+```bash
+pip install opik openai
+```
+
+### 配置 Opik
+
+根据您的部署类型配置 Opik Python SDK。有关详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管 vs 云 vs 企业版**设置
+- **配置文件**和环境变量
+
+### 配置 Helicone
+
+您需要一个 Helicone API key。可以通过在 [Helicone](https://www.helicone.ai/) 注册获取。
+
+将 API key 设置为环境变量：
+
+```bash
+export HELICONE_API_KEY="YOUR_HELICONE_API_KEY"
+```
+
+或通过代码设置：
+
+```python
+import os
+import getpass
+
+if "HELICONE_API_KEY" not in os.environ:
+    os.environ["HELICONE_API_KEY"] = getpass.getpass("Enter your Helicone API key: ")
+
+```
+
+## 记录 LLM 调用
+
+由于 Helicone 提供兼容 OpenAI 的代理，我们可以使用 [Opik OpenAI SDK 包装器](/integrations/openai) 自动将 Helicone 调用作为 generations 记录到 Opik 中。
+
+### 简单 LLM 调用
+
+```python
+import os
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 Helicone 的 base URL 创建 OpenAI 客户端
+client = OpenAI(
+    api_key=os.environ["HELICONE_API_KEY"],
+    base_url="https://ai-gateway.helicone.ai"
+)
+
+# 使用 Opik 跟踪包装客户端
+client = track_openai(client, project_name="helicone-integration-demo")
+
+# 发起聊天补全请求
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a knowledgeable AI assistant."},
+        {"role": "user", "content": "What is the largest city in France?"}
+    ]
+)
+
+# 打印助手的回复
+print(response.choices[0].message.content)
+```
+
+## 高级用法
+
+### 配合 `@track` 装饰器使用
+
+如果您的 LLM 流程包含多个步骤，可以使用 `@track` 装饰器记录每个步骤的 traces。如果在某个步骤中调用了 Helicone，该 LLM 调用将关联到对应的步骤：
+
+```python
+import os
+from opik import track
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+# 使用 Helicone 的 base URL 创建并包装 OpenAI 客户端
+client = OpenAI(
+    api_key=os.environ["HELICONE_API_KEY"],
+    base_url="https://ai-gateway.helicone.ai"
+)
+client = track_openai(client)
+
+@track
+def generate_response(prompt: str):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a knowledgeable AI assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track
+def refine_response(initial_response: str):
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You enhance and polish text responses."},
+            {"role": "user", "content": f"Please improve this response: {initial_response}"}
+        ]
+    )
+    return response.choices[0].message.content
+
+@track(project_name="helicone-integration-demo")
+def generate_and_refine(prompt: str):
+    # 第一次 LLM 调用：生成初始响应
+    initial = generate_response(prompt)
+    
+    # 第二次 LLM 调用：优化响应
+    refined = refine_response(initial)
+    
+    return refined
+
+# 使用示例
+result = generate_and_refine("Explain quantum computing in simple terms.")
+```
+
+Trace 将展示带有层级 span 的嵌套 LLM 调用。
+
+## 进一步改进
+
+如果您对 Helicone 集成有任何改进建议，请在 [GitHub](https://github.com/comet-ml/opik/issues) 上提交 issue 告知我们。

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Span, Trace } from "@/types/traces";
 import get from "lodash/get";
 import CollapsibleSection from "@/v2/pages-shared/traces/TraceDetailsPanel/CollapsibleSection";
@@ -54,6 +55,7 @@ const mapRawEventToEventWithTimestamp = (
 };
 
 const EventsList: React.FC<EventsListProps> = ({ data, isLoading, search }) => {
+  const { t } = useTranslation("tracing");
   // Check if events exist in metadata and map them to processed events
   const rawEvents = get(data.metadata, METADATA_EVENTS_KEY);
 
@@ -80,13 +82,13 @@ const EventsList: React.FC<EventsListProps> = ({ data, isLoading, search }) => {
 
   if (isLoading) {
     return (
-      <CollapsibleSection title="Events" disabled bodyClassName="p-3">
+      <CollapsibleSection title={t("detailsTab.events")} disabled bodyClassName="p-3">
         <Loader />
       </CollapsibleSection>
     );
   }
 
-  return <CodeBlock title="Events" data={events} search={search} withSearch />;
+  return <CodeBlock title={t("detailsTab.events")} data={events} search={search} withSearch />;
 };
 
 export default EventsList;

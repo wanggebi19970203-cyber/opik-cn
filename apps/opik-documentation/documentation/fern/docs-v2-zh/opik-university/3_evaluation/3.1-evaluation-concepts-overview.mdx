@@ -1,0 +1,48 @@
+---
+headline: 评估概念和概述 | Opik 文档
+og:description: 探索 Opik 中的评估概念，增强您对有效评估的理解和实施策略。
+og:site_name: Opik 文档
+og:title: 评估概念概述 - Opik
+title: 评估概念和概述
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div style={{
+    position: 'relative',
+    paddingBottom: '56.25%', // 16:9 aspect ratio
+    height: 0,
+    overflow: 'hidden',
+    maxWidth: '100%',
+    marginBottom: '20px'
+}}>
+    <iframe
+        src="https://www.loom.com/embed/a0fadd90c46d41a6b0d8816e1b924b95?sid=17e17c65-f335-486c-9f59-b8ac33eced3f"
+        frameborder="0"
+        webkitallowfullscreen
+        mozallowfullscreen
+        allowfullscreen
+        style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+        }}
+    />
+</div>
+
+## 使用 Opik 理解 LLM 评估
+
+本视频介绍 LLM [评估](/v1/evaluation/overview)的基础知识以及它与传统机器学习[指标](/v1/evaluation/metrics/overview)的区别。与依赖准确率和 F1 分数的传统 ML 评估不同，LLM [评估](/v1/evaluation/overview)需要评估文本质量，如相关性、准确性和有用性。您将了解 Opik 系统化的三组件评估框架，以及它如何在数百个测试用例中实现定量性能测量。
+
+## 关键亮点
+
+- **超越传统[指标](/v1/evaluation/metrics/overview)**：LLM [评估](/v1/evaluation/overview)需要新方法，因为输出是必须评估相关性、准确性和有用性等质量的文本
+- **三组件框架**：Opik 的[评估](/v1/evaluation/overview)系统由[数据集](/v1/evaluation/manage_datasets)（示例输入/输出）、[指标](/v1/evaluation/metrics/overview)（自动评分方法）和[实验](/v1/evaluation/evaluate_your_llm)（评估运行）组成
+- **全面的[数据集](/v1/evaluation/manage_datasets)管理**：代表您特定用例和需求的示例输入和预期输出集合
+- **灵活的[指标](/v1/evaluation/metrics/overview)系统**：从简单的[启发式方法](/v1/evaluation/metrics/heuristic_metrics)到复杂的 [LLM 作为评判者](/v1/evaluation/metrics/g_eval)方法，用于自动输出评分
+- **系统化实验**：每个[实验](/v1/evaluation/evaluate_your_llm)代表一个特定的 LLM 应用配置，使用定义的[指标](/v1/evaluation/metrics/overview)针对[数据集](/v1/evaluation/manage_datasets)进行测试
+- **模型比较能力**：在相同[数据集](/v1/evaluation/manage_datasets)上系统地比较不同模型（GPT-3.5 vs Claude 3.5 vs GPT-4 vs Gemini）
+- **[提示](/v1/prompt_engineering/prompt_management)模板测试**：使用特定模型针对[数据集](/v1/evaluation/manage_datasets)[评估](/v1/evaluation/evaluate_prompt)各种提示模板以进行优化
+- **定量决策**：用数百个测试用例的定量测量替代基于少量示例的主观判断
+- **生产信心**：结构化的[评估](/v1/evaluation/overview)方法在将 LLM 应用部署到生产环境之前提供信心

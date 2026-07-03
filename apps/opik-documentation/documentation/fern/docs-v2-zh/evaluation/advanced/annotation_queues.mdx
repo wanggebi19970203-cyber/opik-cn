@@ -1,0 +1,449 @@
+---
+headline: 标注队列 | Opik 文档
+og:description: 通过 Opik 直观的标注队列功能，让领域专家高效审查和标注输出，优化您的 AI 项目。
+og:site_name: Opik 文档
+og:title: 使用 Opik 简化标注队列
+subtitle: 通过便捷的队列、邀请流程和简洁的标注界面，让领域专家轻松审查和标注智能体输出
+title: 标注队列
+---
+
+让领域专家参与 AI 项目至关重要，因为他们提供的领域知识和情境判断能够确保模型输出准确、相关，并符合实际预期。Opik 的标注队列功能使领域专家（SME）能够轻松审查和标注智能体输出。该功能通过便捷的队管管理、简单的邀请流程以及专为非技术用户设计的无干扰标注体验，简化了人在回路的工作流程。
+
+![SME 标注流程](/img/evaluation/sme_flow_annotating.gif)
+
+标注队列是需要人工审查和反馈的追踪记录或对话线程的集合。它们帮助您组织待审内容、便捷地与领域专家共享、收集结构化反馈，并跟踪所有评估工作流的进度。
+
+## 创建和管理标注队列
+
+每个标注队列由追踪记录或对话线程的集合、评估指令和反馈定义组成：
+
+1. **队列配置**：设置队列的明确指令和范围
+2. **内容选择**：添加需要人工审查的追踪记录或对话线程
+3. **领域专家访问**：与领域专家共享队列链接以进行标注
+
+### 创建您的第一个队列
+
+导航到项目中的**标注队列**页面，点击**创建队列**。
+
+<Frame>
+  <img src="/img/evaluation/create_new_annotation_queue.png" />
+</Frame>
+
+配置队列的以下属性：
+
+- **名称**：队列的清晰标识
+- **范围**：选择追踪记录或对话线程
+- **指令**：为审查者提供上下文和指导
+- **反馈定义**：选择领域专家用于评分的指标
+
+### 向队列添加内容
+
+您可以通过多种方式向队列添加项目：
+
+**从追踪记录/对话线程列表：**
+
+- 选择一个或多个项目
+- 点击**添加到 -> 添加到标注队列**
+- 选择现有队列或创建新队列
+
+**从单个追踪记录/对话线程详情：**
+
+- 打开追踪记录或对话线程详情视图
+- 在操作面板中点击**添加到 -> 添加到标注队列**
+- 选择目标队列
+
+<Frame>
+  <img src="/img/evaluation/add_to_annotation_queue.png" />
+</Frame>
+
+### 与领域专家共享
+
+队列设置完成后，您可以与领域专家共享：
+
+**复制队列链接：**
+
+<Tip>
+  **需要领域专家访问权限**：领域专家必须先被邀请到您的工作区，然后才能访问标注队列。请确保先邀请他们加入您的项目，然后再共享队列链接。
+</Tip>
+
+- 点击队列上的**共享队列**按钮复制队列链接
+- 通过电子邮件、Slack 或其他沟通工具直接与领域专家共享链接
+
+## 领域专家标注体验
+
+当领域专家访问队列时，他们会看到一个专为高效审查设计的简洁、无干扰的界面。
+
+<Frame>
+  <img src="/img/evaluation/sme_instruction_page.png" />
+</Frame>
+
+标注工作流以清晰的指令和上下文开始，让领域专家了解评估内容和如何提供有意义的反馈。
+
+<Frame>
+  <img src="/img/evaluation/sme_annotation_page.png" />
+</Frame>
+
+领域专家界面提供：
+
+1. **简洁、专注的设计**：无技术术语或复杂导航
+2. **清晰的指令**：突出显示队列特定的指导
+3. **结构化反馈**：带有清晰描述的预定义指标
+4. **进度跟踪**：完成状态的可视化指示
+5. **评论系统**：可选的文本反馈，提供额外上下文
+
+### 标注工作流
+
+1. **访问队列**：领域专家点击共享链接
+2. **审查内容**：检查追踪记录或对话线程输出
+3. **提供反馈**：使用预定义指标进行评分
+4. **添加评论**：可选的文本反馈
+5. **提交并继续**：转到下一个项目
+
+## 通过编程方式管理队列
+
+您可以使用 Python 或 TypeScript SDK 以编程方式创建和管理标注队列。这对于根据特定条件自动向队列添加项目非常有用。
+
+### 创建标注队列
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+### 创建追踪记录标注队列
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Create a traces annotation queue
+queue = client.create_traces_annotation_queue(
+    name="High Priority Traces",
+    description="Traces that need review",
+    instructions="Check for accuracy and completeness",
+    feedback_definition_names=["relevance", "accuracy"]
+)
+
+print(f"Created queue: {queue.name} (ID: {queue.id})")
+```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Create a trace annotation queue
+const queue = await client.createTracesAnnotationQueue({
+  name: "High Priority Traces",
+  description: "Traces that need review",
+  instructions: "Check for accuracy and completeness",
+  feedbackDefinitionNames: ["relevance", "accuracy"],
+});
+
+console.log(`Created queue: ${queue.name} (ID: ${queue.id})`);
+```
+
+    </Tab>
+</Tabs>
+
+### 向队列添加追踪记录
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Get an existing traces queue
+queue = client.get_traces_annotation_queue("queue-id")
+
+# Search for traces and add them to the queue
+traces = client.search_traces(
+  project_name="my-project",
+  filter_string='feedback_scores.user_frustration > 0.5'
+)
+queue.add_traces(traces)
+
+# For a single trace, wrap it in a list
+single_trace = client.get_trace_content("trace-id")
+queue.add_traces([single_trace])
+```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Get an existing traces queue
+const queue = await client.getTracesAnnotationQueue("queue-id");
+
+// Search for traces and add them to the queue
+const traces = await client.searchTraces({
+  projectName: "my-project",
+  filterString: 'feedback_scores.user_frustration > 0.5',
+});
+await queue.addTraces(traces);
+
+// For a single trace, wrap it in an array
+const singleTraceResponse = await client.api.traces.getTraceById("trace-id");
+await queue.addTraces([singleTraceResponse.data]);
+```
+
+    </Tab>
+</Tabs>
+
+### 从队列获取项目
+
+使用 `get_items()` 检索队列中当前所有的追踪记录（或对话线程，对于对话线程队列）。项目范围限定在队列所属的项目内。
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Get an existing traces queue
+queue = client.get_traces_annotation_queue("queue-id")
+
+# Fetch all traces currently in the queue
+traces = queue.get_items()
+
+for trace in traces:
+    print(trace.id, trace.name)
+
+# For a threads queue, get_items() returns the threads instead
+thread_queue = client.get_threads_annotation_queue("thread-queue-id")
+threads = thread_queue.get_items()
+```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Get an existing traces queue
+const queue = await client.getTracesAnnotationQueue("queue-id");
+
+// Fetch all traces currently in the queue
+const traces = await queue.getItems();
+
+for (const trace of traces) {
+  console.log(trace.id, trace.name);
+}
+
+// For a threads queue, getItems() returns the threads instead
+const threadQueue = await client.getThreadsAnnotationQueue("thread-queue-id");
+const threads = await threadQueue.getItems();
+```
+
+    </Tab>
+</Tabs>
+
+### 使用对话线程队列
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Create a threads annotation queue
+thread_queue = client.create_threads_annotation_queue(
+    name="Thread Review Queue",
+    description="Threads needing review"
+)
+
+# Get threads and add them to the queue
+threads_client = client.get_threads_client()
+important_threads = threads_client.search_threads(
+  project_name="my-project",
+  filter_string='tags contains "important"'
+)
+thread_queue.add_threads(important_threads)
+```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Create a thread annotation queue
+const threadQueue = await client.createThreadsAnnotationQueue({
+  name: "Thread Review Queue",
+  description: "Threads needing review",
+});
+
+// Search for threads and add them to the queue
+const threads = await client.searchThreads({
+  projectName: "my-project",
+  filterString: 'tags contains "important"',
+});
+await threadQueue.addThreads(threads);
+```
+
+    </Tab>
+</Tabs>
+
+### 更新和删除队列
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Get an existing traces queue
+queue = client.get_traces_annotation_queue("queue-id")
+
+# Update queue properties
+queue.update(
+    description="Traces that need a thorough review",
+    instructions="Check the conversation tone"
+)
+
+# Remove traces from the queue
+short_traces = client.search_traces(
+  project_name="my-project",
+  filter_string='duration < 10'
+)
+queue.remove_traces(short_traces)
+
+# Delete the queue
+queue.delete()
+```
+
+### 列出标注队列
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Get all traces annotation queues for a project
+traces_queues = client.get_traces_annotation_queues(project_name="my-project")
+
+for queue in traces_queues:
+    print(f"Traces Queue: {queue.name}, Items: {queue.items_count}")
+
+# Get all threads annotation queues for a project
+threads_queues = client.get_threads_annotation_queues(project_name="my-project")
+
+for queue in threads_queues:
+    print(f"Threads Queue: {queue.name}, Items: {queue.items_count}")
+```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Get an existing traces queue
+const queue = await client.getTracesAnnotationQueue("queue-id");
+
+// Update queue properties
+await queue.update({
+  description: "Traces that need a thorough review",
+  instructions: "Check the conversation tone",
+});
+
+// Remove traces from the queue
+const shortTraces = await client.searchTraces({
+  projectName: "my-project",
+  filterString: "duration < 10",
+});
+await queue.removeTraces(shortTraces);
+
+// Delete the queue
+await queue.delete();
+```
+
+    </Tab>
+</Tabs>
+
+### 列出标注队列
+
+<Tabs>
+    <Tab value="Python" title="Python">
+
+```python
+import opik
+
+client = opik.Opik()
+
+# Get all traces annotation queues for a project
+traces_queues = client.get_traces_annotation_queues(project_name="my-project")
+
+for queue in traces_queues:
+    print(f"Traces Queue: {queue.name}, Items: {queue.items_count}")
+
+# Get all threads annotation queues for a project
+threads_queues = client.get_threads_annotation_queues(project_name="my-project")
+
+for queue in threads_queues:
+    print(f"Threads Queue: {queue.name}, Items: {queue.items_count}")
+```
+
+    </Tab>
+    <Tab value="TypeScript" title="TypeScript">
+
+```typescript
+import { Opik } from "opik";
+
+const client = new Opik();
+
+// Get all traces annotation queues for a project
+const tracesQueues = await client.getTracesAnnotationQueues({
+  projectName: "my-project",
+});
+
+for (const queue of tracesQueues) {
+  const itemsCount = await queue.getItemsCount();
+  console.log(
+    `Queue: ${queue.name}, Scope: ${queue.scope}, Items: ${itemsCount}`
+  );
+}
+
+// Get all threads annotation queues for a project
+const threadsQueues = await client.getThreadsAnnotationQueues({
+  projectName: "my-project",
+});
+
+for (const queue of threadsQueues) {
+  const itemsCount = await queue.getItemsCount();
+  console.log(
+    `Queue: ${queue.name}, Scope: ${queue.scope}, Items: ${itemsCount}`
+  );
+}
+```
+
+    </Tab>
+</Tabs>
+
+## 了解更多
+
+您可以在以下内容中了解更多关于 Opik 的标注和评估功能：
+
+1. [评估概览](/evaluation/overview)
+2. [反馈定义](/administration/workspace-settings/feedback_definitions)

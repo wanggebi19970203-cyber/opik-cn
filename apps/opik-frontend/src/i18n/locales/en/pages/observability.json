@@ -1,0 +1,11 @@
+{
+  "observability": {
+    "title": "Observability",
+    "description": "Monitor and observe your applications",
+    "features": {
+      "tracing": "Tracing",
+      "metrics": "Metrics",
+      "logging": "Logging"
+    }
+  }
+}

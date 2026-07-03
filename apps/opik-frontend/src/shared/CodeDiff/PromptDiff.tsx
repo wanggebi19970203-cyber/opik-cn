@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { LLM_MESSAGE_ROLE_NAME_MAP } from "@/constants/llm";
 import {
   OpenAIMessage,
@@ -18,6 +19,7 @@ const MessagesDiff: React.FC<{
   baseline: OpenAIMessage[];
   current: OpenAIMessage[];
 }> = ({ baseline, current }) => {
+  const { t } = useTranslation("common");
   const baselineByRole = useMemo(() => {
     const map = new Map<string, string>();
     baseline.forEach((msg) => {
@@ -74,17 +76,17 @@ const MessagesDiff: React.FC<{
               </Tag>
               {hasChanged && baseContent && currContent && (
                 <Tag variant="orange" size="sm">
-                  Changed
+                  {t("codeDiff.changed")}
                 </Tag>
               )}
               {!baseContent && currContent && (
                 <Tag variant="green" size="sm">
-                  Added
+                  {t("codeDiff.added")}
                 </Tag>
               )}
               {baseContent && !currContent && (
                 <Tag variant="red" size="sm">
-                  Removed
+                  {t("codeDiff.removed")}
                 </Tag>
               )}
             </div>

@@ -1,0 +1,156 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog
+---
+
+以下是自上次发布以来我们做出的最相关的改进：
+
+## 原生 Slack 和 PagerDuty 告警
+
+我们现在提供**原生 Slack 和 PagerDuty 告警集成**，无需任何中间件配置。直接在 Opik 中设置告警，当工作区中发生重要事件时接收通知。
+
+通过原生集成，你可以：
+- 直接从 Opik 设置中**配置 Slack 频道**
+- **设置 PagerDuty 事件**，无需额外的 webhook 配置
+- 为错误、反馈评分和关键事件**接收实时通知**
+- 通过内置集成**简化监控工作流**
+
+<Frame>
+  <img src="/img/production/create_alert_form.png" alt="创建告警表单" />
+</Frame>
+
+👉 在此阅读完整文档 - [告警指南](/v1/production/alerts)
+
+
+## 多模态 LLM-as-a-Judge 视觉评估支持
+
+LLM as a Judge 指标现在可以在使用视觉能力模型时评估包含图像的 traces。这适用于：
+
+- **评估图像生成质量** - 评估生成图像的质量和相关性
+- **分析多模态应用中的视觉内容** - 评估你的应用处理视觉输入的效果
+- **验证基于图像的响应** - 确保你的视觉模型产生准确且相关的输出
+
+要在评估 prompts 中引用 traces 中的图像数据：
+- 在 prompt 编辑器中，点击**"Images +"**按钮添加图像变量
+- 使用变量映射部分将图像变量映射到包含图像数据的 trace 字段
+
+<Frame>
+  <img src="/img/production/online_evaluation_rule_add_image.png" />
+</Frame>
+
+👉 阅读更多：[使用图像评估 traces](/v1/production/rules#evaluating-traces-with-images)
+
+
+## Prompt 生成器和改进器
+
+我们推出了 **Prompt 生成器**和 **Prompt 改进器**——两款 AI 驱动的工具，帮助你在 Playground 中更快地创建和优化 prompts。
+
+专为非技术用户设计，这些功能自动应用来自 OpenAI、Anthropic 和 Google 的最佳实践，帮助你在不离开 Playground 的情况下创建清晰、有效且生产级的 prompts。
+
+### 为什么重要
+
+Prompt 工程仍然是 LLM 开发中最大的瓶颈之一。通过这些工具，团队可以：
+- 从简单的任务描述**生成高质量 prompts**
+- 为清晰度、特异性和一致性**改进现有 prompts**
+- 在 Playground 中**无缝迭代和测试 prompts**
+
+### 工作原理
+
+- **Prompt 生成器** → 用自然语言描述你的任务；Opik 按照经过验证的设计原则创建完整的系统 prompt
+- **Prompt 改进器** → 选择现有 prompt；Opik 按照最佳实践进行增强
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_improvement.png" />
+</Frame>
+
+👉 阅读完整文档：[Prompt 生成器和改进器](/v1/prompt_engineering/improve)
+
+
+## Spans 和 Traces 中的高级 Prompt 集成
+
+我们实现了 **prompt 集成到 spans 和 traces 中**，在你的 Prompt 库、Traces 和 Playground 之间创建了无缝连接。
+
+你现在可以使用 `opik_context` 模块将 prompts 直接与 traces 和 spans 关联——这样每次执行都会自动绑定到所使用的确切 prompt 版本。
+
+了解哪个 prompt 产生了给定的 trace，对于构建简单和高级多 prompt、多 Agent 系统的用户来说至关重要。
+
+通过此集成，你可以：
+- **追踪每个函数或 span 中使用的 prompt 版本**
+- 直接从 trace 详情**审计和调试 prompts**
+- 在 Playground 中**即时复现或改进 prompts**
+- 在 prompt 设计、可观测性和迭代之间**形成闭环**
+
+添加后，你的 prompts 会出现在 trace 详情视图中——带有返回 Prompt 库和 Playground 的链接，一键即可迭代。
+
+<Frame>
+  <img src="/img/prompt_engineering/prompt_opik_context_update.png" />
+</Frame>
+
+👉 阅读更多：[将 prompts 添加到 traces 和 spans](/v1/prompt_engineering/prompt_management#adding-prompts-to-traces-and-spans)
+
+## Playground 中更好的无代码实验能力
+
+我们在 Playground 中引入了一系列改进，使实验更简单更强大：
+
+**关键增强：**
+
+1. 直接在 Playground 中**创建或选择数据集**
+2. **创建或选择在线评分规则** - 能够选择每次运行想要使用的规则
+3. **能够将数据集项传递给在线评分规则** - 这支持基于参考的实验，输出会自动与预期答案或真实值进行比较，使客观评估变得简单
+4. **一键导航到实验结果** - 从 Playground 中，用户现在可以：
+   - 跳转到单实验视图以详细检查指标和示例，或
+   - 前往比较实验视图以并排基准测试多次运行
+
+
+## 现有 Traces 和对话线程的按需在线评估
+
+我们在 Opik 中添加了**按需在线评估**，让用户可以对已记录的 traces 和对话线程运行指标——非常适合评估历史数据或回填新分数。
+
+### 工作原理
+
+选择 traces/对话线程，选择任何在线评分规则（如 Moderation、Equals、Contains），然后直接从 UI 运行评估——无需代码。
+
+结果以内联反馈评分的形式出现，并完全记录以供追溯。
+
+这使得：
+- 对现有数据进行**快速、无代码评估**
+- **轻松回溯衡量**模型和 Agent 性能
+- **历史数据分析**，无需重新运行 traces
+
+👉 阅读更多：[手动评估](/v1/tracing/annotate_traces#manual-evaluation)
+
+## Agent 评估指南
+
+我们添加了两份关于评估 Agents 的全面指南：
+
+### 1. 评估 Agent 轨迹
+
+本指南帮助你评估 Agent 在返回最终答案之前是否做出了正确的工具调用。它本质上是关于评估和评分 trace 内发生的事情。
+
+👉 阅读完整指南：[评估 Agent 轨迹](/v1/evaluation/evaluate_agent_trajectory)
+
+### 2. 评估多轮 Agents
+
+评估聊天机器人很困难，因为你需要评估的不是单个 LLM 响应，而是一段对话。本指南将引导你如何使用新的 `opik.simulation.SimulatedUser` 方法为你的 Agent 创建模拟对话线程。
+
+👉 阅读完整指南：[评估多轮 Agents](/v1/evaluation/evaluate_multi_turn_agents)
+
+这些新文档显著增强了我们的 Agent 评估功能集，并包含图表来可视化每种评估策略的工作原理。
+
+
+## 导入/导出命令
+
+添加了用于导入和导出 Opik 数据的新命令行功能：你现在可以将项目中的所有 traces、spans、数据集、prompts 和评估规则导出到本地 JSON 或 CSV 文件。还可以帮助你从本地 JSON 文件将数据导入到现有项目中。
+
+### 顶级用例
+- **迁移** - 在项目或环境之间移动数据
+- **备份** - 创建项目数据的本地备份
+- **版本控制** - 追踪 prompts 和评估规则的变更
+- **数据可移植性** - 轻松传输你的 Opik 工作区数据
+
+阅读完整文档：[导入/导出命令](/v1/tracing/import_export_commands)
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/1.8.83...1.8.97)
+
+_发布版本_: `1.8.83`, `1.8.84`, `1.8.85`, `1.8.86`, `1.8.87`, `1.8.88`, `1.8.89`, `1.8.90`, `1.8.91`, `1.8.92`, `1.8.93`, `1.8.94`, `1.8.95`, `1.8.96`, `1.8.97`

@@ -1,0 +1,111 @@
+---
+description: 安装 Agent Optimizer SDK，运行你的第一次优化，并在 10 分钟内检查结果。
+headline: 快速入门 | Opik 文档
+og:description: 使用 Opik Agent Optimizer 增强你的工作流，在优化运行中实现自动化提示词和智能体改进。
+og:site_name: Opik 文档
+og:title: 使用 Opik Agent Optimizer 优化提示词
+title: 快速入门
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/quickstart
+---
+
+<Note>
+  在 Opik 2.0 中，数据集和实验是按项目划分作用域的。创建数据集和运行实验时请务必指定 `project_name`，以确保它们关联到正确的项目。
+</Note>
+
+**Opik Agent Optimizer 快速入门**为你提供从 "hello world" 到成功优化运行的最快路径。如果你已经完成了主要的 [Opik 快速入门](/v1/quickstart)（追踪 + 评估），这就是下一站——它在此基础上叠加了 `opik-optimizer` SDK，让你可以自动改进提示词和智能体。偏好 UI 工作流？请改用 [Optimization Studio](/v1/agent_optimization/optimization_studio)。
+
+## 为什么选择 Opik Agent Optimizer？
+
+- **生产级工作流** - 复用你在 Opik 中已有的数据集、指标和追踪。
+- **多种策略** - 通过一个 API 在 MetaPrompt、分层反思提示词优化器（HRPO）、Evolutionary、GEPA 等之间切换。
+- **深度分析** - 每次试验都记录到 Opik，让你检查提示词、工具调用和失败模式。
+
+<Callout>
+  预计时间：如果你已配置 Python 和 Opik API 密钥，**不超过 10 分钟**。
+</Callout>
+
+## 前提条件
+
+- Python 3.10+
+- Opik 账户
+- 通过 LiteLLM 访问兼容 OpenAI 的 LLM（`OPENAI_API_KEY`、`ANTHROPIC_API_KEY` 等）
+
+## 1. 安装和认证
+
+```bash
+pip install --upgrade opik opik-optimizer
+opik configure  # paste your API key
+```
+
+## 2. 创建数据集和指标
+
+```python
+import opik
+from opik.evaluation.metrics import LevenshteinRatio
+
+client = opik.Opik()
+dataset = client.get_or_create_dataset(name="agent-opt-quickstart", project_name="my-project")
+dataset.insert([
+    {"question": "What is Opik?", "answer": "Opik is an LLM observability and optimization platform."},
+    {"question": "How do I reduce hallucinations?", "answer": "Use evaluations and prompt optimization to enforce grounding."},
+])
+
+def answer_quality(item, output):
+    metric = LevenshteinRatio()
+    return metric.score(reference=item["answer"], output=output)
+```
+
+## 3. 运行优化器
+
+```python
+from opik_optimizer import MetaPromptOptimizer, ChatPrompt
+
+prompt = ChatPrompt(
+    messages=[
+        {"role": "system", "content": "You are a precise assistant."},
+        {"role": "user", "content": "{question}"},
+    ],
+    model="openai/gpt-5-nano"  # The model your prompt runs on
+)
+
+optimizer = MetaPromptOptimizer(model="openai/gpt-5-nano")  # The model that improves your prompt
+result = optimizer.optimize_prompt(
+    prompt=prompt,
+    dataset=dataset,
+    metric=answer_quality,
+    max_trials=3,
+    n_samples=2,
+)
+
+result.display()
+```
+
+<Tip>
+  **使用不同的 LLM 提供商？** 优化器通过 LiteLLM 支持 OpenAI、Anthropic、Gemini、Azure、Ollama 和 100+ 其他提供商。参见[配置 LLM 提供商](/v1/agent_optimization/optimization/configure_models)指南了解设置说明。
+</Tip>
+
+## 4. 检查结果
+
+- 运行 `opik dashboard` 或打开 [https://www.comet.com/opik](https://www.comet.com/opik)。
+- 在左侧导航中，进入 **Evaluation → Optimization runs**，然后选择你最新的运行。
+- 查看优化进度图表、试验表和每个试验的追踪数据，决定是否发布新提示词。
+
+## 常见初始问题
+
+<AccordionGroup>
+  <Accordion title="Prompt must be a ChatPrompt object">
+    从 `opik_optimizer` 导入 `ChatPrompt`，并在传递给任何优化器之前包装你的 `messages` 列表。
+  </Accordion>
+  <Accordion title="Authentication failed">
+    重新运行 `opik configure` 并确认账户具有 Agent Optimizer 访问权限。如果你更换了机器，请复制 `~/.opik/config` 文件或重新输入密钥。
+  </Accordion>
+  <Accordion title="liteLLM provider errors">
+    确保提供商密钥（例如 `OPENAI_API_KEY`）在运行脚本的同一 shell 中导出，并验证你选择的模型已为该密钥启用。
+  </Accordion>
+</AccordionGroup>
+
+## 后续步骤
+
+- 偏好 Notebook？启动[快速入门 Notebook](/v1/agent_optimization/cookbooks/optimizer_introduction_cookbook)。
+- 深入了解[定义数据集](/v1/agent_optimization/optimization/define_datasets)和[定义指标](/v1/agent_optimization/optimization/define_metrics)。
+- 探索[优化算法概览](/v1/agent_optimization/algorithms/overview)为你的工作负载选择最佳策略。

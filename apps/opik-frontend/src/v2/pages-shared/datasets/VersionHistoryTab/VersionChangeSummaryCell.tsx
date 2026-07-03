@@ -1,5 +1,6 @@
 import React from "react";
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import { DatasetVersion } from "@/types/datasets";
@@ -9,6 +10,7 @@ import { Tag } from "@/ui/tag";
 const VersionChangeSummaryCell: React.FC<
   CellContext<DatasetVersion, unknown>
 > = (context) => {
+  const { t } = useTranslation("datasets");
   const version = context.row.original;
   const tagSize = getCellTagSize(context, TAG_SIZE_MAP);
   const itemsAdded = version.items_added || 0;
@@ -28,21 +30,21 @@ const VersionChangeSummaryCell: React.FC<
       ) : (
         <div className="flex items-center gap-2">
           {itemsAdded > 0 && (
-            <TooltipWrapper content="Items added">
+            <TooltipWrapper content={t("versionChangeSummary.itemsAdded")}>
               <Tag variant="green" size={tagSize}>
                 + {itemsAdded}
               </Tag>
             </TooltipWrapper>
           )}
           {itemsModified > 0 && (
-            <TooltipWrapper content="Items modified">
+            <TooltipWrapper content={t("versionChangeSummary.itemsModified")}>
               <Tag variant="blue" size={tagSize}>
                 ~ {itemsModified}
               </Tag>
             </TooltipWrapper>
           )}
           {itemsDeleted > 0 && (
-            <TooltipWrapper content="Items deleted">
+            <TooltipWrapper content={t("versionChangeSummary.itemsDeleted")}>
               <Tag variant="red" size={tagSize}>
                 − {itemsDeleted}
               </Tag>

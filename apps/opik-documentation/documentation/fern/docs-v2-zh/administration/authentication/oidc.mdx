@@ -1,0 +1,350 @@
+---
+headline: OIDC SSO 配置 | Opik 文档
+og:description: 了解如何为您的 Opik 组织配置 OpenID Connect (OIDC) 单点登录。
+og:site_name: Opik 文档
+og:title: '在 Opik 中配置 OIDC SSO：分步指南'
+subtitle: 使用身份提供商设置 OpenID Connect 认证
+title: OIDC SSO
+---
+
+OpenID Connect (OIDC) 是一种基于 OAuth 2.0 构建的现代认证协议。本指南将引导您为 Opik 组织配置 OIDC SSO。
+
+<Note>
+OIDC SSO 适用于企业版计划。此功能在开源部署中不可用。如果您希望为 Opik 部署启用此功能，请[联系我们](https://www.comet.com/site/about-us/contact-us/)。
+</Note>
+
+## 前提条件
+
+开始之前，请确保您已具备：
+
+- **组织管理员权限** 访问 Opik
+- **管理员权限** 访问支持 OIDC 的身份提供商
+- **企业版计划** 已为您的组织启用
+- **电子邮件域名** 您希望用于 SSO 的域名（例如 `company.com`）
+
+## OIDC 与 SAML 对比
+
+OIDC 相比 SAML 具有多项优势：
+
+| 特性 | OIDC | SAML |
+| --- | --- | --- |
+| 协议 | 基于 REST/JSON | 基于 XML |
+| 令牌格式 | JWT | XML 断言 |
+| 配置复杂度 | 更简单 | 更复杂 |
+| 移动端/API 友好 | 是 | 有限 |
+| 工作区同步 | 通过默认工作区 | 通过属性映射 |
+
+选择 OIDC 当：
+
+- 您的身份提供商支持 OIDC（大多数现代身份提供商都支持）
+- 您偏好更简单的配置
+- 您不需要基于属性的工作区同步
+
+选择 [SAML](/administration/authentication/saml) 当：
+
+- 您需要基于用户属性的自动工作区分配
+- 您的组织明确要求使用 SAML
+
+## 配置概览
+
+设置 OIDC SSO 包括：
+
+1. **在身份提供商中注册 Opik** 作为 OIDC 应用程序。
+2. **配置 Opik** 使用身份提供商的 OIDC 端点和凭据。
+
+## 步骤 1：在身份提供商中注册 Opik
+
+在身份提供商中创建新的 OIDC/OAuth 应用程序：
+
+### 应用程序设置
+
+| 设置 | 值 |
+| --- | --- |
+| **应用程序类型** | Web 应用程序 |
+| **授权类型** | 授权码 |
+| **重定向/回调 URL** | `https://www.comet.com/opik/oauth/callback/<organization-id>` |
+
+<Tip>
+确切的回调 URL 将显示在 Opik SSO 配置页面中。请直接从那里复制。
+</Tip>
+
+### 所需范围
+
+确保您的 OIDC 应用程序请求以下范围：
+
+- `openid` - OIDC 必需
+- `profile` - 用户个人资料信息
+- `email` - 用户电子邮件地址
+
+## 步骤 2：收集身份提供商信息
+
+注册应用程序后，从身份提供商收集以下信息：
+
+| 信息 | 描述 | 查找位置 |
+| --- | --- | --- |
+| **客户端 ID** | 应用程序的唯一标识符 | 身份提供商应用程序设置 |
+| **客户端密钥** | 用于认证的密钥 | 身份提供商应用程序设置 |
+| **授权 URL** | 授权请求的端点 | 身份提供商文档或知名端点 |
+| **令牌 URL** | 用于交换代码获取令牌的端点 | 身份提供商文档或知名端点 |
+| **用户信息 URL** | 用于获取用户个人资料的端点 | 身份提供商文档或知名端点 |
+
+<Tip>
+**知名端点**：大多数 OIDC 提供商在 `/.well-known/openid-configuration` 暴露一个发现文档，包含所有端点 URL。
+</Tip>
+
+## 步骤 3：配置 Opik
+
+1. 导航至 **管理控制台** > **SSO 配置**。
+2. 选择 **OIDC** 作为 SSO 协议。
+3. 输入以下设置：
+
+### 必需的 OIDC 设置
+
+| 字段 | 描述 | 示例 |
+| --- | --- | --- |
+| **域名** | SSO 用户的电子邮件域名 | `company.com` |
+| **客户端 ID** | 来自身份提供商的应用程序标识符 | `abc123xyz` |
+| **客户端密钥** | 来自身份提供商的密钥 | `secret_...` |
+| **授权 URL** | 身份提供商的授权端点 | `https://idp.company.com/oauth/authorize` |
+| **令牌 URL** | 身份提供商的令牌端点 | `https://idp.company.com/oauth/token` |
+| **回调 URL** | Opik 的回调 URL | `https://www.comet.com/opik/oauth/callback/...` |
+| **用户信息 URL** | 身份提供商的用户信息端点 | `https://idp.company.com/oauth/userinfo` |
+
+### 可选的 OIDC 设置
+
+| 字段 | 描述 | 默认值 |
+| --- | --- | --- |
+| **默认工作区** | 新 SSO 用户的工作区 | 组织默认值 |
+| **应用程序资源 ID** | 自定义资源标识符 | 未设置 |
+
+## 字段参考
+
+### 客户端 ID
+
+当您在身份提供商中注册 Opik 时分配的唯一标识符：
+
+- 在注册应用程序时创建
+- 在授权请求中用于标识 Opik
+- 应视为公开信息（非机密）
+
+### 客户端密钥
+
+用于向身份提供商认证 Opik 的密钥：
+
+- 在注册应用程序时创建
+- 在交换授权代码获取令牌时使用
+- **必须保密** - 切勿在客户端代码中暴露
+
+<Warning>
+**安全提示**：客户端密钥是敏感信息。如果泄露，请在身份提供商中重新生成并在 Opik 中更新配置。
+</Warning>
+
+### 授权 URL（Auth 基础 URL）
+
+用户被重定向进行认证的端点：
+
+```
+https://idp.company.com/oauth/authorize
+```
+
+此 URL 接收包含以下参数的授权请求：
+
+- `client_id` - 您应用程序的客户端 ID
+- `redirect_uri` - 回调 URL
+- `scope` - 请求的权限
+- `response_type` - 对于授权码流程始终为 `code`
+- `state` - 用于防止 CSRF 的安全参数
+
+### 令牌 URL（访问令牌 URL）
+
+Opik 用于交换授权代码获取访问令牌的端点：
+
+```
+https://idp.company.com/oauth/token
+```
+
+Opik 发送包含以下参数的 POST 请求：
+
+- `grant_type` - 始终为 `authorization_code`
+- `code` - 收到的授权代码
+- `redirect_uri` - 回调 URL
+- `client_id` 和 `client_secret` - 用于认证
+
+### 回调 URL
+
+身份提供商在认证后重定向用户的 URL：
+
+```
+https://www.comet.com/opik/oauth/callback/<organization-id>
+```
+
+- 必须在身份提供商允许的重定向 URI 中注册
+- 必须完全匹配（包括尾部斜杠）
+- Opik 根据您的组织 ID 生成此 URL
+
+### 受保护资源 URL（用户信息 URL）
+
+Opik 用于获取用户个人资料信息的端点：
+
+```
+https://idp.company.com/oauth/userinfo
+```
+
+Opik 使用访问令牌请求：
+
+- `sub` - 用户的唯一标识符
+- `email` - 用户的电子邮件地址
+- `name` - 用户的显示名称
+
+### 默认工作区
+
+当用户首次通过 OIDC 认证时：
+
+- 他们会被添加到 SSO 设置中指定的**默认工作区**。
+- 如果未指定，则添加到组织的默认工作区。
+- 工作区分配可以在首次登录后手动管理。
+
+<Note>
+与支持工作区同步的 SAML 不同，OIDC 不支持基于用户属性的自动工作区分配。用户在首次登录时会被添加到默认工作区。
+</Note>
+
+## 身份提供商特定配置指南
+
+<Tabs>
+<Tab value="okta" title="Okta">
+
+### 配置 Okta
+
+1. 在 Okta 管理控制台中，转到 **应用程序** > **创建应用集成**。
+2. 选择 **OIDC - OpenID Connect** 和 **Web 应用程序**。
+3. 配置设置：
+   - **登录重定向 URI**：来自 Opik 的回调 URL
+   - **退出重定向 URI**：`https://www.comet.com/opik`
+   - **受控访问**：根据需要分配用户/组
+4. 记下 **客户端 ID** 和 **客户端密钥**。
+5. 在 Okta 的 **OpenID Connect 元数据** 中查找端点或使用：
+   - 授权：`https://<your-domain>.okta.com/oauth2/v1/authorize`
+   - 令牌：`https://<your-domain>.okta.com/oauth2/v1/token`
+   - 用户信息：`https://<your-domain>.okta.com/oauth2/v1/userinfo`
+
+</Tab>
+<Tab value="azure-ad" title="Azure AD (Entra ID)">
+
+### 配置 Azure AD
+
+1. 在 Azure 门户中，转到 **Azure Active Directory** > **应用注册**。
+2. 点击 **新注册**：
+   - **名称**：Opik
+   - **支持的账户类型**：根据需要选择
+   - **重定向 URI**：Web，来自 Opik 的回调 URL
+3. 创建后，记下 **应用程序（客户端）ID**。
+4. 转到 **证书和密钥** > **新客户端密钥**，记下值。
+5. 使用以下端点（替换 `<tenant-id>`）：
+   - 授权：`https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/authorize`
+   - 令牌：`https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token`
+   - 用户信息：`https://graph.microsoft.com/oidc/userinfo`
+
+</Tab>
+<Tab value="google" title="Google Workspace">
+
+### 配置 Google Workspace
+
+1. 前往 [Google Cloud Console](https://console.cloud.google.com/)。
+2. 创建或选择一个项目。
+3. 转到 **API 和服务** > **凭据**。
+4. 点击 **创建凭据** > **OAuth 客户端 ID**。
+5. 配置：
+   - **应用程序类型**：Web 应用程序
+   - **授权的重定向 URI**：来自 Opik 的回调 URL
+6. 记下 **客户端 ID** 和 **客户端密钥**。
+7. 使用以下端点：
+   - 授权：`https://accounts.google.com/o/oauth2/v2/auth`
+   - 令牌：`https://oauth2.googleapis.com/token`
+   - 用户信息：`https://openidconnect.googleapis.com/v1/userinfo`
+
+</Tab>
+<Tab value="auth0" title="Auth0">
+
+### 配置 Auth0
+
+1. 在 Auth0 控制台中，转到 **应用程序** > **创建应用程序**。
+2. 选择 **常规 Web 应用程序**。
+3. 配置设置：
+   - **允许的回调 URL**：来自 Opik 的回调 URL
+   - **允许的注销 URL**：`https://www.comet.com/opik`
+4. 记下 **域名**、**客户端 ID** 和 **客户端密钥**。
+5. 使用以下端点（替换 `<your-domain>`）：
+   - 授权：`https://<your-domain>.auth0.com/authorize`
+   - 令牌：`https://<your-domain>.auth0.com/oauth/token`
+   - 用户信息：`https://<your-domain>.auth0.com/userinfo`
+
+</Tab>
+</Tabs>
+
+## 测试配置
+
+配置完 Opik 和身份提供商后：
+
+1. **打开无痕/隐私浏览器窗口**（以避免缓存的会话）。
+2. 导航到 Opik 的登录页面。
+3. 输入使用您配置域名的电子邮件地址。
+4. 您应该被重定向到身份提供商进行认证。
+5. 认证后，您应该被重定向回 Opik 并成功登录。
+
+## 故障排除
+
+### 常见问题
+
+| 问题 | 可能原因 | 解决方案 |
+| --- | --- | --- |
+| "无效的重定向 URI" | 回调 URL 不匹配 | 验证 Opik 和身份提供商中的回调 URL 完全一致 |
+| "无效的客户端" | 客户端 ID 错误 | 验证客户端 ID 是否正确复制 |
+| "无效的客户端凭据" | 客户端密钥错误 | 验证客户端密钥，必要时重新生成 |
+| "范围不允许" | 身份提供商范围限制 | 确保允许 `openid`、`profile`、`email` 范围 |
+| 用户未创建 | 缺少电子邮件声明 | 验证身份提供商在用户信息响应中返回电子邮件 |
+
+### 故障排除清单
+
+1. **验证客户端凭据**：仔细检查客户端 ID 和密钥。
+2. **检查回调 URL**：必须完全匹配（包括协议、尾部斜杠）。
+3. **验证端点 URL**：确保所有 URL 正确且可访问。
+4. **查看身份提供商日志**：检查身份提供商的日志以查找错误。
+5. **测试知名端点**：验证 `/.well-known/openid-configuration` 返回有效的 JSON。
+6. **检查范围**：确保所需范围已配置并被允许。
+
+### 使用浏览器工具调试
+
+使用浏览器开发者工具检查认证流程：
+
+1. 在开始登录前打开 **网络** 选项卡。
+2. 查找发送到身份提供商授权端点的请求。
+3. 检查回调 URL 中的错误参数。
+4. 查看令牌端点的任何错误响应。
+
+## 安全考虑
+
+### 客户端密钥保护
+
+- 在 Opik 的配置中安全存储客户端密钥。
+- 切勿在日志或客户端代码中暴露客户端密钥。
+- 根据安全策略定期轮换密钥。
+
+### 回调 URL 验证
+
+- 仅配置 Opik 提供的确切回调 URL。
+- 除非必要，不要添加额外的重定向 URI。
+- 定期审查注册的重定向 URI。
+
+### 令牌处理
+
+Opik 安全处理令牌：
+
+- 访问令牌仅在服务器端使用。
+- 令牌不会暴露给浏览器。
+- 认证后会话被安全管理。
+
+## 后续步骤
+
+- 如果需要工作区同步功能，请[配置 SAML](/administration/authentication/saml)。
+- [设置 JWT 认证](/administration/authentication/jwt) 以进行编程访问。
+- [管理用户](/administration/admin-dashboard/users) 和工作区分配。

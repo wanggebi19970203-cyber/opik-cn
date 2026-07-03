@@ -13,6 +13,7 @@ import StageTag from "@/v2/pages-shared/version-history/StageTag";
 import { pickHighestStage } from "@/utils/version-stages";
 import { PROMPT_TEMPLATE_STRUCTURE } from "@/types/prompts";
 import { PROMPT_UNSAVED_CHANGES_LABEL } from "@/constants/prompts";
+import { useTranslation } from "react-i18next";
 
 type LoadedPromptDisplayProps = {
   name?: string;
@@ -33,7 +34,8 @@ const LoadedPromptDisplay: React.FC<LoadedPromptDisplayProps> = ({
   hasUnsavedChanges = false,
   onClear,
 }) => {
-  const displayName = name ?? "Loaded prompt";
+  const { t } = useTranslation("llm");
+  const displayName = name ?? t("llm:loadedPromptDisplay.loadedPrompt");
   const stage = pickHighestStage(versionTags);
   const Icon =
     templateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT
@@ -69,7 +71,7 @@ const LoadedPromptDisplay: React.FC<LoadedPromptDisplayProps> = ({
         maxWidth={60}
       />
       {onClear && (
-        <TooltipWrapper content="Detach loaded prompt">
+        <TooltipWrapper content={t("llm:loadedPromptDisplay.detachLoadedPrompt")}>
           <Button
             variant="minimal"
             size="icon-2xs"

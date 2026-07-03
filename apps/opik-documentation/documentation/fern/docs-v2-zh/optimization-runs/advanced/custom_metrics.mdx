@@ -1,0 +1,64 @@
+---
+description: 构建专用指标，集成外部模型，并在优化中重用它们。
+headline: 自定义指标 | Opik 文档
+og:description: 探索 Opik 中的自定义指标，使用领域特定评分和精确安全检查增强评估。
+og:site_name: Opik 文档
+og:title: 用于评估的自定义指标 - Opik
+title: 自定义指标
+canonical-url: https://www.comet.com/docs/opik/development/optimization-runs/advanced/custom_metrics
+---
+
+当内置指标不够用时（领域特定评分、精确安全检查、独特的多模态检查），请使用自定义指标。首先阅读核心 Opik 评估文档，了解已有内容：
+
+- [评估概念](/v1/evaluation/concepts) – 术语和生命周期。
+- [指标概述](/v1/evaluation/metrics/overview) – 默认启发式指标（ROUGE、BLEU、幻觉等）。
+- [LLM-as-a-judge 模式](/v1/evaluation/evaluate_agent_trajectory) – Opik 如何对多轮跟踪运行评审模型。
+
+## 设计原则
+
+- **确定性** – 缓存外部模型调用。在模型支持的情况下，将 temperature 设置为 0 并设置种子值以增加重复运行匹配的可能性。请注意，即使使用这些设置，所有模型也不保证确定性输出。
+- **可解释** – 始终在 `ScoreResult` 上设置 `reason` 以获得更好的仪表板效果。
+- **可组合** – 将帮助程序包装到实用模块中，以便多个优化器共享它们。
+- **分层** – 从单个指标开始，然后在需要权衡时通过 `MultiMetricObjective` 组合它们。
+- **成本** - 如果您依赖计算和 API 调用进行评估，请考虑成本影响。
+
+## 示例：安全性 + 完整性指标
+
+```python
+from opik.evaluation.metrics import AnswerRelevance
+from opik.evaluation.metrics.score_result import ScoreResult
+from some_safety_model import classify_risk
+
+safety_model = classify_risk.Client()
+
+def safety_and_completeness(item, output):
+    relevance = AnswerRelevance().score(
+        context=[item["answer"]], output=output, input=item["question"]
+    )
+    safety = safety_model.score(text=output)
+
+    value = 1.0 if relevance.value > 0.75 and safety["label"] == "safe" else 0.0
+    reason = f"Relevant={relevance.value:.2f}, safety={safety['label']}"
+
+    return ScoreResult(name="safety_completeness", value=value, reason=reason)
+```
+
+## 指标构建模块
+
+- **单个指标** – 为每个关注点实现一个可调用对象（准确性、语气、成本）。保持它们在提示词之间可重用。
+- **多指标目标** – 当您需要平衡时，使用权重组合单个指标，例如，准确性（0.7）+ 风格（0.3）。请参阅[多指标优化](/v1/agent_optimization/optimization/define_metrics#compose-metrics)了解模板。
+- **LLM-as-a-judge** – 在指标内调用评估模型（OpenAI、Anthropic 等）。始终包含详细的提示词以保持结果稳定，并了解反射优化器将继承这些评审调用中的任何噪声。
+- **启发式** – 利用 `/evaluation/metrics` 中的内置指标，而不是重新发明经典分数。您可以如上所示将启发式与自定义逻辑组合。
+
+## 测试
+
+- 编写 pytest 用例，将固定的数据集项输入指标并断言预期分数。
+- 在 CI 上针对黄金数据集运行指标以捕获回归。
+- 对于多指标目标，添加测试以验证权重更改是否按预期工作（例如，更高权重增加敏感性）。
+
+## 相关文档
+
+- [定义指标](/v1/agent_optimization/optimization/define_metrics)
+- [评估概念](/v1/evaluation/concepts)
+- [LLM 评审工作流](/v1/evaluation/evaluate_agent_trajectory)
+- [指标概述](/v1/evaluation/metrics/overview)

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   Dialog,
@@ -23,6 +24,7 @@ type RestoreVersionDialogProps = {
 const RestoreVersionDialog: React.FunctionComponent<
   RestoreVersionDialogProps
 > = ({ open, setOpen, versionToRestore, onSetActiveVersionId }) => {
+  const { t } = useTranslation();
   const restorePromptVersionMutation = useRestorePromptVersionMutation();
   const isLoading = restorePromptVersionMutation.isPending;
 
@@ -49,23 +51,25 @@ const RestoreVersionDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Restore Version</DialogTitle>
+          <DialogTitle>{t("prompt:restoreVersion.title")}</DialogTitle>
           <DialogDescription>
-            Are you sure you want to restore version{" "}
-            <span className="font-medium">{versionToRestore?.commit}</span>?
-            This will create a new version with the same content.
+            {t("prompt:restoreVersion.description", {
+              commit: versionToRestore?.commit,
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("prompt:editPrompt.cancel")}</Button>
           </DialogClose>
           <Button
             onClick={handleConfirm}
             disabled={isLoading || !versionToRestore}
           >
-            {isLoading ? "Restoring..." : "Restore"}
+            {isLoading
+              ? t("prompt:restoreVersion.restoring")
+              : t("prompt:restoreVersion.restore")}
           </Button>
         </DialogFooter>
       </DialogContent>

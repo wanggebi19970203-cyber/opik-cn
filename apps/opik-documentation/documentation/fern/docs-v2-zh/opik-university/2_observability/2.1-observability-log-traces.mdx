@@ -1,0 +1,49 @@
+---
+headline: 记录追踪 | Opik 文档
+og:description: 使用 Opik 有效监控和分析日志追踪，提高系统可观测性并高效排查问题。
+og:site_name: Opik 文档
+og:title: 记录追踪以增强可观测性 - Opik
+title: 记录追踪
+canonical-url: https://www.comet.com/docs/opik/
+---
+
+<div
+  style={{
+    position: "relative",
+    paddingBottom: "56.25%", // 16:9 aspect ratio
+    height: 0,
+    overflow: "hidden",
+    maxWidth: "100%",
+    marginBottom: "20px",
+  }}
+>
+  <iframe
+    src="https://www.loom.com/embed/35636dd3baee47c9b96d87e014923d11?sid=4db723bf-3ccc-4cbe-8d86-7f64d782683d"
+    frameborder="0"
+    webkitallowfullscreen
+    mozallowfullscreen
+    allowfullscreen
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+    }}
+  />
+</div>
+
+## Opik 追踪入门
+
+本实践视频演示如何在 Opik 中实现[追踪](/v1/tracing/log_traces)，这是 LLM 可观测性的基础。您将学习[追踪](/v1/tracing/log_traces)如何捕获应用与 LLM 之间的完整交互（输入、输出、元数据和[反馈分数](/v1/tracing/annotate_traces)），并查看使用 [OpenAI](/v1/integrations/openai) 作为示例的逐步实现。将追踪视为传统软件中日志的等价物，但专门为 LLM 应用设计。
+
+## 关键亮点
+
+- **简单设置**：只需 API 密钥和工作区设置即可配置 Opik - 可选择设置项目名称来组织[追踪](/v1/tracing/log_traces)
+- **多种[集成](/v1/integrations/overview)方法**：使用专用[集成](/v1/integrations/openai)（如 [`track_openai`](/v1/tracing/log_traces#using-an-integration)）进行自动追踪，或使用 `@track` 装饰器进行自定义函数追踪
+- **丰富的追踪可视化**：在 Opik UI 中查看完整的交互流程，包括输入、输出和多步骤过程的层次化[跨度](/v1/tracing/log_traces)
+- **强大的过滤和搜索**：按时间范围、标签、[反馈分数](/v1/tracing/annotate_traces)过滤[追踪](/v1/tracing/log_traces)，并按特定追踪 ID 搜索以进行生产调试
+- **框架支持**：为 [LangChain](/v1/integrations/langchain)、[LlamaIndex](/v1/integrations/llama_index) 等流行框架提供专用[集成](/v1/integrations/overview)
+- **自动跨度创建**：多步骤应用和 RAG 工作流会自动为每个步骤生成[跨度](/v1/tracing/log_traces)，提供完整的流程可见性
+- **函数级追踪**：[`@track`](/v1/tracing/log_traces#decorators) 装饰器创建与函数结构镜像的详细追踪堆栈，使调试直观易懂
+- **生产就绪**：标签系统和过滤功能使组织和分析来自生产环境的[追踪](/v1/tracing/log_traces)变得容易

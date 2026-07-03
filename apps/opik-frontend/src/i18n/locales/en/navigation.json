@@ -1,0 +1,112 @@
+{
+  "navigation": {
+    "menu": {
+      "home": "Home",
+      "ollie": "Opik Connect",
+      "logs": "Logs",
+      "diagnostics": "Diagnostics",
+      "dashboards": "Dashboards",
+      "prompts": "Prompt library",
+      "agent_runner": "Agent playground",
+      "playground": "Prompt playground",
+      "optimizations": "Optimization runs",
+      "optimizationStudio": "Optimization studio",
+      "test_suites": "Test suites",
+      "datasets": "Datasets",
+      "experiments": "Experiments",
+      "annotation_queues": "Annotation queues",
+      "online_evaluation": "Online evaluation",
+      "alerts": "Alerts",
+      "workspace": "Workspace",
+      "configuration": "Configuration",
+      "projects": "Projects"
+    },
+    "sidebar": {
+      "expandSidebar": "Expand sidebar",
+      "collapseSidebar": "Collapse sidebar"
+    },
+    "languageSwitcher": {
+      "language": "Language"
+    },
+    "debug": {
+      "copiedVersion": "Successfully copied Opik version",
+      "opikVersion": "OPIK VERSION"
+    },
+    "settings": {
+      "settings": "Settings",
+      "theme": "Theme"
+    },
+    "network": {
+      "rttTooltip": "Round-trip time (RTT) to ping backend server",
+      "connectedToBackend": "Connected to backend server",
+      "notConnectedToBackend": "Not connected to backend server",
+      "connectedToNetwork": "Connected to network",
+      "notConnectedToNetwork": "Not connected to network"
+    },
+    "errorBoundary": {
+      "somethingWentWrong": "Something went wrong",
+      "errorMessage1": "We are sorry for the inconvenience. This error has been reported. If you have any urgent issues, please <contactLink>contact us</contactLink> directly.",
+      "errorMessage2": "You can also submit feature requests to our <githubLink>GitHub repository</githubLink>, or join our <slackLink>Slack community</slackLink> to get help with bugs and questions.",
+      "continue": "Continue"
+    },
+    "groups": {
+      "observability": "Observability",
+      "development": "Development",
+      "evaluation": "Evaluation",
+      "production": "Production",
+      "promptEngineering": "Prompt engineering",
+      "optimization": "Optimization"
+    },
+    "breadcrumbs": {
+      "home": "Home",
+      "projects": "Projects",
+      "project": "Project",
+      "datasets": "Datasets",
+      "dataset": "Dataset",
+      "experiments": "Experiments",
+      "experiment": "Experiment",
+      "prompts": "Prompts",
+      "prompt": "Prompt",
+      "playground": "Playground",
+      "settings": "Settings",
+      "configuration": "Configuration",
+      "newAlert": "New alert"
+    },
+    "noAccess": {
+      "accessDenied": "Access denied",
+      "noPermissionsForResource": "You don't have permissions to view {{resource}} in this workspace.",
+      "noPermissionsAlerts": "You don't have permissions to manage alerts in this workspace.",
+      "noPermissionsOptimization": "You don't have permissions to start new optimization runs in this workspace.",
+      "noPermissionsPlayground": "You don't have permissions to use playground in this workspace.",
+      "goToHome": "Go to home",
+      "goBack": "Go back",
+      "thisResource": "this resource",
+      "resourceDashboards": "dashboards",
+      "resourceTestSuites": "test suites",
+      "resourceExperiments": "experiments",
+      "resourceOptimizationRuns": "optimization runs"
+    },
+    "projectSelector": {
+      "loading": "Loading\u2026",
+      "project": "Project",
+      "selectProject": "Select project",
+      "switchProject": "Switch project",
+      "openProjectSelector": "Open project selector",
+      "projects": "Projects",
+      "newProject": "New project",
+      "deleteProject": "Delete project",
+      "deleteProjectDescription": "Deleting a project will also remove all the traces and their data. This action can't be undone. Are you sure you want to continue?",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "backToProject": {
+      "backToName": "Back to {{name}}",
+      "backToProject": "Back to project",
+      "selectProjectHint": "Select a project on the Projects page"
+    },
+    "githubStar": {
+      "star": "Star",
+      "gitHubStar": "GitHub star {{count}}"
+    }
+  }
+}

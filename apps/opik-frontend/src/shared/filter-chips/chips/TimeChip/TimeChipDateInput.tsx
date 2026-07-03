@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import dayjs from "dayjs";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Popover, PopoverAnchor, PopoverContent } from "@/ui/popover";
 import { Calendar } from "@/ui/calendar";
 import { FormErrorSkeleton } from "@/ui/form";
@@ -38,6 +39,7 @@ const TimeChipDateInput: React.FC<TimeChipDateInputProps> = ({
   onChange,
   onPicked,
 }) => {
+  const { t } = useTranslation();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const ignoreNextFocusRef = useRef(false);
@@ -152,7 +154,7 @@ const TimeChipDateInput: React.FC<TimeChipDateInputProps> = ({
             />
             <button
               type="button"
-              aria-label="Open calendar"
+              aria-label={t("common.timeChip.openCalendar")}
               aria-haspopup="dialog"
               aria-expanded={calendarOpen}
               onMouseDown={handleIconMouseDown}
@@ -180,7 +182,7 @@ const TimeChipDateInput: React.FC<TimeChipDateInputProps> = ({
       </Popover>
       {slot.dateTouched && dateInvalid && (
         <FormErrorSkeleton className="comet-body-xs">
-          Enter valid date
+          {t("forms.validation.enterValidDate")}
         </FormErrorSkeleton>
       )}
     </div>

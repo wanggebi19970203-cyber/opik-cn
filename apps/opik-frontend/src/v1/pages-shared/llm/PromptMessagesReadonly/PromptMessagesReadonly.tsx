@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import capitalize from "lodash/capitalize";
 import { cn } from "@/lib/utils";
 import { useHeightTruncation } from "@/hooks/useHeightTruncation";
@@ -91,6 +92,7 @@ export const PromptMessageCard: React.FC<PromptMessageCardProps> = ({
   message,
   truncate = false,
 }) => {
+  const { t } = useTranslation("prompt");
   const { text, images, videos, audios } = React.useMemo(
     () => getTextAndMedia(message.content),
     [message.content],
@@ -126,7 +128,7 @@ export const PromptMessageCard: React.FC<PromptMessageCardProps> = ({
           onClick={toggle}
           className="h-auto self-start p-0 text-xs"
         >
-          {isExpanded ? "Show less" : "Show more"}
+          {isExpanded ? t("promptMessagesReadonly.showLess") : t("promptMessagesReadonly.showMore")}
         </Button>
       )}
       {hasMedia && (

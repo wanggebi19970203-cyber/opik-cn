@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -57,6 +58,7 @@ type CreateDatasetSidebarProps = {
 const CreateDatasetSidebar: React.FunctionComponent<
   CreateDatasetSidebarProps
 > = ({ type, mode, open, setOpen, onDatasetCreated }) => {
+  const { t } = useTranslation("datasets");
   const config = TYPE_CONFIG[type];
   const entityLabel =
     config.entityName[0].toLowerCase() + config.entityName.slice(1);
@@ -79,18 +81,20 @@ const CreateDatasetSidebar: React.FunctionComponent<
     (dataset: Dataset, navigate: () => void) => {
       setOpen(false);
       toast({
-        title: `${config.entityName} created`,
-        description: `"${dataset.name}" is ready to use.`,
+        title: t("createSidebar.created", { entityName: config.entityName }),
+        description: t("createSidebar.createdDescription", {
+          name: dataset.name,
+        }),
         actions: [
           <ToastAction
             key="view"
             variant="link"
             size="sm"
             className="px-0"
-            altText={`Go to ${entityLabel}`}
+            altText={t("createSidebar.goTo", { entityLabel })}
             onClick={navigate}
           >
-            Go to {entityLabel}
+            {t("createSidebar.goTo", { entityLabel })}
           </ToastAction>,
         ],
       });
@@ -173,11 +177,11 @@ const CreateDatasetSidebar: React.FunctionComponent<
 
   const renderNameField = () => (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={`${type}Name`}>Name</Label>
+      <Label htmlFor={`${type}Name`}>{t("createSidebar.name")}</Label>
       <Input
         id={`${type}Name`}
         dimension="sm"
-        placeholder={`Name your ${entityLabel}...`}
+        placeholder={t("createSidebar.namePlaceholder", { entityLabel })}
         value={name}
         className={
           nameError && "!border-destructive focus-visible:!border-destructive"
@@ -196,12 +200,12 @@ const CreateDatasetSidebar: React.FunctionComponent<
   const renderDescriptionField = () => (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={`${type}Description`}>
-        Description{" "}
-        <span className="font-normal text-foreground">(optional)</span>
+        {t("createSidebar.description")}{" "}
+        <span className="font-normal text-foreground">{t("createSidebar.optional")}</span>
       </Label>
       <Textarea
         id={`${type}Description`}
-        placeholder={`${config.entityName} description`}
+        placeholder={t("createSidebar.descriptionPlaceholder", { entityName: config.entityName })}
         className="min-h-16 text-sm"
         value={description}
         onChange={(event) => setDescription(event.target.value)}
@@ -243,7 +247,7 @@ const CreateDatasetSidebar: React.FunctionComponent<
 
   const renderUploadMode = () => (
     <>
-      <Label className="mb-2 block">File</Label>
+      <Label className="mb-2 block">{t("createSidebar.file")}</Label>
       <DatasetCsvDropzone
         uploadFile={uploadFile}
         uploadError={uploadError}
@@ -274,7 +278,7 @@ const CreateDatasetSidebar: React.FunctionComponent<
             >
               <AccordionItem value="advanced" className="border-b-0">
                 <CustomAccordionTrigger className="flex items-center gap-1 transition-all [&[data-state=open]>svg]:rotate-90">
-                  <span className="comet-body-xs">Advanced options</span>
+                  <span className="comet-body-xs">{t("createSidebar.advancedOptions")}</span>
                   <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200" />
                 </CustomAccordionTrigger>
                 <AccordionContent className="pt-4">
@@ -337,11 +341,11 @@ const CreateDatasetSidebar: React.FunctionComponent<
   const renderFooter = () => (
     <div className="flex items-center justify-end gap-2">
       <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
-        Cancel
+        {t("createSidebar.cancel")}
       </Button>
       <Button disabled={isSubmitting || !canSubmit} onClick={submitHandler}>
         {isSubmitting && <Spinner size="small" className="mr-2" />}
-        {isSubmitting ? "Creating..." : `Create ${entityLabel}`}
+        {isSubmitting ? t("createSidebar.creating") : t("createSidebar.createEntity", { entityLabel })}
       </Button>
     </div>
   );
@@ -359,13 +363,13 @@ const CreateDatasetSidebar: React.FunctionComponent<
         <ResizableSidePanelTopBar
           variant="form"
           title={
-            <span className="comet-body-s-accented">{`Create ${entityLabel}`}</span>
+            <span className="comet-body-s-accented">{t("createSidebar.createEntity", { entityLabel })}</span>
           }
           onClose={handleClose}
         >
           <Button variant="outline" size="2xs" asChild>
             <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-              Docs
+              {t("createSidebar.docs")}
               <ArrowUpRight className="ml-1 size-3 shrink-0" />
             </a>
           </Button>

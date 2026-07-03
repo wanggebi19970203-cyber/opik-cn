@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import { MoreHorizontal, Pencil, RotateCcw } from "lucide-react";
 import {
@@ -26,6 +27,7 @@ const RESTORE_KEY = 2;
 const VersionRowActionsCell: React.FC<CellContext<DatasetVersion, unknown>> = (
   context,
 ) => {
+  const { t } = useTranslation("datasets");
   const resetKeyRef = useRef(0);
   const version = context.row.original;
   const [open, setOpen] = useState<boolean | number>(false);
@@ -67,20 +69,20 @@ const VersionRowActionsCell: React.FC<CellContext<DatasetVersion, unknown>> = (
         open={open === RESTORE_KEY}
         setOpen={setOpen}
         onConfirm={handleRestore}
-        title="Restore version"
+        title={t("datasets.versionActions.restore.title")}
         description={
-          `Restoring this version will create a new version based on version ${version.version_name}. All previous versions will stay in your history.` +
+          t("datasets.versionActions.restore.description", { versionName: version.version_name }) +
           (hasDraft
-            ? "\n\nYou have unsaved draft changes that will be discarded. This action can't be undone."
+            ? "\n\n" + t("datasets.versionActions.restore.draftWarning")
             : "")
         }
-        confirmText={hasDraft ? "Discard & Restore" : "Restore version"}
+        confirmText={hasDraft ? t("datasets.versionActions.restore.discardAndRestore") : t("datasets.versionActions.restore.confirmText")}
         confirmButtonVariant={hasDraft ? "destructive" : "default"}
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("datasets.versionActions.actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -92,7 +94,7 @@ const VersionRowActionsCell: React.FC<CellContext<DatasetVersion, unknown>> = (
             }}
           >
             <Pencil className="mr-2 size-4" />
-            Edit
+            {t("datasets.versionActions.edit")}
           </DropdownMenuItem>
           {!isLatestVersion && (
             <DropdownMenuItem
@@ -102,7 +104,7 @@ const VersionRowActionsCell: React.FC<CellContext<DatasetVersion, unknown>> = (
               }}
             >
               <RotateCcw className="mr-2 size-4" />
-              Restore
+              {t("datasets.versionActions.restore.action")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

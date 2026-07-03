@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   addAllParentIds,
@@ -34,6 +35,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
   filters,
   config,
 }) => {
+  const { t } = useTranslation("tracing");
   const traceSpans = useMemo(() => spans ?? [], [spans]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +166,7 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
             onRowIdChange={onSelectRow}
           />
         ) : (
-          <NoData message="No results" icon={null} />
+          <NoData message={t("treeToolbar.noResults")} icon={null} />
         )}
       </div>
     </div>

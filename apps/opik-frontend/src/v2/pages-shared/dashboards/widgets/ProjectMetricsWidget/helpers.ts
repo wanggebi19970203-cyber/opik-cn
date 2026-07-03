@@ -1,23 +1,27 @@
+import i18next from "i18next";
 import { CHART_TYPE } from "@/constants/chart";
 import { METRIC_NAME_TYPE } from "@/api/projects/useProjectMetric";
 import { ProjectMetricsWidget } from "@/types/dashboard";
 
-const DEFAULT_TITLE = "Project metrics";
+const DEFAULT_TITLE_KEY = "metricsLabels.defaultTitle";
 
-const METRIC_LABELS: Record<string, string> = {
-  [METRIC_NAME_TYPE.FEEDBACK_SCORES]: "Trace metrics",
-  [METRIC_NAME_TYPE.TRACE_COUNT]: "Number of traces",
-  [METRIC_NAME_TYPE.TRACE_DURATION]: "Trace duration",
-  [METRIC_NAME_TYPE.TOKEN_USAGE]: "Token usage",
-  [METRIC_NAME_TYPE.COST]: "Estimated cost",
-  [METRIC_NAME_TYPE.FAILED_GUARDRAILS]: "Failed guardrails",
-  [METRIC_NAME_TYPE.THREAD_COUNT]: "Number of threads",
-  [METRIC_NAME_TYPE.THREAD_DURATION]: "Thread duration",
-  [METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES]: "Thread metrics",
-  [METRIC_NAME_TYPE.SPAN_COUNT]: "Number of spans",
-  [METRIC_NAME_TYPE.SPAN_DURATION]: "Span duration",
-  [METRIC_NAME_TYPE.SPAN_FEEDBACK_SCORES]: "Span metrics",
-  [METRIC_NAME_TYPE.SPAN_TOKEN_USAGE]: "Span token usage",
+const getMetricLabels = (): Record<string, string> => {
+  const t = i18next.getFixedT(null, "dashboards");
+  return {
+    [METRIC_NAME_TYPE.FEEDBACK_SCORES]: t("metrics.traceMetrics"),
+    [METRIC_NAME_TYPE.TRACE_COUNT]: t("metrics.numberOfTraces"),
+    [METRIC_NAME_TYPE.TRACE_DURATION]: t("metrics.traceDuration"),
+    [METRIC_NAME_TYPE.TOKEN_USAGE]: t("metrics.tokenUsage"),
+    [METRIC_NAME_TYPE.COST]: t("metrics.estimatedCost"),
+    [METRIC_NAME_TYPE.FAILED_GUARDRAILS]: t("metrics.failedGuardrails"),
+    [METRIC_NAME_TYPE.THREAD_COUNT]: t("metrics.numberOfThreads"),
+    [METRIC_NAME_TYPE.THREAD_DURATION]: t("metrics.threadDuration"),
+    [METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES]: t("metrics.threadMetrics"),
+    [METRIC_NAME_TYPE.SPAN_COUNT]: t("metrics.numberOfSpans"),
+    [METRIC_NAME_TYPE.SPAN_DURATION]: t("metrics.spanDuration"),
+    [METRIC_NAME_TYPE.SPAN_FEEDBACK_SCORES]: t("metrics.spanMetrics"),
+    [METRIC_NAME_TYPE.SPAN_TOKEN_USAGE]: t("metrics.spanTokenUsage"),
+  };
 };
 
 const FEEDBACK_SCORE_METRIC_TYPES = [
@@ -46,14 +50,17 @@ const TOKEN_USAGE_METRIC_TYPES = [
 const calculateProjectMetricsTitle = (
   config: Record<string, unknown>,
 ): string => {
+  const t = i18next.getFixedT(null, "dashboards");
   const widgetConfig = config as ProjectMetricsWidget["config"];
   const metricType = widgetConfig.metricType;
+  const defaultTitle = t(DEFAULT_TITLE_KEY);
 
   if (!metricType) {
-    return DEFAULT_TITLE;
+    return defaultTitle;
   }
 
-  const baseTitle = METRIC_LABELS[metricType] || DEFAULT_TITLE;
+  const metricLabels = getMetricLabels();
+  const baseTitle = metricLabels[metricType] || defaultTitle;
 
   // For feedback score metrics with exactly one score selected
   if (

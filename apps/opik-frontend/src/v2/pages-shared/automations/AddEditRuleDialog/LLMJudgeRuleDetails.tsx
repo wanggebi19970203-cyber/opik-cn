@@ -1,6 +1,7 @@
 import React, { useCallback, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import find from "lodash/find";
 import get from "lodash/get";
 
@@ -71,6 +72,7 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
   form,
   datasetColumnNames,
 }) => {
+  const { t } = useTranslation();
   const cache = useRef<Record<string | LLM_JUDGE, LLMPromptTemplate>>({});
   const { calculateModelProvider, calculateDefaultModel } =
     useLLMProviderModelsData();
@@ -179,7 +181,7 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label>Model</Label>
+              <Label>{t("common.labels.model")}</Label>
               <FormControl>
                 <div className="flex h-10 items-center justify-center gap-2">
                   <PromptModelSelect
@@ -241,7 +243,7 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
         render={({ field }) => (
           <FormItem>
             <Label>
-              Prompt{" "}
+              {t("common.labels.prompt")}{" "}
               <ExplainerIcon
                 className="inline"
                 {...EXPLAINERS_MAP[EXPLAINER_ID.whats_that_prompt_select]}
@@ -363,12 +365,9 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center">
-          <Label htmlFor="name">Score definition</Label>
+          <Label htmlFor="name">{t("common.labels.scoreDefinition")}</Label>
           <TooltipWrapper
-            content={`The score definition is used to define which
-feedback scores are returned by this rule.
-To return more than one score, simply add
-multiple scores to this section.`}
+            content={t("common.labels.scoreDefinitionDescription")}
           >
             <Info className="ml-1 size-4 text-light-slate" />
           </TooltipWrapper>

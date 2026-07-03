@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -114,6 +115,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
   onClose,
   onRowChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const navigate = useNavigate();
 
   const {
@@ -286,13 +288,13 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
       FileSaver.saveAs(blob, fileName);
 
       toast({
-        title: "Export successful",
-        description: "Exported thread to CSV",
+        title: t("actions.exportSuccessful"),
+        description: t("actions.exportedToFormat", { type: "thread", format: "CSV" }),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: get(error, "message", "Failed to export"),
+        title: t("actions.exportFailed"),
+        description: get(error, "message", t("actions.failedToExport")),
         variant: "destructive",
       });
     }
@@ -326,13 +328,13 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
       FileSaver.saveAs(blob, fileName);
 
       toast({
-        title: "Export successful",
-        description: "Exported thread to JSON",
+        title: t("actions.exportSuccessful"),
+        description: t("actions.exportedToFormat", { type: "thread", format: "JSON" }),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: get(error, "message", "Failed to export"),
+        title: t("actions.exportFailed"),
+        description: get(error, "message", t("actions.failedToExport")),
         variant: "destructive",
       });
     }
@@ -367,10 +369,10 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           <div className="relative flex size-[22px] shrink-0 items-center justify-center rounded-md bg-[var(--thread-icon-background)] text-[var(--thread-icon-text)]">
             <MessagesSquare className="size-3.5" />
           </div>
-          <div className="comet-title-s truncate py-0.5">Thread</div>
+          <div className="comet-title-s truncate py-0.5">{t("detailsPanel.thread")}</div>
         </div>
         <div className=" flex w-full items-center gap-3 overflow-x-hidden py-1">
-          <TooltipWrapper content="Thread start time">
+          <TooltipWrapper content={t("thread.threadStartTime")}>
             <div className="flex flex-nowrap items-center gap-x-1.5 px-1 text-muted-slate">
               <Calendar className="size-4 shrink-0" />
               <span className="comet-body-s-accented truncate">
@@ -378,17 +380,17 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               </span>
             </div>
           </TooltipWrapper>
-          <TooltipWrapper content="Number of messages in the thread">
+          <TooltipWrapper content={t("thread.numberOfMessages")}>
             <div className="flex flex-nowrap items-center gap-x-1.5 px-1 text-muted-slate">
               <Hash className="size-4 shrink-0" />
               <span className="comet-body-s-accented truncate">
                 {thread?.number_of_messages
-                  ? `${thread.number_of_messages} messages`
+                  ? t("thread.messagesCount", { count: thread.number_of_messages })
                   : "NA"}
               </span>
             </div>
           </TooltipWrapper>
-          <TooltipWrapper content="Thread duration">
+          <TooltipWrapper content={t("thread.threadDuration")}>
             <div className="flex flex-nowrap items-center gap-x-1.5 px-1 text-muted-slate">
               <Clock className="size-4 shrink-0" />
               <span className="comet-body-s-accented truncate">
@@ -398,10 +400,12 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           </TooltipWrapper>
           {!isUndefined(thread?.total_estimated_cost) && (
             <TooltipWrapper
-              content={`Estimated cost ${formatCost(
-                thread?.total_estimated_cost,
-                { modifier: "full" },
-              )}`}
+              content={t("thread.estimatedCost", {
+                cost: formatCost(
+                  thread?.total_estimated_cost,
+                  { modifier: "full" },
+                ),
+              })}
             >
               <div className="flex flex-nowrap items-center gap-x-1.5 px-1 text-muted-slate">
                 <Coins className="size-4 shrink-0" />
@@ -437,10 +441,10 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
         <div className="mx-6" data-panel-tabs="true">
           <TabsList variant="underline">
             <TabsTrigger variant="underline" value="messages">
-              Messages
+              {t("detailsPanel.messages")}
             </TabsTrigger>
             <TabsTrigger variant="underline" value="feedback_scores">
-              Feedback scores
+              {t("detailsPanel.feedbackScores")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -573,7 +577,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               });
             }}
           >
-            View all traces
+            {t("thread.viewAllTraces")}
           </Button>
         </div>
         <div className="flex gap-2 pl-6">
@@ -603,7 +607,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon-sm">
-                <span className="sr-only">Actions menu</span>
+                <span className="sr-only">{t("thread.actionsMenu")}</span>
                 <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
@@ -611,31 +615,31 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               <DropdownMenuItem
                 onClick={() => {
                   toast({
-                    description: "URL successfully copied to clipboard",
+                    description: t("actions.urlSuccessfullyCopiedToClipboard"),
                   });
                   copy(window.location.href);
                 }}
               >
                 <Share className="mr-2 size-4" />
-                Share
+                  {t("actions.share")}
               </DropdownMenuItem>
               <TooltipWrapper content={threadId} side="left">
                 <DropdownMenuItem
                   onClick={() => {
                     toast({
-                      description: `Thread ID successfully copied to clipboard`,
+                      description: t("actions.threadIdCopiedToClipboard"),
                     });
                     copy(threadId);
                   }}
                 >
                   <Copy className="mr-2 size-4" />
-                  Copy thread ID
+                  {t("actions.copyThreadId")}
                 </DropdownMenuItem>
               </TooltipWrapper>
               <DropdownMenuSeparator />
               {!isExportEnabled ? (
                 <TooltipWrapper
-                  content="Export functionality is disabled for this installation"
+                  content={t("actions.exportDisabled")}
                   side="left"
                 >
                   <div>
@@ -644,19 +648,19 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
                       disabled={!isExportEnabled}
                     >
                       <Download className="mr-2 size-4" />
-                      Export as CSV
+                      {t("actions.exportAs", { format: "CSV" })}
                     </DropdownMenuItem>
                   </div>
                 </TooltipWrapper>
               ) : (
                 <DropdownMenuItem onClick={handleExportCSV}>
                   <Download className="mr-2 size-4" />
-                  Export as CSV
+                  {t("actions.exportAs", { format: "CSV" })}
                 </DropdownMenuItem>
               )}
               {!isExportEnabled ? (
                 <TooltipWrapper
-                  content="Export functionality is disabled for this installation"
+                  content={t("actions.exportDisabled")}
                   side="left"
                 >
                   <div>
@@ -665,14 +669,14 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
                       disabled={!isExportEnabled}
                     >
                       <Download className="mr-2 size-4" />
-                      Export as JSON
+                      {t("actions.exportAs", { format: "JSON" })}
                     </DropdownMenuItem>
                   </div>
                 </TooltipWrapper>
               ) : (
                 <DropdownMenuItem onClick={handleExportJSON}>
                   <Download className="mr-2 size-4" />
-                  Export as JSON
+                  {t("actions.exportAs", { format: "JSON" })}
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -681,7 +685,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
                 variant="destructive"
               >
                 <Trash className="mr-2 size-4" />
-                Delete
+                {t("actions.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -689,9 +693,9 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
             open={popupOpen}
             setOpen={setPopupOpen}
             onConfirm={handleThreadDelete}
-            title="Delete thread"
-            description="Deleting a thread will also remove all traces linked to it and their data. This action can’t be undone. Are you sure you want to continue?"
-            confirmText="Delete thread"
+            title={t("actions.deleteThread")}
+            description={t("actions.deleteThreadDescription")}
+            confirmText={t("actions.deleteThread")}
             confirmButtonVariant="destructive"
           />
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useHotkeys } from "react-hotkeys-hook";
 import { X } from "lucide-react";
 import { Button } from "@/ui/button";
@@ -24,7 +25,7 @@ const HOTKEYS = ["Esc"];
 
 const DetailsActionSectionLayout: React.FC<DetailsActionSectionLayoutProps> = ({
   title,
-  closeTooltipContent = "Close",
+  closeTooltipContent,
   activeSection,
   setActiveSection,
   children,
@@ -32,6 +33,8 @@ const DetailsActionSectionLayout: React.FC<DetailsActionSectionLayoutProps> = ({
   tag,
   button,
 }) => {
+  const { t } = useTranslation("tracing");
+  const resolvedCloseTooltip = closeTooltipContent ?? t("detailsPanel.close");
   useHotkeys(
     "Escape",
     (keyboardEvent: KeyboardEvent) => {
@@ -57,7 +60,7 @@ const DetailsActionSectionLayout: React.FC<DetailsActionSectionLayoutProps> = ({
         </div>
         <div className="flex items-center gap-1">
           {button}
-          <TooltipWrapper content={closeTooltipContent} hotkeys={HOTKEYS}>
+          <TooltipWrapper content={resolvedCloseTooltip} hotkeys={HOTKEYS}>
             <Button
               variant="outline"
               size="icon-sm"

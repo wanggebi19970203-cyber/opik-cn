@@ -44,29 +44,35 @@ language_models.BaseLLM.dict = base_llm_patcher.base_llm_dict_patched()
 
 # A callable that receives an error string and returns True if the error should be skipped,
 # or False otherwise.
+# 接收错误字符串并返回True表示应跳过该错误，否则返回False的回调函数类型。
 SkipErrorCallback = Callable[[str], bool]
 
 # Placeholder output dictionary used when errors are intentionally skipped
 # via the skip_error_callback. This signals that the output was not produced
 # due to a handled/ignored error during execution.
+# 当错误通过skip_error_callback被有意跳过时使用的占位输出字典。
+# 这表示由于执行过程中处理/忽略的错误而未产生输出。
 ERROR_SKIPPED_OUTPUTS = {"warning": "Error output skipped by skip_error_callback."}
 
 # Constants for LangGraph interrupt/resume functionality
+# LangGraph 中断/恢复功能的常量
 LANGGRAPH_INTERRUPT_OUTPUT_KEY = "__interrupt__"
 LANGGRAPH_RESUME_INPUT_KEY = "__resume__"
 LANGGRAPH_INTERRUPT_METADATA_KEY = "_langgraph_interrupt"
 
 # Constant for LangGraph ParentCommand (multi-agent control flow routing)
+# LangGraph ParentCommand 常量（多智能体控制流路由）
 LANGGRAPH_PARENT_COMMAND_METADATA_KEY = "_langgraph_parent_command"
 
 
 class TrackRootRunResult(NamedTuple):
+    """跟踪根运行结果的命名元组。"""
     new_trace_data: Optional[trace.TraceData]
     new_span_data: Optional[span.SpanData]
 
 
 class OpikTracer(BaseTracer):
-    """Langchain Opik Tracer."""
+    """Langchain Opik 追踪器。"""
 
     def __init__(
         self,
@@ -81,29 +87,28 @@ class OpikTracer(BaseTracer):
         **kwargs: Any,
     ) -> None:
         """
-        Initializes an instance of the class with various parameters for traces, metadata, and project configuration.
+        使用各种参数初始化类的实例，用于追踪、元数据和项目配置。
 
         Args:
-            tags: List of tags associated with logged traces.
-            metadata: Dictionary containing metadata information for logged traces.
-            graph: A LangGraph Graph object for representing dependencies or flow
-                to track the Graph Definition in Opik.
-            project_name: Name of the project associated with the traces.
-            distributed_headers: Headers for distributed tracing context.
-            thread_id: Unique identifier for the conversational thread
-                to be associated with traces.
-            skip_error_callback : Callback function to handle skip errors logic.
-                Allows defining custom logic for handling errors that are intentionally skipped.
-                Please note that in traces/spans where errors are intentionally skipped,
-                the output will be replaced with `ERROR_SKIPPED_OUTPUTS`. You can provide
-                the output manually using `opik_context.get_current_span_data().update(output=...)`.
-            opik_context_read_only_mode: Whether to adding/popping spans/traces to/from the context storage.
-                * If False (default), OpikTracer will add created spans/traces to the opik context, so if there is a @track-decorated
-                  function called inside the LangChain runnable, it will be attached to it's parent span from LangChain automatically.
-                * If True, OpikTracer will not modify the context storage and only create spans/traces from LangChain's Run objects.
-                  This might be useful when the environment doesn't support proper context isolation for concurrent operations and you
-                  want to avoid modifying the Opik context stack due to unsafety.
-            **kwargs: Additional arguments passed to the parent class constructor.
+            tags: 与记录的追踪关联的标签列表。
+            metadata: 包含记录追踪元数据信息的字典。
+            graph: 用于表示依赖关系或流程的LangGraph Graph对象，
+                用于在Opik中跟踪图定义。
+            project_name: 与追踪关联的项目名称。
+            distributed_headers: 分布式追踪上下文的头部信息。
+            thread_id: 与追踪关联的对话线程唯一标识符。
+            skip_error_callback: 处理跳过错误逻辑的回调函数。
+                允许定义处理有意跳过的错误的自定义逻辑。
+                请注意，在有意跳过错误的追踪/span中，
+                输出将被替换为 `ERROR_SKIPPED_OUTPUTS`。您可以使用
+                `opik_context.get_current_span_data().update(output=...)` 手动提供输出。
+            opik_context_read_only_mode: 是否向上下文存储添加/弹出span/trace。
+                * 如果为False（默认），OpikTracer会将创建的span/trace添加到opik上下文中，
+                  因此如果在LangChain可运行对象内部调用了@track装饰的函数，
+                  它将自动附加到LangChain的父span中。
+                * 如果为True，OpikTracer不会修改上下文存储，只会从LangChain的Run对象创建span/trace。
+                  当环境不支持并发操作的适当上下文隔离，并且您希望避免因不安全性而修改Opik上下文栈时，这可能很有用。
+            **kwargs: 传递给父类构造函数的其他参数。
         """
         validator = parameters_validator.create_validator(
             method_name="__init__", class_name=self.__class__.__name__
@@ -125,20 +130,20 @@ class OpikTracer(BaseTracer):
         self._trace_default_tags = tags
 
         self._span_data_map: Dict[UUID, span.SpanData] = {}
-        """Map from run id to span data."""
+        """从运行ID到span数据的映射。"""
 
         self._created_traces_data_map: Dict[UUID, trace.TraceData] = {}
-        """Map from run id to trace data."""
+        """从运行ID到追踪数据的映射。"""
 
         self._created_traces: List[trace.Trace] = []
 
         self._externally_created_traces_ids: Set[str] = set()
 
         self._skipped_langgraph_root_run_ids: Set[UUID] = set()
-        """Set of run IDs for LangGraph root runs where we skip creating the span."""
+        """跳过创建span的LangGraph根运行ID集合。"""
 
         self._langgraph_parent_span_ids: Dict[UUID, Optional[str]] = {}
-        """Map from LangGraph root run ID to parent span ID (None if attached to trace)."""
+        """从LangGraph根运行ID到父span ID的映射（如果附加到追踪则为None）。"""
 
         self._project_name = project_name
 
@@ -162,13 +167,13 @@ class OpikTracer(BaseTracer):
 
     def set_graph(self, graph: "Graph") -> None:
         """
-        Set the LangGraph graph structure for visualization in Opik traces.
+        设置LangGraph图结构以在Opik追踪中进行可视化。
 
-        This method extracts the graph structure and stores it in trace metadata,
-        allowing the graph to be visualized in the Opik UI.
+        此方法提取图结构并将其存储在追踪元数据中，
+        使图可以在Opik UI中进行可视化。
 
         Args:
-            graph: A LangGraph Graph object (typically obtained via graph.get_graph(xray=True)).
+            graph: LangGraph Graph对象（通常通过 graph.get_graph(xray=True) 获取）。
         """
         self._trace_default_metadata["_opik_graph_definition"] = {
             "format": "mermaid",
@@ -184,6 +189,7 @@ class OpikTracer(BaseTracer):
         )
 
     def _persist_run(self, run: Run) -> None:
+        """持久化运行数据。"""
         run_dict: Dict[str, Any] = run.dict()
 
         error_info: Optional[ErrorInfoDict]
@@ -195,16 +201,20 @@ class OpikTracer(BaseTracer):
 
         if error_str is not None:
             # GraphInterrupt is not an error - it's a normal control flow for LangGraph
+            # GraphInterrupt不是错误 - 它是LangGraph的正常控制流
             if interrupt_value := run_parse_helpers.parse_graph_interrupt_value(
                 error_str
             ):
                 outputs = {LANGGRAPH_INTERRUPT_OUTPUT_KEY: interrupt_value}
                 trace_additional_metadata[LANGGRAPH_INTERRUPT_METADATA_KEY] = True
                 # Don't set error_info - this is not an error
+                # 不设置error_info - 这不是错误
             # ParentCommand is not an error - it's multi-agent routing in LangGraph
+            # ParentCommand不是错误 - 它是LangGraph中的多智能体路由
             elif run_parse_helpers.is_langgraph_parent_command(error_str):
                 trace_additional_metadata[LANGGRAPH_PARENT_COMMAND_METADATA_KEY] = True
                 # Don't set error_info - this is not an error
+                # 不设置error_info - 这不是错误
             elif not self._should_skip_error(error_str):
                 error_info = ErrorInfoDict(
                     exception_type="Exception",
@@ -240,6 +250,7 @@ class OpikTracer(BaseTracer):
         outputs: Optional[Dict[str, Any]],
         error_info: Optional[ErrorInfoDict],
     ) -> None:
+        """完成追踪处理。"""
         trace_data = self._created_traces_data_map.get(run_id)
         if trace_data is None:
             LOGGER.warning(
@@ -248,6 +259,7 @@ class OpikTracer(BaseTracer):
             return
 
         # workaround for `.astream()` method usage
+        # 针对 `.astream()` 方法使用的解决方案
         if trace_data.input == {"input": ""}:
             trace_data.input = run_dict["inputs"]
         elif isinstance(trace_data.input, dict) and "input" in trace_data.input:
@@ -258,6 +270,7 @@ class OpikTracer(BaseTracer):
                 trace_data.input = {LANGGRAPH_RESUME_INPUT_KEY: resume_value}
 
         # Check if any child span has a GraphInterrupt output and use it for trace output
+        # 检查是否有子span具有GraphInterrupt输出，并将其用于追踪输出
         for _, span_data in self._span_data_map.items():
             if (
                 span_data.trace_id == trace_data.id
@@ -265,8 +278,10 @@ class OpikTracer(BaseTracer):
                 and span_data.metadata.get(LANGGRAPH_INTERRUPT_METADATA_KEY) is True
             ):
                 # Use the interrupt output from the child span
+                # 使用子span的中断输出
                 outputs = span_data.output
                 # Also propagate the interrupt metadata to trace
+                # 同时将中断元数据传播到追踪
                 if trace_additional_metadata is None:
                     trace_additional_metadata = {}
                 trace_additional_metadata[LANGGRAPH_INTERRUPT_METADATA_KEY] = True
@@ -396,14 +411,13 @@ class OpikTracer(BaseTracer):
         self, run_id: UUID, run_dict: Dict[str, Any], allow_duplicating_root_span: bool
     ) -> None:
         """
-        Creates a root trace and span for a given run and stores the relevant trace and span
-        data in local storage for future reference.
+        为给定运行创建根追踪和span，并将相关的追踪和span数据存储在本地存储中以供将来参考。
 
-        The new span is only created if no new trace is created, i.e., when attached to an existing span
-        or distributed headers. If a new trace is created, the span is skipped and only the
-        trace data is stored in local storage for future reference.
+        仅在未创建新追踪时才创建新span，即当附加到现有span或分布式头部时。
+        如果创建了新追踪，则跳过span，仅将追踪数据存储在本地存储中以供将来参考。
         """
         # This is the first run for the chain.
+        # 这是链的第一次运行。
         root_run_result = self._track_root_run(run_dict, allow_duplicating_root_span)
         if root_run_result.new_trace_data is not None:
             if not self._opik_context_read_only_mode:
@@ -420,15 +434,19 @@ class OpikTracer(BaseTracer):
                 )
 
         # If this is a LangGraph/LangChain root run under fresh trace, skip creating the span
+        # 如果这是新追踪下的LangGraph/LangChain根运行，则跳过创建span
         if root_run_result.new_span_data is None:
             # Mark this run as skipped and store trace data for child runs
+            # 标记此运行为已跳过，并为子运行存储追踪数据
             self._skipped_langgraph_root_run_ids.add(run_id)
 
             # Store parent span ID if LangGraph was attached to the existing span
+            # 如果LangGraph附加到现有span，则存储父span ID
             parent_span_id = self._root_run_external_parent_span_id.get()
             self._langgraph_parent_span_ids[run_id] = parent_span_id
 
             # Store trace data if we created a new trace but skip span data
+            # 如果我们创建了新追踪但跳过span数据，则存储追踪数据
             if root_run_result.new_trace_data is not None:
                 self._save_span_trace_data_to_local_maps(
                     run_id=run_id,
@@ -437,6 +455,7 @@ class OpikTracer(BaseTracer):
                 )
         else:
             # save new span and trace data to local maps to be able to retrieve them later
+            # 将新的span和追踪数据保存到本地映射中，以便稍后检索
             self._save_span_trace_data_to_local_maps(
                 run_id=run_id,
                 span_data=root_run_result.new_span_data,
@@ -458,11 +477,11 @@ class OpikTracer(BaseTracer):
         self, run_id: UUID, parent_run_id: UUID, run_dict: Dict[str, Any]
     ) -> None:
         """
-        Attaches child span to a parent span and updates relevant context storage.
+        将子span附加到父span并更新相关上下文存储。
 
-        This method is responsible for creating a new span data object associated with a
-        run, linking it to the parent span data, and saving it to local and external maps.
-        Additionally, it updates the context storage and logs the span if tracing is active.
+        此方法负责创建与运行关联的新span数据对象，
+        将其链接到父span数据，并保存到本地和外部映射中。
+        此外，它更新上下文存储，并在追踪活动时记录span。
         """
         parent_span_data = self._span_data_map[parent_run_id]
 
@@ -496,6 +515,8 @@ class OpikTracer(BaseTracer):
             else:
                 # Parent may be a stream-restart root run that was created as a regular
                 # span (not a skipped LangGraph root). Find the trace data by trace_id.
+                # 父级可能是作为常规span（不是跳过的LangGraph根）创建的流重启根运行。
+                # 通过trace_id查找追踪数据。
                 for td in self._created_traces_data_map.values():
                     if td.id == new_span_data.trace_id:
                         self._created_traces_data_map[run_id] = td
@@ -516,12 +537,14 @@ class OpikTracer(BaseTracer):
         self, run_id: UUID, parent_run_id: UUID, run_dict: Dict[str, Any]
     ) -> None:
         """
-        Attaches child span directly to a trace by checking trace data or distributed
-        headers and creates new span data based on the provided run information.
+        通过检查追踪数据或分布式头部，将子span直接附加到追踪，
+        并根据提供的运行信息创建新的span数据。
         """
         # Check if we have trace data (new trace) or distributed headers
+        # 检查我们是否有追踪数据（新追踪）或分布式头部
         if parent_run_id in self._created_traces_data_map:
             # LangGraph created a new trace - attach children directly to trace
+            # LangGraph创建了新追踪 - 将子项直接附加到追踪
             trace_data = self._created_traces_data_map[parent_run_id]
             project_name = helpers.resolve_child_span_project_name(
                 trace_data.project_name,
@@ -530,7 +553,7 @@ class OpikTracer(BaseTracer):
 
             new_span_data = span.SpanData(
                 trace_id=trace_data.id,
-                parent_span_id=None,  # Direct child of trace
+                parent_span_id=None,  # Direct child of trace  # 追踪的直接子项
                 input=run_dict["inputs"],
                 metadata=run_parse_helpers.get_run_metadata(run_dict),
                 name=run_dict["name"],
@@ -542,6 +565,7 @@ class OpikTracer(BaseTracer):
 
         elif self._distributed_headers:
             # LangGraph with distributed headers - attach to distributed trace
+            # 带有分布式头部的LangGraph - 附加到分布式追踪
             new_span_data = span.SpanData(
                 trace_id=self._distributed_headers["opik_trace_id"],
                 parent_span_id=self._distributed_headers["opik_parent_span_id"],
@@ -560,6 +584,7 @@ class OpikTracer(BaseTracer):
             current_trace_data := self._opik_context_storage.get_trace_data()
         ) is not None:
             # LangGraph attached to existing trace - attach children directly to trace
+            # LangGraph附加到现有追踪 - 将子项直接附加到追踪
             project_name = helpers.resolve_child_span_project_name(
                 current_trace_data.project_name,
                 context_storage.resolve_project_name(self._project_name, "OpikTracer"),
@@ -603,9 +628,11 @@ class OpikTracer(BaseTracer):
             )
 
     def _process_end_span(self, run: Run) -> None:
+        """处理span结束事件。"""
         span_data = None
         try:
             # Skip processing if this is a skipped LangGraph root run
+            # 如果这是跳过的LangGraph根运行，则跳过处理
             if run.id in self._skipped_langgraph_root_run_ids:
                 return
 
@@ -624,6 +651,7 @@ class OpikTracer(BaseTracer):
                 usage_info = llm_usage.LLMUsageInfo()
 
             # workaround for `.astream()` method usage
+            # 针对 `.astream()` 方法使用的解决方案
             if span_data.input == {"input": ""} or span_data.input == {"input": {}}:
                 span_data.input = run_dict["inputs"]
             elif isinstance(span_data.input, dict):
@@ -669,7 +697,9 @@ class OpikTracer(BaseTracer):
         return self._skip_error_callback(error_str)
 
     def _process_end_span_with_error(self, run: Run) -> None:
+        """处理带错误的span结束事件。"""
         # Skip processing if this is a skipped LangGraph root run
+        # 如果这是跳过的LangGraph根运行，则跳过处理
         if run.id in self._skipped_langgraph_root_run_ids:
             return
 
@@ -686,6 +716,7 @@ class OpikTracer(BaseTracer):
             error_str = run_dict["error"]
 
             # GraphInterrupt is not an error - it's a normal control flow for LangGraph
+            # GraphInterrupt不是错误 - 它是LangGraph的正常控制流
             if interrupt_value := run_parse_helpers.parse_graph_interrupt_value(
                 error_str
             ):
@@ -694,6 +725,7 @@ class OpikTracer(BaseTracer):
                     output={LANGGRAPH_INTERRUPT_OUTPUT_KEY: interrupt_value},
                 )
             # ParentCommand is not an error - it's multi-agent routing in LangGraph
+            # ParentCommand不是错误 - 它是LangGraph中的多智能体路由
             elif run_parse_helpers.is_langgraph_parent_command(error_str):
                 span_data.init_end_time().update(
                     metadata={LANGGRAPH_PARENT_COMMAND_METADATA_KEY: True},
@@ -735,16 +767,16 @@ class OpikTracer(BaseTracer):
 
     def flush(self) -> None:
         """
-        Flush to ensure all data is sent to the Opik server.
+        刷新以确保所有数据发送到Opik服务器。
         """
         self._opik_client.flush()
 
     def created_traces(self) -> List[trace.Trace]:
         """
-        Get a list of traces created by OpikTracer.
+        获取OpikTracer创建的追踪列表。
 
         Returns:
-            List[Trace]: A list of traces.
+            List[Trace]: 追踪列表。
         """
         return self._created_traces
 
@@ -758,7 +790,7 @@ class OpikTracer(BaseTracer):
         return False
 
     def _on_llm_start(self, run: Run) -> None:
-        """Process the LLM Run upon start."""
+        """处理LLM运行开始事件。"""
         if self._skip_tracking():
             return
 
@@ -776,28 +808,31 @@ class OpikTracer(BaseTracer):
         name: Optional[str] = None,
         **kwargs: Any,
     ) -> Run:
-        """Start a trace for an LLM run.
+        """开始LLM运行的追踪。
 
-        Duplicated from Langchain tracer, it is disabled by default in all tracers, see https://github.com/langchain-ai/langchain/blob/fdda1aaea14b257845a19023e8af5e20140ec9fe/libs/core/langchain_core/callbacks/manager.py#L270-L289 and https://github.com/langchain-ai/langchain/blob/fdda1aaea14b257845a19023e8af5e20140ec9fe/libs/core/langchain_core/tracers/core.py#L168-L180
+        从Langchain追踪器复制而来，默认在所有追踪器中禁用，
+        参见 https://github.com/langchain-ai/langchain/blob/fdda1aaea14b257845a19023e8af5e20140ec9fe/libs/core/langchain_core/callbacks/manager.py#L270-L289
+        和 https://github.com/langchain-ai/langchain/blob/fdda1aaea14b257845a19023e8af5e20140ec9fe/libs/core/langchain_core/tracers/core.py#L168-L180
 
         Args:
-            serialized: The serialized model.
-            messages: The messages.
-            run_id: The run ID.
-            tags: The tags. Defaults to None.
-            parent_run_id: The parent run ID. Defaults to None.
-            metadata: The metadata. Defaults to None.
-            name: The name. Defaults to None.
-            kwargs: Additional keyword arguments.
+            serialized: 序列化的模型。
+            messages: 消息列表。
+            run_id: 运行ID。
+            tags: 标签。默认为None。
+            parent_run_id: 父运行ID。默认为None。
+            metadata: 元数据。默认为None。
+            name: 名称。默认为None。
+            kwargs: 其他关键字参数。
 
         Returns:
-            Run: The run.
+            Run: 运行对象。
         """
         start_time = datetime.datetime.now(datetime.timezone.utc)
         if metadata:
             kwargs.update({"metadata": metadata})
 
         # We switched from langchain dumpd to model_dump() as we don't need all the langchain stuff
+        # 我们从langchain dumpd切换到model_dump()，因为我们不需要所有的langchain内容
         chat_model_run = Run(
             id=run_id,
             parent_run_id=parent_run_id,
@@ -818,63 +853,63 @@ class OpikTracer(BaseTracer):
         return chat_model_run
 
     def _on_chat_model_start(self, run: Run) -> None:
-        """Process the Chat Model Run upon start."""
+        """处理聊天模型运行开始事件。"""
         if self._skip_tracking():
             return
 
         self._process_start_span(run, allow_duplicating_root_span=True)
 
     def _on_llm_end(self, run: Run) -> None:
-        """Process the LLM Run."""
+        """处理LLM运行结束事件。"""
         if self._skip_tracking():
             return
 
         self._process_end_span(run)
 
     def _on_llm_error(self, run: Run) -> None:
-        """Process the LLM Run upon error."""
+        """处理LLM运行错误事件。"""
         if self._skip_tracking():
             return
 
         self._process_end_span_with_error(run)
 
     def _on_chain_start(self, run: Run) -> None:
-        """Process the Chain Run upon start."""
+        """处理链运行开始事件。"""
         if self._skip_tracking():
             return
 
         self._process_start_span(run, allow_duplicating_root_span=False)
 
     def _on_chain_end(self, run: Run) -> None:
-        """Process the Chain Run."""
+        """处理链运行结束事件。"""
         if self._skip_tracking():
             return
 
         self._process_end_span(run)
 
     def _on_chain_error(self, run: Run) -> None:
-        """Process the Chain Run upon error."""
+        """处理链运行错误事件。"""
         if self._skip_tracking():
             return
 
         self._process_end_span_with_error(run)
 
     def _on_tool_start(self, run: Run) -> None:
-        """Process the Tool Run upon start."""
+        """处理工具运行开始事件。"""
         if self._skip_tracking():
             return
 
         self._process_start_span(run, allow_duplicating_root_span=True)
 
     def _on_tool_end(self, run: Run) -> None:
-        """Process the Tool Run."""
+        """处理工具运行结束事件。"""
         if self._skip_tracking():
             return
 
         self._process_end_span(run)
 
     def _on_tool_error(self, run: Run) -> None:
-        """Process the Tool Run upon error."""
+        """处理工具运行错误事件。"""
         if self._skip_tracking():
             return
 

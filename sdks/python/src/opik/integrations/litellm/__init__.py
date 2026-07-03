@@ -1,4 +1,4 @@
-# This litellm integration is currently not exposed in the documentation.
+# 此 LiteLLM 集成目前未在文档中公开。
 
 from .opik_tracker import track_completion
 

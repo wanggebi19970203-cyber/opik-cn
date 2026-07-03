@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import copy from "clipboard-copy";
 import {
   DatasetItemColumn,
@@ -68,6 +69,7 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
   isNewItem,
   columns,
 }) => {
+  const { t } = useTranslation("datasets");
   const {
     isPending,
     handleDelete,
@@ -140,14 +142,14 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
   );
 
   const handleShare = useCallback(() => {
-    toast({ description: "URL successfully copied to clipboard" });
+    toast({ description: t("testSuiteItem.urlCopiedToClipboard") });
     copy(window.location.href);
-  }, [toast]);
+  }, [toast, t]);
 
   const handleCopyId = useCallback(() => {
-    toast({ description: "Item ID successfully copied to clipboard" });
+    toast({ description: t("testSuiteItem.itemIdCopiedToClipboard") });
     copy(datasetItemId);
-  }, [datasetItemId, toast]);
+  }, [datasetItemId, toast, t]);
 
   const handleDeleteItemConfirm = useCallback(
     () => handleDelete(onClose),
@@ -161,13 +163,13 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
       header={
         <ResizableSidePanelTopBar
           variant="info"
-          title={isNewItem ? "Add test case" : "Edit test case"}
+          title={isNewItem ? t("testSuiteItem.addTestCase") : t("testSuiteItem.editTestCase")}
           onClose={onClose}
         >
           {!isNewItem && (
             <DatasetItemActionsDropdown
               datasetItemId={datasetItemId}
-              itemName="test case"
+              itemName={t("testSuiteItem.testCase")}
               onShare={handleShare}
               onCopyId={handleCopyId}
               onDelete={handleDeleteItemConfirm}

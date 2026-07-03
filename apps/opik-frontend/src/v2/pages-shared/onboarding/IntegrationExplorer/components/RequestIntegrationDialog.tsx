@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,6 +41,7 @@ type RequestIntegrationDialogProps = {
 const RequestIntegrationDialog: React.FunctionComponent<
   RequestIntegrationDialogProps
 > = ({ open, setOpen }) => {
+  const { t } = useTranslation();
   const { mutate: requestIntegration, isPending: isRequestingIntegration } =
     useRequestIntegrationMutation();
 
@@ -78,10 +80,9 @@ const RequestIntegrationDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Request an integration</DialogTitle>
+          <DialogTitle>{t("onboarding.integrationExplorer.requestAnIntegration")}</DialogTitle>
           <DialogDescription>
-            Please let our team know which additional integration you would like
-            to see supported in Opik.
+            {t("onboarding.integrationExplorer.requestIntegrationDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -93,12 +94,12 @@ const RequestIntegrationDialog: React.FunctionComponent<
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="sr-only">
-                    Integration description
+                    {t("onboarding.integrationExplorer.integrationDescriptionLabel")}
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder="Describe the integration you'd like to see..."
+                      placeholder={t("onboarding.integrationExplorer.describeIntegrationPlaceholder")}
                       className="min-h-32 resize-none"
                     />
                   </FormControl>
@@ -109,7 +110,7 @@ const RequestIntegrationDialog: React.FunctionComponent<
 
             <DialogFooter className="gap-3 md:gap-0">
               <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
+                {t("onboarding.integrationExplorer.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -119,7 +120,7 @@ const RequestIntegrationDialog: React.FunctionComponent<
                   isRequestingIntegration
                 }
               >
-                Submit request
+                {t("onboarding.integrationExplorer.submitRequest")}
               </Button>
             </DialogFooter>
           </form>

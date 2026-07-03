@@ -8,6 +8,7 @@ import {
 import { Button } from "@/ui/button";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 import { Prompt } from "@/types/prompts";
@@ -22,6 +23,7 @@ const DELETE_KEY = 2;
 export const PromptRowActionsCell: React.FunctionComponent<
   CellContext<Prompt, unknown>
 > = (context) => {
+  const { t } = useTranslation("pages/prompts");
   const resetKeyRef = useRef(0);
   const prompt = context.row.original;
   const [open, setOpen] = useState<number | boolean>(false);
@@ -58,15 +60,15 @@ export const PromptRowActionsCell: React.FunctionComponent<
         open={open === 2}
         setOpen={setOpen}
         onConfirm={deletePromptHandler}
-        title={`Delete ${prompt.name}`}
-        description="Deleting a prompt will also remove all associated commits. This action can’t be undone. Are you sure you want to continue?"
-        confirmText="Delete prompt"
+        title={t("deleteDialog.title", { name: prompt.name })}
+        description={t("deleteDialog.description")}
+        confirmText={t("deleteDialog.confirmText")}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("actions.actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -78,7 +80,7 @@ export const PromptRowActionsCell: React.FunctionComponent<
             }}
           >
             <Pencil className="mr-2 size-4" />
-            Edit
+            {t("actions.edit")}
           </DropdownMenuItem>
           {canDeletePrompts && (
             <>
@@ -91,7 +93,7 @@ export const PromptRowActionsCell: React.FunctionComponent<
                 variant="destructive"
               >
                 <Trash className="mr-2 size-4" />
-                Delete
+                {t("delete")}
               </DropdownMenuItem>
             </>
           )}

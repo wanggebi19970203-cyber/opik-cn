@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
+import i18n from "@/i18n";
 import { Button } from "@/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,8 +15,8 @@ type DashboardWidgetErrorStateProps = {
 const DashboardWidgetErrorState: React.FunctionComponent<
   DashboardWidgetErrorStateProps
 > = ({
-  title = "Failed to load data",
-  message = "An error occurred while loading the widget data",
+  title = i18n.t("common:dashboard.failedToLoadData"),
+  message = i18n.t("common:dashboard.widgetLoadError"),
   error,
   onRetry,
   className,
@@ -41,7 +42,7 @@ const DashboardWidgetErrorState: React.FunctionComponent<
       )}
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry}>
-          Try again
+          {i18n.t("common:dashboard.tryAgain")}
         </Button>
       )}
     </div>

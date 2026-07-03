@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import uniq from "lodash/uniq";
 import isEmpty from "lodash/isEmpty";
 
@@ -63,6 +64,8 @@ const GroupsButton = <TColumnData,>({
   align = "start",
   disabled,
 }: GroupsButtonProps<TColumnData>) => {
+  const { t } = useTranslation("common");
+  const { t: tActions } = useTranslation("actions");
   const [groups, setGroups] = useState<Groups>(initialGroups);
   const [open, setOpen] = useState(false);
   const isIconLayout = layout === "icon";
@@ -154,7 +157,7 @@ const GroupsButton = <TColumnData,>({
       const prefix = index === 0 ? "By" : "And";
 
       const error = hasDuplication(groups, group, index)
-        ? "Duplicate group with same field and key"
+        ? t("emptyStates.duplicateGroup")
         : undefined;
 
       return (
@@ -176,7 +179,7 @@ const GroupsButton = <TColumnData,>({
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
-      <TooltipWrapper content={isIconLayout ? "Groups" : undefined}>
+      <TooltipWrapper content={isIconLayout ? t("labels.groups") : undefined}>
         <PopoverTrigger asChild>
           <Button
             variant={variant}
@@ -193,7 +196,7 @@ const GroupsButton = <TColumnData,>({
                 <span className="ml-1.5">{validGroups.length}</span>
               ) : null
             ) : (
-              <span className="ml-1.5">{`Groups (${validGroups.length})`}</span>
+              <span className="ml-1.5">{`${t("labels.groups")} (${validGroups.length})`}</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -201,14 +204,14 @@ const GroupsButton = <TColumnData,>({
       <PopoverContent className="min-w-[340px] px-8 py-6" align={align}>
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between pb-1">
-            <span className="comet-title-s">Groups</span>
+            <span className="comet-title-s">{t("labels.groups")}</span>
             <Button
               variant="ghost"
               size="sm"
               className="-mr-2.5"
               onClick={clearHandler}
             >
-              Clear all
+              {tActions("clearAll")}
             </Button>
           </div>
           <Separator />
@@ -236,11 +239,11 @@ const GroupsButton = <TColumnData,>({
               disabled={groups.length >= MAX_GROUP_LEVELS}
             >
               <Plus className="mr-2 size-4" />
-              Add group
+              {tActions("addGroup")}
             </Button>
             {groups.length >= MAX_GROUP_LEVELS && (
               <span className="ml-2 text-xs text-gray-500">
-                Maximum {MAX_GROUP_LEVELS} levels reached
+                {t("emptyStates.maxLevelsReached", { count: MAX_GROUP_LEVELS })}
               </span>
             )}
           </div>

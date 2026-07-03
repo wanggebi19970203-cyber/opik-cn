@@ -1,0 +1,610 @@
+---
+headline: 数据脱敏器 | Opik 文档
+og:description: 使用 Opik 的数据脱敏器保护 LLM 应用中的敏感信息，确保合规性并防止意外数据泄露。
+og:site_name: Opik 文档
+og:title: 数据脱敏器 - 安全 LLM 应用的 Opik 方案
+title: 数据脱敏器
+---
+
+<Tip>
+  数据脱敏器在 Opik 的 **云端** 和 **自托管** 安装中均可使用。
+</Tip>
+
+数据脱敏器帮助您保护 LLM 应用中的敏感信息，在数据记录到 Opik 之前自动检测并替换个人身份信息 (PII) 和其他敏感数据。这确保了隐私法规的合规性，并防止追踪数据中的敏感信息意外暴露。
+
+<Frame>
+  <img src="/img/production/anonymizers_example.png" />
+</Frame>
+
+# 工作原理
+
+数据脱敏器通过处理流经 Opik 追踪系统的所有数据（包括输入、输出和元数据）来工作，这些处理在数据存储或显示之前完成。它们应用一组规则来检测敏感信息并用脱敏占位符替换。
+
+脱敏过程自动且透明地执行：
+
+1. **数据摄入**：当您向 Opik 记录追踪和跨度数据时
+2. **规则应用**：已注册的脱敏器使用其配置的规则扫描数据
+3. **替换**：敏感信息被脱敏占位符替换
+4. **存储**：仅脱敏后的数据存储在 Opik 中
+
+# 脱敏器类型
+
+## 基于规则的脱敏器
+
+最常见的脱敏器类型使用模式匹配规则来识别和替换敏感信息。规则可以以多种格式定义：
+
+### 正则表达式规则
+
+使用正则表达式匹配特定模式：
+
+```python
+import opik
+from opik.anonymizer import create_anonymizer
+
+# 字典格式
+email_rule = {"regex": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "replace": "[EMAIL]"}
+
+# 元组格式
+phone_rule = (r"\b\d{3}-\d{3}-\d{4}\b", "[PHONE]")
+
+# 创建包含多个规则的脱敏器
+anonymizer = create_anonymizer([email_rule, phone_rule])
+
+# 全局注册
+opik.hooks.add_anonymizer(anonymizer)
+```
+
+### 函数规则
+
+使用自定义 Python 函数实现更复杂的脱敏逻辑：
+
+```python
+import opik
+from opik.anonymizer import create_anonymizer
+
+def mask_api_keys(text: str) -> str:
+    """自定义函数：脱敏 API 密钥"""
+    import re
+    # 匹配常见的 API 密钥模式
+    api_key_pattern = r'\b(sk-[a-zA-Z0-9]{32,}|pk_[a-zA-Z0-9]{24,})\b'
+    return re.sub(api_key_pattern, '[API_KEY]', text)
+
+def anonymize_with_hash(text: str) -> str:
+    """将邮箱替换为一致的哈希值，用于追踪而不暴露 PII"""
+    import re
+    import hashlib
+    
+    def hash_replace(match):
+        email = match.group(0)
+        hash_val = hashlib.md5(email.encode()).hexdigest()[:8]
+        return f"[EMAIL_{hash_val}]"
+    
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    return re.sub(email_pattern, hash_replace, text)
+
+# 创建包含函数规则的脱敏器
+anonymizer = create_anonymizer([mask_api_keys, anonymize_with_hash])
+opik.hooks.add_anonymizer(anonymizer)
+```
+
+### 混合规则
+
+组合不同类型的规则实现全面脱敏：
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import create_anonymizer
+
+# 混合字典、元组和函数规则
+mixed_rules = [
+    {"regex": r"\b\d{3}-\d{2}-\d{4}\b", "replace": "[SSN]"},  # 社会安全号码
+    (r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b", "[CARD]"),  # 信用卡号
+    lambda text: text.replace("CONFIDENTIAL", "[REDACTED]"),  # 自定义替换
+]
+
+anonymizer = create_anonymizer(mixed_rules)
+opik.hooks.add_anonymizer(anonymizer)
+```
+
+## 自定义脱敏器
+
+对于高级用例，可以通过扩展 `Anonymizer` 基类来创建自定义脱敏器。
+
+### 理解脱敏器参数
+
+实现自定义脱敏器时，需要实现具有以下签名的 `anonymize()` 方法：
+
+```python
+def anonymize(self, data, **kwargs):
+    # 此处编写脱敏逻辑
+    return anonymized_data
+```
+
+**`kwargs` 参数：**
+
+`anonymize()` 方法还通过 `**kwargs` 接收额外的上下文信息：
+
+- **`field_name`**：指示正在脱敏的字段（`"input"`、`"output"`、`"metadata"` 或点表示法的嵌套字段名，如 `"metadata.email"`）
+- **`object_type`**：正在处理的对象类型（`"span"`、`"trace"`）
+
+**kwargs 何时可用？**
+
+这些 kwargs 在 Opik 的内部数据处理器将追踪和跨度数据发送到后端之前进行脱敏时自动传递。这允许您根据正在处理的字段应用不同的脱敏策略。
+
+**示例：基于字段的脱敏**
+
+```python
+from opik.anonymizer import Anonymizer
+import opik.hooks
+
+class FieldAwareAnonymizer(Anonymizer):
+    def anonymize(self, data, **kwargs):
+        field_name = kwargs.get("field_name", "")
+        
+        # 仅脱敏输出字段，保留输入字段用于调试
+        if field_name == "output" and isinstance(data, str):
+            import re
+            # 对输出进行更严格的脱敏
+            data = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', data)
+            data = re.sub(r'\b\d{3}-\d{3}-\d{4}\b', '[PHONE]', data)
+        elif field_name == "metadata" and isinstance(data, dict):
+            # 完全移除特定的元数据字段
+            sensitive_keys = ["user_id", "session_token", "api_key"]
+            for key in sensitive_keys:
+                if key in data:
+                    data[key] = "[REDACTED]"
+        
+        return data
+
+# 注册字段感知脱敏器
+opik.hooks.add_anonymizer(FieldAwareAnonymizer())
+```
+
+<Tip>
+  `field_name` 和 `object_type` kwargs 主要用于实现上下文感知的脱敏逻辑。如果您不需要基于字段的行为，可以安全地忽略这些 kwargs。
+</Tip>
+
+**示例：嵌套数据结构的脱敏**
+
+您还可以扩展 `RecursiveAnonymizer` 基类来处理嵌套数据结构。
+这允许您将相同的脱敏逻辑应用于所有嵌套字段。在这种情况下，您需要实现 `anonymize_text()` 方法而不是 `anonymize()`。
+
+```python
+from typing import Any, Optional
+
+from opik.anonymizer import RecursiveAnonymizer
+import opik.hooks
+
+class SSNAnonymizer(RecursiveAnonymizer):
+    def anonymize_text(self, data: str, field_name: Optional[str] = None, **kwargs: Any) -> str:
+        if field_name == "metadata.ssn":
+            return "[SSN_REMOVED]"
+
+        return data
+
+```
+
+### 高级自定义脱敏器示例
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import Anonymizer
+
+class AdvancedPIIAnonymizer(Anonymizer):
+    def anonymize(self, data, **kwargs):
+        """具有高级 PII 检测和移除功能的自定义脱敏器。"""
+        field_name = kwargs.get("field_name")
+        object_type = kwargs.get("object_type")
+
+        # 处理不同的数据类型
+        if isinstance(data, dict):
+            # 完全移除敏感键
+            if "api_key" in data:
+                del data["api_key"]
+            if "password" in data:
+                del data["password"]
+
+            # 脱敏特定字段
+            for key, value in data.items():
+                if key.lower() in ["email", "user_email"]:
+                    data[key] = "[EMAIL_REDACTED]"
+                elif key.lower() in ["phone", "telephone", "mobile"]:
+                    data[key] = "[PHONE_REDACTED]"
+
+        elif isinstance(data, str):
+            # 应用基于字符串的脱敏
+            import re
+            # 姓名（简单启发式）
+            data = re.sub(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b', '[NAME]', data)
+            # 地址
+            data = re.sub(r'\d+\s+\w+\s+(Street|St|Avenue|Ave|Road|Rd|Drive|Dr)\b', '[ADDRESS]', data)
+
+        return data
+
+# 注册自定义脱敏器
+opik.hooks.add_anonymizer(AdvancedPIIAnonymizer())
+```
+
+# 使用示例
+
+## 基本设置
+
+以下是展示如何为简单 LLM 应用设置脱敏的完整示例：
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import create_anonymizer
+
+# 定义 PII 脱敏规则
+pii_rules = [
+    # 邮箱地址
+    {"regex": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "replace": "[EMAIL]"},
+    # 电话号码（美国格式）
+    {"regex": r"\b\d{3}-\d{3}-\d{4}\b", "replace": "[PHONE]"},
+    # 社会安全号码
+    {"regex": r"\b\d{3}-\d{2}-\d{4}\b", "replace": "[SSN]"},
+    # 信用卡号
+    {"regex": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b", "replace": "[CARD]"},
+]
+
+# 创建并注册脱敏器
+anonymizer = create_anonymizer(pii_rules)
+opik.hooks.add_anonymizer(anonymizer)
+
+# 现在所有追踪的函数将自动脱敏 PII
+@opik.track
+def process_customer_data(customer_info):
+    """此函数处理客户数据并自动进行 PII 脱敏"""
+    # 输入和输出将被自动脱敏
+    return f"Processed customer: {customer_info}"
+
+# 示例用法 - PII 将在追踪中被自动脱敏
+result = process_customer_data("John Doe, email: john@example.com, phone: 555-123-4567")
+```
+
+## 高级配置
+
+适用于更复杂的脱敏场景：
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import create_anonymizer, Anonymizer
+
+class ComplianceAnonymizer(Anonymizer):
+    """满足合规要求的企业级脱敏器"""
+
+    def __init__(self, compliance_level="standard"):
+        self.compliance_level = compliance_level
+        self.sensitive_fields = {
+            "standard": ["email", "phone", "ssn"],
+            "strict": ["email", "phone", "ssn", "name", "address", "dob"],
+            "minimal": ["ssn", "password"]
+        }
+
+    def anonymize(self, data, **kwargs):
+        field_name = kwargs.get("field_name", "")
+
+        if isinstance(data, dict):
+            # 处理字典字段
+            for key, value in list(data.items()):
+                if key.lower() in self.sensitive_fields[self.compliance_level]:
+                    data[key] = f"[{key.upper()}_REDACTED]"
+
+        elif isinstance(data, str):
+            # 根据合规级别应用字符串级脱敏
+            if self.compliance_level == "strict":
+                # 更严格的脱敏
+                import re
+                data = re.sub(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b', '[NAME]', data)
+                data = re.sub(r'\b\d{1,4}\s+\w+\s+\w+\b', '[ADDRESS]', data)
+
+        return data
+
+# 设置多层脱敏
+opik.hooks.clear_anonymizers()  # 清除现有脱敏器
+
+# 第 1 层：基本 PII 模式
+basic_rules = [
+    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]"),
+    (r"\b\d{3}-\d{3}-\d{4}\b", "[PHONE]"),
+]
+opik.hooks.add_anonymizer(create_anonymizer(basic_rules))
+
+# 第 2 层：合规性特定脱敏
+opik.hooks.add_anonymizer(ComplianceAnonymizer(compliance_level="standard"))
+
+# 第 3 层：自定义业务逻辑
+def remove_internal_identifiers(text):
+    """移除公司特定的内部标识符"""
+    import re
+    return re.sub(r'\bEMP-\d{6}\b', '[EMPLOYEE_ID]', text)
+
+opik.hooks.add_anonymizer(create_anonymizer(remove_internal_identifiers))
+```
+
+## 使用第三方 PII 库
+
+除了正则表达式和自定义 Python 函数外，您还可以复用现有的 PII 检测/编辑工具，如 Microsoft Presidio 或云 API（AWS Comprehend、Google Cloud DLP、Azure AI Language）。
+这些工具可以封装在 Opik 脱敏器中，以便**所有追踪数据在记录之前都经过预编辑**。
+通常有两种方式集成第三方工具：
+1. **本地开源库**，运行在您的应用或自托管 Opik 部署中
+   （例如 Microsoft Presidio、`scrubadub`）。
+2. **托管云服务**，通过其 SDK 从您的脱敏器中调用
+   （例如 AWS Comprehend PII、Google Cloud DLP、Azure AI Language PII）。
+<Tip>
+  第三方脱敏器本质上只是自定义脱敏器。您在 <code>anonymize()</code> 或函数规则中调用外部引擎，然后将编辑后的数据返回给 Opik。
+</Tip>
+---
+### 示例：Microsoft Presidio（开源，本地运行）
+
+首先，在您的环境中安装 Presidio：
+```bash
+pip install presidio-analyzer presidio-anonymizer
+```
+然后创建一个委托给 Presidio 的脱敏器：
+
+```python
+from typing import Any
+
+import opik.hooks
+from opik.anonymizer import RecursiveAnonymizer
+
+from presidio_analyzer import AnalyzerEngine
+from presidio_anonymizer import AnonymizerEngine
+from presidio_anonymizer.entities import OperatorConfig
+
+class PresidioPIIAnonymizer(RecursiveAnonymizer):
+    """使用 Microsoft Presidio 检测和脱敏文本中的 PII。
+    此脱敏器是 Presidio 内置脱敏引擎的简单封装。
+    它扩展了 RecursiveAnonymizer 基类以支持嵌套数据结构。
+    """
+    def __init__(self, language: str="en",  max_depth: int=10):
+        super().__init__(max_depth=max_depth)
+        self.language = language
+        self.analyzer = AnalyzerEngine()
+        self.anonymizer = AnonymizerEngine()
+
+    def anonymize_text(self, data: str, **kwargs: Any) -> str:
+        # 1) 检测文本中的 PII 实体
+        results = self.analyzer.analyze(
+            text=data,
+            language=self.language,
+            entities=None,  # 检测所有支持的实体
+        )
+        if not results:
+            return data
+
+        # 2) 应用 Presidio 脱敏
+        operators = {
+            "DEFAULT": OperatorConfig("replace", {"new_value": "[PII]"}),
+            # 如果需要，可以按实体类型自定义，例如：
+            # "PHONE_NUMBER": OperatorConfig("mask", {"masking_char": "*", "chars_to_mask": 8}),
+        }
+        anon_result = self.anonymizer.anonymize(
+            text=data,
+            analyzer_results=results,
+            operators=operators,
+        )
+        return anon_result.text
+
+# 全局注册基于 Presidio 的脱敏器
+opik.hooks.add_anonymizer(PresidioPIIAnonymizer())
+```
+
+<Tip>
+您可以通过注册多个脱敏器将 Presidio 脱敏器与现有的正则表达式/函数规则结合使用；它们将按顺序应用。
+</Tip>
+
+## 与框架集成
+
+脱敏器可与所有 Opik 集成无缝协作：
+
+### OpenAI 集成
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import create_anonymizer
+from opik.integrations.openai import track_openai
+import openai
+
+# 设置脱敏
+pii_rules = [
+    {"regex": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "replace": "[EMAIL]"},
+    {"regex": r"\b\d{3}-\d{3}-\d{4}\b", "replace": "[PHONE]"},
+]
+opik.hooks.add_anonymizer(create_anonymizer(pii_rules))
+
+# 启用 OpenAI 追踪并自动脱敏
+client = track_openai(openai.OpenAI())
+
+# 提示词中的 PII 将在追踪中被自动脱敏
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{
+        "role": "user",
+        "content": "Help me draft an email to john.doe@company.com about his phone number 555-123-4567"
+    }]
+)
+```
+
+### LangChain 集成
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import create_anonymizer
+from opik.integrations.langchain import OpikTracer
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage
+
+# 配置脱敏 - 混合正则表达式和可调用函数
+def mask_credit_cards(text: str) -> str:
+    """部分遮罩：显示前 4 位和后 4 位，遮罩中间部分"""
+    import re
+    def partial_mask(match):
+        card = match.group(0).replace('-', '').replace(' ', '')
+        if len(card) >= 8:
+            return card[:4] + '*' * (len(card) - 8) + card[-4:]
+        return '[CARD]'
+    return re.sub(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b', partial_mask, text)
+
+anonymizer_rules = [
+    # 邮箱模式（正则表达式元组）
+    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]"),
+    # 可调用函数用于智能遮罩
+    mask_credit_cards,
+]
+opik.hooks.add_anonymizer(create_anonymizer(anonymizer_rules))
+
+# 设置 LangChain 与 Opik 追踪
+llm = ChatOpenAI(callbacks=[OpikTracer()])
+
+# 所有输入和输出将被自动脱敏
+messages = [HumanMessage(content="Contact sarah@example.com about card 4532-1234-5678-9010")]
+result = llm.invoke(messages)
+```
+
+# 配置选项
+
+## 最大深度
+
+控制嵌套数据结构的处理深度：
+
+```python
+from opik.anonymizer import create_anonymizer
+
+rules = [{"regex": r"\b\d{3}-\d{3}-\d{4}\b", "replace": "[PHONE]"}]
+
+# 默认 max_depth 为 10
+anonymizer = create_anonymizer(rules, max_depth=5)
+```
+
+## 多个脱敏器
+
+注册多个脱敏器，它们将按顺序应用：
+
+```python
+import opik
+import opik.hooks
+from opik.anonymizer import create_anonymizer
+
+# 清除现有脱敏器
+opik.hooks.clear_anonymizers()
+
+# 按顺序添加多个脱敏器
+opik.hooks.add_anonymizer(create_anonymizer([
+    {"regex": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "replace": "[EMAIL]"}
+]))
+
+opik.hooks.add_anonymizer(create_anonymizer([
+    {"regex": r"\b\d{3}-\d{3}-\d{4}\b", "replace": "[PHONE]"}
+]))
+
+# 检查是否有注册的脱敏器
+if opik.hooks.has_anonymizers():
+    print(f"活跃脱敏器数量: {len(opik.hooks.get_anonymizers())}")
+```
+
+# 最佳实践
+
+## 规则顺序
+
+规则按定义顺序应用。更具体的模式应放在通用模式之前：
+
+```python
+rules = [
+    # 具体：信用卡（更具体的模式在前）
+    {"regex": r"\b4\d{3}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b", "replace": "[VISA_CARD]"},
+    # 通用：任何信用卡
+    {"regex": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b", "replace": "[CARD]"},
+    # 通用：任何数字序列
+    {"regex": r"\b\d{4,}\b", "replace": "[NUMBER]"},
+]
+```
+
+## 性能注意事项
+
+- 在实现自定义脱敏函数时，使用预编译的正则表达式模式以提高大数据集的性能。注意：Opik 的 `RegexRule` 在规则创建时会自动编译模式。
+- 保持合理的规则数量以避免性能影响
+- 考虑使用更具体的模式以减少误报
+
+```python
+import re
+from opik.anonymizer import create_anonymizer
+
+# 预编译正则表达式以获得更好的性能
+EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+
+def efficient_email_anonymizer(text):
+    return EMAIL_PATTERN.sub("[EMAIL]", text)
+
+anonymizer = create_anonymizer(efficient_email_anonymizer)
+```
+
+## 测试脱敏器
+
+始终测试您的脱敏规则以确保其正常工作：
+
+```python
+from opik.anonymizer import create_anonymizer
+
+# 定义规则
+rules = [
+    {"regex": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "replace": "[EMAIL]"},
+    {"regex": r"\b\d{3}-\d{3}-\d{4}\b", "replace": "[PHONE]"},
+]
+
+anonymizer = create_anonymizer(rules)
+
+# 使用样本数据测试
+test_data = "Contact John at john.doe@company.com or call 555-123-4567"
+anonymized = anonymizer.anonymize(test_data)
+print(anonymized)  # 应输出: "Contact John at [EMAIL] or call [PHONE]"
+
+# 测试嵌套数据
+test_nested = {
+    "user": {
+        "email": "user@example.com",
+        "phone": "555-987-6543",
+        "notes": "Called regarding john@company.com"
+    }
+}
+anonymized_nested = anonymizer.anonymize(test_nested)
+print(anonymized_nested)
+```
+
+# 故障排除
+
+## 常见问题
+
+**脱敏器不工作：**
+- 确保脱敏器已通过 `opik.hooks.add_anonymizer()` 注册
+- 使用正则表达式测试器检查模式是否正确
+- 验证是否需要调用 `opik.flush_tracker()`
+
+**性能问题：**
+- 降低正则表达式模式的复杂度
+- 限制注册的脱敏器数量
+- 考虑使用更具体的模式以减少处理开销
+
+**误报：**
+- 使正则表达式模式更具体
+- 使用代表性数据进行充分测试
+- 考虑使用负向后行断言/负向先行断言
+
+# 安全注意事项
+
+- **充分测试**：始终使用代表性数据测试脱敏规则
+- **定期更新**：随着应用的发展审查和更新模式
+- **合规性**：确保脱敏方法满足法规要求
+- **备份策略**：考虑脱敏失败时的处理方式
+- **访问控制**：限制对原始数据和脱敏规则的访问
+
+<Warning>
+    请记住，脱敏是单向过程——一旦数据在 Opik 中被脱敏，原始值将无法恢复。请相应地规划您的脱敏策略。
+</Warning>

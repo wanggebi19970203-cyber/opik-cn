@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Trash, Tag } from "lucide-react";
 import get from "lodash/get";
 import slugify from "slugify";
@@ -50,6 +51,7 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
   isDraftMode = false,
   entityName = "dataset",
 }) => {
+  const { t } = useTranslation("datasets");
   const resetKeyRef = useRef(0);
   const [addTagDialogOpen, setAddTagDialogOpen] = useState<boolean>(false);
   const disabled = !selectedDatasetItems?.length;
@@ -145,7 +147,7 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
         totalCount={totalCount}
       />
       {canEditDatasets && (
-        <TooltipWrapper content="Manage tags">
+        <TooltipWrapper content={t("actionsPanel.manageTags")}>
           <Button
             variant="outline"
             size="icon-sm"
@@ -170,12 +172,12 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
         generateFileName={generateFileName}
         tooltipContent={
           !isExportEnabled
-            ? "Export functionality is disabled for this installation"
+            ? t("itemsActions.exportDisabled")
             : undefined
         }
       />
       {canEditDatasets && (
-        <TooltipWrapper content="Delete">
+        <TooltipWrapper content={t("actionsPanel.delete")}>
           <Button
             variant="outline"
             size="icon-sm"

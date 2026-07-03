@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
@@ -55,6 +56,8 @@ const OptimizationsNewConfigSidebar: React.FC<
   onMetricParamsChange,
   getFirstMetricParamsError,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
+
   return (
     <div className="w-[500px] shrink-0 space-y-6">
       <FormField
@@ -63,7 +66,7 @@ const OptimizationsNewConfigSidebar: React.FC<
         render={({ field }) => (
           <FormItem>
             <FormLabel className="comet-body-s-accented flex items-center gap-1">
-              Algorithm
+              {t("optimizations.configSidebar.algorithm")}
               <ExplainerIcon
                 {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_algorithm_section]}
               />
@@ -74,7 +77,7 @@ const OptimizationsNewConfigSidebar: React.FC<
                   value={field.value}
                   onChange={onOptimizerTypeChange}
                   options={OPTIMIZER_OPTIONS}
-                  placeholder="Select algorithm"
+                  placeholder={t("optimizations.configSidebar.selectAlgorithm")}
                   className="w-full"
                 />
                 <FormField
@@ -105,7 +108,7 @@ const OptimizationsNewConfigSidebar: React.FC<
           render={({ field }) => (
             <FormItem>
               <FormLabel className="comet-body-s-accented flex items-center gap-1">
-                Test suite
+                {t("optimizations.configSidebar.dataset")}
                 <ExplainerIcon
                   {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_test_suite_section]}
                 />
@@ -134,7 +137,7 @@ const OptimizationsNewConfigSidebar: React.FC<
           render={({ field }) => (
             <FormItem>
               <FormLabel className="comet-body-s-accented flex items-center gap-1">
-                Metric
+                {t("optimizations.configSidebar.metric")}
                 <ExplainerIcon
                   {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_metric_section]}
                 />
@@ -144,7 +147,7 @@ const OptimizationsNewConfigSidebar: React.FC<
                   value={field.value}
                   onChange={onMetricTypeChange}
                   options={OPTIMIZATION_METRIC_OPTIONS}
-                  placeholder="Select metric"
+                  placeholder={t("optimizations.configSidebar.selectMetric")}
                   className="w-full"
                 />
               </FormControl>

@@ -1,0 +1,214 @@
+---
+headline: 提示词库 | Opik 文档
+og:description: 学习如何使用 Opik 的提示词库推送、获取和版本管理提示词
+og:site_name: Opik 文档
+og:title: 提示词库入门 — Opik
+title: 提示词库入门
+---
+
+您的智能体依赖于频繁变更的提示词。提示词库允许您在代码库外部管理这些提示词，自动对每次变更进行版本控制，并将运行时使用的精确版本与其执行追踪关联起来。
+
+<Frame>
+  <img src="/img/v2/prompt-library/prompt-library-example.png" alt="显示版本化提示词的提示词库页面" />
+</Frame>
+
+## 将提示词库集成到代码中
+
+<Tabs>
+  <Tab title="AI 集成">
+    您可以使用 Opik 技能将现有智能体连接到提示词库：
+
+    <Steps>
+      <Step title="安装 Opik 技能">
+        ```bash
+        npx skills add comet-ml/opik-skills
+        ```
+
+        该技能兼容所有编码智能体，包括 Claude Code、Codex、Cursor、OpenCode 等。
+      </Step>
+      <Step title="运行集成">
+        技能安装完成后，您可以使用以下提示词进行集成：
+        ```
+        Version my prompts in Opik using the /instrument command.
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="手动集成">
+    手动集成分为两个部分：**创建**提示词，然后在智能体运行时**获取**它。
+
+    ### 步骤 1 — 定义并推送您的第一个提示词
+
+    将提示词推送到 Opik。您只需执行一次此操作（或在需要从代码创建新版本时执行）。
+
+    <CodeBlocks>
+
+    ```python title="Python"
+    import opik
+
+    client = opik.Opik()
+
+    client.create_prompt(
+        name="system_prompt",
+        prompt="You are a helpful assistant specializing in {{domain}}.",
+        project_name="my-agent",
+    )
+    ```
+
+    ```ts title="TypeScript"
+    import { Opik } from "opik";
+
+    const client = new Opik();
+
+    await client.createPrompt({
+      name: "system_prompt",
+      prompt: "You are a helpful assistant specializing in {{domain}}.",
+      projectName: "my-agent",
+    });
+    ```
+    </CodeBlocks>
+
+    <Tip>
+      提示词是**项目级别的作用域**。请始终传递 `project_name` / `projectName` 参数，以便两个智能体可以独立使用相同的提示词名称。
+    </Tip>
+
+    ### 步骤 2 — 在运行时获取提示词
+
+    在智能体中使用 `get_prompt` / `getPrompt` 来拉取所需版本，并使用运行时值渲染提示词。
+
+    <CodeBlocks>
+      ```python title="Python"
+      import opik
+
+      client = opik.Opik()
+
+      @opik.track(project_name="my-agent")
+      def run_agent(user_input: str):
+          prompt = client.get_prompt(
+              name="system_prompt",
+              project_name="my-agent",
+          )
+
+          system_prompt = prompt.format(domain="customer support")
+
+          response = call_llm(
+              model="gpt-4o-mini",
+              system_prompt=system_prompt,
+              user_input=user_input,
+          )
+          return response
+      ```
+
+      ```ts title="TypeScript"
+      import { Opik, track } from "opik";
+
+      const client = new Opik();
+
+      const runAgent = track(
+        { name: "run_agent", projectName: "my-agent" },
+        async (userInput: string) => {
+          const prompt = await client.getPrompt({
+            name: "system_prompt",
+            projectName: "my-agent",
+          });
+
+          const systemPrompt = prompt?.format({ domain: "customer support" });
+
+          const response = await callLlm({
+            model: "gpt-4o-mini",
+            systemPrompt,
+            userInput,
+          });
+          return response;
+        },
+      );
+      ```
+    </CodeBlocks>
+
+    <Tip>
+      在追踪函数中调用 `get_prompt` / `getPrompt`（Python 中使用 `@opik.track`，TypeScript 中使用 `track()`）可以让 Opik 自动将提示词版本关联到追踪记录。
+    </Tip>
+
+  </Tab>
+</Tabs>
+
+## 选择版本
+
+传递 `version` 参数来控制返回哪个版本：
+
+- **省略 `version`**（默认）— 返回最新创建的版本。当您希望智能体自动获取新的提示词编辑时非常有用。
+- **`"v3"`**（或任何 `v<N>` 名称）— 返回特定版本。当您希望提示词保持固定，不受新编辑影响时非常有用 — 例如，在重现过去的运行或比较版本时。
+
+<CodeBlocks>
+  ```python title="Python"
+  # 获取特定版本
+  v3 = client.get_prompt(name="system_prompt", version="v3", project_name="my-agent")
+
+  # 获取最新版本（省略 `version`）
+  latest = client.get_prompt(name="system_prompt", project_name="my-agent")
+  ```
+
+  ```ts title="TypeScript"
+  // 获取特定版本
+  const v3 = await client.getPrompt({
+    name: "system_prompt",
+    version: "v3",
+    projectName: "my-agent",
+  });
+
+  // 获取最新版本（省略 `version`）
+  const latest = await client.getPrompt({
+    name: "system_prompt",
+    projectName: "my-agent",
+  });
+  ```
+</CodeBlocks>
+
+## 聊天提示词
+
+对于具有系统、用户和助手角色的多轮对话智能体，请使用 `create_chat_prompt` / `createChatPrompt` 以及对应的 `get_chat_prompt` / `getChatPrompt`。有关更深入的比较、多模态内容和模板引擎，请参阅[文本和聊天提示词](/development/prompt-library/prompt-types)。
+
+<CodeBlocks>
+  ```python title="Python"
+  client.create_chat_prompt(
+      name="support_assistant",
+      messages=[
+          {"role": "system", "content": "You are a helpful support agent for {{company}}."},
+          {"role": "user", "content": "{{user_query}}"},
+      ],
+      project_name="my-agent",
+  )
+
+  chat_prompt = client.get_chat_prompt(
+      name="support_assistant",
+      version="v3",
+      project_name="my-agent",
+  )
+
+  messages = chat_prompt.format(
+      variables={"company": "Acme", "user_query": "How do I reset my password?"},
+  )
+  ```
+
+  ```ts title="TypeScript"
+  await client.createChatPrompt({
+    name: "support_assistant",
+    messages: [
+      { role: "system", content: "You are a helpful support agent for {{company}}." },
+      { role: "user", content: "{{user_query}}" },
+    ],
+    projectName: "my-agent",
+  });
+
+  const chatPrompt = await client.getChatPrompt({
+    name: "support_assistant",
+    version: "v3",
+    projectName: "my-agent",
+  });
+
+  const messages = chatPrompt?.format({
+    company: "Acme",
+    user_query: "How do I reset my password?",
+  });
+  ```
+</CodeBlocks>

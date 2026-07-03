@@ -1,0 +1,126 @@
+{
+  "annotationQueues": {
+    "title": "标注队列",
+    "description": "管理用于数据标注的标注队列",
+    "create": "创建标注队列",
+    "edit": "编辑标注队列",
+    "delete": "删除标注队列",
+    "empty": {
+      "title": "暂无标注队列",
+      "description": "创建一个队列开始人工审核。\n组织追踪和线程，标记输出，收集反馈以提升性能。",
+      "action": "创建您的第一个队列"
+    },
+    "fields": {
+      "name": "队列名称",
+      "description": "描述"
+    },
+    "columns": {
+      "name": "名称",
+      "description": "描述",
+      "items": "项目",
+      "status": "状态",
+      "id": "ID",
+      "project": "项目",
+      "instructions": "说明",
+      "scope": "范围",
+      "createdAt": "创建时间",
+      "createdBy": "创建者",
+      "lastUpdated": "最后更新",
+      "avgFeedbackScores": "平均反馈评分",
+      "itemCount": "项目数量",
+      "reviewedBy": "审核者",
+      "progress": "进度"
+    },
+    "page": {
+      "createNewQueue": "创建新队列"
+    },
+    "actions": {
+      "view": "查看队列",
+      "annotate": "开始标注",
+      "annotateQueue": "标注队列",
+      "resume": "继续标注",
+      "createQueue": "创建队列",
+      "copySharingLink": "复制分享链接",
+      "edit": "编辑",
+      "delete": "删除",
+      "deleteTooltip": "删除",
+      "actionsMenu": "操作菜单"
+    },
+    "search": {
+      "byName": "按名称搜索"
+    },
+    "noData": {
+      "noQueuesYet": "暂无标注队列",
+      "noSearchResults": "无搜索结果"
+    },
+    "filters": {
+      "selectScope": "选择范围",
+      "trace": "追踪",
+      "thread": "线程"
+    },
+    "scopeOptions": {
+      "traces": "追踪",
+      "threads": "线程"
+    },
+    "validation": {
+      "projectRequired": "项目为必填项",
+      "nameRequired": "名称为必填项",
+      "nameMaxLength": "名称不能超过255个字符"
+    },
+    "dialog": {
+      "editTitle": "编辑标注队列",
+      "createTitle": "创建新标注队列",
+      "updateButton": "更新标注队列",
+      "createButton": "创建标注队列",
+      "nameLabel": "名称",
+      "namePlaceholder": "标注队列名称",
+      "scopeLabel": "范围",
+      "annotationGuidelines": "标注指南",
+      "annotationGuidelinesDescription": "设置项目评分和标记方式，并提供说明以确保标注者给出一致的反馈。",
+      "instructionsLabel": "说明",
+      "instructionsPlaceholder": "给标注者的说明",
+      "feedbackScoresLabel": "可用反馈评分（可选）",
+      "annotatorsPerItemLabel": "每个项目的标注者数量",
+      "annotatorsPerItemDescription": "设置项目在队列中标记为完成前所需的标注者数量。",
+      "lockTimeoutLabel": "锁定超时（分钟）",
+      "lockTimeoutDescription": "项目在标注者审核期间的保留时间。超过此时间后，项目将对其他标注者可用。当需要多个标注者时，只有所有标注者槽位都被占用时项目才会被完全保留。",
+      "shareQueue": "分享标注队列",
+      "shareQueueDescription": "您需要邀请标注者到您的工作区才能让他们审核项目。创建队列后，您将获得一个直接链接与他们分享。",
+      "cancel": "取消"
+    },
+    "deleteDialog": {
+      "title": "删除标注队列？",
+      "description": "删除标注队列将永久从系统中移除它。所有关联的数据和配置都将丢失。此操作无法撤销。确定要继续吗？",
+      "confirmText": "删除"
+    },
+    "batchDeleteDialog": {
+      "title": "删除标注队列",
+      "description": "删除这些标注队列将永久移除所有关联的标注和审核。此操作无法撤销。确定要继续吗？",
+      "confirmText": "删除标注队列"
+    },
+    "toast": {
+      "linkCopiedTitle": "标注队列链接已复制到剪贴板",
+      "linkCopiedDescription": "与您的标注者分享此队列，以便他们开始标注并提供反馈以改进您的LLM应用评估。"
+    },
+    "progress": {
+      "byReviewer": "审核者进度"
+    },
+    "feedbackSelect": {
+      "placeholderMulti": "选择反馈定义",
+      "placeholderSingle": "选择反馈定义",
+      "addNew": "添加新项"
+    },
+    "instructions": {
+      "noInstructions": "此标注队列未提供说明"
+    },
+    "scores": {
+      "columns": {
+        "feedbackOption": "反馈选项",
+        "description": "描述",
+        "availableValues": "可用值"
+      },
+      "commentsDescription": "用于开放反馈或附加说明的文本字段。",
+      "comments": "评论"
+    }
+  }
+}

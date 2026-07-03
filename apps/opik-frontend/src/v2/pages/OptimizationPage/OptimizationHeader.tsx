@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCw, X } from "lucide-react";
 import { Tag } from "@/ui/tag";
 import { Button } from "@/ui/button";
@@ -27,6 +28,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
   isStudioOptimization,
   canRerun,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const navigate = useNavigate();
@@ -79,7 +81,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
             id={optimization.dataset_id}
             name={optimization.dataset_name}
             resource={RESOURCE_TYPE.dataset}
-            prefix="Dataset"
+            prefix={t("optimization.header.dataset")}
             className="w-fit"
           />
         )}
@@ -88,7 +90,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
         {canRerun && (
           <Button variant="outline" size="sm" onClick={handleRerun}>
             <RotateCw className="mr-2 size-4" />
-            Rerun
+            {t("optimization.header.rerun")}
           </Button>
         )}
         {canStop && (
@@ -99,7 +101,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
             disabled={isStoppingOptimization}
           >
             <X className="mr-2 size-4" />
-            Stop Execution
+            {t("optimization.header.stopExecution")}
           </Button>
         )}
       </div>

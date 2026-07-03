@@ -3,6 +3,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import useLocalStorageState from "use-local-storage-state";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import useAlertsList from "@/api/alerts/useAlertsList";
 import AlertsRowActionsCell from "@/v1/pages/AlertsPage/AlertsRowActionsCell";
@@ -57,56 +58,56 @@ const PAGINATION_SIZE_KEY = "alerts-pagination-size";
 export const DEFAULT_COLUMNS: ColumnData<Alert>[] = [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: "alerts.columns.id",
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "alerts.columns.name",
     type: COLUMN_TYPE.string,
     sortable: true,
   },
   {
     id: "alert_type",
-    label: "Destination",
+    label: "alerts.columns.alert_type",
     type: COLUMN_TYPE.string,
     cell: AlertTypeCell as never,
   },
   {
     id: "webhook_url",
-    label: "Endpoint",
+    label: "alerts.columns.webhook_url",
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.webhook?.url || "-",
   },
   {
     id: "triggers",
-    label: "Events",
+    label: "alerts.columns.triggers",
     type: COLUMN_TYPE.string,
     cell: AlertsEventsCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "alerts.columns.created_by",
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.created_by || "-",
   },
   {
     id: "status",
-    label: "Status",
+    label: "alerts.columns.status",
     type: COLUMN_TYPE.string,
     cell: StatusCell as never,
     accessorFn: (row) => row.enabled,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "alerts.columns.created_at",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "alerts.columns.last_updated_at",
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
@@ -115,37 +116,37 @@ export const DEFAULT_COLUMNS: ColumnData<Alert>[] = [
 export const FILTERS_COLUMNS: ColumnData<Alert>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: "alerts.columns.name",
     type: COLUMN_TYPE.string,
   },
   {
     id: "id",
-    label: "ID",
+    label: "alerts.columns.id",
     type: COLUMN_TYPE.string,
   },
   {
     id: "alert_type",
-    label: "Destination",
+    label: "alerts.columns.alert_type",
     type: COLUMN_TYPE.category,
   },
   {
     id: "webhook_url",
-    label: "Endpoint",
+    label: "alerts.columns.webhook_url",
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: "alerts.columns.created_by",
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: "alerts.columns.created_at",
     type: COLUMN_TYPE.time,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: "alerts.columns.last_updated_at",
     type: COLUMN_TYPE.time,
   },
 ];
@@ -176,6 +177,7 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
 ];
 
 const AlertsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
 
@@ -218,12 +220,12 @@ const AlertsPage: React.FunctionComponent = () => {
               value: type,
               label: ALERT_TYPE_LABELS[type],
             })),
-            placeholder: "Select type",
+            placeholder: t("alerts.page.selectType"),
           },
         },
       } as Record<string, { keyComponentProps: Record<string, unknown> }>,
     }),
-    [],
+    [t],
   );
 
   const { data, isPending, isPlaceholderData, isFetching } = useAlertsList(
@@ -248,7 +250,7 @@ const AlertsPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? "There are no alerts yet" : "No search results";
+  const noDataText = noData ? t("alerts.page.noAlertsYet") : t("alerts.page.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -329,7 +331,7 @@ const AlertsPage: React.FunctionComponent = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l">Alerts</h1>
+        <h1 className="comet-title-l">{t("alerts.title")}</h1>
       </div>
       <ExplainerDescription
         className="mb-4"
@@ -342,7 +344,7 @@ const AlertsPage: React.FunctionComponent = () => {
             <SearchInput
               searchText={search!}
               setSearchText={setSearch}
-              placeholder="Search by name"
+              placeholder={t("alerts.page.searchPlaceholder")}
               className="w-[320px]"
               dimension="sm"
             ></SearchInput>
@@ -367,7 +369,7 @@ const AlertsPage: React.FunctionComponent = () => {
             ></ColumnsButton>
             {canUpdateAlerts && (
               <Button variant="default" size="sm" onClick={handleNewAlertClick}>
-                Create new alert
+                {t("alerts.page.createNewAlert")}
               </Button>
             )}
           </div>
@@ -387,7 +389,7 @@ const AlertsPage: React.FunctionComponent = () => {
             <DataTableNoData title={noDataText}>
               {noData && canUpdateAlerts && (
                 <Button variant="link" onClick={handleNewAlertClick}>
-                  Create new alert
+                  {t("alerts.page.createNewAlert")}
                 </Button>
               )}
             </DataTableNoData>

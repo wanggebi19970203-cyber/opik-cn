@@ -29,16 +29,16 @@ public record DatasetItem(
         @JsonView({
                 DatasetItem.View.Public.class,
                 DatasetItem.View.Write.class}) @Schema(description = """
-                        Stable item identifier.
-                        On write, used as the upsert key.
-                        If omitted, a new ID is generated.
-                        Remains the same across dataset versions
+                        稳定的条目标识符。
+                        写入时用作更新插入的键。
+                        如果省略，将生成新的 ID。
+                        在数据集版本之间保持不变
                         """) UUID id,
         @JsonView({
                 DatasetItem.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = """
-                        Deprecated.
-                        Always equals 'id'.
-                        Retained for backward compatibility and will be removed in a future version
+                        已弃用。
+                        始终等于 'id'。
+                        保留以保持向后兼容性，将在未来版本中移除
                         """) UUID datasetItemId,
         @JsonView({DatasetItem.View.Public.class, DatasetItem.View.Write.class}) UUID traceId,
         @JsonView({DatasetItem.View.Public.class, DatasetItem.View.Write.class}) UUID spanId,

@@ -1,0 +1,524 @@
+{
+  "datasets": {
+    "title": "Datasets",
+    "description": "Manage datasets for evaluation and experimentation",
+    "create": "Create dataset",
+    "edit": "Edit dataset",
+    "delete": "Delete dataset",
+    "empty": {
+      "title": "No datasets yet",
+      "description": "Get started by creating your first dataset.",
+      "action": "Create your first dataset"
+    },
+    "fields": {
+      "name": "Dataset name",
+      "description": "Dataset description"
+    },
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "itemCount": "Item count",
+      "lastUpdated": "Last updated",
+      "created": "Created",
+      "id": "ID",
+      "tags": "Tags",
+      "mostRecentExperiment": "Most recent experiment",
+      "mostRecentOptimization": "Most recent optimization",
+      "createdBy": "Created by"
+    },
+    "actions": {
+      "view": "View dataset",
+      "items": "View items",
+      "export": "Export dataset",
+      "import": "Import items"
+    },
+    "editSidebar": {
+      "editDataset": "Edit dataset",
+      "editTestSuite": "Edit test suite",
+      "name": "Name",
+      "nameYourDataset": "Name your dataset...",
+      "nameYourTestSuite": "Name your test suite...",
+      "description": "Description",
+      "optional": "(optional)",
+      "datasetDescription": "Dataset description",
+      "testSuiteDescription": "Test suite description",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "saveChanges": "Save changes"
+    },
+    "addItem": {
+      "title": "Add suite item",
+      "addRecord": "Add record",
+      "data": "Data",
+      "invalidJson": "Invalid JSON",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes",
+      "discardChangesTitle": "Discard changes?",
+      "discardChangesDescription": "You have unsaved changes. Do you want to discard them and close?",
+      "keepEditing": "Keep editing",
+      "discardChanges": "Discard changes"
+    },
+    "removeItems": {
+      "title": "Remove suite items",
+      "description": "The items will be deleted from your current suite view. The changes won't take effect until you save and create a new version.",
+      "confirmText": "Remove suite items",
+      "dontShowAgain": "Don't show this message again",
+      "cancel": "Cancel"
+    },
+    "actionsPanel": {
+      "expandWithAi": "Expand with AI",
+      "manageTags": "Manage tags",
+      "delete": "Delete",
+      "samplesAddedToDraft": "Samples added to draft",
+      "samplesAddedDescription": "{{count}} sample{{plural}} added to your draft changes"
+    },
+    "exportPanel": {
+      "preparingDownload": "Preparing download",
+      "downloadReady": "Download ready",
+      "closeExportPanel": "Close export panel?",
+      "closeExportPanelDescription": "You have exports that are still being prepared. Closing this panel will hide the progress and you won't be notified when they complete.",
+      "closeAnyway": "Close anyway",
+      "keepOpen": "Keep open",
+      "exportFailed": "Export failed",
+      "exportFailedDescription": "Failed to export test suite \"{{datasetName}}\"",
+      "download": "Download",
+      "dismiss": "Dismiss",
+      "failed": "Failed",
+      "ready": "Ready",
+      "exporting": "Exporting..."
+    },
+    "rowActions": {
+      "actionsMenu": "Actions menu",
+      "edit": "Edit",
+      "download": "Download",
+      "delete": "Delete",
+      "deleteTitle": "Delete {{entityName}}",
+      "deleteDescription": "Deleting this {{entityName}} will also remove all its items. Any experiments linked to it will be moved to a \"Deleted test suite\" group. This action can't be undone. Are you sure you want to continue?",
+      "deleteConfirmText": "Delete {{entityName}}",
+      "exportFailed": "Export failed",
+      "exportFailedDescription": "Failed to start test suite export. Please try again."
+    },
+    "batchActions": {
+      "deleteTitle": "Delete {{entityName}}",
+      "deleteDescription": "Deleting these {{entityName}} will also remove all their items. Any experiments linked to them will be moved to a 'Deleted test suites' group. This action cannot be undone. Are you sure you want to continue?",
+      "deleteConfirmText": "Delete {{entityName}}"
+    },
+    "itemActions": {
+      "actionsMenu": "Actions menu",
+      "shareItem": "Share {{itemName}}",
+      "copyItemId": "Copy {{itemName}} ID",
+      "deleteItem": "Delete {{itemName}}"
+    },
+    "itemsActions": {
+      "exportDisabled": "Export functionality is disabled for this installation"
+    },
+    "addToDataset": {
+      "title": "Add to test suite",
+      "selectTestSuite": "Select a test suite",
+      "createNewTestSuite": "Create new test suite",
+      "addToTestSuite": "Add to test suite",
+      "cancel": "Cancel",
+      "noSearchResults": "No search results",
+      "noTestSuitesYet": "There are no test suites yet",
+      "noValidRows": "There are no rows that can be added as test suite items. The input field is missing.",
+      "partialValidRows": "Only rows with input fields will be added as test suite items.",
+      "tracesAddedToTestSuite": "Traces added to test suite",
+      "spansAddedToTestSuite": "Spans added to test suite",
+      "itemsAddedToTestSuite": "Items added to test suite",
+      "traceMetadataConfig": "Trace metadata configuration",
+      "spanMetadataConfig": "Span metadata configuration",
+      "nestedSpans": "Nested spans",
+      "tags": "Tags",
+      "feedbackScores": "Feedback scores",
+      "comments": "Comments",
+      "usageMetrics": "Usage metrics",
+      "metadata": "Metadata"
+    },
+    "feedbackDefinition": {
+      "createTitle": "Create a new feedback definition",
+      "editTitle": "Edit feedback definition",
+      "cloneTitle": "Clone feedback definition",
+      "createSubmit": "Create feedback definition",
+      "updateSubmit": "Update feedback definition",
+      "name": "Name",
+      "namePlaceholder": "Feedback definition name",
+      "description": "Description",
+      "descriptionPlaceholder": "Feedback definition description",
+      "type": "Type",
+      "cancel": "Cancel",
+      "boolean": "Boolean",
+      "booleanDescription": "Use binary labels (e.g. \"Pass\", \"Fail\") to evaluate outputs.",
+      "categorical": "Categorical",
+      "categoricalDescription": "Use labels (e.g. \"Helpful\", \"Neutral\", \"Unhelpful\") to classify outputs.",
+      "numerical": "Numerical",
+      "numericalDescription": "Use a numerical range (e.g. 1–5) to rate outputs quantitatively.",
+      "copySuffix": "Copy",
+      "passLabel": "Pass",
+      "failLabel": "Fail",
+      "trueLabel": "True label",
+      "falseLabel": "False label",
+      "categories": "Categories",
+      "addCategory": "Add category",
+      "min": "Min",
+      "max": "Max"
+    },
+    "addEditDialog": {
+      "name": "Name",
+      "namePlaceholder": "Name",
+      "description": "Description",
+      "descriptionPlaceholder": "Description",
+      "cancel": "Cancel",
+      "uploadLabel": "Upload a CSV or JSON file",
+      "fileCantBeUploaded": "File can't be uploaded",
+      "fileCantBeUploadedDescription": "This file cannot be uploaded because it does not pass validation. If you continue, the {{typeLabel}} will be created without any items. You can add items manually later, or go back and upload a valid file.",
+      "createEmpty": "Create empty {{typeLabel}}",
+      "goBack": "Go back",
+      "typeLabelTestSuite": "test suite",
+      "typeLabelDataset": "dataset",
+      "editTitle": "Edit",
+      "createTitle": "Create new",
+      "updateButton": "Update",
+      "createButton": "Create new",
+      "uploadAccepted": "{{format}} upload accepted",
+      "uploadAcceptedDescription": "Your {{format}} file is being processed in the background. Items will appear automatically when ready. If you don't see them, try refreshing the page.",
+      "uploadError": "Error uploading {{format}} file",
+      "uploadErrorDescription": "Failed to upload {{format}} file",
+      "nameAlreadyExists": "This name already exists",
+      "errorSaving": "Error saving",
+      "failedToSave": "Failed to save"
+    },
+    "testSuite": {
+      "defaultRunsPerItem": "Default runs per item",
+      "defaultPassThreshold": "Default pass threshold",
+      "assertionPlaceholder": "e.g. Response should be factually accurate and cite sources",
+      "executionPolicyLabel": "Execution policy"
+    },
+    "itemEditor": {
+      "enterTextForField": "Enter text for this field…",
+      "urlCopiedToClipboard": "URL successfully copied to clipboard",
+      "recordIdCopiedToClipboard": "Record ID successfully copied to clipboard",
+      "record": "Record",
+      "recordLowercase": "record",
+      "media": "Media",
+      "data": "Data"
+    },
+    "listPage": {
+      "datasets": "Datasets",
+      "testSuites": "Test suites",
+      "createDataset": "Create dataset",
+      "createTestSuite": "Create test suite",
+      "noDatasetsYet": "There are no datasets yet",
+      "noTestSuitesYet": "There are no test suites yet",
+      "emptyDatasetTitle": "No datasets yet",
+      "emptyDatasetDescription": "Get started by creating your first dataset.\nDefine inputs and expected outputs to evaluate and optimize your agent.",
+      "emptyTestSuiteTitle": "No test suites yet",
+      "emptyTestSuiteDescription": "Get started by creating your first test suite.\nDefine test cases with expected outputs and scoring to compare and optimize your configurations.",
+      "searchByName": "Search by name"
+    },
+    "header": {
+      "backToTestSuites": "Back to test suites",
+      "backToDatasets": "Back to datasets",
+      "draft": "Draft",
+      "testSuite": "Test suite",
+      "dataset": "Dataset",
+      "discardChanges": "Discard changes",
+      "saveChanges": "Save changes",
+      "testSettings": "Test settings",
+      "testCase": "Test case",
+      "record": "Record",
+      "globalAssertions": "{{count}} global assertion{{plural}}"
+    },
+    "navigation": {
+      "unsavedChanges": "Unsaved changes",
+      "unsavedChangesDescription": "You have unsaved draft changes. Are you sure you want to leave?",
+      "leaveWithoutSaving": "Leave without saving",
+      "stay": "Stay"
+    },
+    "discardDialog": {
+      "title": "Discard changes",
+      "description": "Discarding will remove all unsaved edits to this {{entityName}}. This action can't be undone. Are you sure you want to continue?",
+      "confirmText": "Discard changes"
+    },
+    "tabs": {
+      "testCases": "Test cases",
+      "records": "Records",
+      "versionHistory": "Version history"
+    },
+    "itemsTab": {
+      "allItemsDeleted": "All {{itemName}}s on this page have been deleted",
+      "noItemsYet": "No {{itemName}}s yet",
+      "search": "Search",
+      "searchItems": "Search items",
+      "saveChangesToSearch": "Save changes to search",
+      "saveChangesToFilter": "Save changes to filter",
+      "saveChangesToNavigate": "Save changes to navigate pages",
+      "loadingTitle": "Your {{entityName}} is still loading",
+      "loadingDescription": "Some results or counts may update as more data becomes available. You can continue exploring while the full {{entityName}} loads.",
+      "loadedTitle": "Your {{entityName}} fully loaded",
+      "loadedDescription": "All items are now available.",
+      "emptyDescription": "Add {{itemName}}s to run evaluations and measure performance.",
+      "addNewItem": "Add new {{itemName}}"
+    },
+    "createSidebar": {
+      "created": "{{entityName}} created",
+      "createdDescription": "\"{{name}}\" is ready to use.",
+      "goTo": "Go to {{entityLabel}}",
+      "name": "Name",
+      "namePlaceholder": "Name your {{entityLabel}}...",
+      "description": "Description",
+      "optional": "(optional)",
+      "descriptionPlaceholder": "{{entityName}} description",
+      "file": "File",
+      "advancedOptions": "Advanced options",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "createEntity": "Create {{entityLabel}}",
+      "docs": "Docs"
+    },
+    "createMenu": {
+      "uploadFile": "Upload a file",
+      "importFromCsvJson": "Import from a CSV or JSON file",
+      "useSdk": "Use SDK",
+      "defineInCode": "Define and manage in code"
+    },
+    "emptyState": {
+      "viewDocs": "View docs"
+    },
+    "csvDropzone": {
+      "removeFile": "Remove file",
+      "dropFileOr": "Drop file here, or",
+      "browseFiles": "Browse files",
+      "preferSdk": "CSV or JSON. Prefer to use code instead?",
+      "useSdk": "Use SDK"
+    },
+    "uploadField": {
+      "description": "Drop a CSV or JSON file to upload or",
+      "fileReady": "{{format}} file ready to upload"
+    },
+    "uploadDescription": {
+      "supportedFormats": "Supported formats: .csv, .json, .jsonl/.ndjson. File can be up to {{fileSizeLimit}}MB in size and will be processed in the background.",
+      "learnMore": "Learn more"
+    },
+    "overrideVersion": {
+      "title": "Version conflict detected",
+      "description": "Another version was created while you were editing. Do you want to override the latest version with your changes?",
+      "confirmText": "Override and save",
+      "cancelText": "Cancel"
+    },
+    "generatedSamples": {
+      "diversity": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "description": "Description",
+      "assertions": "Assertions",
+      "title": "Generated samples ({{count}})",
+      "empty": {
+        "title": "No samples to display",
+        "description": "No samples were generated. This might indicate an issue with the generation process. Please try generating samples again."
+      },
+      "summary": {
+        "title": "Generation Summary",
+        "generatedBy": "Generated by {{model}}",
+        "unknownModel": "Unknown",
+        "totalSamples": "Total Samples",
+        "fieldsPerSample": "Fields per Sample",
+        "dataDiversity": "Data Diversity"
+      },
+      "selection": {
+        "selected": "{{selected}} of {{total}} selected",
+        "showSample": "Show sample ({{count}})",
+        "showAll": "Show all ({{count}})"
+      },
+      "sample": "Sample {{number}}",
+      "showMore": "Show {{count}} more samples",
+      "cancel": "Cancel",
+      "addToEntity": "Add {{count}} sample(s) to {{entityName}}"
+    },
+    "expansion": {
+      "progress": {
+        "initializing": "Initializing AI generation...",
+        "analyzingPatterns": "Analyzing {{entityName}} patterns...",
+        "generating": "Generating synthetic samples...",
+        "finalizing": "Finalizing generated data..."
+      },
+      "title": "Expand with AI",
+      "description": "This will generate synthetic samples based on your existing data patterns. The generated samples will be available for review before adding to your {{entityName}}.",
+      "error": {
+        "title": "Generation Error",
+        "default": "An error occurred while generating samples. Please try again."
+      },
+      "analyzing": {
+        "title": "Analyzing {{entityName}} structure",
+        "description": "Analyzing {{entityName}} structure and field patterns"
+      },
+      "empty": {
+        "title": "No {{entityName}} samples found",
+        "description": "This {{entityName}} appears to be empty. Add some sample data to your {{entityName}} first before trying to expand it with AI."
+      },
+      "structure": {
+        "title": "Detected {{entityName}} structure",
+        "tooltip": "Choose which fields to maintain consistency for",
+        "analyzedSamples": "Analyzed samples",
+        "showLess": "Show less ({{count}} hidden)",
+        "showAll": "Show all ({{count}} more)",
+        "fieldsSelected": "{{count}} of {{total}} fields selected",
+        "tips": {
+          "title": "Field preservation tips:",
+          "autoSelect": "• Fields appearing in ≥{{threshold}}% of samples are auto-selected",
+          "maintainPatterns": "• Selected fields will maintain similar patterns in generated data"
+        }
+      },
+      "model": "Model",
+      "sampleCount": "Number of samples",
+      "sampleCountRange": "Range {{min}}-{{max}}",
+      "additionalInstructions": "Additional instructions (optional)",
+      "additionalInstructionsPlaceholder": "e.g., Create variations that test edge cases, focus on different user personas",
+      "prompt": {
+        "title": "Generation prompt",
+        "description": "Customize the prompt sent to the AI model",
+        "customize": "Customize the prompt that will be sent to the AI model. Use clear instructions for best results.",
+        "placeholder": "Enter your custom prompt...",
+        "charCount": "{{count}} characters"
+      },
+      "cancel": "Cancel",
+      "generate": "Generate samples",
+      "validation": {
+        "sampleCount": "Sample count must be between {{min}} and {{max}}.",
+        "promptLength": "Custom prompt must be at least {{min}} characters long.",
+        "analysisInProgress": "Analysis is still in progress. Please wait for it to complete."
+      }
+    },
+    "useDataset": {
+      "loadIntoPlayground": {
+        "title": "Load {{entityName}} into playground",
+        "description": "Loading this {{entityName}} into the Playground will replace any unsaved changes. This action cannot be undone.",
+        "confirmText": "Load {{entityName}}"
+      },
+      "emptyTooltip": "This {{entityName}} is empty",
+      "runIn": "Run in",
+      "openInPlayground": "Open in Playground",
+      "openInPlaygroundDescription": "Test prompts over your {{entityName}} and run evaluations interactively",
+      "runExperiment": "Run an experiment",
+      "runExperimentDescription": "Use this {{entityName}} to run an experiment using the Python SDK"
+    },
+    "versionHistory": {
+      "noData": {
+        "title": "No version history yet",
+        "description": "Version history will appear here when you create dataset versions"
+      }
+    },
+    "versionHistoryTab": {
+      "version": "Version",
+      "changesSummary": "Changes summary",
+      "versionNote": "Version note",
+      "tags": "Tags",
+      "itemCount": "Item count",
+      "createdAt": "Created at",
+      "createdBy": "Created by"
+    },
+    "versionChangeSummary": {
+      "itemsAdded": "Items added",
+      "itemsModified": "Items modified",
+      "itemsDeleted": "Items deleted"
+    },
+    "feedbackDefinitionDetails": {
+      "trueLabel": "True label",
+      "falseLabel": "False label",
+      "passLabel": "Pass",
+      "failLabel": "Fail",
+      "categories": "Categories",
+      "namePlaceholder": "Name",
+      "addCategory": "Add category",
+      "min": "Min",
+      "max": "Max",
+      "minPlaceholder": "Min",
+      "maxPlaceholder": "Max"
+    },
+    "datasetItemsSave": {
+      "newVersionCreated": "New version created",
+      "newVersionCreatedDescription": "Your changes have been saved as a new version. You can now use it to run experiments in the SDK or the Playground.",
+      "runExperimentInSdk": "Run experiment in the SDK",
+      "runExperimentInPlayground": "Run experiment in the Playground"
+    },
+    "versionForm": {
+      "versionNote": "Version note (optional)",
+      "versionNotePlaceholder": "Describe what changed in this version",
+      "tags": "Tags"
+    },
+    "addVersion": {
+      "title": "Save changes",
+      "description": "Saving your changes will create a new version. You'll be able to use it in experiments or in the Playground. The previous version will remain available in version history.",
+      "cancel": "Cancel",
+      "saveChanges": "Save changes"
+    },
+    "editVersion": {
+      "title": "Edit version",
+      "description": "Edit the version note and tags to keep your dataset versions organized.",
+      "cancel": "Cancel",
+      "updateVersion": "Update version"
+    },
+    "versionActions": {
+      "restore": {
+        "title": "Restore version",
+        "description": "Restoring this version will create a new version based on version {{versionName}}. All previous versions will stay in your history.",
+        "draftWarning": "You have unsaved draft changes that will be discarded. This action can't be undone.",
+        "discardAndRestore": "Discard & Restore",
+        "confirmText": "Restore version",
+        "action": "Restore"
+      },
+      "actionsMenu": "Actions menu",
+      "edit": "Edit"
+    },
+    "testSuiteItem": {
+      "addTestCase": "Add test case",
+      "editTestCase": "Edit test case",
+      "testCase": "test case",
+      "urlCopiedToClipboard": "URL successfully copied to clipboard",
+      "itemIdCopiedToClipboard": "Item ID successfully copied to clipboard"
+    },
+    "testSuiteItemForm": {
+      "description": "Description",
+      "descriptionPlaceholder": "Describe this test case...",
+      "data": "Data",
+      "mustBeJsonObject": "Must be a JSON object",
+      "invalidJson": "Invalid JSON"
+    },
+    "testSuiteSettings": {
+      "title": "Test settings",
+      "defaultRunsPerItem": "Default runs per item",
+      "defaultPassThreshold": "Default pass threshold",
+      "runsPerItemDescription": "Sets how many times each item runs.",
+      "passThresholdDescription": "Define how many runs must succeed.",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "assertionsCount": {
+      "customAssertions": "Custom assertions"
+    },
+    "executionPolicy": {
+      "mustPass": "{{threshold}} of {{runs}} must pass"
+    },
+    "copyId": "Copy ID",
+    "actionsMenu": "Actions menu",
+    "delete": "Delete",
+    "deselectAll": "Deselect all",
+    "selectAll": "Select all",
+    "saveToVersion": "Save changes"
+  },
+  "datasetVersionSelectBox": {
+    "noTestSuitesAvailable": "No test suites available",
+    "createTestSuiteHint": "Create a test suite with examples to evaluate your prompt on.",
+    "testSuiteEmpty": "This test suite is empty",
+    "noVersions": "No versions",
+    "selectTestSuite": "Select a test suite",
+    "searchTestSuites": "Search test suites"
+  },
+  "redirectDatasets": {
+    "testSuiteNotFound": "This test suite could not be found",
+    "testSuiteNotFoundMessage": "The test suite you're looking for doesn't exist or has been deleted.",
+    "backToHome": "Back to Home",
+    "noTestSuiteParams": "No test suite params set"
+  }
+}

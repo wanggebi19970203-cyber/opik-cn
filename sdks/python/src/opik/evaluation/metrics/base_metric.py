@@ -8,14 +8,12 @@ from ..metrics import score_result
 
 class BaseMetric(_opik_base_metric.BaseMetric):
     """
-    Abstract base class for all metrics. When creating a new metric, you should inherit
-    from this class and implement the abstract methods.
+    所有评估指标的抽象基类。创建新指标时，应继承此类并实现抽象方法。
 
     Args:
-        name: The name of the metric. If not provided, uses the class name as default.
-        track: Whether to track the metric. Defaults to True.
-        project_name: Optional project name to track the metric in for the cases when
-            there is no parent span/trace to inherit project name from.
+        name: 指标名称。如果未提供，则默认使用类名。
+        track: 是否追踪该指标。默认为 True。
+        project_name: 可选的项目名称，用于在没有父级 span/trace 可继承项目名称时追踪指标。
 
     Example:
         >>> from opik.evaluation.metrics import base_metric, score_result
@@ -25,12 +23,12 @@ class BaseMetric(_opik_base_metric.BaseMetric):
         >>>         super().__init__(name=name, track=track)
         >>>
         >>>     def score(self, input: str, output: str, **ignored_kwargs: Any):
-        >>>         # Add your logic here
+        >>>         # 在此处添加自定义逻辑
         >>>
         >>>         return score_result.ScoreResult(
         >>>             value=0,
         >>>             name=self.name,
-        >>>             reason="Optional reason for the score"
+        >>>             reason="评分的可选原因说明"
         >>>         )
     """
 
@@ -56,7 +54,7 @@ class BaseMetric(_opik_base_metric.BaseMetric):
         self, *args: Any, **kwargs: Any
     ) -> Union[score_result.ScoreResult, List[score_result.ScoreResult]]:
         """
-        Public method that can be called independently.
+        可独立调用的公共方法。子类必须实现此方法。
         """
         raise NotImplementedError()
 
@@ -64,6 +62,6 @@ class BaseMetric(_opik_base_metric.BaseMetric):
         self, *args: Any, **kwargs: Any
     ) -> Union[score_result.ScoreResult, List[score_result.ScoreResult]]:
         """
-        Async public method that can be called independently.
+        可独立调用的异步公共方法。默认实现会同步调用 score 方法。
         """
         return self.score(*args, **kwargs)

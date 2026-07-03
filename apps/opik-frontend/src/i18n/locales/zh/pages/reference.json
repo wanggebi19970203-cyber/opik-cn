@@ -1,0 +1,13 @@
+{
+  "reference": {
+    "title": "参考文档",
+    "description": "API 和 SDK 参考文档",
+    "sdk": {
+      "python": "Python SDK",
+      "typescript": "TypeScript SDK"
+    },
+    "api": {
+      "rest": "REST API"
+    }
+  }
+}

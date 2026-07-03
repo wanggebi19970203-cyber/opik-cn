@@ -17,6 +17,8 @@ LOGGER = logging.getLogger(__name__)
 
 class Prompt(base_prompt.BasePrompt):
     """
+    Prompt 类表示一个包含名称、提示文本/模板和提交哈希的提示。
+
     Prompt class represents a prompt with a name, prompt text/template and commit hash.
     """
 
@@ -34,23 +36,26 @@ class Prompt(base_prompt.BasePrompt):
         project_name: Optional[str] = None,
     ) -> None:
         """
+        使用给定参数初始化类的新实例。
+        使用 opik 客户端创建新的文本提示，并根据创建的提示设置实例属性的初始状态。
+
         Initializes a new instance of the class with the given parameters.
         Creates a new text prompt using the opik client and sets the initial state of the instance attributes based on the created prompt.
 
-        Parameters:
-            name: The name for the prompt.
-            prompt: The template for the prompt.
-            metadata: Optional metadata for the prompt.
-            type: The template type (MUSTACHE or JINJA2).
-            validate_placeholders: Whether to validate template placeholders.
-            id: Optional unique identifier (UUID) for the prompt.
-            description: Optional description of the prompt (up to 255 characters).
-            change_description: Optional description of changes in this version.
-            tags: Optional list of tags to associate with the prompt.
-            project_name: Optional project name for the prompt.
+        Args:
+            name: 提示的名称。
+            prompt: 提示的模板。
+            metadata: 提示的可选元数据。
+            type: 模板类型（MUSTACHE 或 JINJA2）。
+            validate_placeholders: 是否验证模板占位符。
+            id: 提示的可选唯一标识符（UUID）。
+            description: 提示的可选描述（最多 255 个字符）。
+            change_description: 此版本更改的可选描述。
+            tags: 与提示关联的可选标签列表。
+            project_name: 提示所属项目的可选名称。
 
         Raises:
-            PromptTemplateStructureMismatch: If a chat prompt with the same name already exists (template structure is immutable).
+            PromptTemplateStructureMismatch: 如果同名的聊天提示已存在（模板结构不可变）。
         """
 
         LOGGER.warning(
@@ -81,17 +86,22 @@ class Prompt(base_prompt.BasePrompt):
 
     @property
     def synced(self) -> bool:
-        """Whether the prompt has been successfully synced with the backend."""
+        """提示是否已成功与后端同步。"""
         return self._synced
 
     def sync_with_backend(self) -> bool:
-        """Synchronize the prompt with the backend.
+        """将提示与后端同步。
+
+        在 Opik 服务器上创建或更新提示。如果同步失败，
+        会记录警告日志，提示将继续在本地工作。
+
+        Synchronize the prompt with the backend.
 
         Creates or updates the prompt on the Opik server. If the sync fails,
         a warning is logged and the prompt continues to work locally.
 
         Returns:
-            True if the sync succeeded, False otherwise.
+            如果同步成功返回 True，否则返回 False。
         """
         try:
             from opik.api_objects import opik_client
@@ -114,7 +124,7 @@ class Prompt(base_prompt.BasePrompt):
             self._version = prompt_version.version_number
             self.__internal_api__prompt_id__ = prompt_version.prompt_id
             self.__internal_api__version_id__ = prompt_version.id
-            # Update fields from backend response to ensure consistency
+            # 从后端响应更新字段以确保一致性
             self._id = prompt_version.id
             self._change_description = prompt_version.change_description
             self._tags = prompt_version.tags
@@ -135,18 +145,23 @@ class Prompt(base_prompt.BasePrompt):
     @property
     @override
     def name(self) -> str:
-        """The name of the prompt."""
+        """提示的名称。"""
         return self._name
 
     @property
     def prompt(self) -> str:
-        """The latest template of the prompt."""
+        """提示的最新模板。"""
         return str(self._template)
 
     @property
     @override
     def commit(self) -> Optional[str]:
-        """Legacy commit hash of the prompt version.
+        """提示版本的旧版提交哈希。
+
+        已弃用 — 请改用 :attr:`version`（例如 ``"v3"``）。``commit``
+        不再在 Opik UI 中显示，仅为向后兼容旧版 SDK 调用者而保留。
+
+        Legacy commit hash of the prompt version.
 
         DEPRECATED — use :attr:`version` (e.g. ``"v3"``) instead. ``commit``
         is no longer surfaced in the Opik UI and is kept only for backwards
@@ -157,73 +172,75 @@ class Prompt(base_prompt.BasePrompt):
     @property
     @override
     def version(self) -> Optional[str]:
-        """The sequential version selector for the prompt (e.g. ``"v3"``)."""
+        """提示的顺序版本选择器（例如 ``"v3"``）。"""
         return self._version
 
     @property
     @override
     def version_id(self) -> Optional[str]:
-        """The unique identifier of the prompt version."""
+        """提示版本的唯一标识符。"""
         return self.__internal_api__version_id__
 
     @property
     @override
     def metadata(self) -> Optional[Dict[str, Any]]:
-        """The metadata dictionary associated with the prompt"""
+        """与提示关联的元数据字典。"""
         return copy.deepcopy(self._metadata)
 
     @property
     @override
     def type(self) -> prompt_types.PromptType:
-        """The prompt type of the prompt."""
+        """提示的类型。"""
         return self._type
 
     @property
     @override
     def id(self) -> Optional[str]:
-        """The unique identifier (UUID) of the prompt."""
+        """提示的唯一标识符（UUID）。"""
         return self._id
 
     @property
     @override
     def description(self) -> Optional[str]:
-        """The description of the prompt."""
+        """提示的描述。"""
         return self._description
 
     @property
     @override
     def change_description(self) -> Optional[str]:
-        """The description of changes in this version."""
+        """此版本更改的描述。"""
         return self._change_description
 
     @property
     @override
     def tags(self) -> Optional[List[str]]:
-        """The list of tags associated with the prompt."""
+        """与提示关联的标签列表。"""
         return copy.copy(self._tags) if self._tags else []
 
     @property
     def project_name(self) -> Optional[str]:
-        """The name of the project this prompt belongs to."""
+        """提示所属项目的名称。"""
         return self._project_name
 
     @property
     @override
     def environments(self) -> Optional[List[str]]:
-        """The environments that currently own this prompt version, or ``None`` if unowned."""
+        """当前拥有此提示版本的环境，如果未被拥有则返回 ``None``。"""
         return copy.copy(self._environments) if self._environments is not None else None
 
     @override
     def format(self, **kwargs: Any) -> Union[str, List[Dict[str, Any]]]:
         """
+        使用提供的关键字参数替换模板中的占位符。
+
         Replaces placeholders in the template with provided keyword arguments.
 
         Args:
-            **kwargs: Arbitrary keyword arguments where the key represents the placeholder
-                      in the template and the value is the value to replace the placeholder with.
+            **kwargs: 任意关键字参数，其中键表示模板中的占位符，
+                      值是要替换占位符的值。
 
         Returns:
-            A string with all placeholders replaced by their corresponding values from kwargs.
+            所有占位符被 kwargs 中对应值替换后的字符串。
         """
         is_playground_chat_prompt = (
             self._metadata is not None
@@ -246,10 +263,12 @@ class Prompt(base_prompt.BasePrompt):
     @override
     def __internal_api__to_info_dict__(self) -> Dict[str, Any]:
         """
+        将提示转换为用于序列化的信息字典。
+
         Convert the prompt to an info dictionary for serialization.
 
         Returns:
-            Dictionary containing prompt metadata and version information.
+            包含提示元数据和版本信息的字典。
         """
         info_dict: Dict[str, Any] = {
             "name": self.name,
@@ -283,7 +302,7 @@ class Prompt(base_prompt.BasePrompt):
         prompt_version: rest_api_types.PromptVersionDetail,
         project_name: Optional[str] = None,
     ) -> "Prompt":
-        # will not call __init__ to avoid API calls, create new instance with __new__
+        # 不调用 __init__ 以避免 API 调用，使用 __new__ 创建新实例
         prompt = cls.__new__(cls)
 
         prompt.__internal_api__version_id__ = prompt_version.id
@@ -301,7 +320,7 @@ class Prompt(base_prompt.BasePrompt):
         prompt._type = prompt_version.type
         prompt._id = prompt_version.id
         prompt._description = (
-            None  # description is stored at prompt level, not version level
+            None  # 描述存储在提示级别，而非版本级别
         )
         prompt._change_description = prompt_version.change_description
         prompt._tags = copy.copy(prompt_version.tags) if prompt_version.tags else []

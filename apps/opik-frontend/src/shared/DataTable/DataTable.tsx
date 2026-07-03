@@ -1,4 +1,5 @@
 import React, { ReactNode, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Cell,
   ColumnDef,
@@ -176,6 +177,7 @@ const DataTable = <TData, TValue>({
   showLoadingOverlay = false,
   showSkeleton = false,
 }: DataTableProps<TData, TValue>) => {
+  const { t } = useTranslation();
   const isResizable = resizeConfig && resizeConfig.enabled;
   const isRowClickable = isFunction(onRowClick);
 
@@ -398,7 +400,7 @@ const DataTable = <TData, TValue>({
             noData
           ) : (
             <div className="flex h-28 items-center justify-center text-muted-slate">
-              No results
+              {t("common:messages.noResults")}
             </div>
           )}
         </TableCell>

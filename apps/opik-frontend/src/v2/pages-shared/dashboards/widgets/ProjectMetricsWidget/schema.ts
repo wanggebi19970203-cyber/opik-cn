@@ -1,4 +1,5 @@
 import { z } from "zod";
+import i18next from "i18next";
 import { FiltersArraySchema } from "@/shared/FiltersAccordionSection/schema";
 import { CHART_TYPE } from "@/constants/chart";
 import { BREAKDOWN_FIELD } from "@/types/dashboard";
@@ -18,7 +19,7 @@ export const BreakdownConfigSchema = z
       return true;
     },
     {
-      message: "Metadata key is required when group by field is 'Metadata'",
+      message: i18next.t("common:validation.metadataKeyRequiredWhenGroupByMetadata"),
       path: ["metadataKey"],
     },
   );
@@ -26,9 +27,9 @@ export const BreakdownConfigSchema = z
 export const ProjectMetricsWidgetSchema = z.object({
   metricType: z
     .string({
-      required_error: "Metric type is required",
+      required_error: i18next.t("common:validation.metricTypeRequired"),
     })
-    .min(1, { message: "Metric type is required" }),
+    .min(1, { message: i18next.t("common:validation.metricTypeRequired") }),
   chartType: z.nativeEnum(CHART_TYPE),
   projectId: z.string().optional(),
   traceFilters: FiltersArraySchema.optional(),

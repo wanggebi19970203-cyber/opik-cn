@@ -11,6 +11,7 @@ import {
   MessageSquareMore,
   PenLine,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AgentGraphData, Span, Trace } from "@/types/traces";
 import {
@@ -67,6 +68,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
   isSpansLazyLoading,
   search,
 }) => {
+  const { t } = useTranslation("tracing");
   const {
     permissions: { canAnnotateTraceSpanThread },
   } = usePermissions();
@@ -170,7 +172,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
 
   const durationTooltip = (
     <div>
-      Duration in seconds: {duration}
+      {t("detailsPanel.durationInSeconds", { duration })}
       <p>
         {start_time}
         {end_time ? ` - ${end_time}` : ""}
@@ -210,7 +212,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
           />
           <div className="comet-body-s-accented flex w-full flex-wrap items-center gap-3 pl-1 text-muted-slate">
             {created_at && (
-              <TooltipWrapper content={`Created at: ${created_at}`}>
+              <TooltipWrapper content={t("detailsPanel.createdAt", { date: created_at })}>
                 <div
                   className="comet-body-xs-accented flex items-center gap-1 text-muted-slate"
                   data-testid="data-viewer-created-at"
@@ -228,7 +230,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
               </div>
             </TooltipWrapper>
             {isNumber(tokens) && (
-              <TooltipWrapper content={`Total amount of tokens: ${tokens}`}>
+              <TooltipWrapper content={t("detailsPanel.totalTokens", { tokens })}>
                 <div
                   className="comet-body-xs-accented flex items-center gap-1 text-muted-slate"
                   data-testid="data-viewer-tokens"
@@ -239,9 +241,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             )}
             {!isUndefined(estimatedCost) && (
               <TooltipWrapper
-                content={`Estimated cost ${formatCost(estimatedCost, {
-                  modifier: "full",
-                })}`}
+                content={t("detailsPanel.estimatedCost", { cost: formatCost(estimatedCost, { modifier: "full" }) })}
               >
                 <div
                   className="comet-body-xs-accented flex items-center gap-1 text-muted-slate"
@@ -274,7 +274,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
                     data-testid="data-viewer-span-scores"
                   >
                     <PenLine className="size-3 shrink-0" />{" "}
-                    {traceData.span_feedback_scores!.length} span scores
+                    {t("detailsPanel.spanScoresLabel", { count: traceData.span_feedback_scores!.length })}
                   </div>
                 </FeedbackScoreHoverCard>
               )}
@@ -291,9 +291,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             )}
             {(model || provider) && (
               <TooltipWrapper
-                content={`Model: ${model || "NA"}, Provider: ${
-                  provider || "NA"
-                }`}
+                content={t("detailsPanel.model", { model: model || "NA", provider: provider || "NA" })}
               >
                 <div
                   className="comet-body-xs-accented flex items-center gap-1 text-muted-slate"
@@ -325,14 +323,14 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
           <TabsList variant="underline">
             {canShowMessagesTab && (
               <TabsTrigger variant="underline" value="messages">
-                Messages
+                {t("detailsPanel.messages")}
               </TabsTrigger>
             )}
             <TabsTrigger variant="underline" value="details">
-              Details
+              {t("detailsPanel.details")}
             </TabsTrigger>
             <TabsTrigger variant="underline" value="feedback_scores">
-              Feedback scores
+              {t("detailsPanel.feedbackScores")}
               <ExplainerIcon
                 className="ml-1"
                 {...EXPLAINERS_MAP[EXPLAINER_ID.what_are_feedback_scores]}
@@ -340,12 +338,12 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             </TabsTrigger>
             {hasPrompts && (
               <TabsTrigger variant="underline" value="prompts">
-                Prompts
+                {t("detailsPanel.prompts")}
               </TabsTrigger>
             )}
             {hasSpanAgentGraph && (
               <TabsTrigger variant="underline" value="graph">
-                Agent graph
+                {t("detailsPanel.agentGraph")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -371,7 +369,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             <div className="space-y-6">
               <div>
                 <ConfigurableFeedbackScoreTable
-                  title={isTrace ? "Trace scores" : "Span scores"}
+                  title={isTrace ? t("detailsPanel.traceScores") : t("detailsPanel.spanScores")}
                   feedbackScores={data.feedback_scores}
                   onDeleteFeedbackScore={
                     canAnnotateTraceSpanThread
@@ -386,10 +384,10 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
                 />
               </div>
               {isTrace && hasSpanFeedbackScores && traceData && (
-                <div>
-                  <ConfigurableFeedbackScoreTable
-                    title="Span scores"
-                    feedbackScores={traceData.span_feedback_scores}
+              <div>
+                <ConfigurableFeedbackScoreTable
+                  title={t("detailsPanel.spanScores")}
+                  feedbackScores={traceData.span_feedback_scores}
                     onDeleteFeedbackScore={
                       canAnnotateTraceSpanThread
                         ? onDeleteFeedbackScore

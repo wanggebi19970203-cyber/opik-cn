@@ -36,7 +36,7 @@ KWARGS_KEYS_TO_LOG_AS_INPUTS: List[str] = [
 ]
 RESPONSE_KEYS_TO_LOG_AS_OUTPUT: List[str] = ["choices"]
 
-# Sensitive parameters that should never be logged
+# 不应记录的敏感参数
 SENSITIVE_PARAMS_TO_EXCLUDE: List[str] = [
     "api_key",
     "aws_access_key_id",
@@ -62,6 +62,7 @@ SENSITIVE_PARAMS_TO_EXCLUDE: List[str] = [
 
 
 def _extract_provider_from_model(model_name: str) -> Optional[LLMProvider]:
+    """从模型名称中提取 LLM 提供商。"""
     try:
         provider_info = litellm.get_llm_provider(model_name)
         provider_name = provider_info[1] if len(provider_info) > 1 else None
@@ -80,6 +81,7 @@ def _convert_response_to_dict(
         Dict[str, Any],
     ],
 ) -> Dict[str, Any]:
+    """将响应对象转换为字典格式。"""
     if hasattr(output, "model_dump"):
         return output.model_dump(mode="json")
     elif isinstance(output, dict):
@@ -93,6 +95,7 @@ def _convert_response_to_dict(
 def _extract_usage_from_response(
     response_dict: Dict[str, Any],
 ) -> Optional[llm_usage.OpikUsage]:
+    """从响应字典中提取 token 使用量信息。"""
     usage_data = response_dict.get("usage")
     if usage_data is None:
         return None
@@ -118,6 +121,7 @@ def _calculate_completion_cost(
         Dict[str, Any],
     ],
 ) -> Optional[float]:
+    """计算 completion 调用的费用。"""
     try:
         return litellm.completion_cost(completion_response=output)
     except Exception as exception:
@@ -130,6 +134,8 @@ def _calculate_completion_cost(
 
 
 class LiteLLMCompletionTrackDecorator(base_track_decorator.BaseTrackDecorator):
+    """LiteLLM completion 调用的追踪装饰器。"""
+
     @override
     def _start_span_inputs_preprocessor(
         self,
@@ -138,10 +144,11 @@ class LiteLLMCompletionTrackDecorator(base_track_decorator.BaseTrackDecorator):
         args: Tuple,
         kwargs: Dict[str, Any],
     ) -> arguments_helpers.StartSpanParameters:
+        """处理 span 开始时的输入参数。"""
         name = track_options.name if track_options.name is not None else func.__name__
         metadata = track_options.metadata if track_options.metadata is not None else {}
 
-        # Filter out sensitive parameters before logging
+        # 记录前过滤敏感参数
         filtered_kwargs = {
             key: value
             for key, value in kwargs.items()
@@ -175,6 +182,7 @@ class LiteLLMCompletionTrackDecorator(base_track_decorator.BaseTrackDecorator):
         capture_output: bool,
         current_span_data: span.SpanData,
     ) -> arguments_helpers.EndSpanParameters:
+        """处理 span 结束时的输出参数。"""
         if not (
             isinstance(
                 output,
@@ -221,6 +229,7 @@ class LiteLLMCompletionTrackDecorator(base_track_decorator.BaseTrackDecorator):
             ]
         ],
     ) -> Optional[litellm.litellm_core_utils.streaming_handler.CustomStreamWrapper]:
+        """处理流式响应，对 LiteLLM 流进行补丁以支持追踪。"""
         assert generations_aggregator is not None, (
             "LiteLLM decorator will always get aggregator function as input"
         )

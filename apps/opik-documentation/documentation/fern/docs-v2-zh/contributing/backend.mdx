@@ -1,0 +1,301 @@
+---
+headline: 后端 | Opik 文档
+og:description: 了解如何为 Opik 后端做贡献，提升此 Java 应用中的数据处理和 API 功能。
+og:site_name: Opik 文档
+og:title: 为 Opik 后端开发做贡献
+title: 后端
+canonical-url: https://www.comet.com/docs/opik/contributing/guides/backend
+---
+
+# 为后端做贡献
+
+本指南将帮助你开始为 Opik 后端做贡献。
+
+<Tip>
+  在开始之前，请查阅我们的通用[贡献概述](/v1/contributing/overview)和[贡献者许可协议 (CLA)](https://github.com/comet-ml/opik/blob/main/CLA.md)。
+</Tip>
+
+## 项目结构
+
+Opik 后端是一个 Java 应用（源代码位于 `apps/opik-backend`），构成了 Opik 平台的核心。它负责数据采集、存储、API 请求等功能。
+
+## 搭建开发环境
+
+我们提供多种后端开发方式。选择最适合你工作流程的方式：
+
+<Tabs>
+  <Tab value="Local Process Mode" title="本地进程模式（推荐）">
+    **最适合快速开发**
+
+    此模式将后端作为本地进程运行，而基础设施和其他服务在 Docker 中运行：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+        ```bash
+        # 从仓库根目录 - 重启所有服务
+        scripts/dev-runner.sh --be-only-restart
+
+        # 或仅启动（如果已构建则更快）
+        scripts/dev-runner.sh --be-only-start
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        # 从仓库根目录 - 重启所有服务
+        scripts\dev-runner.ps1 --be-only-restart
+
+        # 或仅启动（如果已构建则更快）
+        scripts\dev-runner.ps1 --be-only-start
+        ```
+      </Tab>
+    </Tabs>
+
+    后端 API 将在 `http://localhost:8080` 可访问。
+
+    **优势：**
+    - 快速重建和重启
+    - 方便调试
+    - 无需重建 Docker 容器即可快速修改代码
+
+    **前提条件：**
+    - Java Development Kit (JDK) 25
+    - Apache Maven 3.8+
+  </Tab>
+
+  <Tab value="Docker Mode" title="Docker 模式">
+    **最适合端到端测试完整系统**
+
+    此模式在 Docker 容器中运行所有组件：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+        ```bash
+        # 从仓库根目录
+        ./opik.sh --build
+
+        # 或不重建直接启动
+        ./opik.sh
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        # 从仓库根目录
+        .\opik.ps1 --build
+
+        # 或不重建直接启动
+        .\opik.ps1
+        ```
+      </Tab>
+    </Tabs>
+
+    后端 API 将在 `http://localhost:8080` 可访问。
+
+    **优势：**
+    - 最接近生产环境
+    - 无需本地安装 Java/Maven
+    - 团队间环境一致
+
+    **前提条件：**
+    - Docker 和 Docker Compose
+  </Tab>
+
+  <Tab value="Manual Setup" title="手动搭建">
+    **最适合了解构建过程**
+
+    手动搭建各个组件：
+
+    <Tabs>
+      <Tab title="Linux/Mac">
+        1. **启动基础设施服务：** 后端依赖 Clickhouse、MySQL 和 Redis 等。
+           ```bash
+           ./opik.sh --infra --port-mapping
+           ```
+
+        2. **构建后端：**
+           ```bash
+           cd apps/opik-backend
+           mvn clean install
+           ```
+
+        3. **运行数据库迁移：**
+           ```bash
+           # MySQL 迁移
+           java -jar target/opik-backend-*.jar db migrate config.yml
+
+           # ClickHouse 迁移
+           java -jar target/opik-backend-*.jar dbAnalytics migrate config.yml
+           ```
+
+        4. **启动后端：**
+           ```bash
+           java -jar target/opik-backend-*.jar server config.yml
+           ```
+      </Tab>
+      <Tab title="Windows">
+        1. **启动基础设施服务：** 后端依赖 Clickhouse、MySQL 和 Redis 等。
+           ```powershell
+           .\opik.ps1 --infra --port-mapping
+           ```
+
+        2. **构建后端：**
+           ```powershell
+           cd apps\opik-backend
+           mvn clean install
+           ```
+
+        3. **运行数据库迁移：**
+           ```powershell
+           # MySQL 迁移
+           java -jar target\opik-backend-*.jar db migrate config.yml
+
+           # ClickHouse 迁移
+           java -jar target\opik-backend-*.jar dbAnalytics migrate config.yml
+           ```
+
+        4. **启动后端：**
+           ```powershell
+           java -jar target\opik-backend-*.jar server config.yml
+           ```
+      </Tab>
+    </Tabs>
+
+    后端 API 将在 `http://localhost:8080` 可访问。
+
+    **前提条件：**
+    - Java Development Kit (JDK) 25
+    - Apache Maven 3.8+
+    - Docker 和 Docker Compose（用于基础设施）
+  </Tab>
+</Tabs>
+
+有关所有开发模式、故障排除和高级工作流程的完整文档，请参阅我们的[本地开发指南](/v1/contributing/guides/local-development)。
+
+### 4. 代码格式化
+
+我们使用 Spotless 进行代码格式化。在提交 PR 之前，请确保你的代码已正确格式化：
+
+<Tabs>
+  <Tab value="Using dev-runner" title="使用 dev-runner（推荐）">
+    <Tabs>
+      <Tab title="Linux/Mac">
+        ```bash
+        # 从仓库根目录
+        scripts/dev-runner.sh --lint-be
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```powershell
+        # 从仓库根目录
+        scripts\dev-runner.ps1 --lint-be
+        ```
+      </Tab>
+    </Tabs>
+  </Tab>
+  <Tab value="Manual Maven" title="手动 Maven">
+    ```bash
+    cd apps/opik-backend
+    mvn spotless:apply
+    ```
+  </Tab>
+</Tabs>
+
+我们的 CI（持续集成）将使用 `mvn spotless:check` 检查格式，如果格式不正确将导致构建失败。
+
+### 5. 运行测试
+
+确保你的更改通过所有后端测试：
+
+```bash
+cd apps/opik-backend
+mvn test
+```
+
+测试利用 `testcontainers` 库针对外部服务（Clickhouse、MySQL 等）的真实实例运行集成测试。测试期间这些服务的端口由库随机分配以避免冲突。
+
+### 6. 提交拉取请求
+
+在实现更改、确保测试通过且代码已格式化后，提交你的工作并向 `comet-ml/opik` 仓库的 `main` 分支发起拉取请求。
+
+## 高级后端主题
+
+<AccordionGroup>
+  <Accordion title="健康检查">
+    要检查本地运行的后端应用的健康状态，你可以在浏览器中或通过 `curl` 访问健康检查端点 `http://localhost:8080/healthcheck`。
+  </Accordion>
+
+  <Accordion title="数据库迁移（Liquibase）">
+    Opik 使用 [Liquibase](https://www.liquibase.com/) 管理 MySQL 和 ClickHouse 的数据库模式变更（DDL 迁移）。
+
+    - **位置**：迁移文件位于 `apps/opik-backend/src/main/resources/liquibase/{{DB}}/migrations`（其中 `{{DB}}` 对于 MySQL 为 `db`，对于 ClickHouse 为 `dbAnalytics`）。
+    - **自动化**：在部署环境中，执行通常通过 `apps/opik-backend/run_db_migrations.sh` 脚本、Docker 镜像和 Helm Charts 自动完成。
+    
+    **在本地开发中运行迁移：**
+
+    <Tabs>
+      <Tab value="Using dev-runner" title="使用 dev-runner（推荐）">
+        <Tabs>
+          <Tab title="Linux/Mac">
+            ```bash
+            # 从仓库根目录
+            scripts/dev-runner.sh --migrate
+            ```
+          </Tab>
+          <Tab title="Windows">
+            ```powershell
+            # 从仓库根目录
+            scripts\dev-runner.ps1 --migrate
+            ```
+          </Tab>
+        </Tabs>
+
+        此命令将：
+        - 在需要时启动基础设施服务
+        - 如果没有 JAR 文件则构建后端
+        - 自动运行 MySQL 和 ClickHouse 迁移
+      </Tab>
+      <Tab value="Manual Execution" title="手动执行">
+        要手动运行 DDL 迁移（根据需要替换 `{project.pom.version}` 和 `{database}`）：
+
+        - **检查待处理的迁移：** `java -jar target/opik-backend-{project.pom.version}.jar {database} status config.yml`
+        - **运行迁移：** `java -jar target/opik-backend-{project.pom.version}.jar {database} migrate config.yml`
+        - **创建模式标签：** `java -jar target/opik-backend-{project.pom.version}.jar {database} tag config.yml {tag_name}`
+        - **回滚迁移：** 
+          - `java -jar target/opik-backend-{project.pom.version}.jar {database} rollback config.yml --count 1`
+          - 或 `java -jar target/opik-backend-{project.pom.version}.jar {database} rollback config.yml --tag {tag_name}`
+
+        其中 `{database}` 为 `db`（MySQL）或 `dbAnalytics`（ClickHouse）。
+      </Tab>
+    </Tabs>
+
+    **DDL 迁移要求：**
+    - 必须向后兼容（新字段可选/有默认值，分阶段移除列，不重命名活跃的表/列）。
+    - 必须独立于应用代码变更。
+    - 必须不会导致停机。
+    - 必须有唯一名称。
+    - 必须包含回滚语句（如果 Liquibase 无法自动生成则使用 `empty`）。参考[演化式数据库设计](https://martinfowler.com/articles/evodb.html)和 [Liquibase 回滚文档](https://docs.liquibase.com/secure/user-guide-5-0/what-is-a-rollback)。
+    - 对于更复杂的迁移，应用过渡阶段。参考[演化式数据库设计](https://martinfowler.com/articles/evodb.html)
+
+  </Accordion>
+
+  <Accordion title="数据迁移（DML）">
+    DML（数据操作语言）迁移用于数据本身的变更，而非模式变更。
+    
+    - **执行**：这些不会自动运行。必须由系统管理员使用数据库客户端手动运行。
+    - **文档**：DML 迁移记录在 `CHANGELOG.md`（GitHub 链接：[CHANGELOG.md](https://github.com/comet-ml/opik/blob/main/CHANGELOG.md)）中，脚本放置在 `apps/opik-backend/data-migrations` 并附有详细说明。
+    - **DML 迁移要求**：
+      * 必须向后兼容（除非 100% 安全否则不删除数据，允许回滚，不降低性能）。
+      * 必须包含详细的执行说明。
+      * 必须适当批处理以避免中断操作。
+    * 必须不会导致停机。
+    * 必须有唯一名称。
+    * 必须包含回滚语句。
+  </Accordion>
+
+  <Accordion title="直接访问 ClickHouse">
+    你可以直接查询 ClickHouse REST 端点。例如，获取版本：
+    ```bash
+    echo 'SELECT version()' | curl -H 'X-ClickHouse-User: opik' -H 'X-ClickHouse-Key: opik' 'http://localhost:8123/' -d @-
+    ```
+    示例输出：`23.8.15.35`
+  </Accordion>
+</AccordionGroup>

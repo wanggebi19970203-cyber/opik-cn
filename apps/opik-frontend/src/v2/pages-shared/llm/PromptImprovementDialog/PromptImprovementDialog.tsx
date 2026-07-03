@@ -41,15 +41,7 @@ import {
 import { cn } from "@/lib/utils";
 import { parseComposedProviderType } from "@/lib/provider";
 import { parseLLMMessageContent } from "@/lib/llm";
-
-const PROMPT_IMPROVEMENT_PROGRESS_MESSAGES = [
-  "Analyzing your instructions...",
-  "Defining the prompt structure...",
-  "Scoping the role and perspective...",
-  "Applying best practices...",
-  "Synthesizing the full prompt...",
-  "Polishing the output...",
-];
+import { useTranslation } from "react-i18next";
 
 const PROMPT_IMPROVEMENT_LAST_PICKED_MODEL = "opik-prompt-improvement-model";
 
@@ -82,6 +74,19 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
   const editorViewRef = useRef<EditorView | null>(null);
+  const { t } = useTranslation("llm");
+
+  const progressMessages = useMemo(
+    () => [
+      t("llm:promptImprovement.analyzingInstructions"),
+      t("llm:promptImprovement.definingStructure"),
+      t("llm:promptImprovement.scopingRole"),
+      t("llm:promptImprovement.applyingBestPractices"),
+      t("llm:promptImprovement.synthesizingPrompt"),
+      t("llm:promptImprovement.polishingOutput"),
+    ],
+    [t],
+  );
 
   // Model selection with persistence using the reusable hook
   const { model, provider, configs, modelSelectProps } = useModelSelection({
@@ -96,7 +101,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
   });
 
   const { message: progressMessage } = useProgressSimulation({
-    messages: PROMPT_IMPROVEMENT_PROGRESS_MESSAGES,
+    messages: progressMessages,
     isPending: isLoading && !generatedPrompt,
     intervalMs: 2000,
   });
@@ -108,7 +113,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
   } = useMemo(() => parseLLMMessageContent(originalPrompt), [originalPrompt]);
 
   const isGenerateMode = !originalPromptText?.trim();
-  const title = isGenerateMode ? "Generate prompt" : "Improve prompt";
+  const title = isGenerateMode ? t("llm:promptImprovement.generatePrompt") : t("llm:promptImprovement.improvePrompt");
   const hasInstructions = Boolean(userInstructions.trim());
 
   useEffect(() => {
@@ -184,17 +189,17 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
       ) {
         const errorMsg =
           result.opikError || result.providerError || result.pythonProxyError;
-        setError(errorMsg || "An error occurred during generation");
+        setError(errorMsg || t("llm:promptImprovement.errorDuringGeneration"));
       } else if (
         result?.choices?.[0]?.finish_reason === "length" ||
         result?.choices?.some((choice) => choice.finish_reason === "length")
       ) {
         setError(
-          "The generated prompt was cut off due to token limits. Please try increasing the max_tokens setting in the model configuration or use a shorter instruction.",
+          t("llm:promptImprovement.promptCutOff"),
         );
       } else if (!result?.result || !result.result.trim()) {
         setError(
-          "The model did not return any content. Please try again or adjust your instructions.",
+          t("llm:promptImprovement.noContentReturned"),
         );
       }
     } catch (err) {
@@ -202,8 +207,8 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
         err instanceof Error
           ? err.message
           : isGenerateMode
-            ? "Failed to generate prompt"
-            : "Failed to improve prompt";
+            ? t("llm:promptImprovement.failedToGenerate")
+            : t("llm:promptImprovement.failedToImprove");
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -254,11 +259,11 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
   ]);
 
   const instructionsPlaceholder = isGenerateMode
-    ? "What do you want your AI to do?"
-    : "What do you want to improve (e.g., tone, length)";
+    ? t("llm:promptImprovement.generatePromptPlaceholder")
+    : t("llm:promptImprovement.improvePromptPlaceholder");
 
   const modelDisplayName = useMemo(() => {
-    if (!model) return "not configured";
+    if (!model) return t("llm:promptImprovement.notConfigured");
     const providerLabel = provider
       ? PROVIDERS[parseComposedProviderType(provider)]?.label
       : "";
@@ -287,8 +292,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
     <div className="flex flex-col gap-2">
       <div className="comet-body-accented">{label}</div>
       <Description>
-        This is your generated prompt, created with the selected model (
-        {modelDisplayName}) and parameters. It&apos;s editable.
+        {t("llm:promptImprovement.improvedPromptDescription", { modelDisplayName })}
       </Description>
     </div>
   );
@@ -306,8 +310,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-12">
               <Sparkles className="size-4 text-light-slate" />
               <div className="comet-body-s text-center text-muted-slate">
-                The generated prompt will be shown here, ready for you to review
-                and edit
+                {t("llm:promptImprovement.generatedPromptPlaceholder")}
               </div>
             </div>
           )}
@@ -339,7 +342,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
                 theme={codeMirrorPromptTheme}
                 value={generatedPrompt}
                 onChange={(value) => setGeneratedPrompt(value)}
-                placeholder="The generated prompt will be shown here, ready for you to review and edit"
+                placeholder={t("llm:promptImprovement.generatedPromptPlaceholder")}
                 editable={isEditable}
                 basicSetup={{
                   foldGutter: false,
@@ -368,11 +371,11 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
         <Sparkles className="mr-2 size-4 shrink-0" />
         {hasPrompt
           ? isGenerateMode
-            ? "Re-generate prompt"
-            : "Re-run improvement"
+            ? t("llm:promptImprovement.reGeneratePrompt")
+            : t("llm:promptImprovement.reRunImprovement")
           : isGenerateMode
-            ? "Generate prompt"
-            : "Improve prompt"}
+            ? t("llm:promptImprovement.generatePrompt")
+            : t("llm:promptImprovement.improvePrompt")}
       </Button>
       <Button
         variant={!hasPrompt ? "outline" : "default"}
@@ -380,7 +383,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
         disabled={!hasPrompt}
       >
         <Play className="mr-2 size-4 shrink-0" />
-        Use this prompt
+        {t("llm:promptImprovement.useThisPrompt")}
       </Button>
     </>
   );
@@ -390,22 +393,20 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
       <div className="relative grid grid-cols-2 gap-x-14 gap-y-3">
         {renderArrow()}
         <div className="flex flex-col gap-2">
-          <div className="comet-body-accented">Your initial prompt</div>
+          <div className="comet-body-accented">{t("llm:promptImprovement.yourInitialPrompt")}</div>
           <Description>
-            This is your initial prompt. Optional instructions can guide
-            improvements, or we’ll optimize it automatically.
+            {t("llm:promptImprovement.yourInitialPromptDescription")}
           </Description>
         </div>
-        {renderRightSectionTitle("Improved prompt")}
+        {renderRightSectionTitle(t("llm:promptImprovement.improvedPrompt"))}
         <div className="flex flex-col gap-2">
           <div className="comet-code h-[120px] overflow-y-auto whitespace-pre-wrap break-words rounded-md border bg-primary-foreground p-3 text-light-slate">
             {originalPromptText}
           </div>
           <div className="mt-1 flex flex-col">
-            <div className="comet-title-xs">Instructions (optional)</div>
+            <div className="comet-title-xs">{t("llm:promptImprovement.instructionsOptional")}</div>
             <Description>
-              Write your instructions in plain language. We’ll turn them into a
-              best-practice prompt that you can review and iterate on.
+              {t("llm:promptImprovement.instructionsDescription")}
             </Description>
           </div>
           {renderInstructionsSection("min-h-[120px]")}
@@ -421,13 +422,12 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
       <div className="relative grid grid-cols-2 gap-x-14 gap-y-3 pb-4">
         {renderArrow()}
         <div className="flex flex-col gap-2">
-          <div className="comet-body-accented">Instructions</div>
+          <div className="comet-body-accented">{t("llm:promptImprovement.instructions")}</div>
           <Description>
-            Write your instructions in plain language. We’ll turn them into a
-            best-practice prompt that you can review and iterate on.
+            {t("llm:promptImprovement.instructionsDescription")}
           </Description>
         </div>
-        {renderRightSectionTitle("Generated prompt")}
+        {renderRightSectionTitle(t("llm:promptImprovement.generatedPrompt"))}
         {renderInstructionsSection("h-[320px]")}
         {renderGeneratedPromptSection()}
         {renderGenerateButtons()}
@@ -456,7 +456,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="mb-4 flex items-center gap-3">
-            <div className="comet-body-accented shrink-0">Model</div>
+            <div className="comet-body-accented shrink-0">{t("llm:promptImprovement.model")}</div>
             <div className="w-64">
               <PromptModelSelect
                 workspaceName={workspaceName}

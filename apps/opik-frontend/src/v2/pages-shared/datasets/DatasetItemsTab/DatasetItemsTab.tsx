@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ColumnPinningState, RowSelectionState } from "@tanstack/react-table";
 import get from "lodash/get";
 import {
@@ -151,6 +152,7 @@ function DatasetItemsTab({
   onAddItem,
   itemName,
 }: DatasetItemsTabProps): React.ReactElement | null {
+  const { t } = useTranslation("datasets");
   const {
     permissions: { canEditDatasets },
   } = usePermissions();
@@ -327,10 +329,10 @@ function DatasetItemsTab({
 
   const noDataText = useMemo(() => {
     if (isDraftMode && deletedIds.size > 0) {
-      return `All ${itemName}s on this page have been deleted`;
+      return t("itemsTab.allItemsDeleted", { itemName });
     }
-    return `No ${itemName}s yet`;
-  }, [isDraftMode, deletedIds.size, itemName]);
+    return t("itemsTab.noItemsYet", { itemName });
+  }, [isDraftMode, deletedIds.size, itemName, t]);
 
   const handleSearchChange = useCallback(
     (newSearch: string | null) => {
@@ -533,11 +535,11 @@ function DatasetItemsTab({
           {isCompactToolbar ? (
             <ExpandableSearchInput
               value={search ?? ""}
-              placeholder="Search"
+              placeholder={t("itemsTab.search")}
               onChange={handleCompactSearchChange}
               disabled={isDraftMode}
               buttonVariant="outline"
-              tooltip={isDraftMode ? "Save changes to search" : "Search items"}
+              tooltip={isDraftMode ? t("itemsTab.saveChangesToSearch") : t("itemsTab.searchItems")}
               onExpandedChange={handleSearchExpandedChange}
               className={
                 isSearchExpanded
@@ -547,13 +549,13 @@ function DatasetItemsTab({
             />
           ) : (
             <TooltipWrapper
-              content={isDraftMode ? "Save changes to search" : undefined}
+              content={isDraftMode ? t("itemsTab.saveChangesToSearch") : undefined}
             >
               <div>
                 <SearchInput
                   searchText={search ?? ""}
                   setSearchText={handleSearchChange}
-                  placeholder="Search"
+                  placeholder={t("itemsTab.search")}
                   className="w-[320px]"
                   dimension="sm"
                   disabled={isDraftMode}
@@ -562,7 +564,7 @@ function DatasetItemsTab({
             </TooltipWrapper>
           )}
           <TooltipWrapper
-            content={isDraftMode ? "Save changes to filter" : undefined}
+            content={isDraftMode ? t("itemsTab.saveChangesToFilter") : undefined}
           >
             <div>
               <FiltersButton
@@ -607,16 +609,16 @@ function DatasetItemsTab({
         <StatusMessage
           icon={Loader2}
           iconClassName="animate-spin"
-          title={`Your ${entityName} is still loading`}
-          description={`Some results or counts may update as more data becomes available. You can continue exploring while the full ${entityName} loads.`}
+          title={t("itemsTab.loadingTitle", { entityName })}
+          description={t("itemsTab.loadingDescription", { entityName })}
           className="mb-4"
         />
       )}
       {showSuccessMessage && (
         <StatusMessage
           icon={Check}
-          title={`Your ${entityName} fully loaded`}
-          description="All items are now available."
+          title={t("itemsTab.loadedTitle", { entityName })}
+          description={t("itemsTab.loadedDescription")}
           className="mb-4"
         />
       )}
@@ -649,7 +651,7 @@ function DatasetItemsTab({
             description={
               isDraftMode && deletedIds.size > 0
                 ? ""
-                : `Add ${itemName}s to run evaluations and measure performance.`
+                : t("itemsTab.emptyDescription", { itemName })
             }
           >
             {!(isDraftMode && deletedIds.size > 0) && (
@@ -658,7 +660,7 @@ function DatasetItemsTab({
                 className="comet-body-s underline underline-offset-4 hover:text-primary"
                 data-testid="dataset-items-empty-add-button"
               >
-                Add new {itemName}
+                {t("itemsTab.addNewItem", { itemName })}
               </button>
             )}
           </DataTableEmptyContent>
@@ -666,7 +668,7 @@ function DatasetItemsTab({
       />
       <div className="flex justify-end py-4">
         <TooltipWrapper
-          content={isDraftMode ? "Save changes to navigate pages" : undefined}
+          content={isDraftMode ? t("itemsTab.saveChangesToNavigate") : undefined}
         >
           <div>
             <DataTablePagination

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import i18next from "i18next";
 
 import { Button } from "@/ui/button";
 import AddEditDatasetDialog from "@/v2/pages-shared/datasets/AddEditDatasetDialog/AddEditDatasetDialog";
@@ -17,12 +18,12 @@ interface EmptyDatasetStateProps {
 
 const COPY = {
   [DATASET_TYPE.DATASET]: {
-    title: "No datasets yet",
-    cta: "Create dataset",
+    title: i18next.t("pages/playground:playground.emptyDataset.noDatasets"),
+    cta: i18next.t("pages/playground:playground.emptyDataset.createDataset"),
   },
   [DATASET_TYPE.TEST_SUITE]: {
-    title: "No test suites yet",
-    cta: "Create test suite",
+    title: i18next.t("pages/playground:playground.emptyDataset.noTestSuites"),
+    cta: i18next.t("pages/playground:playground.emptyDataset.createTestSuite"),
   },
 } as const;
 

@@ -43,6 +43,7 @@ import usePromptById from "@/api/prompts/usePromptById";
 import usePromptCreateMutation from "@/api/prompts/usePromptCreateMutation";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
+import { useTranslation } from "react-i18next";
 
 type SaveMode = "update" | "new";
 
@@ -86,6 +87,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 }) => {
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
+  const { t } = useTranslation("llm");
 
   const {
     permissions: { canCreatePrompts },
@@ -218,7 +220,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[620px]">
         <DialogHeader>
-          <DialogTitle>Save to prompt library</DialogTitle>
+          <DialogTitle>{t("llm:promptMessages.saveToPromptLibrary")}</DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
           {prompt && canCreatePrompts && (
@@ -231,10 +233,10 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                 className="w-fit"
               >
                 <ToggleGroupItem value="update" size="sm">
-                  Update existing
+                  {t("llm:promptMessages.updateExisting")}
                 </ToggleGroupItem>
                 <ToggleGroupItem value="new" size="sm">
-                  Save as new
+                  {t("llm:promptMessages.saveAsNew")}
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -242,7 +244,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 
           {saveMode === "update" && prompt && (
             <div className="flex flex-col gap-2 pb-4">
-              <Label>Prompt</Label>
+              <Label>{t("llm:promptMessages.prompt")}</Label>
               <PromptsSelectBox
                 projectId={activeProjectId!}
                 onValueChange={setPromptId}
@@ -252,7 +254,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                 filterByTemplateStructure={templateStructure}
               />
               <Description>
-                Selected prompt will be updated. You can view versions in the
+                {t("llm:promptMessages.selectedPromptDescription")}
                 <Link
                   onClick={(event) => event.stopPropagation()}
                   to="/$workspaceName/projects/$projectId/prompts/$promptId"
@@ -264,7 +266,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                   target="_blank"
                 >
                   <Button variant="link" size="sm" className="px-1">
-                    Prompt library
+                      {t("llm:promptMessages.promptLibrary")}
                     <ExternalLink className="ml-1.5 mt-1 size-3.5 shrink-0" />
                   </Button>
                 </Link>
@@ -274,7 +276,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 
           {isEdit ? (
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="promptMetadata">Commit message</Label>
+              <Label htmlFor="promptMetadata">{t("llm:promptMessages.commitMessage")}</Label>
               <Textarea
                 className="comet-code min-h-20"
                 id="promptMetadata"
@@ -285,10 +287,10 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
           ) : (
             <>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="promptName">Name</Label>
+                <Label htmlFor="promptName">{t("llm:promptMessages.name")}</Label>
                 <Input
                   id="promptName"
-                  placeholder="Prompt name"
+                  placeholder={t("llm:promptMessages.promptName")}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />
@@ -296,7 +298,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 
               <div className="flex flex-col gap-2 pb-4">
                 <Description>
-                  A new prompt will be created in the
+                  {t("llm:promptMessages.newPromptDescription")}
                   <Link
                     onClick={(event) => event.stopPropagation()}
                     to="/$workspaceName/projects/$projectId/prompts"
@@ -304,7 +306,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                     target="_blank"
                   >
                     <Button variant="link" size="sm" className="px-1">
-                      Prompt library
+                    {t("llm:promptMessages.promptLibrary")}
                       <ExternalLink className="ml-1.5 mt-1 size-3.5 shrink-0" />
                     </Button>
                   </Link>
@@ -313,11 +315,11 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 
               <div className="flex flex-col gap-2 pb-4">
                 <Label htmlFor="promptDescription">
-                  Description (optional)
+                  {t("llm:promptMessages.descriptionOptional")}
                 </Label>
                 <Textarea
                   id="promptDescription"
-                  placeholder="Prompt description"
+                  placeholder={t("llm:promptMessages.promptDescription")}
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   maxLength={255}
@@ -330,7 +332,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
           <div className="flex flex-col gap-2 border-t border-border pb-4">
             <Accordion type="multiple">
               <AccordionItem value="metadata">
-                <AccordionTrigger>Metadata</AccordionTrigger>
+                <AccordionTrigger>{t("llm:promptMessages.metadata")}</AccordionTrigger>
                 <AccordionContent>
                   <div className="rounded-md">
                     <CodeMirror
@@ -351,7 +353,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
               </AccordionItem>
               {showInvalidJSON && (
                 <Alert variant="destructive">
-                  <AlertTitle>Metadata field is not valid</AlertTitle>
+                  <AlertTitle>{t("llm:promptMessages.metadataNotValid")}</AlertTitle>
                 </Alert>
               )}
             </Accordion>
@@ -359,14 +361,14 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t("llm:promptMessages.cancel")}</Button>
           </DialogClose>
           <Button
             type="submit"
             disabled={!isValid}
             onClick={handleClickEditPrompt}
           >
-            Save to library
+            {t("llm:promptMessages.saveToLibrary")}
           </Button>
         </DialogFooter>
       </DialogContent>

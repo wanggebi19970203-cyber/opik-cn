@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import get from "lodash/get";
 import sortBy from "lodash/sortBy";
 import {
@@ -86,15 +87,17 @@ const COLUMNS_OUTPUT_ORDER_KEY = "compare-trials-output-columns-order";
 const PAGINATION_SIZE_KEY = "compare-trials-pagination-size";
 const ROW_HEIGHT_KEY = "compare-trials-row-height";
 
-export const FILTER_COLUMNS: ColumnData<FlattenedTrialItem>[] = [
+export const getFilterColumns = (
+  t: (key: string) => string,
+): ColumnData<FlattenedTrialItem>[] => [
   {
     id: "output",
-    label: "Evaluation task",
+    label: t("trialItemsTab.evaluationTask"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Optimizations scores",
+    label: t("trialItemsTab.optimizationScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
@@ -106,10 +109,12 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 
 export const DEFAULT_SELECTED_COLUMNS: string[] = [];
 
-const DEFAULT_COLUMNS: ColumnData<FlattenedTrialItem>[] = [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<FlattenedTrialItem>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "Test suite item ID",
+    label: t("trialItemsTab.testSuiteItemId"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.dataset_item_id,
     cell: IdCell as never,
@@ -132,6 +137,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
   experiments,
   isTestSuite = false,
 }) => {
+  const { t } = useTranslation("pages/trial");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [traceId = "", setTraceId] = useQueryParam("trace", StringParam, {
     updateType: "replaceIn",
@@ -176,12 +182,12 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
           keyComponent: ExperimentsFeedbackScoresSelect,
           keyComponentProps: {
             experimentsIds,
-            placeholder: "Select score",
+            placeholder: t("trialItemsTab.selectScore"),
           },
         },
       },
     }),
-    [experimentsIds],
+    [experimentsIds, t],
   );
 
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
@@ -248,7 +254,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     );
 
   const apiTotal = data?.total ?? 0;
-  const noDataText = "There is no data for the selected trials";
+  const noDataText = t("trialItemsTab.noData");
 
   const allFlatRows = useMemo(() => {
     const apiRows: ExperimentsCompare[] = data?.content ?? [];
@@ -396,7 +402,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
       return [
         {
           id: "score_passed",
-          label: "passed",
+          label: t("trialItemsTab.passed"),
           type: COLUMN_TYPE.string,
           cell: TrialPassedCell as never,
           customMeta: {
@@ -460,7 +466,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     }
   }, [scoresColumnsData, selectedColumns, setSelectedColumns]);
 
-  const activeDefaultColumns = DEFAULT_COLUMNS;
+  const activeDefaultColumns = getDefaultColumns(t);
 
   const columns = useMemo(() => {
     const retVal = [
@@ -478,7 +484,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         columnHelper.group({
           id: "dataset",
           meta: {
-            header: "Test suite",
+            header: t("trialItemsTab.testSuite"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -497,7 +503,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         columnHelper.group({
           id: "evaluation",
           meta: {
-            header: "Evaluation task",
+            header: t("trialItemsTab.evaluationTask"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -516,7 +522,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         columnHelper.group({
           id: "scores",
           meta: {
-            header: "Optimizations scores",
+            header: t("trialItemsTab.optimizationScores"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -547,13 +553,13 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
       ...sortBy(dynamicDatasetColumns, "label").map(
         ({ id, label, columnType }) => ({
           id,
-          label: `${label} (Test suite)`,
+          label: `${label} (${t("trialItemsTab.testSuite")})`,
           type: columnType,
         }),
       ),
-      ...FILTER_COLUMNS,
+      ...getFilterColumns(t),
     ];
-  }, [dynamicDatasetColumns]);
+  }, [dynamicDatasetColumns, t]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -572,19 +578,20 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Evaluation task",
+        title: t("trialItemsTab.evaluationTask"),
         columns: outputColumnsData,
         order: outputColumnsOrder,
         onOrderChange: setOutputColumnsOrder,
       },
       {
-        title: "Optimizations scores",
+        title: t("trialItemsTab.optimizationScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
       },
     ];
   }, [
+    t,
     outputColumnsData,
     outputColumnsOrder,
     setOutputColumnsOrder,
@@ -630,13 +637,13 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
               size="sm"
             >
               <ToggleGroupItem value="all">
-                All ({allFlatRows.length})
+                {t("trialItemsTab.all")} ({allFlatRows.length})
               </ToggleGroupItem>
               <ToggleGroupItem value="passed">
-                Passed ({passedCount})
+                {t("trialItemsTab.passed")} ({passedCount})
               </ToggleGroupItem>
               <ToggleGroupItem value="failed">
-                Failed ({failedCount})
+                {t("trialItemsTab.failed")} ({failedCount})
               </ToggleGroupItem>
             </ToggleGroup>
           )}

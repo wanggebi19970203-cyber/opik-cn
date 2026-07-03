@@ -1,0 +1,104 @@
+---
+description: 从此处开始将 Opik 集成到基于 Mistral AI 的生成式 AI 应用中，实现端到端的
+  LLM 可观测性、单元测试和优化。
+headline: Mistral AI | Opik 文档
+og:description: 学习如何通过 LiteLLM 将 Mistral AI 与 Opik 集成，在项目中有效地跟踪和评估
+  API 调用。
+og:site_name: Opik 文档
+og:title: 将 Mistral AI 与 Opik 集成 - 简化您的工作流程
+title: 使用 Opik 实现 Mistral AI 可观测性
+---
+
+[Mistral AI](https://mistral.ai/) 提供前沿的大型语言模型，在文本生成、推理和代码生成等专业任务上具有出色性能。
+
+本指南介绍如何通过 LiteLLM 将 Opik 与 Mistral AI 集成。通过使用 Opik 提供的 LiteLLM 集成，您可以轻松地在 Opik 项目中跟踪和评估 Mistral API 调用，Opik 会自动记录输入提示词、使用的模型、token 用量和生成的响应。
+
+## 快速开始
+
+### 配置 Opik
+
+要开始跟踪您的 Mistral AI LLM 调用，您需要安装 `opik` 和 `litellm`。可以使用 pip 进行安装：
+
+```bash
+pip install opik litellm
+```
+
+此外，您可以使用 `opik configure` 命令配置 Opik，该命令会提示您输入正确的本地服务器地址，或者如果您使用云平台，则会提示您输入 API 密钥：
+
+```bash
+opik configure
+```
+
+### 配置 Mistral AI
+
+您需要将 Mistral AI API 密钥设置为环境变量：
+
+```bash
+export MISTRAL_API_KEY="YOUR_API_KEY"
+```
+
+## 记录 LLM 调用
+
+要将 LLM 调用记录到 Opik，您需要创建 OpikLogger 回调函数。创建 OpikLogger 回调并将其添加到 LiteLLM 后，您就可以像往常一样调用 LiteLLM：
+
+```python
+from litellm.integrations.opik.opik import OpikLogger
+import litellm
+
+opik_logger = OpikLogger()
+litellm.callbacks = [opik_logger]
+
+response = litellm.completion(
+    model="mistral/mistral-large-2407",
+    messages=[
+        {"role": "user", "content": "Why is tracking and evaluation of LLMs important?"}
+    ]
+)
+```
+
+## 在跟踪函数中记录 LLM 调用
+
+如果您在使用 [`@track`](/tracing/advanced/log_traces#using-function-decorators) 装饰器跟踪的函数中使用 LiteLLM，则需要将 `current_span_data` 作为元数据传递给 `litellm.completion` 调用：
+
+```python
+from opik import track, opik_context
+import litellm
+
+@track
+def generate_story(prompt):
+    response = litellm.completion(
+        model="mistral/mistral-large-2407",
+        messages=[{"role": "user", "content": prompt}],
+        metadata={
+            "opik": {
+                "current_span_data": opik_context.get_current_span_data(),
+            },
+        },
+    )
+    return response.choices[0].message.content
+
+
+@track
+def generate_topic():
+    prompt = "Generate a topic for a story about Opik."
+    response = litellm.completion(
+        model="mistral/mistral-medium-2312",
+        messages=[{"role": "user", "content": prompt}],
+        metadata={
+            "opik": {
+                "current_span_data": opik_context.get_current_span_data(),
+            },
+        },
+    )
+    return response.choices[0].message.content
+
+
+@track
+def generate_opik_story():
+    topic = generate_topic()
+    story = generate_story(topic)
+    return story
+
+
+generate_opik_story()
+```

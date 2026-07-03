@@ -1,0 +1,46 @@
+{
+  "messages": {
+    "success": {
+      "created": "创建成功",
+      "updated": "更新成功",
+      "deleted": "删除成功",
+      "saved": "保存成功",
+      "copied": "已复制到剪贴板",
+      "exported": "导出成功",
+      "imported": "导入成功",
+      "connected": "连接成功",
+      "sent": "发送成功"
+    },
+    "error": {
+      "generic": "发生错误",
+      "notFound": "资源未找到",
+      "unauthorized": "未授权访问",
+      "forbidden": "访问被拒绝",
+      "timeout": "请求超时",
+      "network": "网络错误",
+      "server": "服务器错误",
+      "validation": "验证错误",
+      "create": "创建失败",
+      "update": "更新失败",
+      "delete": "删除失败",
+      "save": "保存失败",
+      "load": "加载数据失败",
+      "copy": "复制失败",
+      "export": "导出失败",
+      "import": "导入失败",
+      "connect": "连接失败"
+    },
+    "warning": {
+      "unsavedChanges": "您有未保存的更改",
+      "limitReached": "已达到最大限制",
+      "slowConnection": "网络连接缓慢"
+    },
+    "info": {
+      "loading": "加载中...",
+      "saving": "保存中...",
+      "processing": "处理中...",
+      "noData": "暂无数据",
+      "noResults": "未找到结果"
+    }
+  }
+}

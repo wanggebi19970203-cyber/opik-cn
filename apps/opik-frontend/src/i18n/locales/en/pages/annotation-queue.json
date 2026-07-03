@@ -1,0 +1,118 @@
+{
+  "annotationQueue": {
+    "title": "Annotation queue",
+    "description": "Annotate data items",
+    "tabs": {
+      "queueItems": "Queue items",
+      "configuration": "Configuration"
+    },
+    "navigation": {
+      "goToTraces": "Go to traces",
+      "goToThreads": "Go to threads",
+      "viewAllTraces": "View all traces for this queue",
+      "viewAllThreads": "View all threads for this queue",
+      "goToProject": "Go to {{name}}",
+      "project": "Project",
+      "logs": "Logs"
+    },
+    "configuration": {
+      "loadingMessage": "Loading queue information",
+      "reviewers": {
+        "title": "Reviewers ({{count}})",
+        "columns": {
+          "reviewer": "Reviewer",
+          "progress": "Progress"
+        }
+      }
+    },
+    "copyLink": {
+      "toastTitle": "Annotation queue link copied to clipboard",
+      "toastDescription": "Share this queue with your annotators so they can start annotating and provide feedback to improve the evaluation of your LLM application.",
+      "tooltip": "Share annotation queue link",
+      "button": "Share"
+    },
+    "edit": {
+      "tooltip": "Edit annotation queue",
+      "button": "Edit"
+    },
+    "export": {
+      "noDataTitle": "No data to export",
+      "noDataDescription": "There are no items in the annotation queue to export.",
+      "failedTitle": "Export failed",
+      "fetchFailed": "Failed to fetch data for export",
+      "disabledTooltip": "Export functionality is disabled for this installation",
+      "tooltip": "Export annotated data",
+      "button": "Export queue",
+      "asCsv": "As CSV",
+      "asJson": "As JSON"
+    },
+    "openSME": {
+      "tooltip": "Start annotating",
+      "button": "Annotate"
+    },
+    "noItems": {
+      "titleTraces": "Add traces to your queue",
+      "titleThreads": "Add threads to your queue",
+      "descriptionTraces": "Your annotation queue is empty. Add traces from your project to start the annotation process and gather valuable feedback.",
+      "descriptionThreads": "Your annotation queue is empty. Add threads from your project to start the annotation process and gather valuable feedback.",
+      "readDocs": "Read documentation",
+      "goToTraces": "Go to traces",
+      "goToThreads": "Go to threads"
+    },
+    "queueItemActions": {
+      "removeFromQueue": "Remove from queue",
+      "removeDescription": "Removing annotation queue items will remove them from the queue. This action can't be undone. Are you sure you want to continue?",
+      "removeItems": "Remove items",
+      "removeItem": "Remove item",
+      "removeSelectedTooltip": "Remove selected items from queue",
+      "actionsMenu": "Actions menu"
+    },
+    "search": {
+      "byId": "Search by ID"
+    },
+    "emptyState": {
+      "noItemsToReview": "No items to review",
+      "addTracesDescription": "Add traces to this queue to start annotating.",
+      "addThreadsDescription": "Add threads to this queue to start annotating."
+    },
+    "columns": {
+      "firstMessage": "First message",
+      "lastMessage": "Last message",
+      "messageCount": "Message count",
+      "createdAt": "Created at",
+      "lastUpdated": "Last updated",
+      "duration": "Duration",
+      "tags": "Tags",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "totalTokens": "Total tokens",
+      "estimatedCost": "Estimated cost",
+      "createdBy": "Created by",
+      "comments": "Comments",
+      "feedbackScores": "Feedback scores",
+      "name": "Name",
+      "input": "Input",
+      "output": "Output",
+      "metadata": "Metadata",
+      "totalInputTokens": "Total input tokens",
+      "totalOutputTokens": "Total output tokens",
+      "llmCallsCount": "LLM calls count",
+      "threadId": "Thread ID",
+      "errors": "Errors"
+    },
+    "filters": {
+      "selectScore": "Select score"
+    },
+    "columnSections": {
+      "feedbackScores": "Feedback scores"
+    },
+    "actions": {
+      "annotate": "Annotate",
+      "skip": "Skip",
+      "submit": "Submit"
+    },
+    "empty": {
+      "noSearchResults": "No search results"
+    }
+  }
+}

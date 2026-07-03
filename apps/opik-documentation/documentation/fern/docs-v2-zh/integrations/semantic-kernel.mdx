@@ -1,0 +1,202 @@
+---
+description: 开始将 Opik 集成到基于 Semantic Kernel 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Semantic Kernel | Opik 文档
+og:description: 利用 Semantic Kernel 将 LLM 与 C# 和 Python 等语言集成，快速开发企业级 AI 解决方案。
+og:site_name: Opik 文档
+og:title: 使用 Semantic Kernel 构建 AI 应用 - Opik
+title: Semantic Kernel (Python) 的可观测性 - Opik
+---
+
+[Semantic Kernel](https://github.com/microsoft/semantic-kernel) 是微软推出的强大开源 SDK。它支持将 LLM 与 C#、Python 和 Java 等主流编程语言结合使用。Semantic Kernel 使开发者能够通过无缝集成 AI 服务、数据源和自定义逻辑来构建复杂的 AI 应用，加速企业级 AI 解决方案的交付。
+
+了解更多关于 Semantic Kernel 的信息，请访问[官方文档](https://learn.microsoft.com/en-us/semantic-kernel/overview/)。
+
+![Semantic Kernel 集成](/img/tracing/semantic_kernel_integration.png)
+
+## 快速开始
+
+要使用 Opik 的 Semantic Kernel 集成，需要安装 Semantic Kernel 和必要的 OpenTelemetry 包：
+
+```bash
+pip install semantic-kernel opentelemetry-exporter-otlp-proto-http
+```
+
+## 环境配置
+
+根据您的 Opik 部署方式配置环境变量：
+
+<Tabs>
+    <Tab value="Opik Cloud" title="Opik Cloud">
+        如果您使用 Opik Cloud，需要设置以下环境变量：
+            
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://www.comet.com/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果需要将数据记录到不同的工作空间，也可以修改 `Comet-Workspace` 参数的值。
+        </Tip>
+    </Tab>
+    <Tab value="企业部署" title="企业部署">
+        如果您使用 Opik 企业部署版本，需要设置以下环境变量：
+
+        ```bash wordWrap
+        export OTEL_EXPORTER_OTLP_ENDPOINT=https://<comet-deployment-url>/opik/api/v1/private/otel
+        export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default'
+        ```
+
+        <Tip>
+            要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS`
+            环境变量中添加 `projectName` 参数：
+
+            ```bash wordWrap
+            export OTEL_EXPORTER_OTLP_HEADERS='Authorization=<your-api-key>,Comet-Workspace=default,projectName=<your-project-name>'
+            ```
+
+            如果需要将数据记录到不同的工作空间，也可以修改 `Comet-Workspace` 参数的值。
+        </Tip>
+    </Tab>
+    <Tab value="自托管实例" title="自托管实例">
+
+    如果您使用自托管 Opik，需要设置以下环境变量：
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:5173/api/v1/private/otel
+    ```
+
+    <Tip>
+        要将追踪记录到特定项目，可以在 `OTEL_EXPORTER_OTLP_HEADERS` 环境变量中添加 `projectName` 参数：
+
+        ```bash
+        export OTEL_EXPORTER_OTLP_HEADERS='projectName=<your-project-name>'
+        ```
+
+    </Tip>
+    </Tab>
+
+</Tabs>
+
+## 在 Semantic Kernel 中使用 Opik
+
+<Warning>
+**重要提示：** 默认情况下，Semantic Kernel 不会为 AI 连接器生成 span，因为它们包含实验性的 `gen_ai` 属性。您**必须**设置以下环境变量之一来启用遥测：
+
+- `SEMANTICKERNEL_EXPERIMENTAL_GENAI_ENABLE_OTEL_DIAGNOSTICS_SENSITIVE=true` - 包含**敏感数据**（提示词和完成内容）
+- `SEMANTICKERNEL_EXPERIMENTAL_GENAI_ENABLE_OTEL_DIAGNOSTICS=true` - **仅非敏感数据**（模型名称、操作名称、token 使用量）
+
+如果不设置这些变量，将不会生成任何 AI 连接器 span。
+
+详情请参阅[微软 Semantic Kernel 环境变量文档](https://learn.microsoft.com/en-us/semantic-kernel/concepts/enterprise-readiness/observability/telemetry-with-console?tabs=Powershell-CreateFile%2CEnvironmentFile&pivots=programming-language-python#environment-variables)。
+</Warning>
+
+Semantic Kernel 内置 OpenTelemetry 支持。启用遥测并配置 OTLP 导出器：
+
+```python
+import asyncio
+import os
+
+# 必需：启用 Semantic Kernel 诊断
+# 选项 1：包含敏感数据（提示词和完成内容）
+os.environ["SEMANTICKERNEL_EXPERIMENTAL_GENAI_ENABLE_OTEL_DIAGNOSTICS_SENSITIVE"] = (
+    "true"
+)
+
+# 选项 2：隐藏敏感数据（提示词和完成内容）
+# os.environ["SEMANTICKERNEL_EXPERIMENTAL_GENAI_ENABLE_OTEL_DIAGNOSTICS"] = "true"
+
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.trace import set_tracer_provider
+from semantic_kernel import Kernel
+from semantic_kernel.connectors.ai.function_choice_behavior import (
+    FunctionChoiceBehavior,
+)
+from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
+from semantic_kernel.connectors.ai.prompt_execution_settings import (
+    PromptExecutionSettings,
+)
+from semantic_kernel.functions.kernel_arguments import KernelArguments
+from semantic_kernel.functions.kernel_function_decorator import kernel_function
+
+
+class BookingPlugin:
+    @kernel_function(
+        name="find_available_rooms",
+        description="查找今天可用的会议室。",
+    )
+    def find_available_rooms(
+        self,
+    ) -> list[str]:
+        return ["Room 101", "Room 201", "Room 301"]
+
+    @kernel_function(
+        name="book_room",
+        description="预订会议室。",
+    )
+    def book_room(self, room: str) -> str:
+        return f"Room {room} booked."
+
+
+def set_up_tracing():
+    # 创建资源以表示服务/样本
+    resource = Resource.create(
+        {ResourceAttributes.SERVICE_NAME: "semantic-kernel-app"}
+    )
+
+    exporter = OTLPSpanExporter()
+
+    # 初始化追踪提供程序。这是创建追踪器的工厂。
+    tracer_provider = TracerProvider(resource=resource)
+    # Span 处理器使用导出器初始化，负责将遥测数据发送到特定后端。
+    tracer_provider.add_span_processor(BatchSpanProcessor(exporter))
+    # 设置全局默认追踪提供程序
+    set_tracer_provider(tracer_provider)
+
+
+# 必须在任何其他遥测调用之前执行
+set_up_tracing()
+
+
+async def main():
+    # 创建内核并添加服务
+    kernel = Kernel()
+    kernel.add_service(OpenAIChatCompletion(ai_model_id="gpt-4.1"))
+    kernel.add_plugin(BookingPlugin(), "BookingPlugin")
+
+    answer = await kernel.invoke_prompt(
+        "为我今天预订一个会议室。",
+        arguments=KernelArguments(
+            settings=PromptExecutionSettings(
+                function_choice_behavior=FunctionChoiceBehavior.Auto(),
+            ),
+        ),
+    )
+    print(answer)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+<Tip>
+**环境变量选择指南：**
+
+- 如果需要完整的 LLM 交互可见性（包括实际的提示词和响应），请使用 `SEMANTICKERNEL_EXPERIMENTAL_GENAI_ENABLE_OTEL_DIAGNOSTICS_SENSITIVE=true`。这在调试和开发阶段非常有用。
+
+- 在生产环境中，如果需要避免记录敏感数据但仍需捕获 token 使用量、模型名称和操作性能等重要指标，请使用 `SEMANTICKERNEL_EXPERIMENTAL_GENAI_ENABLE_OTEL_DIAGNOSTICS=true`。
+</Tip>
+
+## 进一步改进
+
+如果您对 Semantic Kernel 集成有任何疑问或改进建议，请在我们的 GitHub 仓库[提交 issue](https://github.com/comet-ml/opik/issues/new/choose)。
