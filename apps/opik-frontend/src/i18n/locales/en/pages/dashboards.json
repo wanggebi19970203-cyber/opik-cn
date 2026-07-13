@@ -216,6 +216,29 @@
       "averageEstimatedCostPerSpan": "Average estimated cost per span"
     }
   },
+  "metricsLabels": {
+    "p50Duration": "P50 duration",
+    "p90Duration": "P90 duration",
+    "p99Duration": "P99 duration",
+    "totalInputCount": "Total input count",
+    "totalOutputCount": "Total output count",
+    "totalMetadataCount": "Total metadata count",
+    "averageNumberOfTags": "Average number of tags",
+    "totalEstimatedCostSum": "Total estimated cost",
+    "avgOutputTokens": "Average output tokens",
+    "avgInputTokens": "Average input tokens",
+    "avgTotalTokens": "Average total tokens",
+    "totalErrorCount": "Total error count",
+    "totalTraceCount": "Total trace count",
+    "totalThreadCount": "Total thread count",
+    "averageLlmSpanCount": "Average LLM span count",
+    "averageSpanCount": "Average span count",
+    "averageEstimatedCostPerTrace": "Average estimated cost per trace",
+    "totalGuardrailsFailedCount": "Total guardrails failed count",
+    "totalSpanCount": "Total span count",
+    "averageEstimatedCostPerSpan": "Average estimated cost per span",
+    "averageScore": "Average {{name}}"
+  },
   "metrics": {
     "projectMetrics": "Project metrics",
     "traceMetrics": "Trace metrics",
@@ -316,6 +339,19 @@
   "chart": {
     "noDataToShow": "No data to show",
     "total": "Total"
+  },
+  "chartSeries": {
+    "traces": "Traces",
+    "threads": "Threads",
+    "spans": "Spans",
+    "cost": "Cost",
+    "durationP50": "P50 duration",
+    "durationP90": "P90 duration",
+    "durationP99": "P99 duration",
+    "outputTokens": "Output tokens",
+    "inputTokens": "Input tokens",
+    "totalTokens": "Total tokens",
+    "failedGuardrails": "Failed guardrails"
   },
   "chartUtils": {
     "percentile50": "Percentile 50",

@@ -2,6 +2,11 @@
   "logs": {
     "title": "日志",
     "description": "查看和分析追踪与跨度",
+    "tabs": {
+      "threads": "线程",
+      "traces": "追踪",
+      "spans": "跨度"
+    },
     "empty": {
       "title": "暂无追踪",
       "description": "当您的Agent开始接收请求后，追踪将显示在这里。"
@@ -12,13 +17,15 @@
       "status": "状态",
       "duration": "时长",
       "startTime": "开始时间",
+      "endTime": "结束时间",
       "feedbackScores": "反馈分数"
     },
     "actions": {
       "view": "查看追踪",
       "copyId": "复制追踪ID",
       "addToDataset": "添加到数据集",
-      "addToQueue": "添加到队列"
+      "addToQueue": "添加到队列",
+      "setGuardrail": "设置护栏"
     },
     "filters": {
       "search": "搜索追踪",
@@ -72,6 +79,7 @@
         "input": "输入",
         "output": "输出",
         "errors": "错误",
+        "environment": "环境",
         "totalTokens": "总Token数",
         "totalInputTokens": "总输入Token数",
         "totalOutputTokens": "总输出Token数",
@@ -92,6 +100,7 @@
         "searchOutput": "搜索输出",
         "searchName": "搜索名称",
         "withErrors": "包含错误",
+        "type": "类型",
         "traceName": "追踪名称",
         "spanName": "跨度名称",
         "traceId": "追踪ID",

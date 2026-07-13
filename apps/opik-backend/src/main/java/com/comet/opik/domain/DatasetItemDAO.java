@@ -1272,6 +1272,336 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                 statement.bind("dataset_id", datasetId.toString());
 
                 // 如果提供了过滤器参数则绑定
+                if (CollectionUtils.isNotEmpty(filters)) {
+                    filterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
+                }
+            }
+
+            String segmentOperation = hasIds ? "delete_dataset_items" : "delete_dataset_items_by_filters";
+            Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, segmentOperation);
+
+            String successMessage = hasIds
+                    ? "Completed delete for '%s' dataset items".formatted(ids.size())
+                    : "Completed delete for dataset items matching filters";
+
+            return Flux.from(statement.execute())
+                    .flatMap(Result::getRowsUpdated)
+                    .reduce(0L, Long::sum)
+                    .doFinally(signalType -> endSegment(segment))
+                    .doOnSuccess(__ -> log.info(successMessage));
+        }));
+    }
+
+    private ST newFindTemplate(String query, DatasetItemSearchCriteria datasetItemSearchCriteria, String queryName,
+            String workspaceId) {
+        var template = getSTWithLogComment(query, queryName, workspaceId, "", "");
+
+        Optional.ofNullable(datasetItemSearchCriteria.filters())
+                .ifPresent(filters -> {
+                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM)
+                            .ifPresent(datasetItemFilters -> template.add("dataset_item_filters", datasetItemFilters));
+
+                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.EXPERIMENT_ITEM)
+                            .ifPresent(experimentItemFilters -> template.add("experiment_item_filters",
+                                    experimentItemFilters));
+
+                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.FEEDBACK_SCORES)
+                            .ifPresent(scoresFilters -> template.add("feedback_scores_filters", scoresFilters));
+
+                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.FEEDBACK_SCORES_IS_EMPTY)
+                            .ifPresent(feedbackScoreIsEmptyFilters -> template.add("feedback_scores_empty_filters",
+                                    feedbackScoreIsEmptyFilters));
+                });
+
+        Optional.ofNullable(datasetItemSearchCriteria.search())
+                .filter(s -> !s.isBlank())
+                .ifPresent(searchText -> template.add("search_filter",
+                        filterQueryBuilder.buildDatasetItemSearchFilter(searchText)));
+
+        return template;
+    }
+
+    private void bindSearchCriteria(DatasetItemSearchCriteria datasetItemSearchCriteria, Statement statement) {
+        Optional.ofNullable(datasetItemSearchCriteria.filters())
+                .ifPresent(filters -> {
+                    filterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
+                    filterQueryBuilder.bind(statement, filters, FilterStrategy.EXPERIMENT_ITEM);
+                    filterQueryBuilder.bind(statement, filters, FilterStrategy.FEEDBACK_SCORES);
+                    filterQueryBuilder.bind(statement, filters, FilterStrategy.FEEDBACK_SCORES_IS_EMPTY);
+                });
+
+        Optional.ofNullable(datasetItemSearchCriteria.search())
+                .filter(s -> !s.isBlank())
+                .ifPresent(searchText -> filterQueryBuilder.bindSearchTerms(statement, searchText));
+    }
+
+    @Override
+    @WithSpan
+    public Mono<DatasetItemPage> getItems(
+            @NonNull DatasetItemSearchCriteria datasetItemSearchCriteria, int page, int size) {
+
+        boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
+
+        String query = hasExperimentIds ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS : SELECT_DATASET_ITEMS;
+        String summarySegmentName = hasExperimentIds
+                ? "select_dataset_items_experiments_filters_summary"
+                : "select_dataset_items_filters_summary";
+        String contentSegmentName = hasExperimentIds
+                ? "select_dataset_items_experiments_filters"
+                : "select_dataset_items_filters";
+
+        Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, summarySegmentName);
+
+        Mono<Set<Column>> columnsMono = mapColumnsField(datasetItemSearchCriteria);
+        Mono<Long> countMono = getCount(datasetItemSearchCriteria);
+
+        return Mono.zip(countMono, columnsMono)
+                .doFinally(signalType -> endSegment(segment))
+                .flatMap(results -> asyncTemplate
+                        .nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
+
+                            Segment segmentContent = startSegment(DATASET_ITEMS, CLICKHOUSE, contentSegmentName);
+
+                            var selectTemplate = newFindTemplate(query, datasetItemSearchCriteria, contentSegmentName,
+                                    workspaceId);
+                            selectTemplate = ImageUtils.addTruncateToTemplate(selectTemplate,
+                                    datasetItemSearchCriteria.truncate());
+                            selectTemplate = selectTemplate.add("truncationSize",
+                                    configuration.getResponseFormatting().getTruncationSize());
+
+                            var finalTemplate = selectTemplate;
+                            var itemFieldMapping = datasetItemSearchCriteria.sortingFields() != null
+                                    ? filterQueryBuilder
+                                            .buildDatasetItemFieldMapping(datasetItemSearchCriteria.sortingFields())
+                                    : null;
+
+                            if (datasetItemSearchCriteria.sortingFields() != null) {
+                                Optional.ofNullable(
+                                        sortingQueryBuilder.toOrderBySql(datasetItemSearchCriteria.sortingFields(),
+                                                itemFieldMapping))
+                                        .ifPresent(sortFields -> {
+                                            // feedback_scores 已在外层查询通过 argMax(tfs.feedback_scores, ei.created_at) 暴露。
+                                            finalTemplate.add("sort_fields", sortFields);
+                                        });
+                            }
+
+                            var hasDynamicKeys = datasetItemSearchCriteria.sortingFields() != null
+                                    && sortingQueryBuilder.hasDynamicKeys(datasetItemSearchCriteria.sortingFields(),
+                                            itemFieldMapping);
+
+                            var selectStatement = connection.createStatement(finalTemplate.render())
+                                    .bind("datasetId", datasetItemSearchCriteria.datasetId())
+                                    .bind("limit", size)
+                                    .bind("offset", (page - 1) * size)
+                                    .bind("workspace_id", workspaceId);
+
+                            if (hasExperimentIds) {
+                                selectStatement = selectStatement.bind("experimentIds",
+                                        datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new))
+                                        .bind("entityType", datasetItemSearchCriteria.entityType().getType());
+                            }
+
+                            if (hasDynamicKeys) {
+                                selectStatement = sortingQueryBuilder.bindDynamicKeys(selectStatement,
+                                        datasetItemSearchCriteria.sortingFields(), itemFieldMapping);
+                            }
+
+                            bindSearchCriteria(datasetItemSearchCriteria, selectStatement);
+
+                            Long total = results.getT1();
+                            Set<Column> columns = results.getT2();
+
+                            return Flux.from(selectStatement.execute())
+                                    .doFinally(signalType -> endSegment(segmentContent))
+                                    .flatMap(DatasetItemResultMapper::mapItem)
+                                    .collectList()
+                                    .onErrorResume(e -> handleSqlError(e, List.of()))
+                                    .flatMap(
+                                            items -> Mono
+                                                    .just(new DatasetItemPage(items, page, items.size(), total, columns,
+                                                            sortingFactory.getSortableFields())));
+                        })));
+    }
+
+    private Mono<Long> getCount(DatasetItemSearchCriteria datasetItemSearchCriteria) {
+        boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
+        String countQuery = hasExperimentIds
+                ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_COUNT
+                : SELECT_DATASET_ITEMS_COUNT;
+
+        Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, "select_dataset_items_filters_columns");
+
+        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
+
+            var countTemplate = newFindTemplate(countQuery, datasetItemSearchCriteria, "get_count", workspaceId);
+
+            var statement = connection.createStatement(countTemplate.render())
+                    .bind("datasetId", datasetItemSearchCriteria.datasetId())
+                    .bind("workspace_id", workspaceId);
+
+            if (hasExperimentIds) {
+                statement = statement.bind("experimentIds",
+                        datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new));
+            }
+
+            bindSearchCriteria(datasetItemSearchCriteria, statement);
+
+            return Flux.from(statement.execute())
+                    .flatMap(DatasetItemResultMapper::mapCount)
+                    .reduce(0L, Long::sum)
+                    .onErrorResume(e -> handleSqlError(e, 0L))
+                    .doFinally(signalType -> endSegment(segment));
+        }));
+    }
+
+    private Mono<Set<Column>> mapColumnsField(DatasetItemSearchCriteria datasetItemSearchCriteria) {
+        Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, "select_dataset_items_filters_columns");
+
+        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
+            var template = getSTWithLogComment(SELECT_DATASET_ITEMS_COLUMNS_BY_DATASET_ID, "map_columns_field",
+                    workspaceId, userName, "");
+            return Mono.from(connection.createStatement(template.render())
+                    .bind("datasetId", datasetItemSearchCriteria.datasetId())
+                    .bind("workspace_id", workspaceId)
+                    .execute())
+                    .flatMap(result -> DatasetItemResultMapper.mapColumns(result, "data"));
+        }))
+                .doFinally(signalType -> endSegment(segment));
+    }
+
+    private <T> Mono<T> handleSqlError(Throwable e, T defaultValue) {
+        // 用户提供的非法 JSON path 会被 ClickHouse 拒绝；这里按空结果处理。
+        if (ErrorUtils.isMalformedJsonPath(e)) {
+            return Mono.just(defaultValue);
+        }
+        return Mono.error(e);
+    }
+
+    @Override
+    @WithSpan
+    public Mono<com.comet.opik.api.ProjectStats> getExperimentItemsStats(
+            @NonNull UUID datasetId,
+            @NonNull Set<UUID> experimentIds,
+            List<ExperimentsComparisonFilter> filters) {
+        log.info("Getting experiment items stats for dataset '{}' and experiments '{}' with filters '{}'", datasetId,
+                experimentIds, filters);
+
+        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
+            var template = getSTWithLogComment(SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_STATS,
+                    "get_experiment_items_stats", workspaceId, userName, experimentIds.size());
+            template.add("dataset_id", datasetId);
+            if (!experimentIds.isEmpty()) {
+                template.add("experiment_ids", true);
+            }
+
+            applyFiltersToTemplate(template, filters);
+
+            String sql = template.render();
+            log.debug("Experiment items stats query: '{}'", sql);
+
+            Statement statement = connection.createStatement(sql)
+                    .bind("workspace_id", workspaceId);
+            bindStatementParameters(statement, datasetId, experimentIds, filters);
+
+            return Flux.from(statement.execute())
+                    .flatMap(result -> Flux.from(result.map(
+                            (row, rowMetadata) -> com.comet.opik.domain.stats.StatsMapper
+                                    .mapExperimentItemsStats(row))))
+                    .singleOrEmpty();
+        }))
+                .doOnError(error -> log.error("Failed to get experiment items stats", error));
+    }
+
+    private void applyFiltersToTemplate(ST template, List<ExperimentsComparisonFilter> filters) {
+        Optional.ofNullable(filters)
+                .ifPresent(filtersParam -> {
+                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.EXPERIMENT_ITEM)
+                            .ifPresent(experimentItemFilters -> template.add("experiment_item_filters",
+                                    experimentItemFilters));
+
+                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES)
+                            .ifPresent(feedbackScoresFilters -> template.add("feedback_scores_filters",
+                                    feedbackScoresFilters));
+
+                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES_IS_EMPTY)
+                            .ifPresent(feedbackScoresEmptyFilters -> template.add("feedback_scores_empty_filters",
+                                    feedbackScoresEmptyFilters));
+
+                    filterQueryBuilder.toAnalyticsDbFilters(filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.DATASET_ITEM)
+                            .ifPresent(datasetItemFilters -> template.add("dataset_item_filters",
+                                    datasetItemFilters));
+                });
+    }
+
+    private void bindStatementParameters(Statement statement, UUID datasetId, Set<UUID> experimentIds,
+            List<ExperimentsComparisonFilter> filters) {
+        statement.bind("dataset_id", datasetId);
+        if (!experimentIds.isEmpty()) {
+            statement.bind("experiment_ids", experimentIds.toArray(UUID[]::new));
+        }
+
+        Optional.ofNullable(filters)
+                .ifPresent(filtersParam -> {
+                    filterQueryBuilder.bind(statement, filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.EXPERIMENT_ITEM);
+                    filterQueryBuilder.bind(statement, filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES);
+                    filterQueryBuilder.bind(statement, filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.FEEDBACK_SCORES_IS_EMPTY);
+                    filterQueryBuilder.bind(statement, filtersParam,
+                            com.comet.opik.domain.filter.FilterStrategy.DATASET_ITEM);
+                });
+    }
+
+    @Override
+    @WithSpan
+    public Mono<Void> bulkUpdate(Set<UUID> ids, UUID datasetId, List<DatasetItemFilter> filters,
+            @NonNull com.comet.opik.api.DatasetItemUpdate update, boolean mergeTags) {
+        boolean hasIds = CollectionUtils.isNotEmpty(ids);
+        // 空过滤器数组表示选中全部条目，null 表示未提供过滤器
+        boolean hasFilters = filters != null;
+
+        Preconditions.checkArgument(hasIds || hasFilters, "Either ids or filters must be provided");
+
+        if (hasIds) {
+            log.info("Bulk updating '{}' dataset items by IDs", ids.size());
+        } else {
+            log.info("Bulk updating dataset items by filters for dataset '{}'", datasetId);
+        }
+
+        return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
+            var template = newBulkUpdateTemplate(update, BULK_UPDATE, mergeTags, "bulk_update", workspaceId);
+
+            // 添加 ids 或过滤器到模板
+            if (hasIds) {
+                template.add("ids", true);
+            } else {
+                // 使用过滤器时需要 dataset_id
+                template.add("dataset_id", true);
+                filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM)
+                        .ifPresent(datasetItemFilters -> template.add("dataset_item_filters", datasetItemFilters));
+            }
+
+            var query = template.render();
+            var statement = connection.createStatement(query)
+                    .bind("user_name", userName)
+                    .bind("workspace_id", workspaceId);
+
+            // 如果提供了 ids 则绑定
+            if (hasIds) {
+                statement.bind("ids", ids);
+            } else {
+                // 使用过滤器时绑定 dataset_id
+                statement.bind("dataset_id", datasetId);
+            }
+
+            bindBulkUpdateParams(update, statement);
+
+            // 如果提供了过滤器参数则绑定
             if (hasFilters) {
                 filterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
             }

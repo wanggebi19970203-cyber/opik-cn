@@ -14,7 +14,7 @@ import {
   getRangePreset,
   customDayClick,
 } from "./utils";
-import { PRESET_DATE_RANGES, PRESET_LABEL_MAP } from "./constants";
+import { PRESET_DATE_RANGES, PRESET_LABEL_KEY_MAP } from "./constants";
 import {
   DateRangeSelectContext,
   useDateRangeSelectContext,
@@ -26,9 +26,11 @@ type PresetOptionProps = {
 };
 
 const PresetOption: React.FC<PresetOptionProps> = ({ value, className }) => {
+  const { t } = useTranslation();
+
   return (
     <SelectItem value={value} className={cn("text-sm font-normal", className)}>
-      {PRESET_LABEL_MAP[value]}
+      {t(PRESET_LABEL_KEY_MAP[value])}
     </SelectItem>
   );
 };
@@ -122,6 +124,7 @@ type TriggerProps = {
 };
 
 const Trigger: React.FC<TriggerProps> = ({ className }) => {
+  const { t } = useTranslation();
   const { value } = useDateRangeSelectContext();
 
   const displayText = React.useMemo(() => {
@@ -131,8 +134,8 @@ const Trigger: React.FC<TriggerProps> = ({ className }) => {
       return getRangeDatesText(value);
     }
 
-    return PRESET_LABEL_MAP[appliedPreset];
-  }, [value]);
+    return t(PRESET_LABEL_KEY_MAP[appliedPreset]);
+  }, [t, value]);
 
   return (
     <SelectTrigger className={cn("w-auto min-w-40 h-8", className)}>

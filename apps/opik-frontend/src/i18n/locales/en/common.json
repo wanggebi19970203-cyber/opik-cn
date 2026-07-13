@@ -423,7 +423,15 @@
     },
     "dateRange": {
       "customDates": "Custom dates",
-      "selectDateRange": "Select date range"
+      "selectDateRange": "Select date range",
+      "presets": {
+        "past24hours": "Past 24 hours",
+        "past3days": "Past 3 days",
+        "past7days": "Past 7 days",
+        "past30days": "Past 30 days",
+        "past60days": "Past 60 days",
+        "alltime": "All time"
+      }
     },
     "dashboard": {
       "textWidget": "Text",
@@ -434,7 +442,35 @@
       "metricsPlural": "metrics",
       "selectedExperiments": "Selected experiments",
       "filtered": "Filtered",
-      "groupedBy": "grouped by"
+      "groupedBy": "grouped by",
+      "templates": {
+        "experimentComparison": {
+          "name": "Experiment comparison",
+          "description": "Compare experiment results, metrics, and feedback scores.",
+          "experimentFeedbackScores": "Experiment feedback scores",
+          "feedbackScores": "Feedback scores",
+          "feedbackScoresDistribution": "Feedback scores distribution"
+        },
+        "projectOverview": {
+          "name": "Project overview",
+          "description": "View project volume, latency, cost, and quality.",
+          "atAGlance": "At a glance",
+          "traces": "Traces",
+          "errors": "Errors",
+          "latencyP50": "Latency P50",
+          "latencyP99": "Latency P99",
+          "cost": "Cost",
+          "volumeLatencyCost": "Volume, latency, and cost",
+          "traceVolume": "Trace volume",
+          "traceDuration": "Trace duration",
+          "estimatedCost": "Estimated cost",
+          "qualityConversations": "Quality and conversations",
+          "traceFeedbackScores": "Trace feedback scores",
+          "threadVolume": "Thread volume",
+          "threadDuration": "Thread duration",
+          "threadFeedbackScores": "Thread feedback scores"
+        }
+      }
     },
     "feedbackScoresList": {
       "feedbackScores": "Feedback scores"

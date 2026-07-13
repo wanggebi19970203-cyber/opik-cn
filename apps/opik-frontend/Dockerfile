@@ -8,6 +8,7 @@ COPY patches ./patches
 RUN npm ci
 # Copy and build the application
 COPY . .
+RUN mkdir -p public/locales && cp -R src/i18n/locales/. public/locales/
 
 ARG OPIK_VERSION
 ARG SENTRY_ENABLED

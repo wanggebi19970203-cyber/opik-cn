@@ -216,6 +216,29 @@
       "averageEstimatedCostPerSpan": "每个Span平均估算成本"
     }
   },
+  "metricsLabels": {
+    "p50Duration": "P50 持续时间",
+    "p90Duration": "P90 持续时间",
+    "p99Duration": "P99 持续时间",
+    "totalInputCount": "输入总数",
+    "totalOutputCount": "输出总数",
+    "totalMetadataCount": "元数据总数",
+    "averageNumberOfTags": "平均标签数",
+    "totalEstimatedCostSum": "总估算成本",
+    "avgOutputTokens": "平均输出 Token 数",
+    "avgInputTokens": "平均输入 Token 数",
+    "avgTotalTokens": "平均总 Token 数",
+    "totalErrorCount": "错误总数",
+    "totalTraceCount": "追踪总数",
+    "totalThreadCount": "线程总数",
+    "averageLlmSpanCount": "平均 LLM 跨度数",
+    "averageSpanCount": "平均跨度数",
+    "averageEstimatedCostPerTrace": "每条追踪平均估算成本",
+    "totalGuardrailsFailedCount": "护栏失败总数",
+    "totalSpanCount": "跨度总数",
+    "averageEstimatedCostPerSpan": "每个跨度平均估算成本",
+    "averageScore": "平均{{name}}"
+  },
   "metrics": {
     "projectMetrics": "项目指标",
     "traceMetrics": "Trace指标",
@@ -316,6 +339,19 @@
   "chart": {
     "noDataToShow": "暂无数据",
     "total": "总计"
+  },
+  "chartSeries": {
+    "traces": "追踪数",
+    "threads": "线程数",
+    "spans": "跨度数",
+    "cost": "成本",
+    "durationP50": "P50 持续时间",
+    "durationP90": "P90 持续时间",
+    "durationP99": "P99 持续时间",
+    "outputTokens": "输出 Token 数",
+    "inputTokens": "输入 Token 数",
+    "totalTokens": "总 Token 数",
+    "failedGuardrails": "护栏失败数"
   },
   "chartUtils": {
     "percentile50": "第50百分位",

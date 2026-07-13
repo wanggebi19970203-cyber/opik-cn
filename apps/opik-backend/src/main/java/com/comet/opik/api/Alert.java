@@ -54,7 +54,7 @@ public record Alert(
         @JsonView({
                 Alert.View.Public.class}) @Schema(accessMode = Schema.AccessMode.READ_ONLY) String lastUpdatedBy,
         @JsonView({Alert.View.Public.class,
-                Alert.View.Write.class})         @Schema(description = """
+                Alert.View.Write.class}) @Schema(description = """
                         此告警的可选项目范围。 \
                         设置后，告警将限定在指定项目内。 \
                         请勿同时提供 'scope:project' 触发器配置——系统会根据此字段自动创建。 \

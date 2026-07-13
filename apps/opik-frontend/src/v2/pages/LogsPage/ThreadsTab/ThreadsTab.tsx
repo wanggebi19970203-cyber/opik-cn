@@ -393,9 +393,15 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
         t("logs.columns.startTime").split(" ")[0],
         "End",
       ),
-      total_tokens: t("logs.threads.columns.totalTokens"),
-      prompt_tokens: t("logs.threads.columns.totalInputTokens"),
-      completion_tokens: t("logs.threads.columns.totalOutputTokens"),
+      [`${COLUMN_USAGE_ID}.total_tokens`]: t(
+        "logs.threads.columns.totalTokens",
+      ),
+      [`${COLUMN_USAGE_ID}.prompt_tokens`]: t(
+        "logs.threads.columns.totalInputTokens",
+      ),
+      [`${COLUMN_USAGE_ID}.completion_tokens`]: t(
+        "logs.threads.columns.totalOutputTokens",
+      ),
       total_estimated_cost: t("logs.threads.columns.estimatedCost"),
       created_by: t("logs.threads.columns.createdBy"),
       comments: t("logs.threads.columns.comments"),

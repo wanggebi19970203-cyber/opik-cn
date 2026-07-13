@@ -25,7 +25,7 @@ import { LOGS_SOURCE } from "@/types/traces";
 import useAppStore from "@/store/AppStore";
 import { CHART_TYPE } from "@/constants/chart";
 import {
-  INTERVAL_DESCRIPTIONS,
+  getIntervalDescriptions,
   renderDurationTooltipValue,
   durationYTickFormatter,
   renderCostTooltipValue,
@@ -203,6 +203,30 @@ const ProjectMetricsWidget: React.FunctionComponent<
     usageMetrics,
   ]);
 
+  const chartLabelsMap = useMemo(() => {
+    if (effectiveBreakdown) return undefined;
+
+    return {
+      traces: t("chartSeries.traces"),
+      threads: t("chartSeries.threads"),
+      spans: t("chartSeries.spans"),
+      cost: t("chartSeries.cost"),
+      "duration.p50": t("chartSeries.durationP50"),
+      "duration.p90": t("chartSeries.durationP90"),
+      "duration.p99": t("chartSeries.durationP99"),
+      "thread_duration.p50": t("chartSeries.durationP50"),
+      "thread_duration.p90": t("chartSeries.durationP90"),
+      "thread_duration.p99": t("chartSeries.durationP99"),
+      "span_duration.p50": t("chartSeries.durationP50"),
+      "span_duration.p90": t("chartSeries.durationP90"),
+      "span_duration.p99": t("chartSeries.durationP99"),
+      completion_tokens: t("chartSeries.outputTokens"),
+      prompt_tokens: t("chartSeries.inputTokens"),
+      total_tokens: t("chartSeries.totalTokens"),
+      failed: t("chartSeries.failedGuardrails"),
+    };
+  }, [effectiveBreakdown, t]);
+
   const filterLineCallback = useCallback(
     (lineName: string) => {
       // When breakdown is applied, the line names are group names (e.g., tag values),
@@ -258,7 +282,7 @@ const ProjectMetricsWidget: React.FunctionComponent<
 
       const entityType = getMetricEntityType(metricName);
 
-      const         entityConfig = {
+      const entityConfig = {
         span: {
           logsType: LOGS_TYPE.spans,
           filtersKey: "spans_filters",
@@ -320,6 +344,7 @@ const ProjectMetricsWidget: React.FunctionComponent<
       widget?.config?.traceFilters,
       widget?.config?.threadFilters,
       runtimeContext.dateRange,
+      t,
     ],
   );
 
@@ -424,7 +449,7 @@ const ProjectMetricsWidget: React.FunctionComponent<
 
     const intervalType = effectiveInterval as INTERVAL_TYPE;
     const description = effectiveInterval
-      ? INTERVAL_DESCRIPTIONS.TOTALS[intervalType] || ""
+      ? getIntervalDescriptions().TOTALS[intervalType] || ""
       : "";
 
     const customEmptyState = metricName
@@ -452,6 +477,7 @@ const ProjectMetricsWidget: React.FunctionComponent<
           threadFilters={validThreadFilters}
           spanFilters={validSpanFilters}
           logsSource={LOGS_SOURCE.sdk}
+          labelsMap={chartLabelsMap}
           filterLineCallback={filterLineCallback}
           breakdown={effectiveBreakdown}
           getLabelAction={effectiveBreakdown ? getLabelAction : undefined}

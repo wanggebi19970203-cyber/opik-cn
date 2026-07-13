@@ -28,11 +28,11 @@ export const PRESET_DATE_RANGES: Record<DateRangePreset, DateRangeValue> = {
   },
 };
 
-export const PRESET_LABEL_MAP: Record<DateRangePreset, string> = {
-  past24hours: "Past 24 hours",
-  past3days: "Past 3 days",
-  past7days: "Past 7 days",
-  past30days: "Past 30 days",
-  past60days: "Past 60 days",
-  alltime: "All time",
+export const PRESET_LABEL_KEY_MAP: Record<DateRangePreset, string> = {
+  past24hours: "common.dateRange.presets.past24hours",
+  past3days: "common.dateRange.presets.past3days",
+  past7days: "common.dateRange.presets.past7days",
+  past30days: "common.dateRange.presets.past30days",
+  past60days: "common.dateRange.presets.past60days",
+  alltime: "common.dateRange.presets.alltime",
 };

@@ -1934,13 +1934,13 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             .flatMap(itemsTotal -> {
                                 log.info("Applied delta to dataset '{}': itemsTotal '{}'", datasetId, itemsTotal);
 
-                    // 根据是否为批操作确定变更描述
-                    String changeDescription = batchGroupId != null
-                            ? "Auto-created from SDK batch operation"
-                            : null;
+                                // 根据是否为批操作确定变更描述
+                                String changeDescription = batchGroupId != null
+                                        ? "Auto-created from SDK batch operation"
+                                        : null;
 
-                    // 创建版本元数据
-                    return createVersionFromDelta(
+                                // 创建版本元数据
+                                return createVersionFromDelta(
                                         datasetId,
                                         newVersionId,
                                         itemsTotal.intValue(),

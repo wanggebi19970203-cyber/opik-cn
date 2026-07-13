@@ -1,4 +1,4 @@
-FROM maven:3.9.16-amazoncorretto-25-al2023 AS build
+FROM maven:3.9.16-eclipse-temurin-25-alpine AS build
 
 WORKDIR /opt/opik-backend
 
@@ -16,7 +16,7 @@ RUN mvn versions:set -DnewVersion=${OPIK_VERSION} && \
     mvn clean package -DskipTests
 
 ###############################
-FROM amazoncorretto:25.0.3-al2023
+FROM eclipse-temurin:25-jdk-alpine
 
 # Add metadata labels
 LABEL org.opencontainers.image.title="Opik Backend"
@@ -27,15 +27,16 @@ LABEL org.opencontainers.image.vendor="Comet ML"
 # SHA256 checksum must match the official AWS RDS global bundle
 # Update this checksum when AWS updates the bundle: https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
 ARG RDS_CERT_SHA256=e5bb2084ccf45087bda1c9bffdea0eb15ee67f0b91646106e466714f9de3c7e3
+ARG ALPINE_PACKAGE_MIRROR=""
 ARG STORE_PASSWORD=changeit
 COPY install_rds_cert.sh /tmp/install_rds_cert.sh
 # perl is intentionally not installed: it pulls in perl-Archive-Tar, which is
 # affected by CVE-2026-9538 (ALAS2023-2026-1805) and has no patched AL2023 RPM.
 # install_rds_cert.sh uses sed/openssl instead of perl to extract the cert CN.
-RUN yum update -y && \
-    yum install -y --allowerasing shadow ca-certificates openssl dos2unix curl && \
-    yum clean all && \
-    rm -rf /var/cache/yum && \
+RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
+        sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${ALPINE_PACKAGE_MIRROR}|g" /etc/apk/repositories; \
+    fi && \
+    apk add --no-cache bash ca-certificates openssl dos2unix curl && \
     mkdir -p /tmp/certs && \
     curl -fsSL -o /tmp/certs/global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
     echo "${RDS_CERT_SHA256}  /tmp/certs/global-bundle.pem" | sha256sum -c - && \

@@ -11,8 +11,10 @@ import { useIsFeatureEnabled } from "@/contexts/feature-toggles-provider";
 import SetGuardrailDialog from "@/v2/pages-shared/traces/GuardrailConfig/SetGuardrailDialog";
 import { FeatureToggleKeys } from "@/types/feature-toggles";
 import useLogsType from "@/v2/pages/LogsPage/useLogsType";
+import { useTranslation } from "react-i18next";
 
 const LogsPage = () => {
+  const { t } = useTranslation("pages/logs");
   const projectId = useActiveProjectId()!;
   const [isGuardrailsDialogOpened, setIsGuardrailsDialogOpened] =
     useState<boolean>(false);
@@ -43,7 +45,9 @@ const LogsPage = () => {
           className="mb-3 mt-6 flex items-center justify-between"
           direction="horizontal"
         >
-          <h1 className="comet-body-accented truncate break-words">Logs</h1>
+          <h1 className="comet-body-accented truncate break-words">
+            {t("logs.title")}
+          </h1>
           {isGuardrailsEnabled && (
             <div className="flex shrink-0 items-center gap-2">
               <Button
@@ -52,7 +56,7 @@ const LogsPage = () => {
                 onClick={openGuardrailsDialog}
               >
                 <Construction className="mr-1.5 size-3.5" />
-                Set a guardrail
+                {t("logs.actions.setGuardrail")}
               </Button>
             </div>
           )}

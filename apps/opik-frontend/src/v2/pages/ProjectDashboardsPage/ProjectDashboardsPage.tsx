@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { StringParam } from "use-query-params";
+import { useTranslation } from "react-i18next";
 
 import Loader from "@/shared/Loader/Loader";
 import {
@@ -36,6 +37,7 @@ const DEFAULT_TEMPLATE = PROJECT_TEMPLATE_LIST[0];
 const DEFAULT_TEMPLATE_ID = DEFAULT_TEMPLATE.id;
 
 const ProjectDashboardsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/dashboards");
   const projectId = useActiveProjectId()!;
   const workspaceName = useActiveWorkspaceName();
 
@@ -118,7 +120,9 @@ const ProjectDashboardsPage: React.FunctionComponent = () => {
         className="mb-4 mt-6 flex items-center justify-between"
         direction="horizontal"
       >
-        <h1 className="comet-body-accented truncate break-words">Dashboards</h1>
+        <h1 className="comet-body-accented truncate break-words">
+          {t("dashboards.title")}
+        </h1>
       </PageBodyStickyContainer>
       <PageBodyStickyContainer
         className="flex flex-wrap items-center justify-between gap-x-8 gap-y-2 pb-3"

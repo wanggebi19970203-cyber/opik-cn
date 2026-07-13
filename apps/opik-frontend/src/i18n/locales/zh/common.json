@@ -423,7 +423,15 @@
     },
     "dateRange": {
       "customDates": "自定义日期",
-      "selectDateRange": "选择日期范围"
+      "selectDateRange": "选择日期范围",
+      "presets": {
+        "past24hours": "过去24小时",
+        "past3days": "过去3天",
+        "past7days": "过去7天",
+        "past30days": "过去30天",
+        "past60days": "过去60天",
+        "alltime": "全部时间"
+      }
     },
     "dashboard": {
       "textWidget": "文本",
@@ -434,7 +442,35 @@
       "metricsPlural": "个指标",
       "selectedExperiments": "已选实验",
       "filtered": "已筛选",
-      "groupedBy": "分组依据"
+      "groupedBy": "分组依据",
+      "templates": {
+        "experimentComparison": {
+          "name": "实验对比",
+          "description": "比较实验结果、指标和反馈分数。",
+          "experimentFeedbackScores": "实验反馈分数",
+          "feedbackScores": "反馈分数",
+          "feedbackScoresDistribution": "反馈分数分布"
+        },
+        "projectOverview": {
+          "name": "项目概览",
+          "description": "查看项目调用量、延迟、成本和质量。",
+          "atAGlance": "一览",
+          "traces": "追踪数",
+          "errors": "错误数",
+          "latencyP50": "P50 延迟",
+          "latencyP99": "P99 延迟",
+          "cost": "成本",
+          "volumeLatencyCost": "调用量、延迟与成本",
+          "traceVolume": "追踪量",
+          "traceDuration": "追踪持续时间",
+          "estimatedCost": "估算成本",
+          "qualityConversations": "质量与对话",
+          "traceFeedbackScores": "追踪反馈分数",
+          "threadVolume": "线程量",
+          "threadDuration": "线程持续时间",
+          "threadFeedbackScores": "线程反馈分数"
+        }
+      }
     },
     "llmMessages": {
       "showMore": "展开更多",

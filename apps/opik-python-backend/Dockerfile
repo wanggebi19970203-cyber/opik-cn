@@ -5,7 +5,12 @@
 FROM docker:29.5.1 AS builder
 
 # Toolchain only for compiling native wheels (rust/cargo for pydantic-core).
-RUN apk add --no-cache python3 py3-pip build-base python3-dev musl-dev gcc libffi-dev rust cargo
+ARG ALPINE_PACKAGE_MIRROR=""
+ARG PYPI_INDEX_URL="https://pypi.org/simple"
+RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
+        sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${ALPINE_PACKAGE_MIRROR}|g" /etc/apk/repositories; \
+    fi && \
+    apk add --no-cache python3 py3-pip build-base python3-dev musl-dev gcc libffi-dev rust cargo
 
 WORKDIR /opt/opik-python-backend
 
@@ -13,6 +18,9 @@ WORKDIR /opt/opik-python-backend
 COPY requirements.txt .
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV PIP_INDEX_URL="${PYPI_INDEX_URL}" \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Bytecode-only deps (-o 2, -b = fastest layout); strip source/stubs + package
@@ -37,8 +45,12 @@ RUN set -eux; \
 #######################################################################
 FROM docker:29.5.1
 
+ARG ALPINE_PACKAGE_MIRROR=""
 # Upgrade libexpat to the latest available version to mitigate CVEs.
-RUN apk add --no-cache --upgrade libexpat
+RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
+        sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${ALPINE_PACKAGE_MIRROR}|g" /etc/apk/repositories; \
+    fi && \
+    apk add --no-cache --upgrade libexpat
 # Runtime-only OS deps: tini (PID 1 reaper) + python3 interpreter.
 RUN apk add --no-cache tini python3
 

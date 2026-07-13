@@ -2,6 +2,11 @@
   "logs": {
     "title": "Logs",
     "description": "View and analyze traces and spans",
+    "tabs": {
+      "threads": "Threads",
+      "traces": "Traces",
+      "spans": "Spans"
+    },
     "empty": {
       "title": "No traces yet",
       "description": "Traces will appear here once your agent starts receiving requests."
@@ -12,13 +17,15 @@
       "status": "Status",
       "duration": "Duration",
       "startTime": "Start time",
+      "endTime": "End time",
       "feedbackScores": "Feedback scores"
     },
     "actions": {
       "view": "View trace",
       "copyId": "Copy trace ID",
       "addToDataset": "Add to dataset",
-      "addToQueue": "Add to queue"
+      "addToQueue": "Add to queue",
+      "setGuardrail": "Set a guardrail"
     },
     "filters": {
       "search": "Search traces",
@@ -72,6 +79,7 @@
         "input": "Input",
         "output": "Output",
         "errors": "Errors",
+        "environment": "Environment",
         "totalTokens": "Total tokens",
         "totalInputTokens": "Total input tokens",
         "totalOutputTokens": "Total output tokens",
@@ -92,6 +100,7 @@
         "searchOutput": "Search output",
         "searchName": "Search name",
         "withErrors": "With errors",
+        "type": "Type",
         "traceName": "Trace name",
         "spanName": "Span name",
         "traceId": "Trace ID",

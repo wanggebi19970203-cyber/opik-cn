@@ -847,9 +847,12 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       error_info: t("logs.tracesSpans.columns.errors"),
       duration: t("logs.columns.duration"),
       tags: t("logs.filters.tags"),
-      total_tokens: t("logs.tracesSpans.columns.totalTokens"),
-      prompt_tokens: t("logs.tracesSpans.columns.totalInputTokens"),
-      completion_tokens: t("logs.tracesSpans.columns.totalOutputTokens"),
+      [COLUMN_ENVIRONMENT_ID]: t("logs.tracesSpans.columns.environment"),
+      "usage.total_tokens": t("logs.tracesSpans.columns.totalTokens"),
+      "usage.prompt_tokens": t("logs.tracesSpans.columns.totalInputTokens"),
+      "usage.completion_tokens": t(
+        "logs.tracesSpans.columns.totalOutputTokens",
+      ),
       total_estimated_cost: t("logs.tracesSpans.columns.estimatedCost"),
       metadata: t("logs.tracesSpans.columns.metadata"),
       span_count: t("logs.tracesSpans.columns.spanCount"),
@@ -862,6 +865,35 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       provider: t("logs.tracesSpans.columns.provider"),
     }),
     [t],
+  );
+
+  const staticChipLabelMap: Record<string, string> = useMemo(
+    () => ({
+      start_time: t("logs.columns.startTime"),
+      end_time: t("logs.columns.endTime"),
+      duration: t("logs.columns.duration"),
+      total_estimated_cost: t("logs.tracesSpans.filters.cost"),
+      usage_total_tokens: t("logs.tracesSpans.filters.tokens"),
+      usage_prompt_tokens: t("logs.tracesSpans.filters.inputTokens"),
+      usage_completion_tokens: t("logs.tracesSpans.filters.outputTokens"),
+      llm_span_count: t("logs.tracesSpans.filters.llmCallsCount"),
+      input: t("logs.tracesSpans.columns.input"),
+      output: t("logs.tracesSpans.columns.output"),
+      name:
+        type === TRACE_DATA_TYPE.traces
+          ? t("logs.tracesSpans.filters.traceName")
+          : t("logs.tracesSpans.filters.spanName"),
+      with_errors: t("logs.tracesSpans.filters.withErrors"),
+      id:
+        type === TRACE_DATA_TYPE.traces
+          ? t("logs.tracesSpans.filters.traceId")
+          : t("logs.tracesSpans.filters.spanId"),
+      thread_id: t("logs.tracesSpans.filters.threadId"),
+      annotation_queue_ids: t("logs.tracesSpans.filters.annotationQueueId"),
+      trace_id: t("logs.tracesSpans.filters.traceId"),
+      provider: t("logs.tracesSpans.columns.provider"),
+    }),
+    [t, type],
   );
 
   const {
@@ -1046,18 +1078,31 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       },
     };
     const byId: Record<string, ChipDefinition> = {
-      ...keyBy(TRACE_CHIP_DEFINITIONS_STATIC, "id"),
+      ...keyBy(
+        TRACE_CHIP_DEFINITIONS_STATIC.map((chip) => ({
+          ...chip,
+          label: staticChipLabelMap[chip.id] ?? chip.label,
+        })),
+        "id",
+      ),
       ...dynamicChips,
     };
     return compact(TRACE_CHIP_ORDER.map((id) => byId[id]));
-  }, [isGuardrailsEnabled, projectId, traceScoreOptions, spanScoreOptions, t]);
+  }, [
+    isGuardrailsEnabled,
+    projectId,
+    staticChipLabelMap,
+    traceScoreOptions,
+    spanScoreOptions,
+    t,
+  ]);
 
   const spanChipDefinitions = useMemo<ChipDefinition[]>(() => {
     const dynamicChips: Record<string, ChipDefinition> = {
       type: {
         id: "type",
         field: "type",
-        label: "Type",
+        label: t("logs.tracesSpans.filters.type"),
         kind: "single-select",
         options: getSpanTypeOptions(isGuardrailsEnabled),
         columnType: COLUMN_TYPE.category,
@@ -1073,11 +1118,17 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       }),
     };
     const byId: Record<string, ChipDefinition> = {
-      ...keyBy(SPAN_CHIP_DEFINITIONS_STATIC, "id"),
+      ...keyBy(
+        SPAN_CHIP_DEFINITIONS_STATIC.map((chip) => ({
+          ...chip,
+          label: staticChipLabelMap[chip.id] ?? chip.label,
+        })),
+        "id",
+      ),
       ...dynamicChips,
     };
     return compact(SPAN_CHIP_ORDER.map((id) => byId[id]));
-  }, [isGuardrailsEnabled, projectId, spanScoreOptions, t]);
+  }, [isGuardrailsEnabled, projectId, spanScoreOptions, staticChipLabelMap, t]);
 
   const chipDefinitions =
     type === TRACE_DATA_TYPE.traces
