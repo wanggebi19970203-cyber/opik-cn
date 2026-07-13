@@ -72,6 +72,7 @@ import TimeCell from "@/shared/DataTableCells/TimeCell";
 import ThreadsActionsPanel from "@/v2/pages/LogsPage/ThreadsTab/ThreadsActionsPanel";
 import SelectionActionBar from "@/v2/components/SelectionActionBar/SelectionActionBar";
 import useThreadList from "@/api/traces/useThreadsList";
+import useTracesExist from "@/api/traces/useTracesExist";
 import useThreadsStatistic from "@/api/traces/useThreadsStatistic";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
 import FeedbackScoreHeader from "@/shared/DataTableHeaders/FeedbackScoreHeader";
@@ -100,10 +101,24 @@ import {
 } from "@/shared/filter-chips/chips/QueryBuilderChip/operators";
 import { useTagsOptions } from "@/v2/pages-shared/TagsAutocomplete/useTagsOptions";
 import ListCell from "@/shared/DataTableCells/ListCell";
+import { withExplain } from "@/v2/pages/LogsPage/explain/withExplain";
+import {
+  buildThreadCostTarget,
+  buildThreadDurationTarget,
+} from "@/v2/pages/LogsPage/ThreadsTab/explainTargets";
 
 const getRowId = (d: Thread) => d.id;
 
 const REFETCH_INTERVAL = 30000;
+
+// Duration/Cost cells get the Ollie Explain button (OPIK-6425). Threads never
+// change entity type, so the builders are bound once at module scope (unlike
+// the per-view wrapping in TracesSpansTab). No-op in OSS (empty PluginsStore).
+const DurationExplainCell = withExplain(
+  DurationCell as never,
+  buildThreadDurationTarget,
+);
+const CostExplainCell = withExplain(CostCell as never, buildThreadCostTarget);
 
 const SHARED_COLUMNS: ColumnData<Thread>[] = [
   {
@@ -139,7 +154,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
     id: "duration",
     label: "Duration",
     type: COLUMN_TYPE.duration,
-    cell: DurationCell as never,
+    cell: DurationExplainCell as never,
     statisticDataFormater: formatDuration,
     statisticTooltipFormater: formatDuration,
     supportsPercentiles: true,
@@ -213,7 +228,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
     id: "total_estimated_cost",
     label: "Estimated cost",
     type: COLUMN_TYPE.cost,
-    cell: CostCell as never,
+    cell: CostExplainCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_thread_cost_estimated],
     size: 160,
     statisticKey: "total_estimated_cost",
@@ -696,18 +711,21 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
     },
   );
 
-  const { data: existenceData } = useThreadList(
+  // Cheap "does this project have any thread?" probe for the empty-state decision. Hits the LIMIT-1
+  // existence endpoint scoped to threads — backed by trace_threads (the same table the list reads,
+  // and PK-prunable) and to the sdk source, matching the rendered thread list — avoiding the size:1
+  // thread-aggregation scan over the whole project.
+  const { data: existenceData } = useTracesExist(
     {
       projectId,
-      page: 1,
-      size: 1,
-      logsSource: LOGS_SOURCE.sdk,
+      threadOnly: true,
+      source: LOGS_SOURCE.sdk,
     },
     {
       enabled: isTableDataEnabled,
     },
   );
-  const hasProjectData = (existenceData?.total ?? 0) > 0;
+  const hasProjectData = existenceData?.exists ?? false;
 
   const handleClearFilters = useCallback(() => {
     setSearch("");

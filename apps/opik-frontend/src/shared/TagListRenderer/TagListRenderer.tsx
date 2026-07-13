@@ -48,7 +48,7 @@ export type TagListRendererProps = {
   placeholderText?: string;
   addButtonText?: string;
   tagType?: string; // For error messages (e.g., "tag", "version tag")
-  canAdd?: boolean;
+  readOnly?: boolean;
   tagVariant?: TagProps["variant"];
 };
 
@@ -64,7 +64,7 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
   placeholderText,
   addButtonText,
   tagType = "tag",
-  canAdd = true,
+  readOnly = false,
   tagVariant,
 }) => {
   const { t } = useTranslation();
@@ -102,7 +102,7 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
     setOpen(false);
   };
 
-  if (!canAdd && !hasTags) {
+  if (readOnly && !hasTags) {
     return null;
   }
 
@@ -131,10 +131,10 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
           key={tag}
           size={tagSizeConfig.tagSize}
           variant={tagVariant}
-          onDelete={() => onDeleteTag(tag)}
+          onDelete={readOnly ? undefined : () => onDeleteTag(tag)}
         />
       ))}
-      {canAdd && (
+      {!readOnly && (
         <Popover onOpenChange={setOpen} open={open}>
           <PopoverTrigger asChild>
             <Button

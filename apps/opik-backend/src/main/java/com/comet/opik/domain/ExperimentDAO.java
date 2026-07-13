@@ -1770,11 +1770,18 @@ public class ExperimentDAO {
      * {@code (count DESC, last_activity DESC, project_id ASC)} 排序，以便重复运行
      * 产生相同结果。
      *
-     * <p>{@code CAST(t.project_id AS String)} 从 {@code FixedString(36)} 转换，其默认值
-     * 会绕过 {@code != ''} 保护并触发下游 UUID 解析器。
-     * {@code count(DISTINCT ei.trace_id)} 以"每个项目的不同跟踪"为单位计数
-     * （主导选择的自然单位，因为一个跟踪存在于一个项目中），并中和两侧临时
-     * ReplacingMergeTree 行版本的连接输出膨胀。
+     * <p>{@code CAST(t.project_id AS String)} converts away from {@code FixedString(36)}, whose
+     * default would slip past the {@code != ''} guard and trip the downstream UUID parser.
+     * {@code count(DISTINCT ei.trace_id)} counts in units of "distinct traces per project"
+     * (the natural unit for the dominant pick, since one trace lives in one project) and
+     * neutralizes join-output inflation from transient ReplacingMergeTree row versions on
+     * either side.
+     *
+     * <p>The {@code t.id IN (SELECT trace_id FROM experiment_items WHERE workspace_id = :workspace_id)}
+     * predicate prunes the traces read to the referenced trace ids. The hash join alone would scan the
+     * whole workspace trace slice into the hash table; this IN set is implied by the join
+     * ({@code ei.trace_id = t.id}), so it adds an {@code id} primary-key condition that bounds the
+     * traces scan without changing the result.
      */
     private static final String COMPUTE_EXPERIMENT_PROJECT_MAPPING = """
             WITH per_experiment_ranked AS (
@@ -1799,6 +1806,7 @@ public class ExperimentDAO {
                     INNER JOIN traces t
                         ON ei.workspace_id = t.workspace_id AND ei.trace_id = t.id
                     WHERE ei.workspace_id = :workspace_id
+                    AND t.id IN (SELECT trace_id FROM experiment_items WHERE workspace_id = :workspace_id)
                     GROUP BY ei.experiment_id, project_id
                     HAVING project_id != ''
                 )

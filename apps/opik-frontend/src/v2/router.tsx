@@ -13,7 +13,6 @@ import WorkspaceGuard from "@/v2/layout/WorkspaceGuard/WorkspaceGuard";
 import ExperimentsPageGuard from "@/v2/layout/ExperimentsPageGuard";
 import DashboardsPageGuard from "@/v2/layout/DashboardsPageGuard";
 import PlaygroundPageGuard from "@/v2/layout/PlaygroundPageGuard";
-import OptimizationStudioPageGuard from "@/v2/layout/OptimizationStudioPageGuard";
 import OptimizationsPageGuard from "@/v2/layout/OptimizationsPageGuard";
 import DatasetsPageGuard from "@/v2/layout/DatasetsPageGuard";
 import SMEPageLayout from "@/v2/layout/SMEPageLayout/SMEPageLayout";
@@ -39,22 +38,21 @@ import useAppStore from "@/store/AppStore";
 import ConfigurationPage from "@/v2/pages/ConfigurationPage/ConfigurationPage";
 import NewQuickstart from "@/v2/pages/GetStartedPage/NewQuickstart";
 import AutomationLogsPage from "@/v2/pages/AutomationLogsPage/AutomationLogsPage";
-import OnlineEvaluationPage from "@/v2/pages/OnlineEvaluationPage/OnlineEvaluationPage";
+import OnlineEvaluationPageGuard from "@/v2/layout/OnlineEvaluationPageGuard";
 import AnnotationQueuesPage from "@/v2/pages/AnnotationQueuesPage/AnnotationQueuesPage";
 import AnnotationQueuePage from "@/v2/pages/AnnotationQueuePage/AnnotationQueuePage";
-import AgentRunnerPage from "@/v2/pages/AgentRunnerPage/AgentRunnerPage";
+import AgentPlaygroundPageGuard from "@/v2/layout/AgentPlaygroundPageGuard";
 import PairingPage from "@/v2/pages/PairingPage/PairingPage";
 import PairRouteVersionGuard from "@/shared/WorkspaceVersionResolver/PairRouteVersionGuard";
 import { createOAuthConsentRoute } from "@/shared/OAuthConsentPage/createOAuthConsentRoute";
 import OptimizationsPage from "@/v2/pages/OptimizationsPage/OptimizationsPage";
-import OptimizationsNewPage from "@/v2/pages/OptimizationsPage/OptimizationsNewPage/OptimizationsNewPage";
 import OptimizationPage from "@/v2/pages/OptimizationPage/OptimizationPage";
 import OptimizationCompareRedirect from "@/v2/pages/OptimizationPage/OptimizationCompareRedirect";
+import OptimizationsNewRedirect from "@/v2/pages/OptimizationPage/OptimizationsNewRedirect";
 import TrialPage from "@/v2/pages/TrialPage/TrialPage";
-const AlertsRouteWrapper = lazy(
-  () => import("@/v2/pages/AlertsPage/AlertsRouteWrapper"),
-);
 import AlertEditPageGuard from "@/v2/layout/AlertEditPageGuard/AlertEditPageGuard";
+import AlertsPageGuard from "@/v2/layout/AlertsPageGuard";
+import PromptsPageGuard from "@/v2/layout/PromptsPageGuard";
 import DashboardPage from "@/v2/pages/DashboardPage/DashboardPage";
 import DashboardsPage from "@/v2/pages/DashboardsPage/DashboardsPage";
 import DatasetsPage from "@/v2/pages/DatasetsPage/DatasetsPage";
@@ -264,6 +262,15 @@ const diagnosticsRoute = createRoute({
   },
 });
 
+const diagnosticsResolvedRoute = createRoute({
+  path: "/diagnostics/resolved",
+  getParentRoute: () => projectScopedRoute,
+  component: () => <SignalsPage showResolved />,
+  staticData: {
+    title: "Resolved issues",
+  },
+});
+
 // ----------- dashboards (project-scoped)
 const projectDashboardsRoute = createRoute({
   path: "/dashboards",
@@ -382,6 +389,7 @@ const promptsRoute = createRoute({
   staticData: {
     title: i18next.t("navigation.menu.prompts"),
   },
+  component: PromptsPageGuard,
 });
 
 const promptsListRoute = createRoute({
@@ -431,26 +439,19 @@ const optimizationsListRoute = createRoute({
   component: OptimizationsPage,
 });
 
-const optimizationsNewRoute = createRoute({
-  path: "/new",
-  getParentRoute: () => optimizationsRoute,
-  component: OptimizationStudioPageGuard,
-  staticData: {
-    param: "optimizationsNew",
-    paramValue: "new",
-  },
-});
-
-const optimizationsNewIndexRoute = createRoute({
-  path: "/",
-  getParentRoute: () => optimizationsNewRoute,
-  component: OptimizationsNewPage,
-});
-
 const optimizationCompareRedirectRoute = createRoute({
   path: "/$datasetId/compare",
   getParentRoute: () => optimizationsRoute,
   component: OptimizationCompareRedirect,
+});
+
+// Back-compat: the new-run flow moved from `/optimizations/new` into a sidebar
+// (`/optimizations?new=true`). Keep the legacy path working — a static `/new`
+// also wins over the `/$optimizationId` detail route.
+const optimizationsNewRedirectRoute = createRoute({
+  path: "/new",
+  getParentRoute: () => optimizationsRoute,
+  component: OptimizationsNewRedirect,
 });
 
 const optimizationBaseRoute = createRoute({
@@ -484,7 +485,7 @@ const agentRunnerRoute = createRoute({
   staticData: {
     title: i18next.t("navigation.menu.agentPlayground"),
   },
-  component: AgentRunnerPage,
+  component: AgentPlaygroundPageGuard,
 });
 
 // ----------- online evaluation (project-scoped)
@@ -494,7 +495,7 @@ const onlineEvaluationRoute = createRoute({
   staticData: {
     title: i18next.t("navigation.menu.online_evaluation"),
   },
-  component: OnlineEvaluationPage,
+  component: OnlineEvaluationPageGuard,
 });
 
 // ----------- annotation queues (project-scoped)
@@ -528,7 +529,7 @@ const alertsRoute = createRoute({
   staticData: {
     title: i18next.t("navigation.menu.alerts"),
   },
-  component: AlertsRouteWrapper,
+  component: AlertsPageGuard,
 });
 
 const alertNewRoute = createRoute({
@@ -666,6 +667,7 @@ const routeTree = rootRoute.addChildren([
           ollieRoute,
           logsRoute,
           diagnosticsRoute,
+          diagnosticsResolvedRoute,
           projectDashboardsRoute.addChildren([projectDashboardsIndexRoute]),
           tracesRedirectRoute,
           experimentsRoute.addChildren([
@@ -684,7 +686,7 @@ const routeTree = rootRoute.addChildren([
           playgroundRoute.addChildren([playgroundIndexRoute]),
           optimizationsRoute.addChildren([
             optimizationsListRoute,
-            optimizationsNewRoute.addChildren([optimizationsNewIndexRoute]),
+            optimizationsNewRedirectRoute,
             optimizationCompareRedirectRoute,
             optimizationBaseRoute.addChildren([optimizationRoute, trialRoute]),
           ]),

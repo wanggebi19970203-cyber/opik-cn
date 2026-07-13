@@ -89,8 +89,11 @@
       "selectAlgorithm": "选择算法",
       "dataset": "数据集",
       "selectDataset": "选择数据集",
+      "itemSource": "条目来源",
+      "selectItemSource": "选择条目来源",
       "metric": "指标",
-      "selectMetric": "选择指标"
+      "selectMetric": "选择指标",
+      "goToDocs": "查看文档"
     },
     "addDialog": {
       "title": "启动优化运行",

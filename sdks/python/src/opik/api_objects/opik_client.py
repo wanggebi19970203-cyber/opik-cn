@@ -1,10 +1,11 @@
-import atexit
 import contextvars
 import copy
 import datetime
 import functools
 import json
 import logging
+import threading
+import weakref
 from typing import (
     Any,
     Dict,
@@ -17,9 +18,8 @@ from typing import (
     overload,
 )
 
-import httpx
-
 from . import (
+    connection_resources,
     constants,
     dashboard,
     dataset,
@@ -28,6 +28,7 @@ from . import (
     helpers,
     opik_query_language,
     rest_helpers,
+    rest_stream_parser,
     search_helpers,
     span as span_module,
     trace as trace_module,
@@ -66,19 +67,12 @@ from .. import (
     httpx_client,
     id_helpers,
     llm_usage,
-    rest_client_configurator,
     url_helpers,
 )
-from ..healthcheck import connection_monitor, connection_probe
 from ..message_processing import (
     messages,
-    streamer_constructors,
-    message_queue,
-    permissions,
 )
 from ..message_processing.batching import sequence_splitter
-from ..message_processing.processors import message_processors_chain
-from ..message_processing.replay import replay_manager
 from ..rest_api import client as rest_api_client
 from ..rest_api import errors as rest_api_errors
 from ..rest_api.core.api_error import ApiError
@@ -101,7 +95,6 @@ from ..types import (
     TraceSource,
 )
 from .. import context_storage
-from ..file_upload import upload_manager
 
 LOGGER = logging.getLogger(__name__)
 
@@ -159,10 +152,7 @@ class Opik:
         self._project_name_most_recent_trace: Optional[str] = None
         self._use_batching = batching or _use_batching
 
-        self._initialize_streamer(
-            use_batching=self._use_batching,
-        )
-        atexit.register(self.end, timeout=self._flush_timeout)
+        self._acquire_shared_resources()
 
     @property
     def config(self) -> opik_config.OpikConfig:
@@ -197,77 +187,35 @@ class Opik:
         """
         return self._project_name
 
-    def _initialize_streamer(
-        self,
-        use_batching: bool,
-    ) -> None:
-        self._httpx_client = httpx_client.get(
-            workspace=self._workspace,
-            api_key=self._config.api_key,
-            check_tls_certificate=self._config.check_tls_certificate,
-            compress_json_requests=self._config.enable_json_request_compression,
+    def _acquire_shared_resources(self) -> None:
+        self._lease = connection_resources.MANAGER.acquire(
+            self._config,
+            use_batching=self._use_batching,
         )
-        self._rest_client = rest_api_client.OpikApi(
-            base_url=self._config.url_override,
-            httpx_client=self._httpx_client,
-        )
-        self._rest_client._client_wrapper._timeout = (
-            httpx.USE_CLIENT_DEFAULT
-        )  # 参见 https://github.com/fern-api/fern/issues/5321
-        rest_client_configurator.configure(self._rest_client)
+        self._resources = self._lease.resources
+        self._bind_resources()
 
-        max_queue_size = message_queue.calculate_max_queue_size(
-            maximal_queue_size=self._config.maximal_queue_size,
-            batch_factor=self._config.maximal_queue_size_batch_factor,
+        # ``self._lease.release`` is a bound method of the lease, so the finalizer
+        # captures the lease (and through it the manager), never ``self``. A
+        # dropped handle therefore releases its reference on GC without the
+        # atexit strong-ref pin that caused OPIK-7127.
+        #
+        # ``close_on_zero=False``: a finalizer must do nothing risky, so the GC
+        # path only decrements the bundle's refcount. It never closes (thread
+        # joins, network flush) — that is left to an explicit ``end()`` or to the
+        # atexit ``close_all``.
+        self._finalizer = weakref.finalize(
+            self, self._lease.release, self._flush_timeout, close_on_zero=False
         )
 
-        file_uploader = upload_manager.FileUploadManager(
-            rest_client=self._rest_client,
-            httpx_client=self._httpx_client,
-            worker_count=self._config.file_upload_background_workers,
-        )
-
-        fallback_replay = self._create_replay_manager()
-
-        self.__internal_api__message_processor__ = message_processors_chain.create_message_processors_chain(
-            rest_client=self._rest_client,
-            file_upload_manager=file_uploader,
-            fallback_replay_manager=fallback_replay,
-            unauthorized_message_types_registry=permissions.UnauthorizedMessageTypeRegistry(
-                retry_interval_seconds=self._config.unauthorized_message_type_retry_interval,
-                max_retry_count=self._config.unauthorized_message_type_max_retry_count,
-            ),
-        )
-        self._streamer = streamer_constructors.construct_online_streamer(
-            file_uploader=file_uploader,
-            n_consumers=self._config.background_workers,
-            use_batching=use_batching,
-            use_attachment_extraction=self._config.is_attachment_extraction_active,
-            min_base64_embedded_attachment_size=self._config.min_base64_embedded_attachment_size,
-            max_queue_size=max_queue_size,
-            message_processor=self.__internal_api__message_processor__,
-            url_override=self._config.url_override,
-            fallback_replay_manager=fallback_replay,
-        )
-
-    def _create_replay_manager(self) -> replay_manager.ReplayManager:
-        probe = connection_probe.ConnectionProbe(
-            base_url=self._config.url_override,
-            client=self._httpx_client,
-        )
-        monitor = connection_monitor.OpikConnectionMonitor(
-            ping_interval=self._config.connection_monitor_ping_interval,
-            check_timeout=self._config.connection_monitor_check_timeout,
-            probe=probe,
-        )
-
-        fallback_replay = replay_manager.ReplayManager(
-            monitor=monitor,
-            batch_size=self._config.replay_batch_size,
-            batch_replay_delay=self._config.replay_batch_replay_delay,
-            tick_interval_seconds=self._config.replay_tick_interval,
-        )
-        return fallback_replay
+    def _bind_resources(self) -> None:
+        # Expose the bundle's objects as attributes so the rest of the client
+        # (and external callers of ``__internal_api__message_processor__``)
+        # delegate to the shared connection resources unchanged.
+        self._httpx_client = self._resources.httpx_client
+        self._rest_client = self._resources.rest_client
+        self.__internal_api__message_processor__ = self._resources.message_processor
+        self._streamer = self._resources.streamer
 
     def _display_trace_url(self, trace_id: str, project_name: str) -> None:
         project_url = url_helpers.get_project_url_by_trace_id(
@@ -1735,27 +1683,31 @@ class Opik:
         tags: Optional[List[str]] = None,
         dataset_version_id: Optional[str] = None,
         project_name: Optional[str] = None,
+        experiment_id: Optional[str] = None,
     ) -> experiment.Experiment:
         """
         使用给定的数据集名称和可选参数创建新实验。
 
         Args:
-            dataset_name: 要与实验关联的数据集名称。
-            name: 实验的可选名称。如果为None，将使用生成的名称。
-            experiment_config: 可选的实验配置参数。如果提供，必须是字典。
-            prompt: 要与实验关联的提示词对象。已弃用，请改用`prompts`参数。
-            prompts: 要与实验关联的提示词对象列表。
-            type: 实验类型。可以是"regular"、"trial"或"mini-batch"。
-                默认为"regular"。"trial"和"mini-batch"仅与提示词优化实验相关。
-            optimization_id: 与实验关联的优化的可选ID。
-            tags: 要与实验关联的可选标签列表。
-            dataset_version_id: 要与实验关联的数据集版本的可选ID。
-            project_name: 与实验关联的项目可选名称。
+            dataset_name: The name of the dataset to associate with the experiment.
+            name: The optional name for the experiment. If None, a generated name will be used.
+            experiment_config: Optional experiment configuration parameters. Must be a dictionary if provided.
+            prompt: Prompt object to associate with the experiment. Deprecated, use `prompts` argument instead.
+            prompts: List of Prompt objects to associate with the experiment.
+            type: The type of the experiment. Can be "regular", "trial", or "mini-batch".
+                Defaults to "regular". "trial" and "mini-batch" are only relevant for prompt optimization experiments.
+            optimization_id: Optional ID of the optimization associated with the experiment.
+            tags: Optional list of tags to associate with the experiment.
+            dataset_version_id: Optional ID of the dataset version to associate with the experiment.
+            project_name: Optional name of the project to associate the experiment with.
+            experiment_id: Optional explicit id for the experiment. When None a fresh id is
+                generated. Callers that must know the id before creation (e.g. the migrate
+                cascade, which records it for crash-safe cleanup) can supply their own.
 
         Returns:
             experiment.Experiment: 新创建的实验对象。
         """
-        id = id_helpers.generate_id()
+        id = experiment_id or id_helpers.generate_id()
 
         checked_prompts = experiment_helpers.handle_prompt_args(
             prompt=prompt,
@@ -1937,6 +1889,13 @@ class Opik:
         """
         结束Opik会话并提交所有待处理消息。
 
+        Connection resources are shared and ref-counted across clients with a
+        matching configuration: this releases the current client's reference.
+        The underlying streamer/threads are torn down only when the last client
+        sharing them is ended (or garbage-collected). When ``flush`` is True the
+        flush drains the *shared* queue, so pending data from other clients on
+        the same connection is delivered too.
+
         Args:
             timeout (Optional[int]): 关闭流处理器的超时时间。一旦达到超时，
                 流处理器将被关闭，无论所有消息是否已发送。如果未设置超时，
@@ -1946,11 +1905,21 @@ class Opik:
                 如果为False，则在发送停止信号后立即返回，丢弃仍在传输中的
                 任何内容——适用于测试内断言已在测试期间轮询后端的测试拆卸。
 
+        After ``end()`` the client must not be used again. Calling ``trace()``,
+        ``span()``, ``flush()``, etc. on an ended client is unsupported and its
+        behavior is undefined: it may silently no-op, or — because the transport
+        is shared — it may still succeed by riding another live client's
+        resources. Do not rely on either outcome; create a new client instead.
+
         Returns:
             None
         """
         timeout = timeout if timeout is not None else self._flush_timeout
-        self._streamer.close(timeout, flush=flush)
+        # Explicit teardown on a user thread, so close on the last reference
+        # (close_on_zero=True). Releasing is idempotent, so the detached GC
+        # finalizer cannot double-decrement.
+        self._lease.release(timeout, flush=flush, close_on_zero=True)
+        self._finalizer.detach()
 
     def flush(self, timeout: Optional[int] = None) -> bool:
         """
@@ -1995,6 +1964,7 @@ class Opik:
         exclude: Optional[List[str]] = None,
         wait_for_at_least: Optional[int] = None,
         wait_for_timeout: int = httpx_client.READ_TIMEOUT_SECONDS,
+        max_batch_size: int = rest_stream_parser.MAX_ENDPOINT_BATCH_SIZE,
     ) -> List[trace_public.TracePublic]:
         """
         在给定项目中搜索traces。可选地，您可以等待至少找到一定数量的traces后再返回，
@@ -2030,26 +2000,31 @@ class Opik:
                 - `tags`: contains（仅）
                 - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`, `duration`, `number_of_messages`, `total_estimated_cost`: =, !=, >, <, >=, <=
 
-                示例：
-                - `start_time >= "2024-01-01T00:00:00Z"` - 按开始日期过滤
-                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - 日期范围
-                - `input contains "question"` - 按输入内容过滤
-                - `usage.total_tokens > 1000` - 按token使用过滤
-                - `feedback_scores.accuracy > 0.8` - 按反馈分数过滤
-                - `feedback_scores.my_metric is_empty` - 过滤反馈分数为空的traces
-                - `feedback_scores.my_metric is_not_empty` - 过滤反馈分数非空的traces
-                - `tags contains "production"` - 按标签过滤
-                - `metadata.model = "gpt-4"` - 按元数据字段过滤
-                - `thread_id = "thread_123"` - 按线程ID过滤
-                - `environment = "production"` - 按环境过滤
-                - `environment in ("production", "staging")` - 按多个环境过滤
+                Examples:
+                - `start_time >= "2024-01-01T00:00:00Z"` - Filter by start date
+                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - Date range
+                - `input contains "question"` - Filter by input content
+                - `usage.total_tokens > 1000` - Filter by token usage
+                - `feedback_scores.accuracy > 0.8` - Filter by feedback score
+                - `feedback_scores.my_metric is_empty` - Filter traces with empty feedback score
+                - `feedback_scores.my_metric is_not_empty` - Filter traces with non-empty feedback score
+                - `tags contains "production"` - Filter by tag
+                - `metadata.model = "gpt-4"` - Filter by metadata field
+                - `thread_id = "thread_123"` - Filter by thread ID
+                - `environment = "production"` - Filter by environment
+                - `environment in ("production", "staging")` - Filter by multiple environments
 
-                如果未提供，将返回项目中的所有traces，最多返回限制数量。
-            max_results: 要返回的最大traces数量。
-            truncate: 是否截取存储在输入、输出或元数据中的图像数据。
-            exclude: 要从响应中排除的字段。例如，["feedback_scores"]
-            wait_for_at_least: 返回前等待的最小traces数量。
-            wait_for_timeout: 等待traces的超时时间。
+                If not provided, all traces in the project will be returned up to the limit.
+            max_results: The maximum number of traces to return.
+            truncate: Whether to truncate image data stored in input, output, or metadata
+            exclude: Fields to exclude from the response. For example, ["feedback_scores"]
+            wait_for_at_least: The minimum number of traces to wait for before returning.
+            wait_for_timeout: The timeout for waiting for traces.
+            max_batch_size: The maximum number of traces requested per page from the backend
+                (default 2000). The backend buffers a page in memory before streaming it, so a
+                large page of heavy traces (e.g. with inline attachments) can spike server memory;
+                lower this to bound per-request memory. On a connection/timeout error the page size
+                is automatically halved and the page retried.
 
         Raises:
             如果在指定超时内未找到wait_for_at_least数量的traces，引发exceptions.SearchTimeoutError。
@@ -2070,6 +2045,7 @@ class Opik:
             max_results=max_results,
             truncate=truncate,
             exclude=exclude,
+            max_batch_size=max_batch_size,
         )
 
         if wait_for_at_least is None:
@@ -2099,6 +2075,7 @@ class Opik:
         exclude: Optional[List[str]] = None,
         wait_for_at_least: Optional[int] = None,
         wait_for_timeout: int = httpx_client.READ_TIMEOUT_SECONDS,
+        max_batch_size: int = rest_stream_parser.MAX_ENDPOINT_BATCH_SIZE,
     ) -> List[span_public.SpanPublic]:
         """
         在给定trace中搜索spans。这允许您根据span的输入、输出、元数据、标签等或
@@ -2136,26 +2113,31 @@ class Opik:
                 - `tags`: contains（仅）
                 - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`, `duration`, `number_of_messages`, `total_estimated_cost`: =, !=, >, <, >=, <=
 
-                示例：
-                - `start_time >= "2024-01-01T00:00:00Z"` - 按开始日期过滤
-                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - 日期范围
-                - `input contains "question"` - 按输入内容过滤
-                - `usage.total_tokens > 1000` - 按token使用过滤
-                - `feedback_scores.accuracy > 0.8` - 按反馈分数过滤
-                - `feedback_scores.my_metric is_empty` - 过滤反馈分数为空的spans
-                - `feedback_scores.my_metric is_not_empty` - 过滤反馈分数非空的spans
-                - `tags contains "production"` - 按标签过滤
-                - `metadata.model = "gpt-4"` - 按元数据字段过滤
-                - `thread_id = "thread_123"` - 按线程ID过滤
-                - `environment = "production"` - 按环境过滤
-                - `environment in ("production", "staging")` - 按多个环境过滤
+                Examples:
+                - `start_time >= "2024-01-01T00:00:00Z"` - Filter by start date
+                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - Date range
+                - `input contains "question"` - Filter by input content
+                - `usage.total_tokens > 1000` - Filter by token usage
+                - `feedback_scores.accuracy > 0.8` - Filter by feedback score
+                - `feedback_scores.my_metric is_empty` - Filter spans with empty feedback score
+                - `feedback_scores.my_metric is_not_empty` - Filter spans with non-empty feedback score
+                - `tags contains "production"` - Filter by tag
+                - `metadata.model = "gpt-4"` - Filter by metadata field
+                - `thread_id = "thread_123"` - Filter by thread ID
+                - `environment = "production"` - Filter by environment
+                - `environment in ("production", "staging")` - Filter by multiple environments
 
-                如果未提供，将返回项目/trace中的所有spans，最多返回限制数量。
-            max_results: 要返回的最大spans数量。
-            truncate: 是否截取存储在输入、输出或元数据中的图像数据。
-            exclude: 要从响应中排除的字段列表（例如["feedback_scores", "input", "output"]）
-            wait_for_at_least: 返回前等待的最小spans数量。
-            wait_for_timeout: 等待spans的超时时间。
+                If not provided, all spans in the project/trace will be returned up to the limit.
+            max_results: The maximum number of spans to return.
+            truncate: Whether to truncate image data stored in input, output, or metadata
+            exclude: List of fields to exclude from the response (e.g., ["feedback_scores", "input", "output"])
+            wait_for_at_least: The minimum number of spans to wait for before returning.
+            wait_for_timeout: The timeout for waiting for spans.
+            max_batch_size: The maximum number of spans requested per page from the backend
+                (default 2000). The backend buffers a page in memory before streaming it, so a
+                large page of heavy spans (e.g. with inline attachments) can spike server memory;
+                lower this to bound per-request memory. On a connection/timeout error the page size
+                is automatically halved and the page retried.
 
         Raises:
             如果在指定超时内未找到wait_for_at_least数量的spans，引发exceptions.SearchTimeoutError。
@@ -2176,6 +2158,7 @@ class Opik:
             max_results=max_results,
             truncate=truncate,
             exclude=exclude,
+            max_batch_size=max_batch_size,
         )
 
         if wait_for_at_least is None:
@@ -3326,6 +3309,9 @@ _context_client_var: contextvars.ContextVar[Optional[Opik]] = contextvars.Contex
     "_context_client_var", default=None
 )
 _global_singleton: Optional[Opik] = None
+# Serializes lazy creation of the global singleton so concurrent cold-start
+# callers share one client instead of racing to build several.
+_global_singleton_lock = threading.Lock()
 
 
 def get_current_client_raw() -> Optional[Opik]:
@@ -3358,8 +3344,16 @@ def get_global_client() -> Opik:
         return client
 
     global _global_singleton
-    _global_singleton = Opik()
-    return _global_singleton
+    # Re-check under the lock: without it, concurrent cold-start callers (e.g. one
+    # tracer shared by parallel pipelines) each build a client and its full
+    # transport stack, and all but one are immediately discarded — wasteful, and
+    # it races the shared connection-resource manager's build path.
+    with _global_singleton_lock:
+        client = get_current_client_raw()
+        if client is not None:
+            return client
+        _global_singleton = Opik()
+        return _global_singleton
 
 
 def set_global_client(client: Opik, context_wise: bool = False) -> None:

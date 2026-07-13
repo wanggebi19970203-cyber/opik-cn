@@ -2,51 +2,35 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { Checkbox } from "@/ui/checkbox";
-import { Input } from "@/ui/input";
-import { EqualsMetricParameters } from "@/types/optimizations";
-import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
-import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
-import DatasetVariablesHint from "../DatasetVariablesHint";
+import {
+  EqualsMetricParameters,
+  MetricParamErrors,
+} from "@/types/optimizations";
+import ReferenceKeyField from "../ReferenceKeyField";
 
 interface EqualsMetricConfigsProps {
   configs: Partial<EqualsMetricParameters>;
   onChange: (configs: Partial<EqualsMetricParameters>) => void;
   datasetVariables?: string[];
+  errors?: MetricParamErrors;
 }
 
 const EqualsMetricConfigs = ({
   configs,
   onChange,
   datasetVariables = [],
+  errors,
 }: EqualsMetricConfigsProps) => {
   const { t } = useTranslation("optimizations");
   return (
     <div className="flex w-72 flex-col gap-6">
       <div className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="reference_key" className="text-sm">
-              {t("optimizations.metricConfigs.referenceKey")}
-            </Label>
-            <ExplainerIcon
-              {...EXPLAINERS_MAP[EXPLAINER_ID.metric_reference_key]}
-            />
-          </div>
-          <Input
-            id="reference_key"
-            placeholder={t("optimizations.metricConfigs.referenceKeyAdvancedPlaceholder")}
-            value={configs.reference_key ?? ""}
-            onChange={(e) =>
-              onChange({ ...configs, reference_key: e.target.value })
-            }
-          />
-          <DatasetVariablesHint
-            datasetVariables={datasetVariables}
-            onSelect={(variable) =>
-              onChange({ ...configs, reference_key: variable })
-            }
-          />
-        </div>
+        <ReferenceKeyField
+          value={configs.reference_key ?? ""}
+          onChange={(value) => onChange({ ...configs, reference_key: value })}
+          datasetVariables={datasetVariables}
+          error={errors?.reference_key?.message}
+        />
 
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -59,9 +43,6 @@ const EqualsMetricConfigs = ({
           <Label htmlFor="case_sensitive" className="cursor-pointer text-sm">
             {t("optimizations.metricConfigs.caseSensitiveComparison")}
           </Label>
-          <ExplainerIcon
-            {...EXPLAINERS_MAP[EXPLAINER_ID.metric_case_sensitive]}
-          />
         </div>
       </div>
     </div>

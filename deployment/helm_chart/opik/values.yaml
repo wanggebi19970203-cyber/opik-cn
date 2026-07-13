@@ -255,6 +255,27 @@ component:
       enabled: true
     podDisruptionBudget:
       enabled: false
+    # Init container that blocks startup until Redis is reachable. Rendered only
+    # when the RQ worker is enabled (RQ_WORKER_ENABLED unset or != "false") AND
+    # bundled Redis is deployed (redis.enabled: true). Skipped automatically for
+    # managed/external Redis (redis.enabled: false) — no StatefulSet boot race
+    # there, and the default host below would not resolve.
+    waitForRedis:
+      # Explicit opt-out for bundled-Redis installs. Has no effect when
+      # redis.enabled is false (the wait is already skipped in that case).
+      enabled: true
+      redis:
+        # Empty by default so the template falls back to redis.fullnameOverride
+        # (then "opik-redis-master"). Set explicitly to target a different host.
+        host: ""
+        port: 6379
+      image:
+        registry: docker.io
+        repository: busybox
+        tag: "1.36"
+      # Resource requests/limits for the `wait-for-redis-service` init container.
+      # Empty ({}) by default — no resources set.
+      resources: {}
     env:
       PYTHON_CODE_EXECUTOR_IMAGE_REGISTRY: *registry
       PYTHON_CODE_EXECUTOR_IMAGE_NAME: "opik-sandbox-executor-python"
@@ -691,6 +712,8 @@ clickhouse:
                 <max_bytes_ratio_before_external_group_by>0.2</max_bytes_ratio_before_external_group_by>
                 <!-- CH 25.8 made the experimental Time type opt-in; required for fresh installs to replay migration 000030. -->
                 <enable_time_time64_type>1</enable_time_time64_type>
+                <!-- the new CH 25.x default (1) makes FINAL reads on skip-indexed tables over-read massively; our queries already prune on the PK/project_id, so exact mode isn't needed. -->
+                <use_skip_indexes_if_final_exact_mode>0</use_skip_indexes_if_final_exact_mode>
             </default>
           </profiles>
         </clickhouse>

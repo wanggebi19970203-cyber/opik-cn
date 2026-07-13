@@ -29,8 +29,12 @@ const getMenuItems = ({
   canViewExperiments,
   canViewDatasets,
   canViewDashboards,
+  canViewPrompts,
   canUsePlayground,
+  canViewAgentPlayground,
   canViewOptimizationRuns,
+  canViewOnlineEvaluationRules,
+  canViewAlerts,
   showHomePage,
   showOlliePage,
   showDiagnostics,
@@ -40,8 +44,12 @@ const getMenuItems = ({
   canViewExperiments: boolean;
   canViewDatasets: boolean;
   canViewDashboards: boolean;
+  canViewPrompts: boolean;
   canUsePlayground: boolean;
+  canViewAgentPlayground: boolean;
   canViewOptimizationRuns: boolean;
+  canViewOnlineEvaluationRules: boolean;
+  canViewAlerts: boolean;
   showHomePage: boolean;
   showOlliePage: boolean;
   showDiagnostics: boolean;
@@ -127,22 +135,30 @@ const getMenuItems = ({
       id: "development",
       label: t("navigation.groups.development"),
       items: [
-        {
-          id: "prompts",
-          path: projectPath("/prompts"),
-          type: MENU_ITEM_TYPE.router,
-          icon: FileTerminal,
-          label: t("navigation.menu.prompts"),
-          disabled: !projectPrefix,
-        },
-        {
-          id: "agent_runner",
-          path: projectPath("/agent-playground"),
-          type: MENU_ITEM_TYPE.router,
-          icon: GitBranch,
-          label: t("navigation.menu.agent_runner"),
-          disabled: !projectPrefix,
-        },
+        ...(canViewPrompts
+          ? [
+              {
+                id: "prompts",
+                path: projectPath("/prompts"),
+                type: MENU_ITEM_TYPE.router as const,
+                icon: FileTerminal,
+                label: "Prompt library",
+                disabled: !projectPrefix,
+              },
+            ]
+          : []),
+        ...(canViewAgentPlayground
+          ? [
+              {
+                id: "agent_runner",
+                path: projectPath("/agent-playground"),
+                type: MENU_ITEM_TYPE.router as const,
+                icon: GitBranch,
+                label: "Agent playground",
+                disabled: !projectPrefix,
+              },
+            ]
+          : []),
         ...(canUsePlayground
           ? [
               {
@@ -219,22 +235,30 @@ const getMenuItems = ({
       id: "production",
       label: t("navigation.groups.production"),
       items: [
-        {
-          id: "online_evaluation",
-          path: projectPath("/online-evaluation"),
-          type: MENU_ITEM_TYPE.router,
-          icon: Brain,
-          label: t("navigation.menu.online_evaluation"),
-          disabled: !projectPrefix,
-        },
-        {
-          id: "alerts",
-          path: projectPath("/alerts"),
-          type: MENU_ITEM_TYPE.router,
-          icon: Bell,
-          label: t("navigation.menu.alerts"),
-          disabled: !projectPrefix,
-        },
+        ...(canViewOnlineEvaluationRules
+          ? [
+              {
+                id: "online_evaluation",
+                path: projectPath("/online-evaluation"),
+                type: MENU_ITEM_TYPE.router as const,
+                icon: Brain,
+                label: "Online evaluation",
+                disabled: !projectPrefix,
+              },
+            ]
+          : []),
+        ...(canViewAlerts
+          ? [
+              {
+                id: "alerts",
+                path: projectPath("/alerts"),
+                type: MENU_ITEM_TYPE.router as const,
+                icon: Bell,
+                label: "Alerts",
+                disabled: !projectPrefix,
+              },
+            ]
+          : []),
       ],
     },
   ].filter((group) => group.items.length > 0);

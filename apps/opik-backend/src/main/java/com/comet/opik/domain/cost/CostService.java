@@ -39,14 +39,30 @@ public class CostService {
             Map.entry("jina_ai", "jina_ai"),
             Map.entry("elastic", "elastic"),
             Map.entry("microsoft", "azure"),
-            Map.entry("mistral", "mistral"));
+            Map.entry("azure", "azure"),
+            Map.entry("mistral", "mistral"),
+            Map.entry("xai", "xai"));
+
+    // Online evaluation (and OTel ingestion) resolve models to LlmProvider serialized values whose names
+    // differ from the canonical price-table vocabulary. Normalize those to the single canonical provider
+    // at lookup so cost tracking and the per-evaluation spend budget work for every provider selectable
+    // for online evaluation. Only providers whose name actually differs need an entry: openai / anthropic
+    // / bedrock already equal their canonical name, and self-hosted providers (ollama, custom-llm) have no
+    // public pricing to map to. Vertex is unambiguous here because only Gemini models are offered on
+    // Vertex for online evaluation. Canonical names (and any not listed) pass through unchanged.
+    private static final Map<String, String> RUNTIME_PROVIDER_MAPPING = Map.of(
+            "gemini", "google_ai",
+            "vertex-ai", "google_vertexai");
     public static final String MODEL_PRICES_FILE = "model_prices_and_context_window.json";
     public static final String MODEL_PRICES_OVERRIDES_FILE = "model_prices_overrides.json";
     private static final String BEDROCK_PROVIDER = "bedrock";
     private static final String DATE_SUFFIX_PATTERN = "-\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";
+    private static final String VERSION_SUFFIX_PATTERN = ":\\d+$";
     private static final Map<String, BiFunction<ModelPrice, Map<String, Integer>, BigDecimal>> PROVIDERS_CACHE_COST_CALCULATOR = Map
             .of("anthropic", SpanCostCalculator::textGenerationWithCacheCostAnthropic,
                     "openai", SpanCostCalculator::textGenerationWithCacheCostOpenAI,
+                    "azure", SpanCostCalculator::textGenerationWithCacheCostOpenAI,
+                    "xai", SpanCostCalculator::textGenerationWithCacheCostOpenAI,
                     "bedrock", SpanCostCalculator::textGenerationWithCacheCostBedrock,
                     "bedrock_converse", SpanCostCalculator::textGenerationWithCacheCostBedrock,
                     "vertex_ai-language-models", SpanCostCalculator::textGenerationWithCacheCostGoogle,
@@ -90,6 +106,10 @@ public class CostService {
      * Fixes issue #5621: Handles model names with provider prefix like "openai/gpt-4o"
      * sent by LiteLLM via gen_ai.request.model, by stripping the prefix before lookup.
      *
+     * Fixes issue #5130: Handles Bedrock model names with a version-pin suffix like
+     * "anthropic.claude-opus-4-6-v1:0" by stripping the ":N" pin and falling back to the
+     * base model name (e.g. "anthropic.claude-opus-4-6-v1") used in the pricing database.
+     *
      * @param modelName The model name (may contain dots or provider prefix, e.g., "openai/gpt-4o")
      * @param provider The provider name (e.g., "anthropic")
      * @return ModelPrice for the model, or DEFAULT_COST if not found
@@ -98,6 +118,10 @@ public class CostService {
         if (StringUtils.isBlank(modelName) || StringUtils.isBlank(provider)) {
             return DEFAULT_COST;
         }
+
+        // Normalize runtime provider names ("gemini", "vertex-ai") to the canonical price-table provider
+        // so callers holding an LlmProvider value hit the same rows as callers passing the canonical name.
+        provider = RUNTIME_PROVIDER_MAPPING.getOrDefault(provider, provider);
 
         // Strip provider prefix if present (e.g. "openai/gpt-4o" -> "gpt-4o").
         // LiteLLM sends model names with provider prefix via gen_ai.request.model.
@@ -152,6 +176,34 @@ public class CostService {
             }
         }
 
+        // Try stripping version-pin suffix from original name with dots preserved
+        // (e.g., "anthropic.claude-opus-4-6-v1:0" -> "anthropic.claude-opus-4-6-v1")
+        String baseOriginalVersionName = stripVersionSuffix(modelName);
+        if (!baseOriginalVersionName.equalsIgnoreCase(modelName)) {
+            String normalizedKey = createModelProviderKey(baseOriginalVersionName, provider);
+            ModelPrice normalizedMatch = modelProviderPrices.get(normalizedKey);
+            if (normalizedMatch != null) {
+                log.debug(
+                        "Found model price using original base name after stripping version suffix. Original: '{}', Base: '{}'",
+                        modelName, baseOriginalVersionName);
+                return normalizedMatch;
+            }
+        }
+
+        // Try stripping version-pin suffix from normalized name
+        // (e.g., "anthropic-claude-opus-4-6-v1:0" -> "anthropic-claude-opus-4-6-v1")
+        String baseNormalizedVersionName = stripVersionSuffix(normalizedModelName);
+        if (!baseNormalizedVersionName.equalsIgnoreCase(normalizedModelName)) {
+            String normalizedKey = createModelProviderKey(baseNormalizedVersionName, provider);
+            ModelPrice normalizedMatch = modelProviderPrices.get(normalizedKey);
+            if (normalizedMatch != null) {
+                log.debug(
+                        "Found model price using normalized base name after stripping version suffix. Original: '{}', Base: '{}'",
+                        modelName, baseNormalizedVersionName);
+                return normalizedMatch;
+            }
+        }
+
         log.debug("No model price found for model: '{}' with provider: '{}'", modelName, provider);
         return DEFAULT_COST;
     }
@@ -181,6 +233,20 @@ public class CostService {
      */
     private static String stripDateSuffix(String modelName) {
         return modelName.toLowerCase(Locale.ROOT).replaceFirst(DATE_SUFFIX_PATTERN, "");
+    }
+
+    /**
+     * Strips version-pin suffixes from model names to enable fallback pricing lookup.
+     * Bedrock sends versioned names (e.g., "anthropic.claude-opus-4-6-v1:0") while the
+     * pricing database stores the base name (e.g., "anthropic.claude-opus-4-6-v1").
+     *
+     * Version pattern recognized: ":N" (one or more digits) at the end of the model name.
+     *
+     * @param modelName The model name
+     * @return Lowercase model name with version suffix removed if present, otherwise lowercase original name
+     */
+    private static String stripVersionSuffix(String modelName) {
+        return modelName.toLowerCase(Locale.ROOT).replaceFirst(VERSION_SUFFIX_PATTERN, "");
     }
 
     public static BigDecimal getCostFromMetadata(JsonNode metadata) {
@@ -342,9 +408,20 @@ public class CostService {
         BigDecimal inputAudioTokenPrice = Optional.ofNullable(modelCost.inputCostPerAudioToken())
                 .map(BigDecimal::new)
                 .orElse(BigDecimal.ZERO);
-        // Tier rates: above_200k_tokens variants. Models without a tier (most) leave these null
-        // in the LiteLLM JSON; we default to zero and the effective-price helpers on ModelPrice
-        // fall through to the base rate in that case.
+        BigDecimal outputAudioTokenPrice = Optional.ofNullable(modelCost.outputCostPerAudioToken())
+                .map(BigDecimal::new)
+                .orElse(BigDecimal.ZERO);
+        // Tier rates: above_{128k,200k,272k}_tokens variants. Models without a tier (most) leave
+        // these null in the LiteLLM JSON; we default to zero and the effective-price helpers on
+        // ModelPrice fall through to the base rate in that case. Reachable models today: Gemini
+        // 1.5 Flash at 128k, Gemini 2.5 Pro / Claude Sonnet 4.5 at 200k, GPT-5.4 and GPT-5.5
+        // families (both openai and azure) at 272k.
+        BigDecimal inputPriceAbove128kTokens = Optional.ofNullable(modelCost.inputCostPerTokenAbove128kTokens())
+                .map(BigDecimal::new)
+                .orElse(BigDecimal.ZERO);
+        BigDecimal outputPriceAbove128kTokens = Optional.ofNullable(modelCost.outputCostPerTokenAbove128kTokens())
+                .map(BigDecimal::new)
+                .orElse(BigDecimal.ZERO);
         BigDecimal inputPriceAbove200kTokens = Optional.ofNullable(modelCost.inputCostPerTokenAbove200kTokens())
                 .map(BigDecimal::new)
                 .orElse(BigDecimal.ZERO);
@@ -357,6 +434,12 @@ public class CostService {
                 .orElse(BigDecimal.ZERO);
         BigDecimal cacheReadInputTokenPriceAbove200kTokens = Optional
                 .ofNullable(modelCost.cacheReadInputTokenCostAbove200kTokens())
+                .map(BigDecimal::new)
+                .orElse(BigDecimal.ZERO);
+        BigDecimal inputPriceAbove272kTokens = Optional.ofNullable(modelCost.inputCostPerTokenAbove272kTokens())
+                .map(BigDecimal::new)
+                .orElse(BigDecimal.ZERO);
+        BigDecimal outputPriceAbove272kTokens = Optional.ofNullable(modelCost.outputCostPerTokenAbove272kTokens())
                 .map(BigDecimal::new)
                 .orElse(BigDecimal.ZERO);
         ModelMode mode = ModelMode.fromValue(modelCost.mode());
@@ -373,11 +456,16 @@ public class CostService {
                 .videoOutputPrice(videoOutputPrice)
                 .audioInputCharacterPrice(audioInputCharacterPrice)
                 .inputAudioTokenPrice(inputAudioTokenPrice)
+                .outputAudioTokenPrice(outputAudioTokenPrice)
                 .calculator(calculator)
+                .inputPriceAbove128kTokens(inputPriceAbove128kTokens)
+                .outputPriceAbove128kTokens(outputPriceAbove128kTokens)
                 .inputPriceAbove200kTokens(inputPriceAbove200kTokens)
                 .outputPriceAbove200kTokens(outputPriceAbove200kTokens)
                 .cacheCreationInputTokenPriceAbove200kTokens(cacheCreationInputTokenPriceAbove200kTokens)
                 .cacheReadInputTokenPriceAbove200kTokens(cacheReadInputTokenPriceAbove200kTokens)
+                .inputPriceAbove272kTokens(inputPriceAbove272kTokens)
+                .outputPriceAbove272kTokens(outputPriceAbove272kTokens)
                 .build();
     }
 

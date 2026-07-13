@@ -82,7 +82,7 @@ interface VersionWithMaybeAuthor extends PromptVersion {
 const PromptTab = ({ prompt }: PromptTabInterface) => {
   const { t } = useTranslation("pages/prompt");
   const {
-    permissions: { canUsePlayground, canConfigureWorkspaceSettings },
+    permissions: { canUsePlayground, canEditPrompts },
   } = usePermissions();
 
   const [openEditPrompt, setOpenEditPrompt] = useState(false);
@@ -242,7 +242,9 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
           </div>
         </div>
         <div className="hidden min-w-0 xl:block">
-          <p className="comet-body-s-accented mb-1 ml-3">{t("promptTab.versionHistory")}</p>
+          <p className="comet-body-s-accented mb-1 ml-3">
+            {t("promptTab.versionHistory")}
+          </p>
           <div className="space-y-3 p-4">
             {[0, 1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-16 w-full" />
@@ -386,7 +388,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {canUsePlayground && !isChatPrompt && (
+              {canUsePlayground && canEditPrompts && !isChatPrompt && (
                 <>
                   <Separator orientation="vertical" className="mx-1 h-4" />
                   <ImproveInPlaygroundButton
@@ -396,7 +398,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                 </>
               )}
 
-              {canConfigureWorkspaceSettings && (
+              {canEditPrompts && (
                 <>
                   <Separator orientation="vertical" className="mx-1 h-4" />
                   <DeployToEnvironmentMenu
@@ -407,20 +409,20 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                     totalVersions={total}
                     activeEnvironments={activeVersionEnvironments}
                   />
+
+                  <Separator orientation="vertical" className="mx-1 h-4" />
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="px-0"
+                    onClick={() => setOpenEditPrompt(true)}
+                  >
+                    <Pencil className="mr-1.5 size-3.5" />
+                    Edit
+                  </Button>
                 </>
               )}
-
-              <Separator orientation="vertical" className="mx-1 h-4" />
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="px-0"
-                onClick={() => setOpenEditPrompt(true)}
-              >
-                <Pencil className="mr-1.5 size-3.5" />
-                {t("promptTab.edit")}
-              </Button>
             </div>
           </div>
 
@@ -514,7 +516,9 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
 
       {/* Right sidebar (visible only on xl+ screens) */}
       <div className="hidden min-w-0 xl:block">
-        <p className="comet-body-s-accented mb-1 ml-3">{t("promptTab.versionHistory")}</p>
+        <p className="comet-body-s-accented mb-1 ml-3">
+          {t("promptTab.versionHistory")}
+        </p>
         <VersionHistoryTimeline
           items={historyItems}
           selectedId={effectiveVersionId}

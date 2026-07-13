@@ -22,14 +22,18 @@ import GepaOptimizerConfigs from "@/v2/pages-shared/optimizations/AlgorithmSetti
 import EvolutionaryOptimizerConfigs from "@/v2/pages-shared/optimizations/AlgorithmSettings/algorithmConfigs/EvolutionaryOptimizerConfigs";
 import HierarchicalReflectiveOptimizerConfigs from "@/v2/pages-shared/optimizations/AlgorithmSettings/algorithmConfigs/HierarchicalReflectiveOptimizerConfigs";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
-import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
 
 interface AlgorithmConfigsProps {
   optimizerType: OPTIMIZER_TYPE;
   configs: Partial<OptimizerParameters>;
   onChange: (configs: Partial<OptimizerParameters>) => void;
   size?: ButtonProps["size"];
+  variant?: ButtonProps["variant"];
+  className?: string;
   disabled?: boolean;
+  // The prompt model, shown as the effective default when no algorithm model
+  // is explicitly set (the algorithm model defaults to the prompt model).
+  promptModel?: string;
 }
 
 const AlgorithmConfigs = ({
@@ -37,7 +41,10 @@ const AlgorithmConfigs = ({
   configs,
   onChange,
   size = "icon-sm",
+  variant = "outline",
+  className,
   disabled: disabledProp = false,
+  promptModel,
 }: AlgorithmConfigsProps) => {
   const { t } = useTranslation("optimizations");
   const getOptimizerForm = () => {
@@ -78,55 +85,52 @@ const AlgorithmConfigs = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size={size} disabled={disabled}>
+        <Button
+          variant={variant}
+          size={size}
+          className={className}
+          disabled={disabled}
+        >
           <Settings2 />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="max-h-[70vh] overflow-y-auto p-6"
+        className="max-h-[70vh] overflow-y-auto p-4"
         side="bottom"
         align="end"
       >
-        <div className="mb-5 w-72">
-          <div className="mb-1 flex items-center gap-1">
-            <h3 className="comet-body-s-accented">{t("optimizations.algorithmConfigs.title")}</h3>
-            <ExplainerIcon
-              {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_algorithm_settings]}
+        {/* Single column with one gap so every field (model, then the
+            optimizer's own fields) is spaced identically. */}
+        <div className="flex w-72 flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label className="text-sm">
+                {t("optimizations.algorithmConfigs.algorithmModel")}
+              </Label>
+              <ExplainerIcon
+                description={t(
+                  "optimizations.algorithmConfigs.algorithmModelDescription",
+                )}
+              />
+            </div>
+            <OptimizationModelSelect
+              compact
+              value={(configs.model ?? "") as PROVIDER_MODEL_TYPE | ""}
+              inheritedModel={(promptModel ?? "") as PROVIDER_MODEL_TYPE | ""}
+              onChange={(value) => onChange({ ...configs, model: value })}
+              onClear={() => {
+                // Clear the explicit model so the optimizer inherits the prompt
+                // model at runtime (shown as "Same as prompt").
+                const next = { ...configs };
+                delete next.model;
+                delete next.model_parameters;
+                onChange(next);
+              }}
             />
           </div>
-          <p className="comet-body-xs text-muted-slate">
-            {t("optimizations.algorithmConfigs.description")}
-          </p>
+          {getOptimizerForm()}
         </div>
-        <div className="mb-6 flex w-72 flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm">{t("optimizations.algorithmConfigs.algorithmModel")}</Label>
-            {configs.model && (
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto p-0"
-                onClick={() => {
-                  const next = { ...configs };
-                  delete next.model;
-                  delete next.model_parameters;
-                  onChange(next);
-                }}
-              >
-                {t("optimizations.algorithmConfigs.usePromptModel")}
-              </Button>
-            )}
-          </div>
-          <OptimizationModelSelect
-            value={(configs.model ?? "") as PROVIDER_MODEL_TYPE | ""}
-            onChange={(value) => onChange({ ...configs, model: value })}
-          />
-          <p className="comet-body-xs text-muted-slate">
-            {t("optimizations.algorithmConfigs.algorithmModelDescription")}
-          </p>
-        </div>
-        {getOptimizerForm()}
       </DropdownMenuContent>
     </DropdownMenu>
   );

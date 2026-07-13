@@ -52,6 +52,8 @@ import AddEditRuleDialog from "@/v2/pages-shared/automations/AddEditRuleDialog/A
 import RulesActionsPanel from "@/v2/pages-shared/automations/RulesActionsPanel";
 import RuleRowActionsCell from "@/v2/pages-shared/automations/RuleRowActionsCell";
 import RuleLogsCell from "@/v2/pages-shared/automations/RuleLogsCell";
+import RuleTracesCell from "@/v2/pages-shared/automations/RuleTracesCell";
+import { EvaluationTracesSidebar } from "@/v2/pages-shared/automations/EvaluationTracesSidebar";
 import { capitalizeFirstLetter } from "@/lib/utils";
 import { getUIRuleScope } from "@/v2/pages-shared/automations/AddEditRuleDialog/helpers";
 import { usePermissions } from "@/contexts/PermissionsContext";
@@ -60,7 +62,9 @@ import { useActiveProjectId } from "@/store/AppStore";
 
 const getRowId = (d: EvaluatorsRule) => d.id;
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<EvaluatorsRule>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<EvaluatorsRule>[] => [
   {
     id: COLUMN_NAME_ID,
     label: t("onlineEvaluation.columns.name"),
@@ -112,10 +116,11 @@ const getDefaultColumns = (t: (key: string) => string): ColumnData<EvaluatorsRul
   },
 ];
 
-const getFilterColumns = (t: (key: string) => string) => getDefaultColumns(t).filter(
-  (col) =>
-    col.id !== "type" && col.id !== "enabled" && col.id !== "sampling_rate",
-);
+const getFilterColumns = (t: (key: string) => string) =>
+  getDefaultColumns(t).filter(
+    (col) =>
+      col.id !== "type" && col.id !== "enabled" && col.id !== "sampling_rate",
+  );
 
 const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
   left: [COLUMN_SELECT_ID],
@@ -222,12 +227,15 @@ export const OnlineEvaluationPage: React.FC = () => {
     [data?.sortable_by],
   );
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? t("onlineEvaluation.noData.noRulesYet") : t("onlineEvaluation.noData.noSearchResults");
+  const noDataText = noData
+    ? t("onlineEvaluation.noData.noRulesYet")
+    : t("onlineEvaluation.noData.noSearchResults");
 
   const rows: EvaluatorsRule[] = useMemo(() => data?.content ?? [], [data]);
 
   const editingRule = rows.find((r) => r.id === editRuleId);
   const cloningRule = rows.find((r) => r.id === cloneRuleId);
+
   const isDialogOpen =
     Boolean(editingRule) || Boolean(cloningRule) || openDialogForCreate;
 
@@ -291,6 +299,15 @@ export const OnlineEvaluationPage: React.FC = () => {
           sortableColumns: sortableBy,
         },
       ),
+      {
+        accessorKey: "rule_traces",
+        header: "",
+        cell: RuleTracesCell,
+        size: 150,
+        enableResizing: false,
+        enableHiding: false,
+        enableSorting: false,
+      } as ColumnDef<EvaluatorsRule>,
       {
         accessorKey: "rule_logs",
         header: "",
@@ -384,10 +401,18 @@ export const OnlineEvaluationPage: React.FC = () => {
         <PageEmptyState
           lightImageUrl={emptyOnlineEvalLightUrl}
           darkImageUrl={emptyOnlineEvalDarkUrl}
-          title={t("onlineEvaluation.empty.title")}
-          description={t("onlineEvaluation.empty.description")}
-          primaryActionLabel={t("onlineEvaluation.empty.action")}
-          onPrimaryAction={handleNewRuleClick}
+          title="No online evaluations yet"
+          description={
+            "Create a rule to automatically score your model's outputs.\nDefine criteria, evaluate responses in real time, and track quality over time."
+          }
+          primaryActionLabel={
+            canUpdateOnlineEvaluationRules
+              ? "Create your first rule"
+              : undefined
+          }
+          onPrimaryAction={
+            canUpdateOnlineEvaluationRules ? handleNewRuleClick : undefined
+          }
           docsUrl={buildDocsUrl("/production/online-evaluation/rules")}
         />
       ) : (
@@ -460,6 +485,7 @@ export const OnlineEvaluationPage: React.FC = () => {
         mode={dialogMode}
         projectId={projectId}
       />
+      <EvaluationTracesSidebar projectId={projectId} />
     </div>
   );
 };

@@ -400,6 +400,7 @@ const LLMPromptMessage = forwardRef<
                         setIsExpanded(true);
                       }}
                       className="absolute right-0 top-0 bg-background pl-5 text-muted-slate"
+                      type="button"
                     >
                       {t("llm:promptMessages.showMore")}
                     </Button>
@@ -413,6 +414,7 @@ const LLMPromptMessage = forwardRef<
                         setIsExpanded(false);
                       }}
                       className="mt-1 p-0 text-muted-slate"
+                      type="button"
                     >
                       {t("llm:promptMessages.showLess")}
                     </Button>

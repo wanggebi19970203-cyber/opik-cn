@@ -25,6 +25,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.Tika;
 import reactor.core.publisher.Mono;
@@ -79,9 +80,15 @@ public interface AttachmentService {
     Mono<Boolean> hasAnyAttachmentByEntityIds(EntityType entityType, Set<UUID> entityIds);
 
     /**
-     * 单个附件的预签名 (S3) 下载 URL，可被外部调用者访问
-     * （例如 LLM 提供商在在线评估期间获取媒体资源）。使用与上传/下载相同的
-     * 对象键布局，因此可以解析存储的对象。
+     * Lists attachments for a set of entity IDs in a single batch DB call. Each returned
+     * {@link AttachmentInfo} carries its owning {@code entityId} so callers can group by entity.
+     */
+    Mono<List<AttachmentInfo>> getAttachmentInfoByEntityIds(EntityType entityType, Set<UUID> entityIds);
+
+    /**
+     * Presigned (S3) download URL for a single attachment, reachable by an external
+     * caller (e.g. an LLM provider fetching media during online evaluation). Uses the
+     * same object-key layout as upload/download so it resolves the stored object.
      */
     String presignDownloadUrl(AttachmentInfo attachmentInfo, String workspaceId);
 
@@ -436,6 +443,16 @@ class AttachmentServiceImpl implements AttachmentService {
         }
         return attachmentDAO.getAttachmentsByEntityIds(entityType, entityIds)
                 .map(list -> !list.isEmpty());
+    }
+
+    @Override
+    @WithSpan
+    public Mono<List<AttachmentInfo>> getAttachmentInfoByEntityIds(@NonNull EntityType entityType,
+            Set<UUID> entityIds) {
+        if (CollectionUtils.isEmpty(entityIds)) {
+            return Mono.just(List.of());
+        }
+        return attachmentDAO.getAttachmentsByEntityIds(entityType, entityIds);
     }
 
     @Override

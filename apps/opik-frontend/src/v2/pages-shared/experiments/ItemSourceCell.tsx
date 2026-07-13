@@ -36,6 +36,8 @@ type CustomMeta = {
   nameKey?: string;
   idKey?: string;
   getIsDeleted?: (cellData: unknown) => boolean;
+  /** Force the linked resource instead of inferring from `evaluation_method` (for rows that have none). */
+  resource?: RESOURCE_TYPE;
 };
 
 const ItemSourceCell = <TData,>(context: CellContext<TData, unknown>) => {
@@ -45,6 +47,7 @@ const ItemSourceCell = <TData,>(context: CellContext<TData, unknown>) => {
     nameKey = "name",
     idKey = "id",
     getIsDeleted,
+    resource: resourceOverride,
   } = (custom ?? {}) as CustomMeta;
 
   const name = get(cellData, nameKey, undefined) as string | undefined;
@@ -61,11 +64,13 @@ const ItemSourceCell = <TData,>(context: CellContext<TData, unknown>) => {
     ? getIsDeleted(cellData)
     : undefined;
 
-  const isTestSuite = evaluationMethod === EVALUATION_METHOD.TEST_SUITE;
+  const isTestSuite = resourceOverride
+    ? resourceOverride === RESOURCE_TYPE.testSuite
+    : evaluationMethod === EVALUATION_METHOD.TEST_SUITE;
   const Icon = isTestSuite ? ListChecks : Database;
-  const resource = isTestSuite
-    ? RESOURCE_TYPE.testSuite
-    : RESOURCE_TYPE.dataset;
+  const resource =
+    resourceOverride ??
+    (isTestSuite ? RESOURCE_TYPE.testSuite : RESOURCE_TYPE.dataset);
 
   const tagSize = getCellTagSize(context, TAG_SIZE_MAP);
 
@@ -88,6 +93,9 @@ const ItemSourceCell = <TData,>(context: CellContext<TData, unknown>) => {
                 resource={resource}
                 isDeleted={isDeleted}
               />
+            ) : name ? (
+              // No id to link to — show the name instead of a dash.
+              <span className="comet-body-s block truncate">{name}</span>
             ) : (
               "-"
             )}

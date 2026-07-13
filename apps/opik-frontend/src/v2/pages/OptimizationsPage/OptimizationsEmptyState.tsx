@@ -1,23 +1,28 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  BotMessageSquare,
-  SquareDashedMousePointer,
-  FileSliders,
-  ExternalLink,
-  type LucideIcon,
-} from "lucide-react";
+import { ExternalLink, type LucideIcon } from "lucide-react";
 import { Button } from "@/ui/button";
 import { cn } from "@/lib/utils";
 import { buildDocsUrl } from "@/v2/lib/utils";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
 import useNavigateToOptimizationStudio from "@/v2/pages-shared/optimizations/useNavigateToOptimizationStudio";
+import {
+  getStudioCardConfigs,
+  type StudioCardId,
+} from "@/v2/pages-shared/optimizations/studioCards";
 import emptyOptStudioLightUrl from "/images/empty-optimization-studio-light.svg";
 import emptyOptStudioDarkUrl from "/images/empty-optimization-studio-dark.svg";
 
 type OptimizationsEmptyStateProps = {
   onOptimizeViaSdkClick: () => void;
+};
+
+// Icon tint per card id.
+const CARD_ICON_CLASS: Record<StudioCardId, string> = {
+  demo: "text-chart-blue",
+  studio: "text-chart-purple",
+  sdk: "text-chart-burgundy",
 };
 
 type ActionCardConfig = {
@@ -35,17 +40,17 @@ const ActionCard: React.FC<ActionCardConfig> = ({
   description,
   onClick,
 }) => (
-  <button
-    type="button"
+  <Button
+    variant="outline"
     onClick={onClick}
-    className="flex flex-col gap-1 rounded-md border p-4 text-left transition-colors hover:border-primary hover:bg-primary-100"
+    className="h-auto flex-col items-start justify-start gap-1 whitespace-normal p-4 text-left hover:border-primary hover:bg-primary-100"
   >
     <span className="flex items-center gap-2">
       <Icon className={cn("size-4 shrink-0", iconClassName)} />
       <span className="comet-body-s-accented text-foreground">{title}</span>
     </span>
     <span className="comet-body-xs text-muted-slate">{description}</span>
-  </button>
+  </Button>
 );
 
 const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
@@ -59,32 +64,10 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
       ? emptyOptStudioDarkUrl
       : emptyOptStudioLightUrl;
 
-  const actionCards: ActionCardConfig[] = [
-    {
-      icon: BotMessageSquare,
-      iconClassName: "text-chart-blue",
-      title: t("optimizations.emptyState.runDemoExample"),
-      description:
-        t("optimizations.emptyState.runDemoExampleDesc"),
-      onClick: () => navigateToStudio("opik-chatbot"),
-    },
-    {
-      icon: SquareDashedMousePointer,
-      iconClassName: "text-chart-purple",
-      title: t("optimizations.emptyState.startOptimizationRun"),
-      description:
-        t("optimizations.emptyState.startOptimizationRunDesc"),
-      onClick: () => navigateToStudio(),
-    },
-    {
-      icon: FileSliders,
-      iconClassName: "text-chart-burgundy",
-      title: t("optimizations.emptyState.optimizeViaSdk"),
-      description:
-        t("optimizations.emptyState.optimizeViaSdkDesc"),
-      onClick: onOptimizeViaSdkClick,
-    },
-  ];
+  const cards = getStudioCardConfigs({
+    navigateToStudio,
+    onOptimizeViaSdkClick,
+  });
 
   return (
     <div className="flex min-h-full flex-1 items-center justify-center gap-16 px-6">
@@ -96,8 +79,15 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
           {t("optimizations.empty.pageDescription")}
         </p>
         <div className="flex flex-col gap-2">
-          {actionCards.map((card) => (
-            <ActionCard key={card.title} {...card} />
+          {cards.map(({ id, icon, title, description, onClick }) => (
+            <ActionCard
+              key={id}
+              icon={icon}
+              iconClassName={CARD_ICON_CLASS[id]}
+              title={title}
+              description={description}
+              onClick={onClick}
+            />
           ))}
         </div>
         <div>

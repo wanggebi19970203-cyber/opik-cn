@@ -13,7 +13,7 @@ COPY src ./src
 ARG OPIK_VERSION
 ENV MAVEN_OPTS="-Xmx1G -XX:MaxMetaspaceSize=265m"
 RUN mvn versions:set -DnewVersion=${OPIK_VERSION} && \
-    mvn clean package -DskipTests
+    mvn clean package -DskipTests -Dspotless.skip=true
 
 ###############################
 FROM eclipse-temurin:25-jdk-alpine
@@ -30,9 +30,10 @@ ARG RDS_CERT_SHA256=e5bb2084ccf45087bda1c9bffdea0eb15ee67f0b91646106e466714f9de3
 ARG ALPINE_PACKAGE_MIRROR=""
 ARG STORE_PASSWORD=changeit
 COPY install_rds_cert.sh /tmp/install_rds_cert.sh
-# perl is intentionally not installed: it pulls in perl-Archive-Tar, which is
-# affected by CVE-2026-9538 (ALAS2023-2026-1805) and has no patched AL2023 RPM.
 # install_rds_cert.sh uses sed/openssl instead of perl to extract the cert CN.
+# pipefail ensures a failed sha256sum inside the pipeline aborts the build.
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+# hadolint ignore=DL3018
 RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
         sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${ALPINE_PACKAGE_MIRROR}|g" /etc/apk/repositories; \
     fi && \

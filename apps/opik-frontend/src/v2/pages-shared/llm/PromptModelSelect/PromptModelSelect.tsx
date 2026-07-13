@@ -295,7 +295,7 @@ const PromptModelSelect = ({
     const { icon: Icon, title, modelName } = getSelectedModelInfo();
 
     return (
-      <TooltipWrapper content={title}>
+      <TooltipWrapper content={title} hoverOnly>
         <SelectTrigger
           className={cn(
             "size-full data-[placeholder]:text-light-slate",

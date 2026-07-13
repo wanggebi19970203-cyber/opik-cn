@@ -811,13 +811,21 @@ public class SpanDAO {
     /**
      * 两阶段、宽列延迟的span分页查询。
      * <p>
-     * 第一阶段（{@code page_ids}）仅在轻量级的、去重的id + 排序键集合上进行分页——宽文本列
-     * （input/output/metadata）从扫描的{@code spans_deduped} CTE中移除，除非排序目标包含它们
-     * （{@code sort_needs_wide}）。第二阶段（{@code page_wide}）仅为页面id重新读取完整行，包括宽列。
-     * 自定义{@code sort_fields}被渲染到{@code page_ids} ORDER BY（以便分页选择正确的页面）
-     * 和最终的ORDER BY（以便页面按顺序返回）中；{@code page_wide}自身的顺序无关紧要，
-     * 因为它受id约束且使用{@code LIMIT 1 BY id}。字段排除（{@code exclude_fields}）
-     * 和截断分层在顶部，不会丢弃排序键。
+     * Phase 1 ({@code page_ids}) paginates on the light, deduped id + sort-key set only — wide text columns
+     * (input/output/metadata) are dropped from the scanned {@code spans_deduped} CTE unless the sort targets them
+     * ({@code sort_needs_wide}). Phase 2 ({@code page_wide}) re-reads the full rows, including wide columns, for just
+     * the page ids. The custom {@code sort_fields} are rendered into both the {@code page_ids} ORDER BY (so pagination
+     * picks the right page) and the final ORDER BY (so the page is returned in order); {@code page_wide}'s own order is
+     * immaterial since it is id-bounded and {@code LIMIT 1 BY id}. Field exclusion ({@code exclude_fields}) and
+     * truncation are layered on top without dropping the sort key.
+     * <p>
+     * When aggregates are enrichment-only ({@code page_keyed_aggregates}, see
+     * {@code shouldPageKeyAggregates}), the feedback-score and comment CTEs are keyed on
+     * {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} instead of
+     * {@code span_id_prefilter}: the inner scalar subquery is evaluated once and cached for the whole query,
+     * so each aggregate scans only the page's spans instead of the full filtered project. The aggregate CTEs
+     * referencing {@code page_ids} before its definition is fine — CTE names resolve independently of
+     * declaration order.
      */
     private static final String SELECT_BY_PROJECT_ID = """
             WITH <if(span_id_prefilter)>span_id_prefilter AS (
@@ -858,7 +866,8 @@ public class SpanDAO {
                 FROM comments
                 WHERE workspace_id = :workspace_id
                 AND project_id = :project_id
-                <if(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
+                <if(page_keyed_aggregates)> AND entity_id IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))
+                <elseif(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
                 <else>
                 <if(uuid_from_time)> AND entity_id >= :uuid_from_time <endif>
                 <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time <endif>
@@ -899,7 +908,8 @@ public class SpanDAO {
                     WHERE entity_type = 'span'
                       AND workspace_id = :workspace_id
                       AND project_id = :project_id
-                      <if(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
+                      <if(page_keyed_aggregates)> AND entity_id IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))
+                      <elseif(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
                       <else>
                       <if(uuid_from_time)> AND entity_id >= :uuid_from_time <endif>
                       <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time <endif>
@@ -922,7 +932,8 @@ public class SpanDAO {
                     WHERE entity_type = 'span'
                       AND workspace_id = :workspace_id
                       AND project_id = :project_id
-                      <if(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
+                      <if(page_keyed_aggregates)> AND entity_id IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))
+                      <elseif(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
                       <else>
                       <if(uuid_from_time)> AND entity_id >= :uuid_from_time <endif>
                       <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time <endif>
@@ -1075,9 +1086,36 @@ public class SpanDAO {
             ;
             """;
 
+    /**
+     * Cheap "does the project have any span?" probe for the Logs empty state. Deliberately minimal — project
+     * scope only — so it is always a primary-key-prunable {@code LIMIT 1}. It intentionally does not support
+     * filters, search, trace_id, type, or time ranges: no consumer needs them, and adding them back would
+     * reintroduce a full-project COUNT fallback.
+     */
+    private static final String EXISTS_BY_PROJECT_ID = """
+            SELECT 1 AS exist
+            FROM spans
+            WHERE workspace_id = :workspace_id
+            AND project_id = :project_id
+            <if(source)> AND source IN (:source<if(source_legacy)>, :source_legacy<endif>) <endif>
+            LIMIT 1
+            SETTINGS log_comment = '<log_comment>'
+            """;
+
     private static final String COUNT_BY_PROJECT_ID = """
             <if(feedback_scores_filters || feedback_scores_empty_filters)>
-            WITH feedback_scores_deduped AS (
+            WITH <if(span_id_prefilter)>span_id_prefilter AS (
+                SELECT DISTINCT id
+                FROM spans
+                WHERE workspace_id = :workspace_id
+                AND project_id = :project_id
+                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(trace_id)> AND trace_id = :trace_id <endif>
+                <if(type)> AND type = :type <endif>
+                <if(filters)> AND <filters> <endif>
+                <if(search_text)> AND <search_text> <endif>
+            ), <endif>feedback_scores_deduped AS (
                 SELECT workspace_id,
                        project_id,
                        entity_id,
@@ -1097,8 +1135,11 @@ public class SpanDAO {
                     WHERE entity_type = 'span'
                       AND workspace_id = :workspace_id
                       AND project_id = :project_id
+                      <if(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
+                      <else>
                       <if(uuid_from_time)> AND entity_id >= :uuid_from_time <endif>
                       <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time <endif>
+                      <endif>
                     UNION ALL
                     SELECT workspace_id,
                            project_id,
@@ -1111,8 +1152,11 @@ public class SpanDAO {
                     WHERE entity_type = 'span'
                       AND workspace_id = :workspace_id
                       AND project_id = :project_id
+                      <if(span_id_prefilter)> AND entity_id IN (SELECT id FROM span_id_prefilter)
+                      <else>
                       <if(uuid_from_time)> AND entity_id >= :uuid_from_time <endif>
                       <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time <endif>
+                      <endif>
                 )
                 ORDER BY last_updated_at DESC
                 LIMIT 1 BY workspace_id, project_id, entity_id, name, author
@@ -1217,6 +1261,7 @@ public class SpanDAO {
                 UUIDv7ToDateTime(toUUID(min(id))) AS oldest_span_time
             FROM spans
             WHERE workspace_id = :workspace_id
+            AND trace_id >= :lower_bound
             AND trace_id \\< :cutoff_id
             SETTINGS log_comment = '<log_comment>'
             ;
@@ -2148,10 +2193,6 @@ public class SpanDAO {
                 .flatMap(this::mapToDto);
     }
 
-    /**
-     * 根据给定的span ID获取span的目标项目ID。
-     * 作为单独查询执行，以减少主查询中的spans表扫描。
-     */
     private Mono<List<UUID>> getTargetProjectIdsForSpans(Set<UUID> ids) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -2349,6 +2390,42 @@ public class SpanDAO {
         return countTotal(spanSearchCriteria).flatMap(total -> find(page, size, spanSearchCriteria, total));
     }
 
+    @WithSpan
+    public Mono<Boolean> existsByProjectId(@NonNull SpanSearchCriteria spanSearchCriteria) {
+        return Mono.from(connectionFactory.create())
+                .flatMap(connection -> makeMonoContextAware((userName, workspaceId) -> {
+                    var template = getSTWithLogComment(EXISTS_BY_PROJECT_ID, "exists_spans_by_project_id",
+                            workspaceId, userName, "");
+
+                    var source = spanSearchCriteria.source();
+                    var sourceLegacy = source == null
+                            ? Optional.<String>empty()
+                            : Source.legacyFallbackDbValue(source.getValue());
+                    if (source != null) {
+                        template.add("source", true);
+                        if (sourceLegacy.isPresent()) {
+                            template.add("source_legacy", true);
+                        }
+                    }
+
+                    var statement = connection.createStatement(template.render())
+                            .bind("project_id", spanSearchCriteria.projectId())
+                            .bind("workspace_id", workspaceId);
+
+                    if (source != null) {
+                        statement.bind("source", source.getValue());
+                        sourceLegacy.ifPresent(legacy -> statement.bind("source_legacy", legacy));
+                    }
+
+                    Segment segment = startSegment("spans", "Clickhouse", "existsByProjectId");
+
+                    return Mono.from(statement.execute())
+                            .doFinally(signalType -> endSegment(segment))
+                            .flatMap(result -> Mono.from(result.map((row, metadata) -> true)))
+                            .defaultIfEmpty(false);
+                }));
+    }
+
     private Mono<SpanPage> find(int page, int size, SpanSearchCriteria spanSearchCriteria, Long total) {
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> find(page, size, spanSearchCriteria, connection))
@@ -2384,9 +2461,8 @@ public class SpanDAO {
         return makeFluxContextAware((userName, workspaceId) -> {
             var template = newFindTemplate(SELECT_BY_PROJECT_ID, criteria, "find_span_stream", workspaceId, userName);
 
-            if (shouldUseSpanIdPrefilter(criteria, template)) {
-                template.add("span_id_prefilter", true);
-            }
+            // The stream has no custom sorting, so only filters can make aggregates drive page selection.
+            addAggregateKeyingFlags(template, criteria, false);
 
             bindTemplateExcludeFieldVariables(criteria, template);
 
@@ -2433,9 +2509,7 @@ public class SpanDAO {
                     .map(sortFields -> sortFields.contains("feedback_scores"))
                     .orElse(false);
 
-            if (shouldUseSpanIdPrefilter(spanSearchCriteria, template) && !sortHasFeedbackScores) {
-                template.add("span_id_prefilter", true);
-            }
+            addAggregateKeyingFlags(template, spanSearchCriteria, sortHasFeedbackScores);
 
             var finalTemplate = template;
             Optional.ofNullable(orderBySql)
@@ -2521,6 +2595,10 @@ public class SpanDAO {
             var template = newFindTemplate(COUNT_BY_PROJECT_ID, spanSearchCriteria, "count_spans_by_project_id",
                     workspaceId, userName);
 
+            if (shouldUseSpanIdPrefilter(spanSearchCriteria, template)) {
+                template.add("span_id_prefilter", true);
+            }
+
             var statement = connection.createStatement(template.render())
                     .bind("project_id", spanSearchCriteria.projectId())
                     .bind("workspace_id", workspaceId);
@@ -2568,19 +2646,61 @@ public class SpanDAO {
      * 确定是否激活span_id_prefilter CTE以缩小feedback_scores和comments扫描范围。
      * 使用newFindTemplate已计算的模板属性，避免冗余的toAnalyticsDbFilters调用。
      *
-     * <p>仅针对超出时间范围本身提供的过滤器激活：
-     * uuidFromTime/uuidToTime被排除，因为if/else回退会直接将其应用于feedback_scores；
-     * lastReceivedSpanId被排除，因为它是分页游标，而非语义过滤器。
+     * <p>Only activates for filters that narrow beyond what time-range alone provides:
+     * uuidFromTime/uuidToTime are excluded because the if/else fallback applies them directly
+     * to feedback_scores; lastReceivedSpanId is excluded because it's a pagination cursor,
+     * not a semantic filter.
+     *
+     * <p>Feedback score filters use separate template variables ({@code feedback_scores_filters})
+     * and are NOT injected into {@code <filters>}, so the prefilter CTE is safe to use
+     * alongside them (OPIK-7076).
      */
     private boolean shouldUseSpanIdPrefilter(SpanSearchCriteria criteria, ST template) {
-        boolean hasFeedbackScoreFilters = hasFeedbackScoreFilters(template);
-
         boolean hasNarrowingFilters = criteria.traceId() != null
                 || criteria.type() != null
                 || criteria.searchText() != null
                 || template.getAttribute("filters") != null;
 
-        return !hasFeedbackScoreFilters && hasNarrowingFilters;
+        return hasNarrowingFilters;
+    }
+
+    /**
+     * Determines whether the enrichment aggregate CTEs (feedback scores, comments) can be keyed on the page ids
+     * instead of the full filtered span id set.
+     *
+     * <p>Those CTEs are joined to {@code page_wide} only to enrich the returned rows, so whenever neither
+     * filtering nor sorting reads them, computing them for every candidate span is wasted work that grows with
+     * project size: the final LEFT JOINs discard everything outside the page. Keying them on the page ids turns
+     * whole-project scans into page-sized, primary-key-prunable lookups.
+     *
+     * <p>The page ids are consumed via {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))}:
+     * the inner scalar subquery is evaluated once and cached for the whole query, so the {@code page_ids} CTE is
+     * not re-executed at every reference (ClickHouse inlines plain CTE references), and the materialized constant
+     * array is usable for primary-key index analysis.
+     *
+     * <p>Must stay disabled whenever page selection depends on an aggregate: feedback-score filters
+     * ({@code spans_deduped} filters on feedback_scores_final/fsc) or sorting by feedback scores
+     * ({@code page_ids} joins feedback_scores_agg).
+     */
+    private boolean shouldPageKeyAggregates(ST template, boolean sortHasFeedbackScores) {
+        return !hasFeedbackScoreFilters(template) && !sortHasFeedbackScores;
+    }
+
+    /**
+     * Applies the aggregate-keying decision shared by {@code find} and {@code findSpanStream}: page-keyed
+     * aggregates when they are enrichment-only, otherwise the narrowing span id prefilter when filters allow it.
+     *
+     * <p>The prefilter branch fires for feedback-score-sorted queries with narrowing filters: page-keying is
+     * unsafe there (page selection reads feedback_scores_agg), but the prefilter set — all filtered span ids —
+     * is a superset of any page, so keying the aggregate CTEs on it preserves the sort while avoiding
+     * whole-project feedback-score and comment scans.
+     */
+    private void addAggregateKeyingFlags(ST template, SpanSearchCriteria criteria, boolean sortHasFeedbackScores) {
+        if (shouldPageKeyAggregates(template, sortHasFeedbackScores)) {
+            template.add("page_keyed_aggregates", true);
+        } else if (shouldUseSpanIdPrefilter(criteria, template)) {
+            template.add("span_id_prefilter", true);
+        }
     }
 
     private boolean hasFeedbackScoreFilters(ST template) {
@@ -3129,7 +3249,8 @@ public class SpanDAO {
      * @return 包含最旧span时间的速度估计，如果没有数据则返回空Mono
      * @throws io.r2dbc.spi.R2dbcException 对于大型工作区，错误码158（TOO_MANY_ROWS）
      */
-    public Mono<VelocityEstimate> estimateVelocityForRetention(@NonNull String workspaceId, @NonNull UUID cutoffId) {
+    public Mono<VelocityEstimate> estimateVelocityForRetention(@NonNull String workspaceId, @NonNull UUID lowerBound,
+            @NonNull UUID cutoffId) {
         log.debug("Estimating retention velocity for workspace '{}'", workspaceId);
 
         var template = getSTWithLogComment(ESTIMATE_VELOCITY_FOR_RETENTION,
@@ -3139,6 +3260,7 @@ public class SpanDAO {
                 .flatMap(connection -> {
                     var statement = connection.createStatement(template.render())
                             .bind("workspace_id", workspaceId)
+                            .bind("lower_bound", lowerBound)
                             .bind("cutoff_id", cutoffId);
 
                     return Mono.from(statement.execute())

@@ -63,7 +63,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
 }) => {
   const { t } = useTranslation("tracing");
   const {
-    permissions: { canAnnotateTraceSpanThread },
+    permissions: { canAnnotateTraceSpanThread, canViewPrompts },
   } = usePermissions();
 
   const rootScrollRef = useRef<HTMLDivElement>(null);
@@ -78,7 +78,7 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
   const hasSpanAgentGraph =
     Boolean(agentGraphData) && type !== TRACE_TYPE_FOR_TREE;
 
-  const hasPrompts = Boolean(getRawPrompts(data));
+  const hasPrompts = Boolean(getRawPrompts(data)) && canViewPrompts;
 
   const { media, transformedInput, transformedOutput } = useUnifiedMedia(data);
 

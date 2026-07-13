@@ -183,6 +183,7 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
             size="icon-sm"
             onClick={deleteDatasetItemsHandler}
             disabled={disabled}
+            data-testid="dataset-items-bulk-delete-button"
           >
             <Trash />
           </Button>

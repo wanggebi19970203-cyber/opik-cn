@@ -657,24 +657,31 @@ def _evaluate_test_suite_task(
 
     start_time = time.time()
 
-    # 激活本地模拟器，以便套件级别的 LLMJudge 断言可以通过代理工具循环
-    # 访问完整的跟踪树。模拟器缓存进程中记录的每个跟踪/跨度；空闲时保持非活动状态。
-    # 我们在套件运行期间切换状态，并在 `finally` 中恢复先前状态，
-    # 以便不会干扰模拟器的并发（外部）使用。
-    # 带默认值的 `getattr` 保持 MagicMock 兼容性：
-    # MagicMock 自动拒绝看起来像双下划线（以 `__` 开头和结尾）的属性名，
-    # 因此普通属性访问会在单元测试使用的模拟客户端上引发 AttributeError。
-    # 生产客户端始终具有此属性，因此默认值永远不会触发。
+    # Activate the local emulator so suite-level LLMJudge assertions get
+    # access to the full trace tree via the agentic tool loop. The emulator
+    # caches every trace/span logged in-process; it stays inactive at idle.
+    # Activation is ref-counted (acquire here, release in `finally`), so when
+    # this connection's processing chain is shared by several concurrent
+    # evaluate() runs the emulator stays active until the last one finishes.
+    # `getattr` with a default keeps this MagicMock-friendly:
+    # MagicMock auto-rejects attribute names that look like dunders
+    # (start and end with `__`), so plain attribute access raises
+    # AttributeError on mocked clients used by unit tests. Production
+    # clients always have this attribute, so the default never fires.
     chain = getattr(client, "__internal_api__message_processor__", None)
-    emulator_was_active = False
-    if chain is not None:
-        emulator = message_processors_chain.get_local_emulator_message_processor(chain)
-        if emulator is not None:
-            emulator_was_active = emulator.is_active()
-            if not emulator_was_active:
-                message_processors_chain.toggle_local_emulator_message_processor(
-                    active=True, chain=chain, reset=True
-                )
+    emulator = (
+        message_processors_chain.get_local_emulator_message_processor(chain)
+        if chain is not None
+        else None
+    )
+    if chain is not None and emulator is not None:
+        # Ref-counted activation: concurrent evaluate() runs that share this
+        # connection's processing chain each acquire/release, so the emulator
+        # stays active until the last run finishes (instead of the first to
+        # exit deactivating it and starving the others' agentic judges).
+        message_processors_chain.toggle_local_emulator_message_processor(
+            active=True, chain=chain, reset=True
+        )
 
     try:
         with asyncio_support.async_http_connections_expire_immediately():
@@ -704,7 +711,7 @@ def _evaluate_test_suite_task(
                 show_scores_in_progress_bar=False,
             )
     finally:
-        if chain is not None and not emulator_was_active:
+        if chain is not None and emulator is not None:
             message_processors_chain.toggle_local_emulator_message_processor(
                 active=False, chain=chain, reset=True
             )

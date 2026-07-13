@@ -74,10 +74,16 @@ const ExperimentsPage: React.FC = () => {
           <PageEmptyState
             lightImageUrl={emptyExperimentsLightUrl}
             darkImageUrl={emptyExperimentsDarkUrl}
-            title={t("experiments.empty.title")}
-            description={t("experiments.empty.description")}
-            primaryActionLabel={t("experiments.empty.action")}
-            onPrimaryAction={handleNewExperimentClick}
+            title="No experiments yet"
+            description={
+              "Get started by creating your first experiment.\nCompare prompts and models, evaluate results, and track performance over time."
+            }
+            primaryActionLabel={
+              canCreateExperiments ? "Create your first experiment" : undefined
+            }
+            onPrimaryAction={
+              canCreateExperiments ? handleNewExperimentClick : undefined
+            }
             docsUrl={buildDocsUrl("/evaluation/overview")}
           />
         ) : (

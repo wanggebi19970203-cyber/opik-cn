@@ -28,6 +28,7 @@ import {
 import MetricDateRangeSelect from "@/v2/pages-shared/traces/MetricDateRangeSelect/MetricDateRangeSelect";
 import EnvironmentFilterSelect from "@/v2/pages-shared/traces/EnvironmentFilterSelect/EnvironmentFilterSelect";
 
+import useTracesOrSpansExist from "@/hooks/useTracesOrSpansExist";
 import useTracesOrSpansList, {
   TRACE_DATA_TYPE,
 } from "@/hooks/useTracesOrSpansList";
@@ -109,6 +110,15 @@ import EnvironmentCell from "@/shared/DataTableCells/EnvironmentCell";
 import CostCell from "@/shared/DataTableCells/CostCell";
 import ErrorCell from "@/shared/DataTableCells/ErrorCell";
 import DurationCell from "@/shared/DataTableCells/DurationCell";
+import { withExplain } from "@/v2/pages/LogsPage/explain/withExplain";
+import {
+  buildCostTarget,
+  buildDurationTarget,
+  buildErrorTarget,
+  buildSpanCostTarget,
+  buildSpanDurationTarget,
+  buildSpanErrorTarget,
+} from "@/v2/pages/LogsPage/TracesSpansTab/explainTargets";
 import FeedbackScoreCell from "@/shared/DataTableCells/FeedbackScoreCell";
 import PrettyCell from "@/shared/DataTableCells/PrettyCell";
 import CommentsCell from "@/shared/DataTableCells/CommentsCell";
@@ -1294,20 +1304,21 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
       },
     );
 
-  const { data: existenceData } = useTracesOrSpansList(
+  // Cheap "does this project have any SDK-logged traces/spans?" probe for the empty-state decision.
+  // Scoped to source=sdk to match the sdk-scoped list above, so a project whose only data is non-sdk
+  // (experiment/playground/optimization/evaluator) reports false and correctly shows the SDK onboarding.
+  // Hits the LIMIT-1 existence endpoint instead of a size:1 list query, which builds full-project
+  // trace/span/cost/feedback aggregations in ClickHouse regardless of the selected time range.
+  const { exists: hasProjectData } = useTracesOrSpansExist(
     {
       projectId,
       type: type as TRACE_DATA_TYPE,
-      page: 1,
-      size: 1,
-      stripAttachments: true,
-      logsSource: LOGS_SOURCE.sdk,
+      source: LOGS_SOURCE.sdk,
     },
     {
       enabled: isTableDataEnabled,
     },
   );
-  const hasProjectData = (existenceData?.total ?? 0) > 0;
 
   const isTableLoading =
     isPending || isFeedbackScoresPending || isSpanFeedbackScoresPending;
@@ -1559,6 +1570,29 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     [setThreadId, setTraceId],
   );
 
+  // Error/Duration/Cost cells get the Ollie Explain button (OPIK-6425). Wrapped
+  // here (not at module scope) so the builder set follows the active view: the
+  // Spans view emits span.* targets, the Traces view emits trace.*. entityId is
+  // the row id in both cases — the backend resolves a span's parent trace. The
+  // button is a no-op in OSS (the PluginsStore slot is empty).
+  const explainCells = useMemo(() => {
+    const isSpans = type === TRACE_DATA_TYPE.spans;
+    return {
+      error_info: withExplain(
+        ErrorCell as never,
+        isSpans ? buildSpanErrorTarget : buildErrorTarget,
+      ),
+      duration: withExplain(
+        DurationCell as never,
+        isSpans ? buildSpanDurationTarget : buildDurationTarget,
+      ),
+      total_estimated_cost: withExplain(
+        CostCell as never,
+        isSpans ? buildSpanCostTarget : buildCostTarget,
+      ),
+    };
+  }, [type]);
+
   const columnData = useMemo(() => {
     return [
       {
@@ -1568,18 +1602,25 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         cell: IdCell as never,
         sortable: true,
       },
-      ...SHARED_COLUMNS.map((col) =>
-        col.id === "tags"
-          ? {
-              ...col,
-              customMeta: {
-                ...col.customMeta,
-                onItemClick: addTagFilter,
-                getItemTooltip: (tag: string) => `Filter by tag: "${tag}"`,
-              },
-            }
-          : col,
-      ),
+      ...SHARED_COLUMNS.map((col) => {
+        if (col.id === "tags") {
+          return {
+            ...col,
+            customMeta: {
+              ...col.customMeta,
+              onItemClick: addTagFilter,
+              getItemTooltip: (tag: string) => `Filter by tag: "${tag}"`,
+            },
+          };
+        }
+        if (col.id in explainCells) {
+          return {
+            ...col,
+            cell: explainCells[col.id as keyof typeof explainCells] as never,
+          };
+        }
+        return col;
+      }),
       ...(type === TRACE_DATA_TYPE.traces
         ? [
             {
@@ -1660,7 +1701,14 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         : []),
       // Note: metadataColumnsData is NOT added here - it goes in columnSections instead
     ];
-  }, [type, handleThreadIdClick, isGuardrailsEnabled, addTagFilter, t]);
+  }, [
+    type,
+    handleThreadIdClick,
+    isGuardrailsEnabled,
+    addTagFilter,
+    explainCells,
+    t,
+  ]);
 
   const translatedColumnData = useMemo(
     () =>

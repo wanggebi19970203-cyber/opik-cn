@@ -77,6 +77,7 @@ const LoadedPromptDisplay: React.FC<LoadedPromptDisplayProps> = ({
             size="icon-2xs"
             className="shrink-0"
             onClick={onClear}
+            type="button"
           >
             <XCircle />
           </Button>

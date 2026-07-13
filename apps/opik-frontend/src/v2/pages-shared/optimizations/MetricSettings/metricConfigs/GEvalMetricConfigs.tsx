@@ -5,20 +5,23 @@ import { EditorView } from "@codemirror/view";
 import GEvalField from "./GEvalField";
 import DatasetVariablesHint from "../DatasetVariablesHint";
 
-import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
-
-import { GEvalMetricParameters } from "@/types/optimizations";
+import {
+  GEvalMetricParameters,
+  MetricParamErrors,
+} from "@/types/optimizations";
 
 interface GEvalMetricConfigsProps {
   configs: Partial<GEvalMetricParameters>;
   onChange: (configs: Partial<GEvalMetricParameters>) => void;
   datasetVariables?: string[];
+  errors?: MetricParamErrors;
 }
 
 const GEvalMetricConfigs = ({
   configs,
   onChange,
   datasetVariables = [],
+  errors,
 }: GEvalMetricConfigsProps) => {
   const { t } = useTranslation("optimizations");
   const taskIntroEditorRef = useRef<EditorView | null>(null);
@@ -40,39 +43,45 @@ const GEvalMetricConfigs = ({
   };
 
   return (
-    <div className="flex w-72 flex-col gap-6">
+    <div className="flex w-72 flex-col gap-3">
       <GEvalField
         id="task_introduction"
         label={t("optimizations.metricConfigs.taskIntroduction")}
-        explainer={EXPLAINERS_MAP[EXPLAINER_ID.geval_task_introduction]}
         value={configs.task_introduction ?? ""}
         onChange={(value) => onChange({ ...configs, task_introduction: value })}
-        placeholder={t("optimizations.metricConfigs.taskIntroductionPlaceholder")}
+        placeholder={t(
+          "optimizations.metricConfigs.taskIntroductionPlaceholder",
+        )}
         editorRef={taskIntroEditorRef}
         onFocus={() => {
           lastFocusedEditorRef.current = taskIntroEditorRef.current;
         }}
+        error={errors?.task_introduction?.message}
       />
 
-      <GEvalField
-        id="evaluation_criteria"
-        label={t("optimizations.metricConfigs.evaluationCriteria")}
-        explainer={EXPLAINERS_MAP[EXPLAINER_ID.geval_evaluation_criteria]}
-        value={configs.evaluation_criteria ?? ""}
-        onChange={(value) =>
-          onChange({ ...configs, evaluation_criteria: value })
-        }
-        placeholder={t("optimizations.metricConfigs.evaluationCriteriaPlaceholder")}
-        editorRef={evalCriteriaEditorRef}
-        onFocus={() => {
-          lastFocusedEditorRef.current = evalCriteriaEditorRef.current;
-        }}
-      />
+      <div className="space-y-1">
+        <GEvalField
+          id="evaluation_criteria"
+          label={t("optimizations.metricConfigs.evaluationCriteria")}
+          value={configs.evaluation_criteria ?? ""}
+          onChange={(value) =>
+            onChange({ ...configs, evaluation_criteria: value })
+          }
+          placeholder={t(
+            "optimizations.metricConfigs.evaluationCriteriaPlaceholder",
+          )}
+          editorRef={evalCriteriaEditorRef}
+          onFocus={() => {
+            lastFocusedEditorRef.current = evalCriteriaEditorRef.current;
+          }}
+          error={errors?.evaluation_criteria?.message}
+        />
 
-      <DatasetVariablesHint
-        datasetVariables={datasetVariables}
-        onSelect={handleVariableSelect}
-      />
+        <DatasetVariablesHint
+          datasetVariables={datasetVariables}
+          onSelect={handleVariableSelect}
+        />
+      </div>
     </div>
   );
 };

@@ -1,24 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Database,
-  FlaskConical,
-  ListChecks,
-  Pause,
-  Pencil,
-  Play,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { Pause, Play, RotateCcw } from "lucide-react";
 
 import { Separator } from "@/ui/separator";
 import { Button } from "@/ui/button";
 import { HotkeyDisplay } from "@/ui/hotkey-display";
 import ConfirmDialog from "@/shared/ConfirmDialog/ConfirmDialog";
 import FiltersButton from "@/shared/FiltersButton/FiltersButton";
-import RunExperimentDialog from "@/v2/pages/PlaygroundPage/RunExperimentDialog";
+import RunExperimentControl from "@/v2/pages/PlaygroundPage/RunExperimentControl";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
-import { Link } from "@tanstack/react-router";
 import { generateDefaultPrompt } from "@/lib/playground";
 import { LOGS_SOURCE } from "@/types/traces";
 import { useActiveProjectId } from "@/store/AppStore";
@@ -32,26 +22,21 @@ import {
   buildDatasetFilterColumns,
   transformDataColumnFilters,
 } from "@/lib/filters";
-import {
-  parseDatasetVersionKey,
-  toPlainDatasetId,
-} from "@/utils/datasetVersionStorage";
+import { parseDatasetVersionKey } from "@/utils/datasetVersionStorage";
 import {
   usePromptMap,
   useSetPromptMap,
   useClearCreatedExperiments,
+  useCreatedExperiments,
   useIsRunning,
-  useSelectedRuleIds,
   useSetSelectedRuleIds,
   useResetDatasetFilters,
   useResetOutputMap,
-  useSetDatasetFilters,
   useSetExperimentNamePrefix,
-  useDatasetFilters,
   useSetDatasetType,
   useDatasetType,
-  useSetRecentDatasetForType,
-  useSetScoresForDataset,
+  useDatasetFilters,
+  useSetDatasetFilters,
 } from "@/store/PlaygroundStore";
 import useLastPickedModel from "@/hooks/useLastPickedModel";
 import useLLMProviderModelsData from "@/hooks/useLLMProviderModelsData";
@@ -92,24 +77,19 @@ const PlaygroundHeader = ({
   const promptMap = usePromptMap();
   const setPromptMap = useSetPromptMap();
   const clearCreatedExperiments = useClearCreatedExperiments();
-  const selectedRuleIds = useSelectedRuleIds();
+  const createdExperiments = useCreatedExperiments();
   const setSelectedRuleIds = useSetSelectedRuleIds();
   const resetDatasetFilters = useResetDatasetFilters();
   const resetOutputMap = useResetOutputMap();
-  const setDatasetFilters = useSetDatasetFilters();
   const setExperimentNamePrefix = useSetExperimentNamePrefix();
   const isRunning = useIsRunning();
-  const filters = useDatasetFilters();
   const setDatasetType = useSetDatasetType();
-  const setRecentDatasetForType = useSetRecentDatasetForType();
-  const setScoresForDataset = useSetScoresForDataset();
-
   const currentDatasetType = useDatasetType();
+  const filters = useDatasetFilters();
+  const setDatasetFilters = useSetDatasetFilters();
+
   const resetKeyRef = useRef(0);
-  const leaveKeyRef = useRef(0);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
-  const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   const {
     permissions: { canViewExperiments, canCreateExperiments, canViewDatasets },
@@ -123,6 +103,8 @@ const PlaygroundHeader = ({
 
   const isExperimentMode = !!datasetId;
   const activeProjectId = useActiveProjectId();
+  const isDatasetExperiment =
+    isExperimentMode && currentDatasetType === DATASET_TYPE.DATASET;
 
   const parsedDatasetKey = useMemo(
     () => parseDatasetVersionKey(datasetId),
@@ -132,7 +114,7 @@ const PlaygroundHeader = ({
 
   const { data: filterVersionsData } = useDatasetVersionsList(
     { datasetId: plainDatasetId!, page: 1, size: 1000 },
-    { enabled: !!plainDatasetId && isExperimentMode },
+    { enabled: !!plainDatasetId && isDatasetExperiment },
   );
   const filterVersionHash = useMemo(
     () =>
@@ -142,21 +124,21 @@ const PlaygroundHeader = ({
     [filterVersionsData?.content, parsedDatasetKey?.versionId],
   );
 
-  const transformedFiltersForColumnsFetch = useMemo(
-    () => (filters.length ? transformDataColumnFilters(filters) : undefined),
-    [filters],
-  );
-
   const { data: datasetItemsForColumns } = useDatasetItemsList(
     {
       datasetId: plainDatasetId!,
       page: 1,
       size: 1,
       truncate: true,
-      filters: transformedFiltersForColumnsFetch,
+      filters: filters.length ? transformDataColumnFilters(filters) : undefined,
       versionId: filterVersionHash,
     },
-    { enabled: !!plainDatasetId && isExperimentMode },
+    { enabled: !!plainDatasetId && isDatasetExperiment },
+  );
+
+  const datasetColumnNames = useMemo(
+    () => (datasetItemsForColumns?.columns ?? []).map((c) => c.name),
+    [datasetItemsForColumns?.columns],
   );
 
   const filterColumns = useMemo(
@@ -202,10 +184,8 @@ const PlaygroundHeader = ({
     (isExperimentMode && !datasetName);
 
   const runDisabledReason = useMemo(() => {
-    if (!allPromptsHaveModels)
-      return t("playground.runDisabled.selectModel");
-    if (!allMessagesNotEmpty)
-      return t("playground.runDisabled.emptyMessages");
+    if (!allPromptsHaveModels) return t("playground.runDisabled.selectModel");
+    if (!allMessagesNotEmpty) return t("playground.runDisabled.emptyMessages");
     if (hasMediaCompatibilityIssues)
       return t("playground.runDisabled.mediaNotSupported");
     if (isExperimentMode && !datasetName)
@@ -217,6 +197,7 @@ const PlaygroundHeader = ({
     hasMediaCompatibilityIssues,
     isExperimentMode,
     datasetName,
+    t,
   ]);
 
   // Keyboard shortcut: Shift+Enter to run all
@@ -273,114 +254,32 @@ const PlaygroundHeader = ({
     setDatasetType,
   ]);
 
-  const handleRunOnDataset = useCallback(
-    (params: {
-      datasetId: string;
-      versionId?: string;
-      datasetName: string;
-      datasetType: DATASET_TYPE;
-      selectedRuleIds: string[] | null;
-      experimentNamePrefix: string;
-    }) => {
-      resetOutputMap();
-      const datasetValue = params.versionId
-        ? `${params.datasetId}::${params.versionId}`
-        : params.datasetId;
-
-      const previousPlainId = toPlainDatasetId(datasetId);
-      const newPlainId = toPlainDatasetId(params.datasetId);
-      const isDifferentDataset = previousPlainId !== newPlainId;
-      onChangeDatasetId(datasetValue);
-
-      setSelectedRuleIds(params.selectedRuleIds);
-      if (isDifferentDataset) {
-        resetDatasetFilters();
-      }
-      setExperimentNamePrefix(params.experimentNamePrefix);
-      setDatasetType(params.datasetType);
-
-      setRecentDatasetForType(params.datasetType, datasetValue);
-      if (params.datasetType === DATASET_TYPE.DATASET) {
-        setScoresForDataset(newPlainId, params.selectedRuleIds);
-      }
-    },
-    [
-      datasetId,
-      resetOutputMap,
-      onChangeDatasetId,
-      setSelectedRuleIds,
-      resetDatasetFilters,
-      setExperimentNamePrefix,
-      setDatasetType,
-      setRecentDatasetForType,
-      setScoresForDataset,
-    ],
-  );
-
-  const renderExperimentChipOrButton = () => {
+  const renderExperimentControl = () => {
     if (!(canViewDatasets && canCreateExperiments && canViewExperiments))
       return null;
 
-    if (isExperimentMode) {
-      const chipLabel = datasetName
-        ? versionName
-          ? `${datasetName} ${versionName}`
-          : datasetName
-        : t("playground.header.loading");
-
-      const TypeIcon =
-        currentDatasetType === DATASET_TYPE.TEST_SUITE ? ListChecks : Database;
-
-      return (
-        <>
-          <div className="flex h-6 items-center rounded-md border bg-background">
-            <button
-              data-testid="playground-loaded-source-pill"
-              data-source-type={currentDatasetType}
-              className="flex items-center gap-1.5 px-2 text-muted-slate hover:text-primary-hover"
-              onClick={() => setIsRunModalOpen(true)}
-            >
-              <TypeIcon className="size-3.5 shrink-0 text-library-loaded" />
-              <span className="comet-body-xs max-w-[200px] truncate">
-                {chipLabel}
-              </span>
-              <Pencil className="size-3 shrink-0" />
-            </button>
-            <Separator orientation="vertical" className="h-full" />
-            <button
-              className="flex items-center p-1 text-muted-slate hover:text-primary-hover"
-              onClick={() => {
-                leaveKeyRef.current += 1;
-                setLeaveDialogOpen(true);
-              }}
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-          {currentDatasetType === DATASET_TYPE.DATASET && (
-            <FiltersButton
-              columns={filterColumns}
-              filters={filters}
-              onChange={setDatasetFilters}
-              layout="icon"
-              deferOnChange
-            />
-          )}
-        </>
-      );
-    }
-
     return (
-      <Button
-        data-testid="playground-run-button"
-        data-mode="experiment-trigger"
-        variant="outline"
-        size="2xs"
-        onClick={() => setIsRunModalOpen(true)}
-      >
-        <FlaskConical className="mr-1 size-3.5" />
-        {t("playground.header.runExperiment")}
-      </Button>
+      <>
+        <RunExperimentControl
+          workspaceName={workspaceName}
+          datasetId={datasetId}
+          versionName={versionName}
+          datasetColumnNames={datasetColumnNames}
+          onChangeDatasetId={onChangeDatasetId}
+          onLeaveExperimentMode={handleLeaveExperimentMode}
+        />
+        {isDatasetExperiment && (
+          <FiltersButton
+            columns={filterColumns}
+            filters={filters}
+            onChange={setDatasetFilters}
+            layout="icon"
+            variant="outline"
+            size="icon-2xs"
+            deferOnChange
+          />
+        )}
+      </>
     );
   };
 
@@ -396,22 +295,27 @@ const PlaygroundHeader = ({
       );
     }
 
-    const label = isExperimentMode ? t("playground.header.rerun") : t("playground.header.run");
+    const hasRunExperiment = isExperimentMode && createdExperiments.length > 0;
+    const label = hasRunExperiment ? "Re-run" : "Run";
+    const experimentTarget =
+      currentDatasetType === DATASET_TYPE.TEST_SUITE ? "test suite" : "dataset";
     const tooltip =
       runDisabledReason ??
-      (isExperimentMode ? t("playground.header.rerunTooltip") : t("playground.header.runTooltip"));
+      (isExperimentMode
+        ? `Run experiment on ${experimentTarget}`
+        : "Run your prompts");
 
     return (
       <TooltipWrapper content={tooltip}>
         <Button
           data-testid="playground-run-button"
-          data-mode={isExperimentMode ? "re-run" : "run"}
+          data-mode={hasRunExperiment ? "re-run" : "run"}
           size="2xs"
           onClick={() => onRunAll()}
           disabled={isRunDisabled}
           style={isRunDisabled ? { pointerEvents: "auto" } : {}}
         >
-          <Play className="mr-1 size-3.5" />
+          <Play className="mr-1 size-3" />
           {label}
           <HotkeyDisplay hotkey="⇧" size="2xs" className="ml-1.5" />
           <HotkeyDisplay hotkey="⏎" size="2xs" className="ml-1" />
@@ -419,23 +323,6 @@ const PlaygroundHeader = ({
       </TooltipWrapper>
     );
   };
-
-  const leaveDescription = canViewExperiments ? (
-    <>
-      {t("playground.leaveExperiment.descriptionWithExperiments")}{" "}
-      <Link
-        to="/$workspaceName/experiments"
-        params={{ workspaceName }}
-        target="_blank"
-        className="underline"
-      >
-        {t("playground.leaveExperiment.experimentsPage")}
-      </Link>{" "}
-      {t("playground.leaveExperiment.pageSuffix")}
-    </>
-  ) : (
-    t("playground.leaveExperiment.descriptionSimple")
-  );
 
   return (
     <>
@@ -447,7 +334,7 @@ const PlaygroundHeader = ({
           <h1 className="comet-title-xs">{t("playground.title")}</h1>
         </div>
         <div className="flex items-center gap-2">
-          {renderExperimentChipOrButton()}
+          {renderExperimentControl()}
           {renderRunButton()}
           <Separator orientation="vertical" className="h-5" />
           <TooltipWrapper content={t("playground.header.resetTooltip")}>
@@ -481,26 +368,6 @@ const PlaygroundHeader = ({
         title={t("playground.resetConfirm.title")}
         description={t("playground.resetConfirm.description")}
         confirmText={t("playground.resetConfirm.confirmText")}
-      />
-
-      <ConfirmDialog
-        key={`leave-${leaveKeyRef.current}`}
-        open={leaveDialogOpen}
-        setOpen={setLeaveDialogOpen}
-        onConfirm={handleLeaveExperimentMode}
-        title={t("playground.leaveExperiment.title")}
-        description={leaveDescription}
-        confirmText={t("playground.leaveExperiment.confirmText")}
-      />
-
-      <RunExperimentDialog
-        open={isRunModalOpen}
-        onClose={() => setIsRunModalOpen(false)}
-        onRun={handleRunOnDataset}
-        workspaceName={workspaceName}
-        initialDatasetId={isExperimentMode ? datasetId : null}
-        initialDatasetType={isExperimentMode ? currentDatasetType : null}
-        initialSelectedRuleIds={isExperimentMode ? selectedRuleIds : null}
       />
     </>
   );

@@ -89,8 +89,11 @@
       "selectAlgorithm": "Select algorithm",
       "dataset": "Dataset",
       "selectDataset": "Select a dataset",
+      "itemSource": "Item source",
+      "selectItemSource": "Select item source",
       "metric": "Metric",
-      "selectMetric": "Select metric"
+      "selectMetric": "Select metric",
+      "goToDocs": "Go to docs"
     },
     "addDialog": {
       "title": "Start optimization run",

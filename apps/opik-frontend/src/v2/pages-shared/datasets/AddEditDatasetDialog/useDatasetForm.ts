@@ -246,6 +246,7 @@ const useDatasetForm = ({
       createItemsFromCsvMutate,
       createItemsFromJsonMutate,
       toast,
+      t,
     ],
   );
 
@@ -322,7 +323,7 @@ const useDatasetForm = ({
         setOpen(false);
       }
     },
-    [toast, setOpen, onNameConflict],
+    [toast, setOpen, onNameConflict, t],
   );
 
   const submitHandler = useCallback(() => {

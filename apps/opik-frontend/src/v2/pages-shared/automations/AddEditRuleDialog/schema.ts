@@ -35,9 +35,9 @@ const RuleNameSchema = z
   })
   .min(1, { message: i18next.t("common:validation.ruleNameRequired") });
 
-const ProjectIdsSchema = z
-  .array(z.string())
-  .min(1, { message: i18next.t("common:validation.atLeastOneProjectRequired") });
+const ProjectIdsSchema = z.array(z.string()).min(1, {
+  message: i18next.t("common:validation.atLeastOneProjectRequired"),
+});
 
 const SamplingRateSchema = z.number();
 
@@ -118,7 +118,9 @@ export const FiltersSchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: i18next.t("common:validation.keyRequiredForDictionaryFields"),
+          message: i18next.t(
+            "common:validation.keyRequiredForDictionaryFields",
+          ),
           path: [index, "key"],
         });
       }
@@ -145,7 +147,9 @@ const LLMJudgeBaseSchema = z.object({
     seed: z
       .number()
       .int()
-      .min(0, { message: i18next.t("common:validation.seedMustBeNonNegativeInteger") })
+      .min(0, {
+        message: i18next.t("common:validation.seedMustBeNonNegativeInteger"),
+      })
       .optional()
       .nullable(),
     custom_parameters: z.record(z.string(), z.unknown()).optional().nullable(),
@@ -155,7 +159,9 @@ const LLMJudgeBaseSchema = z.object({
     z.object({
       id: z.string(),
       content: z.union([
-        z.string().min(1, { message: i18next.t("common:validation.messageRequired") }),
+        z
+          .string()
+          .min(1, { message: i18next.t("common:validation.messageRequired") }),
         z
           .array(
             z.union([
@@ -183,9 +189,9 @@ const LLMJudgeBaseSchema = z.object({
   schema: z
     .array(
       z.object({
-        name: z
-          .string()
-          .min(1, { message: i18next.t("common:validation.scoreDefinitionNameRequired") }),
+        name: z.string().min(1, {
+          message: i18next.t("common:validation.scoreDefinitionNameRequired"),
+        }),
         type: z.nativeEnum(LLM_SCHEMA_TYPE),
         description: z.string(),
         unsaved: z
@@ -203,8 +209,17 @@ const LLMJudgeBaseSchema = z.object({
 
         return schemaNames.length === uniq(schemaNames).length;
       },
-      { message: i18next.t("common:validation.allScoreDefinitionNamesShouldBeUnique") },
+      {
+        message: i18next.t(
+          "common:validation.allScoreDefinitionNamesShouldBeUnique",
+        ),
+      },
     ),
+  maxCostUsd: z
+    .number()
+    .positive({ message: "Budget must be a positive amount" })
+    .optional()
+    .nullable(),
 });
 
 export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
@@ -214,11 +229,11 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
       .string()
       .min(1, { message: i18next.t("common:validation.keyRequired") })
       // Allow the standard JSONPath form (input/output/metadata.[...]) OR a reserved
-      // bare sentinel like `spans` — see RESERVED_TRACE_EVALUATOR_VARIABLES. The
-      // backend's OnlineScoringEngine substitutes the sentinel with the JSON-
-      // serialized spans list at render time.
-      .regex(/^(input|output|metadata)(\.|$)|^spans$/, {
-        message: i18next.t("common:validation.traceVariableKeyInvalid"),
+      // bare sentinel like `spans` / `trace` — see RESERVED_TRACE_LLM_JUDGE_VARIABLES.
+      // The backend's OnlineScoringEngine substitutes `spans` with the JSON-serialized
+      // spans list and `trace` with the trace skeleton (ids + attachments) at render time.
+      .regex(/^(input|output|metadata)(\.|$)|^spans$|^trace$/, {
+        message: `Key is invalid, it should be "input", "output", "metadata" (e.g. "input.message" or just "input" for the whole object), the reserved word "spans" to inject the trace's spans list, or "trace" to inject the trace skeleton with attachments`,
       }),
   ),
 }).superRefine((data, ctx) => {
@@ -237,24 +252,21 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
     if (!supportsMultimodal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message:
-          i18next.t("common:validation.modelDoesNotSupportMediaInput"),
+        message: i18next.t("common:validation.modelDoesNotSupportMediaInput"),
         path: ["model"],
       });
     } else {
       if (hasImages && !modelSupportsImages) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportImageInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportImageInput"),
           path: ["model"],
         });
       }
       if (hasVideos && !modelSupportsVideos) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportVideoInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportVideoInput"),
           path: ["model"],
         });
       }
@@ -267,9 +279,13 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
     z.string(),
     z
       .string()
-      .min(1, { message: i18next.t("common:validation.keyRequired") })
-      .regex(/^(input|output|metadata)(\.|$)/, {
-        message: i18next.t("common:validation.spanVariableKeyInvalid"),
+      .min(1, { message: "Key is required" })
+      // Allow the standard JSONPath form (input/output/metadata.[...]) OR the reserved
+      // bare sentinel `span` — see RESERVED_SPAN_LLM_JUDGE_VARIABLES. The backend's
+      // OnlineScoringEngine substitutes `span` with the span structure (span id +
+      // attachment file_names) at render time.
+      .regex(/^(input|output|metadata)(\.|$)|^span$/, {
+        message: `Key is invalid, it should be "input", "output", "metadata" (e.g. "input.message" or just "input" for the whole object), or the reserved word "span" to inject the span with its attachments`,
       }),
   ),
 }).superRefine((data, ctx) => {
@@ -288,24 +304,21 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
     if (!supportsMultimodal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message:
-          i18next.t("common:validation.modelDoesNotSupportMediaInput"),
+        message: i18next.t("common:validation.modelDoesNotSupportMediaInput"),
         path: ["model"],
       });
     } else {
       if (hasImages && !modelSupportsImages) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportImageInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportImageInput"),
           path: ["model"],
         });
       }
       if (hasVideos && !modelSupportsVideos) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportVideoInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportVideoInput"),
           path: ["model"],
         });
       }
@@ -324,7 +337,9 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
   if (contextCount < 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: i18next.t("common:validation.atLeastOneMessageShouldContainContext"),
+      message: i18next.t(
+        "common:validation.atLeastOneMessageShouldContainContext",
+      ),
       path: ["messages", data.messages.length - 1, "content"],
     });
   }
@@ -345,7 +360,9 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
         if (match !== "{{context}}") {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: i18next.t("common:validation.templateVariableNotAllowed", { variable: match }),
+            message: i18next.t("common:validation.templateVariableNotAllowed", {
+              variable: match,
+            }),
             path: ["messages", index, "content"],
           });
         }
@@ -527,6 +544,7 @@ export const convertLLMJudgeObjectToLLMJudgeData = (data: LLMJudgeObject) => {
     variables: data.variables ?? {},
     parsingVariablesError: false,
     schema: data.schema,
+    maxCostUsd: data.max_cost_usd ?? null,
   };
 };
 
@@ -558,5 +576,6 @@ export const convertLLMJudgeDataToLLMJudgeObject = (
     messages: convertLLMToProviderMessages(data.messages),
     variables: data.variables,
     schema: data.schema,
+    max_cost_usd: data.maxCostUsd ?? null,
   };
 };

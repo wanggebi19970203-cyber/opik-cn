@@ -100,6 +100,7 @@ export const DEFAULT_LLM_AS_JUDGE_DATA = {
     messages: LLM_PROMPT_CUSTOM_TRACE_TEMPLATE.messages,
     variables: LLM_PROMPT_CUSTOM_TRACE_TEMPLATE.variables,
     schema: LLM_PROMPT_CUSTOM_TRACE_TEMPLATE.schema,
+    maxCostUsd: null,
   },
   [EVALUATORS_RULE_SCOPE.thread]: {
     model: "",
@@ -112,6 +113,7 @@ export const DEFAULT_LLM_AS_JUDGE_DATA = {
     messages: LLM_PROMPT_CUSTOM_THREAD_TEMPLATE.messages,
     variables: LLM_PROMPT_CUSTOM_THREAD_TEMPLATE.variables,
     schema: LLM_PROMPT_CUSTOM_THREAD_TEMPLATE.schema,
+    maxCostUsd: null,
   },
   [EVALUATORS_RULE_SCOPE.span]: {
     model: "",
@@ -145,6 +147,7 @@ type AddEditRuleDialogProps = {
   hideScopeSelector?: boolean; // Optional: hide scope selector (e.g., for contexts that only support one scope)
   defaultScope?: EVALUATORS_RULE_SCOPE; // Optional: default scope for new rules
   mode?: "create" | "edit" | "clone"; // Optional: dialog mode
+  onRuleCreated?: (rule: EvaluatorsRule) => void; // Optional: fired with the created rule
 };
 
 const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
@@ -156,6 +159,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
   hideScopeSelector = false,
   defaultScope,
   mode,
+  onRuleCreated,
 }) => {
   const { t } = useTranslation("online-evaluation");
   const {
@@ -464,10 +468,15 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
       {
         rule: getRule(),
       },
-      { onSuccess: onRuleCreatedEdited },
+      {
+        onSuccess: (rule: EvaluatorsRule) => {
+          onRuleCreatedEdited();
+          onRuleCreated?.(rule);
+        },
+      },
     );
     setOpen(false);
-  }, [createMutate, getRule, onRuleCreatedEdited, setOpen]);
+  }, [createMutate, getRule, onRuleCreatedEdited, onRuleCreated, setOpen]);
 
   const editPrompt = useCallback(() => {
     updateMutate(

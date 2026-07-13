@@ -23,8 +23,10 @@ import { cn } from "@/lib/utils";
 import IssueSeverityBadge from "@/v2/pages/SignalsPage/IssuesTab/IssueSeverityBadge";
 import OccurrenceChart from "@/v2/pages/SignalsPage/IssuesTab/OccurrenceChart";
 import AffectedTracesSample from "@/v2/pages/SignalsPage/IssuesTab/AffectedTracesSample";
+import { formatOccurrences } from "@/v2/pages/SignalsPage/helpers";
 import useAgentInsightsIssue from "@/api/signals/useAgentInsightsIssue";
 import useUpdateAgentInsightsIssueMutation from "@/api/signals/useUpdateAgentInsightsIssueMutation";
+import { OpikEvent, trackEvent } from "@/lib/analytics/tracking";
 
 type IssueDetailProps = {
   issue: AgentInsightsIssue;
@@ -84,10 +86,21 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
     },
   ];
 
-  const setStatus = (status: AGENT_INSIGHTS_ISSUE_STATUS) =>
+  const setStatus = (status: AGENT_INSIGHTS_ISSUE_STATUS) => {
+    trackEvent(
+      status === AGENT_INSIGHTS_ISSUE_STATUS.resolved
+        ? OpikEvent.DIAGNOSTICS_ISSUE_RESOLVED
+        : OpikEvent.DIAGNOSTICS_ISSUE_REOPENED,
+      { project_id: projectId, issue_id: issue.id, severity: issue.severity },
+    );
     updateMutation.mutate({ issueId: issue.id, projectId, status });
+  };
 
   const handleContinueWithOllie = () => {
+    trackEvent(OpikEvent.DIAGNOSTICS_CONTINUE_WITH_OLLIE, {
+      project_id: projectId,
+      issue_id: issue.id,
+    });
     const message = [
       `Help me fix the "${issue.name}" issue detected in this project.`,
       issue.cause ? `Root cause: ${issue.cause}` : null,
@@ -160,8 +173,12 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
           )}
           <MetaItem
             icon={Hash}
-            label={t("signals.issueDetail.occurrences")}
-            value={issue.total_occurrences.toLocaleString()}
+            label="Occurrences"
+            value={formatOccurrences(
+              issue.total_occurrences,
+              issue.latest_count,
+              issue.days_reported,
+            )}
           />
           <MetaItem
             icon={Users}

@@ -112,12 +112,13 @@ public class SpanService {
                         }));
     }
 
-    /**
-     * 查找项目并验证可见性。
-     *
-     * @param searchCriteria 搜索条件
-     * @return 更新后的搜索条件（包含项目ID）
-     */
+    @WithSpan
+    public Mono<Boolean> existsByProjectId(@NonNull SpanSearchCriteria searchCriteria) {
+        return findProjectAndVerifyVisibility(searchCriteria)
+                .flatMap(spanDAO::existsByProjectId)
+                .switchIfEmpty(Mono.just(false));
+    }
+
     private Mono<SpanSearchCriteria> findProjectAndVerifyVisibility(SpanSearchCriteria searchCriteria) {
         return projectService
                 .resolveProjectIdAndVerifyVisibility(searchCriteria.projectId(), searchCriteria.projectName())
@@ -309,8 +310,8 @@ public class SpanService {
                                                     Mono.defer(() -> insertUpdate(project, spanUpdate, id)))
                                             .onErrorResume(this::handleSpanDBError)
                                             .then()))))
-                    .doOnSuccess(__ -> eventBus
-                            .post(new SpansUpdated(Set.of(spanUpdate.traceId()), workspaceId, userName)));
+                    .doOnSuccess(__ -> eventBus.post(
+                            new SpansUpdated(Set.of(spanUpdate.traceId()), workspaceId, userName)));
         });
     }
 
@@ -333,8 +334,7 @@ public class SpanService {
                     .onErrorResume(TagOperations::mapTagLimitError)
                     .doOnSuccess(__ -> {
                         log.info("Completed batch update for '{}' spans", batchUpdate.ids().size());
-                        eventBus.post(
-                                new SpansUpdated(Set.of(batchUpdate.update().traceId()), workspaceId, userName));
+                        eventBus.post(new SpansUpdated(Set.of(batchUpdate.update().traceId()), workspaceId, userName));
                     });
         });
     }
@@ -678,7 +678,7 @@ public class SpanService {
                     })
                     .doOnSuccess(spanIds -> {
                         if (spanIds != null) {
-                            eventBus.post(new SpansDeleted(spanIds, traceIds, workspaceId, userName));
+                            eventBus.post(new SpansDeleted(spanIds, traceIds, workspaceId, userName, projectId));
                         }
                     })
                     .then();

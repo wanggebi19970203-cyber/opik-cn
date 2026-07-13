@@ -4,9 +4,15 @@
 #######################################################################
 FROM docker:29.5.1 AS builder
 
-# Toolchain only for compiling native wheels (rust/cargo for pydantic-core).
 ARG ALPINE_PACKAGE_MIRROR=""
 ARG PYPI_INDEX_URL="https://pypi.org/simple"
+
+# Alpine base ships /bin/ash, not bash; ash honors -o pipefail for the RUN
+# below whose pipe into xargs would otherwise mask a failing find.
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
+# Toolchain only for compiling native wheels (rust/cargo for pydantic-core).
+# hadolint ignore=DL3018
 RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
         sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${ALPINE_PACKAGE_MIRROR}|g" /etc/apk/repositories; \
     fi && \
@@ -34,7 +40,7 @@ RUN set -eux; \
     find "$PY_SITE" \
          -path "$PY_SITE/datasets/*" -prune -o \
          -path "$PY_SITE/opik_optimizer/*" -prune -o \
-         -name '*.py' -type f -print | xargs -r rm -f; \
+         -name '*.py' -type f -print0 | xargs -0 -r rm -f; \
     find "$PY_SITE" -type d -name '__pycache__' -prune -exec rm -rf {} +; \
     find "$PY_SITE" -name '*.pyi' -delete; \
     pip uninstall -y pip setuptools wheel || true; \
@@ -46,13 +52,15 @@ RUN set -eux; \
 FROM docker:29.5.1
 
 ARG ALPINE_PACKAGE_MIRROR=""
-# Upgrade libexpat to the latest available version to mitigate CVEs.
+
+# libexpat --upgrade mitigates CVEs; tini (PID 1 reaper) + python3 are the
+# runtime-only OS deps.
+# hadolint ignore=DL3018
 RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
         sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${ALPINE_PACKAGE_MIRROR}|g" /etc/apk/repositories; \
     fi && \
-    apk add --no-cache --upgrade libexpat
-# Runtime-only OS deps: tini (PID 1 reaper) + python3 interpreter.
-RUN apk add --no-cache tini python3
+    apk add --no-cache --upgrade libexpat && \
+    apk add --no-cache tini python3
 
 WORKDIR /opt/opik-python-backend
 
