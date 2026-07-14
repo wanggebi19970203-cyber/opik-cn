@@ -40,7 +40,8 @@ const useNavigationBlocker = ({
   const description = descriptionProp ?? t("unsavedChanges.description");
   const confirmText = confirmTextProp ?? t("unsavedChanges.confirmText");
   const cancelText = cancelTextProp ?? t("unsavedChanges.cancelText");
-  const saveAndLeaveText = saveAndLeaveTextProp ?? t("unsavedChanges.saveAndLeaveText");
+  const saveAndLeaveText =
+    saveAndLeaveTextProp ?? t("unsavedChanges.saveAndLeaveText");
 
   const [showDialog, setShowDialog] = useState(false);
 

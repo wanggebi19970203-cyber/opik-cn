@@ -55,7 +55,9 @@ const ExperimentDatasetItems = ({
     >
       {showMedia ? (
         <AccordionItem value="media" className="border-t">
-          <AccordionTrigger>{t("compareExperiments.dataset.media")}</AccordionTrigger>
+          <AccordionTrigger>
+            {t("compareExperiments.dataset.media")}
+          </AccordionTrigger>
           <AccordionContent>
             <ImagesListWrapper media={media} />
           </AccordionContent>
@@ -63,7 +65,9 @@ const ExperimentDatasetItems = ({
       ) : null}
 
       <AccordionItem value="data">
-        <AccordionTrigger>{t("compareExperiments.dataset.selectedData")}</AccordionTrigger>
+        <AccordionTrigger>
+          {t("compareExperiments.dataset.selectedData")}
+        </AccordionTrigger>
         <AccordionContent>
           {formattedData ? (
             <SyntaxHighlighter

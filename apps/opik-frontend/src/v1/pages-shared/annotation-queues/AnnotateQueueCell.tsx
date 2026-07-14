@@ -2,6 +2,7 @@ import React from "react";
 import { ExternalLink } from "lucide-react";
 import { CellContext } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { AnnotationQueue } from "@/types/annotation-queues";
@@ -9,6 +10,7 @@ import { Button } from "@/ui/button";
 import useAppStore from "@/store/AppStore";
 
 const AnnotateQueueCell = (context: CellContext<AnnotationQueue, string>) => {
+  const { t } = useTranslation("annotation-queues");
   const queue = context.row.original;
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -28,7 +30,7 @@ const AnnotateQueueCell = (context: CellContext<AnnotationQueue, string>) => {
         target="_blank"
       >
         <Button variant="tableLink" size="sm">
-          Annotate queue
+          {t("annotationQueues.actions.annotateQueue")}
           <ExternalLink className="ml-1.5 mt-1 size-3.5 shrink-0" />
         </Button>
       </Link>

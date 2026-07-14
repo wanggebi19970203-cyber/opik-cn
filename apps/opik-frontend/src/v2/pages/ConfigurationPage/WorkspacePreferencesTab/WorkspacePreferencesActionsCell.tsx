@@ -1,4 +1,5 @@
 import { CellContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { WorkspacePreference } from "@/constants/workspace-preferences";
@@ -10,6 +11,7 @@ type CustomMeta = {
 const WorkspacePreferencesActionsCell: React.FunctionComponent<
   CellContext<WorkspacePreference, unknown>
 > = (context) => {
+  const { t } = useTranslation("pages/settings");
   const { custom } = context.column.columnDef.meta ?? {};
   const { onEdit } = (custom ?? {}) as CustomMeta;
   return (
@@ -24,7 +26,7 @@ const WorkspacePreferencesActionsCell: React.FunctionComponent<
         variant="ghost"
         onClick={() => onEdit(context.row.original)}
       >
-        Edit
+        {t("settings.actions.edit")}
       </Button>
     </CellWrapper>
   );

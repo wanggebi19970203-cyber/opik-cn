@@ -267,7 +267,7 @@ const diagnosticsResolvedRoute = createRoute({
   getParentRoute: () => projectScopedRoute,
   component: () => <SignalsPage showResolved />,
   staticData: {
-    title: "Resolved issues",
+    title: i18next.t("navigation:menu.resolvedIssues"),
   },
 });
 

@@ -126,7 +126,9 @@ const PythonCodeRuleDetails: React.FC<PythonCodeRuleDetailsProps> = ({
                 projectId={form.watch("projectIds")[0] || ""}
                 variables={field.value}
                 onChange={field.onChange}
-                description={t("common.automations.pythonCodeVariablesDescription")}
+                description={t(
+                  "common.automations.pythonCodeVariablesDescription",
+                )}
                 errorText={t("common.automations.pythonCodeParsingError")}
                 projectName={projectName}
                 datasetColumnNames={datasetColumnNames}

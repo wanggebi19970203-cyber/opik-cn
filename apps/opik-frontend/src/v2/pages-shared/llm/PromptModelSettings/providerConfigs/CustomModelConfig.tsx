@@ -51,7 +51,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.TEMPERATURE}
           label={t("sharedModelConfigs.temperature")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("customModelConfigs.temperatureTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("customModelConfigs.temperatureTooltip")}
+            />
           }
         />
       )}
@@ -67,7 +69,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.MAX_COMPLETION_TOKENS}
           label={t("sharedModelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("customModelConfigs.maxOutputTokensTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("customModelConfigs.maxOutputTokensTooltip")}
+            />
           }
         />
       )}
@@ -83,7 +87,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.TOP_P}
           label={t("sharedModelConfigs.topP")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("customModelConfigs.topPTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("customModelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -99,7 +105,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.FREQUENCY_PENALTY}
           label={t("openAIModelConfigs.frequencyPenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("customModelConfigs.frequencyPenaltyTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("customModelConfigs.frequencyPenaltyTooltip")}
+            />
           }
         />
       )}
@@ -115,7 +123,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.PRESENCE_PENALTY}
           label={t("openAIModelConfigs.presencePenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("customModelConfigs.presencePenaltyTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("customModelConfigs.presencePenaltyTooltip")}
+            />
           }
         />
       )}
@@ -130,7 +140,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
         defaultValue={DEFAULT_CUSTOM_CONFIGS.THROTTLING}
         label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
+          <PromptModelSettingsTooltipContent
+            text={t("sharedModelConfigs.throttlingTooltip")}
+          />
         }
       />
 
@@ -147,7 +159,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
         defaultValue={DEFAULT_CUSTOM_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelSettingsTooltipContent
+            text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")}
+          />
         }
       />
 
@@ -156,7 +170,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           {t("sharedModelConfigs.extraBodyParameters")}
           <TooltipWrapper
             content={
-              <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.extraBodyParametersTooltip")} />
+              <PromptModelSettingsTooltipContent
+                text={t("sharedModelConfigs.extraBodyParametersTooltip")}
+              />
             }
           >
             <Info className="ml-1 size-4 text-light-slate" />
@@ -179,7 +195,11 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
             }}
           />
         </div>
-        {showInvalidJSON && <FormErrorSkeleton>{t("sharedModelConfigs.invalidJson")}</FormErrorSkeleton>}
+        {showInvalidJSON && (
+          <FormErrorSkeleton>
+            {t("sharedModelConfigs.invalidJson")}
+          </FormErrorSkeleton>
+        )}
       </div>
     </div>
   );

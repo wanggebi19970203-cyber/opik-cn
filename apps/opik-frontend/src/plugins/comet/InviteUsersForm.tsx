@@ -107,7 +107,9 @@ const InviteUsersForm = () => {
       <div className="mb-4 flex flex-col items-start gap-1.5">
         <div className="flex items-center gap-2">
           <UserPlus className="size-4 text-muted-slate" />
-          <div className="comet-body-s-accented">{t("collaborators.inviteTeamMember")}</div>
+          <div className="comet-body-s-accented">
+            {t("collaborators.inviteTeamMember")}
+          </div>
         </div>
         <div className="comet-body-s text-muted-slate">
           {t("collaborators.inviteTeammatesDescription")}
@@ -122,7 +124,9 @@ const InviteUsersForm = () => {
               name="users"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel className="sr-only">{t("labels.emailsOrUsernames")}</FormLabel>
+                  <FormLabel className="sr-only">
+                    {t("labels.emailsOrUsernames")}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       {...field}

@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { useOptimizationsNewFormHandlers } from "./useOptimizationsNewFormHandlers";
 import OptimizationsNewPromptSection from "./OptimizationsNewPromptSection";
@@ -19,6 +20,7 @@ type OptimizationsNewPageContentProps = {
 const OptimizationsNewPageContent: React.FC<
   OptimizationsNewPageContentProps
 > = ({ onCancel, isPreparingDataset }) => {
+  const { t } = useTranslation("pages/optimizations");
   const {
     form,
     activeProjectId,
@@ -99,17 +101,21 @@ const OptimizationsNewPageContent: React.FC<
       <div className="flex flex-col gap-2 border-t px-5 py-4">
         {isDatasetError && (
           <span className="comet-body-s text-destructive">
-            Couldn&apos;t load the selected item source. Pick another or try
-            again.
+            {t("newPage.loadError")}
           </span>
         )}
         {hasMissingVariables && (
           <span className="comet-body-s text-destructive">
-            {missingDatasetVariables.map((v) => `{{${v}}}`).join(", ")} not in
-            the selected item source
+            {t("newPage.variableNotInSource", {
+              variables: missingDatasetVariables
+                .map((v) => `{{${v}}}`)
+                .join(", "),
+            })}
             {datasetVariables.length > 0 &&
-              ` — available: ${datasetVariables.join(", ")}`}
-            . Update the prompt/metric or pick a matching item source.
+              ` — ${t("newPage.availableVariables", {
+                variables: datasetVariables.join(", "),
+              })}`}
+            . {t("newPage.updatePromptOrMetric")}
           </span>
         )}
         <div className="flex items-center gap-2">
@@ -132,7 +138,7 @@ const OptimizationsNewPageContent: React.FC<
                 <Loader2 className="size-4" />
               </span>
             )}
-            {isSubmitting ? "Starting..." : "Optimize prompt"}
+            {isSubmitting ? t("newRun.starting") : t("newRun.optimizePrompt")}
           </Button>
           <Button
             variant="outline"
@@ -141,7 +147,7 @@ const OptimizationsNewPageContent: React.FC<
             onClick={onCancel}
             disabled={isSubmitting}
           >
-            Cancel
+            {t("newRun.cancel")}
           </Button>
         </div>
       </div>

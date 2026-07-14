@@ -35,9 +35,9 @@ const RuleNameSchema = z
   })
   .min(1, { message: i18next.t("common:validation.ruleNameRequired") });
 
-const ProjectIdsSchema = z
-  .array(z.string())
-  .min(1, { message: i18next.t("common:validation.atLeastOneProjectRequired") });
+const ProjectIdsSchema = z.array(z.string()).min(1, {
+  message: i18next.t("common:validation.atLeastOneProjectRequired"),
+});
 
 const SamplingRateSchema = z.number();
 
@@ -118,7 +118,9 @@ export const FiltersSchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: i18next.t("common:validation.keyRequiredForDictionaryFields"),
+          message: i18next.t(
+            "common:validation.keyRequiredForDictionaryFields",
+          ),
           path: [index, "key"],
         });
       }
@@ -145,7 +147,9 @@ const LLMJudgeBaseSchema = z.object({
     seed: z
       .number()
       .int()
-      .min(0, { message: i18next.t("common:validation.seedMustBeNonNegativeInteger") })
+      .min(0, {
+        message: i18next.t("common:validation.seedMustBeNonNegativeInteger"),
+      })
       .optional()
       .nullable(),
     custom_parameters: z.record(z.string(), z.unknown()).optional().nullable(),
@@ -155,7 +159,9 @@ const LLMJudgeBaseSchema = z.object({
     z.object({
       id: z.string(),
       content: z.union([
-        z.string().min(1, { message: i18next.t("common:validation.messageRequired") }),
+        z
+          .string()
+          .min(1, { message: i18next.t("common:validation.messageRequired") }),
         z
           .array(
             z.union([
@@ -183,9 +189,9 @@ const LLMJudgeBaseSchema = z.object({
   schema: z
     .array(
       z.object({
-        name: z
-          .string()
-          .min(1, { message: i18next.t("common:validation.scoreDefinitionNameRequired") }),
+        name: z.string().min(1, {
+          message: i18next.t("common:validation.scoreDefinitionNameRequired"),
+        }),
         type: z.nativeEnum(LLM_SCHEMA_TYPE),
         description: z.string(),
         unsaved: z
@@ -203,7 +209,11 @@ const LLMJudgeBaseSchema = z.object({
 
         return schemaNames.length === uniq(schemaNames).length;
       },
-      { message: i18next.t("common:validation.allScoreDefinitionNamesShouldBeUnique") },
+      {
+        message: i18next.t(
+          "common:validation.allScoreDefinitionNamesShouldBeUnique",
+        ),
+      },
     ),
 });
 
@@ -237,24 +247,21 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
     if (!supportsMultimodal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message:
-          i18next.t("common:validation.modelDoesNotSupportMediaInput"),
+        message: i18next.t("common:validation.modelDoesNotSupportMediaInput"),
         path: ["model"],
       });
     } else {
       if (hasImages && !modelSupportsImages) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportImageInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportImageInput"),
           path: ["model"],
         });
       }
       if (hasVideos && !modelSupportsVideos) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportVideoInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportVideoInput"),
           path: ["model"],
         });
       }
@@ -288,24 +295,21 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
     if (!supportsMultimodal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message:
-          i18next.t("common:validation.modelDoesNotSupportMediaInput"),
+        message: i18next.t("common:validation.modelDoesNotSupportMediaInput"),
         path: ["model"],
       });
     } else {
       if (hasImages && !modelSupportsImages) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportImageInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportImageInput"),
           path: ["model"],
         });
       }
       if (hasVideos && !modelSupportsVideos) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            i18next.t("common:validation.modelDoesNotSupportVideoInput"),
+          message: i18next.t("common:validation.modelDoesNotSupportVideoInput"),
           path: ["model"],
         });
       }
@@ -324,7 +328,10 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
   if (contextCount < 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: i18next.t("common:validation.atLeastOneMessageShouldContainContext", { context: "{{context}}" }),
+      message: i18next.t(
+        "common:validation.atLeastOneMessageShouldContainContext",
+        { context: "{{context}}" },
+      ),
       path: ["messages", data.messages.length - 1, "content"],
     });
   }
@@ -332,7 +339,9 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
   if (contextCount > 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: i18next.t("common:validation.onlyOneMessageCanContainContext", { context: "{{context}}" }),
+      message: i18next.t("common:validation.onlyOneMessageCanContainContext", {
+        context: "{{context}}",
+      }),
       path: ["messages", data.messages.length - 1, "content"],
     });
   }
@@ -345,7 +354,10 @@ export const LLMJudgeDetailsThreadFormSchema = LLMJudgeBaseSchema.extend({
         if (match !== "{{context}}") {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: i18next.t("common:validation.templateVariableNotAllowed", { variable: match, context: "{{context}}" }),
+            message: i18next.t("common:validation.templateVariableNotAllowed", {
+              variable: match,
+              context: "{{context}}",
+            }),
             path: ["messages", index, "content"],
           });
         }

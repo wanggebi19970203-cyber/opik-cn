@@ -231,16 +231,14 @@ function DatasetItemsPage(): React.ReactElement {
     (items: DatasetItem[]) => {
       const now = new Date().toISOString();
       bulkAddItems(items.map((item) => buildDraftItemFromSample(item, now)));
-      const plural = items.length !== 1 ? "s" : "";
       toast({
         title: t("actionsPanel.samplesAddedToDraft"),
         description: t("actionsPanel.samplesAddedDescription", {
           count: items.length,
-          plural,
         }),
       });
     },
-    [bulkAddItems, toast],
+    [bulkAddItems, toast, t],
   );
 
   const renderExpansionDialog = useCallback(

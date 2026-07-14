@@ -102,7 +102,9 @@ const AddTestSuiteItemPanelContent: React.FC<{
     <>
       <div className="flex size-full flex-col">
         <div className="shrink-0 border-b bg-background p-6 pb-4">
-          <div className="comet-body-accented">{t("addItemPanel.addSuiteItem")}</div>
+          <div className="comet-body-accented">
+            {t("addItemPanel.addSuiteItem")}
+          </div>
           <TagListRenderer
             tags={tags}
             onAddTag={(tag) => setTags((prev) => [...prev, tag])}

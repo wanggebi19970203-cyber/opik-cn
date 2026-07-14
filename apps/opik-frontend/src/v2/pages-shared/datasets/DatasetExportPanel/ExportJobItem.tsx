@@ -180,10 +180,14 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
         {renderStatusIndicator()}
         <span className="truncate text-sm">{datasetName}</span>
         {isFailed && (
-          <span className="shrink-0 text-xs text-destructive">{t("exportPanel.failed")}</span>
+          <span className="shrink-0 text-xs text-destructive">
+            {t("exportPanel.failed")}
+          </span>
         )}
         {isCompleted && (
-          <span className="shrink-0 text-xs text-green-600">{t("exportPanel.ready")}</span>
+          <span className="shrink-0 text-xs text-green-600">
+            {t("exportPanel.ready")}
+          </span>
         )}
         {isLoading && (
           <span className="shrink-0 text-xs text-muted-foreground">

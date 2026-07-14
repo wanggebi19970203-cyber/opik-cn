@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { Textarea } from "@/ui/textarea";
 import { Description } from "@/ui/description";
@@ -20,23 +21,26 @@ interface TextPromptEditorProps {
 const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
   value,
   onChange,
-  label = "Prompt",
+  label,
   labelClassName,
-  placeholder = "Prompt",
+  placeholder,
   showDescription = true,
   currentImages = [],
   currentVideos = [],
   currentAudios = [],
 }) => {
+  const { t } = useTranslation("llm");
+  const resolvedLabel = label ?? t("promptMessages.prompt");
+  const resolvedPlaceholder = placeholder ?? t("promptMessages.prompt");
   return (
     <div className="flex flex-col gap-2 pb-4">
       <Label htmlFor="template" className={labelClassName}>
-        {label}
+        {resolvedLabel}
       </Label>
       <Textarea
         id="template"
         className="comet-code"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -50,7 +54,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
       )}
       {currentImages.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Images</Label>
+          <Label>{t("promptMessages.images")}</Label>
           <MediaTagsList
             type="image"
             items={currentImages}
@@ -61,7 +65,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
       )}
       {currentVideos.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Videos</Label>
+          <Label>{t("promptMessages.videos")}</Label>
           <MediaTagsList
             type="video"
             items={currentVideos}
@@ -72,7 +76,7 @@ const TextPromptEditor: React.FC<TextPromptEditorProps> = ({
       )}
       {currentAudios.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Audios</Label>
+          <Label>{t("promptMessages.audios")}</Label>
           <MediaTagsList
             type="audio"
             items={currentAudios}

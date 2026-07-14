@@ -83,7 +83,11 @@ const DatasetItemsPageHeader: React.FunctionComponent<
                 ? "/$workspaceName/projects/$projectId/test-suites"
                 : "/$workspaceName/projects/$projectId/datasets"
             }
-            tooltip={isTestSuite ? t("header.backToTestSuites") : t("header.backToDatasets")}
+            tooltip={
+              isTestSuite
+                ? t("header.backToTestSuites")
+                : t("header.backToDatasets")
+            }
           />
           {hasDraft && (
             <Tag variant="orange" size="md">
@@ -91,7 +95,8 @@ const DatasetItemsPageHeader: React.FunctionComponent<
             </Tag>
           )}
           <h1 className="comet-body-accented truncate break-words">
-            {dataset?.name ?? (isTestSuite ? t("header.testSuite") : t("header.dataset"))}
+            {dataset?.name ??
+              (isTestSuite ? t("header.testSuite") : t("header.dataset"))}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -209,7 +214,9 @@ const DatasetItemsPageHeader: React.FunctionComponent<
               >
                 <CheckCheck className="size-3 shrink-0 text-muted-slate" />
                 <span className="comet-body-xs-accented text-foreground">
-                  {t("header.globalAssertions", { count: effectiveAssertions.length })}
+                  {t("header.globalAssertions", {
+                    count: effectiveAssertions.length,
+                  })}
                 </span>
               </div>
             </TooltipTrigger>

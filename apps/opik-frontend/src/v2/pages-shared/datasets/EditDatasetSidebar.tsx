@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
@@ -11,9 +11,9 @@ import ResizableSidePanelTopBar from "@/shared/ResizableSidePanel/ResizableSideP
 import useDatasetForm from "@/v2/pages-shared/datasets/AddEditDatasetDialog/useDatasetForm";
 import { Dataset, DATASET_TYPE, DatasetListType } from "@/types/datasets";
 
-const TYPE_CONFIG = {
+const getTypeConfig = (t: (key: string) => string) => ({
   dataset: {
-    entityName: "Dataset",
+    entityName: t("addEditDialog.typeLabelDataset"),
     editTitleKey: "editSidebar.editDataset",
     namePlaceholderKey: "editSidebar.nameYourDataset",
     descPlaceholderKey: "editSidebar.datasetDescription",
@@ -21,14 +21,14 @@ const TYPE_CONFIG = {
     skipEvaluationCriteria: true,
   },
   test_suite: {
-    entityName: "Test suite",
+    entityName: t("addEditDialog.typeLabelTestSuite"),
     editTitleKey: "editSidebar.editTestSuite",
     namePlaceholderKey: "editSidebar.nameYourTestSuite",
     descPlaceholderKey: "editSidebar.testSuiteDescription",
     datasetType: DATASET_TYPE.TEST_SUITE,
     skipEvaluationCriteria: false,
   },
-} as const;
+});
 
 type EditDatasetSidebarProps = {
   type: DatasetListType;
@@ -44,6 +44,7 @@ const EditDatasetSidebar: React.FunctionComponent<EditDatasetSidebarProps> = ({
   setOpen,
 }) => {
   const { t } = useTranslation("datasets");
+  const TYPE_CONFIG = useMemo(() => getTypeConfig(t), [t]);
   const config = TYPE_CONFIG[type];
 
   // Editing only changes name + description — upload and evaluation criteria

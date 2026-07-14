@@ -92,7 +92,9 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
   const trigger = expanded ? (
     <button className="comet-body-s flex h-8 w-full items-center gap-2 rounded-md px-2.5 text-muted-slate hover:bg-primary-foreground">
       <LifeBuoy className="size-4 shrink-0" />
-      <span className="grow truncate text-left">{t("common.supportHub.supportHub")}</span>
+      <span className="grow truncate text-left">
+        {t("common.supportHub.supportHub")}
+      </span>
     </button>
   ) : (
     <button className="comet-body-s flex size-8 items-center justify-center rounded-md text-muted-slate hover:bg-primary-foreground">
@@ -106,7 +108,10 @@ const SupportHubSubMenu: React.FC<SupportHubSubMenuProps> = ({
         {expanded ? (
           <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
         ) : (
-          <TooltipWrapper content={t("common.supportHub.supportHub")} side="right">
+          <TooltipWrapper
+            content={t("common.supportHub.supportHub")}
+            side="right"
+          >
             <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
           </TooltipWrapper>
         )}

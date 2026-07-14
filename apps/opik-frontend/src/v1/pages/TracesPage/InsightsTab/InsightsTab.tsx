@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { StringParam } from "use-query-params";
 
 import Loader from "@/shared/Loader/Loader";
@@ -39,6 +40,7 @@ const DEFAULT_TEMPLATE_ID = DEFAULT_TEMPLATE.id;
 const InsightsTab: React.FunctionComponent<InsightsTabProps> = ({
   projectId,
 }) => {
+  const { t } = useTranslation("tracing");
   const workspaceName = useActiveWorkspaceName();
 
   const [dashboardId, setDashboardId] = useQueryParamAndLocalStorageState({
@@ -139,7 +141,7 @@ const InsightsTab: React.FunctionComponent<InsightsTabProps> = ({
         {!isPending && !dashboardId && (
           <div className="flex h-full items-center justify-center">
             <p className="text-muted-foreground">
-              No view selected. Please select or create a view.
+              {t("tracing.insights.noViewSelected")}
             </p>
           </div>
         )}
@@ -147,8 +149,7 @@ const InsightsTab: React.FunctionComponent<InsightsTabProps> = ({
         {!isPending && dashboardId && !dashboard && (
           <div className="flex h-full items-center justify-center">
             <p className="text-muted-foreground">
-              View could not be loaded. Please select another view from the
-              dropdown.
+              {t("tracing.insights.viewLoadError")}
             </p>
           </div>
         )}

@@ -171,7 +171,7 @@ const FeedbackDefinitionsAndScoresSelectBox: React.FC<
     ? {
         options,
         value: props.value,
-        placeholder: placeholder || t('selectScores'),
+        placeholder: placeholder || t("selectScores"),
         onChange: props.onChange,
         multiselect: true as const,
         showSelectAll: props.showSelectAll,
@@ -179,7 +179,7 @@ const FeedbackDefinitionsAndScoresSelectBox: React.FC<
     : {
         options,
         value: props.value,
-        placeholder: placeholder || t('selectScore'),
+        placeholder: placeholder || t("selectScore"),
         onChange: props.onChange,
         multiselect: false as const,
       };

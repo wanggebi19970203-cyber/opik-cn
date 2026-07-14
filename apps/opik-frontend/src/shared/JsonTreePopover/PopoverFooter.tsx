@@ -1,9 +1,8 @@
 import React from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { Trans } from "react-i18next";
 import KeyboardBadge from "./KeyboardBadge";
 
 const PopoverFooter: React.FC = () => {
-  const { t } = useTranslation();
   return (
     <div className="border-t px-4 py-3">
       <p className="comet-body-xs text-light-slate">

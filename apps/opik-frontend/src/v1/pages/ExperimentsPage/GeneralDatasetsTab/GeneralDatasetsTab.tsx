@@ -521,7 +521,9 @@ const GeneralDatasetsTab: React.FC = () => {
           name: [
             {
               label: t("experiments:experiments.testSuite"),
-              value: datasetExperiments[0]?.dataset_name || t("experiments:experiments.undefined"),
+              value:
+                datasetExperiments[0]?.dataset_name ||
+                t("experiments:experiments.undefined"),
             },
           ],
           experiments: datasetExperiments,
@@ -562,7 +564,9 @@ const GeneralDatasetsTab: React.FC = () => {
                   value:
                     label === DELETED_ENTITY_LABEL
                       ? t("experiments:experiments.deletedTestSuite")
-                      : label || value || t("experiments:experiments.undefined"),
+                      : label ||
+                        value ||
+                        t("experiments:experiments.undefined"),
                 };
               }),
               experiments: groupExperiments,
@@ -629,6 +633,7 @@ const GeneralDatasetsTab: React.FC = () => {
     groups,
     expandingConfig.expanded,
     groupFieldNames,
+    t,
   ]);
 
   if (isPending || isFeedbackScoresPending) {

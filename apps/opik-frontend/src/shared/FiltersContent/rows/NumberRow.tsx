@@ -1,8 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Filter } from "@/types/filters";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
-import { DEFAULT_OPERATORS, OPERATORS_MAP } from "@/constants/filters";
+import { getDefaultOperators, getOperatorsMap } from "@/constants/filters";
 import { COLUMN_TYPE } from "@/types/shared";
 
 type NumberRowProps = {
@@ -14,13 +15,15 @@ export const NumberRow: React.FunctionComponent<NumberRowProps> = ({
   filter,
   onChange,
 }) => {
+  const { t } = useTranslation("common");
   return (
     <>
       <td className="p-1">
         <OperatorSelector
           operator={filter.operator}
           operators={
-            OPERATORS_MAP[filter.type as COLUMN_TYPE] ?? DEFAULT_OPERATORS
+            getOperatorsMap()[filter.type as COLUMN_TYPE] ??
+            getDefaultOperators()
           }
           onSelect={(o) => onChange({ ...filter, operator: o })}
         />
@@ -28,7 +31,7 @@ export const NumberRow: React.FunctionComponent<NumberRowProps> = ({
       <td className="p-1">
         <DebounceInput
           className="w-full min-w-40"
-          placeholder="value"
+          placeholder={t("labels.value")}
           value={filter.value}
           type="number"
           onValueChange={(value) =>

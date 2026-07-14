@@ -124,7 +124,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
         ],
       });
     },
-    [toast, navigate, workspaceName],
+    [t, toast, navigate, workspaceName],
   );
 
   const addToQueueHandler = useCallback(
@@ -213,9 +213,7 @@ const AddToQueueDialog: React.FunctionComponent<AddToQueueDialogProps> = ({
       return (
         <Alert className="mt-4">
           <MessageCircleWarning />
-          <AlertDescription>
-            {t("addToQueue.noValidRows")}
-          </AlertDescription>
+          <AlertDescription>{t("addToQueue.noValidRows")}</AlertDescription>
         </Alert>
       );
     }

@@ -44,7 +44,8 @@
       "spanIdCopiedToClipboard": "Span ID copied to clipboard",
       "threadIdCopiedToClipboard": "Thread ID successfully copied to clipboard",
       "urlSuccessfullyCopiedToClipboard": "URL successfully copied to clipboard",
-      "viewAllTracesForThread": "View all traces for this thread"
+      "viewAllTracesForThread": "View all traces for this thread",
+      "noSearchResults": "No search results"
     },
     "detailsPanel": {
       "messages": "Messages",
@@ -68,7 +69,8 @@
       "spanDetails": "Span details",
       "close": "Close",
       "spanScoresLabel": "{{count}} span scores",
-      "thread": "Thread"
+      "thread": "Thread",
+      "comments": "Comments"
     },
     "detailsTab": {
       "error": "Error",
@@ -77,8 +79,7 @@
       "metadata": "Metadata",
       "tokenUsage": "Token usage",
       "attachments": "Attachments",
-      "events": "Events",
-      "attachments": "Attachments"
+      "events": "Events"
     },
     "messages": {
       "copiedSuccessfully": "Successfully copied messages",
@@ -116,7 +117,6 @@
       "itemsAddedToEntity": "{{itemType}} added to {{entity}}",
       "noValidRowsForEntity": "There are no rows that can be added as {{entity}} items. The input field is missing.",
       "partialValidRowsForEntity": "Only rows with input fields will be added as {{entity}} items.",
-      "cancel": "Cancel",
       "addToEntity": "Add to {{entity}}",
       "items": "Items",
       "traces": "Traces",
@@ -151,6 +151,7 @@
       "clear": "Clear",
       "guardrails": "Guardrails",
       "selectScore": "Select score",
+      "keyPlaceholder": "Key",
       "status": "Status",
       "failed": "Failed",
       "passed": "Passed",
@@ -238,7 +239,11 @@
       "removeFeedbackScoreDescription": "Removing a feedback score from {{entity}} can't be undone. Are you sure you want to continue?",
       "dontAskAgain": "Don't ask me again",
       "removeScore": "Remove score",
-      "avg": "avg"
+      "avg": "avg",
+      "entityTrace": "a trace",
+      "entityThread": "a thread",
+      "entitySpan": "a span",
+      "entityExperiment": "an experiment"
     },
     "aiAssistant": {
       "opikAssist": "OpikAssist",
@@ -317,7 +322,15 @@
       "searchTraces": "Search traces...",
       "refreshTracesList": "Refresh traces list",
       "noTracesYet": "There are no traces yet",
-      "noTracesDescription": "Traces will appear here once your agent starts receiving requests."
+      "noTracesDescription": "Traces will appear here once your agent starts receiving requests.",
+      "goToLogs": "Go to logs",
+      "lockedScopeTooltip": "These traces are locked to this evaluator and can't be changed via filters",
+      "failedToFetchData": "Failed to fetch data",
+      "countLabelTraces": "Traces",
+      "isOneOf": "is one of",
+      "keyInvalid": "Key is invalid, it should begin with \"input\", or \"output\" and follow this format: \"input.[PATH]\" For example: \"input.message\"",
+      "keyPlaceholder": "key",
+      "selectScore": "Select score"
     },
     "traceMessage": {
       "trace": "Trace",
@@ -343,6 +356,14 @@
       "showDiff": "Show diff",
       "compareAgainst": "Compare against",
       "noVersionHistory": "No version history"
+    },
+    "insights": {
+      "builtIn": "Built-in",
+      "duplicate": "Duplicate",
+      "edit": "Edit",
+      "delete": "Delete",
+      "noViewSelected": "No view selected. Please select or create a view.",
+      "viewLoadError": "View could not be loaded. Please select another view from the dropdown."
     },
     "guardrailConfig": {
       "configureGuardrail": "Use the following code to configure your guardrail"
@@ -401,7 +422,12 @@
       "feedbackScoresSection": "Feedback scores",
       "filterSelectScore": "Select score",
       "filterSelectSpanScore": "Select span score",
-      "filterStatus": "Status"
+      "filterStatus": "Status",
+      "noSpansYet": "No spans yet",
+      "searchTraces": "Search traces",
+      "searchSpans": "Search spans",
+      "refreshTracesList": "Refresh traces list",
+      "refreshSpansList": "Refresh spans list"
     },
     "threadsTab": {
       "columns": {
@@ -410,7 +436,9 @@
         "messageCount": "Message count"
       },
       "feedbackScoresSection": "Feedback scores",
-      "filterSelectScore": "Select score"
+      "filterSelectScore": "Select score",
+      "searchThreads": "Search threads",
+      "refreshThreadsList": "Refresh threads list"
     },
     "rulesTab": {
       "columns": {
@@ -419,7 +447,10 @@
         "samplingRate": "Sampling rate",
         "scope": "Scope",
         "status": "Status"
-      }
+      },
+      "noRulesYet": "No rules yet",
+      "searchById": "Search by ID",
+      "createNewRule": "Create new rule"
     },
     "annotationQueuesTab": {
       "columns": {
@@ -433,7 +464,51 @@
       },
       "filterSelectScope": "Select scope",
       "filterTrace": "Trace",
-      "filterThread": "Thread"
+      "filterThread": "Thread",
+      "noQueuesFound": "No queues found for \"{{search}}\"",
+      "noQueues": "No queues",
+      "searchByName": "Search by name",
+      "createNewQueue": "Create new queue"
+    },
+    "noTracesPage": {
+      "title": "No traces yet",
+      "description": "Traces will appear here once your application starts sending data to Opik.",
+      "readDocumentation": "Read documentation",
+      "exploreQuickstart": "Explore quickstart"
+    },
+    "noThreadsPage": {
+      "title": "No threads yet",
+      "description": "Threads will appear here once your application starts sending conversation data to Opik.",
+      "readDocumentation": "Read documentation",
+      "exploreQuickstart": "Explore quickstart"
+    },
+    "sidebarColumns": {
+      "name": "Name",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "input": "Input",
+      "output": "Output",
+      "errors": "Errors",
+      "duration": "Duration",
+      "tags": "Tags",
+      "totalTokens": "Total tokens",
+      "totalInputTokens": "Total input tokens",
+      "totalOutputTokens": "Total output tokens",
+      "estimatedCost": "Estimated cost",
+      "metadata": "Metadata",
+      "id": "ID",
+      "spanCount": "Span count",
+      "llmCallsCount": "LLM calls count",
+      "threadId": "Thread ID",
+      "experiment": "Experiment",
+      "createdBy": "Created by",
+      "comments": "Comments",
+      "errorType": "Error type",
+      "annotationQueueId": "Annotation queue ID",
+      "feedbackScores": "Feedback scores",
+      "customFilter": "Custom filter",
+      "feedbackScoresSection": "Feedback scores",
+      "metadataSection": "Metadata"
     }
   }
 }

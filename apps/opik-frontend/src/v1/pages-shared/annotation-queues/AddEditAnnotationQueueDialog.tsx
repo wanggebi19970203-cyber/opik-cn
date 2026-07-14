@@ -43,31 +43,34 @@ import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v1/constants/explainers";
 import { usePermissions } from "@/contexts/PermissionsContext";
 
-const SCOPE_OPTIONS = [
+const getScopeOptions = (t: (key: string) => string) => [
   {
     value: ANNOTATION_QUEUE_SCOPE.TRACE,
-    label: "Traces",
+    label: t("common.annotationQueues.scopeOptions.traces"),
   },
   {
     value: ANNOTATION_QUEUE_SCOPE.THREAD,
-    label: "Threads",
+    label: t("common.annotationQueues.scopeOptions.threads"),
   },
 ];
 
-const formSchema = z.object({
-  project_id: z.string().min(1, "Project is required"),
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(255, "Name cannot exceed 255 characters"),
-  description: z.string().optional(),
-  instructions: z.string().optional(),
-  scope: z.nativeEnum(ANNOTATION_QUEUE_SCOPE),
-  comments_enabled: z.boolean(),
-  feedback_definition_names: z.array(z.string()).default([]),
-});
+const createFormSchema = (t: (key: string) => string) =>
+  z.object({
+    project_id: z
+      .string()
+      .min(1, t("common.annotationQueues.validation.projectRequired")),
+    name: z
+      .string()
+      .min(1, t("common.annotationQueues.validation.nameRequired"))
+      .max(255, t("common.annotationQueues.validation.nameMaxLength")),
+    description: z.string().optional(),
+    instructions: z.string().optional(),
+    scope: z.nativeEnum(ANNOTATION_QUEUE_SCOPE),
+    comments_enabled: z.boolean(),
+    feedback_definition_names: z.array(z.string()).default([]),
+  });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<ReturnType<typeof createFormSchema>>;
 
 type AddEditAnnotationQueueDialogProps = {
   open: boolean;
@@ -96,7 +99,7 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
   const [isNestedDialogOpen, setIsNestedDialogOpen] = useState(false);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema(t)),
     defaultValues: {
       name: defaultQueue?.name || "",
       instructions: defaultQueue?.instructions || "",
@@ -195,7 +198,9 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                               validationErrors?.message,
                             ),
                           })}
-                          placeholder={t("common.annotationQueues.annotationQueueName")}
+                          placeholder={t(
+                            "common.annotationQueues.annotationQueueName",
+                          )}
                           {...field}
                         />
                       </FormControl>
@@ -250,10 +255,12 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                       </FormLabel>
                       <FormControl>
                         <SelectBox
-                          placeholder="Trace"
+                          placeholder={t(
+                            "common.annotationQueues.scopePlaceholder",
+                          )}
                           value={field.value}
                           onChange={field.onChange}
-                          options={SCOPE_OPTIONS}
+                          options={getScopeOptions(t)}
                           disabled={isEdit || Boolean(scope)}
                         />
                       </FormControl>
@@ -280,7 +287,9 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                       <FormLabel>{t("common.labels.instructions")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder={t("common.annotationQueues.instructionsForAnnotators")}
+                          placeholder={t(
+                            "common.annotationQueues.instructionsForAnnotators",
+                          )}
                           rows={4}
                           {...field}
                         />

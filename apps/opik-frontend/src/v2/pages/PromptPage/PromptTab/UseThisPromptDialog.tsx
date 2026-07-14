@@ -142,7 +142,10 @@ const UseThisPromptDialog: React.FunctionComponent<
       >
         <DialogHeader>
           <DialogTitle>
-            {t("usePrompt.useThisPrompt", { kind: promptKind, suffix: versionSuffix })}
+            {t("usePrompt.useThisPrompt", {
+              kind: promptKind,
+              suffix: versionSuffix,
+            })}
           </DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
@@ -163,7 +166,10 @@ const UseThisPromptDialog: React.FunctionComponent<
             />
             <div className="comet-body-accented mt-4">
               {versionCommit
-                ? t("usePrompt.gettingThisPrompt", { kind: promptKind, suffix: versionSuffix })
+                ? t("usePrompt.gettingThisPrompt", {
+                    kind: promptKind,
+                    suffix: versionSuffix,
+                  })
                 : t("usePrompt.gettingPrompt", { kind: promptKind })}
             </div>
             <CodeHighlighter

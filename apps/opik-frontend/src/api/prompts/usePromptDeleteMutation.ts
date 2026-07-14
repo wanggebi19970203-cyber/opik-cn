@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useToast } from "@/ui/use-toast";
@@ -19,7 +20,7 @@ const usePromptDeleteMutation = () => {
     },
     onError: (error: AxiosError) => {
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: getApiErrorMessage(error),
         variant: "destructive",
       });

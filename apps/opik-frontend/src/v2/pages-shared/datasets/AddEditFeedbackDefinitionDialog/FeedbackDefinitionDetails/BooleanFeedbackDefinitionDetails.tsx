@@ -21,7 +21,12 @@ const BooleanFeedbackDefinitionDetails: React.FunctionComponent<
   const { t } = useTranslation("datasets");
   const [booleanDetails, setBooleanDetails] = useState<
     BooleanFeedbackDefinition["details"]
-  >(details ?? { true_label: "Pass", false_label: "Fail" });
+  >(
+    details ?? {
+      true_label: t("feedbackDefinitionDetails.passLabel"),
+      false_label: t("feedbackDefinitionDetails.failLabel"),
+    },
+  );
 
   useEffect(() => {
     const isValid =
@@ -38,7 +43,9 @@ const BooleanFeedbackDefinitionDetails: React.FunctionComponent<
   return (
     <>
       <div className="flex flex-col gap-2 pb-4">
-        <Label htmlFor="feedbackDefinitionBooleanTrueLabel">{t("feedbackDefinitionDetails.trueLabel")}</Label>
+        <Label htmlFor="feedbackDefinitionBooleanTrueLabel">
+          {t("feedbackDefinitionDetails.trueLabel")}
+        </Label>
         <Input
           id="feedbackDefinitionBooleanTrueLabel"
           placeholder={t("feedbackDefinitionDetails.passLabel")}
@@ -53,7 +60,9 @@ const BooleanFeedbackDefinitionDetails: React.FunctionComponent<
       </div>
 
       <div className="flex flex-col gap-2 pb-4">
-        <Label htmlFor="feedbackDefinitionBooleanFalseLabel">{t("feedbackDefinitionDetails.falseLabel")}</Label>
+        <Label htmlFor="feedbackDefinitionBooleanFalseLabel">
+          {t("feedbackDefinitionDetails.falseLabel")}
+        </Label>
         <Input
           id="feedbackDefinitionBooleanFalseLabel"
           placeholder={t("feedbackDefinitionDetails.failLabel")}

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { ExplainKind, ExplainTarget } from "@/types/assistant-sidebar";
 
 type ExplainKindConfig = {
@@ -17,19 +18,22 @@ type ExplainKindConfig = {
 // The seed question is identical per metric regardless of entity (error/cost/
 // duration), so build the configs from shared factories to keep them in sync.
 const errorConfig: ExplainKindConfig = {
-  label: "Explain error",
+  label: i18next.t("common:comet.explain.explainError"),
   question: (target) => {
+    const t = i18next.t;
     const type = (target.payload as { exception_type?: string }).exception_type;
-    return type ? `Explain this error: ${type}` : "Explain this error";
+    return type
+      ? `${t("common:comet.explain.explainThisError")}: ${type}`
+      : t("common:comet.explain.explainThisError");
   },
 };
 const costConfig: ExplainKindConfig = {
-  label: "Explain cost",
-  question: () => "Explain this cost",
+  label: i18next.t("common:comet.explain.explainCost"),
+  question: () => i18next.t("common:comet.explain.explainThisCost"),
 };
 const durationConfig: ExplainKindConfig = {
-  label: "Explain duration",
-  question: () => "Explain this duration",
+  label: i18next.t("common:comet.explain.explainDuration"),
+  question: () => i18next.t("common:comet.explain.explainThisDuration"),
 };
 
 export const AI_EXPLAIN_REGISTRY: Record<ExplainKind, ExplainKindConfig> = {

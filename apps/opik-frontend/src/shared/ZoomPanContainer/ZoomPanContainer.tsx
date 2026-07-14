@@ -156,7 +156,11 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
       <div className={cn("relative size-full overflow-hidden p-6", className)}>
         <div className="absolute right-2 top-0 z-10 flex items-center gap-1.5">
           <TooltipWrapper
-            content={canZoomOut ? t("zoomPan.zoomOut") : t("zoomPan.minimumZoomReached")}
+            content={
+              canZoomOut
+                ? t("zoomPan.zoomOut")
+                : t("zoomPan.minimumZoomReached")
+            }
           >
             <Button
               variant="ghost"
@@ -170,7 +174,9 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
           </TooltipWrapper>
 
           <TooltipWrapper
-            content={canZoomIn ? t("zoomPan.zoomIn") : t("zoomPan.maximumZoomReached")}
+            content={
+              canZoomIn ? t("zoomPan.zoomIn") : t("zoomPan.maximumZoomReached")
+            }
           >
             <Button
               variant="ghost"
@@ -186,13 +192,21 @@ const ZoomPanContainer: React.FC<ZoomPanContainerProps> = ({
           <Separator orientation="vertical" className="h-4" />
 
           <TooltipWrapper
-            content={isPanning ? t("zoomPan.disablePanMode") : t("zoomPan.enablePanMode")}
+            content={
+              isPanning
+                ? t("zoomPan.disablePanMode")
+                : t("zoomPan.enablePanMode")
+            }
           >
             <Button
               variant={isPanning ? "secondary" : "ghost"}
               size="icon-xs"
               onClick={togglePanning}
-              aria-label={isPanning ? t("zoomPan.disablePanMode") : t("zoomPan.enablePanMode")}
+              aria-label={
+                isPanning
+                  ? t("zoomPan.disablePanMode")
+                  : t("zoomPan.enablePanMode")
+              }
             >
               <Hand />
             </Button>

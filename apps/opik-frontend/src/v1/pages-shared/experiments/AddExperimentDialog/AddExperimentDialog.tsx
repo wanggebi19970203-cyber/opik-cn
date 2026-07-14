@@ -97,17 +97,19 @@ interface MetricOption extends DropdownOption<EVALUATOR_MODEL> {
   docLink: string;
 }
 
-const HEURISTICS_MODELS_OPTIONS: MetricOption[] = [
+const getHeuristicsModelsOptions = (
+  t: (key: string) => string,
+): MetricOption[] => [
   {
     value: EVALUATOR_MODEL.equals,
-    label: "Equals",
-    description: "Checks if the output exactly matches the text.",
+    label: t("experiments.evaluators.equals.label"),
+    description: t("experiments.evaluators.equals.description"),
     docLink: buildDocsUrl("/evaluation/metrics/heuristic_metrics", "#equals"),
   },
   {
     value: EVALUATOR_MODEL.regex_match,
-    label: "Regex match",
-    description: "Verifies pattern conformity using regex.",
+    label: t("experiments.evaluators.regexMatch.label"),
+    description: t("experiments.evaluators.regexMatch.description"),
     docLink: buildDocsUrl(
       "/evaluation/metrics/heuristic_metrics",
       "#regexmatch",
@@ -115,20 +117,20 @@ const HEURISTICS_MODELS_OPTIONS: MetricOption[] = [
   },
   {
     value: EVALUATOR_MODEL.contains,
-    label: "Contains",
-    description: "Identifies presence of a substring.",
+    label: t("experiments.evaluators.contains.label"),
+    description: t("experiments.evaluators.contains.description"),
     docLink: buildDocsUrl("/evaluation/metrics/heuristic_metrics", "#contains"),
   },
   {
     value: EVALUATOR_MODEL.isJSON,
-    label: "isJson",
-    description: "Validates JSON format compliance.",
+    label: t("experiments.evaluators.isJson.label"),
+    description: t("experiments.evaluators.isJson.description"),
     docLink: buildDocsUrl("/evaluation/metrics/heuristic_metrics", "#isjson"),
   },
   {
     value: EVALUATOR_MODEL.levenshtein,
-    label: "Levenshtein",
-    description: "Calculates text similarity via edit distance.",
+    label: t("experiments.evaluators.levenshtein.label"),
+    description: t("experiments.evaluators.levenshtein.description"),
     docLink: buildDocsUrl(
       "/evaluation/metrics/heuristic_metrics",
       "#levenshteinratio",
@@ -136,35 +138,37 @@ const HEURISTICS_MODELS_OPTIONS: MetricOption[] = [
   },
 ];
 
-const LLM_JUDGES_MODELS_OPTIONS: MetricOption[] = [
+const getLlmJudgesModelsOptions = (
+  t: (key: string) => string,
+): MetricOption[] => [
   {
     value: EVALUATOR_MODEL.hallucination,
-    label: "Hallucination",
-    description: "Detects generated false information.",
+    label: t("experiments.evaluators.hallucination.label"),
+    description: t("experiments.evaluators.hallucination.description"),
     docLink: buildDocsUrl("/evaluation/metrics/hallucination"),
   },
   {
     value: EVALUATOR_MODEL.moderation,
-    label: "Moderation",
-    description: "Checks adherence to content standards.",
+    label: t("experiments.evaluators.moderation.label"),
+    description: t("experiments.evaluators.moderation.description"),
     docLink: buildDocsUrl("/evaluation/metrics/moderation"),
   },
   {
     value: EVALUATOR_MODEL.answer_relevance,
-    label: "Answer relevance",
-    description: "Evaluates how well the answer fits the question.",
+    label: t("experiments.evaluators.answerRelevance.label"),
+    description: t("experiments.evaluators.answerRelevance.description"),
     docLink: buildDocsUrl("/evaluation/metrics/answer_relevance"),
   },
   {
     value: EVALUATOR_MODEL.context_recall,
-    label: "Context recall",
-    description: "Measures retrieval of relevant context.",
+    label: t("experiments.evaluators.contextRecall.label"),
+    description: t("experiments.evaluators.contextRecall.description"),
     docLink: buildDocsUrl("/evaluation/metrics/context_recall"),
   },
   {
     value: EVALUATOR_MODEL.context_precision,
-    label: "Context precision",
-    description: "Checks accuracy of provided context details.",
+    label: t("experiments.evaluators.contextPrecision.label"),
+    description: t("experiments.evaluators.contextPrecision.description"),
     docLink: buildDocsUrl("/evaluation/metrics/context_precision"),
   },
 ];
@@ -193,7 +197,7 @@ const AddExperimentDialog: React.FunctionComponent<
   const [isLoadedMore, setIsLoadedMore] = useState(false);
   const [datasetName, setDatasetName] = useState(initialDatasetName);
   const [models, setModels] = useState<EVALUATOR_MODEL[]>([
-    LLM_JUDGES_MODELS_OPTIONS[0].value,
+    EVALUATOR_MODEL.hallucination,
   ]); // Set the first LLM judge model as checked
 
   const { data, isLoading } = useDatasetsList(
@@ -399,7 +403,7 @@ eval_results = evaluate(
               <Checkbox
                 checked={models.includes(m.value)}
                 onCheckedChange={() => checkboxChangeHandler(m.value)}
-                aria-label="Select row"
+                aria-label={t("experiments.evaluators.selectRow")}
                 className="mt-0.5"
               />
               <div className="px-2">
@@ -422,9 +426,14 @@ eval_results = evaluate(
 
   const renderExperimentCodeSection = () => (
     <div>
-      <CodeSectionTitle>{t("experiments.createExperimentStep")}</CodeSectionTitle>
+      <CodeSectionTitle>
+        {t("experiments.createExperimentStep")}
+      </CodeSectionTitle>
       {isPhonePortrait ? (
-        <CodeBlockWithHeader title={t("experiments.python")} copyText={codeWithConfigToCopy}>
+        <CodeBlockWithHeader
+          title={t("experiments.python")}
+          copyText={codeWithConfigToCopy}
+        >
           <CodeHighlighter
             data={codeWithConfig}
             highlightedLines={highlightedLines}
@@ -442,8 +451,11 @@ eval_results = evaluate(
 
   const renderEvaluatorsContent = () => (
     <>
-      {generateList(t("experiments.heuristicsMetrics"), HEURISTICS_MODELS_OPTIONS)}
-      {generateList(t("experiments.llmJudges"), LLM_JUDGES_MODELS_OPTIONS)}
+      {generateList(
+        t("experiments.heuristicsMetrics"),
+        getHeuristicsModelsOptions(t),
+      )}
+      {generateList(t("experiments.llmJudges"), getLlmJudgesModelsOptions(t))}
     </>
   );
 
@@ -484,7 +496,9 @@ eval_results = evaluate(
         </>
       ) : (
         <>
-          <div className="comet-title-s">{t("experiments.selectEvaluators")}</div>
+          <div className="comet-title-s">
+            {t("experiments.selectEvaluators")}
+          </div>
           {renderEvaluatorsContent()}
           {renderCustomMetricsLink()}
         </>
@@ -512,7 +526,9 @@ eval_results = evaluate(
           {!isTestSuite && renderEvaluatorsSection()}
           <div className="flex w-full flex-col gap-6 md:min-w-[450px] md:flex-1 md:rounded-md md:border md:border-border md:p-6">
             <div>
-              <CodeSectionTitle>{t("experiments.selectTestSuiteStep")}</CodeSectionTitle>
+              <CodeSectionTitle>
+                {t("experiments.selectTestSuiteStep")}
+              </CodeSectionTitle>
               <LoadableSelectBox
                 options={options}
                 value={datasetName}

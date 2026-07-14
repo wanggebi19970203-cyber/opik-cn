@@ -78,28 +78,28 @@ const IntegrationDetailsDialog: React.FunctionComponent<
       <DialogContent className="max-w-[920px] gap-2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            {selectedIntegration.title} {t('integrationExplorer.integration')}
+            {selectedIntegration.title} {t("integrationExplorer.integration")}
           </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
           <div className="comet-body-s mb-6 text-muted-slate">
-            {t('integrationExplorer.detailsDescription')}{" "}
+            {t("integrationExplorer.detailsDescription")}{" "}
             <a
               href={selectedIntegration.docsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
             >
-              {t('integrationExplorer.readFullGuide')}
+              {t("integrationExplorer.readFullGuide")}
               <ExternalLink className="size-3" />
             </a>{" "}
-            {t('integrationExplorer.inOurDocs')}
+            {t("integrationExplorer.inOurDocs")}
           </div>
 
           <IntegrationStep
             title={`${INSTALL_OPIK_SECTION_TITLE}.`}
-            description={t('integrationExplorer.installOpikDescription')}
+            description={t("integrationExplorer.installOpikDescription")}
             className="mb-6"
           >
             <div className="min-h-7">
@@ -107,7 +107,9 @@ const IntegrationDetailsDialog: React.FunctionComponent<
             </div>
           </IntegrationStep>
           <IntegrationStep
-            title={t('integrationExplorer.runCodeWithIntegration', { title: selectedIntegration.title })}
+            title={t("integrationExplorer.runCodeWithIntegration", {
+              title: selectedIntegration.title,
+            })}
             className="mb-6"
           >
             {shouldShowCodeExecutor ? (
@@ -133,8 +135,8 @@ const IntegrationDetailsDialog: React.FunctionComponent<
 
           <HelpLinks
             onCloseParentDialog={onClose}
-            title={t('integrationExplorer.needSomeHelp')}
-            description={t('integrationExplorer.needSomeHelpDescription')}
+            title={t("integrationExplorer.needSomeHelp")}
+            description={t("integrationExplorer.needSomeHelpDescription")}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

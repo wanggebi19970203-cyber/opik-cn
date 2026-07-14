@@ -104,15 +104,21 @@ export type Integration = {
 
 export const INTEGRATION_CATEGORIES = {
   ALL: i18next.t("common.constants.integrations.categories.all"),
-  LLM_PROVIDERS: i18next.t("common.constants.integrations.categories.llmProviders"),
-  FRAMEWORKS_TOOLS: i18next.t("common.constants.integrations.categories.frameworksTools"),
-  AGENTS_OPTIMIZATION: i18next.t("common.constants.integrations.categories.agentsOptimization"),
+  LLM_PROVIDERS: i18next.t(
+    "common.constants.integrations.categories.llmProviders",
+  ),
+  FRAMEWORKS_TOOLS: i18next.t(
+    "common.constants.integrations.categories.frameworksTools",
+  ),
+  AGENTS_OPTIMIZATION: i18next.t(
+    "common.constants.integrations.categories.agentsOptimization",
+  ),
 } as const;
 
 export const INTEGRATIONS: Integration[] = [
   {
     id: "function-decorators",
-    title: "Function decorators",
+    title: i18next.t("common.constants.integrations.functionDecorators"),
     category: INTEGRATION_CATEGORIES.ALL,
     icon: pythonLogoUrl,
     code: functionDecoratorsCode,
@@ -122,7 +128,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "openai",
     title: "OpenAI",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: openAILogoUrl,
     whiteIcon: openAIWhiteLogoUrl,
@@ -146,7 +154,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "anthropic",
     title: "Anthropic",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: anthropicLogoUrl,
     code: anthropicCode,
@@ -159,29 +169,41 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "openclaw",
     title: "OpenClaw",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: openclawLogoUrl,
     code: "",
     installCommand: "openclaw plugins install clawhub:@opik/opik-openclaw",
-    installTitle: i18next.t("common.constants.integrations.openclaw.installTitle"),
-    installDescription: i18next.t("common.constants.integrations.openclaw.installDescription"),
+    installTitle: i18next.t(
+      "common.constants.integrations.openclaw.installTitle",
+    ),
+    installDescription: i18next.t(
+      "common.constants.integrations.openclaw.installDescription",
+    ),
     additionalSteps: [
       {
         title: i18next.t("common.constants.integrations.openclaw.step2Title"),
-        description: i18next.t("common.constants.integrations.openclaw.step2Description"),
+        description: i18next.t(
+          "common.constants.integrations.openclaw.step2Description",
+        ),
         code: "openclaw opik configure",
         language: SUPPORTED_LANGUAGE.bash,
       },
       {
         title: i18next.t("common.constants.integrations.openclaw.step3Title"),
-        description: i18next.t("common.constants.integrations.openclaw.step3Description"),
+        description: i18next.t(
+          "common.constants.integrations.openclaw.step3Description",
+        ),
         code: "openclaw opik status",
         language: SUPPORTED_LANGUAGE.bash,
       },
       {
         title: i18next.t("common.constants.integrations.openclaw.step4Title"),
-        description: i18next.t("common.constants.integrations.openclaw.step4Description"),
+        description: i18next.t(
+          "common.constants.integrations.openclaw.step4Description",
+        ),
         code: 'openclaw gateway run\nopenclaw message send "hello from openclaw"',
         language: SUPPORTED_LANGUAGE.bash,
       },
@@ -191,7 +213,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "bedrock",
     title: "Bedrock",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: bedrockLogoUrl,
     whiteIcon: bedrockWhiteLogoUrl,
@@ -202,7 +226,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "gemini",
     title: "Gemini",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: geminiLogoUrl,
     code: geminiCode,
@@ -214,7 +240,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "ollama",
     title: "Ollama",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: ollamaLogoUrl,
     whiteIcon: ollamaWhiteLogoUrl,
@@ -225,7 +253,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "langchain",
     title: "LangChain",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: langChainLogoUrl,
     code: langChainCode,
@@ -236,7 +266,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "langgraph",
     title: "LangGraph",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: langGraphLogoUrl,
     code: langGraphCode,
@@ -246,7 +278,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "llamaindex",
     title: "LlamaIndex",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: llamaIndexLogoUrl,
     code: llamaIndexCode,
@@ -258,7 +292,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "haystack",
     title: "Haystack",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: haystackLogoUrl,
     code: haystackCode,
@@ -268,7 +304,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "litellm",
     title: "LiteLLM",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: liteLLMLogoUrl,
     code: liteLLMCode,
@@ -279,7 +317,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "crewai",
     title: "CrewAI",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: crewaiLogoUrl,
     code: crewaiCode,
@@ -289,7 +329,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "dspy",
     title: "DSPy",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: dspyLogoUrl,
     code: dspyCode,
@@ -299,7 +341,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "ragas",
     title: "Ragas",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: ragasLogoUrl,
     code: ragasCode,
@@ -309,7 +353,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "groq",
     title: "Groq",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: groqLogoUrl,
     code: groqCode,
@@ -320,7 +366,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "google-adk",
     title: "Google ADK",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: googleAdkLogoUrl,
     code: adkCode,
@@ -341,7 +389,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "openrouter",
     title: "OpenRouter",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: openrouterLogoUrl,
     whiteIcon: openrouterWhiteLogoUrl,
@@ -352,7 +402,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "autogen",
     title: "AutoGen",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: autogenLogoUrl,
     code: autogenCode,
@@ -363,7 +415,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "agentspec",
     title: "Agent Spec",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: agentspecLogoUrl,
     code: agentspecCode,
@@ -374,7 +428,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "agno",
     title: "Agno",
-    description: "LLM provider",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.llmProvider",
+    ),
     category: INTEGRATION_CATEGORIES.LLM_PROVIDERS,
     icon: agnoLogoUrl,
     code: agnoCode,
@@ -385,7 +441,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "deepseek",
     title: "DeepSeek",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: deepseekLogoUrl,
     code: deepseekCode,
@@ -406,7 +464,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "guardrailsai",
     title: "GuardrailsAI",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: guardrailsaiLogoUrl,
     code: guardrailsaiCode,
@@ -419,7 +479,9 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: "predibase",
     title: "Predibase",
-    description: "Frameworks & tools",
+    description: i18next.t(
+      "common.constants.integrations.descriptions.frameworksTools",
+    ),
     category: INTEGRATION_CATEGORIES.FRAMEWORKS_TOOLS,
     icon: predibaseLogoUrl,
     code: predibaseCode,

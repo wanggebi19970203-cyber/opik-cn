@@ -89,7 +89,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
             rootKeys: ["metadata"],
             projectId,
             type: dataType,
-            placeholder: "key",
+            placeholder: t("filters.keyPlaceholder"),
             excludeRoot: true,
           },
         },
@@ -104,7 +104,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
             rootKeys: ["input", "output"],
             projectId,
             type: dataType,
-            placeholder: "key",
+            placeholder: t("filters.keyPlaceholder"),
             excludeRoot: false,
           },
           validateFilter: (filter: Filter) => {
@@ -113,7 +113,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
               filter.value &&
               !CUSTOM_FILTER_VALIDATION_REGEXP.test(filter.key)
             ) {
-              return `Key is invalid, it should begin with "input", or "output" and follow this format: "input.[PATH]" For example: "input.message" `;
+              return t("filters.invalidCustomKey");
             }
           },
         },
@@ -154,7 +154,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
         ...(isSpanMetric ? getSpanTypeFilterConfig(isGuardrailsEnabled) : {}),
       },
     }),
-    [projectId, dataType, filterType, isGuardrailsEnabled, isSpanMetric],
+    [projectId, dataType, filterType, isGuardrailsEnabled, isSpanMetric, t],
   );
 
   useEffect(() => {

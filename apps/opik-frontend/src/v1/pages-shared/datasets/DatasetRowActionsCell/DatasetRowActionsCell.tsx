@@ -91,6 +91,7 @@ export const createDatasetRowActionsCell = ({
       startExport,
       addExportJob,
       setPanelExpanded,
+      t,
       toast,
     ]);
 

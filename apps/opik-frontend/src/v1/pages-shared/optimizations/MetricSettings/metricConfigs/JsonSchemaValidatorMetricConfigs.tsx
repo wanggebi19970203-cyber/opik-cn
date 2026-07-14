@@ -30,7 +30,7 @@ const JsonSchemaValidatorMetricConfigs = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="reference_key" className="text-sm">
-              {t('optimizations.metricConfigs.referenceKey')}
+              {t("optimizations.metricConfigs.referenceKey")}
             </Label>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.metric_reference_key]}
@@ -42,7 +42,9 @@ const JsonSchemaValidatorMetricConfigs = ({
             onChange={(e) =>
               onChange({ ...configs, reference_key: e.target.value })
             }
-            placeholder={t('optimizations.metricConfigs.referenceKeyPlaceholder')}
+            placeholder={t(
+              "optimizations.metricConfigs.referenceKeyPlaceholder",
+            )}
           />
           <DatasetVariablesHint
             datasetVariables={datasetVariables}

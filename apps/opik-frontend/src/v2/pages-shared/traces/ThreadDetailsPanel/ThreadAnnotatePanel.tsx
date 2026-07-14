@@ -146,13 +146,17 @@ const ThreadAnnotatePanel: React.FC<ThreadAnnotatePanelProps> = ({
           onUpdateFeedbackScore={onUpdateFeedbackScore}
           onDeleteFeedbackScore={onDeleteFeedbackScore}
           className="mt-4 px-4"
-          header={<FeedbackScoresEditor.Header title={t("annotate.humanReview")} />}
+          header={
+            <FeedbackScoresEditor.Header title={t("annotate.humanReview")} />
+          }
           footer={<FeedbackScoresEditor.Footer entityCopy="threads" />}
         />
 
         <Separator className="m-4 w-auto" />
 
-        <div className="comet-body-s-accented truncate px-4">{t("annotate.comments")}</div>
+        <div className="comet-body-s-accented truncate px-4">
+          {t("annotate.comments")}
+        </div>
         <CommentsSection
           comments={comments}
           onSubmit={onCommentSubmit}

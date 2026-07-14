@@ -1,11 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Filter, FilterOperator, FilterRowConfig } from "@/types/filters";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
 import {
-  DEFAULT_OPERATORS,
+  getDefaultOperators,
   NO_VALUE_OPERATORS,
-  OPERATORS_MAP,
+  getOperatorsMap,
 } from "@/constants/filters";
 import { COLUMN_TYPE } from "@/types/shared";
 import { toString } from "@/lib/utils";
@@ -21,6 +22,7 @@ export const ListRow: React.FunctionComponent<ListRowProps> = ({
   onChange,
   config,
 }) => {
+  const { t } = useTranslation("common");
   const KeyComponent = config?.keyComponent ?? DebounceInput;
 
   return (
@@ -30,8 +32,8 @@ export const ListRow: React.FunctionComponent<ListRowProps> = ({
           operator={filter.operator}
           operators={
             config?.operators ??
-            OPERATORS_MAP[filter.type as COLUMN_TYPE] ??
-            DEFAULT_OPERATORS
+            getOperatorsMap()[filter.type as COLUMN_TYPE] ??
+            getDefaultOperators()
           }
           onSelect={(o) => onChange({ ...filter, operator: o })}
         />
@@ -40,7 +42,7 @@ export const ListRow: React.FunctionComponent<ListRowProps> = ({
         {!NO_VALUE_OPERATORS.includes(filter.operator as FilterOperator) ? (
           <KeyComponent
             className="w-full min-w-40"
-            placeholder="value"
+            placeholder={t("labels.value")}
             value={toString(filter.value)}
             onValueChange={(value) =>
               onChange({ ...filter, value: value as string })

@@ -228,7 +228,7 @@ const OptimizationsNewPromptSection: React.FC<
                 }
                 trigger={
                   <div>
-                    <TooltipWrapper content="Load prompt">
+                    <TooltipWrapper content={t("newRun.loadPrompt")}>
                       <Button
                         variant="minimal"
                         size="icon-2xs"

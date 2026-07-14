@@ -163,7 +163,11 @@ const TestSuiteItemPanelLayout: React.FC<TestSuiteItemPanelLayoutProps> = ({
       header={
         <ResizableSidePanelTopBar
           variant="info"
-          title={isNewItem ? t("testSuiteItem.addTestCase") : t("testSuiteItem.editTestCase")}
+          title={
+            isNewItem
+              ? t("testSuiteItem.addTestCase")
+              : t("testSuiteItem.editTestCase")
+          }
           onClose={onClose}
         >
           {!isNewItem && (

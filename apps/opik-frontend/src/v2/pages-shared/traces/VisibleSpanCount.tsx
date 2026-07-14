@@ -37,12 +37,18 @@ const VisibleSpanCount: React.FC<VisibleSpanCountProps> = ({
   if (displayed < total) {
     return (
       <TooltipWrapper content={t("visibleSpanCount.spansTotal", { total })}>
-        <span className={LABEL_CLASS}>{t("visibleSpanCount.spansLabel", { count: displayed })}</span>
+        <span className={LABEL_CLASS}>
+          {t("visibleSpanCount.spansLabel", { count: displayed })}
+        </span>
       </TooltipWrapper>
     );
   }
 
-  return <span className={LABEL_CLASS}>{t("visibleSpanCount.spansLabel", { count: total })}</span>;
+  return (
+    <span className={LABEL_CLASS}>
+      {t("visibleSpanCount.spansLabel", { count: total })}
+    </span>
+  );
 };
 
 export default VisibleSpanCount;

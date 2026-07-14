@@ -146,7 +146,9 @@ const SortableMessage: React.FC<SortableMessageProps> = ({
           {editable && (
             <div className="ml-auto flex items-center gap-0.5">
               {onDuplicateMessage && (
-                <TooltipWrapper content={t("agentOptimization.chatMessages.duplicate")}>
+                <TooltipWrapper
+                  content={t("agentOptimization.chatMessages.duplicate")}
+                >
                   <Button
                     variant="minimal"
                     size="icon-2xs"
@@ -157,7 +159,9 @@ const SortableMessage: React.FC<SortableMessageProps> = ({
                 </TooltipWrapper>
               )}
               {onDeleteMessage && canDelete && (
-                <TooltipWrapper content={t("agentOptimization.chatMessages.delete")}>
+                <TooltipWrapper
+                  content={t("agentOptimization.chatMessages.delete")}
+                >
                   <Button
                     variant="minimal"
                     size="icon-2xs"

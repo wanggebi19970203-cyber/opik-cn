@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useSMEFlow } from "./SMEFlowContext";
 
 interface AnnotatingHeaderProps {
@@ -8,6 +9,7 @@ interface AnnotatingHeaderProps {
 const AnnotatingHeader: React.FunctionComponent<AnnotatingHeaderProps> = ({
   content,
 }) => {
+  const { t } = useTranslation("sme");
   const { annotationQueue, totalCount, processedCount } = useSMEFlow();
 
   return (
@@ -19,9 +21,14 @@ const AnnotatingHeader: React.FunctionComponent<AnnotatingHeaderProps> = ({
         {content}
       </div>
       <div className="mb-2 flex h-7 items-center justify-between">
-        <div className="comet-body-s-accented text-foreground">Progress</div>
+        <div className="comet-body-s-accented text-foreground">
+          {t("annotationView.progress")}
+        </div>
         <span className="comet-body-s text-light-slate">
-          {processedCount}/{totalCount} completed
+          {t("annotationView.progressCompleted", {
+            processedCount,
+            totalCount,
+          })}
         </span>
       </div>
       <div className="flex flex-1 items-center space-x-4">

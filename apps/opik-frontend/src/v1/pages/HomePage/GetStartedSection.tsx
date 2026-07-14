@@ -60,7 +60,9 @@ const GetStartedSection = () => {
             <div className="flex size-[24px] items-center justify-center rounded bg-action-experiment-background">
               <MousePointer className="size-3.5 text-action-experiment-text" />
             </div>
-            <div className="comet-body-s">{t("home.getStarted.runAnExperiment")}</div>
+            <div className="comet-body-s">
+              {t("home.getStarted.runAnExperiment")}
+            </div>
           </div>
         )}
         {isGuardrailsEnabled && (
@@ -71,7 +73,9 @@ const GetStartedSection = () => {
             <div className="flex size-[24px] items-center justify-center rounded bg-action-guardrail-background">
               <Construction className="size-3.5 text-action-guardrail-text" />
             </div>
-            <div className="comet-body-s">{t("home.getStarted.setAGuardrail")}</div>
+            <div className="comet-body-s">
+              {t("home.getStarted.setAGuardrail")}
+            </div>
           </div>
         )}
         <Link
@@ -82,7 +86,9 @@ const GetStartedSection = () => {
           <div className="flex size-[24px] items-center justify-center rounded bg-action-playground-background">
             <FlaskConical className="size-3.5 text-action-playground-text" />
           </div>
-          <div className="comet-body-s">{t("home.getStarted.tryOutPlayground")}</div>
+          <div className="comet-body-s">
+            {t("home.getStarted.tryOutPlayground")}
+          </div>
         </Link>
       </div>
 

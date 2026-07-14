@@ -1,7 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Filter } from "@/types/filters";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
-import { DEFAULT_OPERATORS } from "@/constants/filters";
+import { getDefaultOperators } from "@/constants/filters";
 import { Input } from "@/ui/input";
 
 type DefaultRowProps = {
@@ -11,17 +12,22 @@ type DefaultRowProps = {
 export const DefaultRow: React.FunctionComponent<DefaultRowProps> = ({
   filter,
 }) => {
+  const { t } = useTranslation("common");
   return (
     <>
       <td className="p-1">
         <OperatorSelector
           operator={filter.operator}
-          operators={DEFAULT_OPERATORS}
+          operators={getDefaultOperators()}
           disabled
         />
       </td>
       <td className="p-1">
-        <Input className="w-full min-w-40" placeholder="value" disabled />
+        <Input
+          className="w-full min-w-40"
+          placeholder={t("labels.value")}
+          disabled
+        />
       </td>
     </>
   );

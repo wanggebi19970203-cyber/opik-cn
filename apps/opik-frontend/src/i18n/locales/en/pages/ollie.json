@@ -6,6 +6,13 @@
       "codebase": "Codebase analysis",
       "integration": "Integration guide",
       "monitoring": "Real-time monitoring"
-    }
+    },
+    "explain": "Explain",
+    "ollieIsWakingUp": "Ollie is waking up…",
+    "thinking": "Thinking...",
+    "somethingWentWrong": "Something went wrong.",
+    "noExplanationAvailable": "No explanation available.",
+    "retry": "Retry",
+    "continueConversation": "Continue conversation"
   }
 }

@@ -45,11 +45,11 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t('addVersion.title')}</DialogTitle>
+          <DialogTitle>{t("addVersion.title")}</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          {t('addVersion.description')}
+          {t("addVersion.description")}
         </p>
 
         <VersionForm
@@ -65,7 +65,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             onClick={handleCancel}
             disabled={isSubmitting}
           >
-            {t('addVersion.cancel')}
+            {t("addVersion.cancel")}
           </Button>
           <Button
             type="submit"
@@ -73,7 +73,7 @@ const AddVersionDialog: React.FC<AddVersionDialogProps> = ({
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-            {t('addVersion.saveChanges')}
+            {t("addVersion.saveChanges")}
           </Button>
         </DialogFooter>
       </DialogContent>

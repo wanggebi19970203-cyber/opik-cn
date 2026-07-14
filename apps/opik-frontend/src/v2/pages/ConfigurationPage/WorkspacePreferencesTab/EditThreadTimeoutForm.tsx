@@ -14,15 +14,20 @@ import SelectBox from "@/shared/SelectBox/SelectBox";
 import { DropdownOption } from "@/types/shared";
 import { isValidIso8601Duration, formatIso8601Duration } from "@/lib/date";
 
-const formSchema = z.object({
-  timeout_to_mark_thread_as_inactive: z
-    .string()
-    .refine((value) => isValidIso8601Duration(value, 7), {
-      message: "Please select a valid timeout duration (maximum 7 days)",
-    }),
-});
+const createFormSchema = (t: (key: string) => string) =>
+  z.object({
+    timeout_to_mark_thread_as_inactive: z
+      .string()
+      .refine((value) => isValidIso8601Duration(value, 7), {
+        message: t(
+          "settings.workspacePreferences.threadTimeout.validation.maxDuration",
+        ),
+      }),
+  });
 
-export type EditThreadTimeoutFormValues = z.infer<typeof formSchema>;
+export type EditThreadTimeoutFormValues = z.infer<
+  ReturnType<typeof createFormSchema>
+>;
 
 const TIMEOUT_VALUES = ["PT5M", "PT10M", "PT15M", "PT20M", "PT30M", "PT1H"];
 
@@ -49,7 +54,7 @@ const EditThreadTimeoutForm: React.FC<EditThreadTimeoutFormProps> = ({
   );
 
   const form = useForm<EditThreadTimeoutFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema(t)),
     defaultValues: {
       timeout_to_mark_thread_as_inactive: defaultValue,
     },
@@ -67,13 +72,17 @@ const EditThreadTimeoutForm: React.FC<EditThreadTimeoutFormProps> = ({
           name="timeout_to_mark_thread_as_inactive"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("settings.workspacePreferences.threadTimeout.formLabel")}</FormLabel>
+              <FormLabel>
+                {t("settings.workspacePreferences.threadTimeout.formLabel")}
+              </FormLabel>
               <FormControl>
                 <SelectBox
                   value={field.value}
                   onChange={field.onChange}
                   options={TIMEOUT_OPTIONS}
-                  placeholder={t("settings.workspacePreferences.threadTimeout.selectPlaceholder")}
+                  placeholder={t(
+                    "settings.workspacePreferences.threadTimeout.selectPlaceholder",
+                  )}
                   className="w-full"
                 />
               </FormControl>

@@ -64,7 +64,11 @@ const transformMessageIntoProviderMessage = (
   );
 
   if (notDefinedVariables.length > 0) {
-    throw new Error(i18next.t("common.playground.variablesNotDefined", { variables: notDefinedVariables.join(", ") }));
+    throw new Error(
+      i18next.t("common.playground.variablesNotDefined", {
+        variables: notDefinedVariables.join(", "),
+      }),
+    );
   }
 
   // Handle content based on type

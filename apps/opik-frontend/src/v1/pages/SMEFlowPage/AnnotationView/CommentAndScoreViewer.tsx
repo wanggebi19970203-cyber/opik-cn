@@ -86,7 +86,9 @@ const CommentAndScoreViewer: React.FC = () => {
       {canAnnotateTraceSpanThread && (
         <>
           <div className="flex items-center justify-between gap-1 pb-2">
-            <span className="comet-body-s-accented truncate">{t("commentAndScoreViewer.comment")}</span>
+            <span className="comet-body-s-accented truncate">
+              {t("commentAndScoreViewer.comment")}
+            </span>
             <TooltipWrapper
               content={SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].description}
               hotkeys={[SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].display]}

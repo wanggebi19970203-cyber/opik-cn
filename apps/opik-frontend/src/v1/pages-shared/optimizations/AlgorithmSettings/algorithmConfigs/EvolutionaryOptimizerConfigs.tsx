@@ -32,8 +32,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={100}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.POPULATION_SIZE}
-        label={t('optimizations.algorithmConfigs.populationSize')}
-        tooltip={t('optimizations.algorithmConfigs.populationSizeTooltip')}
+        label={t("optimizations.algorithmConfigs.populationSize")}
+        tooltip={t("optimizations.algorithmConfigs.populationSizeTooltip")}
       />
 
       <SliderInputControl
@@ -47,8 +47,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={50}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.NUM_GENERATIONS}
-        label={t('optimizations.algorithmConfigs.numberOfGenerations')}
-        tooltip={t('optimizations.algorithmConfigs.numberOfGenerationsTooltip')}
+        label={t("optimizations.algorithmConfigs.numberOfGenerations")}
+        tooltip={t("optimizations.algorithmConfigs.numberOfGenerationsTooltip")}
       />
 
       <SliderInputControl
@@ -62,8 +62,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={1}
         step={0.01}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.MUTATION_RATE}
-        label={t('optimizations.algorithmConfigs.mutationRate')}
-        tooltip={t('optimizations.algorithmConfigs.mutationRateTooltip')}
+        label={t("optimizations.algorithmConfigs.mutationRate")}
+        tooltip={t("optimizations.algorithmConfigs.mutationRateTooltip")}
       />
 
       <SliderInputControl
@@ -77,8 +77,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={1}
         step={0.01}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.CROSSOVER_RATE}
-        label={t('optimizations.algorithmConfigs.crossoverRate')}
-        tooltip={t('optimizations.algorithmConfigs.crossoverRateTooltip')}
+        label={t("optimizations.algorithmConfigs.crossoverRate")}
+        tooltip={t("optimizations.algorithmConfigs.crossoverRateTooltip")}
       />
 
       <SliderInputControl
@@ -92,8 +92,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={20}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.TOURNAMENT_SIZE}
-        label={t('optimizations.algorithmConfigs.tournamentSize')}
-        tooltip={t('optimizations.algorithmConfigs.tournamentSizeTooltip')}
+        label={t("optimizations.algorithmConfigs.tournamentSize")}
+        tooltip={t("optimizations.algorithmConfigs.tournamentSizeTooltip")}
       />
 
       <SliderInputControl
@@ -107,8 +107,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={20}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.ELITISM_SIZE}
-        label={t('optimizations.algorithmConfigs.elitismSize')}
-        tooltip={t('optimizations.algorithmConfigs.elitismSizeTooltip')}
+        label={t("optimizations.algorithmConfigs.elitismSize")}
+        tooltip={t("optimizations.algorithmConfigs.elitismSizeTooltip")}
       />
 
       <div className="space-y-2">
@@ -124,7 +124,7 @@ const EvolutionaryOptimizerConfigs = ({
             }
           />
           <Label htmlFor="adaptive_mutation" className="cursor-pointer text-sm">
-            {t('optimizations.algorithmConfigs.adaptiveMutation')}
+            {t("optimizations.algorithmConfigs.adaptiveMutation")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_adaptive_mutation]}
@@ -145,7 +145,9 @@ const EvolutionaryOptimizerConfigs = ({
             }
           />
           <Label htmlFor="enable_moo" className="cursor-pointer text-sm">
-            {t('optimizations.algorithmConfigs.enableMultiObjectiveOptimization')}
+            {t(
+              "optimizations.algorithmConfigs.enableMultiObjectiveOptimization",
+            )}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_enable_moo]}
@@ -169,7 +171,7 @@ const EvolutionaryOptimizerConfigs = ({
             htmlFor="enable_llm_crossover"
             className="cursor-pointer text-sm"
           >
-            {t('optimizations.algorithmConfigs.enableLlmCrossover')}
+            {t("optimizations.algorithmConfigs.enableLlmCrossover")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_enable_llm_crossover]}
@@ -180,7 +182,7 @@ const EvolutionaryOptimizerConfigs = ({
       <div className="space-y-2">
         <div className="flex items-center">
           <Label htmlFor="output_style_guidance" className="text-sm">
-            {t('optimizations.algorithmConfigs.outputStyleGuidance')}
+            {t("optimizations.algorithmConfigs.outputStyleGuidance")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_output_style_guidance]}
@@ -195,7 +197,9 @@ const EvolutionaryOptimizerConfigs = ({
           onChange={(e) =>
             onChange({ ...configs, output_style_guidance: e.target.value })
           }
-          placeholder={t('optimizations.algorithmConfigs.outputStyleGuidancePlaceholder')}
+          placeholder={t(
+            "optimizations.algorithmConfigs.outputStyleGuidancePlaceholder",
+          )}
           dimension="sm"
         />
       </div>
@@ -216,7 +220,7 @@ const EvolutionaryOptimizerConfigs = ({
             htmlFor="infer_output_style"
             className="cursor-pointer text-sm"
           >
-            {t('optimizations.algorithmConfigs.inferOutputStyle')}
+            {t("optimizations.algorithmConfigs.inferOutputStyle")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_infer_output_style]}
@@ -234,8 +238,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={16}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.N_THREADS}
-        label={t('optimizations.algorithmConfigs.numberOfThreads')}
-        tooltip={t('optimizations.algorithmConfigs.numberOfThreadsTooltip')}
+        label={t("optimizations.algorithmConfigs.numberOfThreads")}
+        tooltip={t("optimizations.algorithmConfigs.numberOfThreadsTooltip")}
       />
 
       <div className="space-y-2">
@@ -250,7 +254,7 @@ const EvolutionaryOptimizerConfigs = ({
             }
           />
           <Label htmlFor="verbose" className="cursor-pointer text-sm">
-            {t('optimizations.algorithmConfigs.verbose')}
+            {t("optimizations.algorithmConfigs.verbose")}
           </Label>
           <ExplainerIcon {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_verbose]} />
         </div>
@@ -264,8 +268,8 @@ const EvolutionaryOptimizerConfigs = ({
         max={1000}
         step={1}
         defaultValue={DEFAULT_EVOLUTIONARY_OPTIMIZER_CONFIGS.SEED}
-        label={t('optimizations.algorithmConfigs.seed')}
-        tooltip={t('optimizations.algorithmConfigs.seedTooltip')}
+        label={t("optimizations.algorithmConfigs.seed")}
+        tooltip={t("optimizations.algorithmConfigs.seedTooltip")}
       />
     </div>
   );

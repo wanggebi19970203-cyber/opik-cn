@@ -92,7 +92,7 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
         });
       }
     },
-    [navigate, toast, workspaceName],
+    [navigate, t, toast, workspaceName],
   );
 
   const submitHandler = useCallback(() => {

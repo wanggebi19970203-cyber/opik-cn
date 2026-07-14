@@ -188,7 +188,9 @@ const ExperimentsSelectBox: React.FC<ExperimentsSelectBoxProps> = (props) => {
       const experimentNames = selectedOptions.map((o) => o.label).join(", ");
       return (
         <TooltipWrapper content={experimentNames}>
-          <div className="truncate">{t('experimentsCountLabel', { count })}</div>
+          <div className="truncate">
+            {t("experimentsCountLabel", { count })}
+          </div>
         </TooltipWrapper>
       );
     },

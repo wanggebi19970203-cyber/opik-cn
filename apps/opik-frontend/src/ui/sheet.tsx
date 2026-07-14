@@ -2,6 +2,7 @@ import * as React from "react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronsRight, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
@@ -60,6 +61,7 @@ type SheetTopBarProps = {
 
 const SheetTopBar = React.forwardRef<HTMLDivElement, SheetTopBarProps>(
   ({ title, leftIcon, children, variant = "form" }, ref) => {
+    const { t } = useTranslation("common");
     const CloseIcon = variant === "info" ? ChevronsRight : X;
     return (
       <div
@@ -70,7 +72,7 @@ const SheetTopBar = React.forwardRef<HTMLDivElement, SheetTopBarProps>(
           <SheetPrimitive.Close asChild>
             <Button variant="ghost" size="icon-2xs">
               <CloseIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t("common.buttons.close")}</span>
             </Button>
           </SheetPrimitive.Close>
           {leftIcon}

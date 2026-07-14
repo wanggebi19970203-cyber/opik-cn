@@ -25,7 +25,7 @@ import {
 import { TRACE_DATA_TYPE } from "@/hooks/useTracesOrSpansList";
 import {
   CUSTOM_FILTER_VALIDATION_REGEXP,
-  OPERATORS_MAP,
+  getOperatorsMap,
 } from "@/constants/filters";
 import { createFilter } from "@/lib/filters";
 import FiltersContent from "@/shared/FiltersContent/FiltersContent";
@@ -42,196 +42,201 @@ import { useIsFeatureEnabled } from "@/contexts/feature-toggles-provider";
 import { FeatureToggleKeys } from "@/types/feature-toggles";
 import { DropdownOption } from "@/types/shared";
 import { FilterOperator } from "@/types/filters";
+import type { TFunction } from "i18next";
 
 // Trace-specific columns for automation rule filtering
-export const TRACE_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
+export const getTraceFilterColumns = (
+  t: TFunction,
+): ColumnData<TRACE_DATA_TYPE>[] => [
   {
     id: "id",
-    label: "ID",
+    label: t("ruleFiltering.filterColumns.id"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "name",
-    label: "Name",
+    label: t("ruleFiltering.filterColumns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "input",
-    label: "Input",
+    label: t("ruleFiltering.filterColumns.input"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "output",
-    label: "Output",
+    label: t("ruleFiltering.filterColumns.output"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("ruleFiltering.filterColumns.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("ruleFiltering.filterColumns.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("ruleFiltering.filterColumns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "thread_id",
-    label: "Thread ID",
+    label: t("ruleFiltering.filterColumns.threadId"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("ruleFiltering.filterColumns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
 
+// Backward-compatible static export (uses English defaults)
+export const TRACE_FILTER_COLUMNS = getTraceFilterColumns(
+  ((key: string) => key.split(".").pop() ?? key) as TFunction,
+);
+
 // Thread-specific columns for automation rule filtering
-export const THREAD_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
-  // {
-  //   id: "id",
-  //   label: "ID",
-  //   type: COLUMN_TYPE.string,
-  // },
+export const getThreadFilterColumns = (
+  t: TFunction,
+): ColumnData<TRACE_DATA_TYPE>[] => [
   {
     id: "status",
-    label: "Status",
+    label: t("ruleFiltering.filterColumns.status"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("ruleFiltering.filterColumns.createdAt"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "last_updated_at",
-    label: "Last updated at",
+    label: t("ruleFiltering.filterColumns.lastUpdatedAt"),
     type: COLUMN_TYPE.time,
   },
-  // {
-  //   id: "start_time",
-  //   label: "Start time",
-  //   type: COLUMN_TYPE.time,
-  // },
-  // {
-  //   id: "end_time",
-  //   label: "End time",
-  //   type: COLUMN_TYPE.time,
-  // },
   {
     id: "duration",
-    label: "Duration",
+    label: t("ruleFiltering.filterColumns.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("ruleFiltering.filterColumns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("ruleFiltering.filterColumns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
 
+export const THREAD_FILTER_COLUMNS = getThreadFilterColumns(
+  ((key: string) => key.split(".").pop() ?? key) as TFunction,
+);
+
 // Span-specific columns for automation rule filtering
-export const SPAN_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
+export const getSpanFilterColumns = (
+  t: TFunction,
+): ColumnData<TRACE_DATA_TYPE>[] => [
   {
     id: "id",
-    label: "ID",
+    label: t("ruleFiltering.filterColumns.id"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "name",
-    label: "Name",
+    label: t("ruleFiltering.filterColumns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "input",
-    label: "Input",
+    label: t("ruleFiltering.filterColumns.input"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "output",
-    label: "Output",
+    label: t("ruleFiltering.filterColumns.output"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("ruleFiltering.filterColumns.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("ruleFiltering.filterColumns.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("ruleFiltering.filterColumns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "type",
-    label: "Type",
+    label: t("ruleFiltering.filterColumns.type"),
     type: COLUMN_TYPE.category,
   },
   {
     id: "model",
-    label: "Model",
+    label: t("ruleFiltering.filterColumns.model"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "provider",
-    label: "Provider",
+    label: t("ruleFiltering.filterColumns.provider"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: t("ruleFiltering.filterColumns.totalTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: t("ruleFiltering.filterColumns.totalInputTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: t("ruleFiltering.filterColumns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("ruleFiltering.filterColumns.estimatedCost"),
     type: COLUMN_TYPE.cost,
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: t("ruleFiltering.filterColumns.errors"),
     type: COLUMN_TYPE.errors,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("ruleFiltering.filterColumns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
   {
     id: COLUMN_CUSTOM_ID,
-    label: "Custom filter",
+    label: t("ruleFiltering.filterColumns.customFilter"),
     type: COLUMN_TYPE.dictionary,
   },
 ];
+
+export const SPAN_FILTER_COLUMNS = getSpanFilterColumns(
+  ((key: string) => key.split(".").pop() ?? key) as TFunction,
+);
 
 // Exported for backward compatibility
 export const AUTOMATION_RULE_FILTER_COLUMNS = TRACE_FILTER_COLUMNS;
@@ -258,10 +263,10 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
   );
 
   const currentFilterColumns = useMemo(() => {
-    if (isThreadScope) return THREAD_FILTER_COLUMNS;
-    if (isSpanScope) return SPAN_FILTER_COLUMNS;
-    return TRACE_FILTER_COLUMNS;
-  }, [isThreadScope, isSpanScope]);
+    if (isThreadScope) return getThreadFilterColumns(t);
+    if (isSpanScope) return getSpanFilterColumns(t);
+    return getTraceFilterColumns(t);
+  }, [isThreadScope, isSpanScope, t]);
 
   useEffect(() => {
     if (form.formState.errors.filters) {
@@ -272,7 +277,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
   // Rule-specific operators for dictionary filters (includes is_empty and is_not_empty)
   const ruleDictionaryOperators: DropdownOption<FilterOperator>[] = useMemo(
     () => [
-      ...(OPERATORS_MAP[COLUMN_TYPE.dictionary] || []),
+      ...(getOperatorsMap()[COLUMN_TYPE.dictionary] || []),
       {
         label: t("ruleFiltering.isEmpty"),
         value: "is_empty",
@@ -282,7 +287,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
         value: "is_not_empty",
       },
     ],
-    [],
+    [t],
   );
 
   const filtersConfig = useMemo(
@@ -298,7 +303,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
             rootKeys: ["metadata"],
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: "key",
+            placeholder: t("ruleFiltering.filterPlaceholders.key"),
             excludeRoot: true,
           },
           operators: ruleDictionaryOperators,
@@ -316,7 +321,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                   rootKeys: ["input"],
                   projectId,
                   type: TRACE_DATA_TYPE.traces,
-                  placeholder: "key (optional)",
+                  placeholder: t(
+                    "ruleFiltering.filterPlaceholders.keyOptional",
+                  ),
                   excludeRoot: true,
                 },
                 operators: ruleDictionaryOperators,
@@ -333,7 +340,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                   rootKeys: ["output"],
                   projectId,
                   type: TRACE_DATA_TYPE.traces,
-                  placeholder: "key (optional)",
+                  placeholder: t(
+                    "ruleFiltering.filterPlaceholders.keyOptional",
+                  ),
                   excludeRoot: true,
                 },
                 operators: ruleDictionaryOperators,
@@ -351,7 +360,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
             rootKeys: ["input", "output"],
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: "key",
+            placeholder: t("ruleFiltering.filterPlaceholders.key"),
             excludeRoot: false,
           },
           operators: ruleDictionaryOperators,
@@ -361,7 +370,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
               filter.value &&
               !CUSTOM_FILTER_VALIDATION_REGEXP.test(filter.key)
             ) {
-              return `Key is invalid, it should be "input", "output", and follow this format: "input.[PATH]" For example: "input.message" or just "input" for the whole object`;
+              return t("ruleFiltering.filterValidation.customKeyInvalid");
             }
           },
         },
@@ -375,7 +384,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
           keyComponentProps: {
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: t("ruleFiltering.selectScore"),
+            placeholder: t("ruleFiltering.filterPlaceholders.selectScore"),
           },
         },
         ...getTagsFilterConfig({
@@ -396,6 +405,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
       isThreadScope,
       isGuardrailsEnabled,
       ruleDictionaryOperators,
+      t,
     ],
   );
 
@@ -430,7 +440,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
       <AccordionItem value="filtering-sampling" className="border-none">
         <AccordionTrigger className="px-3 py-2 hover:no-underline">
           <div className="flex items-center gap-1">
-            <Label className="text-sm font-medium">{t("ruleFiltering.filteringAndSampling")}</Label>
+            <Label className="text-sm font-medium">
+              {t("ruleFiltering.filteringAndSampling")}
+            </Label>
             <ExplainerIcon
               className="mt-0.5"
               description={
@@ -449,10 +461,10 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
               {t("ruleFiltering.samplingDescription", {
                 entityType:
                   scope === EVALUATORS_RULE_SCOPE.trace
-                    ? t("common:common.labels.trace", "traces")
+                    ? t("ruleFiltering.entityTypeTraces")
                     : scope === EVALUATORS_RULE_SCOPE.thread
-                      ? "threads"
-                      : "spans",
+                      ? t("ruleFiltering.entityTypeThreads")
+                      : t("ruleFiltering.entityTypeSpans"),
               })}
             </Description>
 
@@ -466,7 +478,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                 return (
                   <FormItem>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">{t("ruleFiltering.filtersLabel")}</Label>
+                      <Label className="text-sm font-medium">
+                        {t("ruleFiltering.filtersLabel")}
+                      </Label>
 
                       {field.value.length > 0 && (
                         <FiltersContent
@@ -504,7 +518,10 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
 
                             return (
                               <FormErrorSkeleton key={index}>
-                                Filter {index + 1}: {errors.join(", ")}
+                                {t("ruleFiltering.filterErrorPrefix", {
+                                  index: index + 1,
+                                  errors: errors.join(", "),
+                                })}
                               </FormErrorSkeleton>
                             );
                           })}

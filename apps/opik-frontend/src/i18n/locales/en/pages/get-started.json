@@ -43,7 +43,8 @@
       "waitingForRepo": "Waiting for your repo to connect\u2026",
       "connectedDescription": "Ollie can now inspect your code and help you set up tracing in Opik.",
       "notConnectedDescription": "Run the command above in your repo. Once connected, Ollie can inspect your code and help finish setup.",
-      "connectTroubleshooting": "Connect troubleshooting"
+      "connectTroubleshooting": "Connect troubleshooting",
+      "terminal": "Terminal"
     },
     "demoLoading": {
       "creatingDemoProject": "Creating demo project…",
@@ -52,14 +53,21 @@
       "almostReady": "Almost ready…",
       "tryAgain": "Try again",
       "takingLonger": "Demo data is taking longer than expected.",
-      "backToSetup": "Back to setup"
+      "backToSetup": "Back to setup",
+      "generatingDemoData": "Generating demo data…",
+      "showMeDemoProject": "Show me a demo project"
     },
     "manualIntegration": {
       "allIntegrations": "All integrations",
       "llmProviders": "LLM providers",
       "frameworksAndTools": "Frameworks & tools",
       "useOpikSkills": "Use Opik skills",
-      "viewAll": "View all"
+      "viewAll": "View all",
+      "integrateOpikWith": "Integrate Opik with {{title}}",
+      "description": "It all starts with a trace. Follow these quick steps to log your first set of LLM calls so you can use Opik to analyze them and improve performance.",
+      "readTheFullGuide": "Read the full guide",
+      "inOurDocs": "in our docs.",
+      "runCodeToGetStarted": "2. Run the following code to get started with {{title}}"
     },
     "selectIntent": {
       "welcome": "Welcome to Opik - let\u2019s get you set up",

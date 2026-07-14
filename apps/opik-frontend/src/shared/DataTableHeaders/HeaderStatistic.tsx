@@ -63,9 +63,18 @@ const HeaderStatistic: React.FC<HeaderStatisticProps> = ({
   const { t } = useTranslation();
 
   const percentileOptions: DropdownOption<string>[] = [
-    { label: t("common:aggregation.percentile50"), value: AGGREGATION_VALUE.P50 },
-    { label: t("common:aggregation.percentile90"), value: AGGREGATION_VALUE.P90 },
-    { label: t("common:aggregation.percentile99"), value: AGGREGATION_VALUE.P99 },
+    {
+      label: t("common:aggregation.percentile50"),
+      value: AGGREGATION_VALUE.P50,
+    },
+    {
+      label: t("common:aggregation.percentile90"),
+      value: AGGREGATION_VALUE.P90,
+    },
+    {
+      label: t("common:aggregation.percentile99"),
+      value: AGGREGATION_VALUE.P99,
+    },
   ];
 
   const formatTooltip = (value: number) =>
@@ -170,11 +179,17 @@ const HeaderStatistic: React.FC<HeaderStatisticProps> = ({
     const options: DropdownOption<string>[] = [];
 
     if (statistic?.type === STATISTIC_AGGREGATION_TYPE.AVG) {
-      options.push({ label: t("common:aggregation.average"), value: AGGREGATION_VALUE.AVG });
+      options.push({
+        label: t("common:aggregation.average"),
+        value: AGGREGATION_VALUE.AVG,
+      });
     }
 
     if (shouldDisplaySum && sumValue !== null) {
-      options.push({ label: t("common:aggregation.sum"), value: AGGREGATION_VALUE.SUM });
+      options.push({
+        label: t("common:aggregation.sum"),
+        value: AGGREGATION_VALUE.SUM,
+      });
     }
 
     return options;

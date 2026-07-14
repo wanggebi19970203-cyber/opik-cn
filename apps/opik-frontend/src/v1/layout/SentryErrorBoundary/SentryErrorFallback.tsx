@@ -24,7 +24,12 @@ const SentryErrorFallback: FallbackRender = ({ resetError }) => {
             i18nKey="navigation:errorBoundary.errorMessage1"
             components={{
               contactLink: (
-                <Button variant="link" size="sm" asChild className="inline px-0">
+                <Button
+                  variant="link"
+                  size="sm"
+                  asChild
+                  className="inline px-0"
+                >
                   <a href="mailto:support@comet.com" />
                 </Button>
               ),
@@ -36,7 +41,12 @@ const SentryErrorFallback: FallbackRender = ({ resetError }) => {
             i18nKey="navigation:errorBoundary.errorMessage2"
             components={{
               githubLink: (
-                <Button variant="link" size="sm" asChild className="inline px-0">
+                <Button
+                  variant="link"
+                  size="sm"
+                  asChild
+                  className="inline px-0"
+                >
                   <a
                     href="https://github.com/comet-ml/opik"
                     target="_blank"
@@ -45,8 +55,17 @@ const SentryErrorFallback: FallbackRender = ({ resetError }) => {
                 </Button>
               ),
               slackLink: (
-                <Button variant="link" size="sm" asChild className="inline px-0">
-                  <a href="https://chat.comet.com" target="_blank" rel="noreferrer" />
+                <Button
+                  variant="link"
+                  size="sm"
+                  asChild
+                  className="inline px-0"
+                >
+                  <a
+                    href="https://chat.comet.com"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
                 </Button>
               ),
             }}

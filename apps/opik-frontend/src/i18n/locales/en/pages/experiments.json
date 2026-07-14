@@ -1,7 +1,6 @@
 {
   "experiments": {
     "title": "Experiments",
-    "description": "Run and compare experiments to evaluate model performance",
     "create": "Create experiment",
     "edit": "Edit experiment",
     "editAction": "Edit",
@@ -51,12 +50,6 @@
       "compare": "Compare experiments",
       "rerun": "Re-run experiment",
       "stop": "Stop experiment"
-    },
-    "status": {
-      "running": "Running",
-      "completed": "Completed",
-      "failed": "Failed",
-      "cancelled": "Cancelled"
     },
     "charts": {
       "noChartsToShow": "No charts to show",
@@ -116,6 +109,7 @@
     "baseline": "Baseline",
     "current": "Current",
     "score": "Score",
+    "passRate": "Pass rate",
     "step": "Step {{value}}",
     "noExperimentItemDefined": "No experiment item defined",
     "noAssertionsDefined": "No assertions defined",
@@ -187,6 +181,62 @@
       "configuration": "Configuration",
       "lastUpdatedAt": "Last updated at",
       "lastExperimentCreated": "Last experiment created"
+    },
+    "evaluators": {
+      "selectRow": "Select row",
+      "heuristicsMetrics": "Heuristics metrics",
+      "llmJudges": "LLM Judges",
+      "equals": {
+        "label": "Equals",
+        "description": "Checks if the output exactly matches the text."
+      },
+      "regexMatch": {
+        "label": "Regex match",
+        "description": "Verifies pattern conformity using regex."
+      },
+      "contains": {
+        "label": "Contains",
+        "description": "Identifies presence of a substring."
+      },
+      "isJson": {
+        "label": "isJson",
+        "description": "Validates JSON format compliance."
+      },
+      "levenshtein": {
+        "label": "Levenshtein",
+        "description": "Calculates text similarity via edit distance."
+      },
+      "hallucination": {
+        "label": "Hallucination",
+        "description": "Detects generated false information."
+      },
+      "moderation": {
+        "label": "Moderation",
+        "description": "Checks adherence to content standards."
+      },
+      "answerRelevance": {
+        "label": "Answer relevance",
+        "description": "Evaluates how well the answer fits the question."
+      },
+      "contextRecall": {
+        "label": "Context recall",
+        "description": "Measures retrieval of relevant context."
+      },
+      "contextPrecision": {
+        "label": "Context precision",
+        "description": "Checks accuracy of provided context details."
+      }
+    },
+    "optimizationChart": {
+      "score": "Score",
+      "bestCandidate": "Best candidate",
+      "trialStatus": {
+        "baseline": "Baseline",
+        "passed": "Passed",
+        "evaluating": "Evaluating",
+        "discarded": "Discarded",
+        "running": "Running"
+      }
     }
   }
 }

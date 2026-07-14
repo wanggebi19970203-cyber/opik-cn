@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import dayjs from "dayjs";
 import isObject from "lodash/isObject";
+import i18next from "i18next";
 
 import { UsageType } from "@/types/shared";
 import {
@@ -218,7 +219,9 @@ const useCompletionProxyStreaming = ({
           ) {
             pythonProxyError = parsedMessage.detail.error;
           } else {
-            pythonProxyError = parsedMessage.detail ?? "Python proxy error";
+            pythonProxyError =
+              parsedMessage.detail ??
+              i18next.t("common:messages.pythonProxyError");
           }
         };
 
@@ -280,7 +283,9 @@ const useCompletionProxyStreaming = ({
         const isStopped = typedError.name === "AbortError";
 
         // no error if a run has been stopped
-        const defaultErrorMessage = isStopped ? null : "Unexpected error";
+        const defaultErrorMessage = isStopped
+          ? null
+          : i18next.t("common:messages.unexpectedStreamingError");
 
         return {
           startTime,

@@ -136,7 +136,9 @@ const EditPromptSheet: React.FC<EditPromptSheetProps> = ({
           />
 
           <div className="space-y-1.5">
-            <Label htmlFor="promptVersionNotes">{t("editPrompt.versionNotes")}</Label>
+            <Label htmlFor="promptVersionNotes">
+              {t("editPrompt.versionNotes")}
+            </Label>
             <AutoGrowTextarea
               id="promptVersionNotes"
               dimension="sm"

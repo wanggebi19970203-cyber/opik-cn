@@ -133,7 +133,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
         },
       });
     },
-    [submitWizard, onClose, toast],
+    [submitWizard, onClose, toast, t],
   );
 
   return (
@@ -172,7 +172,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={t("welcomeWizard.selectYourRole")} />
+                        <SelectValue
+                          placeholder={t("welcomeWizard.selectYourRole")}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -194,7 +196,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
               render={() => (
                 <FormItem>
                   <div className="mb-4">
-                    <FormLabel>{t("welcomeWizard.integrationsYouUse")}</FormLabel>
+                    <FormLabel>
+                      {t("welcomeWizard.integrationsYouUse")}
+                    </FormLabel>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     {INTEGRATIONS.map((item) => (
@@ -245,9 +249,14 @@ const WelcomeWizardDialog: React.FunctionComponent<
                 name="customIntegration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("welcomeWizard.specifyOtherIntegration")}</FormLabel>
+                    <FormLabel>
+                      {t("welcomeWizard.specifyOtherIntegration")}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder={t("welcomeWizard.enterIntegrationName")} {...field} />
+                      <Input
+                        placeholder={t("welcomeWizard.enterIntegrationName")}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -263,7 +272,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
                   <FormLabel>
                     {t("welcomeWizard.email")}{" "}
                     <span className="text-xs text-muted-foreground">
-                      ({t("common:common.labels.optional")})
+                      ({t("common:labels.optional")})
                     </span>
                   </FormLabel>
                   <FormControl>
@@ -301,7 +310,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
             <div className="space-y-2">
               <Button type="submit" disabled={isPending} className="w-full">
                 {isPending && <Loader className="mr-2 size-4 animate-spin" />}
-                {t("common:common.buttons.submit")}
+                {t("common:buttons.submit")}
               </Button>
               <Button
                 type="button"

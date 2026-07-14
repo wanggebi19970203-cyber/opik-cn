@@ -137,7 +137,9 @@ const ValueCell: React.FC<ValueCellProps> = (context) => {
     ) {
       const countFormat = formatParentRowWithCounts(rowData.value_by_author);
       return renderParentValue(
-        `${t("tracing:feedbackScoreTable.avg")} ${formatNumericString(value)}: ${countFormat}`,
+        `${t("tracing:feedbackScoreTable.avg")} ${formatNumericString(
+          value,
+        )}: ${countFormat}`,
       );
     }
 
@@ -206,6 +208,7 @@ const ValueCell: React.FC<ValueCellProps> = (context) => {
     rowData.span_id,
     rowData.span_type,
     rowData.value,
+    t,
     value,
   ]);
 

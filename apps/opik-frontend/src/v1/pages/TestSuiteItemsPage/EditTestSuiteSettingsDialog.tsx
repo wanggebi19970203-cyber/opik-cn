@@ -213,7 +213,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
                 onChangeEditable={(index, value) => update(index, { value })}
                 onRemoveEditable={(index) => remove(index)}
                 onAdd={() => append({ value: "" })}
-                placeholder="e.g. Response should be factually accurate and cite sources"
+                placeholder={t("editTestSuite.assertionPlaceholder")}
               />
             </div>
           </div>

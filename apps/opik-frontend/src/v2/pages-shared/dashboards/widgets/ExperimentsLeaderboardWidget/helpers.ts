@@ -53,7 +53,7 @@ export const getExperimentListParams = ({
 export const PREDEFINED_COLUMNS: ColumnData<Experiment>[] = [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: i18next.t("common:labels.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
@@ -225,5 +225,6 @@ export const getRankingFilters = (
 
 export const widgetHelpers = {
   getDefaultConfig,
-  calculateTitle: () => i18next.t("common:experimentLabels.experimentLeaderboard"),
+  calculateTitle: () =>
+    i18next.t("common:experimentLabels.experimentLeaderboard"),
 };

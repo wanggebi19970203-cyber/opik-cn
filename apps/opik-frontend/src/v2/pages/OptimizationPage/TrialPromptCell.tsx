@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
@@ -48,6 +49,7 @@ const getPromptSingleLine = (prompt: unknown): string => {
 
 export const TrialPromptCell = (context: CellContext<unknown, unknown>) => {
   const row = context.row.original as AggregatedCandidate;
+  const { t } = useTranslation("pages/optimization");
   const { custom } = context.column.columnDef.meta ?? {};
   const { experimentMap, baselineExperiment } = (custom ?? {}) as {
     experimentMap: Map<string, Experiment>;
@@ -121,7 +123,7 @@ export const TrialPromptCell = (context: CellContext<unknown, unknown>) => {
             onClick={(e) => e.stopPropagation()}
           >
             <h4 className="comet-body-s-accented mb-3">
-              Prompt diff vs baseline
+              {t("optimization.prompt.diffVsBaseline")}
             </h4>
             <PromptDiff baseline={baselinePrompt} current={currentPrompt} />
           </PopoverContent>

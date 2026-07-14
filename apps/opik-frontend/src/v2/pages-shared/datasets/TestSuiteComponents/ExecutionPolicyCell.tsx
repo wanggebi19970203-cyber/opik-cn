@@ -32,7 +32,10 @@ const ExecutionPolicyCellInner: React.FC<ExecutionPolicyCellInnerProps> = ({
     return (
       <CellWrapper metadata={metadata} tableMetadata={tableMetadata}>
         <span className="text-light-slate">
-          {t("executionPolicy.mustPass", { threshold: globalPolicy.pass_threshold, runs: globalPolicy.runs_per_item })}
+          {t("executionPolicy.mustPass", {
+            threshold: globalPolicy.pass_threshold,
+            runs: globalPolicy.runs_per_item,
+          })}
         </span>
       </CellWrapper>
     );
@@ -41,7 +44,10 @@ const ExecutionPolicyCellInner: React.FC<ExecutionPolicyCellInnerProps> = ({
   return (
     <CellWrapper metadata={metadata} tableMetadata={tableMetadata}>
       <span>
-        {t("executionPolicy.mustPass", { threshold: localPolicy.pass_threshold, runs: localPolicy.runs_per_item })}
+        {t("executionPolicy.mustPass", {
+          threshold: localPolicy.pass_threshold,
+          runs: localPolicy.runs_per_item,
+        })}
       </span>
     </CellWrapper>
   );

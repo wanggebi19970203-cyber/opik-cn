@@ -5,6 +5,21 @@
     "description": "Track and manage optimization experiments",
     "create": "Create optimization run",
     "delete": "Delete optimization run",
+    "addOptimization": {
+      "selectRow": "Select row"
+    },
+    "newRun": {
+      "title": "New optimization run",
+      "closePanel": "Close panel",
+      "close": "Close",
+      "starting": "Starting...",
+      "optimizePrompt": "Optimize prompt",
+      "cancel": "Cancel",
+      "loading": "Loading optimization...",
+      "loadPrompt": "Load prompt",
+      "samplePayload": "Sample payload",
+      "copySamplePayload": "Copy sample payload"
+    },
     "empty": {
       "title": "No optimization runs yet",
       "description": "Create your first optimization run to get started.",
@@ -29,9 +44,11 @@
     },
     "columns": {
       "name": "Name",
+      "id": "Run ID",
       "dataset": "Dataset",
       "datasetName": "Dataset name",
       "algorithm": "Algorithm",
+      "metric": "Metric",
       "status": "Status",
       "duration": "Duration",
       "created": "Created",
@@ -54,6 +71,7 @@
     "actionsMenu": "Actions menu",
     "status": {
       "running": "Running",
+      "initialized": "Initialized",
       "completed": "Completed",
       "failed": "Failed",
       "cancelled": "Cancelled"
@@ -82,7 +100,14 @@
       "prompt": "Prompt",
       "loadChatPrompt": "Load chat prompt",
       "loadingOptimization": "Loading optimization...",
-      "preparingDataset": "Preparing a dataset..."
+      "preparingDataset": "Preparing a dataset...",
+      "loadError": "Couldn't load the selected item source. Pick another or try again.",
+      "variableNotInSource": "{{variables}} not in the selected item source",
+      "availableVariables": "available: {{variables}}",
+      "updatePromptOrMetric": "Update the prompt/metric or pick a matching item source.",
+      "collapseDatasetItemSample": "Collapse dataset item sample",
+      "viewDatasetItemSample": "View dataset item sample",
+      "payload": "Payload"
     },
     "configSidebar": {
       "algorithm": "Algorithm",
@@ -154,6 +179,8 @@
       "askAdmin": "Ask a workspace admin to add one to choose a model.",
       "noSearchResults": "No search results",
       "placeholder": "Select an LLM model",
+      "sameAsPrompt": "Same as prompt",
+      "usePromptModel": "Use prompt model",
       "searchPlaceholder": "Search model",
       "manageProviders": "Manage AI providers"
     },
@@ -191,7 +218,11 @@
       "title": "Run an optimization",
       "or": "or",
       "optimizeYourOwnPrompt": "Optimize your own prompt",
-      "optimizeYourOwnPromptDescription": "Start from scratch and configure your own optimization settings."
+      "optimizeYourOwnPromptDescription": "Start from scratch and configure your own optimization settings.",
+      "tryTemplate": "Try template",
+      "createOptimization": "Create optimization",
+      "viewSdkGuide": "View SDK guide",
+      "useOptimizationStudio": "Use the Optimization studio"
     }
   }
 }

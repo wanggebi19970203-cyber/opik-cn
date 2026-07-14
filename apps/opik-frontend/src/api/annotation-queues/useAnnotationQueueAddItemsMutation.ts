@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import get from "lodash/get";
@@ -39,7 +40,7 @@ const useAnnotationQueueAddItemsMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: `Failed to add items to annotation queue: ${message}`,
         variant: "destructive",
       });

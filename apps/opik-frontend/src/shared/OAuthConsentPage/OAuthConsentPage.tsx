@@ -155,7 +155,9 @@ const OAuthConsentPage: React.FC = () => {
             {t("common.shared.deny")}
           </Button>
           <Button onClick={handleAllow} disabled={!canAllow}>
-            {consent.isPending ? t("common.shared.approving") : t("common.shared.allow")}
+            {consent.isPending
+              ? t("common.shared.approving")
+              : t("common.shared.allow")}
           </Button>
         </CardFooter>
       </Card>

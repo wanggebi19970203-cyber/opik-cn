@@ -278,7 +278,11 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
             ? {
                 prefixIcon: (
                   <TooltipWrapper
-                    content={t(rankingDirection ? "leaderboard.rankingMetricHigher" : "leaderboard.rankingMetricLower")}
+                    content={t(
+                      rankingDirection
+                        ? "leaderboard.rankingMetricHigher"
+                        : "leaderboard.rankingMetricLower",
+                    )}
                   >
                     <Trophy className="mr-1 size-3.5 shrink-0 text-yellow-500" />
                   </TooltipWrapper>
@@ -288,7 +292,7 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
         },
       };
     });
-  }, [selectedScoreColumns, enableRanking, rankingMetric, rankingDirection]);
+  }, [selectedScoreColumns, enableRanking, rankingMetric, rankingDirection, t]);
 
   const tableColumns = useMemo(() => {
     const allColumns: ColumnDef<Experiment>[] = [];
@@ -364,6 +368,7 @@ const ExperimentsLeaderboardWidget: React.FunctionComponent<
     scoresColumnsData,
     scoresColumnsOrder,
     sortableColumns,
+    t,
   ]);
 
   const resizeConfig = useMemo(

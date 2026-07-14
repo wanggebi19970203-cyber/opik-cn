@@ -147,7 +147,9 @@ export default function RecentActivitySection() {
 
   return (
     <section>
-      <h2 className="comet-body-s-accented mb-1.5">{t("recentActivity.title")}</h2>
+      <h2 className="comet-body-s-accented mb-1.5">
+        {t("recentActivity.title")}
+      </h2>
       {isPending ? (
         <LoadingSkeleton />
       ) : !items.length ? (

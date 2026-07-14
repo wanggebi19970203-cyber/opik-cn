@@ -37,18 +37,39 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
   const options: DropdownOption<TREE_DATABLOCK_TYPE>[] = useMemo(() => {
     const base: DropdownOption<TREE_DATABLOCK_TYPE>[] = [
       { label: t("treeToolbar.duration"), value: TREE_DATABLOCK_TYPE.DURATION },
-      { label: t("treeToolbar.cost"), value: TREE_DATABLOCK_TYPE.ESTIMATED_COST },
+      {
+        label: t("treeToolbar.cost"),
+        value: TREE_DATABLOCK_TYPE.ESTIMATED_COST,
+      },
       { label: t("treeToolbar.model"), value: TREE_DATABLOCK_TYPE.MODEL },
-      { label: t("treeToolbar.numberOfTokens"), value: TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS },
-      { label: t("treeToolbar.tokensBreakdown"), value: TREE_DATABLOCK_TYPE.TOKENS_BREAKDOWN },
-      { label: t("treeToolbar.numberOfScores"), value: TREE_DATABLOCK_TYPE.NUMBER_OF_SCORES },
-      { label: t("treeToolbar.numberOfComments"), value: TREE_DATABLOCK_TYPE.NUMBER_OF_COMMENTS },
-      { label: t("treeToolbar.numberOfTags"), value: TREE_DATABLOCK_TYPE.NUMBER_OF_TAGS },
+      {
+        label: t("treeToolbar.numberOfTokens"),
+        value: TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS,
+      },
+      {
+        label: t("treeToolbar.tokensBreakdown"),
+        value: TREE_DATABLOCK_TYPE.TOKENS_BREAKDOWN,
+      },
+      {
+        label: t("treeToolbar.numberOfScores"),
+        value: TREE_DATABLOCK_TYPE.NUMBER_OF_SCORES,
+      },
+      {
+        label: t("treeToolbar.numberOfComments"),
+        value: TREE_DATABLOCK_TYPE.NUMBER_OF_COMMENTS,
+      },
+      {
+        label: t("treeToolbar.numberOfTags"),
+        value: TREE_DATABLOCK_TYPE.NUMBER_OF_TAGS,
+      },
     ];
 
     return isGuardrailsEnabled
       ? [
-          { label: t("treeToolbar.guardrails"), value: TREE_DATABLOCK_TYPE.GUARDRAILS },
+          {
+            label: t("treeToolbar.guardrails"),
+            value: TREE_DATABLOCK_TYPE.GUARDRAILS,
+          },
           ...base,
         ]
       : base;
@@ -122,7 +143,10 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
           onCheckedChange={() => toggleColumns(!allSelected)}
         >
           <div className="w-full break-words py-2">
-            {t("treeToolbar.selectedOfTotal", { selected: selectedCount, total: totalCount })}
+            {t("treeToolbar.selectedOfTotal", {
+              selected: selectedCount,
+              total: totalCount,
+            })}
           </div>
         </DropdownMenuCustomCheckboxItem>
       </DropdownMenuContent>

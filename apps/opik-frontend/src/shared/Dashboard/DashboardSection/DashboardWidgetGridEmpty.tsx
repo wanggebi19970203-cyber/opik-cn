@@ -19,7 +19,9 @@ const DashboardWidgetGridEmpty: React.FunctionComponent<
           <div className="pb-1">
             <LineChart className="size-4 text-light-slate" />
           </div>
-          <p className="text-sm font-medium text-foreground">{t("common:dashboard.noWidgetsYet")}</p>
+          <p className="text-sm font-medium text-foreground">
+            {t("common:dashboard.noWidgetsYet")}
+          </p>
           <p className="pb-1 text-center text-sm text-muted-slate">
             {t("common:dashboard.addWidgetsDescription")}
           </p>

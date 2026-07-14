@@ -33,15 +33,6 @@ export const TRIAL_STATUS_COLORS: Record<TrialStatus, string> = {
   running: "var(--color-yellow)",
 };
 
-export const TRIAL_STATUS_LABELS: Record<TrialStatus, string> = {
-  baseline: "Baseline",
-  passed: "Passed",
-  evaluating: "Evaluating",
-  // Internal status key stays "pruned"; user-facing label is "Discarded".
-  pruned: "Discarded",
-  running: "Running",
-};
-
 export const TRIAL_STATUS_ORDER: readonly TrialStatus[] = [
   "baseline",
   "passed",

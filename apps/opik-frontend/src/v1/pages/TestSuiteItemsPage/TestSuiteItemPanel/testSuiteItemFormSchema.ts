@@ -11,7 +11,9 @@ export const testSuiteItemFormSchema = z
     passThreshold: z.number().min(1),
   })
   .refine((data) => data.passThreshold <= data.runsPerItem, {
-    message: i18next.t("common:validation.passThresholdCannotExceedRunsPerItem"),
+    message: i18next.t(
+      "common:validation.passThresholdCannotExceedRunsPerItem",
+    ),
     path: ["passThreshold"],
   });
 

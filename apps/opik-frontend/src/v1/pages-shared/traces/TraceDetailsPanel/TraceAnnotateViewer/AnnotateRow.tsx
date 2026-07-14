@@ -293,7 +293,9 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
               );
 
               if (!selectedOption) {
-                return <div className="truncate">{t("annotate.selectCategory")}</div>;
+                return (
+                  <div className="truncate">{t("annotate.selectCategory")}</div>
+                );
               }
 
               return (

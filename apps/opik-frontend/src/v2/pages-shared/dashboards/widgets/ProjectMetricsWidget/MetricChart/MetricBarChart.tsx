@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 import dayjs from "dayjs";
 
@@ -50,10 +51,15 @@ const MetricBarChart: React.FunctionComponent<MetricBarChartProps> = ({
   hideXAxis = false,
   hideYAxis = false,
 }) => {
+  const { t } = useTranslation("dashboards");
   const renderChartTooltipHeader = useCallback(
     ({ payload }: ChartTooltipRenderHeaderArguments) => {
       if (isAggregateTotal) {
-        return <div className="comet-body-xs mb-1 text-light-slate">Total</div>;
+        return (
+          <div className="comet-body-xs mb-1 text-light-slate">
+            {t("breakdown.total")}
+          </div>
+        );
       }
       return (
         <div className="comet-body-xs mb-1 text-light-slate">
@@ -61,7 +67,7 @@ const MetricBarChart: React.FunctionComponent<MetricBarChartProps> = ({
         </div>
       );
     },
-    [isAggregateTotal],
+    [isAggregateTotal, t],
   );
 
   const xTickFormatter = useCallback(

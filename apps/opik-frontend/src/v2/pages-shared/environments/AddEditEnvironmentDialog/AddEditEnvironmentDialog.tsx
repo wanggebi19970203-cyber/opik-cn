@@ -73,13 +73,15 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
   const nameError = useMemo(() => {
     if (!trimmedName) return "";
     if (trimmedName.length > ENVIRONMENT_NAME_MAX_LENGTH) {
-      return t("environmentDialog.nameMaxLengthError", { max: ENVIRONMENT_NAME_MAX_LENGTH });
+      return t("environmentDialog.nameMaxLengthError", {
+        max: ENVIRONMENT_NAME_MAX_LENGTH,
+      });
     }
     if (!ENVIRONMENT_NAME_REGEX.test(trimmedName)) {
       return t("environmentDialog.namePatternError");
     }
     return "";
-  }, [trimmedName]);
+  }, [trimmedName, t]);
 
   // Color is locked while the name matches a seeded default (development /
   // staging / production) so the badge icon + color stay consistent with what
@@ -103,7 +105,9 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
       : isEdit
         ? t("environmentDialog.editTitle")
         : t("environmentDialog.createTitle");
-  const submitText = isEdit ? t("environmentDialog.updateSubmit") : t("environmentDialog.createSubmit");
+  const submitText = isEdit
+    ? t("environmentDialog.updateSubmit")
+    : t("environmentDialog.createSubmit");
 
   const isValid = trimmedName.length > 0 && !nameError;
 
@@ -178,12 +182,16 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
         <DialogAutoScrollBody>
           <div onKeyDown={handleBodyKeyDown}>
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="environmentName">{t("environmentDialog.nameLabel")}</Label>
+              <Label htmlFor="environmentName">
+                {t("environmentDialog.nameLabel")}
+              </Label>
               <div className="flex items-center">
                 {isColorLocked ? (
-                  <TooltipWrapper content={t("environmentDialog.colorLockedTooltip")}>
+                  <TooltipWrapper
+                    content={t("environmentDialog.colorLockedTooltip")}
+                  >
                     <div
-                      aria-label="Default environment color (locked)"
+                      aria-label={t("environmentDialog.defaultColorAria")}
                       className="flex size-10 shrink-0 cursor-not-allowed items-center justify-center rounded-l-md"
                       style={{ backgroundColor: color }}
                     >
@@ -234,7 +242,9 @@ const AddEditEnvironmentDialog: React.FunctionComponent<
               )}
             </div>
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="environmentDescription">{t("environmentDialog.descriptionLabel")}</Label>
+              <Label htmlFor="environmentDescription">
+                {t("environmentDialog.descriptionLabel")}
+              </Label>
               <Textarea
                 id="environmentDescription"
                 placeholder={t("environmentDialog.descriptionPlaceholder")}

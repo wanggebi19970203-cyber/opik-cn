@@ -255,7 +255,9 @@ const ProjectsPage: React.FunctionComponent = () => {
               accessorFn: (row: ProjectWithStatistic) =>
                 row.guardrails_failed_count &&
                 isNumber(row.guardrails_failed_count)
-                  ? t("projects.table.guardrailsFailed", { count: row.guardrails_failed_count })
+                  ? t("projects.table.guardrailsFailed", {
+                      count: row.guardrails_failed_count,
+                    })
                   : "-",
             },
           ]
@@ -348,7 +350,9 @@ const ProjectsPage: React.FunctionComponent = () => {
   const projects = useMemo(() => data?.content ?? [], [data?.content]);
   const total = data?.total ?? 0;
   const noData = !search;
-  const noDataText = noData ? t("projects.page.noDataText") : t("projects.page.noSearchResults");
+  const noDataText = noData
+    ? t("projects.page.noDataText")
+    : t("projects.page.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -440,7 +444,9 @@ const ProjectsPage: React.FunctionComponent = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l truncate break-words">{t("projects.title")}</h1>
+        <h1 className="comet-title-l truncate break-words">
+          {t("projects.title")}
+        </h1>
       </div>
       <ExplainerDescription
         className="mb-4"

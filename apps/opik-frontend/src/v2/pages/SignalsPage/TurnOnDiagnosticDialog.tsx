@@ -36,7 +36,9 @@ const TurnOnDiagnosticDialog: React.FC<TurnOnDiagnosticDialogProps> = ({
         </DialogHeader>
 
         <div className="comet-body-s text-muted-slate">
-          {t("signals.turnOnDiagnostic.description", { time: DAILY_RUN_TIME_LABEL })}{" "}
+          {t("signals.turnOnDiagnostic.description", {
+            time: DAILY_RUN_TIME_LABEL,
+          })}{" "}
           <a
             href={DIAGNOSTICS_DOCS_URL}
             target="_blank"

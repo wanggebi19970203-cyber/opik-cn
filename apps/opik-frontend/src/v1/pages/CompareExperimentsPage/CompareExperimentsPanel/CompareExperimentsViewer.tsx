@@ -95,7 +95,9 @@ const CompareExperimentsViewer: React.FunctionComponent<
           </div>
         </TooltipWrapper>
         {isTraceExist && isTraceVisible && (
-          <TooltipWrapper content={t("compareExperiments.viewer.openTraceTooltip")}>
+          <TooltipWrapper
+            content={t("compareExperiments.viewer.openTraceTooltip")}
+          >
             <Button
               size="sm"
               variant="outline"

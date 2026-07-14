@@ -205,7 +205,9 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
         ) : (
           <Database className="mb-1 size-5 text-muted-slate" />
         )}
-        <span className="comet-body-s-accented">{t("tracing.addToDataset.noEntitiesYet", { entity: entityName })}</span>
+        <span className="comet-body-s-accented">
+          {t("tracing.addToDataset.noEntitiesYet", { entity: entityName })}
+        </span>
         <span className="comet-body-xs text-muted-slate">
           {isTestSuiteMode
             ? t("tracing.addToDataset.noTestSuitesDescription")
@@ -213,7 +215,7 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
         </span>
       </div>
     ),
-    [entityName, isTestSuiteMode],
+    [entityName, isTestSuiteMode, t],
   );
 
   const validRows = useMemo(() => {
@@ -244,11 +246,14 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
       }
 
       toast({
-        title: t("tracing.addToDataset.itemsAddedToEntity", { itemType, entity: entityName }),
+        title: t("tracing.addToDataset.itemsAddedToEntity", {
+          itemType,
+          entity: entityName,
+        }),
         description: EXPLAINERS_MAP[successToastExplainerId].description,
       });
     },
-    [toast, entityName, successToastExplainerId],
+    [toast, entityName, successToastExplainerId, t],
   );
 
   const handleAssertionChange = useCallback((index: number, value: string) => {
@@ -404,7 +409,9 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
   const renderAlert = () => {
     const text = noValidRows
       ? t("tracing.addToDataset.noValidRowsForEntity", { entity: entityName })
-      : t("tracing.addToDataset.partialValidRowsForEntity", { entity: entityName });
+      : t("tracing.addToDataset.partialValidRowsForEntity", {
+          entity: entityName,
+        });
 
     if (noValidRows || partialValid) {
       return (
@@ -507,7 +514,9 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg sm:max-w-screen-sm">
           <DialogHeader>
-            <DialogTitle>{t("tracing.addToDataset.addToEntity", { entity: entityName })}</DialogTitle>
+            <DialogTitle>
+              {t("tracing.addToDataset.addToEntity", { entity: entityName })}
+            </DialogTitle>
           </DialogHeader>
           <DialogAutoScrollBody>
             {!selectedDataset && (
@@ -531,7 +540,11 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                     ) : (
                       <Database className="size-4 shrink-0 text-muted-slate" />
                     )}
-                    <span>{t("tracing.addToDataset.selectEntity", { entity: entityName })}</span>
+                    <span>
+                      {t("tracing.addToDataset.selectEntity", {
+                        entity: entityName,
+                      })}
+                    </span>
                   </div>
                 }
                 renderTitle={(option: DropdownOption<string>) => (
@@ -544,7 +557,9 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                     <span className="truncate">{option.label}</span>
                   </div>
                 )}
-                searchPlaceholder={t("tracing.addToDataset.searchEntities", { entity: entityName })}
+                searchPlaceholder={t("tracing.addToDataset.searchEntities", {
+                  entity: entityName,
+                })}
                 isLoading={isPending}
                 disabled={noValidRows}
                 buttonClassName="w-full"
@@ -559,7 +574,11 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
                         onClick={() => setOpenDialog(true)}
                       >
                         <Plus className="size-4 shrink-0" />
-                        <span className="comet-body-s">{t("tracing.addToDataset.addEntity", { entity: entityName })}</span>
+                        <span className="comet-body-s">
+                          {t("tracing.addToDataset.addEntity", {
+                            entity: entityName,
+                          })}
+                        </span>
                       </div>
                     </>
                   ) : undefined

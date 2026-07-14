@@ -180,7 +180,7 @@ const DashboardsPage: React.FunctionComponent = () => {
         type: COLUMN_TYPE.string,
       },
     ];
-  }, []);
+  }, [t]);
 
   const {
     permissions: {
@@ -358,7 +358,9 @@ const DashboardsPage: React.FunctionComponent = () => {
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center">
-          <h1 className="comet-title-l truncate break-words">{t("dashboards.title")}</h1>
+          <h1 className="comet-title-l truncate break-words">
+            {t("dashboards.title")}
+          </h1>
         </div>
       </div>
       <ExplainerDescription

@@ -72,7 +72,11 @@ const MetricCard: React.FC<MetricCardProps> = ({
   const renderChange = () => {
     if (delta === undefined || !isFinite(delta)) return null;
     if (delta === 0) {
-      return <span className="text-xs text-light-slate">{t("metrics.noChanges")}</span>;
+      return (
+        <span className="text-xs text-light-slate">
+          {t("metrics.noChanges")}
+        </span>
+      );
     }
 
     const isUp = delta > 0;

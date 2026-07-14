@@ -32,7 +32,9 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[720px] gap-2">
         <DialogHeader>
-          <DialogTitle>{t("onboarding.integrationExplorer.quickInstallTitle")}</DialogTitle>
+          <DialogTitle>
+            {t("onboarding.integrationExplorer.quickInstallTitle")}
+          </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
@@ -42,7 +44,9 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
           <HelpLinks
             onCloseParentDialog={onClose}
             title={t("onboarding.integrationExplorer.needSomeHelp")}
-            description={t("onboarding.integrationExplorer.needSomeHelpDescription")}
+            description={t(
+              "onboarding.integrationExplorer.needSomeHelpDescription",
+            )}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

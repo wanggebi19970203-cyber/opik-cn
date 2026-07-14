@@ -31,7 +31,7 @@
       "connectYourAgent": "连接您的Agent",
       "connectDescription": "将您的Agent连接到Opik，开始使用Agent工作台并提升性能。",
       "markEntrypoint": "将您的Agent标记为入口点",
-      "markEntrypointDescription": "在您的Agent主函数上添加 @opik.track(entrypoint=True)，以便Opik检测和注册它。您也可以在Ollie侧边栏中运行 /instrument 来自动插桩您的Agent。",
+      "markEntrypointDescription": "在您的Agent主函数上添加 <track>@opik.track(entrypoint=True)</track>，以便Opik检测和注册它。您也可以在Ollie侧边栏中运行 <instrument>/instrument</instrument> 来自动插桩您的Agent。",
       "runConnectionCommand": "运行连接命令",
       "runConnectionDescription": "在终端中安装并运行Opik连接器（支持Claude Code、Codex、Cursor、Windsurf等）：",
       "waitingForConnection": "等待连接",
@@ -70,6 +70,13 @@
       "executionFailed": "执行失败",
       "unknownError": "发生未知错误。"
     },
+    "connectedState": {
+      "testInput": "测试输入",
+      "prompts": "提示词",
+      "validation": {
+        "fieldRequired": "此字段为必填项"
+      }
+    },
     "flowDiagram": {
       "configure": "配置",
       "prompts": "提示词",
@@ -77,6 +84,7 @@
       "model": "模型",
       "params": "参数",
       "input": "输入",
+      "inputExample": "你能做什么？",
       "run": "运行",
       "improveWithOllie": "使用Ollie改进",
       "analyzeTracesSuggest": "分析追踪，建议提示词调整",

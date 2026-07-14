@@ -27,14 +27,22 @@ const AgentGraphHeader: React.FC<AgentGraphHeaderProps> = ({
         border === "top" ? "border-t" : "border-b",
       )}
     >
-      <span className="comet-body-xs-accented">{t("detailsPanel.agentGraph")}</span>
+      <span className="comet-body-xs-accented">
+        {t("detailsPanel.agentGraph")}
+      </span>
       <div className="flex items-center gap-1">
         <TooltipWrapper content={t("agentGraph.fullSize")}>
           <Button variant="ghost" size="icon-2xs" onClick={onFullscreen}>
             <Expand className="size-3.5" />
           </Button>
         </TooltipWrapper>
-        <TooltipWrapper content={isCollapsed ? t("agentGraph.expandGraph") : t("agentGraph.collapseGraph")}>
+        <TooltipWrapper
+          content={
+            isCollapsed
+              ? t("agentGraph.expandGraph")
+              : t("agentGraph.collapseGraph")
+          }
+        >
           <Button variant="ghost" size="2xs" onClick={onToggleCollapse}>
             {isCollapsed ? (
               <ChevronUp className="size-4" />

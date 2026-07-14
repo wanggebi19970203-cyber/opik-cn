@@ -19,6 +19,7 @@
     "compare": "比较",
     "noCommitsYet": "暂无提交",
     "searchPlaceholder": "搜索提示词或提交信息",
+    "keyPlaceholder": "键",
     "columns": {
       "prompt": "提示词",
       "metadata": "元数据",
@@ -36,12 +37,31 @@
     "comparePrompts": "比较提示词",
     "chatMessages": "聊天消息",
     "prompt": "提示词",
-    "metadata": "元数据"
+    "metadata": "元数据",
+    "diff": "差异"
   },
   "experiments": {
     "noExperimentsYet": "尚无实验使用此提示词",
     "noSearchResults": "无搜索结果",
-    "searchByName": "按名称搜索"
+    "searchByName": "按名称搜索",
+    "table": {
+      "name": "名称",
+      "promptVersion": "提示词版本",
+      "id": "ID",
+      "created": "创建时间",
+      "createdBy": "创建者",
+      "avgDuration": "平均持续时间",
+      "durationP90": "持续时间 (p90)",
+      "durationP99": "持续时间 (p99)",
+      "traceCount": "追踪数",
+      "totalEstimatedCost": "总预估成本",
+      "avgCost": "平均成本",
+      "passRate": "通过率",
+      "feedbackScores": "反馈分数",
+      "comments": "评论",
+      "tags": "标签",
+      "configuration": "配置"
+    }
   },
   "editPrompt": {
     "title": "编辑提示词",
@@ -74,6 +94,7 @@
     "newVersionTag": "新版本标签",
     "addVersionTag": "添加版本标签",
     "versionTag": "版本标签",
+    "use": "使用",
     "deployTo": "部署到",
     "noEnvironmentsConfigured": "未配置环境",
     "currentlyVersion": "当前 v{{version}}",
@@ -382,6 +403,9 @@
     "throttlingTooltip": "连续请求之间的最小时间（秒），以避免速率限制",
     "maxConcurrentRequests": "最大并发请求数",
     "maxConcurrentRequestsTooltip": "可以同时运行的最大请求数。设置为 1 表示顺序执行，更高的值表示并行处理",
+    "extraBodyParameters": "额外请求体参数",
+    "extraBodyParametersTooltip": "在请求体中发送的额外 JSON 键值对。用于传递上述未涵盖的提供商特定参数。",
+    "invalidJson": "无效的 JSON",
     "clearToUseTopP": "清除以使用 Top P",
     "clearToUseTemperature": "清除以使用温度",
     "anthropicTemperatureTooltip": "控制随机性：降低温度会减少随机性。当温度接近零时，模型将变得确定性和重复性。注意：Anthropic 模型要求使用温度或 Top P，不能同时使用。",
@@ -449,6 +473,8 @@
     "prompt": "提示词",
     "placeholder": "输入您的提示词...",
     "variableSyntaxHint": "使用 mustache 语法在提示词中引用测试套件变量。示例：{{example}}。",
-    "messageFormatInvalid": "消息格式无效。"
+    "messageFormatInvalid": "消息格式无效。",
+    "pretty": "美化",
+    "json": "JSON"
   }
 }

@@ -14,16 +14,21 @@ import { DropdownOption } from "@/types/shared";
 import get from "lodash/get";
 import { FormControl, FormField, FormItem, FormMessage } from "@/ui/form";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 type CloudAIProviderDetailsProps = {
   provider: PROVIDER_TYPE | "";
   form: UseFormReturn<AIProviderFormType>;
 };
 
-const PIPELINE_MODE_OPTIONS: DropdownOption<OpenAiPipelineMode>[] = [
-  { value: "chat_completions_api", label: "Chat Completions API" },
-  { value: "responses_api", label: "Responses API" },
+const getPipelineModeOptions = (
+  t: (key: string) => string,
+): DropdownOption<OpenAiPipelineMode>[] => [
+  {
+    value: "chat_completions_api",
+    label: t("llm:cloudProvider.chatCompletionsApi"),
+  },
+  { value: "responses_api", label: t("llm:cloudProvider.responsesApi") },
 ];
 
 const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
@@ -32,7 +37,9 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
 }) => {
   const { t } = useTranslation("llm");
   const providerName = (provider && PROVIDERS[provider]?.label + " ") || "";
-  const apiKeyLabel = t("llm:cloudProvider.apiKeyLabel", { providerName: providerName.trim() });
+  const apiKeyLabel = t("llm:cloudProvider.apiKeyLabel", {
+    providerName: providerName.trim(),
+  });
   const isOpenAi = provider === PROVIDER_TYPE.OPEN_AI;
 
   return (
@@ -64,17 +71,24 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
       />
       {provider && (
         <span className="comet-body-s mt-1 text-light-slate">
-          Get your {providerName} API key{" "}
-          <Button variant="link" size="sm" asChild className="px-0">
-            <a
-              href={(PROVIDERS[provider] as PROVIDER_OPTION_TYPE)?.apiKeyURL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              here
-            </a>
-          </Button>
-          .
+          <Trans
+            ns="llm"
+            i18nKey="cloudProvider.getApiKey"
+            values={{ providerName: providerName.trim() }}
+            components={{
+              link: (
+                <Button variant="link" size="sm" asChild className="px-0">
+                  <a
+                    href={
+                      (PROVIDERS[provider] as PROVIDER_OPTION_TYPE)?.apiKeyURL
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                </Button>
+              ),
+            }}
+          />
         </span>
       )}
       {isOpenAi && (
@@ -83,7 +97,9 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
           name="openaiPipelineMode"
           render={({ field }) => (
             <FormItem className="mt-2">
-              <Label htmlFor="openaiPipelineMode">{t("llm:cloudProvider.pipelineMode")}</Label>
+              <Label htmlFor="openaiPipelineMode">
+                {t("llm:cloudProvider.pipelineMode")}
+              </Label>
               <FormControl>
                 <SelectBox
                   id="openaiPipelineMode"
@@ -93,7 +109,7 @@ const CloudAIProviderDetails: React.FC<CloudAIProviderDetailsProps> = ({
                   onChange={(value: OpenAiPipelineMode) =>
                     field.onChange(value)
                   }
-                  options={PIPELINE_MODE_OPTIONS}
+                  options={getPipelineModeOptions(t)}
                   placeholder={t("llm:cloudProvider.selectPipelineMode")}
                 />
               </FormControl>

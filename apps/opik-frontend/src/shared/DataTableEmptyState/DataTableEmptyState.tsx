@@ -35,7 +35,9 @@ const DataTableEmptyState: React.FC<DataTableEmptyStateProps> = ({
               <ExternalLink className="ml-2 size-3.5" />
             </a>
           </Button>
-          <Button onClick={onQuickstartClick}>{t("common.table.quickstartGuide")}</Button>
+          <Button onClick={onQuickstartClick}>
+            {t("common.table.quickstartGuide")}
+          </Button>
         </div>
       </div>
     </div>

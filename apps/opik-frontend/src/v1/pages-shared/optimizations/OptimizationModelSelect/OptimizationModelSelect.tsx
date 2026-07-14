@@ -124,7 +124,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
             "border-destructive": hasError,
           })}
         >
-          <SelectValue placeholder={t('optimizations.modelSelect.placeholder')}>
+          <SelectValue placeholder={t("optimizations.modelSelect.placeholder")}>
             <div className="flex items-center gap-2">
               {selectedGroup && (
                 <selectedGroup.icon className="min-w-3.5 text-foreground" />
@@ -142,7 +142,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
             <Input
               ref={inputRef}
               className="outline-0"
-              placeholder={t('optimizations.modelSelect.searchPlaceholder')}
+              placeholder={t("optimizations.modelSelect.searchPlaceholder")}
               value={filterValue}
               variant="ghost"
               onChange={(e) => setFilterValue(e.target.value)}
@@ -153,7 +153,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
           <div className="flex-1 overflow-y-auto">
             {filteredOptions.length === 0 ? (
               <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-                {t('optimizations.modelSelect.noSearchResults')}
+                {t("optimizations.modelSelect.noSearchResults")}
               </div>
             ) : filterValue ? (
               filteredOptions.map((group) => (

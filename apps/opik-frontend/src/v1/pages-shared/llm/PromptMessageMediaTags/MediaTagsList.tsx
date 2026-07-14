@@ -99,7 +99,9 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
               const parent = event.currentTarget.parentElement;
               if (parent) {
                 parent.innerHTML = `
-                  <p class="comet-body-s text-muted-foreground">${t("mediaTagsList.videoPreviewFailed")}</p>
+                  <p class="comet-body-s text-muted-foreground">${t(
+                    "mediaTagsList.videoPreviewFailed",
+                  )}</p>
                   <p class="comet-body-xs truncate text-muted-foreground">${value.substring(
                     0,
                     50,
@@ -125,7 +127,9 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
             const parent = event.currentTarget.parentElement;
             if (parent) {
               parent.innerHTML = `
-                <p class="comet-body-s text-muted-foreground">${t("mediaTagsList.audioPreviewFailed")}</p>
+                <p class="comet-body-s text-muted-foreground">${t(
+                  "mediaTagsList.audioPreviewFailed",
+                )}</p>
               `;
             }
           }}

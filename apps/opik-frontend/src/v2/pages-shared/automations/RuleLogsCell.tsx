@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { CellContext } from "@tanstack/react-table";
 import { Link } from "@tanstack/react-router";
@@ -9,6 +10,7 @@ import { Button } from "@/ui/button";
 import useAppStore from "@/store/AppStore";
 
 const RuleLogsCell = (context: CellContext<EvaluatorsRule, string>) => {
+  const { t } = useTranslation("online-evaluation");
   const rule = context.row.original;
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
@@ -28,7 +30,7 @@ const RuleLogsCell = (context: CellContext<EvaluatorsRule, string>) => {
         target="_blank"
       >
         <Button variant="tableLink" size="sm">
-          Show logs
+          {t("onlineEvaluation.showLogs")}
           <ExternalLink className="ml-1.5 mt-1 size-3.5 shrink-0" />
         </Button>
       </Link>

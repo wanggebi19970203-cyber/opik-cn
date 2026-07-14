@@ -336,7 +336,10 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
 
       toast({
         title: t("actions.exportSuccessful"),
-        description: t("actions.exportedToFormat", { type: "thread", format: "CSV" }),
+        description: t("actions.exportedToFormat", {
+          type: "thread",
+          format: "CSV",
+        }),
       });
     } catch (error) {
       toast({
@@ -376,7 +379,10 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
 
       toast({
         title: t("actions.exportSuccessful"),
-        description: t("actions.exportedToFormat", { type: "thread", format: "JSON" }),
+        description: t("actions.exportedToFormat", {
+          type: "thread",
+          format: "JSON",
+        }),
       });
     } catch (error) {
       toast({
@@ -636,7 +642,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon-2xs">
-              <span className="sr-only">Actions menu</span>
+              <span className="sr-only">{t("common:labels.actionsMenu")}</span>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>

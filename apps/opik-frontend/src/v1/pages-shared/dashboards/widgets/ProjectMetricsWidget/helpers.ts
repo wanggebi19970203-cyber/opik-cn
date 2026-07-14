@@ -6,19 +6,39 @@ import { ProjectMetricsWidget } from "@/types/dashboard";
 const DEFAULT_TITLE = i18next.t("dashboards.metrics.projectMetrics");
 
 const METRIC_LABELS: Record<string, string> = {
-  [METRIC_NAME_TYPE.FEEDBACK_SCORES]: i18next.t("dashboards.metrics.traceMetrics"),
-  [METRIC_NAME_TYPE.TRACE_COUNT]: i18next.t("dashboards.metrics.numberOfTraces"),
-  [METRIC_NAME_TYPE.TRACE_DURATION]: i18next.t("dashboards.metrics.traceDuration"),
+  [METRIC_NAME_TYPE.FEEDBACK_SCORES]: i18next.t(
+    "dashboards.metrics.traceMetrics",
+  ),
+  [METRIC_NAME_TYPE.TRACE_COUNT]: i18next.t(
+    "dashboards.metrics.numberOfTraces",
+  ),
+  [METRIC_NAME_TYPE.TRACE_DURATION]: i18next.t(
+    "dashboards.metrics.traceDuration",
+  ),
   [METRIC_NAME_TYPE.TOKEN_USAGE]: i18next.t("dashboards.metrics.tokenUsage"),
   [METRIC_NAME_TYPE.COST]: i18next.t("dashboards.metrics.estimatedCost"),
-  [METRIC_NAME_TYPE.FAILED_GUARDRAILS]: i18next.t("dashboards.metrics.failedGuardrails"),
-  [METRIC_NAME_TYPE.THREAD_COUNT]: i18next.t("dashboards.metrics.numberOfThreads"),
-  [METRIC_NAME_TYPE.THREAD_DURATION]: i18next.t("dashboards.metrics.threadDuration"),
-  [METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES]: i18next.t("dashboards.metrics.threadMetrics"),
+  [METRIC_NAME_TYPE.FAILED_GUARDRAILS]: i18next.t(
+    "dashboards.metrics.failedGuardrails",
+  ),
+  [METRIC_NAME_TYPE.THREAD_COUNT]: i18next.t(
+    "dashboards.metrics.numberOfThreads",
+  ),
+  [METRIC_NAME_TYPE.THREAD_DURATION]: i18next.t(
+    "dashboards.metrics.threadDuration",
+  ),
+  [METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES]: i18next.t(
+    "dashboards.metrics.threadMetrics",
+  ),
   [METRIC_NAME_TYPE.SPAN_COUNT]: i18next.t("dashboards.metrics.numberOfSpans"),
-  [METRIC_NAME_TYPE.SPAN_DURATION]: i18next.t("dashboards.metrics.spanDuration"),
-  [METRIC_NAME_TYPE.SPAN_FEEDBACK_SCORES]: i18next.t("dashboards.metrics.spanMetrics"),
-  [METRIC_NAME_TYPE.SPAN_TOKEN_USAGE]: i18next.t("dashboards.metrics.spanTokenUsage"),
+  [METRIC_NAME_TYPE.SPAN_DURATION]: i18next.t(
+    "dashboards.metrics.spanDuration",
+  ),
+  [METRIC_NAME_TYPE.SPAN_FEEDBACK_SCORES]: i18next.t(
+    "dashboards.metrics.spanMetrics",
+  ),
+  [METRIC_NAME_TYPE.SPAN_TOKEN_USAGE]: i18next.t(
+    "dashboards.metrics.spanTokenUsage",
+  ),
 };
 
 const FEEDBACK_SCORE_METRIC_TYPES = [

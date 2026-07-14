@@ -6,6 +6,7 @@ import copy from "clipboard-copy";
 import isBoolean from "lodash/isBoolean";
 import isFunction from "lodash/isFunction";
 import { Copy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import NoData from "@/shared/NoData/NoData";
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
@@ -47,6 +48,7 @@ const CompareExperimentsPanel: React.FunctionComponent<
   onRowChange,
   isTraceDetailsOpened,
 }) => {
+  const { t } = useTranslation("pages/compare-experiments");
   const { toast } = useToast();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const datasetId = useDatasetIdFromCompareExperimentsURL();
@@ -103,11 +105,11 @@ const CompareExperimentsPanel: React.FunctionComponent<
   const copyClickHandler = useCallback(() => {
     if (activeExperimentsCompare?.id) {
       toast({
-        description: "ID successfully copied to clipboard",
+        description: t("compareExperiments.panel.idCopiedToClipboard"),
       });
       copy(activeExperimentsCompare?.id);
     }
-  }, [toast, activeExperimentsCompare?.id]);
+  }, [toast, activeExperimentsCompare?.id, t]);
 
   const horizontalNavigation = useMemo(
     () =>
@@ -158,7 +160,7 @@ const CompareExperimentsPanel: React.FunctionComponent<
           <ShareURLButton size="2xs" />
           <Button size="2xs" variant="outline" onClick={copyClickHandler}>
             <Copy className="mr-1 size-3.5" />
-            Copy ID
+            {t("compareExperiments.panel.copyId")}
           </Button>
           <ResizableSidePanelArrowNavigation
             horizontalNavigation={horizontalNavigation}

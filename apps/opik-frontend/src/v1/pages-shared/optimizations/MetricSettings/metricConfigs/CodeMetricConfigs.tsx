@@ -47,7 +47,7 @@ const CodeMetricConfigs = ({ configs, onChange }: CodeMetricConfigsProps) => {
     <div className="flex w-full flex-col gap-2">
       <div className="space-y-2">
         <Label htmlFor="code" className="text-sm">
-          {t('optimizations.metricConfigs.pythonCode')}
+          {t("optimizations.metricConfigs.pythonCode")}
         </Label>
         <div
           className={cn(
@@ -69,7 +69,7 @@ const CodeMetricConfigs = ({ configs, onChange }: CodeMetricConfigsProps) => {
           />
         </div>
         <p className="text-xs text-muted-slate">
-          {t('optimizations.metricConfigs.pythonCodeDescription')}
+          {t("optimizations.metricConfigs.pythonCodeDescription")}
         </p>
       </div>
     </div>

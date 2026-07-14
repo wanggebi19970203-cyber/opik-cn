@@ -19,13 +19,13 @@ const IntegrationTypeScriptSDK: React.FC = () => {
       rel="noopener noreferrer"
     >
       <IntegrationCard
-        title={t('integrationExplorer.typeScriptSdk')}
-        description={t('integrationExplorer.typeScriptSdkDescription')}
+        title={t("integrationExplorer.typeScriptSdk")}
+        description={t("integrationExplorer.typeScriptSdkDescription")}
         size="lg"
         icon={
           <img alt="TypeScript" src={tsLogo} className="size-[32px] shrink-0" />
         }
-        tag={t('integrationExplorer.newTag')}
+        tag={t("integrationExplorer.newTag")}
         id={`integration-typescript-sdk-card${source ? `-${source}` : ""}`}
         data-fs-element={`IntegrationTypeScriptSDKCard${
           source ? `-${source}` : ""

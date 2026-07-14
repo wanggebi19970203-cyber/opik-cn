@@ -19,7 +19,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <SMEFlowLayout header={<h1 className="comet-title-xl">{t("common.smeFlow.error")}</h1>}>
+    <SMEFlowLayout
+      header={<h1 className="comet-title-xl">{t("common.smeFlow.error")}</h1>}
+    >
       {variant === "queue-error" && (
         <div className="space-y-6">
           <Alert variant="destructive">
@@ -31,7 +33,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
 
           <Card className="p-8 text-center">
             <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-            <h3 className="comet-title-m mb-2">{t("common.smeFlow.queueNotAvailable")}</h3>
+            <h3 className="comet-title-m mb-2">
+              {t("common.smeFlow.queueNotAvailable")}
+            </h3>
             <p className="comet-body-s mb-6 text-muted-slate">
               {t("common.smeFlow.queueNotAvailableDescription")}
             </p>
@@ -50,7 +54,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
 
           <Card className="p-8 text-center">
             <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-            <h3 className="comet-title-m mb-2">{t("common.smeFlow.itemsFailedToLoad")}</h3>
+            <h3 className="comet-title-m mb-2">
+              {t("common.smeFlow.itemsFailedToLoad")}
+            </h3>
             <p className="comet-body-s mb-6 text-muted-slate">
               {t("common.smeFlow.itemsErrorDescription")}
             </p>
@@ -67,7 +73,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
       {variant === "no-queue" && (
         <Card className="p-8 text-center">
           <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-          <h3 className="comet-title-m mb-2">{t("common.smeFlow.noAnnotationQueueSelected")}</h3>
+          <h3 className="comet-title-m mb-2">
+            {t("common.smeFlow.noAnnotationQueueSelected")}
+          </h3>
           <p className="comet-body-s mb-6 text-muted-slate">
             {t("common.smeFlow.noAnnotationQueueSelectedDescription")}
           </p>

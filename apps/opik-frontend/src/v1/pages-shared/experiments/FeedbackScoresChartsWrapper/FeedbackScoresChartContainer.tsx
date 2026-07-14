@@ -160,7 +160,7 @@ const FeedbackScoresChartContainer: React.FC<
       return (
         <NoData
           className="min-h-32 text-light-slate"
-          message={t('noScoresToShow')}
+          message={t("noScoresToShow")}
         />
       );
     }
@@ -172,7 +172,7 @@ const FeedbackScoresChartContainer: React.FC<
         containerWidth={width}
       />
     );
-  }, [isPending, noData, chartData, chartId, width]);
+  }, [isPending, noData, chartData, chartId, t, width]);
 
   return (
     <Card className={cn("min-w-[400px]", className)} ref={ref}>

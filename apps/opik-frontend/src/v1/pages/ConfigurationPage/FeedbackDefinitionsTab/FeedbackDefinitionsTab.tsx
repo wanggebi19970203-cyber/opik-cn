@@ -47,10 +47,12 @@ const COLUMNS_WIDTH_KEY = "feedback-definitions-columns-width";
 const COLUMNS_ORDER_KEY = "feedback-definitions-columns-order";
 const PAGINATION_SIZE_KEY = "feedback-definitions-pagination-size";
 
-export const DEFAULT_COLUMNS: ColumnData<FeedbackDefinition>[] = [
+export const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<FeedbackDefinition>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Feedback score",
+    label: t("settings.feedback.columns.name"),
     type: COLUMN_TYPE.numberDictionary,
     cell: FeedbackScoreNameCell as never,
     sortable: true,
@@ -63,31 +65,31 @@ export const DEFAULT_COLUMNS: ColumnData<FeedbackDefinition>[] = [
   },
   {
     id: "description",
-    label: "Description",
+    label: t("settings.feedback.columns.description"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "type",
-    label: "Type",
+    label: t("settings.feedback.columns.type"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => capitalize(row.type),
     cell: TagCell as never,
   },
   {
     id: "values",
-    label: "Values",
+    label: t("settings.feedback.columns.values"),
     type: COLUMN_TYPE.string,
     cell: FeedbackDefinitionsValueCell as never,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("settings.feedback.columns.created_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("settings.feedback.columns.created_by"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -180,11 +182,13 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
     return feedbackDefinitions.filter((row) => rowSelection[row.id]);
   }, [rowSelection, feedbackDefinitions]);
 
+  const defaultColumns = useMemo(() => getDefaultColumns(t), [t]);
+
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<FeedbackDefinition>(),
       ...convertColumnDataToColumn<FeedbackDefinition, FeedbackDefinition>(
-        DEFAULT_COLUMNS,
+        defaultColumns,
         {
           columnsOrder,
           selectedColumns,
@@ -194,7 +198,7 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
         cell: FeedbackDefinitionsRowActionsCell,
       }),
     ];
-  }, [columnsOrder, selectedColumns]);
+  }, [columnsOrder, selectedColumns, defaultColumns]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -234,7 +238,7 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
           <FeedbackDefinitionsActionsPanel feedbackDefinitions={selectedRows} />
           <Separator orientation="vertical" className="mx-2 h-4" />
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={defaultColumns}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}

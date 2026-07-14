@@ -76,7 +76,9 @@ export const useMediaFileUpload = ({
     } catch (error) {
       toast({
         title: i18next.t("common.hooks.useMediaFileUpload.error"),
-        description: i18next.t("common.hooks.useMediaFileUpload.failedToProcessFiles"),
+        description: i18next.t(
+          "common.hooks.useMediaFileUpload.failedToProcessFiles",
+        ),
         variant: "destructive",
       });
       console.error("File conversion error:", error);

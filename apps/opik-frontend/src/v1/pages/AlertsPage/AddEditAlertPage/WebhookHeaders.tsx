@@ -31,19 +31,21 @@ const WebhookHeaders: React.FC<WebhookHeadersProps> = ({ form }) => {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <Label>{t("alerts.headers.label")}</Label>
-        <Description>
-          {t("alerts.headers.description")}
-        </Description>
+        <Description>{t("alerts.headers.description")}</Description>
       </div>
 
       {headerFields.length > 0 && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center">
             <div className="flex-1">
-              <Label className="comet-body-s-accented">Key</Label>
+              <Label className="comet-body-s-accented">
+                {t("alerts.headers.key")}
+              </Label>
             </div>
             <div className="flex-1">
-              <Label className="comet-body-s-accented">Value</Label>
+              <Label className="comet-body-s-accented">
+                {t("alerts.headers.value")}
+              </Label>
             </div>
             <div className="w-10"></div>
           </div>
@@ -68,7 +70,7 @@ const WebhookHeaders: React.FC<WebhookHeadersProps> = ({ form }) => {
                               validationErrors?.message,
                             ),
                           })}
-                          placeholder="Key"
+                          placeholder={t("alerts.headers.key")}
                           {...field}
                         />
                       </FormControl>
@@ -96,7 +98,7 @@ const WebhookHeaders: React.FC<WebhookHeadersProps> = ({ form }) => {
                               validationErrors?.message,
                             ),
                           })}
-                          placeholder="Value"
+                          placeholder={t("alerts.headers.value")}
                           {...field}
                         />
                       </FormControl>

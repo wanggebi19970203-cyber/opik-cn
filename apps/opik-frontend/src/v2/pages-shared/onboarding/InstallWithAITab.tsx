@@ -33,7 +33,9 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
   return (
     <div className="flex flex-col gap-4 px-1">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="comet-body-s-accented">{t("installWithAITab.worksWith")}</span>
+        <span className="comet-body-s-accented">
+          {t("installWithAITab.worksWith")}
+        </span>
         <div className="flex items-center gap-1.5 rounded border px-2 py-1">
           <img src={claudeCodeLogo} alt="Claude Code" className="size-4" />
           <span className="comet-body-xs-accented">Claude Code</span>
@@ -46,7 +48,9 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
           <img src={cursorLogo} alt="Cursor" className="size-4" />
           <span className="comet-body-xs-accented">Cursor</span>
         </div>
-        <span className="comet-body-xs text-muted-slate">+34 more</span>
+        <span className="comet-body-xs text-muted-slate">
+          {t("installWithAITab.moreIntegrations")}
+        </span>
       </div>
 
       <AgentCopyButtons agentName={agentName} />
@@ -54,8 +58,13 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
       <div className="flex flex-col">
         <TimelineStep number={1}>
           <div className="flex flex-col gap-2.5">
-            <h4 className="comet-body-s-accented">{t("installWithAITab.addOpikSkill")}</h4>
-            <CodeSnippet title="Terminal" code={INSTALL_OPIK_SKILLS_COMMAND} />
+            <h4 className="comet-body-s-accented">
+              {t("installWithAITab.addOpikSkill")}
+            </h4>
+            <CodeSnippet
+              title={t("installWithAITab.terminal")}
+              code={INSTALL_OPIK_SKILLS_COMMAND}
+            />
           </div>
         </TimelineStep>
 
@@ -64,7 +73,7 @@ const InstallWithAITab: React.FC<InstallWithAITabProps> = ({
             <h4 className="comet-body-s-accented">
               {t("installWithAITab.openCodingAgent")}
             </h4>
-            <CodeSnippet title="Prompt" code={prompt} />
+            <CodeSnippet title={t("installWithAITab.prompt")} code={prompt} />
           </div>
         </TimelineStep>
 

@@ -27,12 +27,18 @@ import ReportPanel from "./ReportPanel";
 import TurnOnDialog from "./TurnOnDialog";
 import SettingsDialog from "./SettingsDialog";
 
-function getNextRunLabel(scheduleTimeUtc: string, t: (key: string, opts?: Record<string, unknown>) => string) {
+function getNextRunLabel(
+  scheduleTimeUtc: string,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+) {
   const day =
     parseUtcTimeToLocalDate(scheduleTimeUtc) > new Date()
       ? t("dailyBriefing.today")
       : t("dailyBriefing.tomorrow");
-  return t("dailyBriefing.dayAtTime", { day, time: formatUtcTimeAsLocal(scheduleTimeUtc) });
+  return t("dailyBriefing.dayAtTime", {
+    day,
+    time: formatUtcTimeAsLocal(scheduleTimeUtc),
+  });
 }
 
 function LoadingSkeleton() {
@@ -151,7 +157,9 @@ function ScheduledRow({
   const { t } = useTranslation("pages/project-home");
   return (
     <BriefingRow dashed>
-      <span className="text-light-slate">{t("dailyBriefing.scheduled", { time: nextRunLabel })}</span>
+      <span className="text-light-slate">
+        {t("dailyBriefing.scheduled", { time: nextRunLabel })}
+      </span>
       <Button
         variant="ghost"
         size="2xs"
@@ -190,7 +198,9 @@ function PausedRow({ onReactivate }: { onReactivate: () => void }) {
   const { t } = useTranslation("pages/project-home");
   return (
     <BriefingRow dashed>
-      <span className="text-light-slate">{t("dailyBriefing.reactivateDailyBriefing")}</span>
+      <span className="text-light-slate">
+        {t("dailyBriefing.reactivateDailyBriefing")}
+      </span>
       <Button
         variant="ghost"
         size="2xs"
@@ -367,7 +377,9 @@ export default function DailyBriefingSection() {
         <EmptyState
           icon={briefingBubbleIcon}
           title={t("dailyBriefing.noBriefingsYet")}
-          description={t("dailyBriefing.nextBriefingScheduled", { time: nextRunLabel })}
+          description={t("dailyBriefing.nextBriefingScheduled", {
+            time: nextRunLabel,
+          })}
           actionLabel={t("dailyBriefing.runNow")}
           onAction={handleRunNow}
         />

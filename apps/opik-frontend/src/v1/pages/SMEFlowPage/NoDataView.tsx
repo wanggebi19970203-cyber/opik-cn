@@ -20,7 +20,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
   const { t } = useTranslation();
 
   return (
-    <SMEFlowLayout header={<h1 className="comet-title-xl">{t("sme.noDataView.error")}</h1>}>
+    <SMEFlowLayout
+      header={<h1 className="comet-title-xl">{t("sme.noDataView.error")}</h1>}
+    >
       {variant === "queue-error" && (
         <div className="space-y-6">
           <Alert variant="destructive">
@@ -32,7 +34,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
 
           <Card className="p-8 text-center">
             <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-            <h3 className="comet-title-m mb-2">{t("sme.noDataView.queueNotAvailable")}</h3>
+            <h3 className="comet-title-m mb-2">
+              {t("sme.noDataView.queueNotAvailable")}
+            </h3>
             <p className="comet-body-s mb-6 text-muted-slate">
               {t("sme.noDataView.checkQueueLinkOrContactAdmin")}
             </p>
@@ -51,7 +55,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
 
           <Card className="p-8 text-center">
             <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-            <h3 className="comet-title-m mb-2">{t("sme.noDataView.itemsFailedToLoad")}</h3>
+            <h3 className="comet-title-m mb-2">
+              {t("sme.noDataView.itemsFailedToLoad")}
+            </h3>
             <p className="comet-body-s mb-6 text-muted-slate">
               {t("sme.noDataView.tryAgainOrContactAdmin")}
             </p>
@@ -68,7 +74,9 @@ const NoDataView: React.FunctionComponent<NoDataViewProps> = ({
       {variant === "no-queue" && (
         <Card className="p-8 text-center">
           <FileText className="mx-auto mb-4 size-12 text-muted-slate" />
-          <h3 className="comet-title-m mb-2">{t("sme.noDataView.noAnnotationQueueSelected")}</h3>
+          <h3 className="comet-title-m mb-2">
+            {t("sme.noDataView.noAnnotationQueueSelected")}
+          </h3>
           <p className="comet-body-s mb-6 text-muted-slate">
             {t("sme.noDataView.toBeginSmeEvaluation")}
           </p>

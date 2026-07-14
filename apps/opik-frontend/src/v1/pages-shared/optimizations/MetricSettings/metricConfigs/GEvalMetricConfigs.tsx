@@ -43,11 +43,13 @@ const GEvalMetricConfigs = ({
     <div className="flex w-72 flex-col gap-6">
       <GEvalField
         id="task_introduction"
-        label={t('optimizations.metricConfigs.taskIntroduction')}
+        label={t("optimizations.metricConfigs.taskIntroduction")}
         explainer={EXPLAINERS_MAP[EXPLAINER_ID.geval_task_introduction]}
         value={configs.task_introduction ?? ""}
         onChange={(value) => onChange({ ...configs, task_introduction: value })}
-        placeholder={t('optimizations.metricConfigs.taskIntroductionPlaceholder')}
+        placeholder={t(
+          "optimizations.metricConfigs.taskIntroductionPlaceholder",
+        )}
         editorRef={taskIntroEditorRef}
         onFocus={() => {
           lastFocusedEditorRef.current = taskIntroEditorRef.current;
@@ -56,13 +58,15 @@ const GEvalMetricConfigs = ({
 
       <GEvalField
         id="evaluation_criteria"
-        label={t('optimizations.metricConfigs.evaluationCriteria')}
+        label={t("optimizations.metricConfigs.evaluationCriteria")}
         explainer={EXPLAINERS_MAP[EXPLAINER_ID.geval_evaluation_criteria]}
         value={configs.evaluation_criteria ?? ""}
         onChange={(value) =>
           onChange({ ...configs, evaluation_criteria: value })
         }
-        placeholder={t('optimizations.metricConfigs.evaluationCriteriaPlaceholder')}
+        placeholder={t(
+          "optimizations.metricConfigs.evaluationCriteriaPlaceholder",
+        )}
         editorRef={evalCriteriaEditorRef}
         onFocus={() => {
           lastFocusedEditorRef.current = evalCriteriaEditorRef.current;

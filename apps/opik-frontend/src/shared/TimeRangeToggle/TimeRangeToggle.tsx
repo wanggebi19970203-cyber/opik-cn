@@ -24,27 +24,55 @@ type PresetConfig = {
   getRange?: () => DateRangeValue;
 };
 
-const PRESETS: PresetConfig[] = [
-  { key: "1D", label: "Last day", dateRangePreset: "past24hours" },
-  { key: "1W", label: "Last week", dateRangePreset: "past7days" },
-  { key: "1M", label: "Last month", dateRangePreset: "past30days" },
-  {
-    key: "6M",
-    label: "Last 6 months",
-    getRange: () => ({
-      from: dayjs().subtract(6, "months").startOf("day").toDate(),
-      to: dayjs().endOf("day").toDate(),
-    }),
-  },
-];
+const usePresets = (t: (key: string) => string): PresetConfig[] =>
+  useMemo(
+    () => [
+      {
+        key: "1D",
+        label: t("common.dateRange.lastDay"),
+        dateRangePreset: "past24hours",
+      },
+      {
+        key: "1W",
+        label: t("common.dateRange.lastWeek"),
+        dateRangePreset: "past7days",
+      },
+      {
+        key: "1M",
+        label: t("common.dateRange.lastMonth"),
+        dateRangePreset: "past30days",
+      },
+      {
+        key: "6M",
+        label: t("common.dateRange.last6Months"),
+        getRange: () => ({
+          from: dayjs().subtract(6, "months").startOf("day").toDate(),
+          to: dayjs().endOf("day").toDate(),
+        }),
+      },
+    ],
+    [t],
+  );
 
 const useRelativePresets = (t: (key: string) => string) =>
   useMemo(
     () => [
-      { label: t("common.timeRange.lastDay"), dateRangePreset: "past24hours" as DateRangePreset },
-      { label: t("common.timeRange.last3Days"), dateRangePreset: "past3days" as DateRangePreset },
-      { label: t("common.time.lastWeek"), dateRangePreset: "past7days" as DateRangePreset },
-      { label: t("common.time.lastMonth"), dateRangePreset: "past30days" as DateRangePreset },
+      {
+        label: t("common.timeRange.lastDay"),
+        dateRangePreset: "past24hours" as DateRangePreset,
+      },
+      {
+        label: t("common.timeRange.last3Days"),
+        dateRangePreset: "past3days" as DateRangePreset,
+      },
+      {
+        label: t("common.time.lastWeek"),
+        dateRangePreset: "past7days" as DateRangePreset,
+      },
+      {
+        label: t("common.time.lastMonth"),
+        dateRangePreset: "past30days" as DateRangePreset,
+      },
       {
         label: t("common.timeRange.lastQuarter"),
         getRange: () => ({
@@ -69,13 +97,16 @@ const PRESET_TO_TOGGLE: Partial<Record<DateRangePreset, TimeRangePresetKey>> = {
   past30days: "1M",
 };
 
-const getActivePreset = (value: DateRangeValue): TimeRangePresetKey | null => {
+const getActivePreset = (
+  value: DateRangeValue,
+  presets: PresetConfig[],
+): TimeRangePresetKey | null => {
   const rangePreset = getRangePreset(value);
   if (rangePreset && rangePreset in PRESET_TO_TOGGLE) {
     return PRESET_TO_TOGGLE[rangePreset]!;
   }
 
-  for (const preset of PRESETS) {
+  for (const preset of presets) {
     if (preset.getRange) {
       const range = preset.getRange();
       if (
@@ -89,7 +120,11 @@ const getActivePreset = (value: DateRangeValue): TimeRangePresetKey | null => {
   return null;
 };
 
-type RelativePreset = { label: string; dateRangePreset?: DateRangePreset; getRange?: () => DateRangeValue };
+type RelativePreset = {
+  label: string;
+  dateRangePreset?: DateRangePreset;
+  getRange?: () => DateRangeValue;
+};
 
 const getActiveRelativePreset = (
   value: DateRangeValue,
@@ -136,13 +171,17 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
 }) => {
   const { t } = useTranslation();
   const relativePresets = useRelativePresets(t);
+  const presets = usePresets(t);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [pendingRange, setPendingRange] = useState<DateRange | undefined>();
   const [pendingPresetLabel, setPendingPresetLabel] = useState<string | null>(
     null,
   );
 
-  const activePreset = useMemo(() => getActivePreset(value), [value]);
+  const activePreset = useMemo(
+    () => getActivePreset(value, presets),
+    [value, presets],
+  );
   const isCustom = activePreset === null;
 
   const handlePresetClick = useCallback(
@@ -164,9 +203,7 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
     setIsCalendarOpen(open);
   };
 
-  const handleRelativePresetClick = (
-    preset: RelativePreset,
-  ) => {
+  const handleRelativePresetClick = (preset: RelativePreset) => {
     let range: DateRangeValue;
     if ("dateRangePreset" in preset && preset.dateRangePreset) {
       range = PRESET_DATE_RANGES[preset.dateRangePreset];
@@ -227,7 +264,7 @@ const TimeRangeToggle: React.FC<TimeRangeToggleProps> = ({
 
   return (
     <div className="flex items-center gap-1 rounded-md border border-border bg-background p-[3px]">
-      {PRESETS.map((preset) => (
+      {presets.map((preset) => (
         <button
           key={preset.key}
           type="button"

@@ -24,7 +24,7 @@ const CodeBlockCopy: React.FC<CodeBlockCopyProps> = ({ text }) => {
     copy(text);
     toast({ description: t("common.messages.copied") });
     setCopied(true);
-  }, [text, toast]);
+  }, [text, toast, t]);
 
   return (
     <TooltipWrapper content={t("common.buttons.copy")}>

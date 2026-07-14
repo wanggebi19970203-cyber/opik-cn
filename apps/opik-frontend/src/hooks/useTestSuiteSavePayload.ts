@@ -57,7 +57,9 @@ export function useTestSuiteSavePayload({
 
       if (!suite) {
         throw new Error(
-          i18next.t("common.hooks.useTestSuiteSavePayload.testSuiteDataNotAvailable"),
+          i18next.t(
+            "common.hooks.useTestSuiteSavePayload.testSuiteDataNotAvailable",
+          ),
         );
       }
 

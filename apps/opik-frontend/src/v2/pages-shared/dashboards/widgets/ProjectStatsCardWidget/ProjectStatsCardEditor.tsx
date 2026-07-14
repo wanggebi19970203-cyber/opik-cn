@@ -38,7 +38,7 @@ import {
   renderSourceTrigger,
 } from "@/lib/sourceTypeSelect";
 import {
-  ProjectStatsCardWidgetSchema,
+  createProjectStatsCardWidgetSchema,
   ProjectStatsCardWidgetFormData,
 } from "./schema";
 import { getAllMetricOptions } from "./metrics";
@@ -89,8 +89,10 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
     return getAllMetricOptions(source, scoreNames);
   }, [source, data?.scores]);
 
+  const schema = useMemo(() => createProjectStatsCardWidgetSchema(t), [t]);
+
   const form = useForm<ProjectStatsCardWidgetFormData>({
-    resolver: zodResolver(ProjectStatsCardWidgetSchema),
+    resolver: zodResolver(schema),
     mode: "onTouched",
     defaultValues: {
       source,

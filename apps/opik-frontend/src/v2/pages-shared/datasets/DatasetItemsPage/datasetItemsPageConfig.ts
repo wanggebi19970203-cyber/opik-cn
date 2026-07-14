@@ -55,7 +55,7 @@ export const buildSuiteColumns = (): ColumnData<DatasetItem>[] => {
   return [
     {
       id: COLUMN_ID_ID,
-      label: "ID",
+      label: t("datasets.columns.id"),
       type: COLUMN_TYPE.string,
       cell: IdCell as never,
     },
@@ -124,7 +124,7 @@ export const buildDatasetColumns = (
   return [
     {
       id: COLUMN_ID_ID,
-      label: "ID",
+      label: t("datasets.columns.id"),
       type: COLUMN_TYPE.string,
       cell: IdCell as never,
     },

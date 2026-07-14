@@ -152,13 +152,13 @@ const PlaygroundPage = () => {
   const { DialogComponent } = useNavigationBlocker({
     condition: isRunning,
     title: datasetId
-      ? "Experiment execution in progress"
-      : "Prompt execution in progress",
+      ? t("leaveExperiment.experimentExecutionInProgress")
+      : t("leaveExperiment.promptExecutionInProgress"),
     description: datasetId
-      ? "Your experiment is currently running. Leaving now will interrupt the execution and may result in incomplete experiment items. Are you sure you want to leave?"
-      : "Your prompt is currently running. Leaving now will interrupt the execution and may result in incomplete traces. Are you sure you want to leave?",
-    confirmText: t("playground.leaveExperiment.confirmText"),
-    cancelText: "Stay and wait",
+      ? t("leaveExperiment.experimentRunningDescription")
+      : t("leaveExperiment.promptRunningDescription"),
+    confirmText: t("leaveExperiment.confirmText"),
+    cancelText: t("leaveExperiment.stayAndWait"),
   });
 
   const { data: providerKeysData, isPending: isPendingProviderKeys } =

@@ -20,7 +20,11 @@ const GoogleColabCardCore: React.FC<GoogleColabCardCoreProps> = ({ link }) => {
           <a href={link} target="_blank" rel="noreferrer">
             <div className="flex items-center gap-1">
               {t("shared.openInColab")}
-              <img src={colabLogo} alt={t("shared.colabLogo")} className="h-[27px] w-8" />
+              <img
+                src={colabLogo}
+                alt={t("shared.colabLogo")}
+                className="h-[27px] w-8"
+              />
             </div>
 
             <ExternalLink className="ml-2 size-4 shrink-0" />

@@ -40,7 +40,10 @@ const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
             <h4 className="comet-body-s-accented">
               {t("getStarted.connectToOllie.installOpik")}
             </h4>
-            <CodeSnippet title="Terminal" code={INSTALL_COMMAND} />
+            <CodeSnippet
+              title={t("getStarted.connectToOllie.terminal")}
+              code={INSTALL_COMMAND}
+            />
           </div>
         </TimelineStep>
 
@@ -49,7 +52,10 @@ const ConnectToOllieTab: React.FC<ConnectToOllieTabProps> = ({ connected }) => {
             <h4 className="comet-body-s-accented">
               {t("getStarted.connectToOllie.connectRepo")}
             </h4>
-            <CodeSnippet title="Terminal" code={connectCommandText} />
+            <CodeSnippet
+              title={t("getStarted.connectToOllie.terminal")}
+              code={connectCommandText}
+            />
           </div>
         </TimelineStep>
 

@@ -4,7 +4,7 @@ import { Filter, FilterRowConfig } from "@/types/filters";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
 import SelectBox from "@/shared/SelectBox/SelectBox";
 import { COLUMN_TYPE } from "@/types/shared";
-import { DEFAULT_OPERATORS, OPERATORS_MAP } from "@/constants/filters";
+import { getDefaultOperators, getOperatorsMap } from "@/constants/filters";
 
 type EqualsRowProps = {
   filter: Filter;
@@ -26,8 +26,8 @@ export const CategoryRow: React.FunctionComponent<EqualsRowProps> = ({
           operator={filter.operator}
           operators={
             config?.operators ??
-            OPERATORS_MAP[filter.type as COLUMN_TYPE] ??
-            DEFAULT_OPERATORS
+            getOperatorsMap()[filter.type as COLUMN_TYPE] ??
+            getDefaultOperators()
           }
           disabled
         />

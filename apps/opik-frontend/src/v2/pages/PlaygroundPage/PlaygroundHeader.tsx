@@ -296,14 +296,14 @@ const PlaygroundHeader = ({
     }
 
     const hasRunExperiment = isExperimentMode && createdExperiments.length > 0;
-    const label = hasRunExperiment ? "Re-run" : "Run";
+    const label = hasRunExperiment ? t("header.rerun") : t("header.run");
     const experimentTarget =
       currentDatasetType === DATASET_TYPE.TEST_SUITE ? "test suite" : "dataset";
     const tooltip =
       runDisabledReason ??
       (isExperimentMode
         ? `Run experiment on ${experimentTarget}`
-        : "Run your prompts");
+        : t("header.runTooltip"));
 
     return (
       <TooltipWrapper content={tooltip}>

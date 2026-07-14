@@ -17,7 +17,7 @@ const CompareExperimentsNameHeader: React.FC<
       tableMetadata={context.table.options.meta}
     >
       <FlaskConical className="size-3.5 shrink-0 text-slate-300" />
-      <div className="comet-body-s-accented truncate">{t('name')}</div>
+      <div className="comet-body-s-accented truncate">{t("name")}</div>
     </HeaderWrapper>
   );
 };

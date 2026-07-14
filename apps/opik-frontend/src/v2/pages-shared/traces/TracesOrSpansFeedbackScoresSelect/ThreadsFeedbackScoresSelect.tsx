@@ -17,15 +17,10 @@ type ThreadsFeedbackScoresSelectProps = {
 
 const ThreadsFeedbackScoresSelect: React.FC<
   ThreadsFeedbackScoresSelectProps
-> = ({
-  projectId,
-  value,
-  onValueChange,
-  placeholder,
-  className,
-}) => {
+> = ({ projectId, value, onValueChange, placeholder, className }) => {
   const { t } = useTranslation("tracing");
-  const resolvedPlaceholder = placeholder ?? t("feedbackScoresSelect.selectScore");
+  const resolvedPlaceholder =
+    placeholder ?? t("feedbackScoresSelect.selectScore");
   const { data: feedbackScoresNames } = useThreadsFeedbackScoresNames({
     projectId,
   });

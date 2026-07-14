@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCw, X } from "lucide-react";
 import { Tag } from "@/ui/tag";
 import { Button } from "@/ui/button";
@@ -27,6 +28,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
   isStudioOptimization,
   canRerun,
 }) => {
+  const { t } = useTranslation("optimization");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
   const { mutate: stopOptimization, isPending: isStoppingOptimization } =
@@ -76,7 +78,9 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
         {optimization?.dataset_id && optimization?.dataset_name && (
           <NavigationTag
             id={optimization.dataset_id}
-            name={`Go to ${optimization.dataset_name}`}
+            name={t("optimization.header.goToDataset", {
+              name: optimization.dataset_name,
+            })}
             resource={RESOURCE_TYPE.dataset}
             className="w-fit"
           />
@@ -86,7 +90,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
         {canRerun && (
           <Button variant="outline" size="sm" onClick={handleRerun}>
             <RotateCw className="mr-2 size-4" />
-            Rerun
+            {t("optimization.header.rerun")}
           </Button>
         )}
         {canStop && (
@@ -97,7 +101,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
             disabled={isStoppingOptimization}
           >
             <X className="mr-2 size-4" />
-            Stop Execution
+            {t("optimization.header.stopExecution")}
           </Button>
         )}
       </div>

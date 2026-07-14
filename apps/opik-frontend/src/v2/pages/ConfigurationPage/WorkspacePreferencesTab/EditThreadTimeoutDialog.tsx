@@ -58,7 +58,9 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
           variant="link"
           size="sm"
           className="px-0"
-          altText={t("settings.workspacePreferences.threadTimeout.goToProjects")}
+          altText={t(
+            "settings.workspacePreferences.threadTimeout.goToProjects",
+          )}
           key="Go to project"
           onClick={() => {
             navigate({
@@ -95,7 +97,9 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("settings.workspacePreferences.cancel")}</Button>
+            <Button variant="outline">
+              {t("settings.workspacePreferences.cancel")}
+            </Button>
           </DialogClose>
           <Button
             type="submit"

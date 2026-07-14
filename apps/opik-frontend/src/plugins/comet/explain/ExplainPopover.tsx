@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import OllieOwl from "@/icons/ollie-owl.svg?react";
 import { ExplainTarget } from "@/types/assistant-sidebar";
 import { OpikEvent, trackEvent } from "@/lib/analytics/tracking";
@@ -25,6 +26,7 @@ const linkClass =
   "h-auto rounded-none px-0 py-0 text-xs font-normal leading-4 no-underline border-b border-foreground transition-colors hover:border-primary";
 
 const ExplainPopover = ({ target, onContinue }: Props) => {
+  const { t } = useTranslation("ollie");
   const entry = useExplainEntry(target);
   const retry = useExplainStore((s) => s.retry);
   const continueChat = useExplainStore((s) => s.continueChat);
@@ -67,14 +69,14 @@ const ExplainPopover = ({ target, onContinue }: Props) => {
             <div className="flex items-center gap-2">
               <span className="size-2 shrink-0 rounded-full bg-[var(--color-ollie-live)] text-[var(--color-ollie-live)] motion-safe:animate-beacon-pulse" />
               <span className="leading-4 text-muted-slate">
-                {waking ? "Ollie is waking up…" : "Thinking..."}
+                {waking ? t("ollieIsWakingUp") : t("thinking")}
               </span>
             </div>
           )}
 
           {isError && (
             <p className="leading-4 text-destructive">
-              {entry?.error ?? "Something went wrong."}
+              {entry?.error ?? t("somethingWentWrong")}
             </p>
           )}
 
@@ -83,7 +85,7 @@ const ExplainPopover = ({ target, onContinue }: Props) => {
             !isError &&
             (entry?.text.length ?? 0) === 0 && (
               <p className="leading-4 text-muted-slate">
-                No explanation available.
+                {t("noExplanationAvailable")}
               </p>
             )}
 
@@ -121,7 +123,7 @@ const ExplainPopover = ({ target, onContinue }: Props) => {
               retry(target);
             }}
           >
-            Retry
+            {t("retry")}
           </Button>
         )}
 
@@ -140,7 +142,7 @@ const ExplainPopover = ({ target, onContinue }: Props) => {
               onContinue();
             }}
           >
-            Continue conversation
+            {t("continueConversation")}
             <ArrowRight className="size-3" />
           </Button>
         )}

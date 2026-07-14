@@ -92,7 +92,9 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
     () =>
       asNewOption ? (
         <div className="flex w-full items-center text-foreground">
-          <span className="truncate">{t("addNewPromptVersionDialog.saveAsNew")}</span>
+          <span className="truncate">
+            {t("addNewPromptVersionDialog.saveAsNew")}
+          </span>
         </div>
       ) : (
         <div className="flex w-full items-center text-light-slate">
@@ -129,7 +131,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
         </ListAction>
       </>
     ) : undefined;
-  }, [asNewOption, onValueChange]);
+  }, [asNewOption, onValueChange, t]);
 
   return (
     <SelectBoxClearWrapper

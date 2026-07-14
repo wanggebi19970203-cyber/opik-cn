@@ -14,7 +14,8 @@ const IntegrationSearch: React.FunctionComponent<IntegrationSearchProps> = ({
   className,
 }) => {
   const { t } = useTranslation();
-  const displayPlaceholder = placeholder ?? t('integrationExplorer.searchPlaceholder');
+  const displayPlaceholder =
+    placeholder ?? t("integrationExplorer.searchPlaceholder");
   const { searchText, setSearchText } = useIntegrationExplorer();
 
   return (

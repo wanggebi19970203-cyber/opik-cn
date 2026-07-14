@@ -21,7 +21,9 @@ const PrettyLLMMessageUsage: React.FC<PrettyLLMMessageUsageProps> = ({
     >
       {usage.completion_tokens !== undefined && (
         <>
-          <span className="font-medium">{t("common:llmMessages.completionTokens")}</span>
+          <span className="font-medium">
+            {t("common:llmMessages.completionTokens")}
+          </span>
           <span>{usage.completion_tokens}</span>
         </>
       )}

@@ -100,9 +100,7 @@ const AgentSandboxFlowDiagram: React.FC = () => {
             <div className="flex flex-1 flex-col gap-1">
               <div className="flex-1 rounded border bg-primary-foreground px-2 py-1">
                 <span className="font-mono text-[10px] leading-snug text-foreground">
-                  &ldquo;What can you
-                  <br />
-                  do?&rdquo;
+                  &ldquo;{t("flowDiagram.inputExample")}&rdquo;
                 </span>
               </div>
               <div className="flex items-center justify-center gap-1 rounded border px-2 py-0.5">

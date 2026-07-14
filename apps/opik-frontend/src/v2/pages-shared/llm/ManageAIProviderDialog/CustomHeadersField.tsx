@@ -35,10 +35,14 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
   const { t } = useTranslation("llm");
 
   const effectiveLabel = label ?? t("llm:customHeadersField.customHeaders");
-  const effectiveKeyPlaceholder = keyPlaceholder ?? t("llm:customHeadersField.headerName");
-  const effectiveValuePlaceholder = valuePlaceholder ?? t("llm:customHeadersField.headerValue");
-  const effectiveAddButtonLabel = addButtonLabel ?? t("llm:customHeadersField.addHeader");
-  const effectiveDescription = description ?? t("llm:customHeadersField.customHeadersDescription");
+  const effectiveKeyPlaceholder =
+    keyPlaceholder ?? t("llm:customHeadersField.headerName");
+  const effectiveValuePlaceholder =
+    valuePlaceholder ?? t("llm:customHeadersField.headerValue");
+  const effectiveAddButtonLabel =
+    addButtonLabel ?? t("llm:customHeadersField.addHeader");
+  const effectiveDescription =
+    description ?? t("llm:customHeadersField.customHeadersDescription");
 
   return (
     <KeyValueFieldArray<AIProviderFormType>

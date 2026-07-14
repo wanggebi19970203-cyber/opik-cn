@@ -208,7 +208,10 @@ class QuickFilterWidget extends WidgetType {
     button.className = "cm-quick-filter-add";
     button.setAttribute("role", "button");
     button.setAttribute("tabindex", "0");
-    button.setAttribute("aria-label", i18next.t("quickFilter.filterByThisAttribute"));
+    button.setAttribute(
+      "aria-label",
+      i18next.t("quickFilter.filterByThisAttribute"),
+    );
     button.innerHTML = FILTER_ICON;
 
     const activate = (event: Event) => {

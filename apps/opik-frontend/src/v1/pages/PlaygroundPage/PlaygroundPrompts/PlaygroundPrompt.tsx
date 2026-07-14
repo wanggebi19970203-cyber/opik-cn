@@ -306,7 +306,9 @@ const PlaygroundPrompt = ({
         </p>
 
         <div className="flex h-full flex-1 items-center justify-end gap-1">
-          <TooltipWrapper content={chatPromptData?.name || t("playground.prompt.loadPrompt")}>
+          <TooltipWrapper
+            content={chatPromptData?.name || t("playground.prompt.loadPrompt")}
+          >
             <div className="flex h-full min-w-40 max-w-60 flex-auto flex-nowrap">
               <PromptsSelectBox
                 value={selectedChatPromptId}

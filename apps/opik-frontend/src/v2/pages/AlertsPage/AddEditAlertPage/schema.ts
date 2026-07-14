@@ -3,8 +3,12 @@ import { z, RefinementCtx } from "zod";
 import { ALERT_EVENT_TYPE, ALERT_TYPE } from "@/types/alerts";
 
 export const HeaderSchema = z.object({
-  key: z.string().min(1, { message: i18next.t("common.validation.headerKeyRequired") }),
-  value: z.string().min(1, { message: i18next.t("common.validation.headerValueRequired") }),
+  key: z
+    .string()
+    .min(1, { message: i18next.t("common.validation.headerKeyRequired") }),
+  value: z
+    .string()
+    .min(1, { message: i18next.t("common.validation.headerValueRequired") }),
 });
 
 export const FeedbackScoreConditionSchema = z.object({
@@ -118,20 +122,29 @@ export const TriggerSchema = z
       if (thresholdPresent) {
         validateNumeric(ctx, data.threshold!, ["threshold"]);
       }
-      addRequired(ctx, data.window, ["window"], i18next.t("common.validation.windowIsRequired"));
+      addRequired(
+        ctx,
+        data.window,
+        ["window"],
+        i18next.t("common.validation.windowIsRequired"),
+      );
     }
   });
 
 export const AlertFormSchema = z
   .object({
     name: z
-      .string({ required_error: i18next.t("common.validation.alertNameRequired") })
+      .string({
+        required_error: i18next.t("common.validation.alertNameRequired"),
+      })
       .min(1, { message: i18next.t("common.validation.alertNameRequired") }),
     enabled: z.boolean().default(true),
     alertType: z.nativeEnum(ALERT_TYPE).default(ALERT_TYPE.general),
     routingKey: z.string().optional(),
     url: z
-      .string({ required_error: i18next.t("common.validation.endpointUrlRequired") })
+      .string({
+        required_error: i18next.t("common.validation.endpointUrlRequired"),
+      })
       .min(1, { message: i18next.t("common.validation.endpointUrlRequired") })
       .url({ message: i18next.t("common.validation.pleaseEnterValidUrl") }),
     secretToken: z.string().optional(),

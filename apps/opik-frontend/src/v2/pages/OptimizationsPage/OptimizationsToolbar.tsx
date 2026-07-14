@@ -1,4 +1,5 @@
 import React, { ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Separator } from "@/ui/separator";
 import SearchInput from "@/shared/SearchInput/SearchInput";
@@ -8,8 +9,7 @@ import RefreshButton from "@/shared/RefreshButton/RefreshButton";
 import OptimizationsActionsPanel from "@/v2/pages/OptimizationsPage/OptimizationsActionsPanel/OptimizationsActionsPanel";
 import { ColumnData } from "@/types/shared";
 import { Optimization } from "@/types/optimizations";
-import { FILTER_COLUMNS } from "@/v2/pages/OptimizationsPage/OptimizationsColumns";
-import { ITEM_SOURCE_LABEL } from "@/v2/pages-shared/experiments/ItemSourceCell";
+import { getFilterColumns } from "@/v2/pages/OptimizationsPage/OptimizationsColumns";
 
 type OptimizationsToolbarProps = {
   search: string;
@@ -49,19 +49,21 @@ const OptimizationsToolbar: React.FC<OptimizationsToolbarProps> = ({
   columnsOrder,
   onColumnsOrderChange,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
+  const filterColumns = getFilterColumns(t);
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
       <div className="flex items-center gap-2">
         <SearchInput
           searchText={search}
           setSearchText={onSearchChange}
-          placeholder={`Search by ${ITEM_SOURCE_LABEL.toLowerCase()}`}
+          placeholder={t("searchPlaceholder")}
           className="w-[320px]"
           dimension="sm"
         />
         {canViewDatasets && (
           <FiltersButton
-            columns={FILTER_COLUMNS}
+            columns={filterColumns}
             config={filtersConfig as never}
             filters={filters}
             onChange={onFiltersChange}
@@ -77,7 +79,7 @@ const OptimizationsToolbar: React.FC<OptimizationsToolbarProps> = ({
           </>
         )}
         <RefreshButton
-          tooltip="Refresh optimizations list"
+          tooltip={t("refreshTooltip")}
           isFetching={isFetching}
           onRefresh={onRefresh}
         />

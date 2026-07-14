@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 
@@ -34,18 +34,18 @@ export type CreateDatasetMode = "upload" | "sdk";
 
 const DOCS_URL = buildDocsUrl("/evaluation/advanced/manage_datasets");
 
-const TYPE_CONFIG = {
+const getTypeConfig = (t: (key: string) => string) => ({
   dataset: {
-    entityName: "Dataset",
+    entityName: t("addEditDialog.typeLabelDataset"),
     datasetType: DATASET_TYPE.DATASET,
     skipEvaluationCriteria: true,
   },
   test_suite: {
-    entityName: "Test suite",
+    entityName: t("addEditDialog.typeLabelTestSuite"),
     datasetType: DATASET_TYPE.TEST_SUITE,
     skipEvaluationCriteria: false,
   },
-} as const;
+});
 
 type CreateDatasetSidebarProps = {
   type: DatasetListType;
@@ -59,6 +59,7 @@ const CreateDatasetSidebar: React.FunctionComponent<
   CreateDatasetSidebarProps
 > = ({ type, mode, open, setOpen, onDatasetCreated }) => {
   const { t } = useTranslation("datasets");
+  const TYPE_CONFIG = useMemo(() => getTypeConfig(t), [t]);
   const config = TYPE_CONFIG[type];
   const entityLabel =
     config.entityName[0].toLowerCase() + config.entityName.slice(1);
@@ -99,7 +100,7 @@ const CreateDatasetSidebar: React.FunctionComponent<
         ],
       });
     },
-    [setOpen, toast, config.entityName, entityLabel],
+    [setOpen, toast, config.entityName, entityLabel, t],
   );
 
   const {
@@ -201,11 +202,15 @@ const CreateDatasetSidebar: React.FunctionComponent<
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={`${type}Description`}>
         {t("createSidebar.description")}{" "}
-        <span className="font-normal text-foreground">{t("createSidebar.optional")}</span>
+        <span className="font-normal text-foreground">
+          {t("createSidebar.optional")}
+        </span>
       </Label>
       <Textarea
         id={`${type}Description`}
-        placeholder={t("createSidebar.descriptionPlaceholder", { entityName: config.entityName })}
+        placeholder={t("createSidebar.descriptionPlaceholder", {
+          entityName: config.entityName,
+        })}
         className="min-h-16 text-sm"
         value={description}
         onChange={(event) => setDescription(event.target.value)}
@@ -278,7 +283,9 @@ const CreateDatasetSidebar: React.FunctionComponent<
             >
               <AccordionItem value="advanced" className="border-b-0">
                 <CustomAccordionTrigger className="flex items-center gap-1 transition-all [&[data-state=open]>svg]:rotate-90">
-                  <span className="comet-body-xs">{t("createSidebar.advancedOptions")}</span>
+                  <span className="comet-body-xs">
+                    {t("createSidebar.advancedOptions")}
+                  </span>
                   <ChevronRight className="size-3.5 shrink-0 transition-transform duration-200" />
                 </CustomAccordionTrigger>
                 <AccordionContent className="pt-4">
@@ -345,7 +352,9 @@ const CreateDatasetSidebar: React.FunctionComponent<
       </Button>
       <Button disabled={isSubmitting || !canSubmit} onClick={submitHandler}>
         {isSubmitting && <Spinner size="small" className="mr-2" />}
-        {isSubmitting ? t("createSidebar.creating") : t("createSidebar.createEntity", { entityLabel })}
+        {isSubmitting
+          ? t("createSidebar.creating")
+          : t("createSidebar.createEntity", { entityLabel })}
       </Button>
     </div>
   );
@@ -363,7 +372,9 @@ const CreateDatasetSidebar: React.FunctionComponent<
         <ResizableSidePanelTopBar
           variant="form"
           title={
-            <span className="comet-body-s-accented">{t("createSidebar.createEntity", { entityLabel })}</span>
+            <span className="comet-body-s-accented">
+              {t("createSidebar.createEntity", { entityLabel })}
+            </span>
           }
           onClose={handleClose}
         >

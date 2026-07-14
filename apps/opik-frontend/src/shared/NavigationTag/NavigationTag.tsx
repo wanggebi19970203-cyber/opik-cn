@@ -31,8 +31,11 @@ const NavigationTag: React.FunctionComponent<NavigationTagProps> = ({
   suffix,
 }) => {
   const { t } = useTranslation();
-  const resourceLabel = RESOURCE_MAP[resource].label;
-  const defaultTooltipContent = t("common.shared.navigateTo", { resource: resourceLabel, name });
+  const resourceLabel = t(`common.shared.${RESOURCE_MAP[resource].labelKey}`);
+  const defaultTooltipContent = t("common.shared.navigateTo", {
+    resource: resourceLabel,
+    name,
+  });
 
   return (
     <ResourceLink

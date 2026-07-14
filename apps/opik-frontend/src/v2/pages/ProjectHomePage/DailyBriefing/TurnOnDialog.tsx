@@ -35,7 +35,9 @@ export default function TurnOnDialog({
           <DialogDescription asChild className="pt-6">
             <div className="flex flex-col gap-6">
               <p>
-                {t("dailyBriefing.turnOnDialogDescription", { time: scheduleTimeLocal })}
+                {t("dailyBriefing.turnOnDialogDescription", {
+                  time: scheduleTimeLocal,
+                })}
               </p>
               <p>
                 {t("dailyBriefing.turnOnDialogTokenInfo")}{" "}
@@ -65,7 +67,9 @@ export default function TurnOnDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("dailyBriefing.turnOnDialogCancel")}
           </Button>
-          <Button onClick={() => onConfirm(runImmediately)}>{t("dailyBriefing.turnOnDialogConfirm")}</Button>
+          <Button onClick={() => onConfirm(runImmediately)}>
+            {t("dailyBriefing.turnOnDialogConfirm")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

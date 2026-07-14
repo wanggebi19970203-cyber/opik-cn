@@ -49,8 +49,12 @@ const RuleRowActionsCell: React.FC<
         setOpen={setOpen}
         onConfirm={deleteRuleHandler}
         title={t("onlineEvaluation.confirmDialog.deleteSingle.title")}
-        description={t("onlineEvaluation.confirmDialog.deleteSingle.description")}
-        confirmText={t("onlineEvaluation.confirmDialog.deleteSingle.confirmText")}
+        description={t(
+          "onlineEvaluation.confirmDialog.deleteSingle.description",
+        )}
+        confirmText={t(
+          "onlineEvaluation.confirmDialog.deleteSingle.confirmText",
+        )}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>

@@ -54,7 +54,10 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
         >
           {logo}
           {canToggle && !expanded && (
-            <TooltipWrapper content={t("navigation.sidebar.expandSidebar")} side="right">
+            <TooltipWrapper
+              content={t("navigation.sidebar.expandSidebar")}
+              side="right"
+            >
               <Button
                 variant="outline"
                 size="icon-4xs"
@@ -72,7 +75,10 @@ const SideBar: React.FunctionComponent<SideBarProps> = ({
           )}
         </Link>
         {canToggle && expanded && (
-          <TooltipWrapper content={t("navigation.sidebar.collapseSidebar")} side="right">
+          <TooltipWrapper
+            content={t("navigation.sidebar.collapseSidebar")}
+            side="right"
+          >
             <Button
               variant="minimal"
               size="icon-xs"

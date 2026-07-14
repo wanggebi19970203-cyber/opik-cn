@@ -32,7 +32,9 @@ const OptimizationsNewHeader: React.FC<OptimizationsNewHeaderProps> = ({
             onClick={onSubmit}
             disabled={isSubmitting || !isFormValid}
           >
-            {isSubmitting ? t("optimizations.newPage.starting") : t("optimizations.newPage.optimizePrompt")}
+            {isSubmitting
+              ? t("optimizations.newPage.starting")
+              : t("optimizations.newPage.optimizePrompt")}
           </Button>
         </div>
       </div>

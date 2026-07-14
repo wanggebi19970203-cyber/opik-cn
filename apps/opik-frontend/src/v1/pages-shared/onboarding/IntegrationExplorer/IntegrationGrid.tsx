@@ -60,7 +60,7 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
       <>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <h3 className="comet-body-s mb-2 text-muted-slate">
-            {t('integrationExplorer.noSearchResults')}
+            {t("integrationExplorer.noSearchResults")}
           </h3>
 
           <Button
@@ -74,7 +74,7 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
               source ? `-${source}` : ""
             }`}
           >
-            {t('integrationExplorer.requestIntegration')}
+            {t("integrationExplorer.requestIntegration")}
           </Button>
         </div>
 
@@ -137,8 +137,8 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
           rel="noopener noreferrer"
         >
           <IntegrationCard
-            title={t('integrationExplorer.viewAllIntegrations')}
-            description={t('integrationExplorer.discoverIntegrations')}
+            title={t("integrationExplorer.viewAllIntegrations")}
+            description={t("integrationExplorer.discoverIntegrations")}
             icon={
               <div className="flex size-[40px] items-center justify-center rounded-lg bg-primary/10">
                 <BookOpen className="size-5 text-primary" />
@@ -152,7 +152,7 @@ const IntegrationGrid: React.FunctionComponent<IntegrationGridProps> = ({
         </a>
 
         <IntegrationCard
-          title={t('integrationExplorer.requestIntegration')}
+          title={t("integrationExplorer.requestIntegration")}
           iconClassName="min-w-0 min-h-10"
           className="justify-center"
           icon={<Plus className="size-4" />}

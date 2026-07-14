@@ -12,7 +12,7 @@ import "./main.scss";
 import { IS_SENTRY_ENABLED, SENTRY_DSN, SENTRY_MODE } from "@/config";
 
 // i18n
-import '@/i18n';
+import "@/i18n";
 
 // other styles
 import "react18-json-view/src/style.css";

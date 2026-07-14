@@ -75,7 +75,9 @@ const TraceChatMessage: React.FC<TraceChatMessageProps> = ({
         {message.isError && (
           <div className="mb-1 flex items-center gap-1 text-destructive">
             <AlertCircle className="size-3" />
-            <span className="comet-body-s-accented">{t("detailsTab.error")}</span>
+            <span className="comet-body-s-accented">
+              {t("detailsTab.error")}
+            </span>
           </div>
         )}
         {noContent ? (

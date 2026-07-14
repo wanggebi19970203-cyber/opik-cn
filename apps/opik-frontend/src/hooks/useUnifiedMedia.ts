@@ -267,7 +267,11 @@ export const useUnifiedMedia = (
           const errorObj =
             error instanceof Error
               ? error
-              : new Error(i18next.t("common.hooks.useUnifiedMedia.asyncMediaDetectionFailed"));
+              : new Error(
+                  i18next.t(
+                    "common.hooks.useUnifiedMedia.asyncMediaDetectionFailed",
+                  ),
+                );
           console.warn("Async media detection failed:", errorObj);
           setAsyncMediaState({
             media: [],

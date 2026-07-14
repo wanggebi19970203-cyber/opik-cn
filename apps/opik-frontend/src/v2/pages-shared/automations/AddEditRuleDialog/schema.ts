@@ -217,7 +217,11 @@ const LLMJudgeBaseSchema = z.object({
     ),
   maxCostUsd: z
     .number()
-    .positive({ message: "Budget must be a positive amount" })
+    .positive({
+      message: i18next.t(
+        "online-evaluation:onlineEvaluation.addEditRule.budgetMustBePositive",
+      ),
+    })
     .optional()
     .nullable(),
 });
@@ -233,7 +237,9 @@ export const LLMJudgeDetailsTraceFormSchema = LLMJudgeBaseSchema.extend({
       // The backend's OnlineScoringEngine substitutes `spans` with the JSON-serialized
       // spans list and `trace` with the trace skeleton (ids + attachments) at render time.
       .regex(/^(input|output|metadata)(\.|$)|^spans$|^trace$/, {
-        message: `Key is invalid, it should be "input", "output", "metadata" (e.g. "input.message" or just "input" for the whole object), the reserved word "spans" to inject the trace's spans list, or "trace" to inject the trace skeleton with attachments`,
+        message: i18next.t(
+          "online-evaluation:onlineEvaluation.addEditRule.traceVariableKeyInvalid",
+        ),
       }),
   ),
 }).superRefine((data, ctx) => {
@@ -279,13 +285,15 @@ export const LLMJudgeDetailsSpanFormSchema = LLMJudgeBaseSchema.extend({
     z.string(),
     z
       .string()
-      .min(1, { message: "Key is required" })
+      .min(1, { message: i18next.t("common:validation.keyRequired") })
       // Allow the standard JSONPath form (input/output/metadata.[...]) OR the reserved
       // bare sentinel `span` — see RESERVED_SPAN_LLM_JUDGE_VARIABLES. The backend's
       // OnlineScoringEngine substitutes `span` with the span structure (span id +
       // attachment file_names) at render time.
       .regex(/^(input|output|metadata)(\.|$)|^span$/, {
-        message: `Key is invalid, it should be "input", "output", "metadata" (e.g. "input.message" or just "input" for the whole object), or the reserved word "span" to inject the span with its attachments`,
+        message: i18next.t(
+          "online-evaluation:onlineEvaluation.addEditRule.spanVariableKeyInvalid",
+        ),
       }),
   ),
 }).superRefine((data, ctx) => {

@@ -1,12 +1,14 @@
+import type { TFunction } from "i18next";
 import { AGENT_INSIGHTS_ISSUE_SEVERITY } from "@/types/signals";
 
-export const SEVERITY_LABEL_MAP: Record<AGENT_INSIGHTS_ISSUE_SEVERITY, string> =
-  {
-    [AGENT_INSIGHTS_ISSUE_SEVERITY.critical]: "Critical",
-    [AGENT_INSIGHTS_ISSUE_SEVERITY.high]: "High",
-    [AGENT_INSIGHTS_ISSUE_SEVERITY.medium]: "Medium",
-    [AGENT_INSIGHTS_ISSUE_SEVERITY.low]: "Low",
-  };
+export const getSeverityLabelMap = (
+  t: TFunction,
+): Record<AGENT_INSIGHTS_ISSUE_SEVERITY, string> => ({
+  [AGENT_INSIGHTS_ISSUE_SEVERITY.critical]: t("signals.severity.critical"),
+  [AGENT_INSIGHTS_ISSUE_SEVERITY.high]: t("signals.severity.high"),
+  [AGENT_INSIGHTS_ISSUE_SEVERITY.medium]: t("signals.severity.medium"),
+  [AGENT_INSIGHTS_ISSUE_SEVERITY.low]: t("signals.severity.low"),
+});
 
 export const SEVERITY_DOT_MAP: Record<AGENT_INSIGHTS_ISSUE_SEVERITY, string> = {
   [AGENT_INSIGHTS_ISSUE_SEVERITY.critical]: "bg-[#DC2626]",

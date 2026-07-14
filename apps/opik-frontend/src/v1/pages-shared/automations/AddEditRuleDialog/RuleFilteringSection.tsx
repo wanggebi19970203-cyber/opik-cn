@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import uniqid from "uniqid";
 import round from "lodash/round";
 import isArray from "lodash/isArray";
@@ -25,7 +26,7 @@ import {
 import { TRACE_DATA_TYPE } from "@/hooks/useTracesOrSpansList";
 import {
   CUSTOM_FILTER_VALIDATION_REGEXP,
-  OPERATORS_MAP,
+  getOperatorsMap,
 } from "@/constants/filters";
 import { createFilter } from "@/lib/filters";
 import FiltersContent from "@/shared/FiltersContent/FiltersContent";
@@ -46,48 +47,48 @@ import { FilterOperator } from "@/types/filters";
 export const TRACE_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
   {
     id: "id",
-    label: "ID",
+    label: i18next.t("common.labels.id"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "name",
-    label: "Name",
+    label: i18next.t("common.labels.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "input",
-    label: "Input",
+    label: i18next.t("common.labels.input"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "output",
-    label: "Output",
+    label: i18next.t("common.labels.output"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: i18next.t("common.labels.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: i18next.t("common.labels.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("common.labels.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "thread_id",
-    label: "Thread ID",
+    label: i18next.t("common.automations.threadId"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: i18next.t("common.labels.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
@@ -101,17 +102,17 @@ export const THREAD_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
   // },
   {
     id: "status",
-    label: "Status",
+    label: i18next.t("common.labels.status"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: i18next.t("common.labels.created"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "last_updated_at",
-    label: "Last updated at",
+    label: i18next.t("common.labels.updated"),
     type: COLUMN_TYPE.time,
   },
   // {
@@ -126,18 +127,18 @@ export const THREAD_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
   // },
   {
     id: "duration",
-    label: "Duration",
+    label: i18next.t("common.labels.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("common.labels.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: i18next.t("common.labels.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
 ];
@@ -146,88 +147,88 @@ export const THREAD_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
 export const SPAN_FILTER_COLUMNS: ColumnData<TRACE_DATA_TYPE>[] = [
   {
     id: "id",
-    label: "ID",
+    label: i18next.t("common.labels.id"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "name",
-    label: "Name",
+    label: i18next.t("common.labels.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "input",
-    label: "Input",
+    label: i18next.t("common.labels.input"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "output",
-    label: "Output",
+    label: i18next.t("common.labels.output"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: i18next.t("common.labels.duration"),
     type: COLUMN_TYPE.duration,
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: i18next.t("common.labels.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: i18next.t("common.labels.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "type",
-    label: "Type",
+    label: i18next.t("common.labels.type"),
     type: COLUMN_TYPE.category,
   },
   {
     id: "model",
-    label: "Model",
+    label: i18next.t("common.labels.model"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "provider",
-    label: "Provider",
+    label: i18next.t("common.automations.provider"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: i18next.t("common.labels.totalTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: i18next.t("common.labels.totalInputTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: i18next.t("common.labels.totalOutputTokens"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: i18next.t("common.labels.estimatedCost"),
     type: COLUMN_TYPE.cost,
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: i18next.t("common.labels.errors"),
     type: COLUMN_TYPE.errors,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: i18next.t("common.labels.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
   {
     id: COLUMN_CUSTOM_ID,
-    label: "Custom filter",
+    label: i18next.t("common.labels.customFilter"),
     type: COLUMN_TYPE.dictionary,
   },
 ];
@@ -271,17 +272,17 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
   // Rule-specific operators for dictionary filters (includes is_empty and is_not_empty)
   const ruleDictionaryOperators: DropdownOption<FilterOperator>[] = useMemo(
     () => [
-      ...(OPERATORS_MAP[COLUMN_TYPE.dictionary] || []),
+      ...(getOperatorsMap()[COLUMN_TYPE.dictionary] || []),
       {
-        label: "is empty",
+        label: t("common.filters.operators.isEmpty"),
         value: "is_empty",
       },
       {
-        label: "is not empty",
+        label: t("common.filters.operators.isNotEmpty"),
         value: "is_not_empty",
       },
     ],
-    [],
+    [t],
   );
 
   const filtersConfig = useMemo(
@@ -297,7 +298,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
             rootKeys: ["metadata"],
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: "key",
+            placeholder: t("common.automations.filterKeyPlaceholder"),
             excludeRoot: true,
           },
           operators: ruleDictionaryOperators,
@@ -315,7 +316,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                   rootKeys: ["input"],
                   projectId,
                   type: TRACE_DATA_TYPE.traces,
-                  placeholder: "key (optional)",
+                  placeholder: t(
+                    "common.automations.filterKeyOptionalPlaceholder",
+                  ),
                   excludeRoot: true,
                 },
                 operators: ruleDictionaryOperators,
@@ -332,7 +335,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                   rootKeys: ["output"],
                   projectId,
                   type: TRACE_DATA_TYPE.traces,
-                  placeholder: "key (optional)",
+                  placeholder: t(
+                    "common.automations.filterKeyOptionalPlaceholder",
+                  ),
                   excludeRoot: true,
                 },
                 operators: ruleDictionaryOperators,
@@ -350,7 +355,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
             rootKeys: ["input", "output"],
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: "key",
+            placeholder: t("common.automations.filterKeyPlaceholder"),
             excludeRoot: false,
           },
           operators: ruleDictionaryOperators,
@@ -360,7 +365,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
               filter.value &&
               !CUSTOM_FILTER_VALIDATION_REGEXP.test(filter.key)
             ) {
-              return `Key is invalid, it should be "input", "output", and follow this format: "input.[PATH]" For example: "input.message" or just "input" for the whole object`;
+              return t("common.automations.invalidFilterKeyError");
             }
           },
         },
@@ -374,7 +379,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
           keyComponentProps: {
             projectId,
             type: isSpanScope ? TRACE_DATA_TYPE.spans : TRACE_DATA_TYPE.traces,
-            placeholder: "Select score",
+            placeholder: t("common.automations.selectScorePlaceholder"),
           },
         },
         ...(isSpanScope ? getSpanTypeFilterConfig(isGuardrailsEnabled) : {}),
@@ -386,6 +391,7 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
       isSpanScope,
       isGuardrailsEnabled,
       ruleDictionaryOperators,
+      t,
     ],
   );
 
@@ -420,15 +426,21 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
       <AccordionItem value="filtering-sampling" className="border-none">
         <AccordionTrigger className="px-3 py-2 hover:no-underline">
           <div className="flex items-center gap-1">
-            <Label className="text-sm font-medium">{t("common.automations.filteringAndSampling")}</Label>
+            <Label className="text-sm font-medium">
+              {t("common.automations.filteringAndSampling")}
+            </Label>
             <ExplainerIcon
               className="mt-0.5"
               description={
                 isTraceScope
                   ? t("common.automations.filteringAndSamplingTraceDescription")
                   : isThreadScope
-                    ? t("common.automations.filteringAndSamplingThreadDescription")
-                    : t("common.automations.filteringAndSamplingSpanDescription")
+                    ? t(
+                        "common.automations.filteringAndSamplingThreadDescription",
+                      )
+                    : t(
+                        "common.automations.filteringAndSamplingSpanDescription",
+                      )
               }
             />
           </div>
@@ -437,11 +449,12 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
           <div className="mb-8 space-y-4">
             <Description>
               {t("common.automations.samplingRateDescription", {
-                scope: scope === EVALUATORS_RULE_SCOPE.trace
-                  ? t("common.automations.traces")
-                  : scope === EVALUATORS_RULE_SCOPE.thread
-                    ? t("common.automations.threads")
-                    : t("common.automations.spans"),
+                scope:
+                  scope === EVALUATORS_RULE_SCOPE.trace
+                    ? t("common.automations.traces")
+                    : scope === EVALUATORS_RULE_SCOPE.thread
+                      ? t("common.automations.threads")
+                      : t("common.automations.spans"),
               })}
             </Description>
 
@@ -455,7 +468,9 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
                 return (
                   <FormItem>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">{t("common.filters.label")}</Label>
+                      <Label className="text-sm font-medium">
+                        {t("common.filters.label")}
+                      </Label>
 
                       {field.value.length > 0 && (
                         <FiltersContent
@@ -493,7 +508,10 @@ const RuleFilteringSection: React.FC<RuleFilteringSectionProps> = ({
 
                             return (
                               <FormErrorSkeleton key={index}>
-                                Filter {index + 1}: {errors.join(", ")}
+                                {t("common.automations.filterErrorLabel", {
+                                  index: index + 1,
+                                  errors: errors.join(", "),
+                                })}
                               </FormErrorSkeleton>
                             );
                           })}

@@ -171,7 +171,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
               onValueChange: (value: string) => void;
             },
           keyComponentProps: {
-            placeholder: "key",
+            placeholder: t("filters.keyPlaceholder"),
             excludeRoot: true,
           },
         },
@@ -181,7 +181,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
         }),
       },
     }),
-    [projectId],
+    [projectId, t],
   );
 
   const setFilters = useCallback(

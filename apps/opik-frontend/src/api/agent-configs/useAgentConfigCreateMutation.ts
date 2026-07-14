@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import get from "lodash/get";
 import api, { AGENT_CONFIGS_KEY, AGENT_CONFIGS_REST_ENDPOINT } from "@/api/api";
@@ -33,7 +34,7 @@ const useAgentConfigCreateMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

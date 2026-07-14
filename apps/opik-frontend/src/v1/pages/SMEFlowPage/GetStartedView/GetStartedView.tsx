@@ -31,7 +31,9 @@ const GetStartedView: React.FC = () => {
       header={
         <>
           <h1 className="comet-title-xl mb-1">
-            {t("getStartedView.welcomeTo", { name: annotationQueue?.name ?? "opik annotation" })}
+            {t("getStartedView.welcomeTo", {
+              name: annotationQueue?.name ?? "opik annotation",
+            })}
           </h1>
           <div className="comet-body-s mt-2 text-muted-slate">
             {t("getStartedView.invitedToReview")}
@@ -44,7 +46,9 @@ const GetStartedView: React.FC = () => {
           <div className="flex gap-2">
             {canStartAnnotation ? (
               <Button onClick={handleStartAnnotating}>
-                {processedCount > 0 ? t("getStartedView.resumeAnnotating") : t("getStartedView.startAnnotating")}
+                {processedCount > 0
+                  ? t("getStartedView.resumeAnnotating")
+                  : t("getStartedView.startAnnotating")}
               </Button>
             ) : allItemsCompleted ? (
               <Button onClick={handleReviewAnnotations}>
@@ -65,11 +69,15 @@ const GetStartedView: React.FC = () => {
           </Alert>
         )}
         <div>
-          <h2 className="comet-title-l mb-4">{t("getStartedView.instructions")}</h2>
+          <h2 className="comet-title-l mb-4">
+            {t("getStartedView.instructions")}
+          </h2>
           <InstructionsContent annotationQueue={annotationQueue} />
         </div>
         <div>
-          <h2 className="comet-title-l mb-1">{t("getStartedView.feedbackOptions")}</h2>
+          <h2 className="comet-title-l mb-1">
+            {t("getStartedView.feedbackOptions")}
+          </h2>
           <div className="comet-body-s mb-4 text-muted-slate">
             {t("getStartedView.feedbackOptionsDescription")}
           </div>

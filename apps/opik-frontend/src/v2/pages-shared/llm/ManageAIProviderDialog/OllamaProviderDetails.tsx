@@ -69,7 +69,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
       if (response.connected) {
         toast({
           title: t("llm:ollamaProvider.connectionSuccessful"),
-          description: t("llm:ollamaProvider.connectionSuccessfulDesc", { version: response.version || "" }),
+          description: t("llm:ollamaProvider.connectionSuccessfulDesc", {
+            version: response.version || "",
+          }),
         });
 
         // Auto-fetch models if connection successful
@@ -77,7 +79,8 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
       } else {
         toast({
           title: t("llm:ollamaProvider.connectionFailed"),
-          description: response.error_message || t("llm:ollamaProvider.connectionFailed"),
+          description:
+            response.error_message || t("llm:ollamaProvider.connectionFailed"),
           variant: "destructive",
         });
       }
@@ -110,7 +113,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
         toast({
           title: t("llm:ollamaProvider.modelsDiscovered"),
-          description: t("llm:ollamaProvider.modelsDiscoveredDesc", { count: models.length }),
+          description: t("llm:ollamaProvider.modelsDiscoveredDesc", {
+            count: models.length,
+          }),
         });
       } else {
         setModelsFetchFailed(false);
@@ -148,7 +153,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">{t("llm:ollamaProvider.providerName")}</Label>
+                <Label htmlFor="providerName">
+                  {t("llm:ollamaProvider.providerName")}
+                </Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -202,16 +209,7 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
                 />
               </FormControl>
               <FormMessage />
-              <Description>
-                <strong>Important:</strong> URL must end with{" "}
-                <code className="text-xs">/v1</code> for OpenAI API
-                compatibility. For local Ollama:{" "}
-                <code className="text-xs">http://localhost:11434/v1</code>. For
-                remote:{" "}
-                <code className="text-xs">http://ollama-test:11434/v1</code> or
-                your server URL with <code className="text-xs">/v1</code>{" "}
-                suffix.
-              </Description>
+              <Description>{t("ollamaProvider.urlDescription")}</Description>
             </FormItem>
           );
         }}
@@ -270,7 +268,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">{t("llm:ollamaProvider.apiKeyOptional")}</Label>
+              <Label htmlFor="apiKey">
+                {t("llm:ollamaProvider.apiKeyOptional")}
+              </Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
@@ -299,7 +299,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">{t("llm:ollamaProvider.modelsList")}</Label>
+              <Label htmlFor="models">
+                {t("llm:ollamaProvider.modelsList")}
+              </Label>
               <FormControl>
                 <Input
                   id="models"

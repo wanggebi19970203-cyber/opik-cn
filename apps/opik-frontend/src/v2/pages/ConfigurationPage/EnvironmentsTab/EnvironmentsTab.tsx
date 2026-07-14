@@ -4,6 +4,7 @@ import useLocalStorageState from "use-local-storage-state";
 import { Plus } from "lucide-react";
 import { ColumnPinningState, RowSelectionState } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 import useEnvironmentsList from "@/api/environments/useEnvironmentsList";
 import AddEditEnvironmentDialog from "@/v2/pages-shared/environments/AddEditEnvironmentDialog/AddEditEnvironmentDialog";
@@ -45,31 +46,33 @@ const COLUMNS_ORDER_KEY = "environments-columns-order";
 export const DEFAULT_COLUMNS: ColumnData<Environment>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: i18next.t("pages/settings:settings.environments.columns.name"),
     type: COLUMN_TYPE.string,
     cell: EnvironmentNameCell as never,
     sortable: true,
   },
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: i18next.t("pages/settings:settings.environments.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "description",
-    label: "Description",
+    label: i18next.t(
+      "pages/settings:settings.environments.columns.description",
+    ),
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("pages/settings:settings.environments.columns.created_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: i18next.t("pages/settings:settings.environments.columns.created_by"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -151,11 +154,13 @@ const EnvironmentsTab: React.FunctionComponent = () => {
     [rowSelection, environments],
   );
 
-  const translatedColumns: ColumnData<Environment>[] = DEFAULT_COLUMNS.map(
-    (col) => ({
-      ...col,
-      label: t(`settings.environments.columns.${col.id}`),
-    }),
+  const translatedColumns: ColumnData<Environment>[] = useMemo(
+    () =>
+      DEFAULT_COLUMNS.map((col) => ({
+        ...col,
+        label: t(`settings.environments.columns.${col.id}`),
+      })),
+    [t],
   );
 
   const columns = useMemo(() => {
@@ -172,7 +177,12 @@ const EnvironmentsTab: React.FunctionComponent = () => {
         ? [generateActionsColumDef({ cell: EnvironmentsRowActionsCell })]
         : []),
     ];
-  }, [columnsOrder, selectedColumns, canConfigureWorkspaceSettings]);
+  }, [
+    columnsOrder,
+    selectedColumns,
+    canConfigureWorkspaceSettings,
+    translatedColumns,
+  ]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -206,7 +216,9 @@ const EnvironmentsTab: React.FunctionComponent = () => {
   const headerAction =
     createButton && atLimit ? (
       <TooltipWrapper
-        content={t("settings.environments.atLimitTooltip", { limit: ENVIRONMENT_WORKSPACE_LIMIT })}
+        content={t("settings.environments.atLimitTooltip", {
+          limit: ENVIRONMENT_WORKSPACE_LIMIT,
+        })}
       >
         <span>{createButton}</span>
       </TooltipWrapper>

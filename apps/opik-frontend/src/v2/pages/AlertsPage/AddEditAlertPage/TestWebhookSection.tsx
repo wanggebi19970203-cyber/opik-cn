@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { UseFormReturn, useWatch } from "react-hook-form";
 import { ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 import { Button } from "@/ui/button";
 import { Description } from "@/ui/description";
 import {
@@ -26,14 +27,18 @@ type TestWebhookSectionProps = {
   isPending: boolean;
 };
 
-const urlSchema = z
-  .string({ required_error: "Endpoint URL is required" })
-  .min(1, { message: "Endpoint URL is required" })
-  .url({ message: "Please enter a valid URL" });
+const createTestSchemas = (t: TFunction<"pages/alerts", undefined>) => {
+  const urlSchema = z
+    .string({ required_error: t("alerts.testWebhook.endpointRequired") })
+    .min(1, { message: t("alerts.testWebhook.endpointRequired") })
+    .url({ message: t("alerts.testWebhook.validUrlRequired") });
 
-const routingKeySchema = z
-  .string()
-  .min(1, { message: "Routing key is required for PagerDuty integration" });
+  const routingKeySchema = z
+    .string()
+    .min(1, { message: t("alerts.testWebhook.routingKeyRequired") });
+
+  return { urlSchema, routingKeySchema };
+};
 
 const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
   form,
@@ -41,6 +46,10 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
   isPending,
 }) => {
   const { t } = useTranslation("pages/alerts");
+  const { urlSchema, routingKeySchema } = useMemo(
+    () => createTestSchemas(t),
+    [t],
+  );
   const { toast } = useToast();
   const { mutate, isPending: isTestPending } = useWebhookTestMutation();
   const [expandedItem, setExpandedItem] = useState<string>("");
@@ -126,7 +135,8 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
         if (data.status === "failure") {
           toast({
             title: t("alerts.testWebhook.failureTitle"),
-            description: data.error_message || t("alerts.validation.webhookTestFailed"),
+            description:
+              data.error_message || t("alerts.validation.webhookTestFailed"),
             variant: "destructive",
           });
           return;
@@ -146,7 +156,10 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
       triggers: [],
     };
 
-    validateAndTest(connectionPayload, t("alerts.testWebhook.successConnection"));
+    validateAndTest(
+      connectionPayload,
+      t("alerts.testWebhook.successConnection"),
+    );
   };
 
   const handleTestTrigger = (eventType: string, label: string) => {
@@ -168,16 +181,17 @@ const TestWebhookSection: React.FunctionComponent<TestWebhookSectionProps> = ({
       triggers: [triggerToTest],
     };
 
-    validateAndTest(triggerPayload, t("alerts.testWebhook.successTrigger", { label }));
+    validateAndTest(
+      triggerPayload,
+      t("alerts.testWebhook.successTrigger", { label }),
+    );
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="mt-2 flex flex-col gap-1">
         <h3 className="comet-body-accented">{t("alerts.testWebhook.title")}</h3>
-        <Description>
-          {t("alerts.testWebhook.description")}
-        </Description>
+        <Description>{t("alerts.testWebhook.description")}</Description>
       </div>
 
       <div className="flex flex-col gap-3">

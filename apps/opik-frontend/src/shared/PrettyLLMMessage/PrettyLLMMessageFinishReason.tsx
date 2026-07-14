@@ -18,7 +18,9 @@ const PrettyLLMMessageFinishReason: React.FC<
         className,
       )}
     >
-      <span className="font-medium">{t("common:llmMessages.finishReason")}</span>
+      <span className="font-medium">
+        {t("common:llmMessages.finishReason")}
+      </span>
       <span className="capitalize">{finishReason}</span>
     </div>
   );

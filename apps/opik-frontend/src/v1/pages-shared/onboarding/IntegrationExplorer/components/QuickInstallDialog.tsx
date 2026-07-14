@@ -85,7 +85,7 @@ After verifying language compatibility, perform a full codebase scan with the fo
 
 - LLM Touchpoints: Locate all files and functions that invoke or interface with LLMs or can be a candidates for tracing.
 - Entrypoint Detection: Identify the primary application entry point(s) (e.g., main script, API route, CLI handler). If ambiguous, pause and request clarification on which component(s) are most important to trace before proceeding.
-  ⚠️ Do not proceed to Step 3 without explicit confirmation if the entrypoint is unclear.
+  Important: Do not proceed to Step 3 without explicit confirmation if the entrypoint is unclear.
 - Return the LLM Touchpoints to me
 
 ### Step 3: Discover Available Integrations
@@ -179,35 +179,35 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
                 className="size-[32px] shrink-0"
               />
             </div>
-            {t('integrationExplorer.quickInstallTitle')}
+            {t("integrationExplorer.quickInstallTitle")}
           </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody className="border-0">
           <div className="space-y-6">
             <div className="comet-body-s text-muted-slate">
-              {t('integrationExplorer.getOpikIntegrated')}{" "}
+              {t("integrationExplorer.getOpikIntegrated")}{" "}
               <a
                 href={QUICKSTART_DOCS_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
               >
-                {t('integrationExplorer.readTheFullGuide')}
+                {t("integrationExplorer.readTheFullGuide")}
                 <ExternalLink className="size-3" />
               </a>{" "}
-              {t('integrationExplorer.inOurDocs')}
+              {t("integrationExplorer.inOurDocs")}
             </div>
 
             <IntegrationStep
-              title={t('integrationExplorer.setUpOpik')}
-              description={t('integrationExplorer.setUpOpikDescription')}
+              title={t("integrationExplorer.setUpOpik")}
+              description={t("integrationExplorer.setUpOpikDescription")}
               className="mb-6"
             >
               <div className="relative overflow-hidden rounded-md bg-primary-foreground">
                 <div className="flex items-center justify-between gap-2 border-b border-b-border p-2">
                   <div className="comet-body-s-accented px-2 text-foreground">
-                    {t('integrationExplorer.aiAssistantPrompt')}
+                    {t("integrationExplorer.aiAssistantPrompt")}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -221,14 +221,14 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        {t('integrationExplorer.tryInCursor')}
+                        {t("integrationExplorer.tryInCursor")}
                         <ExternalLink className="ml-1.5 size-3" />
                       </a>
                     </Button>
                     <CopyButton
-                      message={t('integrationExplorer.codeCopiedSuccessfully')}
+                      message={t("integrationExplorer.codeCopiedSuccessfully")}
                       text={AI_ASSISTANT_PROMPT}
-                      tooltipText={t('integrationExplorer.copyCode')}
+                      tooltipText={t("integrationExplorer.copyCode")}
                       className="text-muted-slate"
                       id="quick-install-copy-prompt"
                       data-fs-element="QuickInstallCopyPrompt"
@@ -269,8 +269,8 @@ const QuickInstallDialog: React.FunctionComponent<QuickInstallDialogProps> = ({
           <Separator className="my-6" />
           <HelpLinks
             onCloseParentDialog={onClose}
-            title={t('integrationExplorer.needSomeHelp')}
-            description={t('integrationExplorer.needSomeHelpDescription')}
+            title={t("integrationExplorer.needSomeHelp")}
+            description={t("integrationExplorer.needSomeHelpDescription")}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

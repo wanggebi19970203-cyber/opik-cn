@@ -10,7 +10,7 @@ import { Input } from "@/ui/input";
 import { Description } from "@/ui/description";
 import { Button } from "@/ui/button";
 import CustomHeadersField from "./CustomHeadersField";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 type BedrockProviderDetailsProps = {
   form: UseFormReturn<AIProviderFormType>;
@@ -33,11 +33,15 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">{t("llm:bedrockProvider.providerName")}</Label>
+                <Label htmlFor="providerName">
+                  {t("llm:bedrockProvider.providerName")}
+                </Label>
                 <FormControl>
                   <Input
                     id="providerName"
-                    placeholder={t("llm:bedrockProvider.providerNamePlaceholder")}
+                    placeholder={t(
+                      "llm:bedrockProvider.providerNamePlaceholder",
+                    )}
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     disabled={isEdit}
@@ -103,23 +107,26 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Click{" "}
-                <Button
-                  variant="link"
-                  size="sm"
-                  asChild
-                  className="inline px-0"
-                >
-                  <a
-                    href="https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    here
-                  </a>
-                </Button>{" "}
-                for instructions on how to create a service account and assign
-                the correct permissions.
+                <Trans
+                  ns="llm"
+                  i18nKey="bedrockProvider.apiKeyDescription"
+                  components={{
+                    link: (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        asChild
+                        className="inline px-0"
+                      >
+                        <a
+                          href="https://docs.aws.amazon.com/bedrock/latest/userguide/getting-started-api-keys.html"
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      </Button>
+                    ),
+                  }}
+                />
               </Description>
             </FormItem>
           );
@@ -133,7 +140,9 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">{t("llm:bedrockProvider.modelsList")}</Label>
+              <Label htmlFor="models">
+                {t("llm:bedrockProvider.modelsList")}
+              </Label>
               <FormControl>
                 <Input
                   id="models"

@@ -44,7 +44,8 @@
       "spanIdCopiedToClipboard": "跨度 ID 已复制到剪贴板",
       "threadIdCopiedToClipboard": "线程 ID 已成功复制到剪贴板",
       "urlSuccessfullyCopiedToClipboard": "URL 已成功复制到剪贴板",
-      "viewAllTracesForThread": "查看此线程的所有追踪"
+      "viewAllTracesForThread": "查看此线程的所有追踪",
+      "noSearchResults": "无搜索结果"
     },
     "detailsPanel": {
       "messages": "消息",
@@ -68,7 +69,8 @@
       "spanDetails": "跨度详情",
       "close": "关闭",
       "spanScoresLabel": "{{count}} 个跨度分数",
-      "thread": "线程"
+      "thread": "线程",
+      "comments": "评论"
     },
     "detailsTab": {
       "error": "错误",
@@ -77,8 +79,7 @@
       "metadata": "元数据",
       "tokenUsage": "令牌使用",
       "attachments": "附件",
-      "events": "事件",
-      "attachments": "附件"
+      "events": "事件"
     },
     "messages": {
       "copiedSuccessfully": "消息已成功复制",
@@ -116,7 +117,6 @@
       "itemsAddedToEntity": "{{itemType}}已添加到{{entity}}",
       "noValidRowsForEntity": "没有可添加为{{entity}}项目的行。缺少输入字段。",
       "partialValidRowsForEntity": "只有包含输入字段的行才会被添加为{{entity}}项目。",
-      "cancel": "取消",
       "addToEntity": "添加到{{entity}}",
       "items": "项目",
       "traces": "追踪",
@@ -151,6 +151,7 @@
       "clear": "清除",
       "guardrails": "护栏",
       "selectScore": "选择分数",
+      "keyPlaceholder": "键",
       "status": "状态",
       "failed": "失败",
       "passed": "通过",
@@ -238,7 +239,11 @@
       "removeFeedbackScoreDescription": "从{{entity}}移除反馈分数无法撤销。确定要继续吗？",
       "dontAskAgain": "不再询问",
       "removeScore": "移除分数",
-      "avg": "平均"
+      "avg": "平均",
+      "entityTrace": "追踪",
+      "entityThread": "线程",
+      "entitySpan": "跨度",
+      "entityExperiment": "实验"
     },
     "aiAssistant": {
       "opikAssist": "OpikAssist",
@@ -317,7 +322,15 @@
       "searchTraces": "搜索追踪...",
       "refreshTracesList": "刷新追踪列表",
       "noTracesYet": "暂无追踪",
-      "noTracesDescription": "当您的代理开始接收请求后，追踪将显示在这里。"
+      "noTracesDescription": "当您的代理开始接收请求后，追踪将显示在这里。",
+      "goToLogs": "前往日志",
+      "lockedScopeTooltip": "这些追踪已锁定到此评估器，无法通过筛选条件更改",
+      "failedToFetchData": "获取数据失败",
+      "countLabelTraces": "追踪",
+      "isOneOf": "是其中之一",
+      "keyInvalid": "键无效，应以 \"input\" 或 \"output\" 开头，并遵循此格式：\"input.[PATH]\"，例如：\"input.message\"",
+      "keyPlaceholder": "键",
+      "selectScore": "选择分数"
     },
     "traceMessage": {
       "trace": "追踪",
@@ -343,6 +356,14 @@
       "showDiff": "显示差异",
       "compareAgainst": "比较对象",
       "noVersionHistory": "无版本历史"
+    },
+    "insights": {
+      "builtIn": "内置",
+      "duplicate": "复制",
+      "edit": "编辑",
+      "delete": "删除",
+      "noViewSelected": "未选择视图。请选择或创建一个视图。",
+      "viewLoadError": "无法加载视图。请从下拉菜单中选择另一个视图。"
     },
     "guardrailConfig": {
       "configureGuardrail": "使用以下代码配置您的护栏"
@@ -401,7 +422,12 @@
       "feedbackScoresSection": "反馈分数",
       "filterSelectScore": "选择分数",
       "filterSelectSpanScore": "选择跨度分数",
-      "filterStatus": "状态"
+      "filterStatus": "状态",
+      "noSpansYet": "暂无跨度",
+      "searchTraces": "搜索追踪",
+      "searchSpans": "搜索跨度",
+      "refreshTracesList": "刷新追踪列表",
+      "refreshSpansList": "刷新跨度列表"
     },
     "threadsTab": {
       "columns": {
@@ -410,7 +436,9 @@
         "messageCount": "消息数量"
       },
       "feedbackScoresSection": "反馈分数",
-      "filterSelectScore": "选择分数"
+      "filterSelectScore": "选择分数",
+      "searchThreads": "搜索线程",
+      "refreshThreadsList": "刷新线程列表"
     },
     "rulesTab": {
       "columns": {
@@ -419,7 +447,10 @@
         "samplingRate": "采样率",
         "scope": "范围",
         "status": "状态"
-      }
+      },
+      "noRulesYet": "暂无规则",
+      "searchById": "按 ID 搜索",
+      "createNewRule": "创建新规则"
     },
     "annotationQueuesTab": {
       "columns": {
@@ -433,7 +464,51 @@
       },
       "filterSelectScope": "选择范围",
       "filterTrace": "追踪",
-      "filterThread": "线程"
+      "filterThread": "线程",
+      "noQueuesFound": "未找到 \"{{search}}\" 相关队列",
+      "noQueues": "暂无队列",
+      "searchByName": "按名称搜索",
+      "createNewQueue": "创建新队列"
+    },
+    "noTracesPage": {
+      "title": "暂无追踪",
+      "description": "当您的应用开始向 Opik 发送数据后，追踪将显示在此处。",
+      "readDocumentation": "阅读文档",
+      "exploreQuickstart": "探索快速入门"
+    },
+    "noThreadsPage": {
+      "title": "暂无线程",
+      "description": "当您的应用开始向 Opik 发送对话数据后，线程将显示在此处。",
+      "readDocumentation": "阅读文档",
+      "exploreQuickstart": "探索快速入门"
+    },
+    "sidebarColumns": {
+      "name": "名称",
+      "startTime": "开始时间",
+      "endTime": "结束时间",
+      "input": "输入",
+      "output": "输出",
+      "errors": "错误",
+      "duration": "持续时间",
+      "tags": "标签",
+      "totalTokens": "总令牌数",
+      "totalInputTokens": "总输入令牌数",
+      "totalOutputTokens": "总输出令牌数",
+      "estimatedCost": "预估费用",
+      "metadata": "元数据",
+      "id": "ID",
+      "spanCount": "跨度数量",
+      "llmCallsCount": "LLM 调用次数",
+      "threadId": "线程 ID",
+      "experiment": "实验",
+      "createdBy": "创建者",
+      "comments": "评论",
+      "errorType": "错误类型",
+      "annotationQueueId": "标注队列 ID",
+      "feedbackScores": "反馈分数",
+      "customFilter": "自定义过滤器",
+      "feedbackScoresSection": "反馈分数",
+      "metadataSection": "元数据"
     }
   }
 }

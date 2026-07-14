@@ -122,7 +122,13 @@ const PromptLibraryMenu: React.FC<PromptLibraryMenuProps> = ({
               <Spinner />
             </div>
           ) : filteredPrompts.length === 0 ? (
-            <NoOptions text={search ? t("llm:promptLibraryMenu.noSearchResults") : t("llm:promptLibraryMenu.noPrompts")} />
+            <NoOptions
+              text={
+                search
+                  ? t("llm:promptLibraryMenu.noSearchResults")
+                  : t("llm:promptLibraryMenu.noPrompts")
+              }
+            />
           ) : (
             filteredPrompts.map((prompt) => (
               <PromptRow
@@ -256,7 +262,9 @@ const PromptVersionsList: React.FC<PromptVersionsListProps> = ({
 
   if (versions.length === 0) {
     return (
-      <div className="comet-body-xs p-2 text-light-slate">{t("llm:promptLibraryMenu.noVersions")}</div>
+      <div className="comet-body-xs p-2 text-light-slate">
+        {t("llm:promptLibraryMenu.noVersions")}
+      </div>
     );
   }
 

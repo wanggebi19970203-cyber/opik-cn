@@ -1053,7 +1053,12 @@ div.cm-theme div.cm-search.cm-panel {
 
     /* Custom arrow */
     &::before {
-      content: "▶";
+      content: "";
+      width: 0;
+      height: 0;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 6px solid currentcolor;
       @apply inline-block mr-2 text-muted-foreground transition-transform duration-200;
     }
 

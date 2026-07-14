@@ -34,13 +34,16 @@ const isHttpUrl = (value: string): boolean => {
   }
 };
 
-const validateMediaUrl = (url: string): { valid: boolean; error?: string } => {
+const validateMediaUrl = (
+  url: string,
+  t: (key: string) => string,
+): { valid: boolean; error?: string } => {
   if (!isHttpUrl(url)) {
     // Allow template variables like {{image}} or {{video}}, {{audio}}
     if (url.match(/^\{\{.+\}\}$/)) {
       return { valid: true };
     }
-    return { valid: false, error: "Please enter a valid HTTP or HTTPS URL" };
+    return { valid: false, error: t("addMediaPopover.pleaseEnterValidUrl") };
   }
   return { valid: true };
 };
@@ -96,28 +99,41 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
 
     if (items.length >= resolvedMaxItems) {
       const typeLabel =
-        type === "image" ? "images" : type === "video" ? "videos" : "audios";
+        type === "image"
+          ? t("addMediaPopover.images")
+          : type === "video"
+            ? t("addMediaPopover.videos")
+            : t("addMediaPopover.audios");
       toast({
-        title: t("llm:addMediaPopover.maximumLimitReached"),
-        description: `You can only add up to ${resolvedMaxItems} ${typeLabel}`,
+        title: t("addMediaPopover.maximumLimitReached"),
+        description: t("addMediaPopover.maxItemsExceeded", {
+          count: resolvedMaxItems,
+          type: typeLabel,
+        }),
         variant: "destructive",
       });
       return;
     }
 
     if (items.includes(trimmed)) {
+      const typeLabel =
+        type === "image"
+          ? t("addMediaPopover.image")
+          : type === "video"
+            ? t("addMediaPopover.video")
+            : t("addMediaPopover.audio");
       toast({
-        title: t("llm:addMediaPopover.error"),
-        description: `This ${type} already exists`,
+        title: t("addMediaPopover.error"),
+        description: t("addMediaPopover.alreadyExists", { type: typeLabel }),
         variant: "destructive",
       });
       return;
     }
 
-    const validation = validateMediaUrl(trimmed);
+    const validation = validateMediaUrl(trimmed, t);
     if (!validation.valid) {
       toast({
-        title: t("llm:addMediaPopover.invalidUrl"),
+        title: t("addMediaPopover.invalidUrl"),
         description: validation.error,
         variant: "destructive",
       });

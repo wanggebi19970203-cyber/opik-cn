@@ -41,7 +41,9 @@ const VertexAIModelConfigs = ({
           defaultValue={DEFAULT_VERTEX_AI_CONFIGS.TEMPERATURE}
           label={t("sharedModelConfigs.temperature")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.temperatureTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.temperatureTooltip")}
+            />
           }
         />
       )}
@@ -57,7 +59,9 @@ const VertexAIModelConfigs = ({
           defaultValue={DEFAULT_VERTEX_AI_CONFIGS.MAX_COMPLETION_TOKENS}
           label={t("sharedModelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxOutputTokensTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.maxOutputTokensTooltip")}
+            />
           }
         />
       )}
@@ -73,7 +77,9 @@ const VertexAIModelConfigs = ({
           defaultValue={DEFAULT_VERTEX_AI_CONFIGS.TOP_P}
           label={t("sharedModelConfigs.topP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.topPTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -84,7 +90,9 @@ const VertexAIModelConfigs = ({
             <Label htmlFor="thinkingLevel" className="text-sm font-medium">
               {t("vertexAIModelConfigs.thinkingLevel")}
             </Label>
-            <ExplainerIcon description={t("vertexAIModelConfigs.thinkingLevelDescription")} />
+            <ExplainerIcon
+              description={t("vertexAIModelConfigs.thinkingLevelDescription")}
+            />
           </div>
           <SelectBox
             id="thinkingLevel"
@@ -108,7 +116,9 @@ const VertexAIModelConfigs = ({
         defaultValue={DEFAULT_VERTEX_AI_CONFIGS.THROTTLING}
         label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.throttlingTooltip")}
+          />
         }
       />
 
@@ -125,7 +135,9 @@ const VertexAIModelConfigs = ({
         defaultValue={DEFAULT_VERTEX_AI_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")}
+          />
         }
       />
     </div>

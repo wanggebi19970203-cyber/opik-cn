@@ -192,11 +192,12 @@ const SignalsPage: React.FC<{ showResolved?: boolean }> = ({
       });
       endRun();
       const { title, description } = getRunFailureCopy(
+        t,
         job?.last_failure_reason,
       );
       toast({ title, description, variant: "destructive" });
     }
-  }, [job, isRunning, failBaseline, projectId, endRun, toast]);
+  }, [job, isRunning, failBaseline, projectId, endRun, t, toast]);
 
   const hasData = (issuesData?.content?.length ?? 0) > 0;
   const isActive = isJobEnabled || isRunning;
@@ -300,7 +301,7 @@ const SignalsPage: React.FC<{ showResolved?: boolean }> = ({
                   variant="outline"
                   size="xs"
                   onClick={goToResolved}
-                  aria-label="Resolved issues"
+                  aria-label={t("signals.page.resolvedIssues")}
                 >
                   <BookOpenCheck className="size-3.5 lg:mr-1.5" />
                   <span className="hidden lg:inline">
@@ -336,10 +337,10 @@ const SignalsPage: React.FC<{ showResolved?: boolean }> = ({
           <div className="flex min-w-0 items-center gap-2">
             <BackButton
               to="/$workspaceName/projects/$projectId/diagnostics"
-              tooltip="Back to diagnostics"
+              tooltip={t("signals.page.backToDiagnostics")}
             />
             <h1 className="truncate break-words text-base font-medium tracking-normal text-foreground-secondary">
-              Resolved issues
+              {t("signals.page.resolvedIssues")}
             </h1>
           </div>
         ) : (

@@ -29,7 +29,11 @@
       "next": "Next",
       "of": "of",
       "loadingAnnotationQueue": "Loading annotation queue...",
-      "readInstructions": "Read instructions"
+      "readInstructions": "Read instructions",
+      "annotate": "Annotate",
+      "finishAnnotating": "Finish annotating",
+      "progress": "Progress",
+      "progressCompleted": "{{processedCount}}/{{totalCount}} completed"
     },
     "commentAndScoreViewer": {
       "comment": "Comment",
@@ -47,6 +51,11 @@
       "metadata": "Metadata",
       "viewTrace": "View trace",
       "viewToolCalls": "View tool calls"
+    },
+    "threadDataViewer": {
+      "thread": "Thread",
+      "threadLabel": "Thread:",
+      "viewThread": "View thread"
     },
     "completionView": {
       "allItemsCompleted": "All items completed!",
@@ -84,6 +93,10 @@
       "tryAgainOrContactAdmin": "Please try again. If the problem persists, contact your administrator.",
       "noAnnotationQueueSelected": "No annotation queue selected",
       "toBeginSmeEvaluation": "To begin SME evaluation, please access this page through an annotation queue link."
+    },
+    "traceIdentifier": {
+      "copyId": "Copy ID",
+      "idCopied": "ID copied to clipboard"
     }
   }
 }

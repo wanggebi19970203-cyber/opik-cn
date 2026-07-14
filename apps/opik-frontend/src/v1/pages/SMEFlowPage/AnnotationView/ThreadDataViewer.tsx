@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { Loader2 } from "lucide-react";
@@ -17,6 +18,7 @@ const MAX_THREAD_TRACES = 1000;
 const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 const ThreadDataViewer: React.FunctionComponent = () => {
+  const { t } = useTranslation();
   const { currentItem, nextItem } = useSMEFlow();
 
   const thread = currentItem as Thread;
@@ -113,7 +115,7 @@ const ThreadDataViewer: React.FunctionComponent = () => {
     <>
       <div className="relative pr-4">
         <TraceIdentifier
-          label="Thread"
+          label={t("sme.threadDataViewer.thread")}
           id={thread?.thread_model_id || thread?.id || ""}
         />
         {isFetching && (

@@ -1,5 +1,6 @@
 // v1 only — use @/shared/TimeInput/TimeInput for new code
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/ui/label";
 import { TimePickerInput } from "@/ui/time-picker-input";
 import { TimePeriodSelect } from "@/ui/time-picker-period-select";
@@ -18,6 +19,7 @@ const TimePicker: React.FC<TimePickerDemoProps> = ({
   is12HourFormat = true,
   includeSeconds = false,
 }) => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>(getPeriodByDate(date));
 
   const minuteRef = useRef<HTMLInputElement>(null);
@@ -36,7 +38,7 @@ const TimePicker: React.FC<TimePickerDemoProps> = ({
     <div className="flex items-end gap-2">
       <div className="grid gap-1 text-center">
         <Label htmlFor="hours" className="text-xs">
-          Hours
+          {t("common:time.hours")}
         </Label>
         <TimePickerInput
           picker={is12HourFormat ? "12hours" : "hours"}
@@ -49,7 +51,7 @@ const TimePicker: React.FC<TimePickerDemoProps> = ({
       </div>
       <div className="grid gap-1 text-center">
         <Label htmlFor="minutes" className="text-xs">
-          Minutes
+          {t("common:time.minutes")}
         </Label>
         <TimePickerInput
           picker="minutes"
@@ -70,7 +72,7 @@ const TimePicker: React.FC<TimePickerDemoProps> = ({
       {includeSeconds && (
         <div className="grid gap-1 text-center">
           <Label htmlFor="seconds" className="text-xs">
-            Seconds
+            {t("common:time.seconds")}
           </Label>
           <TimePickerInput
             picker="seconds"
@@ -90,7 +92,7 @@ const TimePicker: React.FC<TimePickerDemoProps> = ({
       {is12HourFormat && (
         <div className="grid gap-1 text-center">
           <Label htmlFor="period" className="text-xs">
-            Period
+            {t("common:time.period")}
           </Label>
           <TimePeriodSelect
             period={period}

@@ -12,13 +12,16 @@ const WaitForDataPanel: React.FC<WaitForDataPanelProps> = ({
   description,
 }) => {
   const { t } = useTranslation();
-  const displayDescription = description ?? t('integrationExplorer.dataFlowDescription');
+  const displayDescription =
+    description ?? t("integrationExplorer.dataFlowDescription");
   return (
     <div>
       <div className="flex items-center gap-3 rounded-lg border bg-background p-4">
         <LoggedDataStatus status={status} />
       </div>
-      <div className="comet-body-s mt-2 text-muted-slate">{displayDescription}</div>
+      <div className="comet-body-s mt-2 text-muted-slate">
+        {displayDescription}
+      </div>
     </div>
   );
 };

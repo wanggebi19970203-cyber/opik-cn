@@ -15,7 +15,9 @@ const QuickstartDialog: React.FC = () => {
     <SideDialog
       open={isOpen}
       setOpen={setOpen}
-      header={<SheetTopBar variant="info" title={t("common.table.quickstartGuide")} />}
+      header={
+        <SheetTopBar variant="info" title={t("common.table.quickstartGuide")} />
+      }
     >
       <div className="flex max-h-full w-full min-w-fit flex-col overflow-y-auto px-20 pb-20 pt-4">
         <div className="comet-body-s mb-10 text-muted-slate">

@@ -19,7 +19,7 @@ const DatasetVariablesHint: React.FC<DatasetVariablesHintProps> = ({
 
   return (
     <p className="comet-body-xs text-light-slate">
-      Available:{" "}
+      {t("optimizations.metricConfigs.datasetVariablesAvailable")}{" "}
       {datasetVariables.map((variable, index) => (
         <span key={variable}>
           <TooltipWrapper content={t("optimizations.metricConfigs.clickToUse")}>

@@ -132,13 +132,15 @@ const MetricConfigs = ({
       >
         <div className="mb-5 w-72">
           <div className="mb-1 flex items-center gap-1">
-            <h3 className="comet-body-s-accented">{t('optimizations.metricConfigs.title')}</h3>
+            <h3 className="comet-body-s-accented">
+              {t("optimizations.metricConfigs.title")}
+            </h3>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_metric_settings]}
             />
           </div>
           <p className="comet-body-xs text-muted-slate">
-            {t('optimizations.metricConfigs.description')}
+            {t("optimizations.metricConfigs.description")}
           </p>
         </div>
         {getMetricForm()}

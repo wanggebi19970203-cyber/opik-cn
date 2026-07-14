@@ -19,10 +19,10 @@ const DatasetVariablesHint: React.FC<DatasetVariablesHintProps> = ({
 
   return (
     <p className="text-xs text-light-slate">
-      {t('optimizations.metricConfigs.datasetVariablesAvailable')}{" "}
+      {t("optimizations.metricConfigs.datasetVariablesAvailable")}{" "}
       {datasetVariables.map((variable, index) => (
         <span key={variable}>
-          <TooltipWrapper content={t('optimizations.metricConfigs.clickToUse')}>
+          <TooltipWrapper content={t("optimizations.metricConfigs.clickToUse")}>
             <Button
               variant="minimal"
               size="3xs"

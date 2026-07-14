@@ -24,14 +24,17 @@ import {
 import { Textarea } from "@/ui/textarea";
 import useRequestIntegrationMutation from "@/api/feedback/useRequestIntegrationMutation";
 
-const requestIntegrationSchema = z.object({
-  integrationRequest: z
-    .string()
-    .min(5, "Please provide at least 10 characters describing the integration")
-    .max(1000, "Description must be 1000 characters or less"),
-});
+const createRequestIntegrationSchema = (t: (key: string) => string) =>
+  z.object({
+    integrationRequest: z
+      .string()
+      .min(5, t("integrationExplorer.validation.minLength"))
+      .max(1000, t("integrationExplorer.validation.maxLength")),
+  });
 
-type RequestIntegrationFormData = z.infer<typeof requestIntegrationSchema>;
+type RequestIntegrationFormData = z.infer<
+  ReturnType<typeof createRequestIntegrationSchema>
+>;
 
 type RequestIntegrationDialogProps = {
   open: boolean;
@@ -44,6 +47,8 @@ const RequestIntegrationDialog: React.FunctionComponent<
   const { t } = useTranslation();
   const { mutate: requestIntegration, isPending: isRequestingIntegration } =
     useRequestIntegrationMutation();
+
+  const requestIntegrationSchema = createRequestIntegrationSchema(t);
 
   const form = useForm<RequestIntegrationFormData>({
     resolver: zodResolver(requestIntegrationSchema),
@@ -80,9 +85,11 @@ const RequestIntegrationDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t('integrationExplorer.requestAnIntegration')}</DialogTitle>
+          <DialogTitle>
+            {t("integrationExplorer.requestAnIntegration")}
+          </DialogTitle>
           <DialogDescription>
-            {t('integrationExplorer.requestIntegrationDescription')}
+            {t("integrationExplorer.requestIntegrationDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -94,12 +101,14 @@ const RequestIntegrationDialog: React.FunctionComponent<
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="sr-only">
-                    {t('integrationExplorer.integrationDescriptionLabel')}
+                    {t("integrationExplorer.integrationDescriptionLabel")}
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder={t('integrationExplorer.describeIntegrationPlaceholder')}
+                      placeholder={t(
+                        "integrationExplorer.describeIntegrationPlaceholder",
+                      )}
                       className="min-h-32 resize-none"
                     />
                   </FormControl>
@@ -110,7 +119,7 @@ const RequestIntegrationDialog: React.FunctionComponent<
 
             <DialogFooter className="gap-3 md:gap-0">
               <Button type="button" variant="outline" onClick={handleCancel}>
-                {t('integrationExplorer.cancel')}
+                {t("integrationExplorer.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -120,7 +129,7 @@ const RequestIntegrationDialog: React.FunctionComponent<
                   isRequestingIntegration
                 }
               >
-                {t('integrationExplorer.submitRequest')}
+                {t("integrationExplorer.submitRequest")}
               </Button>
             </DialogFooter>
           </form>

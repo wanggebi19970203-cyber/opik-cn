@@ -189,7 +189,10 @@ export const AssertionsBreakdownTooltip: React.FC<
                           ) : (
                             <CircleX className="size-3 shrink-0" />
                           )}
-                          {t("assertionsPassed", { passed: passedCount, total: run.length })}
+                          {t("assertionsPassed", {
+                            passed: passedCount,
+                            total: run.length,
+                          })}
                         </div>
                       </div>
                       <ChevronDown className="size-3 shrink-0 transition-transform duration-200" />

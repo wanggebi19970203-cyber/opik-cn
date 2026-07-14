@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Music, Image, Video, CircleX } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Tag } from "@/ui/tag";
@@ -37,6 +37,9 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
   preview = true,
 }) => {
   const { t } = useTranslation("llm");
+  const [failedPreviews, setFailedPreviews] = useState<Set<string>>(
+    () => new Set(),
+  );
   const icon = useMemo(() => {
     if (type === "image") {
       return <Image className="size-3.5 shrink-0" />;
@@ -87,6 +90,22 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
       );
     }
 
+    if (failedPreviews.has(value)) {
+      const failureMessage =
+        type === "video"
+          ? t("mediaTagsList.videoPreviewFailed")
+          : t("mediaTagsList.audioPreviewFailed");
+
+      return (
+        <div className="flex max-w-[320px] flex-col gap-2">
+          <p className="comet-body-s text-muted-foreground">{failureMessage}</p>
+          <p className="comet-body-xs truncate text-muted-foreground">
+            {value}
+          </p>
+        </div>
+      );
+    }
+
     if (type === "video") {
       return (
         <div className="flex max-w-[240px] flex-col gap-2">
@@ -95,20 +114,11 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
             controls
             preload="metadata"
             className="max-h-24 rounded border object-contain"
-            onError={(event) => {
-              const parent = event.currentTarget.parentElement;
-              if (parent) {
-                parent.innerHTML = `
-                  <p class="comet-body-s text-muted-foreground">Video preview failed</p>
-                  <p class="comet-body-xs truncate text-muted-foreground">${value.substring(
-                    0,
-                    50,
-                  )}...</p>
-                `;
-              }
-            }}
+            onError={() =>
+              setFailedPreviews((current) => new Set(current).add(value))
+            }
           >
-            Your browser does not support video playback.
+            {t("mediaTagsList.videoPlaybackNotSupported")}
           </video>
         </div>
       );
@@ -121,16 +131,11 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
           controls
           preload="metadata"
           className="h-10 w-full"
-          onError={(event) => {
-            const parent = event.currentTarget.parentElement;
-            if (parent) {
-              parent.innerHTML = `
-                <p class="comet-body-s text-muted-foreground">Audio preview failed</p>
-              `;
-            }
-          }}
+          onError={() =>
+            setFailedPreviews((current) => new Set(current).add(value))
+          }
         >
-          Your browser does not support audio playback.
+          {t("mediaTagsList.audioPlaybackNotSupported")}
         </audio>
       </div>
     );
@@ -163,7 +168,13 @@ const MediaTagsList: React.FC<MediaTagsListProps> = ({
                   variant="ghost"
                   className="hidden group-hover/media-tag:flex"
                   onClick={() => handleDeleteItem(value)}
-                  aria-label={`Delete ${type}`}
+                  aria-label={
+                    type === "image"
+                      ? t("mediaTagsList.deleteImage")
+                      : type === "video"
+                        ? t("mediaTagsList.deleteVideo")
+                        : t("mediaTagsList.deleteAudio")
+                  }
                 >
                   <CircleX />
                 </Button>

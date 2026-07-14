@@ -327,7 +327,9 @@ export const renderCustomRow = <TData,>(
               });
             }}
           >
-            {i18n.t("common:table.loadMoreItems", { count: DEFAULT_ITEMS_PER_GROUP })}
+            {i18n.t("common:table.loadMoreItems", {
+              count: DEFAULT_ITEMS_PER_GROUP,
+            })}
           </Button>
         </td>
       </tr>

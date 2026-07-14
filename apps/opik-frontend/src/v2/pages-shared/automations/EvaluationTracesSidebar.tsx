@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import TraceLogsSidebar, {
   TraceLogsViewConfig,
@@ -34,6 +35,7 @@ export const EVALUATION_TRACES_VIEW_CONFIG: TraceLogsViewConfig = {
 export const EvaluationTracesSidebar: React.FunctionComponent<{
   projectId: string;
 }> = ({ projectId }) => {
+  const { t } = useTranslation("online-evaluation");
   const { open, closeSidebar } = useTraceLogsSidebarControls();
 
   return (
@@ -42,7 +44,7 @@ export const EvaluationTracesSidebar: React.FunctionComponent<{
       onClose={closeSidebar}
       projectId={projectId}
       logsSource={LOGS_SOURCE.evaluator}
-      title="Evaluation traces"
+      title={t("onlineEvaluation.evaluationTraces")}
       viewConfig={EVALUATION_TRACES_VIEW_CONFIG}
     />
   );

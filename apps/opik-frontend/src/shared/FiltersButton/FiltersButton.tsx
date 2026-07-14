@@ -90,7 +90,9 @@ const FiltersButton = <TColumnData,>({
 
   return (
     <Popover onOpenChange={handleOpenChange} open={open}>
-      <TooltipWrapper content={isIconLayout ? tooltip ?? t("labels.filters") : undefined}>
+      <TooltipWrapper
+        content={isIconLayout ? tooltip ?? t("labels.filters") : undefined}
+      >
         <PopoverTrigger asChild>
           <Button
             variant={variant}
@@ -106,7 +108,9 @@ const FiltersButton = <TColumnData,>({
                 <span className="ml-1.5">{validFilters.length}</span>
               ) : null
             ) : (
-              <span className="ml-1.5">{`${t("labels.filters")} (${validFilters.length})`}</span>
+              <span className="ml-1.5">{`${t("labels.filters")} (${
+                validFilters.length
+              })`}</span>
             )}
           </Button>
         </PopoverTrigger>

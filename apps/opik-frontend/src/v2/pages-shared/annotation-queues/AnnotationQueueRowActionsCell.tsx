@@ -44,7 +44,7 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
       title: t("annotationQueues.toast.linkCopiedTitle"),
       description: t("annotationQueues.toast.linkCopiedDescription"),
     });
-  }, [queue.id, toast, workspaceName]);
+  }, [queue.id, t, toast, workspaceName]);
 
   const deleteQueueHandler = useCallback(() => {
     mutate({
@@ -87,7 +87,9 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">{t("annotationQueues.actions.actionsMenu")}</span>
+            <span className="sr-only">
+              {t("annotationQueues.actions.actionsMenu")}
+            </span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>

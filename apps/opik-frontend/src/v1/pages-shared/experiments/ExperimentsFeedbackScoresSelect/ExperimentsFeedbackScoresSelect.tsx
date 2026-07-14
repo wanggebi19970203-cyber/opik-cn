@@ -16,15 +16,9 @@ type ExperimentsFeedbackScoresSelectProps = {
 
 const ExperimentsFeedbackScoresSelect: React.FC<
   ExperimentsFeedbackScoresSelectProps
-> = ({
-  experimentsIds,
-  value,
-  onValueChange,
-  placeholder,
-  className,
-}) => {
+> = ({ experimentsIds, value, onValueChange, placeholder, className }) => {
   const { t } = useTranslation("experiments");
-  const resolvedPlaceholder = placeholder ?? t('selectScore');
+  const resolvedPlaceholder = placeholder ?? t("selectScore");
   const { data } = useExperimentsFeedbackScoresNames(
     {
       experimentsIds,

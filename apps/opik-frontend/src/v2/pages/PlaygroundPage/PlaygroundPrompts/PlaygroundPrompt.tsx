@@ -411,7 +411,7 @@ const PlaygroundPrompt = ({
                 onOpenChange={setIsChatLibraryOpen}
                 trigger={
                   <div>
-                    <TooltipWrapper content="Load prompt">
+                    <TooltipWrapper content={t("prompt.loadPrompt")}>
                       <Button
                         variant="minimal"
                         size="icon-sm"

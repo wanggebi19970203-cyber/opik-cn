@@ -61,16 +61,18 @@ export const DEFAULT_SORTING_COLUMNS: ColumnSort[] = [
   },
 ];
 
-export const DEFAULT_COLUMNS: ColumnData<PromptVersion>[] = [
+export const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<PromptVersion>[] => [
   {
     id: "template",
-    label: "Prompt",
+    label: t("commits.columns.prompt"),
     type: COLUMN_TYPE.dictionary,
     cell: CodeCell as never,
   },
   {
     id: "metadata",
-    label: "Metadata",
+    label: t("commits.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
     accessorFn: (row) =>
       isObject(row.metadata)
@@ -80,12 +82,12 @@ export const DEFAULT_COLUMNS: ColumnData<PromptVersion>[] = [
   },
   {
     id: "change_description",
-    label: "Commit message",
+    label: t("commits.columns.commitMessage"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "tags",
-    label: "Version tags",
+    label: t("commits.columns.versionTags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     accessorFn: (row) => row.tags || [],
@@ -93,13 +95,13 @@ export const DEFAULT_COLUMNS: ColumnData<PromptVersion>[] = [
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("commits.columns.createdAt"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("commits.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -121,41 +123,43 @@ const DEFAULT_COLUMNS_ORDER: string[] = [
   "created_by",
 ];
 
-export const FILTER_COLUMNS: ColumnData<PromptVersion>[] = [
+export const getFilterColumns = (
+  t: (key: string) => string,
+): ColumnData<PromptVersion>[] => [
   {
     id: "commit",
-    label: "Prompt commit",
+    label: t("commits.columns.promptCommit"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "template",
-    label: "Prompt",
+    label: t("commits.columns.prompt"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "change_description",
-    label: "Commit message",
+    label: t("commits.columns.commitMessage"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "metadata",
-    label: "Metadata",
+    label: t("commits.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: "tags",
-    label: "Version tags",
+    label: t("commits.columns.versionTags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("commits.columns.createdAt"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("commits.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -250,14 +254,14 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
       generateSelectColumDef<PromptVersion>(),
       mapColumnDataFields<PromptVersion, PromptVersion>({
         id: "commit",
-        label: "Prompt commit",
+        label: t("commits.columns.promptCommit"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         explainer: EXPLAINERS_MAP[EXPLAINER_ID.whats_a_prompt_commit],
         sortable: isColumnSortable("commit", sortableColumns),
       }),
       ...convertColumnDataToColumn<PromptVersion, PromptVersion>(
-        DEFAULT_COLUMNS,
+        getDefaultColumns(t),
         {
           columnsOrder,
           selectedColumns,
@@ -265,7 +269,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
         },
       ),
     ];
-  }, [columnsOrder, selectedColumns, data?.sortable_by]);
+  }, [columnsOrder, selectedColumns, data?.sortable_by, t]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -320,7 +324,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
             dimension="sm"
           />
           <FiltersButton
-            columns={FILTER_COLUMNS}
+            columns={getFilterColumns(t)}
             filters={filters}
             onChange={setFilters}
             layout="icon"
@@ -335,7 +339,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
                     },
                   keyComponentProps: {
                     prompt,
-                    placeholder: "key",
+                    placeholder: t("commits.keyPlaceholder"),
                   },
                 },
               },
@@ -346,7 +350,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
           <CommitsActionsPanel versions={selectedRows} />
           <Separator orientation="vertical" className="mx-2 h-4" />
           <ColumnsButton
-            columns={DEFAULT_COLUMNS}
+            columns={getDefaultColumns(t)}
             selectedColumns={selectedColumns}
             onSelectionChange={setSelectedColumns}
             order={columnsOrder}

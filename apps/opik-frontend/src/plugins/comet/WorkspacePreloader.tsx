@@ -234,7 +234,8 @@ const WorkspacePreloader: React.FunctionComponent<WorkspacePreloaderProps> = ({
               params={{ workspaceName: defaultWorkspace.workspaceName }}
             >
               <div className="comet-body flex flex-row items-center justify-end text-[hsl(var(--primary))]">
-                <MoveLeft className="mr-2 size-4" /> {t("common.messages.goBackToYourWorkspace")}
+                <MoveLeft className="mr-2 size-4" />{" "}
+                {t("common.messages.goBackToYourWorkspace")}
               </div>
             </Link>
           </div>

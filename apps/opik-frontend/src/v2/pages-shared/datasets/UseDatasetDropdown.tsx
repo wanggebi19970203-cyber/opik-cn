@@ -88,13 +88,21 @@ function UseDatasetDropdown({
           setOpen={setOpenConfirmDialog}
           onConfirm={handleLoadPlayground}
           title={t("useDataset.loadIntoPlayground.title", { entityName })}
-          description={t("useDataset.loadIntoPlayground.description", { entityName })}
-          confirmText={t("useDataset.loadIntoPlayground.confirmText", { entityName })}
+          description={t("useDataset.loadIntoPlayground.description", {
+            entityName,
+          })}
+          confirmText={t("useDataset.loadIntoPlayground.confirmText", {
+            entityName,
+          })}
         />
       )}
       {disabled || isEmpty ? (
         <TooltipWrapper
-          content={isEmpty ? t("useDataset.emptyTooltip", { entityName }) : t("useDataset.runIn")}
+          content={
+            isEmpty
+              ? t("useDataset.emptyTooltip", { entityName })
+              : t("useDataset.runIn")
+          }
         >
           <span className="inline-flex">
             <Button variant="outline" size="icon-sm" disabled>
@@ -129,7 +137,9 @@ function UseDatasetDropdown({
                 <div className="comet-body-s flex flex-col">
                   <span>{t("useDataset.openInPlayground")}</span>
                   <span className="text-light-slate">
-                    {t("useDataset.openInPlaygroundDescription", { entityName })}
+                    {t("useDataset.openInPlaygroundDescription", {
+                      entityName,
+                    })}
                   </span>
                 </div>
               </DropdownMenuItem>

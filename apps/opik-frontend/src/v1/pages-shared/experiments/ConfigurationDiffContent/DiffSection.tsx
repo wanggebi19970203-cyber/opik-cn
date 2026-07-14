@@ -36,17 +36,17 @@ const DiffSection: React.FunctionComponent<DiffSectionProps> = ({
         <span className="comet-body-s-accented">{label}</span>
         {isAdded && (
           <Tag variant="green" size="sm">
-            {t('added')}
+            {t("added")}
           </Tag>
         )}
         {isRemoved && (
           <Tag variant="red" size="sm">
-            {t('removed')}
+            {t("removed")}
           </Tag>
         )}
         {!isAdded && !isRemoved && (
           <Tag variant="orange" size="sm">
-            {t('changed')}
+            {t("changed")}
           </Tag>
         )}
       </div>

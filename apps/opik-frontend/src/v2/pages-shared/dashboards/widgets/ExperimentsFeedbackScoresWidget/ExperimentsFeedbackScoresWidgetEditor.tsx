@@ -239,7 +239,9 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
                   ]);
                   return (
                     <FormItem>
-                      <FormLabel>{t("feedbackScores.maxExperimentsLabel")}</FormLabel>
+                      <FormLabel>
+                        {t("feedbackScores.maxExperimentsLabel")}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -258,7 +260,9 @@ const ExperimentsFeedbackScoresWidgetEditor = forwardRef<WidgetEditorHandle>(
                         />
                       </FormControl>
                       <Description>
-                        {t("feedbackScores.maxExperimentsDescription", { max: MAX_MAX_EXPERIMENTS })}
+                        {t("feedbackScores.maxExperimentsDescription", {
+                          max: MAX_MAX_EXPERIMENTS,
+                        })}
                       </Description>
                       <FormMessage />
                     </FormItem>

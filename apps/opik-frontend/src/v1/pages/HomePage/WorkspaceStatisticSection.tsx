@@ -12,8 +12,10 @@ import { FileTerminal, FlaskConical, LayoutGrid } from "lucide-react";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v1/constants/explainers";
 import { usePermissions } from "@/contexts/PermissionsContext";
+import { useTranslation } from "react-i18next";
 
 const WorkspaceStatisticSection = () => {
+  const { t } = useTranslation("home");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const navigate = useNavigate();
 
@@ -72,7 +74,7 @@ const WorkspaceStatisticSection = () => {
             <LayoutGrid className="size-3.5" />
           </div>
           <div className="comet-body-s !m-0 flex items-center gap-1.5">
-            Projects
+            {t("home.stats.projects")}
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.what_do_you_use_projects_for]}
             />
@@ -101,7 +103,7 @@ const WorkspaceStatisticSection = () => {
               <FlaskConical className="size-3.5" />
             </div>
             <div className="comet-body-s !m-0 flex items-center gap-1.5">
-              Experiments
+              {t("home.stats.experiments")}
               <ExplainerIcon
                 {...EXPLAINERS_MAP[EXPLAINER_ID.whats_an_experiment]}
               />
@@ -130,7 +132,7 @@ const WorkspaceStatisticSection = () => {
             <FileTerminal className="size-3.5" />
           </div>
           <div className="comet-body-s !m-0 flex items-center gap-1.5">
-            Prompts
+            {t("home.stats.prompts")}
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_prompt_library]}
             />

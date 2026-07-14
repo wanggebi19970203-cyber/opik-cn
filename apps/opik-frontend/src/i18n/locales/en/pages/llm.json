@@ -6,7 +6,12 @@
       "editScore": "Edit a score",
       "doneEditing": "Done editing",
       "deleteScore": "Delete a score",
-      "addScore": "Add score"
+      "addScore": "Add score",
+      "number": "Number",
+      "integer": "Integer",
+      "boolean": "Boolean",
+      "defaultName": "Score name",
+      "defaultDescription": "Score description"
     },
     "promptMessages": {
       "saveToPromptLibrary": "Save to prompt library",
@@ -34,7 +39,11 @@
       "addImage": "Add image",
       "addAudio": "Add audio",
       "addVideo": "Add video",
-      "typeOrClickToAddVariable": "Type {{ or click here to add variable"
+      "typeOrClickToAddVariable": "Type {{ or click here to add variable",
+      "addMessage": "Message",
+      "images": "Images",
+      "videos": "Videos",
+      "audios": "Audios"
     },
     "promptMessageActions": {
       "configureModelFirst": "Configure model first",
@@ -63,7 +72,10 @@
       "deleteConfiguration": "Delete configuration",
       "cancel": "Cancel",
       "deleteConfigurationTitle": "Delete configuration",
-      "deleteConfigurationDescription": "This configuration is shared across the workspace. Deleting it will remove access for everyone. This action can't be undone. Are you sure you want to proceed?"
+      "deleteConfigurationDescription": "This configuration is shared across the workspace. Deleting it will remove access for everyone. This action can't be undone. Are you sure you want to proceed?",
+      "provider": "Provider",
+      "configured": "Configured",
+      "noProvidersAvailable": "No providers available for this environment"
     },
     "bedrockProvider": {
       "providerName": "Provider name",
@@ -71,17 +83,19 @@
       "providerNameDescription": "A unique identifier for this provider instance (e.g., \"Bedrock us-east-1\").",
       "url": "URL",
       "apiKey": "API key",
-      "apiKeyDescription": "Click here for instructions on how to create a service account and assign the correct permissions.",
+      "apiKeyDescription": "Click <link>here</link> for instructions on how to create a service account and assign the correct permissions.",
       "modelsList": "Models list",
       "modelsDescription": "Comma separated list of available models. Example:",
       "modelsListDescription": "Comma separated list of available models. Example:"
     },
     "cloudProvider": {
       "apiKeyLabel": "{{providerName}} API Key",
-      "getApiKey": "Get your {{providerName}} API key here.",
+      "getApiKey": "Get your {{providerName}} API key <link>here</link>.",
       "pipelineMode": "Pipeline mode",
       "selectPipelineMode": "Select pipeline mode",
-      "pipelineModeDescription": "Chat Completions API is the standard endpoint. Responses API enables agentic tooling features (e.g. stateful tool loops, reasoning summaries) on models that support it."
+      "pipelineModeDescription": "Chat Completions API is the standard endpoint. Responses API enables agentic tooling features (e.g. stateful tool loops, reasoning summaries) on models that support it.",
+      "chatCompletionsApi": "Chat Completions API",
+      "responsesApi": "Responses API"
     },
     "customHeadersField": {
       "customHeaders": "Custom headers (optional)",
@@ -96,7 +110,7 @@
       "url": "URL",
       "urlDescription": "Use `{model}` as a placeholder in the URL if your gateway expects the model name in the path — Opik substitutes the selected model at request time. The model name is interpolated raw, so values containing `/` (e.g. HuggingFace-style names) will become extra path segments.",
       "apiKey": "API key",
-      "apiKeyDescription": "Custom providers may not require an API key, depending on your server setup. Learn more in the documentation.",
+      "apiKeyDescription": "Custom providers may not require an API key, depending on your server setup. Learn more in the <link>documentation</link>.",
       "documentation": "documentation",
       "modelsList": "Models list",
       "modelsDescription": "Comma-separated list of available models. Example:",
@@ -196,7 +210,15 @@
       "maximumLimitReached": "Maximum limit reached",
       "error": "Error",
       "invalidUrl": "Invalid URL",
-      "pleaseEnterValidUrl": "Please enter a valid HTTP or HTTPS URL"
+      "pleaseEnterValidUrl": "Please enter a valid HTTP or HTTPS URL",
+      "maxItemsExceeded": "You can only add up to {{count}} {{type}}",
+      "alreadyExists": "This {{type}} already exists",
+      "image": "image",
+      "video": "video",
+      "audio": "audio",
+      "images": "images",
+      "videos": "videos",
+      "audios": "audios"
     },
     "mediaTagsList": {
       "previewNotAvailable": "Preview not available",
@@ -204,7 +226,10 @@
       "videoPreviewFailed": "Video preview failed",
       "audioPreviewFailed": "Audio preview failed",
       "videoPlaybackNotSupported": "Your browser does not support video playback.",
-      "audioPlaybackNotSupported": "Your browser does not support audio playback."
+      "audioPlaybackNotSupported": "Your browser does not support audio playback.",
+      "deleteImage": "Delete image",
+      "deleteVideo": "Delete video",
+      "deleteAudio": "Delete audio"
     },
     "promptMessagesReadonly": {
       "showMore": "Show more",

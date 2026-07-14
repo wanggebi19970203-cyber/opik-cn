@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext, ColumnMeta, TableMeta } from "@tanstack/react-table";
 import { DatasetItem } from "@/types/datasets";
 import { useEffectiveItemExecutionPolicy } from "@/hooks/useEffectiveItemExecutionPolicy";
@@ -19,6 +20,7 @@ const ExecutionPolicyCellInner: React.FC<ExecutionPolicyCellInnerProps> = ({
   metadata,
   tableMetadata,
 }) => {
+  const { t } = useTranslation("test-suite-items");
   const suiteId = useSuiteIdFromURL();
   const globalPolicy = useEffectiveExecutionPolicy(suiteId);
   const localPolicy = useEffectiveItemExecutionPolicy(
@@ -30,8 +32,10 @@ const ExecutionPolicyCellInner: React.FC<ExecutionPolicyCellInnerProps> = ({
     return (
       <CellWrapper metadata={metadata} tableMetadata={tableMetadata}>
         <span className="text-light-slate">
-          {globalPolicy.pass_threshold} of {globalPolicy.runs_per_item} must
-          pass
+          {t("testSuiteItems.executionPolicy.mustPass", {
+            threshold: globalPolicy.pass_threshold,
+            runs: globalPolicy.runs_per_item,
+          })}
         </span>
       </CellWrapper>
     );
@@ -40,7 +44,10 @@ const ExecutionPolicyCellInner: React.FC<ExecutionPolicyCellInnerProps> = ({
   return (
     <CellWrapper metadata={metadata} tableMetadata={tableMetadata}>
       <span>
-        {localPolicy.pass_threshold} of {localPolicy.runs_per_item} must pass
+        {t("testSuiteItems.executionPolicy.mustPass", {
+          threshold: localPolicy.pass_threshold,
+          runs: localPolicy.runs_per_item,
+        })}
       </span>
     </CellWrapper>
   );

@@ -173,7 +173,7 @@ const IssueDetail: React.FC<IssueDetailProps> = ({
           )}
           <MetaItem
             icon={Hash}
-            label="Occurrences"
+            label={t("signals.issueDetail.occurrences")}
             value={formatOccurrences(
               issue.total_occurrences,
               issue.latest_count,

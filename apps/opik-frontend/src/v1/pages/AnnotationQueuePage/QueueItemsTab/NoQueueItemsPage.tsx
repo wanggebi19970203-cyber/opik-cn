@@ -43,8 +43,16 @@ const NoQueueItemsPage: React.FC<NoQueueItemsPageProps> = ({
 
   return (
     <Wrapper
-      title={isTraceQueue ? t("annotationQueue.noItems.titleTraces") : t("annotationQueue.noItems.titleThreads")}
-      description={isTraceQueue ? t("annotationQueue.noItems.descriptionTraces") : t("annotationQueue.noItems.descriptionThreads")}
+      title={
+        isTraceQueue
+          ? t("annotationQueue.noItems.titleTraces")
+          : t("annotationQueue.noItems.titleThreads")
+      }
+      description={
+        isTraceQueue
+          ? t("annotationQueue.noItems.descriptionTraces")
+          : t("annotationQueue.noItems.descriptionThreads")
+      }
       imageUrl={noData}
       height={height}
       className={className}
@@ -77,7 +85,9 @@ const NoQueueItemsPage: React.FC<NoQueueItemsPageProps> = ({
                 }}
               >
                 <ExternalLink className="mr-2 size-4" />
-                {isTraceQueue ? t("annotationQueue.noItems.goToTraces") : t("annotationQueue.noItems.goToThreads")}
+                {isTraceQueue
+                  ? t("annotationQueue.noItems.goToTraces")
+                  : t("annotationQueue.noItems.goToThreads")}
               </Link>
             </Button>
           )}

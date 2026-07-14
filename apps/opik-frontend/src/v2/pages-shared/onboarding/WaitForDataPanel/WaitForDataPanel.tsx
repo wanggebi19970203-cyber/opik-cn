@@ -14,7 +14,8 @@ const WaitForDataPanel: React.FC<WaitForDataPanelProps> = ({
   onExplore,
 }) => {
   const { t } = useTranslation();
-  const description = descriptionProp ?? t("onboarding.integrationExplorer.dataFlowDescription");
+  const description =
+    descriptionProp ?? t("onboarding.integrationExplorer.dataFlowDescription");
   return (
     <div>
       <div className="flex items-center gap-3 rounded-lg border bg-background p-4">

@@ -118,7 +118,9 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
     () =>
       asNewOption ? (
         <div className="flex w-full items-center text-foreground">
-          <span className="truncate">{t("addNewPromptVersionDialog.saveAsNew")}</span>
+          <span className="truncate">
+            {t("addNewPromptVersionDialog.saveAsNew")}
+          </span>
         </div>
       ) : (
         <div className="flex w-full items-center text-light-slate">
@@ -130,7 +132,7 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
           </span>
         </div>
       ),
-    [asNewOption, filterByTemplateStructure],
+    [asNewOption, filterByTemplateStructure, t],
   );
 
   let searchPlaceholder = t("promptModelSelect.searchModel");
@@ -155,12 +157,13 @@ const PromptsSelectBox: React.FC<PromptsSelectBoxProps> = ({
         </ListAction>
       </>
     ) : undefined;
-  }, [asNewOption, onValueChange]);
+  }, [asNewOption, onValueChange, t]);
 
   if (compact) {
     if (value) {
       const promptFromList = prompts.find((p) => p.id === value);
-      const displayName = promptName ?? promptFromList?.name ?? t("promptTab.loadPrompt");
+      const displayName =
+        promptName ?? promptFromList?.name ?? t("promptTab.loadPrompt");
 
       return (
         <CompactLoadedPrompt

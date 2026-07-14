@@ -118,10 +118,13 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
       const plural = items.length !== 1 ? "s" : "";
       toast({
         title: t("actionsPanel.samplesAddedToDraft"),
-        description: t("actionsPanel.samplesAddedDescription", { count: items.length, plural }),
+        description: t("actionsPanel.samplesAddedDescription", {
+          count: items.length,
+          plural,
+        }),
       });
     },
-    [bulkAddItems, toast],
+    [bulkAddItems, t, toast],
   );
 
   const mapRowData = useCallback(async () => {
@@ -235,9 +238,7 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
         getData={mapRowData}
         generateFileName={generateFileName}
         tooltipContent={
-          !isExportEnabled
-            ? t("tracing.actions.exportDisabled")
-            : undefined
+          !isExportEnabled ? t("tracing.actions.exportDisabled") : undefined
         }
       />
       {canEditDatasets && (

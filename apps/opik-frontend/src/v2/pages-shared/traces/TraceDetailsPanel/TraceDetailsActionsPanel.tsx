@@ -199,7 +199,10 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
         FileSaver.saveAs(blob, fileName);
         toast({
           title: t("actions.exportSuccessful"),
-          description: t("actions.exportedToFormat", { type: fileSuffix, format: format.toUpperCase() }),
+          description: t("actions.exportedToFormat", {
+            type: fileSuffix,
+            format: format.toUpperCase(),
+          }),
         });
       } catch (error) {
         toast({
@@ -209,7 +212,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
         });
       }
     },
-    [treeData, exportColumns, getDataToExport, toast],
+    [treeData, exportColumns, getDataToExport, toast, t],
   );
 
   return (
@@ -235,7 +238,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon-2xs">
-            <span className="sr-only">Actions menu</span>
+            <span className="sr-only">{t("common:labels.actionsMenu")}</span>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
@@ -291,7 +294,7 @@ const TraceDetailsActionsPanel: React.FunctionComponent<
             ) : (
               <TooltipWrapper
                 key={format}
-                content="Export functionality is disabled for this installation"
+                content={t("actions.exportDisabled")}
                 side="left"
               >
                 <div>{item}</div>

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import api, { ENVIRONMENTS_KEY, ENVIRONMENTS_REST_ENDPOINT } from "@/api/api";
@@ -37,7 +38,7 @@ const useEnvironmentCreateMutation = ({
       if (!showErrorToast) return;
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: extractErrorMessage(error),
         variant: "destructive",
       });

@@ -36,7 +36,9 @@ const DescriptionSection: React.FC = () => {
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">{t("testSuiteItemForm.description")}</h3>
+      <h3 className="comet-body-s-accented mb-2">
+        {t("testSuiteItemForm.description")}
+      </h3>
       <TextareaAutosize
         {...register("description")}
         placeholder={t("testSuiteItemForm.descriptionPlaceholder")}
@@ -68,7 +70,9 @@ const DataSection: React.FC = () => {
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">{t("testSuiteItemForm.data")}</h3>
+      <h3 className="comet-body-s-accented mb-2">
+        {t("testSuiteItemForm.data")}
+      </h3>
       <Controller
         control={control}
         name="data"

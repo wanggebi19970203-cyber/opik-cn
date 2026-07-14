@@ -45,13 +45,6 @@ import {
   OPIK_ASSERTIONS_FIELD,
 } from "@/constants/datasets";
 
-const getProgressMessages = (entityName: string) => [
-  "Initializing AI generation...",
-  `Analyzing ${entityName} patterns...`,
-  "Generating synthetic samples...",
-  "Finalizing generated data...",
-];
-
 const DATASET_EXPANSION_LAST_PICKED_MODEL = "opik-dataset-expansion-model";
 const SAMPLE_COUNT_MIN = 1;
 const SAMPLE_COUNT_MAX = 200;
@@ -252,7 +245,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
       sampleCountNumber > SAMPLE_COUNT_MAX
     ) {
       setValidationError(
-        t("expansion.validation.sampleCount", { min: SAMPLE_COUNT_MIN, max: SAMPLE_COUNT_MAX }),
+        t("expansion.validation.sampleCount", {
+          min: SAMPLE_COUNT_MIN,
+          max: SAMPLE_COUNT_MAX,
+        }),
       );
       return false;
     }
@@ -265,9 +261,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
     }
 
     if (!sampleData?.content?.length) {
-      setValidationError(
-        t("expansion.validation.analysisInProgress"),
-      );
+      setValidationError(t("expansion.validation.analysisInProgress"));
       return false;
     }
 
@@ -334,7 +328,9 @@ const DatasetExpansionDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="comet-title-s">{t("expansion.title")}</DialogTitle>
+          <DialogTitle className="comet-title-s">
+            {t("expansion.title")}
+          </DialogTitle>
           <p className="comet-body-s my-4 text-muted-foreground">
             {t("expansion.description", { entityName })}
           </p>
@@ -382,7 +378,9 @@ const DatasetExpansionDialog: React.FunctionComponent<
             sampleData.content.length === 0 && (
               <Alert variant="callout" size="sm">
                 <AlertTriangle className="size-4" />
-                <AlertTitle>{t("expansion.empty.title", { entityName })}</AlertTitle>
+                <AlertTitle>
+                  {t("expansion.empty.title", { entityName })}
+                </AlertTitle>
                 <AlertDescription>
                   {t("expansion.empty.description", { entityName })}
                 </AlertDescription>
@@ -410,7 +408,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                           <path d="M12 3c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z" />
                         </svg>
                       </div>
-                        <div>
+                      <div>
                         <div className="flex items-center gap-2">
                           <Label
                             htmlFor="fields"
@@ -482,16 +480,23 @@ const DatasetExpansionDialog: React.FunctionComponent<
                         >
                           {showAllFields ? (
                             <>
-                              {t("expansion.structure.showLess", { count: datasetAnalysis.allFields.length - 20 })}
+                              {t("expansion.structure.showLess", {
+                                count: datasetAnalysis.allFields.length - 20,
+                              })}
                             </>
                           ) : (
                             <>
-                              {t("expansion.structure.showAll", { count: datasetAnalysis.allFields.length - 20 })}
+                              {t("expansion.structure.showAll", {
+                                count: datasetAnalysis.allFields.length - 20,
+                              })}
                             </>
                           )}
                         </Button>
                         <div className="text-xs text-muted-foreground">
-                          {t("expansion.structure.fieldsSelected", { count: preserveFields.length, total: datasetAnalysis.allFields.length })}
+                          {t("expansion.structure.fieldsSelected", {
+                            count: preserveFields.length,
+                            total: datasetAnalysis.allFields.length,
+                          })}
                         </div>
                       </div>
                     )}
@@ -513,7 +518,11 @@ const DatasetExpansionDialog: React.FunctionComponent<
                           </div>
                           <div className="mt-1 space-y-1">
                             <div>
-                              {t("expansion.structure.tips.autoSelect", { threshold: Math.round(FIELD_FREQUENCY_THRESHOLD * 100) })}
+                              {t("expansion.structure.tips.autoSelect", {
+                                threshold: Math.round(
+                                  FIELD_FREQUENCY_THRESHOLD * 100,
+                                ),
+                              })}
                             </div>
                             <div>
                               {t("expansion.structure.tips.maintainPatterns")}
@@ -561,7 +570,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
               className="w-full"
             />
             <p className="comet-body-s text-muted-foreground">
-              {t("expansion.sampleCountRange", { min: SAMPLE_COUNT_MIN, max: SAMPLE_COUNT_MAX })}
+              {t("expansion.sampleCountRange", {
+                min: SAMPLE_COUNT_MIN,
+                max: SAMPLE_COUNT_MAX,
+              })}
             </p>
           </div>
 
@@ -629,7 +641,9 @@ const DatasetExpansionDialog: React.FunctionComponent<
                       placeholder={t("expansion.prompt.placeholder")}
                     />
                     <div className="text-xs text-muted-foreground">
-                      {t("expansion.prompt.charCount", { count: customPrompt.length })}
+                      {t("expansion.prompt.charCount", {
+                        count: customPrompt.length,
+                      })}
                     </div>
                   </div>
                 </AccordionContent>

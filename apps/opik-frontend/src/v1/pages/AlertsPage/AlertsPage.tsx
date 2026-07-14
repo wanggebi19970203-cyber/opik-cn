@@ -250,7 +250,9 @@ const AlertsPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? t("alerts.page.noAlertsYet") : t("alerts.page.noSearchResults");
+  const noDataText = noData
+    ? t("alerts.page.noAlertsYet")
+    : t("alerts.page.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,

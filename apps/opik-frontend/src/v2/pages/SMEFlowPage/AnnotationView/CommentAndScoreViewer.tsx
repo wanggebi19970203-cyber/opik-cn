@@ -9,7 +9,7 @@ import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import ExplainerIcon from "@/shared/ExplainerIcon/ExplainerIcon";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v2/constants/explainers";
 import { useSMEFlow, ITEM_STATE } from "@/v2/pages/SMEFlowPage/SMEFlowContext";
-import { SME_ACTION, SME_HOTKEYS } from "@/v2/pages/SMEFlowPage/hotkeys";
+import { SME_ACTION, getSMEHotkeys } from "@/v2/pages/SMEFlowPage/hotkeys";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import {
   getAnnotationQueueItemId,
@@ -31,6 +31,7 @@ const isFromEditableElement = (keyboardEvent: KeyboardEvent): boolean => {
 
 const CommentAndScoreViewer: React.FC = () => {
   const { t } = useTranslation();
+  const SME_HOTKEYS = getSMEHotkeys(t);
   const {
     currentItem,
     currentAnnotationState,
@@ -138,7 +139,9 @@ const CommentAndScoreViewer: React.FC = () => {
       {canAnnotateTraceSpanThread && (
         <>
           <div className="flex items-center justify-between gap-1 pb-2">
-            <span className="comet-body-s-accented truncate">{t("sme.commentAndScoreViewer.comment")}</span>
+            <span className="comet-body-s-accented truncate">
+              {t("sme.commentAndScoreViewer.comment")}
+            </span>
             <TooltipWrapper
               content={SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].description}
               hotkeys={[SME_HOTKEYS[SME_ACTION.FOCUS_COMMENT].display]}

@@ -4,7 +4,6 @@
     "description": "Manage datasets for evaluation and experimentation",
     "create": "Create dataset",
     "edit": "Edit dataset",
-    "delete": "Delete dataset",
     "empty": {
       "title": "No datasets yet",
       "description": "Get started by creating your first dataset.",
@@ -70,7 +69,8 @@
       "manageTags": "Manage tags",
       "delete": "Delete",
       "samplesAddedToDraft": "Samples added to draft",
-      "samplesAddedDescription": "{{count}} sample{{plural}} added to your draft changes"
+      "samplesAddedDescription_one": "{{count}} sample added to your draft changes",
+      "samplesAddedDescription_other": "{{count}} samples added to your draft changes"
     },
     "exportPanel": {
       "preparingDownload": "Preparing download",
@@ -200,7 +200,8 @@
       "record": "Record",
       "recordLowercase": "record",
       "media": "Media",
-      "data": "Data"
+      "data": "Data",
+      "mustBeValidJsonObjectOrArray": "Must be a valid JSON object or array"
     },
     "listPage": {
       "datasets": "Datasets",
@@ -226,7 +227,8 @@
       "testSettings": "Test settings",
       "testCase": "Test case",
       "record": "Record",
-      "globalAssertions": "{{count}} global assertion{{plural}}"
+      "globalAssertions_one": "{{count}} global assertion",
+      "globalAssertions_other": "{{count}} global assertions"
     },
     "navigation": {
       "unsavedChanges": "Unsaved changes",
@@ -513,7 +515,17 @@
     "testSuiteEmpty": "This test suite is empty",
     "noVersions": "No versions",
     "selectTestSuite": "Select a test suite",
-    "searchTestSuites": "Search test suites"
+    "searchTestSuites": "Search test suites",
+    "noSearchResults": "No search results",
+    "showingFirstItems": "Showing first {{count}} items.",
+    "loadMore": "Load more",
+    "selectType": "Select {{type}}",
+    "noDatasetsYet": "No datasets yet",
+    "noTestSuitesYet": "No test suites yet",
+    "createDataset": "Create dataset",
+    "createTestSuite": "Create test suite",
+    "newType": "New {{type}}",
+    "emptyTooltip": "This {{type}} is empty"
   },
   "redirectDatasets": {
     "testSuiteNotFound": "This test suite could not be found",

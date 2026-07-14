@@ -57,6 +57,7 @@
       "retryNow": "立即重试",
       "viewDocs": "查看文档",
       "copyApiKey": "复制 API 密钥",
+      "copyId": "复制 ID",
       "backToHome": "返回首页",
       "skip": "跳过",
       "getHelpInSlack": "在 Slack 获取帮助",
@@ -98,6 +99,8 @@
       "tags": "标签",
       "metadata": "元数据",
       "model": "模型",
+      "costIntelligence": "成本智能",
+      "experimentManagement": "实验管理",
       "score": "分数",
       "feedback": "反馈",
       "comment": "评论",
@@ -133,6 +136,7 @@
       "joined": "加入时间",
       "workspaceRole": "工作区角色",
       "workspace": "工作区",
+      "members": "成员",
       "switchWorkspace": "切换工作区",
       "openWorkspaceSelector": "打开工作区选择器",
       "accountSettings": "账户设置",
@@ -149,6 +153,7 @@
       "scoreDefinition": "分数定义",
       "instructions": "说明",
       "showMoreOptions": "显示更多选项",
+      "breadcrumb": "面包屑导航",
       "allFilters": "所有筛选",
       "paginationLimited": "分页受限",
       "field": "字段",
@@ -175,7 +180,9 @@
       "totalOutputTokens": "总输出令牌数",
       "estimatedCost": "预估成本",
       "feedbackScores": "反馈分数",
-      "customFilter": "自定义筛选"
+      "customFilter": "自定义筛选",
+      "openSettings": "打开 {{name}} 设置",
+      "assistant": "助手"
     },
     "placeholders": {
       "search": "搜索",
@@ -192,7 +199,9 @@
       "searchByUsernameOrEmail": "按用户名或邮箱搜索"
     },
     "actions": {
-      "selectAll": "全选"
+      "selectAll": "全选",
+      "selectedCount": "已选择：{{count}}",
+      "deselectAll": "取消全选"
     },
     "messages": {
       "noData": "暂无数据",
@@ -306,7 +315,13 @@
       "unexpectedErrorRunningExperiment": "运行实验时发生意外错误",
       "unknownErrorUpdatingPromptEnvironment": "更新提示词环境时发生未知错误，请重试。",
       "diagnosticStarted": "诊断已开始",
-      "diagnosticStartedDescription": "我们正在分析最近 24 小时的追踪。运行完成后，新问题将显示在此处。"
+      "diagnosticStartedDescription": "我们正在分析最近 24 小时的追踪。运行完成后，新问题将显示在此处。",
+      "feedbackDefinitionConflict": "同名的反馈定义已存在，请选择其他名称。",
+      "pythonProxyError": "Python 代理错误",
+      "unexpectedStreamingError": "意外错误",
+      "deletedQueue": "<已删除的队列>",
+      "unknownQueue": "<未知队列>",
+      "selectedModel": "所选模型"
     },
     "errors": {
       "useOnboardingMustBeUsedWithinProvider": "useOnboarding 必须在 OnboardingProvider 内使用"
@@ -338,7 +353,9 @@
       "noDataAltText": "无数据图片",
       "createFirst": "创建您的第一个{{item}}",
       "noOrganizationsFound": "未找到组织",
-      "noWorkspacesFound": "未找到工作区"
+      "noWorkspacesFound": "未找到工作区",
+      "viewingDemoProject": "您正在查看演示项目，",
+      "clickHereToCreate": "点击此处创建您自己的项目"
     },
     "time": {
       "justNow": "刚刚",
@@ -348,7 +365,14 @@
       "today": "今天",
       "yesterday": "昨天",
       "lastWeek": "上周",
-      "lastMonth": "上月"
+      "lastMonth": "上月",
+      "timePlaceholder": "12:00",
+      "toggleAmPm": "切换 AM/PM（当前：{{period}}）",
+      "enterValidTime": "请输入有效时间",
+      "hours": "时",
+      "minutes": "分",
+      "seconds": "秒",
+      "period": "时段"
     },
     "table": {
       "readDocs": "阅读文档",
@@ -371,7 +395,16 @@
       "addFilter": "添加筛选",
       "where": "条件",
       "and": "且",
-      "filterError": "筛选 {{index}}: {{messages}}"
+      "filterError": "筛选 {{index}}: {{messages}}",
+      "operators": {
+        "contains": "包含",
+        "notContains": "不包含",
+        "startsWith": "开头为",
+        "endsWith": "结尾为",
+        "isEmpty": "为空",
+        "isNotEmpty": "不为空",
+        "operator": "运算符"
+      }
     },
     "groups": {
       "label": "分组",
@@ -431,7 +464,11 @@
         "past30days": "过去30天",
         "past60days": "过去60天",
         "alltime": "全部时间"
-      }
+      },
+      "lastDay": "最近一天",
+      "lastWeek": "最近一周",
+      "lastMonth": "最近一月",
+      "last6Months": "最近六个月"
     },
     "dashboard": {
       "textWidget": "文本",
@@ -470,7 +507,86 @@
           "threadDuration": "线程持续时间",
           "threadFeedbackScores": "线程反馈分数"
         }
+      },
+      "addSection": "添加分区",
+      "addWidget": "添加组件",
+      "insertSectionAbove": "在上方插入分区",
+      "insertSectionBelow": "在下方插入分区",
+      "deleteSection": "删除分区",
+      "deleteSectionTitle": "删除「{{name}}」？",
+      "deleteSectionDescription": "此操作将永久移除该分区及其所有组件，无法撤销。",
+      "deleteSectionName": "删除 {{name}}",
+      "noWidgetsYet": "暂无组件",
+      "addWidgetsDescription": "添加组件以开始构建您的仪表盘。",
+      "editWidget": "编辑组件",
+      "duplicateWidget": "复制组件",
+      "moveToSection": "移动到分区",
+      "deleteWidget": "删除组件",
+      "deleteWidgetTitle": "删除组件？",
+      "deleteWidgetDescription": "此操作将永久移除此组件，无法撤销。",
+      "deleteWidgetName": "删除 {{name}}",
+      "widgetNotAvailable": "组件不可用",
+      "dragToReposition": "拖拽以重新定位",
+      "saveChanges": "保存更改",
+      "widgetPreview": "组件预览",
+      "previewPlaceholder": "<预览>",
+      "widgetType": "组件类型",
+      "newSection": "新分区",
+      "overview": "概览"
+    },
+    "hooks": {
+      "useAudioPlayer": {
+        "audioLoadingCancelled": "音频加载已取消",
+        "networkErrorLoadingAudio": "加载音频时发生网络错误",
+        "audioFormatError": "音频格式错误",
+        "audioFileNotAvailable": "音频文件不可用",
+        "unableToLoadAudioFile": "无法加载音频文件",
+        "audioPlaybackError": "音频播放错误"
+      },
+      "useBase64InputHandler": {
+        "maximumLimitReached": "已达到最大数量限制",
+        "maxItemsError": "最多只能添加 {{maxItems}} 个{{mediaType}}。",
+        "error": "错误",
+        "duplicateMedia": "此{{type}}已被添加。",
+        "fileTooLarge": "文件过大",
+        "fileTooLargeDescription": "{{type}}大小（{{sizeMB}}MB）超过允许的最大值 {{maxSizeMB}}MB。",
+        "failedToProcessBase64": "处理 base64 数据失败。"
+      },
+      "useLLMProviderModelsData": {
+        "freeModel": "免费模型"
+      },
+      "useMediaFileUpload": {
+        "fileTooLarge": "文件过大",
+        "error": "错误",
+        "failedToProcessFiles": "处理文件失败。"
+      },
+      "useProgressSimulation": {
+        "completedSuccessfully": "已完成"
+      },
+      "useTestSuiteSavePayload": {
+        "testSuiteDataNotAvailable": "测试套件数据不可用。"
+      },
+      "useUnifiedMedia": {
+        "asyncMediaDetectionFailed": "异步媒体检测失败"
+      },
+      "useUpdateColorMapping": {
+        "changesNotSaved": "更改未保存",
+        "workspaceConfigNotLoaded": "工作区配置尚未加载。",
+        "colorMapLimitReached": "颜色映射已达上限",
+        "colorMapLimitExceeded": "最多只能自定义 {{maxEntries}} 种颜色。"
+      },
+      "useQueryErrorToast": {
+        "error": "错误"
+      },
+      "useThemeOptions": {
+        "light": "浅色",
+        "dark": "深色",
+        "system": "跟随系统"
       }
+    },
+    "feedbackScoreEdit": {
+      "clickToEditScore": "点击编辑分数",
+      "yourFeedback": "您的反馈"
     },
     "llmMessages": {
       "showMore": "展开更多",
@@ -570,6 +686,18 @@
       "cliTriedPairingWith": "CLI 尝试使用以下 Opik 设置进行配对：",
       "opikUrl": "Opik URL",
       "project": "项目",
+      "dataset": "数据集",
+      "datasetItem": "数据集项",
+      "prompt": "提示词",
+      "experiment": "实验",
+      "experimentItem": "实验项",
+      "optimization": "优化运行",
+      "trial": "试验",
+      "annotationQueue": "标注队列",
+      "dashboard": "仪表板",
+      "traces": "追踪",
+      "testSuite": "测试套件",
+      "threads": "线程",
       "deletedProject": "已删除的项目",
       "deletedDataset": "已删除的数据集",
       "deletedDatasetItem": "已删除的数据集项",
@@ -613,7 +741,9 @@
       "copyCode": "复制代码",
       "codeCopied": "代码已复制",
       "search": "搜索",
-      "closeSearch": "关闭搜索"
+      "closeSearch": "关闭搜索",
+      "pretty": "格式化",
+      "prettyNotAvailable": "此格式暂不支持格式化显示。"
     },
     "codeDiff": {
       "changed": "已更改",
@@ -621,7 +751,10 @@
       "removed": "已移除",
       "hideDiff": "隐藏差异",
       "showDiff": "显示差异",
-      "trial": "试验"
+      "trial": "试验",
+      "baseline": "基线",
+      "parent": "父级",
+      "parentTrial": "父级 (试验 #{{trialNumber}})"
     },
     "codeSnippet": {
       "copy": "复制",
@@ -730,7 +863,29 @@
       "failedToUpdateWorkspaceUserRole": "更新工作区用户角色失败。",
       "userRoleUpdatedSuccessfully": "用户角色已成功更新。",
       "failedToUpdatePermissions": "更新工作区用户权限失败",
-      "permissionsUpdatedSuccessfully": "权限更新成功"
+      "permissionsUpdatedSuccessfully": "权限更新成功",
+      "workspaceOwner": "工作区所有者",
+      "workspaceMember": "工作区成员",
+      "inviteUsersIU": "邀请用户 (IU)",
+      "inviteUsersToWorkspace": "邀请用户加入工作区",
+      "workspaceOwnerLabel": "工作区所有者",
+      "workspaceOwnerDescription": "对所有工作区资源拥有完全权限",
+      "workspaceMemberLabel": "工作区成员",
+      "workspaceMemberDescription": "有限权限。您可以自定义分配",
+      "explain": {
+        "explainError": "解释错误",
+        "explainCost": "解释成本",
+        "explainDuration": "解释耗时",
+        "explainThisError": "解释此错误",
+        "explainThisCost": "解释此成本",
+        "explainThisDuration": "解释此耗时",
+        "ollieWaking": "Ollie 正在唤醒，请稍候后重试。",
+        "ollieTimeout": "Ollie 响应超时，请重试。",
+        "ollieUnavailable": "Ollie 暂不可用，请稍后重试。",
+        "rateLimited": "当前请求过多，请稍后重试。",
+        "atCapacity": "解释任务过多，请关闭一个后重试。",
+        "somethingWentWrong": "出现错误。"
+      }
     },
     "modelUtils": {
       "adaptive": "自适应",
@@ -979,7 +1134,17 @@
       "feedbackOption": "反馈选项",
       "availableValues": "可用值",
       "commentsDescription": "用于开放式反馈或附加说明的文本字段。",
-      "scope": "范围"
+      "scope": "范围",
+      "scopePlaceholder": "追踪",
+      "scopeOptions": {
+        "traces": "追踪",
+        "threads": "线程"
+      },
+      "validation": {
+        "projectRequired": "项目为必填项",
+        "nameRequired": "名称为必填项",
+        "nameMaxLength": "名称不能超过 255 个字符"
+      }
     },
     "automations": {
       "editRule": "编辑规则",
@@ -1030,10 +1195,23 @@
       "spans": "span",
       "tracesCapitalized": "追踪",
       "threadsCapitalized": "线程",
-      "spansCapitalized": "Span"
+      "spansCapitalized": "Span",
+      "goToProject": "前往项目",
+      "threadId": "线程 ID",
+      "provider": "提供商",
+      "filterKeyPlaceholder": "键",
+      "filterKeyOptionalPlaceholder": "键（可选）",
+      "selectScorePlaceholder": "选择评分",
+      "invalidFilterKeyError": "键无效，应为 \"input\" 或 \"output\"，并遵循此格式：\"input.[PATH]\"。例如：\"input.message\" 或仅 \"input\" 表示整个对象",
+      "filterErrorLabel": "筛选器 {{index}}：{{errors}}"
     },
-    "alerts": {
-      "typeGeneral": "通用",
+"alerts": {
+  "typeGeneral": "通用",
+  "typeLabels": {
+    "general": "通用",
+    "slack": "Slack",
+    "pagerduty": "PagerDuty"
+  },
       "trigger": {
         "traceErrorsTitle": "追踪错误阈值",
         "traceErrorsDescription": "当所选项目中追踪错误数量超过指定阈值时触发。",
@@ -1245,6 +1423,27 @@
           "conversationalCoherenceDescription": "检查输出是否与对话连贯",
           "userFrustration": "用户挫折感",
           "userFrustrationDescription": "检查输出是否让用户感到沮丧"
+        },
+        "schemaNames": {
+          "correctness": "正确性",
+          "relevance": "相关性",
+          "hallucination": "幻觉检测",
+          "moderation": "内容审核",
+          "answerRelevance": "答案相关性",
+          "structureCompliance": "结构合规性",
+          "meaningMatch": "语义匹配",
+          "userFrustration": "用户挫折感"
+        },
+        "schemaDescriptions": {
+          "correctness": "助手的输出是否有效回应了用户的输入",
+          "correctnessSpan": "Span 的输出是否有效回应了 Span 的输入",
+          "relevance": "LLM 的回复是否与对话上下文相关",
+          "hallucination": "幻觉分数用于识别回复中的事实错误",
+          "moderation": "审核分数用于识别回复中的有害内容",
+          "answerRelevance": "答案相关性分数用于检查输出是否与问题相关",
+          "structureCompliance": "如果输出符合预期结构则返回 True",
+          "meaningMatch": "评估输出是否与标准答案含义一致",
+          "userFrustration": "用户挫折感分数用于检查输出是否让用户感到沮丧"
         }
       },
       "optimizations": {
@@ -1331,6 +1530,11 @@
         }
       },
       "integrations": {
+        "functionDecorators": "函数装饰器",
+        "descriptions": {
+          "llmProvider": "LLM 提供商",
+          "frameworksTools": "框架与工具"
+        },
         "categories": {
           "all": "所有集成",
           "llmProviders": "LLM 提供商",
@@ -1358,7 +1562,34 @@
         "installOpikSectionTitle": "1. 使用命令行通过 pip 安装 Opik",
         "installOpikDefaultDescription": "使用命令行通过 pip 安装 Opik。",
         "installSdkSectionTitle": "2. 安装 SDK"
+      },
+      "providerModels": {
+        "freeModel": "免费模型"
       }
+    },
+    "llmMapper": {
+      "image": "图片 {{index}}",
+      "audio": "音频 {{index}}",
+      "toolResult": "工具结果",
+      "unknownTool": "未知工具"
+    },
+    "quickFilter": {
+      "filterByThisAttribute": "按此属性筛选",
+      "filterApplied": "筛选已应用"
+    },
+    "dashboardStore": {
+      "copySuffix": "（副本）"
+    },
+    "feedbackScoreTable": {
+      "source": "来源",
+      "key": "键",
+      "type": "类型",
+      "score": "分数",
+      "reason": "原因",
+      "scoredBy": "评分者"
+    },
+    "explainers": {
+      "whyWouldIWantToAddTracesToATestSuite": "将追踪添加到测试套件，以使用真实生产数据评估代理的性能。"
     },
     "traceLabels": {
       "spanType": "Span 类型",
@@ -1391,6 +1622,7 @@
       "totalEstimatedCost": "总预估成本",
       "avgCost": "平均成本",
       "passRate": "通过率",
+      "prompt": "提示词",
       "experimentLeaderboard": "实验排行榜"
     },
     "projectStats": {
@@ -1462,50 +1694,10 @@
       "lastMessage": "末条消息",
       "messageCount": "消息数量",
       "createdAt": "创建时间"
-    }
-  },
-  "comet": {
-    "workspaceOwner": "工作区所有者",
-    "workspaceMember": "工作区成员",
-    "inviteUsersIU": "邀请用户 (IU)",
-    "inviteUsersToWorkspace": "邀请用户加入工作区",
-    "workspaceOwnerLabel": "工作区所有者",
-    "workspaceOwnerDescription": "对所有工作区资源拥有完全权限",
-    "workspaceMemberLabel": "工作区成员",
-    "workspaceMemberDescription": "有限权限。您可以自定义分配"
-  },
-  "codeDiff": {
-    "baseline": "基线",
-    "parent": "父级",
-    "parentTrial": "父级 (试验 #{{trialNumber}})"
-  },
-  "llmMapper": {
-    "image": "图片 {{index}}",
-    "audio": "音频 {{index}}",
-    "toolResult": "工具结果",
-    "unknownTool": "未知工具"
-  },
-  "quickFilter": {
-    "filterByThisAttribute": "按此属性筛选",
-    "filterApplied": "筛选已应用"
-  },
-  "dashboardStore": {
-    "copySuffix": "（副本）"
-  },
-  "feedbackScoreTable": {
-    "source": "来源",
-    "key": "键",
-    "type": "类型",
-    "score": "分数",
-    "reason": "原因",
-    "scoredBy": "评分者"
-  },
-  "explainers": {
-    "whyWouldIWantToAddTracesToATestSuite": "将追踪添加到测试套件，以使用真实生产数据评估代理的性能。"
-  },
-  "constants": {
-    "providerModels": {
-      "freeModel": "免费模型"
+    },
+    "sourceTypeSelect": {
+      "traces": "追踪",
+      "spans": "Span"
     }
   }
 }

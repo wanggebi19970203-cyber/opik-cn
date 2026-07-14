@@ -17,6 +17,8 @@
     },
     "configuration": {
       "loadingMessage": "Loading queue information",
+      "instructions": "Instructions",
+      "feedbackScores": "Feedback scores ({{count}})",
       "reviewers": {
         "title": "Reviewers ({{count}})",
         "columns": {
@@ -45,6 +47,9 @@
       "button": "Export queue",
       "asCsv": "As CSV",
       "asJson": "As JSON"
+    },
+    "progress": {
+      "label": "{{averageProgress}}/{{itemsCount}} ({{progressPercentage}}%)"
     },
     "openSME": {
       "tooltip": "Start annotating",

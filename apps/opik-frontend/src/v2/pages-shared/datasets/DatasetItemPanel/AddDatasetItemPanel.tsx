@@ -71,23 +71,23 @@ const AddDatasetItemPanel: React.FC<AddDatasetItemPanelProps> = ({
   const { t } = useTranslation("datasets");
 
   return (
-  <AddItemPanelWrapper
-    panelId="dataset-item-panel"
-    formId={ADD_DATASET_ITEM_FORM_ID}
-    title={t("addItem.addRecord")}
-    open={open}
-    onClose={onClose}
-    initialWidth={0.4}
-  >
-    {({ tags, setHasUnsavedChanges }) => (
-      <DatasetItemFormContent
-        columns={columns}
-        tags={tags}
-        setHasUnsavedChanges={setHasUnsavedChanges}
-        onClose={onClose}
-      />
-    )}
-  </AddItemPanelWrapper>
+    <AddItemPanelWrapper
+      panelId="dataset-item-panel"
+      formId={ADD_DATASET_ITEM_FORM_ID}
+      title={t("addItem.addRecord")}
+      open={open}
+      onClose={onClose}
+      initialWidth={0.4}
+    >
+      {({ tags, setHasUnsavedChanges }) => (
+        <DatasetItemFormContent
+          columns={columns}
+          tags={tags}
+          setHasUnsavedChanges={setHasUnsavedChanges}
+          onClose={onClose}
+        />
+      )}
+    </AddItemPanelWrapper>
   );
 };
 

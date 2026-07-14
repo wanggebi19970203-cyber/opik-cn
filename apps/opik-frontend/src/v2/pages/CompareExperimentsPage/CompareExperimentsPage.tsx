@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import isUndefined from "lodash/isUndefined";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
+import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import ExperimentItemsTab from "@/v2/pages/CompareExperimentsPage/ExperimentItemsTab/ExperimentItemsTab";
@@ -16,6 +17,7 @@ import { isTestSuiteExperiment } from "@/lib/experiments";
 import CompareExperimentsDetails from "@/v2/pages/CompareExperimentsPage/CompareExperimentsDetails/CompareExperimentsDetails";
 
 const CompareExperimentsPage: React.FunctionComponent = () => {
+  const { t } = useTranslation("pages/compare-experiments");
   const [tab = "items", setTab] = useQueryParam("tab", StringParam, {
     updateType: "replaceIn",
   });
@@ -65,19 +67,19 @@ const CompareExperimentsPage: React.FunctionComponent = () => {
         <PageBodyStickyContainer direction="horizontal" limitWidth>
           <TabsList variant="segmented-primary">
             <TabsTrigger variant="segmented-primary" value="items">
-              Results
+              {t("compareExperiments.tabs.experimentItems")}
             </TabsTrigger>
             {!isTestSuite && (
               <TabsTrigger variant="segmented-primary" value="insights">
-                Insights
+                {t("compareExperiments.tabs.insights")}
               </TabsTrigger>
             )}
             <TabsTrigger variant="segmented-primary" value="config">
-              Configuration
+              {t("compareExperiments.tabs.configuration")}
             </TabsTrigger>
             {showScoresTab && (
               <TabsTrigger variant="segmented-primary" value="scores">
-                Feedback scores
+                {t("compareExperiments.tabs.feedbackScores")}
               </TabsTrigger>
             )}
           </TabsList>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { UnfoldVertical, FoldVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
 import { SUPPORTED_LANGUAGE } from "@/constants/codeLanguage";
@@ -11,6 +12,7 @@ interface DatasetSamplePreviewProps {
 const DatasetSamplePreview: React.FC<DatasetSamplePreviewProps> = ({
   datasetSample,
 }) => {
+  const { t } = useTranslation("optimizations");
   const [isSampleExpanded, setIsSampleExpanded] = useState(false);
 
   const formattedSample = useMemo(
@@ -30,19 +32,21 @@ const DatasetSamplePreview: React.FC<DatasetSamplePreviewProps> = ({
         {isSampleExpanded ? (
           <>
             <FoldVertical className="mr-1 size-4" />
-            Collapse dataset item sample
+            {t("newPage.collapseDatasetItemSample")}
           </>
         ) : (
           <>
             <UnfoldVertical className="mr-1 size-4" />
-            View dataset item sample
+            {t("newPage.viewDatasetItemSample")}
           </>
         )}
       </Button>
       {isSampleExpanded && (
         <div className="mt-2 rounded-md border border-border">
           <div className="flex h-10 items-center justify-between border-b border-border px-4">
-            <span className="comet-body-s text-muted-slate">Payload</span>
+            <span className="comet-body-s text-muted-slate">
+              {t("newPage.payload")}
+            </span>
           </div>
           <CodeHighlighter
             data={formattedSample}

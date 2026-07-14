@@ -26,7 +26,8 @@ const TracesOrSpansFeedbackScoresSelect: React.FC<
   className,
 }) => {
   const { t } = useTranslation("tracing");
-  const resolvedPlaceholder = placeholder ?? t("feedbackScoresSelect.selectScore");
+  const resolvedPlaceholder =
+    placeholder ?? t("feedbackScoresSelect.selectScore");
   const { data } = useTracesOrSpansScoresColumns(
     {
       projectId,

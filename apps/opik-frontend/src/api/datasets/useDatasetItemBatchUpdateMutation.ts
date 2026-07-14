@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 
@@ -68,7 +69,7 @@ const useDatasetItemBatchUpdateMutation = () => {
     },
     onError: (error: AxiosError) => {
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: extractErrorMessage(error),
         variant: "destructive",
       });

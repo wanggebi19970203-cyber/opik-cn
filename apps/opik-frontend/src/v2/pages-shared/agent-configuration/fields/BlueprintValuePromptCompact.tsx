@@ -167,9 +167,11 @@ const BlueprintValuePromptCompact = forwardRef<
               }
               return true;
             });
-            if (hasEmpty) return t("agentOptimization.newFieldEditor.messagesEmptyError");
+            if (hasEmpty)
+              return t("agentOptimization.newFieldEditor.messagesEmptyError");
           } else {
-            if (!draftTemplate.trim()) return t("agentOptimization.newFieldEditor.promptEmptyError");
+            if (!draftTemplate.trim())
+              return t("agentOptimization.newFieldEditor.promptEmptyError");
           }
           return null;
         },
@@ -201,6 +203,7 @@ const BlueprintValuePromptCompact = forwardRef<
         prompt,
         promptVersion,
         projectId,
+        t,
         value.key,
       ],
     );

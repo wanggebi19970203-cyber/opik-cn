@@ -148,7 +148,9 @@ const TRACE_SPECIFIC_METRICS: MetricDefinition[] = [
   },
   {
     value: "total_estimated_cost",
-    label: i18next.t("dashboards.statsCard.metrics.averageEstimatedCostPerTrace"),
+    label: i18next.t(
+      "dashboards.statsCard.metrics.averageEstimatedCostPerTrace",
+    ),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "total_estimated_cost",
     formatter: formatCost,
@@ -174,7 +176,9 @@ const SPAN_SPECIFIC_METRICS: MetricDefinition[] = [
   },
   {
     value: "total_estimated_cost",
-    label: i18next.t("dashboards.statsCard.metrics.averageEstimatedCostPerSpan"),
+    label: i18next.t(
+      "dashboards.statsCard.metrics.averageEstimatedCostPerSpan",
+    ),
     type: STATISTIC_AGGREGATION_TYPE.AVG,
     statName: "total_estimated_cost",
     formatter: formatCost,

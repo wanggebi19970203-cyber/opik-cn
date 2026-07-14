@@ -52,11 +52,10 @@ const CreateEntityMenu: React.FC<CreateEntityMenuProps> = ({
   const { t } = useTranslation("datasets");
   const options = getCreateEntityOptions(t);
   return (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-    <DropdownMenuContent align={align} className="w-80">
-      {options.map(
-        ({ mode, Icon, iconClassName, title, description }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent align={align} className="w-80">
+        {options.map(({ mode, Icon, iconClassName, title, description }) => (
           <DropdownMenuItem
             key={mode}
             className="items-start gap-2.5 py-2.5"
@@ -82,10 +81,9 @@ const CreateEntityMenu: React.FC<CreateEntityMenuProps> = ({
               </span>
             </div>
           </DropdownMenuItem>
-        ),
-      )}
-    </DropdownMenuContent>
-  </DropdownMenu>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

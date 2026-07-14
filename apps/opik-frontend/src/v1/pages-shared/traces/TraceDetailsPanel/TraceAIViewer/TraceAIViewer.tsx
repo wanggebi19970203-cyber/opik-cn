@@ -462,7 +462,7 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
         stopStreaming();
       }
     },
-    [runStreaming, toast, updateMessage, stopStreaming, startStreaming],
+    [runStreaming, t, toast, updateMessage, stopStreaming, startStreaming],
   );
 
   const handleButtonClick = useCallback(() => {
@@ -549,7 +549,9 @@ const TraceAIViewer: React.FC<TraceAIViewerProps> = ({
                     <div className="relative min-w-[20%] max-w-[90%] rounded-t-xl rounded-br-xl bg-muted/30 px-4 py-2">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Loader2 className="size-3 animate-spin" />
-                        <span className="comet-body-xs">{t("aiAssistant.thinking")}</span>
+                        <span className="comet-body-xs">
+                          {t("aiAssistant.thinking")}
+                        </span>
                       </div>
                     </div>
                   </div>

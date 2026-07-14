@@ -47,25 +47,33 @@ const DatasetItemEditorActionsPanel: React.FC<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon-sm">
-            <span className="sr-only">{t("datasets.itemActions.actionsMenu")}</span>
+            <span className="sr-only">
+              {t("datasets.itemActions.actionsMenu")}
+            </span>
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={onShare}>
             <Share className="mr-2 size-4" />
-            {t("datasets.itemActions.shareItem", { itemName: t("datasets.itemEditor.recordLowercase") })}
+            {t("datasets.itemActions.shareItem", {
+              itemName: t("datasets.itemEditor.recordLowercase"),
+            })}
           </DropdownMenuItem>
           <TooltipWrapper content={datasetItemId} side="left">
             <DropdownMenuItem onClick={onCopyId}>
               <Copy className="mr-2 size-4" />
-              {t("datasets.itemActions.copyItemId", { itemName: t("datasets.itemEditor.record") })}
+              {t("datasets.itemActions.copyItemId", {
+                itemName: t("datasets.itemEditor.record"),
+              })}
             </DropdownMenuItem>
           </TooltipWrapper>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onDelete}>
             <Trash className="mr-2 size-4" />
-            {t("datasets.itemActions.deleteItem", { itemName: t("datasets.itemEditor.recordLowercase") })}
+            {t("datasets.itemActions.deleteItem", {
+              itemName: t("datasets.itemEditor.recordLowercase"),
+            })}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -162,7 +170,9 @@ const DatasetItemEditorAutosaveLayout: React.FC<
           </div>
           {hasMedia && (
             <div className="border-b px-6 py-4">
-              <div className="mb-2 text-sm font-medium">{t("datasets.itemEditor.media")}</div>
+              <div className="mb-2 text-sm font-medium">
+                {t("datasets.itemEditor.media")}
+              </div>
               <ImagesListWrapper media={media} />
             </div>
           )}

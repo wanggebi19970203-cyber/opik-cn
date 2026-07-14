@@ -193,7 +193,9 @@ const SetupProviderDialog: React.FC<SetupProviderDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg sm:max-w-[720px]">
         <DialogHeader>
-          <DialogTitle>{t("setupProvider.addProviderConfiguration")}</DialogTitle>
+          <DialogTitle>
+            {t("setupProvider.addProviderConfiguration")}
+          </DialogTitle>
           <DialogDescription>
             <ExplainerDescription
               {...EXPLAINERS_MAP[EXPLAINER_ID.why_do_i_need_an_ai_provider]}

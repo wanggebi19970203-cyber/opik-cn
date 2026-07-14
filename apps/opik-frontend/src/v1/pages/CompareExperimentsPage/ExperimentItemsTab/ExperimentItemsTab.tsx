@@ -94,7 +94,9 @@ function getFilterColumns(
   return [
     {
       id: COLUMN_ID_ID,
-      label: isTestSuite ? t("compareExperiments.items.testSuiteItemId") : t("compareExperiments.items.datasetItemId"),
+      label: isTestSuite
+        ? t("compareExperiments.items.testSuiteItemId")
+        : t("compareExperiments.items.datasetItemId"),
       type: COLUMN_TYPE.string,
     },
     {
@@ -244,7 +246,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         },
       },
     }),
-    [experimentsIds],
+    [experimentsIds, t],
   );
 
   const datasetColumnsData = useMemo(() => {
@@ -409,7 +411,9 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         columnHelper.group({
           id: "dataset",
           meta: {
-            header: isTestSuite ? t("compareExperiments.items.testSuite") : t("compareExperiments.items.dataset"),
+            header: isTestSuite
+              ? t("compareExperiments.items.testSuite")
+              : t("compareExperiments.items.dataset"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -547,7 +551,11 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       ...sortBy(dynamicDatasetColumns, "label").map(
         ({ id, label, columnType }) => ({
           id,
-          label: `${label} (${isTestSuite ? t("compareExperiments.items.testSuite") : t("compareExperiments.items.dataset")})`,
+          label: `${label} (${
+            isTestSuite
+              ? t("compareExperiments.items.testSuite")
+              : t("compareExperiments.items.dataset")
+          })`,
           type: columnType,
         }),
       ),
@@ -666,7 +674,9 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
             searchText={search!}
             setSearchText={setSearch}
             placeholder={
-              isTestSuite ? t("compareExperiments.items.searchTestSuiteItems") : t("compareExperiments.items.searchDatasetItems")
+              isTestSuite
+                ? t("compareExperiments.items.searchTestSuiteItems")
+                : t("compareExperiments.items.searchDatasetItems")
             }
             className="w-[320px]"
             dimension="sm"

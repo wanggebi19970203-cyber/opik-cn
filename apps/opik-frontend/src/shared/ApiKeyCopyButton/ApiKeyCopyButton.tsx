@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Button, ButtonProps } from "@/ui/button";
 import { Copy } from "lucide-react";
 import copy from "clipboard-copy";
@@ -12,11 +13,12 @@ export type ApiKeyCopyButtonProps = {
 
 const ApiKeyCopyButton: React.FunctionComponent<ApiKeyCopyButtonProps> = ({
   className,
-  label = "Copy API key",
+  label,
   variant = "outline",
   size = "sm",
   disabled,
 }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const apiKey = useUserApiKey();
 
@@ -25,7 +27,7 @@ const ApiKeyCopyButton: React.FunctionComponent<ApiKeyCopyButtonProps> = ({
       return;
     }
     copy(apiKey);
-    toast({ description: "API key copied to clipboard", duration: 2000 });
+    toast({ description: t("common:messages.apiKeyCopied"), duration: 2000 });
   };
 
   if (!apiKey) {
@@ -43,7 +45,7 @@ const ApiKeyCopyButton: React.FunctionComponent<ApiKeyCopyButtonProps> = ({
       data-fs-element="CopyApiKeyButton"
     >
       <Copy className="mr-1.5 size-3.5" />
-      {label}
+      {label ?? t("common:buttons.copyApiKey")}
     </Button>
   );
 };

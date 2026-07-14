@@ -11,7 +11,8 @@
     "header": {
       "rerun": "Rerun",
       "stopExecution": "Stop Execution",
-      "dataset": "Dataset"
+      "dataset": "Dataset",
+      "goToDataset": "Go to {{name}}"
     },
     "kpi": {
       "optimizationCost": "Optimization cost",
@@ -19,7 +20,11 @@
     },
     "trials": {
       "refreshTooltip": "Refresh trials list",
-      "bestTrialConfiguration": "Best trial configuration"
+      "bestTrialConfiguration": "Best trial configuration",
+      "stepLabel": "Step {{stepIndex}}",
+      "best": "Best",
+      "noTrials": "There are no trials yet",
+      "noSearchResults": "No search results"
     },
     "bestPrompt": {
       "title": "Best prompt",
@@ -35,6 +40,20 @@
       "metric": "Metric",
       "initialPrompt": "Initial prompt",
       "noPromptMessages": "No prompt messages"
+    },
+    "status": {
+      "baseline": "Baseline",
+      "passed": "Passed",
+      "evaluating": "Evaluating",
+      "pruned": "Discarded",
+      "running": "Running"
+    },
+    "prompt": {
+      "diffVsBaseline": "Prompt diff vs baseline"
+    },
+    "view": {
+      "logs": "Logs",
+      "configuration": "Configuration"
     }
   }
 }

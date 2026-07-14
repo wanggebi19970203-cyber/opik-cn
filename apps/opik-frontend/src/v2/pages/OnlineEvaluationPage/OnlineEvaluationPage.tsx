@@ -401,13 +401,11 @@ export const OnlineEvaluationPage: React.FC = () => {
         <PageEmptyState
           lightImageUrl={emptyOnlineEvalLightUrl}
           darkImageUrl={emptyOnlineEvalDarkUrl}
-          title="No online evaluations yet"
-          description={
-            "Create a rule to automatically score your model's outputs.\nDefine criteria, evaluate responses in real time, and track quality over time."
-          }
+          title={t("onlineEvaluation.empty.title")}
+          description={t("onlineEvaluation.empty.description")}
           primaryActionLabel={
             canUpdateOnlineEvaluationRules
-              ? "Create your first rule"
+              ? t("onlineEvaluation.empty.action")
               : undefined
           }
           onPrimaryAction={

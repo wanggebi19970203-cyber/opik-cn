@@ -69,7 +69,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
       if (response.connected) {
         toast({
           title: t("ollamaProviderDetails.connectionSuccessful"),
-          description: t("ollamaProviderDetails.connectedToOllama", { version: response.version || "" }),
+          description: t("ollamaProviderDetails.connectedToOllama", {
+            version: response.version || "",
+          }),
         });
 
         // Auto-fetch models if connection successful
@@ -77,7 +79,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
       } else {
         toast({
           title: t("ollamaProviderDetails.connectionFailed"),
-          description: response.error_message || t("ollamaProviderDetails.unableToConnect"),
+          description:
+            response.error_message ||
+            t("ollamaProviderDetails.unableToConnect"),
           variant: "destructive",
         });
       }
@@ -110,7 +114,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
         toast({
           title: t("ollamaProviderDetails.modelsDiscovered"),
-          description: t("ollamaProviderDetails.foundModels", { count: models.length }),
+          description: t("ollamaProviderDetails.foundModels", {
+            count: models.length,
+          }),
         });
       } else {
         setModelsFetchFailed(false);
@@ -148,7 +154,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">{t("ollamaProviderDetails.providerName")}</Label>
+                <Label htmlFor="providerName">
+                  {t("ollamaProviderDetails.providerName")}
+                </Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -179,7 +187,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
           return (
             <FormItem>
               <div className="flex items-center justify-between">
-                <Label htmlFor="url">{t("ollamaProviderDetails.ollamaUrl")}</Label>
+                <Label htmlFor="url">
+                  {t("ollamaProviderDetails.ollamaUrl")}
+                </Label>
                 <Button
                   type="button"
                   variant="link"
@@ -203,7 +213,8 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                <strong>{t("ollamaProviderDetails.urlMustEndWith")}</strong> {t("ollamaProviderDetails.urlMustEndWithDescription")}
+                <strong>{t("ollamaProviderDetails.urlMustEndWith")}</strong>{" "}
+                {t("ollamaProviderDetails.urlMustEndWithDescription")}
               </Description>
             </FormItem>
           );
@@ -263,7 +274,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">{t("ollamaProviderDetails.apiKeyOptional")}</Label>
+              <Label htmlFor="apiKey">
+                {t("ollamaProviderDetails.apiKeyOptional")}
+              </Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
@@ -292,7 +305,9 @@ const OllamaProviderDetails: React.FC<OllamaProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">{t("ollamaProviderDetails.modelsList")}</Label>
+              <Label htmlFor="models">
+                {t("ollamaProviderDetails.modelsList")}
+              </Label>
               <FormControl>
                 <Input
                   id="models"

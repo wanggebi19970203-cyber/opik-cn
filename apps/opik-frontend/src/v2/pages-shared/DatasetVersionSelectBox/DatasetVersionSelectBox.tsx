@@ -1,4 +1,5 @@
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/select";
 import { Button } from "@/ui/button";
 import {
@@ -57,6 +58,7 @@ function DatasetVersionSelectBox({
   autoOpen = false,
   onDismiss,
 }: DatasetVersionSelectBoxProps) {
+  const { t } = useTranslation("datasets");
   const inputRef = useRef<HTMLInputElement>(null);
   const resetDialogKeyRef = useRef(0);
   const selectedInSessionRef = useRef(false);
@@ -77,7 +79,9 @@ function DatasetVersionSelectBox({
   const selectedVersionId = parsed?.versionId ?? null;
 
   const isDatasetMode = datasetType === DATASET_TYPE.DATASET;
-  const typeLabel = isDatasetMode ? "dataset" : "test suite";
+  const typeLabel = isDatasetMode
+    ? t("addEditDialog.typeLabelDataset")
+    : t("addEditDialog.typeLabelTestSuite");
   const TypeIcon = isDatasetMode ? Database : ListChecks;
 
   const {
@@ -179,7 +183,11 @@ function DatasetVersionSelectBox({
 
           {isEmpty ? (
             <div className="relative flex w-8 shrink-0 items-center justify-center self-stretch rounded">
-              <TooltipWrapper content={`This ${typeLabel} is empty`}>
+              <TooltipWrapper
+                content={t("datasetVersionSelectBox.emptyTooltip", {
+                  type: typeLabel,
+                })}
+              >
                 <Info className="size-3.5 text-light-slate" />
               </TooltipWrapper>
             </div>
@@ -212,7 +220,7 @@ function DatasetVersionSelectBox({
                   </div>
                 ) : versions.length === 0 ? (
                   <div className="comet-body-s flex items-center justify-center p-1 text-muted-slate">
-                    No versions
+                    {t("datasetVersionSelectBox.noVersions")}
                   </div>
                 ) : (
                   versions.map((version) => (
@@ -244,7 +252,7 @@ function DatasetVersionSelectBox({
     if (filteredDatasets.length === 0) {
       return (
         <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-          No search results
+          {t("datasetVersionSelectBox.noSearchResults")}
         </div>
       );
     }
@@ -256,7 +264,9 @@ function DatasetVersionSelectBox({
           <>
             <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
               <div className="comet-body-s text-light-slate">
-                Showing first {DEFAULT_LOADED_DATASETS} items.
+                {t("datasetVersionSelectBox.showingFirstItems", {
+                  count: DEFAULT_LOADED_DATASETS,
+                })}
               </div>
               <Button
                 variant="link"
@@ -264,7 +274,7 @@ function DatasetVersionSelectBox({
                 type="button"
                 className="p-0"
               >
-                Load more
+                {t("datasetVersionSelectBox.loadMore")}
               </Button>
             </div>
           </>
@@ -329,7 +339,9 @@ function DatasetVersionSelectBox({
                   <div className="flex w-full items-center">
                     <TypeIcon className="mr-2 size-3 text-[#6bdf93]" />
                     <span className="truncate font-normal">
-                      Select {typeLabel}
+                      {t("datasetVersionSelectBox.selectType", {
+                        type: typeLabel,
+                      })}
                     </span>
                   </div>
                 }
@@ -357,13 +369,15 @@ function DatasetVersionSelectBox({
                   lightImageUrl={emptyDatasetOrSuiteLightUrl}
                   darkImageUrl={emptyDatasetOrSuiteDarkUrl}
                   title={
-                    isDatasetMode ? "No datasets yet" : "No test suites yet"
+                    isDatasetMode
+                      ? t("datasetVersionSelectBox.noDatasetsYet")
+                      : t("datasetVersionSelectBox.noTestSuitesYet")
                   }
                   ctaLabel={
                     canCreateDatasets
                       ? isDatasetMode
-                        ? "Create dataset"
-                        : "Create test suite"
+                        ? t("datasetVersionSelectBox.createDataset")
+                        : t("datasetVersionSelectBox.createTestSuite")
                       : undefined
                   }
                   onCreate={
@@ -402,7 +416,9 @@ function DatasetVersionSelectBox({
                         }}
                       >
                         <Plus className="size-3.5 shrink-0" />
-                        New {typeLabel}
+                        {t("datasetVersionSelectBox.newType", {
+                          type: typeLabel,
+                        })}
                       </ListAction>
                     </>
                   )}

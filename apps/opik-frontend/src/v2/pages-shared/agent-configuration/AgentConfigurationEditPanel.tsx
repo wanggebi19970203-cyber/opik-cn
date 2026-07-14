@@ -69,7 +69,9 @@ const AgentConfigurationEditPanel: React.FC<
           <SheetTopBar variant="form" title={title}>
             <Tag variant="gray" className="flex items-center gap-1 px-1.5 py-1">
               <Pencil className="size-3" />
-              {t("agentOptimization.editPanel.fromVersion", { name: item.name })}
+              {t("agentOptimization.editPanel.fromVersion", {
+                name: item.name,
+              })}
             </Tag>
           </SheetTopBar>
         }
@@ -88,7 +90,9 @@ const AgentConfigurationEditPanel: React.FC<
               <h3 className="comet-body-accented flex items-center gap-1">
                 {view === "diff" ? (
                   <>
-                    {t("agentOptimization.editPanel.compareWith", { name: item.name })}
+                    {t("agentOptimization.editPanel.compareWith", {
+                      name: item.name,
+                    })}
                     <ArrowRight className="size-3.5" />
                     {t("agentOptimization.editPanel.currentChanges")}
                   </>
@@ -153,7 +157,9 @@ const AgentConfigurationEditPanel: React.FC<
               state.isEmpty
             }
           >
-            {state.isSaving ? t("agentOptimization.editPanel.saving") : t("agentOptimization.editPanel.saveNewVersion")}
+            {state.isSaving
+              ? t("agentOptimization.editPanel.saving")
+              : t("agentOptimization.editPanel.saveNewVersion")}
           </Button>
         </div>
       </SheetContent>

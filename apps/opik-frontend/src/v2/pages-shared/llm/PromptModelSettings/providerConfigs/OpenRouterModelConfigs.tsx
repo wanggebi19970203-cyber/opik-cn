@@ -30,7 +30,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.TEMPERATURE}
           label={t("sharedModelConfigs.temperature")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.temperatureTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.temperatureTooltip")}
+            />
           }
         />
       )}
@@ -45,7 +47,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.MAX_TOKENS}
           label={t("openRouterModelConfigs.maxTokens")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("openRouterModelConfigs.maxTokensTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("openRouterModelConfigs.maxTokensTooltip")}
+            />
           }
         />
       )}
@@ -60,7 +64,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.TOP_P}
           label={t("sharedModelConfigs.topP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.topPTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -75,7 +81,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.TOP_K}
           label={t("sharedModelConfigs.topK")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("openRouterModelConfigs.topKTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("openRouterModelConfigs.topKTooltip")}
+            />
           }
         />
       )}
@@ -90,7 +98,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.FREQUENCY_PENALTY}
           label={t("sharedModelConfigs.frequencyPenalty")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("openRouterModelConfigs.frequencyPenaltyTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("openRouterModelConfigs.frequencyPenaltyTooltip")}
+            />
           }
         />
       )}
@@ -105,7 +115,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.PRESENCE_PENALTY}
           label={t("sharedModelConfigs.presencePenalty")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("openRouterModelConfigs.presencePenaltyTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("openRouterModelConfigs.presencePenaltyTooltip")}
+            />
           }
         />
       )}
@@ -120,7 +132,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.REPETITION_PENALTY}
           label={t("sharedModelConfigs.repetitionPenalty")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("openRouterModelConfigs.repetitionPenaltyTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("openRouterModelConfigs.repetitionPenaltyTooltip")}
+            />
           }
         />
       )}
@@ -135,7 +149,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.MIN_P}
           label={t("sharedModelConfigs.minP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("openRouterModelConfigs.minPTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("openRouterModelConfigs.minPTooltip")}
+            />
           }
         />
       )}
@@ -166,7 +182,9 @@ const OpenRouterModelConfigs = ({
         defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.THROTTLING}
         label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.throttlingTooltip")}
+          />
         }
       />
       <SliderInputControl
@@ -182,7 +200,9 @@ const OpenRouterModelConfigs = ({
         defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")}
+          />
         }
       />
     </div>

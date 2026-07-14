@@ -1,4 +1,5 @@
 import React from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,14 +25,17 @@ import {
 import { Textarea } from "@/ui/textarea";
 import useRequestIntegrationMutation from "@/api/feedback/useRequestIntegrationMutation";
 
-const requestIntegrationSchema = z.object({
-  integrationRequest: z
-    .string()
-    .min(5, "Please provide at least 10 characters describing the integration")
-    .max(1000, "Description must be 1000 characters or less"),
-});
+const createRequestIntegrationSchema = (t: TFunction) =>
+  z.object({
+    integrationRequest: z
+      .string()
+      .min(5, t("onboarding.integrationExplorer.requestMinLength"))
+      .max(1000, t("onboarding.integrationExplorer.requestMaxLength")),
+  });
 
-type RequestIntegrationFormData = z.infer<typeof requestIntegrationSchema>;
+type RequestIntegrationFormData = z.infer<
+  ReturnType<typeof createRequestIntegrationSchema>
+>;
 
 type RequestIntegrationDialogProps = {
   open: boolean;
@@ -44,6 +48,10 @@ const RequestIntegrationDialog: React.FunctionComponent<
   const { t } = useTranslation();
   const { mutate: requestIntegration, isPending: isRequestingIntegration } =
     useRequestIntegrationMutation();
+  const requestIntegrationSchema = React.useMemo(
+    () => createRequestIntegrationSchema(t),
+    [t],
+  );
 
   const form = useForm<RequestIntegrationFormData>({
     resolver: zodResolver(requestIntegrationSchema),
@@ -80,7 +88,9 @@ const RequestIntegrationDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t("onboarding.integrationExplorer.requestAnIntegration")}</DialogTitle>
+          <DialogTitle>
+            {t("onboarding.integrationExplorer.requestAnIntegration")}
+          </DialogTitle>
           <DialogDescription>
             {t("onboarding.integrationExplorer.requestIntegrationDescription")}
           </DialogDescription>
@@ -94,12 +104,16 @@ const RequestIntegrationDialog: React.FunctionComponent<
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="sr-only">
-                    {t("onboarding.integrationExplorer.integrationDescriptionLabel")}
+                    {t(
+                      "onboarding.integrationExplorer.integrationDescriptionLabel",
+                    )}
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder={t("onboarding.integrationExplorer.describeIntegrationPlaceholder")}
+                      placeholder={t(
+                        "onboarding.integrationExplorer.describeIntegrationPlaceholder",
+                      )}
                       className="min-h-32 resize-none"
                     />
                   </FormControl>

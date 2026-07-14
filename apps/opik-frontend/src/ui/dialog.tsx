@@ -2,6 +2,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useObserveResizeNode } from "@/hooks/useObserveResizeNode";
 import { usePortalContainer } from "@/lib/portal-container";
@@ -35,6 +36,7 @@ const DialogContent = React.forwardRef<
     hideOverlay?: boolean;
   }
 >(({ className, children, hideOverlay, ...props }, ref) => {
+  const { t } = useTranslation("common");
   const container = usePortalContainer();
   return (
     <DialogPortal container={container}>
@@ -52,7 +54,7 @@ const DialogContent = React.forwardRef<
         {children}
         <DialogPrimitive.Close className="absolute right-8 top-7 opacity-70 transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
           <X className="size-4" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{t("common.buttons.close")}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

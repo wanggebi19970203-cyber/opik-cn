@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import get from "lodash/get";
 import api, {
@@ -68,7 +69,7 @@ const useTraceFeedbackScoreSetMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

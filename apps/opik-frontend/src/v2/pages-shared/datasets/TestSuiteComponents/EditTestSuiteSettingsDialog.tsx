@@ -107,7 +107,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
               onChangeEditable={(index, value) => update(index, { value })}
               onRemoveEditable={(index) => remove(index)}
               onAdd={() => prepend({ value: "" })}
-              placeholder="e.g. Response should be factually accurate and cite sources"
+              placeholder={t("testSuite.assertionPlaceholder")}
             />
 
             <h3 className="comet-body-s-accented mb-1 mt-6">

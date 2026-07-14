@@ -165,10 +165,10 @@ const TrialPage: React.FunctionComponent = () => {
           >
             <TabsList variant="underline">
               <TabsTrigger variant="underline" value="results">
-                {t("tabs.results", "Results")}
+                {t("tabs.results")}
               </TabsTrigger>
               <TabsTrigger variant="underline" value="configuration">
-                {t("tabs.configuration", "Configuration")}
+                {t("tabs.configuration")}
               </TabsTrigger>
             </TabsList>
           </PageBodyStickyContainer>
@@ -192,7 +192,9 @@ const TrialPage: React.FunctionComponent = () => {
             {canViewDatasets && (
               <>
                 <PageBodyStickyContainer direction="horizontal" limitWidth>
-                  <h2 className="comet-title-s mb-4">{t("evaluationResults", "Evaluation results")}</h2>
+                  <h2 className="comet-title-s mb-4">
+                    {t("evaluationResults")}
+                  </h2>
                 </PageBodyStickyContainer>
                 <TrialItemsTab
                   objectiveName={optimization?.objective_name}

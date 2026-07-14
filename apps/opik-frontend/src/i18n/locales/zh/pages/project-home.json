@@ -2,6 +2,10 @@
   "projectHome": {
     "title": "项目首页",
     "description": "项目概览和快捷操作",
+    "greeting": "嗨",
+    "greetingWithName": "嗨，{{name}}",
+    "viewLogs": "查看日志",
+    "viewDashboards": "查看仪表盘",
     "stats": {
       "traces": "追踪",
       "datasets": "数据集",
@@ -29,6 +33,7 @@
     "reactivateDailyBriefing": "重新激活每日简报",
     "reactivate": "重新激活",
     "actionCount": "{{count}} 个操作",
+    "actionCount_plural": "{{count}} 个操作",
     "settings": "简报设置",
     "emptyTitle": "每日推荐以改进您的代理",
     "emptyDescription": "每天 Ollie 会审查您项目过去 24 小时的数据 — 总结变化、标记异常并建议下一步操作。",

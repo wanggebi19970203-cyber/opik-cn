@@ -17,27 +17,9 @@ interface ScoresContentProps {
   annotationQueue: AnnotationQueue;
 }
 
-export const DEFAULT_COLUMNS: ColumnData<FeedbackDefinition>[] = [
-  {
-    id: "name",
-    label: "Feedback option",
-    type: COLUMN_TYPE.numberDictionary,
-    cell: FeedbackOptionCell as never,
-  },
-  {
-    id: "description",
-    label: "Description",
-    type: COLUMN_TYPE.string,
-  },
-  {
-    id: "values",
-    label: "Available values",
-    type: COLUMN_TYPE.string,
-    cell: FeedbackDefinitionsValueCell as never,
-  },
-];
-
-const getTranslatedColumns = (t: (key: string) => string): ColumnData<FeedbackDefinition>[] => [
+const getTranslatedColumns = (
+  t: (key: string) => string,
+): ColumnData<FeedbackDefinition>[] => [
   {
     id: "name",
     label: t("common.annotationQueues.feedbackOption"),
@@ -107,7 +89,7 @@ const ScoresContent: React.FunctionComponent<ScoresContentProps> = ({
     }
 
     return definitions;
-  }, [data?.content, hasFeedbackDefinitions, hasComments, annotationQueue]);
+  }, [data?.content, hasFeedbackDefinitions, hasComments, annotationQueue, t]);
 
   const columns = useMemo(() => {
     const translatedColumns = getTranslatedColumns(t);

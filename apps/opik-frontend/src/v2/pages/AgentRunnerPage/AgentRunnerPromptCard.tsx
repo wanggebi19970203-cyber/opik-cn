@@ -189,6 +189,7 @@ const AgentRunnerPromptCard = forwardRef<
       selectedVersion?.version.type,
       selectedVersion?.version.metadata,
       activeProjectId,
+      t,
       toast,
     ],
   );
@@ -251,6 +252,7 @@ const AgentRunnerPromptCard = forwardRef<
       selectedVersion?.version.type,
       selectedVersion?.version.metadata,
       activeProjectId,
+      t,
       toast,
     ],
   );

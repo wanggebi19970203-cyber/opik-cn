@@ -5,6 +5,21 @@
     "description": "追踪和管理优化实验",
     "create": "创建优化运行",
     "delete": "删除优化运行",
+    "addOptimization": {
+      "selectRow": "选择行"
+    },
+    "newRun": {
+      "title": "新建优化运行",
+      "closePanel": "关闭面板",
+      "close": "关闭",
+      "starting": "启动中...",
+      "optimizePrompt": "优化提示词",
+      "cancel": "取消",
+      "loading": "加载优化中...",
+      "loadPrompt": "加载提示词",
+      "samplePayload": "示例数据",
+      "copySamplePayload": "复制示例数据"
+    },
     "empty": {
       "title": "暂无优化运行",
       "description": "创建您的第一个优化运行开始使用。",
@@ -29,9 +44,11 @@
     },
     "columns": {
       "name": "名称",
+      "id": "运行 ID",
       "dataset": "数据集",
       "datasetName": "数据集名称",
       "algorithm": "算法",
+      "metric": "指标",
       "status": "状态",
       "duration": "时长",
       "created": "创建时间",
@@ -54,6 +71,7 @@
     "actionsMenu": "操作菜单",
     "status": {
       "running": "运行中",
+      "initialized": "已初始化",
       "completed": "已完成",
       "failed": "失败",
       "cancelled": "已取消"
@@ -82,7 +100,14 @@
       "prompt": "提示词",
       "loadChatPrompt": "加载聊天提示词",
       "loadingOptimization": "加载优化中...",
-      "preparingDataset": "准备数据集中..."
+      "preparingDataset": "准备数据集中...",
+      "loadError": "无法加载所选条目来源。请选择其他来源或重试。",
+      "variableNotInSource": "{{variables}} 不在所选条目来源中",
+      "availableVariables": "可用：{{variables}}",
+      "updatePromptOrMetric": "请更新提示词/指标或选择匹配的条目来源。",
+      "collapseDatasetItemSample": "收起数据集项目示例",
+      "viewDatasetItemSample": "查看数据集项目示例",
+      "payload": "载荷"
     },
     "configSidebar": {
       "algorithm": "算法",
@@ -154,6 +179,8 @@
       "askAdmin": "请工作区管理员添加提供商以选择模型。",
       "noSearchResults": "无搜索结果",
       "placeholder": "选择 LLM 模型",
+      "sameAsPrompt": "与提示词相同",
+      "usePromptModel": "使用提示词模型",
       "searchPlaceholder": "搜索模型",
       "manageProviders": "管理 AI 提供商"
     },
@@ -191,7 +218,11 @@
       "title": "运行优化",
       "or": "或",
       "optimizeYourOwnPrompt": "优化您自己的提示词",
-      "optimizeYourOwnPromptDescription": "从零开始，配置您自己的优化设置。"
+      "optimizeYourOwnPromptDescription": "从零开始，配置您自己的优化设置。",
+      "tryTemplate": "尝试模板",
+      "createOptimization": "创建优化",
+      "viewSdkGuide": "查看 SDK 指南",
+      "useOptimizationStudio": "使用优化工作室"
     }
   }
 }

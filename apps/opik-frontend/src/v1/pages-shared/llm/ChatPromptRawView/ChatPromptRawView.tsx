@@ -152,9 +152,7 @@ const ChatPromptRawView: React.FC<ChatPromptRawViewProps> = ({
           {t("chatPromptRawView.messageFormatInvalid")}
         </p>
       )}
-      <Description>
-        {t("chatPromptRawView.editRawJsonDescription")}
-      </Description>
+      <Description>{t("chatPromptRawView.editRawJsonDescription")}</Description>
     </>
   );
 };

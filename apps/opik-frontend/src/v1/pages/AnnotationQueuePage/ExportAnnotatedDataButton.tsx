@@ -264,7 +264,7 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
         setLoading(false);
       }
     },
-    [getData, toast],
+    [getData, t, toast],
   );
 
   const exportCSVHandler = useCallback(() => {

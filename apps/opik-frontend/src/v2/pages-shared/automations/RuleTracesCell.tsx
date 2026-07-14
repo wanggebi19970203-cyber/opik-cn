@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -8,6 +9,7 @@ import { Filter } from "@/types/filters";
 import TraceLogsSidebarButton from "@/v2/pages-shared/traces/TraceLogsSidebar/TraceLogsSidebarButton";
 
 const RuleTracesCell = (context: CellContext<EvaluatorsRule, string>) => {
+  const { t } = useTranslation("online-evaluation");
   const rule = context.row.original;
   const projectId =
     rule.projects?.[0]?.project_id ?? rule.project_id ?? rule.project_ids?.[0];
@@ -46,7 +48,7 @@ const RuleTracesCell = (context: CellContext<EvaluatorsRule, string>) => {
         sourceFilters={ruleFilters}
         lockScope
         scopeLabel={rule.name}
-        label="Go to traces"
+        label={t("onlineEvaluation.goToTraces")}
         renderSidebar={false}
       />
     </CellWrapper>

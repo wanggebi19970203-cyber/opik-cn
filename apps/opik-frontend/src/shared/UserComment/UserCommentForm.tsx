@@ -14,7 +14,9 @@ const CancelButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const { t } = useTranslation();
     return (
       <Button {...buttonProps} variant="outline" size="icon-xs" ref={ref}>
-        <span className="sr-only">{t("common:comments.cancelEditComment")}</span>
+        <span className="sr-only">
+          {t("common:comments.cancelEditComment")}
+        </span>
         <X />
       </Button>
     );
@@ -163,12 +165,17 @@ type UserCommentFormComponents = {
   StandaloneTextareaField: typeof StandaloneTextareaField;
 };
 
-const createCommentSchema = (t: (key: string, opts?: Record<string, unknown>) => string) =>
+const createCommentSchema = (
+  t: (key: string, opts?: Record<string, unknown>) => string,
+) =>
   z.object({
     commentText: z
       .string()
       .min(1, t("common:comments.canNotBeEmpty"))
-      .max(MAX_LENGTH_LIMIT, t("common:comments.maxCharacters", { count: MAX_LENGTH_LIMIT })),
+      .max(
+        MAX_LENGTH_LIMIT,
+        t("common:comments.maxCharacters", { count: MAX_LENGTH_LIMIT }),
+      ),
   });
 type CommentFormValues = z.infer<ReturnType<typeof createCommentSchema>>;
 

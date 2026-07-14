@@ -36,7 +36,8 @@ const ExperimentsPathsAutocomplete: React.FC<
   className,
 }) => {
   const { t } = useTranslation("experiments");
-  const resolvedPlaceholder = placeholder ?? t('selectKeyFromRecentExperiments');
+  const resolvedPlaceholder =
+    placeholder ?? t("selectKeyFromRecentExperiments");
   const { data, isPending } = useExperimentsList({
     promptId,
     sorting,

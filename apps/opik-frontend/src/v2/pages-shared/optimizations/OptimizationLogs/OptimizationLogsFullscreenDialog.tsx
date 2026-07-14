@@ -81,9 +81,12 @@ const OptimizationLogsFullscreenDialog: React.FC<
             <span>{t("optimizations.logs.title")}</span>
             {lastUpdatedAt && (
               <TooltipWrapper
-                content={`${t("optimizations.logs.lastUpdatedAt")} ${formatDate(lastUpdatedAt, {
-                  includeSeconds: true,
-                })}`}
+                content={`${t("optimizations.logs.lastUpdatedAt")} ${formatDate(
+                  lastUpdatedAt,
+                  {
+                    includeSeconds: true,
+                  },
+                )}`}
               >
                 <Clock className="size-3.5 text-muted-slate" />
               </TooltipWrapper>

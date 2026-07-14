@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import AIProvidersTab from "@/v2/pages/ConfigurationPage/AIProvidersTab/AIProvidersTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { StringParam, useQueryParam } from "use-query-params";
@@ -11,6 +12,7 @@ import { CONFIGURATION_TABS } from "@/v2/constants/configuration";
 const DEFAULT_TAB = CONFIGURATION_TABS.FEEDBACK_DEFINITIONS;
 
 const ConfigurationPage = () => {
+  const { t } = useTranslation("pages/settings");
   const [tab, setTab] = useQueryParam("tab", StringParam);
 
   const CollaboratorsTabTrigger = usePluginsStore(
@@ -26,7 +28,7 @@ const ConfigurationPage = () => {
 
   return (
     <div className="pt-5">
-      <h1 className="comet-body-accented">Configuration</h1>
+      <h1 className="comet-body-accented">{t("settings.title")}</h1>
 
       <div className="mt-6">
         <Tabs
@@ -39,25 +41,25 @@ const ConfigurationPage = () => {
               variant="underline"
               value={CONFIGURATION_TABS.FEEDBACK_DEFINITIONS}
             >
-              Feedback definitions
+              {t("settings.sections.feedback")}
             </TabsTrigger>
             <TabsTrigger
               variant="underline"
               value={CONFIGURATION_TABS.ENVIRONMENTS}
             >
-              Environments
+              {t("settings.sections.environments")}
             </TabsTrigger>
             <TabsTrigger
               variant="underline"
               value={CONFIGURATION_TABS.AI_PROVIDER}
             >
-              AI Providers
+              {t("settings.sections.providers")}
             </TabsTrigger>
             <TabsTrigger
               variant="underline"
               value={CONFIGURATION_TABS.WORKSPACE_PREFERENCES}
             >
-              Workspace preferences
+              {t("settings.sections.preferences")}
             </TabsTrigger>
             {CollaboratorsTabTrigger && CollaboratorsTab && (
               <CollaboratorsTabTrigger value={CONFIGURATION_TABS.MEMBERS} />

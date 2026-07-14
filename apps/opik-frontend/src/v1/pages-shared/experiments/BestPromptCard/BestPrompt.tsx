@@ -163,15 +163,15 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
       if (promptId && promptName) {
         const isNewPrompt = promptId !== existingPrompt?.id;
         const message = isNewPrompt
-          ? `${t('newPromptCreated')} ${promptName}`
-          : `${t('newVersionSavedTo')} ${promptName}`;
+          ? `${t("newPromptCreated")} ${promptName}`
+          : `${t("newVersionSavedTo")} ${promptName}`;
 
         toast({
           description: message,
           actions: [
             <ToastAction
               key="save-new-prompt-version"
-              altText={t('goToPrompt')}
+              altText={t("goToPrompt")}
               variant="link"
               size="sm"
               className="px-0"
@@ -182,13 +182,13 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
                 })
               }
             >
-              {t('goToPrompt')}
+              {t("goToPrompt")}
             </ToastAction>,
           ],
         });
       }
     },
-    [closeSaveDialog, toast, workspaceName, navigate, existingPrompt?.id],
+    [closeSaveDialog, t, toast, workspaceName, navigate, existingPrompt?.id],
   );
 
   return (
@@ -198,18 +198,18 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
           <div>
             <div className="flex items-center gap-1">
               <CardTitle className="comet-body-s-accented">
-                {t('bestPrompt')}
+                {t("bestPrompt")}
               </CardTitle>
               <div className="flex items-center">
                 <CopyButton
                   text={currentPromptJson}
-                  message={t('promptCopiedToClipboard')}
-                  tooltipText={t('copyPrompt')}
+                  message={t("promptCopiedToClipboard")}
+                  tooltipText={t("copyPrompt")}
                   variant="ghost"
                   size="icon-xs"
                 />
                 {canSave && (
-                  <TooltipWrapper content={t('saveToPromptLibrary')}>
+                  <TooltipWrapper content={t("saveToPromptLibrary")}>
                     <Button
                       variant="ghost"
                       size="icon-xs"
@@ -276,13 +276,13 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
             search={{ trials: [experiment.id] }}
           >
             <Button variant="ghost" className="flex items-center pl-0">
-              {t('viewDetails')} <ArrowRight className="size-4" />
+              {t("viewDetails")} <ArrowRight className="size-4" />
             </Button>
           </Link>
           <div className="flex items-center gap-1">
             {baselinePrompt && (
               <>
-                <TooltipWrapper content={t('compareBaselinePrompt')}>
+                <TooltipWrapper content={t("compareBaselinePrompt")}>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -290,19 +290,19 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
                     className="flex items-center gap-1"
                   >
                     <Split className="size-4" />
-                    {t('diff')}
+                    {t("diff")}
                   </Button>
                 </TooltipWrapper>
                 <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
                   <DialogContent className="max-w-lg sm:max-w-[880px]">
                     <DialogHeader>
-                      <DialogTitle>{t('comparePrompts')}</DialogTitle>
+                      <DialogTitle>{t("comparePrompts")}</DialogTitle>
                     </DialogHeader>
                     <div className="grid grid-cols-2 gap-4 pb-2">
                       <div>
                         <div className="mb-2 px-0.5">
                           <span className="comet-body-s-accented">
-                            {t('baseline')}
+                            {t("baseline")}
                           </span>
                         </div>
                         <div className="comet-code h-[620px] overflow-y-auto whitespace-pre-line break-words rounded-md border px-2.5 py-1.5">
@@ -311,7 +311,9 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
                       </div>
                       <div>
                         <div className="mb-2 px-0.5">
-                          <span className="comet-body-s-accented">{t('current')}</span>
+                          <span className="comet-body-s-accented">
+                            {t("current")}
+                          </span>
                         </div>
                         <div className="comet-code h-[620px] overflow-y-auto whitespace-pre-line break-words rounded-md border px-2.5 py-1.5">
                           <TextDiff

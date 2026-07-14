@@ -19,6 +19,7 @@
     "compare": "Compare",
     "noCommitsYet": "There are no commits yet",
     "searchPlaceholder": "Search in prompt or commit message",
+    "keyPlaceholder": "Key",
     "columns": {
       "prompt": "Prompt",
       "metadata": "Metadata",
@@ -36,12 +37,31 @@
     "comparePrompts": "Compare prompts",
     "chatMessages": "Chat messages",
     "prompt": "Prompt",
-    "metadata": "Metadata"
+    "metadata": "Metadata",
+    "diff": "Diff"
   },
   "experiments": {
     "noExperimentsYet": "No experiments have used this prompt yet",
     "noSearchResults": "No search results",
-    "searchByName": "Search by name"
+    "searchByName": "Search by name",
+    "table": {
+      "name": "Name",
+      "promptVersion": "Prompt version",
+      "id": "ID",
+      "created": "Created",
+      "createdBy": "Created by",
+      "avgDuration": "Avg duration",
+      "durationP90": "Duration (p90)",
+      "durationP99": "Duration (p99)",
+      "traceCount": "Trace count",
+      "totalEstimatedCost": "Total estimated cost",
+      "avgCost": "Avg cost",
+      "passRate": "Pass rate",
+      "feedbackScores": "Feedback scores",
+      "comments": "Comments",
+      "tags": "Tags",
+      "configuration": "Configuration"
+    }
   },
   "editPrompt": {
     "title": "Edit prompt",
@@ -74,6 +94,7 @@
     "newVersionTag": "New version tag",
     "addVersionTag": "Add version tag",
     "versionTag": "version tag",
+    "use": "Use",
     "deployTo": "Deploy to",
     "noEnvironmentsConfigured": "No environments configured",
     "currentlyVersion": "Currently v{{version}}",
@@ -382,6 +403,9 @@
     "throttlingTooltip": "Minimum time in seconds between consecutive requests to avoid rate limiting",
     "maxConcurrentRequests": "Max concurrent requests",
     "maxConcurrentRequestsTooltip": "Maximum number of requests that can run simultaneously. Set to 1 for sequential execution, higher values for parallel processing",
+    "extraBodyParameters": "Extra body parameters",
+    "extraBodyParametersTooltip": "Additional JSON key-value pairs sent in the request body. Use this to pass provider-specific parameters not covered above.",
+    "invalidJson": "Invalid JSON",
     "clearToUseTopP": "Clear to use Top P",
     "clearToUseTemperature": "Clear to use Temperature",
     "anthropicTemperatureTooltip": "Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive. Note: Anthropic models require using either Temperature OR Top P, not both.",
@@ -449,6 +473,8 @@
     "prompt": "Prompt",
     "placeholder": "Type your prompt...",
     "variableSyntaxHint": "Use mustache syntax to reference test suite variables in your prompt. Example: {{example}}.",
-    "messageFormatInvalid": "Message format is invalid."
+    "messageFormatInvalid": "Message format is invalid.",
+    "pretty": "Pretty",
+    "json": "JSON"
   }
 }

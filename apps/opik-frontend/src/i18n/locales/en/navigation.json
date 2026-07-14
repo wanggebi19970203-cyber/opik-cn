@@ -8,10 +8,12 @@
       "dashboards": "Dashboards",
       "prompts": "Prompt library",
       "agent_runner": "Agent playground",
+      "agentPlayground": "Agent playground",
       "playground": "Prompt playground",
       "optimizations": "Optimization runs",
       "optimizationStudio": "Optimization studio",
       "test_suites": "Test suites",
+      "testSuites": "Test suites",
       "datasets": "Datasets",
       "experiments": "Experiments",
       "annotation_queues": "Annotation queues",
@@ -19,7 +21,8 @@
       "alerts": "Alerts",
       "workspace": "Workspace",
       "configuration": "Configuration",
-      "projects": "Projects"
+      "projects": "Projects",
+      "resolvedIssues": "Resolved issues"
     },
     "sidebar": {
       "expandSidebar": "Expand sidebar",
@@ -84,7 +87,16 @@
       "resourceDashboards": "dashboards",
       "resourceTestSuites": "test suites",
       "resourceExperiments": "experiments",
-      "resourceOptimizationRuns": "optimization runs"
+      "resourceOptimizationRuns": "optimization runs",
+      "resourceDatasets": "datasets",
+      "noPermissionsViewAlerts": "You don't have permissions to view alerts in this workspace.",
+      "noPermissionsViewOnlineEvaluation": "You don't have permissions to view online evaluation in this workspace.",
+      "noPermissionsUseAgentPlayground": "You don't have permissions to use agent playground in this workspace.",
+      "noPermissionsViewPromptLibrary": "You don't have permissions to view the prompt library in this workspace.",
+      "resourceAlerts": "alerts",
+      "resourceOnlineEvaluation": "online evaluation",
+      "resourceAgentPlayground": "agent playground",
+      "resourcePromptLibrary": "the prompt library"
     },
     "projectSelector": {
       "loading": "Loading\u2026",

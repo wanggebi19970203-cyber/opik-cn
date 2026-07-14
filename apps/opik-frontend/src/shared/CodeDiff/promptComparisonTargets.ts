@@ -40,8 +40,7 @@ export const PARENT_TARGET_LABEL = "Parent";
 
 export const getBaselineTargetLabel = (): string =>
   i18next.t("codeDiff.baseline");
-export const getParentTargetLabel = (): string =>
-  i18next.t("codeDiff.parent");
+export const getParentTargetLabel = (): string => i18next.t("codeDiff.parent");
 
 /**
  * A candidate usually has a single parent, shown simply as "Parent" (matching

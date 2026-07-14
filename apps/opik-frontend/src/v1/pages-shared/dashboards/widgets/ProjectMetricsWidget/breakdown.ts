@@ -11,8 +11,12 @@ export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
   [BREAKDOWN_FIELD.TAGS]: i18next.t("dashboards.breakdown.fields.tags"),
   [BREAKDOWN_FIELD.METADATA]: i18next.t("dashboards.breakdown.fields.metadata"),
   [BREAKDOWN_FIELD.NAME]: i18next.t("dashboards.breakdown.fields.name"),
-  [BREAKDOWN_FIELD.ERROR_INFO]: i18next.t("dashboards.breakdown.fields.hasError"),
-  [BREAKDOWN_FIELD.ERROR_TYPE]: i18next.t("dashboards.breakdown.fields.errorType"),
+  [BREAKDOWN_FIELD.ERROR_INFO]: i18next.t(
+    "dashboards.breakdown.fields.hasError",
+  ),
+  [BREAKDOWN_FIELD.ERROR_TYPE]: i18next.t(
+    "dashboards.breakdown.fields.errorType",
+  ),
   [BREAKDOWN_FIELD.MODEL]: i18next.t("dashboards.breakdown.fields.model"),
   [BREAKDOWN_FIELD.PROVIDER]: i18next.t("dashboards.breakdown.fields.provider"),
   [BREAKDOWN_FIELD.TYPE]: i18next.t("dashboards.breakdown.fields.spanType"),

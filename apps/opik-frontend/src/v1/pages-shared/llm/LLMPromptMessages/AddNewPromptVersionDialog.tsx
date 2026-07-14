@@ -217,7 +217,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[620px]">
         <DialogHeader>
-          <DialogTitle>{t("addNewPromptVersionDialog.saveToPromptLibrary")}</DialogTitle>
+          <DialogTitle>
+            {t("addNewPromptVersionDialog.saveToPromptLibrary")}
+          </DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
           {prompt && canCreatePrompts && (
@@ -268,7 +270,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 
           {isEdit ? (
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="promptMetadata">{t("addNewPromptVersionDialog.commitMessage")}</Label>
+              <Label htmlFor="promptMetadata">
+                {t("addNewPromptVersionDialog.commitMessage")}
+              </Label>
               <Textarea
                 className="comet-code min-h-20"
                 id="promptMetadata"
@@ -279,10 +283,14 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
           ) : (
             <>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="promptName">{t("addNewPromptVersionDialog.nameLabel")}</Label>
+                <Label htmlFor="promptName">
+                  {t("addNewPromptVersionDialog.nameLabel")}
+                </Label>
                 <Input
                   id="promptName"
-                  placeholder={t("addNewPromptVersionDialog.promptNamePlaceholder")}
+                  placeholder={t(
+                    "addNewPromptVersionDialog.promptNamePlaceholder",
+                  )}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />
@@ -311,7 +319,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                 </Label>
                 <Textarea
                   id="promptDescription"
-                  placeholder={t("addNewPromptVersionDialog.promptDescriptionPlaceholder")}
+                  placeholder={t(
+                    "addNewPromptVersionDialog.promptDescriptionPlaceholder",
+                  )}
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   maxLength={255}
@@ -324,7 +334,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
           <div className="flex flex-col gap-2 border-t border-border pb-4">
             <Accordion type="multiple">
               <AccordionItem value="metadata">
-                <AccordionTrigger>{t("addNewPromptVersionDialog.metadataLabel")}</AccordionTrigger>
+                <AccordionTrigger>
+                  {t("addNewPromptVersionDialog.metadataLabel")}
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="rounded-md">
                     <CodeMirror
@@ -345,7 +357,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
               </AccordionItem>
               {showInvalidJSON && (
                 <Alert variant="destructive">
-                  <AlertTitle>{t("addNewPromptVersionDialog.metadataFieldNotValid")}</AlertTitle>
+                  <AlertTitle>
+                    {t("addNewPromptVersionDialog.metadataFieldNotValid")}
+                  </AlertTitle>
                 </Alert>
               )}
             </Accordion>
@@ -353,7 +367,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("addNewPromptVersionDialog.cancel")}</Button>
+            <Button variant="outline">
+              {t("addNewPromptVersionDialog.cancel")}
+            </Button>
           </DialogClose>
           <Button
             type="submit"

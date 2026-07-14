@@ -83,7 +83,8 @@ const DiagnosticsSettingsDialog: React.FC<DiagnosticsSettingsDialogProps> = ({
             {t("signals.diagnosticsSettings.billing")}
           </span>
           <span className="comet-body-s text-muted-slate">
-            Runs on your Ollie tokens. {BillingLink && <BillingLink />}
+            {t("signals.diagnosticsSettings.billingDescription")}{" "}
+            {BillingLink && <BillingLink />}
           </span>
         </div>
 

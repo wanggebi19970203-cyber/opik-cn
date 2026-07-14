@@ -28,47 +28,49 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
   left: ["version_name"],
 };
 
-const COLUMNS: ColumnData<DatasetVersion>[] = [
+const getColumns = (
+  t: (key: string) => string,
+): ColumnData<DatasetVersion>[] => [
   {
     id: "version_name",
-    label: "Version",
+    label: t("versionHistoryTab.version"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "change_summary",
-    label: "Changes summary",
+    label: t("versionHistoryTab.changesSummary"),
     type: COLUMN_TYPE.string,
     iconType: COLUMN_TYPE.list,
     cell: VersionChangeSummaryCell as never,
   },
   {
     id: "change_description",
-    label: "Version note",
+    label: t("versionHistoryTab.versionNote"),
     type: COLUMN_TYPE.string,
     cell: VersionNoteCell as never,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("versionHistoryTab.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "items_total",
-    label: "Item count",
+    label: t("versionHistoryTab.itemCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) => row.items_total.toLocaleString(),
   },
   {
     id: "created_at",
-    label: "Created at",
+    label: t("versionHistoryTab.createdAt"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("versionHistoryTab.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -78,6 +80,8 @@ const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
   const {
     permissions: { canEditDatasets },
   } = usePermissions();
+
+  const COLUMNS = useMemo(() => getColumns(t), [t]);
 
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
@@ -114,7 +118,7 @@ const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
     }
 
     return baseColumns;
-  }, [datasetId, canEditDatasets]);
+  }, [datasetId, canEditDatasets, COLUMNS]);
 
   const data = versionsData?.content || [];
   const total = versionsData?.total ?? 0;

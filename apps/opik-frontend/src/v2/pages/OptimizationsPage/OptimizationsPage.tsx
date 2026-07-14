@@ -37,7 +37,7 @@ import { useOptimizationsExistence } from "@/hooks/useOptimizationsExistence";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import NewRunSidebar from "@/v2/pages/OptimizationsPage/OptimizationsNewPage/NewRunSidebar";
 import {
-  DEFAULT_COLUMNS,
+  getDefaultColumns,
   DEFAULT_COLUMNS_ORDER,
   DEFAULT_SELECTED_COLUMNS,
   SELECTED_COLUMNS_KEY,
@@ -168,12 +168,14 @@ const OptimizationsPage: React.FunctionComponent = () => {
     [optimizations],
   );
 
+  const defaultColumnsData = useMemo(() => getDefaultColumns(t), [t]);
+
   const visibleColumns = useMemo(
     () =>
       hasOldTypeOptimizations
-        ? DEFAULT_COLUMNS
-        : DEFAULT_COLUMNS.filter((c) => c.id !== "accuracy"),
-    [hasOldTypeOptimizations],
+        ? defaultColumnsData
+        : defaultColumnsData.filter((c) => c.id !== "accuracy"),
+    [hasOldTypeOptimizations, defaultColumnsData],
   );
 
   const defaultColumns = useMemo(

@@ -15,6 +15,12 @@ const TRANSLATION_ASSET_VERSION =
 const isTranslationResource = (value: unknown): value is TranslationResource =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const toCamelCase = (value: string): string =>
+  value.replace(/-([a-z])/g, (_, character: string) => character.toUpperCase());
+
+const toKebabCase = (value: string): string =>
+  value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+
 const parseTranslationResource = (
   data: string,
   _languages?: string | string[],
@@ -28,15 +34,36 @@ const parseTranslationResource = (
 
   const namespace = Array.isArray(namespaces) ? namespaces[0] : namespaces;
   const namespaceKey = namespace?.split("/").at(-1);
-  const namespacedResource = namespaceKey ? resource[namespaceKey] : undefined;
+  const camelCaseNamespaceKey = namespaceKey
+    ? toCamelCase(namespaceKey)
+    : undefined;
+  const matchedNamespaceKey = namespaceKey
+    ? (isTranslationResource(resource[namespaceKey]) && namespaceKey) ||
+      (camelCaseNamespaceKey &&
+        isTranslationResource(resource[camelCaseNamespaceKey]) &&
+        camelCaseNamespaceKey)
+    : undefined;
+  const namespacedResource = namespaceKey
+    ? resource[namespaceKey] ??
+      (camelCaseNamespaceKey ? resource[camelCaseNamespaceKey] : undefined)
+    : undefined;
 
   if (!isTranslationResource(namespacedResource)) {
     return resource;
   }
 
-  return {
+  const parsedResource = {
     ...resource,
     ...namespacedResource,
+  };
+
+  if (!namespace || ROOT_NAMESPACES.has(namespace) || !matchedNamespaceKey) {
+    return parsedResource;
+  }
+
+  return {
+    ...parsedResource,
+    [matchedNamespaceKey]: parsedResource,
   };
 };
 
@@ -51,10 +78,11 @@ export const getTranslationLoadPath = (
     return "";
   }
 
-  const fileNamespace =
-    ROOT_NAMESPACES.has(namespace) || namespace.startsWith("pages/")
-      ? namespace
-      : `pages/${namespace}`;
+  const fileNamespace = ROOT_NAMESPACES.has(namespace)
+    ? namespace
+    : namespace.startsWith("pages/")
+      ? `pages/${toKebabCase(namespace.slice("pages/".length))}`
+      : `pages/${toKebabCase(namespace)}`;
 
   return `/locales/${language}/${fileNamespace}.json?v=${encodeURIComponent(
     TRANSLATION_ASSET_VERSION,

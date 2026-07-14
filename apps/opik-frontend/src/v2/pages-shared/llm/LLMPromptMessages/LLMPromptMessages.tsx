@@ -1,4 +1,5 @@
 import React, { useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import keyBy from "lodash/keyBy";
 import { Plus } from "lucide-react";
@@ -58,6 +59,7 @@ const LLMPromptMessages = ({
   jsonTreeData,
   compact = false,
 }: LLMPromptMessagesProps) => {
+  const { t } = useTranslation("llm");
   const lastFocusedMessageIdRef = useRef<string | null>(null);
   const messageRefsMap = useRef<Map<string, LLMPromptMessageHandle>>(new Map());
   const listRef = useRef<HTMLDivElement>(null);
@@ -193,7 +195,7 @@ const LLMPromptMessages = ({
           type="button"
         >
           <Plus className="mr-1 size-3" />
-          Message
+          {t("promptMessages.addMessage")}
         </Button>
       )}
     </DndContext>

@@ -82,13 +82,24 @@ const EventsList: React.FC<EventsListProps> = ({ data, isLoading, search }) => {
 
   if (isLoading) {
     return (
-      <CollapsibleSection title={t("detailsTab.events")} disabled bodyClassName="p-3">
+      <CollapsibleSection
+        title={t("detailsTab.events")}
+        disabled
+        bodyClassName="p-3"
+      >
         <Loader />
       </CollapsibleSection>
     );
   }
 
-  return <CodeBlock title={t("detailsTab.events")} data={events} search={search} withSearch />;
+  return (
+    <CodeBlock
+      title={t("detailsTab.events")}
+      data={events}
+      search={search}
+      withSearch
+    />
+  );
 };
 
 export default EventsList;

@@ -6,16 +6,13 @@
       "title": "暂无信号",
       "description": "信号将显示在这里。"
     },
-    "page": {
-      "lastScan": "上次扫描: {{date}}",
-      "noRunsYet": "暂无运行记录",
-      "runDiagnostic": "运行诊断",
-      "resolvedIssues": "已解决的问题",
-      "diagnostics": "诊断",
-      "autoDaily": "自动 · 每日",
-      "manual": "手动",
-      "settings": "设置",
-      "turnOnAutoDiagnostic": "开启自动诊断"
+    "emptyState": {
+      "title": "在用户之前发现问题",
+      "description": "我们将每天扫描您的追踪，标记任何值得关注的问题 — 工具循环、幻觉、慢速检索。",
+      "turnOnDiagnostics": "开启诊断",
+      "turnOnDiagnosticsDescription": "在拥有过去 7 天 100+ 条追踪时效果最佳。",
+      "viewDocs": "查看文档",
+      "viewDocsDescription": "了解诊断如何工作"
     },
     "diagnosticsSettings": {
       "title": "诊断设置",
@@ -40,15 +37,37 @@
       "runDiagnostic": "运行诊断",
       "resolvedIssues": "已解决的问题",
       "diagnostics": "诊断",
-      "autoDaily": "自动 \u00b7 每日",
+      "autoDaily": "自动 · 每日",
       "manual": "手动",
       "settings": "设置",
-      "turnOnAutoDiagnostic": "开启自动诊断"
+      "turnOnAutoDiagnostic": "开启自动诊断",
+      "backToDiagnostics": "返回诊断"
     },
     "stats": {
       "affectedTraces": "受影响的追踪",
       "openIssues": "待处理问题",
       "resolvedThisWeek": "本周已解决"
+    },
+    "severity": {
+      "critical": "严重",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "runFailure": {
+      "couldNotRun": "诊断无法运行",
+      "outOfCredits": "您的 LLM 额度已用完。请充值后重试。",
+      "rateLimited": "LLM 提供方正在限流 — 请稍后重试。",
+      "providerError": "LLM 提供方错误",
+      "providerErrorDescription": "LLM 提供方在运行中途返回错误。这通常是暂时的 — 请重试。",
+      "didNotStart": "诊断无法启动",
+      "didNotStartDescription": "运行未被接收（服务可能正在重启）。请重试。",
+      "permissionDenied": "诊断无法访问此项目",
+      "permissionDeniedDescription": "Agent Insights 缺少读取此项目数据所需的工作区权限。请联系工作区管理员。",
+      "internalError": "诊断运行失败",
+      "internalErrorDescription": "意外错误导致运行中止。请重试；如果持续失败，请联系支持。",
+      "defaultError": "诊断运行失败",
+      "defaultErrorDescription": "运行诊断时出现问题 — 请重试。"
     },
     "issues": {
       "sortByLastSeen": "按最后出现时间",
@@ -56,7 +75,7 @@
       "sortBySeverity": "按严重程度",
       "issues": "问题",
       "runningDiagnostic": "正在运行诊断",
-      "runningDescription": "我们正在分析您的追踪以检测问题。结果将自动更新 \u2014 您可以离开此页面。",
+      "runningDescription": "我们正在分析您的追踪以检测问题。结果将自动更新 — 您可以离开此页面。",
       "detailSubtitle": "您将看到摘要、受影响的追踪以及 Ollie 的修复建议。",
       "issueDetailsPlaceholder": "问题详情将显示在这里",
       "runningFirstDiagnostic": "正在运行首次诊断",
@@ -65,7 +84,21 @@
       "backToOpenIssues": "返回待处理问题",
       "allClear": "一切正常",
       "allClearDescription": "运行新的诊断以检查是否有新问题。",
-      "runDiagnostic": "运行诊断"
+      "runDiagnostic": "运行诊断",
+      "hideDetails": "隐藏详情",
+      "showDetails": "显示详情",
+      "tryAgain": "重试",
+      "staleBanner": {
+        "title": "结果可能已过期",
+        "lastRan_one": "上次诊断在 {{days}} 天前运行。",
+        "lastRan_other": "上次诊断在 {{days}} 天前运行。",
+        "analyze_one": "运行新的诊断以分析过去 24 小时的 {{traceCount}} 条追踪。",
+        "analyze_other": "运行新的诊断以分析过去 24 小时的 {{traceCount}} 条追踪。"
+      }
+    },
+    "issueListItem": {
+      "occurrences": "出现次数:",
+      "lastSeen": "最后出现:"
     },
     "issueDetail": {
       "resolve": "标记已解决",
@@ -82,6 +115,18 @@
     },
     "occurrenceChart": {
       "label": "出现次数"
+    },
+    "upgrade": "升级",
+    "retentionBanner": {
+      "hitPlanLimits": "您已达到计划限制。",
+      "upgradeYourPlan": "升级您的计划",
+      "nowToKeepMonitoring": "以确保监控正常运行。",
+      "hitPlanLimitsAskAdmin": "您已达到计划限制。要继续监控，请联系您的组织",
+      "admin": "管理员",
+      "admins": "管理员",
+      "toUpgradeYourPlan": "升级计划。",
+      "at80Percent": "您已使用 {{limit}} 个免费 span 的 80%。升级以确保",
+      "uninterruptedMonitoring": "监控不间断运行"
     }
   }
 }

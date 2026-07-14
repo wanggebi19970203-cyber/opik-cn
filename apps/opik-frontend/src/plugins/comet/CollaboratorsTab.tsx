@@ -40,41 +40,44 @@ const WARNING_COLUMN_ID = "warning";
 const CollaboratorsTab = () => {
   const { t } = useTranslation("common");
 
-  const DEFAULT_COLUMNS: ColumnData<WorkspaceMember>[] = [
-    {
-      id: "userName",
-      label: t("labels.nameOrUsername"),
-      type: COLUMN_TYPE.string,
-      accessorFn: (row) => row.userName || "-",
-    },
-    {
-      id: "email",
-      label: t("labels.email"),
-      type: COLUMN_TYPE.string,
-    },
-    {
-      id: "joinedAt",
-      label: t("labels.joined"),
-      type: COLUMN_TYPE.time,
-      accessorFn: (row) => {
-        if (!row.joinedAt) return "";
-        return new Date(row.joinedAt).toISOString();
+  const DEFAULT_COLUMNS: ColumnData<WorkspaceMember>[] = useMemo(
+    () => [
+      {
+        id: "userName",
+        label: t("labels.nameOrUsername"),
+        type: COLUMN_TYPE.string,
+        accessorFn: (row) => row.userName || "-",
       },
-      cell: TimeCell as never,
-    },
-    {
-      id: WARNING_COLUMN_ID,
-      label: t("labels.warning"),
-      type: COLUMN_TYPE.errors,
-      cell: WorkspaceMemberWarningCell as never,
-    },
-    {
-      id: "role",
-      label: t("labels.workspaceRole"),
-      type: COLUMN_TYPE.category,
-      cell: WorkspaceRoleCell as never,
-    },
-  ];
+      {
+        id: "email",
+        label: t("labels.email"),
+        type: COLUMN_TYPE.string,
+      },
+      {
+        id: "joinedAt",
+        label: t("labels.joined"),
+        type: COLUMN_TYPE.time,
+        accessorFn: (row) => {
+          if (!row.joinedAt) return "";
+          return new Date(row.joinedAt).toISOString();
+        },
+        cell: TimeCell as never,
+      },
+      {
+        id: WARNING_COLUMN_ID,
+        label: t("labels.warning"),
+        type: COLUMN_TYPE.errors,
+        cell: WorkspaceMemberWarningCell as never,
+      },
+      {
+        id: "role",
+        label: t("labels.workspaceRole"),
+        type: COLUMN_TYPE.category,
+        cell: WorkspaceRoleCell as never,
+      },
+    ],
+    [t],
+  );
   const [columnsWidth, setColumnsWidth] = useLocalStorageState<
     Record<string, number>
   >(COLUMNS_WIDTH_KEY, {
@@ -152,7 +155,7 @@ const CollaboratorsTab = () => {
         cell: WorkspaceMemberActionsCell,
       }),
     ];
-  }, [isPermissionsManagementEnabled]);
+  }, [DEFAULT_COLUMNS, isPermissionsManagementEnabled]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -224,6 +227,7 @@ const CollaboratorsTab = () => {
     search,
     workspaceUsersRoles,
     isPermissionsManagementEnabled,
+    t,
   ]);
 
   const renderTable = () => {

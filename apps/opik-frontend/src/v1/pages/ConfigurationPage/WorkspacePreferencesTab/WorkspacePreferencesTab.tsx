@@ -18,7 +18,7 @@ import {
   WORKSPACE_PREFERENCES_QUERY_PARAMS,
 } from "@/constants/workspace-preferences";
 import {
-  WORKSPACE_PREFERENCES_DEFAULT_COLUMNS,
+  getWorkspacePreferencesDefaultColumns,
   WORKSPACE_PREFERENCES_DEFAULT_COLUMN_PINNING,
   WORKSPACE_PREFERENCES_DEFAULT_THREAD_TIMEOUT,
   WORKSPACE_PREFERENCES_DEFAULT_TRUNCATION_TOGGLE,
@@ -60,16 +60,20 @@ const WorkspacePreferencesTab: React.FC = () => {
     () => [
       {
         name: t("settings.workspacePreferences.threadTimeout.name"),
-        value: formatIso8601Duration(threadTimeoutValue) ?? t("settings.workspacePreferences.threadTimeout.notSet"),
+        value:
+          formatIso8601Duration(threadTimeoutValue) ??
+          t("settings.workspacePreferences.threadTimeout.notSet"),
         type: WORKSPACE_PREFERENCE_TYPE.THREAD_TIMEOUT,
       },
       {
         name: t("settings.workspacePreferences.truncationToggle.name"),
-        value: truncationToggleValue ? t("settings.workspacePreferences.truncationToggle.enabled") : t("settings.workspacePreferences.truncationToggle.disabled"),
+        value: truncationToggleValue
+          ? t("settings.workspacePreferences.truncationToggle.enabled")
+          : t("settings.workspacePreferences.truncationToggle.disabled"),
         type: WORKSPACE_PREFERENCE_TYPE.TRUNCATION_TOGGLE,
       },
     ],
-    [threadTimeoutValue, truncationToggleValue],
+    [threadTimeoutValue, truncationToggleValue, t],
   );
 
   const getPreferencesDialogConfig = useCallback(
@@ -141,10 +145,11 @@ const WorkspacePreferencesTab: React.FC = () => {
   );
 
   const columns = useMemo(() => {
+    const defaultColumns = getWorkspacePreferencesDefaultColumns(t);
     const baseColumns = convertColumnDataToColumn<
       WorkspacePreference,
       WorkspacePreference
-    >(WORKSPACE_PREFERENCES_DEFAULT_COLUMNS, {});
+    >(defaultColumns, {});
 
     if (canConfigureWorkspaceSettings) {
       return [
@@ -158,7 +163,7 @@ const WorkspacePreferencesTab: React.FC = () => {
       ];
     }
     return baseColumns;
-  }, [canConfigureWorkspaceSettings, handleEdit]);
+  }, [canConfigureWorkspaceSettings, handleEdit, t]);
 
   return (
     <>

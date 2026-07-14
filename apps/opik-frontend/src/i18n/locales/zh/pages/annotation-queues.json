@@ -120,7 +120,8 @@
         "availableValues": "可用值"
       },
       "commentsDescription": "用于开放反馈或附加说明的文本字段。",
-      "comments": "评论"
+      "comments": "评论",
+      "feedbackScoresWithCount": "反馈评分 ({{count}})"
     }
   }
 }

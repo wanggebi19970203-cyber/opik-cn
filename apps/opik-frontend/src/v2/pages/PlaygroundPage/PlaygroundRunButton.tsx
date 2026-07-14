@@ -32,8 +32,7 @@ const PlaygroundRunButton = ({
   if (!prompt?.model) {
     promptRunDisabledReason = t("playground.prompt.selectModel");
   } else if (hasEmptyMessages) {
-    promptRunDisabledReason =
-      t("playground.prompt.emptyMessage");
+    promptRunDisabledReason = t("playground.prompt.emptyMessage");
   }
 
   return (
@@ -45,10 +44,12 @@ const PlaygroundRunButton = ({
       {isPromptRunning ? (
         <Button size="2xs" variant="outline" onClick={onStop}>
           <Pause className="mr-1 size-3.5" />
-          Stop
+          {t("playground.header.stopAll")}
         </Button>
       ) : (
-        <TooltipWrapper content={promptRunDisabledReason ?? t("playground.prompt.runTooltip")}>
+        <TooltipWrapper
+          content={promptRunDisabledReason ?? t("playground.prompt.runTooltip")}
+        >
           <Button
             size="2xs"
             variant="outline"
@@ -57,7 +58,7 @@ const PlaygroundRunButton = ({
             style={isPromptRunDisabled ? { pointerEvents: "auto" } : {}}
           >
             <Play className="mr-1 size-3.5" />
-            Run
+            {t("playground.header.run")}
           </Button>
         </TooltipWrapper>
       )}

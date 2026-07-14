@@ -29,6 +29,7 @@
       },
       "columns": {
         "name": "反馈评分",
+        "id": "ID",
         "description": "描述",
         "type": "类型",
         "values": "值",
@@ -90,6 +91,7 @@
       "atLimitTooltip": "工作空间最多可有 {{limit}} 个环境。请删除现有环境以创建新环境。",
       "columns": {
         "name": "名称",
+        "id": "ID",
         "description": "描述",
         "created_at": "创建时间",
         "created_by": "创建者"
@@ -120,7 +122,10 @@
         "updateButton": "更新冷却期",
         "toastTitle": "线程冷却期已更新",
         "toastDescription": "线程在线评分规则将在最后活动后等待 {{duration}} 再评估线程。",
-        "goToProjects": "前往项目"
+        "goToProjects": "前往项目",
+        "validation": {
+          "maxDuration": "请选择有效的超时时长（最多 7 天）"
+        }
       },
       "truncationToggle": {
         "name": "表格中的数据截断",
@@ -145,5 +150,23 @@
       },
       "cancel": "取消"
     }
+  },
+  "environmentDialog": {
+    "createTitle": "创建环境",
+    "editTitle": "编辑环境",
+    "cloneTitle": "克隆环境",
+    "createSubmit": "创建环境",
+    "updateSubmit": "更新环境",
+    "nameLabel": "名称",
+    "namePlaceholder": "环境名称",
+    "nameHint": "使用小写字母、数字和连字符",
+    "nameMaxLengthError": "名称必须少于{{max}}个字符",
+    "namePatternError": "名称必须以字母开头，且仅包含小写字母、数字和连字符",
+    "descriptionLabel": "描述",
+    "descriptionPlaceholder": "环境描述",
+    "cancel": "取消",
+    "colorLockedTooltip": "默认环境的颜色已锁定",
+    "changeColor": "更改颜色",
+    "defaultColorAria": "默认环境颜色（已锁定）"
   }
 }

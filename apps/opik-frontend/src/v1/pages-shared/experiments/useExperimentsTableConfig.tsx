@@ -224,10 +224,10 @@ export const useExperimentsTableConfig = <
           valueKey: `${metaKey}.value`,
           labelKey: `${metaKey}.label`,
           countAggregationKey: "experiment_count",
-            explainer: {
-              id: "group-experiments",
-              description: t('someExperimentsDidntMatchGroup'),
-            },
+          explainer: {
+            id: "group-experiments",
+            description: t("someExperimentsDidntMatchGroup"),
+          },
         },
       } as ColumnData<T>;
 
@@ -246,7 +246,7 @@ export const useExperimentsTableConfig = <
               countAggregationKey: "experiment_count",
               explainer: {
                 id: "group-experiments",
-                description: t('someExperimentsReferenceDeletedDataset'),
+                description: t("someExperimentsReferenceDeletedDataset"),
               },
             },
           } as ColumnData<T>;
@@ -265,7 +265,7 @@ export const useExperimentsTableConfig = <
               countAggregationKey: "experiment_count",
               explainer: {
                 id: "group-experiments",
-                description: t('someExperimentsReferenceDeletedProject'),
+                description: t("someExperimentsReferenceDeletedProject"),
               },
             },
           } as ColumnData<T>;
@@ -351,6 +351,7 @@ export const useExperimentsTableConfig = <
     scoresColumnsData,
     scoresColumnsOrder,
     actionsCell,
+    t,
   ]);
 
   const sortConfig = useMemo(
@@ -391,13 +392,13 @@ export const useExperimentsTableConfig = <
   const columnSections = useMemo(() => {
     return [
       {
-        title: t('columns.feedbackScores'),
+        title: t("columns.feedbackScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
       },
     ];
-  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
+  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder, t]);
 
   return {
     // State

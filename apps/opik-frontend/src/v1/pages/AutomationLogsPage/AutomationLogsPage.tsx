@@ -32,7 +32,9 @@ const generateEvaluatorRuleLogItemKey = (
   return `${item.timestamp}-${item.level}-${messageHash}`;
 };
 
-const getBaseColumns = (t: (key: string) => string): ColumnData<EvaluatorRuleLogItemWithId>[] => [
+const getBaseColumns = (
+  t: (key: string) => string,
+): ColumnData<EvaluatorRuleLogItemWithId>[] => [
   {
     id: "timestamp",
     label: t("automationLogs.columns.timestamp"),
@@ -182,9 +184,13 @@ const AutomationLogsPage = () => {
           className="flex items-center justify-between pb-4 pt-6"
           direction="bidirectional"
         >
-          <h1 className="comet-title-l truncate break-words">{t("automationLogs.logs")}</h1>
+          <h1 className="comet-title-l truncate break-words">
+            {t("automationLogs.logs")}
+          </h1>
           <div className="flex items-center gap-2">
-            <TooltipWrapper content={t("automationLogs.actions.refreshTooltip")}>
+            <TooltipWrapper
+              content={t("automationLogs.actions.refreshTooltip")}
+            >
               <Button
                 variant="outline"
                 size="icon-sm"
@@ -197,7 +203,11 @@ const AutomationLogsPage = () => {
               </Button>
             </TooltipWrapper>
             <TooltipWrapper
-              content={allExpanded ? t("automationLogs.actions.collapseAll") : t("automationLogs.actions.expandAll")}
+              content={
+                allExpanded
+                  ? t("automationLogs.actions.collapseAll")
+                  : t("automationLogs.actions.expandAll")
+              }
             >
               <Button
                 onClick={toggleExpandAll}

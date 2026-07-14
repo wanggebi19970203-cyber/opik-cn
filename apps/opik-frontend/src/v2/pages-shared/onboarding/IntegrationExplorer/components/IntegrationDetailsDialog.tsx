@@ -94,7 +94,8 @@ const IntegrationDetailsDialog: React.FunctionComponent<
               src={iconSrc}
               className="size-7 shrink-0"
             />
-            {selectedIntegration.title} {t("onboarding.integrationExplorer.integration")}
+            {selectedIntegration.title}{" "}
+            {t("onboarding.integrationExplorer.integration")}
           </DialogTitle>
         </DialogHeader>
 
@@ -139,7 +140,10 @@ const IntegrationDetailsDialog: React.FunctionComponent<
           )}
           {selectedIntegration.code && (
             <IntegrationStep
-              title={t("onboarding.integrationExplorer.runCodeWithIntegration", { title: selectedIntegration.title })}
+              title={t(
+                "onboarding.integrationExplorer.runCodeWithIntegration",
+                { title: selectedIntegration.title },
+              )}
               className="mb-6"
             >
               {shouldShowCodeExecutor ? (
@@ -168,7 +172,9 @@ const IntegrationDetailsDialog: React.FunctionComponent<
           <HelpLinks
             onCloseParentDialog={onClose}
             title={t("onboarding.integrationExplorer.needSomeHelp")}
-            description={t("onboarding.integrationExplorer.needSomeHelpDescription")}
+            description={t(
+              "onboarding.integrationExplorer.needSomeHelpDescription",
+            )}
           >
             <HelpLinks.InviteDev />
             <HelpLinks.Slack />

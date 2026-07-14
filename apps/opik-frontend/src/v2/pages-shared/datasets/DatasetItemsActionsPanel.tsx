@@ -171,9 +171,7 @@ const DatasetItemsActionsPanel: React.FunctionComponent<
         getData={mapRowData}
         generateFileName={generateFileName}
         tooltipContent={
-          !isExportEnabled
-            ? t("itemsActions.exportDisabled")
-            : undefined
+          !isExportEnabled ? t("itemsActions.exportDisabled") : undefined
         }
       />
       {canEditDatasets && (

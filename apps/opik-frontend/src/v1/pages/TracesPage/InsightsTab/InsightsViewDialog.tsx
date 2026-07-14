@@ -152,7 +152,7 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
           : undefined,
       });
     },
-    [toast],
+    [t, toast],
   );
 
   const handleMutationError = useCallback(
@@ -177,7 +177,7 @@ const InsightsViewDialog: React.FC<InsightsViewDialogProps> = ({
         });
       }
     },
-    [form, toast],
+    [form, t, toast],
   );
 
   const onSubmit = useCallback(

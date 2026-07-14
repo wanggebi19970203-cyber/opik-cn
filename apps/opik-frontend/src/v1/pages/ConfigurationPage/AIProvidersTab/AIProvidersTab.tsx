@@ -22,10 +22,12 @@ import { COLUMN_NAME_ID, COLUMN_TYPE, ColumnData } from "@/types/shared";
 import { EXPLAINER_ID, EXPLAINERS_MAP } from "@/v1/constants/explainers";
 import { usePermissions } from "@/contexts/PermissionsContext";
 
-export const DEFAULT_COLUMNS: ColumnData<ProviderObject>[] = [
+export const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<ProviderObject>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("settings.providers.columns.name"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) =>
       row.provider === PROVIDER_TYPE.CUSTOM
@@ -34,19 +36,19 @@ export const DEFAULT_COLUMNS: ColumnData<ProviderObject>[] = [
   },
   {
     id: "base_url",
-    label: "URL",
+    label: t("settings.providers.columns.base_url"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.base_url || "-",
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("settings.providers.columns.created_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "provider",
-    label: "Provider",
+    label: t("settings.providers.columns.provider"),
     type: COLUMN_TYPE.string,
     cell: AIProviderCell as never,
   },
@@ -100,11 +102,13 @@ const AIProvidersTab = () => {
     });
   }, [providerKeys, search]);
 
+  const defaultColumns = useMemo(() => getDefaultColumns(t), [t]);
+
   const columns = useMemo(() => {
     const basicColumns = convertColumnDataToColumn<
       ProviderObject,
       ProviderObject
-    >(DEFAULT_COLUMNS, {});
+    >(defaultColumns, {});
 
     if (canUpdateAIProviders)
       return [
@@ -115,7 +119,7 @@ const AIProvidersTab = () => {
       ];
 
     return basicColumns;
-  }, [canUpdateAIProviders]);
+  }, [canUpdateAIProviders, defaultColumns]);
 
   const handleAddConfigurationClick = () => {
     resetDialogKeyRef.current += 1;

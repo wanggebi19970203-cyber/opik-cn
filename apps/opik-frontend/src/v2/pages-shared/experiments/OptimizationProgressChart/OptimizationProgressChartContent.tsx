@@ -19,11 +19,11 @@ import { AggregatedCandidate } from "@/types/optimizations";
 import ChartTooltip from "./ChartTooltip";
 import {
   TRIAL_STATUS_COLORS,
-  TRIAL_STATUS_LABELS,
   TRIAL_STATUS_ORDER,
   CandidateDataPoint,
   buildParentChildEdges,
 } from "./optimizationChartUtils";
+import type { TrialStatus } from "./optimizationChartUtils";
 import type { InProgressInfo } from "./optimizationChartUtils";
 import {
   OVERLAP_SPACING,
@@ -51,10 +51,6 @@ type OptimizationProgressChartContentProps = {
   inProgressInfo?: InProgressInfo;
 };
 
-const CHART_CONFIG = {
-  score: { label: "Score", color: "var(--color-blue)" },
-};
-
 const OptimizationProgressChartContent: React.FC<
   OptimizationProgressChartContentProps
 > = ({
@@ -70,6 +66,25 @@ const OptimizationProgressChartContent: React.FC<
   inProgressInfo,
 }) => {
   const { t } = useTranslation("experiments");
+  const CHART_CONFIG = useMemo(
+    () => ({
+      score: {
+        label: t("optimizationChart.score"),
+        color: "var(--color-blue)",
+      },
+    }),
+    [t],
+  );
+  const trialStatusLabels = useMemo<Record<TrialStatus, string>>(
+    () => ({
+      baseline: t("optimizationChart.trialStatus.baseline"),
+      passed: t("optimizationChart.trialStatus.passed"),
+      evaluating: t("optimizationChart.trialStatus.evaluating"),
+      pruned: t("optimizationChart.trialStatus.discarded"),
+      running: t("optimizationChart.trialStatus.running"),
+    }),
+    [t],
+  );
   const steps = useMemo(() => {
     const s = new Set(chartData.map((d) => d.stepIndex));
     return Array.from(s).sort((a, b) => a - b);
@@ -275,7 +290,7 @@ const OptimizationProgressChartContent: React.FC<
                 style={{ backgroundColor: TRIAL_STATUS_COLORS[s] }}
               />
               <span className="comet-body-xs text-muted-slate">
-                {TRIAL_STATUS_LABELS[s]}
+                {trialStatusLabels[s]}
               </span>
             </div>
           ))

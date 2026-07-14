@@ -97,6 +97,7 @@ const MaxCostInput: React.FC<MaxCostInputProps> = ({
   hasError,
   onChange,
 }) => {
+  const { t } = useTranslation("online-evaluation");
   const [text, setText] = useState(value == null ? "" : String(value));
 
   useEffect(() => {
@@ -115,7 +116,7 @@ const MaxCostInput: React.FC<MaxCostInputProps> = ({
     <Input
       type="text"
       inputMode="decimal"
-      placeholder="No limit"
+      placeholder={t("onlineEvaluation.noLimit")}
       value={text}
       className={cn("max-w-40", { "border-destructive": hasError })}
       onChange={(event) => {
@@ -321,7 +322,9 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
 
             return (
               <FormItem>
-                <FormLabel>Max cost per evaluation (USD)</FormLabel>
+                <FormLabel>
+                  {t("onlineEvaluation.addEditRule.maxCostLabel")}
+                </FormLabel>
                 <FormControl>
                   <MaxCostInput
                     value={field.value}
@@ -330,9 +333,7 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
                   />
                 </FormControl>
                 <FormDescription className="comet-body-xs text-muted-slate">
-                  Once an evaluation&apos;s spend reaches this amount the judge
-                  wraps up and returns its scores so far. Leave empty for no
-                  limit.
+                  {t("onlineEvaluation.addEditRule.maxCostDescription")}
                 </FormDescription>
                 <FormMessage />
               </FormItem>

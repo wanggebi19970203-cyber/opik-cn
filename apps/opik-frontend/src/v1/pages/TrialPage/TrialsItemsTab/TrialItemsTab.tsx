@@ -399,7 +399,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
       return [
         {
           id: "score_passed",
-          label: "passed",
+          label: t("trialItemsTab.passed"),
           type: COLUMN_TYPE.string,
           cell: TrialPassedCell as never,
           customMeta: {
@@ -450,7 +450,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         colorMap,
       },
     })) as ColumnData<FlattenedTrialItem>[];
-  }, [experiments, experimentsIds, objectiveName, isTestSuite]);
+  }, [experiments, experimentsIds, objectiveName, isTestSuite, t]);
 
   useEffect(() => {
     const scoreColumnIds = scoresColumnsData.map((col) => col.id);
@@ -595,6 +595,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     setScoresColumnsOrder,
+    t,
   ]);
 
   if (isPending || isExperimentsOutputPending) {

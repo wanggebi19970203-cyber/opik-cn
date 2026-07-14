@@ -5,7 +5,6 @@ import {
   Clock,
   ExternalLink,
   FilePen,
-  LucideIcon,
   Pencil,
   Play,
   Sparkles,
@@ -62,13 +61,9 @@ import { useTranslation } from "react-i18next";
 
 type ViewMode = "pretty" | "json";
 
-const VIEW_MODE_OPTIONS: Array<{
-  value: ViewMode;
-  label: string;
-  icon?: LucideIcon;
-}> = [
-  { value: "pretty", label: "Pretty", icon: Sparkles },
-  { value: "json", label: "JSON" },
+const getViewModeOptions = (t: (key: string) => string) => [
+  { value: "pretty" as const, label: t("compare.pretty"), icon: Sparkles },
+  { value: "json" as const, label: "JSON" },
 ];
 
 interface PromptTabInterface {
@@ -346,7 +341,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                     currentItemId={effectiveVersionId}
                     versions={historyItems}
                     onSelectVersion={handleSelectDiffVersion}
-                    triggerLabel="Diff"
+                    triggerLabel={t("compare.diff")}
                   />
                 </>
               )}
@@ -357,7 +352,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="px-0">
                     <Play className="mr-1.5 size-3.5" />
-                    Use
+                    {t("promptTab.use")}
                     <ChevronDown className="ml-1 size-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -419,7 +414,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                     onClick={() => setOpenEditPrompt(true)}
                   >
                     <Pencil className="mr-1.5 size-3.5" />
-                    Edit
+                    {t("promptTab.edit")}
                   </Button>
                 </>
               )}
@@ -462,7 +457,7 @@ const PromptTab = ({ prompt }: PromptTabInterface) => {
                 <>
                   <FormFieldModeSelect
                     value={viewMode}
-                    options={VIEW_MODE_OPTIONS}
+                    options={getViewModeOptions(t)}
                     onChange={setViewMode}
                   />
                   <Separator orientation="vertical" className="-ml-2 h-3" />

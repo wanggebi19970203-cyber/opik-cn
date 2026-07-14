@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { ChevronDown, Pencil, Plus } from "lucide-react";
 import toLower from "lodash/toLower";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import { Tag } from "@/ui/tag";
@@ -45,6 +46,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
   onOpenChange,
   onRuleCreated,
 }) => {
+  const { t } = useTranslation("pages/playground");
   const [search, setSearch] = useState("");
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
   const [ruleToEdit, setRuleToEdit] = useState<EvaluatorsRule | null>(null);
@@ -136,10 +138,12 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
 
   const triggerContent =
     selectedCount === 0 ? (
-      <span className="min-w-0 truncate">Select metrics</span>
+      <span className="min-w-0 truncate">
+        {t("metricSelector.selectMetrics")}
+      </span>
     ) : (
       <span className="flex min-w-0 items-center gap-1.5">
-        <span className="truncate">Metrics</span>
+        <span className="truncate">{t("runExperiment.metrics")}</span>
         <Tag
           variant="green"
           size="sm"
@@ -201,8 +205,10 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
               <DropdownEmptyState
                 lightImageUrl={emptyMetricsLightUrl}
                 darkImageUrl={emptyMetricsDarkUrl}
-                title="No metrics yet"
-                ctaLabel={canCreateRule ? "Create metric" : undefined}
+                title={t("metricSelector.noMetricsAvailable")}
+                ctaLabel={
+                  canCreateRule ? t("metricSelector.addNew") : undefined
+                }
                 onCreate={canCreateRule ? openCreateDialog : undefined}
               />
             ) : filteredRules.length > 0 ? (
@@ -222,7 +228,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                     </div>
                   </TooltipWrapper>
                   {canUpdateOnlineEvaluationRules && (
-                    <TooltipWrapper content="Edit metric">
+                    <TooltipWrapper content={t("metricSelector.editMetric")}>
                       <Button
                         type="button"
                         variant="minimal"
@@ -241,7 +247,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
               ))
             ) : (
               <div className="comet-body-s flex h-20 items-center justify-center text-muted-slate">
-                No metrics found
+                {t("metricSelector.noMetricsFound")}
               </div>
             )}
           </div>
@@ -262,7 +268,10 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                     />
                     <div className="min-w-0 flex-1">
                       <div className="comet-body-s truncate tabular-nums">
-                        {selectedCount} of {rules.length} selected
+                        {t("metricSelector.selectedCount", {
+                          selected: selectedCount,
+                          total: rules.length,
+                        })}
                       </div>
                     </div>
                   </div>
@@ -277,7 +286,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                     onClick={openCreateDialog}
                   >
                     <Plus className="size-3.5 shrink-0" />
-                    New metric
+                    {t("metricSelector.addNew")}
                   </ListAction>
                 </>
               )}

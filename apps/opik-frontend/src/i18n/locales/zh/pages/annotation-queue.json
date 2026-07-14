@@ -17,6 +17,8 @@
     },
     "configuration": {
       "loadingMessage": "正在加载队列信息",
+      "instructions": "使用说明",
+      "feedbackScores": "反馈评分 ({{count}})",
       "reviewers": {
         "title": "审核者 ({{count}})",
         "columns": {
@@ -45,6 +47,9 @@
       "button": "导出队列",
       "asCsv": "导出为 CSV",
       "asJson": "导出为 JSON"
+    },
+    "progress": {
+      "label": "{{averageProgress}}/{{itemsCount}} ({{progressPercentage}}%)"
     },
     "openSME": {
       "tooltip": "开始标注",

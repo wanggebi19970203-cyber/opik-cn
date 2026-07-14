@@ -49,17 +49,23 @@ export const TRIGGER_CONFIG: Record<ALERT_EVENT_TYPE, TriggerConfig> = {
   },
   [ALERT_EVENT_TYPE.trace_guardrails_triggered]: {
     title: i18next.t("common.alerts.trigger.guardrailTriggeredTitle"),
-    description: i18next.t("common.alerts.trigger.guardrailTriggeredDescription"),
+    description: i18next.t(
+      "common.alerts.trigger.guardrailTriggeredDescription",
+    ),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.trace_feedback_score]: {
     title: i18next.t("common.alerts.trigger.traceFeedbackScoreTitle"),
-    description: i18next.t("common.alerts.trigger.traceFeedbackScoreDescription"),
+    description: i18next.t(
+      "common.alerts.trigger.traceFeedbackScoreDescription",
+    ),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.trace_thread_feedback_score]: {
     title: i18next.t("common.alerts.trigger.threadFeedbackScoreTitle"),
-    description: i18next.t("common.alerts.trigger.threadFeedbackScoreDescription"),
+    description: i18next.t(
+      "common.alerts.trigger.threadFeedbackScoreDescription",
+    ),
     hasScope: true,
   },
   [ALERT_EVENT_TYPE.prompt_created]: {
@@ -79,7 +85,9 @@ export const TRIGGER_CONFIG: Record<ALERT_EVENT_TYPE, TriggerConfig> = {
   },
   [ALERT_EVENT_TYPE.experiment_finished]: {
     title: i18next.t("common.alerts.trigger.experimentFinishedTitle"),
-    description: i18next.t("common.alerts.trigger.experimentFinishedDescription"),
+    description: i18next.t(
+      "common.alerts.trigger.experimentFinishedDescription",
+    ),
     hasScope: false,
   },
   [ALERT_EVENT_TYPE.trace_cost]: {

@@ -145,7 +145,10 @@ const BlueprintDiffTable: React.FC<BlueprintDiffTableProps> = ({
                 <div className="flex h-60 flex-col items-center justify-center gap-1 text-muted-slate">
                   <GitCompareArrows className="size-4" />
                   <span className="comet-body-s">
-                    {t("agentOptimization.diffTable.noDifferences", { base: base.label, diff: diff.label })}
+                    {t("agentOptimization.diffTable.noDifferences", {
+                      base: base.label,
+                      diff: diff.label,
+                    })}
                   </span>
                 </div>
               </TableCell>

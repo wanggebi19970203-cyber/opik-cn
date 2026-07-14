@@ -40,7 +40,9 @@ const CompareExperimentsConfigCell: React.FC<
 
   const renderContent = () => {
     if (isUndefined(data)) {
-      return <span className="px-1.5 py-2.5 text-light-slate">{t("noValue")}</span>;
+      return (
+        <span className="px-1.5 py-2.5 text-light-slate">{t("noValue")}</span>
+      );
     }
 
     return (

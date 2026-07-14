@@ -1,10 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   useProgressCompleted,
   useProgressTotal,
 } from "@/store/PlaygroundStore";
 
 const PlaygroundProgressIndicator: React.FC = () => {
+  const { t } = useTranslation("playground");
   const progressTotal = useProgressTotal();
   const progressCompleted = useProgressCompleted();
 
@@ -19,9 +21,12 @@ const PlaygroundProgressIndicator: React.FC = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="comet-body-s-accented text-foreground">Progress</span>
+        <span className="comet-body-s-accented text-foreground">
+          {t("playground.progress.progress")}
+        </span>
         <span className="comet-body-s text-light-slate">
-          {progressCompleted}/{progressTotal} completed ({progressPercentage}%)
+          {progressCompleted}/{progressTotal}{" "}
+          {t("playground.progress.completed")} ({progressPercentage}%)
         </span>
       </div>
       <div className="flex flex-1 items-center">

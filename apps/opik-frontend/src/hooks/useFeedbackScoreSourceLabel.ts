@@ -1,4 +1,5 @@
 import { AxiosError, HttpStatusCode } from "axios";
+import i18next from "i18next";
 import useAnnotationQueueById from "@/api/annotation-queues/useAnnotationQueueById";
 import { FEEDBACK_SCORE_SOURCE_MAP } from "@/lib/feedback-scores";
 import { FEEDBACK_SCORE_TYPE } from "@/types/traces";
@@ -37,10 +38,13 @@ const useFeedbackScoreSourceLabel = (
   if (
     (error as AxiosError | null)?.response?.status === HttpStatusCode.NotFound
   ) {
-    return { isLoading: false, label: "<deleted queue>" };
+    return {
+      isLoading: false,
+      label: i18next.t("common:messages.deletedQueue"),
+    };
   }
 
-  return { isLoading: false, label: "<unknown queue>" };
+  return { isLoading: false, label: i18next.t("common:messages.unknownQueue") };
 };
 
 export default useFeedbackScoreSourceLabel;

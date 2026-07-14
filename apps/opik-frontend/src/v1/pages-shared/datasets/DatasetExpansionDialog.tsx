@@ -241,34 +241,35 @@ const DatasetExpansionDialog: React.FunctionComponent<
       sampleCountNumber > SAMPLE_COUNT_MAX
     ) {
       setValidationError(
-        t('expansion.validation.sampleCount', { min: SAMPLE_COUNT_MIN, max: SAMPLE_COUNT_MAX }),
+        t("expansion.validation.sampleCount", {
+          min: SAMPLE_COUNT_MIN,
+          max: SAMPLE_COUNT_MAX,
+        }),
       );
       return false;
     }
 
     if (customPrompt && customPrompt.trim().length < MIN_PROMPT_LENGTH) {
       setValidationError(
-        t('expansion.validation.promptLength', { min: MIN_PROMPT_LENGTH }),
+        t("expansion.validation.promptLength", { min: MIN_PROMPT_LENGTH }),
       );
       return false;
     }
 
     if (!sampleData?.content?.length) {
-      setValidationError(
-        t('expansion.validation.analysisInProgress'),
-      );
+      setValidationError(t("expansion.validation.analysisInProgress"));
       return false;
     }
 
     return true;
-  }, [sampleCount, customPrompt, sampleData?.content?.length]);
+  }, [sampleCount, customPrompt, sampleData?.content?.length, t]);
 
   const getErrorMessage = useCallback(() => {
     return (
       get(error, ["response", "data", "message"], error?.message) ||
-      t('expansion.error.default')
+      t("expansion.error.default")
     );
-  }, [error]);
+  }, [error, t]);
 
   const handleSubmit = useCallback(() => {
     if (!model || !initialDatasetId) return;
@@ -322,16 +323,18 @@ const DatasetExpansionDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="comet-title-s">{t('expansion.title')}</DialogTitle>
+          <DialogTitle className="comet-title-s">
+            {t("expansion.title")}
+          </DialogTitle>
           <p className="comet-body-s my-4 text-muted-foreground">
-            {t('expansion.description')}
+            {t("expansion.description")}
           </p>
         </DialogHeader>
         <DialogAutoScrollBody className="flex flex-col gap-4">
           {(validationError || isError) && (
             <Alert variant="destructive" size="sm" className="mb-4">
               <XCircle className="size-4" />
-              <AlertTitle>{t('expansion.error.title')}</AlertTitle>
+              <AlertTitle>{t("expansion.error.title")}</AlertTitle>
               <AlertDescription>
                 {validationError || getErrorMessage()}
               </AlertDescription>
@@ -342,11 +345,11 @@ const DatasetExpansionDialog: React.FunctionComponent<
               <div className="flex items-center gap-3 rounded-lg border bg-gradient-to-r from-primary/5 to-primary/10 p-4">
                 <Spinner size="small" className="text-primary" />
                 <div className="flex-1">
-                    <div className="text-sm font-medium text-primary">
-                    {t('expansion.analyzing.title')}
+                  <div className="text-sm font-medium text-primary">
+                    {t("expansion.analyzing.title")}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {t('expansion.analyzing.description')}
+                    {t("expansion.analyzing.description")}
                   </div>
                 </div>
               </div>
@@ -370,9 +373,9 @@ const DatasetExpansionDialog: React.FunctionComponent<
             sampleData.content.length === 0 && (
               <Alert variant="callout" size="sm">
                 <AlertTriangle className="size-4" />
-                <AlertTitle>{t('expansion.empty.title')}</AlertTitle>
+                <AlertTitle>{t("expansion.empty.title")}</AlertTitle>
                 <AlertDescription>
-                  {t('expansion.empty.description')}
+                  {t("expansion.empty.description")}
                 </AlertDescription>
               </Alert>
             )}
@@ -404,10 +407,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
                             htmlFor="fields"
                             className="text-sm font-medium"
                           >
-                            {t('expansion.structure.title')}
+                            {t("expansion.structure.title")}
                           </Label>
                           <TooltipWrapper
-                            content={t('expansion.structure.tooltip')}
+                            content={t("expansion.structure.tooltip")}
                             side="top"
                           >
                             <Info className="size-3.5 cursor-help text-muted-foreground" />
@@ -417,7 +420,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-muted-foreground">
-                        {t('expansion.structure.analyzedSamples')}
+                        {t("expansion.structure.analyzedSamples")}
                       </div>
                       <div className="text-sm font-medium">
                         {datasetAnalysis?.sampleCount}
@@ -470,16 +473,23 @@ const DatasetExpansionDialog: React.FunctionComponent<
                         >
                           {showAllFields ? (
                             <>
-                              {t('expansion.structure.showLess', { count: datasetAnalysis.allFields.length - 20 })}
+                              {t("expansion.structure.showLess", {
+                                count: datasetAnalysis.allFields.length - 20,
+                              })}
                             </>
                           ) : (
                             <>
-                              {t('expansion.structure.showAll', { count: datasetAnalysis.allFields.length - 20 })}
+                              {t("expansion.structure.showAll", {
+                                count: datasetAnalysis.allFields.length - 20,
+                              })}
                             </>
                           )}
                         </Button>
                         <div className="text-xs text-muted-foreground">
-                          {t('expansion.structure.fieldsSelected', { count: preserveFields.length, total: datasetAnalysis.allFields.length })}
+                          {t("expansion.structure.fieldsSelected", {
+                            count: preserveFields.length,
+                            total: datasetAnalysis.allFields.length,
+                          })}
                         </div>
                       </div>
                     )}
@@ -497,14 +507,18 @@ const DatasetExpansionDialog: React.FunctionComponent<
                         </svg>
                         <div className="text-warning-box-text">
                           <div className="font-medium">
-                            {t('expansion.structure.tips.title')}
+                            {t("expansion.structure.tips.title")}
                           </div>
                           <div className="mt-1 space-y-1">
                             <div>
-                              {t('expansion.structure.tips.autoSelect', { threshold: Math.round(FIELD_FREQUENCY_THRESHOLD * 100) })}
+                              {t("expansion.structure.tips.autoSelect", {
+                                threshold: Math.round(
+                                  FIELD_FREQUENCY_THRESHOLD * 100,
+                                ),
+                              })}
                             </div>
                             <div>
-                              {t('expansion.structure.tips.maintainPatterns')}
+                              {t("expansion.structure.tips.maintainPatterns")}
                             </div>
                           </div>
                         </div>
@@ -516,7 +530,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
             )}
 
           <div className="mt-6 space-y-2">
-            <Label htmlFor="model">{t('expansion.model')}</Label>
+            <Label htmlFor="model">{t("expansion.model")}</Label>
             <PromptModelSelect
               workspaceName={workspaceName}
               {...modelSelectProps}
@@ -525,7 +539,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sample-count">{t('expansion.sampleCount')}</Label>
+            <Label htmlFor="sample-count">{t("expansion.sampleCount")}</Label>
             <Input
               id="sample-count"
               type="number"
@@ -549,19 +563,22 @@ const DatasetExpansionDialog: React.FunctionComponent<
               className="w-full"
             />
             <p className="comet-body-s text-muted-foreground">
-              {t('expansion.sampleCountRange', { min: SAMPLE_COUNT_MIN, max: SAMPLE_COUNT_MAX })}
+              {t("expansion.sampleCountRange", {
+                min: SAMPLE_COUNT_MIN,
+                max: SAMPLE_COUNT_MAX,
+              })}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="variation-instructions">
-              {t('expansion.additionalInstructions')}
+              {t("expansion.additionalInstructions")}
             </Label>
             <Textarea
               id="variation-instructions"
               value={variationInstructions}
               onChange={(e) => setVariationInstructions(e.target.value)}
-              placeholder={t('expansion.additionalInstructionsPlaceholder')}
+              placeholder={t("expansion.additionalInstructionsPlaceholder")}
               rows={2}
               className="resize-none text-sm"
             />
@@ -592,10 +609,10 @@ const DatasetExpansionDialog: React.FunctionComponent<
                     </div>
                     <div>
                       <div className="text-left text-sm font-medium">
-                        {t('expansion.prompt.title')}
+                        {t("expansion.prompt.title")}
                       </div>
                       <div className="text-left text-xs text-muted-foreground">
-                        {t('expansion.prompt.description')}
+                        {t("expansion.prompt.description")}
                       </div>
                     </div>
                   </div>
@@ -603,7 +620,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                 <AccordionContent className="px-4 pb-4">
                   <div className="space-y-3">
                     <div className="text-xs text-muted-foreground">
-                      {t('expansion.prompt.customize')}
+                      {t("expansion.prompt.customize")}
                     </div>
                     <Textarea
                       value={customPrompt}
@@ -614,10 +631,12 @@ const DatasetExpansionDialog: React.FunctionComponent<
                       }}
                       rows={12}
                       className="resize-none font-mono text-xs leading-relaxed"
-                      placeholder={t('expansion.prompt.placeholder')}
+                      placeholder={t("expansion.prompt.placeholder")}
                     />
                     <div className="text-xs text-muted-foreground">
-                      {t('expansion.prompt.charCount', { count: customPrompt.length })}
+                      {t("expansion.prompt.charCount", {
+                        count: customPrompt.length,
+                      })}
                     </div>
                   </div>
                 </AccordionContent>
@@ -628,7 +647,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
         <DialogFooter className="gap-2 sm:space-x-0">
           <DialogClose asChild>
             <Button variant="outline" size="lg" disabled={isPending}>
-              {t('cancel')}
+              {t("cancel")}
             </Button>
           </DialogClose>
           <Button
@@ -656,7 +675,7 @@ const DatasetExpansionDialog: React.FunctionComponent<
                 </div>
               </div>
             ) : (
-              t('expansion.generate')
+              t("expansion.generate")
             )}
           </Button>
         </DialogFooter>

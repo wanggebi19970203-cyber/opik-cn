@@ -41,10 +41,12 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
   right: [],
 };
 
-export const DEFAULT_COLUMNS: ColumnData<CompareConfig>[] = [
+export const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<CompareConfig>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("configurationTab.name"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -79,7 +81,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
 
   const columns = useMemo(() => {
     const retVal = convertColumnDataToColumn<CompareConfig, CompareConfig>(
-      DEFAULT_COLUMNS,
+      getDefaultColumns(t),
       {},
     );
 
@@ -100,7 +102,7 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
     });
 
     return retVal;
-  }, [experimentsIds, onlyDiff, experiments]);
+  }, [experimentsIds, onlyDiff, experiments, t]);
 
   const flattenExperimentMetadataMap = useMemo(() => {
     return experiments.reduce<

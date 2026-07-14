@@ -32,8 +32,12 @@ const TraceAnnotateViewer: React.FunctionComponent<
 
   const hasFeedbackScores = Boolean(data.feedback_scores?.length);
   const isTrace = !spanId;
-  const title = isTrace ? t("annotate.traceFeedbackScores") : t("annotate.spanFeedbackScores");
-  const scoresSectionTitle = isTrace ? t("detailsPanel.traceScores") : t("detailsPanel.spanScores");
+  const title = isTrace
+    ? t("annotate.traceFeedbackScores")
+    : t("annotate.spanFeedbackScores");
+  const scoresSectionTitle = isTrace
+    ? t("detailsPanel.traceScores")
+    : t("detailsPanel.spanScores");
 
   const { mutate: setTraceFeedbackScore } = useTraceFeedbackScoreSetMutation();
   const { mutate: feedbackScoreDelete } = useTraceFeedbackScoreDeleteMutation();

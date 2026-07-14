@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import CustomSuccess from "@/icons/custom-success.svg?react";
 import { ArrowRight } from "lucide-react";
 
@@ -11,6 +12,8 @@ const LoggedDataStatus: React.FC<LoggedDataStatusProps> = ({
   status,
   onExplore,
 }) => {
+  const { t } = useTranslation("pages/onboarding");
+
   if (status === "logged") {
     return (
       <button
@@ -19,7 +22,7 @@ const LoggedDataStatus: React.FC<LoggedDataStatusProps> = ({
         className="comet-body-s-accented inline-flex h-8 shrink-0 cursor-pointer items-center rounded-md border border-chart-green px-3 text-chart-green hover:opacity-80"
       >
         <CustomSuccess className="mr-1.5 size-3.5 [&_path]:fill-chart-green" />
-        Traces received, explore Opik
+        {t("integrationExplorer.tracesReceivedExploreOpik")}
         <ArrowRight className="ml-1.5 size-3.5" />
       </button>
     );
@@ -31,7 +34,7 @@ const LoggedDataStatus: React.FC<LoggedDataStatusProps> = ({
         <div className="size-2 rounded-full bg-primary"></div>
         <div className="absolute inset-0 size-2 animate-ping rounded-full bg-primary opacity-75"></div>
       </div>
-      Waiting for data
+      {t("integrationExplorer.waitingForData")}
     </div>
   );
 };

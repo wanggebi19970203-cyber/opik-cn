@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import get from "lodash/get";
@@ -31,7 +32,7 @@ const useAlertUpdateMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
+import i18next from "i18next";
 
 import { useTheme } from "@/contexts/theme-provider";
 import { DropdownOption } from "@/types/shared";
@@ -10,9 +11,21 @@ export type ThemeOption = DropdownOption<ThemeMode> & {
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
-  { value: THEME_MODE.LIGHT, label: "Light", icon: Sun },
-  { value: THEME_MODE.DARK, label: "Dark", icon: Moon },
-  { value: SYSTEM_THEME_MODE.SYSTEM, label: "System", icon: Monitor },
+  {
+    value: THEME_MODE.LIGHT,
+    label: i18next.t("common.hooks.useThemeOptions.light"),
+    icon: Sun,
+  },
+  {
+    value: THEME_MODE.DARK,
+    label: i18next.t("common.hooks.useThemeOptions.dark"),
+    icon: Moon,
+  },
+  {
+    value: SYSTEM_THEME_MODE.SYSTEM,
+    label: i18next.t("common.hooks.useThemeOptions.system"),
+    icon: Monitor,
+  },
 ];
 
 export const useThemeOptions = () => {

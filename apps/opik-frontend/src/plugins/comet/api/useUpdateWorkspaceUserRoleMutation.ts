@@ -42,7 +42,9 @@ export function useUpdateWorkspaceUserRoleMutation() {
     mutationKey: ["workspace", "update-user-role"],
     mutationFn: updateWorkspaceUserRoleRequest,
     onSuccess: (_, variables) => {
-      toast({ description: i18next.t("common:comet.userRoleUpdatedSuccessfully") });
+      toast({
+        description: i18next.t("common:comet.userRoleUpdatedSuccessfully"),
+      });
       queryClient.invalidateQueries({
         queryKey: [
           WORKSPACE_USERS_ROLES_QUERY_KEY,

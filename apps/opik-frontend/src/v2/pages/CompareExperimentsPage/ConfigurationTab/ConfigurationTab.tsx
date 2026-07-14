@@ -179,7 +179,9 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder={t("compareExperiments.configuration.searchPlaceholder")}
+            placeholder={t(
+              "compareExperiments.configuration.searchPlaceholder",
+            )}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>
@@ -199,7 +201,9 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">{t("compareExperiments.configuration.showDifferencesOnly")}</Label>
+                <Label htmlFor="show-doff-only">
+                  {t("compareExperiments.configuration.showDifferencesOnly")}
+                </Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

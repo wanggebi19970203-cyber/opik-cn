@@ -34,7 +34,9 @@ const isHttpUrl = (value: string): boolean => {
   }
 };
 
-const validateMediaUrl = (url: string): { valid: boolean; errorKey?: string } => {
+const validateMediaUrl = (
+  url: string,
+): { valid: boolean; errorKey?: string } => {
   if (!isHttpUrl(url)) {
     // Allow template variables like {{image}} or {{video}}, {{audio}}
     if (url.match(/^\{\{.+\}\}$/)) {
@@ -105,10 +107,17 @@ const AddMediaPopover: React.FC<AddMediaPopoverProps> = ({
 
     if (items.length >= resolvedMaxItems) {
       const typeLabel =
-        type === "image" ? tCommon("media.images") : type === "video" ? tCommon("media.videos") : tCommon("media.audios");
+        type === "image"
+          ? tCommon("media.images")
+          : type === "video"
+            ? tCommon("media.videos")
+            : tCommon("media.audios");
       toast({
         title: t("addMediaPopover.maximumLimitReached"),
-        description: t("addMediaPopover.maximumLimitDescription", { count: resolvedMaxItems, type: typeLabel }),
+        description: t("addMediaPopover.maximumLimitDescription", {
+          count: resolvedMaxItems,
+          type: typeLabel,
+        }),
         variant: "destructive",
       });
       return;

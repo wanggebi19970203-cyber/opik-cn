@@ -117,7 +117,9 @@ const SidebarWorkspaceSelector: React.FC<SidebarWorkspaceSelectorProps> = ({
             {expandedThumb}
             <div className="flex min-w-0 flex-1 flex-col items-stretch">
               <span className="flex items-center gap-0.5 text-light-slate">
-                <span className="comet-body-xs-accented">{t("labels.workspace")}</span>
+                <span className="comet-body-xs-accented">
+                  {t("labels.workspace")}
+                </span>
                 {isDropdownOpen ? (
                   <ChevronUp className="size-3.5" />
                 ) : (

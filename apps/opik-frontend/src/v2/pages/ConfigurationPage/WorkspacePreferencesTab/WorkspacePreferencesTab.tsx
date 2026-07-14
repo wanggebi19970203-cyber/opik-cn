@@ -19,7 +19,7 @@ import {
   WORKSPACE_PREFERENCES_QUERY_PARAMS,
 } from "@/constants/workspace-preferences";
 import {
-  WORKSPACE_PREFERENCES_DEFAULT_COLUMNS,
+  createWorkspacePreferencesDefaultColumns,
   WORKSPACE_PREFERENCES_DEFAULT_COLUMN_PINNING,
   WORKSPACE_PREFERENCES_DEFAULT_THREAD_TIMEOUT,
   WORKSPACE_PREFERENCES_DEFAULT_TRUNCATION_TOGGLE,
@@ -145,11 +145,10 @@ const WorkspacePreferencesTab: React.FC = () => {
     [mergeConfigUpdate],
   );
 
-  const translatedColumns: ColumnData<WorkspacePreference>[] =
-    WORKSPACE_PREFERENCES_DEFAULT_COLUMNS.map((col) => ({
-      ...col,
-      label: t(`settings.workspacePreferences.columns.${col.id}`),
-    }));
+  const translatedColumns: ColumnData<WorkspacePreference>[] = useMemo(
+    () => createWorkspacePreferencesDefaultColumns(t),
+    [t],
+  );
 
   const columns = useMemo(() => {
     const baseColumns = convertColumnDataToColumn<
@@ -169,7 +168,7 @@ const WorkspacePreferencesTab: React.FC = () => {
       ];
     }
     return baseColumns;
-  }, [canConfigureWorkspaceSettings, handleEdit]);
+  }, [canConfigureWorkspaceSettings, handleEdit, translatedColumns]);
 
   return (
     <>

@@ -33,7 +33,9 @@ const NoData: React.FunctionComponent<NoDataProps> = ({
         <h3 className="comet-body-accented mb-1 text-foreground">{title}</h3>
       )}
       {resolvedMessage && (
-        <div className="comet-body-small text-muted-slate">{resolvedMessage}</div>
+        <div className="comet-body-small text-muted-slate">
+          {resolvedMessage}
+        </div>
       )}
       {children}
     </div>

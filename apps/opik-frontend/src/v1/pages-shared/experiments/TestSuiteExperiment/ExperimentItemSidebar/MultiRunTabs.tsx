@@ -49,7 +49,7 @@ const MultiRunTabs: React.FC<MultiRunTabsProps> = ({
                 className="size-[7px] shrink-0 rounded-[1.5px]"
                 style={{ backgroundColor: dotColor }}
               />
-              {t('run', { index: idx + 1 })}
+              {t("run", { index: idx + 1 })}
             </button>
           );
         })}

@@ -196,7 +196,9 @@ const GroupsButton = <TColumnData,>({
                 <span className="ml-1.5">{validGroups.length}</span>
               ) : null
             ) : (
-              <span className="ml-1.5">{`${t("labels.groups")} (${validGroups.length})`}</span>
+              <span className="ml-1.5">{`${t("labels.groups")} (${
+                validGroups.length
+              })`}</span>
             )}
           </Button>
         </PopoverTrigger>

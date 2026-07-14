@@ -48,15 +48,16 @@ interface ProjectDashboardViewDialogProps {
   onCreateSuccess?: (dashboardId: string) => void;
 }
 
-const FormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(100, "Name must be less than 100 characters")
-    .trim(),
-});
+const createFormSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z
+      .string()
+      .min(1, t("projectViews.validation.nameRequired"))
+      .max(100, t("projectViews.validation.nameMaxLength"))
+      .trim(),
+  });
 
-type FormData = z.infer<typeof FormSchema>;
+type FormData = z.infer<ReturnType<typeof createFormSchema>>;
 
 const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
   mode,
@@ -95,7 +96,7 @@ const ProjectDashboardViewDialog: React.FC<ProjectDashboardViewDialogProps> = ({
   };
 
   const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(createFormSchema(t)),
     mode: "onChange",
     defaultValues: { name: getInitialName() },
   });

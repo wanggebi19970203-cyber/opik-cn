@@ -93,7 +93,9 @@ const AnthropicModelConfigs = ({
               defaultValue={DEFAULT_ANTHROPIC_CONFIGS.TEMPERATURE}
               label={t("sharedModelConfigs.temperature")}
               tooltip={
-                <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.anthropicTemperatureTooltip")} />
+                <PromptModelConfigsTooltipContent
+                  text={t("sharedModelConfigs.anthropicTemperatureTooltip")}
+                />
               }
             />
           </div>
@@ -126,7 +128,9 @@ const AnthropicModelConfigs = ({
         defaultValue={DEFAULT_ANTHROPIC_CONFIGS.MAX_COMPLETION_TOKENS}
         label={t("sharedModelConfigs.maxOutputTokens")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxOutputTokensTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.maxOutputTokensTooltip")}
+          />
         }
       />
 
@@ -146,7 +150,9 @@ const AnthropicModelConfigs = ({
               defaultValue={DEFAULT_ANTHROPIC_CONFIGS.TOP_P}
               label={t("sharedModelConfigs.topP")}
               tooltip={
-                <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.anthropicTopPTooltip")} />
+                <PromptModelConfigsTooltipContent
+                  text={t("sharedModelConfigs.anthropicTopPTooltip")}
+                />
               }
             />
           </div>
@@ -176,7 +182,9 @@ const AnthropicModelConfigs = ({
         defaultValue={DEFAULT_ANTHROPIC_CONFIGS.THROTTLING}
         label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.throttlingTooltip")}
+          />
         }
       />
 
@@ -193,7 +201,9 @@ const AnthropicModelConfigs = ({
         defaultValue={DEFAULT_ANTHROPIC_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")}
+          />
         }
       />
 
@@ -203,7 +213,9 @@ const AnthropicModelConfigs = ({
             <Label htmlFor="thinkingEffort" className="text-sm font-medium">
               {t("anthropicModelConfigs.thinkingEffort")}
             </Label>
-            <ExplainerIcon description={t("anthropicModelConfigs.thinkingEffortDescription")} />
+            <ExplainerIcon
+              description={t("anthropicModelConfigs.thinkingEffortDescription")}
+            />
           </div>
           <SelectBox
             id="thinkingEffort"

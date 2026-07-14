@@ -152,9 +152,7 @@ const TracesActionsPanel: React.FunctionComponent<TracesActionsPanelProps> = ({
         getData={mapRowData}
         generateFileName={generateFileName}
         tooltipContent={
-          !isExportEnabled
-            ? t("tracing.actions.exportDisabled")
-            : undefined
+          !isExportEnabled ? t("tracing.actions.exportDisabled") : undefined
         }
       />
       {type === TRACE_DATA_TYPE.traces && canDeleteTraces && (

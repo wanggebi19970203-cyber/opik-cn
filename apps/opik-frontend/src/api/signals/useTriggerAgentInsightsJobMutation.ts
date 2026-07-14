@@ -45,8 +45,7 @@ const useTriggerAgentInsightsJobMutation = () => {
       queryClient.invalidateQueries({ queryKey: [AGENT_INSIGHTS_ISSUES_KEY] });
       toast({
         title: i18next.t("common:messages.diagnosticStarted"),
-        description:
-          i18next.t("common:messages.diagnosticStartedDescription"),
+        description: i18next.t("common:messages.diagnosticStartedDescription"),
       });
     },
     onError: (error: AxiosError) => handleMutationError(toast, error),

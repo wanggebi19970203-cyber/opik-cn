@@ -111,7 +111,7 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
             </Button>
           ) : (
             <Button onClick={onRunCode} size="sm" className="h-7 gap-2 px-4">
-              Run
+              {t("codeExecutor.run")}
             </Button>
           )}
 
@@ -130,7 +130,13 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
         >
           <div className="comet-body-s gap-4 text-balance px-4 py-3 font-code">
             <div className="text-foreground-secondary">
-              {t("codeExecutor.welcomeMessage", { run: <span className="text-green-700">Run</span> })}
+              {t("codeExecutor.welcomeMessage", {
+                run: (
+                  <span className="text-green-700">
+                    {t("codeExecutor.run")}
+                  </span>
+                ),
+              })}
             </div>
             {consoleOutput.map((log) => {
               if (log === FINAL_LOG_TEMPLATE) {

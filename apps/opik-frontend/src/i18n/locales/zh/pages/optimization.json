@@ -11,7 +11,8 @@
     "header": {
       "rerun": "重新运行",
       "stopExecution": "停止执行",
-      "dataset": "数据集"
+      "dataset": "数据集",
+      "goToDataset": "前往 {{name}}"
     },
     "kpi": {
       "optimizationCost": "优化成本",
@@ -19,7 +20,11 @@
     },
     "trials": {
       "refreshTooltip": "刷新试验列表",
-      "bestTrialConfiguration": "最佳试验配置"
+      "bestTrialConfiguration": "最佳试验配置",
+      "stepLabel": "步骤 {{stepIndex}}",
+      "best": "最佳",
+      "noTrials": "暂无试验",
+      "noSearchResults": "无搜索结果"
     },
     "bestPrompt": {
       "title": "最佳提示词",
@@ -35,6 +40,20 @@
       "metric": "指标",
       "initialPrompt": "初始提示词",
       "noPromptMessages": "无提示词消息"
+    },
+    "status": {
+      "baseline": "基线",
+      "passed": "通过",
+      "evaluating": "评估中",
+      "pruned": "已丢弃",
+      "running": "运行中"
+    },
+    "prompt": {
+      "diffVsBaseline": "与基线的提示词差异"
+    },
+    "view": {
+      "logs": "日志",
+      "configuration": "配置"
     }
   }
 }

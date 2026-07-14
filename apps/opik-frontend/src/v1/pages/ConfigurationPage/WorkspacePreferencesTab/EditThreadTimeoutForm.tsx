@@ -14,15 +14,18 @@ import SelectBox from "@/shared/SelectBox/SelectBox";
 import { DropdownOption } from "@/types/shared";
 import { isValidIso8601Duration, formatIso8601Duration } from "@/lib/date";
 
-const formSchema = z.object({
-  timeout_to_mark_thread_as_inactive: z
-    .string()
-    .refine((value) => isValidIso8601Duration(value, 7), {
-      message: "Please select a valid timeout duration (maximum 7 days)",
-    }),
-});
+const createFormSchema = (validationError: string) =>
+  z.object({
+    timeout_to_mark_thread_as_inactive: z
+      .string()
+      .refine((value) => isValidIso8601Duration(value, 7), {
+        message: validationError,
+      }),
+  });
 
-export type EditThreadTimeoutFormValues = z.infer<typeof formSchema>;
+export type EditThreadTimeoutFormValues = z.infer<
+  ReturnType<typeof createFormSchema>
+>;
 
 const TIMEOUT_VALUES = ["PT5M", "PT10M", "PT15M", "PT20M", "PT30M", "PT1H"];
 
@@ -30,7 +33,9 @@ const useTimeoutOptions = (): DropdownOption<string>[] => {
   const { t } = useTranslation();
   return TIMEOUT_VALUES.map((value) => ({
     value,
-    label: formatIso8601Duration(value) ?? t("settings.workspacePreferences.threadTimeout.invalidDuration"),
+    label:
+      formatIso8601Duration(value) ??
+      t("settings.workspacePreferences.threadTimeout.invalidDuration"),
   }));
 };
 
@@ -47,6 +52,9 @@ const EditThreadTimeoutForm: React.FC<EditThreadTimeoutFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const timeoutOptions = useTimeoutOptions();
+  const formSchema = createFormSchema(
+    t("settings.workspacePreferences.threadTimeout.validationError"),
+  );
   const form = useForm<EditThreadTimeoutFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -66,13 +74,17 @@ const EditThreadTimeoutForm: React.FC<EditThreadTimeoutFormProps> = ({
           name="timeout_to_mark_thread_as_inactive"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("settings.workspacePreferences.threadTimeout.formLabel")}</FormLabel>
+              <FormLabel>
+                {t("settings.workspacePreferences.threadTimeout.formLabel")}
+              </FormLabel>
               <FormControl>
                 <SelectBox
                   value={field.value}
                   onChange={field.onChange}
                   options={timeoutOptions}
-                  placeholder={t("settings.workspacePreferences.threadTimeout.selectPlaceholder")}
+                  placeholder={t(
+                    "settings.workspacePreferences.threadTimeout.selectPlaceholder",
+                  )}
                   className="w-full"
                 />
               </FormControl>

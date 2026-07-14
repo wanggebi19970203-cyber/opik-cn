@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
@@ -51,7 +52,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     {
       searchText = "",
       setSearchText,
-      placeholder = "Search",
+      placeholder,
       disabled = false,
       className,
       dimension,
@@ -60,6 +61,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     },
     ref,
   ) => {
+    const { t } = useTranslation("common");
+    const resolvedPlaceholder = placeholder ?? t("placeholders.search");
     const style =
       (dimension && SEARCH_STYLE_BY_DIMENSION[dimension]) ??
       DEFAULT_SEARCH_STYLE;
@@ -75,7 +78,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           className={style.input}
           delay={disableDebounce ? 0 : SEARCH_TEXT_DELAY}
           onValueChange={setSearchText as (value: unknown) => void}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           value={searchText}
           variant={variant}

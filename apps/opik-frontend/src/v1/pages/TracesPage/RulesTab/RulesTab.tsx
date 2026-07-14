@@ -51,7 +51,9 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 
 const getRowId = (d: EvaluatorsRule) => d.id;
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<EvaluatorsRule>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<EvaluatorsRule>[] => [
   {
     id: COLUMN_NAME_ID,
     label: t("tracing.tracesSpansTab.columns.name"),
@@ -194,7 +196,9 @@ export const RulesTab: React.FC<RulesTabProps> = ({ projectId }) => {
   );
 
   const noData = !search;
-  const noDataText = noData ? t("tracing.rulesTab.noRulesYet") : t("tracing.actions.noSearchResults");
+  const noDataText = noData
+    ? t("tracing.rulesTab.noRulesYet")
+    : t("tracing.actions.noSearchResults");
 
   const rows: EvaluatorsRule[] = useMemo(() => data?.content ?? [], [data]);
 

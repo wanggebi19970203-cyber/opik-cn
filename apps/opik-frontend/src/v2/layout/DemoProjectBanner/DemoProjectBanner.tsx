@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import useLocalStorageState from "use-local-storage-state";
 import { useFeatureFlagVariantKey } from "posthog-js/react";
@@ -23,6 +24,7 @@ interface DemoProjectBannerProps {
 const DemoProjectBanner: React.FC<DemoProjectBannerProps> = ({
   onChangeHeight,
 }) => {
+  const { t } = useTranslation("common");
   const heightRef = useRef(0);
   const activeProjectId = useActiveProjectId();
   const workspaceName = useActiveWorkspaceName();
@@ -85,14 +87,14 @@ const DemoProjectBanner: React.FC<DemoProjectBannerProps> = ({
       className="z-10 flex h-8 items-center justify-center gap-1.5 bg-primary px-4"
     >
       <span className="comet-body-xs text-center text-white">
-        You are viewing a demo project,{" "}
+        {t("emptyStates.viewingDemoProject")}{" "}
         <Link
           to="/$workspaceName/get-started"
           params={{ workspaceName }}
           onClick={handleCreateYourOwn}
           className="text-white underline underline-offset-2"
         >
-          click here to create your own
+          {t("emptyStates.clickHereToCreate")}
         </Link>
         .
       </span>

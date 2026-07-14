@@ -151,7 +151,9 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
         >
           <CommandList className="w-[--radix-popover-trigger-width] min-w-[320px] max-w-[800px] rounded-md border border-border bg-background p-1 shadow-md">
             {isLoading && (
-              <div className="comet-body-s p-2 text-light-slate">{t("autocomplete.loading")}</div>
+              <div className="comet-body-s p-2 text-light-slate">
+                {t("autocomplete.loading")}
+              </div>
             )}
             {showResults && (
               <CommandGroup
@@ -183,9 +185,7 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
                   "h-auto min-h-8 py-1.5 font-normal text-light-slate data-[selected=true]:text-light-slate",
                 )}
               >
-                <span>
-                  {t("autocomplete.noMatchInRecent", { itemNoun })}
-                </span>
+                <span>{t("autocomplete.noMatchInRecent", { itemNoun })}</span>
               </CommandItem>
             )}
           </CommandList>

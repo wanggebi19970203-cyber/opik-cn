@@ -84,11 +84,11 @@ const IntegrationTemplate: React.FC<IntegrationTemplateProps> = ({
   const renderRunCodeSection = () => (
     <div>
       <CodeSectionTitle>
-        {t('integrationExplorer.runCodeToGetStarted')}
+        {t("integrationExplorer.runCodeToGetStarted")}
       </CodeSectionTitle>
       {isPhonePortrait ? (
         <CodeBlockWithHeader
-          title={t('integrationExplorer.python')}
+          title={t("integrationExplorer.python")}
           copyText={canExecuteCode ? undefined : codeWithConfigToCopy}
         >
           {renderCodeSection()}

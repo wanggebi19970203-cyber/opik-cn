@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import isNumber from "lodash/isNumber";
 
@@ -75,12 +76,15 @@ export const TrialNumberCell = (context: CellContext<unknown, unknown>) => {
 
 export const TrialStepCell = (context: CellContext<unknown, unknown>) => {
   const row = context.row.original as AggregatedCandidate;
+  const { t } = useTranslation("pages/optimization");
   return (
     <CellWrapper
       metadata={context.column.columnDef.meta}
       tableMetadata={context.table.options.meta}
     >
-      <span className="comet-body-s">Step {row.stepIndex}</span>
+      <span className="comet-body-s">
+        {t("optimization.trials.stepLabel", { stepIndex: row.stepIndex })}
+      </span>
     </CellWrapper>
   );
 };

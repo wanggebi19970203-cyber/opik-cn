@@ -212,7 +212,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
   const noData = !search && filters.length === 0;
   const noDataText = noData
     ? t("empty.title") + "\n" + t("empty.pageDescription")
-    : t("empty.noSearchResults", "No search results");
+    : t("empty.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY,
@@ -317,9 +317,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l truncate break-words">
-          {t("title")}
-        </h1>
+        <h1 className="comet-title-l truncate break-words">{t("title")}</h1>
       </div>
       <ExplainerDescription
         {...EXPLAINERS_MAP[EXPLAINER_ID.whats_an_optimization_run]}

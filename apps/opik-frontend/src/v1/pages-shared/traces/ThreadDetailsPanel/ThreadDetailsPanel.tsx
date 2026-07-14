@@ -289,7 +289,10 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
 
       toast({
         title: t("actions.exportSuccessful"),
-        description: t("actions.exportedToFormat", { type: "thread", format: "CSV" }),
+        description: t("actions.exportedToFormat", {
+          type: "thread",
+          format: "CSV",
+        }),
       });
     } catch (error) {
       toast({
@@ -298,7 +301,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
         variant: "destructive",
       });
     }
-  }, [thread, threadId, exportColumns, traces, traceExportColumns]);
+  }, [thread, threadId, exportColumns, traces, traceExportColumns, t]);
 
   const handleExportJSON = useCallback(async () => {
     try {
@@ -329,7 +332,10 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
 
       toast({
         title: t("actions.exportSuccessful"),
-        description: t("actions.exportedToFormat", { type: "thread", format: "JSON" }),
+        description: t("actions.exportedToFormat", {
+          type: "thread",
+          format: "JSON",
+        }),
       });
     } catch (error) {
       toast({
@@ -338,7 +344,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
         variant: "destructive",
       });
     }
-  }, [thread, threadId, exportColumns, traces, traceExportColumns]);
+  }, [thread, threadId, exportColumns, traces, traceExportColumns, t]);
 
   const horizontalNavigation = useMemo(
     () =>
@@ -369,7 +375,9 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           <div className="relative flex size-[22px] shrink-0 items-center justify-center rounded-md bg-[var(--thread-icon-background)] text-[var(--thread-icon-text)]">
             <MessagesSquare className="size-3.5" />
           </div>
-          <div className="comet-title-s truncate py-0.5">{t("detailsPanel.thread")}</div>
+          <div className="comet-title-s truncate py-0.5">
+            {t("detailsPanel.thread")}
+          </div>
         </div>
         <div className=" flex w-full items-center gap-3 overflow-x-hidden py-1">
           <TooltipWrapper content={t("thread.threadStartTime")}>
@@ -385,7 +393,9 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
               <Hash className="size-4 shrink-0" />
               <span className="comet-body-s-accented truncate">
                 {thread?.number_of_messages
-                  ? t("thread.messagesCount", { count: thread.number_of_messages })
+                  ? t("thread.messagesCount", {
+                      count: thread.number_of_messages,
+                    })
                   : "NA"}
               </span>
             </div>
@@ -401,10 +411,9 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
           {!isUndefined(thread?.total_estimated_cost) && (
             <TooltipWrapper
               content={t("thread.estimatedCost", {
-                cost: formatCost(
-                  thread?.total_estimated_cost,
-                  { modifier: "full" },
-                ),
+                cost: formatCost(thread?.total_estimated_cost, {
+                  modifier: "full",
+                }),
               })}
             >
               <div className="flex flex-nowrap items-center gap-x-1.5 px-1 text-muted-slate">
@@ -621,7 +630,7 @@ const ThreadDetailsPanel: React.FC<ThreadDetailsPanelProps> = ({
                 }}
               >
                 <Share className="mr-2 size-4" />
-                  {t("actions.share")}
+                {t("actions.share")}
               </DropdownMenuItem>
               <TooltipWrapper content={threadId} side="left">
                 <DropdownMenuItem

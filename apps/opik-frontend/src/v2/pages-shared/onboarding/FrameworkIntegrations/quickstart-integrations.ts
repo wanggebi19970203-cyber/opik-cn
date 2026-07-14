@@ -46,130 +46,130 @@ export type FrameworkIntegration = {
 const getQuickstartIntegrations = (): FrameworkIntegration[] => {
   const t = i18next.getFixedT(null, "onboarding");
   return [
-  {
-    label: t("integrationExplorer.functionDecorators"),
-    logo: pythonLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/quickstart_notebook.ipynb",
-    documentation: buildDocsUrl(
-      "/tracing/advanced/log_traces",
-      "#using-function-decorators",
-    ),
-    code: functionDecoratorsCode,
-    executionLogs: integrationLogsMap.FunctionDecorators,
-  },
-  {
-    label: "OpenAI",
-    logo: openAILogoUrl,
-    logoWhite: openAIWhiteLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/openai.ipynb",
-    documentation: buildDocsUrl("/integrations/openai"),
-    code: openAiCode,
-    // executionUrl: "openai/run_stream",
-    executionLogs: integrationLogsMap.OpenAI,
-  },
-  {
-    label: "Anthropic",
-    logo: anthropicLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/anthropic.ipynb",
-    documentation: buildDocsUrl("/integrations/openai"),
-    code: anthropicCode,
-    // executionUrl: "anthropic/run_stream",
-    executionLogs: integrationLogsMap.Anthropic,
-  },
-  {
-    label: "Bedrock",
-    logo: bedrockLogoUrl,
-    logoWhite: bedrockWhiteLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/bedrock.ipynb",
-    documentation: buildDocsUrl("/integrations/openai"),
-    code: bedrockCode,
-    executionLogs: integrationLogsMap.Bedrock,
-  },
-  {
-    label: "Gemini",
-    logo: geminiLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/gemini.ipynb",
-    documentation: buildDocsUrl("/integrations/openai"),
-    code: geminiCode,
-    executionLogs: integrationLogsMap.Gemini,
-  },
-  {
-    label: "LangChain",
-    logo: langChainLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/langchain.ipynb",
-    documentation: buildDocsUrl("/integrations/langchain"),
-    code: langChainCode,
-    executionLogs: integrationLogsMap.LangChain,
-  },
-  {
-    label: "LangGraph",
-    logo: langGraphLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/langgraph.ipynb",
-    documentation: buildDocsUrl("/integrations/langchain"),
-    code: langGraphCode,
-    executionLogs: integrationLogsMap.LangGraph,
-  },
-  {
-    label: "LlamaIndex",
-    logo: llamaIndexLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/llama-index.ipynb",
-    documentation: buildDocsUrl("/integrations/langchain"),
-    code: llamaIndexCode,
-    executionLogs: integrationLogsMap.LlamaIndex,
-  },
-  {
-    label: "Haystack",
-    logo: haystackLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/haystack.ipynb",
-    documentation: buildDocsUrl("/integrations/langchain"),
-    code: haystackCode,
-    executionLogs: integrationLogsMap.Haystack,
-  },
-  {
-    label: "LiteLLM",
-    logo: liteLLMLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/litellm.ipynb",
-    documentation: buildDocsUrl("/integrations/litellm"),
-    code: liteLLMCode,
-    executionLogs: integrationLogsMap.LiteLLM,
-  },
-  {
-    label: "Ragas",
-    logo: ragasLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/ragas.ipynb",
-    documentation: buildDocsUrl("/integrations/ragas"),
-    code: ragasCode,
-    executionLogs: integrationLogsMap.Ragas,
-  },
-  {
-    label: "Groq",
-    logo: groqLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/groq.ipynb",
-    documentation: buildDocsUrl("/integrations/ragas"),
-    code: groqCode,
-    executionLogs: integrationLogsMap.Groq,
-  },
-  {
-    label: "DSPy",
-    logo: dspyLogoUrl,
-    colab:
-      "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/dspy.ipynb",
-    documentation: buildDocsUrl("/integrations/ragas"),
-    code: dspyCode,
-    executionLogs: integrationLogsMap.DSPy,
-  },
+    {
+      label: t("integrationExplorer.functionDecorators"),
+      logo: pythonLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/quickstart_notebook.ipynb",
+      documentation: buildDocsUrl(
+        "/tracing/advanced/log_traces",
+        "#using-function-decorators",
+      ),
+      code: functionDecoratorsCode,
+      executionLogs: integrationLogsMap.FunctionDecorators,
+    },
+    {
+      label: "OpenAI",
+      logo: openAILogoUrl,
+      logoWhite: openAIWhiteLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/openai.ipynb",
+      documentation: buildDocsUrl("/integrations/openai"),
+      code: openAiCode,
+      // executionUrl: "openai/run_stream",
+      executionLogs: integrationLogsMap.OpenAI,
+    },
+    {
+      label: "Anthropic",
+      logo: anthropicLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/anthropic.ipynb",
+      documentation: buildDocsUrl("/integrations/openai"),
+      code: anthropicCode,
+      // executionUrl: "anthropic/run_stream",
+      executionLogs: integrationLogsMap.Anthropic,
+    },
+    {
+      label: "Bedrock",
+      logo: bedrockLogoUrl,
+      logoWhite: bedrockWhiteLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/bedrock.ipynb",
+      documentation: buildDocsUrl("/integrations/openai"),
+      code: bedrockCode,
+      executionLogs: integrationLogsMap.Bedrock,
+    },
+    {
+      label: "Gemini",
+      logo: geminiLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/gemini.ipynb",
+      documentation: buildDocsUrl("/integrations/openai"),
+      code: geminiCode,
+      executionLogs: integrationLogsMap.Gemini,
+    },
+    {
+      label: "LangChain",
+      logo: langChainLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/langchain.ipynb",
+      documentation: buildDocsUrl("/integrations/langchain"),
+      code: langChainCode,
+      executionLogs: integrationLogsMap.LangChain,
+    },
+    {
+      label: "LangGraph",
+      logo: langGraphLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/langgraph.ipynb",
+      documentation: buildDocsUrl("/integrations/langchain"),
+      code: langGraphCode,
+      executionLogs: integrationLogsMap.LangGraph,
+    },
+    {
+      label: "LlamaIndex",
+      logo: llamaIndexLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/llama-index.ipynb",
+      documentation: buildDocsUrl("/integrations/langchain"),
+      code: llamaIndexCode,
+      executionLogs: integrationLogsMap.LlamaIndex,
+    },
+    {
+      label: "Haystack",
+      logo: haystackLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/haystack.ipynb",
+      documentation: buildDocsUrl("/integrations/langchain"),
+      code: haystackCode,
+      executionLogs: integrationLogsMap.Haystack,
+    },
+    {
+      label: "LiteLLM",
+      logo: liteLLMLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/litellm.ipynb",
+      documentation: buildDocsUrl("/integrations/litellm"),
+      code: liteLLMCode,
+      executionLogs: integrationLogsMap.LiteLLM,
+    },
+    {
+      label: "Ragas",
+      logo: ragasLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/ragas.ipynb",
+      documentation: buildDocsUrl("/integrations/ragas"),
+      code: ragasCode,
+      executionLogs: integrationLogsMap.Ragas,
+    },
+    {
+      label: "Groq",
+      logo: groqLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/groq.ipynb",
+      documentation: buildDocsUrl("/integrations/ragas"),
+      code: groqCode,
+      executionLogs: integrationLogsMap.Groq,
+    },
+    {
+      label: "DSPy",
+      logo: dspyLogoUrl,
+      colab:
+        "https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/dspy.ipynb",
+      documentation: buildDocsUrl("/integrations/ragas"),
+      code: dspyCode,
+      executionLogs: integrationLogsMap.DSPy,
+    },
   ];
 };
 

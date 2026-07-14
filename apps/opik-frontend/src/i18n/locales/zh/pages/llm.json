@@ -6,7 +6,12 @@
       "editScore": "编辑评分",
       "doneEditing": "完成编辑",
       "deleteScore": "删除评分",
-      "addScore": "添加评分"
+      "addScore": "添加评分",
+      "number": "数字",
+      "integer": "整数",
+      "boolean": "布尔值",
+      "defaultName": "评分名称",
+      "defaultDescription": "评分描述"
     },
     "promptMessages": {
       "saveToPromptLibrary": "保存到提示词库",
@@ -34,7 +39,11 @@
       "addImage": "添加图片",
       "addAudio": "添加音频",
       "addVideo": "添加视频",
-      "typeOrClickToAddVariable": "输入 {{ 或点击添加变量"
+      "typeOrClickToAddVariable": "输入 {{ 或点击添加变量",
+      "addMessage": "消息",
+      "images": "图片",
+      "videos": "视频",
+      "audios": "音频"
     },
     "promptMessageActions": {
       "configureModelFirst": "请先配置模型",
@@ -63,7 +72,10 @@
       "deleteConfiguration": "删除配置",
       "cancel": "取消",
       "deleteConfigurationTitle": "删除配置",
-      "deleteConfigurationDescription": "此配置在工作区中共享。删除后将移除所有人的访问权限。此操作无法撤销。确定要继续吗？"
+      "deleteConfigurationDescription": "此配置在工作区中共享。删除后将移除所有人的访问权限。此操作无法撤销。确定要继续吗？",
+      "provider": "提供商",
+      "configured": "已配置",
+      "noProvidersAvailable": "此环境暂无可用提供商"
     },
     "bedrockProvider": {
       "providerName": "提供商名称",
@@ -71,17 +83,19 @@
       "providerNameDescription": "此提供商实例的唯一标识符（例如 \"Bedrock us-east-1\"）。",
       "url": "URL",
       "apiKey": "API 密钥",
-      "apiKeyDescription": "点击此处查看如何创建服务帐户并分配正确权限的说明。",
+      "apiKeyDescription": "点击<link>此处</link>查看如何创建服务帐户并分配正确权限的说明。",
       "modelsList": "模型列表",
       "modelsDescription": "以逗号分隔的可用模型列表。示例：",
       "modelsListDescription": "以逗号分隔的可用模型列表。示例："
     },
     "cloudProvider": {
       "apiKeyLabel": "{{providerName}} API 密钥",
-      "getApiKey": "在此获取您的 {{providerName}} API 密钥。",
+      "getApiKey": "点击<link>此处</link>获取您的 {{providerName}} API 密钥。",
       "pipelineMode": "管道模式",
       "selectPipelineMode": "选择管道模式",
-      "pipelineModeDescription": "Chat Completions API 是标准端点。Responses API 在支持的模型上启用智能体工具功能（如有状态工具循环、推理摘要）。"
+      "pipelineModeDescription": "Chat Completions API 是标准端点。Responses API 在支持的模型上启用智能体工具功能（如有状态工具循环、推理摘要）。",
+      "chatCompletionsApi": "Chat Completions API",
+      "responsesApi": "Responses API"
     },
     "customHeadersField": {
       "customHeaders": "自定义请求头（可选）",
@@ -96,7 +110,7 @@
       "url": "URL",
       "urlDescription": "如果您的网关期望在路径中包含模型名称，请在 URL 中使用 `{model}` 作为占位符——Opik 会在请求时替换所选模型。模型名称按原样插值，包含 `/` 的值（如 HuggingFace 风格的名称）将成为额外的路径段。",
       "apiKey": "API 密钥",
-      "apiKeyDescription": "自定义提供商可能不需要 API 密钥，具体取决于您的服务器配置。请在文档中了解更多信息。",
+      "apiKeyDescription": "自定义提供商可能不需要 API 密钥，具体取决于您的服务器配置。请在<link>文档</link>中了解更多信息。",
       "documentation": "文档",
       "modelsList": "模型列表",
       "modelsDescription": "以逗号分隔的可用模型列表。示例：",
@@ -126,7 +140,6 @@
       "apiKeyDescription": "大多数 Ollama 实例不需要 API 密钥。仅在您的实例配置了认证时添加。",
       "modelsList": "模型列表",
       "modelsDescription": "以逗号分隔的可用模型列表。使用\"发现模型\"自动填充此字段。",
-      "modelsListDescription": "以逗号分隔的可用模型列表。示例：",
       "customHeadersDescription": "用于认证或配置的可选自定义请求头。",
       "urlRequired": "需要 URL",
       "urlRequiredDescription": "请先输入 Ollama 基础 URL",
@@ -197,7 +210,15 @@
       "maximumLimitReached": "已达到最大限制",
       "error": "错误",
       "invalidUrl": "无效的 URL",
-      "pleaseEnterValidUrl": "请输入有效的 HTTP 或 HTTPS URL"
+      "pleaseEnterValidUrl": "请输入有效的 HTTP 或 HTTPS URL",
+      "maxItemsExceeded": "最多只能添加 {{count}} 个{{type}}",
+      "alreadyExists": "此{{type}}已存在",
+      "image": "图片",
+      "video": "视频",
+      "audio": "音频",
+      "images": "图片",
+      "videos": "视频",
+      "audios": "音频"
     },
     "mediaTagsList": {
       "previewNotAvailable": "预览不可用",
@@ -205,7 +226,10 @@
       "videoPreviewFailed": "视频预览失败",
       "audioPreviewFailed": "音频预览失败",
       "videoPlaybackNotSupported": "您的浏览器不支持视频播放。",
-      "audioPlaybackNotSupported": "您的浏览器不支持音频播放。"
+      "audioPlaybackNotSupported": "您的浏览器不支持音频播放。",
+      "deleteImage": "删除图片",
+      "deleteVideo": "删除视频",
+      "deleteAudio": "删除音频"
     },
     "promptMessagesReadonly": {
       "showMore": "展开更多",

@@ -136,7 +136,9 @@ const PlaygroundOutputTable = ({
     const outputColumns = promptIds.map((promptId, promptIdx) => {
       return {
         id: `output-${promptId}`,
-        label: t("playground.outputTable.outputPrefix", { letter: getAlphabetLetter(promptIdx) }),
+        label: t("playground.outputTable.outputPrefix", {
+          letter: getAlphabetLetter(promptIdx),
+        }),
         type: COLUMN_TYPE.string,
         cell: PlaygroundOutputCell as never,
         minSize: 350,

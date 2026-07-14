@@ -17,7 +17,9 @@ const AddSectionButton: React.FunctionComponent<AddSectionButtonProps> = ({
         className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md px-3 py-1.5 hover:bg-muted"
       >
         <Plus className="size-3 text-foreground" />
-        <span className="text-sm text-foreground">{t("common:dashboard.addSection")}</span>
+        <span className="text-sm text-foreground">
+          {t("common:dashboard.addSection")}
+        </span>
       </button>
     </div>
   );

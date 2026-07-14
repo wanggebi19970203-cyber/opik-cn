@@ -36,8 +36,12 @@ const FeedbackDefinitionsActionsPanel: React.FunctionComponent<
         setOpen={setOpen}
         onConfirm={deleteFeedbackDefinitionsHandler}
         title={t("settings.feedback.confirmDialog.deleteBatch.title")}
-        description={t("settings.feedback.confirmDialog.deleteBatch.description")}
-        confirmText={t("settings.feedback.confirmDialog.deleteBatch.confirmText")}
+        description={t(
+          "settings.feedback.confirmDialog.deleteBatch.description",
+        )}
+        confirmText={t(
+          "settings.feedback.confirmDialog.deleteBatch.confirmText",
+        )}
         confirmButtonVariant="destructive"
       />
       <TooltipWrapper content={t("settings.actions.delete")}>

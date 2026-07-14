@@ -84,7 +84,7 @@ const OptimizationProgressChartContainer: React.FC<
       return (
         <NoData
           className="min-h-32 text-light-slate"
-          message={t('noDataToShow')}
+          message={t("noDataToShow")}
         />
       );
     }
@@ -109,16 +109,16 @@ const OptimizationProgressChartContainer: React.FC<
     <Card className="h-[280px] min-w-[400px] flex-auto">
       <CardHeader className="space-y-0.5 px-4 pt-3">
         <CardTitle className="comet-body-s-accented flex items-center gap-2">
-          {t('optimizationProgress')}
+          {t("optimizationProgress")}
           {isInProgress && !noData && (
             <>
               <Spinner size="xs" />
               <span className="comet-body-xs font-normal text-muted-slate">
                 {inProgressInfo
-                  ? t('evaluatingNewCandidate')
+                  ? t("evaluatingNewCandidate")
                   : isRunningMiniBatches
-                    ? t('lookingForFailingExamples')
-                    : t('generatingNewCandidate')}
+                    ? t("lookingForFailingExamples")
+                    : t("generatingNewCandidate")}
               </span>
             </>
           )}

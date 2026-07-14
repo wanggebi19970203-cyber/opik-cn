@@ -4,7 +4,6 @@
     "description": "管理用于评估和实验的数据集",
     "create": "创建数据集",
     "edit": "编辑数据集",
-    "delete": "删除数据集",
     "empty": {
       "title": "暂无数据集",
       "description": "创建您的第一个数据集开始使用。",
@@ -70,7 +69,8 @@
       "manageTags": "管理标签",
       "delete": "删除",
       "samplesAddedToDraft": "样本已添加到草稿",
-      "samplesAddedDescription": "已将 {{count}} 个样本添加到您的草稿更改中"
+      "samplesAddedDescription_one": "已将 {{count}} 个样本添加到草稿更改中",
+      "samplesAddedDescription_other": "已将 {{count}} 个样本添加到草稿更改中"
     },
     "exportPanel": {
       "preparingDownload": "正在准备下载",
@@ -200,7 +200,8 @@
       "record": "记录",
       "recordLowercase": "记录",
       "media": "媒体",
-      "data": "数据"
+      "data": "数据",
+      "mustBeValidJsonObjectOrArray": "必须是有效的 JSON 对象或数组"
     },
     "listPage": {
       "datasets": "数据集",
@@ -226,7 +227,8 @@
       "testSettings": "测试设置",
       "testCase": "测试用例",
       "record": "记录",
-      "globalAssertions": "{{count}} 个全局断言"
+      "globalAssertions_one": "{{count}} 个全局断言",
+      "globalAssertions_other": "{{count}} 个全局断言"
     },
     "navigation": {
       "unsavedChanges": "未保存的更改",
@@ -513,7 +515,17 @@
     "testSuiteEmpty": "此测试套件为空",
     "noVersions": "暂无版本",
     "selectTestSuite": "选择测试套件",
-    "searchTestSuites": "搜索测试套件"
+    "searchTestSuites": "搜索测试套件",
+    "noSearchResults": "无搜索结果",
+    "showingFirstItems": "显示前 {{count}} 个项目。",
+    "loadMore": "加载更多",
+    "selectType": "选择{{type}}",
+    "noDatasetsYet": "暂无数据集",
+    "noTestSuitesYet": "暂无测试套件",
+    "createDataset": "创建数据集",
+    "createTestSuite": "创建测试套件",
+    "newType": "新建{{type}}",
+    "emptyTooltip": "此{{type}}为空"
   },
   "redirectDatasets": {
     "testSuiteNotFound": "找不到此测试套件",

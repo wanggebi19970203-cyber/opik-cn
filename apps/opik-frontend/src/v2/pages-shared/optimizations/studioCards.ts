@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import {
   BotMessageSquare,
   FileSliders,
@@ -18,35 +19,34 @@ export type StudioCardConfig = {
 type StudioCardHandlers = {
   navigateToStudio: (templateId?: string) => void;
   onOptimizeViaSdkClick: () => void;
+  t: TFunction<"optimizations">;
 };
 
 // Shared definition of the onboarding cards; each view styles them by `id`.
 export const getStudioCardConfigs = ({
   navigateToStudio,
   onOptimizeViaSdkClick,
+  t,
 }: StudioCardHandlers): StudioCardConfig[] => [
   {
     id: "demo",
     icon: BotMessageSquare,
-    title: "Run a demo example",
-    description:
-      "Start with a pre-configured optimization example for a support chatbot.",
+    title: t("optimizations.emptyState.runDemoExample"),
+    description: t("optimizations.emptyState.runDemoExampleDesc"),
     onClick: () => navigateToStudio("opik-chatbot"),
   },
   {
     id: "studio",
     icon: SquareDashedMousePointer,
-    title: "Use the Optimization studio",
-    description:
-      "Create a custom optimization workflow to test and improve your prompts.",
+    title: t("optimizations.studioTemplates.useOptimizationStudio"),
+    description: t("optimizations.emptyState.startOptimizationRunDesc"),
     onClick: () => navigateToStudio(),
   },
   {
     id: "sdk",
     icon: FileSliders,
-    title: "Optimize via SDK",
-    description:
-      "Generate starter code for running a custom optimization programmatically.",
+    title: t("optimizations.emptyState.optimizeViaSdk"),
+    description: t("optimizations.emptyState.optimizeViaSdkDesc"),
     onClick: onOptimizeViaSdkClick,
   },
 ];

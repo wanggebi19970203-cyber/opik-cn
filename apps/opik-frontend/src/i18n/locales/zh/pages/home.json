@@ -2,7 +2,11 @@
   "home": {
     "title": "首页",
     "description": "欢迎使用 Opik",
+    "welcomeTo": "欢迎使用 {{workspaceName}}",
     "welcomeBack": "欢迎回到 Opik",
+    "overallPerformance": "整体表现",
+    "viewDetails": "查看详情",
+    "noDataImageAlt": "无数据图片",
     "welcomeBanner": {
       "title": "欢迎使用 Opik",
       "description": "Opik 通过先进的追踪、实验管理、评估和实时监控，帮助您构建更安全、更可靠的 AI 系统",
@@ -20,7 +24,8 @@
       "projects": "项目",
       "traces": "追踪",
       "datasets": "数据集",
-      "experiments": "实验"
+      "experiments": "实验",
+      "prompts": "提示词"
     },
     "costOverview": {
       "title": "成本概览",
@@ -32,6 +37,7 @@
     },
     "evaluation": {
       "title": "评估",
+      "experiment": "实验",
       "testSuite": "测试套件",
       "itemCount": "项目数量",
       "passRate": "通过率",
@@ -66,12 +72,14 @@
       "lastUpdated": "最后更新",
       "avgFeedbackScores": "平均反馈评分",
       "traceCount": "追踪数量",
+      "errors": "错误",
       "noProjects": "暂无项目",
       "createNewProject": "创建新项目",
       "allProjects": "所有项目"
     },
     "optimizationRuns": {
       "title": "优化运行",
+      "optimization": "优化",
       "testSuite": "测试套件",
       "optimizer": "优化器",
       "bestScore": "最佳评分",

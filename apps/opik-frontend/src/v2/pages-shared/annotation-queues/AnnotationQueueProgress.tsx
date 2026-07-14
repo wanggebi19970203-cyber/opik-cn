@@ -39,7 +39,9 @@ const AnnotationQueueProgress: React.FunctionComponent<
       </HoverCardTrigger>
       <HoverCardContent className="w-64">
         <div className="space-y-2">
-          <h4 className="comet-title-xs">{t("annotationQueues.progress.byReviewer")}</h4>
+          <h4 className="comet-title-xs">
+            {t("annotationQueues.progress.byReviewer")}
+          </h4>
           <div className="space-y-1">
             {reviewers.map((reviewer) => {
               const reviewerProgress =

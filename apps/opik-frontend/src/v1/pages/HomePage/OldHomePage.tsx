@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import ObservabilitySection from "@/v1/pages/HomePage/ObservabilitySection";
 import EvaluationSection from "@/v1/pages/HomePage/EvaluationSection";
 import GetStartedSection from "@/v1/pages/HomePage/GetStartedSection";
@@ -8,6 +9,7 @@ import OptimizationRunsSection from "./OptimizationRunsSection";
 import { usePermissions } from "@/contexts/PermissionsContext";
 
 const OldHomePage = () => {
+  const { t } = useTranslation("home");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const {
     permissions: { canViewOptimizationRuns },
@@ -17,7 +19,9 @@ const OldHomePage = () => {
     <div className="pt-6">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="comet-title-l truncate break-words">
-          Welcome to {calculateWorkspaceName(workspaceName, "Opik")}
+          {t("home.welcomeTo", {
+            workspaceName: calculateWorkspaceName(workspaceName, "Opik"),
+          })}
         </h1>
       </div>
       <GetStartedSection />

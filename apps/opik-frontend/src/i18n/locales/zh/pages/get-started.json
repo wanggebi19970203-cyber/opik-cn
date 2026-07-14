@@ -43,7 +43,8 @@
       "waitingForRepo": "等待您的仓库连接\u2026",
       "connectedDescription": "Ollie 现在可以检查您的代码并帮助您在 Opik 中设置追踪。",
       "notConnectedDescription": "在您的仓库中运行上述命令。连接后，Ollie 可以检查您的代码并帮助完成设置。",
-      "connectTroubleshooting": "连接故障排除"
+      "connectTroubleshooting": "连接故障排除",
+      "terminal": "终端"
     },
     "demoLoading": {
       "creatingDemoProject": "正在创建演示项目…",
@@ -52,14 +53,21 @@
       "almostReady": "即将完成…",
       "tryAgain": "重试",
       "takingLonger": "演示数据加载时间超出预期。",
-      "backToSetup": "返回设置"
+      "backToSetup": "返回设置",
+      "generatingDemoData": "正在生成演示数据…",
+      "showMeDemoProject": "查看演示项目"
     },
     "manualIntegration": {
       "allIntegrations": "所有集成",
       "llmProviders": "LLM 提供商",
       "frameworksAndTools": "框架和工具",
       "useOpikSkills": "使用 Opik 技能",
-      "viewAll": "查看全部"
+      "viewAll": "查看全部",
+      "integrateOpikWith": "将 Opik 与 {{title}} 集成",
+      "description": "一切从追踪开始。按照以下快速步骤记录您的第一组 LLM 调用，以便使用 Opik 分析并改进性能。",
+      "readTheFullGuide": "阅读完整指南",
+      "inOurDocs": "（在我们的文档中）。",
+      "runCodeToGetStarted": "2. 运行以下代码开始使用 {{title}}"
     },
     "selectIntent": {
       "welcome": "欢迎使用 Opik - 让我们帮您完成设置",

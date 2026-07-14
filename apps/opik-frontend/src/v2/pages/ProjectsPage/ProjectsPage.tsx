@@ -255,7 +255,9 @@ const ProjectsPage: React.FunctionComponent = () => {
               accessorFn: (row: ProjectWithStatistic) =>
                 row.guardrails_failed_count &&
                 isNumber(row.guardrails_failed_count)
-                  ? t("table.guardrailsFailed", { count: row.guardrails_failed_count })
+                  ? t("table.guardrailsFailed", {
+                      count: row.guardrails_failed_count,
+                    })
                   : "-",
             },
           ]
@@ -439,7 +441,9 @@ const ProjectsPage: React.FunctionComponent = () => {
   return (
     <div className="pt-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="comet-body-accented truncate break-words">{t("title")}</h1>
+        <h1 className="comet-body-accented truncate break-words">
+          {t("title")}
+        </h1>
         {canCreateProjects && (
           <Button variant="default" size="xs" onClick={handleNewProjectClick}>
             <Plus className="mr-1 size-4" />

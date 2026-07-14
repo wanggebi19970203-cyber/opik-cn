@@ -75,7 +75,9 @@ type PromptTabRow = (CompareConfig | ComparePromptConfig) & {
   rowType: "prompt" | "config";
 };
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<PromptTabRow>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<PromptTabRow>[] => [
   {
     id: "name",
     label: t("promptTab.name"),
@@ -273,7 +275,9 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">{t("promptTab.showDifferencesOnly")}</Label>
+                <Label htmlFor="show-doff-only">
+                  {t("promptTab.showDifferencesOnly")}
+                </Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

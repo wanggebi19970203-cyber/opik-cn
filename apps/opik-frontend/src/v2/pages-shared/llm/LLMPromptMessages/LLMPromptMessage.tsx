@@ -316,7 +316,9 @@ const LLMPromptMessage = forwardRef<
                     <Separator orientation="vertical" className="mx-1 h-4" />
                   )}
                   {!hideRemoveButton && (
-                    <TooltipWrapper content={t("llm:promptMessages.removeMessage")}>
+                    <TooltipWrapper
+                      content={t("llm:promptMessages.removeMessage")}
+                    >
                       <Button
                         variant="minimal"
                         size="icon-2xs"
@@ -327,7 +329,9 @@ const LLMPromptMessage = forwardRef<
                       </Button>
                     </TooltipWrapper>
                   )}
-                  <TooltipWrapper content={t("llm:promptMessages.duplicateMessage")}>
+                  <TooltipWrapper
+                    content={t("llm:promptMessages.duplicateMessage")}
+                  >
                     <Button
                       variant="minimal"
                       size="icon-2xs"
@@ -486,7 +490,9 @@ const LLMPromptMessage = forwardRef<
                       promptVariables={promptVariables}
                       onOpenChange={setIsMediaPopoverOpen}
                     >
-                      <TooltipWrapper content={t("llm:promptMessages.addImage")}>
+                      <TooltipWrapper
+                        content={t("llm:promptMessages.addImage")}
+                      >
                         <Button variant="minimal" size="icon-2xs" type="button">
                           <Image />
                         </Button>
@@ -499,7 +505,9 @@ const LLMPromptMessage = forwardRef<
                       promptVariables={promptVariables}
                       onOpenChange={setIsMediaPopoverOpen}
                     >
-                      <TooltipWrapper content={t("llm:promptMessages.addAudio")}>
+                      <TooltipWrapper
+                        content={t("llm:promptMessages.addAudio")}
+                      >
                         <Button variant="minimal" size="icon-2xs" type="button">
                           <Music />
                         </Button>
@@ -512,7 +520,9 @@ const LLMPromptMessage = forwardRef<
                       promptVariables={promptVariables}
                       onOpenChange={setIsMediaPopoverOpen}
                     >
-                      <TooltipWrapper content={t("llm:promptMessages.addVideo")}>
+                      <TooltipWrapper
+                        content={t("llm:promptMessages.addVideo")}
+                      >
                         <Button variant="minimal" size="icon-2xs" type="button">
                           <Video />
                         </Button>
@@ -524,7 +534,9 @@ const LLMPromptMessage = forwardRef<
                   <Separator orientation="vertical" className="mx-0.5 h-4" />
                 )}
                 {hasJsonData && (
-                  <TooltipWrapper content={t("llm:promptMessages.typeOrClickToAddVariable")}>
+                  <TooltipWrapper
+                    content={t("llm:promptMessages.typeOrClickToAddVariable")}
+                  >
                     <Button
                       variant="minimal"
                       size="icon-2xs"

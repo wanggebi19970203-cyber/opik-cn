@@ -30,21 +30,27 @@ const VersionChangeSummaryCell: React.FC<
       ) : (
         <div className="flex items-center gap-2">
           {itemsAdded > 0 && (
-            <TooltipWrapper content={t("datasets.versionChangeSummary.itemsAdded")}>
+            <TooltipWrapper
+              content={t("datasets.versionChangeSummary.itemsAdded")}
+            >
               <Tag variant="green" size={tagSize}>
                 + {itemsAdded}
               </Tag>
             </TooltipWrapper>
           )}
           {itemsModified > 0 && (
-            <TooltipWrapper content={t("datasets.versionChangeSummary.itemsModified")}>
+            <TooltipWrapper
+              content={t("datasets.versionChangeSummary.itemsModified")}
+            >
               <Tag variant="blue" size={tagSize}>
                 ~ {itemsModified}
               </Tag>
             </TooltipWrapper>
           )}
           {itemsDeleted > 0 && (
-            <TooltipWrapper content={t("datasets.versionChangeSummary.itemsDeleted")}>
+            <TooltipWrapper
+              content={t("datasets.versionChangeSummary.itemsDeleted")}
+            >
               <Tag variant="red" size={tagSize}>
                 − {itemsDeleted}
               </Tag>

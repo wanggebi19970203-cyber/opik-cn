@@ -154,7 +154,8 @@ const ProjectsSelectBox: React.FC<ProjectsSelectBoxProps> = (props) => {
         onChange: props.onValueChange,
         multiselect: true as const,
         showSelectAll: props.showSelectAll,
-        selectAllLabel: props.selectAllLabel || t("projectsSelectBox.allProjects"),
+        selectAllLabel:
+          props.selectAllLabel || t("projectsSelectBox.allProjects"),
       }
     : {
         options,

@@ -46,7 +46,9 @@ export function useUpdateWorkspaceUsersPermissionsMutation() {
     mutationKey: ["workspace", "update-users-permissions"],
     mutationFn: updateWorkspaceUsersPermissionsRequest,
     onSuccess: (_, variables) => {
-      toast({ description: i18next.t("common:comet.permissionsUpdatedSuccessfully") });
+      toast({
+        description: i18next.t("common:comet.permissionsUpdatedSuccessfully"),
+      });
       queryClient.invalidateQueries({
         queryKey: [
           "workspace-permissions",

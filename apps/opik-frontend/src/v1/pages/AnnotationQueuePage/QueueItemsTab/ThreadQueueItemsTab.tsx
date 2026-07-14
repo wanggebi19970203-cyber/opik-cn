@@ -341,7 +341,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
         },
       },
     }),
-    [annotationQueue.feedback_definition_names],
+    [annotationQueue.feedback_definition_names, t],
   );
 
   const dynamicScoresColumns = useMemo(() => {

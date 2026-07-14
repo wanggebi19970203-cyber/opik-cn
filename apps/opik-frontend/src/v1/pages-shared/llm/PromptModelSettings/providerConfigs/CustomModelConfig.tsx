@@ -51,7 +51,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.TEMPERATURE}
           label={t("promptEngineering:modelConfigs.temperature")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.temperatureTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("promptEngineering:modelConfigs.temperatureTooltip")}
+            />
           }
         />
       )}
@@ -67,7 +69,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.MAX_COMPLETION_TOKENS}
           label={t("promptEngineering:modelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.maxOutputTokensTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("promptEngineering:modelConfigs.maxOutputTokensTooltip")}
+            />
           }
         />
       )}
@@ -83,7 +87,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.TOP_P}
           label={t("promptEngineering:modelConfigs.topP")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.topPTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("promptEngineering:modelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -99,7 +105,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.FREQUENCY_PENALTY}
           label={t("promptEngineering:modelConfigs.frequencyPenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.frequencyPenaltyTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("promptEngineering:modelConfigs.frequencyPenaltyTooltip")}
+            />
           }
         />
       )}
@@ -115,7 +123,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           defaultValue={DEFAULT_CUSTOM_CONFIGS.PRESENCE_PENALTY}
           label={t("promptEngineering:modelConfigs.presencePenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.presencePenaltyTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("promptEngineering:modelConfigs.presencePenaltyTooltip")}
+            />
           }
         />
       )}
@@ -130,7 +140,9 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
         defaultValue={DEFAULT_CUSTOM_CONFIGS.THROTTLING}
         label={t("promptEngineering:modelConfigs.throttling")}
         tooltip={
-          <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.throttlingTooltip")} />
+          <PromptModelSettingsTooltipContent
+            text={t("promptEngineering:modelConfigs.throttlingTooltip")}
+          />
         }
       />
 
@@ -147,7 +159,11 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
         defaultValue={DEFAULT_CUSTOM_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("promptEngineering:modelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelSettingsTooltipContent
+            text={t(
+              "promptEngineering:modelConfigs.maxConcurrentRequestsTooltip",
+            )}
+          />
         }
       />
 
@@ -156,7 +172,11 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
           {t("promptEngineering:modelConfigs.extraBodyParameters")}
           <TooltipWrapper
             content={
-              <PromptModelSettingsTooltipContent text={t("promptEngineering:modelConfigs.extraBodyParametersTooltip")} />
+              <PromptModelSettingsTooltipContent
+                text={t(
+                  "promptEngineering:modelConfigs.extraBodyParametersTooltip",
+                )}
+              />
             }
           >
             <Info className="ml-1 size-4 text-light-slate" />
@@ -179,7 +199,11 @@ const CustomModelConfig = ({ configs, onChange }: CustomModelConfigProps) => {
             }}
           />
         </div>
-        {showInvalidJSON && <FormErrorSkeleton>{t("promptEngineering:modelConfigs.invalidJson")}</FormErrorSkeleton>}
+        {showInvalidJSON && (
+          <FormErrorSkeleton>
+            {t("promptEngineering:modelConfigs.invalidJson")}
+          </FormErrorSkeleton>
+        )}
       </div>
     </div>
   );

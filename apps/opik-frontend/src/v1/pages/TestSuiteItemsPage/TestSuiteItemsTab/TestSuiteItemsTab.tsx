@@ -295,7 +295,9 @@ function TestSuiteItemsTab({
     defaultValue: {},
   });
 
-  const itemLabel = isTestSuite ? t("itemsTab.suiteItems") : t("itemsTab.datasetItems");
+  const itemLabel = isTestSuite
+    ? t("itemsTab.suiteItems")
+    : t("itemsTab.datasetItems");
 
   const noDataText = useMemo(() => {
     if (isDraftMode && deletedIds.size > 0) {
@@ -416,12 +418,12 @@ function TestSuiteItemsTab({
       })),
       {
         id: "tags",
-        label: "Tags",
+        label: t("itemsTab.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags" as const,
       },
     ],
-    [datasetColumns],
+    [datasetColumns, t],
   );
 
   const handleRowClick = useCallback(
@@ -542,7 +544,9 @@ function TestSuiteItemsTab({
       <div className="mb-4 flex items-center justify-between gap-8">
         <div className="flex items-center gap-2">
           <TooltipWrapper
-            content={isDraftMode ? t("itemsTab.saveChangesToSearch") : undefined}
+            content={
+              isDraftMode ? t("itemsTab.saveChangesToSearch") : undefined
+            }
           >
             <div>
               <SearchInput
@@ -556,7 +560,9 @@ function TestSuiteItemsTab({
             </div>
           </TooltipWrapper>
           <TooltipWrapper
-            content={isDraftMode ? t("itemsTab.saveChangesToFilter") : undefined}
+            content={
+              isDraftMode ? t("itemsTab.saveChangesToFilter") : undefined
+            }
           >
             <div>
               <FiltersButton
@@ -617,7 +623,9 @@ function TestSuiteItemsTab({
               : t("itemsTab.datasetStillLoading")
           }
           description={t("itemsTab.loadingDescription", {
-            type: isTestSuite ? t("itemsTab.suiteItems") : t("itemsTab.datasetItems"),
+            type: isTestSuite
+              ? t("itemsTab.suiteItems")
+              : t("itemsTab.datasetItems"),
           })}
           className="mb-4"
         />
@@ -675,7 +683,9 @@ function TestSuiteItemsTab({
       />
       <div className="flex justify-end py-4">
         <TooltipWrapper
-          content={isDraftMode ? t("itemsTab.saveChangesToNavigate") : undefined}
+          content={
+            isDraftMode ? t("itemsTab.saveChangesToNavigate") : undefined
+          }
         >
           <div>
             <DataTablePagination

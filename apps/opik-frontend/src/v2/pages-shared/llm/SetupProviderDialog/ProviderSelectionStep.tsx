@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   COMPOSED_PROVIDER_TYPE,
   PROVIDER_TYPE,
@@ -20,10 +21,11 @@ const ProviderSelectionStep: React.FC<ProviderSelectionStepProps> = ({
   selectedComposedProvider,
   onSelectProvider,
 }) => {
+  const { t } = useTranslation("llm");
   if (providerOptions.length === 0) {
     return (
       <div className="comet-body-s text-muted-foreground">
-        No providers available for this environment
+        {t("providerDialog.noProvidersAvailable")}
       </div>
     );
   }

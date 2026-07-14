@@ -79,7 +79,8 @@ const FiltersContent = <TColumnData,>({
 
   const renderFilters = () => {
     return filters.map((filter, index) => {
-      const prefix = index === 0 ? t("common.filters.where") : t("common.filters.and");
+      const prefix =
+        index === 0 ? t("common.filters.where") : t("common.filters.and");
 
       return (
         <FilterRow

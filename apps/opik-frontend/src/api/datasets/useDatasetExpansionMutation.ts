@@ -52,7 +52,9 @@ const useDatasetExpansionMutation = () => {
       // Handle specific model not supported error
       if (message.includes("model not supported")) {
         const modelMatch = message.match(/model not supported (.+)/);
-        const modelName = modelMatch ? modelMatch[1] : "selected model";
+        const modelName = modelMatch
+          ? modelMatch[1]
+          : i18next.t("common:messages.selectedModel");
         message = i18next.t("common:messages.modelNotSupported", { modelName });
       }
 

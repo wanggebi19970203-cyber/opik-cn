@@ -231,7 +231,9 @@ const getTraceColumns = (t: (key: string) => string): ColumnData<Trace>[] => [
   },
 ];
 
-const getTraceFilterColumns = (t: (key: string) => string): ColumnData<Trace>[] => [
+const getTraceFilterColumns = (
+  t: (key: string) => string,
+): ColumnData<Trace>[] => [
   {
     id: COLUMN_ID_ID,
     label: "ID",
@@ -426,7 +428,7 @@ const TraceQueueItemsTab: React.FC<TraceQueueItemsTabProps> = ({
         }),
       },
     }),
-    [annotationQueue.feedback_definition_names, annotationQueue.project_id],
+    [annotationQueue.feedback_definition_names, annotationQueue.project_id, t],
   );
 
   const rows: Trace[] = useMemo(() => data?.content ?? [], [data]);

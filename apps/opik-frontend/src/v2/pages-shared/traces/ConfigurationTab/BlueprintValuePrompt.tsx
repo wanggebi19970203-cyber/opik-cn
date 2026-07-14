@@ -126,7 +126,8 @@ const BlueprintValuePrompt = forwardRef<
             });
             if (hasEmpty) return t("common.messages.messagesMustNotBeEmpty");
           } else {
-            if (!draftTemplate.trim()) return t("common.messages.promptMustNotBeEmpty");
+            if (!draftTemplate.trim())
+              return t("common.messages.promptMustNotBeEmpty");
           }
           return null;
         },
@@ -169,6 +170,7 @@ const BlueprintValuePrompt = forwardRef<
         prompt,
         promptVersion,
         projectId,
+        t,
         value.key,
       ],
     );

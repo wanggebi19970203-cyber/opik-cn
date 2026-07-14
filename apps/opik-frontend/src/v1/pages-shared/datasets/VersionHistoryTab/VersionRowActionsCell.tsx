@@ -71,18 +71,26 @@ const VersionRowActionsCell: React.FC<CellContext<DatasetVersion, unknown>> = (
         onConfirm={handleRestore}
         title={t("datasets.versionActions.restore.title")}
         description={
-          t("datasets.versionActions.restore.description", { versionName: version.version_name }) +
+          t("datasets.versionActions.restore.description", {
+            versionName: version.version_name,
+          }) +
           (hasDraft
             ? "\n\n" + t("datasets.versionActions.restore.draftWarning")
             : "")
         }
-        confirmText={hasDraft ? t("datasets.versionActions.restore.discardAndRestore") : t("datasets.versionActions.restore.confirmText")}
+        confirmText={
+          hasDraft
+            ? t("datasets.versionActions.restore.discardAndRestore")
+            : t("datasets.versionActions.restore.confirmText")
+        }
         confirmButtonVariant={hasDraft ? "destructive" : "default"}
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">{t("datasets.versionActions.actionsMenu")}</span>
+            <span className="sr-only">
+              {t("datasets.versionActions.actionsMenu")}
+            </span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>

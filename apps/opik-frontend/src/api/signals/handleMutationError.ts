@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { AxiosError } from "axios";
 import get from "lodash/get";
 import { useToast } from "@/ui/use-toast";
@@ -10,5 +11,9 @@ export const handleMutationError = (toast: ToastFn, error: AxiosError) => {
     Array.isArray(errors) && errors.length > 0
       ? errors.join("; ")
       : get(error, ["response", "data", "message"], error.message);
-  toast({ title: "Error", description: message, variant: "destructive" });
+  toast({
+    title: i18next.t("common:labels.error"),
+    description: message,
+    variant: "destructive",
+  });
 };

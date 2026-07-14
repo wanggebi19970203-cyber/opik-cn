@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Path, useFieldArray, UseFormReturn } from "react-hook-form";
 import { LayoutGrid, Plus, Trash } from "lucide-react";
 import get from "lodash/get";
@@ -20,11 +20,7 @@ import {
 } from "./schema";
 import { ALERT_EVENT_TYPE } from "@/types/alerts";
 import { cn } from "@/lib/utils";
-import {
-  OPERATOR_VALUES,
-  WINDOW_LABEL_BY_VALUE,
-  WINDOW_OPTIONS,
-} from "./constants";
+import { OPERATOR_VALUES, getWindowOptions } from "./constants";
 
 type FeedbackScoreConditionsProps = {
   form: UseFormReturn<AlertFormType>;
@@ -83,6 +79,8 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
     name: `triggers.${triggerIndex}.groups` as "triggers.0.groups",
   });
 
+  const windowOptions = useMemo(() => getWindowOptions(t), [t]);
+
   const scoreSource =
     eventType === ALERT_EVENT_TYPE.trace_thread_feedback_score
       ? ScoreSource.THREADS
@@ -109,9 +107,12 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
             groupIndex={groupIndex}
             scoreSource={scoreSource}
             projectId={projectId}
-            label={`Group ${groupIndex + 1}`}
+            label={t("alerts.feedbackConditions.group", {
+              number: groupIndex + 1,
+            })}
             onRemove={() => removeGroup(groupIndex)}
             canRemove={canDeleteGroup}
+            windowOptions={windowOptions}
           />
         </React.Fragment>
       ))}
@@ -123,7 +124,7 @@ const FeedbackScoreConditions: React.FC<FeedbackScoreConditionsProps> = ({
           className="text-foreground hover:text-primary-hover"
           onClick={addGroup}
         >
-           <Plus className="mr-0.5 size-3" />
+          <Plus className="mr-0.5 size-3" />
           {t("alerts.feedbackConditions.addOrGroup")}
         </Button>
       </div>
@@ -140,6 +141,7 @@ type ConditionGroupProps = {
   label: string;
   onRemove: () => void;
   canRemove: boolean;
+  windowOptions: { label: string; value: string }[];
 };
 
 const ConditionGroup: React.FC<ConditionGroupProps> = ({
@@ -151,6 +153,7 @@ const ConditionGroup: React.FC<ConditionGroupProps> = ({
   label,
   onRemove,
   canRemove,
+  windowOptions,
 }) => {
   const { t } = useTranslation("pages/alerts");
   const conditionsFieldArray = useFieldArray({
@@ -216,6 +219,7 @@ const ConditionGroup: React.FC<ConditionGroupProps> = ({
               projectId={projectId}
               onDelete={() => handleDeleteCondition(conditionIndex)}
               canDelete={canDeleteCondition}
+              windowOptions={windowOptions}
             />
           </React.Fragment>
         ))}
@@ -243,6 +247,7 @@ type ConditionRowProps = {
   projectId: string;
   onDelete: () => void;
   canDelete: boolean;
+  windowOptions: { label: string; value: string }[];
 };
 
 const fieldPath = (
@@ -262,6 +267,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
   projectId,
   onDelete,
   canDelete,
+  windowOptions,
 }) => {
   const { t } = useTranslation("pages/alerts");
   const errorBase = [
@@ -333,7 +339,11 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
                         key={op}
                         value={op}
                         size="sm"
-                        aria-label={op === ">" ? "greater than" : "less than"}
+                        aria-label={
+                          op === ">"
+                            ? t("alerts.feedbackConditions.greaterThan")
+                            : t("alerts.feedbackConditions.lessThan")
+                        }
                       >
                         {op}
                       </ToggleGroupItem>
@@ -379,18 +389,22 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
                   <SelectBox
                     value={field.value as string}
                     onChange={field.onChange}
-                    options={WINDOW_OPTIONS}
+                    options={windowOptions}
                     className={cn("h-8 w-full text-left font-normal", {
                       "border-destructive": Boolean(errors.window),
                     })}
                     placeholder={t("alerts.triggers.selectTimeWindow")}
                     renderTrigger={(value) => {
-                      const label = WINDOW_LABEL_BY_VALUE[value];
-                      if (!label) return null;
+                      const option = windowOptions.find(
+                        (o) => o.value === value,
+                      );
+                      if (!option) return null;
                       return (
                         <span className="truncate">
-                          <span className="text-muted-slate">{t("alerts.triggers.inTheLast")}</span>{" "}
-                          {label}
+                          <span className="text-muted-slate">
+                            {t("alerts.triggers.inTheLast")}
+                          </span>{" "}
+                          {option.label}
                         </span>
                       );
                     }}
@@ -402,7 +416,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
         </div>
         <DisabledTooltip
           disabled={!canDelete}
-           message={t("alerts.feedbackConditions.cantRemove")}
+          message={t("alerts.feedbackConditions.cantRemove")}
         >
           <Button
             type="button"

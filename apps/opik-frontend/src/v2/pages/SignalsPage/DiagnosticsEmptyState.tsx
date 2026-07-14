@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FileText, ToggleRight } from "lucide-react";
 import { buildDocsUrl } from "@/v2/lib/utils";
 import { useTheme } from "@/contexts/theme-provider";
@@ -25,6 +26,7 @@ const DiagnosticsEmptyState: React.FC<DiagnosticsEmptyStateProps> = ({
   isPending,
   canConfigure,
 }) => {
+  const { t } = useTranslation("pages/signals");
   const [dialogOpen, setDialogOpen] = useState(false);
   const { themeMode } = useTheme();
   const Lamp = themeMode === THEME_MODE.DARK ? RobotLampDark : RobotLamp;
@@ -39,11 +41,10 @@ const DiagnosticsEmptyState: React.FC<DiagnosticsEmptyStateProps> = ({
       <div className="flex w-full max-w-xl flex-col gap-6">
         <div className="flex flex-col gap-2">
           <h2 className="comet-title-s text-foreground">
-            Catch issues before your users do
+            {t("signals.emptyState.title")}
           </h2>
           <p className="comet-body-s text-muted-slate">
-            We&apos;ll scan your traces every day and flag anything worth your
-            attention — tool loops, hallucinations, slow retrievals.
+            {t("signals.emptyState.description")}
           </p>
         </div>
 
@@ -58,10 +59,10 @@ const DiagnosticsEmptyState: React.FC<DiagnosticsEmptyStateProps> = ({
                 <ToggleRight className="mt-1 size-4 shrink-0 text-[var(--color-fuchsia)]" />
                 <span className="flex flex-col gap-0.5">
                   <span className="comet-body-s-accented text-foreground">
-                    Turn on diagnostics
+                    {t("signals.emptyState.turnOnDiagnostics")}
                   </span>
                   <span className="comet-body-xs text-light-slate">
-                    Works best with 100+ traces from the past 7 days.
+                    {t("signals.emptyState.turnOnDiagnosticsDescription")}
                   </span>
                 </span>
               </span>
@@ -78,10 +79,10 @@ const DiagnosticsEmptyState: React.FC<DiagnosticsEmptyStateProps> = ({
               <FileText className="mt-1 size-4 shrink-0 text-[var(--color-green)]" />
               <span className="flex flex-col gap-0.5">
                 <span className="comet-body-s-accented text-foreground">
-                  View docs
+                  {t("signals.emptyState.viewDocs")}
                 </span>
                 <span className="comet-body-xs text-light-slate">
-                  See how diagnostics works
+                  {t("signals.emptyState.viewDocsDescription")}
                 </span>
               </span>
             </span>

@@ -279,7 +279,9 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
           >
             <SelectValue
               placeholder={
-                inheritedModel ? "Same as prompt" : "Select an LLM model"
+                inheritedModel
+                  ? t("optimizations.modelSelect.sameAsPrompt")
+                  : t("optimizations.modelSelect.placeholder")
               }
             >
               {displayTitle && (
@@ -293,7 +295,7 @@ const OptimizationModelSelect: React.FC<OptimizationModelSelectProps> = ({
               <span
                 role="button"
                 tabIndex={0}
-                aria-label="Use prompt model"
+                aria-label={t("optimizations.modelSelect.usePromptModel")}
                 className="ml-auto flex shrink-0 items-center text-light-slate hover:text-primary-hover"
                 // Clear without opening the select: Radix opens on pointer down,
                 // so swallow it there, then clear on click.

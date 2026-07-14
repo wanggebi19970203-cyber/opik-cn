@@ -53,7 +53,9 @@ const GeminiModelConfigs = ({
           defaultValue={DEFAULT_GEMINI_CONFIGS.TEMPERATURE}
           label={t("sharedModelConfigs.temperature")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.temperatureTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.temperatureTooltip")}
+            />
           }
         />
       )}
@@ -69,7 +71,9 @@ const GeminiModelConfigs = ({
           defaultValue={DEFAULT_GEMINI_CONFIGS.MAX_COMPLETION_TOKENS}
           label={t("sharedModelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxOutputTokensTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.maxOutputTokensTooltip")}
+            />
           }
         />
       )}
@@ -85,7 +89,9 @@ const GeminiModelConfigs = ({
           defaultValue={DEFAULT_GEMINI_CONFIGS.TOP_P}
           label={t("sharedModelConfigs.topP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.topPTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("sharedModelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -96,7 +102,9 @@ const GeminiModelConfigs = ({
             <Label htmlFor="thinkingLevel" className="text-sm font-medium">
               {t("geminiModelConfigs.thinkingLevel")}
             </Label>
-            <ExplainerIcon description={t("geminiModelConfigs.thinkingLevelDescription")} />
+            <ExplainerIcon
+              description={t("geminiModelConfigs.thinkingLevelDescription")}
+            />
           </div>
           <SelectBox
             id="thinkingLevel"
@@ -120,7 +128,9 @@ const GeminiModelConfigs = ({
         defaultValue={DEFAULT_GEMINI_CONFIGS.THROTTLING}
         label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.throttlingTooltip")}
+          />
         }
       />
 
@@ -137,7 +147,9 @@ const GeminiModelConfigs = ({
         defaultValue={DEFAULT_GEMINI_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")}
+          />
         }
       />
     </div>

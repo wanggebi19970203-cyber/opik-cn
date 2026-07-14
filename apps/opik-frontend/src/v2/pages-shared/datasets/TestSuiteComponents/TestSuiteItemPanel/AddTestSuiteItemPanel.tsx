@@ -121,16 +121,16 @@ const AddTestSuiteItemPanel: React.FC<AddTestSuiteItemPanelProps> = ({
       onClose={onClose}
       initialWidth={0.4}
     >
-    {({ tags, setHasUnsavedChanges }) => (
-      <TestSuiteItemFormContent
-        columns={columns}
-        tags={tags}
-        setHasUnsavedChanges={setHasUnsavedChanges}
-        onClose={onClose}
-        onOpenSettings={onOpenSettings}
-      />
-    )}
-  </AddItemPanelWrapper>
+      {({ tags, setHasUnsavedChanges }) => (
+        <TestSuiteItemFormContent
+          columns={columns}
+          tags={tags}
+          setHasUnsavedChanges={setHasUnsavedChanges}
+          onClose={onClose}
+          onOpenSettings={onOpenSettings}
+        />
+      )}
+    </AddItemPanelWrapper>
   );
 };
 

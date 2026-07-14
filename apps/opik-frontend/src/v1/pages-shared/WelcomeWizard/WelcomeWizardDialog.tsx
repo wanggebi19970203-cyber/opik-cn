@@ -133,7 +133,7 @@ const WelcomeWizardDialog: React.FunctionComponent<
         },
       });
     },
-    [submitWizard, onClose, toast],
+    [submitWizard, onClose, t, toast],
   );
 
   return (
@@ -172,7 +172,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={t("common.welcomeWizard.selectYourRole")} />
+                        <SelectValue
+                          placeholder={t("common.welcomeWizard.selectYourRole")}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -194,7 +196,9 @@ const WelcomeWizardDialog: React.FunctionComponent<
               render={() => (
                 <FormItem>
                   <div className="mb-4">
-                    <FormLabel>{t("common.welcomeWizard.integrationsYouUse")}</FormLabel>
+                    <FormLabel>
+                      {t("common.welcomeWizard.integrationsYouUse")}
+                    </FormLabel>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     {INTEGRATIONS.map((item) => (
@@ -245,9 +249,16 @@ const WelcomeWizardDialog: React.FunctionComponent<
                 name="customIntegration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("common.welcomeWizard.specifyOtherIntegration")}</FormLabel>
+                    <FormLabel>
+                      {t("common.welcomeWizard.specifyOtherIntegration")}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder={t("common.welcomeWizard.enterIntegrationName")} {...field} />
+                      <Input
+                        placeholder={t(
+                          "common.welcomeWizard.enterIntegrationName",
+                        )}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

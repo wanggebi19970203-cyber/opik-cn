@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import NoAccessPageGuard from "@/v2/layout/NoAccessPageGuard/NoAccessPageGuard";
 
 const PromptsPageGuard = () => {
+  const { t } = useTranslation("navigation");
   const {
     permissions: { canViewPrompts },
   } = usePermissions();
@@ -9,7 +11,7 @@ const PromptsPageGuard = () => {
   return (
     <NoAccessPageGuard
       canViewPage={canViewPrompts}
-      message="You don't have permissions to view the prompt library in this workspace."
+      message={t("noAccess.noPermissionsViewPromptLibrary")}
     />
   );
 };

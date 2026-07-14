@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import useFeedbackDefinitionsList from "@/api/feedback-definitions/useFeedbackDefinitionsList";
 import useAppStore from "@/store/AppStore";
@@ -11,6 +12,7 @@ interface ScoresSectionProps {
 const ScoresSection: React.FunctionComponent<ScoresSectionProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation("annotation-queues");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   const { data } = useFeedbackDefinitionsList(
@@ -41,7 +43,9 @@ const ScoresSection: React.FunctionComponent<ScoresSectionProps> = ({
   return (
     <div className="pt-6">
       <h2 className="comet-title-s truncate break-words pb-3 pt-2">
-        Feedback scores ({feedbackDefinitions.length})
+        {t("annotationQueues.scores.feedbackScoresWithCount", {
+          count: feedbackDefinitions.length,
+        })}
       </h2>
       <ScoresContent annotationQueue={annotationQueue} />
     </div>

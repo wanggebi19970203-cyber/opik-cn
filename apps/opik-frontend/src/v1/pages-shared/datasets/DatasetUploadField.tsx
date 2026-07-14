@@ -33,7 +33,9 @@ const DatasetUploadField: React.FC<DatasetUploadFieldProps> = ({
       errorText={uploadError}
       successText={
         uploadFile && !uploadError && uploadFormat
-          ? t("uploadField.fileReady", { format: formatToHumanLabel(uploadFormat) })
+          ? t("uploadField.fileReady", {
+              format: formatToHumanLabel(uploadFormat),
+            })
           : undefined
       }
     />

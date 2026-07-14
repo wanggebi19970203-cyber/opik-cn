@@ -273,7 +273,9 @@ function TestSuiteItemsPage(): React.ReactElement {
         onConfirm={handleDiscardChanges}
         title={t("page.discardChanges")}
         description={t("page.discardChangesDescription", {
-          type: isTestSuite ? t("page.testSuite").toLowerCase() : t("page.dataset").toLowerCase(),
+          type: isTestSuite
+            ? t("page.testSuite").toLowerCase()
+            : t("page.dataset").toLowerCase(),
         })}
         confirmText={t("page.discardChanges")}
         confirmButtonVariant="destructive"
@@ -297,7 +299,8 @@ function TestSuiteItemsPage(): React.ReactElement {
               </Tag>
             )}
             <h1 className="comet-title-l truncate break-words">
-              {suite?.name ?? (isTestSuite ? t("page.testSuite") : t("page.dataset"))}
+              {suite?.name ??
+                (isTestSuite ? t("page.testSuite") : t("page.dataset"))}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -379,7 +382,10 @@ function TestSuiteItemsPage(): React.ReactElement {
                 >
                   <CheckCheck className="size-3 text-muted-foreground" />
                   <span className="comet-body-s-accented text-muted-foreground">
-                    {effectiveAssertions.length} {effectiveAssertions.length !== 1 ? t("page.globalAssertions") : t("page.globalAssertion")}
+                    {effectiveAssertions.length}{" "}
+                    {effectiveAssertions.length !== 1
+                      ? t("page.globalAssertions")
+                      : t("page.globalAssertion")}
                   </span>
                 </div>
               </TooltipTrigger>

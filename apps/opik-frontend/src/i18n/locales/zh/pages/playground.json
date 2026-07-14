@@ -26,23 +26,39 @@
       "runExperiment": "运行实验",
       "loading": "加载中...",
       "resetTooltip": "重置工作台",
+      "stopPrompt": "停止提示词",
       "stopTooltip": "停止运行中的提示词",
       "runTooltip": "运行您的提示词",
+      "runTooltipSingle": "运行此提示词",
       "rerunTooltip": "在数据集上重新运行实验",
-      "playgroundLogs": "工作台日志"
+      "playgroundLogs": "工作台日志",
+      "runSelection": "运行所选",
+      "runAll": "全部运行",
+      "goToExperiment": "前往实验",
+      "goToExperiments": "前往实验",
+      "experimentTooltip": "查看实验",
+      "experimentsTooltip": "查看实验",
+      "goToTraces": "前往追踪",
+      "viewAllTracesForExperiment": "查看此实验的所有追踪"
     },
     "runDisabled": {
       "selectModel": "请为您的提示词选择一个 LLM 模型",
+      "selectModelSingle": "请为此提示词选择一个 LLM 模型",
       "emptyMessages": "部分消息为空，请添加文本后再继续",
       "mediaNotSupported": "部分提示词包含媒体内容，但所选模型不支持媒体输入",
-      "datasetRemoved": "您的数据集已被删除，请选择其他数据集"
+      "datasetRemoved": "您的数据集已被删除，请选择其他数据集",
+      "datasetEmpty": "数据集为空",
+      "noPermission": "您没有运行提示词的权限",
+      "actionDisabled": "操作已禁用"
     },
     "prompt": {
       "loadPrompt": "加载提示词",
       "removePrompt": "移除提示词",
       "selectModel": "请为此提示词选择一个 LLM 模型",
       "emptyMessage": "消息为空，请添加文本后再继续",
-      "runTooltip": "运行此提示词"
+      "runTooltip": "运行此提示词",
+      "duplicatePrompt": "复制提示词",
+      "addPrompt": "添加提示词"
     },
     "leaveExperiment": {
       "title": "离开实验模式？",
@@ -50,7 +66,12 @@
       "descriptionSimple": "您将返回提示词迭代模式。",
       "experimentsPage": "实验",
       "pageSuffix": "页面查看。",
-      "confirmText": "离开"
+      "confirmText": "离开",
+      "experimentExecutionInProgress": "实验执行中",
+      "promptExecutionInProgress": "提示词执行中",
+      "experimentRunningDescription": "您的实验正在运行。现在离开将中断执行，可能导致实验项目不完整。确定要离开吗？",
+      "promptRunningDescription": "您的提示词正在运行。现在离开将中断执行，可能导致追踪不完整。确定要离开吗？",
+      "stayAndWait": "留下等待"
     },
     "resetConfirm": {
       "title": "重置工作台",
@@ -64,8 +85,13 @@
       "noMetricsAvailableDesc": "为工作台项目创建在线评估规则，以生成输出指标。",
       "noMetricsFound": "未找到指标",
       "selected": "已选择",
+      "selectedCount": "已选择 {{selected}} / {{total}}",
       "addNew": "新增",
-      "openInNewTab": "在新标签页中打开"
+      "openInNewTab": "在新标签页中打开",
+      "editMetric": "编辑指标",
+      "allSelected": "已全选",
+      "selectTestSuiteFirst": "请先选择测试套件",
+      "selectAll": "全选"
     },
     "outputs": {
       "loading": "加载中...",
@@ -73,7 +99,10 @@
       "testSuiteLoading": "测试套件仍在加载中",
       "testSuiteLoadingDesc": "实验将会运行，但在加载完成前可能无法使用完整的测试套件。",
       "testSuiteLoaded": "测试套件已完全加载",
-      "testSuiteLoadedDesc": "所有项目现已可用。"
+      "testSuiteLoadedDesc": "所有项目现已可用。",
+      "tags": "标签",
+      "output": "输出",
+      "outputs": "输出"
     },
     "progress": {
       "running": "步骤 1：收集 LLM 输出",
@@ -93,7 +122,8 @@
       "testSuiteEmptyTooltip": "所选测试套件为空",
       "metrics": "指标",
       "cancel": "取消",
-      "experimentRunning": "已有实验正在运行"
+      "experimentRunning": "已有实验正在运行",
+      "clearSelection": "清除选择"
     },
     "emptyDataset": {
       "noDatasets": "暂无数据集",
@@ -109,6 +139,7 @@
       "variables": "变量",
       "output": "输出",
       "outputPrefix": "输出 {{letter}}",
+      "promptPrefix": "提示词 {{letter}}",
       "tags": "标签"
     },
     "navigationBlocker": {
@@ -126,6 +157,21 @@
       "assertionPollingFailed": "轮询断言评估状态失败",
       "experimentPollingTimeout": "实验完成轮询在 5 分钟后超时",
       "experimentPollingFailed": "轮询实验完成状态失败"
+    },
+    "addVariant": {
+      "addVariant": "添加变体",
+      "duplicateVariant": "复制变体",
+      "blankVariant": "空白变体"
+    },
+    "promptOutput": {
+      "output": "输出 {{letter}}",
+      "duration": "{{duration}}秒",
+      "tokens": "{{count}} 个令牌",
+      "tokens_one": "{{count}} 个令牌",
+      "tokens_other": "{{count}} 个令牌"
+    },
+    "outputColumnHeader": {
+      "passRate": "{{percent}}% 通过率"
     }
   }
 }

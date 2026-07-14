@@ -6,7 +6,7 @@ import { Filter, FilterRowConfig } from "@/types/filters";
 import { COLUMN_TYPE, ColumnData } from "@/types/shared";
 import ColumnSelector from "@/shared/ColumnSelector/ColumnSelector";
 import { Button } from "@/ui/button";
-import { DEFAULT_OPERATOR_MAP, OPERATORS_MAP } from "@/constants/filters";
+import { DEFAULT_OPERATOR_MAP, getOperatorsMap } from "@/constants/filters";
 import StringRow from "@/shared/FiltersContent/rows/StringRow";
 import NumberRow from "@/shared/FiltersContent/rows/NumberRow";
 import ListRow from "@/shared/FiltersContent/rows/ListRow";
@@ -100,7 +100,7 @@ export const FilterRow = <TColumnData,>({
                 operator:
                   getConfig?.(column.id)?.defaultOperator ??
                   DEFAULT_OPERATOR_MAP[column.type as COLUMN_TYPE] ??
-                  OPERATORS_MAP[column.type as COLUMN_TYPE]?.[0]?.value ??
+                  getOperatorsMap()[column.type as COLUMN_TYPE]?.[0]?.value ??
                   "",
               })
             }

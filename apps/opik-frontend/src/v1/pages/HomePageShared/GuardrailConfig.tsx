@@ -77,7 +77,9 @@ const RestrictedList: React.FC<RestrictedListProps> = ({
 
   return (
     <div className="grid w-full">
-      <p className="comet-body-s-accented flex h-10 items-center">{resolvedLabel}</p>
+      <p className="comet-body-s-accented flex h-10 items-center">
+        {resolvedLabel}
+      </p>
       {RESTRICTED_LABEL_LIST.map((label) => (
         <Label
           key={label}

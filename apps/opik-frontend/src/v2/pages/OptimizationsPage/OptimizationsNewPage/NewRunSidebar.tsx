@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import useAppStore, { useActiveProjectId } from "@/store/AppStore";
 import { OpikEvent, trackEvent } from "@/lib/analytics/tracking";
 import useGetOrCreateDemoDataset from "@/api/datasets/useGetOrCreateDemoDataset";
@@ -39,6 +40,7 @@ const NewRunSidebarForm: React.FC<NewRunSidebarFormProps> = ({
   templateId,
   rerunId,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const activeProjectId = useActiveProjectId();
   const { getOrCreateDataset } = useGetOrCreateDemoDataset();
@@ -191,7 +193,7 @@ const NewRunSidebarForm: React.FC<NewRunSidebarFormProps> = ({
   const isRerunLoading = Boolean(rerunId) && isRerunFetching;
 
   if (isRerunLoading) {
-    return <Loader message="Loading optimization..." />;
+    return <Loader message={t("newRun.loading")} />;
   }
 
   return (
@@ -214,6 +216,7 @@ const NewRunSidebar: React.FC<NewRunSidebarProps> = ({
   templateId,
   rerunId,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
   return (
     <ResizableSidePanel
       panelId="new-optimization-run-sidebar"
@@ -227,14 +230,14 @@ const NewRunSidebar: React.FC<NewRunSidebarProps> = ({
         // Figma spec: 16px left to the ✕ (the panel wrapper's pl-2 + this pl-2)
         // and 12px between the ✕ and the title.
         <div className="flex flex-auto items-center gap-3 pl-1">
-          <TooltipWrapper content="Close panel">
+          <TooltipWrapper content={t("newRun.closePanel")}>
             <Button variant="ghost" size="icon-2xs" onClick={onClose}>
               <X />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t("newRun.close")}</span>
             </Button>
           </TooltipWrapper>
           <span className="comet-body-s-accented truncate">
-            New optimization run
+            {t("newRun.title")}
           </span>
         </div>
       }

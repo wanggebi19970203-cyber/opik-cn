@@ -63,7 +63,9 @@ const EvaluationExamples: React.FC = () => {
     <IntegrationListLayout
       leftSidebar={
         <>
-          <IntegrationTabs.Title>{t("evaluationExamples.chooseMethod")}</IntegrationTabs.Title>
+          <IntegrationTabs.Title>
+            {t("evaluationExamples.chooseMethod")}
+          </IntegrationTabs.Title>
           <IntegrationTabs>
             {tabList.map((item) => (
               <IntegrationTabs.Item

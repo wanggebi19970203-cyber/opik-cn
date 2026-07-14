@@ -263,7 +263,7 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
         const message = get(
           error,
           ["response", "data", "message"],
-          get(error, "message", "Failed to fetch data for export"),
+          get(error, "message", t("annotationQueue.export.fetchFailed")),
         );
         toast({
           title: t("annotationQueue.export.failedTitle"),
@@ -274,7 +274,7 @@ const ExportAnnotatedDataButton: React.FC<ExportAnnotatedDataButtonProps> = ({
         setLoading(false);
       }
     },
-    [getData, toast],
+    [getData, t, toast],
   );
 
   const exportCSVHandler = useCallback(() => {

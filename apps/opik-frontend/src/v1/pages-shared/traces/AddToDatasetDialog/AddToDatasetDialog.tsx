@@ -387,7 +387,9 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
             {hasOnlyTraces && renderMetadataConfiguration("trace", true)}
             {hasOnlySpans && renderMetadataConfiguration("span")}
             <div className="my-2 flex items-center justify-between">
-              <h3 className="comet-title-xs">{t("addToDataset.selectTestSuite")}</h3>
+              <h3 className="comet-title-xs">
+                {t("addToDataset.selectTestSuite")}
+              </h3>
               {canCreateDatasets && (
                 <Button
                   variant="ghost"

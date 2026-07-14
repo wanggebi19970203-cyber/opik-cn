@@ -192,7 +192,9 @@ const TrialPage: React.FunctionComponent = () => {
             {canViewDatasets && (
               <>
                 <PageBodyStickyContainer direction="horizontal" limitWidth>
-                  <h2 className="comet-title-s mb-4">{t("common.labels.evaluationResults")}</h2>
+                  <h2 className="comet-title-s mb-4">
+                    {t("common.labels.evaluationResults")}
+                  </h2>
                 </PageBodyStickyContainer>
                 <TrialItemsTab
                   objectiveName={optimization?.objective_name}

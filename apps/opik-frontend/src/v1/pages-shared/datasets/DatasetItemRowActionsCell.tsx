@@ -52,14 +52,14 @@ export const DatasetItemRowActionsCell: React.FC<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5">
-            <span className="sr-only">{t('actionsMenu')}</span>
+            <span className="sr-only">{t("actionsMenu")}</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={handleDeleteClick} variant="destructive">
             <Trash className="mr-2 size-4" />
-            {t('delete')}
+            {t("delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

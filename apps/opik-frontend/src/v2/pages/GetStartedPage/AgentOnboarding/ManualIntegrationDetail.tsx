@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
 import { IntegrationStep } from "@/v2/pages-shared/onboarding/IntegrationExplorer/components/IntegrationStep";
@@ -23,6 +24,7 @@ type ManualIntegrationDetailProps = {
 const ManualIntegrationDetail: React.FC<ManualIntegrationDetailProps> = ({
   integration,
 }) => {
+  const { t } = useTranslation("pages/get-started");
   const { agentName } = useAgentOnboarding();
   const workspaceName = useActiveWorkspaceName();
   const apiKey = useUserApiKey();
@@ -59,22 +61,22 @@ const ManualIntegrationDetail: React.FC<ManualIntegrationDetailProps> = ({
             src={iconSrc}
             className="size-7 shrink-0"
           />
-          Integrate Opik with {integration.title}
+          {t("getStarted.manualIntegration.integrateOpikWith", {
+            title: integration.title,
+          })}
         </h3>
         <p className="comet-body-s text-muted-slate">
-          It all starts with a trace. Follow these quick steps to log your first
-          set of LLM calls so you can use Opik to analyze them and improve
-          performance.{" "}
+          {t("getStarted.manualIntegration.description")}{" "}
           <a
             href={integration.docsLink}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
           >
-            Read the full guide
+            {t("getStarted.manualIntegration.readTheFullGuide")}
             <ExternalLink className="size-3" />
           </a>{" "}
-          in our docs.
+          {t("getStarted.manualIntegration.inOurDocs")}
         </p>
       </div>
       <Separator />
@@ -116,7 +118,9 @@ const ManualIntegrationDetail: React.FC<ManualIntegrationDetailProps> = ({
       )}
       {integration.code && (
         <IntegrationStep
-          title={`2. Run the following code to get started with ${integration.title}`}
+          title={t("getStarted.manualIntegration.runCodeToGetStarted", {
+            title: integration.title,
+          })}
           className="mb-2 border-0 p-0"
         >
           <div className="overflow-hidden rounded-md border">

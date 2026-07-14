@@ -26,23 +26,39 @@
       "runExperiment": "Run experiment",
       "loading": "Loading...",
       "resetTooltip": "Reset playground",
+      "stopPrompt": "Stop prompt",
       "stopTooltip": "Stop running prompts",
       "runTooltip": "Run your prompts",
+      "runTooltipSingle": "Run this prompt",
       "rerunTooltip": "Re-run experiment on dataset",
-      "playgroundLogs": "Playground logs"
+      "playgroundLogs": "Playground logs",
+      "runSelection": "Run selection",
+      "runAll": "Run all",
+      "goToExperiment": "Go to experiment",
+      "goToExperiments": "Go to experiments",
+      "experimentTooltip": "View experiment",
+      "experimentsTooltip": "View experiments",
+      "goToTraces": "Go to traces",
+      "viewAllTracesForExperiment": "View all traces for this experiment"
     },
     "runDisabled": {
       "selectModel": "Please select an LLM model for your prompts",
+      "selectModelSingle": "Please select an LLM model for this prompt",
       "emptyMessages": "Some messages are empty. Please add some text to proceed",
       "mediaNotSupported": "Some prompts contain media but the selected model doesn't support media input",
-      "datasetRemoved": "Your dataset has been removed. Select another one"
+      "datasetRemoved": "Your dataset has been removed. Select another one",
+      "datasetEmpty": "Dataset is empty",
+      "noPermission": "You don't have permission to run prompts",
+      "actionDisabled": "Action is disabled"
     },
     "prompt": {
       "loadPrompt": "Load prompt",
       "removePrompt": "Remove prompt",
       "selectModel": "Please select an LLM model for this prompt",
       "emptyMessage": "Message is empty. Please add some text to proceed",
-      "runTooltip": "Run this prompt"
+      "runTooltip": "Run this prompt",
+      "duplicatePrompt": "Duplicate prompt",
+      "addPrompt": "Add prompt"
     },
     "leaveExperiment": {
       "title": "Leave experiment mode?",
@@ -50,7 +66,12 @@
       "descriptionSimple": "You'll return to prompt iteration mode.",
       "experimentsPage": "Experiments",
       "pageSuffix": "page.",
-      "confirmText": "Leave"
+      "confirmText": "Leave",
+      "experimentExecutionInProgress": "Experiment execution in progress",
+      "promptExecutionInProgress": "Prompt execution in progress",
+      "experimentRunningDescription": "Your experiment is currently running. Leaving now will interrupt the execution and may result in incomplete experiment items. Are you sure you want to leave?",
+      "promptRunningDescription": "Your prompt is currently running. Leaving now will interrupt the execution and may result in incomplete traces. Are you sure you want to leave?",
+      "stayAndWait": "Stay and wait"
     },
     "resetConfirm": {
       "title": "Reset playground",
@@ -64,8 +85,13 @@
       "noMetricsAvailableDesc": "Create an online evaluation rule for the Playground project to generate metrics for your outputs.",
       "noMetricsFound": "No metrics found",
       "selected": "selected",
+      "selectedCount": "{{selected}} / {{total}} selected",
       "addNew": "Add new",
-      "openInNewTab": "Open in a new tab"
+      "openInNewTab": "Open in a new tab",
+      "editMetric": "Edit metric",
+      "allSelected": "All selected",
+      "selectTestSuiteFirst": "Please select a test suite first",
+      "selectAll": "Select all"
     },
     "outputs": {
       "loading": "Loading...",
@@ -73,7 +99,10 @@
       "testSuiteLoading": "Test suite still loading",
       "testSuiteLoadingDesc": "Experiments will run, but may not use the full test suite until loading completes.",
       "testSuiteLoaded": "Test suite fully loaded",
-      "testSuiteLoadedDesc": "All items are now available."
+      "testSuiteLoadedDesc": "All items are now available.",
+      "tags": "Tags",
+      "output": "Output",
+      "outputs": "Outputs"
     },
     "progress": {
       "running": "Step 1: Gathering LLM output",
@@ -93,7 +122,8 @@
       "testSuiteEmptyTooltip": "Selected test suite is empty",
       "metrics": "Metrics",
       "cancel": "Cancel",
-      "experimentRunning": "An experiment is already running"
+      "experimentRunning": "An experiment is already running",
+      "clearSelection": "Clear selection"
     },
     "emptyDataset": {
       "noDatasets": "No datasets yet",
@@ -104,12 +134,6 @@
     "outputCell": {
       "openTrace": "Click to open original trace",
       "outputLastRun": "Output (last run):"
-    },
-    "outputTable": {
-      "variables": "Variables",
-      "output": "Output",
-      "outputPrefix": "Output {{letter}}",
-      "tags": "Tags"
     },
     "navigationBlocker": {
       "experimentInProgressTitle": "Experiment execution in progress",
@@ -126,6 +150,28 @@
       "assertionPollingFailed": "Failed to poll assertion evaluation status",
       "experimentPollingTimeout": "Experiment completion polling timed out after 5 minutes",
       "experimentPollingFailed": "Failed to poll experiment completion status"
+    },
+    "addVariant": {
+      "addVariant": "Add variant",
+      "duplicateVariant": "Duplicate variant",
+      "blankVariant": "Blank variant"
+    },
+    "promptOutput": {
+      "output": "Output {{letter}}",
+      "duration": "{{duration}}s",
+      "tokens": "{{count}} tokens",
+      "tokens_one": "{{count}} token",
+      "tokens_other": "{{count}} tokens"
+    },
+    "outputColumnHeader": {
+      "passRate": "{{percent}}% pass rate"
+    },
+    "outputTable": {
+      "variables": "Variables",
+      "output": "Output",
+      "outputPrefix": "Output {{letter}}",
+      "promptPrefix": "Prompt {{letter}}",
+      "tags": "Tags"
     }
   }
 }

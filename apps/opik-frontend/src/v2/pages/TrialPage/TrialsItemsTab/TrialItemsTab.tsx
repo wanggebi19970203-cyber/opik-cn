@@ -453,7 +453,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         colorMap,
       },
     })) as ColumnData<FlattenedTrialItem>[];
-  }, [experiments, experimentsIds, objectiveName, isTestSuite]);
+  }, [experiments, experimentsIds, objectiveName, isTestSuite, t]);
 
   useEffect(() => {
     const scoreColumnIds = scoresColumnsData.map((col) => col.id);
@@ -546,6 +546,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     columnsOrder,
     outputColumnsOrder,
     scoresColumnsOrder,
+    t,
   ]);
 
   const filterColumns = useMemo(() => {

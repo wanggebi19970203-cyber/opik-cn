@@ -53,13 +53,18 @@ export const validateNewField = (
   if (!key) return i18next.t("common:agentConfig.fieldNameRequired");
   if (!BLUEPRINT_FIELD_NAME_PATTERN.test(key))
     return i18next.t("common:agentConfig.fieldNamePattern");
-  if (existingKeys.has(key)) return i18next.t("common:agentConfig.fieldNameAlreadyExists");
-  if (siblingKeys.has(key)) return i18next.t("common:agentConfig.duplicateFieldName");
+  if (existingKeys.has(key))
+    return i18next.t("common:agentConfig.fieldNameAlreadyExists");
+  if (siblingKeys.has(key))
+    return i18next.t("common:agentConfig.duplicateFieldName");
   if (field.type === BlueprintValueType.PROMPT) {
     if (field.promptStructure === PROMPT_TEMPLATE_STRUCTURE.TEXT) {
-      return field.value.trim() ? "" : i18next.t("common:messages.promptMustNotBeEmpty");
+      return field.value.trim()
+        ? ""
+        : i18next.t("common:messages.promptMustNotBeEmpty");
     }
-    if (field.messages.length === 0) return i18next.t("common:agentConfig.addAtLeastOneMessage");
+    if (field.messages.length === 0)
+      return i18next.t("common:agentConfig.addAtLeastOneMessage");
     if (field.messages.every(isMessageEmpty))
       return i18next.t("common:messages.messagesMustNotBeEmpty");
     return "";

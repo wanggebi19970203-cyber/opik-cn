@@ -30,7 +30,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.TEMPERATURE}
           label={t("promptEngineering:modelConfigs.temperature")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.temperatureTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("promptEngineering:modelConfigs.temperatureTooltip")}
+            />
           }
         />
       )}
@@ -45,7 +47,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.MAX_TOKENS}
           label={t("promptEngineering:modelConfigs.maxTokens")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.maxTokensTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("promptEngineering:modelConfigs.maxTokensTooltip")}
+            />
           }
         />
       )}
@@ -60,7 +64,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.TOP_P}
           label={t("promptEngineering:modelConfigs.topP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.topPTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("promptEngineering:modelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -75,7 +81,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.TOP_K}
           label={t("promptEngineering:modelConfigs.topK")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.topKTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("promptEngineering:modelConfigs.topKTooltip")}
+            />
           }
         />
       )}
@@ -90,7 +98,11 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.FREQUENCY_PENALTY}
           label={t("promptEngineering:modelConfigs.frequencyPenalty")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.openRouterFrequencyPenaltyTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t(
+                "promptEngineering:modelConfigs.openRouterFrequencyPenaltyTooltip",
+              )}
+            />
           }
         />
       )}
@@ -105,7 +117,11 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.PRESENCE_PENALTY}
           label={t("promptEngineering:modelConfigs.presencePenalty")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.openRouterPresencePenaltyTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t(
+                "promptEngineering:modelConfigs.openRouterPresencePenaltyTooltip",
+              )}
+            />
           }
         />
       )}
@@ -120,7 +136,11 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.REPETITION_PENALTY}
           label={t("promptEngineering:modelConfigs.repetitionPenalty")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.repetitionPenaltyTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t(
+                "promptEngineering:modelConfigs.repetitionPenaltyTooltip",
+              )}
+            />
           }
         />
       )}
@@ -135,7 +155,9 @@ const OpenRouterModelConfigs = ({
           defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.MIN_P}
           label={t("promptEngineering:modelConfigs.minP")}
           tooltip={
-            <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.minPTooltip")} />
+            <PromptModelConfigsTooltipContent
+              text={t("promptEngineering:modelConfigs.minPTooltip")}
+            />
           }
         />
       )}
@@ -151,9 +173,7 @@ const OpenRouterModelConfigs = ({
           label={t("promptEngineering:modelConfigs.topA")}
           tooltip={
             <PromptModelConfigsTooltipContent
-              text={
-                t("promptEngineering:modelConfigs.topATooltip")
-              }
+              text={t("promptEngineering:modelConfigs.topATooltip")}
             />
           }
         />
@@ -168,7 +188,9 @@ const OpenRouterModelConfigs = ({
         defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.THROTTLING}
         label={t("promptEngineering:modelConfigs.throttling")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.throttlingTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t("promptEngineering:modelConfigs.throttlingTooltip")}
+          />
         }
       />
       <SliderInputControl
@@ -184,7 +206,11 @@ const OpenRouterModelConfigs = ({
         defaultValue={DEFAULT_OPEN_ROUTER_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("promptEngineering:modelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelConfigsTooltipContent text={t("promptEngineering:modelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelConfigsTooltipContent
+            text={t(
+              "promptEngineering:modelConfigs.maxConcurrentRequestsTooltip",
+            )}
+          />
         }
       />
     </div>

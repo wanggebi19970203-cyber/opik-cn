@@ -105,7 +105,9 @@ const DataTablePagination = ({
       }`}
     >
       <div className="flex flex-row items-center gap-1">
-        {!isMinimal && <span className="comet-body-s">{t("common.table.rowsPerPage")}</span>}
+        {!isMinimal && (
+          <span className="comet-body-s">{t("common.table.rowsPerPage")}</span>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

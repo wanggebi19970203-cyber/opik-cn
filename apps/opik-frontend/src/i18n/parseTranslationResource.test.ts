@@ -70,6 +70,42 @@ describe("parseTranslationResource", () => {
 
     expect(result.title).toBe("Logs");
   });
+
+  it("unwraps camel-cased roots for kebab-cased page namespaces", () => {
+    const result = parseTranslationResource(
+      JSON.stringify({
+        agentPlayground: {
+          content: {
+            connected: "Connected",
+          },
+        },
+      }),
+      "en",
+      "pages/agent-playground",
+    );
+
+    expect(result.content).toEqual({ connected: "Connected" });
+  });
+
+  it("keeps the page namespace prefix usable for sibling groups", () => {
+    const result = parseTranslationResource(
+      JSON.stringify({
+        dashboards: {
+          title: "Dashboards",
+        },
+        metrics: {
+          traces: "Traces",
+        },
+      }),
+      "en",
+      "dashboards",
+    );
+
+    expect(result.metrics).toEqual({ traces: "Traces" });
+    expect((result.dashboards as Record<string, unknown>).metrics).toEqual({
+      traces: "Traces",
+    });
+  });
 });
 
 describe("getTranslationLoadPath", () => {
@@ -88,6 +124,15 @@ describe("getTranslationLoadPath", () => {
   it("keeps explicit page namespace paths unchanged", () => {
     expect(getTranslationLoadPath(["zh"], ["pages/logs"])).toMatch(
       /^\/locales\/zh\/pages\/logs\.json\?v=.+$/,
+    );
+  });
+
+  it("maps camel-cased page namespaces to kebab-cased assets", () => {
+    expect(getTranslationLoadPath(["zh"], ["promptEngineering"])).toMatch(
+      /^\/locales\/zh\/pages\/prompt-engineering\.json\?v=.+$/,
+    );
+    expect(getTranslationLoadPath(["zh"], ["pages/agentPlayground"])).toMatch(
+      /^\/locales\/zh\/pages\/agent-playground\.json\?v=.+$/,
     );
   });
 });

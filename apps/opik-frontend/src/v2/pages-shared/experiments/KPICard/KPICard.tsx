@@ -72,33 +72,34 @@ export const useMetricKPICardConfigs = (options?: {
 }): MetricKPICardConfig[] => {
   const { t } = useTranslation("experiments");
   return [
-  {
-    key: "score",
-    icon: PenLine,
-    label: getObjectiveLabel(options?.isTestSuite, options?.objectiveName),
-    formatter: formatAsPercentage,
-  },
-  {
-    key: "latency",
-    icon: Clock,
-    label: t("latency"),
-    formatter: formatAsDuration,
-    trend: "inverted",
-  },
-  {
-    key: "cost",
-    icon: Coins,
-    label: t("runtimeCost"),
-    formatter: formatAsCurrency,
-    trend: "inverted",
-  },
-];
+    {
+      key: "score",
+      icon: PenLine,
+      label: getObjectiveLabel(options?.isTestSuite, options?.objectiveName),
+      formatter: formatAsPercentage,
+    },
+    {
+      key: "latency",
+      icon: Clock,
+      label: t("latency"),
+      formatter: formatAsDuration,
+      trend: "inverted",
+    },
+    {
+      key: "cost",
+      icon: Coins,
+      label: t("runtimeCost"),
+      formatter: formatAsCurrency,
+      trend: "inverted",
+    },
+  ];
 };
 
 /** @deprecated Use useMetricKPICardConfigs instead */
 export const getMetricKPICardConfigs = (options?: {
   isTestSuite?: boolean;
   objectiveName?: string;
+  t?: (key: string) => string;
 }): MetricKPICardConfig[] => [
   {
     key: "score",
@@ -109,14 +110,14 @@ export const getMetricKPICardConfigs = (options?: {
   {
     key: "latency",
     icon: Clock,
-    label: "Latency",
+    label: options?.t?.("experiments:latency") ?? "Latency",
     formatter: formatAsDuration,
     trend: "inverted",
   },
   {
     key: "cost",
     icon: Coins,
-    label: "Runtime cost",
+    label: options?.t?.("experiments:runtimeCost") ?? "Runtime cost",
     formatter: formatAsCurrency,
     trend: "inverted",
   },

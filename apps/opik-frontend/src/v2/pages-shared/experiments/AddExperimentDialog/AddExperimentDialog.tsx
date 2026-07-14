@@ -93,17 +93,19 @@ interface MetricOption extends DropdownOption<EVALUATOR_MODEL> {
   docLink: string;
 }
 
-const HEURISTICS_MODELS_OPTIONS: MetricOption[] = [
+const getHeuristicsModelsOptions = (
+  t: (key: string) => string,
+): MetricOption[] => [
   {
     value: EVALUATOR_MODEL.equals,
-    label: "Equals",
-    description: "Checks if the output exactly matches the text.",
+    label: t("evaluators.equals.label"),
+    description: t("evaluators.equals.description"),
     docLink: buildDocsUrl("/evaluation/metrics/heuristic_metrics", "#equals"),
   },
   {
     value: EVALUATOR_MODEL.regex_match,
-    label: "Regex match",
-    description: "Verifies pattern conformity using regex.",
+    label: t("evaluators.regexMatch.label"),
+    description: t("evaluators.regexMatch.description"),
     docLink: buildDocsUrl(
       "/evaluation/metrics/heuristic_metrics",
       "#regexmatch",
@@ -111,20 +113,20 @@ const HEURISTICS_MODELS_OPTIONS: MetricOption[] = [
   },
   {
     value: EVALUATOR_MODEL.contains,
-    label: "Contains",
-    description: "Identifies presence of a substring.",
+    label: t("evaluators.contains.label"),
+    description: t("evaluators.contains.description"),
     docLink: buildDocsUrl("/evaluation/metrics/heuristic_metrics", "#contains"),
   },
   {
     value: EVALUATOR_MODEL.isJSON,
-    label: "isJson",
-    description: "Validates JSON format compliance.",
+    label: t("evaluators.isJson.label"),
+    description: t("evaluators.isJson.description"),
     docLink: buildDocsUrl("/evaluation/metrics/heuristic_metrics", "#isjson"),
   },
   {
     value: EVALUATOR_MODEL.levenshtein,
-    label: "Levenshtein",
-    description: "Calculates text similarity via edit distance.",
+    label: t("evaluators.levenshtein.label"),
+    description: t("evaluators.levenshtein.description"),
     docLink: buildDocsUrl(
       "/evaluation/metrics/heuristic_metrics",
       "#levenshteinratio",
@@ -132,46 +134,55 @@ const HEURISTICS_MODELS_OPTIONS: MetricOption[] = [
   },
 ];
 
-const LLM_JUDGES_MODELS_OPTIONS: MetricOption[] = [
+const getLlmJudgesModelsOptions = (
+  t: (key: string) => string,
+): MetricOption[] => [
   {
     value: EVALUATOR_MODEL.hallucination,
-    label: "Hallucination",
-    description: "Detects generated false information.",
+    label: t("evaluators.hallucination.label"),
+    description: t("evaluators.hallucination.description"),
     docLink: buildDocsUrl("/evaluation/metrics/hallucination"),
   },
   {
     value: EVALUATOR_MODEL.moderation,
-    label: "Moderation",
-    description: "Checks adherence to content standards.",
+    label: t("evaluators.moderation.label"),
+    description: t("evaluators.moderation.description"),
     docLink: buildDocsUrl("/evaluation/metrics/moderation"),
   },
   {
     value: EVALUATOR_MODEL.answer_relevance,
-    label: "Answer relevance",
-    description: "Evaluates how well the answer fits the question.",
+    label: t("evaluators.answerRelevance.label"),
+    description: t("evaluators.answerRelevance.description"),
     docLink: buildDocsUrl("/evaluation/metrics/answer_relevance"),
   },
   {
     value: EVALUATOR_MODEL.context_recall,
-    label: "Context recall",
-    description: "Measures retrieval of relevant context.",
+    label: t("evaluators.contextRecall.label"),
+    description: t("evaluators.contextRecall.description"),
     docLink: buildDocsUrl("/evaluation/metrics/context_recall"),
   },
   {
     value: EVALUATOR_MODEL.context_precision,
-    label: "Context precision",
-    description: "Checks accuracy of provided context details.",
+    label: t("evaluators.contextPrecision.label"),
+    description: t("evaluators.contextPrecision.description"),
     docLink: buildDocsUrl("/evaluation/metrics/context_precision"),
   },
 ];
 
-const ALL_EVALUATOR_OPTIONS: MetricOption[] = [
-  ...HEURISTICS_MODELS_OPTIONS.map((m) => ({
-    ...m,
-    group: "Heuristics metrics",
-  })),
-  ...LLM_JUDGES_MODELS_OPTIONS.map((m) => ({ ...m, group: "LLM Judges" })),
-];
+const getAllEvaluatorOptions = (t: (key: string) => string): MetricOption[] => {
+  const heuristicsOptions = getHeuristicsModelsOptions(t);
+  const llmJudgesOptions = getLlmJudgesModelsOptions(t);
+  return [
+    ...heuristicsOptions.map((m) => ({
+      ...m,
+      group: t("evaluators.heuristicsMetrics"),
+    })),
+    ...llmJudgesOptions.map((m) => ({
+      ...m,
+      group: t("evaluators.llmJudges"),
+    })),
+  ];
+};
 
 const DEFAULT_LOADED_DATASET_ITEMS = 25;
 const DEMO_DATASET_NAME = "Opik Demo Questions";
@@ -202,6 +213,15 @@ const AddExperimentDialog: React.FunctionComponent<
 
   const [isLoadedMore, setIsLoadedMore] = useState(false);
   const [datasetName, setDatasetName] = useState(initialDatasetName);
+  const HEURISTICS_MODELS_OPTIONS = useMemo(
+    () => getHeuristicsModelsOptions(t),
+    [t],
+  );
+  const LLM_JUDGES_MODELS_OPTIONS = useMemo(
+    () => getLlmJudgesModelsOptions(t),
+    [t],
+  );
+  const ALL_EVALUATOR_OPTIONS = useMemo(() => getAllEvaluatorOptions(t), [t]);
   const [models, setModels] = useState<EVALUATOR_MODEL[]>([
     LLM_JUDGES_MODELS_OPTIONS[0].value,
   ]); // Set the first LLM judge model as checked
@@ -403,16 +423,16 @@ eval_results = evaluate(
   const generateList = (title: string, list: MetricOption[]) => {
     return (
       <div>
-            <div className="comet-body-s-accented pb-1 pt-2 text-muted-slate">
-              {title}
-            </div>
+        <div className="comet-body-s-accented pb-1 pt-2 text-muted-slate">
+          {title}
+        </div>
         {list.map((m) => {
           return (
             <label key={m.value} className="flex cursor-pointer py-2.5">
               <Checkbox
                 checked={models.includes(m.value)}
                 onCheckedChange={() => checkboxChangeHandler(m.value)}
-                aria-label="Select row"
+                aria-label={t("evaluators.selectRow")}
                 className="mt-0.5"
               />
               <div className="px-2">
@@ -437,7 +457,10 @@ eval_results = evaluate(
     <div>
       <CodeSectionTitle>{t("createExperimentStep")}</CodeSectionTitle>
       {isPhonePortrait ? (
-        <CodeBlockWithHeader title={t("python")} copyText={codeWithConfigToCopy}>
+        <CodeBlockWithHeader
+          title={t("python")}
+          copyText={codeWithConfigToCopy}
+        >
           <CodeHighlighter
             data={codeWithConfig}
             highlightedLines={highlightedLines}
@@ -463,14 +486,14 @@ eval_results = evaluate(
   const renderCustomMetricsLink = () => (
     <div className="mt-4">
       <Button variant="secondary" asChild>
-          <a
-            href={buildDocsUrl("/evaluation/metrics/custom_metric")}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center"
-          >
-            {t("learnAboutCustomMetrics")}
-            <ExternalLink className="ml-1 size-4" />
+        <a
+          href={buildDocsUrl("/evaluation/metrics/custom_metric")}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center"
+        >
+          {t("learnAboutCustomMetrics")}
+          <ExternalLink className="ml-1 size-4" />
         </a>
       </Button>
     </div>
@@ -480,14 +503,14 @@ eval_results = evaluate(
     <div className="flex flex-col gap-2 md:sticky md:top-0 md:w-[250px] md:shrink-0 md:self-start">
       {isPhonePortrait ? (
         <>
-            <div className="comet-body-s-accented">
-              {t("selectEvaluators")}
-              {models.length > 0 && <span> ({models.length})</span>}
-            </div>
-            <LoadableSelectBox
-              options={ALL_EVALUATOR_OPTIONS}
-              value={models}
-              placeholder={t("selectEvaluators")}
+          <div className="comet-body-s-accented">
+            {t("selectEvaluators")}
+            {models.length > 0 && <span> ({models.length})</span>}
+          </div>
+          <LoadableSelectBox
+            options={ALL_EVALUATOR_OPTIONS}
+            value={models}
+            placeholder={t("selectEvaluators")}
             onChange={(values: string[]) =>
               setModels(values as EVALUATOR_MODEL[])
             }

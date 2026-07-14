@@ -75,7 +75,9 @@ const PlaygroundTestSuiteLastRunOutput: React.FunctionComponent<
   return (
     <div className="flex flex-col gap-1">
       {runCount > 1 && (
-        <span className="comet-body-s text-muted-gray">{t("playground.outputCell.outputLastRun")}</span>
+        <span className="comet-body-s text-muted-gray">
+          {t("playground.outputCell.outputLastRun")}
+        </span>
       )}
       <MarkdownPreview>{output}</MarkdownPreview>
     </div>

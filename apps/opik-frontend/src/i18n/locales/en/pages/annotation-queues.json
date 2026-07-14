@@ -120,7 +120,8 @@
         "availableValues": "Available values"
       },
       "commentsDescription": "Text field for open feedback or additional notes.",
-      "comments": "Comments"
+      "comments": "Comments",
+      "feedbackScoresWithCount": "Feedback scores ({{count}})"
     }
   }
 }

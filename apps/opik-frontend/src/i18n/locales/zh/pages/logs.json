@@ -120,6 +120,8 @@
         "selectScore": "选择分数",
         "selectSpanScore": "选择跨度分数",
         "customFilter": "自定义过滤",
+        "keyPlaceholder": "键",
+        "valuePlaceholder": "值",
         "guardrails": "护栏",
         "failed": "失败",
         "passed": "通过",
@@ -128,12 +130,18 @@
         "tokens": "Token数",
         "inputTokens": "输入Token数",
         "outputTokens": "输出Token数",
-        "llmCallsCount": "LLM调用次数"
+        "llmCallsCount": "LLM调用次数",
+        "customKeyError": "键必须以 \"input\" 或 \"output\" 开头 (例如 \"input.message\")"
       },
       "empty": {
+        "noTraces": "暂无追踪",
+        "noSpans": "暂无跨度",
+        "tracesDescription": "当您的Agent开始接收请求后，追踪将显示在这里。",
+        "spansDescription": "当您的Agent开始接收请求后，跨度将显示在这里。",
         "quickstartGuide": "快速入门指南",
         "viewDocs": "查看文档"
       },
+      "filterByTag": "按标签筛选: \"{{tag}}\"",
       "refreshTooltip": {
         "traces": "刷新追踪列表",
         "spans": "刷新跨度列表"

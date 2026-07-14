@@ -40,7 +40,9 @@ const IntegrationQuickInstall: React.FC = () => {
     <>
       <IntegrationCard
         title={t("onboarding.integrationExplorer.quickInstallTitle")}
-        description={t("onboarding.integrationExplorer.quickInstallDescription")}
+        description={t(
+          "onboarding.integrationExplorer.quickInstallDescription",
+        )}
         size="lg"
         icon={
           <div className="flex items-center gap-1 pr-2">

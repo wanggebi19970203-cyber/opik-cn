@@ -91,7 +91,9 @@ const useManualEvaluationMutation = () => {
 
       toast({
         title: i18next.t("common:labels.error"),
-        description: `${i18next.t("common:messages.failedToTriggerEvaluation")}: ${message}`,
+        description: `${i18next.t(
+          "common:messages.failedToTriggerEvaluation",
+        )}: ${message}`,
         variant: "destructive",
       });
     },

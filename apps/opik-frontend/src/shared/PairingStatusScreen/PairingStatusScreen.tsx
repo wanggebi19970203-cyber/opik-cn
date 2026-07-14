@@ -28,7 +28,10 @@ export interface PairingStatusScreenProps {
   expectedBaseUrl?: string | null;
 }
 
-function getCopy(props: PairingStatusScreenProps, t: (key: string) => string): {
+function getCopy(
+  props: PairingStatusScreenProps,
+  t: (key: string) => string,
+): {
   headline: string;
   subtitle: string;
 } {
@@ -145,7 +148,9 @@ export const PairingStatusScreen: React.FC<PairingStatusScreenProps> = (
             >
               {props.expectedBaseUrl ? (
                 <>
-                  <dt className="text-muted-slate">{t("common.shared.opikUrl")}</dt>
+                  <dt className="text-muted-slate">
+                    {t("common.shared.opikUrl")}
+                  </dt>
                   <dd className="break-all font-medium">
                     {safeBaseUrlHref ? (
                       <a
@@ -167,13 +172,17 @@ export const PairingStatusScreen: React.FC<PairingStatusScreenProps> = (
               ) : null}
               {props.expectedWorkspace ? (
                 <>
-                  <dt className="text-muted-slate">{t("common.shared.workspace")}</dt>
+                  <dt className="text-muted-slate">
+                    {t("common.shared.workspace")}
+                  </dt>
                   <dd className="font-medium">{props.expectedWorkspace}</dd>
                 </>
               ) : null}
               {props.expectedProject ? (
                 <>
-                  <dt className="text-muted-slate">{t("common.shared.project")}</dt>
+                  <dt className="text-muted-slate">
+                    {t("common.shared.project")}
+                  </dt>
                   <dd className="break-all font-medium">
                     {props.expectedProject}
                   </dd>

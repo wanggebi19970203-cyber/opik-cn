@@ -1,5 +1,6 @@
 import { Link, Navigate, useParams } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { buttonVariants } from "@/ui/button";
 import { useLoggedInUserName } from "@/store/AppStore";
 import { usePermissions } from "@/contexts/PermissionsContext";
@@ -10,6 +11,7 @@ import DailyBriefingSection from "./DailyBriefing/DailyBriefingSection";
 import RecentActivitySection from "./RecentActivitySection";
 
 const ProjectHomePage = () => {
+  const { t } = useTranslation("pages/project-home");
   const { workspaceName, projectId } = useParams({
     strict: false,
   }) as { workspaceName: string; projectId: string };
@@ -36,7 +38,9 @@ const ProjectHomePage = () => {
     <div className="mx-auto flex size-full max-w-[720px] flex-col gap-3 py-6">
       <div className="flex items-center justify-between">
         <h1 className="comet-body-accented">
-          Hi{userName ? `, ${userName}` : ""}
+          {userName
+            ? t("projectHome.greetingWithName", { name: userName })
+            : t("projectHome.greeting")}
         </h1>
         <div className="flex gap-2">
           <Link
@@ -44,7 +48,7 @@ const ProjectHomePage = () => {
             params={{ workspaceName, projectId }}
             className={buttonVariants({ variant: "outline", size: "xs" })}
           >
-            View logs
+            {t("projectHome.viewLogs")}
             <ArrowUpRight className="ml-1 size-3.5" />
           </Link>
           {canViewDashboards && (
@@ -53,7 +57,7 @@ const ProjectHomePage = () => {
               params={{ workspaceName, projectId }}
               className={buttonVariants({ variant: "outline", size: "xs" })}
             >
-              View dashboards
+              {t("projectHome.viewDashboards")}
               <ArrowUpRight className="ml-1 size-3.5" />
             </Link>
           )}

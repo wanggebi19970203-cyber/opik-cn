@@ -172,7 +172,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
     return [
       {
         id: COLUMN_NAME_ID,
-        label: "Name",
+        label: t("experiments.table.name"),
         type: COLUMN_TYPE.string,
         cell: TextCell as never,
         sortable: true,
@@ -180,7 +180,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "prompt",
-        label: "Prompt version",
+        label: t("experiments.table.promptVersion"),
         type: COLUMN_TYPE.list,
         accessorFn: (row) =>
           (get(row, ["prompt_versions"], []) as ExperimentPromptVersion[]).map(
@@ -201,7 +201,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("experiments.table.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
       },
@@ -217,18 +217,18 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "created_at",
-        label: "Created",
+        label: t("experiments.table.created"),
         type: COLUMN_TYPE.time,
         cell: TimeCell as never,
       },
       {
         id: "created_by",
-        label: "Created by",
+        label: t("experiments.table.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: "duration.p50",
-        label: "Avg duration",
+        label: t("experiments.table.avgDuration"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p50,
         cell: DurationCell as never,
@@ -239,7 +239,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "duration.p90",
-        label: "Duration (p90)",
+        label: t("experiments.table.durationP90"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p90,
         cell: DurationCell as never,
@@ -250,7 +250,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "duration.p99",
-        label: "Duration (p99)",
+        label: t("experiments.table.durationP99"),
         type: COLUMN_TYPE.duration,
         accessorFn: (row) => row.duration?.p99,
         cell: DurationCell as never,
@@ -261,7 +261,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "trace_count",
-        label: "Trace count",
+        label: t("experiments.table.traceCount"),
         type: COLUMN_TYPE.number,
         cell: TextCell as never,
         aggregatedCell: TextCell.Aggregation as never,
@@ -271,7 +271,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "total_estimated_cost",
-        label: "Total estimated cost",
+        label: t("experiments.table.totalEstimatedCost"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -281,7 +281,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "total_estimated_cost_avg",
-        label: "Avg cost",
+        label: t("experiments.table.avgCost"),
         type: COLUMN_TYPE.cost,
         cell: CostCell as never,
         aggregatedCell: CostCell.Aggregation as never,
@@ -291,7 +291,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: "pass_rate",
-        label: "Pass rate",
+        label: t("experiments.table.passRate"),
         type: COLUMN_TYPE.number,
         iconType: "pass_rate",
         accessorFn: (row) => row.pass_rate,
@@ -303,7 +303,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: COLUMN_FEEDBACK_SCORES_ID,
-        label: "Feedback scores",
+        label: t("experiments.table.feedbackScores"),
         type: COLUMN_TYPE.numberDictionary,
         accessorFn: transformExperimentScores,
         cell: FeedbackScoreListCell as never,
@@ -317,20 +317,20 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("experiments.table.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell as never,
       },
       {
         id: "tags",
-        label: "Tags",
+        label: t("experiments.table.tags"),
         type: COLUMN_TYPE.list,
         iconType: "tags" as const,
         cell: ListCell as never,
       },
       {
         id: COLUMN_METADATA_ID,
-        label: "Configuration",
+        label: t("experiments.table.configuration"),
         type: COLUMN_TYPE.dictionary,
         accessorFn: (row) =>
           isObject(row.metadata)
@@ -339,7 +339,7 @@ const ExperimentsTab: React.FC<ExperimentsTabProps> = ({ promptId }) => {
         cell: CodeCell as never,
       },
     ];
-  }, []);
+  }, [t]);
 
   const { isFeedbackScoresPending, dynamicScoresColumns } =
     useExperimentsFeedbackScores({

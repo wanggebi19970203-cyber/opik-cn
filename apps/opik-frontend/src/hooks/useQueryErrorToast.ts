@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import axios, { AxiosError } from "axios";
+import i18next from "i18next";
 
 import { useToast } from "@/ui/use-toast";
 import { extractErrorMessage } from "@/lib/errors";
@@ -23,7 +24,7 @@ const useQueryErrorToast = ({ isError, error }: UseQueryErrorToastParams) => {
         const message = extractErrorMessage(error as AxiosError);
 
         toast({
-          title: "Error",
+          title: i18next.t("common.hooks.useQueryErrorToast.error"),
           description: message,
           variant: "destructive",
         });

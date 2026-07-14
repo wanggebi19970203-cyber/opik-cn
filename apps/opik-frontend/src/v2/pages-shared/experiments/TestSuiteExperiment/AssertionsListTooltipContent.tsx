@@ -24,7 +24,9 @@ export const AssertionsListTooltipContent: React.FC<
         <div className="flex size-4 items-center justify-center rounded bg-[#89DEFF]">
           <CheckCheck className="size-3 text-foreground" />
         </div>
-        <span className="comet-body-xs-accented text-foreground">{resolvedTitle}</span>
+        <span className="comet-body-xs-accented text-foreground">
+          {resolvedTitle}
+        </span>
       </div>
       <Separator className="my-1" />
       {assertions.map((assertion, index) => (

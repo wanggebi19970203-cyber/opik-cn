@@ -47,12 +47,16 @@ const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>{t("feedbackScoreTable.removeFeedbackScore")}</DialogTitle>
+          <DialogTitle>
+            {t("feedbackScoreTable.removeFeedbackScore")}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <div className="comet-body-s text-muted-slate">
-            {t("feedbackScoreTable.removeFeedbackScoreDescription", { entity: entityTypeMap[entityType] })}
+            {t("feedbackScoreTable.removeFeedbackScoreDescription", {
+              entity: entityTypeMap[entityType],
+            })}
           </div>
           <Label
             key="dont-ask-again"

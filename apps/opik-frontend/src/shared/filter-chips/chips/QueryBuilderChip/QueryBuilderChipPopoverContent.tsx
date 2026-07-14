@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import upperFirst from "lodash/upperFirst";
 import { Plus } from "lucide-react";
 import { Button } from "@/ui/button";
@@ -52,6 +53,7 @@ const isRowApplied =
 const QueryBuilderChipPopoverContent: React.FC<
   QueryBuilderChipPopoverContentProps
 > = ({ definition, value, onApply, onClear }) => {
+  const { t } = useTranslation();
   const keyConfig = definition.key;
   const valueConfig = definition.value;
 
@@ -165,7 +167,7 @@ const QueryBuilderChipPopoverContent: React.FC<
             if (!operatorNeedsValue(next)) patch.value = "";
             updateRow(row.id, patch);
           }}
-          ariaLabel="Operator"
+          ariaLabel={t("common:labels.type")}
         />
         {showValue &&
           (isNumericValue ? (
@@ -246,7 +248,8 @@ const QueryBuilderChipPopoverContent: React.FC<
               disabled={appliedCount === 0}
               className="px-0 text-foreground hover:text-primary"
             >
-              Clear{appliedCount > 0 ? ` (${appliedCount})` : ""}
+              {t("common:buttons.clear")}
+              {appliedCount > 0 ? ` (${appliedCount})` : ""}
             </Button>
           </PopoverClose>
         </div>

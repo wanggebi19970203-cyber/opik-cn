@@ -41,7 +41,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
   const title = !isCompare
     ? experiment?.name
-    : t("compareExperiments.details.compareCount", { count: experimentsIds.length });
+    : t("compareExperiments.details.compareCount", {
+        count: experimentsIds.length,
+      });
 
   useEffect(() => {
     title && setBreadcrumbParam("compare", "Compare", title);
@@ -85,9 +87,13 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
       return (
         <div className="flex h-11 items-center gap-2">
-          <span className="text-nowrap">{t("compareExperiments.details.baselineOf")}</span>
+          <span className="text-nowrap">
+            {t("compareExperiments.details.baselineOf")}
+          </span>
           <ExperimentTag experimentName={experiment?.name} />
-          <span className="text-nowrap">{t("compareExperiments.details.comparedAgainst")}</span>
+          <span className="text-nowrap">
+            {t("compareExperiments.details.comparedAgainst")}
+          </span>
           {tag}
         </div>
       );
@@ -119,7 +125,8 @@ const CompareExperimentsDetails: React.FunctionComponent<
               style={{ color: "var(--color-yellow)" }}
             />
             <span className="comet-body-s-accented truncate text-muted-slate">
-              {experiment.dataset_name || t("compareExperiments.details.deletedTestSuite")}
+              {experiment.dataset_name ||
+                t("compareExperiments.details.deletedTestSuite")}
             </span>
           </Tag>
         )}
@@ -127,7 +134,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
           experiment.prompt_versions.length > 0 && (
             <NavigationTag
               id={experiment.prompt_versions[0].prompt_id}
-              name={t("compareExperiments.details.goToPrompt", { name: experiment.prompt_versions[0].prompt_name })}
+              name={t("compareExperiments.details.goToPrompt", {
+                name: experiment.prompt_versions[0].prompt_name,
+              })}
               resource={RESOURCE_TYPE.prompt}
             />
           )}
@@ -163,7 +172,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
                   }`}
                 />
                 <div className="comet-body-s-accented truncate text-muted-slate">
-                  {t("compareExperiments.details.passRate", { rate: Math.round(experiment.pass_rate * 100) })}
+                  {t("compareExperiments.details.passRate", {
+                    rate: Math.round(experiment.pass_rate * 100),
+                  })}
                 </div>
               </Tag>
             </TooltipWrapper>

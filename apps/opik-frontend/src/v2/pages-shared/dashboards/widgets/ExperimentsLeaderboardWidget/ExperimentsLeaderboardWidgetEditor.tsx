@@ -265,6 +265,7 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
         handleScoresColumnsOrderChange,
         metadataColumnsOrder,
         scoresColumnsOrder,
+        t,
       ],
     );
 
@@ -294,7 +295,9 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
                   const validationErrors = get(formState.errors, ["maxRows"]);
                   return (
                     <FormItem>
-                      <FormLabel>{t("feedbackScores.maxExperimentsLabel")}</FormLabel>
+                      <FormLabel>
+                        {t("feedbackScores.maxExperimentsLabel")}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -313,7 +316,9 @@ const ExperimentsLeaderboardWidgetEditor = forwardRef<WidgetEditorHandle>(
                         />
                       </FormControl>
                       <Description>
-                        {t("feedbackScores.maxExperimentsDescription", { max: MAX_MAX_EXPERIMENTS })}
+                        {t("feedbackScores.maxExperimentsDescription", {
+                          max: MAX_MAX_EXPERIMENTS,
+                        })}
                       </Description>
                       <FormMessage />
                     </FormItem>

@@ -144,7 +144,9 @@ const getSharedColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   },
 ];
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
     label: "ID",
@@ -341,7 +343,7 @@ const ThreadQueueItemsTab: React.FunctionComponent<
         }),
       },
     }),
-    [annotationQueue.feedback_definition_names, annotationQueue.project_id],
+    [annotationQueue.feedback_definition_names, annotationQueue.project_id, t],
   );
 
   const dynamicScoresColumns = useMemo(() => {

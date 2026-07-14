@@ -46,13 +46,19 @@ export const useBase64InputHandler = ({
         // Check if already at max capacity
         if (currentItemsCount >= maxItems) {
           toast({
-            title: i18next.t("common.hooks.useBase64InputHandler.maximumLimitReached"),
-            description: i18next.t("common.hooks.useBase64InputHandler.maxItemsError", {
-              maxItems,
-              mediaType: type === "image"
-                ? i18next.t("common.media.images")
-                : i18next.t("common.media.videos"),
-            }),
+            title: i18next.t(
+              "common.hooks.useBase64InputHandler.maximumLimitReached",
+            ),
+            description: i18next.t(
+              "common.hooks.useBase64InputHandler.maxItemsError",
+              {
+                maxItems,
+                mediaType:
+                  type === "image"
+                    ? i18next.t("common.media.images")
+                    : i18next.t("common.media.videos"),
+              },
+            ),
             variant: "destructive",
           });
           callbacks?.onError?.();
@@ -63,7 +69,10 @@ export const useBase64InputHandler = ({
         if (existingItems.includes(trimmed)) {
           toast({
             title: i18next.t("common.hooks.useBase64InputHandler.error"),
-            description: i18next.t("common.hooks.useBase64InputHandler.duplicateMedia", { type }),
+            description: i18next.t(
+              "common.hooks.useBase64InputHandler.duplicateMedia",
+              { type },
+            ),
             variant: "destructive",
           });
           callbacks?.onError?.();
@@ -76,11 +85,14 @@ export const useBase64InputHandler = ({
         if (sizeInMB > maxSizeMB) {
           toast({
             title: i18next.t("common.hooks.useBase64InputHandler.fileTooLarge"),
-            description: i18next.t("common.hooks.useBase64InputHandler.fileTooLargeDescription", {
-              type,
-              sizeMB: sizeInMB.toFixed(2),
-              maxSizeMB,
-            }),
+            description: i18next.t(
+              "common.hooks.useBase64InputHandler.fileTooLargeDescription",
+              {
+                type,
+                sizeMB: sizeInMB.toFixed(2),
+                maxSizeMB,
+              },
+            ),
             variant: "destructive",
           });
           callbacks?.onError?.();
@@ -93,7 +105,9 @@ export const useBase64InputHandler = ({
       } catch (error) {
         toast({
           title: i18next.t("common.hooks.useBase64InputHandler.error"),
-          description: i18next.t("common.hooks.useBase64InputHandler.failedToProcessBase64"),
+          description: i18next.t(
+            "common.hooks.useBase64InputHandler.failedToProcessBase64",
+          ),
           variant: "destructive",
         });
         callbacks?.onError?.();

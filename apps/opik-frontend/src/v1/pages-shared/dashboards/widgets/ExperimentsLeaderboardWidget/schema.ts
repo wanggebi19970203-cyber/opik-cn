@@ -49,7 +49,10 @@ export const ExperimentsLeaderboardWidgetSchema = z
       );
     },
     {
-      message: i18next.t("common:validation.maxRowsRequired", { min: MIN_MAX_EXPERIMENTS, max: MAX_MAX_EXPERIMENTS }),
+      message: i18next.t("common:validation.maxRowsRequired", {
+        min: MIN_MAX_EXPERIMENTS,
+        max: MAX_MAX_EXPERIMENTS,
+      }),
       path: ["maxRows"],
     },
   );

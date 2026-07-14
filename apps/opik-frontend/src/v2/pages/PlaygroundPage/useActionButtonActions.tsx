@@ -78,7 +78,7 @@ const useActionButtonActions = ({
   versionHash,
   projectName,
 }: UseActionButtonActionsArguments) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("pages/playground");
   const queryClient = useQueryClient();
 
   const { toast } = useToast();
@@ -222,6 +222,7 @@ const useActionButtonActions = ({
     promptIds.length,
     storeExperiments,
     setExperimentByPromptId,
+    t,
     toast,
     updateOutputTraceId,
   ]);
@@ -257,7 +258,11 @@ const useActionButtonActions = ({
       resetProgress();
       queryClient.invalidateQueries({ queryKey: ["experiments"] });
       queryClient.invalidateQueries({ queryKey: [COMPARE_EXPERIMENTS_KEY] });
-      toast({ title: t("playground.actionErrors.timeout"), description, variant: "destructive" });
+      toast({
+        title: t("playground.actionErrors.timeout"),
+        description,
+        variant: "destructive",
+      });
     },
     [clearRunningMap, resetProgress, queryClient, toast, t],
   );
@@ -316,8 +321,7 @@ const useActionButtonActions = ({
             finishPollScope(scope);
             toast({
               title: t("playground.actionErrors.timeout"),
-              description:
-                t("playground.actionErrors.assertionPollingTimeout"),
+              description: t("playground.actionErrors.assertionPollingTimeout"),
               variant: "destructive",
             });
           } else {
@@ -416,6 +420,7 @@ const useActionButtonActions = ({
       handlePollTimeout,
       finishPollScope,
       queryClient,
+      t,
       toast,
       handlePollError,
     ],
@@ -440,8 +445,9 @@ const useActionButtonActions = ({
             finishPollScope(scope);
             toast({
               title: t("playground.actionErrors.timeout"),
-              description:
-                t("playground.actionErrors.experimentPollingTimeout"),
+              description: t(
+                "playground.actionErrors.experimentPollingTimeout",
+              ),
               variant: "destructive",
             });
           } else {
@@ -528,6 +534,7 @@ const useActionButtonActions = ({
       handlePollTimeout,
       queryClient,
       pollAssertionEvaluation,
+      t,
       toast,
       handlePollError,
     ],

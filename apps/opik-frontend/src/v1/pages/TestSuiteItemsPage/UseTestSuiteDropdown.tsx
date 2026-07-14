@@ -80,18 +80,28 @@ function UseTestSuiteDropdown({
           setOpen={setOpenConfirmDialog}
           onConfirm={handleLoadPlayground}
           title={t("useTestSuiteDropdown.loadIntoPlayground", {
-            type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+            type: isTestSuite
+              ? t("useTestSuiteDropdown.testSuite")
+              : t("useTestSuiteDropdown.dataset"),
           })}
           description={t("useTestSuiteDropdown.loadDescription", {
-            type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+            type: isTestSuite
+              ? t("useTestSuiteDropdown.testSuite")
+              : t("useTestSuiteDropdown.dataset"),
           })}
-          confirmText={isTestSuite ? t("useTestSuiteDropdown.loadTestSuite") : t("useTestSuiteDropdown.loadDataset")}
+          confirmText={
+            isTestSuite
+              ? t("useTestSuiteDropdown.loadTestSuite")
+              : t("useTestSuiteDropdown.loadDataset")
+          }
         />
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" disabled={disabled}>
-            {isTestSuite ? t("useTestSuiteDropdown.useSuite") : t("useTestSuiteDropdown.useDataset")}
+            {isTestSuite
+              ? t("useTestSuiteDropdown.useSuite")
+              : t("useTestSuiteDropdown.useDataset")}
             <ChevronDown className="ml-2 size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -106,7 +116,9 @@ function UseTestSuiteDropdown({
                 <span>{t("useTestSuiteDropdown.openInPlayground")}</span>
                 <span className="text-light-slate">
                   {t("useTestSuiteDropdown.testPromptsOver", {
-                    type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+                    type: isTestSuite
+                      ? t("useTestSuiteDropdown.testSuite")
+                      : t("useTestSuiteDropdown.dataset"),
                   })}
                 </span>
               </div>
@@ -125,7 +137,9 @@ function UseTestSuiteDropdown({
                 <span>{t("useTestSuiteDropdown.runAnExperiment")}</span>
                 <span className="text-light-slate">
                   {t("useTestSuiteDropdown.runExperimentDescription", {
-                    type: isTestSuite ? t("useTestSuiteDropdown.testSuite") : t("useTestSuiteDropdown.dataset"),
+                    type: isTestSuite
+                      ? t("useTestSuiteDropdown.testSuite")
+                      : t("useTestSuiteDropdown.dataset"),
                   })}
                 </span>
               </div>

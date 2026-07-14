@@ -43,7 +43,8 @@ const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
     const passThreshold = executionPolicy?.pass_threshold ?? 1;
     return (
       <span className={itemPassed ? "text-success" : "text-destructive"}>
-        {passed_runs}/{total_runs} ({t("trialPassedCell.threshold", { value: passThreshold })})
+        {passed_runs}/{total_runs} (
+        {t("trialPassedCell.threshold", { value: passThreshold })})
       </span>
     );
   }
@@ -70,7 +71,8 @@ const TrialPassedCell: React.FC<CellContext<FlattenedTrialItem, unknown>> = (
 
   return (
     <span className={itemPassed ? "text-success" : "text-destructive"}>
-      {runsPassed}/{allRuns.length} ({t("trialPassedCell.threshold", { value: passThreshold })})
+      {runsPassed}/{allRuns.length} (
+      {t("trialPassedCell.threshold", { value: passThreshold })})
     </span>
   );
 };

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import CopyButton from "@/shared/CopyButton/CopyButton";
 
@@ -13,6 +14,8 @@ const TraceIdentifier: React.FC<TraceIdentifierProps> = ({
   name,
   id,
 }) => {
+  const { t } = useTranslation("common");
+
   if (!id) return null;
 
   return (
@@ -27,8 +30,8 @@ const TraceIdentifier: React.FC<TraceIdentifierProps> = ({
         </TooltipWrapper>
         <CopyButton
           text={id}
-          message="ID copied to clipboard"
-          tooltipText="Copy ID"
+          message={t("common.messages.idCopiedToClipboard")}
+          tooltipText={t("common.buttons.copyId")}
           size="icon-xs"
           className="shrink-0 opacity-0 group-hover/id:opacity-100"
         />

@@ -18,8 +18,12 @@ const useUpdateColorMapping = () => {
     (colorKey: string, hexColor: string) => {
       if (!config)
         return toast({
-          title: i18next.t("common.hooks.useUpdateColorMapping.changesNotSaved"),
-          description: i18next.t("common.hooks.useUpdateColorMapping.workspaceConfigNotLoaded"),
+          title: i18next.t(
+            "common.hooks.useUpdateColorMapping.changesNotSaved",
+          ),
+          description: i18next.t(
+            "common.hooks.useUpdateColorMapping.workspaceConfigNotLoaded",
+          ),
           variant: "destructive",
         });
 
@@ -38,10 +42,15 @@ const useUpdateColorMapping = () => {
           Object.keys(currentMap).length >= COLOR_MAP_MAX_ENTRIES
         ) {
           toast({
-            title: i18next.t("common.hooks.useUpdateColorMapping.colorMapLimitReached"),
-            description: i18next.t("common.hooks.useUpdateColorMapping.colorMapLimitExceeded", {
-              maxEntries: COLOR_MAP_MAX_ENTRIES,
-            }),
+            title: i18next.t(
+              "common.hooks.useUpdateColorMapping.colorMapLimitReached",
+            ),
+            description: i18next.t(
+              "common.hooks.useUpdateColorMapping.colorMapLimitExceeded",
+              {
+                maxEntries: COLOR_MAP_MAX_ENTRIES,
+              },
+            ),
             variant: "destructive",
           });
           return;

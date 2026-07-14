@@ -161,7 +161,9 @@ const InviteUsersPopover: React.FC<InviteUsersPopoverProps> = ({
     <>
       <div className="mb-3">
         <h3 className="comet-title-s">
-          {t("collaborators.inviteTo", { workspaceName: workspaceName || t("labels.workspace") })}
+          {t("collaborators.inviteTo", {
+            workspaceName: workspaceName || t("labels.workspace"),
+          })}
         </h3>
       </div>
       <div className="space-y-3">

@@ -51,10 +51,6 @@ type OptimizationProgressChartContentProps = {
   inProgressInfo?: InProgressInfo;
 };
 
-const CHART_CONFIG = {
-  score: { label: "Score", color: "var(--color-blue)" },
-};
-
 const OptimizationProgressChartContent: React.FC<
   OptimizationProgressChartContentProps
 > = ({
@@ -70,6 +66,12 @@ const OptimizationProgressChartContent: React.FC<
   inProgressInfo,
 }) => {
   const { t } = useTranslation("experiments");
+  const CHART_CONFIG = useMemo(
+    () => ({
+      score: { label: t("score"), color: "var(--color-blue)" },
+    }),
+    [t],
+  );
   const steps = useMemo(() => {
     const s = new Set(chartData.map((d) => d.stepIndex));
     return Array.from(s).sort((a, b) => a - b);
@@ -217,7 +219,7 @@ const OptimizationProgressChartContent: React.FC<
                 ? [...steps, ghostStep]
                 : steps
             }
-            tickFormatter={(value) => t('step', { value })}
+            tickFormatter={(value) => t("step", { value })}
             domain={xDomain}
             padding={X_AXIS_PADDING}
           />

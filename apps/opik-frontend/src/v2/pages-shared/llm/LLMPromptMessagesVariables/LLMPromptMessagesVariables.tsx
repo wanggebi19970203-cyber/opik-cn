@@ -72,15 +72,23 @@ const LLMPromptMessagesVariables = ({
   return (
     <div className="pt-4">
       <div className="comet-body-s-accented mb-1 flex items-center gap-1 text-muted-slate">
-        <span>{t("llm:promptMessagesVariables.variableMapping", { count: variablesList.length })}</span>
+        <span>
+          {t("llm:promptMessagesVariables.variableMapping", {
+            count: variablesList.length,
+          })}
+        </span>
         <ExplainerIcon
           {...EXPLAINERS_MAP[EXPLAINER_ID.llm_judge_variable_mapping]}
         />
       </div>
-      <Description className="mb-2 inline-block">{description ?? t("llm:promptMessagesVariables.defaultDescription")}</Description>
+      <Description className="mb-2 inline-block">
+        {description ?? t("llm:promptMessagesVariables.defaultDescription")}
+      </Description>
       {parsingError && (
         <Alert variant="destructive">
-          <AlertTitle>{errorText ?? t("llm:promptMessagesVariables.defaultErrorText")}</AlertTitle>
+          <AlertTitle>
+            {errorText ?? t("llm:promptMessagesVariables.defaultErrorText")}
+          </AlertTitle>
         </Alert>
       )}
       <div className="flex flex-col gap-2 overflow-hidden">

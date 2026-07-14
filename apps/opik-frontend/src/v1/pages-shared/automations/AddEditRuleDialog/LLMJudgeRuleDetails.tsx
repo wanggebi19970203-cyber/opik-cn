@@ -370,9 +370,7 @@ const LLMJudgeRuleDetails: React.FC<LLMJudgeRuleDetailsProps> = ({
       <div className="flex flex-col gap-2">
         <div className="flex items-center">
           <Label htmlFor="name">{t("common.labels.scoreDefinition")}</Label>
-          <TooltipWrapper
-            content={t("common.messages.scoreDefinitionTooltip")}
-          >
+          <TooltipWrapper content={t("common.messages.scoreDefinitionTooltip")}>
             <Info className="ml-1 size-4 text-light-slate" />
           </TooltipWrapper>
         </div>

@@ -31,20 +31,20 @@ function DiversityTag({ score }: { score: number }): React.ReactElement {
   if (score > 80) {
     return (
       <Tag variant="green" size="sm">
-        {t('generatedSamples.diversity.high')}
+        {t("generatedSamples.diversity.high")}
       </Tag>
     );
   }
   if (score > 50) {
     return (
       <Tag variant="yellow" size="sm">
-        {t('generatedSamples.diversity.medium')}
+        {t("generatedSamples.diversity.medium")}
       </Tag>
     );
   }
   return (
     <Tag variant="gray" size="sm">
-      {t('generatedSamples.diversity.low')}
+      {t("generatedSamples.diversity.low")}
     </Tag>
   );
 }
@@ -65,7 +65,7 @@ function ExpandedSampleContent({
       {description !== undefined && (
         <div className="mt-3 rounded-md border bg-background p-2">
           <div className="text-xs font-medium text-muted-foreground">
-            {t('generatedSamples.description')}
+            {t("generatedSamples.description")}
           </div>
           <div className="mt-1 text-sm">{description}</div>
         </div>
@@ -74,7 +74,7 @@ function ExpandedSampleContent({
         <div className="mt-2 rounded-md border bg-background p-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-muted-foreground">
-              {t('generatedSamples.assertions')}
+              {t("generatedSamples.assertions")}
             </span>
             <Tag variant="blue" size="sm">
               {validAssertions.length}
@@ -115,7 +115,7 @@ const GeneratedSamplesDialog: React.FunctionComponent<
   // Update selectedSamples when samples prop changes (ensure all samples are selected by default)
   useEffect(() => {
     setSelectedSamples(new Set(samples.map((sample) => sample.id)));
-  }, [samples]);
+  }, [samples, t]);
 
   // Analyze generated samples for statistics
   const sampleStats = useMemo(() => {
@@ -184,9 +184,10 @@ const GeneratedSamplesDialog: React.FunctionComponent<
       totalFields: fields.size,
       fieldDiversity,
       overallDiversity: Math.round(avgDiversity * 100),
-      generationModel: generationModel || t('generatedSamples.summary.unknownModel'),
+      generationModel:
+        generationModel || t("generatedSamples.summary.unknownModel"),
     };
-  }, [samples]);
+  }, [samples, t]);
 
   // Smart sampling - show representative samples
   const displaySamples = useMemo(() => {
@@ -269,7 +270,7 @@ const GeneratedSamplesDialog: React.FunctionComponent<
       <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col">
         <DialogHeader>
           <DialogTitle className="comet-title-s">
-            {t('generatedSamples.title', { count: samples.length })}
+            {t("generatedSamples.title", { count: samples.length })}
           </DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody className="flex-1">
@@ -278,9 +279,9 @@ const GeneratedSamplesDialog: React.FunctionComponent<
             {!samples.length && (
               <Alert variant="callout" size="sm">
                 <AlertTriangle className="size-4" />
-                <AlertTitle>{t('generatedSamples.empty.title')}</AlertTitle>
+                <AlertTitle>{t("generatedSamples.empty.title")}</AlertTitle>
                 <AlertDescription>
-                  {t('generatedSamples.empty.description')}
+                  {t("generatedSamples.empty.description")}
                 </AlertDescription>
               </Alert>
             )}
@@ -291,27 +292,35 @@ const GeneratedSamplesDialog: React.FunctionComponent<
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="size-4" />
-                    <h4 className="text-sm font-medium">{t('generatedSamples.summary.title')}</h4>
+                    <h4 className="text-sm font-medium">
+                      {t("generatedSamples.summary.title")}
+                    </h4>
                   </div>
-                    <Tag variant="blue" size="sm">
-                      {t('generatedSamples.summary.generatedBy', { model: sampleStats.generationModel })}
-                    </Tag>
+                  <Tag variant="blue" size="sm">
+                    {t("generatedSamples.summary.generatedBy", {
+                      model: sampleStats.generationModel,
+                    })}
+                  </Tag>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
-                    <div className="text-muted-foreground">{t('generatedSamples.summary.totalSamples')}</div>
+                    <div className="text-muted-foreground">
+                      {t("generatedSamples.summary.totalSamples")}
+                    </div>
                     <div className="font-medium">
                       {sampleStats.totalSamples}
                     </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">
-                      {t('generatedSamples.summary.fieldsPerSample')}
+                      {t("generatedSamples.summary.fieldsPerSample")}
                     </div>
                     <div className="font-medium">{sampleStats.totalFields}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">{t('generatedSamples.summary.dataDiversity')}</div>
+                    <div className="text-muted-foreground">
+                      {t("generatedSamples.summary.dataDiversity")}
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">
                         {sampleStats.overallDiversity}%
@@ -331,7 +340,7 @@ const GeneratedSamplesDialog: React.FunctionComponent<
                   onCheckedChange={handleSelectAll}
                 />
                 <span className="text-sm">
-                  {allSelected ? t('deselectAll') : t('selectAll')}
+                  {allSelected ? t("deselectAll") : t("selectAll")}
                 </span>
                 {samples.length > 20 && (
                   <Button
@@ -342,14 +351,21 @@ const GeneratedSamplesDialog: React.FunctionComponent<
                   >
                     <Eye className="mr-1 size-4" />
                     {showAllSamples
-                      ? t('generatedSamples.selection.showSample', { count: displaySamples.length })
-                      : t('generatedSamples.selection.showAll', { count: samples.length })}
+                      ? t("generatedSamples.selection.showSample", {
+                          count: displaySamples.length,
+                        })
+                      : t("generatedSamples.selection.showAll", {
+                          count: samples.length,
+                        })}
                   </Button>
                 )}
               </div>
-                <Tag variant="gray">
-                  {t('generatedSamples.selection.selected', { selected: selectedSamples.size, total: samples.length })}
-                </Tag>
+              <Tag variant="gray">
+                {t("generatedSamples.selection.selected", {
+                  selected: selectedSamples.size,
+                  total: samples.length,
+                })}
+              </Tag>
             </div>
 
             {/* Compact Sample List */}
@@ -380,7 +396,9 @@ const GeneratedSamplesDialog: React.FunctionComponent<
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">
-                            {t('generatedSamples.sample', { number: sampleNumber })}
+                            {t("generatedSamples.sample", {
+                              number: sampleNumber,
+                            })}
                           </span>
                           <Button
                             variant="ghost"
@@ -413,7 +431,9 @@ const GeneratedSamplesDialog: React.FunctionComponent<
                     variant="outline"
                     onClick={() => setShowAllSamples(true)}
                   >
-                    {t('generatedSamples.showMore', { count: samples.length - displaySamples.length })}
+                    {t("generatedSamples.showMore", {
+                      count: samples.length - displaySamples.length,
+                    })}
                   </Button>
                 </div>
               )}
@@ -422,10 +442,13 @@ const GeneratedSamplesDialog: React.FunctionComponent<
         </DialogAutoScrollBody>
         <DialogFooter className="gap-2 sm:space-x-0">
           <DialogClose asChild>
-            <Button variant="outline">{t('cancel')}</Button>
+            <Button variant="outline">{t("cancel")}</Button>
           </DialogClose>
           <Button onClick={handleAddToDataset} disabled={noneSelected}>
-            {t('generatedSamples.addToEntity', { count: selectedSamples.size, entityName: 'dataset' })}
+            {t("generatedSamples.addToEntity", {
+              count: selectedSamples.size,
+              entityName: "dataset",
+            })}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -143,7 +143,8 @@ const CategoricalFeedbackDefinitionDetails: React.FunctionComponent<
             ]);
           }}
         >
-          <Plus className="mr-2 size-4" /> {t("datasets.feedbackDefinition.addCategory")}
+          <Plus className="mr-2 size-4" />{" "}
+          {t("datasets.feedbackDefinition.addCategory")}
         </Button>
       </div>
     </>

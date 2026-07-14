@@ -36,7 +36,9 @@ const NoAnnotationQueuesPage: React.FC<NoAnnotationQueuesPageProps> = ({
   return (
     <Wrapper
       title={t("common.annotationQueues.organizeYourAnnotations")}
-      description={t("common.annotationQueues.organizeYourAnnotationsDescription")}
+      description={t(
+        "common.annotationQueues.organizeYourAnnotationsDescription",
+      )}
       imageUrl={noDataQueuesImageUrl}
       height={height}
       className={className}

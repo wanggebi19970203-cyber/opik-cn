@@ -58,7 +58,10 @@ const getWidgetCount = (dashboard: Dashboard): number => {
   }
 };
 
-const formatDashboardDescription = (dashboard: Dashboard, t: (key: string, opts?: Record<string, unknown>) => string): string => {
+const formatDashboardDescription = (
+  dashboard: Dashboard,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string => {
   const widgetCount = getWidgetCount(dashboard);
   const lastUpdated = dashboard.last_updated_at
     ? formatDate(dashboard.last_updated_at)
@@ -80,7 +83,10 @@ const TEMPLATE_OPTIONS: InsightsViewOption[] = PROJECT_TEMPLATE_LIST.map(
   }),
 );
 
-const buildDashboardOption = (dashboard: Dashboard, t: (key: string, opts?: Record<string, unknown>) => string): InsightsViewOption => ({
+const buildDashboardOption = (
+  dashboard: Dashboard,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): InsightsViewOption => ({
   value: dashboard.id,
   label: dashboard.name,
   description: formatDashboardDescription(dashboard, t),
@@ -134,7 +140,10 @@ const InsightsViewSelector: React.FC<InsightsViewSelectorProps> = ({
   );
 
   const allOptions = useMemo(
-    () => [...TEMPLATE_OPTIONS, ...dashboards.map((d) => buildDashboardOption(d, t))],
+    () => [
+      ...TEMPLATE_OPTIONS,
+      ...dashboards.map((d) => buildDashboardOption(d, t)),
+    ],
     [dashboards, t],
   );
 

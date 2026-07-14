@@ -17,7 +17,9 @@ const IntegrationTypeScriptSDK: React.FC = () => {
     >
       <IntegrationCard
         title={t("onboarding.integrationExplorer.typeScriptSdk")}
-        description={t("onboarding.integrationExplorer.typeScriptSdkDescription")}
+        description={t(
+          "onboarding.integrationExplorer.typeScriptSdkDescription",
+        )}
         size="lg"
         icon={
           <img alt="TypeScript" src={tsLogo} className="size-[32px] shrink-0" />

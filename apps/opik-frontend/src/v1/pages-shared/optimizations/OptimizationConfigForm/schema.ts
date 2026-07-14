@@ -64,17 +64,25 @@ export const HierarchicalReflectiveOptimizerParamsSchema = z.object({
 
 export const EqualsMetricParamsSchema = z.object({
   case_sensitive: z.boolean(),
-  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
+  reference_key: z
+    .string()
+    .min(1, i18next.t("common:validation.referenceKeyRequired")),
 });
 
 export const JsonSchemaValidatorMetricParamsSchema = z.object({
-  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
+  reference_key: z
+    .string()
+    .min(1, i18next.t("common:validation.referenceKeyRequired")),
   case_sensitive: z.boolean().optional(),
 });
 
 export const GEvalMetricParamsSchema = z.object({
-  task_introduction: z.string().min(1, i18next.t("common:validation.taskIntroductionRequired")),
-  evaluation_criteria: z.string().min(1, i18next.t("common:validation.evaluationCriteriaRequired")),
+  task_introduction: z
+    .string()
+    .min(1, i18next.t("common:validation.taskIntroductionRequired")),
+  evaluation_criteria: z
+    .string()
+    .min(1, i18next.t("common:validation.evaluationCriteriaRequired")),
 });
 
 export const CodeMetricParamsSchema = z.object({
@@ -83,11 +91,15 @@ export const CodeMetricParamsSchema = z.object({
 
 export const LevenshteinMetricParamsSchema = z.object({
   normalize: z.boolean().optional(),
-  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
+  reference_key: z
+    .string()
+    .min(1, i18next.t("common:validation.referenceKeyRequired")),
 });
 
 export const NumericalSimilarityMetricParamsSchema = z.object({
-  reference_key: z.string().min(1, i18next.t("common:validation.referenceKeyRequired")),
+  reference_key: z
+    .string()
+    .min(1, i18next.t("common:validation.referenceKeyRequired")),
 });
 
 const isMessageEmpty = (message: LLMMessage): boolean => {
@@ -108,7 +120,9 @@ const isMessageEmpty = (message: LLMMessage): boolean => {
 
 const BaseOptimizationConfigSchema = z.object({
   name: z.string().optional(),
-  datasetId: z.string().min(1, i18next.t("common:validation.testSuiteRequired")),
+  datasetId: z
+    .string()
+    .min(1, i18next.t("common:validation.testSuiteRequired")),
   optimizerType: z.nativeEnum(OPTIMIZER_TYPE),
   optimizerParams: z.union([
     GepaOptimizerParamsSchema,
@@ -218,7 +232,9 @@ export const convertOptimizationStudioToFormData = (
     : defaultConfig;
 
   return {
-    name: optimization?.name || i18next.t("common:validation.optimizationStudioRun"),
+    name:
+      optimization?.name ||
+      i18next.t("common:validation.optimizationStudioRun"),
     datasetId: optimization?.dataset_id || "",
     optimizerType,
     optimizerParams:

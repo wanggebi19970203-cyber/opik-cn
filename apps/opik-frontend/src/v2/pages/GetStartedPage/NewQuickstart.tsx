@@ -63,7 +63,7 @@ const AgentOnboardingQuickstart: React.FC = () => {
 };
 
 const NewQuickstart: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("pages/get-started");
   // Variants: "control" = agent onboarding modal with Opik skills tab; "connect-to-ollie" = agent onboarding modal with Connect to Ollie tab; "manual" = skip the modal and render the full integrations page. Undefined (PostHog unavailable) falls back to "control".
   const variant =
     useFeatureFlagVariantKey(AI_ASSISTED_OPIK_SKILLS_FEATURE_FLAG_KEY) ??

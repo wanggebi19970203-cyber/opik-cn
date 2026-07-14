@@ -80,9 +80,10 @@ export const createDynamicSchema = (fields: DatasetField[]) => {
           }
         },
         {
-          message: i18next.getFixedT(null, "datasets")(
-            "datasets.testSuiteItemForm.mustBeJsonObject",
-          ),
+          message: i18next.getFixedT(
+            null,
+            "datasets",
+          )("datasets.testSuiteItemForm.mustBeJsonObject"),
         },
       );
     } else {

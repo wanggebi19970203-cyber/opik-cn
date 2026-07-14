@@ -150,7 +150,7 @@ const useScatterDot = ({
                 fill="hsl(var(--background))"
                 fontWeight={600}
               >
-                {t('bestCandidate')}
+                {t("bestCandidate")}
               </text>
             </>
           )}
@@ -167,6 +167,7 @@ const useScatterDot = ({
       isTestSuite,
       dotPositionsRef,
       setHoveredTrial,
+      t,
     ],
   );
 };

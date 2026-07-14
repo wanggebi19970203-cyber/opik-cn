@@ -57,6 +57,7 @@
       "retryNow": "Retry now",
       "viewDocs": "View docs",
       "copyApiKey": "Copy API key",
+      "copyId": "Copy ID",
       "backToHome": "Back to Home",
       "skip": "Skip",
       "getHelpInSlack": "Get help in Slack",
@@ -98,6 +99,8 @@
       "tags": "Tags",
       "metadata": "Metadata",
       "model": "Model",
+      "costIntelligence": "Cost Intelligence",
+      "experimentManagement": "Experiment Management",
       "score": "Score",
       "feedback": "Feedback",
       "comment": "Comment",
@@ -133,6 +136,7 @@
       "joined": "Joined",
       "workspaceRole": "Workspace role",
       "workspace": "Workspace",
+      "members": "Members",
       "switchWorkspace": "Switch workspace",
       "openWorkspaceSelector": "Open workspace selector",
       "accountSettings": "Account settings",
@@ -149,6 +153,7 @@
       "scoreDefinition": "Score definition",
       "instructions": "Instructions",
       "showMoreOptions": "Show more options",
+      "breadcrumb": "breadcrumb",
       "allFilters": "All filters",
       "paginationLimited": "Pagination limited",
       "field": "Field",
@@ -175,7 +180,9 @@
       "totalOutputTokens": "Total output tokens",
       "estimatedCost": "Estimated cost",
       "feedbackScores": "Feedback scores",
-      "customFilter": "Custom filter"
+      "customFilter": "Custom filter",
+      "openSettings": "Open {{name}} settings",
+      "assistant": "Assistant"
     },
     "placeholders": {
       "search": "Search",
@@ -192,7 +199,9 @@
       "searchByUsernameOrEmail": "Search by username or email"
     },
     "actions": {
-      "selectAll": "Select all"
+      "selectAll": "Select all",
+      "selectedCount": "Selected: {{count}}",
+      "deselectAll": "Deselect all"
     },
     "messages": {
       "noData": "No data available",
@@ -306,7 +315,13 @@
       "unexpectedErrorRunningExperiment": "An unexpected error occurred while running the experiment",
       "unknownErrorUpdatingPromptEnvironment": "An unknown error occurred while updating the prompt environment. Please try again.",
       "diagnosticStarted": "Diagnostic started",
-      "diagnosticStartedDescription": "We're analysing the last 24h of traces. New issues will appear here once the run completes."
+      "diagnosticStartedDescription": "We're analysing the last 24h of traces. New issues will appear here once the run completes.",
+      "feedbackDefinitionConflict": "A feedback definition with this name already exists. Please choose a different name.",
+      "pythonProxyError": "Python proxy error",
+      "unexpectedStreamingError": "Unexpected error",
+      "deletedQueue": "<deleted queue>",
+      "unknownQueue": "<unknown queue>",
+      "selectedModel": "selected model"
     },
     "errors": {
       "useOnboardingMustBeUsedWithinProvider": "useOnboarding must be used within OnboardingProvider"
@@ -338,7 +353,9 @@
       "noDataAltText": "no data image",
       "createFirst": "Create your first {{item}}",
       "noOrganizationsFound": "No organizations found",
-      "noWorkspacesFound": "No workspaces found"
+      "noWorkspacesFound": "No workspaces found",
+      "viewingDemoProject": "You are viewing a demo project,",
+      "clickHereToCreate": "click here to create your own"
     },
     "time": {
       "justNow": "Just now",
@@ -348,7 +365,14 @@
       "today": "Today",
       "yesterday": "Yesterday",
       "lastWeek": "Last week",
-      "lastMonth": "Last month"
+      "lastMonth": "Last month",
+      "timePlaceholder": "12:00",
+      "toggleAmPm": "Toggle AM/PM (current: {{period}})",
+      "enterValidTime": "Enter valid time",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "period": "Period"
     },
     "table": {
       "readDocs": "Read docs",
@@ -371,7 +395,16 @@
       "addFilter": "Add filter",
       "where": "Where",
       "and": "And",
-      "filterError": "Filter {{index}}: {{messages}}"
+      "filterError": "Filter {{index}}: {{messages}}",
+      "operators": {
+        "contains": "contains",
+        "notContains": "doesn't contain",
+        "startsWith": "starts with",
+        "endsWith": "ends with",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty",
+        "operator": "Operator"
+      }
     },
     "groups": {
       "label": "Group by",
@@ -431,7 +464,11 @@
         "past30days": "Past 30 days",
         "past60days": "Past 60 days",
         "alltime": "All time"
-      }
+      },
+      "lastDay": "Last day",
+      "lastWeek": "Last week",
+      "lastMonth": "Last month",
+      "last6Months": "Last 6 months"
     },
     "dashboard": {
       "textWidget": "Text",
@@ -470,7 +507,86 @@
           "threadDuration": "Thread duration",
           "threadFeedbackScores": "Thread feedback scores"
         }
+      },
+      "addSection": "Add section",
+      "addWidget": "Add widget",
+      "insertSectionAbove": "Insert section above",
+      "insertSectionBelow": "Insert section below",
+      "deleteSection": "Delete section",
+      "deleteSectionTitle": "Delete \"{{name}}\"?",
+      "deleteSectionDescription": "This will permanently remove the section and all its widgets. This action cannot be undone.",
+      "deleteSectionName": "Delete {{name}}",
+      "noWidgetsYet": "No widgets yet",
+      "addWidgetsDescription": "Add widgets to start building your dashboard.",
+      "editWidget": "Edit widget",
+      "duplicateWidget": "Duplicate widget",
+      "moveToSection": "Move to section",
+      "deleteWidget": "Delete widget",
+      "deleteWidgetTitle": "Delete widget?",
+      "deleteWidgetDescription": "This will permanently remove this widget from the dashboard. This action cannot be undone.",
+      "deleteWidgetName": "Delete {{name}}",
+      "widgetNotAvailable": "Widget not available",
+      "dragToReposition": "Drag to reposition",
+      "saveChanges": "Save changes",
+      "widgetPreview": "Widget preview",
+      "previewPlaceholder": "<preview>",
+      "widgetType": "Widget type",
+      "newSection": "New section",
+      "overview": "Overview"
+    },
+    "hooks": {
+      "useAudioPlayer": {
+        "audioLoadingCancelled": "Audio loading was cancelled",
+        "networkErrorLoadingAudio": "Network error while loading audio",
+        "audioFormatError": "Audio format error",
+        "audioFileNotAvailable": "Audio file is not available",
+        "unableToLoadAudioFile": "Unable to load audio file",
+        "audioPlaybackError": "Audio playback error"
+      },
+      "useBase64InputHandler": {
+        "maximumLimitReached": "Maximum limit reached",
+        "maxItemsError": "You can only add up to {{maxItems}} {{mediaType}}.",
+        "error": "Error",
+        "duplicateMedia": "This {{type}} has already been added.",
+        "fileTooLarge": "File too large",
+        "fileTooLargeDescription": "The {{type}} size ({{sizeMB}}MB) exceeds the maximum allowed size of {{maxSizeMB}}MB.",
+        "failedToProcessBase64": "Failed to process base64 data."
+      },
+      "useLLMProviderModelsData": {
+        "freeModel": "Free model"
+      },
+      "useMediaFileUpload": {
+        "fileTooLarge": "File too large",
+        "error": "Error",
+        "failedToProcessFiles": "Failed to process files."
+      },
+      "useProgressSimulation": {
+        "completedSuccessfully": "Completed successfully"
+      },
+      "useTestSuiteSavePayload": {
+        "testSuiteDataNotAvailable": "Test suite data is not available."
+      },
+      "useUnifiedMedia": {
+        "asyncMediaDetectionFailed": "Async media detection failed"
+      },
+      "useUpdateColorMapping": {
+        "changesNotSaved": "Changes not saved",
+        "workspaceConfigNotLoaded": "Workspace configuration is not loaded yet.",
+        "colorMapLimitReached": "Color map limit reached",
+        "colorMapLimitExceeded": "You can only customize up to {{maxEntries}} colors."
+      },
+      "useQueryErrorToast": {
+        "error": "Error"
+      },
+      "useThemeOptions": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
       }
+    },
+    "feedbackScoreEdit": {
+      "clickToEditScore": "Click to edit score",
+      "yourFeedback": "Your feedback"
     },
     "feedbackScoresList": {
       "feedbackScores": "Feedback scores"
@@ -591,6 +707,18 @@
       "cliTriedPairingWith": "The CLI tried to pair using these Opik settings:",
       "opikUrl": "Opik URL",
       "project": "Project",
+      "dataset": "dataset",
+      "datasetItem": "dataset item",
+      "prompt": "prompt",
+      "experiment": "experiment",
+      "experimentItem": "experiment item",
+      "optimization": "optimization run",
+      "trial": "trial",
+      "annotationQueue": "annotation queue",
+      "dashboard": "dashboard",
+      "traces": "traces",
+      "testSuite": "test suite",
+      "threads": "threads",
       "deletedProject": "Deleted project",
       "deletedDataset": "Deleted dataset",
       "deletedDatasetItem": "Deleted dataset item",
@@ -634,7 +762,9 @@
       "copyCode": "Copy code",
       "codeCopied": "Successfully copied code",
       "search": "Search",
-      "closeSearch": "Close search"
+      "closeSearch": "Close search",
+      "pretty": "Pretty",
+      "prettyNotAvailable": "Pretty is not available yet for this format."
     },
     "codeDiff": {
       "changed": "Changed",
@@ -642,7 +772,10 @@
       "removed": "Removed",
       "hideDiff": "Hide diff",
       "showDiff": "Show diff",
-      "trial": "Trial"
+      "trial": "Trial",
+      "baseline": "Baseline",
+      "parent": "Parent",
+      "parentTrial": "Parent (Trial #{{trialNumber}})"
     },
     "codeSnippet": {
       "copy": "Copy",
@@ -730,7 +863,29 @@
       "failedToUpdateWorkspaceUserRole": "Failed to update workspace user role.",
       "userRoleUpdatedSuccessfully": "User role has been successfully updated.",
       "failedToUpdatePermissions": "Failed to update workspace user permissions",
-      "permissionsUpdatedSuccessfully": "Permissions updated successfully"
+      "permissionsUpdatedSuccessfully": "Permissions updated successfully",
+      "workspaceOwner": "Workspace owner",
+      "workspaceMember": "Workspace member",
+      "inviteUsersIU": "Invite Users (IU)",
+      "inviteUsersToWorkspace": "Invite users to workspace",
+      "workspaceOwnerLabel": "Workspace Owner",
+      "workspaceOwnerDescription": "Full permissions to all workspace resources",
+      "workspaceMemberLabel": "Workspace Member",
+      "workspaceMemberDescription": "Limited permissions. You can give customized ones",
+      "explain": {
+        "explainError": "Explain error",
+        "explainCost": "Explain cost",
+        "explainDuration": "Explain duration",
+        "explainThisError": "Explain this error",
+        "explainThisCost": "Explain this cost",
+        "explainThisDuration": "Explain this duration",
+        "ollieWaking": "Ollie is waking up \u2014 give it a moment and retry.",
+        "ollieTimeout": "Ollie took too long to respond. Try again.",
+        "ollieUnavailable": "Ollie is unavailable right now. Try again shortly.",
+        "rateLimited": "Too many requests right now. Try again in a moment.",
+        "atCapacity": "Too many explanations in progress. Close one and try again.",
+        "somethingWentWrong": "Something went wrong."
+      }
     },
     "modelUtils": {
       "adaptive": "Adaptive",
@@ -979,7 +1134,17 @@
       "feedbackOption": "Feedback option",
       "availableValues": "Available values",
       "commentsDescription": "Text field for open feedback or additional notes.",
-      "scope": "Scope"
+      "scope": "Scope",
+      "scopePlaceholder": "Trace",
+      "scopeOptions": {
+        "traces": "Traces",
+        "threads": "Threads"
+      },
+      "validation": {
+        "projectRequired": "Project is required",
+        "nameRequired": "Name is required",
+        "nameMaxLength": "Name cannot exceed 255 characters"
+      }
     },
     "automations": {
       "editRule": "Edit rule",
@@ -1030,10 +1195,23 @@
       "spans": "spans",
       "tracesCapitalized": "Traces",
       "threadsCapitalized": "Threads",
-      "spansCapitalized": "Spans"
+      "spansCapitalized": "Spans",
+      "goToProject": "Go to project",
+      "threadId": "Thread ID",
+      "provider": "Provider",
+      "filterKeyPlaceholder": "key",
+      "filterKeyOptionalPlaceholder": "key (optional)",
+      "selectScorePlaceholder": "Select score",
+      "invalidFilterKeyError": "Key is invalid, it should be \"input\", \"output\", and follow this format: \"input.[PATH]\" For example: \"input.message\" or just \"input\" for the whole object",
+      "filterErrorLabel": "Filter {{index}}: {{errors}}"
     },
     "alerts": {
       "typeGeneral": "General",
+      "typeLabels": {
+        "general": "General",
+        "slack": "Slack",
+        "pagerduty": "PagerDuty"
+      },
       "trigger": {
         "traceErrorsTitle": "Trace errors threshold",
         "traceErrorsDescription": "Triggered when the number of trace errors exceeds the specified threshold in selected projects.",
@@ -1245,6 +1423,27 @@
           "conversationalCoherenceDescription": "Check if the output is coherent with the conversation",
           "userFrustration": "User frustration",
           "userFrustrationDescription": "Check if the output is frustrating to the user"
+        },
+        "schemaNames": {
+          "correctness": "Correctness",
+          "relevance": "Relevance",
+          "hallucination": "Hallucination",
+          "moderation": "Moderation",
+          "answerRelevance": "Answer relevance",
+          "structureCompliance": "Structure Compliance",
+          "meaningMatch": "Meaning match",
+          "userFrustration": "User frustration"
+        },
+        "schemaDescriptions": {
+          "correctness": "Whether the assistant's output effectively addresses the user's input",
+          "correctnessSpan": "Whether the span's output effectively addresses the span's input",
+          "relevance": "Whether the LLM response is relevant to the conversation context",
+          "hallucination": "Hallucination score identifies factual errors in the response",
+          "moderation": "Moderation score identifies harmful content in the response",
+          "answerRelevance": "Answer relevance score checks if the output is relevant to the question",
+          "structureCompliance": "Returns True if the output follows the expected structure",
+          "meaningMatch": "Evaluate if the output conveys the same meaning as the ground truth",
+          "userFrustration": "User frustration score checks if the output is frustrating to the user"
         }
       },
       "optimizations": {
@@ -1331,6 +1530,11 @@
         }
       },
       "integrations": {
+        "functionDecorators": "Function decorators",
+        "descriptions": {
+          "llmProvider": "LLM provider",
+          "frameworksTools": "Frameworks & tools"
+        },
         "categories": {
           "all": "All integrations",
           "llmProviders": "LLM providers",
@@ -1358,7 +1562,34 @@
         "installOpikSectionTitle": "1. Install Opik using pip from the command line",
         "installOpikDefaultDescription": "Install Opik from the command line using pip.",
         "installSdkSectionTitle": "2. Install the SDK"
+      },
+      "providerModels": {
+        "freeModel": "Free model"
       }
+    },
+    "llmMapper": {
+      "image": "Image {{index}}",
+      "audio": "Audio {{index}}",
+      "toolResult": "Tool result",
+      "unknownTool": "unknown tool"
+    },
+    "quickFilter": {
+      "filterByThisAttribute": "Filter by this attribute",
+      "filterApplied": "Filter applied"
+    },
+    "dashboardStore": {
+      "copySuffix": "(copy)"
+    },
+    "feedbackScoreTable": {
+      "source": "Source",
+      "key": "Key",
+      "type": "Type",
+      "score": "Score",
+      "reason": "Reason",
+      "scoredBy": "Scored by"
+    },
+    "explainers": {
+      "whyWouldIWantToAddTracesToATestSuite": "Add traces to a test suite to evaluate your agent's performance using real production data."
     },
     "traceLabels": {
       "spanType": "Span type",
@@ -1391,6 +1622,7 @@
       "totalEstimatedCost": "Total estimated cost",
       "avgCost": "Avg cost",
       "passRate": "Pass rate",
+      "prompt": "Prompt",
       "experimentLeaderboard": "Experiment leaderboard"
     },
     "projectStats": {
@@ -1462,50 +1694,10 @@
       "lastMessage": "Last message",
       "messageCount": "Message count",
       "createdAt": "Created at"
-    }
-  },
-  "comet": {
-    "workspaceOwner": "Workspace owner",
-    "workspaceMember": "Workspace member",
-    "inviteUsersIU": "Invite Users (IU)",
-    "inviteUsersToWorkspace": "Invite users to workspace",
-    "workspaceOwnerLabel": "Workspace Owner",
-    "workspaceOwnerDescription": "Full permissions to all workspace resources",
-    "workspaceMemberLabel": "Workspace Member",
-    "workspaceMemberDescription": "Limited permissions. You can give customized ones"
-  },
-  "codeDiff": {
-    "baseline": "Baseline",
-    "parent": "Parent",
-    "parentTrial": "Parent (Trial #{{trialNumber}})"
-  },
-  "llmMapper": {
-    "image": "Image {{index}}",
-    "audio": "Audio {{index}}",
-    "toolResult": "Tool result",
-    "unknownTool": "unknown tool"
-  },
-  "quickFilter": {
-    "filterByThisAttribute": "Filter by this attribute",
-    "filterApplied": "Filter applied"
-  },
-  "dashboardStore": {
-    "copySuffix": "(copy)"
-  },
-  "feedbackScoreTable": {
-    "source": "Source",
-    "key": "Key",
-    "type": "Type",
-    "score": "Score",
-    "reason": "Reason",
-    "scoredBy": "Scored by"
-  },
-  "explainers": {
-    "whyWouldIWantToAddTracesToATestSuite": "Add traces to a test suite to evaluate your agent's performance using real production data."
-  },
-  "constants": {
-    "providerModels": {
-      "freeModel": "Free model"
+    },
+    "sourceTypeSelect": {
+      "traces": "Traces",
+      "spans": "Spans"
     }
   }
 }

@@ -54,7 +54,9 @@ const TraceChatInput: React.FC<TraceChatInputProps> = ({
           maxRows={10}
         />
         <TooltipWrapper
-          content={isRunning ? t("aiAssistant.stopChat") : t("aiAssistant.sendMessage")}
+          content={
+            isRunning ? t("aiAssistant.stopChat") : t("aiAssistant.sendMessage")
+          }
           hotkeys={isDisabledButton ? undefined : RUN_HOT_KEYS}
         >
           <Button

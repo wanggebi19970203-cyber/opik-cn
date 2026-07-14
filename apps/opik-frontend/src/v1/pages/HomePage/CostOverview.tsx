@@ -143,10 +143,12 @@ export const CostOverview: React.FC<CostOverviewProps> = ({
         <img
           className="absolute inset-0 size-full object-fill blur-sm"
           src={noDataCostsImageUrl}
-          alt="no data image"
+          alt={t("home.noDataImageAlt")}
         ></img>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-10">
-          <h1 className="comet-title-m">{t("home.costOverview.noCostsAvailable")}</h1>
+          <h1 className="comet-title-m">
+            {t("home.costOverview.noCostsAvailable")}
+          </h1>
           <div className="comet-body mt-2 max-w-[60%] text-center text-muted-slate">
             {t("home.costOverview.noDataDescription")}
           </div>

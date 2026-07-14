@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -9,10 +10,20 @@ import {
   computeCandidateStatuses,
   STATUS_VARIANT_MAP,
   type InProgressInfo,
+  type TrialStatus,
 } from "@/v2/pages-shared/experiments/OptimizationProgressChart/optimizationChartUtils";
+
+const STATUS_I18N_KEY: Record<TrialStatus, string> = {
+  baseline: "optimization.status.baseline",
+  passed: "optimization.status.passed",
+  evaluating: "optimization.status.evaluating",
+  pruned: "optimization.status.pruned",
+  running: "optimization.status.running",
+};
 
 const TrialStatusCell = (context: CellContext<unknown, unknown>) => {
   const row = context.row.original as AggregatedCandidate;
+  const { t } = useTranslation("pages/optimization");
   const { custom } = context.column.columnDef.meta ?? {};
   const {
     candidates,
@@ -50,15 +61,11 @@ const TrialStatusCell = (context: CellContext<unknown, unknown>) => {
     >
       {isBest ? (
         <Tag variant="green" size={tagSize}>
-          Best
+          {t("optimization.trials.best")}
         </Tag>
       ) : (
-        <Tag
-          variant={STATUS_VARIANT_MAP[status]}
-          size={tagSize}
-          className="capitalize"
-        >
-          {status}
+        <Tag variant={STATUS_VARIANT_MAP[status]} size={tagSize}>
+          {t(STATUS_I18N_KEY[status])}
         </Tag>
       )}
     </CellWrapper>

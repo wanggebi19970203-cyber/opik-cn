@@ -370,6 +370,7 @@ export const useExperimentsTableConfig = <
     scoresColumnsOrder,
     actionsCell,
     datasetTypeMap,
+    t,
   ]);
 
   const sortConfig = useMemo(
@@ -416,7 +417,7 @@ export const useExperimentsTableConfig = <
         onOrderChange: setScoresColumnsOrder,
       },
     ];
-  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder]);
+  }, [scoresColumnsData, scoresColumnsOrder, setScoresColumnsOrder, t]);
 
   return {
     // State

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import asyncLib from "async";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -52,6 +53,7 @@ const useActionButtonActions = ({
   datasetId,
   datasetVersionId,
 }: UseActionButtonActionsArguments) => {
+  const { t } = useTranslation("playground");
   const queryClient = useQueryClient();
   const { navigate } = useNavigateToExperiment();
 
@@ -147,7 +149,7 @@ const useActionButtonActions = ({
       },
       onError: (e) => {
         toast({
-          title: "Error",
+          title: t("common.labels.error"),
           variant: "destructive",
           description: e.message,
         });
@@ -177,6 +179,7 @@ const useActionButtonActions = ({
     queryClient,
     promptIds.length,
     storeExperiments,
+    t,
     toast,
     updateOutputTraceId,
   ]);

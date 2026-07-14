@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   JsonParam,
   NumberParam,
@@ -94,35 +95,35 @@ export const DEFAULT_COLUMNS_ORDER: string[] = [
   "type",
 ];
 
-export const FILTERS_COLUMNS: ColumnData<Dashboard>[] = [
+export const getFiltersColumns = (t: TFunction): ColumnData<Dashboard>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("dashboards.columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "type",
-    label: "Type",
+    label: t("dashboards.columns.type"),
     type: COLUMN_TYPE.category,
   },
   {
     id: "description",
-    label: "Description",
+    label: t("dashboards.columns.description"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("dashboards.columns.last_updated_at"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("dashboards.columns.created_at"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("dashboards.columns.created_by"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -184,12 +185,7 @@ const DashboardsPage: React.FunctionComponent = () => {
     ];
   }, [t]);
 
-  const translatedFilterColumns: ColumnData<Dashboard>[] = FILTERS_COLUMNS.map(
-    (col) => ({
-      ...col,
-      label: t(`dashboards.columns.${col.id}`),
-    }),
-  );
+  const translatedFilterColumns: ColumnData<Dashboard>[] = getFiltersColumns(t);
 
   const {
     permissions: {
@@ -363,7 +359,9 @@ const DashboardsPage: React.FunctionComponent = () => {
   return (
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
-        <h1 className="comet-body-accented truncate break-words">{t("dashboards.title")}</h1>
+        <h1 className="comet-body-accented truncate break-words">
+          {t("dashboards.title")}
+        </h1>
         {canCreateDashboards && (
           <Button variant="default" size="xs" onClick={handleNewDashboardClick}>
             <Plus className="mr-1 size-4" />

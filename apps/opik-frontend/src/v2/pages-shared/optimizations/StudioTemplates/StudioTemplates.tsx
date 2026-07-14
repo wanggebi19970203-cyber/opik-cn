@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -16,41 +17,49 @@ type StudioTemplatesProps = {
 // routing come from the shared getStudioCardConfigs.
 const CARD_STYLES: Record<
   StudioCardId,
-  { chipColor: string; tintBg: string; tintBorder: string; actionLabel: string }
+  {
+    chipColor: string;
+    tintBg: string;
+    tintBorder: string;
+    actionLabelKey: string;
+  }
 > = {
   demo: {
     chipColor: "#89deff",
     tintBg: "rgba(186, 230, 253, 0.1)",
     tintBorder: "rgba(186, 230, 253, 0.6)",
-    actionLabel: "Try template",
+    actionLabelKey: "optimizations.studioTemplates.tryTemplate",
   },
   studio: {
     chipColor: "#a78bfa",
     tintBg: "rgba(196, 181, 253, 0.1)",
     tintBorder: "rgba(196, 181, 253, 0.4)",
-    actionLabel: "Create optimization",
+    actionLabelKey: "optimizations.studioTemplates.createOptimization",
   },
   sdk: {
     chipColor: "#e25af6",
     tintBg: "rgba(240, 171, 252, 0.1)",
     tintBorder: "rgba(240, 171, 252, 0.5)",
-    actionLabel: "View SDK guide",
+    actionLabelKey: "optimizations.studioTemplates.viewSdkGuide",
   },
 };
 
 const StudioTemplates: React.FC<StudioTemplatesProps> = ({
   onOptimizeViaSdkClick,
 }) => {
+  const { t } = useTranslation("optimizations");
   const navigateToStudio = useNavigateToOptimizationStudio();
   const cards = getStudioCardConfigs({
     navigateToStudio,
     onOptimizeViaSdkClick,
+    t,
   });
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {cards.map(({ id, icon: Icon, title, description, onClick }) => {
-        const { chipColor, tintBg, tintBorder, actionLabel } = CARD_STYLES[id];
+        const { chipColor, tintBg, tintBorder, actionLabelKey } =
+          CARD_STYLES[id];
         return (
           <Button
             key={id}
@@ -73,7 +82,7 @@ const StudioTemplates: React.FC<StudioTemplatesProps> = ({
                 {description}
               </span>
               <span className="comet-body-xs mt-1 inline-flex items-center gap-0.5 text-primary">
-                {actionLabel}
+                {t(actionLabelKey)}
                 <ArrowRight className="size-3" />
               </span>
             </span>

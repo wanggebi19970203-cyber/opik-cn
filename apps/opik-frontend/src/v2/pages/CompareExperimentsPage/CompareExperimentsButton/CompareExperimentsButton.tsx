@@ -49,7 +49,9 @@ const CompareExperimentsButton: React.FunctionComponent<
             EXPLAINER_ID.what_does_it_mean_to_compare_my_experiments
           ]}
         />
-        <TooltipWrapper content={tooltipContent || t("compareExperiments.title")}>
+        <TooltipWrapper
+          content={tooltipContent || t("compareExperiments.title")}
+        >
           <Button
             size={size}
             variant={variant}

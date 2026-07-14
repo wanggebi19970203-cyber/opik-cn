@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import last from "lodash/last";
 import first from "lodash/first";
 import isEqual from "fast-deep-equal";
-import { LucideIcon, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Sheet, SheetContent, SheetTopBar } from "@/ui/sheet";
 import TextDiff from "@/shared/CodeDiff/TextDiff";
@@ -26,13 +26,9 @@ type DiffSide = "base" | "diff";
 type ViewMode = "pretty" | "json";
 type ChatMessage = { role: string; content: unknown };
 
-const VIEW_MODE_OPTIONS: Array<{
-  value: ViewMode;
-  label: string;
-  icon?: LucideIcon;
-}> = [
-  { value: "pretty", label: "Pretty", icon: Sparkles },
-  { value: "json", label: "JSON" },
+const getViewModeOptions = (t: (key: string) => string) => [
+  { value: "pretty" as const, label: t("compare.pretty"), icon: Sparkles },
+  { value: "json" as const, label: "JSON" },
 ];
 
 const stringifyMetadata = (m: unknown): string => {
@@ -184,7 +180,7 @@ const MetadataCell: React.FC<{
   diffText: string;
   side: DiffSide;
 }> = ({ text, baseText, diffText, side }) => {
-  const { t } = useTranslation("compare-experiments");
+  const { t } = useTranslation("pages/prompt");
   if (!text) {
     return <EmptyPlaceholder>{t("compare.noMetadata")}</EmptyPlaceholder>;
   }
@@ -392,12 +388,14 @@ const ComparePromptVersionDialog: React.FunctionComponent<
           <div className="flex flex-col gap-6 pb-2">
             {baseVersion && diffVersion && (
               <SectionContainer
-                title={isChatDiff ? t("compare.chatMessages") : t("compare.prompt")}
+                title={
+                  isChatDiff ? t("compare.chatMessages") : t("compare.prompt")
+                }
                 actions={
                   isChatDiff && (
                     <FormFieldModeSelect
                       value={viewMode}
-                      options={VIEW_MODE_OPTIONS}
+                      options={getViewModeOptions(t)}
                       onChange={setViewMode}
                     />
                   )

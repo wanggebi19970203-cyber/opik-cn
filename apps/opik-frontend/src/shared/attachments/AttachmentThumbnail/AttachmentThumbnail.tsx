@@ -73,7 +73,11 @@ const AttachmentThumbnail: React.FC<AttachmentThumbnailProps> = ({
             </TooltipWrapper>
           )}
           <TooltipWrapper
-            content={showDownload ? t("attachmentThumbnail.download") : t("attachmentThumbnail.openInNewTab")}
+            content={
+              showDownload
+                ? t("attachmentThumbnail.download")
+                : t("attachmentThumbnail.openInNewTab")
+            }
           >
             <Button variant="ghost" size="icon-2xs" className="w-4" asChild>
               <a

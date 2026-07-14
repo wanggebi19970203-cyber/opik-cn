@@ -254,7 +254,7 @@ const TraceDetailsPanel: React.FunctionComponent<TraceDetailsPanelProps> = ({
       nextTooltip: t("detailsPanel.nextSpan"),
       previousTooltip: t("detailsPanel.previousSpan"),
     };
-  }, [spanId, traceId, handleRowSelect, flattenedTree]);
+  }, [spanId, traceId, handleRowSelect, flattenedTree, t]);
 
   const handleTraceDelete = useCallback(() => {
     if (hasPreviousRow && onRowChange) {

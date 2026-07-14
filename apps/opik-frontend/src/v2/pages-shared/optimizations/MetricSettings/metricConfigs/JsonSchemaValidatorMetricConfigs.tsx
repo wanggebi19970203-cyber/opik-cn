@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   JsonSchemaValidatorMetricParameters,
   MetricParamErrors,
@@ -19,6 +20,8 @@ const JsonSchemaValidatorMetricConfigs = ({
   datasetVariables = [],
   errors,
 }: JsonSchemaValidatorMetricConfigsProps) => {
+  const { t } = useTranslation("optimizations");
+
   return (
     <div className="flex w-72 flex-col gap-6">
       <div className="space-y-4">
@@ -29,7 +32,7 @@ const JsonSchemaValidatorMetricConfigs = ({
           }
           onChange={(value) => onChange({ ...configs, reference_key: value })}
           datasetVariables={datasetVariables}
-          placeholder="e.g., expected_output"
+          placeholder={t("optimizations.metricConfigs.referenceKeyPlaceholder")}
           error={errors?.reference_key?.message}
         />
       </div>

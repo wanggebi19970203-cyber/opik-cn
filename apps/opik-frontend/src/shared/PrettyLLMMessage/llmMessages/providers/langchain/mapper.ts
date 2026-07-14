@@ -137,7 +137,10 @@ const formatAsToolResult = (
   return {
     blockType: "code",
     component: PrettyLLMMessage.CodeBlock,
-    props: { code: formattedContent, label: name || i18next.t("llmMapper.toolResult") },
+    props: {
+      code: formattedContent,
+      label: name || i18next.t("llmMapper.toolResult"),
+    },
   };
 };
 

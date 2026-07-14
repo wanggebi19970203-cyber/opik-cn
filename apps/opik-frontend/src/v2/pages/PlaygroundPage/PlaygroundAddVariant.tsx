@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Copy, File, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -20,6 +21,7 @@ interface PlaygroundAddVariantProps {
 }
 
 const PlaygroundAddVariant = ({ providerKeys }: PlaygroundAddVariantProps) => {
+  const { t } = useTranslation("pages/playground");
   const promptMap = usePromptMap();
   const addPrompt = useAddPrompt();
   const promptIds = usePromptIds();
@@ -93,7 +95,7 @@ const PlaygroundAddVariant = ({ providerKeys }: PlaygroundAddVariantProps) => {
                 <Plus />
               </Button>
               <span className="comet-body-xs whitespace-nowrap text-primary">
-                Add variant
+                {t("playground.addVariant.addVariant")}
               </span>
             </div>
           </PopoverTrigger>
@@ -110,7 +112,7 @@ const PlaygroundAddVariant = ({ providerKeys }: PlaygroundAddVariantProps) => {
               onClick={handleDuplicateLastPrompt}
             >
               <Copy className="mr-2 size-3.5" />
-              Duplicate variant
+              {t("playground.addVariant.duplicateVariant")}
             </Button>
             <Button
               variant="ghost"
@@ -119,7 +121,7 @@ const PlaygroundAddVariant = ({ providerKeys }: PlaygroundAddVariantProps) => {
               onClick={handleAddBlankPrompt}
             >
               <File className="mr-2 size-3.5" />
-              Blank variant
+              {t("playground.addVariant.blankVariant")}
             </Button>
           </PopoverContent>
         </Popover>

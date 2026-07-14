@@ -36,8 +36,12 @@ const RulesActionsPanel: React.FunctionComponent<RulesActionsPanelsProps> = ({
         setOpen={setOpen}
         onConfirm={deleteRulesHandler}
         title={t("onlineEvaluation.confirmDialog.deleteBatch.title")}
-        description={t("onlineEvaluation.confirmDialog.deleteBatch.description")}
-        confirmText={t("onlineEvaluation.confirmDialog.deleteBatch.confirmText")}
+        description={t(
+          "onlineEvaluation.confirmDialog.deleteBatch.description",
+        )}
+        confirmText={t(
+          "onlineEvaluation.confirmDialog.deleteBatch.confirmText",
+        )}
         confirmButtonVariant="destructive"
       />
       <TooltipWrapper content={t("common.buttons.delete")}>

@@ -196,7 +196,9 @@ const RunEvaluationDialog: React.FunctionComponent<
                   <Checkbox
                     checked={checked}
                     onCheckedChange={() => handleCheckboxChange(rule.id)}
-                    aria-label={`Select rule ${rule.name}`}
+                    aria-label={t("runEvaluationDialog.selectRule", {
+                      name: rule.name,
+                    })}
                     className="mt-0.5"
                   />
                   <div className="flex flex-1 flex-col gap-2">
@@ -228,7 +230,9 @@ const RunEvaluationDialog: React.FunctionComponent<
                               isExpanded && "rotate-180",
                             )}
                           />
-                          {isExpanded ? t("runEvaluationDialog.hidePrompt") : t("runEvaluationDialog.showPrompt")}
+                          {isExpanded
+                            ? t("runEvaluationDialog.hidePrompt")
+                            : t("runEvaluationDialog.showPrompt")}
                         </Button>
                         {isExpanded && (
                           <div className="mt-2 rounded-md bg-muted p-3">
@@ -251,16 +255,16 @@ const RunEvaluationDialog: React.FunctionComponent<
 
   const entityLabel =
     entityType === "trace"
-      ? "traces"
+      ? t("runEvaluationDialog.entityTraces")
       : entityType === "thread"
-        ? "threads"
-        : "spans";
+        ? t("runEvaluationDialog.entityThreads")
+        : t("runEvaluationDialog.entitySpans");
   const capitalizedEntityLabel =
     entityType === "trace"
-      ? "Traces"
+      ? t("runEvaluationDialog.entityTracesCapitalized")
       : entityType === "thread"
-        ? "Threads"
-        : "Spans";
+        ? t("runEvaluationDialog.entityThreadsCapitalized")
+        : t("runEvaluationDialog.entitySpansCapitalized");
   const isRunDisabled =
     selectedRuleIds.size === 0 || manualEvaluationMutation.isPending;
 
@@ -297,7 +301,9 @@ const RunEvaluationDialog: React.FunctionComponent<
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">{t("runEvaluationDialog.cancel")}</Button>
+              <Button variant="outline">
+                {t("runEvaluationDialog.cancel")}
+              </Button>
             </DialogClose>
             <Button
               type="submit"
@@ -306,7 +312,9 @@ const RunEvaluationDialog: React.FunctionComponent<
             >
               {manualEvaluationMutation.isPending
                 ? t("runEvaluationDialog.evaluating")
-                : t("runEvaluationDialog.evaluateEntity", { entityLabel: capitalizedEntityLabel.toLowerCase() })}
+                : t("runEvaluationDialog.evaluateEntity", {
+                    entityLabel: capitalizedEntityLabel.toLowerCase(),
+                  })}
             </Button>
           </DialogFooter>
         </DialogContent>

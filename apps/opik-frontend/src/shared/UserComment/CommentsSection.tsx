@@ -45,12 +45,17 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
           onSubmit={(data) => onSubmit(data.commentText)}
           className={formClassName}
           actions={
-            <TooltipWrapper content={t("common:buttons.submit")} hotkeys={["⌘", "⏎"]}>
+            <TooltipWrapper
+              content={t("common:buttons.submit")}
+              hotkeys={["⌘", "⏎"]}
+            >
               <UserCommentForm.SubmitButton />
             </TooltipWrapper>
           }
         >
-          <UserCommentForm.TextareaField placeholder={t("common:placeholders.addComment")} />
+          <UserCommentForm.TextareaField
+            placeholder={t("common:placeholders.addComment")}
+          />
         </UserCommentForm>
       )}
       <div className={listClassName}>
@@ -80,7 +85,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
             </UserComment>
           ))
         ) : (
-           <div className="comet-body-s py-3 text-center text-muted-slate">
+          <div className="comet-body-s py-3 text-center text-muted-slate">
             {t("common:comments.noCommentsYet")}
           </div>
         )}

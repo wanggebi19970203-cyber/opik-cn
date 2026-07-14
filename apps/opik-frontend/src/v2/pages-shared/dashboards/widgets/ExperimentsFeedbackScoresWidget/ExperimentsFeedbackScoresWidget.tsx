@@ -374,7 +374,10 @@ const ExperimentsFeedbackScoresWidget: React.FunctionComponent<
   const hasMoreThanLimit = !hasGroups && totalExperiments > experimentsListSize;
 
   const warningMessage = hasMoreThanLimit
-    ? t("feedbackScores.showingFirstN", { count: experimentsListSize, total: totalExperiments })
+    ? t("feedbackScores.showingFirstN", {
+        count: experimentsListSize,
+        total: totalExperiments,
+      })
     : undefined;
 
   const isRadarOrBar =

@@ -59,7 +59,9 @@ const CommentsCellContent: React.FC<CommentsCellContentProps> = ({
       {!isLocalComments && (
         <UserCommentAvatarList className="mt-0.5" commentsList={commentsList} />
       )}
-      <div className="truncate">{commentsCount} {t("common:labels.comments")}</div>
+      <div className="truncate">
+        {commentsCount} {t("common:labels.comments")}
+      </div>
     </div>
   );
 };

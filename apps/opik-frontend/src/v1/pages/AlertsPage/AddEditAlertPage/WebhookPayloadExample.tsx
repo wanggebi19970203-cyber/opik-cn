@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import isString from "lodash/isString";
+import { useTranslation } from "react-i18next";
 import { Alert, ALERT_EVENT_TYPE, ALERT_TYPE } from "@/types/alerts";
 import useWebhookExamplesQuery from "@/api/alerts/useWebhookExamplesQuery";
 import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
@@ -18,6 +19,7 @@ type WebhookPayloadExampleProps = {
 const WebhookPayloadExample: React.FunctionComponent<
   WebhookPayloadExampleProps
 > = ({ eventType, alertType, actionButton, alert }) => {
+  const { t } = useTranslation("alerts");
   const { data: examples, isPending } = useWebhookExamplesQuery({
     alertType,
   });
@@ -49,7 +51,7 @@ const WebhookPayloadExample: React.FunctionComponent<
   if (!formattedPayload) {
     return (
       <div className="comet-body-s rounded-md border bg-primary-foreground p-3 text-muted-foreground">
-        No example available for this event type
+        {t("payloadExample.noExample")}
       </div>
     );
   }
@@ -57,7 +59,7 @@ const WebhookPayloadExample: React.FunctionComponent<
   return (
     <div className="rounded-md border border-border bg-primary-foreground">
       <div className="flex h-10 items-center justify-between border-b border-border px-4">
-        <span className="text-light-slate">Payload</span>
+        <span className="text-light-slate">{t("payloadExample.payload")}</span>
         {actionButton && <div>{actionButton}</div>}
       </div>
       <CodeHighlighter

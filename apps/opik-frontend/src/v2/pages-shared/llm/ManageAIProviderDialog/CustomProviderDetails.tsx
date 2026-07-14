@@ -14,7 +14,7 @@ import { Switch } from "@/ui/switch";
 import { PROVIDERS } from "@/constants/providers";
 import { PROVIDER_TYPE } from "@/types/providers";
 import CustomHeadersField from "./CustomHeadersField";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 type CustomProviderDetailsProps = {
   form: UseFormReturn<AIProviderFormType>;
@@ -41,7 +41,9 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">{t("llm:customProvider.providerName")}</Label>
+                <Label htmlFor="providerName">
+                  {t("llm:customProvider.providerName")}
+                </Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -84,11 +86,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
                 />
               </FormControl>
               <FormMessage />
-              <Description>
-                {
-                  "Use `{model}` as a placeholder in the URL if your gateway expects the model name in the path — Opik substitutes the selected model at request time. The model name is interpolated raw, so values containing `/` (e.g. HuggingFace-style names) will become extra path segments."
-                }
-              </Description>
+              <Description>{t("customProvider.urlDescription")}</Description>
             </FormItem>
           );
         }}
@@ -116,23 +114,26 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                Custom providers may not require an API key, depending on your
-                server setup. Learn more in the{" "}
-                <Button
-                  variant="link"
-                  size="sm"
-                  asChild
-                  className="inline px-0"
-                >
-                  <a
-                    href={buildDocsUrl("/development/playground")}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    documentation
-                  </a>
-                </Button>
-                .
+                <Trans
+                  ns="llm"
+                  i18nKey="customProvider.apiKeyDescription"
+                  components={{
+                    link: (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        asChild
+                        className="inline px-0"
+                      >
+                        <a
+                          href={buildDocsUrl("/development/playground")}
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      </Button>
+                    ),
+                  }}
+                />
               </Description>
             </FormItem>
           );
@@ -146,7 +147,9 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">{t("llm:customProvider.modelsList")}</Label>
+              <Label htmlFor="models">
+                {t("llm:customProvider.modelsList")}
+              </Label>
               <FormControl>
                 <Input
                   id="models"
@@ -204,9 +207,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
               </FormControl>
               <FormMessage />
               <Description>
-                If set, the API key is sent as <code>{"{name}: <key>"}</code> in
-                addition to the default <code>Authorization: Bearer</code>{" "}
-                header.
+                {t("customProvider.authHeaderNameDescription")}
               </Description>
             </FormItem>
           );
@@ -229,8 +230,7 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
               </Label>
             </div>
             <Description>
-              Turn on only if your gateway rejects requests that include{" "}
-              <code>Authorization: Bearer</code>.
+              {t("customProvider.suppressDefaultAuthDescription")}
             </Description>
           </FormItem>
         )}

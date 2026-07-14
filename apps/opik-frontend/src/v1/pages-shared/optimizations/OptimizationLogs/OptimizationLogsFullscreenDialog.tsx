@@ -78,12 +78,15 @@ const OptimizationLogsFullscreenDialog: React.FC<
       <DialogContent className="flex h-[90vh] w-[90vw] max-w-[90vw] flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span>{t('optimizations.logs.title')}</span>
+            <span>{t("optimizations.logs.title")}</span>
             {lastUpdatedAt && (
               <TooltipWrapper
-                content={`${t('optimizations.logs.lastUpdatedAt')} ${formatDate(lastUpdatedAt, {
-                  includeSeconds: true,
-                })}`}
+                content={`${t("optimizations.logs.lastUpdatedAt")} ${formatDate(
+                  lastUpdatedAt,
+                  {
+                    includeSeconds: true,
+                  },
+                )}`}
               >
                 <Clock className="size-3.5 text-muted-slate" />
               </TooltipWrapper>
@@ -109,7 +112,7 @@ const OptimizationLogsFullscreenDialog: React.FC<
               className="absolute bottom-4 left-1/2 -translate-x-1/2 gap-1.5 shadow-md"
             >
               <ArrowDownToLine className="size-3.5" />
-              {t('optimizations.logs.newLogsAvailable')}
+              {t("optimizations.logs.newLogsAvailable")}
             </Button>
           )}
         </div>

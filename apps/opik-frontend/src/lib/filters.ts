@@ -1,6 +1,7 @@
 import uniqid from "uniqid";
 import flatten from "lodash/flatten";
 import compact from "lodash/compact";
+import i18next from "i18next";
 import { Filter, Filters } from "@/types/filters";
 import { DatasetItemColumn } from "@/types/datasets";
 import {
@@ -377,7 +378,7 @@ export const buildDatasetFilterColumns = (
     ...dataFilterColumns,
     {
       id: "tags",
-      label: "Tags",
+      label: i18next.t("common.labels.tags"),
       type: COLUMN_TYPE.list,
       iconType: "tags" as const,
     },

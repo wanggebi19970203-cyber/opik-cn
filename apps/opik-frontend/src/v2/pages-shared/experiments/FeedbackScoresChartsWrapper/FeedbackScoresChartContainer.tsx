@@ -172,7 +172,7 @@ const FeedbackScoresChartContainer: React.FC<
         containerWidth={width}
       />
     );
-  }, [isPending, noData, chartData, chartId, width]);
+  }, [isPending, noData, chartData, chartId, width, t]);
 
   return (
     <Card className={cn("min-w-[400px]", className)} ref={ref}>

@@ -19,8 +19,14 @@ const DataTableNoMatchingData: React.FC<DataTableNoMatchingDataProps> = ({
   return (
     <div className="sticky left-0 flex min-h-[50vh] w-[var(--scroll-body-client-width,100%)] items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-2">
-        <img src={imageUrl} alt={t("dataTableNoMatchingData.noMatchingResults")} className="mb-1" />
-        <h3 className="comet-body">{t("dataTableNoMatchingData.noMatchingResults")}</h3>
+        <img
+          src={imageUrl}
+          alt={t("dataTableNoMatchingData.noMatchingResults")}
+          className="mb-1"
+        />
+        <h3 className="comet-body">
+          {t("dataTableNoMatchingData.noMatchingResults")}
+        </h3>
         <p className="comet-body-s text-muted-slate">
           {t("dataTableNoMatchingData.tryAdjustingFilters")}
         </p>

@@ -265,7 +265,9 @@ const LLMPromptMessage = forwardRef<
                   />
                 )}
                 {!hideRemoveButton && (
-                  <TooltipWrapper content={t("llmPromptMessage.deleteMessageTooltip")}>
+                  <TooltipWrapper
+                    content={t("llmPromptMessage.deleteMessageTooltip")}
+                  >
                     <Button
                       variant="outline"
                       size="icon-sm"
@@ -277,7 +279,9 @@ const LLMPromptMessage = forwardRef<
                     </Button>
                   </TooltipWrapper>
                 )}
-                <TooltipWrapper content={t("llmPromptMessage.duplicateMessageTooltip")}>
+                <TooltipWrapper
+                  content={t("llmPromptMessage.duplicateMessageTooltip")}
+                >
                   <Button
                     variant="outline"
                     size="icon-sm"

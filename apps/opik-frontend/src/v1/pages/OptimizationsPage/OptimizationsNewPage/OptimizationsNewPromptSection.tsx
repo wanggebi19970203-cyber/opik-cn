@@ -103,7 +103,9 @@ const OptimizationsNewPromptSection: React.FC<
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="comet-body-s-accented">{t("newPage.name")}</FormLabel>
+            <FormLabel className="comet-body-s-accented">
+              {t("newPage.name")}
+            </FormLabel>
             <FormControl>
               <Input
                 {...field}

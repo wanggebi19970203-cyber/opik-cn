@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api, { DATASETS_REST_ENDPOINT } from "@/api/api";
 import { AxiosError } from "axios";
@@ -39,7 +40,7 @@ const useDatasetItemsFromJsonMutation = () => {
     },
     onError: (error: AxiosError) => {
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: getApiErrorMessage(error),
         variant: "destructive",
       });

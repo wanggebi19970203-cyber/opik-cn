@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { TabsTrigger } from "@/ui/tabs";
 import useUserPermission from "./useUserPermission";
 
@@ -6,6 +7,7 @@ export interface CollaboratorsTabTriggerProps {
 }
 
 const CollaboratorsTabTrigger = ({ value }: CollaboratorsTabTriggerProps) => {
+  const { t } = useTranslation("common");
   const { isWorkspaceOwner } = useUserPermission();
 
   if (!isWorkspaceOwner) {
@@ -14,7 +16,7 @@ const CollaboratorsTabTrigger = ({ value }: CollaboratorsTabTriggerProps) => {
 
   return (
     <TabsTrigger variant="underline" value={value}>
-      Members
+      {t("labels.members")}
     </TabsTrigger>
   );
 };

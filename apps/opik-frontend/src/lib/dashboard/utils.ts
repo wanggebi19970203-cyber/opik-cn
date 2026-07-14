@@ -49,7 +49,9 @@ export const generateEmptySection = (
 };
 
 export const generateEmptyDashboard = (): DashboardState => {
-  const defaultSection = generateEmptySection(i18next.t("common:dashboard.overview"));
+  const defaultSection = generateEmptySection(
+    i18next.t("common:dashboard.overview"),
+  );
 
   return {
     version: DASHBOARD_VERSION,

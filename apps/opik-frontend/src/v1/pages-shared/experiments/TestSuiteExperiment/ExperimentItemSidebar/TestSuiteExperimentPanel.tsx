@@ -102,11 +102,11 @@ export const TestSuiteExperimentPanel: React.FC<
   const copyClickHandler = useCallback(() => {
     if (activeExperimentsCompare?.id) {
       toast({
-        description: t('idCopiedToClipboard'),
+        description: t("idCopiedToClipboard"),
       });
       copy(activeExperimentsCompare?.id);
     }
-  }, [toast, activeExperimentsCompare?.id]);
+  }, [t, toast, activeExperimentsCompare?.id]);
 
   const horizontalNavigation = useMemo(
     () =>
@@ -158,7 +158,7 @@ export const TestSuiteExperimentPanel: React.FC<
       <ShareURLButton />
       <Button size="sm" variant="outline" onClick={copyClickHandler}>
         <Copy className="mr-2 size-4" />
-        {t('copyId')}
+        {t("copyId")}
       </Button>
     </div>
   );

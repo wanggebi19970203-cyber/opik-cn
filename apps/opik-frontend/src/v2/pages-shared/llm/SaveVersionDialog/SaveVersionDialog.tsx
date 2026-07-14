@@ -56,10 +56,14 @@ const SaveVersionDialog: React.FC<SaveVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{t("saveVersionDialog.title", { name: promptName })}</DialogTitle>
+          <DialogTitle>
+            {t("saveVersionDialog.title", { name: promptName })}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-1.5 pb-4">
-          <Label htmlFor="versionNotes">{t("saveVersionDialog.versionNotes")}</Label>
+          <Label htmlFor="versionNotes">
+            {t("saveVersionDialog.versionNotes")}
+          </Label>
           <AutoGrowTextarea
             id="versionNotes"
             dimension="sm"

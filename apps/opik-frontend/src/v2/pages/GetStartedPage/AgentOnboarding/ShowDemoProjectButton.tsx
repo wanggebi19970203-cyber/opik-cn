@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronsRight, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -7,6 +8,7 @@ import { useActiveWorkspaceName } from "@/store/AppStore";
 import useDemoProject from "@/api/projects/useDemoProject";
 
 const ShowDemoProjectButton: React.FC = () => {
+  const { t } = useTranslation("pages/get-started");
   const workspaceName = useActiveWorkspaceName();
   const { data: demoProject, pollExpired } = useDemoProject({
     workspaceName,
@@ -26,7 +28,7 @@ const ShowDemoProjectButton: React.FC = () => {
         data-fs-element="onboarding-step2-show-demo"
       >
         <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-        Generating demo data…
+        {t("getStarted.demoLoading.generatingDemoData")}
       </Button>
     );
   }
@@ -46,7 +48,7 @@ const ShowDemoProjectButton: React.FC = () => {
           projectId: demoProject.id,
         }}
       >
-        Show me a demo project
+        {t("getStarted.demoLoading.showMeDemoProject")}
         <ChevronsRight className="size-3.5" />
       </Link>
     </Button>

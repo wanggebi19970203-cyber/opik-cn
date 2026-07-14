@@ -35,7 +35,7 @@ const FeedbackScoresChartsWrapper = ({
               chartData={chartsData[index]}
               chartId={data.id}
               chartName={data.name}
-              subtitle={areAggregatedScores ? t('aggregatedScores') : undefined}
+              subtitle={areAggregatedScores ? t("aggregatedScores") : undefined}
             />
           ))}
     </div>

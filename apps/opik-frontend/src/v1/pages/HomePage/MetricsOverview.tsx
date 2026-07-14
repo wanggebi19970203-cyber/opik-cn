@@ -222,7 +222,9 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({
                 <PercentageTrend
                   percentage={percentageMap[metric.name]?.percentage}
                   trend={trend}
-                  tooltip={t("home.metricsOverview.comparesTooltip", { metricName: metric.name })}
+                  tooltip={t("home.metricsOverview.comparesTooltip", {
+                    metricName: metric.name,
+                  })}
                 />
               </div>
             </li>
@@ -247,7 +249,9 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({
           <ExplainerCallout
             {...EXPLAINERS_MAP[explainerId]}
             id="metrics-overview-explainer"
-            description={t("home.metricsOverview.docsDescription", { metricName: selectedMetric })}
+            description={t("home.metricsOverview.docsDescription", {
+              metricName: selectedMetric,
+            })}
           ></ExplainerCallout>
         )}
       </>
@@ -265,16 +269,19 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({
           <img
             className="absolute inset-0 size-full object-fill blur-sm"
             src={noDataMetricChartImageUrl}
-            alt="no data image"
+            alt={t("home.noDataImageAlt")}
           ></img>
           <div className="absolute inset-0 flex flex-col items-center justify-center p-10">
-            <h1 className="comet-title-m text-center">{t("home.metricsOverview.unlockYourMetrics")}</h1>
+            <h1 className="comet-title-m text-center">
+              {t("home.metricsOverview.unlockYourMetrics")}
+            </h1>
             <div className="comet-body mt-2 text-center text-muted-slate">
               {t("home.metricsOverview.integrateProject")}
               <br /> {t("home.metricsOverview.metricsWillAppear")}
             </div>
             <Button className="mt-4" onClick={openQuickstart}>
-              {t("home.metricsOverview.getStarted")} <ChevronRight className="ml-2 size-4 shrink-0" />
+              {t("home.metricsOverview.getStarted")}{" "}
+              <ChevronRight className="ml-2 size-4 shrink-0" />
             </Button>
           </div>
         </div>
@@ -294,16 +301,19 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({
         <img
           className="absolute inset-0 size-full object-fill blur-sm"
           src={noDataMetricsImageUrl}
-          alt="no data image"
+          alt={t("home.noDataImageAlt")}
         ></img>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-10">
-          <h1 className="comet-title-m">{t("home.metricsOverview.noMetricsAvailable")}</h1>
+          <h1 className="comet-title-m">
+            {t("home.metricsOverview.noMetricsAvailable")}
+          </h1>
           <div className="comet-body mt-2 max-w-[60%] text-center text-muted-slate">
             {description}
           </div>
           {noMetricsAndProjectsData && (
             <Button className="mt-4" onClick={openQuickstart}>
-              {t("home.metricsOverview.getStarted")} <ChevronRight className="ml-2 size-4 shrink-0" />
+              {t("home.metricsOverview.getStarted")}{" "}
+              <ChevronRight className="ml-2 size-4 shrink-0" />
             </Button>
           )}
         </div>

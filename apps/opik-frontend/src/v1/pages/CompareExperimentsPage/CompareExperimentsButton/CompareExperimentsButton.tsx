@@ -43,7 +43,9 @@ const CompareExperimentsButton: React.FunctionComponent<
         setOpen={setOpen}
       />
       <div className="inline-flex items-center gap-2">
-        <TooltipWrapper content={tooltipContent ?? t("compareExperiments.title")}>
+        <TooltipWrapper
+          content={tooltipContent ?? t("compareExperiments.title")}
+        >
           <Button
             size={size}
             variant={variant}

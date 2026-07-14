@@ -49,14 +49,19 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
 
     toast({
       title: t("settings.workspacePreferences.threadTimeout.toastTitle"),
-      description: t("settings.workspacePreferences.threadTimeout.toastDescription", { duration: formattedDuration }),
+      description: t(
+        "settings.workspacePreferences.threadTimeout.toastDescription",
+        { duration: formattedDuration },
+      ),
       actions: [
         <ToastAction
           variant="link"
           size="sm"
           className="px-0"
-          altText="Go to project"
-          key="Go to project"
+          altText={t(
+            "settings.workspacePreferences.threadTimeout.goToProjects",
+          )}
+          key="Go to projects"
           onClick={() => {
             navigate({
               to: "/$workspaceName/projects",
@@ -92,7 +97,9 @@ const EditThreadTimeoutDialog: React.FC<EditThreadTimeoutDialogProps> = ({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("settings.workspacePreferences.cancel")}</Button>
+            <Button variant="outline">
+              {t("settings.workspacePreferences.cancel")}
+            </Button>
           </DialogClose>
           <Button
             type="submit"

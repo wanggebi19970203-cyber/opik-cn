@@ -42,9 +42,11 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
     copy(generateSMEURL(workspaceName, queue.id));
     toast({
       title: t("common.annotationQueues.annotationQueueLinkCopied"),
-      description: t("common.annotationQueues.annotationQueueLinkCopiedDescription"),
+      description: t(
+        "common.annotationQueues.annotationQueueLinkCopiedDescription",
+      ),
     });
-  }, [queue.id, toast, workspaceName]);
+  }, [queue.id, t, toast, workspaceName]);
 
   const deleteQueueHandler = useCallback(() => {
     mutate({
@@ -71,7 +73,9 @@ const AnnotationQueueRowActionsCell: React.FunctionComponent<
           setOpen={setOpen}
           onConfirm={deleteQueueHandler}
           title={t("common.annotationQueues.deleteAnnotationQueueTitle")}
-          description={t("common.annotationQueues.deleteAnnotationQueueDescription")}
+          description={t(
+            "common.annotationQueues.deleteAnnotationQueueDescription",
+          )}
           confirmText={t("common.buttons.delete")}
           confirmButtonVariant="destructive"
         />

@@ -4,6 +4,7 @@ import useLocalStorageState from "use-local-storage-state";
 import capitalize from "lodash/capitalize";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 import useFeedbackDefinitionsList from "@/api/feedback-definitions/useFeedbackDefinitionsList";
 import AddEditFeedbackDefinitionDialog from "@/v2/pages-shared/datasets/AddEditFeedbackDefinitionDialog/AddEditFeedbackDefinitionDialog";
@@ -49,44 +50,44 @@ const PAGINATION_SIZE_KEY = "feedback-definitions-pagination-size";
 export const DEFAULT_COLUMNS: ColumnData<FeedbackDefinition>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Feedback score",
+    label: i18next.t("pages/settings:settings.feedback.columns.name"),
     type: COLUMN_TYPE.numberDictionary,
     cell: FeedbackScoreNameCell as never,
     sortable: true,
   },
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: i18next.t("pages/settings:settings.feedback.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "description",
-    label: "Description",
+    label: i18next.t("pages/settings:settings.feedback.columns.description"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "type",
-    label: "Type",
+    label: i18next.t("pages/settings:settings.feedback.columns.type"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => capitalize(row.type),
     cell: TagCell as never,
   },
   {
     id: "values",
-    label: "Values",
+    label: i18next.t("pages/settings:settings.feedback.columns.values"),
     type: COLUMN_TYPE.string,
     cell: FeedbackDefinitionsValueCell as never,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("pages/settings:settings.feedback.columns.created_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: i18next.t("pages/settings:settings.feedback.columns.created_by"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -176,11 +177,14 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
     return feedbackDefinitions.filter((row) => rowSelection[row.id]);
   }, [rowSelection, feedbackDefinitions]);
 
-  const translatedColumns: ColumnData<FeedbackDefinition>[] =
-    DEFAULT_COLUMNS.map((col) => ({
-      ...col,
-      label: t(`settings.feedback.columns.${col.id}`),
-    }));
+  const translatedColumns: ColumnData<FeedbackDefinition>[] = useMemo(
+    () =>
+      DEFAULT_COLUMNS.map((col) => ({
+        ...col,
+        label: t(`settings.feedback.columns.${col.id}`),
+      })),
+    [t],
+  );
 
   const columns = useMemo(() => {
     return [
@@ -196,7 +200,7 @@ const FeedbackDefinitionsTab: React.FunctionComponent = () => {
         cell: FeedbackDefinitionsRowActionsCell,
       }),
     ];
-  }, [columnsOrder, selectedColumns]);
+  }, [columnsOrder, selectedColumns, translatedColumns]);
 
   const resizeConfig = useMemo(
     () => ({

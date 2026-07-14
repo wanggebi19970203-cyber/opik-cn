@@ -33,9 +33,7 @@ const AgentRunnerLoading: React.FC<AgentRunnerLoadingProps> = ({
           {t("common.messages.noAgentsRegistered")}
         </p>
         <div className="comet-body-xs mt-1 max-w-sm text-center">
-          <p>
-            {t("common.messages.noAgentsRegisteredDescription")}
-          </p>
+          <p>{t("common.messages.noAgentsRegisteredDescription")}</p>
           <ul className="mt-1 inline-block list-inside list-disc text-left">
             <li>
               {t("common.messages.runnerMissingDecorator", {

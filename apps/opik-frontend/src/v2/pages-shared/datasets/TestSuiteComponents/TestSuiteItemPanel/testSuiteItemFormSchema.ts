@@ -12,7 +12,9 @@ export const testSuiteItemFormSchema = z
     useGlobalPolicy: z.boolean().default(false),
   })
   .refine((data) => data.passThreshold <= data.runsPerItem, {
-    message: i18next.t("common:validation.passThresholdCannotExceedRunsPerItem"),
+    message: i18next.t(
+      "common:validation.passThresholdCannotExceedRunsPerItem",
+    ),
     path: ["passThreshold"],
   });
 

@@ -100,7 +100,8 @@ const GroupsContent = <TColumnData,>({
 
   const renderGroups = () => {
     return groups.map((group, index) => {
-      const prefix = index === 0 ? t("common.groups.by") : t("common.groups.and");
+      const prefix =
+        index === 0 ? t("common.groups.by") : t("common.groups.and");
 
       return (
         <GroupRow

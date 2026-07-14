@@ -50,7 +50,9 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
       if (hasOtherUnprocessedItems) {
         return t("annotationView.updateNext");
       } else {
-        return isLastItem ? t("annotationView.updateComplete") : t("annotationView.updateNext");
+        return isLastItem
+          ? t("annotationView.updateComplete")
+          : t("annotationView.updateNext");
       }
     } else {
       return unprocessedItems.length === 1

@@ -28,13 +28,33 @@ import {
 // while both map to BlueprintValueType.PROMPT on save.
 type FieldTypeOption = BlueprintValueType | "prompt_chat" | "prompt_text";
 
-const useTypeOptions = (t: (key: string) => string): { value: FieldTypeOption; label: string }[] => [
-  { value: BlueprintValueType.STRING, label: t("agentOptimization.newFieldEditor.string") },
-  { value: BlueprintValueType.INT, label: t("agentOptimization.newFieldEditor.integer") },
-  { value: BlueprintValueType.FLOAT, label: t("agentOptimization.newFieldEditor.float") },
-  { value: BlueprintValueType.BOOLEAN, label: t("agentOptimization.newFieldEditor.boolean") },
-  { value: "prompt_chat", label: t("agentOptimization.newFieldEditor.chatPrompt") },
-  { value: "prompt_text", label: t("agentOptimization.newFieldEditor.textPrompt") },
+const useTypeOptions = (
+  t: (key: string) => string,
+): { value: FieldTypeOption; label: string }[] => [
+  {
+    value: BlueprintValueType.STRING,
+    label: t("agentOptimization.newFieldEditor.string"),
+  },
+  {
+    value: BlueprintValueType.INT,
+    label: t("agentOptimization.newFieldEditor.integer"),
+  },
+  {
+    value: BlueprintValueType.FLOAT,
+    label: t("agentOptimization.newFieldEditor.float"),
+  },
+  {
+    value: BlueprintValueType.BOOLEAN,
+    label: t("agentOptimization.newFieldEditor.boolean"),
+  },
+  {
+    value: "prompt_chat",
+    label: t("agentOptimization.newFieldEditor.chatPrompt"),
+  },
+  {
+    value: "prompt_text",
+    label: t("agentOptimization.newFieldEditor.textPrompt"),
+  },
 ];
 
 export interface NewFieldDraft {
@@ -135,9 +155,12 @@ const NewBlueprintFieldEditor: React.FC<NewBlueprintFieldEditorProps> = ({
   const promptError = useMemo(() => {
     if (field.type !== BlueprintValueType.PROMPT) return null;
     if (field.promptStructure === PROMPT_TEMPLATE_STRUCTURE.TEXT) {
-      return !field.value.trim() ? t("agentOptimization.newFieldEditor.promptEmptyError") : null;
+      return !field.value.trim()
+        ? t("agentOptimization.newFieldEditor.promptEmptyError")
+        : null;
     }
-    if (field.messages.length === 0) return t("agentOptimization.newFieldEditor.addAtLeastOneMessage");
+    if (field.messages.length === 0)
+      return t("agentOptimization.newFieldEditor.addAtLeastOneMessage");
     const allEmpty = field.messages.every((m) => {
       if (typeof m.content === "string") return !m.content.trim();
       if (Array.isArray(m.content)) {
@@ -148,7 +171,9 @@ const NewBlueprintFieldEditor: React.FC<NewBlueprintFieldEditorProps> = ({
       }
       return true;
     });
-    return allEmpty ? t("agentOptimization.newFieldEditor.messagesEmptyError") : null;
+    return allEmpty
+      ? t("agentOptimization.newFieldEditor.messagesEmptyError")
+      : null;
   }, [field.type, field.promptStructure, field.messages, field.value, t]);
 
   const handleTypeChange = (next: FieldTypeOption) => {
@@ -206,7 +231,9 @@ const NewBlueprintFieldEditor: React.FC<NewBlueprintFieldEditorProps> = ({
         <Input
           value={field.key}
           onChange={(e) => onChange({ ...field, key: e.target.value })}
-          placeholder={t("agentOptimization.newFieldEditor.fieldNamePlaceholder")}
+          placeholder={t(
+            "agentOptimization.newFieldEditor.fieldNamePlaceholder",
+          )}
           className="h-8 flex-1"
         />
         <Select
@@ -247,7 +274,9 @@ const NewBlueprintFieldEditor: React.FC<NewBlueprintFieldEditorProps> = ({
           className="comet-code min-h-24"
           value={field.value}
           onChange={(e) => onChange({ ...field, value: e.target.value })}
-          placeholder={t("agentOptimization.newFieldEditor.enterPromptTemplate")}
+          placeholder={t(
+            "agentOptimization.newFieldEditor.enterPromptTemplate",
+          )}
         />
       ) : field.type === BlueprintValueType.PROMPT ? (
         <LLMPromptMessages

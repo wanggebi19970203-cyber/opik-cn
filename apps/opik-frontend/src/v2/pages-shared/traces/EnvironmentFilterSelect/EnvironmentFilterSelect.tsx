@@ -42,7 +42,8 @@ const EnvironmentFilterSelect: React.FC<EnvironmentFilterSelectProps> = ({
 
   const triggerLabel = (() => {
     if (selectedEnvironment) return selectedEnvironment.name;
-    if (value === ENVIRONMENT_UNTAGGED_VALUE) return t("environmentFilter.untagged");
+    if (value === ENVIRONMENT_UNTAGGED_VALUE)
+      return t("environmentFilter.untagged");
     return t("environmentFilter.allEnvironments");
   })();
 

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import * as yml from "js-yaml";
 import { prettifyMessage } from "@/lib/traces";
 import {
@@ -61,13 +62,14 @@ export const generateSelectOptions = (
   canBePrettified: boolean = false,
 ) => {
   if (prettifyConfig) {
+    const t = i18next.t;
     return [
       {
         value: MODE_TYPE.pretty,
-        label: "Pretty ✨",
+        label: t("common:codeBlock.pretty"),
         ...(!canBePrettified && {
           disabled: !canBePrettified,
-          tooltip: "Pretty ✨ is not available yet for this format.",
+          tooltip: t("common:codeBlock.prettyNotAvailable"),
         }),
       },
       ...DEFAULT_OPTIONS,

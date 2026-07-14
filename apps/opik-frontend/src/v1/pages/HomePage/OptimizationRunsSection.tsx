@@ -38,7 +38,7 @@ export const COLUMNS = convertColumnDataToColumn<Optimization, Optimization>(
   [
     {
       id: COLUMN_NAME_ID,
-      label: "Optimization",
+      label: "home.optimizationRuns.optimization",
       type: COLUMN_TYPE.string,
       cell: ResourceCell as never,
       sortable: true,
@@ -199,7 +199,8 @@ const OptimizationRunsSection: React.FunctionComponent = () => {
       <div className="flex justify-end pt-1">
         <Link to="/$workspaceName/optimizations" params={{ workspaceName }}>
           <Button variant="ghost" className="flex items-center gap-1 pr-0">
-            {t("home.optimizationRuns.allOptimizationRuns")} <ArrowRight className="size-4" />
+            {t("home.optimizationRuns.allOptimizationRuns")}{" "}
+            <ArrowRight className="size-4" />
           </Button>
         </Link>
       </div>

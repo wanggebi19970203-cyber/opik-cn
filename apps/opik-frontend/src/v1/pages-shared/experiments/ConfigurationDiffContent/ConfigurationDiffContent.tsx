@@ -143,7 +143,7 @@ const ConfigurationDiffContent: React.FunctionComponent<
     <div className="space-y-3">
       {!hasDiffs && (
         <div className="py-8 text-center text-muted-foreground">
-          {t('noDifferencesFound')}
+          {t("noDifferencesFound")}
         </div>
       )}
       {promptDiffs.map((diff) => (

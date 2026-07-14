@@ -63,7 +63,9 @@ const buildFilterAndGroupTitle = (
 
   let baseLabel: string;
   if (hasFilters) {
-    baseLabel = `${i18next.t("dashboard.filtered")} ${metricsLabel.toLowerCase()}`;
+    baseLabel = `${i18next.t(
+      "dashboard.filtered",
+    )} ${metricsLabel.toLowerCase()}`;
     if (feedbackScores && feedbackScores.length === 1) {
       baseLabel = `${i18next.t("dashboard.filtered")} ${metricsLabel}`;
     }

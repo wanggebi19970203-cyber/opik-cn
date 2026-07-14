@@ -258,7 +258,9 @@ const PlaygroundOutputActions = ({
   const renderActionButton = () => {
     if (isRunning) {
       const stopRunningPromptMessage =
-        promptCount === 1 ? t("playground.header.stopPrompt") : t("playground.header.stopTooltip");
+        promptCount === 1
+          ? t("playground.header.stopPrompt")
+          : t("playground.header.stopTooltip");
 
       return (
         <TooltipWrapper
@@ -315,7 +317,9 @@ const PlaygroundOutputActions = ({
 
     const getTooltipMessage = () => {
       if (!isDisabledButton) {
-        return promptCount === 1 ? t("playground.header.runTooltipSingle") : t("playground.header.runTooltip");
+        return promptCount === 1
+          ? t("playground.header.runTooltipSingle")
+          : t("playground.header.runTooltip");
       }
 
       if (!canUsePlayground) {
@@ -432,7 +436,7 @@ const PlaygroundOutputActions = ({
                 <NavigationTag
                   resource={RESOURCE_TYPE.experiment}
                   id={plainDatasetId}
-                    name={
+                  name={
                     createdExperiments.length === 1
                       ? t("playground.header.goToExperiment")
                       : t("playground.header.goToExperiments")
@@ -463,7 +467,9 @@ const PlaygroundOutputActions = ({
                         createdExperiments[0].id,
                       ),
                     }}
-                    tooltipContent={t("playground.header.viewAllTracesForExperiment")}
+                    tooltipContent={t(
+                      "playground.header.viewAllTracesForExperiment",
+                    )}
                   />
                 </div>
               )}

@@ -352,7 +352,9 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
     : isClone
       ? t("common.automations.cloneEvaluationRule")
       : t("common.automations.createNewRule");
-  const submitText = isEdit ? t("common.automations.updateRule") : t("common.automations.createRule");
+  const submitText = isEdit
+    ? t("common.automations.updateRule")
+    : t("common.automations.createRule");
 
   const isCodeMetricEditBlock = !isCodeMetricEnabled && !isLLMJudge && isEdit;
 
@@ -375,8 +377,8 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
               variant="link"
               size="sm"
               className="px-0"
-              altText="Go to project"
-              key="Go to project"
+              altText={t("common.automations.goToProject")}
+              key="goToProject"
               onClick={() => {
                 navigate({
                   to: "/$workspaceName/projects/$projectId/traces",
@@ -395,7 +397,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                 });
               }}
             >
-              Go to project
+              {t("common.automations.goToProject")}
             </ToastAction>,
           ]
         : undefined;
@@ -405,7 +407,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
       description: explainer.description,
       actions,
     });
-  }, [navigate, toast, workspaceName, scope, formProjectIds]);
+  }, [navigate, t, toast, workspaceName, scope, formProjectIds]);
 
   const getRule = useCallback(() => {
     const formData = form.getValues();
@@ -582,7 +584,9 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                         <FormItem className="min-w-0 flex-1">
                           <Label className="flex items-center">
                             {t("common.annotationQueues.scope")}{" "}
-                            <TooltipWrapper content={t("common.automations.scopeTooltip")}>
+                            <TooltipWrapper
+                              content={t("common.automations.scopeTooltip")}
+                            >
                               <Info className="ml-1 size-4 text-light-slate" />
                             </TooltipWrapper>
                           </Label>
@@ -593,23 +597,27 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                               disabled={isEdit}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder={t("common.automations.selectScope")} />
+                                <SelectValue
+                                  placeholder={t(
+                                    "common.automations.selectScope",
+                                  )}
+                                />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value={EVALUATORS_RULE_SCOPE.trace}>
-                                  Trace
+                                  {t("common.automations.tracesCapitalized")}
                                 </SelectItem>
                                 <SelectItem
                                   value={EVALUATORS_RULE_SCOPE.thread}
                                 >
-                                  Thread
+                                  {t("common.automations.threadsCapitalized")}
                                 </SelectItem>
                                 {(isSpanLlmAsJudgeEnabled ||
                                   isSpanPythonCodeEnabled) && (
                                   <SelectItem
                                     value={EVALUATORS_RULE_SCOPE.span}
                                   >
-                                    Span
+                                    {t("common.automations.spansCapitalized")}
                                   </SelectItem>
                                 )}
                               </SelectContent>
@@ -698,7 +706,9 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                                   (isSpanScope && isSpanPythonCodeEnabled)) && (
                                   <ToggleGroupItem
                                     value={UI_EVALUATORS_RULE_TYPE.python_code}
-                                    aria-label={t("common.automations.codeMetric")}
+                                    aria-label={t(
+                                      "common.automations.codeMetric",
+                                    )}
                                   >
                                     {t("common.automations.codeMetric")}
                                   </ToggleGroupItem>
@@ -742,10 +752,14 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
           </DialogAutoScrollBody>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">{t("common.automations.cancel")}</Button>
+              <Button variant="outline">
+                {t("common.automations.cancel")}
+              </Button>
             </DialogClose>
             {isCodeMetricEditBlock ? (
-              <TooltipWrapper content={t("common.automations.codeMetricCannotBeUpdated")}>
+              <TooltipWrapper
+                content={t("common.automations.codeMetricCannotBeUpdated")}
+              >
                 <span>
                   <Button type="submit" disabled>
                     {submitText}

@@ -8,10 +8,12 @@
       "dashboards": "仪表盘",
       "prompts": "提示词库",
       "agent_runner": "Agent 工作台",
+      "agentPlayground": "Agent 工作台",
       "playground": "提示词工作台",
       "optimizations": "优化运行",
       "optimizationStudio": "优化工作台",
       "test_suites": "测试套件",
+      "testSuites": "测试套件",
       "datasets": "数据集",
       "experiments": "实验",
       "annotation_queues": "标注队列",
@@ -19,7 +21,8 @@
       "alerts": "告警",
       "workspace": "工作空间",
       "configuration": "配置",
-      "projects": "项目"
+      "projects": "项目",
+      "resolvedIssues": "已解决问题"
     },
     "sidebar": {
       "expandSidebar": "展开侧边栏",
@@ -84,7 +87,16 @@
       "resourceDashboards": "仪表盘",
       "resourceTestSuites": "测试套件",
       "resourceExperiments": "实验",
-      "resourceOptimizationRuns": "优化运行"
+      "resourceOptimizationRuns": "优化运行",
+      "resourceDatasets": "数据集",
+      "noPermissionsViewAlerts": "您没有权限在此工作空间中查看告警。",
+      "noPermissionsViewOnlineEvaluation": "您没有权限在此工作空间中查看在线评估。",
+      "noPermissionsUseAgentPlayground": "您没有权限在此工作空间中使用 Agent 工作台。",
+      "noPermissionsViewPromptLibrary": "您没有权限在此工作空间中查看提示词库。",
+      "resourceAlerts": "告警",
+      "resourceOnlineEvaluation": "在线评估",
+      "resourceAgentPlayground": "Agent 工作台",
+      "resourcePromptLibrary": "提示词库"
     },
     "projectSelector": {
       "loading": "加载中…",

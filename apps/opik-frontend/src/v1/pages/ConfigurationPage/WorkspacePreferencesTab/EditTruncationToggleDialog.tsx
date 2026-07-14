@@ -38,13 +38,21 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
 
     if (!newValue) {
       toast({
-        title: t("settings.workspacePreferences.truncationToggle.toastDisabledTitle"),
-        description: t("settings.workspacePreferences.truncationToggle.toastDisabledDescription"),
+        title: t(
+          "settings.workspacePreferences.truncationToggle.toastDisabledTitle",
+        ),
+        description: t(
+          "settings.workspacePreferences.truncationToggle.toastDisabledDescription",
+        ),
       });
     } else {
       toast({
-        title: t("settings.workspacePreferences.truncationToggle.toastEnabledTitle"),
-        description: t("settings.workspacePreferences.truncationToggle.toastEnabledDescription"),
+        title: t(
+          "settings.workspacePreferences.truncationToggle.toastEnabledTitle",
+        ),
+        description: t(
+          "settings.workspacePreferences.truncationToggle.toastEnabledDescription",
+        ),
       });
     }
   };
@@ -56,12 +64,19 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle>
-            {isDisabling ? t("settings.workspacePreferences.truncationToggle.disableTitle") : t("settings.workspacePreferences.truncationToggle.enableTitle")}
+            {isDisabling
+              ? t("settings.workspacePreferences.truncationToggle.disableTitle")
+              : t("settings.workspacePreferences.truncationToggle.enableTitle")}
           </DialogTitle>
           <DialogDescription>
             {isDisabling
-              ? t("settings.workspacePreferences.truncationToggle.disableDescription", { limit: TRUNCATION_DISABLED_MAX_PAGE_SIZE })
-              : t("settings.workspacePreferences.truncationToggle.enableDescription")}
+              ? t(
+                  "settings.workspacePreferences.truncationToggle.disableDescription",
+                  { limit: TRUNCATION_DISABLED_MAX_PAGE_SIZE },
+                )
+              : t(
+                  "settings.workspacePreferences.truncationToggle.enableDescription",
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -69,20 +84,32 @@ const EditTruncationToggleDialog: React.FC<EditTruncationToggleDialogProps> = ({
           <Alert variant="destructive" size="sm">
             <AlertTriangle />
             <AlertTitle size="sm" className="text-destructive">
-              {t("settings.workspacePreferences.truncationToggle.performanceImpactTitle")}
+              {t(
+                "settings.workspacePreferences.truncationToggle.performanceImpactTitle",
+              )}
             </AlertTitle>
             <AlertDescription size="sm" className="text-foreground">
-              {t("settings.workspacePreferences.truncationToggle.performanceImpactDescription")}
+              {t(
+                "settings.workspacePreferences.truncationToggle.performanceImpactDescription",
+              )}
             </AlertDescription>
           </Alert>
         )}
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("settings.workspacePreferences.cancel")}</Button>
+            <Button variant="outline">
+              {t("settings.workspacePreferences.cancel")}
+            </Button>
           </DialogClose>
           <Button variant="default" onClick={handleConfirm}>
-            {isDisabling ? t("settings.workspacePreferences.truncationToggle.disableButton") : t("settings.workspacePreferences.truncationToggle.enableButton")}
+            {isDisabling
+              ? t(
+                  "settings.workspacePreferences.truncationToggle.disableButton",
+                )
+              : t(
+                  "settings.workspacePreferences.truncationToggle.enableButton",
+                )}
           </Button>
         </DialogFooter>
       </DialogContent>

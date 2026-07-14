@@ -27,7 +27,8 @@ const PlaygroundProgressIndicator: React.FC = () => {
   );
 
   const phaseLabel =
-    (progressPhase && PHASE_LABELS[progressPhase]) || t("playground.progress.progress");
+    (progressPhase && PHASE_LABELS[progressPhase]) ||
+    t("playground.progress.progress");
 
   return (
     <div className="flex flex-col gap-2">
@@ -36,7 +37,8 @@ const PlaygroundProgressIndicator: React.FC = () => {
           {phaseLabel}
         </span>
         <span className="comet-body-s text-light-slate">
-          {progressCompleted}/{progressTotal} {t("playground.progress.completed")} ({progressPercentage}%)
+          {progressCompleted}/{progressTotal}{" "}
+          {t("playground.progress.completed")} ({progressPercentage}%)
         </span>
       </div>
       <div className="flex flex-1 items-center">

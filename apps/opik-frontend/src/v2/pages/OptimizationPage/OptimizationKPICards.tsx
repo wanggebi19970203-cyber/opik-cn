@@ -128,7 +128,8 @@ const OptimizationKPICards: React.FunctionComponent<
             kpiData.totalDuration != null &&
             kpiData.totalDuration > 0 && (
               <span className="comet-body-xs text-muted-slate">
-                {formatAsDuration(kpiData.totalDuration)} {t("optimization.kpi.total")}
+                {formatAsDuration(kpiData.totalDuration)}{" "}
+                {t("optimization.kpi.total")}
               </span>
             )
           )}

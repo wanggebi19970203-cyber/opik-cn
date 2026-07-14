@@ -17,7 +17,11 @@ import {
 
 const renderScalarValue = (v: BlueprintValue, t: (key: string) => string) => {
   if (v.value === null || v.value === undefined) {
-    return <div className="comet-body-xs text-light-slate">{t("common.messages.noValue")}</div>;
+    return (
+      <div className="comet-body-xs text-light-slate">
+        {t("common.messages.noValue")}
+      </div>
+    );
   }
   return (
     <div className="comet-body-s whitespace-pre-wrap break-words text-foreground">

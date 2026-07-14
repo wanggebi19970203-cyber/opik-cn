@@ -214,7 +214,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
               >
                 <ToggleGroupItem
                   value={PROMPT_TEMPLATE_STRUCTURE.TEXT}
-                  aria-label="Text prompt"
+                  aria-label={t("prompts:prompts.dropdown.textPrompt")}
                   className="gap-1.5"
                 >
                   <FileText className="size-3.5" />
@@ -222,7 +222,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value={PROMPT_TEMPLATE_STRUCTURE.CHAT}
-                  aria-label="Chat prompt"
+                  aria-label={t("prompts:prompts.dropdown.chatPrompt")}
                   className="gap-1.5"
                 >
                   <MessagesSquare className="size-3.5" />
@@ -238,7 +238,7 @@ const AddEditPromptDialog: React.FC<AddPromptDialogProps> = ({
             <TextPromptEditor
               value={localText}
               onChange={handleContentChange}
-              placeholder="Prompt"
+              placeholder={t("prompts:prompts.dropdown.prompt")}
             />
           )}
           {!isEdit && isChatPrompt && (

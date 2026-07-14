@@ -78,13 +78,13 @@ const FilterExperimentsToCompareDialog: React.FunctionComponent<
               <Checkbox
                 checked={checked}
                 onCheckedChange={() => checkboxChangeHandler(e)}
-                aria-label={t('selectExperiment')}
+                aria-label={t("selectExperiment")}
                 className="mt-0.5"
               />
               <span className="comet-body-s-accented truncate">{e.name}</span>
             </div>
             <div className="comet-body-s truncate pl-6 text-light-slate">
-              {t('testSuitePrefix')} {e.dataset_name ?? t('deletedTestSuite')}
+              {t("testSuitePrefix")} {e.dataset_name ?? t("deletedTestSuite")}
             </div>
           </div>
         </label>
@@ -96,21 +96,23 @@ const FilterExperimentsToCompareDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>{t('selectExperimentsToCompare')}</DialogTitle>
+          <DialogTitle>{t("selectExperimentsToCompare")}</DialogTitle>
         </DialogHeader>
         <div className="w-full overflow-hidden">
-          <ExplainerDescription description={t('compareExperimentsDescription')} />
+          <ExplainerDescription
+            description={t("compareExperimentsDescription")}
+          />
           <div className="my-4 flex max-h-[400px] min-h-36 max-w-full flex-col justify-stretch gap-2.5 overflow-y-auto">
             {renderListItems()}
           </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t('cancel')}</Button>
+            <Button variant="outline">{t("cancel")}</Button>
           </DialogClose>
           <DialogClose asChild>
             <Button type="submit" disabled={!isValid} onClick={compareHandler}>
-              {t('compareExperiments')}
+              {t("compareExperiments")}
             </Button>
           </DialogClose>
         </DialogFooter>

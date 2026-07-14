@@ -61,7 +61,7 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
   const renderMobileFrameworkSelector = () => (
     <div className="flex flex-col gap-1">
       <label className="comet-body-s-accented px-0.5 pb-0.5">
-        {t('integrationExplorer.selectFramework')}
+        {t("integrationExplorer.selectFramework")}
       </label>
       <Select value={integration.label} onValueChange={handleFrameworkSelect}>
         <SelectTrigger className="w-full">
@@ -83,7 +83,9 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
 
   const renderDesktopFrameworkSelector = () => (
     <>
-      <IntegrationTabs.Title>{t('integrationExplorer.selectFramework')}</IntegrationTabs.Title>
+      <IntegrationTabs.Title>
+        {t("integrationExplorer.selectFramework")}
+      </IntegrationTabs.Title>
       <IntegrationTabs>
         {integrationList.map((item, index) => (
           <IntegrationTabs.Item
@@ -102,7 +104,7 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
           target="_blank"
           rel="noreferrer"
         >
-          {t('integrationExplorer.exploreAllIntegrations')}
+          {t("integrationExplorer.exploreAllIntegrations")}
           <ExternalLink className="ml-2 size-4 shrink-0" />
         </a>
       </Button>

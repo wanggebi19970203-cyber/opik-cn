@@ -6,16 +6,13 @@
       "title": "No signals yet",
       "description": "Signals will appear here."
     },
-    "page": {
-      "lastScan": "Last scan: {{date}}",
-      "noRunsYet": "No runs yet",
-      "runDiagnostic": "Run diagnostic",
-      "resolvedIssues": "Resolved issues",
-      "diagnostics": "Diagnostics",
-      "autoDaily": "Auto · Daily",
-      "manual": "Manual",
-      "settings": "Settings",
-      "turnOnAutoDiagnostic": "Turn on auto-diagnostic"
+    "emptyState": {
+      "title": "Catch issues before your users do",
+      "description": "We'll scan your traces every day and flag anything worth your attention — tool loops, hallucinations, slow retrievals.",
+      "turnOnDiagnostics": "Turn on diagnostics",
+      "turnOnDiagnosticsDescription": "Works best with 100+ traces from the past 7 days.",
+      "viewDocs": "View docs",
+      "viewDocsDescription": "See how diagnostics works"
     },
     "diagnosticsSettings": {
       "title": "Diagnostics settings",
@@ -43,12 +40,34 @@
       "autoDaily": "Auto \u00b7 Daily",
       "manual": "Manual",
       "settings": "Settings",
-      "turnOnAutoDiagnostic": "Turn on auto-diagnostic"
+      "turnOnAutoDiagnostic": "Turn on auto-diagnostic",
+      "backToDiagnostics": "Back to diagnostics"
     },
     "stats": {
       "affectedTraces": "Affected traces",
       "openIssues": "Open issues",
       "resolvedThisWeek": "Resolved this week"
+    },
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "runFailure": {
+      "couldNotRun": "Diagnostics couldn't run",
+      "outOfCredits": "You're out of LLM credits. Add credits and try again.",
+      "rateLimited": "The LLM provider is rate-limiting requests — try again shortly.",
+      "providerError": "LLM provider error",
+      "providerErrorDescription": "The LLM provider returned an error mid-run. This is usually temporary — try again.",
+      "didNotStart": "Diagnostics couldn't start",
+      "didNotStartDescription": "The run was never picked up (the service may have been restarting). Try again.",
+      "permissionDenied": "Diagnostics couldn't access this project",
+      "permissionDeniedDescription": "Agent Insights is missing the workspace permission needed to read this project's data. Contact your workspace admin.",
+      "internalError": "Diagnostics run failed",
+      "internalErrorDescription": "An unexpected error stopped the run. Try again; if it keeps failing, contact support.",
+      "defaultError": "Diagnostics run failed",
+      "defaultErrorDescription": "Something went wrong while running diagnostics — try again."
     },
     "issues": {
       "sortByLastSeen": "By last seen",
@@ -65,7 +84,21 @@
       "backToOpenIssues": "Back to open issues",
       "allClear": "All clear",
       "allClearDescription": "Run a new diagnostic to check for anything new.",
-      "runDiagnostic": "Run diagnostic"
+      "runDiagnostic": "Run diagnostic",
+      "hideDetails": "Hide details",
+      "showDetails": "Show details",
+      "tryAgain": "Try again",
+      "staleBanner": {
+        "title": "Results might be outdated",
+        "lastRan_one": "Last diagnostic ran over {{days}} day ago.",
+        "lastRan_other": "Last diagnostic ran over {{days}} days ago.",
+        "analyze_one": "Run a new one to analyze {{traceCount}} trace from the last 24 hours.",
+        "analyze_other": "Run a new one to analyze {{traceCount}} traces from the last 24 hours."
+      }
+    },
+    "issueListItem": {
+      "occurrences": "Occurrences:",
+      "lastSeen": "Last seen:"
     },
     "issueDetail": {
       "resolve": "Resolve",
@@ -82,6 +115,18 @@
     },
     "occurrenceChart": {
       "label": "Occurrences"
+    },
+    "upgrade": "Upgrade",
+    "retentionBanner": {
+      "hitPlanLimits": "You've hit your plan limits.",
+      "upgradeYourPlan": "Upgrade your plan",
+      "nowToKeepMonitoring": "now to keep monitoring running smoothly.",
+      "hitPlanLimitsAskAdmin": "You've hit your plan limits. To keep monitoring running, ask your organization",
+      "admin": "admin",
+      "admins": "admins",
+      "toUpgradeYourPlan": "to upgrade your plan.",
+      "at80Percent": "You're at 80% of your {{limit}} free spans. Upgrade to ensure",
+      "uninterruptedMonitoring": "uninterrupted monitoring"
     }
   }
 }

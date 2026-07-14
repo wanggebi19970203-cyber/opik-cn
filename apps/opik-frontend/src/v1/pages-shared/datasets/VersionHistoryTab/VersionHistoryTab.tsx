@@ -31,49 +31,52 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
 const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
   const { t } = useTranslation("datasets");
 
-  const COLUMNS: ColumnData<DatasetVersion>[] = useMemo(() => [
-    {
-      id: "version_name",
-      label: t("datasets.versionHistoryTab.version"),
-      type: COLUMN_TYPE.string,
-    },
-    {
-      id: "change_summary",
-      label: t("datasets.versionHistoryTab.changesSummary"),
-      type: COLUMN_TYPE.string,
-      iconType: COLUMN_TYPE.list,
-      cell: VersionChangeSummaryCell as never,
-    },
-    {
-      id: "change_description",
-      label: t("datasets.versionHistoryTab.versionNote"),
-      type: COLUMN_TYPE.string,
-    },
-    {
-      id: "tags",
-      label: t("datasets.versionHistoryTab.tags"),
-      type: COLUMN_TYPE.list,
-      iconType: "tags",
-      cell: ListCell as never,
-    },
-    {
-      id: "items_total",
-      label: t("datasets.versionHistoryTab.itemCount"),
-      type: COLUMN_TYPE.number,
-      accessorFn: (row) => row.items_total.toLocaleString(),
-    },
-    {
-      id: "created_at",
-      label: t("datasets.versionHistoryTab.createdAt"),
-      type: COLUMN_TYPE.time,
-      cell: TimeCell as never,
-    },
-    {
-      id: "created_by",
-      label: t("datasets.versionHistoryTab.createdBy"),
-      type: COLUMN_TYPE.string,
-    },
-  ], [t]);
+  const COLUMNS: ColumnData<DatasetVersion>[] = useMemo(
+    () => [
+      {
+        id: "version_name",
+        label: t("datasets.versionHistoryTab.version"),
+        type: COLUMN_TYPE.string,
+      },
+      {
+        id: "change_summary",
+        label: t("datasets.versionHistoryTab.changesSummary"),
+        type: COLUMN_TYPE.string,
+        iconType: COLUMN_TYPE.list,
+        cell: VersionChangeSummaryCell as never,
+      },
+      {
+        id: "change_description",
+        label: t("datasets.versionHistoryTab.versionNote"),
+        type: COLUMN_TYPE.string,
+      },
+      {
+        id: "tags",
+        label: t("datasets.versionHistoryTab.tags"),
+        type: COLUMN_TYPE.list,
+        iconType: "tags",
+        cell: ListCell as never,
+      },
+      {
+        id: "items_total",
+        label: t("datasets.versionHistoryTab.itemCount"),
+        type: COLUMN_TYPE.number,
+        accessorFn: (row) => row.items_total.toLocaleString(),
+      },
+      {
+        id: "created_at",
+        label: t("datasets.versionHistoryTab.createdAt"),
+        type: COLUMN_TYPE.time,
+        cell: TimeCell as never,
+      },
+      {
+        id: "created_by",
+        label: t("datasets.versionHistoryTab.createdBy"),
+        type: COLUMN_TYPE.string,
+      },
+    ],
+    [t],
+  );
   const {
     permissions: { canEditDatasets },
   } = usePermissions();
@@ -113,7 +116,7 @@ const VersionHistoryTab: React.FC<VersionHistoryTabProps> = ({ datasetId }) => {
     }
 
     return baseColumns;
-  }, [datasetId, canEditDatasets]);
+  }, [COLUMNS, datasetId, canEditDatasets]);
 
   const data = versionsData?.content || [];
   const total = versionsData?.total ?? 0;

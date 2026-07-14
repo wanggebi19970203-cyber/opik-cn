@@ -30,9 +30,7 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h3 className="comet-body-accented">{t("alerts.webhook.title")}</h3>
-        <Description>
-          {t("alerts.webhook.description")}
-        </Description>
+        <Description>{t("alerts.webhook.description")}</Description>
       </div>
 
       <FormField
@@ -108,7 +106,9 @@ const WebhookSettings: React.FC<WebhookSettingsProps> = ({ form }) => {
 
       <Accordion type="single" collapsible defaultValue="">
         <AccordionItem value="advanced" className="border-t">
-          <AccordionTrigger>{t("alerts.webhook.advancedSettings")}</AccordionTrigger>
+          <AccordionTrigger>
+            {t("alerts.webhook.advancedSettings")}
+          </AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4 px-3">
               <FormField

@@ -22,15 +22,27 @@ import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 
 const OPTIONS: DropdownOption<TREE_DATABLOCK_TYPE>[] = [
   { label: "treeToolbar.duration", value: TREE_DATABLOCK_TYPE.DURATION },
-  { label: "treeToolbar.numberOfTokens", value: TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS },
-  { label: "treeToolbar.tokensBreakdown", value: TREE_DATABLOCK_TYPE.TOKENS_BREAKDOWN },
+  {
+    label: "treeToolbar.numberOfTokens",
+    value: TREE_DATABLOCK_TYPE.NUMBERS_OF_TOKENS,
+  },
+  {
+    label: "treeToolbar.tokensBreakdown",
+    value: TREE_DATABLOCK_TYPE.TOKENS_BREAKDOWN,
+  },
   { label: "treeToolbar.cost", value: TREE_DATABLOCK_TYPE.ESTIMATED_COST },
-  { label: "treeToolbar.numberOfScores", value: TREE_DATABLOCK_TYPE.NUMBER_OF_SCORES },
+  {
+    label: "treeToolbar.numberOfScores",
+    value: TREE_DATABLOCK_TYPE.NUMBER_OF_SCORES,
+  },
   {
     label: "treeToolbar.numberOfComments",
     value: TREE_DATABLOCK_TYPE.NUMBER_OF_COMMENTS,
   },
-  { label: "treeToolbar.numberOfTags", value: TREE_DATABLOCK_TYPE.NUMBER_OF_TAGS },
+  {
+    label: "treeToolbar.numberOfTags",
+    value: TREE_DATABLOCK_TYPE.NUMBER_OF_TAGS,
+  },
   { label: "treeToolbar.model", value: TREE_DATABLOCK_TYPE.MODEL },
 ];
 
@@ -51,7 +63,10 @@ const SpanDetailsButton: React.FC<SpanDetailsButtonProps> = ({
   const options = useMemo(() => {
     return isGuardrailsEnabled
       ? [
-          { label: t("treeToolbar.guardrails"), value: TREE_DATABLOCK_TYPE.GUARDRAILS },
+          {
+            label: t("treeToolbar.guardrails"),
+            value: TREE_DATABLOCK_TYPE.GUARDRAILS,
+          },
           ...OPTIONS,
         ]
       : OPTIONS;

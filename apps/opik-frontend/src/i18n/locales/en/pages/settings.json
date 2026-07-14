@@ -29,6 +29,7 @@
       },
       "columns": {
         "name": "Feedback score",
+        "id": "ID",
         "description": "Description",
         "type": "Type",
         "values": "Values",
@@ -90,6 +91,7 @@
       "atLimitTooltip": "A workspace can have up to {{limit}} environments. Delete an existing one to create a new environment.",
       "columns": {
         "name": "Name",
+        "id": "ID",
         "description": "Description",
         "created_at": "Created",
         "created_by": "Created by"
@@ -120,7 +122,10 @@
         "updateButton": "Update cooldown period",
         "toastTitle": "Thread cooldown period updated",
         "toastDescription": "Thread online scoring rules will wait {{duration}} after the last activity before evaluating threads.",
-        "goToProjects": "Go to projects"
+        "goToProjects": "Go to projects",
+        "validation": {
+          "maxDuration": "Please select a valid timeout duration (maximum 7 days)"
+        }
       },
       "truncationToggle": {
         "name": "Data truncation in tables",
@@ -145,5 +150,23 @@
       },
       "cancel": "Cancel"
     }
+  },
+  "environmentDialog": {
+    "createTitle": "Create environment",
+    "editTitle": "Edit environment",
+    "cloneTitle": "Clone environment",
+    "createSubmit": "Create environment",
+    "updateSubmit": "Update environment",
+    "nameLabel": "Name",
+    "namePlaceholder": "Environment name",
+    "nameHint": "Use lowercase letters, numbers, and hyphens",
+    "nameMaxLengthError": "Name must be {{max}} characters or less",
+    "namePatternError": "Name must start with a letter and contain only lowercase letters, numbers, and hyphens",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Environment description",
+    "cancel": "Cancel",
+    "colorLockedTooltip": "Color is locked for default environments",
+    "changeColor": "Change color",
+    "defaultColorAria": "Default environment color (locked)"
   }
 }

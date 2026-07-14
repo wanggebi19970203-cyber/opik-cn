@@ -9,7 +9,9 @@ const TruncationDisabledWarning: React.FC = () => {
 
   return (
     <TruncationConfigPopover
-      message={t("common.messages.paginationLimitedTo", { count: TRUNCATION_DISABLED_MAX_PAGE_SIZE })}
+      message={t("common.messages.paginationLimitedTo", {
+        count: TRUNCATION_DISABLED_MAX_PAGE_SIZE,
+      })}
     >
       <div className="flex cursor-help items-center gap-1 text-xs text-muted-foreground">
         <span>{t("common.labels.paginationLimited")}</span>

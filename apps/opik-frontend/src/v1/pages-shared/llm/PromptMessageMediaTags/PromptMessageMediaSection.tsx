@@ -43,7 +43,9 @@ const PromptMessageMediaSection: React.FC<PromptMessageMediaSectionProps> = ({
       <div className="group flex items-center gap-2">
         <div className="flex items-center gap-1">
           <Paperclip className="size-3.5" />
-          <span className="comet-body-s">{t("promptMessageMediaSection.addFile")}</span>
+          <span className="comet-body-s">
+            {t("promptMessageMediaSection.addFile")}
+          </span>
         </div>
         <div
           className={cn(

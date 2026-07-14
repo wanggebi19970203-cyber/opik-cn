@@ -69,7 +69,7 @@ const MessageBlock: React.FC<{ message: MessageEntry }> = ({ message }) => {
           onClick={() => setExpanded((prev) => !prev)}
           className="comet-body-s mt-1 text-[hsl(var(--primary))] hover:underline"
         >
-          {expanded ? t('showLess') : t('seeMore')}
+          {expanded ? t("showLess") : t("seeMore")}
         </button>
       )}
     </div>
@@ -168,7 +168,7 @@ const TrialConfigurationSection: React.FC<TrialConfigurationSectionProps> = ({
   studioConfig,
 }) => {
   const { t } = useTranslation("experiments");
-  const resolvedTitle = title ?? t('configuration');
+  const resolvedTitle = title ?? t("configuration");
   const [viewMode, setViewMode] = useState<ConfigViewMode>(
     CONFIG_VIEW_MODE.CONFIG,
   );
@@ -256,18 +256,18 @@ const TrialConfigurationSection: React.FC<TrialConfigurationSectionProps> = ({
           >
             <ToggleGroupItem value={CONFIG_VIEW_MODE.CONFIG}>
               <List className="mr-1 size-3.5" />
-              {t('configuration')}
+              {t("configuration")}
             </ToggleGroupItem>
             {hasDiffBaseline && (
               <ToggleGroupItem value={CONFIG_VIEW_MODE.DIFF_BASELINE}>
                 <GitCompareArrows className="mr-1 size-3.5" />
-                {t('diffVsBaseline')}
+                {t("diffVsBaseline")}
               </ToggleGroupItem>
             )}
             {hasDiffParent && (
               <ToggleGroupItem value={CONFIG_VIEW_MODE.DIFF_PARENT}>
                 <GitCompareArrows className="mr-1 size-3.5" />
-                {t('diffVsParent')}
+                {t("diffVsParent")}
               </ToggleGroupItem>
             )}
           </ToggleGroup>

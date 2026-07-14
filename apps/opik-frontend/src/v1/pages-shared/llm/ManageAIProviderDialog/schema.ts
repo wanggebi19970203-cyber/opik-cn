@@ -63,7 +63,9 @@ export const createCustomProviderDetailsFormSchema = (
 
             return modelsArray.length === uniq(modelsArray).length;
           },
-          { message: i18next.t("common:validation.allModelNamesShouldBeUnique") },
+          {
+            message: i18next.t("common:validation.allModelNamesShouldBeUnique"),
+          },
         ),
       headers: z
         .array(

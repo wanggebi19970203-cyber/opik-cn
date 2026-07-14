@@ -89,7 +89,8 @@ export const LoadableSelectBox = ({
 }: LoadableSelectBoxProps) => {
   const { t } = useTranslation("common");
   const resolvedPlaceholder = placeholder ?? t("selectBox.selectValue");
-  const resolvedSearchPlaceholder = searchPlaceholder ?? t("placeholders.search");
+  const resolvedSearchPlaceholder =
+    searchPlaceholder ?? t("placeholders.search");
   const showSelectAll =
     multiselect && "showSelectAll" in props ? props.showSelectAll : false;
   const selectAllLabel =
@@ -447,7 +448,10 @@ export const LoadableSelectBox = ({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="comet-body-s truncate">
-                      {t("selectBox.selected", { selected: filteredSelectedCount, total: filteredOptions.length })}
+                      {t("selectBox.selected", {
+                        selected: filteredSelectedCount,
+                        total: filteredOptions.length,
+                      })}
                     </div>
                   </div>
                 </div>

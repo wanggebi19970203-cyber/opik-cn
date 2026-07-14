@@ -133,7 +133,9 @@ const FilterManagerPopover: React.FC<FilterManagerPopoverProps> = ({
               </DropdownMenuLabel>
               {visiblePinned.map((def) => {
                 const isActive = chipHasAppliedValue(def, values[def.id]);
-                const tooltip = isActive ? t("filterManagerPopover.unpinAndClearFilter") : t("filterManagerPopover.unpin");
+                const tooltip = isActive
+                  ? t("filterManagerPopover.unpinAndClearFilter")
+                  : t("filterManagerPopover.unpin");
                 return (
                   <TooltipWrapper key={def.id} content={tooltip}>
                     <DropdownMenuItem

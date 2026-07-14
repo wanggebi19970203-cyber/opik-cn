@@ -32,10 +32,14 @@ export const PLAYGROUND_PROMPT_COLORS = [
 
 export const LLM_MESSAGE_ROLE_NAME_MAP = {
   [LLM_MESSAGE_ROLE.system]: i18next.t("common.constants.llm.roles.system"),
-  [LLM_MESSAGE_ROLE.assistant]: i18next.t("common.constants.llm.roles.assistant"),
+  [LLM_MESSAGE_ROLE.assistant]: i18next.t(
+    "common.constants.llm.roles.assistant",
+  ),
   [LLM_MESSAGE_ROLE.user]: i18next.t("common.constants.llm.roles.user"),
   [LLM_MESSAGE_ROLE.ai]: "AI",
-  [LLM_MESSAGE_ROLE.tool_execution_result]: i18next.t("common.constants.llm.roles.toolExecutionResult"),
+  [LLM_MESSAGE_ROLE.tool_execution_result]: i18next.t(
+    "common.constants.llm.roles.toolExecutionResult",
+  ),
 };
 
 /**
@@ -298,7 +302,10 @@ export const THINKING_LEVEL_OPTIONS_PRO: Array<{
   value: "low" | "high";
 }> = [
   { label: i18next.t("common.constants.llm.thinkingLevels.low"), value: "low" },
-  { label: i18next.t("common.constants.llm.thinkingLevels.highDefault"), value: "high" },
+  {
+    label: i18next.t("common.constants.llm.thinkingLevels.highDefault"),
+    value: "high",
+  },
 ];
 
 // Thinking level options for Gemini 3 Flash models (all 4 levels)
@@ -307,10 +314,19 @@ export const THINKING_LEVEL_OPTIONS_FLASH: Array<{
   label: string;
   value: "minimal" | "low" | "medium" | "high";
 }> = [
-  { label: i18next.t("common.constants.llm.thinkingLevels.minimal"), value: "minimal" },
+  {
+    label: i18next.t("common.constants.llm.thinkingLevels.minimal"),
+    value: "minimal",
+  },
   { label: i18next.t("common.constants.llm.thinkingLevels.low"), value: "low" },
-  { label: i18next.t("common.constants.llm.thinkingLevels.medium"), value: "medium" },
-  { label: i18next.t("common.constants.llm.thinkingLevels.highDefault"), value: "high" },
+  {
+    label: i18next.t("common.constants.llm.thinkingLevels.medium"),
+    value: "medium",
+  },
+  {
+    label: i18next.t("common.constants.llm.thinkingLevels.highDefault"),
+    value: "high",
+  },
 ];
 
 // Legacy export for backwards compatibility.
@@ -320,7 +336,9 @@ export const THINKING_LEVEL_OPTIONS = THINKING_LEVEL_OPTIONS_PRO;
 
 export const LLM_PROMPT_CUSTOM_TRACE_TEMPLATE: LLMPromptTemplate = {
   label: i18next.t("common.constants.llm.templates.customLlmAsJudge"),
-  description: i18next.t("common.constants.llm.templates.customLlmAsJudgeDescription"),
+  description: i18next.t(
+    "common.constants.llm.templates.customLlmAsJudgeDescription",
+  ),
   value: LLM_JUDGE.custom,
   messages: [
     {
@@ -342,9 +360,10 @@ export const LLM_PROMPT_CUSTOM_TRACE_TEMPLATE: LLMPromptTemplate = {
   },
   schema: [
     {
-      name: "Correctness",
-      description:
-        "Whether the assistant's output effectively addresses the user's input",
+      name: i18next.t("common.constants.llm.schemaNames.correctness"),
+      description: i18next.t(
+        "common.constants.llm.schemaDescriptions.correctness",
+      ),
       type: LLM_SCHEMA_TYPE.BOOLEAN,
       unsaved: false,
     },
@@ -353,7 +372,9 @@ export const LLM_PROMPT_CUSTOM_TRACE_TEMPLATE: LLMPromptTemplate = {
 
 export const LLM_PROMPT_CUSTOM_SPAN_TEMPLATE: LLMPromptTemplate = {
   label: i18next.t("common.constants.llm.templates.customLlmAsJudge"),
-  description: i18next.t("common.constants.llm.templates.customLlmAsJudgeDescription"),
+  description: i18next.t(
+    "common.constants.llm.templates.customLlmAsJudgeDescription",
+  ),
   value: LLM_JUDGE.custom,
   messages: [
     {
@@ -375,9 +396,10 @@ export const LLM_PROMPT_CUSTOM_SPAN_TEMPLATE: LLMPromptTemplate = {
   },
   schema: [
     {
-      name: "Correctness",
-      description:
-        "Whether the span's output effectively addresses the span's input",
+      name: i18next.t("common.constants.llm.schemaNames.correctness"),
+      description: i18next.t(
+        "common.constants.llm.schemaDescriptions.correctnessSpan",
+      ),
       type: LLM_SCHEMA_TYPE.BOOLEAN,
       unsaved: false,
     },
@@ -386,7 +408,9 @@ export const LLM_PROMPT_CUSTOM_SPAN_TEMPLATE: LLMPromptTemplate = {
 
 export const LLM_PROMPT_CUSTOM_THREAD_TEMPLATE: LLMPromptTemplate = {
   label: i18next.t("common.constants.llm.templates.customLlmAsJudge"),
-  description: i18next.t("common.constants.llm.templates.customLlmAsJudgeDescription"),
+  description: i18next.t(
+    "common.constants.llm.templates.customLlmAsJudgeDescription",
+  ),
   value: LLM_JUDGE.custom,
   messages: [
     {
@@ -465,9 +489,10 @@ export const LLM_PROMPT_CUSTOM_THREAD_TEMPLATE: LLMPromptTemplate = {
   },
   schema: [
     {
-      name: "Relevance",
-      description:
-        "Whether the LLM response is relevant to the conversation context",
+      name: i18next.t("common.constants.llm.schemaNames.relevance"),
+      description: i18next.t(
+        "common.constants.llm.schemaDescriptions.relevance",
+      ),
       type: LLM_SCHEMA_TYPE.BOOLEAN,
       unsaved: false,
     },
@@ -478,7 +503,9 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
   LLM_PROMPT_CUSTOM_TRACE_TEMPLATE,
   {
     label: i18next.t("common.constants.llm.templates.hallucination"),
-    description: i18next.t("common.constants.llm.templates.hallucinationDescription"),
+    description: i18next.t(
+      "common.constants.llm.templates.hallucinationDescription",
+    ),
     value: LLM_JUDGE.hallucination,
     messages: [
       {
@@ -518,9 +545,10 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "Hallucination",
-        description:
-          "Hallucination score identifies factual errors in the response",
+        name: i18next.t("common.constants.llm.schemaNames.hallucination"),
+        description: i18next.t(
+          "common.constants.llm.schemaDescriptions.hallucination",
+        ),
         type: LLM_SCHEMA_TYPE.DOUBLE,
         unsaved: false,
       },
@@ -528,7 +556,9 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
   },
   {
     label: i18next.t("common.constants.llm.templates.moderation"),
-    description: i18next.t("common.constants.llm.templates.moderationDescription"),
+    description: i18next.t(
+      "common.constants.llm.templates.moderationDescription",
+    ),
     value: LLM_JUDGE.moderation,
     messages: [
       {
@@ -568,9 +598,10 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "Moderation",
-        description:
-          "Moderation score identifies harmful content in the response",
+        name: i18next.t("common.constants.llm.schemaNames.moderation"),
+        description: i18next.t(
+          "common.constants.llm.schemaDescriptions.moderation",
+        ),
         type: LLM_SCHEMA_TYPE.DOUBLE,
         unsaved: false,
       },
@@ -578,7 +609,9 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
   },
   {
     label: i18next.t("common.constants.llm.templates.answerRelevance"),
-    description: i18next.t("common.constants.llm.templates.answerRelevanceDescription"),
+    description: i18next.t(
+      "common.constants.llm.templates.answerRelevanceDescription",
+    ),
     value: LLM_JUDGE.answer_relevance,
     messages: [
       {
@@ -639,17 +672,22 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "Answer relevance",
-        description:
-          "Answer relevance score checks if the output is relevant to the question",
+        name: i18next.t("common.constants.llm.schemaNames.answerRelevance"),
+        description: i18next.t(
+          "common.constants.llm.schemaDescriptions.answerRelevance",
+        ),
         type: LLM_SCHEMA_TYPE.INTEGER,
         unsaved: false,
       },
     ],
   },
   {
-    label: i18next.t("common.constants.llm.templates.structuredOutputCompliance"),
-    description: i18next.t("common.constants.llm.templates.structuredOutputComplianceDescription"),
+    label: i18next.t(
+      "common.constants.llm.templates.structuredOutputCompliance",
+    ),
+    description: i18next.t(
+      "common.constants.llm.templates.structuredOutputComplianceDescription",
+    ),
     value: LLM_JUDGE.structure_compliance,
     messages: [
       {
@@ -674,9 +712,10 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "Structure Compliance",
-        description:
-          "Returns True if the output follows the expected structure",
+        name: i18next.t("common.constants.llm.schemaNames.structureCompliance"),
+        description: i18next.t(
+          "common.constants.llm.schemaDescriptions.structureCompliance",
+        ),
         type: LLM_SCHEMA_TYPE.BOOLEAN,
         unsaved: false,
       },
@@ -684,7 +723,9 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
   },
   {
     label: i18next.t("common.constants.llm.templates.meaningMatch"),
-    description: i18next.t("common.constants.llm.templates.meaningMatchDescription"),
+    description: i18next.t(
+      "common.constants.llm.templates.meaningMatchDescription",
+    ),
     value: LLM_JUDGE.meaning_match,
     messages: [
       {
@@ -742,8 +783,10 @@ export const LLM_PROMPT_TRACE_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "Meaning Match",
-        description: "Whether the output semantically matches the ground truth",
+        name: i18next.t("common.constants.llm.templates.meaningMatch"),
+        description: i18next.t(
+          "common.constants.llm.templates.meaningMatchDescription",
+        ),
         type: LLM_SCHEMA_TYPE.BOOLEAN,
         unsaved: false,
       },
@@ -755,7 +798,9 @@ export const LLM_PROMPT_THREAD_TEMPLATES: LLMPromptTemplate[] = [
   LLM_PROMPT_CUSTOM_THREAD_TEMPLATE,
   {
     label: i18next.t("common.constants.llm.templates.conversationalCoherence"),
-    description: i18next.t("common.constants.llm.templates.conversationalCoherenceDescription"),
+    description: i18next.t(
+      "common.constants.llm.templates.conversationalCoherenceDescription",
+    ),
     value: LLM_JUDGE.conversational_coherence,
     messages: [
       {
@@ -837,9 +882,10 @@ export const LLM_PROMPT_THREAD_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "Answer relevance",
-        description:
-          "Answer relevance score checks if the output is relevant to the question",
+        name: i18next.t("common.constants.llm.schemaNames.answerRelevance"),
+        description: i18next.t(
+          "common.constants.llm.schemaDescriptions.answerRelevance",
+        ),
         type: LLM_SCHEMA_TYPE.INTEGER,
         unsaved: false,
       },
@@ -847,7 +893,9 @@ export const LLM_PROMPT_THREAD_TEMPLATES: LLMPromptTemplate[] = [
   },
   {
     label: i18next.t("common.constants.llm.templates.userFrustration"),
-    description: i18next.t("common.constants.llm.templates.userFrustrationDescription"),
+    description: i18next.t(
+      "common.constants.llm.templates.userFrustrationDescription",
+    ),
     value: LLM_JUDGE.user_frustration,
     messages: [
       {
@@ -920,9 +968,10 @@ export const LLM_PROMPT_THREAD_TEMPLATES: LLMPromptTemplate[] = [
     },
     schema: [
       {
-        name: "User frustration",
-        description:
-          "User frustration score checks if the output is frustrating to the user",
+        name: i18next.t("common.constants.llm.schemaNames.userFrustration"),
+        description: i18next.t(
+          "common.constants.llm.schemaDescriptions.userFrustration",
+        ),
         type: LLM_SCHEMA_TYPE.INTEGER,
         unsaved: false,
       },

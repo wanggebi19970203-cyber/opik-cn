@@ -19,7 +19,9 @@ export const BreakdownConfigSchema = z
       return true;
     },
     {
-      message: i18next.t("common:validation.metadataKeyRequiredWhenGroupByMetadata"),
+      message: i18next.t(
+        "common:validation.metadataKeyRequiredWhenGroupByMetadata",
+      ),
       path: ["metadataKey"],
     },
   );

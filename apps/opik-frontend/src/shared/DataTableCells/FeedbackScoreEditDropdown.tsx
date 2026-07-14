@@ -111,7 +111,9 @@ const FeedbackScoreEditDropdown: React.FC<FeedbackScoreEditDropdownProps> = ({
             e.stopPropagation();
           }}
         >
-          <TooltipWrapper content={t("common:feedbackScoreEdit.clickToEditScore")}>
+          <TooltipWrapper
+            content={t("common:feedbackScoreEdit.clickToEditScore")}
+          >
             <Pencil className={size === "sm" ? "size-2.5" : "size-3"} />
           </TooltipWrapper>
         </Button>

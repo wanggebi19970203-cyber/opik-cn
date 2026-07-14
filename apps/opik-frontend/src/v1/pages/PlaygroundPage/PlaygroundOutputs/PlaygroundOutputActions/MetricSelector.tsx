@@ -134,7 +134,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
       return t("playground.metricSelector.selectMetrics");
     }
     return selectedRules.map((rule) => rule.name).join(", ");
-  }, [isAllSelected, selectedRules, rules.length, datasetId]);
+  }, [isAllSelected, selectedRules, rules.length, datasetId, t]);
 
   const tooltipContent = useMemo(() => {
     if (!datasetId && rules.length > 0) {
@@ -144,7 +144,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
       return selectedRules.map((rule) => rule.name).join(", ");
     }
     return null;
-  }, [datasetId, rules.length, selectedRules]);
+  }, [datasetId, rules.length, selectedRules, t]);
 
   const isSelected = useCallback(
     (ruleId: string) => {
@@ -246,7 +246,9 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                     </div>
                   </TooltipWrapper>
                   <div className="flex shrink-0 items-center justify-center rounded">
-                    <TooltipWrapper content={t("playground.metricSelector.openInNewTab")}>
+                    <TooltipWrapper
+                      content={t("playground.metricSelector.openInNewTab")}
+                    >
                       <Button
                         type="button"
                         variant="minimal"
@@ -293,7 +295,9 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
                   onCheckedChange={(checked) => handleSelectAll(checked)}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="comet-body-s truncate">{t("playground.metricSelector.selectAll")}</div>
+                  <div className="comet-body-s truncate">
+                    {t("playground.metricSelector.selectAll")}
+                  </div>
                 </div>
               </div>
             </>

@@ -65,10 +65,12 @@ const COLUMNS_ORDER_KEY = "prompts-columns-order";
 const COLUMNS_SORT_KEY = "prompts-columns-sort";
 const PAGINATION_SIZE_KEY = "prompts-pagination-size";
 
-export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
+export const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<Prompt>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("columns.name"),
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
     sortable: true,
@@ -81,7 +83,7 @@ export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
   },
   {
     id: "template_structure",
-    label: "Type",
+    label: t("columns.type"),
     type: COLUMN_TYPE.category,
     cell: PromptTypeCell as never,
     size: 80,
@@ -95,45 +97,47 @@ export const DEFAULT_COLUMNS: ColumnData<Prompt>[] = [
   },
   {
     id: "description",
-    label: "Description",
+    label: t("columns.description"),
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
   },
   {
     id: "version_count",
-    label: "Versions",
+    label: t("columns.versions"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("columns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("columns.created"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
 
-export const FILTER_COLUMNS: ColumnData<Prompt>[] = [
+export const getFilterColumns = (
+  t: (key: string) => string,
+): ColumnData<Prompt>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
@@ -143,38 +147,38 @@ export const FILTER_COLUMNS: ColumnData<Prompt>[] = [
   },
   {
     id: "description",
-    label: "Description",
+    label: t("columns.description"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "template_structure",
-    label: "Type",
+    label: t("columns.type"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "version_count",
-    label: "Versions",
+    label: t("columns.versions"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("columns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("columns.lastUpdated"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("columns.created"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -302,7 +306,7 @@ const PromptsPage: React.FunctionComponent = () => {
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<Prompt>(),
-      ...convertColumnDataToColumn<Prompt, Prompt>(DEFAULT_COLUMNS, {
+      ...convertColumnDataToColumn<Prompt, Prompt>(getDefaultColumns(t), {
         columnsOrder,
         selectedColumns,
         sortableColumns: sortableBy,
@@ -311,7 +315,7 @@ const PromptsPage: React.FunctionComponent = () => {
         cell: PromptRowActionsCell,
       }),
     ];
-  }, [sortableBy, columnsOrder, selectedColumns]);
+  }, [sortableBy, columnsOrder, selectedColumns, t]);
 
   const sortConfig = useMemo(
     () => ({
@@ -378,7 +382,9 @@ const PromptsPage: React.FunctionComponent = () => {
               >
                 <FileText className="mr-2 size-4 shrink-0 text-[var(--color-turquoise)]" />
                 <div className="flex flex-col">
-                  <span className="comet-body-s-accented">{t("dropdown.textPrompt")}</span>
+                  <span className="comet-body-s-accented">
+                    {t("dropdown.textPrompt")}
+                  </span>
                   <span className="comet-body-xs text-light-slate">
                     {t("dropdown.textPromptDescription")}
                   </span>
@@ -391,7 +397,9 @@ const PromptsPage: React.FunctionComponent = () => {
               >
                 <MessagesSquare className="mr-2 size-4 shrink-0 text-[var(--color-burgundy)]" />
                 <div className="flex flex-col">
-                  <span className="comet-body-s-accented">{t("dropdown.chatPrompt")}</span>
+                  <span className="comet-body-s-accented">
+                    {t("dropdown.chatPrompt")}
+                  </span>
                   <span className="comet-body-xs text-light-slate">
                     {t("dropdown.chatPromptDescription")}
                   </span>
@@ -405,7 +413,9 @@ const PromptsPage: React.FunctionComponent = () => {
         <div className="flex flex-1 items-center justify-center gap-12 px-8 py-10">
           <div className="flex w-full max-w-md flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <h2 className="comet-title-s text-foreground">{t("empty.title")}</h2>
+              <h2 className="comet-title-s text-foreground">
+                {t("empty.title")}
+              </h2>
               <p className="comet-body-s text-muted-slate">
                 {t("empty.manageDescription")}
               </p>
@@ -467,7 +477,7 @@ const PromptsPage: React.FunctionComponent = () => {
 
           <img
             src={emptyImageUrl}
-            alt="No prompts yet"
+            alt={t("empty.title")}
             className="hidden max-w-sm shrink-0 lg:block"
           />
         </div>
@@ -483,7 +493,7 @@ const PromptsPage: React.FunctionComponent = () => {
                 dimension="sm"
               ></SearchInput>
               <FiltersButton
-                columns={FILTER_COLUMNS}
+                columns={getFilterColumns(t)}
                 filters={filters}
                 onChange={setFilters}
                 layout="icon"
@@ -497,7 +507,7 @@ const PromptsPage: React.FunctionComponent = () => {
                 </>
               )}
               <ColumnsButton
-                columns={DEFAULT_COLUMNS}
+                columns={getDefaultColumns(t)}
                 selectedColumns={selectedColumns}
                 onSelectionChange={setSelectedColumns}
                 order={columnsOrder}

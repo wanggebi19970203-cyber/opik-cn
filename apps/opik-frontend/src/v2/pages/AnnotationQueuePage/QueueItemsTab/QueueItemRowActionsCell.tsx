@@ -61,7 +61,9 @@ const QueueItemRowActionsCell: React.FC<
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="minimal" size="icon" className="-mr-2.5 ">
-            <span className="sr-only">{t("annotationQueue.queueItemActions.actionsMenu")}</span>
+            <span className="sr-only">
+              {t("annotationQueue.queueItemActions.actionsMenu")}
+            </span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>

@@ -22,17 +22,17 @@ const EvaluationExamples: React.FC = () => {
   const { t } = useTranslation();
   const tabList: TabItem[] = [
     {
-      label: t('integrationExplorer.evaluatePrompts'),
+      label: t("integrationExplorer.evaluatePrompts"),
       value: "evaluate-prompts",
       icon: FileTerminal,
     },
     {
-      label: t('integrationExplorer.evaluateLlmApp'),
+      label: t("integrationExplorer.evaluateLlmApp"),
       value: "evaluate-llm",
       icon: FlaskConical,
     },
     {
-      label: t('integrationExplorer.usingPlayground'),
+      label: t("integrationExplorer.usingPlayground"),
       value: "using-playground",
       icon: Blocks,
     },
@@ -62,7 +62,9 @@ const EvaluationExamples: React.FC = () => {
     <IntegrationListLayout
       leftSidebar={
         <>
-          <IntegrationTabs.Title>{t('integrationExplorer.chooseMethod')}</IntegrationTabs.Title>
+          <IntegrationTabs.Title>
+            {t("integrationExplorer.chooseMethod")}
+          </IntegrationTabs.Title>
           <IntegrationTabs>
             {tabList.map((item) => (
               <IntegrationTabs.Item

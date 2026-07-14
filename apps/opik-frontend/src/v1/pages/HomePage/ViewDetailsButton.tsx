@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Link } from "@tanstack/react-router";
 import useAppStore from "@/store/AppStore";
@@ -11,6 +12,7 @@ type ViewDetailsButtonProps = {
 const ViewDetailsButton: React.FC<ViewDetailsButtonProps> = ({
   projectsIds,
 }) => {
+  const { t } = useTranslation("home");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const projectId = projectsIds.length === 1 ? projectsIds[0] : undefined;
 
@@ -27,7 +29,7 @@ const ViewDetailsButton: React.FC<ViewDetailsButtonProps> = ({
       }}
     >
       <Button variant="ghost" className="flex shrink-0 items-center gap-1 pr-0">
-        View details
+        {t("home.viewDetails")}
         <ArrowRight className="size-4" />
       </Button>
     </Link>

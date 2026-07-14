@@ -45,7 +45,9 @@ const NoAccessPageGuard: React.FC<NoAccessPageGuardProps> = ({
         title={t("noAccess.accessDenied")}
         message={
           message ??
-          t("noAccess.noPermissionsForResource", { resource: resolvedResourceName })
+          t("noAccess.noPermissionsForResource", {
+            resource: resolvedResourceName,
+          })
         }
       >
         <div className="flex gap-2 pt-5">

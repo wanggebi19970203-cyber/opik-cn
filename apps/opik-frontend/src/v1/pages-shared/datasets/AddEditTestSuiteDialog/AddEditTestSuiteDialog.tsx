@@ -102,9 +102,16 @@ const AddEditTestSuiteDialog = ({
     name.length > 0 &&
     (isEdit || hideUpload || !csvRequired || hasValidUploadFile);
 
-  const typeLabel = type === DATASET_TYPE.TEST_SUITE ? t("datasets.addEditDialog.typeLabelTestSuite") : t("datasets.addEditDialog.typeLabelDataset");
-  const title = isEdit ? t("datasets.addEditDialog.editTitle") : t("datasets.addEditDialog.createTitle");
-  const buttonText = isEdit ? t("datasets.addEditDialog.updateButton") : t("datasets.addEditDialog.createButton");
+  const typeLabel =
+    type === DATASET_TYPE.TEST_SUITE
+      ? t("datasets.addEditDialog.typeLabelTestSuite")
+      : t("datasets.addEditDialog.typeLabelDataset");
+  const title = isEdit
+    ? t("datasets.addEditDialog.editTitle")
+    : t("datasets.addEditDialog.createTitle");
+  const buttonText = isEdit
+    ? t("datasets.addEditDialog.updateButton")
+    : t("datasets.addEditDialog.createButton");
 
   const fileSizeLimit = FILE_SIZE_LIMIT_IN_MB;
 
@@ -115,8 +122,13 @@ const AddEditTestSuiteDialog = ({
         const handlers = {
           onSuccess: () => {
             toast({
-              title: t("datasets.addEditDialog.uploadAccepted", { format: label }),
-              description: t("datasets.addEditDialog.uploadAcceptedDescription", { format: label }),
+              title: t("datasets.addEditDialog.uploadAccepted", {
+                format: label,
+              }),
+              description: t(
+                "datasets.addEditDialog.uploadAcceptedDescription",
+                { format: label },
+              ),
             });
           },
           onError: (error: unknown) => {
@@ -125,7 +137,9 @@ const AddEditTestSuiteDialog = ({
               title: t("datasets.addEditDialog.uploadError", { format: label }),
               description: getApiErrorMessage(
                 error,
-                t("datasets.addEditDialog.uploadErrorDescription", { format: label }),
+                t("datasets.addEditDialog.uploadErrorDescription", {
+                  format: label,
+                }),
               ),
               variant: "destructive",
             });
@@ -168,12 +182,13 @@ const AddEditTestSuiteDialog = ({
       createItemsFromJsonMutate,
       onDatasetCreated,
       setOpen,
+      t,
       toast,
     ],
   );
 
   const handleMutationError = useCallback(
-    (error: AxiosError, action: "create" | "update") => {
+    (error: AxiosError) => {
       const statusCode = get(error, ["response", "status"]);
       const errorMessage =
         get(error, ["response", "data", "message"]) ||
@@ -191,7 +206,7 @@ const AddEditTestSuiteDialog = ({
         setOpen(false);
       }
     },
-    [toast, setOpen],
+    [t, toast, setOpen],
   );
 
   const submitHandler = useCallback(() => {
@@ -208,7 +223,7 @@ const AddEditTestSuiteDialog = ({
           onSuccess: () => {
             setOpen(false);
           },
-          onError: (error: AxiosError) => handleMutationError(error, "update"),
+          onError: (error: AxiosError) => handleMutationError(error),
         },
       );
     } else {
@@ -222,7 +237,7 @@ const AddEditTestSuiteDialog = ({
         },
         {
           onSuccess: onCreateSuccessHandler,
-          onError: (error: AxiosError) => handleMutationError(error, "create"),
+          onError: (error: AxiosError) => handleMutationError(error),
         },
       );
     }
@@ -274,7 +289,9 @@ const AddEditTestSuiteDialog = ({
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="testSuiteName">{t("datasets.addEditDialog.name")}</Label>
+            <Label htmlFor="testSuiteName">
+              {t("datasets.addEditDialog.name")}
+            </Label>
             <Input
               id="testSuiteName"
               placeholder={t("datasets.addEditDialog.namePlaceholder")}
@@ -303,7 +320,9 @@ const AddEditTestSuiteDialog = ({
             </span>
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="testSuiteDescription">{t("datasets.addEditDialog.description")}</Label>
+            <Label htmlFor="testSuiteDescription">
+              {t("datasets.addEditDialog.description")}
+            </Label>
             <Textarea
               id="testSuiteDescription"
               placeholder={t("datasets.addEditDialog.descriptionPlaceholder")}
@@ -332,7 +351,9 @@ const AddEditTestSuiteDialog = ({
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("datasets.addEditDialog.cancel")}</Button>
+            <Button variant="outline">
+              {t("datasets.addEditDialog.cancel")}
+            </Button>
           </DialogClose>
           <Button
             type="submit"
@@ -348,7 +369,9 @@ const AddEditTestSuiteDialog = ({
         setOpen={setConfirmOpen}
         onCancel={submitHandler}
         title={t("datasets.addEditDialog.fileCantBeUploaded")}
-        description={t("datasets.addEditDialog.fileCantBeUploadedDescription", { typeLabel })}
+        description={t("datasets.addEditDialog.fileCantBeUploadedDescription", {
+          typeLabel,
+        })}
         cancelText={t("datasets.addEditDialog.createEmpty", { typeLabel })}
         confirmText={t("datasets.addEditDialog.goBack")}
       />

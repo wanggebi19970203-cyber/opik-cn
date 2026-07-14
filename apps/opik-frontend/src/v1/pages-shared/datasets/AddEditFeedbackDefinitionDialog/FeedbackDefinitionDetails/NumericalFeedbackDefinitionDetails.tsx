@@ -42,7 +42,9 @@ const NumericalFeedbackDefinitionDetails: React.FunctionComponent<
   return (
     <>
       <div className="flex flex-col gap-2 pb-4">
-        <Label htmlFor="feedbackDefinitionNumericalMin">{t("datasets.feedbackDefinition.min")}</Label>
+        <Label htmlFor="feedbackDefinitionNumericalMin">
+          {t("datasets.feedbackDefinition.min")}
+        </Label>
         <Input
           id="feedbackDefinitionNumericalMin"
           placeholder={t("datasets.feedbackDefinition.min")}
@@ -59,7 +61,9 @@ const NumericalFeedbackDefinitionDetails: React.FunctionComponent<
       </div>
 
       <div className="flex flex-col gap-2 pb-4">
-        <Label htmlFor="feedbackDefinitionNumericalMax">{t("datasets.feedbackDefinition.max")}</Label>
+        <Label htmlFor="feedbackDefinitionNumericalMax">
+          {t("datasets.feedbackDefinition.max")}
+        </Label>
         <Input
           id="feedbackDefinitionNumericalMax"
           placeholder={t("datasets.feedbackDefinition.max")}

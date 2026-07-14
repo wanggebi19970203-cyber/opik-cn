@@ -82,14 +82,10 @@ import DataTableVirtualBody from "@/shared/DataTable/DataTableVirtualBody";
 import { ChartData } from "@/v2/pages-shared/experiments/FeedbackScoresChartsWrapper/FeedbackScoresChartContent";
 import GroupsButton from "@/shared/GroupsButton/GroupsButton";
 import TextCell from "@/shared/DataTableCells/TextCell";
-import ItemSourceCell, {
-  ITEM_SOURCE_LABEL,
-} from "@/v2/pages-shared/experiments/ItemSourceCell";
+import ItemSourceCell from "@/v2/pages-shared/experiments/ItemSourceCell";
 import { EXPERIMENT_STATUS } from "@/types/datasets";
 import { formatPromptVersionLabel } from "@/lib/experiments";
 import { Skeleton } from "@/ui/skeleton";
-
-const PASS_RATE_SCORE_KEY = "Pass rate";
 
 const withRunningSkeleton = <TValue,>(
   Cell: React.ComponentType<CellContext<GroupedExperiment, TValue>>,
@@ -207,7 +203,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
       },
       {
         id: COLUMN_DATASET_ID,
-        label: ITEM_SOURCE_LABEL,
+        label: t("experiments.itemSource"),
         type: COLUMN_TYPE.string,
         cell: ItemSourceCell as never,
         customMeta: {
@@ -519,8 +515,10 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
           id: datasetId,
           name: [
             {
-              label: ITEM_SOURCE_LABEL,
-              value: datasetExperiments[0]?.dataset_name || "Undefined",
+              label: t("experiments.itemSource"),
+              value:
+                datasetExperiments[0]?.dataset_name ||
+                t("experiments.undefined"),
             },
           ],
           experiments: datasetExperiments,
@@ -559,7 +557,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
                 const groupField = groups[index]?.field;
                 const groupLabel =
                   groupField === COLUMN_DATASET_ID
-                    ? ITEM_SOURCE_LABEL
+                    ? t("experiments.itemSource")
                     : calculateGroupLabel(groups[index]);
 
                 return {
@@ -602,7 +600,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
           isTestSuiteExperiment(experiment) &&
           isNumber(experiment.pass_rate)
         ) {
-          scores[PASS_RATE_SCORE_KEY] = experiment.pass_rate;
+          scores[t("experiments.columns.passRate")] = experiment.pass_rate;
         }
 
         groupsMap[groupKey].data.unshift({
@@ -634,6 +632,7 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
     groups,
     expandingConfig.expanded,
     groupFieldNames,
+    t,
   ]);
 
   const isTableLoading =
@@ -658,11 +657,13 @@ const GeneralDatasetsTab: React.FC<GeneralDatasetsTabProps> = ({
               noDataComponent={
                 <Card className="flex min-h-[208px] w-full min-w-[400px] flex-col items-center justify-center gap-2">
                   <ChartLine className="size-4 shrink-0 text-light-slate" />
-                   <div className="comet-body-s-accented text-foreground">
+                  <div className="comet-body-s-accented text-foreground">
                     {t("experiments.charts.noChartsToShow")}
                   </div>
                   <div className="comet-body-s text-muted-slate">
-                    {t("experiments.charts.expandGroupHint", { count: MAX_EXPANDED_DEEPEST_GROUPS })}
+                    {t("experiments.charts.expandGroupHint", {
+                      count: MAX_EXPANDED_DEEPEST_GROUPS,
+                    })}
                   </div>
                 </Card>
               }

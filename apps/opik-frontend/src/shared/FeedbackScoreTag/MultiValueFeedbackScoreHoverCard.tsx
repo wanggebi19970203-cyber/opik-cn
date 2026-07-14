@@ -132,9 +132,12 @@ const CategoricalScoreContent = ({
                 <span className="comet-body-xs-accented truncate text-foreground">
                   {value}
                 </span>
-                  <span className="comet-body-xs-accented shrink-0 text-foreground">
-                    {users.length} {users.length === 1 ? t("multiValueFeedbackScore.user") : t("multiValueFeedbackScore.users")}
-                  </span>
+                <span className="comet-body-xs-accented shrink-0 text-foreground">
+                  {users.length}{" "}
+                  {users.length === 1
+                    ? t("multiValueFeedbackScore.user")
+                    : t("multiValueFeedbackScore.users")}
+                </span>
               </div>
               <div className="flex flex-col pl-2">
                 {users.map((user) => (

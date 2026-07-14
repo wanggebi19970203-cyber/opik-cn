@@ -97,7 +97,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
           ]
         : []),
     ];
-  }, [isGuardrailsEnabled]);
+  }, [isGuardrailsEnabled, t]);
 
   const filtersConfig = useMemo(
     () => ({
@@ -123,7 +123,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
             )
               .sort()
               .map((key) => ({ value: key, label: key })),
-            placeholder: "key",
+            placeholder: t("traceLogs.keyPlaceholder"),
           },
         },
         [COLUMN_CUSTOM_ID]: {
@@ -150,7 +150,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
             )
               .sort()
               .map((key) => ({ value: key, label: key })),
-            placeholder: "key",
+            placeholder: t("traceLogs.keyPlaceholder"),
           },
         },
         [COLUMN_FEEDBACK_SCORES_ID]: {
@@ -185,7 +185,7 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
         },
       },
     }),
-    [isGuardrailsEnabled, treeData],
+    [isGuardrailsEnabled, treeData, t],
   );
 
   return (
@@ -220,7 +220,11 @@ export const TraceTreeToolbar: React.FC<TraceTreeToolbarProps> = ({
         {!hasSearchOrFilter ? (
           <>
             <TooltipWrapper
-              content={isAllExpanded ? t("treeToolbar.collapseAll") : t("treeToolbar.expandAll")}
+              content={
+                isAllExpanded
+                  ? t("treeToolbar.collapseAll")
+                  : t("treeToolbar.expandAll")
+              }
             >
               <Button onClick={toggleExpandAll} variant="ghost" size="icon-2xs">
                 {isAllExpanded ? (

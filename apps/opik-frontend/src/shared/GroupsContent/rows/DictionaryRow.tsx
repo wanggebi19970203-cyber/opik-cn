@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
 import { Group, GroupRowConfig } from "@/types/groups";
 import SortDirectionSelector from "@/shared/GroupsContent/SortDirectionSelector";
@@ -16,6 +17,7 @@ export const DictionaryRow: React.FC<DictionaryRowProps> = ({
   onChange,
   hideSorting = false,
 }) => {
+  const { t } = useTranslation("common");
   const keyValueChangeHandler = (value: unknown) =>
     onChange({ ...group, key: value as string });
 
@@ -26,7 +28,7 @@ export const DictionaryRow: React.FC<DictionaryRowProps> = ({
       <td className="p-1">
         <KeyComponent
           className="w-full min-w-32 max-w-[30vw]"
-          placeholder="key"
+          placeholder={t("labels.key")}
           value={group.key}
           onValueChange={keyValueChangeHandler}
           {...(config?.keyComponentProps ?? {})}

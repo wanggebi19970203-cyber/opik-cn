@@ -1,5 +1,6 @@
 import React from "react";
 import { Clock, Coins } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import PlaygroundOutputLoader from "@/v2/pages/PlaygroundPage/PlaygroundOutputs/PlaygroundOutputLoader/PlaygroundOutputLoader";
@@ -29,6 +30,7 @@ const PlaygroundPromptOutput = ({
   onRun,
   onStop,
 }: PlaygroundPromptOutputProps) => {
+  const { t } = useTranslation("pages/playground");
   const value = useOutputValueByPromptDatasetItemId(promptId);
   const isLoading = useOutputLoadingByPromptDatasetItemId(promptId);
   const stale = useOutputStaleStatusByPromptDatasetItemId(promptId);
@@ -80,7 +82,9 @@ const PlaygroundPromptOutput = ({
                 className="inline-block size-3 rounded-sm"
                 style={{ backgroundColor: promptColor.bg }}
               />
-              <span className="comet-body-s-accented">Output {letter}</span>
+              <span className="comet-body-s-accented">
+                {t("playground.promptOutput.output", { letter })}
+              </span>
             </span>
             {modelLabel && ProviderIcon && (
               <span className="flex items-center gap-1 text-muted-gray">
@@ -92,7 +96,9 @@ const PlaygroundPromptOutput = ({
               <span className="flex items-center gap-1 text-muted-gray">
                 <Clock className="size-3.5 shrink-0" />
                 <span className="comet-body-xs">
-                  {usage.duration.toFixed(1)}s
+                  {t("playground.promptOutput.duration", {
+                    duration: usage.duration.toFixed(1),
+                  })}
                 </span>
               </span>
             )}
@@ -100,7 +106,9 @@ const PlaygroundPromptOutput = ({
               <span className="flex items-center gap-1 text-muted-gray">
                 <Coins className="size-3.5 shrink-0" />
                 <span className="comet-body-xs">
-                  {usage.totalTokens} tokens
+                  {t("playground.promptOutput.tokens", {
+                    count: usage.totalTokens,
+                  })}
                 </span>
               </span>
             )}

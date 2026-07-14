@@ -10,7 +10,9 @@ const PlaygroundNoRunsYet = ({ color }: PlaygroundNoRunsYetProps) => {
   return (
     <div className="flex size-full flex-col items-center justify-center gap-2">
       <AlignLeft className="size-5" style={{ color }} />
-      <p className="comet-body-s-accented">{t("common.playground.noRunsYet")}</p>
+      <p className="comet-body-s-accented">
+        {t("common.playground.noRunsYet")}
+      </p>
       <p className="comet-body-s text-light-slate">
         {t("common.playground.noRunsYetDescription")}
       </p>

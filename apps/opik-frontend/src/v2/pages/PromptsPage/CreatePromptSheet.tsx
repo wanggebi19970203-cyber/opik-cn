@@ -33,7 +33,9 @@ const CreatePromptSheet: React.FC<CreatePromptSheetProps> = ({
   const navigate = useNavigate();
 
   const isChatPrompt = templateStructure === PROMPT_TEMPLATE_STRUCTURE.CHAT;
-  const title = isChatPrompt ? t("createSheet.newChatPrompt") : t("createSheet.newTextPrompt");
+  const title = isChatPrompt
+    ? t("createSheet.newChatPrompt")
+    : t("createSheet.newTextPrompt");
 
   const [name, setName] = useState("");
   const [metadata, setMetadata] = useState("");

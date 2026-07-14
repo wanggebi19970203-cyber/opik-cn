@@ -170,7 +170,9 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
         <div className="mb-4 flex flex-col gap-1">
           <div className="comet-body-s flex w-full flex-wrap items-center gap-3 pl-1 text-foreground">
             {created_at && (
-              <TooltipWrapper content={`Created at: ${created_at}`}>
+              <TooltipWrapper
+                content={t("detailsPanel.createdAt", { date: created_at })}
+              >
                 <div
                   className="comet-body-s flex items-center gap-1 text-foreground"
                   data-testid="data-viewer-created-at"
@@ -209,7 +211,8 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
                     data-testid="data-viewer-span-scores"
                   >
                     <PenLine className="size-3.5 shrink-0 text-muted-slate" />{" "}
-                     {traceData.span_feedback_scores!.length} {t("detailsPanel.spanScores")}
+                    {traceData.span_feedback_scores!.length}{" "}
+                    {t("detailsPanel.spanScores")}
                   </div>
                 </FeedbackScoreHoverCard>
               )}
@@ -226,9 +229,10 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             )}
             {(model || provider) && (
               <TooltipWrapper
-                content={`Model: ${model || "NA"}, Provider: ${
-                  provider || "NA"
-                }`}
+                content={t("detailsPanel.model", {
+                  model: model || "NA",
+                  provider: provider || "NA",
+                })}
               >
                 <div
                   className="comet-body-s flex items-center gap-1 text-foreground"
@@ -329,7 +333,11 @@ const TraceDataViewer: React.FunctionComponent<TraceDataViewerProps> = ({
             <div className="space-y-4">
               <div>
                 <ConfigurableFeedbackScoreTable
-                    title={isTrace ? t("detailsPanel.traceScores") : t("detailsPanel.spanScores")}
+                  title={
+                    isTrace
+                      ? t("detailsPanel.traceScores")
+                      : t("detailsPanel.spanScores")
+                  }
                   feedbackScores={data.feedback_scores}
                   onDeleteFeedbackScore={
                     canAnnotateTraceSpanThread

@@ -38,7 +38,9 @@ export function useRemoveFromTeamMutation() {
     mutationKey: ["workspace", "remove-from-team"],
     mutationFn: removeFromTeamRequest,
     onSuccess: (_, variables) => {
-      toast({ description: i18next.t("common:comet.userRemovedFromTeamSuccessfully") });
+      toast({
+        description: i18next.t("common:comet.userRemovedFromTeamSuccessfully"),
+      });
       queryClient.invalidateQueries({
         queryKey: ["workspace-members", { workspaceId: variables.teamId }],
       });

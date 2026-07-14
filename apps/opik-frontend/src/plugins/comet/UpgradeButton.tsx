@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useMatches } from "@tanstack/react-router";
 import { Zap } from "lucide-react";
 
@@ -14,6 +15,7 @@ import {
 import { buildUrl, isOnPremise, isProduction } from "@/plugins/comet/utils";
 
 const UpgradeButton: React.FC = () => {
+  const { t } = useTranslation("signals");
   const matches = useMatches();
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const hideUpgradeButton = matches.some(
@@ -71,7 +73,7 @@ const UpgradeButton: React.FC = () => {
         rel="noreferrer"
       >
         <Zap className="mr-1.5 size-3 shrink-0" />
-        Upgrade
+        {t("upgrade")}
       </a>
     </Button>
   );

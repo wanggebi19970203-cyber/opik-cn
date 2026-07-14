@@ -62,8 +62,12 @@ const EnvironmentsRowActionsCell: React.FunctionComponent<
         setOpen={handleClose}
         onConfirm={deleteHandler}
         title={t("settings.environments.confirmDialog.deleteSingle.title")}
-        description={t("settings.environments.confirmDialog.deleteSingle.description")}
-        confirmText={t("settings.environments.confirmDialog.deleteSingle.confirmText")}
+        description={t(
+          "settings.environments.confirmDialog.deleteSingle.description",
+        )}
+        confirmText={t(
+          "settings.environments.confirmDialog.deleteSingle.confirmText",
+        )}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>

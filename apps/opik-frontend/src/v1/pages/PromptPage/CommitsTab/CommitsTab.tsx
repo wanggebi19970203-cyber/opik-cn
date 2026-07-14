@@ -333,7 +333,7 @@ const CommitsTab = ({ prompt }: CommitsTabInterface) => {
                     },
                   keyComponentProps: {
                     prompt,
-                    placeholder: "key",
+                    placeholder: t("common.labels.key"),
                   },
                 },
               },

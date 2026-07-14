@@ -34,8 +34,12 @@ const EnvironmentsActionsPanel: React.FunctionComponent<
         setOpen={setOpen}
         onConfirm={deleteEnvironmentsHandler}
         title={t("settings.environments.confirmDialog.deleteBatch.title")}
-        description={t("settings.environments.confirmDialog.deleteBatch.description")}
-        confirmText={t("settings.environments.confirmDialog.deleteBatch.confirmText")}
+        description={t(
+          "settings.environments.confirmDialog.deleteBatch.description",
+        )}
+        confirmText={t(
+          "settings.environments.confirmDialog.deleteBatch.confirmText",
+        )}
         confirmButtonVariant="destructive"
       />
       <TooltipWrapper content={t("settings.actions.delete")}>

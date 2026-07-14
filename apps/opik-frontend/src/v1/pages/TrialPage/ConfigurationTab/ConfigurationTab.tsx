@@ -41,7 +41,9 @@ export const DEFAULT_COLUMN_PINNING: ColumnPinningState = {
   right: [],
 };
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<CompareConfig>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<CompareConfig>[] => [
   {
     id: "name",
     label: t("configurationTab.name"),
@@ -206,7 +208,9 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
             <>
               <Separator orientation="vertical" className="mx-2 h-4" />
               <div className="flex items-center space-x-2">
-                <Label htmlFor="show-doff-only">{t("configurationTab.showDifferencesOnly")}</Label>
+                <Label htmlFor="show-doff-only">
+                  {t("configurationTab.showDifferencesOnly")}
+                </Label>
                 <Switch
                   id="show-doff-only"
                   onCheckedChange={setOnlyDiff}

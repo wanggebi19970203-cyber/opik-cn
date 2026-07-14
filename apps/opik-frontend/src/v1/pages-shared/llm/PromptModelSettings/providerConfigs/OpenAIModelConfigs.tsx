@@ -75,7 +75,9 @@ const OpenAIModelConfigs = ({
           defaultValue={DEFAULT_OPEN_AI_CONFIGS.MAX_COMPLETION_TOKENS}
           label={t("sharedModelConfigs.maxOutputTokens")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.maxOutputTokensTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("sharedModelConfigs.maxOutputTokensTooltip")}
+            />
           }
         />
       )}
@@ -91,7 +93,9 @@ const OpenAIModelConfigs = ({
           defaultValue={DEFAULT_OPEN_AI_CONFIGS.TOP_P}
           label={t("sharedModelConfigs.topP")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.topPTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("sharedModelConfigs.topPTooltip")}
+            />
           }
         />
       )}
@@ -107,7 +111,9 @@ const OpenAIModelConfigs = ({
           defaultValue={DEFAULT_OPEN_AI_CONFIGS.FREQUENCY_PENALTY}
           label={t("openAIModelConfigs.frequencyPenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("openAIModelConfigs.frequencyPenaltyTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("openAIModelConfigs.frequencyPenaltyTooltip")}
+            />
           }
         />
       )}
@@ -123,7 +129,9 @@ const OpenAIModelConfigs = ({
           defaultValue={DEFAULT_OPEN_AI_CONFIGS.PRESENCE_PENALTY}
           label={t("openAIModelConfigs.presencePenalty")}
           tooltip={
-            <PromptModelSettingsTooltipContent text={t("openAIModelConfigs.presencePenaltyTooltip")} />
+            <PromptModelSettingsTooltipContent
+              text={t("openAIModelConfigs.presencePenaltyTooltip")}
+            />
           }
         />
       )}
@@ -134,7 +142,9 @@ const OpenAIModelConfigs = ({
             <Label htmlFor="reasoningEffort" className="text-sm font-medium">
               {t("openAIModelConfigs.reasoningEffort")}
             </Label>
-            <ExplainerIcon description={t("openAIModelConfigs.reasoningEffortDescription")} />
+            <ExplainerIcon
+              description={t("openAIModelConfigs.reasoningEffortDescription")}
+            />
           </div>
           <Select
             value={configs.reasoningEffort ?? "high"}
@@ -143,7 +153,9 @@ const OpenAIModelConfigs = ({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder={t("openAIModelConfigs.selectReasoningEffort")} />
+              <SelectValue
+                placeholder={t("openAIModelConfigs.selectReasoningEffort")}
+              />
             </SelectTrigger>
             <SelectContent>
               {getOpenAIReasoningEffortOptions(model).map((opt) => (
@@ -166,7 +178,9 @@ const OpenAIModelConfigs = ({
         defaultValue={DEFAULT_OPEN_AI_CONFIGS.THROTTLING}
         label={t("sharedModelConfigs.throttling")}
         tooltip={
-          <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.throttlingTooltip")} />
+          <PromptModelSettingsTooltipContent
+            text={t("sharedModelConfigs.throttlingTooltip")}
+          />
         }
       />
 
@@ -183,7 +197,9 @@ const OpenAIModelConfigs = ({
         defaultValue={DEFAULT_OPEN_AI_CONFIGS.MAX_CONCURRENT_REQUESTS}
         label={t("sharedModelConfigs.maxConcurrentRequests")}
         tooltip={
-          <PromptModelSettingsTooltipContent text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")} />
+          <PromptModelSettingsTooltipContent
+            text={t("sharedModelConfigs.maxConcurrentRequestsTooltip")}
+          />
         }
       />
     </div>

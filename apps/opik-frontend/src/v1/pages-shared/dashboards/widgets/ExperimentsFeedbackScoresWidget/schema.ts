@@ -36,7 +36,10 @@ export const ExperimentsFeedbackScoresWidgetSchema = z
       );
     },
     {
-      message: i18next.t("common:validation.maxExperimentsCountRequired", { min: MIN_MAX_EXPERIMENTS, max: MAX_MAX_EXPERIMENTS }),
+      message: i18next.t("common:validation.maxExperimentsCountRequired", {
+        min: MIN_MAX_EXPERIMENTS,
+        max: MAX_MAX_EXPERIMENTS,
+      }),
       path: ["maxExperimentsCount"],
     },
   );

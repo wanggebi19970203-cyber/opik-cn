@@ -135,7 +135,10 @@ const GroupsAccordionSection = <TColumnData,>({
 
                   return (
                     <FormErrorSkeleton key={index}>
-                      {t("common.groups.groupError", { index: index + 1, messages: errorMessages.join(", ") })}
+                      {t("common.groups.groupError", {
+                        index: index + 1,
+                        messages: errorMessages.join(", "),
+                      })}
                     </FormErrorSkeleton>
                   );
                 })}
@@ -157,7 +160,9 @@ const GroupsAccordionSection = <TColumnData,>({
 
               {groups.length >= MAX_GROUP_LEVELS && (
                 <Description className="text-muted-foreground">
-                  {t("common.groups.maxLevelsReached", { count: MAX_GROUP_LEVELS })}
+                  {t("common.groups.maxLevelsReached", {
+                    count: MAX_GROUP_LEVELS,
+                  })}
                 </Description>
               )}
             </div>

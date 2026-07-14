@@ -51,7 +51,9 @@ export default function ReportPanel({
           </button>
           <h3 className="comet-body-s-accented truncate">
             {report
-              ? `${t("common.labels.dailyBriefing")}: ${formatRelativeDateTime(report.created_at)}`
+              ? `${t("common.labels.dailyBriefing")}: ${formatRelativeDateTime(
+                  report.created_at,
+                )}`
               : ""}
           </h3>
         </div>
@@ -106,7 +108,9 @@ export default function ReportPanel({
             </MarkdownPreview>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">{t("common.messages.noContentAvailable")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("common.messages.noContentAvailable")}
+          </p>
         )}
       </div>
     </ResizableSidePanel>

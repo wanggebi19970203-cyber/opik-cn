@@ -97,7 +97,9 @@ export const createCustomProviderDetailsFormSchema = (
 
             return modelsArray.length === uniq(modelsArray).length;
           },
-          { message: i18next.t("common:validation.allModelNamesShouldBeUnique") },
+          {
+            message: i18next.t("common:validation.allModelNamesShouldBeUnique"),
+          },
         ),
       headers: z
         .array(
@@ -181,7 +183,9 @@ export const createCustomProviderDetailsFormSchema = (
           if ((hasKey || hasValue) && !hasValue) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: i18next.t("common:validation.queryParameterValueRequired"),
+              message: i18next.t(
+                "common:validation.queryParameterValueRequired",
+              ),
               path: ["queryParams", index, "value"],
             });
           }
@@ -191,7 +195,9 @@ export const createCustomProviderDetailsFormSchema = (
             if (paramKeys.includes(trimmedKey)) {
               ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: i18next.t("common:validation.queryParameterKeyMustBeUnique"),
+                message: i18next.t(
+                  "common:validation.queryParameterKeyMustBeUnique",
+                ),
                 path: ["queryParams", index, "key"],
               });
             } else {

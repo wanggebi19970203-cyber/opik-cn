@@ -34,7 +34,9 @@ const VertexAIProviderDetails: React.FC<VertexAIProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="location">{t("llm:vertexProvider.location")}</Label>
+              <Label htmlFor="location">
+                {t("llm:vertexProvider.location")}
+              </Label>
               <FormControl>
                 <Input
                   id="location"

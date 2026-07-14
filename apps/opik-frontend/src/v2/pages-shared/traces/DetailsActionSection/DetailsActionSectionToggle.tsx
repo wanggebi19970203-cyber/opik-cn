@@ -81,9 +81,7 @@ const DetailsActionSectionToggle: React.FC<DetailsActionSectionToggleProps> = ({
           disabled={disabled}
         >
           {configMap[type].icon}
-          {showFullActionLabel && (
-            <div className="pl-1">{tooltipLabel}</div>
-          )}
+          {showFullActionLabel && <div className="pl-1">{tooltipLabel}</div>}
           {Boolean(count) && <div>{formatCounter(layoutSize, count)}</div>}
           {hotkey && (
             <kbd className="flex h-5 min-w-5 items-center justify-center rounded-sm border bg-background px-1 text-xs text-muted-foreground">

@@ -151,22 +151,34 @@ export const useAudioPlayer = (
       if (error) {
         switch (error.code) {
           case 1: // MEDIA_ERR_ABORTED
-            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioLoadingCancelled"));
+            setErrorMessage(
+              i18next.t("common.hooks.useAudioPlayer.audioLoadingCancelled"),
+            );
             break;
           case 2: // MEDIA_ERR_NETWORK
-            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.networkErrorLoadingAudio"));
+            setErrorMessage(
+              i18next.t("common.hooks.useAudioPlayer.networkErrorLoadingAudio"),
+            );
             break;
           case 3: // MEDIA_ERR_DECODE
-            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioFormatError"));
+            setErrorMessage(
+              i18next.t("common.hooks.useAudioPlayer.audioFormatError"),
+            );
             break;
           case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
-            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioFileNotAvailable"));
+            setErrorMessage(
+              i18next.t("common.hooks.useAudioPlayer.audioFileNotAvailable"),
+            );
             break;
           default:
-            setErrorMessage(i18next.t("common.hooks.useAudioPlayer.unableToLoadAudioFile"));
+            setErrorMessage(
+              i18next.t("common.hooks.useAudioPlayer.unableToLoadAudioFile"),
+            );
         }
       } else {
-        setErrorMessage(i18next.t("common.hooks.useAudioPlayer.audioPlaybackError"));
+        setErrorMessage(
+          i18next.t("common.hooks.useAudioPlayer.audioPlaybackError"),
+        );
       }
     };
 

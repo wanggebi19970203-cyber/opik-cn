@@ -16,7 +16,7 @@ const IntegrationSkip: React.FunctionComponent<IntegrationSkipProps> = ({
   label,
 }) => {
   const { t } = useTranslation();
-  const displayLabel = label ?? t('integrationExplorer.skipAndExplore');
+  const displayLabel = label ?? t("integrationExplorer.skipAndExplore");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
 
   return (

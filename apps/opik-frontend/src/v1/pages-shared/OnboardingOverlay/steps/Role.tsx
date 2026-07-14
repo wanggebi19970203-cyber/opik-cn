@@ -14,9 +14,7 @@ const Role: React.FC = () => {
 
   return (
     <OnboardingStep className="mt-16">
-      <OnboardingStep.Title>
-        {t("roleQuestion")}
-      </OnboardingStep.Title>
+      <OnboardingStep.Title>{t("roleQuestion")}</OnboardingStep.Title>
 
       <OnboardingStep.AnswerList>
         {options.map((option) => (

@@ -26,7 +26,7 @@ const LevenshteinMetricConfigs = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="reference_key" className="text-sm">
-              {t('optimizations.metricConfigs.referenceKey')}
+              {t("optimizations.metricConfigs.referenceKey")}
             </Label>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.metric_reference_key]}
@@ -34,7 +34,9 @@ const LevenshteinMetricConfigs = ({
           </div>
           <Input
             id="reference_key"
-            placeholder={t('optimizations.metricConfigs.referenceKeyAdvancedPlaceholder')}
+            placeholder={t(
+              "optimizations.metricConfigs.referenceKeyAdvancedPlaceholder",
+            )}
             value={configs.reference_key}
             onChange={(e) =>
               onChange({ ...configs, reference_key: e.target.value })
@@ -57,7 +59,7 @@ const LevenshteinMetricConfigs = ({
             }
           />
           <Label htmlFor="case_sensitive" className="cursor-pointer text-sm">
-            {t('optimizations.metricConfigs.caseSensitiveComparison')}
+            {t("optimizations.metricConfigs.caseSensitiveComparison")}
           </Label>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.metric_case_sensitive]}

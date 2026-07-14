@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 import { useActiveWorkspaceName } from "@/store/AppStore";
@@ -22,6 +23,7 @@ interface RetentionBannerProps {
 const SHOW_BANNER_MIN_THRESHOLD = 0.8;
 
 const RetentionBanner = ({ onChangeHeight }: RetentionBannerProps) => {
+  const { t } = useTranslation("signals");
   const { data: user } = useUser();
   const heightRef = useRef(0);
 
@@ -98,7 +100,7 @@ const RetentionBanner = ({ onChangeHeight }: RetentionBannerProps) => {
     if (isOrganizationAdmin) {
       return (
         <span>
-          You&apos;ve hit your plan limits.{" "}
+          {t("retentionBanner.hitPlanLimits")}{" "}
           <a
             href={buildUrl(
               `organizations/${workspace?.organizationId}/billing`,
@@ -107,9 +109,9 @@ const RetentionBanner = ({ onChangeHeight }: RetentionBannerProps) => {
             rel="noopener noreferrer"
             className="whitespace-nowrap underline"
           >
-            Upgrade your plan
+            {t("retentionBanner.upgradeYourPlan")}
           </a>{" "}
-          now to keep monitoring running smoothly.
+          {t("retentionBanner.nowToKeepMonitoring")}
         </span>
       );
     }
@@ -118,8 +120,9 @@ const RetentionBanner = ({ onChangeHeight }: RetentionBannerProps) => {
 
     return (
       <span>
-        You&apos;ve hit your plan limits. To keep monitoring running, ask your
-        organization {isOneAdmin ? "admin" : "admins"} (
+        {t("retentionBanner.hitPlanLimitsAskAdmin")}{" "}
+        {isOneAdmin ? t("retentionBanner.admin") : t("retentionBanner.admins")}{" "}
+        (
         {firstThreeAdmins?.map((user, idx) => (
           <React.Fragment key={user.userName}>
             <TooltipWrapper content={user.email}>
@@ -128,15 +131,16 @@ const RetentionBanner = ({ onChangeHeight }: RetentionBannerProps) => {
             {idx !== firstThreeAdmins.length - 1 && ", "}
           </React.Fragment>
         ))}
-        {!isOneAdmin && "..."}) to upgrade your plan.
+        {!isOneAdmin && "..."}) {t("retentionBanner.toUpgradeYourPlan")}
       </span>
     );
   };
 
   const label = isExceededLimit
     ? getExceededLabel()
-    : `You're at 80% of your ${spanQuota?.limit} free spans. Upgrade to ensure` +
-      "uninterrupted monitoring";
+    : t("retentionBanner.at80Percent", { limit: spanQuota?.limit }) +
+      " " +
+      t("retentionBanner.uninterruptedMonitoring");
 
   const closable = !isExceededLimit;
 

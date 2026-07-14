@@ -17,7 +17,9 @@ const ExperimentsPage: React.FC = () => {
         direction="horizontal"
         limitWidth
       >
-        <h1 className="comet-title-l truncate break-words">{t("experiments.title")}</h1>
+        <h1 className="comet-title-l truncate break-words">
+          {t("experiments.title")}
+        </h1>
       </PageBodyStickyContainer>
       <PageBodyStickyContainer direction="horizontal" limitWidth>
         <ExplainerDescription

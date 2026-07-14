@@ -332,7 +332,7 @@ const AddOptimizationDialog: React.FunctionComponent<
               <Checkbox
                 checked={selectedModel === m.value}
                 onCheckedChange={() => checkboxChangeHandler(m.value)}
-                aria-label="Select row"
+                aria-label={t("optimizations.addOptimization.selectRow")}
                 className="mt-0.5"
               />
               <div className="px-2">
@@ -359,7 +359,9 @@ const AddOptimizationDialog: React.FunctionComponent<
         </div>
         <div className="m-auto flex w-full max-w-[1250px] items-start gap-6">
           <div className="flex w-[250px] shrink-0 flex-col gap-2">
-            <div className="comet-title-s">{t("optimizations.addDialog.optimizationAlgorithms")}</div>
+            <div className="comet-title-s">
+              {t("optimizations.addDialog.optimizationAlgorithms")}
+            </div>
             {generateList(getOptimizationAlgorithmsOptions(t))}
           </div>
           <div className="flex w-full max-w-[700px] flex-col gap-2 rounded-md border border-border p-6">
@@ -372,7 +374,9 @@ const AddOptimizationDialog: React.FunctionComponent<
                   <LoadableSelectBox
                     options={options}
                     value={datasetName}
-                    placeholder={t("optimizations.addDialog.selectTestSuitePlaceholder")}
+                    placeholder={t(
+                      "optimizations.addDialog.selectTestSuitePlaceholder",
+                    )}
                     onChange={setDatasetName}
                     onLoadMore={
                       total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore

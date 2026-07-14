@@ -63,7 +63,6 @@ const TagListRenderer: React.FC<TagListRendererProps> = ({
   tooltipText,
   placeholderText,
   addButtonText,
-  tagType = "tag",
   readOnly = false,
   tagVariant,
 }) => {

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import get from "lodash/get";
 import api, { OPTIMIZATIONS_KEY, OPTIMIZATIONS_REST_ENDPOINT } from "@/api/api";
@@ -41,7 +42,7 @@ const useOptimizationCreateMutation = () => {
       );
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: message,
         variant: "destructive",
       });

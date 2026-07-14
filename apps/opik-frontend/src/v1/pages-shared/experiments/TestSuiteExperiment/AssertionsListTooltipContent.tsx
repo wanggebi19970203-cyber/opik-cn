@@ -23,7 +23,7 @@ export const AssertionsListTooltipContent: React.FC<
           <CheckCheck className="size-3 text-foreground" />
         </div>
         <span className="comet-body-xs-accented text-foreground">
-          {t('assertions')}
+          {t("assertions")}
         </span>
       </div>
       <Separator className="my-1" />

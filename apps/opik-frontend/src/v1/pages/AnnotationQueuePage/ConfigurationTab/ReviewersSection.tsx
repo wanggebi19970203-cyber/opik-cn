@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { AnnotationQueue } from "@/types/annotation-queues";
 import { ROW_HEIGHT, COLUMN_TYPE, ColumnData } from "@/types/shared";
 import { convertColumnDataToColumn } from "@/lib/table";
@@ -13,29 +14,34 @@ interface ReviewersSectionProps {
   annotationQueue: AnnotationQueue;
 }
 
-export const DEFAULT_COLUMNS: ColumnData<ReviewerRowData>[] = [
-  {
-    id: "username",
-    label: "Reviewer",
-    type: COLUMN_TYPE.string,
-  },
-  {
-    id: "progress",
-    label: "Progress",
-    type: COLUMN_TYPE.string,
-  },
-];
-
 const ReviewersSection: React.FunctionComponent<ReviewersSectionProps> = ({
   annotationQueue,
 }) => {
+  const { t } = useTranslation();
+
+  const defaultColumns: ColumnData<ReviewerRowData>[] = useMemo(
+    () => [
+      {
+        id: "username",
+        label: t("annotationQueue.configuration.reviewers.columns.reviewer"),
+        type: COLUMN_TYPE.string,
+      },
+      {
+        id: "progress",
+        label: t("annotationQueue.configuration.reviewers.columns.progress"),
+        type: COLUMN_TYPE.string,
+      },
+    ],
+    [t],
+  );
+
   const reviewerColumns = useMemo(
     () =>
       convertColumnDataToColumn<ReviewerRowData, ReviewerRowData>(
-        DEFAULT_COLUMNS,
+        defaultColumns,
         {},
       ),
-    [],
+    [defaultColumns],
   );
 
   const rows = useMemo(() => {
@@ -54,7 +60,9 @@ const ReviewersSection: React.FunctionComponent<ReviewersSectionProps> = ({
   return (
     <div className="pt-6">
       <h2 className="comet-title-s truncate break-words bg-soft-background pb-3 pt-2">
-        Reviewers ({annotationQueue.reviewers.length})
+        {t("annotationQueue.configuration.reviewers.title", {
+          count: annotationQueue.reviewers.length,
+        })}
       </h2>
       <DataTable
         columns={reviewerColumns}

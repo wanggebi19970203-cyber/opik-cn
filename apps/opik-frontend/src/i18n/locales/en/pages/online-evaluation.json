@@ -72,7 +72,16 @@
       "goToProject": "Go to project",
       "loseChangesTitle": "You're about to lose your changes",
       "loseChangesDescription": "If you change the evaluation scope, your current rule settings — including prompt, model, and variable mappings — will be reset.\nAre you sure you want to continue?",
-      "resetAndContinue": "Reset and continue"
+      "resetAndContinue": "Reset and continue",
+      "budgetMustBePositive": "Budget must be a positive amount",
+      "traceVariableKeyInvalid": "Key is invalid, it should be \"input\", \"output\", \"metadata\" (e.g. \"input.message\" or just \"input\" for the whole object), the reserved word \"spans\" to inject the trace's spans list, or \"trace\" to inject the trace skeleton with attachments",
+      "spanVariableKeyInvalid": "Key is invalid, it should be \"input\", \"output\", \"metadata\" (e.g. \"input.message\" or just \"input\" for the whole object), or the reserved word \"span\" to inject the span with its attachments",
+      "maxCostLabel": "Max cost per evaluation (USD)",
+      "maxCostDescription": "Once an evaluation's spend reaches this amount the judge wraps up and returns its scores so far. Leave empty for no limit.",
+      "copySuffix": " (Copy)",
+      "scopeTrace": "Trace",
+      "scopeThread": "Thread",
+      "scopeSpan": "Span"
     },
     "pythonCodeRule": {
       "pythonCodeLabel": "Python code",
@@ -91,7 +100,42 @@
       "samplingRateTooltip": "Percentage of traces to evaluate",
       "isEmpty": "is empty",
       "isNotEmpty": "is not empty",
-      "selectScore": "Select score"
+      "selectScore": "Select score",
+      "entityTypeTraces": "traces",
+      "entityTypeThreads": "threads",
+      "entityTypeSpans": "spans",
+      "filterColumns": {
+        "id": "ID",
+        "name": "Name",
+        "input": "Input",
+        "output": "Output",
+        "duration": "Duration",
+        "metadata": "Metadata",
+        "tags": "Tags",
+        "threadId": "Thread ID",
+        "feedbackScores": "Feedback scores",
+        "status": "Status",
+        "createdAt": "Created at",
+        "lastUpdatedAt": "Last updated at",
+        "type": "Type",
+        "model": "Model",
+        "provider": "Provider",
+        "totalTokens": "Total tokens",
+        "totalInputTokens": "Total input tokens",
+        "totalOutputTokens": "Total output tokens",
+        "estimatedCost": "Estimated cost",
+        "errors": "Errors",
+        "customFilter": "Custom filter"
+      },
+      "filterPlaceholders": {
+        "key": "key",
+        "keyOptional": "key (optional)",
+        "selectScore": "Select score"
+      },
+      "filterValidation": {
+        "customKeyInvalid": "Key is invalid, it should be \"input\", \"output\", and follow this format: \"input.[PATH]\" For example: \"input.message\" or just \"input\" for the whole object"
+      },
+      "filterErrorPrefix": "Filter {{index}}: {{errors}}"
     },
     "evaluateButton": {
       "noRulesTooltip": "No online evaluation rules assigned to this project",
@@ -138,7 +182,50 @@
       "hidePrompt": "Hide prompt",
       "cancel": "Cancel",
       "evaluating": "Evaluating...",
-      "evaluateEntity": "Evaluate {{entityLabel}}"
-    }
+      "evaluateEntity": "Evaluate {{entityLabel}}",
+      "selectRule": "Select rule {{name}}",
+      "entityTraces": "traces",
+      "entityThreads": "threads",
+      "entitySpans": "spans",
+      "entityTracesCapitalized": "Traces",
+      "entityThreadsCapitalized": "Threads",
+      "entitySpansCapitalized": "Spans"
+    },
+    "filterColumns": {
+      "id": "ID",
+      "name": "Name",
+      "input": "Input",
+      "output": "Output",
+      "duration": "Duration",
+      "metadata": "Metadata",
+      "tags": "Tags",
+      "threadId": "Thread ID",
+      "feedbackScores": "Feedback scores",
+      "status": "Status",
+      "createdAt": "Created at",
+      "lastUpdatedAt": "Last updated at",
+      "type": "Type",
+      "model": "Model",
+      "provider": "Provider",
+      "totalTokens": "Total tokens",
+      "totalInputTokens": "Total input tokens",
+      "totalOutputTokens": "Total output tokens",
+      "estimatedCost": "Estimated cost",
+      "errors": "Errors",
+      "customFilter": "Custom filter"
+    },
+    "filterPlaceholders": {
+      "key": "key",
+      "keyOptional": "key (optional)",
+      "selectScore": "Select score"
+    },
+    "filterValidation": {
+      "customKeyInvalid": "Key is invalid, it should be \"input\", \"output\", and follow this format: \"input.[PATH]\" For example: \"input.message\" or just \"input\" for the whole object"
+    },
+    "filterErrorPrefix": "Filter {{index}}: {{errors}}",
+    "noLimit": "No limit",
+    "goToTraces": "Go to traces",
+    "evaluationTraces": "Evaluation traces",
+    "showLogs": "Show logs"
   }
 }

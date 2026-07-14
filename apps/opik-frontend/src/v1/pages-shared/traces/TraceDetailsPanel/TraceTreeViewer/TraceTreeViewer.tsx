@@ -84,7 +84,9 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
   const hasSearch = Boolean(search && search.length);
   const hasFilter = Boolean(filters.length);
   const hasSearchOrFilter = hasSearch || hasFilter;
-  const title = !hasSearchOrFilter ? t("treeToolbar.trace") : t("treeToolbar.results");
+  const title = !hasSearchOrFilter
+    ? t("treeToolbar.trace")
+    : t("treeToolbar.results");
 
   const spansFilterForTrace = useMemo(
     () => [
@@ -243,7 +245,9 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
                 }}
               >
                 <Button variant="link" className="comet-body-s px-0" asChild>
-                  <span>{t("treeToolbar.spansCount", { count: filteredSpanCount })}</span>
+                  <span>
+                    {t("treeToolbar.spansCount", { count: filteredSpanCount })}
+                  </span>
                 </Button>
               </Link>
             </TooltipWrapper>
@@ -258,7 +262,11 @@ const TraceTreeViewer: React.FunctionComponent<TraceTreeViewerProps> = ({
               <>
                 <SpanDetailsButton config={config} onConfigChange={setConfig} />
                 <TooltipWrapper
-                  content={isAllExpanded ? t("treeToolbar.collapseAll") : t("treeToolbar.expandAll")}
+                  content={
+                    isAllExpanded
+                      ? t("treeToolbar.collapseAll")
+                      : t("treeToolbar.expandAll")
+                  }
                 >
                   <Button
                     onClick={toggleExpandAll}

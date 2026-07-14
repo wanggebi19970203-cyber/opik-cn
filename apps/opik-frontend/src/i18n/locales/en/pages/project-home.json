@@ -2,6 +2,10 @@
   "projectHome": {
     "title": "Project home",
     "description": "Project overview and quick actions",
+    "greeting": "Hi",
+    "greetingWithName": "Hi, {{name}}",
+    "viewLogs": "View logs",
+    "viewDashboards": "View dashboards",
     "stats": {
       "traces": "Traces",
       "datasets": "Datasets",

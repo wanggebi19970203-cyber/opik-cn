@@ -117,7 +117,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.what_do_you_use_projects_for]: {
     id: EXPLAINER_ID.what_do_you_use_projects_for,
-    description: i18next.t("common.constants.explainers.whatDoYouUseProjectsFor"),
+    description: i18next.t(
+      "common.constants.explainers.whatDoYouUseProjectsFor",
+    ),
   },
   [EXPLAINER_ID.what_are_feedback_scores]: {
     id: EXPLAINER_ID.what_are_feedback_scores,
@@ -126,7 +128,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   [EXPLAINER_ID.i_created_a_project_now_what]: {
     id: EXPLAINER_ID.i_created_a_project_now_what,
     title: i18next.t("common.constants.explainers.projectCreated"),
-    description: i18next.t("common.constants.explainers.iCreatedAProjectNowWhat"),
+    description: i18next.t(
+      "common.constants.explainers.iCreatedAProjectNowWhat",
+    ),
   },
   [EXPLAINER_ID.what_are_traces]: {
     id: EXPLAINER_ID.what_are_traces,
@@ -148,16 +152,22 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   [EXPLAINER_ID.i_added_traces_to_an_test_suite_now_what]: {
     id: EXPLAINER_ID.i_added_traces_to_an_test_suite_now_what,
     title: i18next.t("common.constants.explainers.tracesAddedToTestSuite"),
-    description: i18next.t("common.constants.explainers.iAddedTracesToATestSuiteNowWhat"),
+    description: i18next.t(
+      "common.constants.explainers.iAddedTracesToATestSuiteNowWhat",
+    ),
   },
   [EXPLAINER_ID.i_added_items_to_a_dataset_now_what]: {
     id: EXPLAINER_ID.i_added_items_to_a_dataset_now_what,
     title: i18next.t("common.constants.explainers.itemsAddedToDataset"),
-    description: i18next.t("common.constants.explainers.iAddedItemsToADatasetNowWhat"),
+    description: i18next.t(
+      "common.constants.explainers.iAddedItemsToADatasetNowWhat",
+    ),
   },
   [EXPLAINER_ID.why_would_i_want_to_add_traces_to_an_test_suite]: {
     id: EXPLAINER_ID.why_would_i_want_to_add_traces_to_an_test_suite,
-    description: i18next.t("common.constants.explainers.whyWouldIWantToAddTracesToATestSuite"),
+    description: i18next.t(
+      "common.constants.explainers.whyWouldIWantToAddTracesToATestSuite",
+    ),
   },
   [EXPLAINER_ID.hows_the_cost_estimated]: {
     id: EXPLAINER_ID.hows_the_cost_estimated,
@@ -166,7 +176,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.hows_the_thread_cost_estimated]: {
     id: EXPLAINER_ID.hows_the_thread_cost_estimated,
-    description: i18next.t("common.constants.explainers.howsTheThreadCostEstimated"),
+    description: i18next.t(
+      "common.constants.explainers.howsTheThreadCostEstimated",
+    ),
     type: "help",
   },
   [EXPLAINER_ID.whats_that_prompt_select]: {
@@ -177,23 +189,31 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   [EXPLAINER_ID.i_added_edited_a_new_online_evaluation_rule_now_what]: {
     id: EXPLAINER_ID.i_added_edited_a_new_online_evaluation_rule_now_what,
     title: i18next.t("common.constants.explainers.evaluationRuleSet"),
-    description: i18next.t("common.constants.explainers.iAddedEditedANewOnlineEvaluationRuleNowWhat"),
+    description: i18next.t(
+      "common.constants.explainers.iAddedEditedANewOnlineEvaluationRuleNowWhat",
+    ),
   },
   [EXPLAINER_ID.i_added_edited_a_new_online_evaluation_thread_level_rule_now_what]:
     {
       id: EXPLAINER_ID.i_added_edited_a_new_online_evaluation_thread_level_rule_now_what,
       title: i18next.t("common.constants.explainers.evaluationRuleSet"),
-      description: i18next.t("common.constants.explainers.iAddedEditedANewOnlineEvaluationThreadLevelRuleNowWhat"),
+      description: i18next.t(
+        "common.constants.explainers.iAddedEditedANewOnlineEvaluationThreadLevelRuleNowWhat",
+      ),
     },
   [EXPLAINER_ID.i_added_edited_a_new_online_evaluation_span_level_rule_now_what]:
     {
       id: EXPLAINER_ID.i_added_edited_a_new_online_evaluation_span_level_rule_now_what,
       title: i18next.t("common.constants.explainers.evaluationRuleSet"),
-      description: i18next.t("common.constants.explainers.iAddedEditedANewOnlineEvaluationSpanLevelRuleNowWhat"),
+      description: i18next.t(
+        "common.constants.explainers.iAddedEditedANewOnlineEvaluationSpanLevelRuleNowWhat",
+      ),
     },
   [EXPLAINER_ID.what_are_these_elements_in_the_tree]: {
     id: EXPLAINER_ID.what_are_these_elements_in_the_tree,
-    description: i18next.t("common.constants.explainers.whatAreTheseElementsInTheTree"),
+    description: i18next.t(
+      "common.constants.explainers.whatAreTheseElementsInTheTree",
+    ),
   },
   [EXPLAINER_ID.what_is_human_review]: {
     id: EXPLAINER_ID.what_is_human_review,
@@ -201,11 +221,15 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.what_are_annotation_queues]: {
     id: EXPLAINER_ID.what_are_annotation_queues,
-    description: i18next.t("common.constants.explainers.whatAreAnnotationQueues"),
+    description: i18next.t(
+      "common.constants.explainers.whatAreAnnotationQueues",
+    ),
   },
   [EXPLAINER_ID.how_to_choose_annotation_queue_type]: {
     id: EXPLAINER_ID.how_to_choose_annotation_queue_type,
-    description: i18next.t("common.constants.explainers.howToChooseAnnotationQueueType"),
+    description: i18next.t(
+      "common.constants.explainers.howToChooseAnnotationQueueType",
+    ),
   },
   [EXPLAINER_ID.whats_an_experiment]: {
     id: EXPLAINER_ID.whats_an_experiment,
@@ -218,15 +242,21 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.what_are_experiment_items]: {
     id: EXPLAINER_ID.what_are_experiment_items,
-    description: i18next.t("common.constants.explainers.whatAreExperimentItems"),
+    description: i18next.t(
+      "common.constants.explainers.whatAreExperimentItems",
+    ),
   },
   [EXPLAINER_ID.whats_the_experiment_configuration]: {
     id: EXPLAINER_ID.whats_the_experiment_configuration,
-    description: i18next.t("common.constants.explainers.whatsTheExperimentConfiguration"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheExperimentConfiguration",
+    ),
   },
   [EXPLAINER_ID.what_does_it_mean_to_compare_my_experiments]: {
     id: EXPLAINER_ID.what_does_it_mean_to_compare_my_experiments,
-    description: i18next.t("common.constants.explainers.whatDoesItMeanToCompareMyExperiments"),
+    description: i18next.t(
+      "common.constants.explainers.whatDoesItMeanToCompareMyExperiments",
+    ),
     type: "help",
   },
   [EXPLAINER_ID.whats_the_test_suite_item]: {
@@ -240,15 +270,21 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.why_do_i_need_multiple_test_suites]: {
     id: EXPLAINER_ID.why_do_i_need_multiple_test_suites,
-    description: i18next.t("common.constants.explainers.whyDoINeedMultipleTestSuites"),
+    description: i18next.t(
+      "common.constants.explainers.whyDoINeedMultipleTestSuites",
+    ),
   },
   [EXPLAINER_ID.what_format_is_this_to_add_my_test_suite_item]: {
     id: EXPLAINER_ID.what_format_is_this_to_add_my_test_suite_item,
-    description: i18next.t("common.constants.explainers.whatFormatIsThisToAddMyTestSuiteItem"),
+    description: i18next.t(
+      "common.constants.explainers.whatFormatIsThisToAddMyTestSuiteItem",
+    ),
   },
   [EXPLAINER_ID.what_format_is_this_to_add_my_dataset_item]: {
     id: EXPLAINER_ID.what_format_is_this_to_add_my_dataset_item,
-    description: i18next.t("common.constants.explainers.whatFormatIsThisToAddMyDatasetItem"),
+    description: i18next.t(
+      "common.constants.explainers.whatFormatIsThisToAddMyDatasetItem",
+    ),
   },
   [EXPLAINER_ID.whats_the_prompt_library]: {
     id: EXPLAINER_ID.whats_the_prompt_library,
@@ -260,7 +296,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.why_do_i_have_experiments_in_the_prompt_library]: {
     id: EXPLAINER_ID.why_do_i_have_experiments_in_the_prompt_library,
-    description: i18next.t("common.constants.explainers.whyDoIHaveExperimentsInThePromptLibrary"),
+    description: i18next.t(
+      "common.constants.explainers.whyDoIHaveExperimentsInThePromptLibrary",
+    ),
   },
   [EXPLAINER_ID.what_are_commits]: {
     id: EXPLAINER_ID.what_are_commits,
@@ -273,7 +311,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.what_happens_if_i_edit_my_prompt]: {
     id: EXPLAINER_ID.what_happens_if_i_edit_my_prompt,
-    description: i18next.t("common.constants.explainers.whatHappensIfIEditMyPrompt"),
+    description: i18next.t(
+      "common.constants.explainers.whatHappensIfIEditMyPrompt",
+    ),
   },
   [EXPLAINER_ID.whats_the_playground]: {
     id: EXPLAINER_ID.whats_the_playground,
@@ -282,19 +322,27 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   [EXPLAINER_ID.whats_these_configuration_things]: {
     id: EXPLAINER_ID.whats_these_configuration_things,
     title: i18next.t("common.constants.explainers.modelParameters"),
-    description: i18next.t("common.constants.explainers.whatsTheseConfigurationThings"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheseConfigurationThings",
+    ),
   },
   [EXPLAINER_ID.why_do_i_need_an_ai_provider]: {
     id: EXPLAINER_ID.why_do_i_need_an_ai_provider,
-    description: i18next.t("common.constants.explainers.whyDoINeedAnAiProvider"),
+    description: i18next.t(
+      "common.constants.explainers.whyDoINeedAnAiProvider",
+    ),
   },
   [EXPLAINER_ID.what_does_the_test_suite_do_here]: {
     id: EXPLAINER_ID.what_does_the_test_suite_do_here,
-    description: i18next.t("common.constants.explainers.whatDoesTheTestSuiteDoHere"),
+    description: i18next.t(
+      "common.constants.explainers.whatDoesTheTestSuiteDoHere",
+    ),
   },
   [EXPLAINER_ID.how_do_i_use_the_test_suite_in_the_playground]: {
     id: EXPLAINER_ID.how_do_i_use_the_test_suite_in_the_playground,
-    description: i18next.t("common.constants.explainers.howDoIUseTheTestSuiteInThePlayground"),
+    description: i18next.t(
+      "common.constants.explainers.howDoIUseTheTestSuiteInThePlayground",
+    ),
   },
   [EXPLAINER_ID.whats_llm_as_a_judge]: {
     id: EXPLAINER_ID.whats_llm_as_a_judge,
@@ -306,23 +354,33 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.what_are_feedback_definitions]: {
     id: EXPLAINER_ID.what_are_feedback_definitions,
-    description: i18next.t("common.constants.explainers.whatAreFeedbackDefinitions"),
+    description: i18next.t(
+      "common.constants.explainers.whatAreFeedbackDefinitions",
+    ),
   },
   [EXPLAINER_ID.why_do_i_need_the_collaborators_tab]: {
     id: EXPLAINER_ID.why_do_i_need_the_collaborators_tab,
-    description: i18next.t("common.constants.explainers.whyDoINeedTheCollaboratorsTab"),
+    description: i18next.t(
+      "common.constants.explainers.whyDoINeedTheCollaboratorsTab",
+    ),
   },
   [EXPLAINER_ID.what_format_should_the_metadata_be]: {
     id: EXPLAINER_ID.what_format_should_the_metadata_be,
-    description: i18next.t("common.constants.explainers.whatFormatShouldTheMetadataBe"),
+    description: i18next.t(
+      "common.constants.explainers.whatFormatShouldTheMetadataBe",
+    ),
   },
   [EXPLAINER_ID.what_format_should_the_prompt_be]: {
     id: EXPLAINER_ID.what_format_should_the_prompt_be,
-    description: i18next.t("common.constants.explainers.whatFormatShouldThePromptBe"),
+    description: i18next.t(
+      "common.constants.explainers.whatFormatShouldThePromptBe",
+    ),
   },
   [EXPLAINER_ID.whats_an_optimization_run]: {
     id: EXPLAINER_ID.whats_an_optimization_run,
-    description: i18next.t("common.constants.explainers.whatsAnOptimizationRun"),
+    description: i18next.t(
+      "common.constants.explainers.whatsAnOptimizationRun",
+    ),
   },
   [EXPLAINER_ID.whats_the_best_score]: {
     id: EXPLAINER_ID.whats_the_best_score,
@@ -331,26 +389,36 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   [EXPLAINER_ID.what_happens_if_i_edit_an_ai_provider]: {
     id: EXPLAINER_ID.what_happens_if_i_edit_an_ai_provider,
     title: i18next.t("common.constants.explainers.editingAnExistingKey"),
-    description: i18next.t("common.constants.explainers.whatHappensIfIEditAnAiProvider"),
+    description: i18next.t(
+      "common.constants.explainers.whatHappensIfIEditAnAiProvider",
+    ),
   },
   [EXPLAINER_ID.what_happens_if_i_edit_a_rule]: {
     id: EXPLAINER_ID.what_happens_if_i_edit_a_rule,
     title: i18next.t("common.constants.explainers.editingAnExistingRule"),
-    description: i18next.t("common.constants.explainers.whatHappensIfIEditARule"),
+    description: i18next.t(
+      "common.constants.explainers.whatHappensIfIEditARule",
+    ),
   },
   [EXPLAINER_ID.what_happens_if_i_edit_a_thread_rule]: {
     id: EXPLAINER_ID.what_happens_if_i_edit_a_thread_rule,
     title: i18next.t("common.constants.explainers.editingAThreadLevelRule"),
-    description: i18next.t("common.constants.explainers.whatHappensIfIEditAThreadRule"),
+    description: i18next.t(
+      "common.constants.explainers.whatHappensIfIEditAThreadRule",
+    ),
   },
   [EXPLAINER_ID.what_happens_if_i_edit_a_feedback_definition]: {
     id: EXPLAINER_ID.what_happens_if_i_edit_a_feedback_definition,
     title: i18next.t("common.constants.explainers.editingAFeedbackDefinition"),
-    description: i18next.t("common.constants.explainers.whatHappensIfIEditAFeedbackDefinition"),
+    description: i18next.t(
+      "common.constants.explainers.whatHappensIfIEditAFeedbackDefinition",
+    ),
   },
   [EXPLAINER_ID.why_would_i_want_to_create_a_new_project]: {
     id: EXPLAINER_ID.why_would_i_want_to_create_a_new_project,
-    description: i18next.t("common.constants.explainers.whyWouldIWantToCreateANewProject"),
+    description: i18next.t(
+      "common.constants.explainers.whyWouldIWantToCreateANewProject",
+    ),
   },
   [EXPLAINER_ID.whats_the_commit_history]: {
     id: EXPLAINER_ID.whats_the_commit_history,
@@ -358,7 +426,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.why_would_i_compare_commits]: {
     id: EXPLAINER_ID.why_would_i_compare_commits,
-    description: i18next.t("common.constants.explainers.whyWouldICompareCommits"),
+    description: i18next.t(
+      "common.constants.explainers.whyWouldICompareCommits",
+    ),
     type: "help",
   },
   [EXPLAINER_ID.whats_the_optimizer]: {
@@ -372,7 +442,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.whats_the_evaluation_run_configuration]: {
     id: EXPLAINER_ID.whats_the_evaluation_run_configuration,
-    description: i18next.t("common.constants.explainers.whatsTheEvaluationRunConfiguration"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheEvaluationRunConfiguration",
+    ),
   },
   [EXPLAINER_ID.metric_equals]: {
     id: EXPLAINER_ID.metric_equals,
@@ -428,7 +500,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.metric_context_precision]: {
     id: EXPLAINER_ID.metric_context_precision,
-    description: i18next.t("common.constants.explainers.metricContextPrecision"),
+    description: i18next.t(
+      "common.constants.explainers.metricContextPrecision",
+    ),
   },
   [EXPLAINER_ID.metric_context_recall]: {
     id: EXPLAINER_ID.metric_context_recall,
@@ -445,19 +519,27 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.llm_judge_variable_mapping]: {
     id: EXPLAINER_ID.llm_judge_variable_mapping,
-    description: i18next.t("common.constants.explainers.llmJudgeVariableMapping"),
+    description: i18next.t(
+      "common.constants.explainers.llmJudgeVariableMapping",
+    ),
   },
   [EXPLAINER_ID.prompt_generation_learn_more]: {
     id: EXPLAINER_ID.prompt_generation_learn_more,
-    description: i18next.t("common.constants.explainers.promptGenerationLearnMore"),
+    description: i18next.t(
+      "common.constants.explainers.promptGenerationLearnMore",
+    ),
   },
   [EXPLAINER_ID.prompt_improvement_learn_more]: {
     id: EXPLAINER_ID.prompt_improvement_learn_more,
-    description: i18next.t("common.constants.explainers.promptImprovementLearnMore"),
+    description: i18next.t(
+      "common.constants.explainers.promptImprovementLearnMore",
+    ),
   },
   [EXPLAINER_ID.prompt_improvement_optimizer]: {
     id: EXPLAINER_ID.prompt_improvement_optimizer,
-    description: i18next.t("common.constants.explainers.promptImprovementOptimizer"),
+    description: i18next.t(
+      "common.constants.explainers.promptImprovementOptimizer",
+    ),
   },
   [EXPLAINER_ID.whats_an_alert]: {
     id: EXPLAINER_ID.whats_an_alert,
@@ -469,15 +551,21 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.whats_the_optimization_config]: {
     id: EXPLAINER_ID.whats_the_optimization_config,
-    description: i18next.t("common.constants.explainers.whatsTheOptimizationConfig"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheOptimizationConfig",
+    ),
   },
   [EXPLAINER_ID.whats_the_algorithm_section]: {
     id: EXPLAINER_ID.whats_the_algorithm_section,
-    description: i18next.t("common.constants.explainers.whatsTheAlgorithmSection"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheAlgorithmSection",
+    ),
   },
   [EXPLAINER_ID.whats_the_test_suite_section]: {
     id: EXPLAINER_ID.whats_the_test_suite_section,
-    description: i18next.t("common.constants.explainers.whatsTheTestSuiteSection"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheTestSuiteSection",
+    ),
   },
   [EXPLAINER_ID.whats_the_metric_section]: {
     id: EXPLAINER_ID.whats_the_metric_section,
@@ -485,11 +573,15 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.whats_the_metric_settings]: {
     id: EXPLAINER_ID.whats_the_metric_settings,
-    description: i18next.t("common.constants.explainers.whatsTheMetricSettings"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheMetricSettings",
+    ),
   },
   [EXPLAINER_ID.whats_the_algorithm_settings]: {
     id: EXPLAINER_ID.whats_the_algorithm_settings,
-    description: i18next.t("common.constants.explainers.whatsTheAlgorithmSettings"),
+    description: i18next.t(
+      "common.constants.explainers.whatsTheAlgorithmSettings",
+    ),
   },
   [EXPLAINER_ID.geval_task_introduction]: {
     id: EXPLAINER_ID.geval_task_introduction,
@@ -497,7 +589,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.geval_evaluation_criteria]: {
     id: EXPLAINER_ID.geval_evaluation_criteria,
-    description: i18next.t("common.constants.explainers.gevalEvaluationCriteria"),
+    description: i18next.t(
+      "common.constants.explainers.gevalEvaluationCriteria",
+    ),
   },
   [EXPLAINER_ID.metric_reference_key]: {
     id: EXPLAINER_ID.metric_reference_key,
@@ -513,7 +607,9 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.optimizer_adaptive_mutation]: {
     id: EXPLAINER_ID.optimizer_adaptive_mutation,
-    description: i18next.t("common.constants.explainers.optimizerAdaptiveMutation"),
+    description: i18next.t(
+      "common.constants.explainers.optimizerAdaptiveMutation",
+    ),
   },
   [EXPLAINER_ID.optimizer_enable_moo]: {
     id: EXPLAINER_ID.optimizer_enable_moo,
@@ -521,27 +617,39 @@ export const EXPLAINERS_MAP: Record<EXPLAINER_ID, Explainer> = {
   },
   [EXPLAINER_ID.optimizer_enable_llm_crossover]: {
     id: EXPLAINER_ID.optimizer_enable_llm_crossover,
-    description: i18next.t("common.constants.explainers.optimizerEnableLlmCrossover"),
+    description: i18next.t(
+      "common.constants.explainers.optimizerEnableLlmCrossover",
+    ),
   },
   [EXPLAINER_ID.optimizer_output_style_guidance]: {
     id: EXPLAINER_ID.optimizer_output_style_guidance,
-    description: i18next.t("common.constants.explainers.optimizerOutputStyleGuidance"),
+    description: i18next.t(
+      "common.constants.explainers.optimizerOutputStyleGuidance",
+    ),
   },
   [EXPLAINER_ID.optimizer_infer_output_style]: {
     id: EXPLAINER_ID.optimizer_infer_output_style,
-    description: i18next.t("common.constants.explainers.optimizerInferOutputStyle"),
+    description: i18next.t(
+      "common.constants.explainers.optimizerInferOutputStyle",
+    ),
   },
   [EXPLAINER_ID.feedback_score_groupby_requires_single_metric]: {
     id: EXPLAINER_ID.feedback_score_groupby_requires_single_metric,
-    description: i18next.t("common.constants.explainers.feedbackScoreGroupbyRequiresSingleMetric"),
+    description: i18next.t(
+      "common.constants.explainers.feedbackScoreGroupbyRequiresSingleMetric",
+    ),
   },
   [EXPLAINER_ID.duration_groupby_requires_single_metric]: {
     id: EXPLAINER_ID.duration_groupby_requires_single_metric,
-    description: i18next.t("common.constants.explainers.durationGroupbyRequiresSingleMetric"),
+    description: i18next.t(
+      "common.constants.explainers.durationGroupbyRequiresSingleMetric",
+    ),
   },
   [EXPLAINER_ID.usage_groupby_requires_single_metric]: {
     id: EXPLAINER_ID.usage_groupby_requires_single_metric,
-    description: i18next.t("common.constants.explainers.usageGroupbyRequiresSingleMetric"),
+    description: i18next.t(
+      "common.constants.explainers.usageGroupbyRequiresSingleMetric",
+    ),
   },
   [EXPLAINER_ID.groupby_requires_metric]: {
     id: EXPLAINER_ID.groupby_requires_metric,

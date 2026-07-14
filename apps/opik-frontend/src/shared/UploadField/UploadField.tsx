@@ -90,7 +90,9 @@ const UploadField: React.FC<UploadFieldProps> = ({
         />
         <CloudUpload className="-mr-0.5 size-[18px] " />
         <div className="flex items-center gap-2">
-          <span className="comet-body-s-accented">{description ?? t("common.upload.dropFileToUpload")}</span>
+          <span className="comet-body-s-accented">
+            {description ?? t("common.upload.dropFileToUpload")}
+          </span>
           <Button
             type="button"
             size="sm"

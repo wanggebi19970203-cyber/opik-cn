@@ -228,7 +228,9 @@ const RunEvaluationDialog: React.FunctionComponent<
                               isExpanded && "rotate-180",
                             )}
                           />
-                          {isExpanded ? t("common.automations.hidePrompt") : t("common.automations.showPrompt")}
+                          {isExpanded
+                            ? t("common.automations.hidePrompt")
+                            : t("common.automations.showPrompt")}
                         </Button>
                         {isExpanded && (
                           <div className="mt-2 rounded-md bg-muted p-3">
@@ -277,11 +279,15 @@ const RunEvaluationDialog: React.FunctionComponent<
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-lg sm:max-w-screen-sm">
           <DialogHeader>
-            <DialogTitle>{t("common.automations.runOnlineEvaluationRules")}</DialogTitle>
+            <DialogTitle>
+              {t("common.automations.runOnlineEvaluationRules")}
+            </DialogTitle>
           </DialogHeader>
           <div className="w-full overflow-hidden">
             <p className="comet-body-s mb-4 text-muted-foreground">
-              {t("common.automations.runOnlineEvaluationDescription", { entity: entityLabel })}
+              {t("common.automations.runOnlineEvaluationDescription", {
+                entity: entityLabel,
+              })}
             </p>
             {canUpdateOnlineEvaluationRules && rules.length > 0 && (
               <div className="mb-4 flex justify-end">
@@ -306,7 +312,9 @@ const RunEvaluationDialog: React.FunctionComponent<
             >
               {manualEvaluationMutation.isPending
                 ? t("common.automations.evaluating")
-                : t("common.automations.evaluateEntities", { entity: capitalizedEntityLabel.toLowerCase() })}
+                : t("common.automations.evaluateEntities", {
+                    entity: capitalizedEntityLabel.toLowerCase(),
+                  })}
             </Button>
           </DialogFooter>
         </DialogContent>

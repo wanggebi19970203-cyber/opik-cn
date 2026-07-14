@@ -28,7 +28,9 @@ const SelectBoxClearWrapper: React.FC<SelectBoxClearWrapperProps> = ({
       {children}
 
       {isClearable && (
-        <TooltipWrapper content={clearTooltip ?? t("common.emptyStates.clearSelection")}>
+        <TooltipWrapper
+          content={clearTooltip ?? t("common.emptyStates.clearSelection")}
+        >
           <Button
             variant="outline"
             size={buttonSize}

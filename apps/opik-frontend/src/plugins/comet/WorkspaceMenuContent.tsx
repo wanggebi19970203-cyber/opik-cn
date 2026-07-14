@@ -120,7 +120,9 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
             <DropdownMenuSubContent className="w-[280px] p-1" sideOffset={8}>
-              <DropdownMenuLabel size="sm">{t("labels.organizations")}</DropdownMenuLabel>
+              <DropdownMenuLabel size="sm">
+                {t("labels.organizations")}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-1" />
               <div className="max-h-[60vh] overflow-auto">
                 {sortedOrganizations.length > 0 ? (
@@ -154,7 +156,9 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
                                 workspaceName,
                               );
                             }}
-                            aria-label={`Open ${org.name} settings`}
+                            aria-label={t("labels.openSettings", {
+                              name: org.name,
+                            })}
                             className={cn(
                               "shrink-0 text-light-slate hover:text-foreground",
                               !isActive && "invisible group-hover:visible",
@@ -194,7 +198,9 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
                   workspaceName,
                 );
               }}
-              aria-label={`Open ${currentOrganization.name} settings`}
+              aria-label={t("labels.openSettings", {
+                name: currentOrganization.name,
+              })}
               className="shrink-0 text-light-slate hover:text-foreground"
             >
               <Settings2 className="size-3.5" />

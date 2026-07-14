@@ -202,7 +202,9 @@ const AutoComplete = <T extends string>({
                   ))}
                 </CommandGroup>
               ) : null}
-              {!isLoading ? <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty> : null}
+              {!isLoading ? (
+                <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty>
+              ) : null}
             </CommandList>
           </PopoverContent>
         </Command>

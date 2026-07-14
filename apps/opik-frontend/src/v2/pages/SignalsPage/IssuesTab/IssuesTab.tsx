@@ -126,8 +126,9 @@ const FailureDetailText: React.FC<{ detail?: string; className?: string }> = ({
     </p>
   ) : null;
 
-const TryAgainButton: React.FC<{ onClick?: () => void }> = ({ onClick }) =>
-  onClick ? (
+const TryAgainButton: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
+  const { t } = useTranslation("pages/signals");
+  return onClick ? (
     <Button
       variant="link"
       size="2xs"
@@ -135,9 +136,10 @@ const TryAgainButton: React.FC<{ onClick?: () => void }> = ({ onClick }) =>
       className="h-auto select-none gap-1 self-start px-0"
     >
       <RotateCcw className="size-3" />
-      Try again
+      {t("signals.issues.tryAgain")}
     </Button>
   ) : null;
+};
 
 // Banner above an existing issue list: inline "Show details" + Try again.
 const FailedBanner: React.FC<{
@@ -145,7 +147,8 @@ const FailedBanner: React.FC<{
   detail?: string;
   onRetry?: () => void;
 }> = ({ reason, detail, onRetry }) => {
-  const { title, description } = getRunFailureCopy(reason);
+  const { t } = useTranslation("pages/signals");
+  const { title, description } = getRunFailureCopy(t, reason);
   const [open, setOpen] = useState(false);
   return (
     <div className="flex items-start gap-3 border-b border-border bg-[#F146681A] px-4 py-3">
@@ -165,7 +168,7 @@ const FailedBanner: React.FC<{
                   onClick={() => setOpen((o) => !o)}
                   className="text-muted-slate underline underline-offset-2 hover:opacity-80"
                 >
-                  {open ? "Hide details" : "Show details"}
+                  {open ? t("issues.hideDetails") : t("issues.showDetails")}
                 </button>
               </>
             )}
@@ -188,36 +191,44 @@ const StaleResultsBanner: React.FC<{
   days: number;
   traceCount: number;
   onRun?: () => void;
-}> = ({ days, traceCount, onRun }) => (
-  <div className="flex items-start gap-3 border-b border-border bg-[#FB923C1A] px-4 py-3">
-    <IconTile className="bg-[#FB923C]">
-      <Clock className="size-4 text-white" />
-    </IconTile>
-    <div className="flex min-w-0 flex-1 flex-col gap-2">
-      <div className="flex flex-col gap-0.5">
-        <span className="comet-body-s-accented text-foreground">
-          Results might be outdated
-        </span>
-        <span className="comet-body-xs text-muted-slate">
-          Last diagnostic ran over {days} {days === 1 ? "day" : "days"} ago. Run
-          a new one to analyze {formatTraceCount(traceCount)}{" "}
-          {traceCount === 1 ? "trace" : "traces"} from the last 24 hours.
-        </span>
+}> = ({ days, traceCount, onRun }) => {
+  const { t } = useTranslation("pages/signals");
+  return (
+    <div className="flex items-start gap-3 border-b border-border bg-[#FB923C1A] px-4 py-3">
+      <IconTile className="bg-[#FB923C]">
+        <Clock className="size-4 text-white" />
+      </IconTile>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-0.5">
+          <span className="comet-body-s-accented text-foreground">
+            {t("signals.issues.staleBanner.title")}
+          </span>
+          <span className="comet-body-xs text-muted-slate">
+            {t("signals.issues.staleBanner.lastRan", {
+              days,
+              count: days,
+            })}{" "}
+            {t("signals.issues.staleBanner.analyze", {
+              traceCount: formatTraceCount(traceCount),
+              count: traceCount,
+            })}
+          </span>
+        </div>
+        {onRun && (
+          <Button
+            variant="link"
+            size="2xs"
+            onClick={onRun}
+            className="h-auto select-none gap-1.5 self-start px-0"
+          >
+            <Radar className="size-3" />
+            {t("signals.issues.runDiagnostic")}
+          </Button>
+        )}
       </div>
-      {onRun && (
-        <Button
-          variant="link"
-          size="2xs"
-          onClick={onRun}
-          className="h-auto select-none gap-1.5 self-start px-0"
-        >
-          <Radar className="size-3" />
-          Run diagnostic
-        </Button>
-      )}
     </div>
-  </div>
-);
+  );
+};
 
 const ListEmptyState: React.FC<{
   icon: React.ReactNode;
@@ -472,7 +483,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
     }
 
     if (isFailed) {
-      const { title, description } = getRunFailureCopy(failedReason);
+      const { title, description } = getRunFailureCopy(t, failedReason);
       return (
         <ListEmptyState
           className="bg-[#F146681A]"
@@ -590,7 +601,7 @@ const IssuesTab: React.FC<IssuesTabProps> = ({
             >
               <span className="flex min-w-0 items-center gap-2">
                 <span className="comet-body-xs-accented shrink-0 text-muted-slate">
-                  Issues ({issueCount}):
+                  {t("signals.issues.issues")} ({issueCount}):
                 </span>
                 <IssueSeverityBadge severity={activeIssue?.severity} />
                 <span className="comet-body-xs-accented truncate text-foreground">

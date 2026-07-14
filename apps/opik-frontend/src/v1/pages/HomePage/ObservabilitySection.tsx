@@ -133,7 +133,7 @@ const ObservabilitySection: React.FunctionComponent = () => {
         ...SHARED_COLUMNS,
         {
           id: "error_count",
-          label: "Errors",
+          label: "home.observability.errors",
           type: COLUMN_TYPE.errors,
           cell: ErrorsCountCell as never,
           customMeta: {
@@ -211,7 +211,8 @@ const ObservabilitySection: React.FunctionComponent = () => {
       <div className="flex justify-end pt-1">
         <Link to="/$workspaceName/projects" params={{ workspaceName }}>
           <Button variant="ghost" className="flex items-center gap-1 pr-0">
-            {t("home.observability.allProjects")} <ArrowRight className="size-4" />
+            {t("home.observability.allProjects")}{" "}
+            <ArrowRight className="size-4" />
           </Button>
         </Link>
       </div>

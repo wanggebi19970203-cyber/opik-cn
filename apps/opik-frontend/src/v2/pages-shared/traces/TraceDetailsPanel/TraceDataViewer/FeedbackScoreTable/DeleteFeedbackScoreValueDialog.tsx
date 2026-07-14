@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
@@ -27,18 +27,21 @@ type SetInactiveConfirmDialogProps = {
   row: ExpandingFeedbackScoreRow;
 };
 
-const entityTypeMap: Record<string, string> = {
-  trace: "a trace",
-  thread: "a thread",
-  span: "a span",
-  experiment: "an experiment",
-};
-
 const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
   SetInactiveConfirmDialogProps
 > = ({ open, setOpen, onDeleteFeedbackScore, row, entityType }) => {
   const { t } = useTranslation("tracing");
   const [dontAskAgain, setDontAskAgain] = useFeedbackScoreDeletePreference();
+
+  const entityTypeLabel = useMemo(() => {
+    const map: Record<string, string> = {
+      trace: t("feedbackScoreTable.entityTrace"),
+      thread: t("feedbackScoreTable.entityThread"),
+      span: t("feedbackScoreTable.entitySpan"),
+      experiment: t("feedbackScoreTable.entityExperiment"),
+    };
+    return map[entityType];
+  }, [entityType, t]);
 
   const onConfirm = () => {
     onDeleteFeedbackScore(
@@ -53,12 +56,16 @@ const DeleteFeedbackScoreValueDialog: React.FunctionComponent<
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>{t("feedbackScoreTable.removeFeedbackScore")}</DialogTitle>
+          <DialogTitle>
+            {t("feedbackScoreTable.removeFeedbackScore")}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <div className="comet-body-s text-muted-slate">
-            {t("feedbackScoreTable.removeFeedbackScoreDescription", { entity: entityTypeMap[entityType] })}
+            {t("feedbackScoreTable.removeFeedbackScoreDescription", {
+              entity: entityTypeLabel,
+            })}
           </div>
           <Label
             key="dont-ask-again"

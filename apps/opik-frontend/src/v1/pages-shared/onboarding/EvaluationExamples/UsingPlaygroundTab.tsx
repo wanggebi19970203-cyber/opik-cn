@@ -13,13 +13,13 @@ const UsingPlaygroundTab = () => {
     <div className="flex flex-col gap-6 rounded-md border bg-background p-6">
       <div className="comet-body-s">
         <div className="pt-1">
-          {t('integrationExplorer.playgroundDescription')}
+          {t("integrationExplorer.playgroundDescription")}
         </div>
 
         <img className="my-5 block" src={evaluationGifUrl} />
 
         <div className="pb-1">
-          {t('integrationExplorer.learnMorePlayground')}{" "}
+          {t("integrationExplorer.learnMorePlayground")}{" "}
           <Button
             size="sm"
             variant="link"
@@ -33,12 +33,12 @@ const UsingPlaygroundTab = () => {
               target="_blank"
               rel="noreferrer"
             >
-              {t('integrationExplorer.documentationGuide')}
+              {t("integrationExplorer.documentationGuide")}
             </a>
           </Button>
         </div>
         <div className="pt-2">
-          {t('integrationExplorer.getStartedPlayground')}{" "}
+          {t("integrationExplorer.getStartedPlayground")}{" "}
           <SheetClose asChild>
             <Button
               size="sm"
@@ -47,13 +47,13 @@ const UsingPlaygroundTab = () => {
               asChild
             >
               <Link to="/$workspaceName/playground" params={{ workspaceName }}>
-                {t('integrationExplorer.playgroundLink')}
+                {t("integrationExplorer.playgroundLink")}
               </Link>
             </Button>
           </SheetClose>{" "}
-          {t('integrationExplorer.playgroundUsage')}{" "}
+          {t("integrationExplorer.playgroundUsage")}{" "}
           <span className="text-emerald-500">{`{{ variable_name }}`}</span>{" "}
-          {t('integrationExplorer.evaluateAgainstSuites')}
+          {t("integrationExplorer.evaluateAgainstSuites")}
         </div>
       </div>
     </div>

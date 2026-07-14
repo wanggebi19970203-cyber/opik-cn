@@ -44,7 +44,9 @@ const RemoveDatasetItemsDialog = ({
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
-          <div className="comet-body-s text-muted-slate">{resolvedDescription}</div>
+          <div className="comet-body-s text-muted-slate">
+            {resolvedDescription}
+          </div>
           <Label className="flex cursor-pointer items-center gap-2">
             <Checkbox
               id="dont-show-again"

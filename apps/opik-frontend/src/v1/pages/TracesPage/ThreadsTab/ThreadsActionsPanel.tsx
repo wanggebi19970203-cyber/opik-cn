@@ -140,9 +140,7 @@ const ThreadsActionsPanel: React.FunctionComponent<
         getData={mapRowData}
         generateFileName={generateFileName}
         tooltipContent={
-          !isExportEnabled
-            ? t("tracing.actions.exportDisabled")
-            : undefined
+          !isExportEnabled ? t("tracing.actions.exportDisabled") : undefined
         }
       />
       <TooltipWrapper content={t("tracing.actions.delete")}>

@@ -100,7 +100,7 @@ const SlackButton: React.FC = () => {
     >
       <a href={SLACK_LINK} target="_blank" rel="noopener noreferrer">
         <Slack className="mr-2 size-4" />
-        <span>{t('integrationExplorer.getHelpInSlack')}</span>
+        <span>{t("integrationExplorer.getHelpInSlack")}</span>
       </a>
     </Button>
   );
@@ -121,7 +121,7 @@ const PlaygroundButton: React.FC = () => {
     >
       <Link to={"/$workspaceName/playground"} params={{ workspaceName }}>
         <Blocks className="mr-2 size-4" />
-        {t('integrationExplorer.tryPlayground')}
+        {t("integrationExplorer.tryPlayground")}
       </Link>
     </Button>
   );
@@ -147,7 +147,7 @@ const DemoProjectButton: React.FC = () => {
         }}
       >
         <MousePointerClick className="mr-2 size-4" />
-        {t('integrationExplorer.exploreDemoProject')}
+        {t("integrationExplorer.exploreDemoProject")}
       </Link>
     </Button>
   );
@@ -166,7 +166,7 @@ const WatchTutorialButton: React.FC = () => {
     >
       <a href={VIDEO_TUTORIAL_LINK} target="_blank" rel="noopener noreferrer">
         <MonitorPlay className="mr-2 size-4" />
-        <span>{t('integrationExplorer.watchTutorial')}</span>
+        <span>{t("integrationExplorer.watchTutorial")}</span>
       </a>
     </Button>
   );

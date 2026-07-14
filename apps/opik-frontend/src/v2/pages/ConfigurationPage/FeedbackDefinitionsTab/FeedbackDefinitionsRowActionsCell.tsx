@@ -55,8 +55,12 @@ const FeedbackDefinitionsRowActionsCell: React.FunctionComponent<
         setOpen={setOpen}
         onConfirm={deleteFeedbackDefinitionHandler}
         title={t("settings.feedback.confirmDialog.deleteSingle.title")}
-        description={t("settings.feedback.confirmDialog.deleteSingle.description")}
-        confirmText={t("settings.feedback.confirmDialog.deleteSingle.confirmText")}
+        description={t(
+          "settings.feedback.confirmDialog.deleteSingle.description",
+        )}
+        confirmText={t(
+          "settings.feedback.confirmDialog.deleteSingle.confirmText",
+        )}
         confirmButtonVariant="destructive"
       />
       <DropdownMenu>

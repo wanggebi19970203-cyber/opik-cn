@@ -224,7 +224,9 @@ export const OnlineEvaluationPage: React.FC = () => {
     [data?.sortable_by],
   );
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? t("noData.noRulesYet") : t("noData.noSearchResults");
+  const noDataText = noData
+    ? t("noData.noRulesYet")
+    : t("noData.noSearchResults");
 
   // Backend now enriches projects (ID + name pairs) from projectIds
   const rows: EvaluatorsRule[] = useMemo(() => data?.content ?? [], [data]);
@@ -398,9 +400,7 @@ export const OnlineEvaluationPage: React.FC = () => {
   return (
     <div className="pt-6">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="comet-title-l truncate break-words">
-          {t("title")}
-        </h1>
+        <h1 className="comet-title-l truncate break-words">{t("title")}</h1>
       </div>
       <ExplainerDescription
         className="mb-4"

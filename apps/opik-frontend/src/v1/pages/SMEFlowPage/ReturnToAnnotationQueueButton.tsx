@@ -33,7 +33,12 @@ const ReturnToAnnotationQueueButton: React.FC = () => {
         to="/$workspaceName/annotation-queues/$annotationQueueId"
         params={{ workspaceName, annotationQueueId: queueId }}
       >
-        <Button variant="ghost" aria-label={t("returnToAnnotationQueue.returnToAnnotationQueueAriaLabel")}>
+        <Button
+          variant="ghost"
+          aria-label={t(
+            "returnToAnnotationQueue.returnToAnnotationQueueAriaLabel",
+          )}
+        >
           <ArrowLeft className="mr-2 size-4" />
           {t("returnToAnnotationQueue.returnToAnnotationQueue")}
         </Button>

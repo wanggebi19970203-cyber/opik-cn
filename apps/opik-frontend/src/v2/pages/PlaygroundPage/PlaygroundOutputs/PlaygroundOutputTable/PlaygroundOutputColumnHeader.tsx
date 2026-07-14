@@ -1,5 +1,6 @@
 import React from "react";
 import { HeaderContext } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import HeaderWrapper from "@/shared/DataTableHeaders/HeaderWrapper";
 import { PLAYGROUND_PROMPT_COLORS } from "@/constants/llm";
 import {
@@ -95,6 +96,7 @@ const TestSuiteColumnHeader: React.FC<TestSuiteColumnHeaderProps> = ({
   header,
   promptId,
 }) => {
+  const { t } = useTranslation("pages/playground");
   const { status, promptResult } = usePromptResultStatus(promptId);
 
   return (
@@ -108,7 +110,9 @@ const TestSuiteColumnHeader: React.FC<TestSuiteColumnHeaderProps> = ({
           className="shrink-0 text-xs"
           style={{ color: PASS_RATE_TEXT_COLOR[status] }}
         >
-          {Math.round(promptResult.passRate * 100)}% pass rate
+          {t("playground.outputColumnHeader.passRate", {
+            percent: Math.round(promptResult.passRate * 100),
+          })}
         </span>
       )}
     </ColumnHeaderLayout>

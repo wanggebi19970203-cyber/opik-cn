@@ -1,6 +1,7 @@
 import React from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/ui/toggle-group";
 import { LOGS_TYPE } from "@/constants/traces";
+import { useTranslation } from "react-i18next";
 
 type LogsTypeToggleProps = {
   value: LOGS_TYPE;
@@ -11,6 +12,8 @@ const LogsTypeToggle: React.FC<LogsTypeToggleProps> = ({
   value,
   onValueChange,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <ToggleGroup
       type="single"
@@ -20,13 +23,13 @@ const LogsTypeToggle: React.FC<LogsTypeToggleProps> = ({
       className="w-fit"
     >
       <ToggleGroupItem value={LOGS_TYPE.threads} size="sm">
-        Threads
+        {t("tracing.tabs.threads")}
       </ToggleGroupItem>
       <ToggleGroupItem value={LOGS_TYPE.traces} size="sm">
-        Traces
+        {t("tracing.tabs.traces")}
       </ToggleGroupItem>
       <ToggleGroupItem value={LOGS_TYPE.spans} size="sm">
-        Spans
+        {t("tracing.tabs.spans")}
       </ToggleGroupItem>
     </ToggleGroup>
   );

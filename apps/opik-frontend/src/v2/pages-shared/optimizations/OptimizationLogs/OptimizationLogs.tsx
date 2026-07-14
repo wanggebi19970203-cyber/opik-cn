@@ -120,7 +120,11 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
     if (isPending && !logContent) {
       return (
         <Loader
-          message={isInProgress ? t("optimizations.logs.waitingForLogs") : t("optimizations.logs.loadingLogs")}
+          message={
+            isInProgress
+              ? t("optimizations.logs.waitingForLogs")
+              : t("optimizations.logs.loadingLogs")
+          }
           className="min-h-32"
         />
       );
@@ -131,7 +135,9 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
         <div className="flex flex-1 flex-col items-center justify-center gap-2">
           {isInProgress && <Spinner size="small" />}
           <div className="comet-body-s text-muted-slate">
-            {isInProgress ? t("optimizations.logs.willAppearShortly") : t("optimizations.logs.noLogsAvailable")}
+            {isInProgress
+              ? t("optimizations.logs.willAppearShortly")
+              : t("optimizations.logs.noLogsAvailable")}
           </div>
         </div>
       );
@@ -169,12 +175,17 @@ const OptimizationLogs: React.FC<OptimizationLogsProps> = ({
       <CardContent className="flex h-full flex-col p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="comet-body-s-accented">{t("optimizations.logs.title")}</h3>
+            <h3 className="comet-body-s-accented">
+              {t("optimizations.logs.title")}
+            </h3>
             {lastUpdatedAt && (
               <TooltipWrapper
-                content={`${t("optimizations.logs.lastUpdatedAt")} ${formatDate(lastUpdatedAt, {
-                  includeSeconds: true,
-                })}`}
+                content={`${t("optimizations.logs.lastUpdatedAt")} ${formatDate(
+                  lastUpdatedAt,
+                  {
+                    includeSeconds: true,
+                  },
+                )}`}
               >
                 <Clock className="size-3.5 text-muted-slate" />
               </TooltipWrapper>

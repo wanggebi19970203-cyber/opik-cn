@@ -16,7 +16,9 @@ const ConfigurationTab: React.FunctionComponent<ConfigurationTabProps> = ({
   const { t } = useTranslation("pages/annotation-queue");
 
   if (!annotationQueue) {
-    return <Loader message={t("annotationQueue.configuration.loadingMessage")} />;
+    return (
+      <Loader message={t("annotationQueue.configuration.loadingMessage")} />
+    );
   }
 
   return (

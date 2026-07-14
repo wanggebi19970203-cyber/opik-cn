@@ -186,11 +186,14 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
     [t],
   );
   const durationMetricOptions = useMemo(
-    () => DURATION_METRIC_OPTIONS_KEYS.map((o) => ({ ...o, label: t(o.labelKey) })),
+    () =>
+      DURATION_METRIC_OPTIONS_KEYS.map((o) => ({ ...o, label: t(o.labelKey) })),
     [t],
   );
 
-  const selectedMetric = METRIC_OPTIONS_KEYS.find((m) => m.value === metricType);
+  const selectedMetric = METRIC_OPTIONS_KEYS.find(
+    (m) => m.value === metricType,
+  );
   const isTraceMetric = !metricType || selectedMetric?.filterType === "trace";
   const isThreadMetric = metricType && selectedMetric?.filterType === "thread";
   const isSpanMetric = metricType && selectedMetric?.filterType === "span";
@@ -631,7 +634,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
           control={form.control}
           name="chartType"
           render={({ field }) => (
-              <FormItem>
+            <FormItem>
               <FormLabel>{t("feedbackScores.visualizationLabel")}</FormLabel>
               <FormControl>
                 <VisualizationCardSelector

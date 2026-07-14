@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import get from "lodash/get";
 import api, { FEEDBACK_DEFINITIONS_REST_ENDPOINT } from "@/api/api";
@@ -34,11 +35,11 @@ const useFeedbackDefinitionCreateMutation = () => {
 
       const errorMessage =
         error.response?.status === 409
-          ? "A feedback definition with this name already exists. Please choose a different name."
+          ? i18next.t("common:messages.feedbackDefinitionConflict")
           : message;
 
       toast({
-        title: "Error",
+        title: i18next.t("common:labels.error"),
         description: errorMessage,
         variant: "destructive",
       });

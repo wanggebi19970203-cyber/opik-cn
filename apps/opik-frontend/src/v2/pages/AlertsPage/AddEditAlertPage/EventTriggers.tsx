@@ -22,8 +22,7 @@ import { Separator } from "@/ui/separator";
 import { Input } from "@/ui/input";
 import SelectBox from "@/shared/SelectBox/SelectBox";
 import { AlertFormType } from "./schema";
-import { TRIGGER_CONFIG } from "./helpers";
-import { WINDOW_OPTIONS } from "./constants";
+import { getWindowOptions } from "./constants";
 import { ALERT_EVENT_TYPE } from "@/types/alerts";
 import { useIsFeatureEnabled } from "@/contexts/feature-toggles-provider";
 import { FeatureToggleKeys } from "@/types/feature-toggles";
@@ -163,12 +162,14 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             ]);
             return (
               <FormItem className="flex-1">
-                <Label className="comet-body-s">{t("alerts.triggers.inTheLast")}</Label>
+                <Label className="comet-body-s">
+                  {t("alerts.triggers.inTheLast")}
+                </Label>
                 <FormControl>
                   <SelectBox
                     value={field.value as string}
                     onChange={field.onChange}
-                    options={WINDOW_OPTIONS}
+                    options={windowOptions}
                     className={cn("h-8", {
                       "border-destructive": Boolean(validationErrors?.message),
                     })}
@@ -198,10 +199,12 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
     );
   };
 
+  const windowOptions = useMemo(() => getWindowOptions(t), [t]);
+
   const allEventTypes = useMemo(() => {
     const eventTypes = Object.values(ALERT_EVENT_TYPE) as ALERT_EVENT_TYPE[];
-    return eventTypes.filter((t) =>
-      t === ALERT_EVENT_TYPE.trace_guardrails_triggered
+    return eventTypes.filter((et) =>
+      et === ALERT_EVENT_TYPE.trace_guardrails_triggered
         ? isGuardrailsEnabled
         : true,
     );
@@ -212,9 +215,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h3 className="comet-body-accented">{t("alerts.triggers.title")}</h3>
-          <Description>
-            {t("alerts.triggers.description")}
-          </Description>
+          <Description>{t("alerts.triggers.description")}</Description>
         </div>
 
         <Popover>
@@ -228,7 +229,6 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             <div className="flex flex-col">
               <div className="max-h-[400px] overflow-y-auto p-1">
                 {allEventTypes.map((eventType) => {
-                  const config = TRIGGER_CONFIG[eventType];
                   const isChecked = selectedEventTypes.has(eventType);
 
                   return (
@@ -270,10 +270,14 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="comet-body-s">{t("alerts.triggers.githubTicket")}</span>
+                    <span className="comet-body-s">
+                      {t("alerts.triggers.githubTicket")}
+                    </span>
                     <ExternalLink className="size-3.5" />
                   </a>
-                  <span className="comet-body-s">{t("alerts.triggers.toLetUsKnow")}</span>
+                  <span className="comet-body-s">
+                    {t("alerts.triggers.toLetUsKnow")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -302,7 +306,6 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
           <CardContent className="p-4">
             <div className="flex flex-col gap-2">
               {fields.map((field, index) => {
-                const config = TRIGGER_CONFIG[field.eventType];
                 const isLastItem = index === fields.length - 1;
                 const isThresholdTrigger =
                   field.eventType === ALERT_EVENT_TYPE.trace_cost ||
@@ -320,9 +323,15 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                         <div className="flex gap-4">
                           <div className="flex flex-1 flex-col gap-1">
                             <Label className="comet-body-s-accented">
-                              {t(`alerts.triggerTypes.${field.eventType}.title`)}
+                              {t(
+                                `alerts.triggerTypes.${field.eventType}.title`,
+                              )}
                             </Label>
-                            <Description>{t(`alerts.triggerTypes.${field.eventType}.description`)}</Description>
+                            <Description>
+                              {t(
+                                `alerts.triggerTypes.${field.eventType}.description`,
+                              )}
+                            </Description>
                           </div>
                         </div>
                         {isThresholdTrigger &&

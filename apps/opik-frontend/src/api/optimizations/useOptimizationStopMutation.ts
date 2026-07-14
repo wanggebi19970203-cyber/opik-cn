@@ -55,7 +55,9 @@ const useOptimizationStopMutation = () => {
       });
 
       toast({
-        description: i18next.t("common:messages.optimizationStoppedSuccessfully"),
+        description: i18next.t(
+          "common:messages.optimizationStoppedSuccessfully",
+        ),
       });
     },
   });

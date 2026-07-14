@@ -101,7 +101,9 @@ export function UpdateExperimentDialog({
           </div>
 
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="configuration">{t("common.experiment.configuration")}</Label>
+            <Label htmlFor="configuration">
+              {t("common.experiment.configuration")}
+            </Label>
             <div className="max-h-52 overflow-y-auto rounded-md">
               <CodeMirror
                 theme={theme}
@@ -123,7 +125,9 @@ export function UpdateExperimentDialog({
           </div>
           {showInvalidJSON && (
             <Alert variant="destructive">
-              <AlertTitle>{t("common.experiment.configurationNotValid")}</AlertTitle>
+              <AlertTitle>
+                {t("common.experiment.configurationNotValid")}
+              </AlertTitle>
             </Alert>
           )}
         </div>

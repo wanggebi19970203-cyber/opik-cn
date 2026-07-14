@@ -166,15 +166,17 @@ const formatSpanScoreLabel = (scoreName: string): string =>
 const parseSpanScoreName = (label: string): string =>
   label.replace(SPAN_FEEDBACK_SCORE_SUFFIX, "");
 
-const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
+const getSharedColumns = (
+  t: (key: string) => string,
+): ColumnData<BaseTraceData>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("logs.columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("logs.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -183,7 +185,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("logs.columns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -192,7 +194,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "input",
-    label: "Input",
+    label: t("logs.tracesSpans.columns.input"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -203,7 +205,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "output",
-    label: "Output",
+    label: t("logs.tracesSpans.columns.output"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -214,14 +216,14 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: t("logs.tracesSpans.columns.errors"),
     statisticKey: "error_count",
     type: COLUMN_TYPE.errors,
     cell: ErrorCell as never,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("logs.columns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationCell as never,
     statisticDataFormater: formatDuration,
@@ -229,19 +231,19 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("logs.filters.tags"),
     type: COLUMN_TYPE.list,
     cell: ListCell as never,
   },
   {
     id: COLUMN_ENVIRONMENT_ID,
-    label: "Environment",
+    label: t("logs.tracesSpans.columns.environment"),
     type: COLUMN_TYPE.string,
     cell: EnvironmentCell as never,
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: t("logs.tracesSpans.columns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -250,7 +252,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: t("logs.tracesSpans.columns.totalInputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.prompt_tokens)
@@ -259,7 +261,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: t("logs.tracesSpans.columns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.completion_tokens)
@@ -268,7 +270,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("logs.tracesSpans.columns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_cost_estimated],
@@ -279,10 +281,12 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
 ];
 
-const METADATA_MAIN_COLUMN_DATA: ColumnData<BaseTraceData>[] = [
+const getMetadataMainColumnData = (
+  t: (key: string) => string,
+): ColumnData<BaseTraceData>[] => [
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("logs.tracesSpans.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
     accessorFn: (row) =>
       isObject(row.metadata)
@@ -380,25 +384,27 @@ const DYNAMIC_COLUMNS_KEY_SUFFIX = "dynamic-columns";
 const PAGINATION_SIZE_KEY_SUFFIX = "pagination-size";
 const ROW_HEIGHT_KEY_SUFFIX = "row-height";
 
-const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
+const getTraceChipDefinitionsStatic = (
+  t: (key: string) => string,
+): ChipDefinition[] => [
   {
     id: "start_time",
     field: "start_time",
-    label: "Start time",
+    label: t("logs.columns.startTime"),
     kind: "time",
     columnType: COLUMN_TYPE.time,
   },
   {
     id: "end_time",
     field: "end_time",
-    label: "End time",
+    label: t("logs.columns.endTime"),
     kind: "time",
     columnType: COLUMN_TYPE.time,
   },
   {
     id: "duration",
     field: "duration",
-    label: "Duration",
+    label: t("logs.columns.duration"),
     kind: "numeric",
     columnType: COLUMN_TYPE.duration,
     format: "duration",
@@ -406,7 +412,7 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "total_estimated_cost",
     field: "total_estimated_cost",
-    label: "Cost",
+    label: t("logs.tracesSpans.filters.cost"),
     kind: "numeric",
     columnType: COLUMN_TYPE.cost,
     format: "currency",
@@ -414,7 +420,7 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "usage_total_tokens",
     field: "usage.total_tokens",
-    label: "Tokens",
+    label: t("logs.tracesSpans.filters.tokens"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -422,7 +428,7 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "usage_prompt_tokens",
     field: "usage.prompt_tokens",
-    label: "Input tokens",
+    label: t("logs.tracesSpans.filters.inputTokens"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -430,7 +436,7 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "usage_completion_tokens",
     field: "usage.completion_tokens",
-    label: "Output tokens",
+    label: t("logs.tracesSpans.filters.outputTokens"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -438,7 +444,7 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "llm_span_count",
     field: "llm_span_count",
-    label: "LLM calls count",
+    label: t("logs.tracesSpans.filters.llmCallsCount"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -446,37 +452,37 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "input",
     field: "input",
-    label: "Input",
+    label: t("logs.tracesSpans.columns.input"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search input" },
+    value: { placeholder: t("logs.tracesSpans.filters.searchInput") },
   },
   {
     id: "output",
     field: "output",
-    label: "Output",
+    label: t("logs.tracesSpans.columns.output"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search output" },
+    value: { placeholder: t("logs.tracesSpans.filters.searchOutput") },
   },
   {
     id: "name",
     field: "name",
-    label: "Trace name",
+    label: t("logs.tracesSpans.filters.traceName"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search name" },
+    value: { placeholder: t("logs.tracesSpans.filters.searchName") },
   },
   {
     id: "with_errors",
     field: "error_info",
-    label: "With errors",
+    label: t("logs.tracesSpans.filters.withErrors"),
     kind: "boolean",
     onOperator: "is_not_empty",
     columnType: COLUMN_TYPE.errors,
@@ -484,54 +490,58 @@ const TRACE_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "id",
     field: "id",
-    label: "Trace ID",
+    label: t("logs.tracesSpans.filters.traceId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter trace ID" },
+    value: { placeholder: t("logs.tracesSpans.filters.enterTraceId") },
   },
   {
     id: "thread_id",
     field: "thread_id",
-    label: "Thread ID",
+    label: t("logs.tracesSpans.filters.threadId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter thread ID" },
+    value: { placeholder: t("logs.tracesSpans.filters.enterThreadId") },
   },
   {
     id: "annotation_queue_ids",
     field: "annotation_queue_ids",
-    label: "Annotation queue ID",
+    label: t("logs.tracesSpans.filters.annotationQueueId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.list,
     operators: LIST_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter annotation queue ID" },
+    value: {
+      placeholder: t("logs.tracesSpans.filters.enterAnnotationQueueId"),
+    },
   },
 ];
 
-const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
+const getSpanChipDefinitionsStatic = (
+  t: (key: string) => string,
+): ChipDefinition[] => [
   {
     id: "start_time",
     field: "start_time",
-    label: "Start time",
+    label: t("logs.columns.startTime"),
     kind: "time",
     columnType: COLUMN_TYPE.time,
   },
   {
     id: "end_time",
     field: "end_time",
-    label: "End time",
+    label: t("logs.columns.endTime"),
     kind: "time",
     columnType: COLUMN_TYPE.time,
   },
   {
     id: "duration",
     field: "duration",
-    label: "Duration",
+    label: t("logs.columns.duration"),
     kind: "numeric",
     columnType: COLUMN_TYPE.duration,
     format: "duration",
@@ -539,7 +549,7 @@ const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "total_estimated_cost",
     field: "total_estimated_cost",
-    label: "Cost",
+    label: t("logs.tracesSpans.filters.cost"),
     kind: "numeric",
     columnType: COLUMN_TYPE.cost,
     format: "currency",
@@ -547,7 +557,7 @@ const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "usage_total_tokens",
     field: "usage.total_tokens",
-    label: "Tokens",
+    label: t("logs.tracesSpans.filters.tokens"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -555,7 +565,7 @@ const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "usage_prompt_tokens",
     field: "usage.prompt_tokens",
-    label: "Input tokens",
+    label: t("logs.tracesSpans.filters.inputTokens"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -563,7 +573,7 @@ const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "usage_completion_tokens",
     field: "usage.completion_tokens",
-    label: "Output tokens",
+    label: t("logs.tracesSpans.filters.outputTokens"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -571,37 +581,37 @@ const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "input",
     field: "input",
-    label: "Input",
+    label: t("logs.tracesSpans.columns.input"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search input" },
+    value: { placeholder: t("logs.tracesSpans.filters.searchInput") },
   },
   {
     id: "output",
     field: "output",
-    label: "Output",
+    label: t("logs.tracesSpans.columns.output"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search output" },
+    value: { placeholder: t("logs.tracesSpans.filters.searchOutput") },
   },
   {
     id: "name",
     field: "name",
-    label: "Span name",
+    label: t("logs.tracesSpans.filters.spanName"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search name" },
+    value: { placeholder: t("logs.tracesSpans.filters.searchName") },
   },
   {
     id: "with_errors",
     field: "error_info",
-    label: "With errors",
+    label: t("logs.tracesSpans.filters.withErrors"),
     kind: "boolean",
     onOperator: "is_not_empty",
     columnType: COLUMN_TYPE.errors,
@@ -609,32 +619,32 @@ const SPAN_CHIP_DEFINITIONS_STATIC: ChipDefinition[] = [
   {
     id: "id",
     field: "id",
-    label: "Span ID",
+    label: t("logs.tracesSpans.filters.spanId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter span ID" },
+    value: { placeholder: t("logs.tracesSpans.filters.enterSpanId") },
   },
   {
     id: "trace_id",
     field: "trace_id",
-    label: "Trace ID",
+    label: t("logs.tracesSpans.filters.traceId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter trace ID" },
+    value: { placeholder: t("logs.tracesSpans.filters.enterTraceId") },
   },
   {
     id: "provider",
     field: "provider",
-    label: "Provider",
+    label: t("logs.tracesSpans.columns.provider"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter provider" },
+    value: { placeholder: t("logs.tracesSpans.filters.enterProvider") },
   },
 ];
 
@@ -766,7 +776,7 @@ const buildSharedDynamicChips = ({
       operators: DICTIONARY_OPERATORS,
       defaultOperator: "contains",
       key: {
-        placeholder: "key",
+        placeholder: t("logs.tracesSpans.filters.keyPlaceholder"),
         options: chipOptions(usePathsOptions, {
           projectId,
           type,
@@ -775,7 +785,9 @@ const buildSharedDynamicChips = ({
           logsSource: LOGS_SOURCE.sdk,
         }),
       },
-      value: { placeholder: "value" },
+      value: {
+        placeholder: t("logs.tracesSpans.filters.valuePlaceholder"),
+      },
     },
     custom: {
       id: "custom",
@@ -786,7 +798,7 @@ const buildSharedDynamicChips = ({
       operators: DICTIONARY_OPERATORS,
       defaultOperator: "contains",
       key: {
-        placeholder: "key",
+        placeholder: t("logs.tracesSpans.filters.keyPlaceholder"),
         options: chipOptions(usePathsOptions, {
           projectId,
           type,
@@ -797,9 +809,11 @@ const buildSharedDynamicChips = ({
         validate: (k) =>
           CUSTOM_FILTER_VALIDATION_REGEXP.test(k)
             ? undefined
-            : 'Key must begin with "input" or "output" (e.g. "input.message")',
+            : t("logs.tracesSpans.filters.customKeyError"),
       },
-      value: { placeholder: "value" },
+      value: {
+        placeholder: t("logs.tracesSpans.filters.valuePlaceholder"),
+      },
     },
   };
   if (isGuardrailsEnabled) {
@@ -844,14 +858,17 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
   const { open: openQuickstart } = useOpenQuickStartDialog();
   const truncationEnabled = useTruncationEnabled();
 
+  const sharedColumns = useMemo(() => getSharedColumns(t), [t]);
+  const metadataMainColumnData = useMemo(
+    () => getMetadataMainColumnData(t),
+    [t],
+  );
+
   const tracesColumnLabelMap: Record<string, string> = useMemo(
     () => ({
       name: t("logs.columns.name"),
       start_time: t("logs.columns.startTime"),
-      end_time: t("logs.columns.startTime").replace(
-        t("logs.columns.startTime").split(" ")[0],
-        "End",
-      ),
+      end_time: t("logs.columns.endTime"),
       input: t("logs.tracesSpans.columns.input"),
       output: t("logs.tracesSpans.columns.output"),
       error_info: t("logs.tracesSpans.columns.errors"),
@@ -1089,7 +1106,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     };
     const byId: Record<string, ChipDefinition> = {
       ...keyBy(
-        TRACE_CHIP_DEFINITIONS_STATIC.map((chip) => ({
+        getTraceChipDefinitionsStatic(t).map((chip) => ({
           ...chip,
           label: staticChipLabelMap[chip.id] ?? chip.label,
         })),
@@ -1129,7 +1146,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     };
     const byId: Record<string, ChipDefinition> = {
       ...keyBy(
-        SPAN_CHIP_DEFINITIONS_STATIC.map((chip) => ({
+        getSpanChipDefinitionsStatic(t).map((chip) => ({
           ...chip,
           label: staticChipLabelMap[chip.id] ?? chip.label,
         })),
@@ -1597,19 +1614,20 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     return [
       {
         id: COLUMN_ID_ID,
-        label: "ID",
+        label: t("logs.columns.id"),
         type: COLUMN_TYPE.string,
         cell: IdCell as never,
         sortable: true,
       },
-      ...SHARED_COLUMNS.map((col) => {
+      ...sharedColumns.map((col) => {
         if (col.id === "tags") {
           return {
             ...col,
             customMeta: {
               ...col.customMeta,
               onItemClick: addTagFilter,
-              getItemTooltip: (tag: string) => `Filter by tag: "${tag}"`,
+              getItemTooltip: (tag: string) =>
+                t("logs.tracesSpans.filterByTag", { tag }),
             },
           };
         }
@@ -1625,20 +1643,20 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: "span_count",
-              label: "Span count",
+              label: t("logs.tracesSpans.columns.spanCount"),
               type: COLUMN_TYPE.number,
               accessorFn: (row: BaseTraceData) => get(row, "span_count", "-"),
             },
             {
               id: "llm_span_count",
-              label: "LLM calls count",
+              label: t("logs.tracesSpans.columns.llmCallsCount"),
               type: COLUMN_TYPE.number,
               accessorFn: (row: BaseTraceData) =>
                 get(row, "llm_span_count", "-"),
             },
             {
               id: "thread_id",
-              label: "Thread ID",
+              label: t("logs.tracesSpans.columns.threadId"),
               type: COLUMN_TYPE.string,
               cell: LinkCell as never,
               customMeta: {
@@ -1649,7 +1667,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             },
             {
               id: COLUMN_EXPERIMENT_ID,
-              label: "Experiment",
+              label: t("logs.tracesSpans.columns.experiment"),
               type: COLUMN_TYPE.string,
               cell: ResourceCell as never,
               customMeta: {
@@ -1667,7 +1685,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: "type",
-              label: "Type",
+              label: t("logs.tracesSpans.filters.type"),
               type: COLUMN_TYPE.category,
               cell: SpanTypeCell as never,
             },
@@ -1675,12 +1693,12 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         : []),
       {
         id: "created_by",
-        label: "Created by",
+        label: t("logs.tracesSpans.columns.createdBy"),
         type: COLUMN_TYPE.string,
       },
       {
         id: COLUMN_COMMENTS_ID,
-        label: "Comments",
+        label: t("logs.tracesSpans.columns.comments"),
         type: COLUMN_TYPE.string,
         cell: CommentsCell as never,
       },
@@ -1688,7 +1706,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         ? [
             {
               id: COLUMN_GUARDRAILS_ID,
-              label: "Guardrails",
+              label: t("logs.tracesSpans.columns.guardrails"),
               statisticKey: COLUMN_GUARDRAIL_STATISTIC_ID,
               type: COLUMN_TYPE.category,
               accessorFn: (row: BaseTraceData) =>
@@ -1707,6 +1725,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     isGuardrailsEnabled,
     addTagFilter,
     explainCells,
+    sharedColumns,
     t,
   ]);
 
@@ -1739,7 +1758,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         },
       ),
       ...convertColumnDataToColumn<BaseTraceData, Span | Trace>(
-        [...METADATA_MAIN_COLUMN_DATA, ...metadataColumnsData],
+        [...metadataMainColumnData, ...metadataColumnsData],
         {
           columnsOrder: metadataColumnsOrder,
           selectedColumns,
@@ -1754,6 +1773,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     selectedColumns,
     scoresColumnsData,
     scoresColumnsOrder,
+    metadataMainColumnData,
     metadataColumnsData,
     metadataColumnsOrder,
   ]);
@@ -1820,7 +1840,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     ];
 
     const allMetadataColumns = [
-      ...METADATA_MAIN_COLUMN_DATA,
+      ...metadataMainColumnData,
       ...metadataColumnsData,
     ];
 
@@ -1838,6 +1858,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     setScoresColumnsOrder,
+    metadataMainColumnData,
     metadataColumnsData,
     metadataColumnsOrder,
     setMetadataColumnsOrder,
@@ -1981,12 +2002,14 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         emptyState={
           <DataTableEmptyContent
             title={
-              type === TRACE_DATA_TYPE.spans ? `No spans yet` : `No traces yet`
+              type === TRACE_DATA_TYPE.spans
+                ? t("logs.tracesSpans.empty.noSpans")
+                : t("logs.tracesSpans.empty.noTraces")
             }
             description={
               type === TRACE_DATA_TYPE.spans
-                ? "Spans will appear here once your agent starts receiving requests."
-                : "Traces will appear here once your agent starts receiving requests."
+                ? t("logs.tracesSpans.empty.spansDescription")
+                : t("logs.tracesSpans.empty.tracesDescription")
             }
             lightImageUrl={emptyLogsLightUrl}
             darkImageUrl={emptyLogsDarkUrl}

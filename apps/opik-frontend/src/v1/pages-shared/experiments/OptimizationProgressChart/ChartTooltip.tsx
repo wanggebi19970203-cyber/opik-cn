@@ -33,7 +33,7 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
     (d) => d.candidateId === hoveredTrial.candidateId,
   );
   const status = chartPoint?.status ?? "passed";
-  const scoreLabel = isTestSuite ? t('passRate') : t('score');
+  const scoreLabel = isTestSuite ? t("passRate") : t("score");
   const percentageDisplay = isNumber(candidate.score)
     ? formatAsPercentage(candidate.score)
     : "-";
@@ -43,7 +43,7 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
       : "";
 
   const rows: { label: string; value: string }[] = [
-    { label: t('status'), value: status },
+    { label: t("status"), value: status },
     {
       label: scoreLabel,
       value: `${percentageDisplay}${fractionDisplay}`,
@@ -51,13 +51,13 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
   ];
   if (candidate.latencyP50 != null) {
     rows.push({
-      label: t('latency'),
+      label: t("latency"),
       value: formatAsDuration(candidate.latencyP50),
     });
   }
   if (candidate.runtimeCost != null) {
     rows.push({
-      label: t('runtimeCost'),
+      label: t("runtimeCost"),
       value: formatAsCurrency(candidate.runtimeCost),
     });
   }
@@ -77,7 +77,7 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({
       <div className="grid items-start gap-1.5">
         <div className="mb-1 max-w-full overflow-hidden border-b px-2 pt-0.5">
           <div className="comet-body-xs-accented mb-0.5 truncate">
-            {t('trialNumber', { number: candidate.trialNumber })}
+            {t("trialNumber", { number: candidate.trialNumber })}
           </div>
         </div>
         <div className="grid gap-1.5">

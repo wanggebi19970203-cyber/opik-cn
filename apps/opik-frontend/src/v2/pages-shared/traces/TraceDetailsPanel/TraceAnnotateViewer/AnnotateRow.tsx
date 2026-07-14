@@ -294,7 +294,9 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
               );
 
               if (!selectedOption) {
-                return <div className="truncate">{t("annotate.selectCategory")}</div>;
+                return (
+                  <div className="truncate">{t("annotate.selectCategory")}</div>
+                );
               }
 
               return (
@@ -383,7 +385,9 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
         />
         {feedbackScoreData?.reason && value !== "" && (
           <div className="absolute right-2 top-1 hidden gap-1 group-hover/reason-field:flex">
-            <TooltipWrapper content={t("common.buttons.copy", { ns: "common" })}>
+            <TooltipWrapper
+              content={t("common.buttons.copy", { ns: "common" })}
+            >
               <Button
                 size="icon-2xs"
                 variant="outline"
@@ -393,7 +397,9 @@ const AnnotateRow: React.FunctionComponent<AnnotateRowProps> = ({
               </Button>
             </TooltipWrapper>
 
-            <TooltipWrapper content={t("common.buttons.clear", { ns: "common" })}>
+            <TooltipWrapper
+              content={t("common.buttons.clear", { ns: "common" })}
+            >
               <Button variant="outline" size="icon-2xs" onClick={onReasonReset}>
                 <Trash />
               </Button>

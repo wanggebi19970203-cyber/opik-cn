@@ -120,6 +120,8 @@
         "selectScore": "Select score",
         "selectSpanScore": "Select span score",
         "customFilter": "Custom filter",
+        "keyPlaceholder": "Key",
+        "valuePlaceholder": "Value",
         "guardrails": "Guardrails",
         "failed": "Failed",
         "passed": "Passed",
@@ -128,12 +130,18 @@
         "tokens": "Tokens",
         "inputTokens": "Input tokens",
         "outputTokens": "Output tokens",
-        "llmCallsCount": "LLM calls count"
+        "llmCallsCount": "LLM calls count",
+        "customKeyError": "Key must begin with \"input\" or \"output\" (e.g. \"input.message\")"
       },
       "empty": {
+        "noTraces": "No traces yet",
+        "noSpans": "No spans yet",
+        "tracesDescription": "Traces will appear here once your agent starts receiving requests.",
+        "spansDescription": "Spans will appear here once your agent starts receiving requests.",
         "quickstartGuide": "Quickstart guide",
         "viewDocs": "View docs"
       },
+      "filterByTag": "Filter by tag: \"{{tag}}\"",
       "refreshTooltip": {
         "traces": "Refresh traces list",
         "spans": "Refresh spans list"

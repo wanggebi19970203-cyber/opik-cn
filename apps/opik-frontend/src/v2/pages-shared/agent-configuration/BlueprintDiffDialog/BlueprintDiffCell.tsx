@@ -108,7 +108,11 @@ export const ValueCellContent: React.FC<{
         tokenText(mode),
       )}
     >
-      {text || <span className="italic text-muted-slate">{t("agentOptimization.diffCell.empty")}</span>}
+      {text || (
+        <span className="italic text-muted-slate">
+          {t("agentOptimization.diffCell.empty")}
+        </span>
+      )}
     </div>
   );
 };
@@ -203,7 +207,11 @@ export const PromptCellContent: React.FC<{
           {mode === "changed" ? (
             <TextDiff content1={baseText} content2={diffText} mode="words" />
           ) : (
-            text || <span className="italic text-muted-slate">{t("agentOptimization.diffCell.empty")}</span>
+            text || (
+              <span className="italic text-muted-slate">
+                {t("agentOptimization.diffCell.empty")}
+              </span>
+            )
           )}
         </div>
       </div>

@@ -220,15 +220,22 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
     const tokensBreakdownTooltip = node.data.usage ? (
       <div className="space-y-2">
         <div className="space-y-0.5">
-          <div className="text-sm font-medium">{t("treeToolbar.tokenUsage")}</div>
+          <div className="text-sm font-medium">
+            {t("treeToolbar.tokenUsage")}
+          </div>
           <div className="text-xs">
-            <span className="font-medium">{t("treeToolbar.input")}:</span> {promptTokens} |{" "}
-            <span className="font-medium">{t("treeToolbar.output")}:</span> {completionTokens} |{" "}
-            <span className="font-medium">{t("treeToolbar.total")}:</span> {tokens}
+            <span className="font-medium">{t("treeToolbar.input")}:</span>{" "}
+            {promptTokens} |{" "}
+            <span className="font-medium">{t("treeToolbar.output")}:</span>{" "}
+            {completionTokens} |{" "}
+            <span className="font-medium">{t("treeToolbar.total")}:</span>{" "}
+            {tokens}
           </div>
         </div>
         <div className="space-y-1">
-          <div className="text-xs font-medium opacity-75">{t("treeToolbar.breakdown")}:</div>
+          <div className="text-xs font-medium opacity-75">
+            {t("treeToolbar.breakdown")}:
+          </div>
           <pre className="whitespace-pre font-mono text-xs opacity-75">
             {Object.entries(node.data.usage)
               .map(([key, value]) => `"${key}": ${value}`)
@@ -311,7 +318,9 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
             <FeedbackScoreHoverCard scores={spanFeedbackScores!}>
               <div className="comet-body-xs-accented flex items-center gap-1 text-muted-slate">
                 <PenLine className="size-3 shrink-0" />{" "}
-                {t("detailsPanel.spanScoresLabel", { count: spanFeedbackScores!.length })}
+                {t("detailsPanel.spanScoresLabel", {
+                  count: spanFeedbackScores!.length,
+                })}
               </div>
             </FeedbackScoreHoverCard>
           )}
@@ -334,7 +343,10 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
           )}
         {config[TREE_DATABLOCK_TYPE.MODEL] && (model || provider) && (
           <TooltipWrapper
-            content={t("detailsPanel.model", { model: model || "NA", provider: provider || "NA" })}
+            content={t("detailsPanel.model", {
+              model: model || "NA",
+              provider: provider || "NA",
+            })}
           >
             <div className="comet-body-xs-accented flex items-center gap-1 text-muted-slate">
               <Brain className="size-3 shrink-0" />{" "}
@@ -424,7 +436,10 @@ const VirtualizedTreeViewer: React.FC<VirtualizedTreeViewerProps> = ({
                       <>
                         <div className="flex-auto" />
                         <TooltipWrapper
-                           content={node.data.error_info?.message ?? t("treeToolbar.hasError")}
+                          content={
+                            node.data.error_info?.message ??
+                            t("treeToolbar.hasError")
+                          }
                         >
                           <div className="flex size-5 items-center justify-center rounded-sm bg-[var(--error-indicator-background)]">
                             <TriangleAlert className="size-3 text-[var(--error-indicator-text)]" />

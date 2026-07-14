@@ -27,7 +27,9 @@ const FeedbackDefinitionsValueCell = (
     items = categoryList;
     tooltipContent = categoryList;
   } else if (feedbackDefinition.type === FEEDBACK_DEFINITION_TYPE.numerical) {
-    const numericText = `${t("common:labels.min")}: ${feedbackDefinition.details.min}, ${t("common:labels.max")}: ${feedbackDefinition.details.max}`;
+    const numericText = `${t("common:labels.min")}: ${
+      feedbackDefinition.details.min
+    }, ${t("common:labels.max")}: ${feedbackDefinition.details.max}`;
     items = <p>{numericText}</p>;
     tooltipContent = numericText;
   } else if (feedbackDefinition.type === FEEDBACK_DEFINITION_TYPE.boolean) {

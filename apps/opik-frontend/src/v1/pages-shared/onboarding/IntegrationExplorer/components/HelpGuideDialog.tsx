@@ -30,19 +30,19 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-[790px] gap-2">
         <DialogHeader>
-          <DialogTitle>{t('integrationExplorer.helpGuide')}</DialogTitle>
+          <DialogTitle>{t("integrationExplorer.helpGuide")}</DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody>
           <div className="comet-body-s mb-3 pb-2 text-muted-slate">
-            {t('integrationExplorer.needHelpGettingStarted')}{" "}
+            {t("integrationExplorer.needHelpGettingStarted")}{" "}
             <a
               href={buildDocsUrl("/quickstart")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
             >
-              {t('integrationExplorer.checkOurDocs')}
+              {t("integrationExplorer.checkOurDocs")}
               <ExternalLink className="size-3" />
             </a>
             .
@@ -54,12 +54,12 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <PlayIcon className="size-4 text-muted-slate" />
                   <div className="comet-body-s-accented">
-                    {t('integrationExplorer.watchGuidedTutorial')}
+                    {t("integrationExplorer.watchGuidedTutorial")}
                   </div>
                 </div>
 
                 <div className="comet-body-s text-muted-slate">
-                  {t('integrationExplorer.watchShortVideo')}
+                  {t("integrationExplorer.watchShortVideo")}
                 </div>
               </div>
 
@@ -71,7 +71,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
               >
                 <img
                   src={imageTutorialUrl}
-                  alt="Comet tutorial"
+                  alt={t("integrationExplorer.cometTutorial")}
                   className="size-full object-cover"
                 />
                 <PlayButton className="absolute left-1/2 top-1/2 size-10 -translate-x-1/2 -translate-y-1/2 opacity-25 transition-opacity group-hover:opacity-80" />
@@ -83,11 +83,11 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <Book className="size-4 text-muted-slate" />
                   <div className="comet-body-s-accented">
-                    {t('integrationExplorer.exploreOurDocumentation')}
+                    {t("integrationExplorer.exploreOurDocumentation")}
                   </div>
                 </div>
                 <div className="comet-body-s text-muted-slate">
-                  {t('integrationExplorer.checkOutDocs')}
+                  {t("integrationExplorer.checkOutDocs")}
                 </div>
               </div>
 
@@ -98,7 +98,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  {t('integrationExplorer.opikUniversity')}
+                  {t("integrationExplorer.opikUniversity")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -107,7 +107,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  {t('integrationExplorer.gettingStartedWithOpik')}
+                  {t("integrationExplorer.gettingStartedWithOpik")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -118,7 +118,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  {t('integrationExplorer.opikCookbooks')}
+                  {t("integrationExplorer.opikCookbooks")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -127,7 +127,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  {t('integrationExplorer.integrateOpikWithLlm')}
+                  {t("integrationExplorer.integrateOpikWithLlm")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -136,7 +136,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  {t('integrationExplorer.trackAgentExecution')}
+                  {t("integrationExplorer.trackAgentExecution")}
                   <ExternalLink className="size-4" />
                 </a>
                 <a
@@ -145,7 +145,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                   rel="noopener noreferrer"
                   className="comet-body-s flex items-center gap-1 text-primary hover:underline dark:text-primary-hover"
                 >
-                  {t('integrationExplorer.readFaq')}
+                  {t("integrationExplorer.readFaq")}
                   <ExternalLink className="size-4" />
                 </a>
               </div>
@@ -158,8 +158,8 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
 
           <HelpLinks
             onCloseParentDialog={() => setOpen(false)}
-            title={t('integrationExplorer.notReadyToIntegrate')}
-            description={t('integrationExplorer.exploreOpikDescription')}
+            title={t("integrationExplorer.notReadyToIntegrate")}
+            description={t("integrationExplorer.exploreOpikDescription")}
           >
             <HelpLinks.Playground />
             <HelpLinks.DemoProject />

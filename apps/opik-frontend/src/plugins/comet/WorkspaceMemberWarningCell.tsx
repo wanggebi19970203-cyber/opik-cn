@@ -29,7 +29,9 @@ const WorkspaceMemberWarningCell = (
         <Tag variant="yellow" size={tagSize}>
           <div className="flex items-center gap-1">
             <AlertTriangle className="size-3 shrink-0" />
-            <span className="truncate">{t("common.messages.permissionsMismatch")}</span>
+            <span className="truncate">
+              {t("common.messages.permissionsMismatch")}
+            </span>
           </div>
         </Tag>
       </TooltipWrapper>

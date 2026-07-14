@@ -105,7 +105,7 @@ const BaseOptimizationConfigSchema = z.object({
   ]),
   messages: z
     .array(z.custom<LLMMessage>())
-    .min(1, "At least one message is required")
+    .min(1, i18next.t("common.validation.atLeastOneMessageRequired"))
     // Emit a per-message issue (path [index, "content"]) instead of one
     // array-level error, so each empty message card renders its own red border
     // + inline text rather than a single banner. An array-root error would
@@ -119,7 +119,7 @@ const BaseOptimizationConfigSchema = z.object({
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: [index, "content"],
-            message: "Message is required",
+            message: i18next.t("common.validation.messageRequired"),
           });
         }
       });

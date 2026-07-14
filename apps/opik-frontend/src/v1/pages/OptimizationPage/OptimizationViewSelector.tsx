@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollText, Settings } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/ui/toggle-group";
 
@@ -17,6 +18,8 @@ const OptimizationViewSelector: React.FC<OptimizationViewSelectorProps> = ({
   value,
   onChange,
 }) => {
+  const { t } = useTranslation("optimization");
+
   return (
     <ToggleGroup
       type="single"
@@ -31,7 +34,7 @@ const OptimizationViewSelector: React.FC<OptimizationViewSelectorProps> = ({
         className="gap-2"
       >
         <ScrollText className="size-3" />
-        Logs
+        {t("optimization.view.logs")}
       </ToggleGroupItem>
       <ToggleGroupItem
         value={OPTIMIZATION_VIEW_TYPE.CONFIGURATION}
@@ -39,7 +42,7 @@ const OptimizationViewSelector: React.FC<OptimizationViewSelectorProps> = ({
         className="gap-2"
       >
         <Settings className="size-3" />
-        Configuration
+        {t("optimization.view.configuration")}
       </ToggleGroupItem>
     </ToggleGroup>
   );

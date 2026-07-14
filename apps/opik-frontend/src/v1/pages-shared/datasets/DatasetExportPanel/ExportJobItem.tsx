@@ -92,6 +92,7 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
     job.viewed_at,
     updateJob,
     datasetName,
+    t,
     toast,
     markAsViewed,
   ]);
@@ -179,10 +180,14 @@ const ExportJobItem: React.FC<ExportJobItemProps> = ({ jobInfo }) => {
         {renderStatusIndicator()}
         <span className="truncate text-sm">{datasetName}</span>
         {isFailed && (
-          <span className="shrink-0 text-xs text-destructive">{t("datasets.exportPanel.failed")}</span>
+          <span className="shrink-0 text-xs text-destructive">
+            {t("datasets.exportPanel.failed")}
+          </span>
         )}
         {isCompleted && (
-          <span className="shrink-0 text-xs text-green-600">{t("datasets.exportPanel.ready")}</span>
+          <span className="shrink-0 text-xs text-green-600">
+            {t("datasets.exportPanel.ready")}
+          </span>
         )}
         {isLoading && (
           <span className="shrink-0 text-xs text-muted-foreground">

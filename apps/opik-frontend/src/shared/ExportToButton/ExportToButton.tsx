@@ -59,7 +59,7 @@ const ExportToButton: React.FC<ExportToButtonProps> = ({
         setLoading(false);
       }
     },
-    [getData, toast],
+    [getData, t, toast],
   );
 
   const exportCSVHandler = useCallback(() => {

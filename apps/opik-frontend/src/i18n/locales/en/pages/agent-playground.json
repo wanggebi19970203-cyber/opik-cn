@@ -31,7 +31,7 @@
       "connectYourAgent": "Connect your agent",
       "connectDescription": "Link your agent to Opik to start using the Agent playground and improve performance.",
       "markEntrypoint": "Mark your agent as an entrypoint",
-      "markEntrypointDescription": "Add @opik.track(entrypoint=True) to your agent's main function so Opik can detect and register it. You can also run /instrument in the Ollie sidebar to auto-instrument your agent.",
+      "markEntrypointDescription": "Add <track>@opik.track(entrypoint=True)</track> to your agent's main function so Opik can detect and register it. You can also run <instrument>/instrument</instrument> in the Ollie sidebar to auto-instrument your agent.",
       "runConnectionCommand": "Run the connection command",
       "runConnectionDescription": "Install and run the Opik connector in your terminal (works with Claude Code, Codex, Cursor, Windsurf, and more):",
       "waitingForConnection": "Waiting for connection",
@@ -70,6 +70,13 @@
       "executionFailed": "Execution failed",
       "unknownError": "An unknown error occurred."
     },
+    "connectedState": {
+      "testInput": "Test input",
+      "prompts": "Prompts",
+      "validation": {
+        "fieldRequired": "This field is required"
+      }
+    },
     "flowDiagram": {
       "configure": "Configure",
       "prompts": "Prompts",
@@ -77,6 +84,7 @@
       "model": "Model",
       "params": "Params",
       "input": "Input",
+      "inputExample": "What can you do?",
       "run": "Run",
       "improveWithOllie": "Improve with Ollie",
       "analyzeTracesSuggest": "Analyze traces, suggest prompt tweaks",

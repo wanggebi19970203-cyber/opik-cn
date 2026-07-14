@@ -49,7 +49,8 @@ const useRestoreDatasetVersionMutation = () => {
     },
     onSuccess: (_, { datasetId, successMessage }) => {
       toast({
-        title: successMessage?.title ?? i18next.t("common:messages.versionRestored"),
+        title:
+          successMessage?.title ?? i18next.t("common:messages.versionRestored"),
         description:
           successMessage?.description ??
           i18next.t("common:messages.versionRestoredDescription"),

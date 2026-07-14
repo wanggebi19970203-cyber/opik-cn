@@ -27,7 +27,8 @@ const DashboardWidgetPreviewHeader: React.FunctionComponent<
 
   const { title, subtitle, generatedTitle } = previewWidget;
   const displayTitle = title || generatedTitle || "";
-  const titlePlaceholder = generatedTitle || i18n.t("common:dashboard.enterWidgetTitle");
+  const titlePlaceholder =
+    generatedTitle || i18n.t("common:dashboard.enterWidgetTitle");
 
   const handleTitleChange = (newTitle: string) => {
     updatePreviewWidget({ title: newTitle });

@@ -1,7 +1,6 @@
 {
   "experiments": {
     "title": "实验",
-    "description": "运行和比较实验以评估模型性能",
     "create": "创建实验",
     "edit": "编辑实验",
     "editAction": "编辑",
@@ -51,12 +50,6 @@
       "compare": "比较实验",
       "rerun": "重新运行实验",
       "stop": "停止实验"
-    },
-    "status": {
-      "running": "运行中",
-      "completed": "已完成",
-      "failed": "失败",
-      "cancelled": "已取消"
     },
     "charts": {
       "noChartsToShow": "暂无图表可显示",
@@ -116,6 +109,7 @@
     "baseline": "基线",
     "current": "当前",
     "score": "评分",
+    "passRate": "通过率",
     "step": "步骤 {{value}}",
     "noExperimentItemDefined": "未定义实验项目",
     "noAssertionsDefined": "未定义断言",
@@ -130,9 +124,9 @@
     "assertionsPassed": "{{passed}}/{{total}} 个断言通过",
     "assertions": "断言",
     "copyId": "复制 ID",
-    "noRelatedTraceFound": "未找到相关 trace",
-    "traceNotFoundMessage": "该 trace 可能已被删除或未创建",
-    "trace": "Trace",
+    "noRelatedTraceFound": "未找到相关追踪",
+    "traceNotFoundMessage": "该追踪可能已被删除或未创建",
+    "trace": "追踪",
     "itemContext": "项目上下文",
     "viewEvaluationItem": "查看评估项目",
     "data": "数据",
@@ -187,6 +181,62 @@
       "configuration": "配置",
       "lastUpdatedAt": "最后更新时间",
       "lastExperimentCreated": "最后创建的实验"
+    },
+    "evaluators": {
+      "selectRow": "选择行",
+      "heuristicsMetrics": "启发式指标",
+      "llmJudges": "LLM 评判",
+      "equals": {
+        "label": "等于",
+        "description": "检查输出是否与文本完全匹配。"
+      },
+      "regexMatch": {
+        "label": "正则匹配",
+        "description": "使用正则表达式验证模式一致性。"
+      },
+      "contains": {
+        "label": "包含",
+        "description": "识别子字符串的存在。"
+      },
+      "isJson": {
+        "label": "isJson",
+        "description": "验证 JSON 格式合规性。"
+      },
+      "levenshtein": {
+        "label": "Levenshtein",
+        "description": "通过编辑距离计算文本相似度。"
+      },
+      "hallucination": {
+        "label": "幻觉检测",
+        "description": "检测生成的虚假信息。"
+      },
+      "moderation": {
+        "label": "内容审核",
+        "description": "检查是否符合内容标准。"
+      },
+      "answerRelevance": {
+        "label": "答案相关性",
+        "description": "评估答案与问题的匹配程度。"
+      },
+      "contextRecall": {
+        "label": "上下文召回",
+        "description": "衡量相关上下文的检索效果。"
+      },
+      "contextPrecision": {
+        "label": "上下文精确度",
+        "description": "检查所提供上下文细节的准确性。"
+      }
+    },
+    "optimizationChart": {
+      "score": "评分",
+      "bestCandidate": "最佳候选",
+      "trialStatus": {
+        "baseline": "基线",
+        "passed": "通过",
+        "evaluating": "评估中",
+        "discarded": "已丢弃",
+        "running": "运行中"
+      }
     }
   }
 }

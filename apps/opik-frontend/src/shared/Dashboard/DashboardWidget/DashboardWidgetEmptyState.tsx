@@ -1,6 +1,5 @@
 import React from "react";
 import { Book, Inbox, Pencil } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";

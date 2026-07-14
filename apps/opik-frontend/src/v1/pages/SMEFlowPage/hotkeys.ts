@@ -39,6 +39,8 @@ export const SME_HOTKEYS = {
   [SME_ACTION.FOCUS_FEEDBACK_SCORES]: {
     key: "f",
     display: "F",
-    description: i18next.t("common:smeFlow.hotkeys.focusFirstFeedbackScoreInput"),
+    description: i18next.t(
+      "common:smeFlow.hotkeys.focusFirstFeedbackScoreInput",
+    ),
   },
 } as const;

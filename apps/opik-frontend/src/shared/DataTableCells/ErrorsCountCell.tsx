@@ -21,11 +21,15 @@ const getErrorDeviationCopy = (
   }
 
   if (error.deviation_percentage < 0) {
-    return `(${t("common:messages.decreaseSinceLastWeek", { percentage: error.deviation_percentage })})`;
+    return `(${t("common:messages.decreaseSinceLastWeek", {
+      percentage: error.deviation_percentage,
+    })})`;
   }
 
   if (error.deviation_percentage > 0) {
-    return `(${t("common:messages.increaseSinceLastWeek", { percentage: error.deviation_percentage })})`;
+    return `(${t("common:messages.increaseSinceLastWeek", {
+      percentage: error.deviation_percentage,
+    })})`;
   }
 
   if (error.deviation_percentage === 0) {
@@ -60,7 +64,13 @@ const ErrorsCountCell = (context: CellContext<unknown, ProjectErrorCount>) => {
       className="group relative"
       stopClickPropagation
     >
-      <CellTooltipWrapper content={`${error.count} ${error.count === 1 ? t("common:labels.error") : t("common:labels.errors")} ${deviationCopy}`}>
+      <CellTooltipWrapper
+        content={`${error.count} ${
+          error.count === 1
+            ? t("common:labels.error")
+            : t("common:labels.errors")
+        } ${deviationCopy}`}
+      >
         <Tag
           onClick={onClick}
           variant="red"
@@ -70,7 +80,9 @@ const ErrorsCountCell = (context: CellContext<unknown, ProjectErrorCount>) => {
           <TriangleAlert className="size-3 shrink-0" />
           <span>{error.count}</span>
           <span className="truncate">
-            {error.count === 1 ? t("common:labels.error") : t("common:labels.errors")}
+            {error.count === 1
+              ? t("common:labels.error")
+              : t("common:labels.errors")}
           </span>
         </Tag>
       </CellTooltipWrapper>

@@ -163,7 +163,9 @@ const AlertForm: React.FunctionComponent<AlertFormProps> = ({ alert }) => {
             className="min-h-56"
             message={
               <div className="comet-body-s-accented text-center">
-                {isEdit ? t("alerts.loading.updating") : t("alerts.loading.creating")}
+                {isEdit
+                  ? t("alerts.loading.updating")
+                  : t("alerts.loading.creating")}
               </div>
             }
           />

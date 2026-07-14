@@ -16,7 +16,8 @@
       "defaultRunsPerItem": "Default runs per item",
       "defaultPassThreshold": "Default pass threshold",
       "cancel": "Cancel",
-      "updateTestSuite": "Update test suite"
+      "updateTestSuite": "Update test suite",
+      "assertionPlaceholder": "e.g. Response should be factually accurate and cite sources"
     },
     "addItemPanel": {
       "addSuiteItem": "Add suite item",
@@ -73,6 +74,7 @@
       "saveChangesToSearch": "Save changes to search",
       "saveChangesToFilter": "Save changes to filter",
       "search": "Search",
+      "tags": "Tags",
       "suiteItems": "suite items",
       "datasetItems": "dataset items",
       "allDeletedOnPage": "All {{itemLabel}} on this page have been deleted",
@@ -100,6 +102,9 @@
       "testPromptsOver": "Test prompts over your {{type}} and run evaluations interactively",
       "runAnExperiment": "Run an experiment",
       "runExperimentDescription": "Use this {{type}} to run an experiment using the Python SDK"
+    },
+    "executionPolicy": {
+      "mustPass": "{{threshold}} of {{runs}} must pass"
     }
   }
 }

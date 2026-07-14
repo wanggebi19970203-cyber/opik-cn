@@ -241,7 +241,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         },
       },
     }),
-    [experimentsIds],
+    [experimentsIds, t],
   );
 
   const datasetColumnsData = useMemo(() => {
@@ -415,7 +415,9 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
         columnHelper.group({
           id: "dataset",
           meta: {
-            header: isTestSuite ? t("compareExperiments.items.testSuite") : t("compareExperiments.items.dataset"),
+            header: isTestSuite
+              ? t("compareExperiments.items.testSuite")
+              : t("compareExperiments.items.dataset"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -532,6 +534,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
     outputColumnsOrder,
     scoresColumnsOrder,
     sortableColumns,
+    t,
   ]);
 
   const columnsToExport = useMemo(() => {
@@ -555,7 +558,11 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       ...sortBy(dynamicDatasetColumns, "label").map(
         ({ id, label, columnType }) => ({
           id,
-          label: `${label} (${isTestSuite ? t("compareExperiments.items.testSuite") : t("compareExperiments.items.dataset")})`,
+          label: `${label} (${
+            isTestSuite
+              ? t("compareExperiments.items.testSuite")
+              : t("compareExperiments.items.dataset")
+          })`,
           type: columnType,
         }),
       ),
@@ -566,7 +573,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
       })),
       ...getFilterColumns(),
     ];
-  }, [dynamicDatasetColumns, visibleOutputColumns, isTestSuite]);
+  }, [dynamicDatasetColumns, visibleOutputColumns, isTestSuite, t]);
 
   const resizeConfig = useMemo(
     () => ({
@@ -607,6 +614,7 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     setScoresColumnsOrder,
+    t,
   ]);
 
   const meta = useMemo(
@@ -665,7 +673,9 @@ const ExperimentItemsTab: React.FunctionComponent<ExperimentItemsTabProps> = ({
             searchText={search!}
             setSearchText={setSearch}
             placeholder={
-              isTestSuite ? t("compareExperiments.items.searchTestSuiteItems") : t("compareExperiments.items.searchDatasetItems")
+              isTestSuite
+                ? t("compareExperiments.items.searchTestSuiteItems")
+                : t("compareExperiments.items.searchDatasetItems")
             }
             className="w-[320px]"
             dimension="sm"

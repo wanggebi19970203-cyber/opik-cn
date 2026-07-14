@@ -29,7 +29,11 @@
       "next": "下一个",
       "of": "/",
       "loadingAnnotationQueue": "正在加载标注队列...",
-      "readInstructions": "查看使用说明"
+      "readInstructions": "查看使用说明",
+      "annotate": "标注",
+      "finishAnnotating": "完成标注",
+      "progress": "进度",
+      "progressCompleted": "已完成 {{processedCount}}/{{totalCount}}"
     },
     "commentAndScoreViewer": {
       "comment": "评论",
@@ -47,6 +51,11 @@
       "metadata": "元数据",
       "viewTrace": "查看追踪",
       "viewToolCalls": "查看工具调用"
+    },
+    "threadDataViewer": {
+      "thread": "会话",
+      "threadLabel": "会话：",
+      "viewThread": "查看会话"
     },
     "completionView": {
       "allItemsCompleted": "所有项目已完成！",
@@ -84,6 +93,10 @@
       "tryAgainOrContactAdmin": "请重试。如果问题持续存在，请联系管理员。",
       "noAnnotationQueueSelected": "未选择标注队列",
       "toBeginSmeEvaluation": "要开始 SME 评估，请通过标注队列链接访问此页面。"
+    },
+    "traceIdentifier": {
+      "copyId": "复制 ID",
+      "idCopied": "ID 已复制到剪贴板"
     }
   }
 }

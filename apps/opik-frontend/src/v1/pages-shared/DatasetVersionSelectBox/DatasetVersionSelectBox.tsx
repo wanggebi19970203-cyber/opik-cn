@@ -180,7 +180,9 @@ function DatasetVersionSelectBox({
 
           {isEmpty ? (
             <div className="relative flex w-8 shrink-0 justify-center self-stretch rounded pt-3">
-              <TooltipWrapper content={t("datasetVersionSelectBox.testSuiteEmpty")}>
+              <TooltipWrapper
+                content={t("datasetVersionSelectBox.testSuiteEmpty")}
+              >
                 <Info className="size-3.5 text-light-slate" />
               </TooltipWrapper>
             </div>
@@ -261,7 +263,9 @@ function DatasetVersionSelectBox({
             <SelectSeparator />
             <div className="flex items-center justify-between border-t border-border px-4 py-2">
               <div className="comet-body-s text-light-slate">
-                {t("common.selectBox.showingFirstItems", { count: DEFAULT_LOADED_DATASETS })}
+                {t("common.selectBox.showingFirstItems", {
+                  count: DEFAULT_LOADED_DATASETS,
+                })}
               </div>
               <Button variant="link" onClick={loadMore} type="button">
                 {t("common.selectBox.loadMore")}
@@ -301,7 +305,11 @@ function DatasetVersionSelectBox({
           open={isSelectOpen}
           disabled={disabled}
         >
-          <TooltipWrapper content={displayValue ?? t("datasetVersionSelectBox.selectTestSuite")}>
+          <TooltipWrapper
+            content={
+              displayValue ?? t("datasetVersionSelectBox.selectTestSuite")
+            }
+          >
             <SelectTrigger
               className={cn(
                 "size-full w-[220px] data-[placeholder]:text-light-slate h-[32px] py-0",

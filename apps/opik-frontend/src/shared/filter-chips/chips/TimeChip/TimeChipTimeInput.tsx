@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronsUpDown, Clock } from "lucide-react";
 import { FormErrorSkeleton } from "@/ui/form";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
@@ -29,6 +30,7 @@ const TimeChipTimeInput: React.FC<TimeChipTimeInputProps> = ({
   inputRef,
   onChange,
 }) => {
+  const { t } = useTranslation("common");
   const commit = (raw: string) => {
     if (raw.trim() === "") {
       onChange({ time: null, timeText: "" });
@@ -80,7 +82,7 @@ const TimeChipTimeInput: React.FC<TimeChipTimeInputProps> = ({
           dimension="none"
           type="text"
           value={slot.timeText}
-          placeholder="12:00"
+          placeholder={t("time.timePlaceholder")}
           onValueChange={(next) => commit(String(next ?? ""))}
           onBlur={() => onChange({ timeTouched: true })}
           onKeyDown={flushOnEnter}
@@ -91,7 +93,7 @@ const TimeChipTimeInput: React.FC<TimeChipTimeInputProps> = ({
           onMouseDown={(event) => event.preventDefault()}
           onClick={togglePeriod}
           className="comet-body-s flex shrink-0 cursor-pointer items-center gap-0.5 text-foreground"
-          aria-label={`Toggle AM/PM (current: ${slot.period})`}
+          aria-label={t("time.toggleAmPm", { period: slot.period })}
         >
           <span>{slot.period}</span>
           <ChevronsUpDown className="hidden size-[14px] text-muted-slate peer-focus:inline-block" />
@@ -100,7 +102,7 @@ const TimeChipTimeInput: React.FC<TimeChipTimeInputProps> = ({
       </div>
       {slot.timeTouched && timeInvalid && (
         <FormErrorSkeleton className="comet-body-xs">
-          Enter valid time
+          {t("time.enterValidTime")}
         </FormErrorSkeleton>
       )}
     </div>

@@ -92,7 +92,9 @@ export const SelectBox = <ValueType extends string>({
         })}
 
         {!options.length && (
-          <div className="comet-boby-s p-2 text-light-slate">{t("selectBox.noItems")}</div>
+          <div className="comet-boby-s p-2 text-light-slate">
+            {t("selectBox.noItems")}
+          </div>
         )}
       </SelectContent>
     </Select>

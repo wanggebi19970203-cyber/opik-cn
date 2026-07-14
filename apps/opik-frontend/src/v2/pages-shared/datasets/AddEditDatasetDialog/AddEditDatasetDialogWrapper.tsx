@@ -94,7 +94,9 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
             </span>
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor={`${idPrefix}Description`}>{t("addEditDialog.description")}</Label>
+            <Label htmlFor={`${idPrefix}Description`}>
+              {t("addEditDialog.description")}
+            </Label>
             <Textarea
               id={`${idPrefix}Description`}
               placeholder={t("addEditDialog.descriptionPlaceholder")}
@@ -143,7 +145,9 @@ const AddEditDatasetDialogWrapper: React.FunctionComponent<
         setOpen={setConfirmOpen}
         onCancel={submitHandler}
         title={t("addEditDialog.fileCantBeUploaded")}
-        description={t("addEditDialog.fileCantBeUploadedDescription", { typeLabel })}
+        description={t("addEditDialog.fileCantBeUploadedDescription", {
+          typeLabel,
+        })}
         cancelText={t("addEditDialog.createEmpty", { typeLabel })}
         confirmText={t("addEditDialog.goBack")}
       />

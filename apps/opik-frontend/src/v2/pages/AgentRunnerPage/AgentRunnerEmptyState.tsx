@@ -1,5 +1,5 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 
 import { buildDocsUrl } from "@/v2/lib/utils";
@@ -56,12 +56,14 @@ const AgentRunnerEmptyState: React.FC = () => {
                 {t("emptyState.markEntrypoint")}
               </h4>
               <p className="comet-body-xs text-muted-slate">
-                Add{" "}
-                <code className="font-code">@opik.track(entrypoint=True)</code>{" "}
-                to your agent&apos;s main function so Opik can detect and
-                register it. You can also run{" "}
-                <code className="font-code">/instrument</code> in the Ollie
-                sidebar to auto-instrument your agent.
+                <Trans
+                  ns="pages/agent-playground"
+                  i18nKey="agentPlayground.emptyState.markEntrypointDescription"
+                  components={{
+                    track: <code className="font-code" />,
+                    instrument: <code className="font-code" />,
+                  }}
+                />
               </p>
               <Tabs defaultValue="python">
                 <TabsList variant="underline">

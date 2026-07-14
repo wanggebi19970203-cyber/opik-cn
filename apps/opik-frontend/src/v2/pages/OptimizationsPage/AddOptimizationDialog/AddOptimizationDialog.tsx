@@ -29,24 +29,37 @@ const OPTIMIZATION_ALGORITHMS_OPTIONS: DropdownOption<OPTIMIZATION_ALGORITHMS>[]
   [
     {
       value: OPTIMIZATION_ALGORITHMS.metaPromptOptimizer,
-      label: i18next.t("pages/optimizations:optimizations.addDialog.metaOptimizer"),
-      description: i18next.t("pages/optimizations:optimizations.addDialog.metaOptimizerDesc"),
+      label: i18next.t(
+        "pages/optimizations:optimizations.addDialog.metaOptimizer",
+      ),
+      description: i18next.t(
+        "pages/optimizations:optimizations.addDialog.metaOptimizerDesc",
+      ),
     },
     {
       value: OPTIMIZATION_ALGORITHMS.fewShotOptimizer,
-      label: i18next.t("pages/optimizations:optimizations.addDialog.fewShotBayesian"),
-      description:
-        i18next.t("pages/optimizations:optimizations.addDialog.fewShotBayesianDesc"),
+      label: i18next.t(
+        "pages/optimizations:optimizations.addDialog.fewShotBayesian",
+      ),
+      description: i18next.t(
+        "pages/optimizations:optimizations.addDialog.fewShotBayesianDesc",
+      ),
     },
     {
       value: OPTIMIZATION_ALGORITHMS.evolutionaryOptimizer,
-      label: i18next.t("pages/optimizations:optimizations.addDialog.evolutionary"),
-      description: i18next.t("pages/optimizations:optimizations.addDialog.evolutionaryDesc"),
+      label: i18next.t(
+        "pages/optimizations:optimizations.addDialog.evolutionary",
+      ),
+      description: i18next.t(
+        "pages/optimizations:optimizations.addDialog.evolutionaryDesc",
+      ),
     },
     {
       value: OPTIMIZATION_ALGORITHMS.gepaOptimizer,
       label: i18next.t("pages/optimizations:optimizations.addDialog.gepa"),
-      description: i18next.t("pages/optimizations:optimizations.addDialog.gepaDesc"),
+      description: i18next.t(
+        "pages/optimizations:optimizations.addDialog.gepaDesc",
+      ),
     },
   ];
 
@@ -337,7 +350,7 @@ const AddOptimizationDialog: React.FunctionComponent<
               <Checkbox
                 checked={selectedModel === m.value}
                 onCheckedChange={() => checkboxChangeHandler(m.value)}
-                aria-label="Select row"
+                aria-label={t("addOptimization.selectRow")}
                 className="mt-0.5"
               />
               <div className="px-2">
@@ -357,12 +370,19 @@ const AddOptimizationDialog: React.FunctionComponent<
     <SideDialog
       open={open}
       setOpen={openChangeHandler}
-      header={<SheetTopBar variant="info" title={t("optimizations.addDialog.title")} />}
+      header={
+        <SheetTopBar
+          variant="info"
+          title={t("optimizations.addDialog.title")}
+        />
+      }
     >
       <div className="max-h-full overflow-y-auto px-5 pb-20 pt-4">
         <div className="m-auto flex w-full items-start gap-6">
           <div className="flex w-[250px] shrink-0 flex-col gap-2">
-            <div className="comet-title-s">{t("optimizations.addDialog.optimizationAlgorithms")}</div>
+            <div className="comet-title-s">
+              {t("optimizations.addDialog.optimizationAlgorithms")}
+            </div>
             {generateList(OPTIMIZATION_ALGORITHMS_OPTIONS)}
           </div>
           <div className="flex w-full max-w-[700px] flex-col gap-2 rounded-md border border-border p-6">
@@ -375,7 +395,9 @@ const AddOptimizationDialog: React.FunctionComponent<
                   <LoadableSelectBox
                     options={options}
                     value={datasetName}
-                    placeholder={t("optimizations.addDialog.selectTestSuitePlaceholder")}
+                    placeholder={t(
+                      "optimizations.addDialog.selectTestSuitePlaceholder",
+                    )}
                     onChange={setDatasetName}
                     onLoadMore={
                       total > DEFAULT_LOADED_DATASET_ITEMS && !isLoadedMore

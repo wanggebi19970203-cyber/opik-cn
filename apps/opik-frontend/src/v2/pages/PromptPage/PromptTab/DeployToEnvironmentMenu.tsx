@@ -93,10 +93,22 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
       if (!canEditPrompts) return;
       if (activeEnvSet.has(envName)) {
         const next = activeEnvironments.filter((e) => e !== envName);
-        applyEnvironments(next, t("promptTab.removedFromEnvironment", { version: versionLabel, environment: envName }));
+        applyEnvironments(
+          next,
+          t("promptTab.removedFromEnvironment", {
+            version: versionLabel,
+            environment: envName,
+          }),
+        );
       } else {
         const next = [...activeEnvironments, envName];
-        applyEnvironments(next, t("promptTab.deployedToEnvironment", { version: versionLabel, environment: envName }));
+        applyEnvironments(
+          next,
+          t("promptTab.deployedToEnvironment", {
+            version: versionLabel,
+            environment: envName,
+          }),
+        );
       }
     },
     [
@@ -112,7 +124,10 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
   const handleClearAll = useCallback(() => {
     if (!canEditPrompts) return;
     if (activeEnvironments.length === 0) return;
-    applyEnvironments([], t("promptTab.removedFromAll", { version: versionLabel }));
+    applyEnvironments(
+      [],
+      t("promptTab.removedFromAll", { version: versionLabel }),
+    );
   }, [
     canEditPrompts,
     activeEnvironments.length,
@@ -148,7 +163,9 @@ const DeployToEnvironmentMenu: React.FC<DeployToEnvironmentMenuProps> = ({
             const isActiveHere = activeEnvSet.has(env.name);
             const ownerLabel =
               !isActiveHere && owner && totalVersions > 0
-                ? t("promptTab.currentlyVersion", { version: totalVersions - owner.index })
+                ? t("promptTab.currentlyVersion", {
+                    version: totalVersions - owner.index,
+                  })
                 : "";
             return (
               <DropdownMenuItem

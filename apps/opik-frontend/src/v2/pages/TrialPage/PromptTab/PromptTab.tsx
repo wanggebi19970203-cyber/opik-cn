@@ -75,10 +75,12 @@ type PromptTabRow = (CompareConfig | ComparePromptConfig) & {
   rowType: "prompt" | "config";
 };
 
-export const DEFAULT_COLUMNS: ColumnData<PromptTabRow>[] = [
+export const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<PromptTabRow>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("promptTab.name"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -113,7 +115,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
 
   const columns = useMemo(() => {
     const retVal = convertColumnDataToColumn<PromptTabRow, PromptTabRow>(
-      DEFAULT_COLUMNS,
+      getDefaultColumns(t),
       {},
     );
 
@@ -154,7 +156,7 @@ const PromptTab: React.FunctionComponent<PromptTabProps> = ({
     });
 
     return retVal;
-  }, [experimentsIds, onlyDiff, experiments]);
+  }, [experimentsIds, onlyDiff, experiments, t]);
 
   const flattenExperimentMetadataMap = useMemo(() => {
     return experiments.reduce<

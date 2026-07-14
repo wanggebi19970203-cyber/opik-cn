@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { ListTree } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Tag } from "@/ui/tag";
 import { Button } from "@/ui/button";
@@ -13,18 +14,12 @@ type TraceLogsSidebarButtonProps = {
   projectId: string;
   logsSource?: LOGS_SOURCE;
   sourceFilters?: Filter[];
-  // When true, sourceFilters become a locked scope: applied to the query but not user-editable or
-  // removable via the filter bar (e.g. the per-evaluator Evaluation traces sidebar). scopeLabel is
-  // shown as a read-only indicator of what the view is locked to.
   lockScope?: boolean;
   scopeLabel?: string;
   variant?: "tag" | "icon";
   title?: string;
   label?: string;
   viewConfig?: TraceLogsViewConfig;
-  // When false, render only the trigger and let a single page-level <TraceLogsSidebar /> handle
-  // display. Used by per-row triggers (e.g. the online-evaluation rules table) so the sidebar is
-  // mounted once for the page instead of once per row (which would race on the shared tls_* state).
   renderSidebar?: boolean;
 };
 
@@ -38,11 +33,13 @@ const TraceLogsSidebarButton: React.FunctionComponent<
   scopeLabel,
   variant = "tag",
   title,
-  label = "Go to logs",
+  label,
   viewConfig,
   renderSidebar = true,
 }) => {
+  const { t } = useTranslation("tracing");
   const { open, openSidebar, closeSidebar } = useTraceLogsSidebarControls();
+  const resolvedLabel = label ?? t("traceLogs.goToLogs");
 
   const handleOpen = useCallback(
     () =>
@@ -55,7 +52,7 @@ const TraceLogsSidebarButton: React.FunctionComponent<
 
   const trigger =
     variant === "icon" ? (
-      <TooltipWrapper content={label}>
+      <TooltipWrapper content={resolvedLabel}>
         <Button
           data-testid="playground-logs-sidebar-button"
           variant="outline"
@@ -66,7 +63,7 @@ const TraceLogsSidebarButton: React.FunctionComponent<
         </Button>
       </TooltipWrapper>
     ) : (
-      <TooltipWrapper content={label}>
+      <TooltipWrapper content={resolvedLabel}>
         <Tag
           size="md"
           variant="transparent"
@@ -78,7 +75,7 @@ const TraceLogsSidebarButton: React.FunctionComponent<
             style={{ color: "var(--color-green)" }}
           />
           <div className="comet-body-s-accented truncate text-muted-slate">
-            {label}
+            {resolvedLabel}
           </div>
         </Tag>
       </TooltipWrapper>

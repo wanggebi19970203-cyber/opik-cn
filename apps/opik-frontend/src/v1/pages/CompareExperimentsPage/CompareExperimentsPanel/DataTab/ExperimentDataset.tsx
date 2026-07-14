@@ -93,7 +93,9 @@ const ExperimentDataset = ({ data, datasetItemId }: ExperimentDatasetProps) => {
     <div ref={containerRef} className="min-w-72 max-w-full flex-1 pr-6 pt-4">
       <div className="flex items-center justify-between gap-2 pb-4">
         <div className="flex min-w-0 shrink items-center gap-1">
-          <h4 className="comet-body-accented truncate">{t("compareExperiments.dataset.testSuiteItem")}</h4>
+          <h4 className="comet-body-accented truncate">
+            {t("compareExperiments.dataset.testSuiteItem")}
+          </h4>
           <ExplainerIcon
             {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_test_suite_item]}
           />

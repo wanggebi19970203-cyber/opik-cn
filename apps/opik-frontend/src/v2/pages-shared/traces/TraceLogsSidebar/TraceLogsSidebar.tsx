@@ -104,20 +104,22 @@ import useTraceThreadPanelsState from "@/v2/pages-shared/traces/useTraceThreadPa
 import { Filter } from "@/types/filters";
 import { useTruncationEnabled } from "@/contexts/server-sync-provider";
 
+import type { TFunction } from "i18next";
+
 const getRowId = (d: Trace) => d.id;
 
 const TLS_STORAGE_PREFIX = "tls-traces-";
 export const TLS_QUERY_PREFIX = "tls_";
 
-const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
+const getSharedColumns = (t: TFunction): ColumnData<BaseTraceData>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("sidebarColumns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("sidebarColumns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -126,7 +128,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("sidebarColumns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -135,7 +137,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "input",
-    label: "Input",
+    label: t("sidebarColumns.input"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -145,7 +147,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "output",
-    label: "Output",
+    label: t("sidebarColumns.output"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -155,14 +157,14 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "error_info",
-    label: "Errors",
+    label: t("sidebarColumns.errors"),
     statisticKey: "error_count",
     type: COLUMN_TYPE.errors,
     cell: ErrorCell as never,
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("sidebarColumns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationCell as never,
     statisticDataFormater: formatDuration,
@@ -170,14 +172,14 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("sidebarColumns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "usage.total_tokens",
-    label: "Total tokens",
+    label: t("sidebarColumns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -186,7 +188,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "usage.prompt_tokens",
-    label: "Total input tokens",
+    label: t("sidebarColumns.totalInputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.prompt_tokens)
@@ -195,7 +197,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "usage.completion_tokens",
-    label: "Total output tokens",
+    label: t("sidebarColumns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.completion_tokens)
@@ -204,7 +206,7 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("sidebarColumns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_cost_estimated],
@@ -215,10 +217,12 @@ const SHARED_COLUMNS: ColumnData<BaseTraceData>[] = [
   },
 ];
 
-const METADATA_MAIN_COLUMN_DATA: ColumnData<BaseTraceData>[] = [
+const getMetadataMainColumnData = (
+  t: TFunction,
+): ColumnData<BaseTraceData>[] => [
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("sidebarColumns.metadata"),
     type: COLUMN_TYPE.dictionary,
     accessorFn: (row) =>
       isObject(row.metadata)
@@ -292,30 +296,30 @@ const DEFAULT_TRACES_COLUMNS_ORDER: string[] = [
   "created_by",
 ];
 
-const COLUMN_DATA: ColumnData<BaseTraceData>[] = [
+const getColumnData = (t: TFunction): ColumnData<BaseTraceData>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("sidebarColumns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
     sortable: true,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: "span_count",
-    label: "Span count",
+    label: t("sidebarColumns.spanCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row: BaseTraceData) => get(row, "span_count", "-"),
   },
   {
     id: "llm_span_count",
-    label: "LLM calls count",
+    label: t("sidebarColumns.llmCallsCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row: BaseTraceData) => get(row, "llm_span_count", "-"),
   },
   {
     id: "thread_id",
-    label: "Thread ID",
+    label: t("sidebarColumns.threadId"),
     type: COLUMN_TYPE.string,
     cell: LinkCell as never,
     customMeta: {
@@ -325,7 +329,7 @@ const COLUMN_DATA: ColumnData<BaseTraceData>[] = [
   },
   {
     id: COLUMN_EXPERIMENT_ID,
-    label: "Experiment",
+    label: t("sidebarColumns.experiment"),
     type: COLUMN_TYPE.string,
     cell: ResourceCell as never,
     customMeta: {
@@ -339,30 +343,30 @@ const COLUMN_DATA: ColumnData<BaseTraceData>[] = [
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("sidebarColumns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_COMMENTS_ID,
-    label: "Comments",
+    label: t("sidebarColumns.comments"),
     type: COLUMN_TYPE.string,
     cell: CommentsCell as never,
   },
 ];
 
-const FILTERS_COLUMN_DATA: ColumnData<BaseTraceData>[] = [
+const getFiltersColumnData = (t: TFunction): ColumnData<BaseTraceData>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("sidebarColumns.id"),
     type: COLUMN_TYPE.string,
   },
-  ...SHARED_COLUMNS.flatMap((col) =>
+  ...getSharedColumns(t).flatMap((col) =>
     col.id === "error_info"
       ? [
           col,
           {
             id: "error_type",
-            label: "Error type",
+            label: t("sidebarColumns.errorType"),
             type: COLUMN_TYPE.string,
           },
         ]
@@ -370,37 +374,37 @@ const FILTERS_COLUMN_DATA: ColumnData<BaseTraceData>[] = [
   ),
   {
     id: "thread_id",
-    label: "Thread ID",
+    label: t("sidebarColumns.threadId"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_EXPERIMENT_IDS,
-    label: "Experiment",
+    label: t("sidebarColumns.experiment"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "annotation_queue_ids",
-    label: "Annotation queue ID",
+    label: t("sidebarColumns.annotationQueueId"),
     type: COLUMN_TYPE.list,
   },
   {
     id: "llm_span_count",
-    label: "LLM calls count",
+    label: t("sidebarColumns.llmCallsCount"),
     type: COLUMN_TYPE.number,
   },
   {
     id: COLUMN_METADATA_ID,
-    label: "Metadata",
+    label: t("sidebarColumns.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
-    label: "Feedback scores",
+    label: t("sidebarColumns.feedbackScores"),
     type: COLUMN_TYPE.numberDictionary,
   },
   {
     id: COLUMN_CUSTOM_ID,
-    label: "Custom filter",
+    label: t("sidebarColumns.customFilter"),
     type: COLUMN_TYPE.dictionary,
   },
 ];
@@ -431,7 +435,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
   projectId,
   projectName = "",
   logsSource,
-  title = "Logs",
+  title,
   viewConfig = DEFAULT_TRACE_LOGS_VIEW_CONFIG,
 }) => {
   const { t } = useTranslation("tracing");
@@ -533,7 +537,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
             rootKeys: ["metadata"],
             projectId,
             type,
-            placeholder: "key",
+            placeholder: t("traceLogs.keyPlaceholder"),
             excludeRoot: true,
           },
         },
@@ -543,7 +547,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
             rootKeys: ["input", "output"],
             projectId,
             type,
-            placeholder: "key",
+            placeholder: t("traceLogs.keyPlaceholder"),
             excludeRoot: false,
           },
           validateFilter: (filter: Filter) => {
@@ -552,7 +556,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
               filter.value &&
               !CUSTOM_FILTER_VALIDATION_REGEXP.test(filter.key)
             ) {
-              return `Key is invalid, it should begin with "input", or "output" and follow this format: "input.[PATH]" For example: "input.message" `;
+              return t("traceLogs.keyInvalid");
             }
           },
         },
@@ -561,7 +565,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
           keyComponentProps: {
             projectId,
             type,
-            placeholder: "Select score",
+            placeholder: t("traceLogs.selectScore"),
           },
         },
         error_type: {
@@ -574,12 +578,12 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
         [COLUMN_EXPERIMENT_IDS]: {
           keyComponent: ExperimentsSelectBoxFilterWrapper as never,
           keyComponentProps: { projectId },
-          operators: [{ label: "is one of", value: "in" }],
+          operators: [{ label: t("traceLogs.isOneOf"), value: "in" }],
           defaultOperator: "in",
         },
       },
     }),
-    [projectId, type],
+    [projectId, t, type],
   );
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -786,9 +790,10 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
 
   const metadataColumnsData = useMemo(() => {
     return dynamicMetadataColumns.map(({ label, id }) => {
+      const metadataLabel = t("sidebarColumns.metadata");
       const columnLabel = label.startsWith(".")
-        ? `Metadata${label}`
-        : `Metadata.${label}`;
+        ? `${metadataLabel}${label}`
+        : `${metadataLabel}.${label}`;
 
       return {
         id,
@@ -807,7 +812,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
         cell: AutodetectCell as never,
       };
     }) as ColumnData<BaseTraceData>[];
-  }, [dynamicMetadataColumns]);
+  }, [dynamicMetadataColumns, t]);
 
   const selectedRows: Array<Trace> = useMemo(() => {
     return rows.filter((row) => rowSelection[row.id]);
@@ -821,14 +826,14 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
     }
 
     if (!result.data?.content) {
-      throw new Error("Failed to fetch data");
+      throw new Error(t("traceLogs.failedToFetchData"));
     }
 
     const allRows = result.data.content;
     const selectedIds = Object.keys(rowSelection);
 
     return allRows.filter((row) => selectedIds.includes(row.id)) as Trace[];
-  }, [refetchExportData, rowSelection]);
+  }, [refetchExportData, rowSelection, t]);
 
   const {
     traceId,
@@ -848,10 +853,17 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
     },
   });
 
+  const columnData = useMemo(() => getColumnData(t), [t]);
+  const filtersColumnData = useMemo(() => getFiltersColumnData(t), [t]);
+  const metadataMainColumnData = useMemo(
+    () => getMetadataMainColumnData(t),
+    [t],
+  );
+
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<Trace>(),
-      ...convertColumnDataToColumn<BaseTraceData, Trace>(COLUMN_DATA, {
+      ...convertColumnDataToColumn<BaseTraceData, Trace>(columnData, {
         columnsOrder,
         selectedColumns,
         sortableColumns: sortableBy,
@@ -862,7 +874,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
         sortableColumns: sortableBy,
       }),
       ...convertColumnDataToColumn<BaseTraceData, Trace>(
-        [...METADATA_MAIN_COLUMN_DATA, ...metadataColumnsData],
+        [...metadataMainColumnData, ...metadataColumnsData],
         {
           columnsOrder: metadataColumnsOrder,
           selectedColumns,
@@ -871,6 +883,8 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
       ),
     ];
   }, [
+    columnData,
+    metadataMainColumnData,
     sortableBy,
     columnsOrder,
     selectedColumns,
@@ -929,7 +943,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
       onOrderChange: (order: string[]) => void;
     }[] = [
       {
-        title: "Feedback scores",
+        title: t("sidebarColumns.feedbackScoresSection"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
@@ -937,13 +951,13 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
     ];
 
     const allMetadataColumns = [
-      ...METADATA_MAIN_COLUMN_DATA,
+      ...metadataMainColumnData,
       ...metadataColumnsData,
     ];
 
     if (allMetadataColumns.length > 0) {
       sections.push({
-        title: "Metadata",
+        title: t("sidebarColumns.metadataSection"),
         columns: allMetadataColumns,
         order: metadataColumnsOrder,
         onOrderChange: setMetadataColumnsOrder,
@@ -955,9 +969,11 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     setScoresColumnsOrder,
+    metadataMainColumnData,
     metadataColumnsData,
     metadataColumnsOrder,
     setMetadataColumnsOrder,
+    t,
   ]);
 
   return (
@@ -978,7 +994,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
               <MetricsSummary
                 projectId={projectId}
                 entityType="traces"
-                countLabel="Traces"
+                countLabel={t("traceLogs.countLabelTraces")}
                 filters={effectiveFilters}
                 intervalStart={intervalStart}
                 intervalEnd={intervalEnd}
@@ -997,14 +1013,14 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
                 dimension="sm"
               />
               <FiltersButton
-                columns={FILTERS_COLUMN_DATA}
+                columns={filtersColumnData}
                 config={filtersConfig as never}
                 filters={filters}
                 onChange={setFilters}
                 layout="icon"
               />
               {scopeLabel && (
-                <TooltipWrapper content="These traces are locked to this evaluator and can't be changed via filters">
+                <TooltipWrapper content={t("traceLogs.lockedScopeTooltip")}>
                   <Tag
                     size="md"
                     variant="gray"
@@ -1046,7 +1062,7 @@ const TraceLogsSidebar: React.FunctionComponent<TraceLogsSidebarProps> = ({
                 setType={setHeight}
               />
               <ColumnsButton
-                columns={COLUMN_DATA}
+                columns={columnData}
                 selectedColumns={selectedColumns}
                 onSelectionChange={setSelectedColumns}
                 order={columnsOrder}

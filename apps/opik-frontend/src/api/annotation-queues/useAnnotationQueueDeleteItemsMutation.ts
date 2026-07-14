@@ -35,7 +35,9 @@ const useAnnotationQueueDeleteItemsMutation = () => {
 
     onSuccess: () => {
       toast({
-        description: i18next.t("common:messages.itemsDeletedFromAnnotationQueue"),
+        description: i18next.t(
+          "common:messages.itemsDeletedFromAnnotationQueue",
+        ),
       });
     },
     onError: (error: AxiosError) => {
@@ -47,7 +49,9 @@ const useAnnotationQueueDeleteItemsMutation = () => {
 
       toast({
         title: i18next.t("common:labels.error"),
-        description: `${i18next.t("common:messages.failedToDeleteItemsFromAnnotationQueue")}: ${message}`,
+        description: `${i18next.t(
+          "common:messages.failedToDeleteItemsFromAnnotationQueue",
+        )}: ${message}`,
         variant: "destructive",
       });
     },

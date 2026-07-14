@@ -85,7 +85,7 @@ export const PromptRowActionsCell: React.FunctionComponent<
               }}
             >
               <Pencil className="mr-2 size-4" />
-              Edit
+              {t("actions.edit")}
             </DropdownMenuItem>
           )}
           {canDeletePrompts && (

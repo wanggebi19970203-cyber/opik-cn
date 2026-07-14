@@ -206,7 +206,9 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
         </div>
         {description && (
           <div className="pb-4">
-            <h4 className="comet-body-s-accented px-0.5 pb-0.5">{t("common:labels.description")}</h4>
+            <h4 className="comet-body-s-accented px-0.5 pb-0.5">
+              {t("common:labels.description")}
+            </h4>
             <div className="rounded-md border border-border px-3 py-2">
               <p className="comet-body-s truncate">{description}</p>
             </div>
@@ -220,7 +222,10 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
               preserveKey="eval-suite-sidebar-context"
             />
           ) : (
-            <NoData title={t("common:emptyStates.noData")} className="min-h-24" />
+            <NoData
+              title={t("common:emptyStates.noData")}
+              className="min-h-24"
+            />
           )}
         </div>
       </div>

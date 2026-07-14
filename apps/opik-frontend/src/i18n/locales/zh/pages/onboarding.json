@@ -43,6 +43,7 @@
   "codeExecutor": {
     "console": "控制台",
     "running": "运行中...",
+    "run": "运行",
     "welcomeMessage": "欢迎使用 Opik! 点击 {{run}} 执行代码示例",
     "loggedToDashboard": "OPIK: 您的 LLM 调用已记录到 Opik 仪表板，",
     "viewThemHere": "在此查看"
@@ -85,6 +86,8 @@
     "submitRequest": "提交请求",
     "receivingData": "正在接收数据",
     "waitingForData": "等待数据",
+    "tracesReceivedExploreOpik": "已收到追踪数据，探索 Opik",
+    "cometTutorial": "Comet 教程",
     "getHelpInSlack": "在 Slack 获取帮助",
     "tryPlayground": "试用我们的 Playground",
     "exploreDemoProject": "探索我们的演示项目",
@@ -109,7 +112,6 @@
     "goToDocs": "前往文档",
     "selectFramework": "选择框架",
     "exploreAllIntegrations": "探索所有集成",
-    "functionDecorators": "函数装饰器",
     "runCodeToGetStarted": "运行以下代码开始使用",
     "python": "Python",
     "chooseMethod": "选择方法",
@@ -122,7 +124,13 @@
     "getStartedPlayground": "您今天就可以通过导航到",
     "playgroundLink": "Playground。",
     "playgroundUsage": "在那里，您可以使用以下格式添加带变量的提示词",
-    "evaluateAgainstSuites": "并在您的 Opik 测试套件上进行评估。"
+    "evaluateAgainstSuites": "并在您的 Opik 测试套件上进行评估。",
+    "requestMinLength": "请提供至少 10 个字符来描述该集成",
+    "requestMaxLength": "描述不能超过 1000 个字符",
+    "validation": {
+      "minLength": "请提供至少 10 个字符来描述该集成",
+      "maxLength": "描述不能超过 1000 个字符"
+    }
   },
   "agentCopyButtons": {
     "copyWorkspace": "复制工作区",
@@ -147,6 +155,22 @@
     "waitingForFirstTrace": "等待第一条追踪...",
     "tracesFlowing": "追踪数据正在流入。您现在可以调试、评估和优化。",
     "connectAgentToOpik": "将您的智能体连接到 Opik 以实现可观测性、评估和优化。",
-    "whyIsntTraceShowing": "为什么我的追踪没有显示？"
+    "whyIsntTraceShowing": "为什么我的追踪没有显示？",
+    "moreIntegrations": "+34 更多",
+    "terminal": "终端",
+    "prompt": "提示词"
+  },
+  "usingPlaygroundTab": {
+    "description": "您可以使用 Playground 从 Opik 平台运行提示词评估。这允许您在平台上可用的任何测试套件上测试不同的提示词。",
+    "learnMore": "您可以在以下位置了解更多关于在 Playground 中运行评估的信息",
+    "documentationGuide": "文档指南。",
+    "getStarted": "您今天就可以通过导航到",
+    "playground": "Playground。",
+    "fromThere": "在那里，您可以使用以下格式添加带变量的提示词",
+    "andEvaluate": "并在您的 Opik 测试套件上进行评估。"
+  },
+  "loggedDataStatus": {
+    "tracesReceived": "已收到追踪，探索 Opik",
+    "waitingForData": "等待数据"
   }
 }

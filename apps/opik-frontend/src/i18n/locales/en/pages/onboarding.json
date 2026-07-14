@@ -43,6 +43,7 @@
   "codeExecutor": {
     "console": "Console",
     "running": "Running...",
+    "run": "Run",
     "welcomeMessage": "Welcome to Opik! Click {{run}} to execute the code sample",
     "loggedToDashboard": "OPIK: Your LLM calls have been logged to your Opik dashboard,",
     "viewThemHere": "view them here"
@@ -85,6 +86,8 @@
     "submitRequest": "Submit request",
     "receivingData": "Receiving data",
     "waitingForData": "Waiting for data",
+    "tracesReceivedExploreOpik": "Traces received, explore Opik",
+    "cometTutorial": "Comet tutorial",
     "getHelpInSlack": "Get help in Slack",
     "tryPlayground": "Try our Playground",
     "exploreDemoProject": "Explore our Demo project",
@@ -109,7 +112,6 @@
     "goToDocs": "Go to docs",
     "selectFramework": "Select framework",
     "exploreAllIntegrations": "Explore all integrations",
-    "functionDecorators": "Function decorators",
     "runCodeToGetStarted": "Run the following code to get started",
     "python": "Python",
     "chooseMethod": "Choose a Method",
@@ -122,7 +124,13 @@
     "getStartedPlayground": "You can get started today by navigating to the",
     "playgroundLink": "Playground.",
     "playgroundUsage": "From there, you can add prompts with variables in the format",
-    "evaluateAgainstSuites": "and evaluate them against your Opik test suites."
+    "evaluateAgainstSuites": "and evaluate them against your Opik test suites.",
+    "requestMinLength": "Please provide at least 10 characters describing the integration",
+    "requestMaxLength": "Description must be 1000 characters or less",
+    "validation": {
+      "minLength": "Please provide at least 10 characters describing the integration",
+      "maxLength": "Description must be 1000 characters or less"
+    }
   },
   "agentCopyButtons": {
     "copyWorkspace": "Copy workspace",
@@ -147,6 +155,22 @@
     "waitingForFirstTrace": "Waiting for first trace\u2026",
     "tracesFlowing": "Traces are flowing. You can now debug, evaluate, and optimize.",
     "connectAgentToOpik": "Connect your agent to Opik for observability, evaluation and optimization. ",
-    "whyIsntTraceShowing": "Why isn\u0027t my trace showing?"
+    "whyIsntTraceShowing": "Why isn\u0027t my trace showing?",
+    "moreIntegrations": "+34 more",
+    "terminal": "Terminal",
+    "prompt": "Prompt"
+  },
+  "usingPlaygroundTab": {
+    "description": "You can run prompt evaluations from the Opik platform using the Playground. This allows you to test different prompts on any test suites available in the platform.",
+    "learnMore": "You can learn more about running evaluations in the playground in the",
+    "documentationGuide": "documentation guide.",
+    "getStarted": "You can get started today by navigating to the",
+    "playground": "Playground.",
+    "fromThere": "From there, you can add prompts with variables in the format",
+    "andEvaluate": "and evaluate them against your Opik test suites."
+  },
+  "loggedDataStatus": {
+    "tracesReceived": "Traces received, explore Opik",
+    "waitingForData": "Waiting for data"
   }
 }

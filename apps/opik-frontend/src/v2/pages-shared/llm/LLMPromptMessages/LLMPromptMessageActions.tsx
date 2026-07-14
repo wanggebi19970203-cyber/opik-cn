@@ -171,7 +171,9 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
         if (!hasModel) {
           toast({
             title: t("llm:promptMessageActions.modelConfigurationRequired"),
-            description: t("llm:promptMessageActions.modelConfigurationDescription"),
+            description: t(
+              "llm:promptMessageActions.modelConfigurationDescription",
+            ),
           });
           return;
         }
@@ -189,6 +191,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
     hasModel,
     onChangeMessage,
     toast,
+    t,
   ]);
 
   const handleUpdateExternalPromptId = useCallback(
@@ -266,7 +269,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
       description: t("llm:promptMessageActions.loadPromptDescription"),
       confirmText: t("llm:promptMessageActions.loadPrompt"),
     };
-  }, [handleUpdateExternalPromptId]);
+  }, [handleUpdateExternalPromptId, t]);
 
   // This effect is used to set the template and promptVersionId after it is loaded,
   // after it was set in handleUpdateExternalPromptId function

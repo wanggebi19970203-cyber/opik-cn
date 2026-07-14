@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CopyPlus, Pencil, Trash } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -27,6 +28,7 @@ export const BuiltInViewItem: React.FC<BuiltInViewItemProps> = ({
   onSelect,
   onDuplicate,
 }) => {
+  const { t } = useTranslation();
   const Icon = option.icon;
 
   return (
@@ -45,11 +47,11 @@ export const BuiltInViewItem: React.FC<BuiltInViewItemProps> = ({
               {option.label}
             </span>
             <Tag variant="pink" size="sm" className="shrink-0">
-              Built-in
+              {t("tracing.insights.builtIn")}
             </Tag>
           </div>
           <div className="shrink-0 opacity-0 group-hover:opacity-100">
-            <TooltipWrapper content="Duplicate">
+            <TooltipWrapper content={t("tracing.insights.duplicate")}>
               <Button
                 variant="minimal"
                 size="icon-xs"
@@ -89,6 +91,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
   onDuplicate,
   onDelete,
 }) => {
+  const { t } = useTranslation();
   const Icon = option.icon;
 
   return (
@@ -108,7 +111,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5 rounded-sm p-0.5 opacity-0 group-hover:opacity-100">
-            <TooltipWrapper content="Edit">
+            <TooltipWrapper content={t("tracing.insights.edit")}>
               <Button
                 variant="minimal"
                 size="icon-xs"
@@ -121,7 +124,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
                 <Pencil className="size-3.5" />
               </Button>
             </TooltipWrapper>
-            <TooltipWrapper content="Duplicate">
+            <TooltipWrapper content={t("tracing.insights.duplicate")}>
               <Button
                 variant="minimal"
                 size="icon-xs"
@@ -135,7 +138,7 @@ export const CustomViewItem: React.FC<CustomViewItemProps> = ({
               </Button>
             </TooltipWrapper>
             <Separator orientation="vertical" className="h-2.5" />
-            <TooltipWrapper content="Delete">
+            <TooltipWrapper content={t("tracing.insights.delete")}>
               <Button
                 variant="minimal"
                 size="icon-xs"

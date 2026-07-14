@@ -124,7 +124,9 @@ const DatasetItemEditorAutosaveLayout: React.FC<
           </div>
           {hasMedia && (
             <div className="border-b px-6 py-4">
-              <div className="mb-2 text-sm font-medium">{t("itemEditor.media")}</div>
+              <div className="mb-2 text-sm font-medium">
+                {t("itemEditor.media")}
+              </div>
               <ImagesListWrapper media={media} />
             </div>
           )}

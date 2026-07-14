@@ -196,7 +196,9 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
             />
           )}
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="feedbackDefinitionName">{t("feedbackDefinition.name")}</Label>
+            <Label htmlFor="feedbackDefinitionName">
+              {t("feedbackDefinition.name")}
+            </Label>
             <div className="flex items-center">
               <Popover>
                 <PopoverTrigger asChild>
@@ -220,7 +222,9 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
             </div>
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="feedbackDefinitionDescription">{t("feedbackDefinition.description")}</Label>
+            <Label htmlFor="feedbackDefinitionDescription">
+              {t("feedbackDefinition.description")}
+            </Label>
             <Textarea
               id="feedbackDefinitionDescription"
               placeholder={t("feedbackDefinition.descriptionPlaceholder")}
@@ -231,7 +235,9 @@ const AddEditFeedbackDefinitionDialog: React.FunctionComponent<
             />
           </div>
           <div className="flex flex-col gap-2 pb-4">
-            <Label htmlFor="feedbackDefinitionType">{t("feedbackDefinition.type")}</Label>
+            <Label htmlFor="feedbackDefinitionType">
+              {t("feedbackDefinition.type")}
+            </Label>
             <SelectBox
               id="feedbackDefinitionType"
               value={type}

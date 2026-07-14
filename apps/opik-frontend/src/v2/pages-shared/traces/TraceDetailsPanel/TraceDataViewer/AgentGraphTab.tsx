@@ -11,7 +11,10 @@ type AgentGraphTabProps = {
 const AgentGraphTab: React.FC<AgentGraphTabProps> = ({ data }) => {
   const { t } = useTranslation("tracing");
   return (
-    <ZoomPanContainer dialogTitle={t("detailsPanel.agentGraph")} expandButton={false}>
+    <ZoomPanContainer
+      dialogTitle={t("detailsPanel.agentGraph")}
+      expandButton={false}
+    >
       <MermaidDiagram chart={data.data} />
     </ZoomPanContainer>
   );

@@ -17,13 +17,15 @@ import {
 } from "./usePromptTemplateEditor";
 import { useTranslation } from "react-i18next";
 
-const CHAT_VIEW_OPTIONS: Array<{
+const getChatViewOptions = (
+  t: (key: string) => string,
+): Array<{
   value: ChatViewMode;
   label: string;
   icon?: LucideIcon;
-}> = [
-  { value: "pretty", label: "Pretty", icon: Sparkles },
-  { value: "json", label: "JSON" },
+}> => [
+  { value: "pretty", label: t("promptTemplateEditor.pretty"), icon: Sparkles },
+  { value: "json", label: t("promptTemplateEditor.json") },
 ];
 
 type PromptTemplateEditorProps = {
@@ -59,7 +61,7 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
             <>
               <FormFieldModeSelect
                 value={editor.chatViewMode}
-                options={CHAT_VIEW_OPTIONS}
+                options={getChatViewOptions(t)}
                 onChange={editor.onChatViewModeChange}
               />
               <Separator orientation="vertical" className="-ml-2 h-3" />
@@ -121,7 +123,9 @@ const PromptTemplateEditor: React.FC<PromptTemplateEditorProps> = ({
         </div>
       </FormFieldCard>
       <p className="comet-body-xs text-light-slate">
-        {t("promptTemplateEditor.variableSyntaxHint", { example: "{{question}}" })}
+        {t("promptTemplateEditor.variableSyntaxHint", {
+          example: "{{question}}",
+        })}
       </p>
     </div>
   );

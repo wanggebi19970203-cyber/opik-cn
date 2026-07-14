@@ -68,21 +68,22 @@ const getDashboardTypeOptions = (t: (key: string) => string): CardOption[] => [
   },
 ];
 
-const DashboardFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(100, "Name must be less than 100 characters")
-    .trim(),
-  description: z
-    .string()
-    .max(255, "Description must be less than 255 characters")
-    .optional()
-    .or(z.literal("")),
-  dashboardType: z.nativeEnum(DASHBOARD_TYPE),
-});
+const getDashboardFormSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z
+      .string()
+      .min(1, t("validation.nameRequired"))
+      .max(100, t("validation.nameMaxLength"))
+      .trim(),
+    description: z
+      .string()
+      .max(255, t("validation.descriptionMaxLength"))
+      .optional()
+      .or(z.literal("")),
+    dashboardType: z.nativeEnum(DASHBOARD_TYPE),
+  });
 
-type DashboardFormData = z.infer<typeof DashboardFormSchema>;
+type DashboardFormData = z.infer<ReturnType<typeof getDashboardFormSchema>>;
 
 export type DashboardDialogMode = "create" | "edit" | "clone";
 
@@ -139,6 +140,8 @@ const AddEditCloneDashboardDialog: React.FC<
 
     return dashboard?.name || "";
   };
+
+  const DashboardFormSchema = useMemo(() => getDashboardFormSchema(t), [t]);
 
   const form = useForm<DashboardFormData>({
     resolver: zodResolver(DashboardFormSchema),
@@ -218,7 +221,7 @@ const AddEditCloneDashboardDialog: React.FC<
         </ToastAction>,
       ],
     });
-  }, [toast]);
+  }, [toast, t]);
 
   const handleMutationError = useCallback(
     (error: AxiosError, action: string) => {
@@ -242,7 +245,7 @@ const AddEditCloneDashboardDialog: React.FC<
         });
       }
     },
-    [form, toast],
+    [form, toast, t],
   );
 
   const onSubmit = useCallback(
@@ -325,7 +328,7 @@ const AddEditCloneDashboardDialog: React.FC<
             }
           : option,
       ),
-    [canViewExperiments],
+    [canViewExperiments, t],
   );
 
   return (

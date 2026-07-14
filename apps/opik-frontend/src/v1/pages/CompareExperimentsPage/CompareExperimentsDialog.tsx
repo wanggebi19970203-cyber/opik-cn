@@ -157,7 +157,9 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("compareExperiments.dialog.cancel")}</Button>
+            <Button variant="outline">
+              {t("compareExperiments.dialog.cancel")}
+            </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button
@@ -167,9 +169,10 @@ const CompareExperimentsDialog: React.FC<CompareExperimentsDialogProps> = ({
             >
               {t("compareExperiments.dialog.compareCount", {
                 count: selectedExperimentsIds.length,
-                type: selectedExperimentsIds.length === 1
-                  ? t("compareExperiments.experiment")
-                  : t("compareExperiments.experiments"),
+                type:
+                  selectedExperimentsIds.length === 1
+                    ? t("compareExperiments.experiment")
+                    : t("compareExperiments.experiments"),
               })}
             </Button>
           </DialogClose>

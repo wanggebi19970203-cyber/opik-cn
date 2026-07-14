@@ -15,7 +15,7 @@ const IntegrationGetHelp: React.FunctionComponent<IntegrationGetHelpProps> = ({
   label,
 }) => {
   const { t } = useTranslation();
-  const displayLabel = label ?? t('integrationExplorer.getHelp');
+  const displayLabel = label ?? t("integrationExplorer.getHelp");
   const { helpGuideDialogOpen, setHelpGuideDialogOpen } =
     useIntegrationExplorer();
 

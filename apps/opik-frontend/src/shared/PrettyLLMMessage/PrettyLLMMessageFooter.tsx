@@ -23,13 +23,17 @@ const PrettyLLMMessageFooter: React.FC<PrettyLLMMessageFooterProps> = ({
     >
       {usage && (
         <div className="flex items-center gap-2">
-          <span className="font-medium">{t("common:llmMessages.maxCompletionTokens")}</span>
+          <span className="font-medium">
+            {t("common:llmMessages.maxCompletionTokens")}
+          </span>
           <span>{usage.completion_tokens || 0}</span>
         </div>
       )}
       {finishReason && (
         <div className="flex items-center gap-2">
-          <span className="font-medium">{t("common:llmMessages.finishReason")}</span>
+          <span className="font-medium">
+            {t("common:llmMessages.finishReason")}
+          </span>
           <span className="capitalize">{finishReason}</span>
         </div>
       )}

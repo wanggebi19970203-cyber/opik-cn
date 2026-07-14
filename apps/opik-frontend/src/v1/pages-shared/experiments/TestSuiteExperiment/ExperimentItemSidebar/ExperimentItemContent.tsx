@@ -125,7 +125,7 @@ const SingleExperimentSection: React.FC<SingleExperimentSectionProps> = ({
             }}
           >
             <ListTree className="size-3" />
-            Trace
+            {t("trace")}
           </Tag>
         )}
       </div>
@@ -201,14 +201,18 @@ export const ExperimentItemContent: React.FC<ExperimentItemContentProps> = ({
         </div>
         {description && (
           <div className="pb-4">
-            <h4 className="comet-body-s-accented px-0.5 pb-0.5">{t("description")}</h4>
+            <h4 className="comet-body-s-accented px-0.5 pb-0.5">
+              {t("description")}
+            </h4>
             <div className="rounded-md border border-border px-3 py-2">
               <p className="comet-body-s truncate">{description}</p>
             </div>
           </div>
         )}
         <div>
-          <h4 className="comet-body-s-accented px-0.5 pb-0.5">{t("dataLabel")}</h4>
+          <h4 className="comet-body-s-accented px-0.5 pb-0.5">
+            {t("dataLabel")}
+          </h4>
           {data ? (
             <SyntaxHighlighter
               data={data}

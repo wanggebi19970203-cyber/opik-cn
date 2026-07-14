@@ -69,7 +69,7 @@ const isFieldRequired = (field: AgentParam): boolean => {
   return field.presence !== "optional";
 };
 
-const buildSchema = (fields: AgentParam[]) => {
+const buildSchema = (fields: AgentParam[], t: (key: string) => string) => {
   const shape: Record<string, z.ZodTypeAny> = {};
   for (const field of fields) {
     // Boolean fields are always valid (Switch is always "true"/"false")
@@ -77,7 +77,7 @@ const buildSchema = (fields: AgentParam[]) => {
       shape[field.name] = z.string();
     } else {
       shape[field.name] = z.string().refine((v) => v.trim().length > 0, {
-        message: "This field is required",
+        message: t("connectedState.validation.fieldRequired"),
       });
     }
   }
@@ -91,7 +91,7 @@ const AgentRunnerInputForm: React.FC<AgentRunnerInputFormProps> = ({
   onValidityChange,
 }) => {
   const { t } = useTranslation("pages/agent-playground");
-  const schema = useMemo(() => buildSchema(fields), [fields]);
+  const schema = useMemo(() => buildSchema(fields, t), [fields, t]);
 
   const {
     register,

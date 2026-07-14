@@ -41,7 +41,9 @@ const PrettyLLMMessageTextBlock: React.FC<PrettyLLMMessageTextBlockProps> =
             onClick={toggle}
             className="h-auto p-0 text-xs"
           >
-            {isExpanded ? t("common:llmMessages.showLess") : t("common:llmMessages.showMore")}
+            {isExpanded
+              ? t("common:llmMessages.showLess")
+              : t("common:llmMessages.showMore")}
           </Button>
         )}
       </div>

@@ -220,7 +220,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg sm:max-w-[620px]">
         <DialogHeader>
-          <DialogTitle>{t("llm:promptMessages.saveToPromptLibrary")}</DialogTitle>
+          <DialogTitle>
+            {t("llm:promptMessages.saveToPromptLibrary")}
+          </DialogTitle>
         </DialogHeader>
         <DialogAutoScrollBody>
           {prompt && canCreatePrompts && canEditPrompts && (
@@ -266,7 +268,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                   target="_blank"
                 >
                   <Button variant="link" size="sm" className="px-1">
-                      {t("llm:promptMessages.promptLibrary")}
+                    {t("llm:promptMessages.promptLibrary")}
                     <ExternalLink className="ml-1.5 mt-1 size-3.5 shrink-0" />
                   </Button>
                 </Link>
@@ -276,7 +278,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
 
           {isEdit ? (
             <div className="flex flex-col gap-2 pb-4">
-              <Label htmlFor="promptMetadata">{t("llm:promptMessages.commitMessage")}</Label>
+              <Label htmlFor="promptMetadata">
+                {t("llm:promptMessages.commitMessage")}
+              </Label>
               <Textarea
                 className="comet-code min-h-20"
                 id="promptMetadata"
@@ -287,7 +291,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
           ) : (
             <>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="promptName">{t("llm:promptMessages.name")}</Label>
+                <Label htmlFor="promptName">
+                  {t("llm:promptMessages.name")}
+                </Label>
                 <Input
                   id="promptName"
                   placeholder={t("llm:promptMessages.promptName")}
@@ -306,7 +312,7 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
                     target="_blank"
                   >
                     <Button variant="link" size="sm" className="px-1">
-                    {t("llm:promptMessages.promptLibrary")}
+                      {t("llm:promptMessages.promptLibrary")}
                       <ExternalLink className="ml-1.5 mt-1 size-3.5 shrink-0" />
                     </Button>
                   </Link>
@@ -332,7 +338,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
           <div className="flex flex-col gap-2 border-t border-border pb-4">
             <Accordion type="multiple">
               <AccordionItem value="metadata">
-                <AccordionTrigger>{t("llm:promptMessages.metadata")}</AccordionTrigger>
+                <AccordionTrigger>
+                  {t("llm:promptMessages.metadata")}
+                </AccordionTrigger>
                 <AccordionContent>
                   <div className="rounded-md">
                     <CodeMirror
@@ -353,7 +361,9 @@ const AddNewPromptVersionDialog: React.FC<AddNewPromptVersionDialogProps> = ({
               </AccordionItem>
               {showInvalidJSON && (
                 <Alert variant="destructive">
-                  <AlertTitle>{t("llm:promptMessages.metadataNotValid")}</AlertTitle>
+                  <AlertTitle>
+                    {t("llm:promptMessages.metadataNotValid")}
+                  </AlertTitle>
                 </Alert>
               )}
             </Accordion>

@@ -222,8 +222,14 @@ const getFiltersConfig = (t: (key: string) => string) => ({
     scope: {
       keyComponentProps: {
         options: [
-          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: t("annotationQueues.filters.trace") },
-          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: t("annotationQueues.filters.thread") },
+          {
+            value: ANNOTATION_QUEUE_SCOPE.TRACE,
+            label: t("annotationQueues.filters.trace"),
+          },
+          {
+            value: ANNOTATION_QUEUE_SCOPE.THREAD,
+            label: t("annotationQueues.filters.thread"),
+          },
         ],
         placeholder: t("annotationQueues.filters.selectScope"),
       },

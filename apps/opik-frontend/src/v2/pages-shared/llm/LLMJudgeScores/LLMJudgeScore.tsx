@@ -18,18 +18,20 @@ import { TEXT_AREA_CLASSES } from "@/ui/textarea";
 import { get } from "lodash";
 import { useTranslation } from "react-i18next";
 
-const SCORE_TYPE_OPTIONS: DropdownOption<LLM_SCHEMA_TYPE>[] = [
+const getScoreTypeOptions = (
+  t: (key: string) => string,
+): DropdownOption<LLM_SCHEMA_TYPE>[] => [
   {
     value: LLM_SCHEMA_TYPE.DOUBLE,
-    label: "Number",
+    label: t("llm:judgeScores.number"),
   },
   {
     value: LLM_SCHEMA_TYPE.INTEGER,
-    label: "Integer",
+    label: t("llm:judgeScores.integer"),
   },
   {
     value: LLM_SCHEMA_TYPE.BOOLEAN,
-    label: "Boolean",
+    label: t("llm:judgeScores.boolean"),
   },
 ];
 
@@ -157,7 +159,7 @@ const LLMJudgeScore = ({
                 onUpdateField(value as LLM_SCHEMA_TYPE, "type")
               }
               disabled={!isEditing}
-              options={SCORE_TYPE_OPTIONS}
+              options={getScoreTypeOptions(t)}
               className="h-8"
             />
 

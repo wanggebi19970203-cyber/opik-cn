@@ -82,7 +82,9 @@
     "headers": {
       "label": "请求头（可选）",
       "description": "指定每个 Webhook 请求中包含的自定义 HTTP 请求头。用于身份验证、内容类型规范或任何其他必需的元数据。",
-      "addHeader": "添加请求头"
+      "addHeader": "添加请求头",
+      "key": "键",
+      "value": "值"
     },
     "triggers": {
       "title": "触发器",
@@ -110,7 +112,14 @@
       "removeCondition": "移除条件",
       "addOrGroup": "添加 OR 分组",
       "addAndCondition": "添加 AND 条件",
-      "cantRemove": "无法移除 — 每个告警至少需要一个包含一个条件的分组。"
+      "cantRemove": "无法移除 — 每个告警至少需要一个包含一个条件的分组。",
+      "group": "分组 {{number}}",
+      "greaterThan": "大于",
+      "lessThan": "小于"
+    },
+    "payloadExample": {
+      "noExample": "此事件类型暂无示例",
+      "payload": "载荷"
     },
     "testWebhook": {
       "title": "测试告警配置",

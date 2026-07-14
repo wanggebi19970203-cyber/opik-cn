@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useOpikWorkspaceName } from "@/store/AppStore";
 import { useAiSpend } from "@/contexts/AiSpendContext";
 import usePluginsStore from "@/store/PluginsStore";
+import { useTranslation } from "react-i18next";
 import { buildUrl } from "./utils";
 
 type AppLinkItemProps = {
@@ -57,6 +58,7 @@ type UserMenuAppLinksProps = {
 };
 
 const UserMenuAppLinks = ({ isLLMOnlyOrganization }: UserMenuAppLinksProps) => {
+  const { t } = useTranslation("common");
   const opikWorkspaceName = useOpikWorkspaceName();
   const {
     hasAccess: hasAiSpendAccess,
@@ -98,7 +100,7 @@ const UserMenuAppLinks = ({ isLLMOnlyOrganization }: UserMenuAppLinksProps) => {
         <AppLinkItem
           badge="CI"
           badgeClassName="bg-chart-green"
-          label="Cost Intelligence"
+          label={t("labels.costIntelligence")}
           onClick={goToCostIntelligence}
         />
       )}
@@ -106,7 +108,7 @@ const UserMenuAppLinks = ({ isLLMOnlyOrganization }: UserMenuAppLinksProps) => {
         <AppLinkItem
           badge="EM"
           badgeClassName="bg-[var(--feature-experiment-management)]"
-          label="Experiment Management"
+          label={t("labels.experimentManagement")}
           onClick={switchToEM}
         />
       )}

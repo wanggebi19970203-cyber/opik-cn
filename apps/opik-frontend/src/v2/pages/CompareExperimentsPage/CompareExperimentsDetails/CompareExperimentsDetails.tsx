@@ -44,12 +44,24 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
   const title = !isCompare
     ? experiment?.name
-    : t("compareExperiments.details.compareCount", { count: experimentsIds.length });
+    : t("compareExperiments.details.compareCount", {
+        count: experimentsIds.length,
+      });
 
   useEffect(() => {
-    title && setBreadcrumbParam("compare", "Compare", title);
-    return () => setBreadcrumbParam("compare", "Compare", "");
-  }, [title, setBreadcrumbParam]);
+    title &&
+      setBreadcrumbParam(
+        "compare",
+        t("compareExperiments.details.compare"),
+        title,
+      );
+    return () =>
+      setBreadcrumbParam(
+        "compare",
+        t("compareExperiments.details.compare"),
+        "",
+      );
+  }, [title, setBreadcrumbParam, t]);
 
   const experimentSourceFilters = useMemo(
     () => generateExperimentIdsFilter(experimentsIds),
@@ -86,9 +98,13 @@ const CompareExperimentsDetails: React.FunctionComponent<
 
       return (
         <div className="mt-1 flex items-center gap-2">
-          <span className="text-nowrap">{t("compareExperiments.details.baselineOf")}</span>
+          <span className="text-nowrap">
+            {t("compareExperiments.details.baselineOf")}
+          </span>
           <ExperimentTag experimentName={experiment?.name} />
-          <span className="text-nowrap">{t("compareExperiments.details.comparedAgainst")}</span>
+          <span className="text-nowrap">
+            {t("compareExperiments.details.comparedAgainst")}
+          </span>
           {tag}
         </div>
       );
@@ -127,7 +143,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
                 : RESOURCE_TYPE.dataset
             }
             prefix={
-              isTestSuiteExperiment(experiment) ? t("compareExperiments.details.testSuite") : t("compareExperiments.details.dataset")
+              isTestSuiteExperiment(experiment)
+                ? t("compareExperiments.details.testSuite")
+                : t("compareExperiments.details.dataset")
             }
             suffix={
               experiment.dataset_version_summary?.version_name ? (
@@ -178,7 +196,9 @@ const CompareExperimentsDetails: React.FunctionComponent<
                   }`}
                 />
                 <div className="comet-body-s-accented truncate text-muted-slate">
-                  {t("compareExperiments.details.passRate", { rate: Math.round(experiment.pass_rate * 100) })}
+                  {t("compareExperiments.details.passRate", {
+                    rate: Math.round(experiment.pass_rate * 100),
+                  })}
                 </div>
               </Tag>
             </TooltipWrapper>

@@ -155,7 +155,7 @@ const ExperimentWidgetDataSection = <T extends FieldValues>({
               onValueChange: (value: string) => void;
             },
           keyComponentProps: {
-            placeholder: "key",
+            placeholder: t("filters.keyPlaceholder"),
             excludeRoot: true,
           },
         },

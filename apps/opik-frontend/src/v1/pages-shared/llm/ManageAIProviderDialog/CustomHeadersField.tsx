@@ -22,7 +22,8 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
   description,
 }) => {
   const { t } = useTranslation("prompt");
-  const resolvedDescription = description ?? t("customHeadersField.defaultDescription");
+  const resolvedDescription =
+    description ?? t("customHeadersField.defaultDescription");
   return (
     <FormField
       control={form.control}
@@ -63,7 +64,9 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <Input
-                          placeholder={t("customHeadersField.headerNamePlaceholder")}
+                          placeholder={t(
+                            "customHeadersField.headerNamePlaceholder",
+                          )}
                           value={header.key}
                           onChange={(e) =>
                             updateHeader(
@@ -84,7 +87,9 @@ const CustomHeadersField: React.FC<CustomHeadersFieldProps> = ({
                       </div>
                       <div className="flex-1">
                         <Input
-                          placeholder={t("customHeadersField.headerValuePlaceholder")}
+                          placeholder={t(
+                            "customHeadersField.headerValuePlaceholder",
+                          )}
                           value={header.value}
                           onChange={(e) =>
                             updateHeader(header.id, header.key, e.target.value)

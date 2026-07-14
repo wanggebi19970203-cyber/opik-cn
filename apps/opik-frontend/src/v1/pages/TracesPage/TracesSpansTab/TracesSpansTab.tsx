@@ -133,7 +133,9 @@ const parseSpanScoreName = (label: string): string => {
   return label.replace(SPAN_FEEDBACK_SCORE_SUFFIX, "");
 };
 
-const getSharedColumns = (t: (key: string) => string): ColumnData<BaseTraceData>[] => [
+const getSharedColumns = (
+  t: (key: string) => string,
+): ColumnData<BaseTraceData>[] => [
   {
     id: "name",
     label: t("tracing.tracesSpansTab.columns.name"),
@@ -238,7 +240,9 @@ const getSharedColumns = (t: (key: string) => string): ColumnData<BaseTraceData>
   },
 ];
 
-const getMetadataMainColumnData = (t: (key: string) => string): ColumnData<BaseTraceData>[] => [
+const getMetadataMainColumnData = (
+  t: (key: string) => string,
+): ColumnData<BaseTraceData>[] => [
   {
     id: COLUMN_METADATA_ID,
     label: t("tracing.tracesSpansTab.columns.metadata"),
@@ -444,7 +448,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             rootKeys: ["metadata"],
             projectId,
             type,
-            placeholder: "key",
+            placeholder: t("common.labels.key"),
             excludeRoot: true,
           },
         },
@@ -454,7 +458,7 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             rootKeys: ["input", "output"],
             projectId,
             type,
-            placeholder: "key",
+            placeholder: t("common.labels.key"),
             excludeRoot: false,
           },
           validateFilter: (filter: Filter) => {
@@ -482,7 +486,9 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
                 keyComponentProps: {
                   projectId,
                   type: TRACE_DATA_TYPE.spans,
-                  placeholder: t("tracing.tracesSpansTab.filterSelectSpanScore"),
+                  placeholder: t(
+                    "tracing.tracesSpansTab.filterSelectSpanScore",
+                  ),
                 },
               },
               [COLUMN_EXPERIMENT_ID]: {
@@ -506,8 +512,14 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
         [COLUMN_GUARDRAILS_ID]: {
           keyComponentProps: {
             options: [
-              { value: GuardrailResult.FAILED, label: t("tracing.tracesSpansTab.columns.failed") },
-              { value: GuardrailResult.PASSED, label: t("tracing.tracesSpansTab.columns.passed") },
+              {
+                value: GuardrailResult.FAILED,
+                label: t("tracing.tracesSpansTab.columns.failed"),
+              },
+              {
+                value: GuardrailResult.PASSED,
+                label: t("tracing.tracesSpansTab.columns.passed"),
+              },
             ],
             placeholder: t("tracing.tracesSpansTab.filterStatus"),
           },
@@ -982,7 +994,8 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
               accessorFn: (row: BaseTraceData) =>
                 row.guardrails_validations || [],
               cell: GuardrailsCell as never,
-              statisticDataFormater: (value: number) => t("tracing.tracesSpansTab.failedCount", { count: value }),
+              statisticDataFormater: (value: number) =>
+                t("tracing.tracesSpansTab.failedCount", { count: value }),
             },
           ]
         : []),
@@ -1219,7 +1232,11 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
           <SearchInput
             searchText={search as string}
             setSearchText={setSearch}
-            placeholder={type === TRACE_DATA_TYPE.traces ? t("tracing.tracesSpansTab.searchTraces") : t("tracing.tracesSpansTab.searchSpans")}
+            placeholder={
+              type === TRACE_DATA_TYPE.traces
+                ? t("tracing.tracesSpansTab.searchTraces")
+                : t("tracing.tracesSpansTab.searchSpans")
+            }
             className="w-[320px]"
             dimension="sm"
           />
@@ -1248,7 +1265,11 @@ export const TracesSpansTab: React.FC<TracesSpansTabProps> = ({
             maxDate={maxDate}
           />
           <TooltipWrapper
-            content={type === TRACE_DATA_TYPE.traces ? t("tracing.tracesSpansTab.refreshTracesList") : t("tracing.tracesSpansTab.refreshSpansList")}
+            content={
+              type === TRACE_DATA_TYPE.traces
+                ? t("tracing.tracesSpansTab.refreshTracesList")
+                : t("tracing.tracesSpansTab.refreshSpansList")
+            }
           >
             <Button
               variant="outline"

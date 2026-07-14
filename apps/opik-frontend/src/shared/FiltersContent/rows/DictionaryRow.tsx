@@ -1,11 +1,12 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Filter, FilterOperator, FilterRowConfig } from "@/types/filters";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
 import {
-  DEFAULT_OPERATORS,
+  getDefaultOperators,
   NO_VALUE_OPERATORS,
-  OPERATORS_MAP,
+  getOperatorsMap,
 } from "@/constants/filters";
 import { COLUMN_TYPE } from "@/types/shared";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export const DictionaryRow: React.FunctionComponent<DictionaryRowProps> = ({
   filter,
   onChange,
 }) => {
+  const { t } = useTranslation("common");
   const type: "string" | "number" =
     filter.type === COLUMN_TYPE.dictionary ? "string" : "number";
 
@@ -38,8 +40,8 @@ export const DictionaryRow: React.FunctionComponent<DictionaryRowProps> = ({
       operator={filter.operator}
       operators={
         config?.operators ??
-        OPERATORS_MAP[filter.type as COLUMN_TYPE] ??
-        DEFAULT_OPERATORS
+        getOperatorsMap()[filter.type as COLUMN_TYPE] ??
+        getDefaultOperators()
       }
       onSelect={(o) => onChange({ ...filter, operator: o })}
     />
@@ -50,7 +52,7 @@ export const DictionaryRow: React.FunctionComponent<DictionaryRowProps> = ({
       <td className="flex gap-2 p-1">
         <KeyComponent
           className="w-full min-w-32 max-w-[30vw]"
-          placeholder="key"
+          placeholder={t("labels.key")}
           value={filter.key}
           onValueChange={keyValueChangeHandler}
           data-testid="filter-dictionary-key-input"
@@ -68,7 +70,7 @@ export const DictionaryRow: React.FunctionComponent<DictionaryRowProps> = ({
         ) : (
           <DebounceInput
             className="w-full min-w-40"
-            placeholder="value"
+            placeholder={t("labels.value")}
             value={filter.value}
             onValueChange={(value) =>
               onChange({ ...filter, value: value as string })

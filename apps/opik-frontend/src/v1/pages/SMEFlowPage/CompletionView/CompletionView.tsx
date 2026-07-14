@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye } from "lucide-react";
+import { CircleCheck, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/ui/card";
 import { Button } from "@/ui/button";
@@ -20,12 +20,16 @@ const CompletionView: React.FunctionComponent<CompletionViewProps> = ({
   return (
     <SMEFlowLayout header={header} footer={<ReturnToAnnotationQueueButton />}>
       <Card className="h-full p-6 pt-14 text-center">
-        <div className="mb-5 h-8 text-[32px]">🎉</div>
-        <h3 className="comet-title-l">{t("completionView.allItemsCompleted")}</h3>
+        <CircleCheck
+          className="mx-auto mb-5 size-8 text-success"
+          data-testid="completion-icon"
+          aria-hidden="true"
+        />
+        <h3 className="comet-title-l">
+          {t("completionView.allItemsCompleted")}
+        </h3>
         <div className="comet-body-s mt-3 text-center text-muted-slate">
-          <p>
-            {t("completionView.allAnnotationsComplete")}
-          </p>
+          <p>{t("completionView.allAnnotationsComplete")}</p>
           <p className="mt-2">{t("completionView.canCloseTab")}</p>
         </div>
         <div className="mt-6">

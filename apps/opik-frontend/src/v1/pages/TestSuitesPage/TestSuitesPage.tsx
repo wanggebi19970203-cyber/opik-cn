@@ -243,7 +243,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? t("empty.title") : t("empty.noSearchResults", "No search results");
+  const noDataText = noData ? t("empty.title") : t("empty.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V3,
@@ -277,12 +277,12 @@ const TestSuitesPage: React.FunctionComponent = () => {
               value,
               label,
             })),
-            placeholder: t("selectType", "Select type"),
+            placeholder: t("selectType"),
           },
         },
       },
     }),
-    [],
+    [t],
   );
 
   const selectedRows: Dataset[] = useMemo(() => {
@@ -365,7 +365,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
           rel="noreferrer"
           className="text-primary"
         >
-          {t("readMore", "Read more")}
+          {t("readMore")}
         </a>
       </div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
@@ -373,7 +373,7 @@ const TestSuitesPage: React.FunctionComponent = () => {
           <SearchInput
             searchText={search!}
             setSearchText={setSearch}
-            placeholder={t("searchPlaceholder", "Search by name")}
+            placeholder={t("searchPlaceholder")}
             className="w-[320px]"
             dimension="sm"
           ></SearchInput>

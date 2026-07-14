@@ -52,8 +52,10 @@ const LLMPromptMessagesVariables = ({
   reservedSentinels,
 }: LLMPromptMessagesVariablesProps) => {
   const { t } = useTranslation("prompt");
-  const resolvedDescription = description ?? t("llmPromptMessagesVariables.defaultDescription");
-  const resolvedErrorText = errorText ?? t("llmPromptMessagesVariables.templateParsingError");
+  const resolvedDescription =
+    description ?? t("llmPromptMessagesVariables.defaultDescription");
+  const resolvedErrorText =
+    errorText ?? t("llmPromptMessagesVariables.templateParsingError");
   const variablesList: DropdownOption<string>[] = useMemo(() => {
     if (!variables || typeof variables !== "object") {
       return [];
@@ -76,12 +78,18 @@ const LLMPromptMessagesVariables = ({
   return (
     <div className="pt-4">
       <div className="comet-body-s-accented mb-1 flex items-center gap-1 text-muted-slate">
-        <span>{t("llmPromptMessagesVariables.variableMapping", { count: variablesList.length })}</span>
+        <span>
+          {t("llmPromptMessagesVariables.variableMapping", {
+            count: variablesList.length,
+          })}
+        </span>
         <ExplainerIcon
           {...EXPLAINERS_MAP[EXPLAINER_ID.llm_judge_variable_mapping]}
         />
       </div>
-      <Description className="mb-2 inline-block">{resolvedDescription}</Description>
+      <Description className="mb-2 inline-block">
+        {resolvedDescription}
+      </Description>
       {parsingError && (
         <Alert variant="destructive">
           <AlertTitle>{resolvedErrorText}</AlertTitle>

@@ -71,7 +71,9 @@ const LoadedPromptDisplay: React.FC<LoadedPromptDisplayProps> = ({
         maxWidth={60}
       />
       {onClear && (
-        <TooltipWrapper content={t("llm:loadedPromptDisplay.detachLoadedPrompt")}>
+        <TooltipWrapper
+          content={t("llm:loadedPromptDisplay.detachLoadedPrompt")}
+        >
           <Button
             variant="minimal"
             size="icon-2xs"

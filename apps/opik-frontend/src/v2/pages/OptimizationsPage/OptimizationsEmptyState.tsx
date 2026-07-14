@@ -67,6 +67,7 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
   const cards = getStudioCardConfigs({
     navigateToStudio,
     onOptimizeViaSdkClick,
+    t,
   });
 
   return (
@@ -107,7 +108,7 @@ const OptimizationsEmptyState: React.FC<OptimizationsEmptyStateProps> = ({
       </div>
 
       <div className="hidden shrink-0 items-start xl:flex">
-        <img src={imageUrl} alt="No optimization runs yet" />
+        <img src={imageUrl} alt={t("empty.title")} />
       </div>
     </div>
   );

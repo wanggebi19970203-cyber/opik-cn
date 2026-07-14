@@ -35,8 +35,10 @@ const HierarchicalReflectiveOptimizerConfigs = ({
         defaultValue={
           DEFAULT_HIERARCHICAL_REFLECTIVE_OPTIMIZER_CONFIGS.CONVERGENCE_THRESHOLD
         }
-        label={t('optimizations.algorithmConfigs.convergenceThreshold')}
-        tooltip={t('optimizations.algorithmConfigs.convergenceThresholdTooltip')}
+        label={t("optimizations.algorithmConfigs.convergenceThreshold")}
+        tooltip={t(
+          "optimizations.algorithmConfigs.convergenceThresholdTooltip",
+        )}
       />
 
       <div className="space-y-2">
@@ -52,7 +54,7 @@ const HierarchicalReflectiveOptimizerConfigs = ({
             }
           />
           <Label htmlFor="verbose" className="cursor-pointer text-sm">
-            {t('optimizations.algorithmConfigs.verbose')}
+            {t("optimizations.algorithmConfigs.verbose")}
           </Label>
           <ExplainerIcon {...EXPLAINERS_MAP[EXPLAINER_ID.optimizer_verbose]} />
         </div>
@@ -68,8 +70,8 @@ const HierarchicalReflectiveOptimizerConfigs = ({
         max={1000}
         step={1}
         defaultValue={DEFAULT_HIERARCHICAL_REFLECTIVE_OPTIMIZER_CONFIGS.SEED}
-        label={t('optimizations.algorithmConfigs.seed')}
-        tooltip={t('optimizations.algorithmConfigs.seedTooltip')}
+        label={t("optimizations.algorithmConfigs.seed")}
+        tooltip={t("optimizations.algorithmConfigs.seedTooltip")}
       />
     </div>
   );

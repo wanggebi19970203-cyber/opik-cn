@@ -99,7 +99,9 @@ const EvaluationCriteriaSection: React.FunctionComponent<
       <div className="flex items-start overflow-hidden rounded-md border">
         <div className="flex flex-1 gap-4 p-3">
           <div className="flex flex-1 flex-col gap-1">
-            <Label className="comet-body-xs-accented">{t("shared.runsForThisItem")}</Label>
+            <Label className="comet-body-xs-accented">
+              {t("shared.runsForThisItem")}
+            </Label>
             <Input
               dimension="sm"
               className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -119,7 +121,9 @@ const EvaluationCriteriaSection: React.FunctionComponent<
             </span>
           </div>
           <div className="flex flex-1 flex-col gap-1">
-            <Label className="comet-body-xs-accented">{t("shared.passThreshold")}</Label>
+            <Label className="comet-body-xs-accented">
+              {t("shared.passThreshold")}
+            </Label>
             <Input
               dimension="sm"
               className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -143,7 +147,10 @@ const EvaluationCriteriaSection: React.FunctionComponent<
           content={
             useGlobalPolicy
               ? t("shared.alreadyUsingSuiteDefaults")
-              : t("shared.revertToSuiteDefaults", { runs: defaultRunsPerItem, threshold: defaultPassThreshold })
+              : t("shared.revertToSuiteDefaults", {
+                  runs: defaultRunsPerItem,
+                  threshold: defaultPassThreshold,
+                })
           }
         >
           <button

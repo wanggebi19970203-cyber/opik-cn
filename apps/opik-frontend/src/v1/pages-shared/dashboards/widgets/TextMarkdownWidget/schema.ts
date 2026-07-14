@@ -6,7 +6,9 @@ export const TextMarkdownWidgetSchema = z.object({
     .string({
       required_error: i18next.t("common:validation.markdownContentRequired"),
     })
-    .min(1, { message: i18next.t("common:validation.markdownContentRequired") }),
+    .min(1, {
+      message: i18next.t("common:validation.markdownContentRequired"),
+    }),
 });
 
 export type TextMarkdownWidgetFormData = z.infer<

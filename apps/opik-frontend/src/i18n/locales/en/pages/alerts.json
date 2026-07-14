@@ -82,7 +82,9 @@
     "headers": {
       "label": "Headers (optional)",
       "description": "Specify custom HTTP headers to include with each webhook request. Use them for authentication, content type specification, or any other required metadata.",
-      "addHeader": "Add header"
+      "addHeader": "Add header",
+      "key": "Key",
+      "value": "Value"
     },
     "triggers": {
       "title": "Triggers",
@@ -110,7 +112,14 @@
       "removeCondition": "Remove condition",
       "addOrGroup": "Add OR group",
       "addAndCondition": "Add AND condition",
-      "cantRemove": "Can't remove — every alert needs at least one group with at least one condition."
+      "cantRemove": "Can't remove — every alert needs at least one group with at least one condition.",
+      "group": "Group {{number}}",
+      "greaterThan": "greater than",
+      "lessThan": "less than"
+    },
+    "payloadExample": {
+      "noExample": "No example available for this event type",
+      "payload": "Payload"
     },
     "testWebhook": {
       "title": "Test alert configuration",

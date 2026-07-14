@@ -32,7 +32,11 @@
     "deleteConfirm": "Delete",
     "widgetCount": "{{count}} widgets",
     "nameRequired": "Name is required",
-    "nameMaxLength": "Name must be less than 100 characters"
+    "nameMaxLength": "Name must be less than 100 characters",
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name must be less than 100 characters"
+    }
   },
   "dashboards": {
     "title": "Dashboards",
@@ -303,6 +307,7 @@
     "title": "Filters",
     "filterTracesDescription": "Use filters to target specific traces, or leave empty to apply to all.",
     "keyPlaceholder": "key",
+    "invalidCustomKey": "Key must begin with \"input\" or \"output\" (for example, \"input.message\")",
     "selectScore": "Select score",
     "experimentsLabel": "Experiments",
     "datasetLabel": "Dataset",
@@ -373,5 +378,49 @@
     "totalDailyCostInUsd": "Total daily cost in USD",
     "totalWeeklyCostInUsd": "Total weekly cost in USD",
     "totalCostInUsd": "Total cost in USD"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameMaxLength": "Name must be less than 100 characters",
+    "descriptionMaxLength": "Description must be less than 255 characters"
+  },
+  "breakdownGroups": {
+    "others": "Others",
+    "unknown": "Unknown"
+  },
+  "breakdownDrilldown": {
+    "noError": "No Error",
+    "hasError": "Has Error"
+  },
+  "schema": {
+    "metricRequired": "Metric is required"
+  },
+  "projectStatsCard": {
+    "projectStatistics": "Project statistics",
+    "metricTitles": {
+      "traceCount": "Total trace count",
+      "threadCount": "Total thread count",
+      "spanCount": "Total span count",
+      "averageSpanCount": "Average span count",
+      "llmSpanCount": "Average LLM span count",
+      "sourceTrace": "trace",
+      "sourceSpan": "span",
+      "errorCount": "Total {{source}} error count",
+      "p50Duration": "P50 {{source}} duration",
+      "p90Duration": "P90 {{source}} duration",
+      "p99Duration": "P99 {{source}} duration",
+      "avgCostPerTrace": "Avg cost per trace",
+      "avgCostPerSpan": "Avg cost per span",
+      "totalCostSum": "Total {{source}} cost sum",
+      "avgOutputTokens": "Avg {{source}} output tokens",
+      "avgInputTokens": "Avg {{source}} input tokens",
+      "avgTotalTokens": "Avg {{source}} total tokens",
+      "inputCount": "Total {{source}} input count",
+      "outputCount": "Total {{source}} output count",
+      "metadataCount": "Total {{source}} metadata count",
+      "tagsCount": "Avg {{source}} tags count",
+      "guardrailsFailed": "Total {{source}} guardrails failed"
+    },
+    "averageScore": "Average {{source}} {{name}}"
   }
 }

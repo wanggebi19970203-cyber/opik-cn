@@ -141,41 +141,69 @@ export const OPTIMIZATION_MESSAGE_TYPE_OPTIONS = [
 export const OPTIMIZER_OPTIONS = [
   {
     value: OPTIMIZER_TYPE.GEPA,
-    label: i18next.t("common.constants.optimizations.optimizerOptions.gepa.label"),
-    description: i18next.t("common.constants.optimizations.optimizerOptions.gepa.description"),
+    label: i18next.t(
+      "common.constants.optimizations.optimizerOptions.gepa.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.optimizerOptions.gepa.description",
+    ),
   },
   {
     value: OPTIMIZER_TYPE.HIERARCHICAL_REFLECTIVE,
-    label: i18next.t("common.constants.optimizations.optimizerOptions.hierarchicalReflective.label"),
-    description: i18next.t("common.constants.optimizations.optimizerOptions.hierarchicalReflective.description"),
+    label: i18next.t(
+      "common.constants.optimizations.optimizerOptions.hierarchicalReflective.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.optimizerOptions.hierarchicalReflective.description",
+    ),
   },
 ];
 
 export const OPTIMIZATION_METRIC_OPTIONS = [
   {
     value: METRIC_TYPE.EQUALS,
-    label: i18next.t("common.constants.optimizations.metricOptions.equals.label"),
-    description: i18next.t("common.constants.optimizations.metricOptions.equals.description"),
+    label: i18next.t(
+      "common.constants.optimizations.metricOptions.equals.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.metricOptions.equals.description",
+    ),
   },
   {
     value: METRIC_TYPE.JSON_SCHEMA_VALIDATOR,
-    label: i18next.t("common.constants.optimizations.metricOptions.jsonSchemaValidator.label"),
-    description: i18next.t("common.constants.optimizations.metricOptions.jsonSchemaValidator.description"),
+    label: i18next.t(
+      "common.constants.optimizations.metricOptions.jsonSchemaValidator.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.metricOptions.jsonSchemaValidator.description",
+    ),
   },
   {
     value: METRIC_TYPE.G_EVAL,
-    label: i18next.t("common.constants.optimizations.metricOptions.gEval.label"),
-    description: i18next.t("common.constants.optimizations.metricOptions.gEval.description"),
+    label: i18next.t(
+      "common.constants.optimizations.metricOptions.gEval.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.metricOptions.gEval.description",
+    ),
   },
   {
     value: METRIC_TYPE.LEVENSHTEIN,
-    label: i18next.t("common.constants.optimizations.metricOptions.levenshtein.label"),
-    description: i18next.t("common.constants.optimizations.metricOptions.levenshtein.description"),
+    label: i18next.t(
+      "common.constants.optimizations.metricOptions.levenshtein.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.metricOptions.levenshtein.description",
+    ),
   },
   {
     value: METRIC_TYPE.NUMERICAL_SIMILARITY,
-    label: i18next.t("common.constants.optimizations.metricOptions.numericalSimilarity.label"),
-    description: i18next.t("common.constants.optimizations.metricOptions.numericalSimilarity.description"),
+    label: i18next.t(
+      "common.constants.optimizations.metricOptions.numericalSimilarity.label",
+    ),
+    description: i18next.t(
+      "common.constants.optimizations.metricOptions.numericalSimilarity.description",
+    ),
   },
 ];
 
@@ -349,7 +377,9 @@ export const OPTIMIZATION_DEMO_TEMPLATES: OptimizationTemplate[] = [
   {
     id: "opik-chatbot",
     title: i18next.t("common.constants.optimizations.demoTemplate.title"),
-    description: i18next.t("common.constants.optimizations.demoTemplate.description"),
+    description: i18next.t(
+      "common.constants.optimizations.demoTemplate.description",
+    ),
     name: "Opik chatbot optimization",
     dataset_id: "",
     dataset_items: OPIK_CHATBOT_DATASET_ITEMS,

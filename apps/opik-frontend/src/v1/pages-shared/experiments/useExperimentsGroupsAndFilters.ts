@@ -1,5 +1,6 @@
 import i18next from "i18next";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { JsonParam } from "use-query-params";
 import { ColumnSort } from "@tanstack/react-table";
 
@@ -59,6 +60,7 @@ export const useExperimentsGroupsAndFilters = ({
   filters,
   promptId,
 }: UseExperimentsGroupsAndFiltersProps) => {
+  const { t } = useTranslation();
   const [groups, setGroups] = useQueryParamAndLocalStorageState<Groups>({
     localStorageKey: `${storageKeyPrefix}-columns-groups`,
     queryKey: `groups`,
@@ -76,7 +78,9 @@ export const useExperimentsGroupsAndFilters = ({
           },
           defaultOperator: "=",
           operators: [{ label: "=", value: "=" }],
-          sortingMessage: i18next.t("experiments.experiments.filterColumns.lastUpdatedAt"),
+          sortingMessage: i18next.t(
+            "experiments.experiments.filterColumns.lastUpdatedAt",
+          ),
         },
         [COLUMN_DATASET_ID]: {
           keyComponent: DatasetSelectBox,
@@ -85,12 +89,14 @@ export const useExperimentsGroupsAndFilters = ({
           },
           defaultOperator: "=",
           operators: [{ label: "=", value: "=" }],
-          sortingMessage: i18next.t("experiments.experiments.filterColumns.lastExperimentCreated"),
+          sortingMessage: i18next.t(
+            "experiments.experiments.filterColumns.lastExperimentCreated",
+          ),
         },
         [COLUMN_METADATA_ID]: {
           keyComponent: ExperimentsPathsAutocomplete,
           keyComponentProps: {
-            placeholder: "key",
+            placeholder: t("common.labels.key"),
             excludeRoot: true,
             ...(promptId && { promptId }),
             sorting: sortedColumns,
@@ -99,7 +105,7 @@ export const useExperimentsGroupsAndFilters = ({
         },
       },
     }),
-    [filters, sortedColumns, promptId],
+    [filters, sortedColumns, promptId, t],
   );
 
   return {

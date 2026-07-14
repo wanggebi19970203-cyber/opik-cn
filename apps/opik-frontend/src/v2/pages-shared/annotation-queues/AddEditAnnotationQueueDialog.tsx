@@ -46,14 +46,22 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 const useScopeOptions = () => {
   const { t } = useTranslation("annotation-queues");
   return [
-    { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: t("annotationQueues.scopeOptions.traces") },
-    { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: t("annotationQueues.scopeOptions.threads") },
+    {
+      value: ANNOTATION_QUEUE_SCOPE.TRACE,
+      label: t("annotationQueues.scopeOptions.traces"),
+    },
+    {
+      value: ANNOTATION_QUEUE_SCOPE.THREAD,
+      label: t("annotationQueues.scopeOptions.threads"),
+    },
   ];
 };
 
 const createFormSchema = (t: (key: string) => string) =>
   z.object({
-    project_id: z.string().min(1, t("annotationQueues.validation.projectRequired")),
+    project_id: z
+      .string()
+      .min(1, t("annotationQueues.validation.projectRequired")),
     name: z
       .string()
       .min(1, t("annotationQueues.validation.nameRequired"))
@@ -201,7 +209,9 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   const validationErrors = get(formState.errors, ["name"]);
                   return (
                     <FormItem>
-                      <FormLabel>{t("annotationQueues.dialog.nameLabel")}</FormLabel>
+                      <FormLabel>
+                        {t("annotationQueues.dialog.nameLabel")}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           className={cn({
@@ -209,7 +219,9 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                               validationErrors?.message,
                             ),
                           })}
-                          placeholder={t("annotationQueues.dialog.namePlaceholder")}
+                          placeholder={t(
+                            "annotationQueues.dialog.namePlaceholder",
+                          )}
                           {...field}
                         />
                       </FormControl>
@@ -262,10 +274,14 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   name="instructions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("annotationQueues.dialog.instructionsLabel")}</FormLabel>
+                      <FormLabel>
+                        {t("annotationQueues.dialog.instructionsLabel")}
+                      </FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder={t("annotationQueues.dialog.instructionsPlaceholder")}
+                          placeholder={t(
+                            "annotationQueues.dialog.instructionsPlaceholder",
+                          )}
                           rows={4}
                           {...field}
                         />
@@ -320,9 +336,13 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   name="annotators_per_item"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("annotationQueues.dialog.annotatorsPerItemLabel")}</FormLabel>
+                      <FormLabel>
+                        {t("annotationQueues.dialog.annotatorsPerItemLabel")}
+                      </FormLabel>
                       <Description>
-                        {t("annotationQueues.dialog.annotatorsPerItemDescription")}
+                        {t(
+                          "annotationQueues.dialog.annotatorsPerItemDescription",
+                        )}
                       </Description>
                       <FormControl>
                         <Input type="number" min={1} {...field} />
@@ -338,7 +358,9 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
                   name="lock_timeout_minutes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("annotationQueues.dialog.lockTimeoutLabel")}</FormLabel>
+                      <FormLabel>
+                        {t("annotationQueues.dialog.lockTimeoutLabel")}
+                      </FormLabel>
                       <Description>
                         {t("annotationQueues.dialog.lockTimeoutDescription")}
                       </Description>
@@ -363,7 +385,9 @@ const AddEditAnnotationQueueDialog: React.FunctionComponent<
         </DialogAutoScrollBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">{t("annotationQueues.dialog.cancel")}</Button>
+            <Button variant="outline">
+              {t("annotationQueues.dialog.cancel")}
+            </Button>
           </DialogClose>
           <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
             {submitText}

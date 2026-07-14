@@ -26,7 +26,9 @@ const ReturnToAnnotationQueueButton: React.FC = () => {
     >
       <Button
         variant="ghost"
-        aria-label={t("returnToAnnotationQueue.returnToAnnotationQueueAriaLabel")}
+        aria-label={t(
+          "returnToAnnotationQueue.returnToAnnotationQueueAriaLabel",
+        )}
       >
         <ArrowLeft className="mr-2 size-4" />
         {t("returnToAnnotationQueue.returnToAnnotationQueue")}

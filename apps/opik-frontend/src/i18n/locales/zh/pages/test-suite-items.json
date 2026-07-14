@@ -16,7 +16,8 @@
       "defaultRunsPerItem": "默认每项运行次数",
       "defaultPassThreshold": "默认通过阈值",
       "cancel": "取消",
-      "updateTestSuite": "更新测试套件"
+      "updateTestSuite": "更新测试套件",
+      "assertionPlaceholder": "例如：响应应准确并引用来源"
     },
     "addItemPanel": {
       "addSuiteItem": "添加套件项目",
@@ -73,6 +74,7 @@
       "saveChangesToSearch": "保存更改后才能搜索",
       "saveChangesToFilter": "保存更改后才能筛选",
       "search": "搜索",
+      "tags": "标签",
       "suiteItems": "套件项目",
       "datasetItems": "数据集项目",
       "allDeletedOnPage": "此页面上的所有{{itemLabel}}已被删除",
@@ -100,6 +102,9 @@
       "testPromptsOver": "在您的{{type}}上测试提示词并交互式运行评估",
       "runAnExperiment": "运行实验",
       "runExperimentDescription": "使用此{{type}}通过Python SDK运行实验"
+    },
+    "executionPolicy": {
+      "mustPass": "{{threshold}} / {{runs}} 必须通过"
     }
   }
 }

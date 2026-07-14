@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Hash, ScanEye } from "lucide-react";
 import { AgentInsightsIssue } from "@/types/signals";
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
@@ -18,6 +19,7 @@ const IssueListItem: React.FC<IssueListItemProps> = ({
   isActive,
   onClick,
 }) => {
+  const { t } = useTranslation("pages/signals");
   return (
     <button
       type="button"
@@ -50,7 +52,7 @@ const IssueListItem: React.FC<IssueListItemProps> = ({
       <div className="comet-body-xs flex items-center gap-4 text-muted-slate">
         <span className="flex items-center gap-1">
           <Hash className="size-3" />
-          Occurrences:{" "}
+          {t("signals.issueListItem.occurrences")}{" "}
           {formatOccurrences(
             issue.total_occurrences,
             issue.latest_count,
@@ -60,7 +62,8 @@ const IssueListItem: React.FC<IssueListItemProps> = ({
         {issue.last_seen && (
           <span className="flex items-center gap-1">
             <ScanEye className="size-3" />
-            Last seen: {formatDate(issue.last_seen, { format: "D MMM" })}
+            {t("signals.issueListItem.lastSeen")}{" "}
+            {formatDate(issue.last_seen, { format: "D MMM" })}
           </span>
         )}
       </div>

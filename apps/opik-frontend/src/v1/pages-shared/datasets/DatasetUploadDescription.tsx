@@ -19,10 +19,10 @@ const DatasetUploadDescription: React.FC<DatasetUploadDescriptionProps> = ({
   const { t } = useTranslation("datasets");
   return (
     <Description className={className}>
-      {t('uploadDescription.supportedFormats', { fileSizeLimit })}
+      {t("uploadDescription.supportedFormats", { fileSizeLimit })}
       <Button variant="link" size="sm" className="h-5 px-1" asChild>
         <a href={docsUrl} target="_blank" rel="noopener noreferrer">
-          {t('uploadDescription.learnMore')}
+          {t("uploadDescription.learnMore")}
           <ExternalLink className="ml-0.5 size-3 shrink-0" />
         </a>
       </Button>

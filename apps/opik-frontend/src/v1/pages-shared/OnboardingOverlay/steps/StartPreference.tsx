@@ -18,9 +18,15 @@ const StartPreference: React.FC = () => {
   } = usePermissions();
 
   const OPTIONS = {
-    TRACE_APP: `${t("startOptions.traceApp")} – ${t("startOptions.traceAppDesc")}`,
-    TEST_PROMPTS: `${t("startOptions.testPrompts")} – ${t("startOptions.testPromptsDesc")}`,
-    RUN_EVALUATIONS: `${t("startOptions.runEvaluations")} – ${t("startOptions.runEvaluationsDesc")}`,
+    TRACE_APP: `${t("startOptions.traceApp")} – ${t(
+      "startOptions.traceAppDesc",
+    )}`,
+    TEST_PROMPTS: `${t("startOptions.testPrompts")} – ${t(
+      "startOptions.testPromptsDesc",
+    )}`,
+    RUN_EVALUATIONS: `${t("startOptions.runEvaluations")} – ${t(
+      "startOptions.runEvaluationsDesc",
+    )}`,
   } as const;
 
   // A/B test: control shows "Skip", test shows "Start exploring Opik"

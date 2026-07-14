@@ -30,7 +30,9 @@ import { formatNumericData } from "@/lib/utils";
 import { ChartTooltipRenderValueArguments } from "@/shared/Charts/ChartTooltipContent/ChartTooltipContent";
 
 export const FEEDBACK_SCORE_SOURCE_MAP = {
-  [FEEDBACK_SCORE_TYPE.online_scoring]: i18next.t("common.feedbackScores.onlineEvaluation"),
+  [FEEDBACK_SCORE_TYPE.online_scoring]: i18next.t(
+    "common.feedbackScores.onlineEvaluation",
+  ),
   [FEEDBACK_SCORE_TYPE.sdk]: "SDK",
   [FEEDBACK_SCORE_TYPE.ui]: i18next.t("common.feedbackScores.humanReview"),
 };
@@ -531,7 +533,9 @@ export const getScoreDisplayName = (
   name: string,
   scoreType: ScoreType,
 ): string => {
-  return scoreType === SCORE_TYPE_EXPERIMENT ? name : `${name} (${i18next.t("common.feedbackScores.avg")})`;
+  return scoreType === SCORE_TYPE_EXPERIMENT
+    ? name
+    : `${name} (${i18next.t("common.feedbackScores.avg")})`;
 };
 
 export const buildScoreColumnId = (

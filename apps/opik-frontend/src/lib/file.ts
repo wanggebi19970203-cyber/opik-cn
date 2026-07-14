@@ -17,7 +17,9 @@ export const convertFileToBase64 = (file: File): Promise<string> => {
       if (typeof reader.result === "string") {
         resolve(reader.result);
       } else {
-        reject(new Error(i18next.t("common:fileValidation.failedToConvertToBase64")));
+        reject(
+          new Error(i18next.t("common:fileValidation.failedToConvertToBase64")),
+        );
       }
     };
     reader.onerror = () => {
@@ -35,7 +37,9 @@ export async function validateCsvFile(
   if (!file) return {};
 
   if (file.size > maxSize * 1024 * 1024) {
-    return { error: i18next.t("common:fileValidation.fileExceedsMaxSize", { maxSize }) };
+    return {
+      error: i18next.t("common:fileValidation.fileExceedsMaxSize", { maxSize }),
+    };
   }
 
   if (!file.name.toLowerCase().endsWith(".csv")) {
@@ -63,7 +67,9 @@ export async function validateCsvFile(
 
     if (parsed.length > maxItems) {
       return {
-        error: i18next.t("common:fileValidation.fileTooLarge", { maxItems: maxItems.toLocaleString() }),
+        error: i18next.t("common:fileValidation.fileTooLarge", {
+          maxItems: maxItems.toLocaleString(),
+        }),
       };
     }
 
@@ -92,7 +98,9 @@ export const validateFileCount = (
   if (newFilesCount > availableSlots) {
     return {
       valid: false,
-      error: i18next.t("common:fileValidation.canOnlyAddFiles", { count: availableSlots }),
+      error: i18next.t("common:fileValidation.canOnlyAddFiles", {
+        count: availableSlots,
+      }),
     };
   }
 
@@ -189,7 +197,11 @@ export const validateDatasetUploadFile = (
 ): DatasetUploadValidation => {
   if (!file) return {};
   if (file.size > maxSizeMB * 1024 * 1024) {
-    return { error: i18next.t("common:fileValidation.fileExceedsMaxSize", { maxSize: maxSizeMB }) };
+    return {
+      error: i18next.t("common:fileValidation.fileExceedsMaxSize", {
+        maxSize: maxSizeMB,
+      }),
+    };
   }
   const format = detectUploadFormat(file.name);
   if (!format) {

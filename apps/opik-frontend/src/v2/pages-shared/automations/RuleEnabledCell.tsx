@@ -19,7 +19,9 @@ const RuleEnabledCell = (
       tableMetadata={context.table.options.meta}
     >
       <span className="text-center text-sm">
-        {isEnabled ? t("ruleEnabledCell.enabled") : t("ruleEnabledCell.disabled")}
+        {isEnabled
+          ? t("ruleEnabledCell.enabled")
+          : t("ruleEnabledCell.disabled")}
       </span>
     </CellWrapper>
   );

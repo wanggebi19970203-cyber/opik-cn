@@ -113,7 +113,7 @@ const ProjectWidgetFiltersSection = <T extends FieldValues>({
               filter.value &&
               !CUSTOM_FILTER_VALIDATION_REGEXP.test(filter.key)
             ) {
-              return `Key is invalid, it should begin with "input", or "output" and follow this format: "input.[PATH]" For example: "input.message" `;
+              return t("filters.invalidCustomKey");
             }
           },
         },

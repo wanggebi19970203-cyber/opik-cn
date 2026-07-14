@@ -24,14 +24,12 @@ const TraceCountCell = <TData extends GroupedExperiment>(
 ) => {
   const { t } = useTranslation("tracing");
   const { custom } = context.column.columnDef.meta ?? {};
-  const {
-    tooltip,
-    getIsDisabled,
-    disabledTooltip,
-  } = (custom ?? {}) as CustomMeta<TData>;
+  const { tooltip, getIsDisabled, disabledTooltip } = (custom ??
+    {}) as CustomMeta<TData>;
 
   const resolvedTooltip = tooltip ?? t("traceCountCell.viewExperimentTraces");
-  const resolvedDisabledTooltip = disabledTooltip ?? t("traceCountCell.noProjectAssociated");
+  const resolvedDisabledTooltip =
+    disabledTooltip ?? t("traceCountCell.noProjectAssociated");
 
   const navigateToExperimentTraces = useExperimentsTraceCountNavigation();
   const value = context.getValue() as number | string;

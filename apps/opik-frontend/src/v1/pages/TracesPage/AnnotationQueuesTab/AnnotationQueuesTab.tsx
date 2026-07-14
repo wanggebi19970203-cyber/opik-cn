@@ -68,7 +68,9 @@ import {
 } from "@/types/annotation-queues";
 import { capitalizeFirstLetter } from "@/lib/utils";
 
-const getSharedColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
+const getSharedColumns = (
+  t: (key: string) => string,
+): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_ID_ID,
     label: t("tracing.tracesSpansTab.columns.id"),
@@ -109,7 +111,9 @@ const getSharedColumns = (t: (key: string) => string): ColumnData<AnnotationQueu
   },
 ];
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
     label: t("tracing.tracesSpansTab.columns.name"),
@@ -150,7 +154,9 @@ const getDefaultColumns = (t: (key: string) => string): ColumnData<AnnotationQue
   },
 ];
 
-const getFilterColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
+const getFilterColumns = (
+  t: (key: string) => string,
+): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
     label: t("tracing.tracesSpansTab.columns.name"),
@@ -201,8 +207,14 @@ const getFiltersConfig = (t: (key: string) => string) => ({
     scope: {
       keyComponentProps: {
         options: [
-          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: t("tracing.annotationQueuesTab.filterTrace") },
-          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: t("tracing.annotationQueuesTab.filterThread") },
+          {
+            value: ANNOTATION_QUEUE_SCOPE.TRACE,
+            label: t("tracing.annotationQueuesTab.filterTrace"),
+          },
+          {
+            value: ANNOTATION_QUEUE_SCOPE.THREAD,
+            label: t("tracing.annotationQueuesTab.filterThread"),
+          },
         ],
         placeholder: t("tracing.annotationQueuesTab.filterSelectScope"),
       },

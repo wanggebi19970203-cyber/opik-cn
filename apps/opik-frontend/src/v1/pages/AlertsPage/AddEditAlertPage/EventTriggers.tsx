@@ -53,7 +53,10 @@ const useWindowOptions = (): DropdownOption<string>[] => {
   ];
 };
 
-function getThresholdLabel(t: (key: string) => string, eventType: ALERT_EVENT_TYPE): string {
+function getThresholdLabel(
+  t: (key: string) => string,
+  eventType: ALERT_EVENT_TYPE,
+): string {
   switch (eventType) {
     case ALERT_EVENT_TYPE.trace_cost:
       return t("alerts.thresholdLabels.trace_cost");
@@ -178,7 +181,9 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             ]);
             return (
               <FormItem className="flex-1">
-                <Label className="comet-body-s">{t("alerts.triggers.inTheLast")}</Label>
+                <Label className="comet-body-s">
+                  {t("alerts.triggers.inTheLast")}
+                </Label>
                 <FormControl>
                   <SelectBox
                     value={field.value as string}
@@ -226,9 +231,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h3 className="comet-body-accented">{t("alerts.triggers.title")}</h3>
-          <Description>
-            {t("alerts.triggers.description")}
-          </Description>
+          <Description>{t("alerts.triggers.description")}</Description>
         </div>
 
         <Popover>
@@ -284,10 +287,14 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                     className="inline-flex items-center gap-1 text-primary hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="comet-body-s">{t("alerts.triggers.githubTicket")}</span>
+                    <span className="comet-body-s">
+                      {t("alerts.triggers.githubTicket")}
+                    </span>
                     <ExternalLink className="size-3.5" />
                   </a>
-                  <span className="comet-body-s">{t("alerts.triggers.toLetUsKnow")}</span>
+                  <span className="comet-body-s">
+                    {t("alerts.triggers.toLetUsKnow")}
+                  </span>
                 </div>
               </div>
             </div>

@@ -20,7 +20,9 @@ const IntegrationSearch: React.FunctionComponent<IntegrationSearchProps> = ({
     <SearchInput
       searchText={searchText}
       setSearchText={setSearchText}
-      placeholder={placeholder ?? t("onboarding.integrationExplorer.searchPlaceholder")}
+      placeholder={
+        placeholder ?? t("onboarding.integrationExplorer.searchPlaceholder")
+      }
       className={cn("max-w-[240px]", className)}
       dimension="sm"
     />

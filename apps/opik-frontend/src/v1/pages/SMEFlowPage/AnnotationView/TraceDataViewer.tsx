@@ -194,7 +194,9 @@ const TraceDataViewer: React.FC = () => {
             </AccordionItem>
 
             <AccordionItem className="group" value="metadata">
-              <AccordionTrigger>{t("traceDataViewer.metadata")}</AccordionTrigger>
+              <AccordionTrigger>
+                {t("traceDataViewer.metadata")}
+              </AccordionTrigger>
               <AccordionContent
                 forceMount
                 className="group-data-[state=closed]:hidden"

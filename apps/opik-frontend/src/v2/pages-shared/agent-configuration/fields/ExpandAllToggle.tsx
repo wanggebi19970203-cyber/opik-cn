@@ -16,7 +16,9 @@ const ExpandAllToggle: React.FC<ExpandAllToggleProps> = ({
   size = "icon-2xs",
 }) => {
   const { t } = useTranslation("agent-optimization");
-  const label = controller.allExpanded ? t("agentOptimization.expandAllToggle.collapseAll") : t("agentOptimization.expandAllToggle.expandAll");
+  const label = controller.allExpanded
+    ? t("agentOptimization.expandAllToggle.collapseAll")
+    : t("agentOptimization.expandAllToggle.expandAll");
   const onClick = () =>
     controller.allExpanded ? controller.collapseAll() : controller.expandAll();
   const Icon = controller.allExpanded ? FoldVertical : UnfoldVertical;

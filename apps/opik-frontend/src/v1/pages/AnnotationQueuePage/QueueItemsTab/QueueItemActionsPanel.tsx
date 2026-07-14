@@ -45,7 +45,9 @@ const QueueItemActionsPanel: React.FunctionComponent<
         confirmText={t("annotationQueue.queueItemActions.removeItems")}
         confirmButtonVariant="destructive"
       />
-      <TooltipWrapper content={t("annotationQueue.queueItemActions.removeSelectedTooltip")}>
+      <TooltipWrapper
+        content={t("annotationQueue.queueItemActions.removeSelectedTooltip")}
+      >
         <Button
           variant="outline"
           size="icon-sm"

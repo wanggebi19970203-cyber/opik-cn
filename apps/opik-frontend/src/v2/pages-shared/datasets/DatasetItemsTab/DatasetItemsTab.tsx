@@ -539,7 +539,11 @@ function DatasetItemsTab({
               onChange={handleCompactSearchChange}
               disabled={isDraftMode}
               buttonVariant="outline"
-              tooltip={isDraftMode ? t("itemsTab.saveChangesToSearch") : t("itemsTab.searchItems")}
+              tooltip={
+                isDraftMode
+                  ? t("itemsTab.saveChangesToSearch")
+                  : t("itemsTab.searchItems")
+              }
               onExpandedChange={handleSearchExpandedChange}
               className={
                 isSearchExpanded
@@ -549,7 +553,9 @@ function DatasetItemsTab({
             />
           ) : (
             <TooltipWrapper
-              content={isDraftMode ? t("itemsTab.saveChangesToSearch") : undefined}
+              content={
+                isDraftMode ? t("itemsTab.saveChangesToSearch") : undefined
+              }
             >
               <div>
                 <SearchInput
@@ -564,7 +570,9 @@ function DatasetItemsTab({
             </TooltipWrapper>
           )}
           <TooltipWrapper
-            content={isDraftMode ? t("itemsTab.saveChangesToFilter") : undefined}
+            content={
+              isDraftMode ? t("itemsTab.saveChangesToFilter") : undefined
+            }
           >
             <div>
               <FiltersButton
@@ -668,7 +676,9 @@ function DatasetItemsTab({
       />
       <div className="flex justify-end py-4">
         <TooltipWrapper
-          content={isDraftMode ? t("itemsTab.saveChangesToNavigate") : undefined}
+          content={
+            isDraftMode ? t("itemsTab.saveChangesToNavigate") : undefined
+          }
         >
           <div>
             <DataTablePagination

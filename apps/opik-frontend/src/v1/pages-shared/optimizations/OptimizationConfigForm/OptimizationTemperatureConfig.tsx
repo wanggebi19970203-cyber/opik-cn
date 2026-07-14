@@ -53,13 +53,13 @@ const OptimizationTemperatureConfig: React.FC<
             max={isReasoning ? 1 : 2}
             step={0.01}
             defaultValue={isReasoning ? 1 : DEFAULT_OPEN_AI_CONFIGS.TEMPERATURE}
-            label={t('optimizations.temperatureConfig.label')}
+            label={t("optimizations.temperatureConfig.label")}
             tooltip={
               <PromptModelConfigsTooltipContent
                 text={
                   isReasoning
-                    ? t('optimizations.temperatureConfig.reasoningTooltip')
-                    : t('optimizations.temperatureConfig.defaultTooltip')
+                    ? t("optimizations.temperatureConfig.reasoningTooltip")
+                    : t("optimizations.temperatureConfig.defaultTooltip")
                 }
               />
             }

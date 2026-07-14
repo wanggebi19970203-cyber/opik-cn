@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { ColumnPinningState } from "@tanstack/react-table";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 import { convertColumnDataToColumn } from "@/lib/table";
 import { ProviderObject, PROVIDER_TYPE } from "@/types/providers";
@@ -25,7 +26,7 @@ import { usePermissions } from "@/contexts/PermissionsContext";
 export const DEFAULT_COLUMNS: ColumnData<ProviderObject>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: i18next.t("pages/settings:settings.providers.columns.name"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) =>
       row.provider === PROVIDER_TYPE.CUSTOM
@@ -34,19 +35,19 @@ export const DEFAULT_COLUMNS: ColumnData<ProviderObject>[] = [
   },
   {
     id: "base_url",
-    label: "URL",
+    label: i18next.t("pages/settings:settings.providers.columns.base_url"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.base_url || "-",
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("pages/settings:settings.providers.columns.created_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "provider",
-    label: "Provider",
+    label: i18next.t("pages/settings:settings.providers.columns.provider"),
     type: COLUMN_TYPE.string,
     cell: AIProviderCell as never,
   },
@@ -100,11 +101,14 @@ const AIProvidersTab = () => {
     });
   }, [providerKeys, search]);
 
-  const translatedColumns: ColumnData<ProviderObject>[] =
-    DEFAULT_COLUMNS.map((col) => ({
-      ...col,
-      label: t(`settings.providers.columns.${col.id}`),
-    }));
+  const translatedColumns: ColumnData<ProviderObject>[] = useMemo(
+    () =>
+      DEFAULT_COLUMNS.map((col) => ({
+        ...col,
+        label: t(`settings.providers.columns.${col.id}`),
+      })),
+    [t],
+  );
 
   const columns = useMemo(() => {
     const basicColumns = convertColumnDataToColumn<
@@ -121,7 +125,7 @@ const AIProvidersTab = () => {
       ];
 
     return basicColumns;
-  }, [canUpdateAIProviders]);
+  }, [canUpdateAIProviders, translatedColumns]);
 
   const handleAddConfigurationClick = () => {
     resetDialogKeyRef.current += 1;

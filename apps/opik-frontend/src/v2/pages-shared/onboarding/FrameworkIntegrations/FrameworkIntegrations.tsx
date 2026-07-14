@@ -85,7 +85,9 @@ const FrameworkIntegrations: React.FC<FrameworkIntegrationsProps> = ({
 
   const renderDesktopFrameworkSelector = () => (
     <>
-      <IntegrationTabs.Title>{t("integrationExplorer.selectFramework")}</IntegrationTabs.Title>
+      <IntegrationTabs.Title>
+        {t("integrationExplorer.selectFramework")}
+      </IntegrationTabs.Title>
       <IntegrationTabs>
         {integrationList.map((item, index) => (
           <IntegrationTabs.Item

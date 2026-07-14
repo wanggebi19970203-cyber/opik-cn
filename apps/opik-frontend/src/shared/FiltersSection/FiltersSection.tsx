@@ -105,7 +105,10 @@ const FiltersSection = <TColumnData,>({
 
             return (
               <FormErrorSkeleton key={index}>
-                {t("filters.filterError", { index: index + 1, messages: errorMessages.join(", ") })}
+                {t("filters.filterError", {
+                  index: index + 1,
+                  messages: errorMessages.join(", "),
+                })}
               </FormErrorSkeleton>
             );
           })}

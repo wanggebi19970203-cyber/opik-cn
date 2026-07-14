@@ -157,7 +157,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
   const handleCopy = useCallback(async () => {
     await copy(textContent);
     toast({ description: t("promptCard.promptCopiedToClipboard") });
-  }, [textContent, toast]);
+  }, [textContent, toast, t]);
 
   const effectiveTemplateStructure = isChatPrompt
     ? PROMPT_TEMPLATE_STRUCTURE.CHAT
@@ -274,7 +274,8 @@ const PromptCard: React.FC<PromptCardProps> = ({
               >
                 {view === "pretty" ? (
                   <>
-                    {t("promptCard.pretty")} <Sparkles className="ml-1 size-3" />
+                    {t("promptCard.pretty")}{" "}
+                    <Sparkles className="ml-1 size-3" />
                   </>
                 ) : (
                   <>{t("promptCard.raw")}</>

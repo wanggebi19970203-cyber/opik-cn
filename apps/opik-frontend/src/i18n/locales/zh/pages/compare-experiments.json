@@ -27,6 +27,7 @@
     },
     "details": {
       "backToExperiments": "返回实验列表",
+      "compare": "比较",
       "compareCount": "比较 ({{count}})",
       "baselineOf": "基准",
       "comparedAgainst": "对比",

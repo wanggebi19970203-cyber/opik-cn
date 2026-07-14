@@ -2,6 +2,7 @@ import React from "react";
 import { Clock, Coins, Hash } from "lucide-react";
 import isNumber from "lodash/isNumber";
 import isUndefined from "lodash/isUndefined";
+import { useTranslation } from "react-i18next";
 
 import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import { formatDate, formatDuration } from "@/lib/date";
@@ -24,6 +25,7 @@ const TraceStatsDisplay: React.FC<TraceStatsDisplayProps> = ({
   totalTokens,
   estimatedCost,
 }) => {
+  const { t } = useTranslation("tracing");
   const formattedDuration = formatDuration(duration);
 
   const formattedStart = startTime
@@ -35,7 +37,7 @@ const TraceStatsDisplay: React.FC<TraceStatsDisplayProps> = ({
 
   const durationTooltip = (
     <div>
-      Duration in seconds: {formattedDuration}
+      {t("detailsPanel.durationInSeconds", { duration: formattedDuration })}
       {formattedStart && (
         <p>
           {formattedStart}
@@ -56,7 +58,9 @@ const TraceStatsDisplay: React.FC<TraceStatsDisplayProps> = ({
         </TooltipWrapper>
       )}
       {isNumber(totalTokens) && (
-        <TooltipWrapper content={`Total amount of tokens: ${totalTokens}`}>
+        <TooltipWrapper
+          content={t("detailsPanel.totalTokens", { tokens: totalTokens })}
+        >
           <div className={statClassName}>
             <Hash className="size-3.5 shrink-0 text-muted-slate" />{" "}
             {totalTokens}
@@ -65,9 +69,9 @@ const TraceStatsDisplay: React.FC<TraceStatsDisplayProps> = ({
       )}
       {!isUndefined(estimatedCost) && (
         <TooltipWrapper
-          content={`Estimated cost ${formatCost(estimatedCost, {
-            modifier: "full",
-          })}`}
+          content={t("detailsPanel.estimatedCost", {
+            cost: formatCost(estimatedCost, { modifier: "full" }),
+          })}
         >
           <div className={statClassName}>
             <Coins className="size-3.5 shrink-0 text-muted-slate" />{" "}

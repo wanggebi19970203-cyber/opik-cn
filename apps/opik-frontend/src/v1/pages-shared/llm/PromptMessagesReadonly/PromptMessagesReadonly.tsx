@@ -128,7 +128,9 @@ export const PromptMessageCard: React.FC<PromptMessageCardProps> = ({
           onClick={toggle}
           className="h-auto self-start p-0 text-xs"
         >
-          {isExpanded ? t("promptMessagesReadonly.showLess") : t("promptMessagesReadonly.showMore")}
+          {isExpanded
+            ? t("promptMessagesReadonly.showLess")
+            : t("promptMessagesReadonly.showMore")}
         </Button>
       )}
       {hasMedia && (

@@ -70,11 +70,11 @@ const EditVersionDialog: React.FC<EditVersionDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t('editVersion.title')}</DialogTitle>
+          <DialogTitle>{t("editVersion.title")}</DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          {t('editVersion.description')}
+          {t("editVersion.description")}
         </p>
 
         <VersionForm
@@ -91,14 +91,14 @@ const EditVersionDialog: React.FC<EditVersionDialogProps> = ({
             onClick={handleCancel}
             disabled={editMutation.isPending}
           >
-            {t('editVersion.cancel')}
+            {t("editVersion.cancel")}
           </Button>
           <Button
             type="submit"
             form={EDIT_VERSION_FORM_ID}
             disabled={editMutation.isPending}
           >
-            {t('editVersion.updateVersion')}
+            {t("editVersion.updateVersion")}
           </Button>
         </DialogFooter>
       </DialogContent>

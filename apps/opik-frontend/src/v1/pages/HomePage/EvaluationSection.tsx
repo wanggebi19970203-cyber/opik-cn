@@ -35,7 +35,7 @@ export const COLUMNS = convertColumnDataToColumn<Experiment, Experiment>(
   [
     {
       id: COLUMN_NAME_ID,
-      label: "Experiment",
+      label: "home.evaluation.experiment",
       type: COLUMN_TYPE.string,
       cell: ResourceCell as never,
       sortable: true,
@@ -192,7 +192,8 @@ const EvaluationSection: React.FC = () => {
       <div className="flex justify-end pt-1">
         <Link to="/$workspaceName/experiments" params={{ workspaceName }}>
           <Button variant="ghost" className="flex items-center gap-1 pr-0">
-            {t("home.evaluation.allExperiments")} <ArrowRight className="size-4" />
+            {t("home.evaluation.allExperiments")}{" "}
+            <ArrowRight className="size-4" />
           </Button>
         </Link>
       </div>

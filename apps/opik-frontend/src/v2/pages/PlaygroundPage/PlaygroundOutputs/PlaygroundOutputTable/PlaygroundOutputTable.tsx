@@ -114,7 +114,7 @@ const PlaygroundOutputTable = ({
 
     inputColumns.push({
       id: "tags",
-      label: "Tags",
+      label: t("outputs.tags"),
       type: COLUMN_TYPE.list,
       iconType: "tags",
       accessorFn: (row) => row.tags || [],
@@ -129,7 +129,7 @@ const PlaygroundOutputTable = ({
     );
 
     return retVal;
-  }, [datasetColumns]);
+  }, [datasetColumns, t]);
 
   const rightColumns = useMemo(() => {
     if (promptIds.length === 0) {
@@ -141,7 +141,9 @@ const PlaygroundOutputTable = ({
     const outputColumns = promptIds.map((promptId, promptIdx) => {
       return {
         id: `output-${promptId}`,
-        label: `Prompt ${getAlphabetLetter(promptIdx)}`,
+        label: t("playground.outputTable.promptPrefix", {
+          letter: getAlphabetLetter(promptIdx),
+        }),
         type: COLUMN_TYPE.string,
         header: PlaygroundOutputColumnHeader as never,
         cell: PlaygroundOutputCell as never,
@@ -161,7 +163,7 @@ const PlaygroundOutputTable = ({
     );
 
     return retVal;
-  }, [promptIds]);
+  }, [promptIds, t]);
 
   const resizeConfig = useMemo(
     () => ({

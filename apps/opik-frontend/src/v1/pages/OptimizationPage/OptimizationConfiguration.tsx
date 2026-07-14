@@ -60,7 +60,9 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
       >
         <div className="flex h-full flex-col overflow-auto">
           <CardHeader className="shrink-0 pb-2">
-            <CardTitle className="text-sm">{t("optimization.configuration.title")}</CardTitle>
+            <CardTitle className="text-sm">
+              {t("optimization.configuration.title")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex shrink-0 flex-col gap-1">
             <ConfigItem
@@ -77,7 +79,10 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
                 </Link>
               }
             />
-            <ConfigItem label={t("optimization.configuration.model")} value={llm_model?.model || "-"} />
+            <ConfigItem
+              label={t("optimization.configuration.model")}
+              value={llm_model?.model || "-"}
+            />
             <ConfigItem
               label={t("optimization.configuration.algorithm")}
               value={optimizer?.type ? getOptimizerLabel(optimizer.type) : "-"}
@@ -124,7 +129,9 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
 
       <div className="flex min-h-0 flex-1 flex-col overflow-auto">
         <CardHeader className="shrink-0 px-6 py-1.5">
-          <CardTitle className="text-sm">{t("optimization.configuration.initialPrompt")}</CardTitle>
+          <CardTitle className="text-sm">
+            {t("optimization.configuration.initialPrompt")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="min-h-0 flex-1">
           {messages && messages.length > 0 ? (

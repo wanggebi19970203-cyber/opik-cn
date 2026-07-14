@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -54,16 +55,16 @@ const TIMEOUT_MS = 30_000; // still no chunk → give up with a retryable error
 
 // Friendly, contextual copy per error code. The console may send a `code` with
 // explain:error; the watchdog/pod-loss paths set their own.
-const ERROR_COPY = {
-  waking: "Ollie is waking up — give it a moment and retry.",
-  timeout: "Ollie took too long to respond. Try again.",
-  unavailable: "Ollie is unavailable right now. Try again shortly.",
-  rate_limited: "Too many requests right now. Try again in a moment.",
-} as const;
-type ErrorCode = keyof typeof ERROR_COPY;
+const getErrorCopy = () =>
+  ({
+    waking: i18next.t("common:comet.explain.ollieWaking"),
+    timeout: i18next.t("common:comet.explain.ollieTimeout"),
+    unavailable: i18next.t("common:comet.explain.ollieUnavailable"),
+    rate_limited: i18next.t("common:comet.explain.rateLimited"),
+  }) as const;
+type ErrorCode = keyof ReturnType<typeof getErrorCopy>;
 
-const AT_CAPACITY =
-  "Too many explanations in progress. Close one and try again.";
+const getAtCapacity = () => i18next.t("common:comet.explain.atCapacity");
 
 // Known code → copy; otherwise the raw upstream message, then a generic line.
 // `code` is a free-form string off the bridge, so guard the lookup with an
@@ -71,12 +72,16 @@ const AT_CAPACITY =
 // Object.prototype members ("constructor"/"toString"/…) to Functions, which are
 // truthy and would short-circuit the fallback — then render as a React child
 // and crash the popover.
-const errorMessage = (code: string | undefined, raw: string | undefined) =>
-  (code && Object.prototype.hasOwnProperty.call(ERROR_COPY, code)
-    ? ERROR_COPY[code as ErrorCode]
-    : undefined) ??
-  raw ??
-  "Something went wrong.";
+const errorMessage = (code: string | undefined, raw: string | undefined) => {
+  const errorCopy = getErrorCopy();
+  return (
+    (code && Object.prototype.hasOwnProperty.call(errorCopy, code)
+      ? errorCopy[code as ErrorCode]
+      : undefined) ??
+    raw ??
+    i18next.t("common:comet.explain.somethingWentWrong")
+  );
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cell identity
@@ -296,7 +301,7 @@ const useExplainStore = create<ExplainState>((set, get) => {
       const entry = stalledCell(explainId);
       if (entry && isPending(entry.phase)) {
         get().emit?.("explain:cancel", { explainId });
-        failCell(explainId, "timeout", ERROR_COPY.timeout, true);
+        failCell(explainId, "timeout", getErrorCopy().timeout, true);
       }
     },
   });
@@ -307,7 +312,7 @@ const useExplainStore = create<ExplainState>((set, get) => {
     Object.values(get().entries).forEach((entry) => {
       if (isPending(entry.phase)) {
         watchdog.disarm(entry.explainId);
-        failCell(entry.explainId, code, ERROR_COPY[code], true);
+        failCell(entry.explainId, code, getErrorCopy()[code], true);
       }
     });
   };
@@ -361,7 +366,7 @@ const useExplainStore = create<ExplainState>((set, get) => {
       // "Thinking…". No stream is dispatched, so no route is tracked.
       if (inFlightCount(get()) >= MAX_IN_FLIGHT) {
         mutate((c) =>
-          putCell(c, key, erroredEntry(target, AT_CAPACITY), false),
+          putCell(c, key, erroredEntry(target, getAtCapacity()), false),
         );
         return false;
       }

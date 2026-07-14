@@ -63,7 +63,9 @@ const ExpandableTextCell = <TData,>(context: CellContext<TData, string>) => {
           }}
           className="shrink-0"
         >
-          {isExpanded ? t("common:buttons.collapse") : t("common:buttons.expand")}
+          {isExpanded
+            ? t("common:buttons.collapse")
+            : t("common:buttons.expand")}
         </Button>
       )}
     </CellWrapper>

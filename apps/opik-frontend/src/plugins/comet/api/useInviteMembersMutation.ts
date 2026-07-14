@@ -21,7 +21,8 @@ const isEmail = (value: string): boolean =>
 const extractServerMessage = (error: unknown): string => {
   const axiosError = error as AxiosError<{ msg: string }>;
   return capitalizeFirstLetter(
-    axiosError?.response?.data?.msg || i18next.t("common:comet.inviteRequestFailed"),
+    axiosError?.response?.data?.msg ||
+      i18next.t("common:comet.inviteRequestFailed"),
   );
 };
 
@@ -119,7 +120,9 @@ export function useInviteUsersMutation() {
       });
     },
     onError: (error) => {
-      const message = extractServerMessage(error) || i18next.t("common:comet.inviteRequestFailed");
+      const message =
+        extractServerMessage(error) ||
+        i18next.t("common:comet.inviteRequestFailed");
       toast({ description: message, variant: "destructive" });
     },
   });

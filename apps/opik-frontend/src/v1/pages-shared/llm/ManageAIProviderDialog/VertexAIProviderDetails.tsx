@@ -22,7 +22,9 @@ const VertexAIProviderDetails: React.FC<VertexAIProviderDetailsProps> = ({
 }) => {
   const { t } = useTranslation("prompt");
   const providerName = PROVIDERS[PROVIDER_TYPE.VERTEX_AI].label;
-  const apiKeyLabel = t("vertexAIProviderDetails.apiKeyLabel", { providerName });
+  const apiKeyLabel = t("vertexAIProviderDetails.apiKeyLabel", {
+    providerName,
+  });
 
   return (
     <div className="flex flex-col gap-2 pb-4">
@@ -34,7 +36,9 @@ const VertexAIProviderDetails: React.FC<VertexAIProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="location">{t("vertexAIProviderDetails.location")}</Label>
+              <Label htmlFor="location">
+                {t("vertexAIProviderDetails.location")}
+              </Label>
               <FormControl>
                 <Input
                   id="location"

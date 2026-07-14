@@ -311,19 +311,19 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                 >
                   <ToggleGroupItem
                     value={PROMPT_PREVIEW_MODE.write}
-                    aria-label="Write"
+                    aria-label={t("prompt:textPromptEditor.editView")}
                   >
                     {t("prompt:textPromptEditor.editView")}
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value={PROMPT_PREVIEW_MODE.prettyView}
-                    aria-label="Pretty view"
+                    aria-label={t("prompt:textPromptEditor.prettyView")}
                   >
                     {t("prompt:textPromptEditor.prettyView")}
                   </ToggleGroupItem>
                   <ToggleGroupItem
                     value={PROMPT_PREVIEW_MODE.diff}
-                    aria-label="Preview changes"
+                    aria-label={t("prompt:compare.pretty")}
                     disabled={!templateHasChanges}
                   >
                     {t("prompt:compare.pretty")}
@@ -335,7 +335,7 @@ const EditPromptVersionDialog: React.FC<EditPromptVersionDialogProps> = ({
                   <Textarea
                     id="template"
                     className="comet-code"
-                    placeholder="Prompt"
+                    placeholder={t("prompt:textPromptEditor.prompt")}
                     value={localText}
                     onChange={(event) =>
                       handleContentChange(event.target.value)

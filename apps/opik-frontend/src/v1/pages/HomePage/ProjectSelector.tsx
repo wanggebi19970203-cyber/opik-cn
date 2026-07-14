@@ -82,7 +82,9 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           <div className="max-h-[calc(var(--radix-popper-available-height)-60px)] overflow-y-auto overflow-x-hidden pb-1">
             {hasMoreProjects && (
               <div className="comet-body-xs px-4 py-2 text-muted-slate">
-                {t("home.projectSelector.presentingLatest", { count: LOADED_PROJECTS_COUNT })}
+                {t("home.projectSelector.presentingLatest", {
+                  count: LOADED_PROJECTS_COUNT,
+                })}
               </div>
             )}
             {filteredProjects.map(({ name, id }) => (

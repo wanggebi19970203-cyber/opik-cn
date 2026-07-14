@@ -27,9 +27,7 @@ const HiddenSpansToggle: React.FC<HiddenSpansToggleProps> = ({ spans }) => {
   return (
     <TooltipWrapper
       content={
-        hidden
-          ? t("hiddenSpans.someHidden")
-          : t("hiddenSpans.allVisible")
+        hidden ? t("hiddenSpans.someHidden") : t("hiddenSpans.allVisible")
       }
     >
       <Button

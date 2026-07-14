@@ -53,7 +53,9 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
   const isEdit = Boolean(project);
   const isValid = Boolean(name.length);
   const title = isEdit ? t("dialog.editTitle") : t("dialog.createTitle");
-  const buttonText = isEdit ? t("dialog.updateButton") : t("dialog.createButton");
+  const buttonText = isEdit
+    ? t("dialog.updateButton")
+    : t("dialog.createButton");
 
   const onProjectCreated = useCallback(
     (projectData?: { id?: string }) => {
@@ -88,7 +90,7 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
         });
       }
     },
-    [navigate, toast, workspaceName],
+    [navigate, t, toast, workspaceName],
   );
 
   const submitHandler = useCallback(() => {
@@ -147,7 +149,9 @@ const AddEditProjectDialog: React.FC<AddEditProjectDialogProps> = ({
           />
         </div>
         <div className="flex flex-col gap-2 pb-4">
-          <Label htmlFor="projectDescription">{t("dialog.descriptionLabel")}</Label>
+          <Label htmlFor="projectDescription">
+            {t("dialog.descriptionLabel")}
+          </Label>
           <Textarea
             id="projectDescription"
             placeholder={t("fields.description")}

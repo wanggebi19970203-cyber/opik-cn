@@ -39,7 +39,9 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">{t("customProviderDetails.providerName")}</Label>
+                <Label htmlFor="providerName">
+                  {t("customProviderDetails.providerName")}
+                </Label>
                 <FormControl>
                   <Input
                     id="providerName"
@@ -95,7 +97,9 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">{t("customProviderDetails.apiKey")}</Label>
+              <Label htmlFor="apiKey">
+                {t("customProviderDetails.apiKey")}
+              </Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
@@ -138,7 +142,9 @@ const CustomProviderDetails: React.FC<CustomProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">{t("customProviderDetails.modelsList")}</Label>
+              <Label htmlFor="models">
+                {t("customProviderDetails.modelsList")}
+              </Label>
               <FormControl>
                 <Input
                   id="models"

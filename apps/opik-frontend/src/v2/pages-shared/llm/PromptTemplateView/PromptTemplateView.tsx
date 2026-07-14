@@ -162,7 +162,9 @@ const PromptTemplateView: React.FC<PromptTemplateViewProps> = ({
       {!hideHeader && (
         <div className="flex items-center justify-between">
           <div className={cn("comet-body-s-accented", labelClassName)}>
-            {isChatPrompt ? t("promptTemplateView.chatMessages") : t("promptTemplateView.prompt")}
+            {isChatPrompt
+              ? t("promptTemplateView.chatMessages")
+              : t("promptTemplateView.prompt")}
           </div>
           {renderToggleButton()}
         </div>

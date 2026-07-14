@@ -140,7 +140,7 @@ const FeedbackDefinitionsSelectBox: React.FC<
         </ListAction>
       </>
     ),
-    [handleAddNewClick],
+    [handleAddNewClick, t],
   );
 
   return (

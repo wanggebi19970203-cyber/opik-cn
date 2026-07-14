@@ -175,7 +175,9 @@ const DashboardWidgetActionsMenu: React.FunctionComponent<
         onConfirm={handleConfirmDelete}
         title={t("common:dashboard.deleteWidgetTitle")}
         description={t("common:dashboard.deleteWidgetDescription")}
-        confirmText={t("common:dashboard.deleteWidgetName", { name: widgetTitle })}
+        confirmText={t("common:dashboard.deleteWidgetName", {
+          name: widgetTitle,
+        })}
         confirmButtonVariant="destructive"
       />
     </>

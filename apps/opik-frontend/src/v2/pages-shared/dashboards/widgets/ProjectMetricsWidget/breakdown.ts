@@ -26,8 +26,18 @@ export const BREAKDOWN_FIELD_LABELS = getBreakdownFieldLabels();
 
 /**
  * Special group names used in group by results.
- * OTHERS_DISPLAY and UNKNOWN are used as comparison identifiers, not translated here.
+ * OTHERS_DISPLAY and UNKNOWN are used as comparison identifiers.
  */
+export const getBreakdownGroupNames = () => {
+  const t = i18next.getFixedT(null, "dashboards");
+  return {
+    OTHERS: "__others__",
+    OTHERS_DISPLAY: t("breakdownGroups.others"),
+    UNKNOWN: t("breakdownGroups.unknown"),
+  };
+};
+
+/** @deprecated Use getBreakdownGroupNames() instead */
 export const BREAKDOWN_GROUP_NAMES = {
   OTHERS: "__others__",
   OTHERS_DISPLAY: "Others",
@@ -136,7 +146,8 @@ export function buildBreakdownDrilldownFilter(
   label: string,
   metadataKey?: string,
 ): Partial<Filter> | null {
-  const noError = label === "No Error";
+  const t = i18next.getFixedT(null, "dashboards");
+  const noError = label === t("breakdownDrilldown.noError");
 
   switch (field) {
     case BREAKDOWN_FIELD.ERROR_TYPE:
@@ -149,7 +160,7 @@ export function buildBreakdownDrilldownFilter(
       };
 
     case BREAKDOWN_FIELD.ERROR_INFO:
-      if (label !== "Has Error") return null;
+      if (label !== t("breakdownDrilldown.hasError")) return null;
       return {
         field: "error_info",
         operator: "is_not_empty" as FilterOperator,

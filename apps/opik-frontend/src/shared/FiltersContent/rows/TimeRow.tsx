@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import OperatorSelector from "@/shared/FiltersContent/OperatorSelector";
 import DebounceInput from "@/shared/DebounceInput/DebounceInput";
 import TimePicker from "@/shared/TimePicker/TimePicker";
-import { DEFAULT_OPERATORS, OPERATORS_MAP } from "@/constants/filters";
+import { getDefaultOperators, getOperatorsMap } from "@/constants/filters";
 import { Filter } from "@/types/filters";
 import { COLUMN_TYPE } from "@/types/shared";
 import { formatDate, DEFAULT_DATE_FORMAT } from "@/lib/date";
@@ -71,7 +71,8 @@ export const TimeRow: React.FunctionComponent<TimeRowProps> = ({
         <OperatorSelector
           operator={filter.operator}
           operators={
-            OPERATORS_MAP[filter.type as COLUMN_TYPE] ?? DEFAULT_OPERATORS
+            getOperatorsMap()[filter.type as COLUMN_TYPE] ??
+            getDefaultOperators()
           }
           onSelect={(o) => onChange({ ...filter, operator: o })}
         />

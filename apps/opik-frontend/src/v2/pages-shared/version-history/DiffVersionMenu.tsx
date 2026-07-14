@@ -47,7 +47,9 @@ const DiffVersionMenu: React.FC<DiffVersionMenuProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel size="sm">{t("versionHistory.compareAgainst")}</DropdownMenuLabel>
+        <DropdownMenuLabel size="sm">
+          {t("versionHistory.compareAgainst")}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border" />
         <div className="max-h-[40vh] overflow-y-auto">
           {selectableVersions.map((version) => (

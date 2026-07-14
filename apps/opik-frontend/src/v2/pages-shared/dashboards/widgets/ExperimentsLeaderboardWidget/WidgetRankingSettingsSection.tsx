@@ -40,7 +40,7 @@ const WidgetRankingSettingsSection = <T extends FieldValues>({
         label: col.label,
       })),
     ];
-  }, [dynamicScoresColumns]);
+  }, [dynamicScoresColumns, t]);
 
   const currentRankingMetric = useWatch({
     control,

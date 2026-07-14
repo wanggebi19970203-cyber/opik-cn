@@ -29,12 +29,15 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ setOpen }) => {
         <X />
       </Button>
       <div className="p-7">
-        <div className="comet-title-xl text-white">{t("home.welcomeBanner.title")}</div>
+        <div className="comet-title-xl text-white">
+          {t("home.welcomeBanner.title")}
+        </div>
         <div className="comet-body text-white/80 mt-4">
           {t("home.welcomeBanner.description")}
         </div>
         <Button variant="secondary" className="mt-6" onClick={openQuickstart}>
-          {t("home.welcomeBanner.getStarted")} <ChevronRight className="ml-2 size-4 shrink-0" />
+          {t("home.welcomeBanner.getStarted")}{" "}
+          <ChevronRight className="ml-2 size-4 shrink-0" />
         </Button>
       </div>
     </div>

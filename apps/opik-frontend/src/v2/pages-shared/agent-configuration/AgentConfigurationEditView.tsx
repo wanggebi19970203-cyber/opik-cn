@@ -304,7 +304,9 @@ const AgentConfigurationEditView = React.forwardRef<
         <>
           <BlueprintDiffTable
             base={{
-              label: t("agentOptimization.editView.original", { name: item.name }),
+              label: t("agentOptimization.editView.original", {
+                name: item.name,
+              }),
               blueprintId: item.id,
               values: agentConfig?.values,
             }}
@@ -342,7 +344,9 @@ const AgentConfigurationEditView = React.forwardRef<
             const isBoolean = v.type === BlueprintValueType.BOOLEAN;
 
             const modifiedDot = isChanged ? (
-              <TooltipWrapper content={t("agentOptimization.editView.modified")}>
+              <TooltipWrapper
+                content={t("agentOptimization.editView.modified")}
+              >
                 <span
                   className="size-1.5 rounded-full bg-amber-400"
                   aria-label={t("agentOptimization.editView.modified")}
@@ -379,7 +383,11 @@ const AgentConfigurationEditView = React.forwardRef<
                     <div className="flex items-center gap-1">
                       {modifiedDot}
                       <TooltipWrapper
-                        content={isRemoved ? t("agentOptimization.editView.restoreField") : t("agentOptimization.editView.removeField")}
+                        content={
+                          isRemoved
+                            ? t("agentOptimization.editView.restoreField")
+                            : t("agentOptimization.editView.removeField")
+                        }
                       >
                         <Button
                           variant="minimal"

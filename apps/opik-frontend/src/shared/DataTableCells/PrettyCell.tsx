@@ -42,7 +42,9 @@ const PrettyCell = <TData,>(context: CellContext<TData, string | object>) => {
     }
 
     if (truncationEnabled && message.length > maxDataLength) {
-      return message.slice(0, maxDataLength) + ` [${t("common:labels.truncated")}]`;
+      return (
+        message.slice(0, maxDataLength) + ` [${t("common:labels.truncated")}]`
+      );
     }
 
     return message;

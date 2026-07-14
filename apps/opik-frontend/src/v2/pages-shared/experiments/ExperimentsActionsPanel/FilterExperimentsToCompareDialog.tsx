@@ -101,7 +101,9 @@ const FilterExperimentsToCompareDialog: React.FunctionComponent<
           <DialogTitle>{t("selectExperimentsToCompare")}</DialogTitle>
         </DialogHeader>
         <div className="w-full overflow-hidden">
-          <ExplainerDescription description={t("compareExperimentsDescription")} />
+          <ExplainerDescription
+            description={t("compareExperimentsDescription")}
+          />
           <div className="my-4 flex max-h-[400px] min-h-36 max-w-full flex-col justify-stretch gap-2.5 overflow-y-auto">
             {renderListItems()}
           </div>

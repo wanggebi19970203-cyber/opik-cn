@@ -79,7 +79,11 @@ export const createDynamicSchema = (fields: DatasetField[]) => {
             return false;
           }
         },
-        { message: i18next.t("datasets.itemEditor.mustBeValidJsonObjectOrArray") },
+        {
+          message: i18next.t(
+            "datasets.itemEditor.mustBeValidJsonObjectOrArray",
+          ),
+        },
       );
     } else {
       schemaShape[field.key] = z.any();

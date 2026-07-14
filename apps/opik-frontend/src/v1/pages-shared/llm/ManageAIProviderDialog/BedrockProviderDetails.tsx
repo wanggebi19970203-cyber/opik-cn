@@ -33,11 +33,15 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
             return (
               <FormItem>
-                <Label htmlFor="providerName">{t("bedrockProviderDetails.providerName")}</Label>
+                <Label htmlFor="providerName">
+                  {t("bedrockProviderDetails.providerName")}
+                </Label>
                 <FormControl>
                   <Input
                     id="providerName"
-                    placeholder={t("bedrockProviderDetails.providerNamePlaceholder")}
+                    placeholder={t(
+                      "bedrockProviderDetails.providerNamePlaceholder",
+                    )}
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.value)}
                     disabled={isEdit}
@@ -89,7 +93,9 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="apiKey">{t("bedrockProviderDetails.apiKey")}</Label>
+              <Label htmlFor="apiKey">
+                {t("bedrockProviderDetails.apiKey")}
+              </Label>
               <FormControl>
                 <EyeInput
                   id="apiKey"
@@ -132,11 +138,15 @@ const BedrockProviderDetails: React.FC<BedrockProviderDetailsProps> = ({
 
           return (
             <FormItem>
-              <Label htmlFor="models">{t("bedrockProviderDetails.modelsList")}</Label>
+              <Label htmlFor="models">
+                {t("bedrockProviderDetails.modelsList")}
+              </Label>
               <FormControl>
                 <Input
                   id="models"
-                  placeholder={t("bedrockProviderDetails.modelsListPlaceholder")}
+                  placeholder={t(
+                    "bedrockProviderDetails.modelsListPlaceholder",
+                  )}
                   value={field.value}
                   onChange={(e) => field.onChange(e.target.value)}
                   className={cn({

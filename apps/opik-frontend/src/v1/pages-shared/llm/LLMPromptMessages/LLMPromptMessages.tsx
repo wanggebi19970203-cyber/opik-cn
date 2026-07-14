@@ -242,7 +242,9 @@ const LLMPromptMessages = ({
 
         {promptVariables.length > 0 && (
           <p className="comet-body-s mt-2 text-light-slate">
-            {t("llmPromptMessages.variableSyntaxHint", { syntax: "{{variable_name}}" })}{" "}
+            {t("llmPromptMessages.variableSyntaxHint", {
+              syntax: "{{variable_name}}",
+            })}{" "}
             <PromptVariablesList
               variables={promptVariables}
               onVariableClick={handleVariableClick}

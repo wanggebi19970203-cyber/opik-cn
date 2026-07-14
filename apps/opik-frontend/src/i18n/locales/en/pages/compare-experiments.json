@@ -27,6 +27,7 @@
     },
     "details": {
       "backToExperiments": "Back to experiments",
+      "compare": "Compare",
       "compareCount": "Compare ({{count}})",
       "baselineOf": "Baseline of",
       "comparedAgainst": "compared against",

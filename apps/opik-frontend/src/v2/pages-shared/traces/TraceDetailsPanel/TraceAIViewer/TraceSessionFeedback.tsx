@@ -96,7 +96,9 @@ const TraceSessionFeedback: React.FC<TraceSessionFeedbackProps> = ({
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{t("aiAssistant.clickToRemoveFeedback")}</TooltipContent>
+          <TooltipContent>
+            {t("aiAssistant.clickToRemoveFeedback")}
+          </TooltipContent>
         </Tooltip>
       ) : (
         // If no feedback given yet, show both buttons

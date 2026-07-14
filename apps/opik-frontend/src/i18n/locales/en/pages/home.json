@@ -2,7 +2,11 @@
   "home": {
     "title": "Home",
     "description": "Welcome to Opik",
+    "welcomeTo": "Welcome to {{workspaceName}}",
     "welcomeBack": "Welcome back to Opik",
+    "overallPerformance": "Overall performance",
+    "viewDetails": "View details",
+    "noDataImageAlt": "no data image",
     "welcomeBanner": {
       "title": "Welcome to Opik",
       "description": "Opik helps you build safer, more reliable AI systems through advanced tracing, experiment management, evaluation, and real-time monitoring",
@@ -20,7 +24,8 @@
       "projects": "Projects",
       "traces": "Traces",
       "datasets": "Datasets",
-      "experiments": "Experiments"
+      "experiments": "Experiments",
+      "prompts": "Prompts"
     },
     "costOverview": {
       "title": "Cost overview",
@@ -32,6 +37,7 @@
     },
     "evaluation": {
       "title": "Evaluation",
+      "experiment": "Experiment",
       "testSuite": "Test suite",
       "itemCount": "Item count",
       "passRate": "Pass rate",
@@ -66,12 +72,14 @@
       "lastUpdated": "Last updated",
       "avgFeedbackScores": "Avg feedback scores",
       "traceCount": "Trace count",
+      "errors": "Errors",
       "noProjects": "There are no projects yet",
       "createNewProject": "Create new project",
       "allProjects": "All projects"
     },
     "optimizationRuns": {
       "title": "Optimization runs",
+      "optimization": "Optimization",
       "testSuite": "Test suite",
       "optimizer": "Optimizer",
       "bestScore": "Best score",

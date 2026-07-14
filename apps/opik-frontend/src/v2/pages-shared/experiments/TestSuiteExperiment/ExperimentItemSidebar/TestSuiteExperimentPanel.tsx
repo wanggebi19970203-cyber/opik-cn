@@ -108,7 +108,7 @@ export const TestSuiteExperimentPanel: React.FC<
       });
       copy(activeExperimentsCompare?.id);
     }
-  }, [toast, activeExperimentsCompare?.id]);
+  }, [toast, activeExperimentsCompare?.id, t]);
 
   const horizontalNavigation = useMemo(
     () =>

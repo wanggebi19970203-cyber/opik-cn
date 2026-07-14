@@ -60,7 +60,11 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
         metadata: sourceVersion?.metadata,
         projectId: activeProjectId ?? undefined,
         onSuccess: () => {
-          toast({ description: t("promptImprovement.savedImprovedVersion", { name: prompt.name }) });
+          toast({
+            description: t("promptImprovement.savedImprovedVersion", {
+              name: prompt.name,
+            }),
+          });
           setOpen(false);
         },
       });
@@ -72,6 +76,7 @@ const ImproveInPlaygroundButton: React.FC<ImproveInPlaygroundButtonProps> = ({
       sourceVersion?.metadata,
       activeProjectId,
       createVersion,
+      t,
       toast,
     ],
   );

@@ -1,3 +1,4 @@
+import { TFunction } from "i18next";
 import TimeCell from "@/shared/DataTableCells/TimeCell";
 import IdCell from "@/shared/DataTableCells/IdCell";
 import { COLUMN_DATASET_ID, COLUMN_TYPE, ColumnData } from "@/types/shared";
@@ -28,17 +29,17 @@ export const COLUMNS_ORDER_KEY = "optimizations-columns-order-v2";
 
 const DEFAULT_METRIC_COLUMN_WIDTH = 120;
 
-export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
+export const getDefaultColumns = (t: TFunction): ColumnData<Optimization>[] => [
   {
     id: "name",
-    label: "Name",
+    label: t("columns.name"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.name,
     size: 191,
   },
   {
     id: "id",
-    label: "Run ID",
+    label: t("columns.id"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.id,
     cell: IdCell as never,
@@ -58,7 +59,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "algorithm",
-    label: "Algorithm",
+    label: t("columns.algorithm"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => {
       const optimizerType = getOptimizationOptimizerType(row);
@@ -68,7 +69,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "metric",
-    label: "Metric",
+    label: t("columns.metric"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) =>
       row.objective_name ? getMetricLabel(row.objective_name) : "-",
@@ -76,21 +77,21 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "created_at",
-    label: "Start time",
+    label: t("columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     size: 145,
   },
   {
     id: "status",
-    label: "Status",
+    label: t("columns.status"),
     type: COLUMN_TYPE.string,
     cell: OptimizationStatusCell as never,
     size: 120,
   },
   {
     id: "pass_rate",
-    label: "Pass rate",
+    label: t("columns.passRate"),
     type: COLUMN_TYPE.numberDictionary,
     size: DEFAULT_METRIC_COLUMN_WIDTH,
     accessorFn: (row) => row.best_objective_score,
@@ -98,7 +99,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "accuracy",
-    label: "Accuracy",
+    label: t("columns.accuracy"),
     type: COLUMN_TYPE.numberDictionary,
     size: DEFAULT_METRIC_COLUMN_WIDTH,
     accessorFn: (row) =>
@@ -107,7 +108,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "latency",
-    label: "Latency",
+    label: t("columns.latency"),
     type: COLUMN_TYPE.duration,
     size: DEFAULT_METRIC_COLUMN_WIDTH,
     accessorFn: (row) => row.best_duration,
@@ -115,7 +116,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "cost",
-    label: "Cost",
+    label: t("columns.cost"),
     type: COLUMN_TYPE.cost,
     size: DEFAULT_METRIC_COLUMN_WIDTH,
     accessorFn: (row) => row.best_cost,
@@ -123,7 +124,7 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
   {
     id: "opt_cost",
-    label: "Opt. cost",
+    label: t("columns.optCost"),
     type: COLUMN_TYPE.cost,
     size: DEFAULT_METRIC_COLUMN_WIDTH,
     accessorFn: (row) => row.total_optimization_cost,
@@ -131,10 +132,10 @@ export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = [
   },
 ];
 
-export const FILTER_COLUMNS: ColumnData<Optimization>[] = [
+export const getFilterColumns = (t: TFunction): ColumnData<Optimization>[] => [
   {
     id: COLUMN_DATASET_ID,
-    label: "Test suite",
+    label: t("filters.testSuite"),
     type: COLUMN_TYPE.string,
     disposable: true,
   },

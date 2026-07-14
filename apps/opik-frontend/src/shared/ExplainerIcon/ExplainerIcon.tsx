@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { CircleHelp, ExternalLink, Info } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ const ExplainerIcon: React.FC<ExplainerIconProps> = ({
   docLink,
   className,
 }) => {
+  const { t } = useTranslation("common");
   const Icon = type === "info" ? Info : CircleHelp;
   return (
     <TooltipWrapper
@@ -26,7 +28,7 @@ const ExplainerIcon: React.FC<ExplainerIconProps> = ({
           {docLink && (
             <Button variant="link" size="3xs" asChild>
               <a href={docLink} target="_blank" rel="noreferrer">
-                Read more
+                {t("explainer.readMore")}
                 <ExternalLink className="ml-0.5 size-3 shrink-0" />
               </a>
             </Button>

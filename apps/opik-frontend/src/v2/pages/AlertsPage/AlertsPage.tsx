@@ -5,6 +5,7 @@ import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 import PageEmptyState from "@/shared/PageEmptyState/PageEmptyState";
 import { buildDocsUrl } from "@/v2/lib/utils";
@@ -62,56 +63,56 @@ const PAGINATION_SIZE_KEY = "alerts-pagination-size";
 export const DEFAULT_COLUMNS: ColumnData<Alert>[] = [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: i18next.t("pages/alerts:alerts.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: i18next.t("pages/alerts:alerts.columns.name"),
     type: COLUMN_TYPE.string,
     sortable: true,
   },
   {
     id: "alert_type",
-    label: "Destination",
+    label: i18next.t("pages/alerts:alerts.columns.alert_type"),
     type: COLUMN_TYPE.string,
     cell: AlertTypeCell as never,
   },
   {
     id: "webhook_url",
-    label: "Endpoint",
+    label: i18next.t("pages/alerts:alerts.columns.webhook_url"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.webhook?.url || "-",
   },
   {
     id: "triggers",
-    label: "Events",
+    label: i18next.t("pages/alerts:alerts.columns.triggers"),
     type: COLUMN_TYPE.string,
     cell: AlertsEventsCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: i18next.t("pages/alerts:alerts.columns.created_by"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.created_by || "-",
   },
   {
     id: "status",
-    label: "Status",
+    label: i18next.t("pages/alerts:alerts.columns.status"),
     type: COLUMN_TYPE.string,
     cell: StatusCell as never,
     accessorFn: (row) => row.enabled,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("pages/alerts:alerts.columns.created_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: i18next.t("pages/alerts:alerts.columns.last_updated_at"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
@@ -120,37 +121,37 @@ export const DEFAULT_COLUMNS: ColumnData<Alert>[] = [
 export const FILTERS_COLUMNS: ColumnData<Alert>[] = [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: i18next.t("pages/alerts:alerts.columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "id",
-    label: "ID",
+    label: i18next.t("pages/alerts:alerts.columns.id"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "alert_type",
-    label: "Destination",
+    label: i18next.t("pages/alerts:alerts.columns.alert_type"),
     type: COLUMN_TYPE.category,
   },
   {
     id: "webhook_url",
-    label: "Endpoint",
+    label: i18next.t("pages/alerts:alerts.columns.webhook_url"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: i18next.t("pages/alerts:alerts.columns.created_by"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: i18next.t("pages/alerts:alerts.columns.created_at"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: i18next.t("pages/alerts:alerts.columns.last_updated_at"),
     type: COLUMN_TYPE.time,
   },
 ];
@@ -214,10 +215,14 @@ const AlertsPage: React.FunctionComponent = () => {
     },
   );
 
-  const translatedColumns: ColumnData<Alert>[] = DEFAULT_COLUMNS.map((col) => ({
-    ...col,
-    label: t(`alerts.columns.${col.id}`),
-  }));
+  const translatedColumns: ColumnData<Alert>[] = useMemo(
+    () =>
+      DEFAULT_COLUMNS.map((col) => ({
+        ...col,
+        label: t(`alerts.columns.${col.id}`),
+      })),
+    [t],
+  );
 
   const translatedFilterColumns: ColumnData<Alert>[] = FILTERS_COLUMNS.map(
     (col) => ({
@@ -242,7 +247,7 @@ const AlertsPage: React.FunctionComponent = () => {
         },
       } as Record<string, { keyComponentProps: Record<string, unknown> }>,
     }),
-    [],
+    [t],
   );
 
   const { data, isPending, isPlaceholderData, isFetching } =
@@ -268,7 +273,9 @@ const AlertsPage: React.FunctionComponent = () => {
   );
   const total = data?.total ?? 0;
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? t("alerts.empty.title") : t("alerts.noSearchResults");
+  const noDataText = noData
+    ? t("alerts.empty.title")
+    : t("alerts.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
     SELECTED_COLUMNS_KEY_V2,
@@ -314,7 +321,13 @@ const AlertsPage: React.FunctionComponent = () => {
           ]
         : []),
     ];
-  }, [columnsOrder, selectedColumns, sortableBy, canUpdateAlerts]);
+  }, [
+    columnsOrder,
+    selectedColumns,
+    sortableBy,
+    canUpdateAlerts,
+    translatedColumns,
+  ]);
 
   const resizeConfig = useMemo(
     () => ({

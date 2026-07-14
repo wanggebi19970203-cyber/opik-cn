@@ -1,13 +1,20 @@
 import React from "react";
 import { ListTree, LucideIcon, SquareStack } from "lucide-react";
+import i18next from "i18next";
 
 import { TRACE_DATA_TYPE } from "@/constants/traces";
 import { DropdownOption } from "@/types/shared";
 import { SelectItem } from "@/ui/select";
 
 export const SOURCE_OPTIONS: DropdownOption<string>[] = [
-  { value: TRACE_DATA_TYPE.traces, label: "Traces" },
-  { value: TRACE_DATA_TYPE.spans, label: "Spans" },
+  {
+    value: TRACE_DATA_TYPE.traces,
+    label: i18next.t("common.sourceTypeSelect.traces"),
+  },
+  {
+    value: TRACE_DATA_TYPE.spans,
+    label: i18next.t("common.sourceTypeSelect.spans"),
+  },
 ];
 
 const SOURCE_ICON_MAP: Record<string, { icon: LucideIcon; className: string }> =

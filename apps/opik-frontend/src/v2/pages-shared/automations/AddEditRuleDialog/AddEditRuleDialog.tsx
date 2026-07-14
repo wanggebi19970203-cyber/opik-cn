@@ -192,7 +192,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
 
   const getInitialRuleName = () => {
     if (mode === "clone" && defaultRule) {
-      return `${defaultRule.name} (Copy)`;
+      return `${defaultRule.name}${t("addEditRule.copySuffix")}`;
     }
     return defaultRule?.name || "";
   };
@@ -267,7 +267,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
     } else if (open && defaultRule && mode === "clone") {
       // For clone mode, reset the form with cloned rule data and append " (Copy)" to name
       const cloneFormData = {
-        ruleName: `${defaultRule.name} (Copy)`,
+        ruleName: `${defaultRule.name}${t("addEditRule.copySuffix")}`,
         projectIds: projectId ? [projectId] : [],
         samplingRate: defaultRule.sampling_rate ?? 1,
         uiType: formUIRuleType,
@@ -304,6 +304,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
     formScope,
     formUIRuleType,
     form,
+    t,
   ]);
 
   const handleScopeChange = useCallback(
@@ -351,7 +352,9 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
     : isClone
       ? t("addEditRule.cloneTitle")
       : t("addEditRule.createTitle");
-  const submitText = isEdit ? t("addEditRule.updateSubmit") : t("addEditRule.createSubmit");
+  const submitText = isEdit
+    ? t("addEditRule.updateSubmit")
+    : t("addEditRule.createSubmit");
 
   const isCodeMetricEditBlock = !isCodeMetricEnabled && !isLLMJudge && isEdit;
 
@@ -403,7 +406,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
       description: explainer.description,
       actions,
     });
-  }, [navigate, toast, workspaceName, scope, formProjectIds]);
+  }, [navigate, toast, workspaceName, scope, formProjectIds, t]);
 
   const getRule = useCallback(() => {
     const formData = form.getValues();
@@ -557,7 +560,9 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                         <FormItem className="min-w-0 flex-1">
                           <Label className="flex items-center">
                             {t("addEditRule.scopeLabel")}{" "}
-                            <TooltipWrapper content={t("addEditRule.scopeTooltip")}>
+                            <TooltipWrapper
+                              content={t("addEditRule.scopeTooltip")}
+                            >
                               <Info className="ml-1 size-4 text-light-slate" />
                             </TooltipWrapper>
                           </Label>
@@ -568,23 +573,27 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                               disabled={isEdit}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder={t("addEditRule.selectScopePlaceholder")} />
+                                <SelectValue
+                                  placeholder={t(
+                                    "addEditRule.selectScopePlaceholder",
+                                  )}
+                                />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value={EVALUATORS_RULE_SCOPE.trace}>
-                                  Trace
+                                  {t("addEditRule.scopeTrace")}
                                 </SelectItem>
                                 <SelectItem
                                   value={EVALUATORS_RULE_SCOPE.thread}
                                 >
-                                  Thread
+                                  {t("addEditRule.scopeThread")}
                                 </SelectItem>
                                 {(isSpanLlmAsJudgeEnabled ||
                                   isSpanPythonCodeEnabled) && (
                                   <SelectItem
                                     value={EVALUATORS_RULE_SCOPE.span}
                                   >
-                                    Span
+                                    {t("addEditRule.scopeSpan")}
                                   </SelectItem>
                                 )}
                               </SelectContent>
@@ -665,7 +674,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                             >
                               <ToggleGroupItem
                                 value={UI_EVALUATORS_RULE_TYPE.llm_judge}
-                                aria-label="LLM-as-judge"
+                                aria-label={t("addEditRule.llmAsJudge")}
                               >
                                 {t("addEditRule.llmAsJudge")}
                               </ToggleGroupItem>
@@ -674,7 +683,7 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                                   (isSpanScope && isSpanPythonCodeEnabled)) && (
                                   <ToggleGroupItem
                                     value={UI_EVALUATORS_RULE_TYPE.python_code}
-                                    aria-label="Code metric"
+                                    aria-label={t("addEditRule.codeMetric")}
                                   >
                                     {t("addEditRule.codeMetric")}
                                   </ToggleGroupItem>
@@ -719,7 +728,9 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
               <Button variant="outline">{t("addEditRule.cancel")}</Button>
             </DialogClose>
             {isCodeMetricEditBlock ? (
-              <TooltipWrapper content={t("addEditRule.codeMetricDisabledTooltip")}>
+              <TooltipWrapper
+                content={t("addEditRule.codeMetricDisabledTooltip")}
+              >
                 <span>
                   <Button type="submit" disabled>
                     {submitText}

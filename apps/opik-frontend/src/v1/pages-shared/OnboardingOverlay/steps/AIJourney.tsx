@@ -15,9 +15,7 @@ const AIJourney: React.FC = () => {
   return (
     <OnboardingStep>
       <OnboardingStep.BackButton />
-      <OnboardingStep.Title>
-        {t("aiJourneyQuestion")}
-      </OnboardingStep.Title>
+      <OnboardingStep.Title>{t("aiJourneyQuestion")}</OnboardingStep.Title>
 
       <OnboardingStep.AnswerList>
         {options.map((option) => (

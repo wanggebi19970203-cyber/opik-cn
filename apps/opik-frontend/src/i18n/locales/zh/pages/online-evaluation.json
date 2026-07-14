@@ -72,7 +72,16 @@
       "goToProject": "前往项目",
       "loseChangesTitle": "您即将丢失更改",
       "loseChangesDescription": "如果更改评估范围，当前规则设置（包括提示词、模型和变量映射）将被重置。\n确定要继续吗？",
-      "resetAndContinue": "重置并继续"
+      "resetAndContinue": "重置并继续",
+      "budgetMustBePositive": "预算必须为正数",
+      "traceVariableKeyInvalid": "键无效，应为 \"input\"、\"output\"、\"metadata\"（例如 \"input.message\" 或仅 \"input\" 表示整个对象），保留字 \"spans\" 注入追踪的跨度列表，或 \"trace\" 注入带附件的追踪骨架",
+      "spanVariableKeyInvalid": "键无效，应为 \"input\"、\"output\"、\"metadata\"（例如 \"input.message\" 或仅 \"input\" 表示整个对象），或保留字 \"span\" 注入带附件的跨度",
+      "maxCostLabel": "每次评估最大费用 (USD)",
+      "maxCostDescription": "当评估的花费达到此金额时，评判将结束并返回到目前为止的分数。留空表示无限制。",
+      "copySuffix": " (副本)",
+      "scopeTrace": "追踪",
+      "scopeThread": "线程",
+      "scopeSpan": "跨度"
     },
     "pythonCodeRule": {
       "pythonCodeLabel": "Python 代码",
@@ -91,7 +100,42 @@
       "samplingRateTooltip": "评估的 Trace 百分比",
       "isEmpty": "为空",
       "isNotEmpty": "不为空",
-      "selectScore": "选择分数"
+      "selectScore": "选择分数",
+      "entityTypeTraces": "追踪",
+      "entityTypeThreads": "线程",
+      "entityTypeSpans": "跨度",
+      "filterColumns": {
+        "id": "ID",
+        "name": "名称",
+        "input": "输入",
+        "output": "输出",
+        "duration": "持续时间",
+        "metadata": "元数据",
+        "tags": "标签",
+        "threadId": "线程 ID",
+        "feedbackScores": "反馈分数",
+        "status": "状态",
+        "createdAt": "创建时间",
+        "lastUpdatedAt": "最后更新时间",
+        "type": "类型",
+        "model": "模型",
+        "provider": "提供商",
+        "totalTokens": "总令牌数",
+        "totalInputTokens": "总输入令牌数",
+        "totalOutputTokens": "总输出令牌数",
+        "estimatedCost": "预估费用",
+        "errors": "错误",
+        "customFilter": "自定义过滤器"
+      },
+      "filterPlaceholders": {
+        "key": "键",
+        "keyOptional": "键（可选）",
+        "selectScore": "选择分数"
+      },
+      "filterValidation": {
+        "customKeyInvalid": "键无效，应以 \"input\" 或 \"output\" 开头，并遵循此格式：\"input.[PATH]\"，例如：\"input.message\" 或仅 \"input\" 表示整个对象"
+      },
+      "filterErrorPrefix": "过滤器 {{index}}：{{errors}}"
     },
     "evaluateButton": {
       "noRulesTooltip": "此项目未分配在线评估规则",
@@ -138,7 +182,50 @@
       "hidePrompt": "隐藏提示词",
       "cancel": "取消",
       "evaluating": "评估中...",
-      "evaluateEntity": "评估{{entityLabel}}"
-    }
+      "evaluateEntity": "评估{{entityLabel}}",
+      "selectRule": "选择规则 {{name}}",
+      "entityTraces": "追踪",
+      "entityThreads": "线程",
+      "entitySpans": "跨度",
+      "entityTracesCapitalized": "追踪",
+      "entityThreadsCapitalized": "线程",
+      "entitySpansCapitalized": "跨度"
+    },
+    "filterColumns": {
+      "id": "ID",
+      "name": "名称",
+      "input": "输入",
+      "output": "输出",
+      "duration": "持续时间",
+      "metadata": "元数据",
+      "tags": "标签",
+      "threadId": "线程 ID",
+      "feedbackScores": "反馈分数",
+      "status": "状态",
+      "createdAt": "创建时间",
+      "lastUpdatedAt": "最后更新时间",
+      "type": "类型",
+      "model": "模型",
+      "provider": "提供商",
+      "totalTokens": "总令牌数",
+      "totalInputTokens": "总输入令牌数",
+      "totalOutputTokens": "总输出令牌数",
+      "estimatedCost": "预估费用",
+      "errors": "错误",
+      "customFilter": "自定义过滤器"
+    },
+    "filterPlaceholders": {
+      "key": "键",
+      "keyOptional": "键（可选）",
+      "selectScore": "选择分数"
+    },
+    "filterValidation": {
+      "customKeyInvalid": "键无效，应以 \"input\" 或 \"output\" 开头，并遵循此格式：\"input.[PATH]\"，例如：\"input.message\" 或仅 \"input\" 表示整个对象"
+    },
+    "filterErrorPrefix": "过滤器 {{index}}：{{errors}}",
+    "noLimit": "无限制",
+    "goToTraces": "前往追踪",
+    "evaluationTraces": "评估追踪",
+    "showLogs": "显示日志"
   }
 }

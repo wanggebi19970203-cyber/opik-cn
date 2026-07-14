@@ -192,7 +192,7 @@ const ExperimentsSelectBox: React.FC<ExperimentsSelectBoxProps> = (props) => {
         </TooltipWrapper>
       );
     },
-    [],
+    [t],
   );
 
   const loadableSelectBoxProps = props.multiselect

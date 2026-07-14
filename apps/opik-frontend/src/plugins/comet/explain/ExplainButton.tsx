@@ -1,4 +1,5 @@
 import { useState, type SyntheticEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import OllieOwl from "@/icons/ollie-owl.svg?react";
@@ -62,6 +63,7 @@ const ExplainButton = ({
   target,
   align = CELL_HORIZONTAL_ALIGNMENT.start,
 }: ExplainButtonProps) => {
+  const { t } = useTranslation("ollie");
   const canExplain = useCanExplain();
   const explain = useExplainStore((s) => s.explain);
   const cancel = useExplainStore((s) => s.cancel);
@@ -117,7 +119,7 @@ const ExplainButton = ({
               low against the label; lift ~1px to optically centre them (mirrors
               the popover header). */}
           <OllieOwl className="relative -top-px size-3 shrink-0" />
-          <span className={owlLabelClass(open, growsLeft)}>Explain</span>
+          <span className={owlLabelClass(open, growsLeft)}>{t("explain")}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent

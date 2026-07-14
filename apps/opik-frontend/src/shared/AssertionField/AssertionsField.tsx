@@ -105,7 +105,9 @@ const AssertionsField: React.FC<AssertionsFieldProps> = ({
               <AssertionField
                 key={index}
                 ref={index === 0 ? firstFieldRef : undefined}
-                placeholder={placeholder ?? t("assertionsField.assertionPlaceholder")}
+                placeholder={
+                  placeholder ?? t("assertionsField.assertionPlaceholder")
+                }
                 value={assertion}
                 onChange={(e) => onChangeEditable(index, e.target.value)}
                 onRemove={() => onRemoveEditable(index)}

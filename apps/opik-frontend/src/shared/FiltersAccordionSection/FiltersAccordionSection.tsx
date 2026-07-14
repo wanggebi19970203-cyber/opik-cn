@@ -121,7 +121,10 @@ const FiltersAccordionSection = <TColumnData,>({
 
                   return (
                     <FormErrorSkeleton key={index}>
-                      {t("common.filters.filterError", { index: index + 1, messages: errorMessages.join(", ") })}
+                      {t("common.filters.filterError", {
+                        index: index + 1,
+                        messages: errorMessages.join(", "),
+                      })}
                     </FormErrorSkeleton>
                   );
                 })}

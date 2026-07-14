@@ -235,7 +235,9 @@ export const BestPrompt: React.FC<BestPromptProps> = ({
                       </div>
                       <div>
                         <div className="mb-2 px-0.5">
-                          <span className="comet-body-s-accented">{t("current")}</span>
+                          <span className="comet-body-s-accented">
+                            {t("current")}
+                          </span>
                         </div>
                         <div className="comet-code h-[620px] overflow-y-auto whitespace-pre-line break-words rounded-md border px-2.5 py-1.5">
                           <TextDiff

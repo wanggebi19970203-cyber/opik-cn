@@ -18,8 +18,9 @@ export const EXPERIMENT_COMPARISON_TEMPLATE: DashboardTemplate = {
   type: TEMPLATE_TYPE.EXPERIMENT_COMPARISON,
   scope: TEMPLATE_SCOPE.EXPERIMENTS,
   name: i18next.t("common:dashboard.templates.experimentComparison.name"),
-  description:
-    i18next.t("common:dashboard.templates.experimentComparison.description"),
+  description: i18next.t(
+    "common:dashboard.templates.experimentComparison.description",
+  ),
   icon: SquareActivity,
   iconColor: "text-chart-pink",
   config: {
@@ -27,11 +28,15 @@ export const EXPERIMENT_COMPARISON_TEMPLATE: DashboardTemplate = {
     sections: [
       {
         id: "template-section-1",
-        title: i18next.t("common:dashboard.templates.experimentComparison.experimentFeedbackScores"),
+        title: i18next.t(
+          "common:dashboard.templates.experimentComparison.experimentFeedbackScores",
+        ),
         widgets: [
           {
             id: "template-widget-1",
-            title: i18next.t("common:dashboard.templates.experimentComparison.feedbackScores"),
+            title: i18next.t(
+              "common:dashboard.templates.experimentComparison.feedbackScores",
+            ),
             type: WIDGET_TYPE.EXPERIMENTS_FEEDBACK_SCORES,
             config: {
               chartType: CHART_TYPE.radar,
@@ -42,7 +47,9 @@ export const EXPERIMENT_COMPARISON_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-2",
-            title: i18next.t("common:dashboard.templates.experimentComparison.feedbackScoresDistribution"),
+            title: i18next.t(
+              "common:dashboard.templates.experimentComparison.feedbackScoresDistribution",
+            ),
             type: WIDGET_TYPE.EXPERIMENTS_FEEDBACK_SCORES,
             config: {
               chartType: CHART_TYPE.bar,
@@ -79,8 +86,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
   type: TEMPLATE_TYPE.PROJECT_OVERVIEW,
   scope: TEMPLATE_SCOPE.PROJECT,
   name: i18next.t("common:dashboard.templates.projectOverview.name"),
-  description:
-    i18next.t("common:dashboard.templates.projectOverview.description"),
+  description: i18next.t(
+    "common:dashboard.templates.projectOverview.description",
+  ),
   icon: SquareActivity,
   iconColor: "text-chart-pink",
   config: {
@@ -89,11 +97,15 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
       // Section 1: "At a glance" — 5 stats cards
       {
         id: "template-section-1",
-        title: i18next.t("common:dashboard.templates.projectOverview.atAGlance"),
+        title: i18next.t(
+          "common:dashboard.templates.projectOverview.atAGlance",
+        ),
         widgets: [
           {
             id: "template-widget-1",
-            title: i18next.t("common:dashboard.templates.projectOverview.traces"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.traces",
+            ),
             type: WIDGET_TYPE.PROJECT_STATS_CARD,
             config: {
               source: TRACE_DATA_TYPE.traces,
@@ -104,7 +116,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-2",
-            title: i18next.t("common:dashboard.templates.projectOverview.errors"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.errors",
+            ),
             type: WIDGET_TYPE.PROJECT_STATS_CARD,
             config: {
               source: TRACE_DATA_TYPE.traces,
@@ -115,7 +129,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-3",
-            title: i18next.t("common:dashboard.templates.projectOverview.latencyP50"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.latencyP50",
+            ),
             type: WIDGET_TYPE.PROJECT_STATS_CARD,
             config: {
               source: TRACE_DATA_TYPE.traces,
@@ -126,7 +142,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-4",
-            title: i18next.t("common:dashboard.templates.projectOverview.latencyP99"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.latencyP99",
+            ),
             type: WIDGET_TYPE.PROJECT_STATS_CARD,
             config: {
               source: TRACE_DATA_TYPE.traces,
@@ -208,11 +226,15 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
       // Section 2: "Volume, latency & cost" — 3 charts
       {
         id: "template-section-2",
-        title: i18next.t("common:dashboard.templates.projectOverview.volumeLatencyCost"),
+        title: i18next.t(
+          "common:dashboard.templates.projectOverview.volumeLatencyCost",
+        ),
         widgets: [
           {
             id: "template-widget-6",
-            title: i18next.t("common:dashboard.templates.projectOverview.traceVolume"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.traceVolume",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.TRACE_COUNT,
@@ -223,7 +245,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-7",
-            title: i18next.t("common:dashboard.templates.projectOverview.traceDuration"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.traceDuration",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.TRACE_DURATION,
@@ -234,7 +258,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-8",
-            title: i18next.t("common:dashboard.templates.projectOverview.estimatedCost"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.estimatedCost",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.COST,
@@ -282,11 +308,15 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
       // Section 3: "Quality & conversations" — 4 charts
       {
         id: "template-section-3",
-        title: i18next.t("common:dashboard.templates.projectOverview.qualityConversations"),
+        title: i18next.t(
+          "common:dashboard.templates.projectOverview.qualityConversations",
+        ),
         widgets: [
           {
             id: "template-widget-9",
-            title: i18next.t("common:dashboard.templates.projectOverview.traceFeedbackScores"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.traceFeedbackScores",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.FEEDBACK_SCORES,
@@ -297,7 +327,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-10",
-            title: i18next.t("common:dashboard.templates.projectOverview.threadVolume"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.threadVolume",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.THREAD_COUNT,
@@ -307,7 +339,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-11",
-            title: i18next.t("common:dashboard.templates.projectOverview.threadDuration"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.threadDuration",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.THREAD_DURATION,
@@ -317,7 +351,9 @@ const PROJECT_OVERVIEW_TEMPLATE: DashboardTemplate = {
           },
           {
             id: "template-widget-12",
-            title: i18next.t("common:dashboard.templates.projectOverview.threadFeedbackScores"),
+            title: i18next.t(
+              "common:dashboard.templates.projectOverview.threadFeedbackScores",
+            ),
             type: WIDGET_TYPE.PROJECT_METRICS,
             config: {
               metricType: METRIC_NAME_TYPE.THREAD_FEEDBACK_SCORES,

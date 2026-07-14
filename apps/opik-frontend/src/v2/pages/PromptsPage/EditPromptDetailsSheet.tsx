@@ -93,7 +93,9 @@ const EditPromptDetailsSheet: React.FC<EditPromptDetailsSheetProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="editPromptDescription">{t("common.description")}</Label>
+            <Label htmlFor="editPromptDescription">
+              {t("common.description")}
+            </Label>
             <AutoGrowTextarea
               id="editPromptDescription"
               dimension="sm"

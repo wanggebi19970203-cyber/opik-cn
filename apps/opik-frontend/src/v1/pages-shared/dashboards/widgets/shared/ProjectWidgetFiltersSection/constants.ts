@@ -11,21 +11,62 @@ import { BaseTraceData, Thread, Span } from "@/types/traces";
 
 export const TRACE_FILTER_COLUMNS: ColumnData<BaseTraceData>[] = [
   { id: COLUMN_ID_ID, label: "ID", type: COLUMN_TYPE.string },
-  { id: "name", label: i18next.t("dashboards.filters.columns.name"), type: COLUMN_TYPE.string },
-  { id: "start_time", label: i18next.t("dashboards.filters.columns.startTime"), type: COLUMN_TYPE.time },
-  { id: "end_time", label: i18next.t("dashboards.filters.columns.endTime"), type: COLUMN_TYPE.time },
-  { id: "input", label: i18next.t("dashboards.filters.columns.input"), type: COLUMN_TYPE.string },
-  { id: "output", label: i18next.t("dashboards.filters.columns.output"), type: COLUMN_TYPE.string },
-  { id: "duration", label: i18next.t("dashboards.filters.columns.duration"), type: COLUMN_TYPE.duration },
+  {
+    id: "name",
+    label: i18next.t("dashboards.filters.columns.name"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "start_time",
+    label: i18next.t("dashboards.filters.columns.startTime"),
+    type: COLUMN_TYPE.time,
+  },
+  {
+    id: "end_time",
+    label: i18next.t("dashboards.filters.columns.endTime"),
+    type: COLUMN_TYPE.time,
+  },
+  {
+    id: "input",
+    label: i18next.t("dashboards.filters.columns.input"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "output",
+    label: i18next.t("dashboards.filters.columns.output"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "duration",
+    label: i18next.t("dashboards.filters.columns.duration"),
+    type: COLUMN_TYPE.duration,
+  },
   {
     id: COLUMN_METADATA_ID,
     label: i18next.t("dashboards.filters.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
-  { id: "tags", label: i18next.t("dashboards.filters.columns.tags"), type: COLUMN_TYPE.list, iconType: "tags" },
-  { id: "thread_id", label: i18next.t("dashboards.filters.columns.threadId"), type: COLUMN_TYPE.string },
-  { id: "error_info", label: i18next.t("dashboards.filters.columns.errors"), type: COLUMN_TYPE.errors },
-  { id: "error_type", label: i18next.t("dashboards.filters.columns.errorType"), type: COLUMN_TYPE.string },
+  {
+    id: "tags",
+    label: i18next.t("dashboards.filters.columns.tags"),
+    type: COLUMN_TYPE.list,
+    iconType: "tags",
+  },
+  {
+    id: "thread_id",
+    label: i18next.t("dashboards.filters.columns.threadId"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "error_info",
+    label: i18next.t("dashboards.filters.columns.errors"),
+    type: COLUMN_TYPE.errors,
+  },
+  {
+    id: "error_type",
+    label: i18next.t("dashboards.filters.columns.errorType"),
+    type: COLUMN_TYPE.string,
+  },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
     label: i18next.t("dashboards.filters.columns.feedbackScores"),
@@ -70,7 +111,12 @@ export const THREAD_FILTER_COLUMNS: ColumnData<Thread>[] = [
     label: i18next.t("dashboards.filters.columns.duration"),
     type: COLUMN_TYPE.duration,
   },
-  { id: "tags", label: i18next.t("dashboards.filters.columns.tags"), type: COLUMN_TYPE.list, iconType: "tags" },
+  {
+    id: "tags",
+    label: i18next.t("dashboards.filters.columns.tags"),
+    type: COLUMN_TYPE.list,
+    iconType: "tags",
+  },
   {
     id: "start_time",
     label: i18next.t("dashboards.filters.columns.startTime"),
@@ -90,21 +136,62 @@ export const THREAD_FILTER_COLUMNS: ColumnData<Thread>[] = [
 
 export const SPAN_FILTER_COLUMNS: ColumnData<Span>[] = [
   { id: COLUMN_ID_ID, label: "ID", type: COLUMN_TYPE.string },
-  { id: "name", label: i18next.t("dashboards.filters.columns.name"), type: COLUMN_TYPE.string },
-  { id: "start_time", label: i18next.t("dashboards.filters.columns.startTime"), type: COLUMN_TYPE.time },
-  { id: "end_time", label: i18next.t("dashboards.filters.columns.endTime"), type: COLUMN_TYPE.time },
-  { id: "type", label: i18next.t("dashboards.filters.columns.type"), type: COLUMN_TYPE.category },
-  { id: "input", label: i18next.t("dashboards.filters.columns.input"), type: COLUMN_TYPE.string },
-  { id: "output", label: i18next.t("dashboards.filters.columns.output"), type: COLUMN_TYPE.string },
-  { id: "duration", label: i18next.t("dashboards.filters.columns.duration"), type: COLUMN_TYPE.duration },
+  {
+    id: "name",
+    label: i18next.t("dashboards.filters.columns.name"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "start_time",
+    label: i18next.t("dashboards.filters.columns.startTime"),
+    type: COLUMN_TYPE.time,
+  },
+  {
+    id: "end_time",
+    label: i18next.t("dashboards.filters.columns.endTime"),
+    type: COLUMN_TYPE.time,
+  },
+  {
+    id: "type",
+    label: i18next.t("dashboards.filters.columns.type"),
+    type: COLUMN_TYPE.category,
+  },
+  {
+    id: "input",
+    label: i18next.t("dashboards.filters.columns.input"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "output",
+    label: i18next.t("dashboards.filters.columns.output"),
+    type: COLUMN_TYPE.string,
+  },
+  {
+    id: "duration",
+    label: i18next.t("dashboards.filters.columns.duration"),
+    type: COLUMN_TYPE.duration,
+  },
   {
     id: COLUMN_METADATA_ID,
     label: i18next.t("dashboards.filters.columns.metadata"),
     type: COLUMN_TYPE.dictionary,
   },
-  { id: "tags", label: i18next.t("dashboards.filters.columns.tags"), type: COLUMN_TYPE.list, iconType: "tags" },
-  { id: "error_info", label: i18next.t("dashboards.filters.columns.errors"), type: COLUMN_TYPE.errors },
-  { id: "error_type", label: i18next.t("dashboards.filters.columns.errorType"), type: COLUMN_TYPE.string },
+  {
+    id: "tags",
+    label: i18next.t("dashboards.filters.columns.tags"),
+    type: COLUMN_TYPE.list,
+    iconType: "tags",
+  },
+  {
+    id: "error_info",
+    label: i18next.t("dashboards.filters.columns.errors"),
+    type: COLUMN_TYPE.errors,
+  },
+  {
+    id: "error_type",
+    label: i18next.t("dashboards.filters.columns.errorType"),
+    type: COLUMN_TYPE.string,
+  },
   {
     id: COLUMN_FEEDBACK_SCORES_ID,
     label: i18next.t("dashboards.filters.columns.feedbackScores"),

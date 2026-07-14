@@ -223,7 +223,7 @@ const ProjectMetricsBreakdownSection: React.FC<
                                   ? TRACE_DATA_TYPE.spans
                                   : TRACE_DATA_TYPE.traces
                               }
-                              placeholder="key"
+                              placeholder={t("common.labels.key")}
                               excludeRoot={true}
                               value={field.value || ""}
                               onValueChange={(value) => {

@@ -28,15 +28,21 @@ const FeedbackScoreTableNoData: React.FC<FeedbackScoreTableNoDataProps> = ({
 
   const getDescription = () => {
     if (canUpdateOnlineEvaluationRules && canAnnotateTraceSpanThread) {
-      return t("feedbackScoreTable.descOnlineEvalAndAnnotate", { entity: entityCopy[entityType] });
+      return t("feedbackScoreTable.descOnlineEvalAndAnnotate", {
+        entity: entityCopy[entityType],
+      });
     }
 
     if (canAnnotateTraceSpanThread) {
-      return t("feedbackScoreTable.descSdkOnly", { entity: entityCopy[entityType] });
+      return t("feedbackScoreTable.descSdkOnly", {
+        entity: entityCopy[entityType],
+      });
     }
 
     if (canUpdateOnlineEvaluationRules) {
-      return t("feedbackScoreTable.descOnlineEvalOnly", { entity: entityCopy[entityType] });
+      return t("feedbackScoreTable.descOnlineEvalOnly", {
+        entity: entityCopy[entityType],
+      });
     }
 
     return "";

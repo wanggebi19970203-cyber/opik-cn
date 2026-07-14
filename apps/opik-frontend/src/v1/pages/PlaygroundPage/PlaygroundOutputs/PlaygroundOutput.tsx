@@ -73,7 +73,10 @@ const PlaygroundOutput = ({
     );
   };
 
-  const outputLabel = totalOutputs === 1 ? t("playground.outputs.output") : t("playground.outputs.outputs");
+  const outputLabel =
+    totalOutputs === 1
+      ? t("playground.outputs.output")
+      : t("playground.outputs.outputs");
 
   return (
     <div className="size-full min-w-[var(--min-prompt-width)]">

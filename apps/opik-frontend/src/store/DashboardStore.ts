@@ -255,7 +255,9 @@ export const useDashboardStore = create<DashboardStore>()(
           const newWidget: DashboardWidget = {
             ...widget,
             id: uniqid(),
-            title: `${widget.title || widget.generatedTitle || ""} ${i18next.t("dashboardStore.copySuffix")}`,
+            title: `${widget.title || widget.generatedTitle || ""} ${i18next.t(
+              "dashboardStore.copySuffix",
+            )}`,
           };
 
           const size = getLayoutItemSize(section.layout, widgetId);

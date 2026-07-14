@@ -54,7 +54,9 @@ export const FiltersArraySchema = z
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: i18next.t("common:validation.keyRequiredForDictionaryFields"),
+          message: i18next.t(
+            "common:validation.keyRequiredForDictionaryFields",
+          ),
           path: [index, "key"],
         });
       }

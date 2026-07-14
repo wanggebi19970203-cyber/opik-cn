@@ -142,7 +142,7 @@ const getMenuItems = ({
                 path: projectPath("/prompts"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: FileTerminal,
-                label: "Prompt library",
+                label: t("navigation.menu.prompts"),
                 disabled: !projectPrefix,
               },
             ]
@@ -154,7 +154,7 @@ const getMenuItems = ({
                 path: projectPath("/agent-playground"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: GitBranch,
-                label: "Agent playground",
+                label: t("navigation.menu.agent_runner"),
                 disabled: !projectPrefix,
               },
             ]
@@ -242,7 +242,7 @@ const getMenuItems = ({
                 path: projectPath("/online-evaluation"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: Brain,
-                label: "Online evaluation",
+                label: t("navigation.menu.online_evaluation"),
                 disabled: !projectPrefix,
               },
             ]
@@ -254,7 +254,7 @@ const getMenuItems = ({
                 path: projectPath("/alerts"),
                 type: MENU_ITEM_TYPE.router as const,
                 icon: Bell,
-                label: "Alerts",
+                label: t("navigation.menu.alerts"),
                 disabled: !projectPrefix,
               },
             ]

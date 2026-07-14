@@ -177,7 +177,9 @@ const MessagesTab: React.FunctionComponent<MessagesTabProps> = ({
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">
-        {isAllExpanded ? t("treeToolbar.collapseAll") : t("treeToolbar.expandAll")}
+        {isAllExpanded
+          ? t("treeToolbar.collapseAll")
+          : t("treeToolbar.expandAll")}
       </TooltipContent>
     </Tooltip>
   );
@@ -273,7 +275,9 @@ const MessagesTab: React.FunctionComponent<MessagesTabProps> = ({
             )}
           </>
         ) : (
-          <div className="text-sm text-muted-foreground">{t("messages.noMessages")}</div>
+          <div className="text-sm text-muted-foreground">
+            {t("messages.noMessages")}
+          </div>
         )}
       </CollapsibleSection>
     </MediaProvider>

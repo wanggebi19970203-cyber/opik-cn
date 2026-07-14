@@ -97,7 +97,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
     workspaceName,
   });
 
-  const progressMessages = PROMPT_IMPROVEMENT_PROGRESS_MESSAGE_KEYS.map((key) => t(key));
+  const progressMessages = PROMPT_IMPROVEMENT_PROGRESS_MESSAGE_KEYS.map((key) =>
+    t(key),
+  );
   const { message: progressMessage } = useProgressSimulation({
     messages: progressMessages,
     isPending: isLoading && !generatedPrompt,
@@ -111,7 +113,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
   } = useMemo(() => parseLLMMessageContent(originalPrompt), [originalPrompt]);
 
   const isGenerateMode = !originalPromptText?.trim();
-  const title = isGenerateMode ? t("promptImprovement.generatePrompt") : t("promptImprovement.improvePrompt");
+  const title = isGenerateMode
+    ? t("promptImprovement.generatePrompt")
+    : t("promptImprovement.improvePrompt");
   const hasInstructions = Boolean(userInstructions.trim());
 
   useEffect(() => {
@@ -192,13 +196,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
         result?.choices?.[0]?.finish_reason === "length" ||
         result?.choices?.some((choice) => choice.finish_reason === "length")
       ) {
-        setError(
-          t("promptImprovement.promptCutOff"),
-        );
+        setError(t("promptImprovement.promptCutOff"));
       } else if (!result?.result || !result.result.trim()) {
-        setError(
-          t("promptImprovement.noContentReturned"),
-        );
+        setError(t("promptImprovement.noContentReturned"));
       }
     } catch (err) {
       const errorMessage =
@@ -220,6 +220,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
     originalPromptText,
     model,
     configs,
+    t,
   ]);
 
   const hasPrompt = generatedPrompt.trim() && !isLoading && !error;
@@ -266,7 +267,7 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
       ? PROVIDERS[parseComposedProviderType(provider)]?.label
       : "";
     return providerLabel ? `${providerLabel} ${model}` : model;
-  }, [model, provider]);
+  }, [model, provider, t]);
 
   const renderInstructionsSection = (height: string) => (
     <div className="flex flex-1 flex-col gap-2">
@@ -290,7 +291,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
     <div className="flex flex-col gap-2">
       <div className="comet-body-accented">{label}</div>
       <Description>
-        {t("promptImprovement.generatedPromptDescription", { modelDisplayName })}
+        {t("promptImprovement.generatedPromptDescription", {
+          modelDisplayName,
+        })}
       </Description>
     </div>
   );
@@ -391,7 +394,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
       <div className="relative grid grid-cols-2 gap-x-14 gap-y-3">
         {renderArrow()}
         <div className="flex flex-col gap-2">
-          <div className="comet-body-accented">{t("promptImprovement.yourInitialPrompt")}</div>
+          <div className="comet-body-accented">
+            {t("promptImprovement.yourInitialPrompt")}
+          </div>
           <Description>
             {t("promptImprovement.initialPromptDescription")}
           </Description>
@@ -402,7 +407,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
             {originalPromptText}
           </div>
           <div className="mt-1 flex flex-col">
-            <div className="comet-title-xs">{t("promptImprovement.instructionsOptional")}</div>
+            <div className="comet-title-xs">
+              {t("promptImprovement.instructionsOptional")}
+            </div>
             <Description>
               {t("promptImprovement.instructionsDescription")}
             </Description>
@@ -420,7 +427,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
       <div className="relative grid grid-cols-2 gap-x-14 gap-y-3 pb-4">
         {renderArrow()}
         <div className="flex flex-col gap-2">
-          <div className="comet-body-accented">{t("promptImprovement.instructions")}</div>
+          <div className="comet-body-accented">
+            {t("promptImprovement.instructions")}
+          </div>
           <Description>
             {t("promptImprovement.instructionsDescription")}
           </Description>
@@ -454,7 +463,9 @@ const PromptImprovementDialog: React.FC<PromptImprovementDialogProps> = ({
         </DialogHeader>
         <DialogAutoScrollBody>
           <div className="mb-4 flex items-center gap-3">
-            <div className="comet-body-accented shrink-0">{t("promptImprovement.modelLabel")}</div>
+            <div className="comet-body-accented shrink-0">
+              {t("promptImprovement.modelLabel")}
+            </div>
             <div className="w-64">
               <PromptModelSelect
                 workspaceName={workspaceName}

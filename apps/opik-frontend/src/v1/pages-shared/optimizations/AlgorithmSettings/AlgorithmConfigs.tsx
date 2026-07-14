@@ -87,13 +87,15 @@ const AlgorithmConfigs = ({
       >
         <div className="mb-5 w-72">
           <div className="mb-1 flex items-center gap-1">
-            <h3 className="comet-body-s-accented">{t('optimizations.algorithmConfigs.title')}</h3>
+            <h3 className="comet-body-s-accented">
+              {t("optimizations.algorithmConfigs.title")}
+            </h3>
             <ExplainerIcon
               {...EXPLAINERS_MAP[EXPLAINER_ID.whats_the_algorithm_settings]}
             />
           </div>
           <p className="comet-body-xs text-muted-slate">
-            {t('optimizations.algorithmConfigs.description')}
+            {t("optimizations.algorithmConfigs.description")}
           </p>
         </div>
         {getOptimizerForm()}

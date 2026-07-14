@@ -26,13 +26,13 @@ const LLMJudgeScores = ({
     onChange([
       ...scores,
       {
-        name: "Score name",
-        description: "Score description",
+        name: t("llm:judgeScores.defaultName"),
+        description: t("llm:judgeScores.defaultDescription"),
         type: LLM_SCHEMA_TYPE.INTEGER,
         unsaved: false,
       },
     ]);
-  }, [onChange, scores]);
+  }, [onChange, scores, t]);
 
   const handleRemoveScore = useCallback(
     (index: number) => {

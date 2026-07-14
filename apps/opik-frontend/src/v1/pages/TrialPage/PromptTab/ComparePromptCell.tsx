@@ -43,7 +43,11 @@ const ComparePromptCell: React.FC<CellContext<ComparePromptConfig, unknown>> = (
 
   const renderContent = () => {
     if (isUndefined(data) || data === "-") {
-      return <span className="px-1.5 py-2.5 text-light-slate">{t("common.messages.noValue")}</span>;
+      return (
+        <span className="px-1.5 py-2.5 text-light-slate">
+          {t("common.messages.noValue")}
+        </span>
+      );
     }
 
     if (showDiffView) {
@@ -59,7 +63,9 @@ const ComparePromptCell: React.FC<CellContext<ComparePromptConfig, unknown>> = (
         <PromptDisplay
           data={data}
           fallback={
-            <span className="text-light-slate">{t("common.messages.unableToParsePrompt")}</span>
+            <span className="text-light-slate">
+              {t("common.messages.unableToParsePrompt")}
+            </span>
           }
         />
       </div>

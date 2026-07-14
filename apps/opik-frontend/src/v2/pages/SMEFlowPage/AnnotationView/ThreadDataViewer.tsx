@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { keepPreviousData } from "@tanstack/react-query";
 import { JsonParam, StringParam, useQueryParam } from "use-query-params";
 import { ArrowUpRight, Loader2, MessagesSquare } from "lucide-react";
@@ -140,6 +141,7 @@ const useThreadData = () => {
 };
 
 const ThreadHeader: React.FC = () => {
+  const { t } = useTranslation("pages/sme");
   const { thread, isFetching, handleOpenThread } = useThreadData();
 
   const dateRange = formatThreadDateRange(thread?.start_time, thread?.end_time);
@@ -150,7 +152,9 @@ const ThreadHeader: React.FC = () => {
         {isFetching && (
           <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-slate" />
         )}
-        <span className="comet-body-xs-accented shrink-0">Thread:</span>
+        <span className="comet-body-xs-accented shrink-0">
+          {t("sme.threadDataViewer.threadLabel")}
+        </span>
         <div className="flex size-4 shrink-0 items-center justify-center rounded bg-[var(--thread-icon-background)] text-[var(--thread-icon-text)]">
           <MessagesSquare className="size-2" />
         </div>
@@ -158,7 +162,7 @@ const ThreadHeader: React.FC = () => {
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <Button variant="ghost" size="2xs" onClick={handleOpenThread}>
-          Thread
+          {t("sme.threadDataViewer.thread")}
           <ArrowUpRight className="ml-1 size-3" />
         </Button>
       </div>

@@ -28,18 +28,34 @@ export const INTERVAL_DESCRIPTIONS = {
     [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.hourlyAverages"),
     [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.dailyAverages"),
     [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.weeklyAverages"),
-    [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.wholePeriodAverages"),
+    [INTERVAL_TYPE.TOTAL]: i18next.t(
+      "dashboards.chartUtils.wholePeriodAverages",
+    ),
   },
   QUANTILES: {
-    [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.hourlyQuantilesInSeconds"),
-    [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.dailyQuantilesInSeconds"),
-    [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.weeklyQuantilesInSeconds"),
-    [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.wholePeriodQuantilesInSeconds"),
+    [INTERVAL_TYPE.HOURLY]: i18next.t(
+      "dashboards.chartUtils.hourlyQuantilesInSeconds",
+    ),
+    [INTERVAL_TYPE.DAILY]: i18next.t(
+      "dashboards.chartUtils.dailyQuantilesInSeconds",
+    ),
+    [INTERVAL_TYPE.WEEKLY]: i18next.t(
+      "dashboards.chartUtils.weeklyQuantilesInSeconds",
+    ),
+    [INTERVAL_TYPE.TOTAL]: i18next.t(
+      "dashboards.chartUtils.wholePeriodQuantilesInSeconds",
+    ),
   },
   COST: {
-    [INTERVAL_TYPE.HOURLY]: i18next.t("dashboards.chartUtils.totalHourlyCostInUsd"),
-    [INTERVAL_TYPE.DAILY]: i18next.t("dashboards.chartUtils.totalDailyCostInUsd"),
-    [INTERVAL_TYPE.WEEKLY]: i18next.t("dashboards.chartUtils.totalWeeklyCostInUsd"),
+    [INTERVAL_TYPE.HOURLY]: i18next.t(
+      "dashboards.chartUtils.totalHourlyCostInUsd",
+    ),
+    [INTERVAL_TYPE.DAILY]: i18next.t(
+      "dashboards.chartUtils.totalDailyCostInUsd",
+    ),
+    [INTERVAL_TYPE.WEEKLY]: i18next.t(
+      "dashboards.chartUtils.totalWeeklyCostInUsd",
+    ),
     [INTERVAL_TYPE.TOTAL]: i18next.t("dashboards.chartUtils.totalCostInUsd"),
   },
 } as const;

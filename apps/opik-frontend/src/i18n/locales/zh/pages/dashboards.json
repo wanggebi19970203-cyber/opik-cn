@@ -32,7 +32,11 @@
     "deleteConfirm": "删除",
     "widgetCount": "{{count}} 个组件",
     "nameRequired": "名称为必填项",
-    "nameMaxLength": "名称必须少于100个字符"
+    "nameMaxLength": "名称必须少于100个字符",
+    "validation": {
+      "nameRequired": "名称为必填项",
+      "nameMaxLength": "名称必须少于100个字符"
+    }
   },
   "dashboards": {
     "title": "仪表盘",
@@ -303,6 +307,7 @@
     "title": "过滤器",
     "filterTracesDescription": "使用过滤器定位特定Trace，或留空以应用于所有。",
     "keyPlaceholder": "键",
+    "invalidCustomKey": "键必须以 \"input\" 或 \"output\" 开头（例如 \"input.message\"）",
     "selectScore": "选择分数",
     "experimentsLabel": "实验",
     "datasetLabel": "数据集",
@@ -373,5 +378,49 @@
     "totalDailyCostInUsd": "每日总成本（美元）",
     "totalWeeklyCostInUsd": "每周总成本（美元）",
     "totalCostInUsd": "总成本（美元）"
+  },
+  "validation": {
+    "nameRequired": "名称为必填项",
+    "nameMaxLength": "名称必须少于100个字符",
+    "descriptionMaxLength": "描述必须少于255个字符"
+  },
+  "breakdownGroups": {
+    "others": "其他",
+    "unknown": "未知"
+  },
+  "breakdownDrilldown": {
+    "noError": "无错误",
+    "hasError": "有错误"
+  },
+  "schema": {
+    "metricRequired": "指标为必填项"
+  },
+  "projectStatsCard": {
+    "projectStatistics": "项目统计",
+    "metricTitles": {
+      "traceCount": "总Trace数量",
+      "threadCount": "总Thread数量",
+      "spanCount": "总Span数量",
+      "averageSpanCount": "平均Span数量",
+      "llmSpanCount": "平均LLM Span数量",
+      "sourceTrace": "追踪",
+      "sourceSpan": "跨度",
+      "errorCount": "总{{source}}错误数量",
+      "p50Duration": "P50 {{source}}持续时间",
+      "p90Duration": "P90 {{source}}持续时间",
+      "p99Duration": "P99 {{source}}持续时间",
+      "avgCostPerTrace": "每条Trace平均成本",
+      "avgCostPerSpan": "每个Span平均成本",
+      "totalCostSum": "总{{source}}成本",
+      "avgOutputTokens": "平均{{source}}输出Token数",
+      "avgInputTokens": "平均{{source}}输入Token数",
+      "avgTotalTokens": "平均{{source}}总Token数",
+      "inputCount": "总{{source}}输入数量",
+      "outputCount": "总{{source}}输出数量",
+      "metadataCount": "总{{source}}元数据数量",
+      "tagsCount": "平均{{source}}标签数",
+      "guardrailsFailed": "总{{source}}护栏失败数"
+    },
+    "averageScore": "平均{{source}}{{name}}"
   }
 }

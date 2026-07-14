@@ -70,7 +70,9 @@ import {
 import useQueryParamAndLocalStorageState from "@/hooks/useQueryParamAndLocalStorageState";
 import { capitalizeFirstLetter } from "@/lib/utils";
 
-const getSharedColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
+const getSharedColumns = (
+  t: (key: string) => string,
+): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_ID_ID,
     label: t("annotationQueues.columns.id"),
@@ -113,7 +115,9 @@ const getSharedColumns = (t: (key: string) => string): ColumnData<AnnotationQueu
   },
 ];
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
     label: t("annotationQueues.columns.name"),
@@ -154,7 +158,9 @@ const getDefaultColumns = (t: (key: string) => string): ColumnData<AnnotationQue
   },
 ];
 
-const getFilterColumns = (t: (key: string) => string): ColumnData<AnnotationQueue>[] => [
+const getFilterColumns = (
+  t: (key: string) => string,
+): ColumnData<AnnotationQueue>[] => [
   {
     id: COLUMN_NAME_ID,
     label: t("annotationQueues.columns.name"),
@@ -205,8 +211,14 @@ const getFiltersConfig = (t: (key: string) => string) => ({
     scope: {
       keyComponentProps: {
         options: [
-          { value: ANNOTATION_QUEUE_SCOPE.TRACE, label: t("annotationQueues.filters.trace") },
-          { value: ANNOTATION_QUEUE_SCOPE.THREAD, label: t("annotationQueues.filters.thread") },
+          {
+            value: ANNOTATION_QUEUE_SCOPE.TRACE,
+            label: t("annotationQueues.filters.trace"),
+          },
+          {
+            value: ANNOTATION_QUEUE_SCOPE.THREAD,
+            label: t("annotationQueues.filters.thread"),
+          },
         ],
         placeholder: t("annotationQueues.filters.selectScope"),
       },
@@ -363,7 +375,7 @@ export const AnnotationQueuesPage: React.FC = () => {
         cell: AnnotationQueueRowActionsCell,
       }),
     ];
-  }, [sortableBy, columnsOrder, selectedColumns]);
+  }, [sortableBy, columnsOrder, selectedColumns, t]);
 
   const sortConfig = useMemo(
     () => ({
@@ -406,7 +418,9 @@ export const AnnotationQueuesPage: React.FC = () => {
           title={t("annotationQueues.empty.title")}
           description={t("annotationQueues.empty.description")}
           primaryActionLabel={
-            canCreateAnnotationQueues ? t("annotationQueues.empty.action") : undefined
+            canCreateAnnotationQueues
+              ? t("annotationQueues.empty.action")
+              : undefined
           }
           onPrimaryAction={
             canCreateAnnotationQueues ? handleNewQueue : undefined

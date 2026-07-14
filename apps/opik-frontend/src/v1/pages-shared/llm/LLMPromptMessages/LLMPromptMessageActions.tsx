@@ -138,8 +138,9 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
         if (!hasModel) {
           toast({
             title: t("llmPromptMessageActions.modelConfigurationRequired"),
-            description:
-              t("llmPromptMessageActions.modelConfigurationRequiredDescription"),
+            description: t(
+              "llmPromptMessageActions.modelConfigurationRequiredDescription",
+            ),
           });
           return;
         }
@@ -156,6 +157,7 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
     hasContent,
     hasModel,
     onChangeMessage,
+    t,
     toast,
   ]);
 
@@ -254,11 +256,15 @@ const LLMPromptMessageActions: React.FC<LLMPromptLibraryActionsProps> = ({
           ? resetHandler()
           : handleUpdateExternalPromptId(tempPromptIdRef.current);
       },
-      title: isReset ? t("llmPromptMessageActions.resetPrompt") : t("llmPromptMessageActions.loadPrompt"),
+      title: isReset
+        ? t("llmPromptMessageActions.resetPrompt")
+        : t("llmPromptMessageActions.loadPrompt"),
       description: isReset
         ? t("llmPromptMessageActions.resetPromptDescription")
         : t("llmPromptMessageActions.loadPromptDescription"),
-      confirmText: isReset ? t("llmPromptMessageActions.resetPrompt") : t("llmPromptMessageActions.loadPrompt"),
+      confirmText: isReset
+        ? t("llmPromptMessageActions.resetPrompt")
+        : t("llmPromptMessageActions.loadPrompt"),
     };
   }, [handleUpdateExternalPromptId, open, resetHandler, t]);
 

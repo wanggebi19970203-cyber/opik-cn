@@ -23,7 +23,9 @@ const PassFailBadge: React.FC<PassFailBadgeProps> = ({ status }) => {
   const { t } = useTranslation("experiments");
   if (!status) return null;
 
-  return <Tag variant={STATUS_VARIANT_MAP[status]}>{t(STATUS_I18N_KEY[status])}</Tag>;
+  return (
+    <Tag variant={STATUS_VARIANT_MAP[status]}>{t(STATUS_I18N_KEY[status])}</Tag>
+  );
 };
 
 export default PassFailBadge;

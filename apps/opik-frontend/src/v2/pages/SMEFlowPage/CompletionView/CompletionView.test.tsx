@@ -42,15 +42,17 @@ describe("CompletionView", () => {
   it("should render completion message and UI elements", () => {
     render(<CompletionView header={<div>Header</div>} />);
 
-    expect(screen.getByText("All items completed!")).toBeInTheDocument();
     expect(
-      screen.getByText(/All annotations in this queue are complete/),
+      screen.getByText("completionView.allItemsCompleted"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("completionView.allAnnotationsComplete"),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("🎉")).toBeInTheDocument();
+    expect(screen.getByTestId("completion-icon")).toBeInTheDocument();
 
     const reviewButton = screen.getByRole("button", {
-      name: /review annotations/i,
+      name: "completionView.reviewAnnotationsAriaLabel",
     });
     expect(reviewButton).toBeInTheDocument();
     expect(reviewButton.querySelector("svg")).toBeInTheDocument();
@@ -62,7 +64,7 @@ describe("CompletionView", () => {
     render(<CompletionView header={<div>Header</div>} />);
 
     const reviewButton = screen.getByRole("button", {
-      name: /review annotations/i,
+      name: "completionView.reviewAnnotationsAriaLabel",
     });
     fireEvent.click(reviewButton);
 

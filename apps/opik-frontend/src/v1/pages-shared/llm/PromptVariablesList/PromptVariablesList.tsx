@@ -14,7 +14,8 @@ const PromptVariablesList: React.FC<PromptVariablesListProps> = ({
   tooltipContent,
 }) => {
   const { t } = useTranslation("prompt");
-  const resolvedTooltipContent = tooltipContent ?? t("promptVariablesList.clickToInsert");
+  const resolvedTooltipContent =
+    tooltipContent ?? t("promptVariablesList.clickToInsert");
   if (variables.length === 0) return null;
 
   return (

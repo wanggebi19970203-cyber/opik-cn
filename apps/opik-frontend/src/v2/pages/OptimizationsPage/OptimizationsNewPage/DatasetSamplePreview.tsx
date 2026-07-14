@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import CopyButton from "@/shared/CopyButton/CopyButton";
 import CodeHighlighter from "@/shared/CodeHighlighter/CodeHighlighter";
 import { SUPPORTED_LANGUAGE } from "@/constants/codeLanguage";
@@ -11,6 +12,7 @@ interface DatasetSamplePreviewProps {
 const DatasetSamplePreview: React.FC<DatasetSamplePreviewProps> = ({
   datasetSample,
 }) => {
+  const { t } = useTranslation("pages/optimizations");
   const [isSampleExpanded, setIsSampleExpanded] = useState(false);
 
   const formattedSample = useMemo(
@@ -37,12 +39,12 @@ const DatasetSamplePreview: React.FC<DatasetSamplePreviewProps> = ({
           ) : (
             <ChevronRight className="size-3 shrink-0" />
           )}
-          Sample payload
+          {t("newRun.samplePayload")}
         </button>
         {isSampleExpanded && (
           <CopyButton
             text={formattedSample}
-            tooltipText="Copy sample payload"
+            tooltipText={t("newRun.copySamplePayload")}
             size="icon-2xs"
             variant="ghost"
           />

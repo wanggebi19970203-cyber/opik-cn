@@ -147,7 +147,9 @@ const getSharedColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   },
 ];
 
-const getDefaultColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
     label: t("tracing.tracesSpansTab.columns.id"),
@@ -433,7 +435,9 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   );
 
   const noData = !search && filters.length === 0;
-  const noDataText = noData ? t("tracing.traceLogs.noTracesYet") : t("tracing.actions.noSearchResults");
+  const noDataText = noData
+    ? t("tracing.traceLogs.noTracesYet")
+    : t("tracing.actions.noSearchResults");
 
   const filtersConfig = useMemo(
     () => ({

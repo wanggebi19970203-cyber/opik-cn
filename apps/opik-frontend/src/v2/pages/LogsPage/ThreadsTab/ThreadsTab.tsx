@@ -120,10 +120,10 @@ const DurationExplainCell = withExplain(
 );
 const CostExplainCell = withExplain(CostCell as never, buildThreadCostTarget);
 
-const SHARED_COLUMNS: ColumnData<Thread>[] = [
+const getSharedColumns = (t: (key: string) => string): ColumnData<Thread>[] => [
   {
     id: "first_message",
-    label: "First message",
+    label: t("logs.threads.columns.firstMessage"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -134,7 +134,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "last_message",
-    label: "Last message",
+    label: t("logs.threads.columns.lastMessage"),
     size: 400,
     type: COLUMN_TYPE.string,
     cell: PrettyCell as never,
@@ -145,14 +145,14 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "number_of_messages",
-    label: "Message count",
+    label: t("logs.threads.columns.messageCount"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       isNumber(row.number_of_messages) ? `${row.number_of_messages}` : "-",
   },
   {
     id: "duration",
-    label: "Duration",
+    label: t("logs.columns.duration"),
     type: COLUMN_TYPE.duration,
     cell: DurationExplainCell as never,
     statisticDataFormater: formatDuration,
@@ -161,13 +161,13 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("logs.filters.tags"),
     type: COLUMN_TYPE.list,
     cell: ListCell as never,
   },
   {
     id: "start_time",
-    label: "Start time",
+    label: t("logs.columns.startTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -176,7 +176,7 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "end_time",
-    label: "End time",
+    label: t("logs.columns.endTime"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
     customMeta: {
@@ -185,18 +185,20 @@ const SHARED_COLUMNS: ColumnData<Thread>[] = [
   },
 ];
 
-const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<Thread>[] => [
   {
     id: COLUMN_ID_ID,
-    label: "ID",
+    label: t("logs.columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
     sortable: true,
   },
-  ...SHARED_COLUMNS,
+  ...getSharedColumns(t),
   {
     id: `${COLUMN_USAGE_ID}.total_tokens`,
-    label: "Total tokens",
+    label: t("logs.threads.columns.totalTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.total_tokens)
@@ -206,7 +208,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: `${COLUMN_USAGE_ID}.prompt_tokens`,
-    label: "Total input tokens",
+    label: t("logs.threads.columns.totalInputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.prompt_tokens)
@@ -216,7 +218,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: `${COLUMN_USAGE_ID}.completion_tokens`,
-    label: "Total output tokens",
+    label: t("logs.threads.columns.totalOutputTokens"),
     type: COLUMN_TYPE.number,
     accessorFn: (row) =>
       row.usage && isNumber(row.usage.completion_tokens)
@@ -226,7 +228,7 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "total_estimated_cost",
-    label: "Estimated cost",
+    label: t("logs.threads.columns.estimatedCost"),
     type: COLUMN_TYPE.cost,
     cell: CostExplainCell as never,
     explainer: EXPLAINERS_MAP[EXPLAINER_ID.hows_the_thread_cost_estimated],
@@ -238,12 +240,12 @@ const DEFAULT_COLUMNS: ColumnData<Thread>[] = [
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("logs.threads.columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
   {
     id: COLUMN_COMMENTS_ID,
-    label: "Comments",
+    label: t("logs.threads.columns.comments"),
     type: COLUMN_TYPE.string,
     cell: CommentsCell as never,
   },
@@ -282,25 +284,27 @@ const DEFAULT_THREADS_COLUMNS_ORDER: string[] = [
   "created_by",
 ];
 
-const THREAD_CHIP_DEFINITIONS: ChipDefinition[] = [
+const getThreadChipDefinitions = (
+  t: (key: string) => string,
+): ChipDefinition[] => [
   {
     id: "start_time",
     field: "start_time",
-    label: "Start time",
+    label: t("logs.columns.startTime"),
     kind: "time",
     columnType: COLUMN_TYPE.time,
   },
   {
     id: "end_time",
     field: "end_time",
-    label: "End time",
+    label: t("logs.columns.endTime"),
     kind: "time",
     columnType: COLUMN_TYPE.time,
   },
   {
     id: "duration",
     field: "duration",
-    label: "Duration",
+    label: t("logs.columns.duration"),
     kind: "numeric",
     columnType: COLUMN_TYPE.duration,
     format: "duration",
@@ -308,7 +312,7 @@ const THREAD_CHIP_DEFINITIONS: ChipDefinition[] = [
   {
     id: "number_of_messages",
     field: "number_of_messages",
-    label: "Message count",
+    label: t("logs.threads.columns.messageCount"),
     kind: "numeric",
     columnType: COLUMN_TYPE.number,
     format: "integer",
@@ -316,42 +320,42 @@ const THREAD_CHIP_DEFINITIONS: ChipDefinition[] = [
   {
     id: "first_message",
     field: "first_message",
-    label: "First message",
+    label: t("logs.threads.columns.firstMessage"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search first message" },
+    value: { placeholder: t("logs.threads.filters.searchFirstMessage") },
   },
   {
     id: "last_message",
     field: "last_message",
-    label: "Last message",
+    label: t("logs.threads.columns.lastMessage"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Search last message" },
+    value: { placeholder: t("logs.threads.filters.searchLastMessage") },
   },
   {
     id: "id",
     field: "id",
-    label: "Thread ID",
+    label: t("logs.threads.columns.threadId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.string,
     operators: STRING_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter thread ID" },
+    value: { placeholder: t("logs.threads.filters.enterThreadId") },
   },
   {
     id: "annotation_queue_ids",
     field: "annotation_queue_ids",
-    label: "Annotation queue ID",
+    label: t("logs.threads.columns.annotationQueueId"),
     kind: "query-builder",
     columnType: COLUMN_TYPE.list,
     operators: LIST_OPERATORS,
     defaultOperator: "contains",
-    value: { placeholder: "Enter annotation queue ID" },
+    value: { placeholder: t("logs.threads.filters.enterAnnotationQueueId") },
   },
 ];
 
@@ -396,41 +400,14 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   const { open: openQuickstart } = useOpenQuickStartDialog();
   const truncationEnabled = useTruncationEnabled();
 
-  const columnLabelMap: Record<string, string> = useMemo(
-    () => ({
-      first_message: t("logs.threads.columns.firstMessage"),
-      last_message: t("logs.threads.columns.lastMessage"),
-      number_of_messages: t("logs.threads.columns.messageCount"),
-      duration: t("logs.columns.duration"),
-      tags: t("logs.filters.tags"),
-      start_time: t("logs.columns.startTime"),
-      end_time: t("logs.columns.startTime").replace(
-        t("logs.columns.startTime").split(" ")[0],
-        "End",
-      ),
-      [`${COLUMN_USAGE_ID}.total_tokens`]: t(
-        "logs.threads.columns.totalTokens",
-      ),
-      [`${COLUMN_USAGE_ID}.prompt_tokens`]: t(
-        "logs.threads.columns.totalInputTokens",
-      ),
-      [`${COLUMN_USAGE_ID}.completion_tokens`]: t(
-        "logs.threads.columns.totalOutputTokens",
-      ),
-      total_estimated_cost: t("logs.threads.columns.estimatedCost"),
-      created_by: t("logs.threads.columns.createdBy"),
-      comments: t("logs.threads.columns.comments"),
-    }),
-    [t],
-  );
+  const defaultColumns = useMemo(() => getDefaultColumns(t), [t]);
 
   const translatedDefaultColumns = useMemo(
     () =>
-      DEFAULT_COLUMNS.map((col) => ({
+      defaultColumns.map((col) => ({
         ...col,
-        label: columnLabelMap[col.id] ?? col.label,
       })),
-    [columnLabelMap],
+    [defaultColumns],
   );
 
   const chipLabelMap: Record<
@@ -439,12 +416,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   > = useMemo(
     () => ({
       start_time: { label: t("logs.columns.startTime") },
-      end_time: {
-        label: t("logs.columns.startTime").replace(
-          t("logs.columns.startTime").split(" ")[0],
-          "End",
-        ),
-      },
+      end_time: { label: t("logs.columns.endTime") },
       duration: { label: t("logs.columns.duration") },
       number_of_messages: { label: t("logs.threads.columns.messageCount") },
       first_message: {
@@ -548,7 +520,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
   );
 
   const threadChipDefinitions = useMemo<ChipDefinition[]>(() => {
-    const translatedStaticChips = THREAD_CHIP_DEFINITIONS.map((chip) => {
+    const translatedStaticChips = getThreadChipDefinitions(t).map((chip) => {
       const mapped = chipLabelMap[chip.id];
       if (!mapped) return chip;
       const base = { ...chip, label: mapped.label ?? chip.label };
@@ -843,7 +815,8 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
               customMeta: {
                 ...col.customMeta,
                 onItemClick: addThreadTagFilter,
-                getItemTooltip: (tag: string) => `Filter by tag: "${tag}"`,
+                getItemTooltip: (tag: string) =>
+                  t("logs.tracesSpans.filterByTag", { tag }),
               },
             }
           : col,
@@ -875,6 +848,7 @@ export const ThreadsTab: React.FC<ThreadsTabProps> = ({
     handleRowClick,
     addThreadTagFilter,
     translatedDefaultColumns,
+    t,
   ]);
 
   const columnsToExport = useMemo(() => {

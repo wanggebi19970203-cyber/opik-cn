@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { Database, FlaskConical, ListChecks, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/ui/button";
 import {
@@ -36,26 +37,25 @@ import {
   toPlainDatasetId,
 } from "@/utils/datasetVersionStorage";
 
-const ENTRY_OPTIONS = [
-  {
-    type: DATASET_TYPE.DATASET,
-    testId: "run-experiment-source-dataset",
-    Icon: Database,
-    iconClassName: "text-chart-burgundy",
-    title: "Dataset",
-    description:
-      "Run prompts against a dataset. Results will be scored using selected metrics.",
-  },
-  {
-    type: DATASET_TYPE.TEST_SUITE,
-    testId: "run-experiment-source-test-suite",
-    Icon: ListChecks,
-    iconClassName: "text-chart-green",
-    title: "Test suite",
-    description:
-      "Run prompts against a test suite. Results will be scored using the assertions defined on the suite.",
-  },
-] as const;
+const getEntryOptions = (t: (key: string) => string) =>
+  [
+    {
+      type: DATASET_TYPE.DATASET,
+      testId: "run-experiment-source-dataset",
+      Icon: Database,
+      iconClassName: "text-chart-burgundy",
+      title: t("runExperiment.dataset"),
+      description: t("runExperiment.datasetDescription"),
+    },
+    {
+      type: DATASET_TYPE.TEST_SUITE,
+      testId: "run-experiment-source-test-suite",
+      Icon: ListChecks,
+      iconClassName: "text-chart-green",
+      title: t("runExperiment.testSuite"),
+      description: t("runExperiment.testSuiteDescription"),
+    },
+  ] as const;
 
 interface RunExperimentControlProps {
   workspaceName: string;
@@ -74,6 +74,7 @@ const RunExperimentControl: React.FC<RunExperimentControlProps> = ({
   onChangeDatasetId,
   onLeaveExperimentMode,
 }) => {
+  const { t } = useTranslation("pages/playground");
   const activeProjectId = useActiveProjectId();
   const storedDatasetType = useDatasetType();
   const scoresByDatasetId = useScoresByDatasetId();
@@ -257,7 +258,7 @@ const RunExperimentControl: React.FC<RunExperimentControlProps> = ({
       <button
         className="flex h-full items-center px-1 text-light-slate hover:text-primary-hover"
         onClick={handleClickX}
-        aria-label="Clear selection"
+        aria-label={t("runExperiment.clearSelection")}
       >
         <X className="size-3.5" />
       </button>
@@ -274,11 +275,11 @@ const RunExperimentControl: React.FC<RunExperimentControlProps> = ({
           size="2xs"
         >
           <FlaskConical className="mr-1 size-3" />
-          Run experiment
+          {t("playground.header.runExperiment")}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[380px] p-1">
-        {ENTRY_OPTIONS.map(
+        {getEntryOptions(t).map(
           ({ type, testId, Icon, iconClassName, title, description }) => (
             <DropdownMenuItem
               key={type}

@@ -98,102 +98,106 @@ const TYPE_CONFIG = {
   },
 } as const;
 
-const DEFAULT_COLUMNS: ColumnData<Dataset>[] = [
+const getDefaultColumns = (
+  t: (key: string) => string,
+): ColumnData<Dataset>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("columns.name"),
     type: COLUMN_TYPE.string,
     cell: TextCell as never,
   },
   {
     id: "id",
-    label: "ID",
+    label: t("columns.id"),
     type: COLUMN_TYPE.string,
     cell: IdCell as never,
   },
   {
     id: "description",
-    label: "Description",
+    label: t("columns.description"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "dataset_items_count",
-    label: "Item count",
+    label: t("columns.itemCount"),
     type: COLUMN_TYPE.number,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("columns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
     cell: ListCell as never,
   },
   {
     id: "most_recent_experiment_at",
-    label: "Most recent experiment",
+    label: t("columns.mostRecentExperiment"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "most_recent_optimization_at",
-    label: "Most recent optimization",
+    label: t("columns.mostRecentOptimization"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("columns.lastUpdated"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("columns.created"),
     type: COLUMN_TYPE.time,
     cell: TimeCell as never,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
 
-const FILTERS_COLUMNS: ColumnData<Dataset>[] = [
+const getFiltersColumns = (
+  t: (key: string) => string,
+): ColumnData<Dataset>[] => [
   {
     id: COLUMN_NAME_ID,
-    label: "Name",
+    label: t("columns.name"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "id",
-    label: "ID",
+    label: t("columns.id"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "description",
-    label: "Description",
+    label: t("columns.description"),
     type: COLUMN_TYPE.string,
   },
   {
     id: "tags",
-    label: "Tags",
+    label: t("columns.tags"),
     type: COLUMN_TYPE.list,
     iconType: "tags",
   },
   {
     id: "last_updated_at",
-    label: "Last updated",
+    label: t("columns.lastUpdated"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_at",
-    label: "Created",
+    label: t("columns.created"),
     type: COLUMN_TYPE.time,
   },
   {
     id: "created_by",
-    label: "Created by",
+    label: t("columns.createdBy"),
     type: COLUMN_TYPE.string,
   },
 ];
@@ -296,7 +300,11 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
     isPending || (isPlaceholderData && datasets.length === 0);
   const isEmpty = !isTableLoading && noData && datasets.length === 0;
   const noDataText = noData
-    ? t(type === "dataset" ? "listPage.noDatasetsYet" : "listPage.noTestSuitesYet")
+    ? t(
+        type === "dataset"
+          ? "listPage.noDatasetsYet"
+          : "listPage.noTestSuitesYet",
+      )
     : t("addToDataset.noSearchResults");
 
   const [selectedColumns, setSelectedColumns] = useLocalStorageState<string[]>(
@@ -347,6 +355,9 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
   const showActionsColumn =
     canEditDatasets || canDeleteDatasets || isDatasetExportEnabled;
 
+  const DEFAULT_COLUMNS = useMemo(() => getDefaultColumns(t), [t]);
+  const FILTERS_COLUMNS = useMemo(() => getFiltersColumns(t), [t]);
+
   const columns = useMemo(() => {
     return [
       generateSelectColumDef<Dataset>(),
@@ -369,6 +380,7 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
     selectedColumns,
     showActionsColumn,
     RowActionsCell,
+    DEFAULT_COLUMNS,
   ]);
 
   const sortConfig = useMemo(
@@ -429,7 +441,11 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
           <CreateEntityMenu onSelect={handleCreateClick}>
             <Button variant="default" size="xs">
               <Plus className="mr-1 size-4" />
-              {t(type === "dataset" ? "listPage.createDataset" : "listPage.createTestSuite")}
+              {t(
+                type === "dataset"
+                  ? "listPage.createDataset"
+                  : "listPage.createTestSuite",
+              )}
             </Button>
           </CreateEntityMenu>
         )}
@@ -438,8 +454,16 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
         <DatasetEmptyState
           lightImageUrl={emptyTestSuitesLightUrl}
           darkImageUrl={emptyTestSuitesDarkUrl}
-          title={t(type === "dataset" ? "listPage.emptyDatasetTitle" : "listPage.emptyTestSuiteTitle")}
-          description={t(type === "dataset" ? "listPage.emptyDatasetDescription" : "listPage.emptyTestSuiteDescription")}
+          title={t(
+            type === "dataset"
+              ? "listPage.emptyDatasetTitle"
+              : "listPage.emptyTestSuiteTitle",
+          )}
+          description={t(
+            type === "dataset"
+              ? "listPage.emptyDatasetDescription"
+              : "listPage.emptyTestSuiteDescription",
+          )}
           canCreate={canCreateDatasets}
           onSelect={handleCreateClick}
           docsUrl={buildDocsUrl(config.docsUrl)}
@@ -500,7 +524,11 @@ const DatasetListPage: React.FunctionComponent<DatasetListPageProps> = ({
                     variant="link"
                     onClick={() => handleCreateClick("upload")}
                   >
-                    {t(type === "dataset" ? "listPage.createDataset" : "listPage.createTestSuite")}
+                    {t(
+                      type === "dataset"
+                        ? "listPage.createDataset"
+                        : "listPage.createTestSuite",
+                    )}
                   </Button>
                 )}
               </DataTableNoData>

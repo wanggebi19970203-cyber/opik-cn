@@ -31,7 +31,9 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-[790px] gap-2">
         <DialogHeader>
-          <DialogTitle>{t("onboarding.integrationExplorer.helpGuide")}</DialogTitle>
+          <DialogTitle>
+            {t("onboarding.integrationExplorer.helpGuide")}
+          </DialogTitle>
         </DialogHeader>
 
         <DialogAutoScrollBody>
@@ -72,7 +74,7 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
               >
                 <img
                   src={imageTutorialUrl}
-                  alt="Comet tutorial"
+                  alt={t("onboarding.integrationExplorer.cometTutorial")}
                   className="size-full object-cover"
                 />
                 <PlayButton className="absolute left-1/2 top-1/2 size-10 -translate-x-1/2 -translate-y-1/2 opacity-25 transition-opacity group-hover:opacity-80" />
@@ -84,7 +86,9 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <Book className="size-4 text-muted-slate" />
                   <div className="comet-body-s-accented">
-                    {t("onboarding.integrationExplorer.exploreOurDocumentation")}
+                    {t(
+                      "onboarding.integrationExplorer.exploreOurDocumentation",
+                    )}
                   </div>
                 </div>
                 <div className="comet-body-s text-muted-slate">
@@ -149,7 +153,9 @@ const HelpGuideDialog: React.FunctionComponent<HelpGuideDialogProps> = ({
           <HelpLinks
             onCloseParentDialog={() => setOpen(false)}
             title={t("onboarding.integrationExplorer.notReadyToIntegrate")}
-            description={t("onboarding.integrationExplorer.exploreOpikDescription")}
+            description={t(
+              "onboarding.integrationExplorer.exploreOpikDescription",
+            )}
           >
             <HelpLinks.Playground />
             <HelpLinks.DemoProject />

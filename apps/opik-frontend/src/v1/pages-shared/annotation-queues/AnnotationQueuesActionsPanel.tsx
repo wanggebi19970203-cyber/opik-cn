@@ -43,7 +43,9 @@ const AnnotationQueuesActionsPanel: React.FunctionComponent<
         setOpen={setOpen}
         onConfirm={deleteQueuesHandler}
         title={t("common.annotationQueues.deleteAnnotationQueuesTitle")}
-        description={t("common.annotationQueues.deleteAnnotationQueuesDescription")}
+        description={t(
+          "common.annotationQueues.deleteAnnotationQueuesDescription",
+        )}
         confirmText={t("common.annotationQueues.deleteAnnotationQueuesConfirm")}
         confirmButtonVariant="destructive"
       />

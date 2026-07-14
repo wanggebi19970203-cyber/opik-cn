@@ -102,7 +102,9 @@ export default function SettingsDialog({
 
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <p className="font-medium text-foreground">{t("dailyBriefing.settingsDialog.scheduledFor")}</p>
+                  <p className="font-medium text-foreground">
+                    {t("dailyBriefing.settingsDialog.scheduledFor")}
+                  </p>
                   <TimeInput
                     date={timeDate}
                     setDate={setTimeDate}
@@ -117,7 +119,9 @@ export default function SettingsDialog({
                   <Textarea
                     value={localCustomPrompt}
                     onChange={(e) => setLocalCustomPrompt(e.target.value)}
-                    placeholder={t("dailyBriefing.settingsDialog.customInstructionsPlaceholder")}
+                    placeholder={t(
+                      "dailyBriefing.settingsDialog.customInstructionsPlaceholder",
+                    )}
                     rows={4}
                     maxLength={5000}
                     className="min-h-0"
@@ -126,9 +130,12 @@ export default function SettingsDialog({
                 </div>
 
                 <div className="flex flex-col gap-1 py-2">
-                  <p className="font-medium text-foreground">{t("dailyBriefing.settingsDialog.billing")}</p>
+                  <p className="font-medium text-foreground">
+                    {t("dailyBriefing.settingsDialog.billing")}
+                  </p>
                   <p className="text-foreground">
-                    {t("dailyBriefing.settingsDialog.billingDescription")} {BillingLink && <BillingLink />}
+                    {t("dailyBriefing.settingsDialog.billingDescription")}{" "}
+                    {BillingLink && <BillingLink />}
                   </p>
                 </div>
               </div>
@@ -139,7 +146,9 @@ export default function SettingsDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("dailyBriefing.settingsDialog.cancel")}
           </Button>
-          <Button onClick={handleSave}>{t("dailyBriefing.settingsDialog.saveChanges")}</Button>
+          <Button onClick={handleSave}>
+            {t("dailyBriefing.settingsDialog.saveChanges")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

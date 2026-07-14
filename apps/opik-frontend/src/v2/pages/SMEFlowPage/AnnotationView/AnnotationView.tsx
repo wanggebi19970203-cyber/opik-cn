@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useHotkeys } from "react-hotkeys-hook";
 import TraceDataViewer from "./TraceDataViewer";
 import ReturnToAnnotationQueueButton from "../ReturnToAnnotationQueueButton";
@@ -10,7 +11,7 @@ import { useSMEFlow, ITEM_STATE, WORKFLOW_STATUS } from "../SMEFlowContext";
 import { ANNOTATION_QUEUE_SCOPE } from "@/types/annotation-queues";
 import ThreadDataViewer from "./ThreadDataViewer";
 import ItemsSidebar from "./ItemsSidebar";
-import { SME_ACTION, SME_HOTKEYS } from "../hotkeys";
+import { SME_ACTION, getSMEHotkeys } from "../hotkeys";
 
 interface AnnotationViewProps {
   header: React.ReactNode;
@@ -19,6 +20,8 @@ interface AnnotationViewProps {
 const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
   header,
 }) => {
+  const { t } = useTranslation("pages/sme");
+  const SME_HOTKEYS = getSMEHotkeys(t);
   const {
     annotationQueue,
     itemStates,
@@ -87,7 +90,7 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
             <div className="flex flex-[1] flex-col overflow-hidden">
               <div className="flex h-10 shrink-0 items-center border-b border-border bg-soft-background px-3">
                 <span className="comet-body-xs-accented text-foreground">
-                  Annotate
+                  {t("sme.annotationView.annotate")}
                 </span>
               </div>
               <div className="flex-1 overflow-y-auto px-3 py-2">
@@ -101,7 +104,7 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
         <ReturnToAnnotationQueueButton />
         {allDone ? (
           <Button onClick={handleNext}>
-            Finish annotating
+            {t("sme.annotationView.finishAnnotating")}
             <HotkeyDisplay
               hotkey={SME_HOTKEYS[SME_ACTION.NEXT_DEFAULT].display}
               size="sm"
@@ -114,7 +117,7 @@ const AnnotationView: React.FunctionComponent<AnnotationViewProps> = ({
             hotkeys={[SME_HOTKEYS[SME_ACTION.NEXT_DEFAULT].display]}
           >
             <Button onClick={handleNextDefault} disabled={isNextDisabled}>
-              Next
+              {t("sme.annotationView.next")}
               <HotkeyDisplay
                 hotkey={SME_HOTKEYS[SME_ACTION.NEXT_DEFAULT].display}
                 size="sm"

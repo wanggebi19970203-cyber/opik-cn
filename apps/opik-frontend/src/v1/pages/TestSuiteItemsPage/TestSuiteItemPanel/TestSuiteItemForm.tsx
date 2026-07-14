@@ -45,7 +45,9 @@ const DescriptionSection: React.FC = () => {
 
   return (
     <div>
-      <h3 className="comet-body-s-accented mb-2">{t("itemForm.description")}</h3>
+      <h3 className="comet-body-s-accented mb-2">
+        {t("itemForm.description")}
+      </h3>
       <TextareaAutosize
         {...register("description")}
         placeholder={t("itemForm.describeItemPlaceholder")}
@@ -170,7 +172,9 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
 
       <div className="mb-4 flex gap-4">
         <div className="flex flex-1 flex-col gap-1">
-          <Label className="comet-body-xs-accented">{t("itemForm.runsForItem")}</Label>
+          <Label className="comet-body-xs-accented">
+            {t("itemForm.runsForItem")}
+          </Label>
           <Input
             dimension="sm"
             className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -186,11 +190,15 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
             onKeyDown={runsInput.onKeyDown}
           />
           <span className="comet-body-xs text-light-slate">
-            {t("itemForm.globalDefaultIs", { value: suitePolicy.runs_per_item })}
+            {t("itemForm.globalDefaultIs", {
+              value: suitePolicy.runs_per_item,
+            })}
           </span>
         </div>
         <div className="flex flex-1 flex-col gap-1">
-          <Label className="comet-body-xs-accented">{t("itemForm.passThreshold")}</Label>
+          <Label className="comet-body-xs-accented">
+            {t("itemForm.passThreshold")}
+          </Label>
           <Input
             dimension="sm"
             className={cn("[&::-webkit-inner-spin-button]:appearance-none", {
@@ -206,7 +214,9 @@ const EvaluationCriteriaSection: React.FC<EvaluationCriteriaSectionProps> = ({
             onKeyDown={thresholdInput.onKeyDown}
           />
           <span className="comet-body-xs text-light-slate">
-            {t("itemForm.globalDefaultIs", { value: suitePolicy.pass_threshold })}
+            {t("itemForm.globalDefaultIs", {
+              value: suitePolicy.pass_threshold,
+            })}
           </span>
         </div>
       </div>
