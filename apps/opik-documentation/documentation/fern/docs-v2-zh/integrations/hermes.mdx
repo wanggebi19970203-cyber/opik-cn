@@ -1,0 +1,66 @@
+---
+description: 安装并配置 opik-hermes 插件，将 LLM、工具和智能体 trace 导出到 Opik。
+headline: Hermes | Opik 文档
+og:description: 通过 opik-hermes 插件将 Hermes 连接到 Opik。
+og:site_name: Opik 文档
+og:title: Hermes 集成 - Opik
+title: 使用 Opik 实现 Hermes 可观测性
+---
+
+[Hermes](https://github.com/NousResearch/hermes-agent) 可以通过插件包 [`opik-hermes`](https://github.com/comet-ml/opik-hermes) 将 trace 数据发送到 Opik。
+
+该集成捕获：
+
+- 每个智能体轮次一个根 trace，按 Hermes `session_id` 组织
+- LLM span（`type=llm`）：消息、assistant 输出、模型/提供商、token 用量和美元成本
+- 工具 span（`type=tool`）：工具参数和结果
+
+## 前置条件
+
+- 已安装 [Hermes](https://github.com/NousResearch/hermes-agent) 智能体框架。
+- Opik 项目/工作区详情（用于云或企业部署）。
+
+## 设置
+
+<Steps>
+  <Step title="1. 安装插件">
+    ```bash
+    pip install opik-hermes
+    ```
+
+    安装该包会自动向 Hermes 注册插件。
+  </Step>
+  <Step title="2. 启用插件">
+    在 `~/.hermes/config.yaml` 的已启用插件中添加 `opik`：
+
+    ```yaml
+    plugins:
+      enabled: [opik]
+    ```
+  </Step>
+  <Step title="3. 配置 Opik 凭据">
+    在 `~/.hermes/.env` 中设置 Opik 环境变量。
+
+    对于本地开源 Opik 部署：
+
+    ```bash
+    OPIK_URL_OVERRIDE=http://localhost:5173/api
+    OPIK_PROJECT_NAME=hermes
+    ```
+
+    对于 Comet 托管的 Opik：
+
+    ```bash
+    OPIK_API_KEY=your-api-key
+    OPIK_WORKSPACE=your-workspace
+    ```
+  </Step>
+</Steps>
+
+## 验证设置
+
+运行一个 Hermes 聊天会话，并验证 trace 出现在已配置的 Opik 项目仪表板中。
+
+## 下一步
+
+对于 OTEL 原生管线，参见 [OpenTelemetry 集成](/integrations/opentelemetry)。

@@ -1,0 +1,280 @@
+---
+headline: 数据、隐私和安全 | Opik 文档
+og:description: Cost Intelligence 到底收集什么、从不收集什么、可选的捕获内容开关、数据去向，以及数据在传输中和落盘后如何受到保护。
+og:site_name: Opik 文档
+og:title: 数据、隐私和安全 - Opik
+title: 数据、隐私和安全
+---
+
+Cost Intelligence 位于你的开发者编码智能体流量的路径上，因此你完全有理由想得到"什么会离开机器"这一问题的精确答案。本页就是逐字段给出的答案。
+
+简短版本：**只上报计数、成本和结构性元数据。** 提示词和响应内容不会被收集，除非有人明确开启它，而组织可以阻止这种情况永远发生。
+
+## 收集了什么
+
+下面每一节都列出了字段，并包含一个可展开的真实负载示例，展示的是内容捕获**关闭**（默认状态）时的情况。值仅为示例。
+
+### 每个会话
+
+| 字段 | 含义 |
+| --- | --- |
+| 会话 ID | 一次编码会话的标识符 |
+| 工作目录 | 会话运行所在的路径 |
+| 项目名称 | 解析出的项目标签 |
+| 用户身份 | 邮箱、用户名、显示名称、组织 |
+| 计费归因 | 套餐、席位层级、计费模式 |
+| Git 仓库 | 远程 URL、分支、提交 SHA |
+| 提交统计 | 每一轮的文件数和行数。**无 diff、无文件名** |
+
+<Accordion title="查看会话负载示例">
+
+```json
+{
+  "schema_version": 3,
+  "harness": "claude_code",
+  "session_id": "9f2c1e84-3b7a-4d21-9c05-71e4a8b6d033",
+  "cwd": "/Users/dev/src/payments-api",
+  "transcript_path": "/Users/dev/.claude/projects/payments-api/9f2c1e84.jsonl",
+  "project": { "name": "payments-api", "source": "git_remote" },
+  "identity": {
+    "email": "dev@example.com",
+    "username": "dev",
+    "display_name": "Dev Example",
+    "org_name": "Example Inc",
+    "plan": "max",
+    "seat_tier": "priority",
+    "billing_mode": "subscription"
+  },
+  "repository": {
+    "remote": "git@github.com:example/payments-api.git",
+    "branch": "feature/idempotency-keys",
+    "head_sha": "4c1b9a7e2f8d3a15b6c07e94d2af8b31c5e7d902",
+    "dirty": true,
+    "commits_in_trace": 1,
+    "files_added": 2,
+    "files_deleted": 0,
+    "lines_added": 148,
+    "lines_deleted": 23
+  },
+  "capture_content": false
+}
+```
+
+注意，提交增量只携带**计数**。没有文件名，也没有 diff 内容。
+
+</Accordion>
+
+### 每次调用
+
+| 字段 | 含义 |
+| --- | --- |
+| 模型 | 为该调用提供服务的模型 |
+| 请求 ID | 提供商自己的请求标识符 |
+| Token 计数 | 输入、输出、缓存创建、缓存读取、按层级的缓存拆分。**逐字读取自提供商的 usage 负载**，从不估算 |
+| 服务层级 | Standard、batch 或 priority |
+| 模型配置 | Effort 级别、思考模式、token 限制、上下文管理 |
+| 错误 | 状态码和重试次数。**无错误正文** |
+| 调用结构 | 触发器、轮次和 trace 标识符、父级链接 |
+
+<Accordion title="查看调用负载示例">
+
+```json
+{
+  "provider": "anthropic",
+  "model": "claude-opus-5",
+  "request_id": "req_011CSb4RtqK8vN3wXyZ7Lm2P",
+  "trigger": "user_turn",
+  "turn_key": "b91f7c3d5a2e08461fd7c9b8e05a3d2f",
+  "trace_id": "0193f4c2-8a1e-7b3d-9f05-2c6e8a4b1d77",
+  "usage": {
+    "input_tokens": 412,
+    "cache_creation_input_tokens": 2048,
+    "cache_read_input_tokens": 31744,
+    "output_tokens": 1893,
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 2048,
+      "ephemeral_1h_input_tokens": 0
+    }
+  },
+  "config": {
+    "effort": "high",
+    "thinking_type": "adaptive",
+    "max_tokens": 32000
+  },
+  "total_chars": 138204
+}
+```
+
+Token 计数直接读取自提供商自己的 `usage` 块，因此它们与你的发票一致。
+
+</Accordion>
+
+### 每个内容块
+
+请求或响应中每个可分类区域对应一行。正是这一点使成本归因成为可能。
+
+| 字段 | 含义 |
+| --- | --- |
+| 位置 | 该块在请求结构中所处的位置（一个线路坐标，而非文件路径） |
+| 成本桶 | 它属于约 20 个类别中的哪一个 |
+| 大小 | 字符数或字节数 |
+| 内容哈希 | 该块内容的单向哈希 |
+| 媒体类型 | 用于二进制块（图片、PDF） |
+| 工具 / 资源名称 | 工具、MCP 服务器、技能或智能体的**名称**。**不含参数或结果** |
+| 缓存状态 | 该块是缓存读取、写入还是全新的 |
+| 正文 | **仅在明确启用内容捕获时才存在** |
+
+<Accordion title="查看内容块示例">
+
+```json
+[
+  {
+    "path": "system[0]",
+    "side": "input",
+    "kind": "text",
+    "category": "system_prompt",
+    "sha256": "3f8a1c9e77b204d6",
+    "chars": 8432,
+    "cache_control": "1h",
+    "cache_status": "read"
+  },
+  {
+    "path": "tools[3]",
+    "side": "input",
+    "kind": "tool_schema",
+    "category": "mcp_tools_active",
+    "tool_server": "github",
+    "tool_name": "create_issue",
+    "sha256": "b1d47e0a92c5f386",
+    "chars": 612,
+    "cache_status": "read"
+  },
+  {
+    "path": "messages[6].content[0]",
+    "side": "input",
+    "kind": "text",
+    "category": "memory_files",
+    "resource": "CLAUDE.md",
+    "sha256": "77c2e5b8104af9d3",
+    "chars": 1904,
+    "cache_status": "read"
+  },
+  {
+    "path": "messages[11].content[0]",
+    "side": "input",
+    "kind": "text",
+    "category": "user_input",
+    "sha256": "e904b71c3d8f26a5",
+    "chars": 214,
+    "cache_status": "fresh"
+  },
+  {
+    "path": "response.content[0]",
+    "side": "output",
+    "kind": "thinking",
+    "category": "thinking",
+    "sha256": "5a3f8c11e7b90d42",
+    "chars": 4120
+  },
+  {
+    "path": "response.content[2]",
+    "side": "output",
+    "kind": "tool_use",
+    "category": "builtin_tool_call",
+    "tool_name": "Edit",
+    "tool_use_id": "toolu_01A9bC3dEf5GhJ7k",
+    "sha256": "c60b2d9741ea8f35",
+    "chars": 806
+  }
+]
+```
+
+每个块都携带一个类别、一个大小和一个哈希。**没有任何一个携带 `body` 字段**，因为内容捕获处于关闭状态。那一个字段是提示词或响应文本唯一可能出现的地方。
+
+</Accordion>
+
+<Note>
+  正是这些块列表把一个单一的 token 总量转化为成本拆解。上面的 `user_input` 块只有 214 个字符，而系统提示词是 8,432 个字符、记忆文件是 1,904 个字符——这正是大多数团队感到意外的那种比例。
+</Note>
+
+### 从不收集
+
+| | |
+| --- | --- |
+| 提示词和响应文本 | 除非明确启用内容捕获 |
+| 思考文本 | 除非明确启用内容捕获 |
+| 工具参数和结果 | 仅名称 |
+| 源文件内容、diff、文件名 | 仅计数 |
+| 编码智能体对话记录内容 | 仅路径。该文件从未被读取 |
+| API 密钥和凭据 | 在捕获时即被脱敏，早于任何写入 |
+| 请求和响应头 | 不发送 |
+
+## 内容捕获开关
+
+有一个设置决定任何提示词或响应文本是否会离开设备。
+
+| | |
+| --- | --- |
+| **默认** | 关闭。无需任何配置即可获得隐私姿态 |
+| **设置位置** | `CIPX_CAPTURE_CONTENT`，通过托管设置或 MDM 下发 |
+| **组织否决权** | 将其显式设为 `false` 是硬否决。任何单个用户都无法覆盖它 |
+| **可审计** | 每个会话都会记录该决定，因此你可以查询哪些会话（如果有的话）上报了内容 |
+
+<Warning>
+  如果你的组织没有固定该值，单个开发者可以自行选择开启。沉默不是否决。对于对 IP 敏感的团队，请将
+  `CIPX_CAPTURE_CONTENT` 显式设为 `false`，而不是保持未设置。
+</Warning>
+
+## 策略同步在设备上写入什么
+
+应用[成本策略](/cost-intelligence/roll-out-cost-policies)只会写入 `~/.claude/settings.json` 和 `~/.codex/config.toml` 中的托管策略键；每个文件的其余部分属于开发者自己。无法解析的设置文件会被原样保留，失败只会出现在本地日志和错误遥测中。
+
+## 数据去向
+
+| 目的地 | 用途 | 控制 |
+| --- | --- | --- |
+| 你的模型提供商或网关 | 原始 API 调用，逐字节原样转发 | 固有的 |
+| 你的 Opik 工作区 | 上述负载 | 自托管 Opik 可将这些数据保留在你自己的基础设施内 |
+| 错误遥测 | 崩溃和错误报告，含堆栈跟踪。无请求或响应正文 | 将 `CIPX_SENTRY` 设为 `off` 可禁用 |
+| 插件分发 | 插件自动更新 | 禁用市场自动更新 |
+
+## 安全
+
+**传输中。** 编码智能体仅通过回环接口与代理通信，因此该流量从不经过网络。代理向模型提供商发起自己的 TLS 连接，并进行完整的证书校验，通过 HTTPS 发送到 Opik。代理、管理端和查看端监听器拒绝绑定除 `127.0.0.1` 之外的任何地址，若绑定公网地址则启动失败。
+
+**凭据。** 授权头在捕获时即被脱敏，早于任何写入磁盘的操作。原始头原样转发到上游，因此代理对认证是透明的，从不重写调用方的凭据。
+
+**落盘。** 本地暂存位于 `~/.opik-cipx/`，目录权限为 `0700`，文件权限为 `0600`。它是一个缓冲区，而非归档，并且受总磁盘上限和保留窗口约束，以先触发者为准。
+
+<Warning>
+  内容捕获设置管控的是**上报给 Opik** 的内容。它不管控本地缓冲区：完整的请求和响应字节无论如何都会写入本地暂存，因为管线需要从它们重新推导成本归因。这些数据从不离开机器、不可被他人读取，并且会按上述上限自动过期，但如果你的基线要求更短的窗口，请在部署配置中调低
+  `raw_retention_days` 和 `disk_cap_bytes`。
+</Warning>
+
+**TLS 拦截。** 推荐的插件推广方案（[托管设置](/cost-intelligence/install/managed-settings)和 [MDM](/cost-intelligence/install/mdm)）**不会**终止、解密或检查 TLS，也不安装任何证书。可选的 [macOS 应用](/cost-intelligence/install/macos-app)确实会在本地终止 TLS，使用按设备生成的证书颁发机构，其私钥由硬件保护且不可导出，并约束到模型提供商的主机名。
+
+## 合规与安全审查
+
+如需正式审查，我们可以提供完整的 Cost Intelligence 数据安全与隐私文档，涵盖完整的字段清单、落盘保留特征、完整的出站目的地列表、子处理方以及当前的合规证明。
+
+发送邮件至 [sales@comet.com](mailto:sales@comet.com)，我们会将其转交给相应团队。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card
+    title="安装"
+    icon="fa-regular fa-download"
+    href="/cost-intelligence/install/overview"
+  >
+    通过 MDM、托管设置或 macOS 应用推广到你的设备群。
+  </Card>
+  <Card
+    title="降低编码智能体支出"
+    icon="fa-regular fa-arrow-trend-down"
+    href="/cost-intelligence/reduce-agent-spend"
+  >
+    将收集到的数据转化为更低的账单。
+  </Card>
+</CardGroup>

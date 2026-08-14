@@ -1,0 +1,172 @@
+---
+headline: 通过 MDM 安装 macOS 应用 | Opik 文档
+og:description: 将 Cost Intelligence 作为 macOS 菜单栏应用和网络扩展部署，在无法向编码智能体下发任何客户端配置时实现透明捕获。
+og:site_name: Opik 文档
+og:title: 通过 MDM 安装 macOS 应用 - Opik
+title: 通过 MDM 安装 macOS 应用
+---
+
+macOS 应用使用一个系统扩展来**透明地**捕获编码智能体流量，由操作系统移交相关网络流。它不对智能体做任何配置：无基础 URL 变更，无环境变量。
+
+<Warning>
+  此路径会在本地终止 TLS 以便看到流量，这使得它的安全审查范围显著大于插件路径。如果[托管设置](/cost-intelligence/install/managed-settings)或
+  [MDM](/cost-intelligence/install/mdm)中的任何一个能向你的设备群下发配置，请优先使用它们，因为它们无需系统扩展、无需证书，也无需 TLS 拦截。只有两者都无法做到时才使用此路径。
+</Warning>
+
+## 它与插件的区别
+
+| | 插件（代理） | macOS 应用（扩展） |
+| --- | --- | --- |
+| 流量如何到达 | 智能体被指向一个本地端口 | 操作系统转移这些流 |
+| 客户端配置 | 需要（由 MDM 下发） | 无 |
+| TLS | 不拦截 | 本地终止 |
+| 平台 | macOS、Linux、Windows | 仅 macOS |
+
+## 你部署什么
+
+四个交付物。只有两个可以放在配置描述文件中，这是需要规划的主要事项：
+
+| 交付物 | 交付方式 |
+| --- | --- |
+| `/Applications` 中的 `Opik CIPX.app` | 软件包负载 |
+| 配置描述文件 | MDM 配置描述文件 |
+| `~/.opik-cipx/config.toml`（工作区凭据） | 每用户文件下发，**不能**由描述文件交付 |
+| 每设备证书信任 | 在设备上建立；无法集中签发 |
+
+应用包内嵌了系统扩展和捕获引擎，因此无需单独安装引擎。
+
+## 配置描述文件
+
+该描述文件携带两个完成不同工作的负载。
+
+### 预先批准系统扩展
+
+一个 `com.apple.system-extension-policy` 负载将捕获扩展加入允许列表，使其**静默**激活：开发者永远不会看到 *系统设置 → 通用 → 登录项与扩展 → 网络扩展* 的批准关卡。
+
+<Note>
+  这**仅在描述文件由设备已注册的 MDM 推送时**才会被遵守。本地安装的描述文件对这种负载类型会被忽略，因此一台手工安装描述文件的测试机器仍会显示手动批准提示。这是预期行为，并不代表描述文件损坏。
+</Note>
+
+### 强制应用的设置
+
+一个托管偏好负载写入应用的偏好域 `com.comet.opik-cipx-app`。强制值优先于用户设置的任何内容，且对应控件在应用的设置窗口中会被禁用，并显示"由你的组织管理"的说明。
+
+| 键 | 类型 | 推荐 | 原因 |
+| --- | --- | --- | --- |
+| `Cipx.isEnabled` | Boolean | `true` | 捕获总开关；同时驱动自动激活 |
+| `Settings.enableViewer` | Boolean | `false` | 本地调试仪表板；在设备群中无立足之地 |
+| `Settings.enableAdmin` | Boolean | `false` | 本地控制端点 |
+| `Settings.startAtLogin` | Boolean | `true` | 捕获在注销和重启后仍存活 |
+| `Settings.allowExtensionUninstall` | Boolean | `false` | 对用户隐藏卸载操作 |
+| `Settings.enabledHarnesses` | Array | `["com.anthropic.claude-code"]` | 按代码签名 ID 指定捕获哪些客户端 |
+
+推送前先校验描述文件，因为格式错误的负载会被某些 MDM 静默忽略：
+
+```bash
+plutil -lint opik-cipx-app.mobileconfig    # 必须输出 "OK"
+```
+
+### 推送它
+
+| MDM | 路径 |
+| --- | --- |
+| **Jamf Pro** | 配置描述文件 → 应用程序与自定义设置 → 外部应用程序；域 `com.comet.opik-cipx-app`。系统扩展允许列表是一个单独的 *系统扩展* 负载。 |
+| **Kandji** | 资源库 → 自定义描述文件 → 上传 `.mobileconfig` |
+| **Intune** | 设备 → macOS → 配置描述文件 → 偏好文件；域 `com.comet.opik-cipx-app` |
+| **JumpCloud** | 自定义 macOS MDM 描述文件（策略）→ 粘贴 `.mobileconfig` |
+
+## 下发工作区凭据
+
+Opik 目的地**不是**一个偏好键，因此任何配置描述文件都无法携带它。捕获引擎由一个登录项应用启动，而 GUI 应用不继承 shell 环境，因此你在 shell 配置文件中导出的、或作为 MDM 环境变量推送的任何内容都无法到达它。
+
+改为按用户下发一个文件，位于 `~/.opik-cipx/config.toml`：
+
+```toml
+[opik]
+base_url  = "https://www.comet.com/opik/api"
+api_key   = "<workspace-scoped service-account key>"
+workspace = "your-org-cc-workspace"
+project   = "claude-code"
+
+[capture]
+capture_content = false
+```
+
+下发注意事项：
+
+- 它落在**用户主目录**中，因此以 root 运行的 MDM 脚本必须解析控制台用户并将文件 `chown` 给他们。root 拥有的文件无法被守护进程写入。
+- 将文件权限设为 `0600`，目录权限设为 `0700`。
+- 它包含 ingest API 密钥，因此使用服务账户密钥，并通过重新部署来轮换。
+
+<Warning>
+  缺少此文件的设备会看起来完全健康，却什么都不捕获。
+  扩展被刻意设计为 fail-open，缺失或崩溃的引擎永远不会
+  中断开发者的会话，因此唯一可靠的验证是确认 trace 到达 Opik。
+</Warning>
+
+## 激活
+
+应用启动过一次之后，其余一切都自动完成。启动时它会激活系统扩展、启动捕获引擎、启用代理配置，并注册一个登录项，使捕获在每次重启后恢复。引擎还会自动将你组织的[成本策略](/cost-intelligence/roll-out-cost-policies)应用到该机器。在描述文件预先批准扩展的情况下，这些过程都不会提示用户。
+
+激活是 fail-safe 的：链路中的任何错误都会重新关闭捕获，而不是留下一个配置了一半的代理。
+
+为了触发首次启动，按优先级排序：
+
+1. 一个在控制台用户上下文中打开应用的软件包 postinstall 脚本。
+2. 随应用一起下发的 LaunchAgent。这也覆盖了安装时未登录的用户。
+3. 一个"以当前用户身份运行"的 MDM 脚本。
+
+## 证书信任
+
+为了对流量进行分类而不仅仅是计数字节，扩展会在本地终止 TLS，这意味着客户端必须信任拦截证书。
+
+证书颁发机构是**按设备**签发的，私钥由硬件保护且不可导出。这是有意为之：不存在全团队共享的拦截密钥，因此攻破一台设备不会攻破整个团队。其后果是**没有单一的证书可以嵌入到集中签发的 MDM 证书负载中**；信任是在生成它的那台设备上建立的。
+
+对于 Claude Code，这已为你处理：应用把 Claude Code 指向该设备自己的证书。证书颁发机构还带有约束，将其限制到特定的模型提供商主机名，因此即使一个完全受信任的机构也无法为任何其他域作保。这一点值得在安全审查早期提出，因为正是这一属性使本地终止变得站得住脚。
+
+## 验证
+
+在目标设备上，以登录用户身份：
+
+```bash
+systemextensionsctl list | grep opik-cipx        # 扩展已激活
+defaults read com.comet.opik-cipx-app Cipx.isEnabled
+ls -l ~/.opik-cipx/config.toml                   # 会静默失败的步骤
+```
+
+然后确认 trace 正在到达目标 Opik 工作区。
+
+## 卸载
+
+```bash
+# 通过你的 MDM 移除描述文件，或：
+sudo profiles remove -identifier com.comet.opik-cipx-app.managed
+
+# 干净地拆除，然后移除应用
+open -a "/Applications/Opik CIPX.app" --args disable
+sudo rm -rf "/Applications/Opik CIPX.app"
+
+# 本地状态，包括每设备证书
+rm -rf ~/.opik-cipx "~/Library/Application Support/opik-cipx"
+```
+
+未先禁用就移除应用会留下一个孤立的系统扩展注册，因此优先执行 `disable` 步骤。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card
+    title="降低编码智能体支出"
+    icon="fa-regular fa-arrow-trend-down"
+    href="/cost-intelligence/reduce-agent-spend"
+  >
+    将数据转化为更低的账单。
+  </Card>
+  <Card
+    title="安装概览"
+    icon="fa-regular fa-download"
+    href="/cost-intelligence/install/overview"
+  >
+    比较推广路径并查看数据清单。
+  </Card>
+</CardGroup>

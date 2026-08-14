@@ -1,5 +1,5 @@
 ---
-headline: 通过 SDK、REST 和 UI 导出 | Opik 文档
+headline: 通过 SDK、REST 和 UI 导出
 og:description: 学习使用 Opik SDK、REST 和 UI 导出追踪和 Span，以进行模型微调和深入分析。
 og:site_name: Opik 文档
 og:title: 使用 Opik 高效导出数据
@@ -309,6 +309,39 @@ threads = client.search_threads(
 )
 ```
 
+### 大规模导出
+
+读取操作按工作空间进行速率限制。用于导出的搜索和列表端点 —— `search_traces` 和 `search_spans`（以及底层的 `GET /traces` 和 `GET /spans` 端点）—— 限制为每个工作空间每分钟 `30` 个请求。超出限制会返回 `429 Too Many Requests`，并带有 `RateLimit-Reset` 响应头，告诉你需要等待多久。完整列表请参阅[速率限制常见问题](/faq#are-there-are-rate-limits-on-opik-cloud)。
+
+这个配额很小，因此获取数据的方式很重要：
+
+- **批量获取，而不是逐条获取。** 一次 `search_spans` 调用在每个底层请求中最多流式返回 2,000 行，会自动分页，并在遇到 `429` 时退避，因此一次调用可以返回数千个 span 而不会出错。避免为每个 trace 单独发起请求。
+- **在服务端过滤**：使用 `filter_string`（例如时间窗口），这样你只需传输所需的数据。
+- **控制并发。** 限制按工作空间共享，因此并行请求会竞争同一个配额，更快地触发 `429`，而不会更快完成。
+
+```python title="✅ 建议做法：批量获取，在客户端进行关联"
+from collections import defaultdict
+
+traces = client.search_traces(project_name="Default project", max_results=1000000)
+
+# 一次调用获取所有 span，然后在内存中按 trace_id 分组。
+spans = client.search_spans(project_name="Default project", max_results=1000000)
+spans_by_trace = defaultdict(list)
+for span in spans:
+    spans_by_trace[str(span.trace_id)].append(span)
+```
+
+```python title="❌ 不建议做法：每个 trace 一个请求"
+traces = client.search_traces(project_name="Default project", max_results=1000000)
+
+# 每个 trace 一个请求：速度慢，并且会很快触发读取速率限制。
+spans_by_trace = {}
+for trace in traces:
+    spans_by_trace[trace.id] = client.search_spans(
+        project_name="Default project", trace_id=trace.id
+    )
+```
+
 ## 使用 Opik REST API
 
 要使用 Opik REST API 导出追踪，可以使用 [`/traces`](/reference/rest-api/traces/get-traces-by-project) 端点和 [`/spans`](/reference/rest-api/spans/get-spans-by-project) 端点。这些端点是分页的，因此你需要发出多个请求来检索所有想要的追踪或 Span。
@@ -327,8 +360,9 @@ threads = client.search_threads(
 ```
 
 <Warning>
-  `filter` 参数是为 Opik UI 设计的，因此灵活性有限。如果你需要更多灵活性，请在
-  [GitHub](https://github.com/comet-ml/opik/issues) 上提交问题，我们可以提供帮助。
+  `filter` 参数是为 Opik UI 使用而设计的，因此灵活性有限。对于复杂查询，请改用 SDK。这些端点同样受速率限制，
+  且不会自动退避 —— 对于大规模导出，请优先使用 SDK（参见[大规模导出](#大规模导出)），或自行实现针对 `429`
+  的重试逻辑，并遵循 `RateLimit-Reset` 响应头。
 </Warning>
 
 ## 使用 UI

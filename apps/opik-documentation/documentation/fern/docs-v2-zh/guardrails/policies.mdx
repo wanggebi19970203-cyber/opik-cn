@@ -1,0 +1,106 @@
+---
+title: 策略
+subtitle: 在 Opik 中定义一次你的检查，并从应用中按名称引用它们
+headline: 护栏策略 | Opik 文档
+og:title: 护栏策略 — Opik
+og:description: 在 Opik UI 中创建和管理命名的护栏策略，然后使用 Guardrail.from_stored_policies 从中构建护栏。
+og:site_name: Opik 文档
+---
+
+一个**策略（policy）**是一组命名的、由一个或多个防护组成的集合，存储在你的 Opik 工作区中。你的应用按名称引用策略，而不是自己罗列检查。
+
+这把工作干净地一分为二。策略在 **Opik UI** 中创建和编辑，SDK 的职责是获取它们并运行检查。改变一个护栏强制执行的内容——添加一个实体、收紧一个阈值、切换一个模型——是队友在 UI 中做的事，无需改代码，也无需重新部署。
+
+这是我们推荐运行护栏的方式。它让检查对整个团队可见，让你能针对在生产中看到的情况收紧它们而无需等待发布，并在每个引用该策略的应用上一致地应用同样的保护。
+
+<Frame>
+  <img src="/img/guardrails/policies-table.png" />
+</Frame>
+
+## 创建策略
+
+打开侧边栏中的 **Guardrails**，停留在 **Policies** 标签页，然后选择 **Create policy**。
+
+一个策略有一个名字、一个可选的描述、一个执行模式，以及它运行的防护。
+
+<Steps>
+  <Step title="命名它">
+    名字是你的应用传给 SDK 的东西，因此选一个在代码中读起来顺口的——`no-contact-information`、`support-tone`。名字在工作区内是唯一的。
+
+    <Warning>
+      应用按名字引用策略。重命名一个已在使用的策略会破坏所有仍在请求旧名字的应用，因此把这个名字当作你公共接口的一部分。
+    </Warning>
+  </Step>
+  <Step title="选择执行模式">
+    - **On request** — 该策略只应用于点名它的应用。这是默认值。
+    - **Always** — 该策略应用于工作区中的每个应用，无论它是否点名该策略。用于你想在各处强制执行的基础保护，例如阻止个人数据。
+  </Step>
+  <Step title="打开它运行的防护">
+    打开你想要的检查并配置每一个。一个策略每种类型最多持有一个防护，因此一个策略是一组不同的检查，而不是一个可以重复的列表。
+
+    <Frame>
+      <img src="/img/guardrails/policy-configuration.png" />
+    </Frame>
+
+    大多数防护都有一个**阈值**——达到或超过该分数即算作防护失败。越低越严格。其他字段取决于类型：PII 询问要阻止哪些个人数据类别，主题接受允许和受限主题的列表，LLM 评判接受你用平实语言写的规则加一个模型，自定义分类器接受你的一个模型。
+
+    五种类型在[防护](/guardrails/guardrails)页面有完整描述。**LLM 评判**防护需要一个来自在 [AI Providers](/administration/workspace-settings/ai_providers) 下配置的提供商的模型，**自定义分类器**防护需要你的一个[自定义模型](/guardrails/custom-guardrails)。
+  </Step>
+</Steps>
+
+<Tip>
+  与其把每个检查都塞进一个大型策略，不如按它们保护的对象来拆分。一个护栏可以一次由多个策略构建，而小型策略跨应用复用起来要容易得多。
+</Tip>
+
+## 在你的应用中使用策略
+
+用 `Guardrail.from_stored_policies` 从存储的策略构建一个护栏，然后像对代码中定义的护栏一样调用 `validate`：
+
+```python
+from opik.guardrails import Guardrail
+from opik import exceptions
+
+guardrail = Guardrail.from_stored_policies(names=["no-contact-information"])
+
+try:
+    guardrail.validate("Call me at 555-0123")
+except exceptions.GuardrailValidationFailed as e:
+    print("Guardrail failed:", e)
+```
+
+传入多个名字来组合策略。它们的防护会作为一个集合一起检查，只要任何一个防护失败，护栏就失败：
+
+```python
+guardrail = Guardrail.from_stored_policies(
+    names=["no-contact-information", "support-tone"],
+)
+```
+
+设置为 **Always** 的策略会被自动包含，因此一条工作区范围的规则甚至适用于什么都不点名的应用：
+
+```python
+# 运行工作区中的每一条 "Always" 策略
+guardrail = Guardrail.from_stored_policies()
+```
+
+关于该调用有几件值得了解的事：
+
+- 策略只在构建护栏时读取**一次**。在启动时构建它，而不是在每个请求上构建，并重启（或重建护栏）以拾取 UI 中做出的更改。
+- 你传入的每个名字都必须存在。不存在的名字是一个错误，而不是一项悄悄没有运行的检查。
+
+## 管理策略
+
+**Policies** 标签页列出工作区中的每个策略，连同它持有的防护、它的执行模式，以及谁最后更改了它。选中一行会打开该策略进行编辑，行菜单提供 **Duplicate** —— 一种无需重新输入防护即可快速构建变体的方式。
+
+保存的更改会在每个引用该策略的应用下次构建其护栏时生效。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="防护" href="/guardrails/guardrails" icon="fa-regular fa-shield-check">
+    五种防护类型各自检查什么，以及如何配置它。
+  </Card>
+  <Card title="自定义模型" href="/guardrails/custom-guardrails" icon="fa-regular fa-brain">
+    为内置防护未覆盖的检查微调一个模型。
+  </Card>
+</CardGroup>

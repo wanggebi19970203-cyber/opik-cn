@@ -1,6 +1,6 @@
 ---
 description: 通过 Opik 的 `GepaOptimizer` 使用外部 GEPA 包，利用反思模型优化单轮任务的系统提示词。
-headline: GEPA | Opik 文档
+headline: GEPA
 og:description: 学习使用 GepaOptimizer 增强单轮任务提示词，借助 GEPA 实现高效优化并与 Opik 兼容的结果。
 og:site_name: Opik 文档
 og:title: 使用 Opik 优化单轮任务 - GEPA
@@ -75,6 +75,7 @@ result.display()
 - GEPA 的随机种子会直接传递到底层的 `gepa.optimize` 调用，但提示词中的任何非确定性因素（工具调用、非零温度、外部 API）仍会引入方差。如需单独测试种子效果，请禁用工具或使用缓存的响应。
 - GEPA 在优化循环内部会发出自己的基线评估。您会看到来自 Opik 封装层的一个基线分数，以及在第一次试验前来自 GEPA 的另一个基线分数；这是正常现象，不会重复消耗指标预算。
 - 反思仅在 GEPA 接受至少 `reflection_minibatch_size` 个不同的提示词后才会触发。如果迷你批次大小超过试验预算，优化器会记录警告并跳过反思。
+- 反思调用使用 `GepaOptimizer.model`，会被追踪为 Opik span，并计入运行所报告的 LLM 成本。它们**不是**指标调用，因此 `max_trials` 不会限制它们——一次运行通常进行的反思调用次数远多于试验次数，因为某候选在迷你批次上落败的迭代只会消耗 `2 * reflection_minibatch_size` 次指标调用。运行会在结果详情中将总次数报告为 `reflection_call_count`；可设置 `max_reflection_calls` 来设置上限。
 - GEPA 支持**评估期间的工具使用**（`allow_tool_use=True`），但目前**不支持** `optimize_tools=True`。在适配器支持之前，工具描述优化请求将被降级/阻止。
 
 ### GEPA 分数与 Opik 分数
@@ -117,6 +118,7 @@ result.display()
 <ParamField path="project_name" type="str" optional={true} default="Optimization" />
 <ParamField path="max_trials" type="int" optional={true} default="10">要测试的不同提示词的最大数量（默认：10）</ParamField>
 <ParamField path="reflection_minibatch_size" type="int" optional={true} default="3">反思迷你批次大小（默认：3）</ParamField>
+<ParamField path="max_reflection_calls" type="int" optional={true} default="0">反思 LLM 调用次数的上限——即 GEPA 为提出新候选所进行的调用，它们不是指标调用，且会在此基础上额外计费。默认值为 `0`，表示不设上限：GEPA 会按其搜索所需频繁进行反思。设置一个正值即可限制反思开销；运行会在达到上限后停止，并报告 `finish_reason="reflection_budget"`（若运行同时耗尽了全部指标预算，则会报告 `max_trials`，因为试验才是其结束的原因）。反思调用次数随引擎迭代次数而非试验次数变化，因此请根据运行报告的 `reflection_call_count` 来设置该值，而不是依据 `max_trials`。</ParamField>
 <ParamField path="candidate_selection_strategy" type="str" optional={true} default="pareto">候选选择策略（可选 "pareto"、"current_best" 或 "epsilon_greedy"；默认："pareto"）</ParamField>
 <ParamField path="skip_perfect_score" type="bool" optional={true} default="True">跳过满分候选（默认：True）</ParamField>
 <ParamField path="perfect_score" type="float" optional={true} default="1.0">视为满分的分数（默认：1.0）</ParamField>

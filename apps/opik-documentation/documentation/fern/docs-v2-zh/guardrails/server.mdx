@@ -1,0 +1,199 @@
+---
+title: 护栏服务器
+subtitle: 安装、配置并运行支撑基于模型的防护的后端
+headline: 护栏服务器 | Opik 文档
+og:title: 护栏服务器 - Opik
+og:description: 如何安装、配置、启动和调用运行 PII、主题、提示注入和自定义分类器模型的 Opik 护栏后端。
+og:site_name: Opik 文档
+---
+
+<Tip>
+  护栏是一项企业版功能。请联系 Opik 团队
+  [sales@comet.com](mailto:sales@comet.com) 为你的账户启用它们。
+</Tip>
+
+护栏服务器是一个独立的后端，运行 Opik 内置护栏背后的机器学习模型。[Python SDK](/guardrails/guardrails) 通过 HTTP 将文本发送到该服务，该服务返回每个检查是否通过以及详细的分数。
+
+它为这些验证类型提供支持：
+
+- **主题（Topic）** — 一个零样本分类器（`facebook/bart-large-mnli`），检查文本是否在主题范围内。
+- **PII** — 命名实体识别（Microsoft Presidio，使用 spaCy `en_core_web_lg` 模型），检测敏感信息，如姓名、电子邮件和信用卡号。
+- **提示注入** — 一个微调的分类器（一个 Qwen LoRA 适配器），检测提示注入和越狱尝试。它的模型存放在一个私有的 Hugging Face 仓库中，因此服务器需要一个 Hugging Face token（参见[配置](#configuration)）。
+- **自定义模型** — [在你自己的标注示例上微调](/guardrails/custom-guardrails)的模型。训练在此服务器上运行，它按名字从适配器目录加载结果。
+
+服务器是可选的，默认禁用。运行内置的主题、PII 或提示注入护栏，或任何自定义模型，都需要它。[LLM 评判护栏](/guardrails/guardrails#llm-judge)不使用此服务器：它调用你工作区中配置的 LLM 提供商。
+
+## 安装和启动
+
+### 与 Opik 一起运行（推荐）
+
+如果你用 Docker Compose 自托管 Opik，通过传入 `--guardrails` 标志来启动护栏后端：
+
+```bash
+./opik.sh --guardrails
+```
+
+这会启用 `guardrails` profile，启动 `guardrails-backend` 容器，并配置 Opik 前端把请求代理到它。以这种方式启动 Opik 时，Python SDK 会自动到达服务器，无需额外配置。
+
+### 作为独立容器运行
+
+你也可以单独运行护栏后端，这在你希望在专用 GPU 节点上运行它时很有用。
+
+该镜像未发布到镜像仓库，因此从 `apps/opik-guardrails-backend` 本地构建它（只需一次）：
+
+```bash
+cd apps/opik-guardrails-backend
+docker build -t opik-guardrails-backend:latest .
+```
+
+使用 GPU 加速运行它：
+
+```bash
+docker run -p 5000:5000 --gpus all opik-guardrails-backend:latest
+```
+
+或仅用 CPU 运行：
+
+```bash
+docker run -p 5000:5000 opik-guardrails-backend:latest
+```
+
+服务器监听端口 `5000`。通过健康检查确认它已启动：
+
+```bash
+curl http://localhost:5000/healthcheck
+# OK
+```
+
+<Note>
+  要使用 GPU 加速，你需要在主机上安装
+  [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)。
+  模型在构建时就被打包进镜像，因此启动时不会发生模型下载。
+</Note>
+
+## 配置
+
+服务器读取以下环境变量：
+
+| 变量 | 默认值 | 描述 |
+| --- | --- | --- |
+| `OPIK_GUARDRAILS_DEVICE` | `cuda:0` | 用于模型推理的设备。当没有 GPU 可用时回退到 `cpu`。 |
+| `CUDA_VISIBLE_DEVICES` | all | 控制哪些 GPU 对容器可见。 |
+| `HF_TOKEN` | — | 用于下载私有提示注入模型的 Hugging Face token。提示注入护栏需要它；其他护栏不需要。 |
+| `OPIK_GUARDRAILS_PROMPT_INJECTION_MODEL` | — | 提示注入 LoRA 适配器的 Hugging Face 仓库。提示注入护栏需要它。 |
+| `OPIK_GUARDRAILS_PROMPT_INJECTION_BASE_MODEL` | — | 适配器所应用的基础模型。提示注入护栏需要它。 |
+| `OPIK_GUARDRAILS_ADAPTERS_DIR` | `/adapters` | 服务器加载[自定义模型](/guardrails/custom-guardrails)的目录。必须与训练写入的目录相同。 |
+
+<Note>
+  提示注入模型由 Comet 私有分发。要使用提示注入护栏，请联系
+  Comet 获取访问权限：他们会提供模型仓库、其基础模型，以及一个用于设置为
+  `HF_TOKEN` 的 Hugging Face token。
+</Note>
+
+模型在提示注入护栏首次使用时被懒加载，因此服务器可以在未设置这些变量的情况下启动；只有提示注入护栏会在它们被提供之前（closed）失败。用 `-e HF_TOKEN=<token> -e OPIK_GUARDRAILS_PROMPT_INJECTION_MODEL=<repo> -e OPIK_GUARDRAILS_PROMPT_INJECTION_BASE_MODEL=<base-model>` 将它们传给容器。
+
+例如，将推理固定到第二块 GPU：
+
+```bash
+docker run -p 5000:5000 --gpus all -e OPIK_GUARDRAILS_DEVICE=cuda:1 opik-guardrails-backend:latest
+```
+
+该服务在启动时检测 CUDA 是否可用。如果没有 GPU，或未配置 NVIDIA Container Toolkit，它会自动回退到 CPU 模式，无需任何配置更改。
+
+如果你在自定义地址（例如，在单独的节点上）运行服务器，用 `OPIK_GUARDRAILS_URL_OVERRIDE` 环境变量将 Python SDK 指向它：
+
+```bash
+export OPIK_GUARDRAILS_URL_OVERRIDE=http://my-guardrails-host:5000
+```
+
+<Warning>
+  主题护栏接受最大 1024 个 token 的输入，主题和 PII 护栏都只支持英语。
+  在 CPU 上运行可行但明显更慢；生产环境强烈建议使用 GPU 节点。
+</Warning>
+
+## 调用服务器
+
+大多数用户从不直接调用服务器——[Python SDK](/guardrails/guardrails)为你处理请求、响应解析和 trace 记录。只有在没有 SDK 的语言或环境中集成时，才直接调用 API。
+
+向 `/api/v1/guardrails/validations` 发送一个 `POST` 请求，附上要检查的文本和要运行的验证列表：
+
+```bash
+curl -X POST http://localhost:5000/api/v1/guardrails/validations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "My name is John Doe and my email is john.doe@example.com.",
+    "validations": [
+      {
+        "type": "TOPIC",
+        "config": {
+          "topics": ["politics", "religion", "artificial intelligence"],
+          "threshold": 0.5,
+          "mode": "restrict"
+        }
+      },
+      {
+        "type": "PII",
+        "config": {
+          "entities": ["PERSON", "EMAIL_ADDRESS"],
+          "language": "en",
+          "threshold": 0.5
+        }
+      }
+    ]
+  }'
+```
+
+响应报告一个总体的 `validation_passed` 标志，以及带有驱动每个决策的分数的每验证结果。
+
+<AccordionGroup>
+  <Accordion title="请求和响应参考">
+    **请求字段：**
+
+    - `text`（必需）— 要验证的文本。
+    - `validations`（必需）— 要运行的验证列表。每个都有一个 `type`（`TOPIC` 或 `PII`）和一个 `config`：
+      - **`TOPIC` 配置：**
+        - `topics`（必需）— 要检查的主题列表。
+        - `threshold`（默认 `0.5`）— 主题检测的置信度阈值。
+        - `mode`（必需）— 当没有任何主题匹配时 `restrict` 通过（内容过滤）；当至少一个匹配时 `allow` 通过（内容分类）。
+      - **`PII` 配置：**
+        - `entities`（可选）— 要检测的实体类型。默认为 `IP_ADDRESS`、`PHONE_NUMBER`、`PERSON`、`MEDICAL_LICENSE`、`URL`、`EMAIL_ADDRESS`、`IBAN_CODE`。参见 [Presidio 支持的实体](https://microsoft.github.io/presidio/supported_entities/)获取完整列表。
+        - `language`（默认 `en`）— 文本的语言。
+        - `threshold`（默认 `0.5`）— PII 检测的置信度阈值。
+
+    **响应示例：**
+
+    ```json
+    {
+      "validation_passed": false,
+      "validations": [
+        {
+          "validation_passed": false,
+          "type": "PII",
+          "validation_config": {
+            "entities": ["PERSON", "EMAIL_ADDRESS"],
+            "language": "en",
+            "threshold": 0.5
+          },
+          "validation_details": {
+            "detected_entities": {
+              "PERSON": [{ "start": 11, "end": 19, "score": 0.85, "text": "John Doe" }],
+              "EMAIL_ADDRESS": [{ "start": 36, "end": 56, "score": 1.0, "text": "john.doe@example.com" }]
+            }
+          }
+        }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="防护" href="/guardrails/guardrails" icon="fa-regular fa-shield-check">
+    五种防护类型以及如何配置每一种。
+  </Card>
+  <Card title="护栏概览" href="/guardrails/overview" icon="fa-regular fa-circle-info">
+    了解何时使用护栏而非在线评估。
+  </Card>
+</CardGroup>

@@ -1,0 +1,63 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog/2026-06-23
+---
+
+## LLM-as-Judge 评分器现在可评估 Trace 附件
+
+在线 LLM-as-judge 评分规则现在可以针对附加到 trace 的文件——图片、PDF、文档和其他二进制内容——进行推理，此外还可以针对 trace 的文本字段。之前，附件感知评估仅可用于线程（对话）评分；单 trace 评分规则现在也具备同样的能力。
+
+当 trace 携带附件时，评分器会自动路由到一个智能体式的工具调用循环。评判模型会收到一个 `ReadTool`（列出附加文件）和一个 `GetAttachmentTool`（将每个文件作为多模态内容获取）。每次评估最多注入八个附件。当所配置的提供商不支持工具调用时，会显示一个警告，而不是静默失败。
+
+## 项目作用域的 `opik export` / `opik import`
+
+`opik export` 和 `opik import` CLI 命令现在需要一个项目参数，以匹配 Opik v2 组织数据的方式（每个数据集、提示词和实验都位于一个项目内）。
+
+**新的命令形式：**
+
+```bash
+opik export WORKSPACE PROJECT ITEM [NAME] [OPTIONS]
+```
+
+其中 `ITEM` 是 `all`、`dataset`、`traces`、`experiment` 或 `prompt` 之一。磁盘上的输出会写入 `PATH/WORKSPACE/projects/<id>/`，并带有一个 `project.json` 名称索引，因此相同的 `--path` 值可以在导出和导入之间往返。
+
+导入新增了一个 `--to-project` 选项，可在导入时将条目重定向到另一个项目。
+
+👉 [导出和导入文档](https://www.comet.com/docs/opik/tracing/advanced/export-data)
+
+## Bug 修复和改进
+
+- **MCP 服务器：`opik mcp status` 命令 + 自动检测托管服务器** — `opik configure` 和 `opik mcp configure` 现在会探测 Comet 托管的 MCP 服务器（HTTP + OAuth），并且只在托管服务器不可用时才回退到本地 `uvx opik-mcp` 服务器。新增的 `opik mcp status` 命令（以及等价的 `opik configure status`）报告当前生效的 Opik 配置，以及哪些 AI 助手注册了 MCP 服务器，并标记任何偏离 `~/.opik.config` 的情况。使用 `--local-server` 强制走本地路径。
+
+- **Vercel AI SDK v7 和 Vercel eve agent 支持** — `OpikExporter` 现在能捕获从 AI SDK v4 到 v7 以及来自 Vercel eve agent 框架的 trace。多轮 eve 对话会通过会话 ID 自动分组到一个线程中，并捕获缓存 token 用量。
+
+- **`track_openai`：自定义 `provider` 参数** — 现在可以向 `track_openai` 传入一个可选的 `provider` 参数（`str` 或 `opik.LLMProvider`），以在每个 span 上覆盖自动检测到的提供商。适用于主机名派生的默认值不具有描述性的兼容 OpenAI 的 API。
+
+  ```python
+  client = track_openai(openai.OpenAI(base_url="..."), provider="my-provider")
+  ```
+
+- **可配置的本地 runner 轮询间隔** — `opik connect` / `opik endpoint` runner 默认每 0.5 秒轮询一次任务（约 120 次请求/分钟）。设置 `OPIK_RUNNER_POLL_INTERVAL`（秒）可以在防火墙或代理限制持续轮询的环境中降低频率。持续失败现在会升级为一个可操作的警告，并附带防火墙/代理提示，而不是静默。
+
+- **断言评分错误现在显示在 UI 中** — 当 LLM-as-judge 断言评分器失败时（例如，因为配置的模型不可用），会显示一个橙色的 **Scoring error** 徽章，并附带可操作的提示，而不是旋转指示器或通用的灰色 **Skipped** 标签。
+
+- **编辑断言后测试套件条目不再丢失** — 一个 ClickHouse 参数转义 bug 导致 LLM-judge 提示词中的 `\n` 序列被反转义为字面换行符，产生无效的存储 JSON，并在读取时静默丢弃该行。条目现在可以正确地经历编辑往返。
+
+- **ChrF 指标：`char_order` 和 `ignore_whitespace` 现在转发给 NLTK** — 这些参数被存储在 `ChrF` 对象中，但从未传递给 `nltk.translate.chrf_score.sentence_chrf`。`char_order` 现在作为 `max_len` 转发，`ignore_whitespace` 按原样转发。
+
+- **OpenAI 音频模型：音频输入 token 以正确的费率计费** — 对于 `gpt-4o-audio-preview` 和 `gpt-4o-realtime` 等模型，音频输入 token 现在按 `input_cost_per_audio_token` 费率收费（最高可达标准文本费率的 16 倍）。之前它们被静默地按标准文本输入费率计费。
+
+- **`opik export` span 获取性能** — 当导出经过过滤的 trace 子集时，span 现在通过从匹配的 trace ID 派生的 `trace_id` 范围边界获取，而不是扫描整个项目。之前停滞的大型过滤导出现在可以迅速完成。
+
+- **Optimization studio 重命名为 Optimization runs** — 之前称为 "Optimization studio" 的 v2 UI 部分现在在所有地方都标注为 **Optimization runs**。
+
+## 性能改进
+
+- **附件 base64 检测现在是 O(n)** — 检测附件负载是否已经是 base64 编码的正则表达式用占有型量词重写，使其随负载大小线性，避免在大型二进制附件上发生灾难性回溯。
+
+- **自托管：ClickHouse 升级到 25.8 LTS** — 捆绑的 ClickHouse 实例（Helm chart、docker-compose 和 testcontainers）现在固定为 25.8 LTS，operator 固定为 0.27.1。此版本无需手动迁移；现有数据可被新版本正确读取。
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.0.73...2.1.5)
+
+_发布版本_: `2.0.77`, `2.1.0`, `2.1.1`, `2.1.2`, `2.1.3`, `2.1.4`, `2.1.5`

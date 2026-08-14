@@ -1,0 +1,181 @@
+---
+title: 自定义模型
+subtitle: 为内置防护未覆盖的检查微调一个语言模型
+headline: 自定义护栏模型 | Opik 文档
+og:title: 自定义护栏模型 — Opik
+og:description: 在你自己的标注示例上微调一个语言模型，在 Opik 中创建一个自定义护栏，然后从策略中运行它。Opik 为你托管训练并服务该模型。
+og:site_name: Opik 文档
+---
+
+内置防护覆盖了大多数应用共有的检查——个人数据、主题、提示注入。当你需要你产品特有的东西时，**微调你自己的模型**：给 Opik 一个标注数据集和一份要捕获什么的描述，它会把一个语言模型训练成一个检查，回答关于一段文本的一个是非问题，例如"这个回复读起来是否偏离品牌？"或"这是否辱骂？"。
+
+Opik 为你运行整个循环。无需搭建训练基础设施，也无需部署任何东西：你提供示例，Opik 在其 GPU 上微调模型、报告结果有多准确，并从那时起内联服务它。你可以[从 UI 进行](#create-a-model-in-the-ui)或[从 SDK 进行](#fine-tune-from-the-sdk)。
+
+创建之后，模型的行为就像任何其他防护一样：在[策略](/guardrails/policies)的**自定义分类器**防护中选择它，或从代码中按名称引用它。
+
+## 何时微调
+
+微调模型不是覆盖内置防护遗漏检查的唯一方式，而且它并不总是正确的那个：
+
+- 一个 [LLM 评判](/guardrails/guardrails#llm-judge)不需要你自己的模型——你用平实语言写规则，由你工作区提供商中的一个模型来评判。最快跑起来，每次调用最贵。
+- 一个[手动护栏](/guardrails/guardrails#manual-guardrails)适合一次性的启发式或确实只是代码的业务规则，比如一个竞争对手名称列表。
+- 一个**微调模型**是前两者的进阶形态。一旦某项检查必须在每个请求上运行并且必须正确，在你的标注上训练一个小模型，既比每次请求都提示一个通用模型更便宜，又比启发式更准确。
+
+## 微调还是仅提示词
+
+Opik 也可以仅凭一份描述就建立一个模型，完全不需要训练。这两个选项在你准备什么和得到什么上有所不同。
+
+| | 微调 | 仅提示词 |
+| --- | --- | --- |
+| **你提供什么** | 一个标注数据集 | 一份描述，以及可选的几个示例 |
+| **它如何决策** | 一个在你的示例上训练的语言模型 | 你的描述成为一个通用模型据此评判的提示词 |
+| **就绪时间** | GPU 分钟 | 秒 |
+| **质量信号** | 在留出数据上测量的准确率 | 无——你自己判断 |
+| **最适合** | 在每个请求上运行且必须正确的检查 | 原型化该检查，以及低流量使用 |
+
+只要检查很重要，就选择**微调**：一个训练过的模型在高流量下运行比每次请求都提示一个通用模型更快、更便宜，它学会你的标注所编码的边界情况，并且它带有一个你可以在信任之前用来判断的数字。
+
+**仅提示词**是廉价的第一稿。创建一个不花任何成本，因此它是快速确认你的描述确实说出了你意思的方式——并且在预约 GPU 分钟之前，收集那些分歧，它们会成为你的训练标注。
+
+## 在 UI 中创建模型
+
+打开侧边栏中的 **Guardrails**，切换到 **Models** 标签页，选择 **Create model**。该标签页列出工作区可用的每个模型，包括 Opik 自己的内置检测器，因此你可以一眼看出哪些是仅提示词的、哪些是微调的、哪些是平台自带的。
+
+<Frame>
+  <img src="/img/guardrails/model-create.png" />
+</Frame>
+
+<Steps>
+  <Step title="命名它">
+    小写字母、数字和连字符——长度在 3 到 63 个字符之间。
+
+    <Warning>
+      模型无法重命名。策略通过这个名字引用它，因此选择一个你能长期接受的名字。
+    </Warning>
+  </Step>
+  <Step title="描述它应该标记什么">
+    用平实的语言写下一个违规是什么样的——例如，"对于一种平静、朴实的客服语气来说，这个回复读起来偏离品牌。"
+
+    这段文本是模型的提示词：它是模型评判的依据，在训练时和推理时都是。对你所关心的那个边界要具体，因为那正是一份简短描述通常会留下歧义的部分。
+  </Step>
+  <Step title="选择它如何决策">
+    选择 **Fine-tuned** 并附加你的训练数据集——Opik 会在其上训练模型。
+
+    如果你改为选择 **Prompt only**，就没有数据集。你可以添加它应该标记的示例和它应该放行的示例——每行一个，两者都可选——它们会被折叠进提示词中，通常是修复一个判断错了边界的模型的最快方式。
+  </Step>
+  <Step title="启动它">
+    **Start training** 将微调任务排队；模型显示为 **Training**，直到完成，完成后变为 **Active**。仅提示词的模型立即可用。
+  </Step>
+</Steps>
+
+### 训练数据集
+
+微调需要一个 `.jsonl` 文件——每行一个 JSON 对象——最大 50 MB：
+
+```json
+{"text": "Get lost, nobody wants you around here.", "label": true}
+{"text": "Thanks so much for your help today!", "label": false}
+```
+
+当文本违反护栏时把一行标注为 `true`，未违反时标注为 `false`。
+
+<Tip>
+  目标是让每个类别都有足够示例的平衡集合，以代表你的生产流量。低于 30 行时就没有足够的数据为测量留出任何一部分，因此模型会训练，但它的准确率无法测量。
+</Tip>
+
+### 训练期间，以及如果失败
+
+训练需要 GPU 分钟，一旦开始就无法停止。**Models** 标签页会在过程中显示模型状态，模型只有在任务完成或失败后才能删除。
+
+如果训练失败，无法重试——检查数据集在两类中是否都有足够的行、是否没有冲突的标注，然后用修正后的文件创建一个新模型。行菜单的 **Reuse settings** 操作会重新打开已预填名称和描述的表单，因此你只需重新附加文件。
+
+### 检查模型
+
+打开一个模型会显示它的状态和类型、你给它的描述，以及——对于微调模型——训练任务产生了什么：它从多少行学习、运行了多少个 epoch、最终的训练损失，以及它在训练留出数据上的准确率。
+
+<Frame>
+  <img src="/img/guardrails/model-details.png" />
+</Frame>
+
+**留出准确率（Held-out accuracy）**是值得看的数字。它是唯一在模型未见过的文本上测量的指标，这使它成为唯一对生产有意义的指标。Opik 不会阻止一个弱模型被使用，所以这个判断由你来做：如果准确率低，通常的原因是示例太少、集合不平衡，或描述与行的实际标注方式不匹配。
+
+**System prompt** 部分展示模型评判所用的确切文本，由你的描述构建而成。值得展开查看——一个标记错误内容的模型，通常是一个和你意思略有出入的提示词，而这里就是你能看到它的地方。
+
+该面板还会列出当前使用该模型的策略，因此你可以在删除它之前看到你会影响什么。
+
+## 在护栏中使用它
+
+把模型添加到一个[策略](/guardrails/policies)：打开**自定义分类器**防护，选择你的模型，并设置一个阈值。只有就绪的模型才可选择。
+
+当模型的分数达到或超过阈值时，防护失败。调低它更严格，调高它更宽松。
+
+从那时起，任何引用该策略的应用都会连同策略的其他检查一起运行你的模型——无需改动应用即可推出：
+
+```python
+from opik.guardrails import Guardrail
+
+guardrail = Guardrail.from_stored_policies(names=["support-tone"])
+```
+
+<Note>
+  模型也可以在代码中用 `CustomGuardrail` 防护直接引用，它接受 `model_name` 和
+  `threshold`。参见[在代码中定义防护](/guardrails/guardrails#defining-guards-in-code)。
+</Note>
+
+## 从 SDK 微调
+
+微调也是一次单一的 SDK 调用，这正是数据集存放在版本控制中或训练作为管线一部分运行时你想要的。把你的标注示例传给 `create_custom_guardrail`，Opik 训练模型并以你选择的名字服务它。
+
+每个示例是 `text` 加上一个二元的 `label`，其中 `1` 表示检查成立、护栏应当失败。`description` 补全这句话"Determine whether it ..."。
+
+```python
+from opik.guardrails import create_custom_guardrail
+
+result = create_custom_guardrail(
+    name="toxicity-v1",
+    description="contains toxic or abusive language",
+    examples=[
+        {"text": "Get lost, nobody wants you around here.", "label": 1},
+        {"text": "Thanks so much for your help today!", "label": 0},
+        # ... more labeled examples
+    ],
+)
+
+print(result["eval_metrics"])
+```
+
+默认情况下，调用会阻塞直到训练完成，并在留出的验证和测试划分上返回评估指标，因此你可以在使用模型之前判断质量。传入 `wait=False` 可立即返回，传入 `overwrite=True` 可在已存在的名字下重新训练。
+
+<AccordionGroup>
+  <Accordion title="跟随训练运行的过程">
+    传入一个 `callback`，在每次轮询时以当前状态调用它。该状态携带一个 `progress` 字典——完成百分比、epoch、最新训练损失和最新验证指标：
+
+    ```python
+    def on_progress(status):
+        p = status.get("progress", {})
+        print(
+            f"{status['status']} {p.get('percent', 0)}% "
+            f"epoch={p.get('epoch')} "
+            f"val_f1={p.get('latest_eval', {}).get('eval_validation_f1')}"
+        )
+
+    create_custom_guardrail(
+        name="toxicity-v1",
+        description="contains toxic or abusive language",
+        examples=[...],
+        callback=on_progress,
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="策略" href="/guardrails/policies" icon="fa-regular fa-list-check">
+    把你的防护分组为一个你的应用所引用的命名策略。
+  </Card>
+  <Card title="护栏服务器" href="/guardrails/server" icon="fa-regular fa-server">
+    自托管 Opik 的配置和部署选项。
+  </Card>
+</CardGroup>

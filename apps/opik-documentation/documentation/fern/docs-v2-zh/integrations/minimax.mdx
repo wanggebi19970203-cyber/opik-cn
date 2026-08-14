@@ -1,0 +1,103 @@
+---
+description: 通过兼容 OpenAI 或兼容 Anthropic 的 API，使用 Opik 跟踪 MiniMax 模型调用。
+headline: MiniMax | Opik 文档
+og:description: 为 MiniMax 配置 Opik 跟踪，覆盖全球和中国 API 端点。
+og:site_name: Opik 文档
+og:title: 将 MiniMax 与 Opik 集成
+title: 使用 Opik 实现 MiniMax 可观测性
+---
+
+MiniMax 为其语言模型提供兼容 OpenAI 和兼容 Anthropic 的 API。Opik 可以通过包装相应的 Python SDK 客户端来跟踪任一协议。
+
+## 安装依赖
+
+安装 Opik 以及你计划使用的协议所对应的 SDK：
+
+```bash
+pip install opik openai anthropic
+```
+
+为你的部署配置 Opik：
+
+```bash
+opik configure
+```
+
+设置你的 MiniMax API 密钥：
+
+```bash
+export MINIMAX_API_KEY="<MINIMAX_API_KEY>"
+```
+
+## 选择端点
+
+使用与你账户区域和 SDK 协议对应的端点：
+
+| 区域 | 兼容 OpenAI 的基础 URL | 兼容 Anthropic 的基础 URL |
+| --- | --- | --- |
+| 全球 | `https://api.minimax.io/v1` | `https://api.minimax.io/anthropic` |
+| 中国 | `https://api.minimaxi.com/v1` | `https://api.minimaxi.com/anthropic` |
+
+你可以在[全球 MiniMax 文档](https://platform.minimax.io/docs)或[中国 MiniMax 文档](https://platform.minimaxi.com/docs)中找到更多 API 详情。
+
+## 跟踪兼容 OpenAI 的调用
+
+用 `track_openai` 包装 OpenAI 客户端，并传入 MiniMax 基础 URL：
+
+```python
+import os
+
+from openai import OpenAI
+from opik.integrations.openai import track_openai
+
+client = OpenAI(
+    api_key=os.environ["MINIMAX_API_KEY"],
+    base_url="https://api.minimax.io/v1",
+)
+client = track_openai(client, project_name="minimax-demo")
+
+response = client.chat.completions.create(
+    model="MiniMax-M3",
+    messages=[{"role": "user", "content": "Explain observability in one sentence."}],
+)
+
+print(response.choices[0].message.content)
+```
+
+对于中国账户，将 `base_url` 改为 `https://api.minimaxi.com/v1`。
+
+## 跟踪兼容 Anthropic 的调用
+
+用 `track_anthropic` 包装 Anthropic 客户端，并传入 MiniMax 基础 URL：
+
+```python
+import os
+
+import anthropic
+from opik.integrations.anthropic import track_anthropic
+
+client = anthropic.Anthropic(
+    api_key=os.environ["MINIMAX_API_KEY"],
+    base_url="https://api.minimax.io/anthropic",
+)
+client = track_anthropic(client, project_name="minimax-demo")
+
+response = client.messages.create(
+    model="MiniMax-M3",
+    max_tokens=512,
+    messages=[{"role": "user", "content": "Explain observability in one sentence."}],
+)
+
+print(response.content[0].text)
+```
+
+对于中国账户，将 `base_url` 改为 `https://api.minimaxi.com/anthropic`。
+
+## 模型标识符
+
+使用你的 MiniMax 账户所暴露的模型标识符。当前的文本模型标识符包括：
+
+- `MiniMax-M3`
+- `MiniMax-M2.7`
+
+被包装的客户端保留正常的 SDK 响应对象，同时 Opik 记录请求、响应、token 用量和模型元数据。

@@ -1,0 +1,89 @@
+---
+headline: Cost Intelligence | Opik 文档
+og:description: 查看你的编码智能体支出实际去向，精确的 token 总量可归因到系统提示词、工具、MCP 服务器、技能、记忆和用户输入，然后通过组织和每用户策略来降低支出。
+og:site_name: Opik 文档
+og:title: Cost Intelligence - Opik
+title: Cost Intelligence
+---
+
+你的提供商账单告诉你花了**多少** token，却没有告诉你这些 token 花在**什么**上面。
+
+与任何其他 LLM 工作负载相比，这一差距在编码智能体身上影响更大。一次 Claude Code 请求就携带着数千 token 的系统提示词、每个已启用 MCP 服务器的工具 schema、记忆文件、技能列表、子智能体定义，以及累积的对话记录——所有这些都发生在开发者输入第一个字符之前。一个扁平化的 token 计数无法告诉你：一次昂贵的会话中有 70% 是框架开销，也无法告诉你某个没人使用的 MCP 服务器出现在每一次请求中。
+
+Cost Intelligence 填补了这一差距。它捕获线路上的每一次编码智能体 API 调用，将这些字节归因到成本桶，并为你提供真正可操作的每用户、每会话、每仓库视图，同时还提供了配套的策略控制。
+
+<Note>
+  Cost Intelligence 是一项企业版功能，需要工作区管理员权限。如果你的工作区中看不到它，请联系你的 Comet 客户团队。
+</Note>
+
+## 你能获得什么
+
+<CardGroup cols={2}>
+  <Card title="精确的支出，而非估算" icon="fa-regular fa-badge-check">
+    Token 总量直接来自提供商自己的 `usage` 负载，从不估算，也从不重新分词。
+  </Card>
+  <Card title="token 级归因" icon="fa-regular fa-chart-pie">
+    每次调用都被拆分到约 20 个成本桶中：系统提示词、工具、MCP
+    服务器、记忆、技能、智能体、思考、工具 I/O、用户输入。
+  </Card>
+  <Card title="每用户可见性" icon="fa-regular fa-users">
+    一个排行榜，显示谁在花什么钱，并支持会话级下钻和每仓库上下文。
+  </Card>
+  <Card title="可操作的节省" icon="fa-regular fa-piggy-bank">
+    带有定价的建议，通常可在不降低输出质量的情况下削减 **15% 到 30%** 的支出，并且一键即可作为策略应用。
+  </Card>
+</CardGroup>
+
+## 你的 token 实际去向
+
+每一次 Claude Code 调用都被拆解为驱动它的各个部分：系统提示词、工具 schema、MCP 服务器、记忆文件、技能、子智能体，以及夹杂在其中的开发者真正输入的内容。
+
+<Frame>
+  <img src="/img/v2/cost-intelligence/home_page.png" alt="Claude Code token 支出按成本桶拆解" />
+</Frame>
+
+对大多数团队来说，令人意外的是这个比例。你的开发者所写的提示词只是你所付费的一小部分；其余的是框架开销，其中大部分是没有人选择、也没有人使用的配置。
+
+这正是关键所在。一旦你能看到这些驱动因素，就可以移除那些不产生任何价值的部分。在实践中，这意味着**支出降低 15% 到 30%，而你的开发者能做的事情没有任何变化**，因为被削减的是未使用的 MCP 服务器、废弃的技能和失控的工具输出，而不是工作本身。
+
+<CardGroup cols={3}>
+  <Card title="构建即精确" icon="fa-regular fa-badge-check">
+    Token 计数来自提供商自己的用量数据，因此你看到的与你的账单一致。
+  </Card>
+  <Card title="对开发者无感" icon="fa-regular fa-bolt">
+    无额外延迟，无工作流变更，如果任何环节失败，智能体会继续正常工作。
+  </Card>
+  <Card title="默认隐私" icon="fa-regular fa-lock">
+    只有计数和元数据离开机器。
+    [绝不包含提示词或响应内容。](/cost-intelligence/data-privacy-security)
+  </Card>
+</CardGroup>
+
+## 支持的智能体
+
+| 智能体 | 状态 |
+| --- | --- |
+| **Claude Code** | 已支持 |
+| **Codex** | 已支持 |
+| **Cursor** | 已支持 |
+
+对于通过自有网关（企业 LLM 网关、LiteLLM、AWS Bedrock 接入网关）对接提供商的部署，可以通过将代理的上游指向该网关来支持。参见[安装](/cost-intelligence/install/overview)。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card
+    title="降低编码智能体支出"
+    icon="fa-regular fa-arrow-trend-down"
+    href="/cost-intelligence/reduce-agent-spend"
+  >
+    操作手册：要衡量什么、浪费藏在哪里，以及哪些策略真正能改变数字。
+  </Card>
+  <Card
+    title="安装"
+    icon="fa-regular fa-download"
+    href="/cost-intelligence/install/overview"
+  >
+    通过托管设置、MDM 或 macOS 应用推广到你的设备群。
+  </Card>
+</CardGroup>

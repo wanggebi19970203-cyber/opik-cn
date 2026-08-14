@@ -1,6 +1,6 @@
 ---
 description: 自托管 Opik 部署中常见问题的故障排查指南。
-headline: 故障排查 | Opik 文档
+headline: 故障排查
 og:description: 了解如何解决自托管 Opik 部署中的常见问题，包括 ClickHouse Zookeeper 元数据丢失及其症状。
 og:site_name: Opik 文档
 og:title: 自托管 Opik 部署故障排查
@@ -76,6 +76,53 @@ SELECT * FROM system.macros WHERE macro = 'cluster';
 ##### 4. 重新执行迁移
 
 重启 ClickHouse 后，重新执行后端部署或迁移。后端应在 ClickHouse 就绪后自动重试。
+
+### 全新多副本安装的迁移失败
+
+#### 问题描述
+
+在 ClickHouse 集群上使用 **2 个或更多副本**进行的全新 Opik 安装无法完成其分析迁移。后端永远不会启动（CrashLoopBackOff），迁移步骤会以如下错误失败：
+
+```
+Code: 60. DB::Exception: Could not find table: <table_name>. (UNKNOWN_TABLE)
+Code: 81. DB::Exception: Database opik does not exist. (UNKNOWN_DATABASE)
+```
+
+_`opik` 是默认的分析数据库名称（`ANALYTICS_DB_DATABASE_NAME`）；如果您覆盖了它，请替换为您自己的名称。_
+
+**症状：**
+
+- 仅限全新安装（无现有数据）；后端处于 CrashLoopBackOff 状态
+- 迁移错误指向某张表或在某个副本上缺失的 `opik` 数据库
+- 一个副本持有 `opik` 数据库和表，而另一个副本只有很少或没有
+
+#### 原因
+
+Opik 最早的分析迁移早于感知集群的 DDL——它们不使用 `ON CLUSTER '{cluster}'`——因此它们只在单个副本上创建 `opik` 数据库和基础表。随后，感知集群的迁移会传播到每个副本，并在从未收到该基础 schema 的副本上失败。ClickHouse operator 只会在副本**加入**集群时（扩容时）将 schema 复制到该副本，而不会在迁移过程中复制。
+
+#### 解决方法
+
+分两个阶段安装高可用部署，以便在额外副本加入之前让 schema 存在：
+
+<Steps>
+  <Step>
+    使用 `clickhouse.replicasCount: 1` 进行安装（或重置为）。
+  </Step>
+  <Step>
+    等待 `opik-backend` 变为 `Ready`——所有迁移都会应用在单个副本上。
+  </Step>
+  <Step>
+    提高 `clickhouse.replicasCount`（例如设为 `2`）并升级。operator 会配置新副本，并将已完全迁移的 schema 复制到该副本。
+  </Step>
+</Steps>
+
+<Callout intent="info">
+单副本安装以及已迁移多副本集群的升级不受影响。感知集群的迁移使用 `ON CLUSTER '{cluster}'`，因此一旦基础 schema 在所有副本上就绪，后续迁移就会自动保持一致。
+</Callout>
+
+<Callout intent="warning">
+如果一次全新的多副本尝试被拆除，被删除的表可能会留下孤立的 `/clickhouse/tables/...` Zookeeper 路径，导致重试时出现 `REPLICA_ALREADY_EXISTS`。由于全新安装没有需要保留的数据，恢复只需在重新运行之前清除这些孤立路径——[ClickHouse Zookeeper 元数据丢失](#clickhouse-zookeeper-metadata-loss)中的完整副本恢复重建是用于恢复现有数据的，此处并不需要。
+</Callout>
 
 ### ClickHouse Zookeeper 元数据丢失
 
@@ -207,6 +254,167 @@ kubectl exec -it cometml-production-opik-zookeeper-0 -- zkCli.sh -server localho
 # 列出表（示例路径 - 请根据您的数据库名称进行调整）
 ls /clickhouse/tables/0/<database_name>/<table_name>
 ```
+
+### ClickHouse `TOO_MANY_PARTS` 错误与卡住的合并
+
+#### 问题描述
+
+在持续的高容量摄入下，span/trace 批量插入可能会开始以 HTTP 500 失败，同时 ClickHouse 拒绝新的 part：
+
+```
+Code: 252. DB::Exception: Too many parts (N) in table 'opik.spans'.
+Merges are processing significantly slower than inserts:
+While executing WaitForAsyncInsert. (TOO_MANY_PARTS)
+```
+
+调用 `POST /api/v1/private/spans/batch`（或 `/traces/batch`）的客户端会收到 500。该表的活跃 part 数量已超过 ClickHouse 的 `parts_to_throw_insert` 阈值（默认 `3000`），并且没有下降。
+
+**症状：**
+
+- span/trace 批量端点出现 500；opik-backend 日志中出现 `TOO_MANY_PARTS`（`Code: 252`）
+- `spans` 和/或 `traces` 的活跃 part 数量很高且持续增长
+- 如果持续下去，opik-backend 的 ClickHouse 连接池可能会耗尽（`ConnectionRequestTimeoutException`），进一步放大影响
+
+<Callout intent="info">
+  这种异步插入行为适用于**所有**由 ClickHouse 支持的写入——包括单个 create/update 调用以及批量端点，以及其他实体（反馈评分、数据集数据项、实验……）——因为该设置位于连接之上。Span 和 trace，尤其是**批量**端点，产生的数据量远超其他，因此它们会最先触及阈值；下方的调优适用于全局。
+</Callout>
+
+<Callout intent="warning">
+  此错误有**两个截然不同的根本原因**，需要不同的修复方式。在采取任何行动之前，请务必先运行下方的诊断——针对其中一个的恢复方法对另一个没有帮助。
+</Callout>
+
+<Callout intent="info">
+  生产环境的 Opik 以复制集群的方式运行 ClickHouse，因此下方命令使用集群范围的形式，并有两个占位符：`{cluster}`（集群宏）和 `<database_name>`（分析 schema——默认 `opik`，通过 `ANALYTICS_DB_DATABASE_NAME` 设置）。运行前请替换为您自己的值——可通过 `SELECT * FROM system.macros` 和 `SHOW DATABASES` 找到它们。在单节点安装上，去掉 `clusterAllReplicas(...)` 包装（直接查询 `system.*` 表）以及 `ON CLUSTER '{cluster}'` 子句。
+</Callout>
+
+#### 先进行诊断
+
+```sql
+-- 每个节点和表的活跃 part 数量：该数量是否很高且在增长？
+SELECT hostName() AS host, table, count() AS active_parts
+FROM clusterAllReplicas('{cluster}', system.parts)
+WHERE active AND database = '<database_name>'
+GROUP BY host, table ORDER BY active_parts DESC;
+
+-- 是否有合并卡住了？查找 num_tries 不断上升且异常重复出现的队列条目。
+SELECT hostName() AS host, database, table, type, num_tries, new_part_name, last_exception
+FROM clusterAllReplicas('{cluster}', system.replication_queue)
+WHERE database = '<database_name>'
+ORDER BY num_tries DESC;
+
+-- 每个节点实际运行了多少合并？与池大小相比如何？
+SELECT hostName() AS host, count() AS running_merges
+FROM clusterAllReplicas('{cluster}', system.merges)
+GROUP BY host;
+
+-- 副本健康状态（用于排除下方的 Zookeeper 元数据丢失场景）。
+SELECT hostName() AS host, table, is_readonly, replica_is_active, zookeeper_exception
+FROM clusterAllReplicas('{cluster}', system.replicas);
+```
+
+- **原因 A —— 碎片化（合并跟不上）。** 合并正常且快速地完成，`running_merges` 健康，但 part 的创建速度超过了合并速度。`system.replication_queue` 中没有任何 `num_tries` 很高且卡住的条目。这是由高并发下的异步插入刷新频率所驱动。
+- **原因 B —— 一个卡住的合并阻塞了队列。** `running_merges` 接近零（尽管 `background_pool_size` 很大），且某个 `replication_queue` 条目的 `num_tries` 很高且不断攀升，`last_exception` 重复出现——通常是损坏/缺失的源 part 文件上的 `Code: 76 ... CANNOT_OPEN_FILE`。这一条“毒”条目卡住了调度器，导致没有其他合并发生，part 无法排空，无论 CPU 或磁盘如何。
+
+<Callout intent="info">
+  如果 `system.replicas` 显示 `Code: 999 / KEEPER_EXCEPTION / No node`，则您遇到的是另一个问题——请参阅[ClickHouse Zookeeper 元数据丢失](#clickhouse-zookeeper-metadata-loss)。`SYSTEM RESTORE REPLICA` 适用于该场景，**不会**清除卡住的合并。
+</Callout>
+
+#### 原因 A 的解决方法 —— 调优异步插入
+
+Opik 在 **ClickHouse 连接**上应用其异步插入设置（通过 `ANALYTICS_DB_QUERY_PARAMETERS` 中的 `custom_http_params`），因此它们适用于每一次插入。出厂默认值更偏向新鲜度而非批处理：
+
+```
+async_insert=1
+wait_for_async_insert=1
+async_insert_busy_timeout_min_ms=100
+async_insert_busy_timeout_max_ms=250
+async_insert_use_adaptive_busy_timeout=1
+```
+
+当 `async_insert=1` 时，每次服务端刷新都会成为新的 part。较短的 busy-timeout 窗口（100–250 ms）意味着频繁刷新，在高并发下会产生许多小 part，合并必须努力跟上。
+
+<Callout intent="warning">
+  由于 Opik 在连接上固定了 busy-timeout 设置，因此在 ClickHouse **服务器配置或用户设置**中调优 `async_insert_busy_timeout_*` **不会生效**——连接上的值优先。请改为通过 Opik 配置进行更改（见下文）。
+</Callout>
+
+要为高容量部署减少碎片化，可通过以下 opik-backend 环境变量扩大刷新窗口（更少、更大的 part）：
+
+```bash
+ANALYTICS_DB_ASYNC_INSERT_BUSY_TIMEOUT_MAX_MS=2000   # 自适应刷新窗口的上限（毫秒）；例如 1000–3000
+ANALYTICS_DB_ASYNC_INSERT_BUSY_TIMEOUT_MIN_MS=1000   # 自适应刷新窗口的下限（毫秒）；保持低于上限
+ANALYTICS_DB_ASYNC_INSERT_MAX_DATA_SIZE=52428800     # 强制刷新的缓冲字节数；越大 = part 越少
+```
+
+<Callout intent="info">
+  这些环境变量在设置时才会生效——它会覆盖您 `ANALYTICS_DB_QUERY_PARAMETERS` 链中的值，若链中省略了该项则会被添加——未设置时则保持您的值不变。未设置时，busy-timeout 旋钮会回退到出厂链默认值（100 / 250 ms），`async_insert_max_data_size` 回退到您 ClickHouse 服务器 / 用户配置中的值（Opik 不固定它）。要更改任何其他连接设置，请覆盖整个 `ANALYTICS_DB_QUERY_PARAMETERS` 字符串，保留每个现有键，只调整您需要的部分。
+</Callout>
+
+扩大刷新窗口会牺牲少量摄入延迟和缓冲内存——数据行最多会晚 `max_ms` 才可查询——以换取少得多的 part，对于高容量可观测性数据来说是一笔划算的权衡。在持续高负载下，刷新本就会由数据量触发，因此新增的延迟大部分落在较安静的时段。更改这些设置后，重启 opik-backend 并观察活跃 part 数量和 `system.asynchronous_inserts`，将 `max_ms` 在 1000–3000 ms 之间按需调整。新的插入碎片化程度会降低；现有的积压仍需合并消化（一旦插入速率不再超过合并速率，它就会被消化）。
+
+<Callout intent="warning">
+  由于摄入是同步的（`wait_for_async_insert=1`），更高的 `max_ms` 也会提高批量端点和 create/update 端点最坏情况下的响应时间。请确保您的客户端请求超时明显大于 `max_ms`：官方 Opik SDK 已使用较宽裕的读取超时，因此典型值通常是安全的，但自定义或直接的 HTTP 客户端应进行检查，并在必要时调大超时，以免调用方在插入成功返回之前就超时。
+</Callout>
+
+#### 原因 B 的解决方法 —— 解除卡住的合并
+
+请按从侵入性最小到最大的顺序操作：提高阈值（步骤 1）和诊断（步骤 2–3）是非破坏性的；`DETACH`（步骤 4）可恢复但会影响数据；编辑 Zookeeper（步骤 6）是最后的手段。请针对诊断所标记的表运行命令——将 `<table>` 替换为 `spans` 或 `traces`。
+
+<Steps>
+  <Step>
+    **立即恢复摄入（可逆，无数据丢失）。** 暂时提高抛出阈值，以便在您修复根本原因期间插入能够成功：
+
+    ```sql
+    ALTER TABLE <database_name>.<table> ON CLUSTER '{cluster}' MODIFY SETTING parts_to_throw_insert = 20000, parts_to_delay_insert = 20000;
+    ```
+
+    在 Distributed 部署中，请针对底层的每个分片 ReplacingMergeTree 表操作，而不是 Distributed 代理表。这是一个安全、可逆的临时措施——不会删除任何数据——因此一旦积压排空，请恢复为默认值。
+  </Step>
+  <Step>
+    **确认副本健康**（`is_readonly = 0`、`replica_is_active = 1`、`zookeeper_exception = ''`）。如果看到 Keeper `No node` 错误，请切换到[ClickHouse Zookeeper 元数据丢失](#clickhouse-zookeeper-metadata-loss)。
+  </Step>
+  <Step>
+    **从 `system.replication_queue.last_exception` 的值中找出失败的合并及其损坏的源 part**（`CANNOT_OPEN_FILE` 消息会指明有问题的 part 目录）。
+  </Step>
+  <Step>
+    **尝试恢复损坏的源 part。** 如果某个 part 在另一个副本上仍然完好，请 `DETACH` 本地损坏的副本（切勿 `DROP`）——ClickHouse 随后会从健康的副本重新获取完好的副本，从而使被阻塞的合并得以完成。被分离的 part 会保留在表的 `detached/` 目录下。
+
+    ```sql
+    ALTER TABLE <database_name>.<table> DETACH PART 'all_1_100_5';
+    -- 对异常中列出的每个损坏 part 重复执行
+    ```
+
+    <Callout intent="warning">
+      会影响数据、需要专家操作——请在具备 ClickHouse 专业知识的情况下进行。在 `ReplicatedMergeTree` 上，排队的合并条目会按名称引用其源 part，因此 `DETACH` 本身**不会**移除该条目：它只在 part 在别处完好且可被重新获取时有帮助。如果 part 在**所有**副本上均已损坏，则没有可重新获取的内容——该条目会不断重试，您必须继续执行步骤 6 来清除它（而移除该 part 也会丢弃其数据行，对于可观测性数据而言只是一个小而有界的时间窗口）。始终使用 `DETACH`（可恢复），切勿使用 `DROP`。
+    </Callout>
+  </Step>
+  <Step>
+    **重新检查队列。** 如果卡住的条目消失且合并恢复，积压会自动排空。执行 `SYSTEM RESTART REPLICA <database_name>.<table>` 可以帮助节点重新读取其队列。
+  </Step>
+  <Step>
+    **最后的手段 —— 从 Zookeeper 中移除卡住的队列条目。** 当重新获取/`DETACH` 无法清除它时（步骤 4–5），直接移除这条“毒”条目是可靠的修复方式——但这很危险，因此请仅在完成步骤 4–5 之后、且最好在具备 ClickHouse 专业知识的情况下进行。在**每个**副本路径下删除特定的卡住的 `queue-XXXXXXXXXX` 节点，然后重启副本：
+
+    ```
+    /clickhouse/tables/<shard>/<database_name>/<table>/replicas/<replica>/queue/queue-XXXXXXXXXX
+    ```
+
+    <Callout intent="warning">
+      直接编辑 Zookeeper 很危险，如果删除了错误的节点，可能会破坏复制。请只删除确切的卡住条目，并在所有副本上执行，尽可能优先使用上方的 `DETACH PART` 路径。
+    </Callout>
+  </Step>
+  <Step>
+    **验证恢复并回退。** 观察活跃 part 数量下降，然后将 `parts_to_throw_insert` / `parts_to_delay_insert` 恢复为默认值。
+  </Step>
+</Steps>
+
+<Callout intent="info">
+  **不能清除卡住合并的做法有：** 单独执行 `SYSTEM RESTART REPLICA`（它只会重置 `num_tries` 并重新尝试同一条目）、`SYSTEM STOP/START MERGES`（该条目在暂停后依然存在），以及 `KILL MUTATION`（合并不是变更）。请改用 `DETACH PART` 路径。
+</Callout>
+
+#### 预防措施
+
+- **高容量摄入：** 在扩大摄入规模之前，提高 `async_insert_busy_timeout_max_ms`（上方的原因 A），并监控 part 数量。
+- **ClickHouse 主版本升级：** 在复制表的滚动升级期间，副本可能会短暂进入只读状态，这可能导致 part 文件不一致，并安排一个之后会失败的合并。升级期间应静默或限制摄入，并在**重新加大**摄入之前确认所有副本健康（`system.replicas`）且 `system.replication_queue` 干净。
+- **监控：** 对每张表的集群范围活跃 part 数量，以及 `num_tries` 不断上升的 `system.replication_queue` 条目设置告警，以便在卡住的合并演变为 `TOO_MANY_PARTS` 之前及时发现。
 
 ## 诊断命令
 

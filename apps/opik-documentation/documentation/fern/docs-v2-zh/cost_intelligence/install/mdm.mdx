@@ -1,0 +1,177 @@
+---
+headline: 通过 MDM 安装 | Opik 文档
+og:description: 使用 Jamf、Kandji、Intune 或 JumpCloud，通过向每台设备推送一个 Claude Code 托管设置 drop-in 文件，将 Cost Intelligence 部署到设备群。
+og:site_name: Opik 文档
+og:title: 通过 MDM 安装 - Opik
+title: 通过 MDM 安装插件
+---
+
+**这是我们向大多数组织推荐的路径。** 你使用已经在运行的设备管理，把配置作为每台设备上的一个文件来交付：Jamf、Kandji、Intune、JumpCloud 或 Linux 配置工具。
+
+它通常是更好选择的两个原因：
+
+- **你选择谁获得它。** 针对特定设备或组，这样你可以先对一个团队试点，确认数据看起来正确，然后从那里扩大。托管设置会一次性应用到组织中的每一个已认证用户，无法分阶段。
+- **它使用管理员已经在操作的工具。** 把配置文件推送到设备组，对运营你设备群的人来说是日常工作，没有新的管理面，并且它覆盖使用个人 Claude 账户的开发者，以及账户不由你集中控制的机器。
+
+配置本身与[托管设置路径](/cost-intelligence/install/managed-settings)完全相同；只有交付方式不同。Claude Code 在本地读取它，而不是从 Anthropic 获取。
+
+## 设备上落地什么
+
+一个单一的 JSON drop-in 文件，以 root 身份写入：
+
+| 操作系统 | 路径 |
+| --- | --- |
+| macOS | `/Library/Application Support/ClaudeCode/managed-settings.d/50-opik-cipx.json` |
+| Linux | `/etc/claude-code/managed-settings.d/50-opik-cipx.json` |
+| Windows | `C:\Program Files\ClaudeCode\managed-settings.d\50-opik-cipx.json` |
+
+Claude Code 会将 `managed-settings.d/` 中的一切与任何现有的 `managed-settings.json` 深度合并，因此这是**增量**的：它不会覆盖你已经推送的其他策略。
+
+以这种方式下发的设置是组织强制执行的：用户无法禁用插件或覆盖 `OPIK_CIPX_*` 环境，并且它们适用于设备上的每一个用户。
+
+## 准备配置
+
+从 **Cost Intelligence → Organization Policies → Copy settings file** 生成，或从以下模板开始：
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "opik-enterprise": {
+      "source": { "source": "github", "repo": "comet-ml/cost-intelligence-proxy" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "opik-cipx@opik-enterprise": true
+  },
+  "env": {
+    "OPIK_CIPX_BASE_URL": "https://www.comet.com/opik/api",
+    "OPIK_CIPX_WORKSPACE": "your-org-cc-workspace",
+    "OPIK_CIPX_API_KEY": "<workspace-scoped API key>",
+    "OPIK_CIPX_PROJECT": "claude-code"
+  }
+}
+```
+
+<Warning>
+  该文件持有一个 API 密钥，并且按设计在设备上对所有用户可读，
+  因为 Claude Code 以登录用户身份运行，必须能够读取它。使用限定为 ingest 权限的
+  **服务账户**密钥，绝不要使用个人令牌，并通过重新部署来轮换它。
+</Warning>
+
+发布前先校验。格式错误的负载会被某些 MDM 静默忽略，这会给你一个报告成功却什么都不执行的推广：
+
+```bash
+plutil -convert json -o /dev/null 50-opik-cipx.json   # macOS
+python3 -m json.tool 50-opik-cipx.json > /dev/null    # 任意平台
+```
+
+## 部署
+
+<Tabs>
+
+<Tab title="任意 MDM（Jamf、Kandji、Intune）">
+
+将 JSON 发送到设备（pkg 负载，或"文件和脚本"策略），然后以 root 身份放置它：
+
+```bash
+#!/bin/bash
+set -euo pipefail
+DIR="/Library/Application Support/ClaudeCode/managed-settings.d"
+/bin/mkdir -p "$DIR"
+/bin/cp 50-opik-cipx.json "$DIR/50-opik-cipx.json"
+/usr/sbin/chown root:wheel "$DIR/50-opik-cipx.json"
+/bin/chmod 644 "$DIR/50-opik-cipx.json"
+```
+
+MDM 脚本运行器已经以 root 身份执行。使用绝对工具路径；这些运行器通常只有一个精简的 `PATH`。
+
+</Tab>
+
+<Tab title="JumpCloud">
+
+整个安装可以放进一条 JumpCloud Command 中，以 **root** 身份运行。用 heredoc 内联 JSON，这样无需单独的文件传输：
+
+```bash
+#!/bin/bash
+set -euo pipefail
+DIR="/Library/Application Support/ClaudeCode/managed-settings.d"
+/bin/mkdir -p "$DIR"
+TMP="$(/usr/bin/mktemp)"
+/bin/cat > "$TMP" <<'JSON'
+{ ...your configuration... }
+JSON
+/usr/bin/plutil -convert json -o /dev/null "$TMP"   # 校验；若无效则中止
+/bin/mv "$TMP" "$DIR/50-opik-cipx.json"
+/usr/sbin/chown root:wheel "$DIR/50-opik-cipx.json"
+/bin/chmod 644 "$DIR/50-opik-cipx.json"
+```
+
+两条 JumpCloud 特有的操作注意事项：
+
+- **面向用户，而不是设备**，这样已离职员工的机器会被排除在外。
+- **触发后保留该 Command。** JumpCloud 会为离线的 Mac 排队，并在下次签到时运行；删除 Command 会取消那些排队的交付。
+
+</Tab>
+
+<Tab title="Linux">
+
+同样的 JSON，不同的路径。任何能写入 root 拥有文件的配置工具都可以：Ansible、Puppet、Chef 或软件包 postinstall：
+
+```bash
+install -d -m 755 /etc/claude-code/managed-settings.d
+install -m 644 -o root -g root \
+  50-opik-cipx.json /etc/claude-code/managed-settings.d/50-opik-cipx.json
+```
+
+</Tab>
+
+</Tabs>
+
+## 验证
+
+以登录用户身份，在一个**全新**的 Claude Code 会话中（托管设置在启动时加载）：
+
+```bash
+claude plugin list
+cat "/Library/Application Support/ClaudeCode/managed-settings.d/50-opik-cipx.json"
+opik-cipx status
+```
+
+然后确认 trace 正在到达目标工作区。
+
+## 之后更新配置
+
+有两件事值得分开，因为它决定你多久需要碰一次 MDM：
+
+- **引导配置**：工作区、API 密钥、基础 URL、上游网关。更改这些意味着重新部署文件。
+- **成本策略**：模型默认值、输出上限、被拒绝的 MCP 服务器和技能、思考预算。这些**不需要** MDM 推送——你从仪表板管理它们，设备会自行拾取（参见[推广成本策略](/cost-intelligence/roll-out-cost-policies)）。
+
+所以你只需推送这个文件一次，之后即可从 Opik 仪表板管理成本策略。
+
+## 卸载
+
+```bash
+sudo rm "/Library/Application Support/ClaudeCode/managed-settings.d/50-opik-cipx.json"
+```
+
+然后，在每台设备上，`opik-cipx uninstall` 移除钩子、停止守护进程并删除本地状态。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card
+    title="降低编码智能体支出"
+    icon="fa-regular fa-arrow-trend-down"
+    href="/cost-intelligence/reduce-agent-spend"
+  >
+    将数据转化为更低的账单。
+  </Card>
+  <Card
+    title="通过 MDM 安装 macOS 应用"
+    icon="fa-regular fa-shield-halved"
+    href="/cost-intelligence/install/macos-app"
+  >
+    当无法下发任何客户端配置时的透明捕获。
+  </Card>
+</CardGroup>

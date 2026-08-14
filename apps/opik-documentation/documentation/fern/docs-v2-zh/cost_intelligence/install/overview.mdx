@@ -1,0 +1,152 @@
+---
+headline: 安装 Cost Intelligence | Opik 文档
+og:description: 为 Cost Intelligence 选择推广路径（Claude Code 托管设置、MDM 下发的配置，或 macOS 捕获应用），以及收集数据的完整清单。
+og:site_name: Opik 文档
+og:title: 安装 Cost Intelligence - Opik
+title: 安装概览
+---
+
+Cost Intelligence 以 Claude Code 插件的形式交付，它在每台开发者机器上运行一个本地代理。推广它意味着做两件事：启用插件，并将其指向你的 Opik 工作区。
+
+无需在服务器上安装任何东西，并且在任何受支持的路径中都没有每个开发者手动操作的步骤。
+
+## 选择推广路径
+
+<CardGroup cols={3}>
+  <Card
+    title="MDM"
+    icon="fa-regular fa-laptop-mobile"
+    href="/cost-intelligence/install/mdm"
+  >
+    **推荐。** 使用你已经在运行的工具（Jamf、
+    Kandji、Intune、JumpCloud）推送配置，并精确选择哪些设备或组获得它，这样你就可以试点和分阶段推广。
+  </Card>
+  <Card
+    title="托管设置"
+    icon="fa-regular fa-cloud"
+    href="/cost-intelligence/install/managed-settings"
+  >
+    **最简单。** 在 Claude 管理控制台中粘贴一段 JSON，但它会一次性应用到组织中**每一个**已认证用户。
+  </Card>
+  <Card
+    title="macOS 应用"
+    icon="fa-regular fa-shield-halved"
+    href="/cost-intelligence/install/macos-app"
+  >
+    通过系统扩展透明捕获，用于完全无法下发任何客户端配置的情况。
+  </Card>
+</CardGroup>
+
+哪种适合你：
+
+| | MDM | 托管设置 | macOS 应用 |
+| --- | --- | --- | --- |
+| **需要** | 任意 MDM / 配置工具 | Claude for Teams 或 Enterprise | MDM + macOS |
+| **平台** | macOS、Linux、Windows | macOS、Linux、Windows | 仅 macOS |
+| **谁接收** | 你指定的任意设备或组 | 组织中每一个已认证用户 | 指定的设备 |
+| **分阶段 / 试点推广** | 是 | 否，所有用户一次性 | 是 |
+| **需要客户端配置** | 是（为你下发） | 是（为你下发） | 无，透明 |
+| **拦截 TLS** | 否 | 否 | 是，本地 |
+| **用户可禁用它** | 否，强制执行 | 否，强制执行 | 否，强制执行 |
+| **工作量** | 低 | 最低 | 最高 |
+
+<Tip>
+  **我们向大多数组织推荐 MDM。** 它使用管理员每天都在运行的设备工具，并且让你决定*谁*获得推广：先从一个团队开始，确认数据按你期望的方式落地，然后再扩大。托管设置没有定向：一旦保存，它就会应用到组织中的每一个已认证用户，这使得试点不可能实现，也使得错误成为全组织的。
+
+  当你拥有 Claude for Teams 或 Enterprise、想要尽可能快的路径、并且乐于一次性为所有人启用，或者你的开发者机器根本没有集中管理时，请选择**托管设置**。只有在两条路径都无法下发客户端配置时，才使用 **macOS 应用**。
+</Tip>
+
+## 先在你自己的机器上试用
+
+在把任何东西推送到设备群之前，先在你自己的机器上安装它。只需一分钟，它能证明你的工作区凭据确实有效，并且如果之后的设备群推广看起来有问题，它能给你一个已知正确的参照。
+
+在 Claude Code 内部：
+
+```
+/plugin marketplace add comet-ml/cost-intelligence-proxy
+/plugin install opik-cipx@opik-enterprise
+```
+
+使用下面[配置参考](#configuration-reference)中的值，在 `~/.opik-cipx/config.toml` 中将它指向你的工作区，然后重启 Claude Code。会话钩子会启动守护进程并将智能体路由经过它。
+
+运行一个简短的会话，然后检查发生了什么：
+
+```bash
+opik-cipx status   # 守护进程状态、生效配置、已发送的 span
+opik-cipx logs     # 追踪守护进程日志
+opik-cipx viewer   # 本地 UI：每一次捕获，以及每个字节被归因到了哪里
+```
+
+<Tip>
+  `opik-cipx viewer` 是回答"它捕获的是否符合我的预期？"的最快方式。它在你自己的机器上渲染每一次捕获的请求，用每个区域落入的成本桶对每个区域着色，且这一切发生在任何数据发送之前。如果仪表板中的数字看起来不对劲，这里也是第一个要查看的地方。
+</Tip>
+
+最后，确认 trace 已到达你的 Opik 工作区。一旦你看到它成功工作过一次，设备群推广就是通过不同机制下发的相同配置。
+
+## 你需要什么
+
+开始任何路径之前：
+
+<Steps>
+
+### 一个用于编码智能体数据的 Opik 工作区
+
+使用专用工作区，而不是共享工作区。它将全团队的智能体流量与单个开发者自己的 Opik 项目隔离开。
+
+### 一个工作区范围的 API 密钥
+
+创建一个限定为 ingest 权限的**服务账户**密钥，而不是个人令牌。在每一种推广路径中，该密钥在开发者设备上是可读的，因此它不应携带写入 trace 之外的任何权限。通过重新部署配置来轮换它。
+
+### 你的 Opik 基础 URL
+
+Opik Cloud 使用 `https://www.comet.com/opik/api`，如果你自托管则使用你自己的源站。
+
+</Steps>
+
+<Tip>
+  **你不必自己组装这些。** 将你正在采用的推广路径发送邮件给
+  [sales@comet.com](mailto:sales@comet.com)，我们会为你的工作区返回填好的精确配置片段，可直接粘贴到你的管理控制台或 MDM 中。这是让第一个试点运行起来的最快方式，也消除了推广错误最常见的来源。
+</Tip>
+
+## 配置参考
+
+每条路径都设置相同的四个值；只有下发机制不同。
+
+| 变量 | 用途 |
+| --- | --- |
+| `OPIK_CIPX_BASE_URL` | 将 trace 发送到的 Opik 安装 |
+| `OPIK_CIPX_WORKSPACE` | 目标工作区 |
+| `OPIK_CIPX_API_KEY` | 工作区范围的服务账户密钥 |
+| `OPIK_CIPX_PROJECT` | trace 落入的 Opik 项目 |
+
+可选：
+
+| 变量 | 用途 |
+| --- | --- |
+| `OPIK_CIPX_UPSTREAM_BASE_URL` | 将流量发送到你自己的网关，而不是直接发送给提供商（企业 LLM 网关、LiteLLM、Bedrock 接入网关） |
+| `CIPX_CAPTURE_CONTENT` | 内容捕获。默认关闭；显式设为 `false` 可阻止任何用户启用它 |
+| `CIPX_SENTRY` | 设为 `off` 可禁用错误遥测 |
+
+## 收集的数据
+
+只上报计数、成本和结构性元数据。除非明确启用内容捕获，否则**不**收集提示词和响应内容，而且组织可以将其固定为关闭，使任何单个用户都无法打开。
+
+<Card
+  title="数据、隐私和安全"
+  icon="fa-regular fa-shield-check"
+  href="/cost-intelligence/data-privacy-security"
+>
+  逐字段的完整清单、负载示例、内容捕获开关、数据去向，以及数据在传输中和落盘后如何受到保护。
+</Card>
+
+
+## 验证推广
+
+在目标设备上，在一个全新的 Claude Code 会话中：
+
+```bash
+opik-cipx status          # 守护进程状态、生效配置、已发送的 span
+claude plugin list        # opik-cipx@opik-enterprise -> enabled / managed
+```
+
+然后确认 trace 正在到达目标 Opik 工作区。最后一项检查才是关键：如果工作区凭据没有落地，一台设备可能看起来完全安装好了，却什么也没有发送。

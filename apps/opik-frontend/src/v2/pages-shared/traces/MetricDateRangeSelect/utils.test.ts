@@ -253,7 +253,12 @@ describe("calculateIntervalStartAndEnd", () => {
     });
 
     it("should handle Date objects with time v1", () => {
-      const today = new Date("2024-01-15T16:45:30.500Z");
+      const today = dayjs(mockCurrentDate)
+        .hour(16)
+        .minute(45)
+        .second(30)
+        .millisecond(500)
+        .toDate();
       const yesterday = new Date("2024-01-14T08:20:15.250Z");
       const dateRange: DateRangeValue = {
         from: yesterday,

@@ -1,5 +1,5 @@
 ---
-headline: 扩展 Opik | Opik 文档
+headline: 扩展 Opik
 og:description: 了解在生产环境中运行 Opik 的最佳实践和配置，确保关键工作负载的弹性和可扩展性。
 og:site_name: Opik 文档
 og:title: 为大规模部署扩展 Opik
@@ -126,6 +126,45 @@ Opik 可扩展性的核心是 ClickHouse，这是一款经过验证的高性能�
 - **生产环境**：2 个副本
 
 为提高效率，应优先进行垂直扩展，再考虑增加副本。
+
+#### 多副本部署中的内部复制
+
+ClickHouse 的 `internal_replication` 设置控制 Distributed 表如何在副本之间路由写入：
+
+- **当 `internal_replication: true` 时**（推荐用于 2 个及以上副本）
+  - Distributed 表只写入每个分片中的一个副本
+  - ReplicatedMergeTree 负责在副本之间进行复制
+  - 更高效，减少重复写入
+
+- **当 `internal_replication: false` 时**（单副本部署的默认值）
+  - Distributed 表写入所有副本
+  - 仅适用于单副本部署
+
+**Opik 如何应用此设置**：
+- 当**未启用分片**时（`clickhouse.sharding.enabled: false`，默认值）：ClickHouse operator 会自动根据 `replicasCount > 1` 推断 `internal_replication`
+- 当**启用了分片**（`clickhouse.sharding.enabled: true`）且您有 2 个及以上副本时：Opik 会在每个分片上显式固定 `internal_replication: true`
+
+**重要的作用域说明**：此设置**仅**适用于 Helm chart 中定义的、由 operator 管理的集群。如果您在此定义之外创建了 Replicated 引擎数据库（例如 `CREATE DATABASE mydb ENGINE = Replicated(...)`），该数据库会自动生成自己的内部集群，并拥有独立的复制设置。Opik 的集群配置并不约束这些自行管理的数据库——它们的复制行为是独立的，如有需要必须单独配置。
+
+#### 全新多副本安装：先迁移，再扩展
+
+直接在 **2 个或更多 ClickHouse 副本**上运行的全新安装无法完成其分析迁移。Opik 最早的迁移并不感知集群，因此在全新的多副本集群上，它们只会到达一个副本；后续迁移随后会以 `UNKNOWN_TABLE` 或 `UNKNOWN_DATABASE` 之类的错误失败（某张表或 `opik` 数据库在某个副本上缺失），并且 `opik-backend` 永远不会就绪。请分两个阶段安装高可用部署：
+
+<Steps>
+  <Step>
+    使用 `clickhouse.replicasCount: 1` 进行安装。
+  </Step>
+  <Step>
+    等待 `opik-backend` 变为 `Ready`——所有迁移随后都会应用在单个副本上。
+  </Step>
+  <Step>
+    提高 `clickhouse.replicasCount`（例如设为 `2`）并升级。ClickHouse operator 会配置新副本，并将已完全迁移的 schema 复制到该副本。
+  </Step>
+</Steps>
+
+<Callout intent="info">
+这只影响**全新**安装。单副本安装以及已迁移多副本集群的升级不受影响——感知集群的迁移使用 `ON CLUSTER '{cluster}'`，因此一旦基础 schema 在所有副本上就绪，它就会自动保持一致。如果在全新多副本安装中遇到此问题，请参阅[故障排查](/self-host/troubleshooting)。
+</Callout>
 
 ### CPU 与内存指南
 

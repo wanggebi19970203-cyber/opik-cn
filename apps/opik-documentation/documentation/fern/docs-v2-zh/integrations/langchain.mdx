@@ -1,6 +1,6 @@
 ---
 description: 从这里开始将 Opik 集成到基于 LangChain 的生成式 AI 应用中，实现端到端的 LLM 可观测性、单元测试和优化。
-headline: LangChain | Opik 文档
+headline: LangChain
 og:description: 使用 Opik 的自动日志记录功能，在 LangChain 应用中无缝捕获详细洞察并跟踪成本。
 og:site_name: Opik 文档
 og:title: 使用 Opik 释放 LangChain 的潜力
@@ -261,6 +261,51 @@ for chunk in llm.stream("Hello", config={"callbacks": [opik_tracer]}):
 <Tip>
   在[支持的模型](/tracing/advanced/cost_tracking)页面查看支持的模型和提供商完整列表。
 </Tip>
+
+### 使用代理（LiteLLM 等）
+
+当 LangChain 的 `ChatOpenAI` 指向一个 OpenAI 兼容的代理（例如 LiteLLM 网关）时，成本跟踪可能在两个方面失效：每个 LLM span 上记录的提供商默认为代理的主机名，Opik 无法识别该主机名，因此无法为其定价；同时，代理已经计算出的成本也不会被捕获。
+
+**覆盖提供商。** 向 `OpikTracer` 传递 `provider`，以便后端能够为该调用定价。它接受一个字符串或一个 `opik.LLMProvider`：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+# 在每个 LLM span 上将 "bedrock" 记录为提供商
+opik_tracer = OpikTracer(provider="bedrock")
+```
+
+如果单个链或图混合了多个提供商，可以传递一个可调用对象，为每次运行返回对应的提供商。它接收一个上下文，其中包含从该次运行中解析出的模型名称，因此路由通常只需一行代码。返回 `None` 可回退到自动检测的提供商：
+
+```python
+def resolve_provider(context):
+    if "anthropic" in (context.model or ""):
+        return "bedrock"
+    return None  # 回退到自动检测
+
+opik_tracer = OpikTracer(provider=resolve_provider)
+```
+
+`context.model` 由 Opik 进行规范化，因此该路由不依赖于代理的响应结构。对于高级场景，原始的 LangChain 运行字典也可通过 `context.run` 获取。
+
+**提供商报告的成本透传。** 一些代理会在响应头中返回请求的确切成本。`OpikTracer` 会自动捕获它并将其记录在 span 上，其优先级高于 Opik 自己的估算。LiteLLM 的 `x-litellm-response-cost` 头开箱即用即可支持。
+
+为了让 LangChain 将这些响应头暴露给 Opik，请使用 `include_response_headers=True` 创建聊天模型：
+
+```python
+from langchain_openai import ChatOpenAI
+from opik.integrations.langchain import OpikTracer
+
+llm = ChatOpenAI(
+    model="my-model",
+    base_url="https://my-litellm-proxy.example.com",
+    api_key="<proxy API key>",
+    include_response_headers=True,  # 需要此设置以便代理透出成本头
+)
+
+opik_tracer = OpikTracer(provider="bedrock")
+llm.invoke("Hello", config={"callbacks": [opik_tracer]})
+```
 
 ## 设置标签和元数据
 

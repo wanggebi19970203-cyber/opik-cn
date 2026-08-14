@@ -1,0 +1,143 @@
+---
+headline: 通过托管设置安装 | Opik 文档
+og:description: 从 Claude 管理控制台通过一段 JSON 配置将 Cost Intelligence 推广到你的整个团队，下发到每一个已认证用户，无需设备管理。
+og:site_name: Opik 文档
+og:title: 通过托管设置安装 - Opik
+title: 通过托管设置安装插件
+---
+
+Claude Code 的 **server-managed settings** 让你从 Anthropic 的管理控制台将配置下发到组织中的每一个已认证用户，无需 MDM、无需每设备操作，并且它会跟随用户到他们登录的任何机器。
+
+这是最快获得可用推广的路径。代价是它**没有定向**：配置在保存后立即应用到组织中的每一个已认证用户，因此你无法先对单个团队试点。
+
+<Note>
+  需要 **Claude for Teams 或 Enterprise**。
+
+  如果你想分阶段推广（先一个团队，再扩大），请改用
+  [MDM](/cost-intelligence/install/mdm)。这是我们的一般建议，如果你的开发者使用的是个人 Claude 账户，或你需要覆盖那些账户不受你控制的机器，这也是应采用的路径。
+</Note>
+
+## 生成配置
+
+你在这里下发的托管设置是**引导**：它们注册插件并将其指向你的 Opik 工作区。这是一次性部署的产物——你不会再编辑它来改变支出行为。
+
+你的[成本策略](/cost-intelligence/roll-out-cost-policies)**不属于**这个文件。插件运行起来之后，策略会自行同步到设备——无论你是用托管设置、[MDM](/cost-intelligence/install/mdm) 还是 [macOS 应用](/cost-intelligence/install/macos-app)安装，方式都一样。你只需为引导选择一种安装方式；策略交付无论哪种方式都相同，从仪表板实时管理。
+
+从下一步中的模板开始，或在数据尚未流动时从 Cost Intelligence 的 **Home** 页面抓取一段已填好的引导片段（将 API 密钥占位符替换为工作区范围的密钥）。
+
+
+## 在管理控制台中应用
+
+<Steps>
+
+### 打开托管设置编辑器
+
+在 [Claude.ai](https://claude.ai) 中，前往 **Admin Settings → Claude Code → Managed settings**。
+
+### 粘贴你的配置
+
+粘贴来自 Cost Intelligence 的引导片段，或从以下模板开始：
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "opik-enterprise": {
+      "source": { "source": "github", "repo": "comet-ml/cost-intelligence-proxy" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "opik-cipx@opik-enterprise": true
+  },
+  "env": {
+    "OPIK_CIPX_BASE_URL": "https://www.comet.com/opik/api",
+    "OPIK_CIPX_WORKSPACE": "your-org-cc-workspace",
+    "OPIK_CIPX_API_KEY": "<workspace-scoped API key>",
+    "OPIK_CIPX_PROJECT": "claude-code"
+  },
+  "forceRemoteSettingsRefresh": true
+}
+```
+
+### 保存
+
+客户端会在下次启动时拾取配置，或对已运行的会话在每小时轮询内拾取。
+
+</Steps>
+
+## 各部分的作用
+
+| 键 | 效果 |
+| --- | --- |
+| `extraKnownMarketplaces` | 注册 Comet 插件市场。`autoUpdate: true` 让插件保持最新，无需再次管理操作。 |
+| `enabledPlugins` | 为每个用户强制启用插件。它在他们看来是 **managed** 且无法禁用。 |
+| `OPIK_CIPX_BASE_URL` | trace 发送到的 Opik 安装。 |
+| `OPIK_CIPX_WORKSPACE` | 目标工作区。将全团队流量与开发者个人的 Opik 项目隔离。 |
+| `OPIK_CIPX_API_KEY` | 工作区范围的服务账户密钥。 |
+| `OPIK_CIPX_PROJECT` | trace 落入的 Opik 项目。 |
+| `forceRemoteSettingsRefresh` | 让客户端及时重读设置，而不是等待缓存过期。 |
+
+<Warning>
+  使用限定为 ingest 权限的**服务账户** API 密钥，绝不要使用个人令牌。
+  托管设置在每台设备上对 Claude Code 进程可读，因此
+  在你保存的那一刻就要把该密钥视为已分发。通过更新此配置来轮换它。
+</Warning>
+
+## 开发者的机器上会发生什么
+
+他们什么都不用做。在下一次 Claude Code 启动时：
+
+1. 插件安装并注册一个 `SessionStart` 钩子。
+2. 该钩子运行 `opik-cipx sync`，它是幂等的：安装一个操作系统监督器（macOS 上是 launchd，Linux 上是 systemd），使守护进程在崩溃时重启；如果守护进程未运行则启动它；并通过在 `~/.claude/settings.json` 中设置 `ANTHROPIC_BASE_URL` 将 Claude Code 指向本地代理。
+3. 捕获开始。之后的每一个会话都会被自动拾取。
+4. 守护进程还会应用你组织的[成本策略](/cost-intelligence/roll-out-cost-policies)——Claude Code 和 Codex 都是如此，无需每次变更都推送。
+
+代理只绑定回环地址，Claude Code 通过纯 HTTP 与其通信，因此不安装证书，也不拦截 TLS。
+
+<Tip>
+  该钩子容忍缺失的二进制文件：如果安装的任何环节不完整，它会打印提示并让会话继续。Cost Intelligence 被设计为绝不会成为开发者无法工作的原因。
+</Tip>
+
+## 验证
+
+在开发者机器上，在一个**全新**的 Claude Code 会话中：
+
+```bash
+claude plugin list        # opik-cipx@opik-enterprise -> enabled / managed
+opik-cipx status          # 守护进程已启动、配置已解析、span 已发送
+```
+
+然后确认 trace 正在落到目标 Opik 工作区。那才是真正证明推广成功的检查。
+
+## 使用你自己的网关
+
+如果你的流量经过企业 LLM 网关、LiteLLM 或 AWS Bedrock 接入网关，而不是直接到提供商，请添加它的源站：
+
+```json
+{
+  "env": {
+    "OPIK_CIPX_UPSTREAM_BASE_URL": "https://gateway.internal.example.com"
+  }
+}
+```
+
+网关必须暴露 Anthropic Messages API。由于网关以自己的账户计费，会话会以 API 定价上报且没有订阅套餐，用户身份来自环境通道而非 OAuth 配置文件。如果你的设备群上 git 和操作系统身份不可靠，请同时设置 `OPIK_CIPX_USER_EMAIL` 和 `OPIK_CIPX_USERNAME`。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card
+    title="降低编码智能体支出"
+    icon="fa-regular fa-arrow-trend-down"
+    href="/cost-intelligence/reduce-agent-spend"
+  >
+    数据开始流动后，找出并削减浪费。
+  </Card>
+  <Card
+    title="通过 MDM 安装"
+    icon="fa-regular fa-laptop-mobile"
+    href="/cost-intelligence/install/mdm"
+  >
+    覆盖那些 Claude 账户不由你集中管理的机器。
+  </Card>
+</CardGroup>

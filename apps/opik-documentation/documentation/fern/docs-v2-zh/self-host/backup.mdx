@@ -1,5 +1,5 @@
 ---
-headline: 高级 ClickHouse 备份 | Opik 文档
+headline: 高级 ClickHouse 备份
 og:description: 了解如何在 Opik 的 Kubernetes 部署中为 ClickHouse 实现基于 SQL 的备份和专用备份工具，以确保数据保护和恢复。
 og:site_name: Opik 文档
 og:title: 高级 ClickHouse 备份选项 - Opik
@@ -281,6 +281,143 @@ spec:
           restartPolicy: OnFailure
 ```
 
+### 使用 Kubernetes Job 自动恢复
+
+Opik Helm chart 内置了一个 Kubernetes Job，用于执行完整的恢复流程：它会根据备份是否已在本地磁盘上，选择 `restore` 或 `restore_remote`，通过备份服务器 API 启动该操作，并轮询直至完成。
+
+<Warning>
+备份服务器必须在恢复**之前**启用，且备份必须已经存在并由**备份服务器**创建——而不是通过选项 1 中的基于 SQL 的备份创建。
+
+恢复会**替换数据**。`clickhouse-backup` 会先删除并重建备份中包含的每一张表（当设置了 `RESTORE_SCHEMA_ON_CLUSTER` 时为 `ON CLUSTER`），然后再进行恢复，因此您无需自行删除数据库或表。不属于该备份的表会保持不变。
+
+一个例外情况：如果 `restore_schema_on_cluster` 通过配置文件设置，而 `RESTORE_SCHEMA_ON_CLUSTER` 环境变量为空，`clickhouse-backup` 会拒绝删除仍存有数据的表，恢复会中止。请像下面的 values 示例那样，将其设置为环境变量。
+
+该 Job 不会重试（`backoffLimit: 0`），并受 `activeDeadlineSeconds` 限制——默认为 24 小时。对于大型恢复，请调高该值，否则 Kubernetes 会在恢复进行到一半时终止该 Job。
+</Warning>
+
+<Steps>
+  <Step title="查找备份名称">
+    `backupName` 是必填项，必须与备份服务器所知的名称匹配：
+
+    ```bash
+    kubectl port-forward -n <namespace> svc/chi-opik-clickhouse-cluster-0-0 7171:7171
+
+    # S3 中的备份
+    curl -s "http://localhost:7171/backup/list/remote"
+
+    # 已在本地磁盘上的备份
+    curl -s "http://localhost:7171/backup/list/local"
+    ```
+
+    请使用 `name` 字段，而不是 S3 前缀。当 `S3_PATH: shard-{shard}` 时，存储在 `s3://your-bucket/shard-0/2026-07-28/` 的备份名称即为 `2026-07-28`。
+
+    本节通篇使用的 service、pod 和端口均为 chart 默认值，与 Job 计算出的 `RESTORE_SERVICE` 一致。如果您设置了 `nameOverride`、使用了不同的分片/副本布局，或设置了 `clickhouse.backupServer.service.name` / `.port`，请替换为您自己的值——可通过 `kubectl get pods,svc -n <namespace> -l clickhouse.altinity.com/chi` 列出它们。端口在设置了 `clickhouse.backupServer.service.port` 时为该值，否则为 `clickhouse.backupServer.port`（默认 `7171`）。
+  </Step>
+  <Step title="渲染 Job 清单">
+    备份服务器必须已在 release 中运行。下面的命令**仅**渲染 Job，因此 `backupServer` 下的任何内容都不会通过它应用到集群——如果服务器尚未启用，请先通过 `helm upgrade` 将其部署：
+
+    ```yaml
+    # 属于您 release values 的一部分
+    clickhouse:
+      backupServer:
+        enabled: true
+        # 备份服务器执行 restore_remote（从 S3 下载）所需的 S3 设置
+        env:
+          REMOTE_STORAGE: s3
+          S3_BUCKET: YOURBUCKET
+          S3_PATH: YOURPATH
+          RESTORE_SCHEMA_ON_CLUSTER: cluster  # 以便在每个副本上恢复 schema
+    ```
+
+    然后将仅在渲染时需要的恢复设置放到单独的 values 文件中：
+
+    ```yaml
+    # restore-values.yaml
+    clickhouse:
+      backup:
+        restore:
+          createJob: true
+          backupName: "2026-07-28"          # 来自步骤 1
+          activeDeadlineSeconds: 604800     # 7 天；默认 24 小时
+          image: "amazon/aws-cli:2.27.49"   # 任何带 bash 和 curl 的镜像
+    ```
+
+    只渲染恢复 Job。将您现有的 values 文件放在最前面传入，以便 Job 继承与 ClickHouse Pod 相同的 service account、节点选择器和容忍度：
+
+    ```bash
+    helm template opik opik/opik \
+      -f your-values.yaml -f restore-values.yaml \
+      --show-only templates/clickhouse_restore_job.yaml > clickhouse-restore-job.yaml
+    ```
+
+    `helm template` 不会将 namespace 写入清单，因此要么在 Job 的 metadata 中添加 `namespace:`，要么在应用时传入 `-n`。
+  </Step>
+  <Step title="创建 Job">
+    ```bash
+    kubectl apply -f clickhouse-restore-job.yaml -n <namespace>
+    ```
+
+    该 Job 被命名为 `<opik.name>-clickhouse-restore`——除非您设置了 `nameOverride`，否则为 `opik-clickhouse-restore`，并且始终可从您刚渲染的清单中的 `metadata.name` 读取。请在本文和下一步的命令中使用该名称。每个 release 该名称是固定的，因此在再次恢复之前请删除之前的 Job：
+
+    ```bash
+    kubectl delete job opik-clickhouse-restore -n <namespace>
+    ```
+
+    重新应用是安全的：如果该备份已被恢复过，Job 会直接退出而不再次恢复；如果某个恢复仍在进行中——例如其 Pod 被重新调度之后——它会继续跟随该恢复，而不是启动第二个。
+  </Step>
+  <Step title="观察恢复进度">
+    ```bash
+    kubectl get job opik-clickhouse-restore -n <namespace>
+
+    kubectl logs -f job/opik-clickhouse-restore -n <namespace>
+    ```
+
+    该 Job 每 15 分钟轮询一次，因此两次检查之间的日志会保持安静——大型 `restore_remote` 会运行数小时。它会打印最终状态，并在恢复失败时使 Job 失败。
+  </Step>
+</Steps>
+
+#### 在长时间恢复期间检查进度
+
+Job 自身的日志只报告 `in progress`。要查看实际进度，请使用以下命令——按成本从低到高排列。
+
+每张表的进度，来自备份服务器的日志：
+
+```bash
+kubectl logs chi-opik-clickhouse-cluster-0-0-0 -c clickhouse-backup -n <namespace> \
+  | grep download_data | tail -5
+```
+
+每行代表一张已完成的表：`progress=9/44 size=457.38GiB table=opik_prod.spans`。请注意 `9/44` 是该表在**列表中的位置**，而不是已完成表的数量——请统计您已看到的去重后的位置，否则即使大多数表已完成，分子看起来也会像卡住一样。
+
+当前状态和开始时间：
+
+```bash
+kubectl exec chi-opik-clickhouse-cluster-0-0-0 -c clickhouse-backup -n <namespace> \
+  -- curl -s localhost:7171/backup/actions | tail -3
+```
+
+已落到磁盘的字节数，对照备份自身的大小：
+
+```bash
+# 数据卷当前占用了多少
+kubectl exec chi-opik-clickhouse-cluster-0-0-0 -c clickhouse-backup -n <namespace> \
+  -- df -h /var/lib/clickhouse
+
+# 完成后的恢复应达到的大小（data_size）
+kubectl exec chi-opik-clickhouse-cluster-0-0-0 -c clickhouse-backup -n <namespace> \
+  -- curl -s localhost:7171/backup/list/remote
+```
+
+相隔几分钟的两次 `df` 读数可粗略估算吞吐量和预计完成时间，但请将其视为粗略的容量检查，而非恢复进度：`df` 报告的是整个卷，因此合并、系统表以及任何其他写入都会落入同一个增量中，总大小可能在恢复完成之前就超过备份的 `data_size`。上方的每表 `download_data` 行才是权威信号。无论如何，相对于对备份目录执行 `du -sb`，更推荐使用 `df`：`du` 会遍历数 TB 目录树中的每个文件，给本已满载的卷增加大量 I/O。
+
+<Note>
+`/backup/actions` 历史记录保存在内存中。如果备份服务器容器在恢复开始后重启过，该记录将为空，因此它只是一个实时进度工具——事后没有本地记录。如果您采集指标，ClickHouse PVC 的 `kubelet_volume_stats_used_bytes` 是持久化的等效替代，且无需 `exec`。
+</Note>
+
+<Note>
+在 release values 中设置 `createJob: true` 同样可行——随后的 `helm upgrade` 会创建相同的 Job。如果您这样做，之后请将其设回 `false`，否则下一次 `helm upgrade` 会重新创建 Job 并再次恢复。“已恢复”检查读取的是备份服务器内存中的操作历史，因此它无法在备份服务器重启后保留。
+</Note>
+
 ## 功能对比
 
 | 功能特性 | 基于 SQL 的备份 | ClickHouse 备份工具 |
@@ -407,5 +544,5 @@ curl "http://localhost:7171/backup/list"
 如需 ClickHouse 备份方面的帮助：
 
 - [ClickHouse 备份文档](https://github.com/Altinity/clickhouse-backup)
-- [ClickHouse 备份命令参考](https://clickhouse.com/docs/operations/backup)
+- [ClickHouse 备份与恢复](https://clickhouse.com/docs/concepts/features/backup-restore/overview)
 - [Opik 社区支持](https://github.com/comet-ml/opik/issues)

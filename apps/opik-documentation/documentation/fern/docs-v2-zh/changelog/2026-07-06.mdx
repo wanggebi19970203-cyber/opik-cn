@@ -1,0 +1,47 @@
+---
+canonical-url: https://www.comet.com/docs/opik/changelog/2026-07-06
+---
+
+## 让 Ollie 解释 Trace 单元格
+
+Traces、Spans 和 Threads 表中的错误、持续时间和成本单元格现在都有一个"Explain"按钮（Ollie 猫头鹰图标），它会流式输出对该特定值的平实语言解释，而无需离开表格——无需打开 trace 面板并在原始负载中翻找，就能理解为什么一次调用出错、为什么花了那么长时间、为什么花费了那么多。
+
+解释按单元格缓存，因此重新打开一个弹出框会立即显示之前的答案，而不是重新运行查询，而"Continue conversation"链接会在你想深入挖掘时转交到完整的 Ollie 侧边栏。
+
+## 在线评估运行现在被 Trace
+
+LLM-as-a-judge 评分运行（在 trace、span 和线程上）现在会自动记录为监控 trace，带有一个 `prepare_evaluation` span 和每次评分调用一个 span，包括 token 用量和成本。它们默认从主 Logs 视图中隐藏，**Online Evaluation** 页面上的每条规则现在都有一个 **Go to traces** 操作，打开该规则评估活动的作用域、过滤视图——用于确认规则正在运行、检查它的成本，或调试它为何出错。这对所有工作区默认开启。
+
+## Bug 修复和改进
+
+- **诊断现在会解释运行失败的原因** — 之前，一个崩溃或从未启动的 Diagnostics 运行（例如，LLM 额度耗尽）只会一直转到超时，没有任何迹象表明出了什么问题。失败的运行现在显示具体原因（额度不足、速率限制、提供商错误或从未启动），并带有"Try again"操作，失败超时从 12 分钟缩短到 5 分钟。
+
+- **Playground 和在线评分：Sonnet 5 和 Fable 5 不再报错** — 这些模型在能力列表中缺失，因此 Playground 一直显示 temperature/Top P 滑块并发送这些参数，而模型会拒绝这些参数。滑块现在被隐藏，参数不再发送，与 Opus 4.7/4.8 已有的行为一致。
+
+- **Azure 托管的 OpenAI 模型价格现在正确加载** — `azure/*` 模型系列（`gpt-4o`、`gpt-5`、`codex-mini` 等）的模型价格由于提供商映射缺口而静默加载失败，导致这些模型的成本显示为不可用。
+
+- **实验和 Playground trace 现在出现在作用域 "Go to logs" 视图中** — 由实验运行和 Playground 运行创建的 trace 有时会从它们各自的 "Go to logs" 表中缺失，即使 trace 存在，原因是可见性过滤器不匹配。这些视图现在正确地按实验或运行本身限定作用域。
+
+- **Playground：数据集和指标选择重新设计** — "Run experiment" 对话框被 Playground 头部内联的数据集和指标下拉框取代，因此你可以独立更改其中任何一个而无需重新打开模态框。指标也可以就地创建和编辑。
+
+- **权限门控扩展到更多页面** — 拥有 Annotator 工作区角色的用户不再在侧边栏中看到 Agent Playground、Online Evaluation 或 Alerts。Prompt Library 的查看/编辑访问现在由同一权限系统管理，在 UI 和 API 层面都是。
+
+- **`opik import --to-workspace` 用于跨工作区导入** — `opik import` CLI 命令接受一个 `--to-workspace` 选项，将导出的数据导入到与其导出时不同的工作区，无需通过重构导出目录来变通。
+
+- **`opik migrate dataset --exclude-experiments`** — 此标志跳过迁移数据集的实验和优化，只迁移数据集及其版本历史。适用于不需要实验/优化级联的大型数据集。
+
+- **修复了负载下加载提示词和数据集版本的间歇性错误** — 一个导致 MySQL 物化大型临时表的查询模式在负载下可能直接失败。提示词和数据集版本查找现在被重写以避免该问题。
+
+## 性能改进
+
+- **更快的 trace 摄取** — 移除了每次 trace 摄取时仅用于检查 trace 最后更新时间戳的一次冗余 ClickHouse 查找，降低了摄取延迟和 ClickHouse 负载。
+
+- **SDK：跨 `Opik()` 客户端共享连接资源** — 创建多个 `Opik()` 客户端的代码（例如，每个任务或请求一个）现在会在配置匹配的客户端之间共享底层连接池和后台线程，而不是每次都创建一个完整的新栈，降低了线程和连接开销。
+
+- **自托管：ClickHouse `FINAL` 读取不再对跳过索引表过度读取** — 禁用了新的 ClickHouse 25.x 默认值 `use_skip_indexes_if_final_exact_mode`，该默认值导致跳过索引查询读取远超必要的数据；Opik 的查询已经通过主键和项目 ID 进行剪枝，因此不需要精确模式。
+
+---
+
+以及更多！👉 [在 GitHub 上查看完整提交日志](https://github.com/comet-ml/opik/compare/2.1.10...2.1.15)
+
+_发布版本_: `2.1.11`, `2.1.12`, `2.1.13`, `2.1.14`, `2.1.15`
