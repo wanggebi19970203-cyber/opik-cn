@@ -53,33 +53,29 @@ def raise_if_score_arguments_are_missing(
 def select_score_arguments(
     score_function: Callable, kwargs: Dict[str, Any], score_name: str
 ) -> Tuple[List[Any], Dict[str, Any]]:
-    """Split the scoring inputs into what the score signature can accept.
+    """将评分输入拆分为评分函数签名能够接受的形式。
 
-    Every dataset item key and task output key is offered to every metric, which
-    breaks two kinds of signature:
+    每个数据集项键和任务输出键都会提供给每个指标，这会破坏两种签名：
 
-    - A metric that does not declare ``**kwargs`` used to fail on every single
-      item with an ``unexpected keyword argument`` TypeError — a message that
-      reads like an SDK bug rather than a signature mismatch. Those keys are
-      dropped now.
-    - A positional-only parameter cannot be passed by keyword at all, so such a
-      metric could never be scored. Those are returned separately, in signature
-      order, to be passed positionally.
+    - 未声明 ``**kwargs`` 的指标过去会因每个项都报出
+      ``unexpected keyword argument`` TypeError 而失败——这条报错读起来更像是
+      SDK 的 bug，而非签名不匹配。现在这些键会被丢弃。
+    - 仅限位置参数的参数根本无法通过关键字传递，因此这类指标此前永远无法
+      被评分。这些参数会单独返回，并按照签名顺序以位置参数方式传递。
 
-    Missing arguments are still reported: ``validate_score_arguments`` runs
-    before this and only checks the parameters the metric declares, so filtering
-    here cannot hide a key the metric actually asked for.
+    缺失的参数仍会被报告：``validate_score_arguments`` 在此函数之前运行，
+    并且只检查指标声明的参数，因此此处的过滤不会隐藏指标实际需要的键。
     """
     try:
         parameters = inspect.signature(score_function).parameters
     except (ValueError, TypeError):
-        # Signature is not introspectable — pass everything, as before.
+        # 签名无法被内省——与之前一样，全部原样传递。
         return [], kwargs
 
-    # Positional-only values are bound by position, so a gap cannot be skipped:
-    # dropping an absent parameter would shift every later value one slot left and
-    # score the metric against the wrong inputs. Only the contiguous leading run is
-    # passed; anything supplied after a gap means the metric cannot be scored.
+    # 仅限位置参数的值按位置绑定，因此无法跳过一个空缺：
+    # 丢弃缺失的参数会使后续每个值向左错位一格，导致指标基于错误的输入
+    # 进行评分。仅传递前部连续的部分；空缺之后即使提供了任何内容，
+    # 也意味着该指标无法被评分。
     positional_only_names = [
         name
         for name, parameter in parameters.items()
@@ -134,19 +130,17 @@ def create_scoring_inputs(
                 mapped_inputs[key] = value(mapped_inputs)
             else:
                 if value not in mapped_inputs:
-                    # A mapping that matches nothing is always a mistake, and
-                    # it only surfaces later if the metric happens to have no
-                    # default for that argument. When it does have one, the
-                    # metric silently scores the wrong thing, so this cannot
-                    # stay at debug level (OPIK-6925). The available keys are
-                    # the actionable part, but they are user data and can be
-                    # numerous, so only a sample goes into the warning.
+                    # 一个匹配不到任何内容的映射始终是一个错误，只是它仅当
+                    # 该指标恰好对该参数没有默认值时才在稍后暴露。若确有
+                    # 默认值，指标会静默地对错误内容评分，因此这不能停留在
+                    # debug 级别（OPIK-6925）。可用键才是可操作的部分，但它们
+                    # 属于用户数据，可能数量众多，因此警告中只放入一部分样例。
                     available_keys = list(mapped_inputs.keys())
                     sample = available_keys[:MAX_REPORTED_AVAILABLE_KEYS]
                     remaining = len(available_keys) - len(sample)
                     LOGGER.warning(
-                        "Scoring key mapping value '%s' not found in dataset item. "
-                        "Available keys (%d): %s%s",
+                        "评分键映射值 '%s' 未在数据集项中找到。"
+                        "可用键（%d）：%s%s",
                         value,
                         len(available_keys),
                         sample,

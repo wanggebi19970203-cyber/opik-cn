@@ -124,25 +124,20 @@ public interface ExperimentAggregatesDAO {
             List<ExperimentsComparisonFilter> filters);
 
     /**
-     * Counts aggregated and non-aggregated experiments so callers can drop query branches that cannot contribute
-     * rows.
+     * 统计已聚合和未聚合的实验，以便调用方可以丢弃那些不可能产生任何行的查询分支。
      * <p>
-     * When {@link AggregationBranchCountsCriteria#projectId()} is set, the non-aggregated count is restricted to
-     * experiments reachable from that project. Reachability follows the project of the experiment itself and the
-     * projects of the traces its items reference.
+     * 当设置 {@link AggregationBranchCountsCriteria#projectId()} 时，未聚合计数会被限制为从该项目可达的实验。
+     * 可达性遵循实验自身的项目及其条目所引用的 trace 所属的项目。
      * <p>
-     * The restriction applies to the non-aggregated count only, and must not be hoisted into the outer filter. The
-     * two branches decide project membership differently: the raw branch from traces and {@code project_id}, the
-     * aggregated branch from {@code experiment_aggregates.project_id}. Aggregated experiments exist whose stored
-     * project is no longer reachable from their traces, because those traces were deleted after aggregation.
-     * Filtering every row by the raw branch's notion of reachability would drop such experiments from the
-     * aggregated count, and with it the aggregated branch that returns them.
+     * 该限制仅适用于未聚合计数，且不得提升到外层过滤条件中。两个分支对项目归属的判定方式不同：原始分支来自
+     * trace 和 {@code project_id}，聚合分支来自 {@code experiment_aggregates.project_id}。存在这样的聚合实验：
+     * 其存储的项目已无法从其 trace 可达，因为这些 trace 在聚合之后被删除了。按原始分支的可达性概念过滤每一行
+     * 会把此类实验从聚合计数中丢弃，进而丢弃返回它们的聚合分支。
      * <p>
-     * The trace lookup is deliberately restricted to trace ids that appear in {@code experiment_items}. A project
-     * can hold tens of millions of traces while a workspace holds under a million experiment items, so driving the
-     * lookup from the project alone builds an enormous set: measured against a seven-million-trace project it read
-     * 7.19M rows using 1.4 GiB, versus 197K rows and 12 MiB with the restriction, for an identical result. Without
-     * it this count can cost more than the branch it is meant to eliminate.
+     * trace 查找被有意限制为出现在 {@code experiment_items} 中的 trace id。一个项目可能包含数千万条 trace，
+     * 而一个工作空间中的实验条目不足一百万条，因此仅从项目出发进行查找会构建出一个庞大的集合：针对一个有
+     * 七百万条 trace 的项目进行测量，它读取了 719 万行、占用 1.4 GiB，而加上该限制后仅读取 19.7 万行、占用
+     * 12 MiB，结果完全相同。没有该限制，这次计数的开销可能比它本应消除的那个分支还要高。
      */
     Mono<AggregatedExperimentCounts> getAggregationBranchCounts(AggregationBranchCountsCriteria criteria);
 
@@ -167,8 +162,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     private final @NonNull Client clickHouseClient;
 
     /**
-     * Filter strategies used for experiment aggregates search binding.
-     * Reused across all experiment search operations to avoid repeated allocations.
+     * 用于实验聚合搜索绑定的过滤策略。
+     * 在所有实验搜索操作中复用，以避免重复分配。
      */
     private static final List<FilterStrategy> FILTER_STRATEGIES = List.of(
             FilterStrategy.EXPERIMENT,
@@ -246,7 +241,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Fetch experiment base data
+     * 获取实验基础数据
      */
     private static final String GET_EXPERIMENT_DATA = """
             SELECT
@@ -278,10 +273,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Distinct project_ids this experiment's items reference, read from {@code traces} as the
-     * single source of truth. Drives the {@code project_id IN :project_ids} filter on every
-     * downstream aggregation query so totals cover all referenced projects while keeping
-     * partition pruning.
+     * 该实验条目所引用的去重 project_ids，从 {@code traces} 这一唯一事实来源读取。用于驱动每个下游聚合查询中的
+     * {@code project_id IN :project_ids} 过滤，使总计覆盖所有被引用的项目，同时保留分区裁剪。
      */
     private static final String GET_PROJECT_IDS = """
             SELECT groupUniqArrayIf(toString(project_id), project_id != '') AS project_ids
@@ -298,9 +291,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Fetch trace aggregations for an experiment. {@code project_id IN :project_ids} keeps
-     * partition pruning while covering every project the experiment's items reference;
-     * {@code :project_id} is the single label written to the aggregate row.
+     * 获取实验的 trace 聚合。{@code project_id IN :project_ids} 在覆盖实验条目所引用的每个项目的同时保留分区裁剪；
+     * {@code :project_id} 是写入聚合行的单一标签。
      */
     private static final String GET_TRACE_AGGREGATIONS = """
             WITH experiment_trace_items AS (
@@ -342,7 +334,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Fetch span aggregations for an experiment
+     * 获取实验的 span 聚合
      */
     private static final String GET_SPAN_AGGREGATIONS = """
             WITH experiment_items AS (
@@ -405,7 +397,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Fetch feedback score aggregations for an experiment
+     * 获取实验的反馈分数聚合
      */
     private static final String GET_FEEDBACK_SCORE_AGGREGATIONS = """
             WITH experiment_items AS (
@@ -615,7 +607,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Insert experiment aggregate
+     * 插入实验聚合
      */
     private static final String INSERT_EXPERIMENT_AGGREGATE = """
             INSERT INTO experiment_aggregates
@@ -694,12 +686,11 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get experiment items with cursor pagination.
+     * 使用游标分页获取实验条目。
      *
-     * <p>OPIK-6177: resolves {@code ei.dataset_item_id} (legacy per-version DIV row id or modern
-     * stable id) to the stable {@code dataset_item_id} at aggregation time. Compare reads still
-     * resolve at read time too (see {@code DatasetItemVersionDAO}), so this is best-effort
-     * hygiene — over time it phases out legacy values from EIA without a backfill migration.
+     * <p>OPIK-6177：在聚合时把 {@code ei.dataset_item_id}（旧版按版本 DIV 行 id 或现代的稳定 id）解析为
+     * 稳定的 {@code dataset_item_id}。比较读取在读取时也会解析（参见 {@code DatasetItemVersionDAO}），
+     * 所以这只是尽力而为的清洗——随着时间推移，它会在无需回填迁移的情况下逐步淘汰 EIA 中的旧值。
      */
     private static final String GET_EXPERIMENT_ITEMS = """
             SELECT
@@ -727,8 +718,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get trace data for an experiment-items batch, scoped to the projects the experiment
-     * references so partition pruning is preserved across multi-project experiments.
+     * 获取一批实验条目的 trace 数据，范围限定为实验所引用的项目，以便在多项目实验中保留分区裁剪。
      */
     private static final String GET_TRACES_DATA = """
             SELECT
@@ -752,8 +742,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get span data for an experiment-items batch. See {@link #GET_TRACES_DATA} for the
-     * multi-project scoping.
+     * 获取一批实验条目的 span 数据。多项目范围说明参见 {@link #GET_TRACES_DATA}。
      */
     private static final String GET_SPANS_DATA = """
             SELECT
@@ -776,7 +765,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get feedback scores for experiment items batch identified by trace_ids
+     * 获取由 trace_ids 标识的一批实验条目的反馈分数
      */
     private static final String GET_FEEDBACK_SCORES_DATA = """
             WITH feedback_scores_deduped AS (
@@ -900,7 +889,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get comments for experiment items batch identified by trace_ids
+     * 获取由 trace_ids 标识的一批实验条目的评论
      */
     private static final String GET_COMMENTS_DATA = """
             SELECT
@@ -944,7 +933,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get assertions data per trace for experiment items batch identified by trace_ids
+     * 获取由 trace_ids 标识的一批实验条目中每个 trace 的断言数据
      */
     private static final String GET_ASSERTIONS_DATA = """
             SELECT
@@ -977,7 +966,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get comments aggregated at experiment level
+     * 获取实验级别的评论聚合
      */
     private static final String GET_COMMENTS_AGGREGATION = """
             WITH experiment_items AS (
@@ -1032,7 +1021,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Get experiment items count
+     * 获取实验条目数量
      */
     private static final String GET_EXPERIMENT_ITEMS_COUNT = """
             SELECT count(DISTINCT id) as count
@@ -1082,8 +1071,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Find experiment groups from experiment_aggregates table.
-     * This query is optimized to use the aggregated project_id instead of joining with traces.
+     * 从 experiment_aggregates 表中查找实验分组。
+     * 该查询经过优化，使用聚合后的 project_id 而不是与 traces 进行连接。
      */
     private static final String FIND_GROUPS_FROM_AGGREGATES = """
             SELECT <groupSelects>, max(created_at) AS last_created_experiment_at
@@ -1100,8 +1089,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Find experiment groups aggregations from experiment_aggregates table.
-     * This query uses pre-aggregated metrics instead of calculating from raw tables.
+     * 从 experiment_aggregates 表中查找实验分组聚合。
+     * 该查询使用预聚合指标，而不是从原始表中计算。
      */
     private static final String FIND_GROUPS_AGGREGATIONS_FROM_AGGREGATES = """
             SELECT
@@ -1126,13 +1115,12 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Count query for the dev/test parity harness ({@link #countDatasetItemsWithExperimentItemsFromAggregates}).
-     * Resolves the legacy-or-stable {@code eia.dataset_item_id} to the canonical stable id at read time
-     * via the {@code lookup_div FINAL} LEFT JOIN, then de-duplicates with {@code COUNT(DISTINCT
-     * if(notEmpty(lookup_div.dataset_item_id), lookup_div.dataset_item_id, eia.dataset_item_id))}.
-     * The production count uses a different stable-id pre-narrowing CTE ({@code lookup_for_count})
-     * for skip-index pushdown — see {@code DatasetItemVersionDAO}; this harness path doesn't need
-     * it because callers exercise it only against test fixtures.
+     * 开发/测试对等测试框架（{@link #countDatasetItemsWithExperimentItemsFromAggregates}）的计数查询。
+     * 在读取时通过 {@code lookup_div FINAL} LEFT JOIN 把旧版或稳定的 {@code eia.dataset_item_id} 解析为
+     * 规范的稳定 id，然后用 {@code COUNT(DISTINCT if(notEmpty(lookup_div.dataset_item_id),
+     * lookup_div.dataset_item_id, eia.dataset_item_id))} 去重。生产计数使用不同的稳定 id 预收窄 CTE
+     * （{@code lookup_for_count}）以实现跳数索引下推——参见 {@code DatasetItemVersionDAO}；此测试框架路径
+     * 不需要它，因为调用方仅针对测试夹具使用它。
      */
     private static final String SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS_COUNT = """
             WITH dataset_item_versions_resolved AS (
@@ -1210,9 +1198,9 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             """;
 
     /**
-     * Row query for the dev/test parity harness ({@link #getDatasetItemsWithExperimentItemsFromAggregates}).
-     * Same stable-id resolution shape as {@link #SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS_COUNT}
-     * — see that constant's Javadoc for the rationale.
+     * 开发/测试对等测试框架（{@link #getDatasetItemsWithExperimentItemsFromAggregates}）的行查询。
+     * 稳定 id 解析方式与 {@link #SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS_COUNT} 相同——
+     * 理由参见该常量的 Javadoc。
      */
     private static final String SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS = """
             WITH dataset_item_versions_resolved AS (
@@ -1517,7 +1505,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
 
         return getExperimentData(experimentId)
                 .flatMap(experimentData ->
-                // First check if experiment has any items
+                // 首先检查实验是否有任何条目
                 getExperimentItemsCount(experimentId)
                         .flatMap(itemsCount -> {
                             if (itemsCount == 0) {
@@ -1643,8 +1631,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * The experiment's stored {@code project_id}; emits {@link Mono#empty()} when unset or when
-     * the experiment doesn't exist, so callers can fall back via {@code .switchIfEmpty(...)}.
+     * 实验存储的 {@code project_id}；当未设置或实验不存在时发出 {@link Mono#empty()}，
+     * 以便调用方可以通过 {@code .switchIfEmpty(...)} 进行回退。
      */
     @Override
     public Mono<UUID> getExperimentProjectId(@NonNull UUID experimentId) {
@@ -1652,9 +1640,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Distinct project_ids this experiment's items reference; always emits exactly one Set
-     * (possibly empty when no traces with project_id are found). See {@link #GET_PROJECT_IDS} and
-     * {@link #unionProjectIdChunks(Flux)}.
+     * 该实验条目所引用的去重 project_ids；始终恰好发出一个 Set（当未找到带有 project_id 的 trace 时可能为空）。
+     * 参见 {@link #GET_PROJECT_IDS} 和 {@link #unionProjectIdChunks(Flux)}。
      */
     @Override
     public Mono<Set<UUID>> getProjectIds(UUID experimentId) {
@@ -1676,11 +1663,10 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Folds the project_id chunks emitted by the result stream into a single immutable Set. Using
-     * {@code reduceWith} (rather than {@code single()}/{@code singleOrEmpty()}) is deliberate: the
-     * R2DBC result publisher can emit more than one element, which would make {@code single()}
-     * throw {@code IndexOutOfBoundsException}. Unioning always yields exactly one Set (empty when
-     * the stream is empty) and is idempotent for the normal single-row result.
+     * 将结果流发出的 project_id 分块折叠为一个不可变 Set。使用 {@code reduceWith}（而不是
+     * {@code single()}/{@code singleOrEmpty()}）是有意为之：R2DBC 结果发布者可能发出多个元素，
+     * 这会使 {@code single()} 抛出 {@code IndexOutOfBoundsException}。求并集始终恰好得到一个 Set
+     * （流为空时为空集），并且对于正常的单行结果而言是幂等的。
      */
     @VisibleForTesting
     static Mono<Set<UUID>> unionProjectIdChunks(Flux<Set<UUID>> projectIdChunks) {
@@ -1715,9 +1701,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Single-row aggregation query scoped to one experiment and the set of projects its items
-     * reference. Delegates to the {@code labelProjectId}-aware overload with {@code null} for
-     * queries that don't need the label bind.
+     * 限定为一个实验及其条目所引用的项目集合的单行聚合查询。对于不需要标签绑定的查询，
+     * 委托给感知 {@code labelProjectId} 的重载，并传入 {@code null}。
      */
     private <T> Mono<T> queryExperimentAggregation(
             String query,
@@ -1729,8 +1714,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Overload for queries that additionally bind {@code :project_id} (the aggregate row's
-     * single-project label). Currently only {@link #GET_TRACE_AGGREGATIONS} needs it.
+     * 用于额外绑定 {@code :project_id}（聚合行的单项目标签）的查询的重载。目前只有
+     * {@link #GET_TRACE_AGGREGATIONS} 需要它。
      */
     private <T> Mono<T> queryExperimentAggregation(
             String query,
@@ -1784,7 +1769,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             var template = getSTWithLogComment(INSERT_EXPERIMENT_AGGREGATE,
                     "insertExperimentAggregate", experimentData.workspaceId(), "", experimentData.id().toString());
 
-            // Convert Maps to key/value arrays for ClickHouse mapFromArrays
+            // 将 Map 转换为 ClickHouse mapFromArrays 所需的键/值数组
             var experimentScoresArrays = mapToArrays(
                     ObjectUtils.getIfNull(experimentData.experimentScores(), Map.of()),
                     String[]::new, Double[]::new,
@@ -1976,29 +1961,28 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Serialize a single experiment-item row as a JSONEachRow object and append it to {@code out},
-     * terminated by {@code '\n'} — the format expected by ClickHouse v2 bulk insert
-     * (see {@link #insertExperimentItemAggregates(UUID, List, List, List, List, List, List)}).
+     * 将单个实验条目行序列化为一个 JSONEachRow 对象，并追加到 {@code out}，以 {@code '\n'} 结尾——
+     * 这是 ClickHouse v2 批量插入所期望的格式（参见
+     * {@link #insertExperimentItemAggregates(UUID, List, List, List, List, List, List)}）。
      *
-     * <p>Why a shared {@link StringBuilder}: the v2 {@link com.clickhouse.client.api.Client#insert} call
-     * takes an {@link java.io.InputStream} over the whole batch; concatenating rows into one buffer
-     * then handing off a single {@link java.io.ByteArrayInputStream} avoids per-row stream plumbing
-     * and lets ClickHouse's HTTP layer compress + send the payload in one shot.
+     * <p>为何共享一个 {@link StringBuilder}：v2 的 {@link com.clickhouse.client.api.Client#insert} 调用
+     * 接收覆盖整个批次的 {@link java.io.InputStream}；将行连接到一个缓冲区，然后交出单个
+     * {@link java.io.ByteArrayInputStream}，可以避免逐行的流管道，并让 ClickHouse 的 HTTP 层一次性压缩并
+     * 发送负载。
      *
-     * <p>Why {@link com.comet.opik.utils.JsonUtils#createObjectNode()}: keeps JSON serialization on the
-     * same Jackson {@code ObjectMapper} the rest of the backend uses (snake_case naming, BigDecimal
-     * handling, custom deserializers). Using a local {@code new ObjectMapper()} would silently diverge
-     * from REST-side encoding and could reintroduce the NaN / precision / date-format mismatches that
-     * the JSONEachRow path was designed to avoid.
+     * <p>为何使用 {@link com.comet.opik.utils.JsonUtils#createObjectNode()}：使 JSON 序列化保持在后端其余部分
+     * 使用的同一个 Jackson {@code ObjectMapper} 上（snake_case 命名、BigDecimal 处理、自定义反序列化器）。
+     * 使用本地 {@code new ObjectMapper()} 会与 REST 侧的编码悄然产生分歧，并可能重新引入 JSONEachRow 路径
+     * 设计之初就要避免的 NaN / 精度 / 日期格式不匹配问题。
      *
-     * <p>Field contract: the keys below must match the column names and types in the target table
-     * (see migrations {@code 000030_*} / {@code 000054_*} for {@code experiment_item_aggregates}). New
-     * columns require a matching {@code node.put(...)} here AND a {@code FORMAT JSONEachRow}-compatible
-     * ClickHouse type (strings, numbers, and {@code Map(String, ...)} via {@code putObject}).
+     * <p>字段契约：以下键必须与目标表的列名和类型匹配（参见迁移 {@code 000030_*} / {@code 000054_*} 中的
+     * {@code experiment_item_aggregates}）。新增列需要在此处有对应的 {@code node.put(...)}，并且需要与
+     * {@code FORMAT JSONEachRow} 兼容的 ClickHouse 类型（字符串、数字，以及通过 {@code putObject} 的
+     * {@code Map(String, ...)}）。
      *
-     * <p>Nullable upstream data ({@code trace}, {@code span}, {@code feedback}) is coalesced to safe
-     * defaults ({@code ""}, {@code 0}, {@code EMPTY_ARRAY_STR}) rather than emitted as JSON {@code null},
-     * because ClickHouse's non-nullable columns would reject nulls and fail the whole batch.
+     * <p>可为空的上游数据（{@code trace}、{@code span}、{@code feedback}）会被合并为安全的默认值
+     * （{@code ""}、{@code 0}、{@code EMPTY_ARRAY_STR}），而不是发出 JSON {@code null}，因为 ClickHouse 的
+     * 非空列会拒绝 null 并导致整个批次失败。
      */
     private void appendJsonRow(StringBuilder out,
             String workspaceId,
@@ -2072,7 +2056,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             List<CommentsData> commentsData,
             List<AssertionData> assertionsData) {
 
-        // Create lookup maps
+        // 创建查找映射
         Map<UUID, TraceData> tracesMap = tracesData.stream()
                 .collect(Collectors.toMap(TraceData::traceId, Function.identity()));
         Map<UUID, SpanData> spansMap = spansData.stream()
@@ -2088,44 +2072,35 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Bulk-insert {@code items} into {@code experiment_item_aggregates} via the ClickHouse v2 HTTP
-     * client using {@link ClickHouseFormat#JSONEachRow}.
+     * 通过 ClickHouse v2 HTTP 客户端使用 {@link ClickHouseFormat#JSONEachRow} 将 {@code items} 批量插入
+     * {@code experiment_item_aggregates}。
      *
-     * <p>Why the v2 client + JSONEachRow (vs. the R2DBC path used elsewhere): this is the ONLY path
-     * in the backend that uses the v2 client — we specifically chose it for this bulk-insert flow
-     * because {@code EXPERIMENT_AGGREGATES_BATCH_SIZE} can be configured above 1k (e.g. {@code 10000}
-     * for workspaces with experiments of 1M+ items). R2DBC's bind-parameter serialization scales
-     * super-linearly once a single statement carries more than ~1k rows (per-row parameter map,
-     * driver-side escaping, per-row round-trips), so at that batch size it becomes the dominant
-     * cost of the aggregation job. The JSONEachRow bulk path is ~500× faster end-to-end on those
-     * batches because (1) the payload is a single HTTP body, (2) compression is applied once by the
-     * v2 client, and (3) parsing happens server-side in ClickHouse's fast path. For smaller-batch
-     * inserts elsewhere in the codebase R2DBC remains the right choice and is unchanged. The v2
-     * client is shared and managed as a Dropwizard {@code Managed} (see
-     * {@code DatabaseAnalyticsModule.getClickHouseClient}); this method does not close it.
+     * <p>为何使用 v2 客户端 + JSONEachRow（对比其他位置使用的 R2DBC 路径）：这是后端中唯一使用 v2 客户端的路径——
+     * 我们特意为这个批量插入流程选择它，因为 {@code EXPERIMENT_AGGREGATES_BATCH_SIZE} 可以配置到 1k 以上
+     * （例如对于实验条目超过 100 万条的工作空间配置为 {@code 10000}）。一旦单个语句携带超过约 1k 行，R2DBC 的
+     * 绑定参数序列化开销就会呈超线性增长（逐行的参数映射、驱动侧转义、逐行往返），因此在该批量大小下它会成为
+     * 聚合任务的主要开销。JSONEachRow 批量路径在这些批次上端到端快约 500 倍，因为 (1) 负载是单个 HTTP 请求体，
+     * (2) 压缩由 v2 客户端一次性应用，以及 (3) 解析在服务端的 ClickHouse 快速路径中完成。对于代码库中其他位置
+     * 的较小批量插入，R2DBC 仍然是正确的选择并且保持不变。v2 客户端被共享并作为 Dropwizard 的 {@code Managed}
+     * 进行管理（参见 {@code DatabaseAnalyticsModule.getClickHouseClient}）；本方法不会关闭它。
      *
-     * <p>Flow:
+     * <p>流程：
      * <ol>
-     *   <li>Materialize every item into a shared {@link StringBuilder} via
-     *       {@link #appendJsonRow} (one JSON object + newline per row).</li>
-     *   <li>Convert to UTF-8 bytes and wrap in a {@link ByteArrayInputStream}.</li>
-     *   <li>Attach a {@code log_comment} identifying the workspace / user / batch size so the query
-     *       can be correlated in {@code system.query_log} / ClickHouse traces.</li>
-     *   <li>Set {@code date_time_input_format=best_effort} per-request (NOT on the global
-     *       {@code Client.Builder}). Scoping it to the insert keeps the global client configuration
-     *       free of format-specific tolerances that would affect unrelated queries — if a future
-     *       caller needs a different format, it passes its own {@link InsertSettings}.</li>
-     *   <li>Run the blocking HTTP call on {@link Schedulers#boundedElastic()} so the reactive
-     *       chain is not pinned to the event loop.</li>
-     *   <li>Return the authoritative {@code NUM_ROWS_WRITTEN} metric from the server response
-     *       rather than {@code items.size()}, so the caller sees the count ClickHouse actually
-     *       accepted (truncation, deduplication, or engine-specific merges would otherwise be
-     *       invisible).</li>
+     *   <li>通过 {@link #appendJsonRow} 将每个条目物化到一个共享的 {@link StringBuilder}（每行一个 JSON 对象
+     *       加一个换行符）。</li>
+     *   <li>转换为 UTF-8 字节并包装到一个 {@link ByteArrayInputStream} 中。</li>
+     *   <li>附加一个标识工作空间 / 用户 / 批量大小的 {@code log_comment}，以便在 {@code system.query_log} /
+     *       ClickHouse trace 中关联该查询。</li>
+     *   <li>按请求设置 {@code date_time_input_format=best_effort}（而不是在全局 {@code Client.Builder} 上）。
+     *       将其限定在插入范围内可以让全局客户端配置免受会影响无关查询的格式特定容差的影响——如果未来的调用方
+     *       需要不同的格式，它传入自己的 {@link InsertSettings} 即可。</li>
+     *   <li>在 {@link Schedulers#boundedElastic()} 上运行阻塞的 HTTP 调用，以免响应式链被钉在事件循环上。</li>
+     *   <li>从服务器响应返回权威的 {@code NUM_ROWS_WRITTEN} 指标，而不是 {@code items.size()}，这样调用方看到的
+     *       是 ClickHouse 实际接受的数量（否则截断、去重或引擎特定的合并将是不可见的）。</li>
      * </ol>
      *
-     * <p>Error handling: the {@code try-with-resources} ensures the response is always released,
-     * even on partial read failure. Exceptions propagate up the reactive chain; we only log the
-     * item count (no payload) to avoid dumping PII into the logs.
+     * <p>错误处理：{@code try-with-resources} 确保响应总是被释放，即使在部分读取失败时也是如此。异常会沿响应式
+     * 链向上传播；我们只记录条目数量（不记录负载），以避免将 PII 转储到日志中。
      */
     private Mono<Long> insertExperimentItems(UUID projectId,
             List<ExperimentItemData> items,
@@ -2157,11 +2132,11 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             }
         }).subscribeOn(Schedulers.boundedElastic())
                 .doOnError(err -> log.error(
-                        "Failed to insert experiment item aggregates: items='{}'",
+                        "插入实验条目聚合失败: items='{}'",
                         items.size(), err)));
     }
 
-    // Row mapping methods
+    // 行映射方法
     private ExperimentData mapExperimentData(Row row) {
         return ExperimentData.builder()
                 .workspaceId(row.get("workspace_id", String.class))
@@ -2189,8 +2164,8 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Parse experiment_scores from JSON string (experiments table stores as String).
-     * Returns empty map if input is null/empty or parsing fails.
+     * 从 JSON 字符串解析 experiment_scores（experiments 表以 String 存储）。
+     * 如果输入为 null/空或解析失败，返回空映射。
      */
     private Map<String, BigDecimal> parseExperimentScoresFromString(String experimentScores) {
         if (StringUtils.isBlank(experimentScores)) {
@@ -2232,7 +2207,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     private FeedbackScoreAggregations mapFeedbackScoreAggregations(Row row) {
-        // Convert feedbackScoresAvg map values from BigDecimal to Double
+        // 将 feedbackScoresAvg 映射值从 BigDecimal 转换为 Double
         Map<String, Object> feedbackScoresAvgRaw = row.get("feedback_scores_avg", Map.class);
         Map<String, Double> feedbackScoresAvg = Optional.ofNullable(feedbackScoresAvgRaw)
                 .map(raw -> raw.entrySet().stream()
@@ -2272,11 +2247,11 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Query experiment_aggregates table directly and construct Experiment from stored aggregated values.
-     * Used for testing and verification that aggregated data matches expected values.
+     * 直接查询 experiment_aggregates 表，并根据存储的聚合值构造 Experiment。
+     * 用于测试和验证聚合数据与预期值匹配。
      *
-     * @param experimentId the experiment ID to query
-     * @return Mono containing the Experiment constructed from aggregates table, or empty if not found
+     * @param experimentId 要查询的实验 ID
+     * @return 包含由聚合表构造的 Experiment 的 Mono，如果未找到则为空
      */
     public Mono<Experiment> getExperimentFromAggregates(@NonNull UUID experimentId) {
 
@@ -2300,61 +2275,61 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Maps a row from experiment_aggregates table to an Experiment object.
+     * 将 experiment_aggregates 表中的一行映射为一个 Experiment 对象。
      */
     private Experiment mapExperimentFromAggregates(Row row) {
-        // id is FixedString(36) in ClickHouse, read as String
+        // id 在 ClickHouse 中是 FixedString(36)，以 String 读取
         UUID id = getUUID(row, "id");
 
-        // dataset_id is FixedString(36), read as String
+        // dataset_id 是 FixedString(36)，以 String 读取
         UUID datasetId = getUUID(row, "dataset_id");
 
-        // project_id is FixedString(36), read as String
+        // project_id 是 FixedString(36)，以 String 读取
         UUID projectId = getUUID(row, "project_id");
 
-        // name is String
+        // name 是 String
         String name = row.get("name", String.class);
 
-        // created_at is DateTime64(9, 'UTC'), read as Instant
+        // created_at 是 DateTime64(9, 'UTC')，以 Instant 读取
         Instant createdAt = row.get("created_at", Instant.class);
 
-        // last_updated_at is DateTime64(9, 'UTC'), read as Instant
+        // last_updated_at 是 DateTime64(9, 'UTC')，以 Instant 读取
         Instant lastUpdatedAt = row.get("last_updated_at", Instant.class);
 
-        // created_by is String
+        // created_by 是 String
         String createdBy = row.get("created_by", String.class);
 
-        // last_updated_by is String
+        // last_updated_by 是 String
         String lastUpdatedBy = row.get("last_updated_by", String.class);
 
-        // metadata is String (JSON), parse to JsonNode
+        // metadata 是 String (JSON)，解析为 JsonNode
         JsonNode metadata = getJsonNodeOrNull(row, "metadata");
 
-        // tags is Array(String), read as List<String> and convert to Set<String>
+        // tags 是 Array(String)，以 List<String> 读取并转换为 Set<String>
         Set<String> tags = Set.copyOf(Optional.ofNullable(row.get("tags", List.class)).orElse(List.of()));
 
-        // type is Enum8, read as String and convert to ExperimentType
+        // type 是 Enum8，以 String 读取并转换为 ExperimentType
         ExperimentType type = ExperimentType.fromString(row.get("type", String.class));
 
-        // evaluation_method is Enum, read as String and convert to EvaluationMethod
+        // evaluation_method 是 Enum，以 String 读取并转换为 EvaluationMethod
         EvaluationMethod evaluationMethod = EvaluationMethod.fromString(row.get("evaluation_method", String.class))
                 .orElse(null);
 
-        // status is Enum8, read as String and convert to ExperimentStatus
+        // status 是 Enum8，以 String 读取并转换为 ExperimentStatus
         ExperimentStatus status = ExperimentStatus.fromString(row.get("status", String.class));
 
-        // optimization_id is String, convert to UUID
+        // optimization_id 是 String，转换为 UUID
         UUID optimizationId = getUUIDOrNull(row, "optimization_id");
 
-        // dataset_version_id is String, convert to UUID
+        // dataset_version_id 是 String，转换为 UUID
         UUID datasetVersionId = getUUIDOrNull(row, "dataset_version_id");
 
-        // prompt_versions - ignored in comparison, set to null
-        // Database has Map(FixedString(36), Array(FixedString(36)))
-        // Java expects List<PromptVersionLink> - complex conversion not needed since ignored
+        // prompt_versions - 比较中忽略，设为 null
+        // 数据库中是 Map(FixedString(36), Array(FixedString(36)))
+        // Java 期望 List<PromptVersionLink> - 由于被忽略，无需复杂转换
         List<Experiment.PromptVersionLink> promptVersions = null;
 
-        // experiment_scores is Map(String, Float64), convert to List<ExperimentScore>
+        // experiment_scores 是 Map(String, Float64)，转换为 List<ExperimentScore>
         Map<String, Double> experimentScoresRaw = row.get("experiment_scores", Map.class);
 
         List<ExperimentScore> experimentScores = Optional.ofNullable(experimentScoresRaw)
@@ -2363,10 +2338,10 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                         .toList())
                 .orElse(null);
 
-        // trace_count is UInt64 in ClickHouse, read as Long
+        // trace_count 在 ClickHouse 中是 UInt64，以 Long 读取
         Long traceCount = row.get("trace_count", Long.class);
 
-        // duration_percentiles is Map(String, Float64), read as Map<String, Double>
+        // duration_percentiles 是 Map(String, Float64)，以 Map<String, Double> 读取
         Map<String, Double> durationMap = row.get("duration_percentiles", Map.class);
 
         PercentageValues duration = Optional.ofNullable(durationMap)
@@ -2377,7 +2352,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                         BigDecimal.valueOf(map.getOrDefault("p99", 0.0))))
                 .orElse(null);
 
-        // feedback_scores_avg is Map(String, Float64), convert to List<FeedbackScoreAverage>
+        // feedback_scores_avg 是 Map(String, Float64)，转换为 List<FeedbackScoreAverage>
         Map<String, Double> feedbackScoresAvgRaw = row.get("feedback_scores_avg", Map.class);
         List<FeedbackScoreAverage> feedbackScores = Optional.ofNullable(feedbackScoresAvgRaw)
                 .map(raw -> raw.entrySet().stream()
@@ -2386,17 +2361,17 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                         .toList())
                 .orElse(null);
 
-        // total_estimated_cost_sum is Float64, read as Double
+        // total_estimated_cost_sum 是 Float64，以 Double 读取
         BigDecimal totalEstimatedCost = getBigDecimal(row, "total_estimated_cost_sum");
 
-        // total_estimated_cost_avg is Float64, read as Double
+        // total_estimated_cost_avg 是 Float64，以 Double 读取
         BigDecimal totalEstimatedCostAvg = getBigDecimal(row, "total_estimated_cost_avg");
 
-        // usage_avg is Map(String, Float64), read as Map<String, Double>
+        // usage_avg 是 Map(String, Float64)，以 Map<String, Double> 读取
         Map<String, Double> usageAvg = row.get("usage_avg", Map.class);
 
-        // pass_rate fields are non-nullable in experiment_aggregates (DEFAULT 0)
-        // Convert 0 defaults to null for non-test-suite experiments
+        // pass_rate 字段在 experiment_aggregates 中不可为空（DEFAULT 0）
+        // 对于非测试套件实验，将 0 默认值转换为 null
         Long totalCount = row.get("total_count", Long.class);
         boolean hasPassRate = totalCount != null && totalCount > 0;
 
@@ -2409,13 +2384,13 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                         .toList())
                 .orElse(null);
 
-        // Build Experiment with all fields from experiment_aggregates table
+        // 使用 experiment_aggregates 表中的所有字段构建 Experiment
         return new Experiment(
                 id,
-                null, // datasetName - not in DB
+                null, // datasetName - 不在数据库中
                 datasetId,
                 projectId,
-                null, // projectName - not in DB
+                null, // projectName - 不在数据库中
                 name,
                 metadata,
                 tags,
@@ -2425,7 +2400,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                 feedbackScores,
                 CommentResultMapper.parseCommentsFromJson(row.get("comments_array_agg", String.class)),
                 traceCount,
-                null, // datasetItemCount - not in aggregates table
+                null, // datasetItemCount - 不在聚合表中
                 createdAt,
                 duration,
                 totalEstimatedCost, // total_estimated_cost_sum
@@ -2436,10 +2411,10 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                 lastUpdatedBy,
                 status,
                 experimentScores,
-                null, // promptVersion (singular) - not in DB
+                null, // promptVersion（单数）- 不在数据库中
                 promptVersions,
                 datasetVersionId,
-                null, // datasetVersionSummary - not in DB
+                null, // datasetVersionSummary - 不在数据库中
                 hasPassRate ? row.get("pass_rate", BigDecimal.class) : null,
                 hasPassRate ? row.get("passed_count", Long.class) : null,
                 hasPassRate ? totalCount : null,
@@ -2447,14 +2422,14 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Helper to read UUID from ClickHouse FixedString(36) column.
+     * 用于从 ClickHouse 的 FixedString(36) 列读取 UUID 的辅助方法。
      */
     private UUID getUUID(Row row, String columnName) {
         return UUID.fromString(row.get(columnName, String.class));
     }
 
     /**
-     * Helper to read UUID from ClickHouse FixedString(36) column with null handling.
+     * 用于从 ClickHouse 的 FixedString(36) 列读取 UUID 并处理 null 的辅助方法。
      */
     private UUID getUUIDOrNull(Row row, String columnName) {
         String value = row.get(columnName, String.class);
@@ -2466,7 +2441,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     /**
-     * Helper to parse JsonNode from String with null handling.
+     * 用于从 String 解析 JsonNode 并处理 null 的辅助方法。
      */
     private JsonNode getJsonNodeOrNull(Row row, String columnName) {
         String value = row.get(columnName, String.class);
@@ -2489,7 +2464,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     }
 
     private TraceData mapTraceData(Row row) {
-        // visibility_mode is Enum8, read as String and convert to VisibilityMode
+        // visibility_mode 是 Enum8，以 String 读取并转换为 VisibilityMode
         VisibilityMode visibilityMode = VisibilityMode.fromString(row.get("visibility_mode", String.class))
                 .orElse(VisibilityMode.DEFAULT);
 
@@ -2517,7 +2492,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
     private FeedbackScoreData mapFeedbackScoreData(Row row) {
         List[] feedbackScoresArray = row.get("feedback_scores_array", List[].class);
 
-        // Map to FeedbackScore objects before serializing to JSON
+        // 在序列化为 JSON 之前先映射为 FeedbackScore 对象
         List<FeedbackScore> feedbackScores = FeedbackScoreMapper.getFeedbackScores(feedbackScoresArray);
         String feedbackScoresArrayJson = Optional.ofNullable(feedbackScores)
                 .map(JsonUtils::writeValueAsString)
@@ -2592,12 +2567,12 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                 .filter(experimentIds -> !experimentIds.isEmpty())
                 .ifPresent(experimentIds -> template.add("experiment_ids", experimentIds));
 
-        // Add regular experiment filters
+        // 添加常规实验过滤条件
         Optional.ofNullable(criteria.filters())
                 .flatMap(filters -> FilterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.EXPERIMENT))
                 .ifPresent(experimentFilters -> template.add("filters", experimentFilters));
 
-        // Add aggregated feedback score filters (ONLY REFERENCED HERE in ExperimentAggregatesDAO)
+        // 添加聚合反馈分数过滤条件（仅在 ExperimentAggregatesDAO 此处被引用）
         Optional.ofNullable(criteria.filters())
                 .flatMap(filters -> FilterQueryBuilder.toAnalyticsDbFilters(filters,
                         FilterStrategy.FEEDBACK_SCORES_AGGREGATED))
@@ -2610,7 +2585,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                         "feedback_scores_aggregated_empty_filters",
                         feedbackScoresAggregatedEmptyFilters));
 
-        // Add experiment score filters
+        // 添加实验分数过滤条件
         Optional.ofNullable(criteria.filters())
                 .flatMap(filters -> FilterQueryBuilder.toAnalyticsDbFilters(filters,
                         FilterStrategy.EXPERIMENT_SCORES))
@@ -2631,7 +2606,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                 criteria,
                 filterQueryBuilder,
                 FILTER_STRATEGIES,
-                false // Don't bind entity_type for aggregates
+                false // 不为聚合绑定 entity_type
         );
     }
 
@@ -2812,7 +2787,7 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
             var template = getSTWithLogComment(SELECT_EXPERIMENT_ITEMS_STATS_FROM_AGGREGATES,
                     "getExperimentItemsStatsFromAggregates", workspaceId, userName, datasetId);
 
-            // Apply filters to template
+            // 将过滤条件应用到模板
             FilterQueryBuilder.applyFiltersToTemplate(template, filters,
                     EXPERIMENT_ITEMS_STATS_FILTER_STRATEGY_PARAMS);
 
@@ -2824,14 +2799,14 @@ class ExperimentAggregatesDAOImpl implements ExperimentAggregatesDAO {
                     .bind("version_id", versionId.toString())
                     .bind("experiment_ids", experimentIds.toArray(UUID[]::new));
 
-            // Bind filter parameters
+            // 绑定过滤参数
             FilterQueryBuilder.bindFilters(statement, filters, EXPERIMENT_ITEMS_STATS_BIND_STRATEGIES);
 
             return Flux.from(statement.execute())
                     .flatMap(result -> result.map(
                             (row, rowMetadata) -> StatsMapper.mapExperimentItemsStats(row)));
         }).singleOrEmpty())
-                .doOnError(error -> log.error("Failed to get experiment items stats from aggregates", error));
+                .doOnError(error -> log.error("获取聚合实验条目统计信息失败", error));
     }
 
     @Override

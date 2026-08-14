@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * Why a row was recorded in the deletion-events bridge, stored as the {@code deletion_reason} column.
+ * 一行记录被写入删除事件桥接表的原因，存储为 {@code deletion_reason} 列。
  */
 @Getter
 @RequiredArgsConstructor

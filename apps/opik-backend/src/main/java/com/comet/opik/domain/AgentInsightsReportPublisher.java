@@ -17,10 +17,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Publishes Agent Insights report-trigger requests onto a Redis stream so the report subscriber can
- * execute them with bounded concurrency. Both the manual {@code /trigger} endpoint and the daily cron
- * enqueue through here, so the actual (potentially slow) report call never runs on a request or sweep
- * thread, and the consumer group caps the in-flight fan-out.
+ * 将 Agent Insights 报告触发请求发布到 Redis 流，使报告订阅者能够
+ * 以有界的并发执行它们。手动 {@code /trigger} 端点和每日 cron
+ * 都通过这里入队，因此实际的（可能较慢的）报告调用永远不会在请求或扫描
+ * 线程上运行，并且消费者组会限制进行中的扇出数量。
  */
 @Slf4j
 @Singleton
@@ -43,14 +43,14 @@ public class AgentInsightsReportPublisher {
     }
 
     /**
-     * Enqueues a report-trigger request and returns the generated report id once the message is on the
-     * stream, or completes empty when publishing is disabled.
+     * 将报告触发请求入队，并在消息进入流之后返回生成的报告 ID，
+     * 或者在发布被禁用时以空值完成。
      */
     public Mono<String> enqueue(@NonNull UUID projectId, @NonNull String workspaceId,
             @NonNull Instant periodStart, @NonNull Instant periodEnd, @NonNull String triggerSource) {
 
         if (!serviceToggles.isOllieEnabled()) {
-            log.debug("Agent Insights is disabled, ignoring trigger for project '{}'", projectId);
+            log.debug("Agent Insights 已禁用，忽略项目 '{}' 的触发", projectId);
             return Mono.empty();
         }
 
@@ -64,8 +64,8 @@ public class AgentInsightsReportPublisher {
                 .triggerSource(triggerSource)
                 .build();
 
-        // DEBUG: the daily sweep enqueues one per enabled project, so keep INFO for lifecycle events only.
-        log.debug("Publishing Agent Insights report trigger: reportId='{}', project='{}', workspace='{}'",
+        // DEBUG：每日扫描会为每个启用的项目入队一次，因此 INFO 仅用于生命周期事件。
+        log.debug("发布 Agent Insights 报告触发：reportId='{}'、project='{}'、workspace='{}'",
                 reportId, projectId, workspaceId);
 
         return Mono.defer(() -> {
@@ -76,7 +76,7 @@ public class AgentInsightsReportPublisher {
                     AgentInsightsReportConfig.PAYLOAD_FIELD, message, config))
                     .map(streamMessageId -> reportId)
                     .doOnError(throwable -> log.error(
-                            "Failed to publish Agent Insights report trigger: reportId='{}', project='{}'",
+                            "发布 Agent Insights 报告触发失败：reportId='{}'、project='{}'",
                             reportId, projectId, throwable));
         }).subscribeOn(Schedulers.boundedElastic());
     }

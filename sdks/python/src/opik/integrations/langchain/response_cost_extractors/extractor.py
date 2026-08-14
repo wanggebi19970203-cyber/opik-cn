@@ -14,15 +14,14 @@ _REGISTERED_RESPONSE_COST_EXTRACTORS: List[
 
 def try_extract_response_cost(run_dict: Dict[str, Any]) -> Optional[float]:
     """
-    Attempts to extract a provider-reported cost (in USD) from an LLM run.
+    尝试从 LLM 运行中提取提供商报告的成本（以美元计）。
 
-    Proxies such as LiteLLM return the request cost in a response header that
-    LangChain surfaces under the message ``response_metadata``. This is a real,
-    provider-reported cost, so it takes priority over the cost Opik estimates
-    from token usage.
+    LiteLLM 等代理会在响应头中返回请求成本，LangChain 会将该响应头以
+    ``response_metadata`` 的形式暴露出来。这是真实的、由提供商报告的成本，
+    因此其优先级高于 Opik 根据 token 用量估算的成本。
 
-    New proxies/integrations can be supported by adding an extractor to
-    ``_REGISTERED_RESPONSE_COST_EXTRACTORS``.
+    可通过向 ``_REGISTERED_RESPONSE_COST_EXTRACTORS`` 添加提取器来支持新的
+    代理/集成。
     """
     response_metadata = _try_get_response_metadata(run_dict)
     if not response_metadata:
@@ -33,7 +32,7 @@ def try_extract_response_cost(run_dict: Dict[str, Any]) -> Optional[float]:
             cost = extractor.try_get_response_cost(response_metadata)
         except Exception:
             LOGGER.debug(
-                "Failed to extract response cost with %s.",
+                "使用 %s 提取响应成本失败。",
                 type(extractor).__name__,
                 exc_info=True,
             )

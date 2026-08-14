@@ -1,0 +1,505 @@
+---
+headline: 测试套件
+og:description: 使用 Opik TypeScript SDK 针对你的 LLM 应用创建和运行回归测试套件，支持断言和可配置的执行策略。
+og:site_name: Opik 文档
+og:title: 使用 Opik TypeScript SDK 的测试套件
+title: 测试套件
+---
+
+<Note>
+  测试套件是项目级别的。创建测试套件时请务必指定一个 `projectName`，以确保它与正确的项目关联。
+</Note>
+
+测试套件是面向你的 LLM 应用的预配置回归测试。它们让你能够验证提示词变更、模型更新或代码修改不会破坏现有功能——将真实的生产故障固化为可复用的测试用例。
+
+一个测试套件将以下内容配对：
+
+- **测试项（Items）** — 一个输入（以及它们所需的任何上下文）数据集，每个测试项都有可选的项级断言和执行策略覆盖
+- **全局断言** — 应用于每个测试项的自然语言检查（由 LLM 评判器评估）
+- **执行策略** — 每个测试项运行多少次，以及这些运行中必须通过多少次
+
+有关通过 Ollie、UI 或 SDK 构建套件的操作指南，请参阅[构建测试套件](/evaluation/advanced/building-test-suites)。本页面是 SDK API 参考。
+
+## 创建和管理测试套件
+
+TypeScript SDK 提供了多种方法，通过 `OpikClient` 类来创建和管理测试套件。
+
+```typescript
+import { Opik } from "opik";
+
+const opik = new Opik();
+
+// 创建一个带有套件级断言的新测试套件
+const suite = await opik.createTestSuite({
+  name: "customer-support-qa",
+  description: "Regression tests for the support agent",
+  projectName: "my-project",
+  globalAssertions: [
+    "The response is grounded in the provided documentation context",
+    "The response directly addresses the user's question",
+  ],
+  globalExecutionPolicy: { runsPerItem: 2, passThreshold: 2 },
+});
+
+// 获取一个现有的测试套件，如果不存在则创建它
+const suite2 = await opik.getOrCreateTestSuite({
+  name: "customer-support-qa",
+  projectName: "my-project",
+});
+
+// 按名称获取一个现有的测试套件
+const existing = await opik.getTestSuite("customer-support-qa", "my-project");
+
+// 列出测试套件
+const suites = await opik.getTestSuites(100, "my-project");
+
+// 删除一个测试套件
+await opik.deleteTestSuite("customer-support-qa", "my-project");
+```
+
+<Tip>
+  测试套件由一个评估类型的数据集支撑——`createTestSuite`/`getTestSuite` 等与 `createDataset`/`getDataset` 是分开的，无法解析通过数据集 API 创建的套件，反之亦然。
+</Tip>
+
+## 处理测试套件的测试项
+
+```typescript
+// 插入测试项——项级断言/执行策略是可选的
+// 并且会追加到（而不是替换）套件级的那些
+await suite.insert([
+  {
+    data: { question: "How do I reset my password?" },
+  },
+  {
+    data: { question: "Can I use this with Kubernetes?" },
+    assertions: ["The response does NOT claim Kubernetes is supported"],
+    executionPolicy: { runsPerItem: 3, passThreshold: 2 },
+  },
+]);
+
+// 更新现有的测试项（每个测试项都必须包含一个 `id`）
+await suite.update([
+  { id: "item-1", assertions: ["The response is under 3 sentences"] },
+]);
+
+// 检索测试项，项级和套件级策略已合并
+const items = await suite.getItems();
+
+// 检索原始、未合并的存储载荷——评估器以
+// EvaluatorItemWrite[] 的形式呈现，而不是解码后的断言字符串，
+// 且仅包含项级 executionPolicy（未与套件默认值合并）
+const rawItems = await suite.getRawItems();
+
+// 删除特定的测试项
+await suite.delete(["item-1", "item-2"]);
+
+// 删除套件中的所有测试项
+await suite.clear();
+```
+
+### 更新单个测试项的断言或执行策略
+
+```typescript
+await suite.updateItemAssertions("item-1", [
+  "The response cites a specific step from the provided context",
+]);
+
+await suite.updateItemExecutionPolicy("item-1", {
+  runsPerItem: 5,
+  passThreshold: 4,
+});
+
+// 或一次性更新两者
+await suite.updateItem("item-1", {
+  assertions: ["The response is polite"],
+  executionPolicy: { runsPerItem: 3, passThreshold: 2 },
+});
+```
+
+## 执行策略
+
+执行策略控制每个测试项运行多少次，以及这些运行中必须通过多少次——这对于处理 LLM 的非确定性输出非常有用。
+
+- 一次**运行**在其所有断言都通过时才算通过
+- 一个**测试项**在 `runsPassed >= passThreshold` 时才算通过
+- 套件的**通过率**是通过的测试项数量与总测试项数量的比值
+
+```typescript
+// 读取套件级默认值
+const assertions = await suite.getGlobalAssertions();
+const policy = await suite.getGlobalExecutionPolicy();
+
+// 更新套件级断言和/或执行策略
+await suite.updateTestSettings({
+  globalAssertions: [
+    "The response is grounded in the provided context",
+    "The response is concise",
+  ],
+  globalExecutionPolicy: { runsPerItem: 5, passThreshold: 3 },
+});
+```
+
+## 运行测试套件
+
+`runTests` 是执行套件的主要入口点：它针对每个测试项运行你的任务，使用套件配置的断言对结果进行评分，并返回通过/失败结果。
+
+```typescript
+import { runTests } from "opik";
+
+const result = await runTests({
+  testSuite: suite,
+  task: async (item) => ({
+    input: item,
+    output: await myLLM(item.question),
+  }),
+});
+
+console.log(result.allItemsPassed, result.passRate);
+```
+
+<Note>
+  `input` 应仅包含你的智能体在生成响应时实际接收到的数据。LLM 评判器使用 `input` 和 `output` 来评估断言——在 `input` 中包含诸如预期答案之类的字段，可能会让评判器利用它们通过本应失败的断言。
+</Note>
+
+每次运行都会在 Opik 中创建一个独立的实验，因此你可以在仪表板中将多次运行（例如两个提示词版本）与同一套件进行比较。`evaluateTestSuite` 是 `runTests` 所构建于其上的较低层级函数，如果你需要原始的 `EvaluationResult` 而不是套件形状的 `TestSuiteResult`，它会很有用。
+
+## 测试套件版本
+
+与数据集一样，测试套件也是有版本的。请参阅[数据集](/reference/typescript-sdk/evaluation/datasets)了解通用的版本模型——相同的 `DatasetVersion` 风格方法在 `TestSuite` 上也可用：
+
+```typescript
+const currentVersion = await suite.getCurrentVersionName();
+const versionInfo = await suite.getVersionInfo();
+const v2 = await suite.getVersionView("v2");
+```
+
+## API 参考
+
+### OpikClient 测试套件方法
+
+#### `createTestSuite`
+
+创建一个新的测试套件。
+
+**参数：**
+
+- `options: CreateTestSuiteOptions` - `{ name, description?, globalAssertions?, globalExecutionPolicy?, tags?, projectName? }`
+
+**返回：** `Promise<TestSuite>` - 已创建的测试套件
+
+#### `getTestSuite`
+
+按名称检索现有的测试套件。
+
+**参数：**
+
+- `name: string` - 要检索的测试套件的名称
+- `projectName?: string` - 用于限定查找范围的可选项目名称。如果未提供，则使用客户端配置的项目。
+
+**返回：** `Promise<TestSuite>`
+
+**抛出：** 如果测试套件不存在，抛出 `DatasetNotFoundError`
+
+#### `getOrCreateTestSuite`
+
+按名称检索现有的测试套件，如果不存在则创建它。
+
+**参数：**
+
+- `options: CreateTestSuiteOptions` - 与 `createTestSuite` 相同的形状
+
+**返回：** `Promise<TestSuite>` - 现有或新创建的测试套件
+
+#### `deleteTestSuite`
+
+按名称删除测试套件。
+
+**参数：**
+
+- `name: string` - 要删除的测试套件的名称
+- `projectName?: string` - 用于限定查找范围的可选项目名称。如果未提供，则使用客户端配置的项目。
+
+**返回：** `Promise<void>`
+
+#### `getTestSuites`
+
+返回所有测试套件，最多达到指定的限制。
+
+**参数：**
+
+- `maxResults?: number` - 要返回的测试套件最大数量（默认：1000）
+- `projectName?: string` - 用于过滤的可选项目名称。如果未提供，则使用客户端配置的项目。
+
+**返回：** `Promise<TestSuite[]>`
+
+#### `getTestSuiteExperiments`
+
+检索与某个测试套件关联的所有实验。
+
+**参数：**
+
+- `name: string` - 测试套件的名称
+- `maxResults?: number` - 要返回的实验最大数量（默认：100）
+- `projectName?: string` - 用于限定套件查找范围的可选项目名称。如果未提供，则使用客户端配置的项目。
+
+**返回：** `Promise<TestSuiteExperiment[]>` - 每个条目都携带由后端填充的套件特定断言聚合（`passRate`、`passedCount`、`totalCount`、`assertionScores`）
+
+**抛出：** 如果测试套件不存在，抛出 `DatasetNotFoundError`
+
+### TestSuite 类方法
+
+#### `insert`
+
+将新的测试项插入到测试套件中。
+
+**参数：**
+
+- `items: TestSuiteItem[]` - `{ data, assertions?, description?, executionPolicy? }[]`
+
+**返回：** `Promise<void>`
+
+#### `update`
+
+更新现有的测试项。每个测试项都必须包含一个 `id`。
+
+**参数：**
+
+- `items: UpdateTestSuiteItem[]` - `{ id, data?, assertions?, description?, executionPolicy? }[]`
+
+**返回：** `Promise<void>`
+
+**抛出：** 如果有任何测试项缺少 `id`，抛出 `Error`
+
+#### `getItems`
+
+检索测试项，项级断言已解码，且项级执行策略已与套件级默认值合并。
+
+**参数：**
+
+- `nbSamples?: number` - 要检索的最大测试项数量（默认：全部）
+- `lastRetrievedId?: string` - 用于分页的不透明游标
+
+**返回：** `Promise<Array<{ id, data, description?, assertions, executionPolicy }>>`
+
+#### `getRawItems`
+
+检索测试项，保留原样的存储载荷——`evaluators` 以原始 `EvaluatorItemWrite[]` 形式呈现（不解码为断言字符串），`executionPolicy` 仅包含项级值（不与套件默认值合并）。当你需要按原样检查或转发存储配置时，请使用此方法。
+
+**参数：**
+
+- `nbSamples?: number` - 要检索的最大测试项数量（默认：全部）
+- `lastRetrievedId?: string` - 用于分页的不透明游标
+
+**返回：** `Promise<RawTestSuiteItem[]>`
+
+#### `delete`
+
+从测试套件中删除测试项。
+
+**参数：**
+
+- `itemIds: string[]` - 要删除的测试项 ID 列表
+
+**返回：** `Promise<void>`
+
+#### `clear`
+
+删除测试套件中的所有测试项。
+
+**返回：** `Promise<void>`
+
+#### `getGlobalAssertions`
+
+**返回：** `Promise<string[]>` - 套件级断言
+
+#### `getGlobalExecutionPolicy`
+
+**返回：** `Promise<Required<ExecutionPolicy>>` - 套件级执行策略（`{ runsPerItem, passThreshold }`）
+
+#### `updateTestSettings`
+
+更新套件级断言和/或执行策略。你省略的字段会保留其当前值。
+
+**参数：**
+
+- `options: UpdateTestSuiteOptions` - `{ globalAssertions?, globalExecutionPolicy? }` — 至少需要其中一个
+
+**返回：** `Promise<void>`
+
+#### `updateItem`
+
+更新单个测试项的断言和/或执行策略。
+
+**参数：**
+
+- `itemId: string`
+- `options: { assertions?: string[]; executionPolicy?: ExecutionPolicy }` - 至少需要其中一个
+
+**返回：** `Promise<void>`
+
+#### `updateItemAssertions`
+
+`updateItem(itemId, { assertions })` 的简写。
+
+**参数：**
+
+- `itemId: string`
+- `assertions: string[]`
+
+**返回：** `Promise<void>`
+
+#### `updateItemExecutionPolicy`
+
+`updateItem(itemId, { executionPolicy })` 的简写。
+
+**参数：**
+
+- `itemId: string`
+- `executionPolicy: ExecutionPolicy`
+
+**返回：** `Promise<void>`
+
+#### `getTags`
+
+**返回：** `Promise<string[]>`
+
+#### `getItemsCount`
+
+**返回：** `Promise<number | undefined>`
+
+#### `getCurrentVersionName`
+
+**返回：** `Promise<string | undefined>` - 最新版本名称（例如 `"v1"`），如果不存在任何版本则为 `undefined`
+
+#### `getVersionInfo`
+
+**返回：** `Promise<DatasetVersionPublic | undefined>`
+
+#### `getVersionView`
+
+**参数：**
+
+- `versionName: string` - 例如 `"v1"`、`"v2"`
+
+**返回：** `Promise<DatasetVersion>`
+
+**抛出：** 如果该版本不存在，抛出 `DatasetVersionNotFoundError`
+
+### `runTests`
+
+运行测试套件的主要入口点。
+
+```typescript
+async function runTests(options: RunTestsOptions): Promise<TestSuiteResult>;
+```
+
+| 参数                | 类型                     | 必填 | 描述                                                                   |
+| ------------------- | ------------------------ | ---- | ---------------------------------------------------------------------- |
+| `testSuite`         | `TestSuite`              | 是   | 要针对其运行的测试套件                                                 |
+| `task`              | `EvaluationTask`         | 是   | 接收每个测试项的数据，并且必须返回 `{ input, output }`                 |
+| `experimentName`    | `string`                 | 否   | 为本次运行创建的实验的可选名称                                         |
+| `projectName`       | `string`                 | 否   | 用于关联实验的可选项目（默认为套件的项目）                             |
+| `experimentConfig`  | `Record<string, unknown>` | 否  | 存储在实验上的可选配置                                                  |
+| `prompts`           | `Prompt[]`               | 否   | 要与实验关联的可选提示词                                               |
+| `experimentTags`    | `string[]`               | 否   | 要与实验关联的可选标签                                                 |
+| `model`             | `string`                 | 否   | 用于覆盖 LLM 评判器评估器的可选模型名称                                |
+| `taskThreads`       | `number`                 | 否   | 并发任务执行的数量（默认：16，与 Python SDK 一致）                     |
+| `nbSamples`         | `number`                 | 否   | 限制要评估的测试项数量（默认：全部）                                   |
+
+**返回：** `Promise<TestSuiteResult>`
+
+### `evaluateTestSuite`
+
+`runTests` 所构建于其上的较低层级函数。它使用存储在套件数据集版本元数据中的评估器和执行策略来运行测试套件，并返回原始的 `EvaluationResult` 而不是套件形状的 `TestSuiteResult`。
+
+```typescript
+async function evaluateTestSuite(
+  options: EvaluateTestSuiteOptions
+): Promise<EvaluationResult>;
+```
+
+**参数：** 与 [`evaluate`](/reference/typescript-sdk/evaluation/evaluate_function) 相同的形状，外加 `dataset`（套件的数据集）。
+
+**返回：** `Promise<EvaluationResult>`
+
+## 数据结构
+
+### TestSuiteResult
+
+运行测试套件的结果。由 `runTests` 返回。
+
+```typescript
+class TestSuiteResult {
+  readonly allItemsPassed: boolean;
+  readonly itemsPassed: number;
+  readonly itemsTotal: number;
+  readonly passRate: number | undefined;
+  readonly itemResults: Map<string, ItemResult>;
+  readonly experimentId: string;
+  readonly experimentName?: string;
+  readonly experimentUrl?: string;
+  readonly suiteName?: string;
+  readonly totalTime?: number;
+
+  // 将结果转换为纯报告对象（camelCase 键），
+  // 按试验分组测试结果，并包含每个测试项的通过/失败和断言详情
+  toReportDict(): Record<string, unknown>;
+
+  // toReportDict() 的别名
+  toDict(): Record<string, unknown>;
+}
+```
+
+### ItemResult
+
+单个测试套件测试项的结果，在 `TestSuiteResult.itemResults` 中以 `datasetItemId` 为键。
+
+```typescript
+type ItemResult = {
+  datasetItemId: string;
+  passed: boolean;
+  // 该测试项是否在其任何一次运行中评估过至少一个断言
+  hasAssertions: boolean;
+  runsPassed: number;
+  runsTotal: number;
+  // 执行策略中配置的 runsPerItem
+  configuredRunsPerItem: number;
+  passThreshold: number;
+  testResults: EvaluationTestResult[];
+};
+```
+
+### TestSuiteExperiment
+
+表示针对测试套件运行的一次实验。它继承自 `Experiment`（参见[实验](/reference/typescript-sdk/evaluation/experiments)），并带有后端仅为测试套件实验填充的聚合断言统计（对于普通数据集实验则为 `undefined`）。
+
+```typescript
+class TestSuiteExperiment extends Experiment {
+  readonly passRate?: number;
+  readonly passedCount?: number;
+  readonly totalCount?: number;
+  readonly assertionScores?: AssertionScoreAveragePublic[];
+}
+```
+
+### CreateTestSuiteOptions
+
+```typescript
+interface CreateTestSuiteOptions {
+  name: string;
+  description?: string;
+  globalAssertions?: string[];
+  globalExecutionPolicy?: ExecutionPolicy;
+  tags?: string[];
+  projectName?: string;
+}
+```
+
+### ExecutionPolicy
+
+```typescript
+interface ExecutionPolicy {
+  runsPerItem?: number;
+  passThreshold?: number;
+}
+```

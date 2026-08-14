@@ -14,54 +14,51 @@ def _get_expected_payload_size_MB(item: T) -> float:
 
 
 def get_payload_size_MB(item: T) -> float:
-    """Estimate the JSON-serialized size of ``item`` in megabytes.
+    """估算 ``item`` 序列化为 JSON 后的大小（以 MB 为单位）。
 
-    Public wrapper around the internal size estimator, reused by span-truncation
-    so the size measured for truncation matches the batching size estimate.
+    内部大小估算器的公开包装，供 span 截断复用，从而使截断时测量的大小与
+    批处理的大小估算保持一致。
     """
     return _get_expected_payload_size_MB(item)
 
 
 def _get_json_size(obj: Any) -> Any:
     """
-    Compute the size of the resulting JSON without actually doing the JSON
-    encoding, which is CPU and memory consuming. This assumes that we only
-    receive basic Python objects, strings, booleans, numbers, list and dicts
-    and that the object does not contain any cyclic reference.
+    在不实际执行 JSON 编码（这很耗费 CPU 和内存）的情况下计算最终 JSON 的大小。
+    这里假设我们只会收到基本的 Python 对象、字符串、布尔值、数字、列表和字典，
+    并且对象不包含任何循环引用。
     """
     try:
         if isinstance(obj, str):
-            return len(obj.encode("utf-8")) + 2  # "str_content"
+            return len(obj.encode("utf-8")) + 2  # 字符串两侧的引号
         elif isinstance(obj, (int, float)):
             return len(str(obj))
         elif isinstance(obj, type(None)):
-            # null
+            # null 关键字
             return 4
         elif isinstance(obj, dict):
-            size = 2  # {obj}
+            size = 2  # 花括号 {}
             allowed_keys = set(obj.keys())
             for key, value in obj.items():
                 if key in allowed_keys:
                     encoded_key = _get_json_size(key)
                     encoded_value = _get_json_size(value)
-                    size += encoded_key + encoded_value + 1 + 1  # key:value and ,
-            return size - 1  # Remove the last trailing comma
+                    size += encoded_key + encoded_value + 1 + 1  # key:value 中的冒号与逗号
+            return size - 1  # 去掉末尾多余的逗号
         elif isinstance(obj, list):
-            size = 2  # [obj]
+            size = 2  # 方括号 []
             for item in obj:
-                size += _get_json_size(item) + 1  # ,
-            return size - 1  # Remove the last trailing comma
+                size += _get_json_size(item) + 1  # 逗号
+            return size - 1  # 去掉末尾多余的逗号
         elif isinstance(obj, bool):
             return len(str(obj))
         else:
-            LOGGER.debug(
-                "Unexpected object seen during JSON size estimation %r", type(obj)
-            )
+            LOGGER.debug("JSON 大小估算过程中遇到意外对象：%r", type(obj))
             return len(str(obj))
 
     except Exception:
-        LOGGER.debug("Failed to compute object size.", exc_info=True)
-        # Return a value that will cause the span to be in its own batch to be on the safe side
+        LOGGER.debug("无法计算对象大小。", exc_info=True)
+        # 为保险起见，返回一个会让该 span 独立成批的值
         return float("inf")
 
 
@@ -71,7 +68,7 @@ def split_into_batches(
     max_length: Optional[int] = None,
 ) -> List[List[T]]:
     assert (max_payload_size_MB is not None) or (max_length is not None), (
-        "At least one limitation must be set for splitting"
+        "至少需要设置一种拆分限制"
     )
 
     if max_length is None:

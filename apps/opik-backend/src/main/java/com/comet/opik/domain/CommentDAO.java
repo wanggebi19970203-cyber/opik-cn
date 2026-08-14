@@ -217,7 +217,7 @@ class CommentDAOImpl implements CommentDAO {
 
     @Override
     public Mono<Long> deleteByEntityIds(@NonNull EntityType entityType, @NonNull Set<UUID> entityIds, UUID projectId) {
-        log.info("Deleting comments for entityType '{}', entityIds count '{}', project id '{}'", entityType,
+        log.info("删除 entityType '{}'、entityIds 数量 '{}'、项目 ID '{}' 的评论", entityType,
                 entityIds.size(), projectId);
         if (entityIds.isEmpty()) {
             return Mono.just(0L);

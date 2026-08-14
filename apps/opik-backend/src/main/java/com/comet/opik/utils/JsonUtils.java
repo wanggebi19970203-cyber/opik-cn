@@ -40,44 +40,44 @@ import java.util.Optional;
 public class JsonUtils {
 
     /**
-     * ObjectMapper for internal JSON processing.
-     * Initialized with minimal defaults (20MB) and reconfigured by OpikApplication
-     * during startup to match config.yml settings.
+     * 用于内部 JSON 处理的 ObjectMapper。
+     * 以最小默认值（20MB）初始化，并在启动期间由 OpikApplication
+     * 重新配置以匹配 config.yml 设置。
      */
     private static volatile ObjectMapper MAPPER;
 
     static {
         MAPPER = createConfiguredMapper(StreamReadConstraints.DEFAULT_MAX_STRING_LEN, -1L);
-        log.info("JsonUtils initialized with default maxStringLength: '{}', maxDocumentLength: unlimited",
+        log.info("JsonUtils 已用默认 maxStringLength: '{}'、maxDocumentLength: 无限制 初始化",
                 StreamReadConstraints.DEFAULT_MAX_STRING_LEN);
     }
 
     /**
-     * Configures JsonUtils with the limits from config.yml.
-     * Called by OpikApplication during startup.
+     * 用 config.yml 中的限制配置 JsonUtils。
+     * 由 OpikApplication 在启动期间调用。
      *
-     * @param maxStringLength   Maximum single string value length in bytes
-     * @param maxDocumentLength Maximum whole-document length in bytes ({@code <= 0} means unlimited)
+     * @param maxStringLength   单个字符串值的最大长度（字节）
+     * @param maxDocumentLength 整个文档的最大长度（字节）（{@code <= 0} 表示无限制）
      */
     public static synchronized void configure(int maxStringLength, long maxDocumentLength) {
         MAPPER = createConfiguredMapper(maxStringLength, maxDocumentLength);
-        log.info("JsonUtils configured with maxStringLength: '{}' bytes ('{}'MB), maxDocumentLength: '{}' bytes",
+        log.info("JsonUtils 已配置 maxStringLength: '{}' 字节（'{}'MB），maxDocumentLength: '{}' 字节",
                 maxStringLength, maxStringLength / 1024 / 1024, maxDocumentLength);
     }
 
     /**
-     * Creates and configures an ObjectMapper with the specified limits.
-     * This configuration matches the Dropwizard ObjectMapper setup in OpikApplication.
+     * 创建并用指定限制配置一个 ObjectMapper。
+     * 该配置与 OpikApplication 中的 Dropwizard ObjectMapper 设置匹配。
      *
-     * @param maxStringLength   Maximum single string value length in bytes
-     * @param maxDocumentLength Maximum whole-document length in bytes ({@code <= 0} means unlimited)
-     * @return Configured ObjectMapper instance
+     * @param maxStringLength   单个字符串值的最大长度（字节）
+     * @param maxDocumentLength 整个文档的最大长度（字节）（{@code <= 0} 表示无限制）
+     * @return 已配置的 ObjectMapper 实例
      */
     @VisibleForTesting
     static ObjectMapper createConfiguredMapper(int maxStringLength, long maxDocumentLength) {
         ObjectMapper mapper = new ObjectMapper();
 
-        // Basic configuration matching Dropwizard defaults
+        // 与 Dropwizard 默认值匹配的基本配置
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SnakeCaseStrategy.INSTANCE);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -86,7 +86,7 @@ public class JsonUtils {
         mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, false);
         mapper.enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature());
 
-        // Register JavaTimeModule for proper date/time handling
+        // 注册 JavaTimeModule 以正确处理日期/时间
         mapper.registerModule(new JavaTimeModule()
                 .addDeserializer(BigDecimal.class, JsonBigDecimalDeserializer.INSTANCE)
                 .addDeserializer(Message.class, OpenAiMessageJsonDeserializer.INSTANCE)
@@ -98,9 +98,9 @@ public class JsonUtils {
     }
 
     /**
-     * Applies the JSON stream-read size limits to {@code mapper}'s factory. NOTE: {@code maxDocumentLength}
-     * is enforced only on parser buffer refills (stream/reader input, e.g. the HTTP request body) - a fully
-     * in-memory {@code String}/{@code byte[]} read bypasses it; {@code maxStringLength} applies to both.
+     * 将 JSON 流读取大小限制应用到 {@code mapper} 的 factory。注意：{@code maxDocumentLength}
+     * 只在解析器缓冲区重新填充（流/读取器输入，例如 HTTP 请求体）时强制 —— 完全
+     * 在内存中的 {@code String}/{@code byte[]} 读取会绕过它；{@code maxStringLength} 对两者都适用。
      */
     public static void applyStreamReadConstraints(@NonNull ObjectMapper mapper, int maxStringLength,
             long maxDocumentLength) {
@@ -112,31 +112,31 @@ public class JsonUtils {
     }
 
     /**
-     * Gets the shared ObjectMapper instance.
+     * 获取共享的 ObjectMapper 实例。
      *
-     * @return The configured ObjectMapper
+     * @return 已配置的 ObjectMapper
      */
     public static ObjectMapper getMapper() {
         return MAPPER;
     }
 
     /**
-     * Creates a new empty ObjectNode.
+     * 创建一个新的空 ObjectNode。
      *
-     * @return A new ObjectNode instance
+     * @return 一个新的 ObjectNode 实例
      */
     public static ObjectNode createObjectNode() {
         return MAPPER.createObjectNode();
     }
 
     /**
-     * Shallow-merges object {@code overrides} on top of {@code base}, returning a new object node.
-     * Keys present in {@code overrides} are added/replaced; keys only in {@code base} are preserved.
+     * 将对象 {@code overrides} 浅合并到 {@code base} 之上，返回一个新的对象节点。
+     * {@code overrides} 中存在的键会被添加/替换；仅存在于 {@code base} 中的键被保留。
      * <p>
-     * Only object overrides are mergeable: a {@code null}, scalar, or array {@code overrides} is ignored
-     * and {@code base} is returned unchanged, so a non-object value can never be propagated into storage
-     * (which would violate the object-shaped metadata contract the callers/UI rely on). Likewise a
-     * non-object {@code base} is discarded rather than merged onto.
+     * 只有对象覆盖是可合并的：{@code null}、标量或数组的 {@code overrides} 会被忽略，
+     * 并原样返回 {@code base}，因此非对象值永远不会被传播进存储
+     * （这会违反调用方/UI 所依赖的对象形状元数据契约）。同样地，
+     * 非对象的 {@code base} 会被丢弃而不是被合并到其上。
      */
     public static JsonNode merge(JsonNode base, JsonNode overrides) {
         if (overrides == null || !overrides.isObject()) {
@@ -151,30 +151,30 @@ public class JsonUtils {
     }
 
     /**
-     * Creates a new empty ArrayNode.
+     * 创建一个新的空 ArrayNode。
      *
-     * @return A new ArrayNode instance
+     * @return 一个新的 ArrayNode 实例
      */
     public static ArrayNode createArrayNode() {
         return MAPPER.createArrayNode();
     }
 
     /**
-     * Converts a Java object to a JsonNode.
+     * 将 Java 对象转换为 JsonNode。
      *
-     * @param value The Java object to convert
-     * @return The JsonNode representation
+     * @param value 要转换的 Java 对象
+     * @return JsonNode 表示
      */
     public static JsonNode valueToTree(@NonNull Object value) {
         return MAPPER.valueToTree(value);
     }
 
     /**
-     * Converts a JsonNode to a Java object of the specified type.
+     * 将 JsonNode 转换为指定类型的 Java 对象。
      *
-     * @param node The JsonNode to convert
-     * @param valueType The target class type
-     * @return The converted Java object
+     * @param node 要转换的 JsonNode
+     * @param valueType 目标类类型
+     * @return 转换后的 Java 对象
      */
     public static <T> T treeToValue(@NonNull JsonNode node, @NonNull Class<T> valueType) {
         try {
@@ -185,10 +185,10 @@ public class JsonUtils {
     }
 
     /**
-     * Serializes a value to a byte array.
+     * 将值序列化为字节数组。
      *
-     * @param value The value to serialize
-     * @return The serialized byte array
+     * @param value 要序列化的值
+     * @return 序列化后的字节数组
      */
     public static byte[] writeValueAsBytes(@NonNull Object value) {
         try {
@@ -320,10 +320,10 @@ public class JsonUtils {
     }
 
     /**
-     * Serialized character (UTF-16) length of a node without materializing its JSON string — the node is
-     * streamed through a counting writer, so a large field costs O(1) transient heap rather than a full
-     * copy. A {@code null} or JSON-null node counts as 0. Use {@link #getSerializedLengthInBytes} to
-     * enforce byte-denominated limits.
+     * 节点的序列化字符（UTF-16）长度，不物化其 JSON 字符串 —— 节点被
+     * 流经一个计数 writer，因此大字段只花费 O(1) 的瞬态堆，而不是完整
+     * 拷贝。{@code null} 或 JSON-null 节点计为 0。使用 {@link #getSerializedLengthInBytes}
+     * 来强制以字节计量的限制。
      */
     public long getSerializedLength(JsonNode node) {
         if (node == null || node.isNull()) {
@@ -335,11 +335,11 @@ public class JsonUtils {
     }
 
     /**
-     * Serialized UTF-8 byte length of a node without materializing its JSON — the node is streamed through
-     * a counting output stream, so a large field costs O(1) transient heap rather than a full copy. This
-     * is the byte-accurate variant of {@link #getSerializedLength}, for enforcing byte-denominated caps
-     * (where non-ASCII text makes the byte count exceed the character count). A {@code null} or JSON-null
-     * node counts as 0.
+     * 节点的序列化 UTF-8 字节长度，不物化其 JSON —— 节点被流经
+     * 一个计数输出流，因此大字段只花费 O(1) 的瞬态堆，而不是完整拷贝。这是
+     * {@link #getSerializedLength} 的字节精确变体，用于强制以字节计量的上限
+     * （非 ASCII 文本会使字节数超过字符数）。{@code null} 或 JSON-null
+     * 节点计为 0。
      */
     public long getSerializedLengthInBytes(JsonNode node) {
         if (node == null || node.isNull()) {

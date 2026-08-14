@@ -23,9 +23,8 @@ class ValidationResult(pydantic.BaseModel):
 class ValidationResponse(pydantic.BaseModel):
     validation_passed: bool
     validations: List[ValidationResult]
-    # These are client side injected
+    # 这些由客户端注入
     guardrail_result: Optional[CheckPublicResult] = None
-    # Set when the guardrail could not be evaluated (backend unreachable, timeout, or
-    # local guard failure). Kept on the response so the guardrail span still carries an
-    # output when failing closed, rather than only an error.
+    # 当护栏无法评估（后端不可达、超时或本地 guard 失败）时设置。
+    # 保留在响应上，使护栏 span 在失败关闭时仍然携带输出，而不仅仅是错误。
     error: Optional[str] = None

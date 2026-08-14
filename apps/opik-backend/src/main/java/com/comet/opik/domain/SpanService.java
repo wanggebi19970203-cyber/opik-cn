@@ -547,7 +547,7 @@ public class SpanService {
                                 .then(Mono.defer(() -> attachmentService.deleteByEntityIds(SPAN, spanIds, projectId)))
                                 .then(spanDAO.deleteByIds(spanIds, projectId)
                                         .doOnSuccess(__ -> log.info(
-                                                "Deleted '{}' spans for workspace '{}', project '{}'",
+                                                "已删除 '{}' 个 span（工作区 '{}'，项目 '{}'）",
                                                 spanIds.size(), workspaceId, projectId)))
                                 .then(captureDeletions(spanIds, projectId, workspaceId, userName))
                                 .thenReturn(spanIds);

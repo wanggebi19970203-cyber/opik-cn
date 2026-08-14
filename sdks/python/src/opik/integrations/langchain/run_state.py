@@ -8,18 +8,17 @@ if TYPE_CHECKING:
 
 
 class RunStateStore:
-    """Per-run bookkeeping for :class:`OpikTracer`.
+    """为 :class:`OpikTracer` 维护每个运行（run）的簿记状态。
 
-    Owns the mapping from LangChain run ids to the span/trace data the tracer
-    created for them. Trace ownership - whether the tracer must finalize a trace
-    or leave it to whoever created it - is derived from that same trace data map
-    (see :meth:`owns_trace`) rather than tracked separately.
+    维护从 LangChain run id 到 tracer 为其创建的 span/trace 数据的映射。
+    trace 所有权——即 tracer 是必须终结某个 trace，还是将其留给创建者——
+    由同一份 trace 数据映射推导得出（参见 :meth:`owns_trace`），而非单独跟踪。
 
-    All of this state is scoped to in-flight runs. :meth:`release_run_tree`
-    drops every entry belonging to a finished root run's subtree, so a
-    long-lived tracer reused across invocations - the documented "build once,
-    pass on every invoke" pattern - stays flat in memory instead of growing for
-    the process lifetime and pinning the retained prompt/completion payloads.
+    所有这些状态都限定在进行中（in-flight）的 run 范围内。:meth:`release_run_tree`
+    会丢弃属于某个已结束的根 run 子树的所有条目，因此跨多次调用复用的
+    长生命周期 tracer（即文档所述的“构建一次，每次 invoke 时传入”模式）在
+    内存中保持平稳，而不会随进程生命周期不断增长并保留已缓存的
+    prompt/completion 负载。
     """
 
     def __init__(self) -> None:
@@ -49,11 +48,10 @@ class RunStateStore:
     def link_child_run_to_parent_trace(
         self, child_run_id: UUID, parent_run_id: UUID, trace_id: str
     ) -> None:
-        """Point a child run at its parent run's trace data.
+        """将子 run 指向其父 run 的 trace 数据。
 
-        Falls back to a lookup by ``trace_id`` when the parent run has no trace
-        data of its own (e.g. a stream-restart root that only exists as a span),
-        leaving the child unlinked when neither is found.
+        当父 run 自身没有 trace 数据（例如仅以 span 形式存在的流式重启根节点）时，
+        会退回到按 ``trace_id`` 查找；若两者都找不到，则保持子 run 未关联。
         """
         trace_data = self._trace_data_by_run_id.get(parent_run_id)
         if trace_data is None:
@@ -75,11 +73,11 @@ class RunStateStore:
         return run_id in self._skipped_langgraph_root_run_ids
 
     def owns_trace(self, trace_id: str) -> bool:
-        """Whether this tracer created the trace (and so must finalize it).
+        """判断该 tracer 是否创建了该 trace（从而必须终结它）。
 
-        A trace the tracer did not create - an ambient ``@track`` trace, a
-        distributed-header trace, a caller-provided one - is never in the trace
-        data map, so this returns False and the tracer leaves it alone.
+        tracer 未创建的 trace——例如外部的 ``@track`` trace、分布式头（distributed
+        header）trace 或调用方提供的 trace——永远不会出现在 trace 数据映射中，
+        因此本方法返回 False，tracer 也会对其置之不理。
         """
         return any(
             trace_data.id == trace_id
@@ -94,10 +92,10 @@ class RunStateStore:
         )
 
     def release_run_tree(self, root_run: "Run") -> None:
-        """Drop all state for a finished root run and its whole subtree.
+        """丢弃某个已结束的根 run 及其整个子树的所有状态。
 
-        LangChain attaches the entire subtree to the root run, so walking it
-        yields every run id this store created bookkeeping for.
+        LangChain 会将整个子树挂载到根 run 上，因此遍历它即可得到本存储
+        为其建立簿记的每个 run id。
         """
         pending_runs: List["Run"] = [root_run]
         while pending_runs:

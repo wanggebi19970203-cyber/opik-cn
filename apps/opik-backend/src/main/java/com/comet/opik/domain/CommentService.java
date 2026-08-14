@@ -85,8 +85,8 @@ class CommentServiceImpl implements CommentService {
         };
     }
 
-    // Resolves the (single) project for a comment's entity refs so CommentsUpdated can prune by project;
-    // empty when there are no refs or the entity's project can't be resolved.
+    // 为评论的实体引用解析（单个）项目，以便 CommentsUpdated 可以按项目剪枝；
+    // 当没有引用或实体的项目无法解析时为空。
     private Mono<Optional<UUID>> resolveProjectIdForRefs(List<CommentEntityRef> refs) {
         if (CollectionUtils.isEmpty(refs)) {
             return Mono.just(Optional.empty());

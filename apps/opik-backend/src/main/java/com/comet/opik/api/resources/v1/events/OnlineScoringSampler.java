@@ -54,10 +54,9 @@ import java.util.stream.Collectors;
 import static com.comet.opik.infrastructure.log.LogContextAware.wrapWithMdc;
 
 /**
- * This service listens for Traces creation server in-memory event (via EventBus). When it happens, it fetches
- * Automation Rules for the trace's project and samples the trace batch for the proper scoring. The trace and code
- * (which can be a LLM-as-Judge, a Python code or new integrations we add) are enqueued in a Redis stream dedicated
- * to that evaluator type.
+ * 此服务监听追踪创建的服务器内存事件（通过 EventBus）。事件发生时，它会获取追踪所属项目的
+ * 自动化规则，并对追踪批次进行采样以进行相应评分。追踪和代码（可以是 LLM 裁判、Python 代码或
+ * 我们新增的集成）被入队到专用于该评估器类型的 Redis 流中。
  */
 @EagerSingleton
 @Slf4j
@@ -68,8 +67,8 @@ public class OnlineScoringSampler {
     private static final AttributeKey<String> WORKSPACE_NAME_KEY = AttributeKey.stringKey("workspace_name");
     private static final AttributeKey<String> EVALUATOR_TYPE_KEY = AttributeKey.stringKey("evaluator_type");
     private static final AttributeKey<String> DECISION_KEY = AttributeKey.stringKey("decision");
-    // Sampling decision values (the per-workspace funnel between ingestion and scoring):
-    private static final String DECISION_SAMPLED = "sampled"; // passed all checks -> enqueued for scoring
+    // 采样决策值（摄入与评分之间的每工作区漏斗）：
+    private static final String DECISION_SAMPLED = "sampled"; // 通过所有检查 -> 入队以进行评分
     private static final String DECISION_SKIPPED_DISABLED = "skipped_disabled";
     private static final String DECISION_SKIPPED_FILTER = "skipped_filter";
     private static final String DECISION_SKIPPED_SAMPLING = "skipped_sampling";
@@ -109,8 +108,8 @@ public class OnlineScoringSampler {
 
     private void recordDecision(String workspaceId, String workspaceName, AutomationRuleEvaluator<?, ?> evaluator,
             String decision, long count) {
-        // workspaceName is resolved from RequestContext.WORKSPACE_NAME at trace-event publish time and carried
-        // on the message/event; fall back to the id when absent so the label is always populated.
+        // workspaceName 在追踪事件发布时从 RequestContext.WORKSPACE_NAME 解析，并随
+        // 消息/事件携带；缺失时回退到 id，使标签始终被填充。
         samplingDecisions.add(count, Attributes.of(
                 WORKSPACE_ID_KEY, workspaceId,
                 WORKSPACE_NAME_KEY, StringUtils.defaultIfBlank(workspaceName, workspaceId),
@@ -119,15 +118,14 @@ public class OnlineScoringSampler {
     }
 
     /**
-     * Records a skip decision and emits the user-facing log line for it. Shared by the disabled,
-     * filter-mismatch and sampling-skip branches of {@link #shouldSampleTrace} so a new skip reason
-     * is a single call site rather than three. Always returns {@code false} so callers can
-     * {@code return skip(...)}.
+     * 记录一个跳过决策并为其发出面向用户的日志行。由 {@link #shouldSampleTrace} 的禁用、
+     * 过滤器不匹配和采样跳过分支共享，因此新的跳过原因只需一个调用点而非三个。始终返回 {@code false}，
+     * 使调用方可以 {@code return skip(...)}。
      */
     private boolean skip(String workspaceId, String workspaceName, AutomationRuleEvaluator<?, ?> evaluator, Trace trace,
             String decision, String message, Object... args) {
         recordDecision(workspaceId, workspaceName, evaluator, decision, 1);
-        // Important to set the workspaceId for logging purposes
+        // 出于日志目的，设置 workspaceId 很重要
         try (var logContext = createTraceLoggingContext(workspaceId, evaluator, trace)) {
             userFacingLogger.info(message, args);
         }
@@ -135,21 +133,21 @@ public class OnlineScoringSampler {
     }
 
     /**
-     * Listen for trace batches to check for existent Automation Rules to score them. It samples the trace batch and
-     * enqueues the sample into Redis Stream.
+     * 监听追踪批次，检查是否存在用于评分的自动化规则。它对追踪批次进行采样，
+     * 并将样本入队到 Redis Stream。
      *
-     * @param tracesBatch a traces batch with workspaceId and userName
+     * @param tracesBatch 一个带有 workspaceId 和 userName 的追踪批次
      */
     @Subscribe
     public void onTracesCreated(TracesCreated tracesBatch) {
-        // Filter out partial traces (no end_time) to avoid scoring incomplete data.
-        // The SDK may send a "start" event (with input but no output/end_time) followed by
-        // a "complete" event (with output and end_time). Only score complete traces.
+        // 过滤掉不完整的追踪（无 end_time），以避免对不完整数据进行评分。
+        // SDK 可能先发送一个 "start" 事件（有输入但无输出/end_time），随后发送一个
+        // "complete" 事件（有输出和 end_time）。只对完整追踪进行评分。
         var completeTraces = tracesBatch.traces().stream()
                 .filter(trace -> trace.endTime() != null)
                 .toList();
 
-        log.info("Received TracesCreated, complete '{}', total '{}', workspace '{}'",
+        log.info("收到 TracesCreated，完整 '{}'，总计 '{}'，工作区 '{}'",
                 completeTraces.size(), tracesBatch.traces().size(), tracesBatch.workspaceId());
 
         sampleAndScore(completeTraces, tracesBatch.workspaceId(), tracesBatch.userName(),
@@ -157,25 +155,23 @@ public class OnlineScoringSampler {
     }
 
     /**
-     * Listen for trace updates that include end_time being set. This handles the case where
-     * the SDK sends a POST (create) at function start and a PATCH (update) at function end
-     * (e.g., manual trace.end() API). Without this, traces completed via PATCH would never
-     * be scored because onTracesCreated only sees the initial partial trace.
+     * 监听包含 end_time 被设置的追踪更新。这处理了 SDK 在函数开始时发送 POST（创建）、
+     * 在函数结束时发送 PATCH（更新）的情况（例如手动 trace.end() API）。没有这一点，
+     * 通过 PATCH 完成的追踪将永远不会被评分，因为 onTracesCreated 只能看到初始的不完整追踪。
      */
     @Subscribe
     public void onTracesUpdated(TracesUpdated event) {
         if (event.traceUpdate().endTime() == null) {
-            log.debug("TracesUpdated event without endTime -> incomplete trace, won't score.");
+            log.debug("TracesUpdated 事件没有 endTime -> 追踪不完整，不会评分。");
             return;
         }
 
-        log.info("Received TracesUpdated with end_time, traceIds '{}', workspace '{}'",
+        log.info("收到带有 end_time 的 TracesUpdated，traceIds '{}'，工作区 '{}'",
                 event.traceIds().size(), event.workspaceId());
 
-        // NOTE: there is a potential race condition in multi-node ClickHouse clusters — the write
-        // may have landed on one replica while this read hits another that hasn't replicated yet.
-        // In practice doOnSuccess fires after the INSERT completes and reads use FINAL, so this is
-        // unlikely. If it becomes an issue, consider carrying the full Trace objects in the event.
+        // 注意：在多节点 ClickHouse 集群中存在潜在的竞态条件——写入可能已落在某个副本上，
+        // 而此读取命中了尚未复制的另一个副本。实际上，doOnSuccess 在 INSERT 完成后触发，
+        // 且读取使用 FINAL，因此这种情况不太可能发生。如果成为问题，可考虑在事件中携带完整的 Trace 对象。
         var traces = traceService.getByIds(new ArrayList<>(event.traceIds()))
                 .filter(trace -> trace.endTime() != null)
                 .collectList()
@@ -188,16 +184,15 @@ public class OnlineScoringSampler {
 
     private void sampleAndScore(List<Trace> traces, String workspaceId, String userName, String workspaceName) {
         if (CollectionUtils.isEmpty(traces)) {
-            log.info("No traces to score for workspace '{}'", workspaceId);
+            log.info("工作区 '{}' 没有要评分的追踪", workspaceId);
             return;
         }
 
-        // TraceDAO.findByIds (used by the onTracesUpdated path) populates projectId but not
-        // projectName — the ClickHouse traces table doesn't carry the name. Downstream,
-        // FeedbackScoreService.processScoreBatch groups by projectName and resolves projectId
-        // from it, so a null name there causes every score to land in "Default Project".
-        // Stamp the name back on, resolved once per project from MySQL, before publishing the
-        // scoring event.
+        // TraceDAO.findByIds（由 onTracesUpdated 路径使用）填充 projectId 但不填充
+        // projectName——ClickHouse 的 traces 表不携带名称。在下游，
+        // FeedbackScoreService.processScoreBatch 按 projectName 分组并从中解析 projectId，
+        // 因此那里的 null 名称会导致每条评分落入 "Default Project"。
+        // 在发布评分事件之前，将名称重新盖回，每个项目从 MySQL 解析一次。
         traces = stampMissingProjectNames(traces, workspaceId);
 
         var tracesByProject = traces.stream().collect(Collectors.groupingBy(Trace::projectId));
@@ -206,14 +201,14 @@ public class OnlineScoringSampler {
                 .collect(Collectors.toMap(entry -> "projectId: " + entry.getKey(),
                         entry -> entry.getValue().size()));
 
-        log.info("Scoring traces, count '{}', workspace '{}', projects '{}'", traces.size(), workspaceId, countMap);
+        log.info("对追踪评分，数量 '{}'，工作区 '{}'，项目 '{}'", traces.size(), workspaceId, countMap);
 
-        // fetch automation rules per project
+        // 按项目获取自动化规则
         tracesByProject.forEach((projectId, projectTraces) -> {
-            // SDK and experiment traces are scorable by evaluators whose trigger scope matches.
-            // We deliberately do not read selected_rule_ids from SDK or experiment traces.
-            // Other non-SDK traces (playground, optimization) are only scored when
-            // they carry selected_rule_ids metadata (explicit user selection from the playground).
+            // SDK 和实验追踪可被触发器作用域匹配的评估器评分。
+            // 我们有意不从 SDK 或实验追踪中读取 selected_rule_ids。
+            // 其他非 SDK 追踪（playground、优化）仅在携带 selected_rule_ids 元数据
+            // （用户在 playground 中的显式选择）时才会被评分。
             var scorableTraces = new ArrayList<Trace>();
             var selectedRuleIdsByTrace = new HashMap<UUID, Set<UUID>>();
             for (var trace : projectTraces) {
@@ -229,22 +224,22 @@ public class OnlineScoringSampler {
             }
             if (scorableTraces.isEmpty()) {
                 log.info(
-                        "No scorable traces: source is not SDK and no selected_rule_ids, projectId '{}', workspaceId '{}'",
+                        "没有可评分的追踪：来源不是 SDK 且没有 selected_rule_ids，projectId '{}'，workspaceId '{}'",
                         projectId, workspaceId);
                 return;
             }
 
-            log.info("Fetching evaluators, traces '{}', project '{}', workspace '{}'",
+            log.info("获取评估器，追踪 '{}'，项目 '{}'，工作区 '{}'",
                     scorableTraces.size(), projectId, workspaceId);
 
             List<? extends AutomationRuleEvaluator<?, ?>> evaluators = ruleEvaluatorService.findAll(
                     projectId, workspaceId);
 
-            //When using the MDC with multiple threads, we must ensure that the context is propagated. For this reason, we must use the wrapWithMdc method.
+            //在多线程使用 MDC 时，必须确保上下文被传播。因此，必须使用 wrapWithMdc 方法。
             evaluators.parallelStream().forEach(evaluator -> {
-                // Samples traces for this rule.
-                // If any trace carries explicit rule selections, filter evaluators to that set.
-                // If no selection found, use all evaluators (default behavior for backward compatibility).
+                // 为此规则采样追踪。
+                // 如果有任何追踪携带显式的规则选择，则将评估器过滤到该集合。
+                // 如果没有找到选择，则使用所有评估器（默认行为，用于向后兼容）。
                 var samples = scorableTraces.stream()
                         .filter(trace -> matchesTriggerScope(evaluator, trace))
                         .filter(trace -> isEvaluatorSelectedForTrace(evaluator, trace, selectedRuleIdsByTrace))
@@ -277,24 +272,22 @@ public class OnlineScoringSampler {
                                         workspaceName);
                             }
                         } else {
-                            log.warn("Python evaluator is disabled. Skipping sampling for evaluator type '{}'",
+                            log.warn("Python 评估器已禁用。跳过评估器类型 '{}' 的采样",
                                     evaluator.getType());
                         }
                     }
-                    default -> log.warn("No process defined for evaluator type '{}'", evaluator.getType());
+                    default -> log.warn("未为评估器类型 '{}' 定义处理过程", evaluator.getType());
                 }
             });
         });
     }
 
     /**
-     * Returns the given trace list with each {@code projectName == null} entry rebuilt
-     * with the name resolved from {@link ProjectService#findIdToNameByIds}. Entries that
-     * already carry a projectName, and entries whose projectId isn't resolvable, pass
-     * through unchanged — the latter logs a warning. We deliberately don't fail-fast on
-     * an unresolved id: a transient lookup miss shouldn't drop scoring entirely; the
-     * downstream {@code FeedbackScoreService} will fall back to Default Project via the
-     * existing contract, and the warn log surfaces the issue for follow-up.
+     * 返回给定的追踪列表，其中每个 {@code projectName == null} 条目会使用从
+     * {@link ProjectService#findIdToNameByIds} 解析出的名称重建。已携带 projectName 的条目，
+     * 以及 projectId 无法解析的条目，原样通过——后者会记录警告。我们有意识地对无法解析的 id
+     * 不做快速失败：暂时的查询未命中不应完全丢弃评分；下游的 {@code FeedbackScoreService}
+     * 会通过现有契约回退到 Default Project，而 warn 日志会将问题呈现出来以便跟进。
      */
     private List<Trace> stampMissingProjectNames(List<Trace> traces, String workspaceId) {
         Set<UUID> missingNameProjectIds = traces.stream()
@@ -315,8 +308,8 @@ public class OnlineScoringSampler {
                     String resolved = projectNamesById.get(trace.projectId());
                     if (resolved == null) {
                         log.warn(
-                                "Could not resolve projectName for projectId '{}' on traceId '{}' in workspace '{}';"
-                                        + " scoring will proceed but the feedback score may not land on the expected project",
+                                "无法为 projectId '{}'（traceId '{}'，工作区 '{}'）解析 projectName；"
+                                        + " 评分将继续，但反馈评分可能不会落在预期的项目上",
                                 trace.projectId(), trace.id(), workspaceId);
                         return trace;
                     }
@@ -340,28 +333,28 @@ public class OnlineScoringSampler {
 
     private boolean shouldSampleTrace(AutomationRuleEvaluator<?, ?> evaluator, String workspaceId,
             String workspaceName, Trace trace) {
-        // Check if rule is enabled first
+        // 首先检查规则是否已启用
         if (!evaluator.isEnabled()) {
             return skip(workspaceId, workspaceName, evaluator, trace, DECISION_SKIPPED_DISABLED,
-                    "The traceId '{}' was skipped for rule: '{}' as the rule is disabled",
+                    "traceId '{}' 被跳过，规则：'{}'，因为该规则已禁用",
                     trace.id(), evaluator.getName());
         }
 
-        // Check if trace matches all filters
+        // 检查追踪是否匹配所有过滤器
         if (!filterEvaluationService.matchesAllFilters(evaluator.getFilters(), trace)) {
             return skip(workspaceId, workspaceName, evaluator, trace, DECISION_SKIPPED_FILTER,
-                    "The traceId '{}' was skipped for rule: '{}' as it does not match the configured filters",
+                    "traceId '{}' 被跳过，规则：'{}'，因为它不匹配配置的过滤器",
                     trace.id(), evaluator.getName());
         }
 
         if (secureRandom.nextFloat() >= evaluator.getSamplingRate()) {
             return skip(workspaceId, workspaceName, evaluator, trace, DECISION_SKIPPED_SAMPLING,
-                    "The traceId '{}' was skipped for rule: '{}' and per the sampling rate '{}'",
+                    "traceId '{}' 被跳过，规则：'{}'，依据采样率 '{}'",
                     trace.id(), evaluator.getName(), evaluator.getSamplingRate());
         }
 
-        // The DECISION_SAMPLED metric is recorded at enqueue time (see sampleAndScore), so it
-        // reflects messages actually published to Redis rather than the sampling roll alone.
+        // DECISION_SAMPLED 指标在入队时记录（参见 sampleAndScore），因此它
+        // 反映的是实际发布到 Redis 的消息，而不仅仅是采样结果。
         return true;
     }
 
@@ -397,7 +390,7 @@ public class OnlineScoringSampler {
     }
 
     private void logSampledTrace(AutomationRuleEvaluator<?, ?> evaluator, List<?> messages, int totalTraces) {
-        log.info("[AutomationRule '{}', type '{}'] Sampled '{}/{}' from trace batch (expected rate: '{}')",
+        log.info("[自动化规则 '{}'，类型 '{}'] 从追踪批次中采样 '{}/{}'（预期速率：'{}'）",
                 evaluator.getName(),
                 evaluator.getType(),
                 messages.size(),
@@ -416,18 +409,18 @@ public class OnlineScoringSampler {
     }
 
     /**
-     * Decides whether the given evaluator applies to the given trace based on per-trace rule selection.
+     * 根据每条追踪的规则选择，判断给定评估器是否适用于给定追踪。
      * <ul>
-     *   <li>SDK traces (and legacy null-source traces) are absent from {@code selectedRuleIdsByTrace}
-     *       and always run against every evaluator.</li>
-     *   <li>Non-SDK traces (e.g., Playground) that carry {@code selected_rule_ids} metadata are
-     *       present in the map and only run against evaluators whose ID is in their own selection.</li>
+     *   <li>SDK 追踪（以及遗留的 null 来源追踪）不在 {@code selectedRuleIdsByTrace} 中，
+     *       并且始终针对每个评估器运行。</li>
+     *   <li>携带 {@code selected_rule_ids} 元数据的非 SDK 追踪（例如 Playground）
+     *       存在于映射中，并且仅针对其自身选择中的 ID 所对应的评估器运行。</li>
      * </ul>
      *
-     * @param evaluator              the evaluator being considered
-     * @param trace                  the trace being sampled
-     * @param selectedRuleIdsByTrace trace-id to selected rule IDs, populated only for non-SDK traces
-     * @return true if the evaluator applies to the trace
+     * @param evaluator              正在考虑的评估器
+     * @param trace                  正在被采样的追踪
+     * @param selectedRuleIdsByTrace 追踪 id 到所选规则 ID 的映射，仅为非 SDK 追踪填充
+     * @return 如果评估器适用于该追踪则返回 true
      */
     private boolean isEvaluatorSelectedForTrace(AutomationRuleEvaluator<?, ?> evaluator, Trace trace,
             Map<UUID, Set<UUID>> selectedRuleIdsByTrace) {
@@ -436,10 +429,10 @@ public class OnlineScoringSampler {
     }
 
     /**
-     * Extracts selected_rule_ids from trace metadata.
+     * 从追踪元数据中提取 selected_rule_ids。
      *
-     * @param trace the trace to check
-     * @return set of rule UUIDs found in metadata, or empty set if absent/invalid
+     * @param trace 要检查的追踪
+     * @return 元数据中找到的规则 UUID 集合，若缺失/无效则返回空集合
      */
     private Set<UUID> extractSelectedRuleIds(Trace trace) {
         return Optional.ofNullable(trace.metadata())
@@ -453,13 +446,13 @@ public class OnlineScoringSampler {
                                 try {
                                     ruleIds.add(UUID.fromString(idNode.asText()));
                                 } catch (IllegalArgumentException exception) {
-                                    log.warn("Invalid UUID format in selected_rule_ids metadata for trace: '{}'",
+                                    log.warn("追踪 '{}' 的 selected_rule_ids 元数据中 UUID 格式无效",
                                             trace.id(), exception);
                                 }
                             }
                         });
                     } catch (RuntimeException exception) {
-                        log.warn("Error parsing selected_rule_ids metadata for trace: '{}'", trace.id(), exception);
+                        log.warn("解析追踪 '{}' 的 selected_rule_ids 元数据时出错", trace.id(), exception);
                     }
                     return ruleIds;
                 })

@@ -16,13 +16,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Read-only ClickHouse DAO backing the partition-health observability metrics (OPIK-6904,
- * Section 11.1). Sources per-(table, partition) size, row, part and activity data from
- * {@code system.parts}, and lightweight-deleted (LWD-masked) row counts from the tables
- * themselves. Everything is {@code active}-parts-only and scoped to the analytics database.
+ * 支持分区健康可观测性指标（OPIK-6904，第 11.1 节）的只读 ClickHouse DAO。
+ * 从 {@code system.parts} 获取每个（表，分区）的大小、行、part 和活动数据，
+ * 并从表本身获取轻量删除（LWD 掩码）行计数。一切都只针对 {@code active} parts，
+ * 并限定在分析数据库范围内。
  *
- * <p>This is infrastructure observability, not application domain: it reports on the storage
- * engine's internal state rather than any business entity.
+ * <p>这是基础设施可观测性，不是应用领域：它报告的是存储引擎的内部状态，
+ * 而非任何业务实体。
  */
 @ImplementedBy(ClickHousePartitionMetricsDAOImpl.class)
 public interface ClickHousePartitionMetricsDAO {
@@ -48,10 +48,10 @@ class ClickHousePartitionMetricsDAOImpl implements ClickHousePartitionMetricsDAO
     private static final Pattern IDENTIFIER = Pattern.compile("[a-zA-Z0-9_]+");
 
     /**
-     * Per-(table, partition) aggregate over active parts. All aggregates are cast to Int64 so the
-     * r2dbc driver maps them to {@code Long} (raw {@code sum}/{@code count} yield UInt64). The
-     * partition key uses {@code partition_id} so it aligns with the {@code _partition_id} virtual
-     * column used by the LWD query.
+     * 对活跃 part 按（表，分区）聚合。所有聚合都被转换为 Int64，这样
+     * r2dbc 驱动会把它们映射为 {@code Long}（原始的 {@code sum}/{@code count} 产生 UInt64）。
+     * 分区键使用 {@code partition_id}，从而与 LWD 查询使用的
+     * {@code _partition_id} 虚拟列对齐。
      */
     private static final String PARTITION_STATS_SQL = """
             SELECT
@@ -69,21 +69,20 @@ class ClickHousePartitionMetricsDAOImpl implements ClickHousePartitionMetricsDAO
             """;
 
     /**
-     * Count of LWD-masked rows per partition for a single table. {@code apply_deleted_mask = 0}
-     * disables the implicit filter so masked rows are visible to the count; partitions with no
-     * masked rows are absent from the result (a 0 series). Reading only the near-constant
-     * {@code _row_exists} column keeps the full-table scan cheap despite touching every row
-     * (~1.3s on the largest prod table, run once per interval by a single distributed-lock owner).
+     * 单个表按分区的 LWD 掩码行计数。{@code apply_deleted_mask = 0}
+     * 禁用隐式过滤，这样被掩码的行对计数可见；没有被掩码行的分区
+     * 会从结果中缺失（形成 0 序列）。只读取近乎恒定的
+     * {@code _row_exists} 列，使全表扫描保持廉价，尽管会触及每一行
+     * （在最大的生产表上约 1.3 秒，由单个分布式锁持有者每个间隔运行一次）。
      *
-     * <p>This must execute as the backend's read-write ClickHouse user. {@code apply_deleted_mask}
-     * is a per-query setting, and a {@code readonly = 1} user cannot change it — the query then
-     * fails with {@code Code 164 (READONLY)}. The setting is mandatory, not optional: without it
-     * the masked rows are filtered out and the count is always 0.
+     * <p>这必须以后端读写 ClickHouse 用户执行。{@code apply_deleted_mask}
+     * 是按查询的设置，而 {@code readonly = 1} 用户无法更改它 —— 否则查询会
+     * 以 {@code Code 164 (READONLY)} 失败。该设置是强制的，不是可选的：没有它，
+     * 被掩码的行会被过滤掉，计数永远为 0。
      *
-     * <p>{@code max_execution_time} and {@code priority} bound the scan so it can never contend with
-     * customer query load, even on a pathologically large future partition. The table name is
-     * rendered by the template engine after being validated as a plain identifier, so it is never
-     * an injection vector.
+     * <p>{@code max_execution_time} 和 {@code priority} 限制了扫描，这样它绝不会与
+     * 客户查询负载争抢，即使面对病态庞大的未来分区。表名在
+     * 被校验为纯标识符之后由模板引擎渲染，因此它绝不会成为注入向量。
      */
     private static final String LWD_ROWS_SQL = """
             SELECT
@@ -151,7 +150,7 @@ class ClickHousePartitionMetricsDAOImpl implements ClickHousePartitionMetricsDAO
         if (table != null && IDENTIFIER.matcher(table).matches()) {
             return true;
         }
-        log.warn("Skipping invalid LWD table name: '{}'", table);
+        log.warn("跳过无效的 LWD 表名: '{}'", table);
         return false;
     }
 }

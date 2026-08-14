@@ -2581,7 +2581,7 @@ export class OpikClient {
     const isExplicitBlueprintFromContext = blueprintName !== undefined;
     const manager = new ConfigManager(projectName, this);
 
-    // "latest" fetches the most-recent blueprint (no name/env filter); allows auto-create.
+    // "latest" 获取最新的蓝图（无名称/环境筛选）；允许自动创建。
     const isLatest = options?.version === "latest";
     const hasNamedVersion = options?.version !== undefined && !isLatest;
     const effectiveEnv = options?.version ? null : (options?.env ?? "prod");
@@ -2594,7 +2594,7 @@ export class OpikClient {
       effectiveEnv, maskId, projectName, effectiveVersion, fallback,
     });
 
-    // _fetchBlueprintFromBackend may return a ready-made fallback Config on network error
+    // 网络错误时，_fetchBlueprintFromBackend 可能返回一个现成的回退 Config
     if (fetchResult !== null && !(fetchResult instanceof Blueprint)) {
       return fetchResult as Config<T>;
     }
@@ -2608,7 +2608,7 @@ export class OpikClient {
         isExplicitBlueprintFromContext, isLatest, fallback,
       });
 
-      // _resolveNullBlueprint may return a ready-made fallback Config on network error
+      // 网络错误时，_resolveNullBlueprint 可能返回一个现成的回退 Config
       if (!(resolved instanceof Blueprint)) {
         return resolved as Config<T>;
       }

@@ -31,10 +31,10 @@ public class TraceDeletedListener {
     private final @NonNull SpanService spanService;
 
     /**
-     * Handles the TracesDeleted event by asynchronously deleting related entities.
-     * This includes feedback scores, comments, attachments, and spans associated with the deleted traces.
+     * 通过异步删除相关实体来处理 TracesDeleted 事件。
+     * 这包括与被删除追踪关联的反馈评分、评论、附件和跨度。
      *
-     * @param event the TracesDeleted event containing the trace IDs that were deleted
+     * @param event 包含被删除追踪 ID 的 TracesDeleted 事件
      */
     @Subscribe
     public void onTracesDeleted(@NonNull TracesDeleted event) {
@@ -44,18 +44,18 @@ public class TraceDeletedListener {
         UUID projectId = event.projectId();
 
         log.info(
-                "Received TracesDeleted event for workspace: '{}', trace count: '{}'. Processing related entity deletion",
+                "收到工作区 '{}' 的 TracesDeleted 事件，追踪数量：'{}'。正在处理相关实体删除",
                 workspaceId, traceIds.size());
 
         processTraceDeletion(traceIds, projectId)
                 .doOnError(error -> {
                     log.error(
-                            "Failed to process TracesDeleted event for workspace: '{}', trace count: '{}', error: '{}'",
+                            "处理工作区 '{}' 的 TracesDeleted 事件失败，追踪数量：'{}'，错误：'{}'",
                             workspaceId, traceIds.size(), error.getMessage());
-                    log.error("Error processing trace related entity deletion", error);
+                    log.error("处理追踪相关实体删除时出错", error);
                 })
                 .doOnSuccess(__ -> log.info(
-                        "Successfully processed TracesDeleted event for workspace: '{}', trace count: '{}'",
+                        "成功处理工作区 '{}' 的 TracesDeleted 事件，追踪数量：'{}'",
                         workspaceId, traceIds.size()))
                 .contextWrite(ctx -> ctx.put(RequestContext.WORKSPACE_ID, workspaceId)
                         .put(RequestContext.USER_NAME, userName))
@@ -63,14 +63,14 @@ public class TraceDeletedListener {
     }
 
     /**
-     * Processes the deletion of all entities related to the traces.
-     * This method handles the deletion in the correct order to maintain referential integrity.
+     * 处理与追踪相关的所有实体的删除。
+     * 此方法按正确顺序处理删除，以维护引用完整性。
      *
-     * @param traceIds the set of trace IDs whose related entities should be deleted
-     * @return a Mono that completes when all related entities have been deleted
+     * @param traceIds 应删除其相关实体的追踪 ID 集合
+     * @return 当所有相关实体都已删除时完成的 Mono
      */
     private Mono<Void> processTraceDeletion(Set<UUID> traceIds, UUID projectId) {
-        log.info("Starting deletion of related entities for traces, count '{}'", traceIds.size());
+        log.info("开始删除追踪的相关实体，数量 '{}'", traceIds.size());
 
         return feedbackScoreService.deleteByTraceIds(traceIds, projectId)
                 .then(Mono.defer(() -> commentService.deleteByEntityIds(CommentDAO.EntityType.TRACE, traceIds,

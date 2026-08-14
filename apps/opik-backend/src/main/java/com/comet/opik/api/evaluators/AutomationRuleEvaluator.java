@@ -75,8 +75,8 @@ public abstract sealed class AutomationRuleEvaluator<T, E extends Filter> implem
     private final Set<UUID> projectIds;
 
     @JsonView({View.Public.class, View.Write.class})
-    // Bounded to match the automation_rules.name VARCHAR(150) column, so an over-long name is rejected at
-    // the API boundary instead of failing the insert (OPIK-7371).
+    // 限制以匹配 automation_rules.name VARCHAR(150) 列，因此过长的名称会在
+    // API 边界处被拒绝，而不是在插入时失败（OPIK-7371）。
     @NotBlank @Size(max = 150, message = "cannot exceed 150 characters") private final String name;
 
     @JsonView({View.Public.class, View.Write.class})
@@ -96,9 +96,9 @@ public abstract sealed class AutomationRuleEvaluator<T, E extends Filter> implem
     private final List<E> filters = List.of();
 
     @JsonIgnore
-    // @Valid cascades bean-validation into the polymorphic code record, so nested constraints
-    // (e.g. @Positive on maxCostUsd, @NotNull on model/messages/schema) are enforced at the API
-    // boundary instead of being silently accepted.
+    // @Valid 将 bean 校验级联到多态 code 记录中，因此嵌套约束
+    //（例如 maxCostUsd 上的 @Positive，model/messages/schema 上的 @NotNull）会在 API
+    // 边界处被强制执行，而不是被静默接受。
     @NotNull @Valid private final T code;
 
     @JsonView({View.Public.class})

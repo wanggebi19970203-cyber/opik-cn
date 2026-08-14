@@ -95,24 +95,23 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
         if (serviceTogglesConfig.isTraceThreadPythonEvaluatorEnabled()) {
             super.start();
         } else {
-            log.warn("Online Scoring Python evaluator consumer won't start as it is disabled.");
+            log.warn("在线评分 Python 评估器消费者因被禁用而不会启动。");
         }
     }
 
     @Override
     protected Mono<Void> score(@NonNull TraceThreadToScoreUserDefinedMetricPython message) {
 
-        log.info("Message received with projectId '{}', ruleId '{}' for workspace '{}'",
+        log.info("收到消息，projectId '{}'、ruleId '{}'，工作区 '{}'",
                 message.projectId(), message.ruleId(), message.workspaceId());
 
         return Flux.fromIterable(message.threadIds())
-                // Score each thread id independently: a single thread's failure must not stop scoring the
-                // sibling thread ids. Per-thread errors are materialized (onErrorResume) so the flatMap
-                // completes for every thread; the batch's first failure is then re-surfaced below. This keeps
-                // the failure on the Mono error path handled by BaseRedisSubscriber.processMessage's
-                // onErrorResume — classified as a processing error, following the normal retryable/
-                // non-retryable path — instead of leaking into the enclosing onErrorContinue via Flux.flatMap
-                // (which would drop the element and count it as an "unexpected" error).
+                // 独立评分每个 thread id：单个线程的失败绝不能阻止对兄弟 thread id 的评分。
+                // 每个线程的错误被物化（onErrorResume），使 flatMap 对每个线程都完成；
+                // 批次的第一个失败随后在下面被重新抛出。这使失败保留在由
+                // BaseRedisSubscriber.processMessage 的 onErrorResume 处理的 Mono 错误路径上——
+                // 被归类为处理错误，遵循正常的可重试/不可重试路径——而不是通过 Flux.flatMap
+                // 泄漏到外围的 onErrorContinue（后者会丢弃该元素并将其计为 "unexpected" 错误）。
                 .flatMap(threadId -> processThreadScores(message, threadId)
                         .then(Mono.<Throwable>empty())
                         .onErrorResume(Mono::just))
@@ -122,10 +121,10 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                         .put(RequestContext.USER_NAME, message.userName())
                         .put(RequestContext.VISIBILITY, Visibility.PRIVATE))
                 .doOnSuccess(unused -> log.info(
-                        "Processed trace threads for projectId '{}', ruleId '{}' for workspace '{}'",
+                        "已处理 projectId '{}'、ruleId '{}'（工作区 '{}'）的追踪线程",
                         message.projectId(), message.ruleId(), message.workspaceId()))
                 .doOnError(error -> log.error(
-                        "Error processing trace thread for projectId '{}', ruleId '{}' for workspace '{}'",
+                        "处理 projectId '{}'、ruleId '{}'（工作区 '{}'）的追踪线程时出错",
                         message.projectId(), message.ruleId(), message.workspaceId(), error))
                 .then();
     }
@@ -143,7 +142,7 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                     if (traces.isEmpty()) {
                         try (var logContext = wrapWithMdc(mdc)) {
                             userFacingLogger.info(
-                                    "No traces found for threadId '{}' in projectId '{}'. Skipping scoring.",
+                                    "未找到 threadId '{}'（在 projectId '{}' 中）的追踪。跳过评分。",
                                     currentThreadId, message.projectId());
                         }
                         return Mono.empty();
@@ -152,7 +151,7 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                             .switchIfEmpty(Mono.defer(() -> {
                                 try (var logContext = wrapWithMdc(mdc)) {
                                     userFacingLogger.info(
-                                            "Thread model not found for threadId '{}' in projectId '{}'. Skipping scoring.",
+                                            "未找到 threadId '{}'（在 projectId '{}' 中）的线程模型。跳过评分。",
                                             currentThreadId, message.projectId());
                                 }
                                 return Mono.empty();
@@ -164,7 +163,7 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
     }
 
     /**
-     * Scores a single thread for a given rule and persists the resulting feedback scores.
+     * 针对给定规则对单个线程评分，并持久化所得的反馈评分。
      */
     private Mono<Void> processScoring(TraceThreadToScoreUserDefinedMetricPython message, List<Trace> traces,
             UUID threadModelId, String threadId) {
@@ -176,7 +175,7 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
         return Mono.fromCallable(() -> findRule(message, threadId, mdc))
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(withMdc(mdc, error -> userFacingLogger
-                        .error("Unexpected error while looking up rule for threadId '{}': \n\n{}",
+                        .error("查找 threadId '{}' 的规则时发生意外错误：\n\n{}",
                                 threadId,
                                 Optional.ofNullable(error.getCause()).map(Throwable::getMessage)
                                         .orElse(error.getMessage()))))
@@ -186,8 +185,8 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
     }
 
     /**
-     * Resolves the automation rule for this scoring run. Returns {@link Optional#empty()} if the rule
-     * has been deleted, signalling the caller to skip without throwing.
+     * 为本次评分运行解析自动化规则。如果规则已被删除，返回 {@link Optional#empty()}，
+     * 示意调用方跳过而不抛出异常。
      */
     private Optional<AutomationRuleEvaluator<?, ?>> findRule(
             TraceThreadToScoreUserDefinedMetricPython message, String threadId, Map<String, String> mdc) {
@@ -198,7 +197,7 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                 return Optional.of(rule);
             } catch (NotFoundException ex) {
                 log.warn(
-                        "Automation rule with ID '{}' not found in projectId '{}' for workspace '{}'. Skipping scoring for threadId '{}'.",
+                        "未找到 ID 为 '{}' 的自动化规则，projectId '{}'、工作区 '{}'。跳过对 threadId '{}' 的评分。",
                         message.ruleId(), message.projectId(), message.workspaceId(), threadId);
                 return Optional.empty();
             }
@@ -206,17 +205,15 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
     }
 
     /**
-     * Runs the scoring chain for a known rule and persists the resulting feedback scores. Caller
-     * guarantees {@code traces} is non-empty.
+     * 针对已知规则运行评分链路并持久化所得的反馈评分。调用方保证 {@code traces} 非空。
      */
     private Mono<Void> scoreThread(TraceThreadToScoreUserDefinedMetricPython message, List<Trace> traces,
             UUID threadModelId, String threadId, AutomationRuleEvaluator<?, ?> rule, Map<String, String> mdc) {
-        // OPIK-7454 — route before fetch. Size the whole thread with a cheap ClickHouse aggregate (no
-        // spans materialized), then fetch spans for enrichment only if the thread fits under the heap
-        // cap. This Python path has no inline-vs-tools routing, so a thread over the cap degrades to the
-        // unenriched {role, content} context instead of being buffered in full. When enriched, spans nest
-        // under each trace's assistant ChatMessage via fromTraceToThreadEnriched so the user's Python
-        // score(...) sees the full call tree. Toggle off → size 0 (no query) → unenriched, unchanged.
+        // OPIK-7454——在获取之前路由。用一个廉价的 ClickHouse 聚合（不物化 span）来确定整个线程的大小，
+        // 然后仅在线程符合堆上限时才获取 spans 进行富化。此 Python 路径没有内联-vs-工具路由，
+        // 因此超过上限的线程降级为未富化的 {role, content} 上下文，而不是完整缓冲。当富化时，
+        // spans 通过 fromTraceToThreadEnriched 嵌套在每个 trace 的 assistant ChatMessage 下，
+        // 使用户的 Python score(...) 看到完整的调用树。开关关闭 → 大小 0（不查询）→ 未富化，不变。
         var traceIds = traces.stream().map(Trace::id).collect(Collectors.toSet());
         var maxPreloadBytes = agenticToolsMaxPreloadBytes();
         var spansSizeMono = serviceTogglesConfig.isAgenticToolsEnabled()
@@ -231,12 +228,12 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                     if (serviceTogglesConfig.isAgenticToolsEnabled() && !enrich) {
                         try (var logContext = wrapWithMdc(mdc)) {
                             userFacingLogger.warn("""
-                                    Thread span size estimate exceeds the enrichment cap; scoring with the \
-                                    unenriched context. threadId='{}', sizeBytes='{}', capBytes='{}'""",
+                                    线程 span 大小估算超过富化上限；使用未富化的上下文进行评分。\
+                                    threadId='{}', sizeBytes='{}', capBytes='{}'""",
                                     threadId, sizeBytes, maxPreloadBytes);
                         }
                     }
-                    // Fetch spans (streaming byte-cap backstop) only when enriching a small-enough thread.
+                    // 仅在富化一个足够小的线程时才获取 spans（流式字节上限作为兜底）。
                     var spansMono = enrich
                             ? agenticScoringService.preloadThreadSpansBounded(
                                     spanService.getByTraceIds(traceIds), maxPreloadBytes)
@@ -246,15 +243,15 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                                             .put(RequestContext.WORKSPACE_ID, message.workspaceId())
                                             .put(RequestContext.USER_NAME, message.userName()))
                             : Mono.just(List.<Span>of());
-                    // boundedElastic so the blocking JDBC call inside prepareScoring (projectService.get)
-                    // doesn't pin the upstream reactive thread.
+                    // 使用 boundedElastic，使 prepareScoring（projectService.get）内的阻塞 JDBC 调用
+                    // 不会钉住上游的响应式线程。
                     return spansMono.flatMap(spans -> Mono.fromCallable(
                             () -> prepareScoring(message, traces, spans, threadId, rule, mdc))
                             .subscribeOn(Schedulers.boundedElastic()));
                 })
                 .flatMap(context -> evaluateAndStore(message, threadModelId, threadId, context, mdc))
                 .doOnError(withMdc(mdc, error -> userFacingLogger
-                        .error("Unexpected error while scoring threadId '{}' with rule '{}': \n\n{}",
+                        .error("对 threadId '{}' 使用规则 '{}' 评分时发生意外错误：\n\n{}",
                                 threadId, rule.getName(),
                                 Optional.ofNullable(error.getCause()).map(Throwable::getMessage)
                                         .orElse(error.getMessage()))))
@@ -262,31 +259,29 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
     }
 
     /**
-     * Builds the Python evaluator request (project + chat messages) for the given thread. Caller
-     * guarantees {@code traces} is non-empty.
+     * 为给定线程构建 Python 评估器请求（项目 + 聊天消息）。调用方保证 {@code traces} 非空。
      */
     private Pair<Project, List<ChatMessage>> prepareScoring(TraceThreadToScoreUserDefinedMetricPython message,
             List<Trace> traces, List<Span> spans, String threadId, AutomationRuleEvaluator<?, ?> rule,
             Map<String, String> mdc) {
         try (var logContext = wrapWithMdc(mdc)) {
-            userFacingLogger.info("Evaluating threadId '{}' sampled by rule '{}'", threadId, rule.getName());
+            userFacingLogger.info("正在评估 threadId '{}'，由规则 '{}' 采样", threadId, rule.getName());
 
             Project project = projectService.get(message.projectId(), message.workspaceId());
 
-            // Always use the enriched helper — when `spans` is empty (toggle off, see
-            // scoreThread), it emits the legacy [{role, content}, ...] shape via
-            // @JsonInclude(NON_NULL) on ChatMessage.spans. When non-empty, the assistant
-            // entry for each trace carries the nested span tree.
+            // 始终使用富化辅助方法——当 `spans` 为空时（开关关闭，参见 scoreThread），
+            // 它通过 ChatMessage.spans 上的 @JsonInclude(NON_NULL) 发出旧版 [{role, content}, ...] 形态。
+            // 当非空时，每个 trace 的 assistant 条目携带嵌套的 span 树。
             List<ChatMessage> context;
             try {
                 context = OnlineScoringEngine.fromTraceToThreadEnriched(traces, spans);
             } catch (Exception exception) {
-                userFacingLogger.error("Error preparing Python request for threadId '{}': \n\n{}",
+                userFacingLogger.error("为 threadId '{}' 准备 Python 请求时出错：\n\n{}",
                         threadId, exception.getMessage());
                 throw exception;
             }
 
-            userFacingLogger.info("Sending threadId '{}' to Python evaluator using the following context:\n\n{}",
+            userFacingLogger.info("将 threadId '{}' 发送到 Python 评估器，使用以下上下文：\n\n{}",
                     threadId, context);
 
             return Pair.of(project, context);
@@ -300,7 +295,7 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
         var chatMessages = context.getRight();
         return pythonEvaluatorService.evaluateThread(message.code().metric(), chatMessages)
                 .doOnNext(withMdc(mdc, scoreResults -> userFacingLogger
-                        .info("Received response for threadId '{}':\n\n{}", threadId, scoreResults)))
+                        .info("收到 threadId '{}' 的响应：\n\n{}", threadId, scoreResults)))
                 .flatMap(scoreResults -> {
                     List<FeedbackScoreBatchItemThread> scores = scoreResults.stream()
                             .map(scoreResult -> FeedbackScoresMapper.INSTANCE.map(
@@ -314,6 +309,6 @@ public class OnlineScoringTraceThreadUserDefinedMetricPythonScorer
                     return storeThreadScores(scores, threadId, message.userName(), message.workspaceId());
                 })
                 .doOnNext(withMdc(mdc, loggedScores -> userFacingLogger
-                        .info("Scores for threadId '{}' stored successfully:\n\n{}", threadId, loggedScores)));
+                        .info("threadId '{}' 的分数已成功存储：\n\n{}", threadId, loggedScores)));
     }
 }

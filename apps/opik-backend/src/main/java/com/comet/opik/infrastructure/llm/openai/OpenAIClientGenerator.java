@@ -29,14 +29,14 @@ public class OpenAIClientGenerator implements LlmProviderClientGenerator<OpenAiC
 
     private static final String CONFIG_KEY_PIPELINE_MODE = "openai_pipeline_mode";
 
-    // langchain4j's OpenAiOfficialResponsesChatModel constructor requires a non-null modelName at
-    // build time. On the proxy path the real model is supplied per request via
-    // ChatRequest.parameters().modelName(...), so this placeholder never reaches OpenAI.
+    // langchain4j 的 OpenAiOfficialResponsesChatModel 构造函数在构建时要求非 null 的 modelName。
+    // 在代理路径上，真实模型是通过 ChatRequest.parameters().modelName(...) 按请求提供的，
+    // 因此这个占位符永远不会到达 OpenAI。
     private static final String PROXY_MODEL_NAME_PLACEHOLDER = "placeholder-model-value";
 
     public enum ApiPipelineMode {
-        CHAT_COMPLETIONS_API, // Uses traditional /v1/chat/completions
-        RESPONSES_API // Uses modern /v1/responses
+        CHAT_COMPLETIONS_API, // 使用传统的 /v1/chat/completions
+        RESPONSES_API // 使用现代的 /v1/responses
     }
 
     private final @NonNull LlmProviderClientConfig llmProviderClientConfig;
@@ -44,8 +44,8 @@ public class OpenAIClientGenerator implements LlmProviderClientGenerator<OpenAiC
     public OpenAiClient newOpenAiClient(@NonNull LlmProviderClientApiConfig config) {
         var openAiClientBuilder = OpenAiClient.builder()
                 .baseUrl(DEFAULT_OPENAI_URL)
-                // Treat insufficient_quota (429, out-of-credits) as non-retryable, so the outer retry
-                // policy in ChatCompletionService does not keep hitting an exhausted key.
+                // 将 insufficient_quota（429，额度耗尽）视为不可重试，这样
+                // ChatCompletionService 中的外层重试策略就不会持续打击一个已耗尽的 key。
                 .httpClientBuilder(QuotaAwareHttpClient.builder())
                 .logRequests(llmProviderClientConfig.getLogRequests())
                 .logResponses(llmProviderClientConfig.getLogResponses());
@@ -102,7 +102,7 @@ public class OpenAIClientGenerator implements LlmProviderClientGenerator<OpenAiC
         try {
             return ApiPipelineMode.valueOf(pipelineMode.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            log.warn("Unknown OpenAI '{}' value '{}', falling back to '{}'",
+            log.warn("未知的 OpenAI '{}' 值 '{}'，回退到 '{}'",
                     CONFIG_KEY_PIPELINE_MODE, pipelineMode, ApiPipelineMode.CHAT_COMPLETIONS_API);
             return ApiPipelineMode.CHAT_COMPLETIONS_API;
         }
@@ -113,8 +113,8 @@ public class OpenAIClientGenerator implements LlmProviderClientGenerator<OpenAiC
         var builder = OpenAiChatModel.builder()
                 .modelName(modelParameters.name())
                 .apiKey(config.apiKey())
-                // Treat insufficient_quota (429, out-of-credits) as non-retryable so neither the model's
-                // internal retry nor the outer retry policy keeps hitting an exhausted key.
+                // 将 insufficient_quota（429，额度耗尽）视为不可重试，这样无论是模型的
+                // 内部重试还是外层重试策略都不会持续打击一个已耗尽的 key。
                 .httpClientBuilder(QuotaAwareHttpClient.builder())
                 .logRequests(true)
                 .logResponses(true);
@@ -142,14 +142,14 @@ public class OpenAIClientGenerator implements LlmProviderClientGenerator<OpenAiC
     }
 
     /**
-     * Proxy-path overload — synthesizes placeholder judge parameters. The real model name is
-     * supplied per request via {@code ChatRequest.parameters().modelName(...)}, so the placeholder
-     * never reaches OpenAI; it only satisfies langchain4j's required-field validation at build time.
+     * 代理路径重载 —— 合成占位的 judge 参数。真实模型名是
+     * 通过 {@code ChatRequest.parameters().modelName(...)} 按请求提供的，因此占位符
+     * 永远不会到达 OpenAI；它只是在构建时满足 langchain4j 的必填字段校验。
      * <p>
-     * {@code strictJsonSchema} controls langchain4j's build-time strict mode for {@code json_schema}
-     * response formats. The Responses-API proxy peeks at the inbound
-     * {@code response_format.json_schema.strict} per request and picks the right variant here, since
-     * langchain4j has no per-request strict slot.
+     * {@code strictJsonSchema} 控制 langchain4j 对 {@code json_schema}
+     * 响应格式的构建时严格模式。Responses-API 代理会按请求窥探入站的
+     * {@code response_format.json_schema.strict} 并在这里挑选正确的变体，因为
+     * langchain4j 没有按请求的 strict 槽位。
      */
     ChatModel newResponsesApiChatModel(@NonNull LlmProviderClientApiConfig config, boolean strictJsonSchema) {
         return newResponsesApiChatModel(
@@ -192,11 +192,11 @@ public class OpenAIClientGenerator implements LlmProviderClientGenerator<OpenAiC
     }
 
     /**
-     * Proxy-path streaming counterpart to {@link #newResponsesApiChatModel(LlmProviderClientApiConfig, boolean)}.
-     * Like the non-streaming variant, the real model name is supplied per request via
-     * {@code ChatRequest.parameters().modelName(...)}; a placeholder is used at build time only to
-     * satisfy langchain4j's required-field validation. {@code strictJsonSchema} is a build-time
-     * setting on the langchain4j model — the proxy passes the per-request {@code strict} bit here.
+     * 代理路径流式对应 {@link #newResponsesApiChatModel(LlmProviderClientApiConfig, boolean)}。
+     * 与非流式变体一样，真实模型名是通过
+     * {@code ChatRequest.parameters().modelName(...)} 按请求提供的；占位符仅在构建时使用以
+     * 满足 langchain4j 的必填字段校验。{@code strictJsonSchema} 是 langchain4j 模型上的
+     * 构建时设置 —— 代理在这里传递按请求的 {@code strict} 位。
      */
     StreamingChatModel newResponsesApiStreamingChatModel(@NonNull LlmProviderClientApiConfig config,
             boolean strictJsonSchema) {

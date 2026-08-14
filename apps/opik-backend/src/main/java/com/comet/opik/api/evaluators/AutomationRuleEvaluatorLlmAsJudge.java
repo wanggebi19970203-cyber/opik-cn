@@ -42,8 +42,8 @@ public final class AutomationRuleEvaluatorLlmAsJudge extends AutomationRuleEvalu
             @JsonView({View.Public.class, View.Write.class}) @NotNull List<LlmAsJudgeOutputSchema> schema,
             @JsonView({View.Public.class, View.Write.class}) @Positive BigDecimal maxCostUsd) {
 
-        // Optional per-evaluation spend limit added after the fact; this overload keeps the prior
-        // positional shape working (callers get maxCostUsd = null = no limit).
+        // 可选的单次评估花费上限，为事后追加；该重载保留了先前的
+        // 位置参数形态以便继续工作（调用方获得 maxCostUsd = null = 无限制）。
         public LlmAsJudgeCode(LlmAsJudgeModelParameters model, List<LlmAsJudgeMessage> messages,
                 Map<String, String> variables, List<LlmAsJudgeOutputSchema> schema) {
             this(model, messages, variables, schema, null);
@@ -73,9 +73,9 @@ public final class AutomationRuleEvaluatorLlmAsJudge extends AutomationRuleEvalu
     }
 
     /**
-     * Two purposes:
-     * - Makes the polymorphic T code available for serialization.
-     * - Provides the specific type T for Open API and Fern.
+     * 两个用途：
+     * - 使多态 T 类型的 code 可用于序列化。
+     * - 为 Open API 和 Fern 提供具体的 T 类型。
      */
     @JsonView({View.Public.class, View.Write.class})
     @Override
@@ -84,9 +84,9 @@ public final class AutomationRuleEvaluatorLlmAsJudge extends AutomationRuleEvalu
     }
 
     /**
-     * Two purposes:
-     * - Makes the polymorphic T code available for serialization.
-     * - Provides the specific type T for Open API and Fern.
+     * 两个用途：
+     * - 使多态 T 类型的 code 可用于序列化。
+     * - 为 Open API 和 Fern 提供具体的 T 类型。
      */
     @JsonView({View.Public.class, View.Write.class})
     @Override

@@ -18,11 +18,11 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Uses 2 caches:
- * 1. Workspace metadata cache (v2). Data type: Hash. Key pattern: authV2-{apiKey}-{workspaceName},
- *    value: Map with keys 'userName', 'workspaceId', 'workspaceName', 'quotas'
- * 2. Permission access cache (v3). Data type: String. Key pattern: authV3-{apiKey}-{workspaceName}-{permission},
- *    value: userName. Only used when requiredPermissions are specified.
+ * 使用 2 个缓存：
+ * 1. 工作区元数据缓存（v2）。数据类型：Hash。键模式：authV2-{apiKey}-{workspaceName}，
+ *    值：包含键 'userName'、'workspaceId'、'workspaceName'、'quotas' 的 Map
+ * 2. 权限访问缓存（v3）。数据类型：String。键模式：authV3-{apiKey}-{workspaceName}-{permission}，
+ *    值：userName。仅在指定了 requiredPermissions 时使用。
  */
 @RequiredArgsConstructor
 class AuthCredentialsCacheService implements CacheService {

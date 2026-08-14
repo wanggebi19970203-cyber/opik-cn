@@ -5,9 +5,9 @@ import lombok.Getter;
 import java.io.Writer;
 
 /**
- * {@link Writer} that only counts the characters written and holds no buffer, so the serialized size of a
- * value can be measured by streaming it through the writer instead of materializing its full string.
- * Single-use: create a fresh instance per measurement.
+ * {@link Writer}，只统计写入的字符数且不持有缓冲区，因此值的序列化大小
+ * 可以通过把它流经该 writer 来测量，而不必物化其完整字符串。
+ * 一次性使用：每次测量都创建新实例。
  */
 @Getter
 final class CountingWriter extends Writer {

@@ -45,8 +45,8 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         self._rest_client = rest_client
         self._file_uploader = file_upload_manager
         self._batch_memory_limit_mb = batch_memory_limit_mb
-        # Per-span size limit (MB). Oversized spans are truncated right before
-        # sending. None disables the check.
+        # 每个 span 的大小限制（MB）。超大的 span 会在发送前被截断。
+        # None 会禁用检查。
         self._max_payload_size_mb = max_payload_size_mb
         self._is_active = active
         self._replay_manager = fallback_replay_manager
@@ -75,9 +75,9 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             messages.CreateAttachmentMessage: self._process_create_attachment,  # type: ignore
             messages.AttachmentSupportingMessage: self._noop_handler,  # type: ignore
         }
-        # list of messages to be ignored for replay because not used for communications with server
-        # the AttachmentSupportingMessage is just marker container-message that later used to extract
-        # the CreateAttachmentMessage and preprocessed original message
+        # 需要在重放时忽略的消息列表，因为它们不用于与服务器通信；
+        # AttachmentSupportingMessage 只是一个标记性的容器消息，后续用于提取
+        # CreateAttachmentMessage 和经过预处理后的原始消息
         self._ignored_message_types_for_replay = [messages.AttachmentSupportingMessage]
 
     def is_active(self) -> bool:
@@ -86,19 +86,19 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
     def register_message_handler(
         self, message_type: Type, handler: MessageProcessingHandler
     ) -> None:
-        """Registers a handler for a specific message type."""
+        """为特定消息类型注册处理程序。"""
         self._handlers[message_type] = handler
 
     def process(self, message: messages.BaseMessage) -> None:
         if not self.is_active():
             return
 
-        # check if a message type is authorized to be processed
+        # 检查该消息类型是否被授权处理
         if not self._unauthorized_message_types_registry.is_authorized(
             message.message_type
         ):
             LOGGER.debug(
-                "Unauthorized message type: '%s' - ignored from processing.",
+                "未授权的消息类型：'%s' —— 已从处理中忽略。",
                 message.message_type,
             )
             self._record_data_loss(
@@ -109,7 +109,7 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         message_type = type(message)
         handler = self._handlers.get(message_type)
         if handler is None:
-            LOGGER.debug("Unknown type of message - %s", message_type.__name__)
+            LOGGER.debug("未知的消息类型 - %s", message_type.__name__)
             return
 
         should_register_message = not self._should_ignore_replay_for_message_type(
@@ -119,30 +119,30 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             self._replay_manager.has_server_connection and should_register_message
         )
         if isinstance(message, messages.CreateAttachmentMessage):
-            # it would be unregistered by callback when the upload is finished
+            # 上传完成后会由回调将其注销
             should_unregister_message = False
 
         try:
             if should_register_message:
-                # handle replayable messages
+                # 处理可重放的消息
                 if self._replay_manager.has_server_connection:
-                    # register a message with the replay manager and process it
+                    # 将消息注册到重放管理器并处理它
                     self._replay_manager.register_message(message)
 
                     handler(message)
                 else:
-                    # register a message as failed and skip sending it to the backend
+                    # 将消息注册为失败，并跳过发送到后端
                     self._replay_manager.register_message(
                         message, status=db_manager.MessageStatus.failed
                     )
             else:
-                # handle non-replayable messages (ignored types bypass replay entirely)
+                # 处理不可重放的消息（被忽略的类型完全绕过重放）
                 handler(message)
 
         except rest_api_core.ApiError as exception:
             if exception.status_code == 409:
-                # sometimes a retry mechanism works in a way that it sends the same request 2 times.
-                # if the backend rejects the second request, we don't want users to see an error.
+                # 有时重试机制会以发送两次相同请求的方式工作。
+                # 如果后端拒绝了第二个请求，我们不希望用户看到错误。
                 if should_unregister_message:
                     self._replay_manager.unregister_message(message.message_id)  # type: ignore
                 return
@@ -156,11 +156,11 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
                         )
             elif exception.status_code == 401:
                 LOGGER.error(
-                    "Unauthorized message type '%s' processing request: %s",
+                    "未授权的消息类型 '%s' 处理请求：%s",
                     message.message_type,
                     exception.body,
                 )
-                # register a message type as unauthorized to avoid re-sending it to the backend
+                # 将该消息类型注册为未授权，避免再次发送到后端
                 self._unauthorized_message_types_registry.add(message.message_type)
                 self._record_data_loss(
                     message,
@@ -207,7 +207,7 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
                 validation_error, message
             )
             LOGGER.error(
-                "Failed to process message: '%s' due to input data validation error:\n%s\n",
+                "处理消息失败：'%s'，原因是输入数据校验错误：\n%s\n",
                 message_type.__name__,
                 validation_error,
                 exc_info=True,
@@ -221,10 +221,10 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         except (httpx.ConnectError, httpx.TimeoutException) as ex:
             should_unregister_message = False
             LOGGER.warning(
-                "Failed to process message: '%s' due to connection error. Will be retried later when connection is restored.",
+                "处理消息失败：'%s'，原因是连接错误。将在连接恢复后重试。",
                 message_type.__name__,
             )
-            # mark a message as failed with replay manager due to a connection error
+            # 因连接错误，通过重放管理器将消息标记为失败
             self._replay_manager.message_sent_failed(
                 message.message_id,  # type: ignore
                 failure_reason=str(ex),
@@ -243,7 +243,7 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
                 message, data_loss.FailureReason.UNKNOWN, detail=str(exception)
             )
 
-        # unregister a message from the reply manager because it is delivered or other error occurred
+        # 由于消息已送达或发生其他错误，从重放管理器中注销该消息
         if should_unregister_message:
             self._replay_manager.unregister_message(message.message_id)  # type: ignore
 
@@ -278,14 +278,13 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             object_type="span",
         )
 
-        # Enforce the per-object size limit right before sending, after attachment
-        # extraction has already stripped/uploaded large attachments.
+        # 在发送前立即强制执行每个对象的大小限制，此时附件提取已剥离/上传了大附件。
         if self._max_payload_size_mb is not None:
             payload_truncation.truncate_kwargs_if_needed(
                 cleaned_create_span_kwargs, self._max_payload_size_mb, kind="span"
             )
 
-        LOGGER.debug("Create span request: %s", cleaned_create_span_kwargs)
+        LOGGER.debug("创建 span 请求：%s", cleaned_create_span_kwargs)
         self._rest_client.spans.create_span(**cleaned_create_span_kwargs)
 
     def _process_create_trace_message(
@@ -302,14 +301,14 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             object_type="trace",
         )
 
-        # Same per-object size cap as spans: @track / manual trace logging mirror the
-        # payload onto the trace, so an oversized trace input/output must be capped too.
+        # 与 span 相同的每个对象大小上限：@track / 手动 trace 记录会把负载镜像到 trace 上，
+        # 因此超大的 trace input/output 也必须被限制。
         if self._max_payload_size_mb is not None:
             payload_truncation.truncate_kwargs_if_needed(
                 cleaned_create_trace_kwargs, self._max_payload_size_mb, kind="trace"
             )
 
-        LOGGER.debug("Create trace request: %s", cleaned_create_trace_kwargs)
+        LOGGER.debug("创建 trace 请求：%s", cleaned_create_trace_kwargs)
         self._rest_client.traces.create_trace(**cleaned_create_trace_kwargs)
 
     def _process_update_span_message(
@@ -327,15 +326,15 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             object_type="span",
         )
 
-        # Enforce the per-object size limit on updates too: an oversized
-        # output/input attached via update_span (e.g. span.end(output=...)
-        # once the create was already flushed) would otherwise bypass the cap.
+        # 对 update 也强制执行每个对象的大小限制：通过 update_span 附加的超大
+        # output/input（例如在 create 已刷新后调用 span.end(output=...)）
+        # 否则会绕过上限。
         if self._max_payload_size_mb is not None:
             payload_truncation.truncate_kwargs_if_needed(
                 cleaned_update_span_kwargs, self._max_payload_size_mb, kind="span"
             )
 
-        LOGGER.debug("Update span request: %s", cleaned_update_span_kwargs)
+        LOGGER.debug("更新 span 请求：%s", cleaned_update_span_kwargs)
         self._rest_client.spans.update_span(**cleaned_update_span_kwargs)
 
     def _process_update_trace_message(
@@ -353,16 +352,16 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             object_type="trace",
         )
 
-        # Cap oversized trace output/input attached via update (e.g. the @track
-        # decorator setting the trace output when the root function returns).
+        # 限制通过 update 附加的超大 trace output/input（例如 @track 装饰器
+        # 在根函数返回时设置 trace 输出）。
         if self._max_payload_size_mb is not None:
             payload_truncation.truncate_kwargs_if_needed(
                 cleaned_update_trace_kwargs, self._max_payload_size_mb, kind="trace"
             )
 
-        LOGGER.debug("Update trace request: %s", cleaned_update_trace_kwargs)
+        LOGGER.debug("更新 trace 请求：%s", cleaned_update_trace_kwargs)
         self._rest_client.traces.update_trace(**cleaned_update_trace_kwargs)
-        LOGGER.debug("Sent trace %s", message.trace_id)
+        LOGGER.debug("已发送 trace %s", message.trace_id)
 
     def _process_add_span_feedback_scores_batch_message(
         self,
@@ -373,12 +372,12 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             for score_message in message.batch
         ]
 
-        LOGGER.debug("Add spans feedbacks scores request of size: %d", len(scores))
+        LOGGER.debug("添加 span 反馈评分的请求，数量：%d", len(scores))
 
         self._rest_client.spans.score_batch_of_spans(
             scores=scores,
         )
-        LOGGER.debug("Sent batch of spans feedback scores %d", len(scores))
+        LOGGER.debug("已发送 span 反馈评分批次 %d", len(scores))
 
     def _process_add_trace_feedback_scores_batch_message(
         self,
@@ -389,12 +388,12 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
             for score_message in message.batch
         ]
 
-        LOGGER.debug("Add traces feedbacks scores request: %d", len(scores))
+        LOGGER.debug("添加 trace 反馈评分请求：%d", len(scores))
 
         self._rest_client.traces.score_batch_of_traces(
             scores=scores,
         )
-        LOGGER.debug("Sent batch of traces feedbacks scores of size %d", len(scores))
+        LOGGER.debug("已发送 trace 反馈评分批次，数量 %d", len(scores))
 
     def _process_add_threads_feedback_scores_batch_message(
         self,
@@ -408,50 +407,48 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         ]
 
         try:
-            LOGGER.debug("Add threads feedbacks scores request of size %d", len(scores))
+            LOGGER.debug("添加线程反馈评分请求，数量 %d", len(scores))
             self._rest_client.traces.score_batch_of_threads(
                 scores=scores,
             )
             LOGGER.debug(
-                "Sent batch of threads feedbacks scores of size %d", len(scores)
+                "已发送线程反馈评分批次，数量 %d", len(scores)
             )
         except rest_api_core.ApiError as exception:
-            # In the case of AddThreadsFeedbackScoresBatchMessage, the backend will reject the request
-            # if thread is not closed which can happen if the user is unaware of this fact.
-            # Thus, we display the warning message.
+            # 对于 AddThreadsFeedbackScoresBatchMessage，如果线程未关闭，后端会拒绝该请求，
+            # 而用户可能并未意识到这一点。因此，我们显示警告消息。
             if exception.status_code == 409:
                 LOGGER.warning(
-                    "Threads feedbacks scores batch was rejected by the backend, reason: '%s'",
+                    "线程反馈评分批次被后端拒绝，原因：'%s'",
                     exception.body,
                 )
-            # propagate further to be handled in a unified error handler
+            # 继续向上传播，交由统一的错误处理器处理
             raise exception
 
     def _process_create_spans_batch_message(
         self, message: messages.CreateSpansBatchMessage
     ) -> None:
-        LOGGER.debug("Create spans batch request of size %d", len(message.batch))
-        # Enforce the per-object size limit right before sending, after attachment
-        # extraction has already stripped/uploaded large attachments.
+        LOGGER.debug("创建 span 批次请求，数量 %d", len(message.batch))
+        # 在发送前立即强制执行每个对象的大小限制，此时附件提取已剥离/上传了大附件。
         batch: List[span_write.SpanWrite] = message.batch
         if self._max_payload_size_mb is not None:
             batch = payload_truncation.truncate_writes(
                 batch, self._max_payload_size_mb, kind="span"
             )
         self._rest_client.spans.create_spans(spans=batch)
-        LOGGER.debug("Sent spans batch of size %d", len(batch))
+        LOGGER.debug("已发送 span 批次，数量 %d", len(batch))
 
     def _process_create_traces_batch_message(
         self, message: messages.CreateTraceBatchMessage
     ) -> None:
-        LOGGER.debug("Create trace batch request of size %d", len(message.batch))
+        LOGGER.debug("创建 trace 批次请求，数量 %d", len(message.batch))
         batch: List[trace_write.TraceWrite] = message.batch
         if self._max_payload_size_mb is not None:
             batch = payload_truncation.truncate_writes(
                 batch, self._max_payload_size_mb, kind="trace"
             )
         self._rest_client.traces.create_traces(traces=batch)
-        LOGGER.debug("Sent trace batch of size %d", len(batch))
+        LOGGER.debug("已发送 trace 批次，数量 %d", len(batch))
 
     def _process_guardrail_batch_message(
         self,
@@ -488,26 +485,26 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         ]
 
         LOGGER.debug(
-            "Create experiment items batch request of size %d",
+            "创建实验条目批次请求，数量 %d",
             len(experiment_items_batch),
         )
         self._rest_client.experiments.create_experiment_items(
             experiment_items=experiment_items_batch
         )
         LOGGER.debug(
-            "Sent experiment items batch of size %d", len(experiment_items_batch)
+            "已发送实验条目批次，数量 %d", len(experiment_items_batch)
         )
 
     def _process_create_attachment(
         self, message: messages.CreateAttachmentMessage
     ) -> None:
-        LOGGER.debug("Processing create attachment message")
+        LOGGER.debug("正在处理创建附件消息")
         self._file_uploader.upload(
             message,
             on_upload_failed=self._on_upload_failed_callback(message.message_id),  # type: ignore
             on_upload_success=self._on_upload_success_callback(message.message_id),  # type: ignore
         )
-        LOGGER.debug("Uploaded attachment with %s", message.file_name)
+        LOGGER.debug("已上传附件 %s", message.file_name)
 
     def _on_upload_failed_callback(
         self, message_id: int
@@ -525,7 +522,7 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
                     message_id, failure_reason=str(error)
                 )
             else:
-                # it is an unrecoverable error-unregister the message
+                # 这是不可恢复的错误——注销该消息
                 self._replay_manager.unregister_message(message_id)
 
         return _callback
@@ -539,7 +536,7 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         return _callback
 
     def _noop_handler(self, message: messages.BaseMessage) -> None:
-        # just ignore the message
+        # 直接忽略该消息
         pass
 
     def _should_ignore_replay_for_message_type(
@@ -548,7 +545,7 @@ class OpikMessageProcessor(message_processors.BaseMessageProcessor):
         message_type = type(message)
         if message_type in self._ignored_message_types_for_replay:
             LOGGER.debug(
-                "Message type %s is ignored list, replay management skipping for it.",
+                "消息类型 %s 在忽略列表中，重放管理将跳过它。",
                 message_type.__name__,
             )
             return True

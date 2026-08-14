@@ -1,47 +1,42 @@
-"""Experiment + trace/span cascade for ``opik migrate dataset`` (Slice 3).
+"""用于 ``opik migrate dataset``（Slice 3）的实验 + trace/span 级联。
 
-Reads source experiments referencing the migrating dataset and recreates them
-under the destination project, re-emitting their traces and spans with FK
-fields rewritten using the maps populated by Slice 2.
+读取引用了正在迁移数据集的源实验，并在目标项目下重新创建它们，
+重新发送它们的 trace 和 span，使用 Slice 2 填充的映射重写外键字段。
 
-**Cascade-copy semantics.** Like Slice 1's dataset copy, this is a copy --
-not a move. Source experiments stay in their original projects with all
-their traces and spans intact; the destination project gets brand-new
-experiments (new ids) that reference the destination's dataset/version/item
-ids and carry independent copies of the trace+span data. Users who want
-the source side cleaned up will use ``--delete-source`` (out of this slice's
-scope) once they've verified the destination.
+**级联复制语义。** 与 Slice 1 的数据集复制一样，这是复制而非移动。
+源实验连同其所有 trace 和 span 原封不动地保留在原始项目中；
+目标项目获得全新的实验（新 id），它们引用目标数据集/版本/项目的
+id，并携带独立的 trace+span 数据副本。希望清理源端的用户会在
+验证目标端之后使用 ``--delete-source``（不在本 Slice 范围内）。
 
-**Cross-project follow.** ``find_experiments(dataset_id=...)`` is project-
-agnostic at the REST layer, so every experiment referencing the source
-dataset cascades to ``--to-project`` regardless of which project it was
-originally in. This is the epic's "baseline follow" default and never
-produces dangling references, but it does produce duplicates when the
-source dataset was referenced by experiments in multiple projects. Slice 4
-(OPIK-6417) adds detection + reporting on top of this behaviour.
+**跨项目跟随。** ``find_experiments(dataset_id=...)`` 在 REST 层是
+项目无关的，因此每个引用源数据集的实验都会级联到 ``--to-project``，
+无论它最初位于哪个项目。这是 epic 的“基线跟随”默认行为，永远不会
+产生悬空引用，但当源数据集被多个项目中的实验引用时，会产生重复项。
+Slice 4 (OPIK-6417) 在此行为之上增加了检测与报告。
 
-FK remap during recreation:
+重建期间的外键重映射：
 
   source dataset_id         -> dest_dataset_id                  (Slice 1)
   source dataset_version_id -> plan.version_remap[old]          (Slice 2)
   source dataset_item_id    -> plan.item_id_remap[old]          (Slice 2)
-  source trace_id           -> built here as traces copy        (this slice)
-  source project_id         -> target_project_name              (this slice)
+  source trace_id           -> built here as traces copy        (本 Slice)
+  source project_id         -> target_project_name              (本 Slice)
   source optimization_id    -> plan.optimization_id_remap[old]  (Slice 5)
 
-Stripped on the destination experiment (matches Jacques's "strip the link"
-policy from the epic discussion; the pointers would otherwise dangle):
+在目标实验上被剥离的字段（符合 epic 讨论中 Jacques 的“剥离链接”策略；
+否则这些指针会悬空）：
 
-  prompt_versions  -- prompt entity isn't cascaded in v1 (epic open question)
+  prompt_versions  -- prompt 实体在 v1 中不级联（epic 的开放问题）
 
-Spans cascade with their parent trace; tree ordering is preserved via
-``sort_spans_topologically`` from the import path so ``parent_span_id``
-remap entries always exist by the time a child span is processed.
+span 与其父 trace 一起级联；通过导入路径中的
+``sort_spans_topologically`` 保持树的顺序，因此在处理子 span 时，
+``parent_span_id`` 重映射条目始终存在。
 
-Per-experiment failures stop the cascade (the audit log's ``failed`` entry
-captures partial progress via ``ExperimentCascadeResult``); per-item missing-
-trace / missing-item conditions are tallied as skip counters rather than
-failures, matching Slice 1/2's ``skipped_items`` semantics.
+单实验失败会停止级联（审计日志的 ``failed`` 条目通过
+``ExperimentCascadeResult`` 捕获部分进度）；单项目缺失 trace /
+缺失项目的条件按跳过计数累加，而不是视为失败，与 Slice 1/2 的
+``skipped_items`` 语义一致。
 """
 
 from __future__ import annotations
@@ -76,42 +71,38 @@ from ..errors import ExperimentCascadeError
 
 LOGGER = logging.getLogger(__name__)
 
-# Outer + inner progress callback shapes are shared across all dataset
-# cascade phases (version_replay, optimizations, experiments) -- see
-# ``datasets/_progress.py`` for the single source of truth. Re-exported
-# from this module so existing call sites that ``from .experiments
-# import ProgressCallback`` keep working.
+# 外层 + 内层进度回调形状在所有数据集级联阶段（version_replay、
+# optimizations、experiments）共享 —— 单一事实来源见
+# ``datasets/_progress.py``。从此模块重新导出，使现有的
+# ``from .experiments import ProgressCallback`` 调用点继续可用。
 from ._progress import InnerProgressCallback, ProgressCallback  # noqa: E402, F401
 
-# Notes specific to the experiment cascade's usage of these callbacks:
+# 关于实验级联使用这些回调的说明：
 #
-# - The outer ``ProgressCallback`` fires once before each experiment;
-#   ``label="done"`` signals the final tick with ``completed == total``.
+# - 外层 ``ProgressCallback`` 在每个实验开始前触发一次；
+#   ``label="done"`` 表示 ``completed == total`` 的最终 tick。
 #
-# - The inner ``InnerProgressCallback`` ticks within a single experiment so
-#   the outer experiment-level bar isn't a frozen one-step-per-experiment
-#   readout. ``total`` is the number of inner steps for THIS experiment
-#   (recomputed per experiment, since experiments can have wildly different
-#   trace counts). ``label`` describes the step that just completed (e.g.
-#   ``"trace 47/150"``, ``"spans for trace 47/150"``, ``"flush"``,
-#   ``"recreate"``). Executor renders this on a nested Rich bar; tests use
-#   it to assert the cascade ticks every read/write phase.
+# - 内层 ``InnerProgressCallback`` 在单个实验内 tick，因此外层实验级
+#   进度条不会变成每个实验只前进一次的冻结读数。``total`` 是 THIS
+#   实验的内层步数（每个实验重新计算，因为实验之间的 trace 数量可能
+#   差异巨大）。``label`` 描述刚完成的步骤（例如
+#   ``"trace 47/150"``、``"spans for trace 47/150"``、``"flush"``、
+#   ``"recreate"``）。执行器将其渲染在嵌套的 Rich 进度条上；测试使用
+#   它来断言级联在每个读/写阶段都进行 tick。
 
 
 class _InnerProgress:
-    """Small adapter that drives an ``InnerProgressCallback`` across the
-    per-experiment work phases.
+    """跨单个实验工作阶段驱动 ``InnerProgressCallback`` 的小型适配器。
 
-    The cascade pre-computes a total step count for THIS experiment
-    (typically ``2N + fixed_overhead`` for ``N`` traces -- one tick per
-    trace read, one per span fetch, plus a handful for read-items / flush
-    / log-scores / log-assertions / recreate). Each call to ``tick(label)``
-    increments the counter and fires the callback with the latest label
-    so the UI updates smoothly even when the algorithmic work hasn't
-    advanced (e.g. the executor's Rich bar repaints on every callback).
+    级联会为 THIS 实验预先计算总步数（对于 ``N`` 个 trace 通常为
+    ``2N + 固定开销`` —— 每次读取 trace tick 一次，每次获取 span tick
+    一次，外加读取项目 / flush / 记录分数 / 记录断言 / 重建的少量步骤）。
+    每次调用 ``tick(label)`` 都会递增计数器，并用最新的标签触发回调，
+    使 UI 即使在算法工作尚未推进时也能平滑更新（例如执行器的 Rich
+    进度条会在每次回调时重绘）。
 
-    No-op when the callback is None, so passing ``inner_progress_callback=None``
-    from tests keeps the cascade machinery unchanged.
+    当回调为 None 时为空操作，因此从测试中传入
+    ``inner_progress_callback=None`` 可保持级联机制不变。
     """
 
     def __init__(self, callback: Optional[InnerProgressCallback], total: int) -> None:
@@ -126,10 +117,9 @@ class _InnerProgress:
         self._callback(self._completed, self._total, label)
 
     def finish(self, label: str = "done") -> None:
-        """Force the bar to 100% on completion -- guards against
-        miscounted totals (e.g. some traces were already in the remap
-        from a prior experiment and got skipped, so we ticked fewer
-        times than estimated)."""
+        """完成时将进度条强制置为 100% —— 防止总数计算错误
+        （例如某些 trace 已在先前实验的重映射中，因而被跳过，
+        导致我们 tick 的次数少于估计值）。"""
         if self._callback is None:
             return
         self._completed = self._total
@@ -138,47 +128,41 @@ class _InnerProgress:
 
 _EXPERIMENT_PAGE_SIZE = 100
 
-# Per-request page size for the cascade's bulk trace/span reads. The SDK
-# default of 2000 (with the cascade's ``truncate=False`` for round-trip
-# fidelity) makes the per-request read a firehose: on a large customer
-# migration (OPIK-7152) the backend container was OOM-killed by RSS (~3 GiB)
-# driven by native/off-heap read buffers tracking the SELECT throughput --
-# NOT JVM heap (heap peaked at 931 MiB against a 3.2 GiB ceiling). The CH
-# SELECT ran at 2.93M rows/s while INSERT was only 511 rows/s, so the read
-# path is the culprit; the write path is already batched and needs no cap
-# here. 500 records/page bounds the read firehose (~12.5 MB/page at the
-# observed ~25 KB avg span; ~4.5 MB max single span) without ballooning the
-# request count (~5-6 pages for a 2.7k-span experiment). The SDK's adaptive
-# shrink halves this further if a page still drops the socket on a
-# connection/timeout error -- the reactive guard for a page that happens to
-# bunch up multi-MB spans.
+# 级联批量读取 trace/span 时每个请求的页大小。SDK 默认的 2000
+# （配合级联为往返保真而设置的 ``truncate=False``）使每次请求的读取
+# 变成洪流：在一次大型客户迁移（OPIK-7152）中，后端容器因 RSS（约 3 GiB）
+# 被 OOM 杀死，RSS 由跟踪 SELECT 吞吐的原生/堆外读取缓冲区驱动 ——
+# 而非 JVM 堆（堆峰值 931 MiB，上限为 3.2 GiB）。CH SELECT 运行速率为
+# 293 万行/秒，而 INSERT 仅为 511 行/秒，因此读路径是元凶；写路径已经
+# 批处理，无需在此设上限。每页 500 条记录在不让请求数膨胀的前提下
+# 约束了读取洪流（按观察到的平均 span 约 25 KB 计，约 12.5 MB/页；
+# 单个 span 最大约 4.5 MB）（一个 2.7k span 的实验约 5-6 页）。如果某页
+# 仍因连接/超时错误而断开套接字，SDK 的自适应收缩会进一步将其减半 ——
+# 这是针对恰好聚积了多个多 MB span 的页面的反应式保护。
 MIGRATION_SEARCH_PAGE_SIZE = 500
 
-# Cap the per-record ``sample_source_ids`` list so a pathological
-# all-items-missing case doesn't bloat the audit JSON. The count is
-# always recorded in full; the sample is only there to give an operator
-# enough breadcrumbs to investigate a few offending source ids.
+# 限制每条记录的 ``sample_source_ids`` 列表，使病态的“所有项目都缺失”
+# 情况不会撑爆审计 JSON。计数始终完整记录；样本只是为了给操作员
+# 足够的面包屑来调查少数出问题的源 id。
 _SKIP_SAMPLE_LIMIT = 20
 
-# Buffer around the experiment's trace start/end times when bulk-fetching
-# spans via ``search_spans(from_time, to_time)``. Late-arriving spans
-# (the streamer is async; a span tied to a trace can land after the trace's
-# own ``end_time``) and clock skew across SDK clients motivate the buffer.
-# 5 minutes covers the common cases without ballooning over-fetch from
-# concurrent activity in the same project. Traces with spans landing more
-# than 5 minutes past the trace window are accepted as a known edge case
-# (logged as zero-bucket warnings at the end of the bulk read).
+# 通过 ``search_spans(from_time, to_time)`` 批量获取 span 时，围绕实验
+# trace 开始/结束时间的缓冲。迟到的 span（流式处理器是异步的；绑定到
+# trace 的 span 可能在 trace 自身的 ``end_time`` 之后才落地）以及各 SDK
+# 客户端之间的时钟偏差是这个缓冲的动机。5 分钟覆盖了常见情况，同时
+# 不会因同一项目中的并发活动而膨胀为过度获取。span 落地时间超过 trace
+# 窗口 5 分钟以上的 trace 作为已知边界情况被接受（在批量读取结束时
+# 记录为零桶警告）。
 _SPAN_BULK_WINDOW_BUFFER = timedelta(minutes=5)
 
 
 @dataclass
 class ExperimentCascadeResult:
-    """Outcome of a full experiment cascade.
+    """一次完整实验级联的结果。
 
-    Aggregated counters land in the audit log's ``cascade_experiments``
-    entry; ``trace_id_remap`` is also stashed on the plan so Slice 4
-    (optimization cascade) can reuse the mapping when it remaps
-    optimization-level trace references.
+    聚合计数写入审计日志的 ``cascade_experiments`` 条目；
+    ``trace_id_remap`` 也会暂存到 plan 上，使 Slice 4（优化级联）
+    在重映射优化级 trace 引用时能够复用该映射。
     """
 
     trace_id_remap: Dict[str, str] = field(default_factory=dict)
@@ -190,15 +174,14 @@ class ExperimentCascadeResult:
     span_comments_migrated: int = 0
     items_skipped_missing_trace: int = 0
     items_skipped_missing_item: int = 0
-    # Source experiments that carried an ``optimization_id`` but had no
-    # entry in ``optimization_id_remap`` -- defensive counter; should
-    # always be zero when ``CascadeOptimizations`` ran first as the
-    # planner guarantees. Non-zero values indicate a planning bug
-    # (e.g. action ordering broken) rather than a user-visible failure.
+    # 携带了 ``optimization_id`` 但在 ``optimization_id_remap`` 中没有条目
+    # 的源实验 —— 防御性计数器；当 ``CascadeOptimizations`` 按 planner
+    # 保证的顺序先运行时，应始终为零。非零值表示存在规划缺陷
+    # （例如动作顺序被破坏），而不是用户可见的失败。
     experiments_with_orphan_optimization_id: int = 0
-    # Per-experiment skip reasons for the audit log. Each entry is
-    # ``{"id": ..., "name": ..., "reason": ...}``; capped at the most
-    # recent failures to keep the audit JSON bounded.
+    # 用于审计日志的按实验跳过原因。每条记录为
+    # ``{"id": ..., "name": ..., "reason": ...}``；只保留最近的失败，
+    # 以保持审计 JSON 有界。
     skipped_experiments: List[Dict[str, Any]] = field(default_factory=list)
 
 
@@ -218,68 +201,56 @@ def cascade_experiments(
     progress_callback: Optional[ProgressCallback] = None,
     inner_progress_callback: Optional[InnerProgressCallback] = None,
 ) -> ExperimentCascadeResult:
-    """Enumerate source experiments referencing ``source_dataset_id`` and
-    recreate each one at the destination, with traces+spans riding along.
+    """枚举引用 ``source_dataset_id`` 的源实验，并在目标端重新创建
+    每一个，同时携带 trace+span。
 
-    Source-side reads (``get_spans_by_project``) scope by ``project_id``
-    PER-EXPERIMENT -- derived from ``source_experiment.project_id`` on
-    each iteration -- because experiments are always project-scoped
-    (unlike datasets, which can be workspace-scoped) and cross-project
-    experiments referencing the same source dataset legitimately live
-    in different projects.
+    源端读取（``get_spans_by_project``）按 ``project_id`` 逐个实验限定范围
+    —— 每次迭代从 ``source_experiment.project_id`` 派生 —— 因为实验始终
+    是项目级范围的（与数据集不同，数据集可以是工作区级范围的），而引用
+    同一源数据集的跨项目实验合理地存在于不同的项目中。
 
-    ``progress_callback(completed, total, label)`` fires once before each
-    experiment so callers can drive a progress bar; matches the shape used
-    by ``version_replay.replay_all_versions``. ``completed`` and ``total`` are
-    absolute across the full experiment set (including experiments already
-    completed on a prior run) so a resumed run's bar starts at the right
-    percentage rather than at 0.
+    ``progress_callback(completed, total, label)`` 在每个实验之前触发一次，
+    使调用方能够驱动进度条；其形状与 ``version_replay.replay_all_versions``
+    使用的一致。``completed`` 和 ``total`` 在整个实验集上是绝对的
+    （包括先前运行已完成的实验），因此恢复运行的进度条从正确的百分比
+    开始，而不是从 0 开始。
 
-    When ``checkpoint`` is supplied (OPIK-7168), the cascade resumes an
-    interrupted migration: experiments whose source id is already in the
-    checkpoint's completed set are skipped, and an experiment left ``in_flight``
-    by a prior run has its partial destination data (traces/spans + a
-    possibly-orphaned experiment row) deleted before it is re-migrated. The
-    checkpoint is flushed after each experiment completes and is the caller's
-    responsibility to delete on full success. ``target_dataset_id`` is used
-    only for that resume cleanup (to find an orphaned destination experiment
-    by name under the destination dataset).
+    当提供 ``checkpoint``（OPIK-7168）时，级联会恢复被中断的迁移：
+    源 id 已在检查点完成集合中的实验会被跳过，而先前运行遗留为
+    ``in_flight`` 的实验，其部分目标数据（trace/span + 可能孤立的
+    实验行）会在重新迁移之前被删除。检查点在每个实验完成后刷新，
+    并在完全成功后由调用方负责删除。``target_dataset_id`` 仅用于该
+    恢复清理（用于在目标数据集下按名称查找孤立的目标实验）。
 
     Returns
     -------
     ExperimentCascadeResult
-        Aggregated cascade outcome, mutated in place as each source
-        experiment is processed. Fields:
+        聚合的级联结果，在处理每个源实验时原地更新。字段：
 
-        - ``trace_id_remap`` -- source trace id -> newly-minted destination
-          trace id. Stashed on ``plan.trace_id_remap`` by the executor so
-          Slice 4 (optimization cascade) can reuse the mapping when it
-          remaps optimization-level trace references.
-        - ``experiments_migrated`` / ``experiments_skipped`` -- per-
-          experiment counters. An experiment is "skipped" only when
-          ``recreate_experiment`` returns ``False`` (degenerate cases like
-          all items missing a trace mapping); fatal errors raise
-          ``ExperimentCascadeError`` instead.
-        - ``traces_migrated`` / ``spans_migrated`` -- per-entity counters
-          aggregating across every source experiment processed.
+        - ``trace_id_remap`` -- 源 trace id -> 新生成的目标 trace id。
+          由执行器暂存到 ``plan.trace_id_remap`` 上，使 Slice 4（优化级联）
+          在重映射优化级 trace 引用时能够复用该映射。
+        - ``experiments_migrated`` / ``experiments_skipped`` -- 按实验的
+          计数器。仅当 ``recreate_experiment`` 返回 ``False`` 时实验才被
+          “跳过”（如所有项目都缺失 trace 映射的退化情况）；致命错误会
+          抛出 ``ExperimentCascadeError``。
+        - ``traces_migrated`` / ``spans_migrated`` -- 按实体的计数器，
+          聚合所有已处理源实验。
         - ``trace_comments_migrated`` / ``span_comments_migrated`` --
-          counters for comments re-emitted via the dedicated single-
-          comment write endpoints (comments are READ_ONLY on the
-          trace/span Write payload, so they ride along the cascade as
-          post-write follow-up POSTs rather than the bulk writes).
+          通过专用单评论写入端点重新发送的评论计数器（评论在
+          trace/span 写载荷上是只读的，因此它们作为写后的后续 POST
+          跟随级联，而不是随批量写入一起发送）。
         - ``items_skipped_missing_trace`` / ``items_skipped_missing_item``
-          -- per-experiment-item skip counters, tallied after the recreate
-          call by comparing each source item's ``trace_id`` /
-          ``dataset_item_id`` against the remaps.
-        - ``skipped_experiments`` -- bounded list of
-          ``{"id", "name", "reason"}`` entries for the audit log.
+          -- 按实验项目的跳过计数器，在重建调用之后通过将每个源项目的
+          ``trace_id`` / ``dataset_item_id`` 与重映射对比来累加。
+        - ``skipped_experiments`` -- 用于审计日志的有界
+          ``{"id", "name", "reason"}`` 条目列表。
     """
     result = ExperimentCascadeResult()
 
-    # Default to an empty remap so callers that haven't picked up the
-    # new kwarg (older tests, ad-hoc invocations) behave the same as
-    # before: any source ``optimization_id`` falls into the orphan path
-    # and the field is omitted from the destination payload.
+    # 默认使用空重映射，使尚未采用新 kwarg 的调用方（较旧的测试、
+    # 临时调用）行为与之前一致：任何源 ``optimization_id`` 都会落入
+    # 孤立路径，该字段从目标载荷中省略。
     if optimization_id_remap is None:
         optimization_id_remap = {}
 
@@ -288,24 +259,22 @@ def cascade_experiments(
 
     if total == 0:
         LOGGER.info(
-            "No experiments reference dataset %s; cascade is a no-op.",
+            "没有实验引用数据集 %s；级联为空操作。",
             source_dataset_id,
         )
         return result
 
     if checkpoint is not None:
         checkpoint.total_experiments = total
-        # Clean up a prior run's interrupted experiment before we start, so its
-        # partial destination data doesn't survive as duplicates. The backend
-        # mints fresh ids on re-migrate rather than overwriting, so this
-        # client-side cleanup is the only thing that keeps the resume lossless.
+        # 在开始之前清理先前运行中断的实验，使其部分目标数据不会
+        # 以重复形式留存。后端在重新迁移时会生成全新 id 而非覆盖，
+        # 因此这一客户端侧清理是保持恢复无损的唯一手段。
         _cleanup_in_flight_experiment(client, rest_client, checkpoint)
 
-    # ``already_done`` anchors the progress bar's absolute completed count so a
-    # resumed run starts at the right percentage. It counts experiments in
-    # THIS source set that the checkpoint already marks done (not the raw
-    # checkpoint size, which could include ids no longer present if the source
-    # changed between runs).
+    # ``already_done`` 锚定进度条的绝对完成计数，使恢复运行从正确的
+    # 百分比开始。它统计 THIS 源集合中检查点已标记为完成的实验
+    # （而非原始检查点大小，后者在源于两次运行之间发生变化时可能
+    # 包含已不存在的 id）。
     already_done = (
         sum(1 for e in source_experiments if checkpoint.is_completed(e.id or ""))
         if checkpoint is not None
@@ -315,15 +284,14 @@ def cascade_experiments(
 
     for index, experiment in enumerate(source_experiments):
         if experiment.id is None:
-            # Defensive: the BE should always return an id; if it doesn't,
-            # treat as cascade-fatal because we can't enumerate items
-            # without it.
+            # 防御性：后端应始终返回 id；如果没有，则视为级联致命，
+            # 因为没有它就无法枚举项目。
             raise ExperimentCascadeError(
-                f"BE returned experiment without id at position {index}: {experiment!r}"
+                f"后端在位置 {index} 返回了没有 id 的实验：{experiment!r}"
             )
 
         if checkpoint is not None and checkpoint.is_completed(experiment.id):
-            # Already migrated on a prior run -- skip without re-doing any work.
+            # 已在先前的运行中迁移 —— 跳过，不再重复任何工作。
             continue
 
         label = experiment.name or experiment.id or f"<experiment[{index}]>"
@@ -369,33 +337,30 @@ def _cleanup_in_flight_experiment(
     rest_client: OpikApi,
     checkpoint: MigrationCheckpoint,
 ) -> None:
-    """Delete the partial destination data left by a prior run's interrupted
-    experiment, so re-migrating it doesn't create duplicates.
+    """删除先前运行中断的实验所遗留的部分目标数据，使重新迁移它时
+    不会产生重复项。
 
-    The backend does not cascade-delete on re-migrate -- ``recreate_experiment``
-    mints fresh experiment/trace/span ids every run rather than overwriting by
-    name -- so the SDK removes the partial copy client-side:
+    后端在重新迁移时不会级联删除 —— ``recreate_experiment`` 每次运行都会
+    生成全新的实验/trace/span id，而不是按名称覆盖 —— 因此 SDK 在客户端
+    侧移除部分副本：
 
-    1. Delete the recorded destination traces (``traces.delete_traces``); the
-       backend cascades their spans, so no separate span delete is needed.
-    2. Delete the destination experiment row by its recorded id. The cascade
-       mints and checkpoints ``dest_experiment_id`` before creating the row, so
-       cleanup targets that exact experiment -- never a same-named peer (names
-       are not unique in the destination dataset). ``dest_experiment_id`` is
-       ``None`` when the interruption landed before the experiment row was
-       created, in which case there is nothing to delete.
+    1. 删除记录的目标 trace（``traces.delete_traces``）；后端会级联删除
+       它们的 span，因此无需单独删除 span。
+    2. 按其记录的 id 删除目标实验行。级联在创建行之前生成并检查点记录
+       ``dest_experiment_id``，因此清理针对的是那个确切的实验 —— 而绝不会
+       是同名的同级实验（目标数据集中名称不唯一）。当中断发生在实验行
+       创建之前时，``dest_experiment_id`` 为 ``None``，此时没有需要删除的
+       内容。
 
-    No-op when nothing was in flight. Clears the in-flight record and flushes
-    afterward so a crash *during* cleanup doesn't re-run deletes against ids
-    that were already removed.
+    当没有进行中的实验时为空操作。清理完成后清除进行中记录并刷新，
+    使清理*过程中*发生的崩溃不会对已被删除的 id 重复执行删除。
     """
     in_flight = checkpoint.in_flight
     if in_flight is None:
         return
 
     LOGGER.info(
-        "Resuming migration: cleaning up partial data from interrupted "
-        "experiment %s (%s) before re-migrating.",
+        "正在恢复迁移：在重新迁移之前清理中断实验 %s (%s) 的部分数据。",
         in_flight.source_experiment_id,
         in_flight.experiment_name,
     )
@@ -433,73 +398,67 @@ def cascade_one_experiment(
     checkpoint: Optional[MigrationCheckpoint] = None,
     inner_progress_callback: Optional[InnerProgressCallback] = None,
 ) -> None:
-    """Migrate one source experiment: read items -> copy traces + spans ->
-    recreate experiment via ``imports.experiment.recreate_experiment``.
+    """迁移一个源实验：读取项目 -> 复制 trace + span ->
+    通过 ``imports.experiment.recreate_experiment`` 重建实验。
 
-    When ``checkpoint`` is supplied, the destination trace ids minted for this
-    experiment are recorded on the checkpoint's in-flight record and flushed to
-    disk right after the trace/span copy. If the process is then killed before
-    ``recreate_experiment`` finishes, the next run's resume cleanup can delete
-    those traces (and, via BE cascade, their spans) so the re-migration doesn't
-    duplicate them.
+    当提供 ``checkpoint`` 时，为此实验生成的目标 trace id 会记录在
+    检查点的进行中记录上，并在 trace/span 复制之后立即刷新到磁盘。
+    如果进程随后在 ``recreate_experiment`` 完成之前被杀死，下一次运行
+    的恢复清理可以删除这些 trace（并通过后端级联删除其 span），
+    使重新迁移不会重复它们。
 
-    The source project is derived from ``source_experiment.project_id`` --
-    experiments are always project-scoped on the BE, so every experiment
-    returned by ``find_experiments(dataset_id=...)`` carries a non-null
-    ``project_id`` (even when the dataset itself was workspace-scoped).
-    Using per-experiment ``project_id`` -- rather than threading a single
-    dataset-level project -- means cross-project experiments (i.e. ones
-    living in a project other than the source dataset's project) read
-    their traces / spans from the correct scope.
+    源项目派生自 ``source_experiment.project_id`` —— 实验在后端始终是
+    项目级范围的，因此 ``find_experiments(dataset_id=...)`` 返回的每个
+    实验都携带非空的 ``project_id``（即使数据集本身是工作区级范围的）。
+    使用按实验的 ``project_id`` —— 而不是贯通传递单个数据集级项目 ——
+    意味着跨项目实验（即位于源数据集项目之外的实验）能从正确的范围
+    读取其 trace / span。
 
-    Mutates ``result`` in place.
+    原地更新 ``result``。
     """
     experiment_id = source_experiment.id
     experiment_name = source_experiment.name
-    assert experiment_id is not None  # narrowed in the caller
+    assert experiment_id is not None  # 已在调用方收窄
 
     source_dataset_id = source_experiment.dataset_id
     if not source_dataset_id:
         raise ExperimentCascadeError(
-            f"Source experiment {experiment_id} has no dataset_id; "
-            "find_dataset_items_with_experiment_items requires the "
-            "dataset id to enumerate the experiment's items."
+            f"源实验 {experiment_id} 没有 dataset_id；"
+            "find_dataset_items_with_experiment_items 需要"
+            "数据集 id 来枚举实验的项目。"
         )
 
     source_project_id = source_experiment.project_id
     if not source_project_id:
-        # Defensive: the BE should never return a project-less
-        # experiment (experiments are always project-scoped). If it
-        # does, fail clearly rather than letting ``get_spans_by_project``
-        # 400 with an opaque message.
+        # 防御性：后端绝不应返回无项目的实验（实验始终是项目级范围的）。
+        # 如果它确实返回了，清晰地失败，而不是让 ``get_spans_by_project``
+        # 以晦涩的消息 400。
         raise ExperimentCascadeError(
-            f"Source experiment {experiment_id} has no project_id; "
-            "cascade requires project_id to scope span reads."
+            f"源实验 {experiment_id} 没有 project_id；"
+            "级联需要 project_id 来限定 span 读取的范围。"
         )
 
-    # Source-side read goes through the Compare view (rather than the
-    # ``stream_experiment_items`` Public view) because we need each
-    # item's ``assertion_results``, which only the Compare view surfaces.
-    # Trace-scoped assertion results are then re-emitted at the
-    # destination via ``store_assertions_batch`` in _copy_traces_and_spans.
+    # 源端读取走 Compare 视图（而非 ``stream_experiment_items`` Public 视图），
+    # 因为我们需要每个项目的 ``assertion_results``，而只有 Compare 视图
+    # 会暴露它。trace 级断言结果随后在 _copy_traces_and_spans 中通过
+    # ``store_assertions_batch`` 在目标端重新发送。
     items = _read_source_experiment_items(
         rest_client,
         source_dataset_id=source_dataset_id,
         source_experiment_id=experiment_id,
     )
     if not items:
-        # An experiment with no items is degenerate but recreate-able; we
-        # still recreate it so users see the row at the destination.
+        # 没有项目的实验是退化的，但仍可重建；我们仍重建它，
+        # 使用户能在目标端看到该行。
         LOGGER.info(
-            "Experiment %s (%s) has no items; recreating empty.",
+            "实验 %s (%s) 没有项目；正在重建为空实验。",
             experiment_id,
             experiment_name,
         )
 
-    # Collect distinct source trace ids for the items we plan to migrate,
-    # plus the assertion_results keyed by trace id (one trace can carry
-    # multiple assertion results across items, though the typical 1:1
-    # shape is one item -> one trace).
+    # 收集我们计划迁移的项目的不同源 trace id，以及按 trace id 为键的
+    # assertion_results（一个 trace 可以跨项目携带多个断言结果，尽管
+    # 典型的 1:1 形状是一个项目 -> 一个 trace）。
     source_trace_ids: Set[str] = {item.trace_id for item in items if item.trace_id}
     assertion_results_by_source_trace: Dict[str, List[Any]] = {}
     for item in items:
@@ -508,28 +467,27 @@ def cascade_one_experiment(
                 item.assertion_results
             )
 
-    # Inner progress total = 1 (read items, just completed)
-    # + 1 (bulk-read traces via search_traces(filter=experiment_id))
-    # + N (per-trace emit ticks; the writes are streamer-batched so each
-    #     tick is in-memory but gives the user motion)
-    # + 1 (flush traces) + 1 (log trace feedback) + 1 (log assertions)
-    # + 1 (bulk-read spans via search_spans(from_time, to_time))
-    # + N (per-trace span emit ticks from the in-memory bucket)
-    # + 1 (flush spans + log span feedback)
-    # + 1 (recreate)
-    # = 2N + 8. The trace count we use is the SET size (deduped) -- not
-    # ``len(items)`` -- to avoid overcounting items that share a trace.
-    # ``_InnerProgress`` clamps overshoots at ``total`` so a stale estimate
-    # (e.g. idempotent-skip removes traces) doesn't push the bar past 100%.
+    # 内层进度总数 = 1（读取项目，刚完成）
+    # + 1（通过 search_traces(filter=experiment_id) 批量读取 trace）
+    # + N（每个 trace 的发送 tick；写入由流式处理器批处理，因此每个
+    #     tick 都在内存中，但给用户提供动态感）
+    # + 1（刷新 trace）+ 1（记录 trace 反馈）+ 1（记录断言）
+    # + 1（通过 search_spans(from_time, to_time) 批量读取 span）
+    # + N（来自内存桶的每个 trace 的 span 发送 tick）
+    # + 1（刷新 span + 记录 span 反馈）
+    # + 1（重建）
+    # = 2N + 8。我们使用的 trace 计数是 SET 大小（去重后）—— 而非
+    # ``len(items)`` —— 以避免对共享同一 trace 的项目重复计数。
+    # ``_InnerProgress`` 会在 ``total`` 处截断超出部分，因此过时的估计值
+    # （例如幂等跳过移除了 trace）不会把进度条推到超过 100%。
     inner_total = 1 + 1 + 2 * len(source_trace_ids) + 6
     inner = _InnerProgress(inner_progress_callback, inner_total)
     inner.tick(label="read items")
 
-    # ``_copy_traces_and_spans`` records the destination trace ids on the
-    # checkpoint and flushes it to disk BEFORE it flushes those traces to the
-    # backend -- so a crash anywhere from the trace flush through the span-copy
-    # phase leaves the ids recorded for the next run's resume cleanup. Recording
-    # here (after the call returned) would leave that window uncovered.
+    # ``_copy_traces_and_spans`` 会在将这些 trace 刷新到后端*之前*把
+    # 目标 trace id 记录到检查点并刷新到磁盘 —— 因此从 trace 刷新到
+    # span 复制阶段的任何崩溃都会为下一次运行的恢复清理留下已记录的 id。
+    # 在此处记录（调用返回之后）会使该窗口处于未覆盖状态。
     (
         traces_copied,
         spans_copied,
@@ -553,12 +511,11 @@ def cascade_one_experiment(
     result.trace_comments_migrated += trace_comments_copied
     result.span_comments_migrated += span_comments_copied
 
-    # Build the ExperimentData payload that recreate_experiment consumes.
-    # Only the FK fields land on the destination ExperimentItem -- the
-    # rest of the per-item fidelity (input/output/feedback_scores/
-    # assertion_results/etc.) is READ-ONLY on the BE and reconstructs
-    # from the underlying trace + span + assertion entities (which the
-    # cascade copies in _copy_traces_and_spans).
+    # 构建 recreate_experiment 消费的 ExperimentData 载荷。
+    # 只有外键字段会落到目标 ExperimentItem 上 —— 其余按项目的保真内容
+    # （input/output/feedback_scores/assertion_results/等）在后端是只读的，
+    # 并从底层的 trace + span + assertion 实体重建（级联在
+    # _copy_traces_and_spans 中复制了这些实体）。
     experiment_data = _build_experiment_data(
         source_experiment,
         items,
@@ -568,11 +525,10 @@ def cascade_one_experiment(
 
     target_version_id = version_remap.get(source_experiment.dataset_version_id or "")
 
-    # Mint the destination experiment id here (rather than letting
-    # ``create_experiment`` generate it) so we can record it on the checkpoint
-    # BEFORE the row is created. Resume then deletes that exact row on cleanup
-    # instead of matching by name -- experiment names are not unique in the
-    # destination dataset, so a name match could delete an unrelated peer.
+    # 在此处生成目标实验 id（而非让 ``create_experiment`` 生成），以便在
+    # 行创建*之前*将其记录到检查点。恢复随后在清理时删除那个确切的
+    # 行，而不是按名称匹配 —— 实验名称在目标数据集中不唯一，因此名称
+    # 匹配可能删除无关的同级实验。
     dest_experiment_id = id_helpers_module.generate_id()
     if checkpoint is not None:
         checkpoint.record_dest_experiment_id(dest_experiment_id)
@@ -589,10 +545,9 @@ def cascade_one_experiment(
         target_dataset_version_id=target_version_id,
         experiment_id=dest_experiment_id,
     )
-    # Snap the inner bar to 100% so the executor's nested Rich bar
-    # finishes cleanly even when our pre-computed ``inner_total`` ran a
-    # bit hot or cold (e.g. fewer ticks fired because idempotent-skip
-    # removed traces from this experiment).
+    # 将内层进度条快进到 100%，使执行器的嵌套 Rich 进度条干净地结束，
+    # 即使我们预先计算的 ``inner_total`` 略微偏高或偏低（例如幂等跳过
+    # 移除了此实验的 trace，导致 tick 次数减少）。
     inner.finish(label="recreated" if recreated else "skipped")
 
     if recreated:
@@ -615,19 +570,16 @@ def cascade_one_experiment(
             sample_source_ids=[experiment_id],
         )
 
-    # Tally per-item skips visible after the recreate call. ``recreate_experiment``
-    # prints its own skip counts but doesn't return them; we infer the two
-    # mapping-miss totals by comparing source items against the remap entries
-    # so the cascade-level audit counters stay accurate.
+    # 累加重建调用之后可见的按项目跳过计数。``recreate_experiment``
+    # 会打印自己的跳过计数但不返回它们；我们通过将源项目与重映射条目
+    # 对比来推断两个映射缺失总数，使级联级审计计数器保持准确。
     #
-    # Per-(experiment, reason) audit records are emitted at the end with
-    # the affected source ids (capped at ``_SKIP_SAMPLE_LIMIT``) so the
-    # CLI can fail loud with a machine-readable breakdown -- see OPIK-6599.
-    # Cap the per-reason sample lists during collection -- ``_record_skip``
-    # would slice them anyway, but trimming early bounds peak memory in
-    # the pathological case (e.g. 10k items all missing the same remap).
-    # ``count`` comes from the always-fully-incremented counters so the
-    # audit record carries the true total even when the sample is capped.
+    # 按 (experiment, reason) 的审计记录在最后发出，附带有问题的源 id
+    # （上限为 ``_SKIP_SAMPLE_LIMIT``），使 CLI 能以机器可读的明细响亮地
+    # 失败 —— 参见 OPIK-6599。在收集期间就截断按原因的样本列表 ——
+    # ``_record_skip`` 反正也会切片，但尽早修剪能在病态情况下
+    # （例如 1 万个项目都缺失同一重映射）约束峰值内存。``count`` 来自
+    # 始终完整递增的计数器，因此即使样本被截断，审计记录也携带真实总数。
     missing_trace_count = 0
     missing_item_count = 0
     missing_trace_sample: List[str] = []
@@ -673,15 +625,14 @@ def _record_skip(
     count: int,
     sample_source_ids: List[str],
 ) -> None:
-    """Append a per-(experiment, reason) ``skip`` record to the audit log.
+    """向审计日志追加一条按 (experiment, reason) 的 ``skip`` 记录。
 
-    Sample ids are capped at ``_SKIP_SAMPLE_LIMIT`` so a pathological skip
-    (e.g. 10k items losing their dataset_item_id remap) doesn't balloon
-    the audit JSON. ``count`` is always the full population so a
-    machine-readable consumer can sum across records.
+    样本 id 上限为 ``_SKIP_SAMPLE_LIMIT``，使病态的跳过（例如 1 万个
+    项目丢失了其 dataset_item_id 重映射）不会撑爆审计 JSON。``count``
+    始终是完整总数，使机器可读的消费者可以跨记录求和。
 
-    No-op when ``audit`` is ``None`` — keeps tests and ad-hoc invocations
-    that don't pass an audit log working as before.
+    当 ``audit`` 为 ``None`` 时为空操作 —— 保持未传入审计日志的测试和
+    临时调用像之前一样工作。
     """
     if audit is None:
         return
@@ -701,14 +652,13 @@ def _record_skip(
 def _list_source_experiments(
     rest_client: OpikApi, source_dataset_id: str
 ) -> List[ExperimentPublic]:
-    """Page through ``find_experiments(dataset_id=...)`` to exhaustion.
+    """翻页遍历 ``find_experiments(dataset_id=...)`` 直到耗尽。
 
-    Stays on ``rest_client`` rather than ``client.get_dataset_experiments``:
-    the high-level wrapper takes ``dataset_name`` only, which would require
-    a per-call name lookup. The cascade keys off the stable source
-    ``dataset_id`` from the plan instead — decoupling it from the source's
-    name, which the OPIK-7162 handoff renames to ``<name>_v1`` at the very
-    end of the run. The ``rest_client`` call takes ``dataset_id`` directly.
+    停留在 ``rest_client`` 上而非 ``client.get_dataset_experiments``：
+    高层包装只接受 ``dataset_name``，这需要每次调用都做名称查找。
+    级联改为以 plan 中稳定的源 ``dataset_id`` 为键 —— 使其与源名称解耦，
+    源名称在 OPIK-7162 交接中会在运行的最后被重命名为 ``<name>_v1``。
+    ``rest_client`` 调用直接接受 ``dataset_id``。
     """
     collected: List[ExperimentPublic] = []
     page = 1
@@ -734,40 +684,33 @@ def _read_source_experiment_items(
     source_dataset_id: str,
     source_experiment_id: str,
 ) -> List[experiment_item.ExperimentItemContent]:
-    """Read all items for one source experiment via the Compare view.
+    """通过 Compare 视图读取一个源实验的所有项目。
 
-    Routes through the high-level
-    ``api_objects.experiment.rest_operations.find_experiment_items_for_dataset``
-    helper, which paginates
-    ``datasets.find_dataset_items_with_experiment_items`` internally
-    (PAGE_SIZE=100), flattens each page's per-dataset-item
-    ``experiment_items`` list, and returns ``ExperimentItemContent``
-    dataclasses with ``assertion_results`` already normalized to
-    ``List[AssertionResultDict]``.
+    经由高层辅助函数
+    ``api_objects.experiment.rest_operations.find_experiment_items_for_dataset``，
+    它内部会对 ``datasets.find_dataset_items_with_experiment_items`` 进行分页
+    （PAGE_SIZE=100），展开每页按数据集项目的 ``experiment_items`` 列表，
+    并返回 ``ExperimentItemContent`` 数据类，其 ``assertion_results``
+    已规范化为 ``List[AssertionResultDict]``。
 
-    Compare view (vs. the Public ``stream_experiment_items``) is the
-    correct read shape here because only Compare surfaces
-    ``assertion_results``, which the cascade needs in order to re-emit
-    them at the destination scoped to the new trace id via
-    ``client.log_assertion_results``.
+    这里的正确读取形状是 Compare 视图（而非 Public 的
+    ``stream_experiment_items``），因为只有 Compare 会暴露
+    ``assertion_results``，级联需要它在目标端以新的 trace id 为作用域
+    通过 ``client.log_assertion_results`` 重新发送。
 
-    ``max_results`` is the helper's caller-side "stop at N results" knob,
-    designed for paginated/search-as-you-type UIs that don't want to
-    fetch the long tail. A migration is lossless by contract -- silently
-    truncating any experiment's items would corrupt the destination --
-    so we pass ``sys.maxsize`` to let the helper's underlying pagination
-    walk every page of the source experiment. ``truncate=False`` likewise
-    keeps the per-item Compare payloads at full fidelity (the cascade
-    only consumes ``id`` / ``trace_id`` / ``dataset_item_id`` /
-    ``assertion_results`` today, so the BE-side truncation flag wouldn't
-    affect correctness, but forwarding ``False`` matches the prior call
-    shape and future-proofs against the cascade ever consuming a
-    truncatable field).
+    ``max_results`` 是辅助函数在调用方一侧的“到 N 条结果即停”旋钮，
+    专为不想获取长尾的分页/边输入边搜索 UI 设计。迁移按契约是无损的
+    —— 静默截断任何实验的项目都会破坏目标端 —— 因此我们传入
+    ``sys.maxsize``，让辅助函数底层的分页遍历源实验的每一页。
+    同样地，``truncate=False`` 使按项目的 Compare 载荷保持完整保真
+    （级联目前只消费 ``id`` / ``trace_id`` / ``dataset_item_id`` /
+    ``assertion_results``，因此后端侧的截断标志不会影响正确性，但
+    转发 ``False`` 与先前的调用形状一致，并为级联将来消费可截断字段
+    预留了空间）。
 
-    The underlying endpoint takes ``experiment_ids`` as a JSON-array
-    string -- not a comma-separated value or a list -- and 400s on
-    either of the other forms; the helper handles the JSON encoding
-    internally.
+    底层端点以 JSON 数组字符串（而非逗号分隔值或列表）接受
+    ``experiment_ids``，对另外两种形式会返回 400；辅助函数在内部
+    处理 JSON 编码。
     """
     return rest_operations.find_experiment_items_for_dataset(
         rest_client=rest_client,
@@ -784,30 +727,26 @@ def _discover_trace_projects(
     source_experiment_name: str,
     fallback_project_id: str,
 ) -> Dict[str, Set[str]]:
-    """Map each source trace_id to the project where its trace actually lives.
+    """将每个源 trace_id 映射到其 trace 实际所在的项目。
 
-    Cross-project experiments are legal on the BE: ``experiment_items``
-    rows can reference traces in projects different from the experiment's
-    own project. The BE populates ``experiment_items.project_id`` from
-    ``traces.project_id`` at write time (see
-    ``ExperimentItemService.populateProjectIdFromTraces``), and
-    ``streamExperimentItems`` surfaces that field on each row (verified
-    on staging -- the Compare-view endpoint omits ``project_id`` via its
-    ``@JsonView`` annotation, but the stream-experiment-items endpoint
-    has no view restriction and includes it).
+    跨项目实验在后端是合法的：``experiment_items`` 行可以引用与实验
+    自身项目不同的项目中的 trace。后端在写入时从 ``traces.project_id``
+    填充 ``experiment_items.project_id``（参见
+    ``ExperimentItemService.populateProjectIdFromTraces``），而
+    ``streamExperimentItems`` 会在每行上暴露该字段（已在 staging 上验证
+    —— Compare 视图端点通过其 ``@JsonView`` 注解省略了 ``project_id``，
+    但 stream-experiment-items 端点没有视图限制，会包含它）。
 
-    We stream the experiment's items, group source trace_ids by their
-    actual project_id, and return ``{project_id: {trace_ids}}``. The
-    cascade then issues one ``search_traces`` and one ``search_spans``
-    per distinct project -- typically 1 in practice (``opik.evaluate(...)``
-    co-locates), but legal cross-project setups stay lossless without
-    falling back to per-trace ``get_trace_content`` for each.
+    我们流式读取实验的项目，按实际 project_id 对源 trace_ids 分组，
+    并返回 ``{project_id: {trace_ids}}``。级联随后为每个不同的项目发出
+    一次 ``search_traces`` 和一次 ``search_spans`` —— 实际上通常为 1
+    （``opik.evaluate(...)`` 会共置），但合法的跨项目设置在不为每个
+    trace 回退到 ``get_trace_content`` 的情况下保持无损。
 
-    Items whose ``project_id`` is ``None`` (defensive; the BE
-    populate-from-traces step shouldn't leave nulls but the schema allows
-    it) are routed to ``fallback_project_id`` -- the experiment's own
-    project. This matches the per-trace fallback's old behavior from
-    commit ``7e0f9a8bb``: ``trace.project_id or source_project_id``.
+    ``project_id`` 为 ``None`` 的项目（防御性；后端的从 trace 填充步骤
+    不应留下空值，但 schema 允许）会路由到 ``fallback_project_id`` ——
+    实验自身的项目。这与提交 ``7e0f9a8bb`` 中按 trace 回退的旧行为一致：
+    ``trace.project_id or source_project_id``。
     """
     trace_ids_by_project: Dict[str, Set[str]] = {}
 
@@ -854,59 +793,50 @@ def _copy_traces_and_spans(
     inner_progress: Optional["_InnerProgress"] = None,
     checkpoint: Optional[MigrationCheckpoint] = None,
 ) -> tuple[int, int, int, int]:
-    """Re-emit traces + spans under ``target_project_name`` via the high-level
-    Opik client's streamer infrastructure.
+    """通过高层 Opik 客户端的流式处理器基础设施，在
+    ``target_project_name`` 下重新发送 trace + span。
 
-    Writes route through ``client.__internal_api__trace__`` (traces),
-    ``client._streamer.put(CreateSpanMessage(...))`` (spans),
+    写入路径为 ``client.__internal_api__trace__``（trace）、
+    ``client._streamer.put(CreateSpanMessage(...))``（span）、
     ``client.log_traces_feedback_scores`` / ``client.log_spans_feedback_scores``
-    (feedback scores), and ``client.log_assertion_results`` (assertions).
-    The streamer batches across messages and handles retry/backpressure
-    internally; no manual ``rest_helpers.ensure_rest_api_call_respecting_rate_limit``
-    wrap on the write path.
+    （反馈分数）以及 ``client.log_assertion_results``（断言）。
+    流式处理器跨消息批量处理，并在内部处理重试/背压；写路径上无需手动
+    包裹 ``rest_helpers.ensure_rest_api_call_respecting_rate_limit``。
 
-    Spans use a direct ``_streamer.put(CreateSpanMessage(...))`` rather
-    than ``client.span(...)`` because the public ``client.span(usage=...)``
-    path invokes ``helpers.add_usage_to_metadata`` which merges ``usage``
-    into ``metadata["usage"]``. That's a user-facing write-side convenience
-    for fresh spans, but it conflicts with this cascade's round-trip
-    metadata-fidelity contract: source spans have ``usage`` in their own
-    field and ``metadata`` distinct, and we need both to round-trip
-    untouched. The streamer's ``CreateSpanMessage`` accepts them as
-    separate fields and serializes verbatim.
+    span 使用直接的 ``_streamer.put(CreateSpanMessage(...))`` 而非
+    ``client.span(...)``，因为公共的 ``client.span(usage=...)`` 路径会
+    调用 ``helpers.add_usage_to_metadata``，把 ``usage`` 合并到
+    ``metadata["usage"]`` 中。这是面向用户的新 span 写侧便利功能，但与本
+    级联的往返元数据保真契约冲突：源 span 的 ``usage`` 在自己的字段中，
+    且 ``metadata`` 与之分离，我们需要两者都原封不动地往返。流式处理器的
+    ``CreateSpanMessage`` 将它们作为独立字段接受，并逐字序列化。
 
-    Trace reads now go through one ``client.search_traces(filter=
-    "experiment_id=...", truncate=False)`` call per experiment -- the BE
-    exposes ``TraceField.EXPERIMENT_ID`` as a first-class filter, so a
-    single paginated read returns every trace linked to this experiment.
-    This is the per-experiment fix for the per-trace 30-then-pause rate-
-    limit pattern. Span reads stay per-trace (no ``experiment_id`` filter
-    on ``SpanField``); the bulk-read win is on traces only.
+    trace 读取现在每个实验走一次 ``client.search_traces(filter=
+    "experiment_id=...", truncate=False)`` 调用 —— 后端将
+    ``TraceField.EXPERIMENT_ID`` 作为一等过滤器暴露，因此一次分页读取即可
+    返回链接到此实验的所有 trace。这是针对按 trace 的“30 次后暂停”速率
+    限制模式的按实验修复。span 读取仍按 trace（``SpanField`` 上没有
+    ``experiment_id`` 过滤器）；批量读取的收益仅体现在 trace 上。
 
-    Populates ``trace_id_remap`` in place with one entry per copied trace.
-    Returns ``(traces_copied, spans_copied, trace_comments_copied,
-    span_comments_copied)`` for counter aggregation.
+    为每个复制的 trace 在 ``trace_id_remap`` 中原位填充一条记录。
+    返回 ``(traces_copied, spans_copied, trace_comments_copied,
+    span_comments_copied)`` 用于计数聚合。
 
-    Comments are read off the same ``TracePublic.comments`` /
-    ``SpanPublic.comments`` payload as the bulk trace/span reads
-    (no extra fetches) and re-emitted via the dedicated single-comment
-    write endpoints after the destination trace/span lands. Order is
-    preserved by iterating the source list in place: the BE returns
-    comments sorted by ``createdAt`` and POSTs are serialized, so the
-    destination read order matches.
+    评论从与批量 trace/span 读取相同的 ``TracePublic.comments`` /
+    ``SpanPublic.comments`` 载荷中读取（无需额外获取），并在目标
+    trace/span 落地后通过专用的单评论写入端点重新发送。通过原地迭代
+    源列表来保持顺序：后端按 ``createdAt`` 排序返回评论，且 POST 是
+    串行的，因此目标端的读取顺序匹配。
 
-    ``source_project_id`` is only a defensive fallback used when an
-    individual source trace has a null ``project_id`` field. Per-trace
-    span reads use the trace's own ``project_id`` -- spans live in the
-    same project as their parent trace, which may differ from the
-    experiment's project (the BE does not enforce single-project
-    invariance across an experiment's traces).
+    ``source_project_id`` 仅是一个防御性回退，用于单个源 trace 的
+    ``project_id`` 字段为 null 的情况。按 trace 的 span 读取使用 trace
+    自身的 ``project_id`` —— span 与其父 trace 位于同一项目，这可能与
+    实验的项目不同（后端不对实验的 trace 强制单项目不变性）。
     """
     if not source_trace_ids:
         return 0, 0, 0, 0
 
-    # Skip traces we already copied (idempotent retries, cross-experiment
-    # trace sharing in the rare case it happens).
+    # 跳过已复制的 trace（幂等重试，以及极少发生的跨实验共享 trace）。
     new_source_ids = [tid for tid in source_trace_ids if tid not in trace_id_remap]
     if not new_source_ids:
         return 0, 0, 0, 0
@@ -914,38 +844,34 @@ def _copy_traces_and_spans(
     source_to_new_trace: Dict[str, str] = {}
     project_id_to_name_cache: Dict[str, str] = {}
 
-    # Phase 1a: discover which projects this experiment's traces actually
-    # live in. The BE allows ``experiment_items`` rows to reference traces
-    # in projects different from the experiment's own project (legal but
-    # rare; ``opik.evaluate(...)`` always co-locates). We stream the
-    # experiment's items via ``streamExperimentItems`` -- each row carries
-    # ``project_id`` populated from the trace's actual project at write
-    # time -- and group by project so we can issue one ``search_traces``
-    # per distinct project. Single-project experiments (the common case)
-    # still produce one read; cross-project experiments stay lossless.
+    # 阶段 1a：发现此实验的 trace 实际位于哪些项目。后端允许
+    # ``experiment_items`` 行引用与实验自身项目不同的项目中的 trace
+    # （合法但罕见；``opik.evaluate(...)`` 始终共置）。我们通过
+    # ``streamExperimentItems`` 流式读取实验的项目 —— 每行携带在写入时
+    # 从 trace 实际项目填充的 ``project_id`` —— 并按项目分组，从而为每个
+    # 不同的项目发出一次 ``search_traces``。单项目实验（常见情况）仍只
+    # 产生一次读取；跨项目实验保持无损。
     traces_by_project: Dict[str, Set[str]] = _discover_trace_projects(
         rest_client,
         source_experiment_name=source_experiment_name,
         fallback_project_id=source_project_id,
     )
 
-    # Phase 1b: fetch source traces in BULK via
-    # ``search_traces(filter="experiment_id=...")`` -- one HTTP read PER
-    # DISTINCT PROJECT. The BE has ``TraceField.EXPERIMENT_ID`` as a
-    # first-class filter (joined through ``experiment_items``), but the
-    # outer SQL clamps ``project_id = :project_id`` -- so the filter is
-    # AND-ed with the project scope. Looping per project covers every
-    # trace including cross-project ones.
+    # 阶段 1b：通过 ``search_traces(filter="experiment_id=...")`` 批量获取
+    # 源 trace —— 每个不同的项目一次 HTTP 读取。后端将
+    # ``TraceField.EXPERIMENT_ID`` 作为一等过滤器（通过
+    # ``experiment_items`` 连接），但外层 SQL 会钳制
+    # ``project_id = :project_id`` —— 因此过滤器会与项目范围相与。
+    # 按项目循环覆盖每个 trace，包括跨项目的。
     #
-    # ``truncate=False`` is required for round-trip fidelity: the SDK
-    # wrapper defaults to ``True``, which replaces inline base64 image
-    # data in input/output/metadata with the placeholder ``"[image]"``.
-    # We need the raw bytes preserved.
+    # ``truncate=False`` 是往返保真所必需的：SDK 包装默认 ``True``，
+    # 它会把 input/output/metadata 中的内联 base64 图像数据替换为占位符
+    # ``"[image]"``。我们需要保留原始字节。
     #
-    # ``max_results=sys.maxsize`` lets the wrapper's internal pagination
-    # (PAGE_SIZE=2000 via ``last_retrieved_id`` cursor) walk every page;
-    # the cap is the wrapper's caller-side "stop at N" UI knob, not a
-    # safety limit -- a migration must be lossless.
+    # ``max_results=sys.maxsize`` 让包装的内部分页
+    # （通过 ``last_retrieved_id`` 游标，PAGE_SIZE=2000）遍历每一页；
+    # 该上限是包装在调用方一侧的“到 N 即停”UI 旋钮，而非安全限制
+    # —— 迁移必须无损。
     source_traces_by_id: Dict[str, TracePublic] = {}
     for project_id in traces_by_project:
         project_name = _resolve_project_name(
@@ -970,17 +896,15 @@ def _copy_traces_and_spans(
             f"({len(traces_by_project)} project{'s' if len(traces_by_project) != 1 else ''})"
         )
 
-    # Defensive fallback: if any trace_ids from the Compare-view items are
-    # missing from the bulk search response (rare -- shouldn't happen if
-    # the experiment_items table is consistent), fall back to per-trace
-    # ``get_trace_content`` so correctness wins over throughput. This keeps
-    # the cascade lossless even if the join filter has edge-case misses.
+    # 防御性回退：如果 Compare 视图项目中的任何 trace_ids 在批量搜索响应中
+    # 缺失（罕见 —— 若 experiment_items 表一致则不应发生），则回退到按
+    # trace 的 ``get_trace_content``，使正确性优先于吞吐量。即使连接过滤器
+    # 存在边界情况的遗漏，这也能保持级联无损。
     missing_ids = [tid for tid in new_source_ids if tid not in source_traces_by_id]
     if missing_ids:
         LOGGER.warning(
-            "search_traces(experiment_id=%s) returned %d traces but %d "
-            "were expected from Compare-view items; falling back to "
-            "get_trace_content for %d missing ids.",
+            "search_traces(experiment_id=%s) 返回了 %d 个 trace，但 Compare "
+            "视图项目期望 %d 个；正在对 %d 个缺失 id 回退到 get_trace_content。",
             source_experiment_id,
             len(source_traces_by_id),
             len(new_source_ids),
@@ -994,16 +918,14 @@ def _copy_traces_and_spans(
                 )
             except ApiError as err:
                 if err.status_code == 404:
-                    # The experiment item references a trace that has since
-                    # been deleted. It's gone -- there is no data to copy --
-                    # so skip it and continue rather than aborting the whole
-                    # migration (OPIK-7344). Leaving it out of
-                    # ``source_traces_by_id`` means the emission loop below
-                    # skips it too.
+                    # 实验项目引用的 trace 已被删除。它已经不存在了 ——
+                    # 没有可复制的数据 —— 因此跳过它并继续，而不是中止
+                    # 整个迁移（OPIK-7344）。将它排除在
+                    # ``source_traces_by_id`` 之外意味着下面的发送循环
+                    # 也会跳过它。
                     LOGGER.warning(
-                        "Experiment %s references trace %s which no longer "
-                        "exists (deleted); skipping it. The destination "
-                        "experiment omits this trace.",
+                        "实验 %s 引用的 trace %s 已不存在（被删除）；"
+                        "正在跳过它。目标实验将省略此 trace。",
                         source_experiment_id,
                         tid,
                     )
@@ -1011,18 +933,16 @@ def _copy_traces_and_spans(
                 raise
             source_traces_by_id[tid] = fetched
 
-    # Phase 1b: emit destination traces. ``source="experiment"`` matches
-    # what opik.evaluate(...) writes on the source (the public
-    # client.trace() would override to source="sdk", which the deep-
-    # compare would flag).
+    # 阶段 1b：发送目标 trace。``source="experiment"`` 与 opik.evaluate(...)
+    # 在源端写入的内容一致（公共的 client.trace() 会覆盖为 source="sdk"，
+    # 深层对比会标记出差异）。
     total_traces = len(new_source_ids)
     for index, source_trace_id in enumerate(new_source_ids, start=1):
         source_trace = source_traces_by_id.get(source_trace_id)
         if source_trace is None:
-            # The trace was referenced by an experiment item but couldn't be
-            # fetched (deleted -- see the 404-tolerant fallback above). Skip
-            # emission; downstream span/feedback/comment copy keys off
-            # ``source_to_new_trace`` so the skipped id never surfaces there.
+            # 该 trace 被实验项目引用，但无法获取（已删除 —— 参见上面容忍
+            # 404 的回退）。跳过发送；下游的 span/反馈/评论复制以
+            # ``source_to_new_trace`` 为键，因此被跳过的 id 不会在那里出现。
             continue
         new_trace_id = id_helpers_module.generate_id()
         source_to_new_trace[source_trace_id] = new_trace_id
@@ -1046,30 +966,28 @@ def _copy_traces_and_spans(
             inner_progress.tick(label=f"trace {index}/{total_traces}")
 
     trace_id_remap.update(source_to_new_trace)
-    # Count traces actually emitted, not referenced -- deleted traces skipped
-    # above (404 fallback) never entered ``source_to_new_trace``.
+    # 统计实际发送的 trace，而非被引用的 —— 上面被跳过的已删除 trace
+    # （404 回退）从未进入 ``source_to_new_trace``。
     traces_copied = len(source_to_new_trace)
 
-    # Record the freshly-minted destination trace ids on the checkpoint and
-    # flush it to disk BEFORE the BE flush below. Ordering is the whole point:
-    # once ``client.flush()`` persists these traces, a crash (OOM SIGKILL) at
-    # any later point -- including the entire span-copy phase -- must find the
-    # ids already on disk so the next run's resume cleanup can delete them.
-    # Recording after ``_copy_traces_and_spans`` returned (the previous
-    # approach) left this window uncovered and duplicated the traces on resume.
+    # 将新生成的目标 trace id 记录到检查点，并在下面的后端刷新*之前*
+    # 刷新到磁盘。顺序就是全部意义所在：一旦 ``client.flush()`` 持久化了
+    # 这些 trace，任何之后时刻的崩溃（OOM SIGKILL）—— 包括整个 span
+    # 复制阶段 —— 都必须能在磁盘上找到这些 id，使下一次运行的恢复清理
+    # 能够删除它们。在 ``_copy_traces_and_spans`` 返回之后才记录（旧做法）
+    # 会使该窗口处于未覆盖状态，并在恢复时重复 trace。
     if checkpoint is not None and source_to_new_trace:
         checkpoint.record_dest_trace_ids(list(source_to_new_trace.values()))
         checkpoint.flush()
 
-    # Flush traces before writing trace-attached records (feedback scores,
-    # assertion results, spans). The streamer batches writes without
-    # ordering guarantees within a flush window; assertions referencing a
-    # trace can fail if the BE hasn't persisted the trace yet.
+    # 在写入附着于 trace 的记录（反馈分数、断言结果、span）之前刷新
+    # trace。流式处理器在刷新窗口内批量写入，不保证顺序；如果后端尚未
+    # 持久化 trace，引用该 trace 的断言可能会失败。
     client.flush()
     if inner_progress is not None:
         inner_progress.tick(label="flushed traces")
 
-    # Re-emit trace-level feedback scores via the high-level batched API.
+    # 通过高层批量 API 重新发送 trace 级反馈分数。
     _log_trace_feedback_scores(
         client,
         source_traces_by_id=source_traces_by_id,
@@ -1079,8 +997,8 @@ def _copy_traces_and_spans(
     if inner_progress is not None:
         inner_progress.tick(label="logged trace feedback scores")
 
-    # Re-emit per-trace assertion results. Skipped for callers that
-    # didn't read them (regular-dataset path).
+    # 重新发送按 trace 的断言结果。对于未读取它们的调用方（常规数据集路径）
+    # 跳过。
     if assertion_results_by_source_trace:
         _log_trace_assertion_results(
             client,
@@ -1091,33 +1009,30 @@ def _copy_traces_and_spans(
     if inner_progress is not None:
         inner_progress.tick(label="logged assertion results")
 
-    # Re-emit trace comments via the dedicated single-comment write
-    # endpoint. ``TracePublic.comments`` rides along the bulk trace read,
-    # so no additional source-side fetch. Comments are READ_ONLY on the
-    # trace Write payload (can't ride along ``__internal_api__trace__``),
-    # so we POST one-at-a-time after the trace flush -- production-wide
-    # there are ~4k comments total across all workspaces, the per-comment
-    # cost is acceptable.
+    # 通过专用的单评论写入端点重新发送 trace 评论。``TracePublic.comments``
+    # 随批量 trace 读取一起携带，因此无需额外的源端获取。评论在 trace
+    # 写载荷上是只读的（无法随 ``__internal_api__trace__`` 一起携带），
+    # 因此我们在 trace 刷新之后一次一条地 POST —— 生产环境所有工作区合计
+    # 约 4k 条评论，每条评论的成本可接受。
     trace_comments_copied = _copy_trace_comments(
         rest_client,
         source_traces_by_id=source_traces_by_id,
         source_to_new_trace=source_to_new_trace,
     )
 
-    # Phase 2a: bulk-fetch spans for the experiment, one call per distinct
-    # project the experiment's traces live in. ``search_spans`` (like
-    # ``search_traces``) clamps ``project_id`` on the outer SQL, so a
-    # single call cannot cover cross-project experiments. We reuse the
-    # ``traces_by_project`` mapping computed before the trace bulk-read.
+    # 阶段 2a：为实验批量获取 span，实验的 trace 所在的每个不同项目调用
+    # 一次。``search_spans``（与 ``search_traces`` 一样）在外层 SQL 上钳制
+    # ``project_id``，因此单次调用无法覆盖跨项目实验。我们复用 trace
+    # 批量读取之前计算的 ``traces_by_project`` 映射。
     #
-    # Each per-project call uses a ``[from_time, to_time]`` window derived
-    # from THAT project's traces' start/end timestamps, then filters
-    # client-side by ``trace_id in <project's trace_ids>`` so spans from
-    # concurrent activity in the same project + time window are discarded.
+    # 每个按项目的调用使用从 THAT 项目的 trace 开始/结束时间戳派生的
+    # ``[from_time, to_time]`` 窗口，然后在客户端按
+    # ``trace_id in <该项目的 trace_ids>`` 过滤，使同一项目 + 时间窗口中
+    # 并发活动产生的 span 被丢弃。
     #
-    # We drop to the Fern method because the high-level
-    # ``client.search_spans`` wrapper doesn't expose ``from_time`` /
-    # ``to_time``. Tactical Fern use, scoped to this one bulk read.
+    # 我们下沉到 Fern 方法，因为高层的 ``client.search_spans`` 包装不暴露
+    # ``from_time`` / ``to_time``。这是战术性 Fern 用法，仅限于这一处批量
+    # 读取。
     spans_by_trace_id = _bulk_fetch_spans_for_experiment(
         client,
         source_traces_by_id=source_traces_by_id,
@@ -1132,17 +1047,15 @@ def _copy_traces_and_spans(
             f"({len(traces_by_project)} project{'s' if len(traces_by_project) != 1 else ''})"
         )
 
-    # Phase 2b: emit destination spans per-trace from the in-memory
-    # bucket. Same topological-sort + per-trace span_id_remap logic as
-    # before; the only change is the source of ``source_spans`` shifted
-    # from a per-trace REST call to a dict lookup.
+    # 阶段 2b：从内存桶中按 trace 发送目标 span。与之前相同的拓扑排序 +
+    # 按 trace 的 span_id_remap 逻辑；唯一的变化是 ``source_spans`` 的来源
+    # 从按 trace 的 REST 调用改为字典查找。
     #
-    # ``span_id_remaps_by_trace`` keeps each trace's per-trace remap
-    # (source span id -> destination span id) so the comment-cascade
-    # follow-up can POST source span comments against the correct
-    # destination span id. Per-trace scoping is correct: span ids only
-    # collide within a tree, and ``comments`` are span-attached so the
-    # mapping never needs to span trees.
+    # ``span_id_remaps_by_trace`` 保存每个 trace 的按 trace 重映射
+    # （源 span id -> 目标 span id），使评论级联的后续步骤能针对正确的
+    # 目标 span id 来 POST 源 span 评论。按 trace 的作用域是正确的：
+    # span id 只在树内冲突，而 ``comments`` 附着于 span，因此该映射
+    # 从不需要跨树。
     spans_emitted = 0
     span_feedback_scores: List[BatchFeedbackScoreDict] = []
     span_id_remaps_by_trace: Dict[str, Dict[str, str]] = {}
@@ -1162,8 +1075,7 @@ def _copy_traces_and_spans(
         if inner_progress is not None:
             inner_progress.tick(label=f"spans for trace {index}/{span_trace_count}")
 
-    # Flush spans before their feedback scores (the BE rejects a score
-    # whose entity id doesn't exist yet).
+    # 在其反馈分数之前刷新 span（后端会拒绝实体 id 尚不存在的分数）。
     client.flush()
 
     if span_feedback_scores:
@@ -1173,11 +1085,10 @@ def _copy_traces_and_spans(
     if inner_progress is not None:
         inner_progress.tick(label="flushed spans + logged span feedback scores")
 
-    # Re-emit span comments via the dedicated single-comment write
-    # endpoint, after the span flush so the destination span id is
-    # persisted. Same shape as trace comments: ``SpanPublic.comments``
-    # rides along the bulk span read (no extra fetch), per-comment POST
-    # wrapped with the rate-limit helper.
+    # 通过专用的单评论写入端点重新发送 span 评论，在 span 刷新之后进行，
+    # 使目标 span id 已持久化。与 trace 评论形状相同：``SpanPublic.comments``
+    # 随批量 span 读取一起携带（无需额外获取），每条评论的 POST 都用
+    # 速率限制辅助函数包裹。
     span_comments_copied = _copy_span_comments(
         rest_client,
         spans_by_trace_id=spans_by_trace_id,
@@ -1194,15 +1105,14 @@ def _log_trace_feedback_scores(
     source_to_new_trace: Dict[str, str],
     target_project_name: str,
 ) -> None:
-    """Re-emit per-trace feedback scores under the destination project via
-    ``client.log_traces_feedback_scores``.
+    """通过 ``client.log_traces_feedback_scores`` 在目标项目下重新发送
+    按 trace 的反馈分数。
 
-    Reads ``feedback_scores`` off each source trace's read payload
-    (already fetched during the trace copy, no extra round-trip) and
-    rewrites them keyed by the destination trace id. The high-level API
-    handles batching + streamer routing.
+    从每个源 trace 的读取载荷中读取 ``feedback_scores``（在 trace 复制期间
+    已获取，无需额外往返），并以目标 trace id 为键重写它们。高层 API
+    处理批处理 + 流式路由。
 
-    No-op for traces with no feedback scores.
+    对没有反馈分数的 trace 为空操作。
     """
     batch: List[BatchFeedbackScoreDict] = []
     for source_trace_id, new_trace_id in source_to_new_trace.items():
@@ -1235,25 +1145,22 @@ def _log_trace_assertion_results(
     source_to_new_trace: Dict[str, str],
     target_project_name: str,
 ) -> None:
-    """Re-emit per-trace assertion results via ``client.log_assertion_results``.
+    """通过 ``client.log_assertion_results`` 重新发送按 trace 的断言结果。
 
-    Assertion results aren't a field on ``ExperimentItem`` (the BE drops
-    that field on write -- it's READ-ONLY on the Compare view, computed
-    from the underlying assertion-results entity table). They are
-    written via the dedicated assertion-results ingestion endpoint, which
-    the high-level client exposes as ``log_assertion_results`` -- that
-    routes through the streamer like every other write.
+    断言结果不是 ``ExperimentItem`` 上的字段（后端在写入时会丢弃该字段
+    —— 它在 Compare 视图上是只读的，由底层断言结果实体表计算得出）。
+    它们通过专用的断言结果摄取端点写入，高层客户端将其暴露为
+    ``log_assertion_results`` —— 与其他写入一样经过流式处理器。
 
-    For Slice 3 we only see assertion results on items via the Compare
-    view's ``ExperimentItemCompare.assertion_results``; those are the
-    trace-scoped writes the source had. We re-emit them scoped to the new
-    destination trace id so the destination ``ExperimentItemCompare``
-    surfaces them in the same place at the same shape.
+    对于 Slice 3，我们只能通过 Compare 视图的
+    ``ExperimentItemCompare.assertion_results`` 在项目上看到断言结果；
+    这些是源端拥有的 trace 级写入。我们以新的目标 trace id 为作用域
+    重新发送它们，使目标 ``ExperimentItemCompare`` 在相同位置以相同形状
+    暴露它们。
 
-    The read shape ``AssertionResultCompare`` carries ``value`` / ``passed``
-    / ``reason``; ``client.log_assertion_results`` accepts dicts with
-    ``id`` (= trace id), ``name``, ``status`` ("passed" | "failed"),
-    ``reason``. The mapping is:
+    读取形状 ``AssertionResultCompare`` 携带 ``value`` / ``passed`` /
+    ``reason``；``client.log_assertion_results`` 接受带有 ``id``（= trace id）、
+    ``name``、``status``（"passed" | "failed"）、``reason`` 的字典。映射为：
 
       AssertionResultCompare.value  <->  log_assertion_results.name
       AssertionResultCompare.passed <->  log_assertion_results.status
@@ -1264,12 +1171,11 @@ def _log_trace_assertion_results(
     for source_trace_id, results in assertion_results_by_source_trace.items():
         new_trace_id = source_to_new_trace.get(source_trace_id)
         if not new_trace_id:
-            # Trace wasn't copied (e.g. earlier idempotent-skip); nothing
-            # to remap against.
+            # 该 trace 未被复制（例如先前的幂等跳过）；没有可重映射的目标。
             continue
         for ar in results:
-            # ``ar`` is an ``AssertionResultCompare``; defensive .get for
-            # callers passing dict-like stand-ins in tests.
+            # ``ar`` 是 ``AssertionResultCompare``；为在测试中传入类字典
+            # 替身的调用方做防御性 .get。
             value = (
                 getattr(ar, "value", None)
                 if not isinstance(ar, dict)
@@ -1286,12 +1192,12 @@ def _log_trace_assertion_results(
                 else ar.get("reason")
             )
             if value is None or passed is None:
-                # Skip degenerate entries; the BE write rejects items
-                # missing the required ``name``/``status`` fields.
+                # 跳过退化条目；后端写入会拒绝缺少必需 ``name``/``status``
+                # 字段的项目。
                 continue
-            # ``status`` is ``Literal["passed", "failed"]`` on
-            # ``BatchAssertionResultDict``; the explicit ternary keeps mypy
-            # narrowing intact (a bare ``str`` would widen and fail).
+            # ``status`` 在 ``BatchAssertionResultDict`` 上是
+            # ``Literal["passed", "failed"]``；显式三元表达式保持 mypy 的
+            # 收窄不变（裸的 ``str`` 会拓宽并失败）。
             status: Literal["passed", "failed"] = "passed" if passed else "failed"
             entry: BatchAssertionResultDict = {
                 "id": new_trace_id,
@@ -1317,19 +1223,17 @@ def _copy_trace_comments(
     source_traces_by_id: Dict[str, TracePublic],
     source_to_new_trace: Dict[str, str],
 ) -> int:
-    """Re-emit each source trace's comments on the destination trace.
+    """将每个源 trace 的评论重新发送到目标 trace 上。
 
-    ``TracePublic.comments`` rides along the bulk trace read (no extra
-    source-side fetch). Comments are READ_ONLY on the trace Write
-    payload, so they can't ride along ``__internal_api__trace__``; we
-    POST one-at-a-time via the dedicated single-comment write endpoint
-    after the destination trace lands.
+    ``TracePublic.comments`` 随批量 trace 读取一起携带（无需额外源端获取）。
+    评论在 trace 写载荷上是只读的，因此无法随 ``__internal_api__trace__``
+    一起携带；我们在目标 trace 落地后，通过专用的单评论写入端点一次一条
+    地 POST。
 
-    Order is preserved by iterating the source ``comments`` list in
-    place: the BE returns comments sorted by ``createdAt`` and the POSTs
-    are serialized, so the destination read order matches.
+    通过原地迭代源 ``comments`` 列表来保持顺序：后端按 ``createdAt`` 排序
+    返回评论，且 POST 是串行的，因此目标端的读取顺序匹配。
 
-    Returns the total number of comments copied (sum across all traces).
+    返回复制的评论总数（所有 trace 之和）。
     """
     copied = 0
     for source_trace_id, new_trace_id in source_to_new_trace.items():
@@ -1353,18 +1257,17 @@ def _copy_span_comments(
     spans_by_trace_id: Dict[str, List[SpanPublic]],
     span_id_remaps_by_trace: Dict[str, Dict[str, str]],
 ) -> int:
-    """Re-emit each source span's comments on the destination span.
+    """将每个源 span 的评论重新发送到目标 span 上。
 
-    Same shape as ``_copy_trace_comments``: ``SpanPublic.comments``
-    rides along the bulk span read, comments POST via the dedicated
-    single-comment write endpoint after the destination span lands.
+    与 ``_copy_trace_comments`` 形状相同：``SpanPublic.comments`` 随批量
+    span 读取一起携带，评论在目标 span 落地后通过专用的单评论写入端点
+    POST。
 
-    The destination span id comes from the per-trace ``span_id_remap``
-    populated in ``_emit_spans_for_trace``. Per-trace scoping is correct
-    -- span ids only collide within a tree, so the remap never needs to
-    span trees.
+    目标 span id 来自 ``_emit_spans_for_trace`` 中填充的按 trace
+    ``span_id_remap``。按 trace 的作用域是正确的 —— span id 只在树内
+    冲突，因此该重映射从不需要跨树。
 
-    Returns the total number of comments copied (sum across all spans).
+    返回复制的评论总数（所有 span 之和）。
     """
     copied = 0
     for source_trace_id, source_spans in spans_by_trace_id.items():
@@ -1376,10 +1279,9 @@ def _copy_span_comments(
                 continue
             new_span_id = span_id_remap.get(source_span.id or "")
             if new_span_id is None:
-                # Defensive: every span we wrote produced a remap entry,
-                # so this should only fire if the bulk fetch returned a
-                # span we didn't write (e.g. the cascade's expected-id
-                # filter dropped it). Skip rather than crash.
+                # 防御性：我们写入的每个 span 都会产生一条重映射条目，
+                # 因此只有当批量获取返回了我们未写入的 span 时才会走到
+                # 这里（例如级联的期望 id 过滤器丢弃了它）。跳过而非崩溃。
                 continue
             for comment in source_span.comments:
                 rest_helpers.ensure_rest_api_call_respecting_rate_limit(
@@ -1398,15 +1300,14 @@ def _resolve_project_name(
     project_id: str,
     cache: Dict[str, str],
 ) -> str:
-    """Translate a project_id to project_name with caching.
+    """将 project_id 转换为 project_name，并带缓存。
 
-    ``client.search_traces`` and ``client.search_spans`` take
-    ``project_name`` (the underlying BE endpoint accepts either, but the
-    SDK only exposes ``project_name``). The cascade has ``project_id``
-    handy from ``source_experiment.project_id`` and per-trace
-    ``trace.project_id``; resolving once and caching means we pay at most
-    one ``client.get_project(id=...)`` per distinct project per
-    experiment (typically 1).
+    ``client.search_traces`` 和 ``client.search_spans`` 接受
+    ``project_name``（底层后端端点两者都接受，但 SDK 只暴露
+    ``project_name``）。级联手头有来自 ``source_experiment.project_id``
+    和按 trace ``trace.project_id`` 的 ``project_id``；解析一次并缓存意味着
+    每个实验对每个不同项目最多付出一次 ``client.get_project(id=...)``
+    （通常为 1 次）。
     """
     cached = cache.get(project_id)
     if cached is not None:
@@ -1423,20 +1324,17 @@ def _resolve_project_name(
 def _compute_span_time_window(
     traces: Dict[str, TracePublic],
 ) -> Optional[Tuple[datetime, datetime]]:
-    """Derive a ``(from_time, to_time)`` window from a batch of traces.
+    """从一批 trace 推导出 ``(from_time, to_time)`` 窗口。
 
-    The window spans ``min(start_time) - buffer`` to
-    ``max(end_time, last_updated_at) + buffer`` so a bulk
-    ``search_spans(from_time=…, to_time=…)`` call can fetch every span
-    parented by these traces in one round-trip. ``last_updated_at`` is
-    the fallback when ``end_time`` is missing (the trace never completed
-    cleanly, or the BE has a different shape than expected).
+    该窗口从 ``min(start_time) - buffer`` 跨越到
+    ``max(end_time, last_updated_at) + buffer``，使一次批量
+    ``search_spans(from_time=…, to_time=…)`` 调用能在一个往返中获取这些
+    trace 所辖的所有 span。``last_updated_at`` 是 ``end_time`` 缺失时的回退
+    （trace 从未干净地完成，或后端的形状与预期不同）。
 
-    Returns ``None`` when no trace has any usable timestamp -- the
-    caller should treat that as "no time bound" and pass ``from_time``
-    / ``to_time`` as ``None`` (the BE then returns all matching spans
-    in the project, which the caller already filters client-side by
-    ``trace_id``).
+    当没有任何 trace 具有可用时间戳时返回 ``None`` —— 调用方应将其视为
+    “无时间界限”，并把 ``from_time`` / ``to_time`` 传为 ``None``（后端随后
+    返回项目中所有匹配的 span，调用方已在客户端按 ``trace_id`` 过滤）。
     """
     starts: List[datetime] = []
     ends: List[datetime] = []
@@ -1448,20 +1346,18 @@ def _compute_span_time_window(
             ends.append(_as_aware(upper))
     if not starts and not ends:
         return None
-    # If only one side is populated, anchor the missing side to it so the
-    # window is still bounded.
+    # 如果只有一侧有值，则将缺失的一侧锚定到它，使窗口仍有界。
     earliest = min(starts) if starts else min(ends)
     latest = max(ends) if ends else max(starts)
     return (earliest - _SPAN_BULK_WINDOW_BUFFER, latest + _SPAN_BULK_WINDOW_BUFFER)
 
 
 def _as_aware(value: datetime) -> datetime:
-    """Coerce a naive datetime to UTC-aware.
+    """将 naive datetime 强制转换为 UTC 感知的 datetime。
 
-    BE timestamps are always UTC; the SDK wire types sometimes deserialize
-    them as naive datetimes depending on the version. ``min`` / ``max``
-    across mixed naive/aware datetimes raises a TypeError, so we normalize
-    once at the boundary.
+    后端时间戳始终是 UTC；根据版本的不同，SDK 的线格式类型有时会将它们
+    反序列化为 naive datetime。对混合的 naive/aware datetime 调用
+    ``min`` / ``max`` 会抛出 TypeError，因此我们在边界处统一规范化一次。
     """
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
@@ -1476,33 +1372,28 @@ def _bulk_fetch_spans_for_experiment(
     project_id_to_name_cache: Dict[str, str],
     expected_trace_ids: Set[str],
 ) -> Dict[str, List[SpanPublic]]:
-    """Fetch every span parented by ``expected_trace_ids`` in bulk.
+    """批量获取 ``expected_trace_ids`` 所辖的每个 span。
 
-    One ``client.search_spans`` call per distinct project the
-    experiment's traces live in. The BE's ``search_spans`` clamps
-    ``project_id = :project_id`` on the outer SQL, so a single call can
-    only cover traces in one project. ``traces_by_project`` (computed
-    earlier from ``streamExperimentItems``) tells us where each trace
-    actually lives, so this loop covers cross-project experiments
-    losslessly.
+    实验的 trace 所在的每个不同项目调用一次 ``client.search_spans``。
+    后端的 ``search_spans`` 在外层 SQL 上钳制 ``project_id = :project_id``，
+    因此单次调用只能覆盖一个项目中的 trace。``traces_by_project``（先前
+    从 ``streamExperimentItems`` 计算得出）告诉我们每个 trace 实际位于
+    何处，因此此循环能无损地覆盖跨项目实验。
 
-    Each per-project call uses a ``filter_string="start_time >= … AND
-    start_time <= …"`` clause derived from THAT project's traces'
-    start/end timestamps. The BE filter grammar accepts the bounds via
-    the date-time filter operators on ``SpanField.START_TIME``. Spans
-    from concurrent activity in the same project + time window are
-    discarded by the client-side ``span.trace_id in expected_trace_ids``
-    filter.
+    每个按项目的调用使用从 THAT 项目的 trace 开始/结束时间戳派生的
+    ``filter_string="start_time >= … AND start_time <= …"`` 子句。后端过滤器
+    语法通过 ``SpanField.START_TIME`` 上的日期时间过滤器运算符接受边界。
+    同一项目 + 时间窗口中并发活动产生的 span 会被客户端的
+    ``span.trace_id in expected_trace_ids`` 过滤器丢弃。
 
-    Returns a dict ``{trace_id: [spans]}`` covering every id in
-    ``expected_trace_ids``. Missing entries are present with empty lists
-    so the caller can detect zero-bucket cases and log them. A trace with
-    no spans is a legitimate case (no LLM call, no child operations), so
-    we don't error on empty buckets -- only log.
+    返回覆盖 ``expected_trace_ids`` 中每个 id 的字典 ``{trace_id: [spans]}``。
+    缺失条目以空列表形式存在，使调用方能检测零桶情况并记录日志。没有
+    span 的 trace 是合法情况（没有 LLM 调用，没有子操作），因此我们对
+    空桶不报错 —— 只记录日志。
 
-    Replaces the prior ``N × search_spans(trace_id=…)`` loop, which on
-    workspaces with a strict ``search_spans:{workspaceId}`` bucket
-    produced a 30-then-pause throttle pattern for large experiments.
+    替换了先前的 ``N × search_spans(trace_id=…)`` 循环，后者在具有严格
+    ``search_spans:{workspaceId}`` 桶的工作区上，对大型实验会产生
+    “30 次后暂停”的节流模式。
     """
     spans_by_trace: Dict[str, List[SpanPublic]] = {
         tid: [] for tid in expected_trace_ids
@@ -1513,30 +1404,27 @@ def _bulk_fetch_spans_for_experiment(
             client, project_id=project_id, cache=project_id_to_name_cache
         )
 
-        # Narrow the time window to just THIS project's traces -- shrinks
-        # over-fetch from concurrent activity unrelated to the experiment.
+        # 将时间窗口收窄到仅 THIS 项目的 trace —— 缩小与实验无关的
+        # 并发活动造成的过度获取。
         per_project_traces = {
             tid: source_traces_by_id[tid]
             for tid in trace_ids_in_project
             if tid in source_traces_by_id
         }
-        # Both branches below would otherwise fall through to an
-        # UNBOUNDED, UNFILTERED
-        # ``search_spans(filter_string=None, max_results=sys.maxsize)`` --
-        # a whole-project read that OOMs the client on large projects
-        # (OPIK-7344). Skip + warn + continue instead: destination traces
-        # in this bucket are still copied, just without spans. A bounded
-        # per-trace fallback for the no-timestamp case is deferred to
-        # OPIK-7343 (once span reads are scoped by ``trace_id IN (...)``
-        # the unbounded read is gone structurally).
+        # 下面的两个分支原本会落入无界、无过滤的
+        # ``search_spans(filter_string=None, max_results=sys.maxsize)`` ——
+        # 一次会在大项目上让客户端 OOM 的全项目读取（OPIK-7344）。
+        # 改为跳过 + 警告 + 继续：此桶中的目标 trace 仍会被复制，
+        # 只是没有 span。针对无时间戳情况的有界按 trace 回退推迟到
+        # OPIK-7343（一旦 span 读取按 ``trace_id IN (...)`` 限定作用域，
+        # 无界读取就从结构上消失了）。
         if not per_project_traces:
-            # Every trace this bucket references is absent from the
-            # experiment's fetched traces -- stale/deleted references that
-            # experiment items still carry. There is nothing to fetch.
+            # 此桶引用的每个 trace 都缺失于实验已获取的 trace ——
+            # 实验项目仍携带的过期/已删除引用。没有可获取的内容。
             LOGGER.warning(
-                "Skipping span read for project %s: all %d referenced "
-                "trace_id(s) are stale/deleted (absent from the experiment's "
-                "fetched traces). Avoids an unbounded full-project span read.",
+                "跳过项目 %s 的 span 读取：所有 %d 个被引用的 "
+                "trace_id 都已过期/已删除（缺失于实验已获取的 trace）。"
+                "这避免了一次无界的全项目 span 读取。",
                 project_id,
                 len(trace_ids_in_project),
             )
@@ -1544,26 +1432,23 @@ def _bulk_fetch_spans_for_experiment(
 
         window = _compute_span_time_window(per_project_traces)
         if window is None:
-            # The bucket's traces exist but none carry a
-            # start/end/last_updated timestamp, so we can't bound the read.
+            # 此桶的 trace 存在，但都不携带 start/end/last_updated 时间戳，
+            # 因此无法为读取设定边界。
             LOGGER.warning(
-                "Skipping span read for project %s: %d trace(s) have no "
-                "usable timestamps to bound the read. Destination traces are "
-                "copied without spans. Avoids an unbounded full-project span "
-                "read.",
+                "跳过项目 %s 的 span 读取：%d 个 trace 没有可用于限定读取的"
+                "时间戳。目标 trace 将在没有 span 的情况下被复制。"
+                "这避免了一次无界的全项目 span 读取。",
                 project_id,
                 len(per_project_traces),
             )
             continue
 
         from_time, to_time = window
-        # ISO 8601 with explicit ``Z`` UTC suffix matches the BE
-        # filter grammar's date-time literal format (see the
-        # search_spans docstring on ``client.search_spans``:
-        # "use ISO 8601 format, e.g., '2024-01-01T00:00:00Z'").
-        # ``SpanField.END_TIME`` is filterable too but using
-        # ``start_time`` for both bounds keeps the filter AST simple
-        # and lets the BE's primary-key range scan stay tight.
+        # 带显式 ``Z`` UTC 后缀的 ISO 8601 匹配后端过滤器语法的日期时间
+        # 字面量格式（参见 ``client.search_spans`` 的 search_spans docstring：
+        # “使用 ISO 8601 格式，例如 '2024-01-01T00:00:00Z'”）。
+        # ``SpanField.END_TIME`` 也可过滤，但对两个边界都使用 ``start_time``
+        # 能保持过滤器 AST 简单，并让后端的主键范围扫描保持紧凑。
         filter_string = (
             f'start_time >= "{_to_iso_z(from_time)}" '
             f'AND start_time <= "{_to_iso_z(to_time)}"'
@@ -1582,11 +1467,9 @@ def _bulk_fetch_spans_for_experiment(
 
         for span in all_spans:
             tid = span.trace_id
-            # Filter twice: must be one of the experiment's expected
-            # trace_ids AND must belong to this project's subset (the
-            # outer ``project_name`` filter already restricts the
-            # returned spans, but checking here too makes the contract
-            # explicit and defends against any BE quirk).
+            # 双重过滤：必须是实验期望的 trace_ids 之一，且必须属于此项目
+            # 的子集（外层 ``project_name`` 过滤器已经限制了返回的 span，
+            # 但这里再检查一次可使契约显式化，并防御任何后端怪异行为）。
             if (
                 tid is not None
                 and tid in spans_by_trace
@@ -1594,18 +1477,16 @@ def _bulk_fetch_spans_for_experiment(
             ):
                 spans_by_trace[tid].append(span)
 
-    # Surface zero-bucket traces. Could be legitimate (genuinely no spans
-    # on the source trace) OR the bulk window missed them. We don't
-    # distinguish today -- the destination trace is still copied, just
-    # without spans -- but we log so an operator can spot mass misses.
+    # 暴露零桶 trace。可能是合法的（源 trace 上确实没有 span），也可能是
+    # 批量窗口漏掉了它们。我们目前不区分 —— 目标 trace 仍会被复制，
+    # 只是没有 span —— 但我们会记录日志，使操作员能发现大规模遗漏。
     empty_bucket_ids = [tid for tid, spans in spans_by_trace.items() if not spans]
     if empty_bucket_ids:
         LOGGER.warning(
-            "Bulk span read for experiment returned zero spans for %d/%d "
-            "expected trace_ids. Either those traces genuinely have no spans, "
-            "or the [from_time, to_time] window missed late-arriving spans. "
-            "Destination traces are still copied but without their spans. "
-            "Example missing trace_ids: %s",
+            "实验的批量 span 读取对 %d/%d 个期望的 trace_ids 返回了零个 span。"
+            "要么这些 trace 确实没有 span，要么 [from_time, to_time] 窗口"
+            "漏掉了迟到的 span。目标 trace 仍会被复制，只是没有其 span。"
+            "缺失的 trace_ids 示例：%s",
             len(empty_bucket_ids),
             len(expected_trace_ids),
             empty_bucket_ids[:5],
@@ -1615,31 +1496,29 @@ def _bulk_fetch_spans_for_experiment(
 
 
 def _to_iso_z(value: datetime) -> str:
-    """Format a UTC datetime in the BE's filter-grammar date-time literal.
+    """将 UTC datetime 格式化为后端过滤器语法的日期时间字面量。
 
-    The BE expects strings like ``"2024-01-01T00:00:00Z"``. Python's
-    ``isoformat()`` produces ``"2024-01-01T00:00:00+00:00"`` for an
-    aware UTC datetime; we swap the offset for the ``Z`` suffix so the
-    filter parser accepts it without extra coercion. Microseconds are
-    preserved when present.
+    后端期望形如 ``"2024-01-01T00:00:00Z"`` 的字符串。Python 的
+    ``isoformat()`` 对 aware UTC datetime 会生成
+    ``"2024-01-01T00:00:00+00:00"``；我们将偏移量替换为 ``Z`` 后缀，
+    使过滤器解析器无需额外转换即可接受。存在微秒时保留微秒。
     """
     iso = value.astimezone(timezone.utc).isoformat()
-    # ``.isoformat()`` for an aware UTC datetime ends with ``"+00:00"``.
+    # 对 aware UTC datetime 调用 ``.isoformat()`` 会以 ``"+00:00"`` 结尾。
     if iso.endswith("+00:00"):
         iso = iso[: -len("+00:00")] + "Z"
     return iso
 
 
 def _to_error_info_dict(error_info: Any) -> Optional[ErrorInfoDict]:
-    """Convert a wire-shape ``ErrorInfoPublic`` (or already-dict) to the
-    ``ErrorInfoDict`` TypedDict shape the streamer / high-level API expects.
+    """将线格式的 ``ErrorInfoPublic``（或已经是字典）转换为流式处理器 /
+    高层 API 所期望的 ``ErrorInfoDict`` TypedDict 形状。
 
-    Returns ``None`` when there's no error info, so callers can pass it
-    through verbatim without nil-handling. ``cast`` at the boundary
-    because the runtime shape (``exception_type`` + ``traceback`` plus
-    optional ``message``) already matches the TypedDict's required keys --
-    BE writes always populate them -- but mypy can't infer that from a
-    generic dict / a ``model_dump`` call.
+    当没有错误信息时返回 ``None``，使调用方可以原样传递而无需处理 nil。
+    在边界处 ``cast``，因为运行时形状（``exception_type`` + ``traceback``
+    加上可选的 ``message``）已经匹配 TypedDict 的必需键 —— 后端写入总是
+    填充它们 —— 但 mypy 无法从泛型字典 / ``model_dump`` 调用中推断出
+    这一点。
     """
     if error_info is None:
         return None
@@ -1658,35 +1537,33 @@ def _emit_spans_for_trace(
     new_trace_id: str,
     target_project_name: str,
 ) -> Tuple[int, List[BatchFeedbackScoreDict], Dict[str, str]]:
-    """Mint new ids preserving the parent tree and emit destination spans
-    via direct ``client._streamer.put(CreateSpanMessage(...))`` calls.
-    Returns ``(spans_emitted, span_feedback_scores, span_id_remap)``.
+    """在保持父树的前提下生成新 id，并通过直接的
+    ``client._streamer.put(CreateSpanMessage(...))`` 调用发送目标 span。
+    返回 ``(spans_emitted, span_feedback_scores, span_id_remap)``。
 
-    ``span_id_remap`` (source span id -> destination span id) is needed
-    by the comment-cascade follow-up so it can POST each source span's
-    ``comments`` against the correct destination span id.
+    ``span_id_remap``（源 span id -> 目标 span id）是评论级联后续步骤
+    所需要的，使其能针对正确的目标 span id 来 POST 每个源 span 的
+    ``comments``。
 
-    ``source_spans`` is the pre-fetched bucket for ONE trace, populated
-    by the experiment-level bulk read in
-    ``_bulk_fetch_spans_for_experiment``. Previously fetched per-trace
-    via ``search_spans(trace_id=…)``; the bulk-read refactor moved that
-    out to amortize the rate-limit cost across the whole experiment.
+    ``source_spans`` 是 ONE 个 trace 的预取桶，由
+    ``_bulk_fetch_spans_for_experiment`` 中的实验级批量读取填充。先前通过
+    ``search_spans(trace_id=…)`` 按 trace 获取；批量读取重构将其移出，
+    以在整个实验上摊销速率限制成本。
 
-    Why bypass ``client.span(...)``: the public method routes through
-    ``span_client.create_span()`` which calls
-    ``helpers.add_usage_to_metadata`` -- a user-facing convenience that
-    merges ``usage`` into ``metadata["usage"]`` for fresh writes. The
-    cascade needs strict round-trip metadata fidelity (source has
-    ``usage`` and ``metadata`` as distinct fields, the merge would
-    diverge the destination). The streamer's ``CreateSpanMessage``
-    accepts ``usage`` and ``metadata`` as separate fields and serializes
-    verbatim, so building the message directly preserves both.
+    为何绕过 ``client.span(...)``：公共方法经过
+    ``span_client.create_span()``，它会调用
+    ``helpers.add_usage_to_metadata`` —— 一个面向用户的便利功能，对新的
+    写入把 ``usage`` 合并进 ``metadata["usage"]``。级联需要严格的往返元数据
+    保真（源将 ``usage`` 和 ``metadata`` 作为不同字段，合并会使目标端
+    产生偏差）。流式处理器的 ``CreateSpanMessage`` 将 ``usage`` 和
+    ``metadata`` 作为独立字段接受并逐字序列化，因此直接构建消息能同时
+    保留两者。
 
-    Span_id remap stays per-trace -- parents must precede children
-    within a trace tree, and span ids only collide within a tree.
+    span_id 重映射保持按 trace —— 在 trace 树内，父必须先于子，且 span id
+    只在树内冲突。
 
-    Span-level feedback scores are returned for the caller to batch via
-    ``client.log_spans_feedback_scores`` after the spans are flushed.
+    返回 span 级反馈分数，供调用方在 span 刷新后通过
+    ``client.log_spans_feedback_scores`` 批量发送。
     """
     from opik import datetime_helpers
     from opik.message_processing import messages
@@ -1694,10 +1571,9 @@ def _emit_spans_for_trace(
     if not source_spans:
         return 0, [], {}
 
-    # Topological order: parents before children, so the parent_span_id
-    # remap entry for every child is always populated by the time we
-    # process it. ``sort_spans_topologically`` operates on dicts; we
-    # convert through model_dump and back.
+    # 拓扑顺序：父先于子，因此处理每个子节点时，其 parent_span_id 重映射
+    # 条目始终已填充。``sort_spans_topologically`` 操作字典；我们通过
+    # model_dump 转换后再转回。
     span_dicts = [span.model_dump() for span in source_spans]
     span_dicts = sort_spans_topologically(span_dicts)
 
@@ -1713,9 +1589,9 @@ def _emit_spans_for_trace(
         original_parent = span_dict.get("parent_span_id")
         new_parent = span_id_remap.get(original_parent) if original_parent else None
 
-        # Build CreateSpanMessage directly; bypasses span_client.create_span's
-        # add_usage_to_metadata merge. Field-for-field mapping from
-        # SpanPublic -> CreateSpanMessage.
+        # 直接构建 CreateSpanMessage；绕过 span_client.create_span 的
+        # add_usage_to_metadata 合并。从 SpanPublic -> CreateSpanMessage
+        # 逐字段映射。
         msg = messages.CreateSpanMessage(
             span_id=new_span_id,
             trace_id=new_trace_id,
@@ -1742,9 +1618,8 @@ def _emit_spans_for_trace(
         client._streamer.put(msg)
         spans_emitted += 1
 
-        # Collect per-span feedback scores keyed by the new span id so
-        # the caller can batch-emit them via log_spans_feedback_scores
-        # after the spans flush.
+        # 收集以新 span id 为键的按 span 反馈分数，使调用方能在 span 刷新后
+        # 通过 log_spans_feedback_scores 批量发送它们。
         for score in span_dict.get("feedback_scores") or []:
             entry: BatchFeedbackScoreDict = {
                 "id": new_span_id,
@@ -1768,34 +1643,30 @@ def _build_experiment_data(
     optimization_id_remap: Dict[str, str],
     result: ExperimentCascadeResult,
 ) -> ExperimentData:
-    """Adapt the REST ``ExperimentPublic`` + items into the
-    ``ExperimentData`` dataclass that ``recreate_experiment`` consumes.
+    """将 REST ``ExperimentPublic`` + 项目适配为 ``recreate_experiment``
+    消费的 ``ExperimentData`` 数据类。
 
-    The disk-export shape stores experiment metadata as a flat dict matching
-    the BE schema field names; we mirror that here so ``recreate_experiment``
-    can read fields like ``type`` / ``evaluation_method`` / ``optimization_id``
-    / ``tags`` / ``metadata`` / ``dataset_name`` verbatim.
+    磁盘导出形状将实验元数据存储为与后端 schema 字段名匹配的扁平字典；
+    我们在此镜像该形状，使 ``recreate_experiment`` 能逐字读取 ``type`` /
+    ``evaluation_method`` / ``optimization_id`` / ``tags`` / ``metadata`` /
+    ``dataset_name`` 等字段。
 
-    ``optimization_id`` is re-pointed at the destination optimization id
-    via ``optimization_id_remap`` (populated by the prior
-    ``CascadeOptimizations`` action). If the source experiment carries an
-    ``optimization_id`` but the remap doesn't have an entry, the field is
-    omitted to avoid a dangling-pointer write and
-    ``experiments_with_orphan_optimization_id`` is incremented for the
-    audit — this only happens if planner ordering was broken.
+    ``optimization_id`` 通过 ``optimization_id_remap``（由先前的
+    ``CascadeOptimizations`` 动作填充）重新指向目标优化 id。如果源实验
+    携带 ``optimization_id`` 但重映射中没有条目，则省略该字段以避免悬空
+    指针写入，并为审计递增 ``experiments_with_orphan_optimization_id``
+    —— 这仅在 planner 顺序被破坏时发生。
 
-    Per-item payload carries only the FK fields. The BE's ``ExperimentItem``
-    Write view accepts only ``id`` / ``experiment_id`` / ``dataset_item_id``
-    / ``trace_id`` (plus ``project_name``); every other per-item field
-    surfaced on the Compare view (``input`` / ``output`` /
-    ``feedback_scores`` / ``assertion_results`` / ``execution_policy`` /
-    ``description`` / ``status`` / ``usage`` / ``total_estimated_cost`` /
-    ``duration``) is READ-ONLY and computed/aggregated from the underlying
-    trace + span + assertion-result entities. The cascade ensures those
-    underlying entities are populated correctly at the destination (traces
-    + spans copied with feedback scores; assertion results copied via the
-    dedicated ``assertion_results.store_assertions_batch`` endpoint scoped
-    to the new trace id); the BE surfaces the rest on read.
+    按项目的载荷只携带外键字段。后端的 ``ExperimentItem`` 写视图只接受
+    ``id`` / ``experiment_id`` / ``dataset_item_id`` / ``trace_id``
+    （加上 ``project_name``）；在 Compare 视图上暴露的其余每个按项目字段
+    （``input`` / ``output`` / ``feedback_scores`` / ``assertion_results`` /
+    ``execution_policy`` / ``description`` / ``status`` / ``usage`` /
+    ``total_estimated_cost`` / ``duration``）是只读的，并由底层的
+    trace + span + assertion-result 实体计算/聚合。级联确保这些底层实体
+    在目标端被正确填充（trace + span 连同反馈分数一起复制；断言结果通过
+    以新 trace id 为作用域的专用 ``assertion_results.store_assertions_batch``
+    端点复制）；其余部分由后端在读取时暴露。
     """
     experiment_dict: Dict[str, Any] = {
         "id": source.id,
@@ -1817,13 +1688,12 @@ def _build_experiment_data(
         if destination_optimization_id:
             experiment_dict["optimization_id"] = destination_optimization_id
         else:
-            # Defensive: CascadeOptimizations runs before CascadeExperiments,
-            # so the remap should always contain this id. Log loudly and
-            # omit the field rather than write a dangling FK.
+            # 防御性：CascadeOptimizations 在 CascadeExperiments 之前运行，
+            # 因此重映射应始终包含此 id。大声记录日志并省略该字段，
+            # 而不是写入悬空外键。
             LOGGER.warning(
-                "Source experiment %s carries optimization_id %s with no "
-                "entry in optimization_id_remap; omitting from destination "
-                "payload. Planner ordering is likely broken.",
+                "源实验 %s 携带的 optimization_id %s 在 optimization_id_remap "
+                "中没有条目；正在从目标载荷中省略。planner 顺序可能已被破坏。",
                 source.id,
                 source_optimization_id,
             )

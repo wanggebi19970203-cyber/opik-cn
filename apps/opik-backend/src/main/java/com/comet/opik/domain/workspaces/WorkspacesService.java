@@ -22,18 +22,16 @@ import static com.comet.opik.infrastructure.db.TransactionTemplateAsync.WRITE;
 public interface WorkspacesService {
 
     /**
-     * Returns {@code true} only for the writer that transitioned {@code first_trace_reported_at}
-     * from NULL. {@code userName} is recorded in the audit columns (caller passes the user that
-     * created the trace).
+     * 仅对把 {@code first_trace_reported_at} 从 NULL 转换过来的写入者返回 {@code true}。{@code userName}
+     * 会被记录在审计列中（调用方传入创建该 trace 的用户）。
      */
     boolean markFirstTraceReported(String workspaceId, String userName);
 
     /**
-     * Returns whether the workspace has data in the legacy {@code feedback_scores} ClickHouse
-     * table, read from the persisted {@code has_legacy_scores} column. Runs the blocking JDBI
-     * lookup on a bounded-elastic worker; defaults to {@code true} when no row exists yet, and on
-     * any error so a degraded state DB doesn't break the stats endpoint. Consumed by the trace/span
-     * stats queries to decide whether to UNION the legacy {@code feedback_scores} table.
+     * 返回工作空间在旧版 {@code feedback_scores} ClickHouse 表中是否有数据，从持久化的
+     * {@code has_legacy_scores} 列读取。在 bounded-elastic worker 上运行阻塞的 JDBI 查找；当行尚不存在时
+     * 默认返回 {@code true}，任何错误时也默认 {@code true}，这样降级的状态数据库不会破坏统计端点。
+     * 供 trace/span 统计查询使用，以决定是否 UNION 旧版 {@code feedback_scores} 表。
      */
     Mono<Boolean> hasLegacyScores(String workspaceId);
 }
@@ -48,17 +46,13 @@ class WorkspacesServiceImpl implements WorkspacesService {
     private final @NonNull TransactionTemplate transactionTemplate;
 
     /**
-     * UPDATE-then-INSERT, single transaction. We can't use a single-statement upsert with a
-     * ROW_COUNT check here because Connector/J defaults to {@code useAffectedRows=false}
-     * ({@code CLIENT_FOUND_ROWS=on}), which makes a matched-but-unchanged upsert return
-     * {@code 1} — indistinguishable from a fresh insert. Splitting into two primitives keeps the
-     * detection unambiguous.
+     * 先 UPDATE 后 INSERT，单一事务。此处不能使用带 ROW_COUNT 检查的单语句 upsert，因为 Connector/J 默认
+     * {@code useAffectedRows=false}（{@code CLIENT_FOUND_ROWS=on}），这会让“匹配但未改变”的 upsert 返回
+     * {@code 1}——与全新插入无法区分。拆分为两个原语可以保持检测的明确性。
      *
-     * <p>A duplicate-key on the INSERT means a concurrent first-trace writer created the row
-     * between our UPDATE and INSERT (this is the only path that inserts into {@code workspaces}).
-     * Retrying the UPDATE-if-null then flips the column only if it is still NULL; since the other
-     * writer already set it, this caller returns {@code false}, so exactly one caller reports the
-     * first trace.</p>
+     * <p>INSERT 上的重复键意味着在我们 UPDATE 和 INSERT 之间，一个并发的首条 trace 写入者创建了该行
+     * （这是插入 {@code workspaces} 的唯一路径）。随后重试 UPDATE-if-null 只会在列仍为 NULL 时翻转它；
+     * 由于另一个写入者已经设置了它，此调用方返回 {@code false}，因此恰好只有一个调用方报告首条 trace。</p>
      */
     @Override
     public boolean markFirstTraceReported(@NonNull String workspaceId, @NonNull String userName) {
@@ -91,7 +85,7 @@ class WorkspacesServiceImpl implements WorkspacesService {
                 .orElse(true))
                 .subscribeOn(Schedulers.boundedElastic())
                 .onErrorResume(throwable -> {
-                    log.warn("Failed to resolve has_legacy_scores for workspace '{}', defaulting to true",
+                    log.warn("解析工作空间 '{}' 的 has_legacy_scores 失败，默认返回 true",
                             workspaceId, throwable);
                     return Mono.just(true);
                 });

@@ -1,22 +1,22 @@
 package com.comet.opik.domain;
 
 /**
- * Shared ClickHouse query fragments for span-based metrics. The span-filtering CTE (feedback-score dedup + span
- * filters) is identical for per-project ({@link ProjectMetricsDAO}) and workspace-level ({@link WorkspaceMetricsDAO})
- * aggregation; the only difference is the project predicate, which is injected via {@link #spanFilteredPrefix(String)}
- * so both DAOs stay in sync when the CTE changes.
+ * 用于基于 span 的指标的共享 ClickHouse 查询片段。span 过滤 CTE（反馈分数去重 + span 过滤）
+ * 对于按项目（{@link ProjectMetricsDAO}）和工作区级别（{@link WorkspaceMetricsDAO}）的聚合是完全相同的；
+ * 唯一的区别是项目谓词，它通过 {@link #spanFilteredPrefix(String)} 注入，
+ * 以便两个 DAO 在 CTE 变化时保持同步。
  * <p>
- * Each {@code id}-range bound on the {@code spans} scan carries a parallel {@code toMonday(id_at)} bound: a strict
- * consequence of the id-range that scans the same rows but engages weekly-partition pruning once {@code spans} is
- * partitioned, which the planner can't infer through {@code UUIDv7ToDateTime}.
+ * {@code spans} 扫描上的每个 {@code id} 范围边界都带有一个平行的 {@code toMonday(id_at)} 边界：这是
+ * id 范围的严格推论，它扫描相同的行，但一旦 {@code spans} 被分区，就会启用周分区裁剪，
+ * 而优化器无法通过 {@code UUIDv7ToDateTime} 推断出这一点。
  */
 final class SpanMetricsQueries {
 
     private SpanMetricsQueries() {
     }
 
-    // %s slots are the project predicate: "project_id = :project_id" (single project) or
-    // "project_id IN :project_ids" (a resolved set of projects). workspace_id is always bound separately.
+    // %s 占位符是项目谓词："project_id = :project_id"（单个项目）或
+    // "project_id IN :project_ids"（一组已解析的项目）。workspace_id 始终单独绑定。
     private static final String SPAN_FILTERED_PREFIX_TEMPLATE = """
             WITH feedback_scores_deduped AS (
                 SELECT workspace_id,
@@ -152,9 +152,9 @@ final class SpanMetricsQueries {
         return SPAN_FILTERED_PREFIX_TEMPLATE.formatted(projectPredicate, projectPredicate, projectPredicate);
     }
 
-    // Distinct span token-usage key names. The %s slot is the project predicate: "project_id = :project_id" (single
-    // project, {@link ProjectMetricsDAO}) or "project_id IN :project_ids" (a resolved set, {@link WorkspaceMetricsDAO});
-    // workspace_id is always bound separately. Shared so the two callers can't drift.
+    // 去重后的 span token 用量键名。%s 占位符是项目谓词："project_id = :project_id"（单个
+    // 项目，{@link ProjectMetricsDAO}）或 "project_id IN :project_ids"（一组已解析的集合，{@link WorkspaceMetricsDAO}）；
+    // workspace_id 始终单独绑定。共享此片段，以确保两个调用方不会产生偏差。
     private static final String TOKEN_USAGE_NAMES_TEMPLATE = """
             SELECT DISTINCT name
             FROM (

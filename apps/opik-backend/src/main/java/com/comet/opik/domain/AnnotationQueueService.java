@@ -231,8 +231,8 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
             return Mono.just(0L);
         }
 
-        // Queue items reference trace/thread ids (v7 by construction); enforce so the referenced-id
-        // policy is uniform. Past allowed — queues commonly collect older traces/threads.
+        // 队列条目引用 trace/thread ID（按构造即为 v7）；强制执行以使被引用 ID 的
+        // 策略保持一致。允许过去时间——队列通常会收集较旧的 trace/thread。
         itemIds.forEach(itemId -> idGenerator.validateIdNotInFuture(itemId, "AnnotationQueue item"));
 
         return annotationQueueDAO.findQueueInfoById(queueId)
@@ -390,7 +390,7 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
     private AnnotationQueue prepareAnnotationQueue(AnnotationQueue annotationQueue) {
         UUID id = annotationQueue.id() == null ? idGenerator.generateId() : annotationQueue.id();
         IdGenerator.validateVersion(id, "AnnotationQueue");
-        // projectId is persisted without an existence check here, so enforce v7 to avoid storing an orphan v4.
+        // projectId 在此处持久化时不做存在性检查，因此强制 v7 以避免存储孤立的 v4。
         idGenerator.validateIdNotInFutureIfPresent(annotationQueue.projectId(), "project");
 
         log.debug("准备注解队列，ID '{}'，名称 '{}'，项目 '{}'",

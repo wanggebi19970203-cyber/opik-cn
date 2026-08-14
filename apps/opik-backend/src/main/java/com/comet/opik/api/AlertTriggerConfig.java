@@ -45,6 +45,6 @@ public record AlertTriggerConfig(
     public static final String WINDOW_CONFIG_KEY = "window";
     public static final String NAME_CONFIG_KEY = "name";
     public static final String OPERATOR_CONFIG_KEY = "operator";
-    // Comma-separated GuardrailType names (e.g. "PII,TOPIC"); empty/absent means all types.
+    // 逗号分隔的 GuardrailType 名称（例如 "PII,TOPIC"）；为空或缺失表示所有类型。
     public static final String GUARDRAIL_TYPES_CONFIG_KEY = "guardrail_types";
 }

@@ -7,22 +7,22 @@ import static com.comet.opik.api.metrics.BreakdownField.SPAN_METRICS;
 
 public class BreakdownQueryBuilder {
 
-    // Fixed defaults - not configurable
+    // 固定默认值 - 不可配置
     public static final int LIMIT = 10;
     public static final String OTHERS_GROUP_NAME = "__others__";
     public static final String UNKNOWN_GROUP_NAME = "Unknown";
 
     /**
-     * Check if breakdown is enabled (field is not NONE and not null).
+     * 检查 breakdown 是否已启用（字段不是 NONE 且不为 null）。
      */
     public static boolean isEnabled(BreakdownConfig config) {
         return config.field() != null && config.field() != BreakdownField.NONE;
     }
 
     /**
-     * Validate the configuration.
+     * 校验配置。
      *
-     * @throws IllegalArgumentException if configuration is invalid
+     * @throws IllegalArgumentException 如果配置无效
      */
     public static void validate(BreakdownConfig config, MetricType metricType) {
         if (!isEnabled(config)) {
@@ -42,24 +42,24 @@ public class BreakdownQueryBuilder {
     }
 
     /**
-     * Get the SQL expression for the breakdown group based on the metric type and breakdown field.
-     * This is used in the GROUP BY clause to group metrics by the specified dimension.
-     * The table alias prefix depends on the metric type:
-     * - Span metrics use 's.' prefix (spans_filtered)
-     * - Trace/Thread metrics use 't.' prefix (traces_filtered/threads_filtered)
+     * 根据指标类型和 breakdown 字段获取 breakdown 分组的 SQL 表达式。
+     * 该表达式用于 GROUP BY 子句，按指定维度对指标进行分组。
+     * 表别名前缀取决于指标类型：
+     * - Span 指标使用 's.' 前缀（spans_filtered）
+     * - Trace/Thread 指标使用 't.' 前缀（traces_filtered/threads_filtered）
      */
     public static String getBreakdownGroupExpression(MetricType metricType, BreakdownConfig breakdown) {
         if (breakdown == null || !isEnabled(breakdown)) {
             return "''";
         }
 
-        // Guardrail name lives in the joined guardrails table ('g.'), independent of the
-        // span/trace/thread alias used by the other breakdown fields.
+        // Guardrail 名称位于联接的 guardrails 表（'g.'）中，独立于
+        // 其他 breakdown 字段所使用的 span/trace/thread 别名。
         if (breakdown.field() == BreakdownField.GUARDRAIL_NAME) {
             return "ifNull(g.name, 'Unknown')";
         }
 
-        // Span metrics use 's.' prefix, trace/thread metrics use 't.' prefix
+        // Span 指标使用 's.' 前缀，trace/thread 指标使用 't.' 前缀
         if (SPAN_METRICS.contains(metricType)) {
             return getSpanBreakdownExpression(breakdown);
         } else {
@@ -68,9 +68,9 @@ public class BreakdownQueryBuilder {
     }
 
     /**
-     * Maps sub-metric names (p50, p90, p99) to ClickHouse quantile values (0.5, 0.9, 0.99).
-     * The result is substituted as a numeric literal into the SQL, so the allow-list is
-     * enforced to FE input enum {@code DURATION_METRIC_OPTIONS}
+     * 将子指标名称（p50、p90、p99）映射到 ClickHouse 分位数值（0.5、0.9、0.99）。
+     * 结果会作为数字字面量代入 SQL 中，因此该允许列表
+     * 由前端输入枚举 {@code DURATION_METRIC_OPTIONS} 强制执行。
      */
     public static String mapQuantile(String subMetric) {
         return switch (subMetric.toLowerCase()) {
@@ -82,7 +82,7 @@ public class BreakdownQueryBuilder {
     }
 
     /**
-     * Get breakdown expression for span metrics using 's.' table alias.
+     * 使用 's.' 表别名获取 span 指标的 breakdown 表达式。
      */
     private static String getSpanBreakdownExpression(BreakdownConfig breakdown) {
         return switch (breakdown.field()) {
@@ -100,7 +100,7 @@ public class BreakdownQueryBuilder {
     }
 
     /**
-     * Get breakdown expression for trace/thread metrics using 't.' table alias.
+     * 使用 't.' 表别名获取 trace/thread 指标的 breakdown 表达式。
      */
     private static String getTraceOrThreadBreakdownExpression(BreakdownConfig breakdown) {
         return switch (breakdown.field()) {

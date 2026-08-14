@@ -1,9 +1,8 @@
-"""Assembles :class:`~opik.message_processing.data_loss.FlushResult` values.
+"""组装 :class:`~opik.message_processing.data_loss.FlushResult` 值。
 
-The read side of data-loss reporting. It holds the two collaborators needed to
-describe a flush — the queue (via the streamer) and the :class:`DataLossTracker`
-— so that no caller has to gather them itself. One instance is owned per
-connection bundle and shared by every client on it.
+数据丢失报告的读取侧。它持有描述一次 flush 所需的两个协作者——队列（经由
+streamer）和 :class:`DataLossTracker`——这样任何调用方都无需自行收集它们。
+每个连接捆绑（connection bundle）拥有一个实例，并由其上的每个客户端共享。
 """
 
 import logging
@@ -29,10 +28,10 @@ class FlushReporter:
         self._data_loss_tracker = data_loss_tracker
 
     def marker(self) -> "data_loss.DropMarker":
-        """Opaque token identifying the current point in the drop history.
+        """标识丢弃历史中当前位置的不透明令牌。
 
-        Take one before a flush; pass it to :meth:`build_result` afterwards to
-        attribute only the drops observed in between to that flush.
+        在 flush 之前获取一个；之后将其传给 :meth:`build_result`，
+        即可只把期间观察到的丢弃归因于该次 flush。
         """
         return self._data_loss_tracker.marker()
 
@@ -51,8 +50,8 @@ class FlushReporter:
         )
         if not result.success:
             LOGGER.error(
-                "Opik flush completed with data loss: %d message(s) / %d item(s) "
-                "dropped, %d still queued. Inspect Opik.last_flush_result for details.",
+                "Opik flush 完成时发生数据丢失：%d 条消息 / %d 个条目被丢弃，"
+                "仍有 %d 条在队列中。详情请查看 Opik.last_flush_result。",
                 result.dropped_messages,
                 result.dropped_items,
                 result.remaining_queue_size,
@@ -60,7 +59,7 @@ class FlushReporter:
         return result
 
     def build_errors_report(self) -> "data_loss.ErrorsReport":
-        """Sender-wide data-loss snapshot, independent of any single flush."""
+        """面向整个发送器的数据丢失快照，与任何单次 flush 无关。"""
         total_messages, total_items, failures = self._data_loss_tracker.total_drops()
         return data_loss.ErrorsReport(
             total_dropped_messages=total_messages,

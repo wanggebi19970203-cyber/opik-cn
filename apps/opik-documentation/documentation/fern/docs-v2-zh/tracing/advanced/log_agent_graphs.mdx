@@ -1,0 +1,84 @@
+---
+headline: 记录智能体图
+og:description: 了解如何在 Opik 中记录智能体执行图，以增强调试和流程可视化，支持 LangGraph 和 Google ADK 等框架。
+og:site_name: Opik 文档
+og:title: 使用 Opik 可视化智能体图
+title: 记录智能体图
+---
+
+智能体图是可视化智能体流程的好方法，可以简化调试过程。
+
+<Frame>
+  <img src="/img/tracing/agent_definition.png" />
+</Frame>
+
+Opik 支持为以下框架记录智能体图：
+
+1. LangGraph
+2. Google Agent Development Kit (ADK)
+3. 手动追踪
+
+## LangGraph
+
+你可以通过在 [OpikTracer](https://www.comet.com/docs/opik/python-sdk-reference/integrations/langchain/OpikTracer.html) 回调中指定 `graph` 参数来记录智能体执行图：
+
+```python
+from opik.integrations.langchain import OpikTracer
+
+opik_tracer = OpikTracer(graph=app.get_graph(xray=True))
+```
+
+Opik 将在 Opik 仪表板中记录智能体图定义，你可以通过点击追踪侧边栏中的 `Show Agent Graph` 来访问。
+
+## Google Agent Development Kit (ADK)
+
+Opik 会自动为 Google ADK 生成智能体工作流的可视化表示，无需任何额外配置。只需按照 [ADK 集成配置指南](https://www.comet.com/docs/opik/integrations/adk#configuring-google-adk)中所示集成 Opik 的 OpikTracer 回调，你的智能体图就会被自动捕获和可视化。
+
+该图会自动显示：
+- 智能体层级结构和关系
+- 顺序执行流程
+- 并行处理分支
+- 工具连接和依赖关系
+- 循环结构和迭代
+
+例如，一个基本的天气和时间智能体会显示其执行流程，包括所有智能体步骤、LLM 调用和工具调用：
+
+<Frame>
+  <img src="/img/tracing/adk/adk_weather_time_graph_screenshot.png" />
+</Frame>
+
+对于更复杂的多智能体架构，自动图可视化变得更有价值，可以清晰地查看嵌套的智能体层级结构和复杂的执行模式。
+
+## 手动追踪
+
+你也可以通过将智能体图定义作为 mermaid 图定义记录在追踪的元数据中来手动记录智能体图：
+
+```python
+import opik
+from opik import opik_context
+
+@opik.track
+def chat_agent(input: str):
+  # Update the current trace with the agent graph definition
+  opik_context.update_current_trace(
+    metadata={
+      "_opik_graph_definition": {
+        "format": "mermaid",
+            "data": "graph TD; U[User]-->A[Agent]; A-->L[LLM]; L-->A; A-->R[Answer];"
+      }
+    }
+  )
+  return "Hello, how can I help you today?"
+
+chat_agent("Hi there!")
+```
+
+Opik 将在 Opik 仪表板中记录智能体图定义，你可以通过点击追踪侧边栏中的 `Show Agent Graph` 来访问。
+
+## 后续步骤
+
+为什么不了解一下：
+
+- [Opik 的 50+ 集成](/integrations/overview)
+- [记录追踪](/tracing/advanced/log_traces)
+- [评估智能体](/evaluation/evaluate_agents)

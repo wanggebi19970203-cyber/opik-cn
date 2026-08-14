@@ -73,18 +73,18 @@ public interface ProjectMetricsDAO {
     String NAME_THREAD_DURATION_P99 = String.join(".", THREAD_DURATION_PREFIX, P99);
 
     /**
-     * Represents a single data point entry for metrics.
+     * 表示指标的一个数据点条目。
      *
-     * @param name      The metric name (e.g., "cost", "duration.p50", feedback score name)
-     * @param time      The time bucket for this data point
-     * @param value     The metric value
-     * @param groupName The breakdown group name (null if no breakdown is applied)
+     * @param name      指标名称（例如 "cost"、"duration.p50"、反馈评分名称）
+     * @param time      该数据点的时间桶
+     * @param value     指标值
+     * @param groupName 拆分组名称（未应用拆分时为 null）
      */
     @Builder
     record Entry(String name, Instant time, Number value, String groupName) {
 
         /**
-         * Constructor for backward compatibility when no breakdown is used.
+         * 未使用拆分时用于向后兼容的构造函数。
          */
         public Entry(String name, Instant time, Number value) {
             this(name, time, value, null);
@@ -304,7 +304,7 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             )
             """;
 
-    // Shared with WorkspaceMetricsDAO via SpanMetricsQueries; per-project aggregation fixes a single project_id.
+    // 通过 SpanMetricsQueries 与 WorkspaceMetricsDAO 共享；按项目聚合固定单个 project_id。
     private static final String SPAN_FILTERED_PREFIX = SpanMetricsQueries
             .spanFilteredPrefix("project_id = :project_id");
 
@@ -1369,12 +1369,12 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             var stTemplate = getSTWithLogComment(GET_AVERAGE_FEEDBACK_SCORE, "get_average_feedback_score", workspaceId,
                     userName, feedbackScoreName);
 
-            // Add project_ids flag to template if provided
+            // 若提供了 project_ids，则向模板添加 project_ids 标志
             if (projectIds != null && !projectIds.isEmpty()) {
                 stTemplate.add("project_ids", true);
             }
 
-            // Create statement once with all flags set
+            // 一次性创建语句，并设置所有标志
             var statement = connection.createStatement(stTemplate.render())
                     .bind("start_time", startTime.toString())
                     .bind("end_time", endTime.toString())
@@ -1382,7 +1382,7 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     .bind("feedback_score_name", feedbackScoreName)
                     .bind("workspace_id", workspaceId);
 
-            // Bind project IDs if provided
+            // 若提供了项目 ID，则进行绑定
             if (projectIds != null && !projectIds.isEmpty()) {
                 statement.bind("project_ids", projectIds.toArray(new UUID[0]));
             }
@@ -1525,33 +1525,33 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             var stTemplate = getSTWithLogComment(query, ALERT_METRIC_QUERY_NAME_PREFIX + segmentName, workspaceId,
                     userName, projectIds != null ? projectIds.size() : 0);
 
-            // Add project_ids flag to template if provided
+            // 若提供了 project_ids，则向模板添加 project_ids 标志
             if (projectIds != null && !projectIds.isEmpty()) {
                 stTemplate.add("project_ids", true);
             }
 
-            // Add uuid_from_time flag
+            // 添加 uuid_from_time 标志
             stTemplate.add("uuid_from_time", true);
             var uuidFromTime = instantToUUIDMapper.toLowerBound(startTime).toString();
 
-            // Add uuid_to_time flag if endTime is provided
+            // 若提供了 endTime，则添加 uuid_to_time 标志
             String uuidToTime = null;
             if (endTime != null) {
                 stTemplate.add("uuid_to_time", true);
                 uuidToTime = instantToUUIDMapper.toUpperBound(endTime).toString();
             }
 
-            // Create statement once with all flags set
+            // 一次性创建语句，并设置所有标志
             var statement = connection.createStatement(stTemplate.render())
                     .bind("uuid_from_time", uuidFromTime)
                     .bind("workspace_id", workspaceId);
 
-            // Bind uuid_to_time only if endTime is provided
+            // 仅当提供了 endTime 时才绑定 uuid_to_time
             if (uuidToTime != null) {
                 statement = statement.bind("uuid_to_time", uuidToTime);
             }
 
-            // Bind project IDs if provided
+            // 若提供了项目 ID，则进行绑定
             if (projectIds != null && !projectIds.isEmpty()) {
                 statement.bind("project_ids", projectIds.toArray(new UUID[0]));
             }
@@ -1587,7 +1587,7 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                                         .formatted(intervalToSql(request.interval()))));
             }
 
-            // Add breakdown group expression if breakdown is enabled
+            // 若启用了拆分，则添加拆分组表达式
             if (request.hasBreakdown()) {
                 template.add("group_expression",
                         getBreakdownGroupExpression(request.metricType(), request.breakdown()));
@@ -1598,7 +1598,7 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                 }
             }
 
-            // Add uuid flags for conditional SQL generation
+            // 添加 uuid 标志以用于条件式 SQL 生成
             template.add("uuid_from_time", true);
             if (request.uuidToTime() != null) {
                 template.add("uuid_to_time", true);
@@ -1606,10 +1606,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     template.add("with_fill", true);
                 }
             }
-            // Note: when uuid_to_time is null, WITH FILL clause is omitted entirely
+            // 注意：当 uuid_to_time 为 null 时，WITH FILL 子句会被完全省略
 
-            // OPIK-5678: each SQL prefix only has placeholders for its own entity type's filters;
-            // binding mismatched filters causes NoSuchElementException from R2DBC
+            // OPIK-5678：每个 SQL 前缀只包含自身实体类型过滤器的占位符；
+            // 绑定不匹配的过滤器会导致 R2DBC 抛出 NoSuchElementException
             var metricType = request.metricType();
 
             if (THREAD_METRICS.contains(metricType)) {
@@ -1669,18 +1669,18 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     .bind("uuid_from_time", request.uuidFromTime().toString())
                     .bind("workspace_id", workspaceId);
 
-            // Bind uuid_to_time only if present
+            // 仅当存在时才绑定 uuid_to_time
             if (request.uuidToTime() != null) {
                 statement.bind("uuid_to_time", request.uuidToTime().toString());
             }
 
-            // Bind metadata_key if breakdown by metadata is enabled
+            // 若启用了按 metadata 拆分，则绑定 metadata_key
             if (request.hasBreakdown() && request.breakdown().field() == BreakdownField.METADATA) {
                 statement.bind("metadata_key", request.breakdown().metadataKey());
             }
 
-            // Bind sub_metric for name-based breakdowns (feedback scores, token usage). It is an
-            // arbitrary user-defined name, so it must be bound rather than substituted into the SQL.
+            // 为基于名称的拆分（反馈评分、token 用量）绑定 sub_metric。它是
+            // 任意用户定义的名称，因此必须绑定，而不能替换进 SQL。
             if (request.hasBreakdown() && NAME_BREAKDOWN_METRICS.contains(metricType)) {
                 statement.bind("sub_metric",
                         Optional.ofNullable(request.breakdown().subMetric()).orElse(""));
@@ -1741,8 +1741,8 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             MetricType.THREAD_COST);
 
     /**
-     * Metric types whose {@code _WITH_BREAKDOWN} template uses {@code quantile(<sub_metric>)}, so sub_metric is a
-     * percentile validated by {@link BreakdownQueryBuilder#mapQuantile} and substituted as a numeric literal.
+     * 其 {@code _WITH_BREAKDOWN} 模板使用 {@code quantile(<sub_metric>)} 的指标类型，因此 sub_metric 是一个
+     * 由 {@link BreakdownQueryBuilder#mapQuantile} 校验的分位数，并作为数值字面量替换进去。
      */
     private static final Set<MetricType> QUANTILE_BREAKDOWN_METRICS = EnumSet.of(
             MetricType.DURATION,
@@ -1750,8 +1750,8 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             MetricType.SPAN_DURATION);
 
     /**
-     * Metric types whose {@code _WITH_BREAKDOWN} template filters by {@code name = :sub_metric}, so sub_metric is an
-     * arbitrary user-defined feedback-score or token-usage name and is bound as a parameter rather than substituted.
+     * 其 {@code _WITH_BREAKDOWN} 模板按 {@code name = :sub_metric} 过滤的指标类型，因此 sub_metric 是
+     * 任意用户定义的反馈评分或 token 用量名称，并作为参数绑定，而不是替换进去。
      */
     private static final Set<MetricType> NAME_BREAKDOWN_METRICS = EnumSet.of(
             MetricType.FEEDBACK_SCORES,

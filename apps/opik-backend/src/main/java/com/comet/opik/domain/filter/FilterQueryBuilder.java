@@ -64,16 +64,14 @@ public class FilterQueryBuilder {
     private static final String START_TIME_ANALYTICS_DB = "start_time";
     private static final String END_TIME_ANALYTICS_DB = "end_time";
     /**
-     * Sentinel-aware {@code end_time} for trace/thread/span filtering once the column is non-nullable: {@code nullIf}
-     * collapses the epoch sentinel to {@code NULL} so range/inequality comparisons exclude an absent value. Applied
-     * only under {@code columnsNonNullable} — while the column is Nullable a client-supplied epoch is a
-     * legitimate value that must keep matching.
+     * 列变为非空后，用于 trace/thread/span 过滤的感知哨兵值的 {@code end_time}：{@code nullIf} 把纪元哨兵值折叠为
+     * {@code NULL}，从而让范围/不等式比较排除缺失值。仅在 {@code columnsNonNullable} 下应用——当列还是 Nullable 时，
+     * 客户端提供的纪元值是一个合法值，必须继续匹配。
      */
     private static final String END_TIME_NON_NULLABLE_ANALYTICS_DB = "nullIf(end_time, toDateTime64('1970-01-01 00:00:00.000', 9))";
     /**
-     * The {@code end_time} fields whose filter resolves to {@link #END_TIME_NON_NULLABLE_ANALYTICS_DB} under the
-     * caller's cutover flag — one per entity that migrated ({@code traceColumnsNonNullable} for traces/threads,
-     * {@code spanColumnsNonNullable} for spans).
+     * 在调用方的切换标志下，其过滤解析为 {@link #END_TIME_NON_NULLABLE_ANALYTICS_DB} 的 {@code end_time} 字段——
+     * 每个已迁移的实体各一个（trace/thread 的 {@code traceColumnsNonNullable}，span 的 {@code spanColumnsNonNullable}）。
      */
     private static final Set<Field> END_TIME_SENTINEL_FIELDS = Set.of(
             TraceField.END_TIME, TraceThreadField.END_TIME, SpanField.END_TIME);
@@ -93,22 +91,21 @@ public class FilterQueryBuilder {
     private static final String USAGE_TOTAL_TOKENS_ANALYTICS_DB = "usage['total_tokens']";
     private static final String VALUE_ANALYTICS_DB = "value";
     /**
-     * Duration (ms) derived from {@code start_time}/{@code end_time}. The {@code notEquals(end_time, epoch)} guard, as
-     * in every other duration calc, keeps an absent (epoch-sentinel) {@code end_time} from yielding a garbage negative
-     * duration once the column is non-nullable. No-op while it is Nullable (an absent value reads as {@code NULL}).
+     * 由 {@code start_time}/{@code end_time} 推导的时长（毫秒）。{@code notEquals(end_time, epoch)} 守卫与其他每个
+     * 时长计算一样，可防止缺失（纪元哨兵值）的 {@code end_time} 在列变为非空后产生无意义的负时长。列仍为
+     * Nullable 时它是空操作（缺失值读作 {@code NULL}）。
      */
     private static final String DURATION_ANALYTICS_DB = "if(end_time IS NOT NULL AND notEquals(end_time, toDateTime64('1970-01-01 00:00:00.000', 9)) AND start_time IS NOT NULL AND notEquals(start_time, toDateTime64('1970-01-01 00:00:00.000', 9)), (dateDiff('microsecond', start_time, end_time) / 1000.0), 0)";
     /**
-     * Sentinel-aware {@code duration} for the materialized column (experiment-comparison filtering): {@code isNaN}
-     * collapses the {@code NaN} sentinel to {@code NULL} so comparisons exclude an absent value — notably {@code !=},
-     * since {@code NaN != x} is true. Unconditional (mirrors {@code TTFT_ANALYTICS_DB}); a no-op while the column is
-     * Nullable since {@code NaN} cannot occur yet.
+     * 用于物化列（实验比较过滤）的感知哨兵值的 {@code duration}：{@code isNaN} 把 {@code NaN} 哨兵值折叠为
+     * {@code NULL}，从而让比较排除缺失值——尤其是 {@code !=}，因为 {@code NaN != x} 为 true。无条件应用
+     * （与 {@code TTFT_ANALYTICS_DB} 一致）；在列仍为 Nullable 时是空操作，因为此时 {@code NaN} 还不会出现。
      */
     private static final String NEW_DURATION_ANALYTICS_DB = "if(isNaN(duration), NULL, duration)";
     /**
-     * Sentinel-aware {@code ttft} for filtering: {@code isNaN} collapses the {@code NaN} sentinel to {@code NULL} so
-     * comparisons exclude an absent value — notably {@code !=}, since {@code NaN != x} is true. Unconditional, not
-     * flag-gated: {@code NaN} cannot occur while the column is Nullable, so it is a no-op today.
+     * 用于过滤的感知哨兵值的 {@code ttft}：{@code isNaN} 把 {@code NaN} 哨兵值折叠为 {@code NULL}，从而让比较
+     * 排除缺失值——尤其是 {@code !=}，因为 {@code NaN != x} 为 true。无条件应用，不受标志门控：列仍为 Nullable
+     * 时 {@code NaN} 不会出现，所以目前它是空操作。
      */
     private static final String TTFT_ANALYTICS_DB = "if(isNaN(ttft), NULL, ttft)";
     private static final String THREAD_ID_ANALYTICS_DB = "thread_id";
@@ -155,8 +152,8 @@ public class FilterQueryBuilder {
     private static final String VERSION_NUMBER_DB = "version_number";
 
     /**
-     * Set of all feedback score fields across different entity types (Trace, Span, TraceThread, Experiment, etc.).
-     * Used to identify feedback score filters that require special handling in query building.
+     * 跨不同实体类型（Trace、Span、TraceThread、Experiment 等）的所有反馈分数字段的集合。
+     * 用于识别需要在查询构建中进行特殊处理的反馈分数过滤条件。
      */
     private static final Set<Field> FEEDBACK_SCORE_FIELDS = Set.of(
             TraceField.FEEDBACK_SCORES,
@@ -167,7 +164,7 @@ public class FilterQueryBuilder {
             ExperimentField.FEEDBACK_SCORES,
             ExperimentField.EXPERIMENT_SCORES);
 
-    // Table alias prefixes for AutomationRuleEvaluator queries
+    // AutomationRuleEvaluator 查询的表别名前缀
     private static final String AUTOMATION_RULE_TABLE_ALIAS = "rule.%s";
     private static final String AUTOMATION_EVALUATOR_TABLE_ALIAS = "evaluator.%s";
 
@@ -181,8 +178,8 @@ public class FilterQueryBuilder {
                             "arrayExists(element -> (ilike(element, CONCAT('%%', :filter%2$d ,'%%'))), %1$s) = 1",
                             FieldType.DICTIONARY,
                             "ilike(JSON_VALUE(%1$s, :filterKey%2$d), CONCAT('%%', :filter%2$d ,'%%'))",
-                            // MAP values are stored as JSON strings (e.g., "hello" with quotes), so we use the raw value
-                            // CONTAINS works because the pattern is found inside the value regardless of surrounding quotes
+                            // MAP 值以 JSON 字符串存储（例如带引号的 "hello"），因此我们使用原始值
+                            // CONTAINS 之所以有效，是因为无论值周围是否有引号，模式都能在值内部找到
                             FieldType.DICTIONARY_STATE_DB,
                             "JSON_VALUE(%1$s, :filterKey%2$d) LIKE CONCAT('%%', :filter%2$d ,'%%')",
                             FieldType.MAP,
@@ -193,7 +190,7 @@ public class FilterQueryBuilder {
                             FieldType.STRING_STATE_DB, "%1$s NOT LIKE CONCAT('%%', :filter%2$d ,'%%')",
                             FieldType.LIST,
                             "arrayExists(element -> (ilike(element, CONCAT('%%', :filter%2$d ,'%%'))), %1$s) = 0",
-                            // MAP values are stored as JSON strings, NOT_CONTAINS works with raw value
+                            // MAP 值以 JSON 字符串存储，NOT_CONTAINS 使用原始值即可
                             FieldType.MAP,
                             "notILike(arrayElement(mapValues(%1$s),indexOf(mapKeys(%1$s), :filterKey%2$d)), CONCAT('%%', :filter%2$d ,'%%'))",
                             FieldType.DICTIONARY,
@@ -204,8 +201,8 @@ public class FilterQueryBuilder {
                             FieldType.STRING, "startsWith(lower(%1$s), lower(:filter%2$d))",
                             FieldType.STRING_EXACT, "startsWith(%1$s, :filter%2$d)",
                             FieldType.STRING_STATE_DB, "%1$s LIKE CONCAT(:filter%2$d ,'%%')",
-                            // MAP values are stored as JSON strings with possible escaped quotes (e.g., "\"hello\"")
-                            // First remove escaped quotes with replaceAll, then trim remaining quotes with trimBoth
+                            // MAP 值以 JSON 字符串存储，可能包含转义引号（例如 "\"hello\""）
+                            // 先用 replaceAll 移除转义引号，再用 trimBoth 去除剩余引号
                             FieldType.MAP,
                             "startsWith(lower(trimBoth(replaceAll(arrayElement(mapValues(%1$s),indexOf(mapKeys(%1$s), :filterKey%2$d)), '\\\\\"', ''), '\"')), lower(:filter%2$d))",
                             FieldType.DICTIONARY,
@@ -216,8 +213,8 @@ public class FilterQueryBuilder {
                             FieldType.STRING, "endsWith(lower(%1$s), lower(:filter%2$d))",
                             FieldType.STRING_EXACT, "endsWith(%1$s, :filter%2$d)",
                             FieldType.STRING_STATE_DB, "%1$s LIKE CONCAT('%%', :filter%2$d)",
-                            // MAP values are stored as JSON strings with possible escaped quotes (e.g., "\"hello\"")
-                            // First remove escaped quotes with replaceAll, then trim remaining quotes with trimBoth
+                            // MAP 值以 JSON 字符串存储，可能包含转义引号（例如 "\"hello\""）
+                            // 先用 replaceAll 移除转义引号，再用 trimBoth 去除剩余引号
                             FieldType.MAP,
                             "endsWith(lower(trimBoth(replaceAll(arrayElement(mapValues(%1$s),indexOf(mapKeys(%1$s), :filterKey%2$d)), '\\\\\"', ''), '\"')), lower(:filter%2$d))",
                             FieldType.DICTIONARY,
@@ -239,8 +236,8 @@ public class FilterQueryBuilder {
                                     "lower(JSON_VALUE(%1$s, :filterKey%2$d)) = lower(:filter%2$d)"),
                             Map.entry(FieldType.DICTIONARY_STATE_DB,
                                     "lower(JSON_VALUE(%1$s, :filterKey%2$d)) = lower(:filter%2$d)"),
-                            // MAP values are stored as JSON strings with possible escaped quotes (e.g., "\"hello\"")
-                            // First remove escaped quotes with replaceAll, then trim remaining quotes with trimBoth
+                            // MAP 值以 JSON 字符串存储，可能包含转义引号（例如 "\"hello\""）
+                            // 先用 replaceAll 移除转义引号，再用 trimBoth 去除剩余引号
                             Map.entry(FieldType.MAP,
                                     "lower(trimBoth(replaceAll(arrayElement(mapValues(%1$s),indexOf(mapKeys(%1$s), :filterKey%2$d)), '\\\\\"', ''), '\"')) = lower(:filter%2$d)"),
                             Map.entry(FieldType.ENUM, "%1$s = :filter%2$d"),
@@ -260,8 +257,8 @@ public class FilterQueryBuilder {
                                     "lower(JSON_VALUE(%1$s, :filterKey%2$d)) != lower(:filter%2$d)"),
                             Map.entry(FieldType.DICTIONARY_STATE_DB,
                                     "lower(JSON_VALUE(%1$s, :filterKey%2$d)) != lower(:filter%2$d)"),
-                            // MAP values are stored as JSON strings with possible escaped quotes (e.g., "\"hello\"")
-                            // First remove escaped quotes with replaceAll, then trim remaining quotes with trimBoth
+                            // MAP 值以 JSON 字符串存储，可能包含转义引号（例如 "\"hello\""）
+                            // 先用 replaceAll 移除转义引号，再用 trimBoth 去除剩余引号
                             Map.entry(FieldType.MAP,
                                     "lower(trimBoth(replaceAll(arrayElement(mapValues(%1$s),indexOf(mapKeys(%1$s), :filterKey%2$d)), '\\\\\"', ''), '\"')) != lower(:filter%2$d)"),
                             Map.entry(FieldType.ENUM, "%1$s != :filter%2$d"),
@@ -474,7 +471,7 @@ public class FilterQueryBuilder {
             Map.entry(PromptVersionField.CREATED_BY, CREATED_BY_DB)).entrySet().stream()
             .collect(Collectors.toUnmodifiableMap(
                     Map.Entry::getKey,
-                    // Add the table alias as prefix to the db field name
+                    // 将表别名作为前缀添加到数据库字段名
                     entry -> PROMPT_VERSIONS_FIELDS_PATTERN.formatted(entry.getValue())));
 
     private static final Map<DatasetField, String> DATASET_FIELDS_MAP = new EnumMap<>(
@@ -757,7 +754,7 @@ public class FilterQueryBuilder {
                 DatasetItemField.LAST_UPDATED_AT,
                 DatasetItemField.CREATED_BY,
                 DatasetItemField.LAST_UPDATED_BY,
-                // Also include ExperimentsComparisonValidKnownField variants for experiment items
+                // 同时包含实验条目的 ExperimentsComparisonValidKnownField 变体
                 ExperimentsComparisonValidKnownField.ID,
                 ExperimentsComparisonValidKnownField.SOURCE,
                 ExperimentsComparisonValidKnownField.TRACE_ID,
@@ -834,14 +831,14 @@ public class FilterQueryBuilder {
     }
 
     private static String toAnalyticsDbOperator(@NonNull Filter filter, @NonNull FilterStrategy filterStrategy) {
-        // For aggregated feedback scores, use map access patterns instead of groupArray patterns
+        // 对于聚合反馈分数，使用 map 访问模式而不是 groupArray 模式
         if ((filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED
                 || filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED_IS_EMPTY)
                 && filter.field().getType() == FieldType.FEEDBACK_SCORES_NUMBER) {
             return getAggregatedFeedbackScoresTemplate(filter.operator());
         }
 
-        // For aggregated experiment scores (Map(String, Float64)), use Float64-based map access patterns
+        // 对于聚合实验分数（Map(String, Float64)），使用基于 Float64 的 map 访问模式
         if ((filterStrategy == FilterStrategy.EXPERIMENT_SCORES_AGGREGATED
                 || filterStrategy == FilterStrategy.EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY)
                 && filter.field().getType() == FieldType.FEEDBACK_SCORES_NUMBER) {
@@ -897,10 +894,10 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * @param columnsNonNullable when {@code true}, filters use the sentinel-aware
-     *                                expression so an absent (epoch) value is excluded like a {@code NULL}; pass the
-     *                                target entity's cutover flag from callers (traceColumnsNonNullable for
-     *                                traces/threads, spanColumnsNonNullable for spans), {@code false} elsewhere.
+     * @param columnsNonNullable 为 {@code true} 时，过滤条件使用感知哨兵值的表达式，从而像 {@code NULL} 一样排除
+     *                               缺失（纪元）值；调用方传入目标实体的切换标志（trace/thread 的
+     *                               traceColumnsNonNullable，span 的 spanColumnsNonNullable），其他位置传
+     *                               {@code false}。
      */
     public static Optional<String> toAnalyticsDbFilters(
             @NonNull List<? extends Filter> filters,
@@ -922,9 +919,9 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * V2-client entry point that mirrors {@link #toAnalyticsDbFilters} but emits placeholders
-     * in the v2 ClickHouse client's {@code {name:Type}} form instead of the r2dbc {@code :name}
-     * form. Pair with {@link #populateV2ClientParams} for the matching parameter binding.
+     * V2 客户端入口，与 {@link #toAnalyticsDbFilters} 对应，但发出的是 v2 ClickHouse 客户端的
+     * {@code {name:Type}} 形式占位符，而不是 r2dbc 的 {@code :name} 形式。与 {@link #populateV2ClientParams}
+     * 配对使用以完成对应的参数绑定。
      */
     public static Optional<String> toAnalyticsDbFiltersV2Client(
             @NonNull List<? extends Filter> filters, @NonNull FilterStrategy filterStrategy) {
@@ -932,8 +929,8 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * @param columnsNonNullable threaded through so a v2-client caller can opt into sentinel-aware {@code end_time}
-     *                                just like the r2dbc path; without it this entry point could never enable the flag.
+     * @param columnsNonNullable 透传该参数，让 v2 客户端调用方可以像 r2dbc 路径一样选择感知哨兵值的
+     *                               {@code end_time}；没有它，此入口就永远无法启用该标志。
      */
     public static Optional<String> toAnalyticsDbFiltersV2Client(
             @NonNull List<? extends Filter> filters, @NonNull FilterStrategy filterStrategy,
@@ -943,7 +940,7 @@ public class FilterQueryBuilder {
     }
 
     private static Optional<Set<? extends Field>> getFieldsByStrategy(FilterStrategy filterStrategy, Filter filter) {
-        // we want to apply the is empty filter only in the case below
+        // 我们只想在下面这种情况下应用 is empty 过滤
         if (filter.operator() == Operator.IS_EMPTY && filterStrategy == FilterStrategy.FEEDBACK_SCORES_IS_EMPTY) {
             return Optional.of(FILTER_STRATEGY_MAP.get(FilterStrategy.FEEDBACK_SCORES));
         }
@@ -981,26 +978,26 @@ public class FilterQueryBuilder {
             return Optional.of(FILTER_STRATEGY_MAP.get(FilterStrategy.EXPERIMENT_SCORES_AGGREGATED));
         }
 
-        // Skip IS_NOT_EMPTY for FEEDBACK_SCORES_AGGREGATED — it is handled by FEEDBACK_SCORES_AGGREGATED_IS_EMPTY
+        // 跳过 FEEDBACK_SCORES_AGGREGATED 的 IS_NOT_EMPTY — 它由 FEEDBACK_SCORES_AGGREGATED_IS_EMPTY 处理
         if (filter.operator() == Operator.IS_NOT_EMPTY && isFeedbackScore(filter)
                 && filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED) {
             return Optional.empty();
         }
 
-        // Skip IS_NOT_EMPTY for EXPERIMENT_SCORES_AGGREGATED — it is handled by EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY
+        // 跳过 EXPERIMENT_SCORES_AGGREGATED 的 IS_NOT_EMPTY — 它由 EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY 处理
         if (filter.operator() == Operator.IS_NOT_EMPTY && isFeedbackScore(filter)
                 && filterStrategy == FilterStrategy.EXPERIMENT_SCORES_AGGREGATED) {
             return Optional.empty();
         }
 
-        // Skip numerical operators for FEEDBACK_SCORES_AGGREGATED_IS_EMPTY — only IS_EMPTY/IS_NOT_EMPTY are handled there
+        // 跳过 FEEDBACK_SCORES_AGGREGATED_IS_EMPTY 的数值运算符 — 那里只处理 IS_EMPTY/IS_NOT_EMPTY
         if (filter.operator() != Operator.IS_EMPTY && filter.operator() != Operator.IS_NOT_EMPTY
                 && isFeedbackScore(filter)
                 && filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED_IS_EMPTY) {
             return Optional.empty();
         }
 
-        // Skip numerical operators for EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY — only IS_EMPTY/IS_NOT_EMPTY are handled there
+        // 跳过 EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY 的数值运算符 — 那里只处理 IS_EMPTY/IS_NOT_EMPTY
         if (filter.operator() != Operator.IS_EMPTY && filter.operator() != Operator.IS_NOT_EMPTY
                 && isFeedbackScore(filter)
                 && filterStrategy == FilterStrategy.EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY) {
@@ -1011,7 +1008,7 @@ public class FilterQueryBuilder {
             return Optional.empty();
         }
 
-        // Only allow IS_EMPTY for _IS_EMPTY strategies (not for regular AGGREGATED strategy)
+        // 仅允许 _IS_EMPTY 策略使用 IS_EMPTY（不允许常规的 AGGREGATED 策略）
         if (filter.operator() == Operator.IS_EMPTY && isFeedbackScore(filter)
                 && filterStrategy != FilterStrategy.FEEDBACK_SCORES_AGGREGATED_IS_EMPTY
                 && filterStrategy != FilterStrategy.EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY) {
@@ -1042,14 +1039,14 @@ public class FilterQueryBuilder {
 
     private static String getAnalyticsDbField(
             Field field, FilterStrategy filterStrategy, int i, boolean columnsNonNullable) {
-        // Resolve end_time to the sentinel-aware expression so an absent (epoch) value is excluded like a
-        // NULL. Flag-gated (epoch is legitimate while the column is Nullable); the caller passes its entity's
-        // cutover flag (traceColumnsNonNullable for traces/threads, spanColumnsNonNullable for spans).
+        // 将 end_time 解析为感知哨兵值的表达式，从而像 NULL 一样排除缺失（纪元）值。受标志门控
+        // （列仍为 Nullable 时纪元是合法值）；调用方传入其实体的切换标志（trace/thread 的
+        // traceColumnsNonNullable，span 的 spanColumnsNonNullable）。
         if (columnsNonNullable && END_TIME_SENTINEL_FIELDS.contains(field)) {
             return END_TIME_NON_NULLABLE_ANALYTICS_DB;
         }
 
-        // this is a special case where the DB field is determined by the filter strategy rather than the filter field
+        // 这是一个特殊情况：数据库字段由过滤策略决定，而不是由过滤字段决定
         if (filterStrategy == FilterStrategy.FEEDBACK_SCORES_IS_EMPTY) {
             return FEEDBACK_SCORE_COUNT_DB;
         }
@@ -1062,15 +1059,15 @@ public class FilterQueryBuilder {
             return EXPERIMENT_SCORE_COUNT_DB;
         }
 
-        // For aggregated feedback scores, use the appropriate column based on context
-        // ExperimentField.FEEDBACK_SCORES -> experiment_aggregates table uses feedback_scores_avg
+        // 对于聚合反馈分数，根据上下文使用合适的列
+        // ExperimentField.FEEDBACK_SCORES -> experiment_aggregates 表使用 feedback_scores_avg
         if ((filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED
                 || filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED_IS_EMPTY)
                 && field == ExperimentField.FEEDBACK_SCORES) {
             return "feedback_scores_avg";
         }
 
-        // ExperimentsComparisonValidKnownField.FEEDBACK_SCORES -> experiment_item_aggregates table uses feedback_scores
+        // ExperimentsComparisonValidKnownField.FEEDBACK_SCORES -> experiment_item_aggregates 表使用 feedback_scores
         if ((filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED
                 || filterStrategy == FilterStrategy.FEEDBACK_SCORES_AGGREGATED_IS_EMPTY)
                 && field == ExperimentsComparisonValidKnownField.FEEDBACK_SCORES) {
@@ -1083,8 +1080,8 @@ public class FilterQueryBuilder {
             return "experiment_scores";
         }
 
-        // experiment_aggregates.experiment_scores is Map(String, Float64); qualify with alias to avoid
-        // ambiguity with experiments.experiment_scores (JSON blob) in the same FROM clause
+        // experiment_aggregates.experiment_scores 是 Map(String, Float64)；使用别名限定，以避免与
+        // 同一 FROM 子句中的 experiments.experiment_scores（JSON 二进制大对象）产生歧义
         if ((filterStrategy == FilterStrategy.EXPERIMENT_SCORES_AGGREGATED
                 || filterStrategy == FilterStrategy.EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY)
                 && field == ExperimentField.EXPERIMENT_SCORES) {
@@ -1129,16 +1126,14 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * V2-client entry point: produces the same filter parameters as
-     * {@link #bind(Statement, List, FilterStrategy)} but populates a {@code Map<String, Object>}
-     * for the v2 ClickHouse client's {@code query(sql, params, settings)} API instead of binding
-     * to a {@link Statement}.
+     * V2 客户端入口：生成与 {@link #bind(Statement, List, FilterStrategy)} 相同的过滤参数，但为 v2 ClickHouse
+     * 客户端的 {@code query(sql, params, settings)} API 填充 {@code Map<String, Object>}，而不是绑定到
+     * {@link Statement}。
      *
-     * <p>Multi-value operator values are pre-rendered as a ClickHouse array literal string
-     * (e.g. {@code ['a','b']}) because the v2 client serialises Map values via
-     * {@code String.valueOf}, which would otherwise emit an unquoted Java array {@code [a, b]}.
+     * <p>多值运算符的值被预渲染为 ClickHouse 数组字面量字符串（例如 {@code ['a','b']}），因为 v2 客户端通过
+     * {@code String.valueOf} 序列化 Map 值，否则会发出一个未加引号的 Java 数组 {@code [a, b]}。
      *
-     * <p>Pair with {@link #toAnalyticsDbFiltersV2Client} for the matching SQL fragment.
+     * <p>与 {@link #toAnalyticsDbFiltersV2Client} 配对使用以获取匹配的 SQL 片段。
      */
     public static void populateV2ClientParams(
             @NonNull Map<String, Object> params,
@@ -1154,9 +1149,8 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Core binding logic shared by the r2dbc {@link Statement} and the v2-client
-     * {@code Map<String, Object>} entry points above. Iterates filters and emits param
-     * (name, value) pairs through the supplied {@code binder}.
+     * 上述 r2dbc {@link Statement} 和 v2 客户端 {@code Map<String, Object>} 入口共用的核心绑定逻辑。
+     * 遍历过滤条件，并通过提供的 {@code binder} 发出参数 (name, value) 对。
      */
     private static void bindUsing(
             @NonNull BiConsumer<String, Object> binder,
@@ -1170,8 +1164,8 @@ public class FilterQueryBuilder {
                 if (filter.field().isDynamic(filterStrategy)) {
                     String fieldName = filter.field().getQueryParamField();
 
-                    // For EXPERIMENT_ITEM, split fields like "output.some_field" into column name and JSON path
-                    // Only bind the JSON path (column name is embedded in SQL template)
+                    // 对于 EXPERIMENT_ITEM，把 "output.some_field" 这类字段拆分为列名和 JSON 路径
+                    // 只绑定 JSON 路径（列名已嵌入到 SQL 模板中）
                     if (filterStrategy == FilterStrategy.EXPERIMENT_ITEM && fieldName.contains(".")) {
                         int firstDot = fieldName.indexOf('.');
                         String jsonKey = fieldName.substring(firstDot + 1);
@@ -1179,8 +1173,8 @@ public class FilterQueryBuilder {
 
                         binder.accept("dynamicJsonPath%d".formatted(i), jsonPath);
                     } else if (filterStrategy == FilterStrategy.DATASET_ITEM && fieldName.contains(".")) {
-                        // For DATASET_ITEM, fields like "data.expected_answer" map to data['expected_answer']
-                        // Extract the key name (the part after the first dot) and bind it
+                        // 对于 DATASET_ITEM，"data.expected_answer" 这类字段映射到 data['expected_answer']
+                        // 提取键名（第一个点之后的部分）并绑定它
                         int firstDot = fieldName.indexOf('.');
                         String keyName = fieldName.substring(firstDot + 1);
 
@@ -1189,16 +1183,15 @@ public class FilterQueryBuilder {
                         var jsonPath = getStateSQLJsonPath(fieldName);
                         binder.accept("dynamicJsonPath%d".formatted(i), jsonPath);
                     } else {
-                        // Default dynamic field binding for other strategies
+                        // 其他策略的默认动态字段绑定
                         binder.accept("dynamicField%d".formatted(i), fieldName);
                     }
                 }
 
                 if (!NO_VALUE_OPERATORS.contains(filter.operator())) {
                     if (Operator.MULTI_VALUE_OPERATORS.contains(filter.operator())) {
-                        // Comma-separated values for IN/NOT_IN (ENUM, STRING_LIST); bind as String[].
-                        // Trim and drop empty tokens defensively against stray whitespace
-                        // or trailing commas in client input.
+                        // 用于 IN/NOT_IN（ENUM、STRING_LIST）的逗号分隔值；以 String[] 绑定。
+                        // 防御性地去除空白和空 token，以应对客户端输入中可能混入的空格或尾随逗号。
                         binder.accept("filter%d".formatted(i),
                                 Arrays.stream(filter.value().split(","))
                                         .map(String::trim)
@@ -1219,21 +1212,18 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Rewrites the r2dbc-style {@code :name} placeholders emitted by
-     * {@link #toAnalyticsDbFilters} into the v2 ClickHouse client's {@code {name:Type}}
-     * form. Multi-value operators ({@code IN}, {@code NOT_IN}) are typed as
-     * {@code Array(String)}; everything else as {@code String}.
+     * 将 {@link #toAnalyticsDbFilters} 发出的 r2dbc 风格 {@code :name} 占位符重写为 v2 ClickHouse 客户端的
+     * {@code {name:Type}} 形式。多值运算符（{@code IN}、{@code NOT_IN}）类型化为 {@code Array(String)}；
+     * 其他所有情况类型化为 {@code String}。
      *
-     * <p>Iteration order goes from the highest filter index to the lowest so that
-     * substring overlaps like {@code :filter1} inside {@code :filter12} resolve to the
-     * longer name first.
+     * <p>迭代顺序从最高的过滤索引到最低，这样像 {@code :filter12} 中的 {@code :filter1} 这类子串重叠会先解析为
+     * 更长的名称。
      *
-     * <p>{@link #toAnalyticsDbFiltersV2Client} is the public entry point that bundles this
-     * rewrite with the SQL generation; this method is exposed only for direct unit testing.
+     * <p>{@link #toAnalyticsDbFiltersV2Client} 是把这个重写与 SQL 生成打包在一起的公开入口；本方法仅用于直接
+     * 单元测试。
      *
-     * @param sql     SQL fragment containing {@code :name} placeholders
-     * @param filters filters that were used to build {@code sql}; their order determines
-     *                the param indices ({@code :filter0}, {@code :filter1}, …)
+     * @param sql     包含 {@code :name} 占位符的 SQL 片段
+     * @param filters 用于构建 {@code sql} 的过滤条件；它们的顺序决定参数索引（{@code :filter0}、{@code :filter1}、…）
      */
     @VisibleForTesting
     static String rewritePlaceholdersForV2Client(@NonNull String sql, @NonNull List<? extends Filter> filters) {
@@ -1252,17 +1242,15 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Renders a collection of strings as a ClickHouse array literal, e.g. {@code ['a','b']}.
-     * Use when binding an {@code Array(String)} parameter to the v2 ClickHouse client, which
-     * serialises Map values via {@code String.valueOf} and would otherwise emit an unquoted
-     * Java array {@code [a, b]} that the server rejects.
+     * 将字符串集合渲染为 ClickHouse 数组字面量，例如 {@code ['a','b']}。用于向 v2 ClickHouse 客户端绑定
+     * {@code Array(String)} 参数时，因为该客户端通过 {@code String.valueOf} 序列化 Map 值，否则会发出一个
+     * 服务器会拒绝的未加引号 Java 数组 {@code [a, b]}。
      *
-     * <p>Per-element escaping delegates to {@link ClickHouseUtil#escape(String)}, the upstream
-     * ClickHouse JDBC helper that handles the full C-style escape set the server accepts
-     * (backslash, single-quote, backtick, newline, tab, etc.). This closes injection vectors
-     * like {@code x';DROP TABLE...} and {@code x\';...} by emitting {@code \'} and {@code \\}.
+     * <p>逐元素转义委托给 {@link ClickHouseUtil#escape(String)}，即上游 ClickHouse JDBC 辅助方法，
+     * 它处理服务器接受的完整 C 风格转义集（反斜杠、单引号、反引号、换行、制表符等）。这通过发出
+     * {@code \'} 和 {@code \\} 来封堵诸如 {@code x';DROP TABLE...} 和 {@code x\';...} 的注入向量。
      *
-     * @throws NullPointerException if {@code values} is null
+     * @throws NullPointerException 如果 {@code values} 为 null
      */
     public static String formatStringArrayLiteral(@NonNull Collection<@NonNull String> values) {
         return values.stream()
@@ -1271,19 +1259,18 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Maps a {@link FilterStrategy} to the StringTemplate parameter name it populates.
+     * 将 {@link FilterStrategy} 映射到它所填充的 StringTemplate 参数名。
      */
     public record FilterStrategyParam(FilterStrategy strategy, String templateParam) {
     }
 
     /**
-     * Applies a configurable list of filter strategies to a StringTemplate.
-     * For each entry whose strategy produces a non-empty SQL fragment, adds the fragment
-     * under the corresponding template parameter name.
+     * 将可配置的过滤策略列表应用到一个 StringTemplate。
+     * 对于每个策略生成了非空 SQL 片段的条目，把该片段添加到对应的模板参数名下。
      *
-     * @param template       the ST template to populate
-     * @param filters        the caller-supplied filter list (may be null or empty)
-     * @param strategyParams ordered list of (strategy, templateParam) pairs to evaluate
+     * @param template       要填充的 ST 模板
+     * @param filters        调用方提供的过滤列表（可为 null 或空）
+     * @param strategyParams 要评估的 (strategy, templateParam) 对的有序列表
      */
     public static void applyFiltersToTemplate(ST template, List<? extends Filter> filters,
             List<FilterStrategyParam> strategyParams) {
@@ -1297,12 +1284,12 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Binds filter parameters for a configurable list of filter strategies to an R2DBC statement.
+     * 为可配置的过滤策略列表把过滤参数绑定到一个 R2DBC 语句。
      *
-     * @param statement  the statement to bind parameters to
-     * @param filters    the caller-supplied filter list (may be null or empty)
-     * @param strategies ordered list of strategies whose parameters should be bound
-     * @return the statement with all parameters bound
+     * @param statement  要绑定参数的语句
+     * @param filters    调用方提供的过滤列表（可为 null 或空）
+     * @param strategies 应当绑定参数的策略的有序列表
+     * @return 已绑定所有参数的语句
      */
     public static Statement bindFilters(Statement statement, List<? extends Filter> filters,
             List<FilterStrategy> strategies) {
@@ -1326,7 +1313,7 @@ public class FilterQueryBuilder {
             var filter = filters.get(i);
             stateSQLMapping.put("filter%d".formatted(i), filter.value());
 
-            // Handle dynamic fields
+            // 处理动态字段
             if (filterStrategy != null && filter.field().isDynamic(filterStrategy)) {
                 var fieldName = filter.field().getQueryParamField();
                 if (filterStrategy == FilterStrategy.PROMPT_VERSION && fieldName.contains(".")) {
@@ -1335,7 +1322,7 @@ public class FilterQueryBuilder {
                 }
             }
 
-            // Handle filter keys for DICTIONARY fields
+            // 处理 DICTIONARY 字段的过滤键
             if (StringUtils.isNotBlank(filter.key())
                     && KEY_SUPPORTED_FIELDS_SET.contains(filter.field().getType())) {
                 var key = getKey(filter);
@@ -1347,12 +1334,12 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Generates a JSON path for dynamic fields, typically metadata, for the state DB (MySQL) SQL.
-     * Splits fields, e.g: "metadata.environment" into JSON path format: $."environment"
-     * Uses quoted dot notation to handle keys with spaces and special characters.
+     * 为动态字段（通常是 metadata）生成用于状态数据库（MySQL）SQL 的 JSON 路径。
+     * 把字段（例如 "metadata.environment"）拆分为 JSON 路径格式：$."environment"
+     * 使用带引号的点号记法以处理包含空格和特殊字符的键。
      *
-     * @param fieldName Full field name like "metadata.environment"
-     * @return JSON path in format $."key" e.g: $."environment"
+     * @param fieldName 完整字段名，如 "metadata.environment"
+     * @return 格式为 $."key" 的 JSON 路径，例如 $."environment"
      */
     private static String getStateSQLJsonPath(String fieldName) {
         var jsonKey = fieldName.substring(fieldName.indexOf('.') + 1);
@@ -1364,11 +1351,10 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Resolves the key bound as {@code :filterKey} for a filter.
+     * 解析作为 {@code :filterKey} 绑定的过滤键。
      * <p>
-     * The analytics DB path is delegated to {@link JsonPathUtils#toAnalyticsDbJsonPath(String)} so that
-     * a key holding characters unquoted dot notation cannot express resolves normally instead of
-     * aborting the query. The state DB path is unchanged.
+     * 分析数据库路径委托给 {@link JsonPathUtils#toAnalyticsDbJsonPath(String)}，这样持有未加引号点号记法无法
+     * 表达的字符的键也能正常解析，而不会中止查询。状态数据库路径保持不变。
      */
     private static String getKey(Filter filter) {
 
@@ -1393,15 +1379,14 @@ public class FilterQueryBuilder {
     }
 
     /**
-     * Builds field mapping for DatasetItem JSON fields (output, input, metadata).
-     * These fields are stored as JSON strings in ClickHouse, so we need to use JSONExtractRaw
-     * instead of bracket notation. We use literal keys instead of bind parameters
-     * to avoid the dynamic field tuple wrapping.
+     * 为 DatasetItem JSON 字段（output、input、metadata）构建字段映射。
+     * 这些字段在 ClickHouse 中以 JSON 字符串存储，因此我们需要使用 JSONExtractRaw 而不是方括号记法。
+     * 我们使用字面量键而不是绑定参数，以避免动态字段的元组包装。
      * <p>
-     * This is used for sorting DatasetItem fields.
+     * 这用于对 DatasetItem 字段进行排序。
      *
-     * @param sortingFields the sorting fields from the request
-     * @return a map from field name to ClickHouse SQL expression
+     * @param sortingFields 来自请求的排序字段
+     * @return 从字段名到 ClickHouse SQL 表达式的映射
      */
     public Map<String, String> buildDatasetItemFieldMapping(@NonNull List<SortingField> sortingFields) {
         Map<String, String> fieldMapping = new HashMap<>();
@@ -1409,8 +1394,8 @@ public class FilterQueryBuilder {
         for (SortingField field : sortingFields) {
             String fieldName = field.field();
 
-            // Check if this is a JSON field (output, input, or metadata)
-            // Use literal keys instead of bind parameters to avoid dynamic field handling
+            // 检查这是否是 JSON 字段（output、input 或 metadata）
+            // 使用字面量键而不是绑定参数，以避免动态字段处理
             if (fieldName.startsWith(OUTPUT_FIELD_PREFIX)) {
                 String key = fieldName.substring(OUTPUT_FIELD_PREFIX.length());
                 fieldMapping.put(fieldName,
@@ -1424,30 +1409,30 @@ public class FilterQueryBuilder {
                 fieldMapping.put(fieldName,
                         JSON_EXTRACT_RAW_TEMPLATE.formatted("metadata", key));
             }
-            // For other fields (including feedback_scores, data, etc.), use default dbField()
+            // 对于其他字段（包括 feedback_scores、data 等），使用默认的 dbField()
         }
 
         return fieldMapping;
     }
 
     /**
-     * Builds a search filter SQL condition for DatasetItem search.
-     * Uses multiSearchAnyCaseInsensitive to search within the data field.
+     * 为 DatasetItem 搜索构建一个搜索过滤 SQL 条件。
+     * 使用 multiSearchAnyCaseInsensitive 在 data 字段内进行搜索。
      *
-     * @param searchText the search text (non-blank)
-     * @return SQL filter condition string
+     * @param searchText 搜索文本（非空白）
+     * @return SQL 过滤条件字符串
      */
     public String buildDatasetItemSearchFilter(@NonNull String searchText) {
         return "multiSearchAnyCaseInsensitive(toString(data), :searchTerms) > 0";
     }
 
     /**
-     * Binds search terms to a statement.
-     * Splits the search text by whitespace and binds as an array.
+     * 把搜索词绑定到一个语句。
+     * 按空白拆分搜索文本并绑定为数组。
      *
-     * @param statement the R2DBC statement
-     * @param searchText the search text to split and bind
-     * @return the statement with bound search terms
+     * @param statement R2DBC 语句
+     * @param searchText 要拆分并绑定的搜索文本
+     * @return 已绑定搜索词的语句
      */
     public Statement bindSearchTerms(@NonNull Statement statement, @NonNull String searchText) {
         String[] searchTerms = searchText.split("\\s+");

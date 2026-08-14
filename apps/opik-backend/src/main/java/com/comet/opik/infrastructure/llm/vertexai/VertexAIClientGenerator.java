@@ -56,7 +56,7 @@ public class VertexAIClientGenerator implements LlmProviderClientGenerator<ChatM
                         new VertexAiGeminiStreamingChatModel(generativeModel, generationConfig), vertexAI));
     }
 
-    // Fresh VertexAI per call, handed to the wrapper that owns and closes it; closed here if setup fails first.
+    // 每次调用都新建 VertexAI，交给持有并关闭它的包装器；如果此处设置先失败则在这里关闭。
     private <T> T buildOwnedClient(LlmProviderClientApiConfig apiKey, ChatCompletionRequest request,
             OwnedClientFactory<T> factory) {
         VertexAI vertexAI = buildVertexAI(apiKey);
@@ -79,7 +79,7 @@ public class VertexAIClientGenerator implements LlmProviderClientGenerator<ChatM
         return new InternalServerErrorException("Failed to create GoogleCredentials", e);
     }
 
-    // Close a client we built but couldn't hand to a wrapping owner, so it can't outlive the failure.
+    // 关闭一个我们已构建但无法交给包装所有者的客户端，这样它就不会比失败存活得更久。
     private static void closeSuppressing(VertexAI vertexAI, RuntimeException failure) {
         try {
             vertexAI.close();
@@ -120,9 +120,9 @@ public class VertexAIClientGenerator implements LlmProviderClientGenerator<ChatM
     }
 
     /**
-     * The location is free-text in the provider configuration but ends up in the {@code locations/%s} resource path as
-     * well as the host, so it has to be canonicalised before either is derived from it. The configured endpoint keys
-     * are constrained to the same lower-case form, so both sides of the lookup agree on the key.
+     * 位置在 provider 配置中是自由文本，但会进入 {@code locations/%s} 资源路径以及
+     * 主机，因此在从它推导出两者之前必须先规范化它。配置的端点键
+     * 也被约束为相同的小写形式，这样查找的两侧对键达成一致。
      */
     private static String canonicalLocation(String location) {
         return location.strip().toLowerCase(Locale.ROOT);

@@ -22,32 +22,32 @@ def create_custom_guardrail(
     callback: Optional[Callable[[Dict[str, Any]], None]] = None,
 ) -> Dict[str, Any]:
     """
-    Train a custom binary guardrail on the guardrails server and make it available
-    to the :class:`~opik.guardrails.CustomGuardrail` guard.
+    在 guardrails 服务器上训练一个自定义二分类 guardrail，并使其可被
+    :class:`~opik.guardrails.CustomGuardrail` 防护使用。
 
     Args:
-        name: Name of the model, used later to reference the guardrail.
-        description: Natural-language metric, completing "Determine whether it ...",
-            for example "contains toxic or abusive language".
-        examples: Labeled examples as ``{"text": ..., "label": 0 or 1}``, where 1 means
-            the metric holds (the guardrail should fail).
-        base_model: Base model to fine-tune the adapter on.
-        epochs: Number of training epochs.
-        overwrite: If True, retrain and replace an existing guardrail with this name.
-            If False (default), a name that already exists is rejected.
-        wait: If True, block until training completes and return the final status.
-        poll_interval: Seconds between status checks while waiting.
-        timeout: Maximum seconds to wait for training to complete.
-        callback: Optional function called once per poll with the current status,
-            which carries a ``progress`` dict (percent, epoch, train_loss, latest_eval)
-            while training. Only used when ``wait`` is True.
+        name: 模型名称，之后用于引用该 guardrail。
+        description: 自然语言描述的评价标准，用于补全“判断其是否……”，
+            例如“包含有毒或辱骂性语言”。
+        examples: 形如 ``{"text": ..., "label": 0 或 1}`` 的带标签示例，其中 1 表示
+            该标准成立（guardrail 应判定为失败）。
+        base_model: 用于微调适配器的基础模型。
+        epochs: 训练轮数。
+        overwrite: 若为 True，则重新训练并替换同名已有 guardrail。
+            若为 False（默认），同名 guardrail 已存在时会被拒绝。
+        wait: 若为 True，则阻塞直到训练完成并返回最终状态。
+        poll_interval: 等待期间每次状态检查之间的间隔秒数。
+        timeout: 等待训练完成的最大秒数。
+        callback: 可选的函数，在每次轮询时以当前状态调用一次，
+            训练期间该状态携带一个 ``progress`` 字典（percent、epoch、train_loss、latest_eval）。
+            仅在 ``wait`` 为 True 时使用。
 
     Returns:
-        The training status. When ``wait`` is True this includes the eval metrics.
+        训练状态。当 ``wait`` 为 True 时包含评估指标。
 
     Raises:
-        opik.exceptions.GuardrailTrainingError: If training fails or does not complete
-            within ``timeout``.
+        opik.exceptions.GuardrailTrainingError: 若训练失败或未在
+            ``timeout`` 内完成。
     """
     client = opik_client.get_global_client()
     api_client = rest_api_client.GuardrailsApiClient(
@@ -79,10 +79,10 @@ def create_custom_guardrail(
             return status
         if state == "failed":
             raise exceptions.GuardrailTrainingError(
-                f"Custom guardrail '{name}' training failed: {status.get('error')}"
+                f"自定义 guardrail '{name}' 训练失败：{status.get('error')}"
             )
         time.sleep(poll_interval)
 
     raise exceptions.GuardrailTrainingError(
-        f"Custom guardrail '{name}' training did not complete within {timeout} seconds"
+        f"自定义 guardrail '{name}' 训练未在 {timeout} 秒内完成"
     )

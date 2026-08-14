@@ -46,7 +46,7 @@ class GuardrailsServiceImpl implements GuardrailsService {
 
         var entityType = EntityType.TRACE;
 
-        // group guardrails by project name to resolve project ids
+        // 按项目名称对防护规则分组，以解析项目ID
         Map<String, List<Guardrail>> guardrailsPerProject = guardrails
                 .stream()
                 .map(guardrail -> {
@@ -78,7 +78,7 @@ class GuardrailsServiceImpl implements GuardrailsService {
                             project,
                             guardrailsPerProject.get(projectName)
                                     .stream()
-                                    .map(item -> item.toBuilder().projectId(project.id()).build()) // set projectId
+                                    .map(item -> item.toBuilder().projectId(project.id()).build()) // 设置 projectId
                                     .toList());
                 })
                 .toList();

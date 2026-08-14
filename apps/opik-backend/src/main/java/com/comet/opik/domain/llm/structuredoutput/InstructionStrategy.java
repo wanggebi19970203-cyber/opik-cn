@@ -43,7 +43,7 @@ public class InstructionStrategy implements StructuredOutputStrategy {
         String instruction = "\n\n"
                 + INSTRUCTION.formatted(generateJsonExample(schema), generateJsonDescriptions(schema));
 
-        // Create a mutable copy to work with
+        // 创建一个可变副本来操作
         List<ChatMessage> modifiableMessages = new ArrayList<>(messages);
 
         int lastUserMessageIndex = -1;
@@ -58,29 +58,29 @@ public class InstructionStrategy implements StructuredOutputStrategy {
             UserMessage userMessage = (UserMessage) modifiableMessages.get(lastUserMessageIndex);
             UserMessage modifiedUserMessage;
 
-            // Check if this is a simple text message (original behavior)
+            // 检查这是否是一条简单文本消息（原有行为）
             if (userMessage.contents() == null || userMessage.contents().isEmpty()) {
-                // Simple text message: use singleText()
+                // 简单文本消息：使用 singleText()
                 String newContent = userMessage.singleText() + instruction;
                 modifiedUserMessage = UserMessage.from(newContent);
             } else {
-                // Multimodal message: extract text parts, append instruction, and rebuild
+                // 多模态消息：提取文本部分、追加指令并重建
                 List<Content> originalContents = new ArrayList<>(userMessage.contents());
 
-                // Find and concatenate all text content
+                // 查找并连接所有文本内容
                 String allTextContent = originalContents.stream()
                         .filter(content -> content instanceof TextContent)
                         .map(content -> ((TextContent) content).text())
                         .collect(Collectors.joining("\n"));
 
-                // Append the instruction to the text
+                // 将指令追加到文本
                 String newTextContent = allTextContent + instruction;
 
-                // Rebuild the message: keep all non-text content, replace text with updated text
+                // 重建消息：保留所有非文本内容，用更新后的文本替换原文本
                 List<Content> newContents = new ArrayList<>();
                 newContents.add(TextContent.from(newTextContent));
 
-                // Add all non-text content (images, videos, etc.)
+                // 添加所有非文本内容（图片、视频等）
                 originalContents.stream()
                         .filter(content -> !(content instanceof TextContent))
                         .forEach(newContents::add);
@@ -88,12 +88,12 @@ public class InstructionStrategy implements StructuredOutputStrategy {
                 modifiedUserMessage = UserMessage.from(newContents);
             }
 
-            // Remove the original user message
+            // 移除原始用户消息
             modifiableMessages.remove(lastUserMessageIndex);
-            // Add the modified user message to the end
+            // 将修改后的用户消息添加到末尾
             modifiableMessages.add(modifiedUserMessage);
 
-            // Update the request builder with the new message list
+            // 用新的消息列表更新请求构建器
             chatRequestBuilder.messages(modifiableMessages);
         }
 

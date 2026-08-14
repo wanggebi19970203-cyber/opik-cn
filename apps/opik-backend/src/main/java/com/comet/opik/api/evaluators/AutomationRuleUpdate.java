@@ -31,7 +31,7 @@ public sealed interface AutomationRuleUpdate permits AutomationRuleEvaluatorUpda
 
     <E extends Filter> List<E> getFilters();
 
-    UUID getProjectId(); // Legacy field for backward compatibility
+    UUID getProjectId(); // 用于向后兼容的遗留字段
 
-    Set<UUID> getProjectIds(); // Project IDs to assign to this rule (write-only)
+    Set<UUID> getProjectIds(); // 分配给此规则的项目 ID（仅写入）
 }

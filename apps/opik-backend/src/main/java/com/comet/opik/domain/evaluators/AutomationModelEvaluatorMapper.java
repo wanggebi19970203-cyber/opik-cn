@@ -209,8 +209,8 @@ interface AutomationModelEvaluatorMapper {
     }
 
     /**
-     * Map LlmAsJudgeMessage to LlmAsJudgeCodeMessage for database storage.
-     * Handles the content which can be either a String (content field) or a List (contentArray field).
+     * 将 LlmAsJudgeMessage 映射为 LlmAsJudgeCodeMessage 以用于数据库存储。
+     * 处理既可以是 String（content 字段）也可以是 List（contentArray 字段）的内容。
      */
     default LlmAsJudgeCodeMessage map(LlmAsJudgeMessage message) {
         if (message == null) {
@@ -219,13 +219,13 @@ interface AutomationModelEvaluatorMapper {
 
         String contentString;
         if (message.isStringContent()) {
-            // Simple string content
+            // 简单字符串内容
             contentString = message.content();
         } else if (message.isStructuredContent()) {
-            // Structured content (array), serialize to JSON
+            // 结构化内容（数组），序列化为 JSON
             contentString = JsonUtils.writeValueAsString(message.contentArray());
         } else {
-            // Both are null
+            // 两者都为空
             contentString = null;
         }
 
@@ -233,7 +233,7 @@ interface AutomationModelEvaluatorMapper {
     }
 
     /**
-     * Map list of LlmAsJudgeMessage to list of LlmAsJudgeCodeMessage.
+     * 将 LlmAsJudgeMessage 列表映射为 LlmAsJudgeCodeMessage 列表。
      */
     default List<LlmAsJudgeCodeMessage> mapMessages(List<LlmAsJudgeMessage> messages) {
         if (messages == null) {
@@ -245,8 +245,8 @@ interface AutomationModelEvaluatorMapper {
     }
 
     /**
-     * Map LlmAsJudgeCodeMessage from database to LlmAsJudgeMessage for API.
-     * Handles the content field which can be stored as either a plain String or a JSON array.
+     * 将数据库中的 LlmAsJudgeCodeMessage 映射为 API 的 LlmAsJudgeMessage。
+     * 处理内容字段——它可能以普通字符串或 JSON 数组形式存储。
      */
     default LlmAsJudgeMessage map(LlmAsJudgeCodeMessage codeMessage) {
         if (codeMessage == null) {
@@ -261,16 +261,16 @@ interface AutomationModelEvaluatorMapper {
                     .role(role)
                     .build();
         } else if (contentString.trim().startsWith("[")) {
-            // It's a JSON array, deserialize to List<LlmAsJudgeMessageContent>
+            // 这是一个 JSON 数组，反序列化为 List<LlmAsJudgeMessageContent>
             try {
-                // Deserialize as raw list first to handle potential LinkedHashMap issue
+                // 先反序列化为原始列表，以处理潜在的 LinkedHashMap 问题
                 List<?> rawList = JsonUtils.getMapper().readValue(
                         contentString,
                         JsonUtils.getMapper().getTypeFactory().constructCollectionType(
                                 List.class,
                                 Object.class));
 
-                // Convert each element to LlmAsJudgeMessageContent
+                // 将每个元素转换为 LlmAsJudgeMessageContent
                 List<LlmAsJudgeMessageContent> contentArray = rawList.stream()
                         .map(this::convertToMessageContent)
                         .toList();
@@ -283,7 +283,7 @@ interface AutomationModelEvaluatorMapper {
                 throw new RuntimeException("Failed to deserialize message content from JSON", e);
             }
         } else {
-            // It's a plain string
+            // 这是一个普通字符串
             return LlmAsJudgeMessage.builder()
                     .role(role)
                     .content(contentString)
@@ -292,8 +292,8 @@ interface AutomationModelEvaluatorMapper {
     }
 
     /**
-     * Convert a deserialized object (either LlmAsJudgeMessageContent or Map) to LlmAsJudgeMessageContent.
-     * This handles the case where Jackson deserializes JSON objects as LinkedHashMap.
+     * 将反序列化的对象（LlmAsJudgeMessageContent 或 Map）转换为 LlmAsJudgeMessageContent。
+     * 这处理了 Jackson 将 JSON 对象反序列化为 LinkedHashMap 的情况。
      */
     private LlmAsJudgeMessageContent convertToMessageContent(Object obj) {
         if (obj instanceof LlmAsJudgeMessageContent content) {
@@ -363,7 +363,7 @@ interface AutomationModelEvaluatorMapper {
     }
 
     /**
-     * Map list of LlmAsJudgeCodeMessage to list of LlmAsJudgeMessage.
+     * 将 LlmAsJudgeCodeMessage 列表映射为 LlmAsJudgeMessage 列表。
      */
     default List<LlmAsJudgeMessage> mapCodeMessages(List<LlmAsJudgeCodeMessage> codeMessages) {
         if (codeMessages == null) {

@@ -317,7 +317,7 @@ public interface AlertDAO {
                         try {
                             return mapper.map(rs, "alert_type", ctx);
                         } catch (SQLException e) {
-                            log.warn("Failed to map alert_type column", e);
+                            log.warn("映射 alert_type 列失败", e);
                             return null;
                         }
                     })
@@ -361,7 +361,7 @@ public interface AlertDAO {
                     return triggers;
                 }
             } catch (Exception e) {
-                log.warn("Failed to parse triggers JSON: '{}'", triggersNode, e);
+                log.warn("解析 triggers JSON 失败：'{}'", triggersNode, e);
             }
             return null;
         }
@@ -382,7 +382,7 @@ public interface AlertDAO {
                         .createdBy(triggerNode.get("created_by").asText())
                         .build();
             } catch (Exception e) {
-                log.warn("Failed to parse trigger: '{}'", triggerNode, e);
+                log.warn("解析 trigger 失败：'{}'", triggerNode, e);
                 return null;
             }
         }
@@ -400,7 +400,7 @@ public interface AlertDAO {
                     return configs;
                 }
             } catch (Exception e) {
-                log.warn("Failed to parse trigger configs: '{}'", configsNode, e);
+                log.warn("解析 trigger configs 失败：'{}'", configsNode, e);
             }
             return null;
         }
@@ -428,7 +428,7 @@ public interface AlertDAO {
                         .lastUpdatedBy(configNode.get("last_updated_by").asText())
                         .build();
             } catch (Exception e) {
-                log.warn("Failed to parse trigger config: '{}'", configNode, e);
+                log.warn("解析 trigger config 失败：'{}'", configNode, e);
                 return null;
             }
         }
@@ -444,7 +444,7 @@ public interface AlertDAO {
                     return JsonUtils.convertValue(configValueNode, MapFlatArgumentFactory.TYPE_REFERENCE);
                 }
             } catch (Exception e) {
-                log.warn("Failed to parse config value: '{}'", configValueNode, e);
+                log.warn("解析 config value 失败：'{}'", configValueNode, e);
             }
             return Map.of();
         }

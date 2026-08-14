@@ -6,14 +6,13 @@ LOGGER = logging.getLogger(__name__)
 
 class LiteLLMResponseCostExtractor:
     """
-    Extracts the cost reported by a LiteLLM proxy.
+    提取 LiteLLM 代理报告的成本。
 
-    The proxy returns the request cost in the ``x-litellm-response-cost``
-    response header. LangChain only surfaces response headers when the chat
-    model is created with ``include_response_headers=True``, in which case they
-    land under ``response_metadata["headers"]``. We also check the top level of
-    ``response_metadata`` to stay robust across LangChain versions/setups that
-    flatten the header.
+    代理会在 ``x-litellm-response-cost`` 响应头中返回请求成本。LangChain 仅在
+    创建 chat 模型时设置了 ``include_response_headers=True`` 才会暴露响应头，
+    此时它们会落在 ``response_metadata["headers"]`` 之下。我们还会检查
+    ``response_metadata`` 的顶层，以便在那些会扁平化响应头的 LangChain
+    版本/配置下保持健壮性。
     """
 
     RESPONSE_COST_KEY = "x-litellm-response-cost"
@@ -34,7 +33,5 @@ class LiteLLMResponseCostExtractor:
         try:
             return float(raw_cost)
         except (TypeError, ValueError):
-            LOGGER.debug(
-                "Failed to parse LiteLLM response cost from value: %r", raw_cost
-            )
+            LOGGER.debug("无法从以下值解析 LiteLLM 响应成本：%r", raw_cost)
             return None

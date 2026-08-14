@@ -36,11 +36,10 @@ class Optimization:
         error_info: Optional[dict] = None,
     ) -> None:
         LOGGER.debug(
-            f"Updating optimization {self.id} with name {name} and status {status}"
+            f"正在更新优化 {self.id}，名称为 {name}，状态为 {status}"
         )
-        # Only forward error_info when supplied; passing None would serialize an
-        # explicit null and could clobber a previously-persisted reason on a
-        # subsequent non-error update.
+        # 仅在提供 error_info 时才转发它；传入 None 会序列化为显式的 null，
+        # 并可能在后续的非错误更新中覆盖之前持久化的原因。
         extra = {"error_info": error_info} if error_info is not None else {}
         try:
             self._rest_client.optimizations.update_optimizations_by_id(
@@ -50,20 +49,18 @@ class Optimization:
                 **extra,
             )
         except TypeError:
-            # An older installed opik whose typed ``update_optimizations_by_id``
-            # predates the ``error_info`` field rejects that kwarg with a
-            # TypeError. Fall back to the SDK's pre-configured httpx client
-            # (accepts snake_case fields, ignores unknown ones) so the update —
-            # crucially the ``status`` transition on the error path — still
-            # lands instead of throwing while trying to record a failure and
-            # leaving the run stuck. Mirrors the python-backend worker's
-            # status_manager fallback. Once the SDK ships ``error_info`` this
-            # branch is never exercised.
+            # 较旧的已安装 opik，其带类型的 ``update_optimizations_by_id``
+            # 早于 ``error_info`` 字段，会以 TypeError 拒绝该 kwarg。
+            # 回退到 SDK 预先配置的 httpx 客户端（接受 snake_case 字段，忽略未知字段），
+            # 这样更新 —— 尤其是错误路径上的 ``status`` 转换 —— 仍然能够落地，
+            # 而不是在尝试记录失败时抛出异常并让运行卡住。
+            # 这镜像了 python-backend worker 的 status_manager 回退。
+            # 一旦 SDK 提供了 ``error_info``，此分支将永远不会被执行。
             if not extra:
                 raise
             LOGGER.debug(
-                "Installed opik SDK lacks the 'error_info' update field; "
-                "sending the optimization update via the raw REST client."
+                "已安装的 opik SDK 缺少 'error_info' 更新字段；"
+                "改为通过原始 REST 客户端发送优化更新。"
             )
             body: dict = {"error_info": error_info}
             if name is not None:
@@ -76,10 +73,10 @@ class Optimization:
                 json=body,
             )
             if response.status_code >= 300:
-                # Preserve the generated client's error contract: callers that
-                # `except ApiError` / inspect status_code must see the same
-                # exception type as the typed path, not a leaked
-                # httpx.HTTPStatusError from raise_for_status().
+                # 保留生成客户端的错误契约：执行 `except ApiError` /
+                # 检查 status_code 的调用方必须看到与带类型路径相同的
+                # 异常类型，而不是 raise_for_status() 泄漏出来的
+                # httpx.HTTPStatusError。
                 error_body: Any
                 try:
                     error_body = response.json()
@@ -92,5 +89,5 @@ class Optimization:
                 )
 
     def fetch_content(self) -> rest_api_types.OptimizationPublic:
-        LOGGER.debug(f"Fetching optimization data {self.id}")
+        LOGGER.debug(f"正在获取优化数据 {self.id}")
         return self._rest_client.optimizations.get_optimization_by_id(id=self.id)

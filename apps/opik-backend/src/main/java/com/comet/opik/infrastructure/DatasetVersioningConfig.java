@@ -12,20 +12,17 @@ import lombok.Builder;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Runtime configuration for the dataset versioning write path.
+ * 数据集版本化写入路径的运行时配置。
  *
- * <p>See OPIK-6674: the {@code COPY_VERSION_ITEMS} and {@code EDIT_ITEM_VIA_SELECT_INSERT}
- * INSERT...SELECT queries on the {@code dataset_item_versions} table can return zero
- * rows when the SELECT lands on a ClickHouse replica that does not yet have the
- * source version's parts visible. The retry guard re-issues the operation with backoff
- * when zero rows are written and fails with a typed exception once attempts are exhausted,
- * instead of silently committing the truncated state.
+ * <p>参见 OPIK-6674：当 SELECT 落在某个尚未可见源版本分区的 ClickHouse 副本上时，
+ * {@code dataset_item_versions} 表上的 {@code COPY_VERSION_ITEMS} 和 {@code EDIT_ITEM_VIA_SELECT_INSERT}
+ * INSERT...SELECT 查询可能返回零行。重试守卫会在写入零行时带退避重新执行该操作，并在尝试耗尽后以
+ * 类型化异常失败，而不是静默提交被截断的状态。
  *
- * <p>{@code lockLease} is the per-dataset distributed-lock lease that serializes the
- * read-latest &rarr; create-version &rarr; flip-latest sequence so parallel uploads can't
- * race on the mutable 'latest' pointer (OPIK-7264).
+ * <p>{@code lockLease} 是每个数据集的分布式锁租约，用于串行化 读取最新 &rarr; 创建版本 &rarr; 翻转最新
+ * 的序列，使并行上传无法在可变的 'latest' 指针上产生竞态（OPIK-7264）。
  *
- * <p>Defaults live in {@code config.yml} / {@code config-test.yml}, not here.
+ * <p>默认值位于 {@code config.yml} / {@code config-test.yml}，不在这里。
  */
 @Builder(toBuilder = true)
 public record DatasetVersioningConfig(

@@ -15,14 +15,14 @@ RETRIEVE_POLICIES_PATH = "v1/private/guardrails/policies/retrieve"
 
 
 class StoredGuard(pydantic.BaseModel):
-    """A single stored check: a type and the configuration of the matching guard class."""
+    """单个已存储的检查项：一个类型以及匹配 guard 类的配置。"""
 
     type: str
     config: Dict[str, Any]
 
 
 class StoredPolicy(pydantic.BaseModel):
-    """A named group of guards, as stored in the workspace."""
+    """存储在工作空间中的一组命名的 guard。"""
 
     name: str
     guards: List[StoredGuard]
@@ -32,10 +32,10 @@ def retrieve_policies(
     client: opik_client.Opik, names: Optional[Sequence[str]]
 ) -> List[StoredPolicy]:
     """
-    Fetch the named policies, plus every policy the workspace applies unconditionally.
+    获取指定的策略，以及工作空间无条件应用的所有策略。
 
-    Composed by hand rather than through the generated REST client: the endpoint is not
-    part of the published OpenAPI definition the client is generated from.
+    此请求通过手工构造而非使用生成的 REST 客户端：该端点不在
+    客户端所依据的已发布 OpenAPI 定义中。
     """
     response = client.rest_client._client_wrapper.httpx_client.request(
         RETRIEVE_POLICIES_PATH,
@@ -53,10 +53,10 @@ def retrieve_policies(
 
 def build_guards(policies: Sequence[StoredPolicy]) -> List[guards.Guard]:
     """
-    Turn stored policies into runtime guards.
+    将存储的策略转换为运行时 guard。
 
-    Which policy a guard came from is not preserved: the guards of every policy are
-    checked together, as one flat set.
+    不保留 guard 来自哪个策略：所有策略的 guard 会被一起检查，
+    作为一个扁平的集合。
     """
     return [
         _build_guard(policy_name=policy.name, stored_guard=stored_guard)
@@ -91,16 +91,16 @@ def _build_guard(policy_name: str, stored_guard: StoredGuard) -> guards.Guard:
         )
 
     if stored_guard.type == schemas.ValidationType.LLM_JUDGE:
-        # A policy holds at most one judge, so its results are labeled with the policy name.
+        # 一个策略最多持有一个 judge，因此其结果以策略名称进行标记。
         return guards.LLMJudge(
             name=policy_name,
             instructions=config["instructions"],
             model=config["model"],
         )
 
-    # Not skipped: guardrails fail closed, and a check that cannot run must not silently
-    # reduce the protection a policy promises.
+    # 不跳过：护栏采用失败关闭策略，无法运行的检查绝不能悄然
+    # 削弱策略所承诺的防护。
     raise exceptions.GuardrailPolicyError(
-        f"Guardrail policy '{policy_name}' contains a guard of type '{stored_guard.type}', "
-        "which this version of the Opik SDK cannot run. Upgrade the SDK."
+        f"护栏策略 '{policy_name}' 包含类型为 '{stored_guard.type}' 的 guard，"
+        "此版本的 Opik SDK 无法运行。请升级 SDK。"
     )

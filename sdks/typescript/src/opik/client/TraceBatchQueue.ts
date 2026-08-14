@@ -44,10 +44,10 @@ export class TraceBatchQueue extends BatchQueue<SavedTrace> {
     );
   }
 
-  // Extract inline base64 attachments (when enabled) BEFORE truncation, so images become
-  // attachments and no longer count toward the per-object size cap. @track mirrors the
-  // outermost call's input/output onto the trace, so a trace can carry an oversized payload
-  // just like a span and needs the same guard.
+  // 在截断之前（启用时）提取内联 base64 附件，使图片变为
+  // 附件，不再计入每个对象的大小上限。@track 会把最外层调用的输入/输出
+  // 镜像到 trace 上，因此 trace 与 span 一样可能携带超大的载荷，
+  // 需要相同的防护。
   protected async createEntities(traces: SavedTrace[]) {
     const payload: SavedTrace[] = [];
     for (const trace of traces) {

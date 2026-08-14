@@ -45,8 +45,8 @@ public interface AutomationRuleEvaluatorDAO extends AutomationRuleDAO {
     <T> int updateEvaluator(@Bind("id") UUID id, @BindMethods("rule") AutomationRuleEvaluatorModel<T> rule);
 
     /**
-     * Query 1: Find rules WITHOUT project associations (clean, no duplication).
-     * Returns one row per rule with all rule metadata.
+     * 查询 1：查找没有项目关联的规则（干净、无重复）。
+     * 每条规则返回一行，包含所有规则元数据。
      */
     @SqlQuery("""
             SELECT rule.id, rule.project_id AS legacy_project_id,
@@ -89,8 +89,8 @@ public interface AutomationRuleEvaluatorDAO extends AutomationRuleDAO {
             @Define("limit") @Bind("limit") Integer limit);
 
     /**
-     * Query 2: Bulk fetch project associations for given rules.
-     * Returns minimal data: only rule_id and project_id mappings.
+     * 查询 2：批量获取给定规则的项目关联。
+     * 返回最小数据：仅 rule_id 和 project_id 的映射。
      */
     @SqlQuery("""
             SELECT rule_id, project_id
@@ -104,7 +104,7 @@ public interface AutomationRuleEvaluatorDAO extends AutomationRuleDAO {
             @Bind("workspaceId") String workspaceId);
 
     /**
-     * Helper to convert list of mappings into Map<RuleId, Set<ProjectId>>
+     * 将映射列表转换为 Map<RuleId, Set<ProjectId>> 的帮助方法
      */
     default Map<UUID, Set<UUID>> findProjectMappings(List<UUID> ruleIds, String workspaceId) {
         return findProjectMappingsList(ruleIds, workspaceId).stream()
@@ -114,13 +114,13 @@ public interface AutomationRuleEvaluatorDAO extends AutomationRuleDAO {
     }
 
     /**
-     * Simple record to hold rule-project mapping.
+     * 用于保存规则-项目映射的简单记录。
      */
     record RuleProjectMapping(UUID ruleId, UUID projectId) {
     }
 
     /**
-     * Row mapper for RuleProjectMapping.
+     * RuleProjectMapping 的行映射器。
      */
     class RuleProjectMappingRowMapper implements RowMapper<RuleProjectMapping> {
         @Override
@@ -170,7 +170,7 @@ public interface AutomationRuleEvaluatorDAO extends AutomationRuleDAO {
     default long findCount(String workspaceId,
             UUID projectId,
             AutomationRuleEvaluatorCriteria criteria) {
-        // Backward compatibility: convert single projectId to set
+        // 向后兼容：将单个 projectId 转换为集合
         return findCount(workspaceId, Optional.ofNullable(projectId).map(Set::of).orElse(null), criteria);
     }
 

@@ -35,7 +35,7 @@ ARGUMENT_VALIDATION_SPAN_SUFFIX = "_arg_validation"
 
 
 def _has_evaluation_span_parameter(func: Callable) -> bool:
-    """Check if a scoring function expects the task_span parameter."""
+    """检查评分函数是否期望 task_span 参数。"""
     try:
         sig = inspect.signature(func)
         return EVALUATION_SPAN_PARAMETER_NAME in sig.parameters
@@ -44,11 +44,10 @@ def _has_evaluation_span_parameter(func: Callable) -> bool:
 
 
 def _accepts_trace_tool_context(func: Callable) -> bool:
-    """Check if a scoring function accepts the trace_tool_context kwarg.
+    """检查评分函数是否接受 trace_tool_context kwarg。
 
-    Returns True when the signature names the parameter explicitly OR
-    accepts ``**kwargs`` (which absorbs unknown kwargs). LLMJudge falls
-    into the second case.
+    当签名显式命名该参数，或接受 ``**kwargs``（它会吸收未知的
+    kwarg）时返回 True。LLMJudge 属于第二种情况。
     """
     try:
         sig = inspect.signature(func)
@@ -64,13 +63,13 @@ def split_into_regular_and_task_span_metrics(
     scoring_metrics: List[base_metric.BaseMetric],
 ) -> Tuple[List[base_metric.BaseMetric], List[base_metric.BaseMetric]]:
     """
-    Separate metrics into regular and task-span categories.
+    将指标分为常规指标和任务 span 指标两类。
 
     Args:
-        scoring_metrics: List of metrics to analyze.
+        scoring_metrics: 要分析的指标列表。
 
     Returns:
-        Tuple of (regular_metrics, task_span_metrics).
+        (regular_metrics, task_span_metrics) 元组。
     """
     regular_metrics: List[base_metric.BaseMetric] = []
     task_span_metrics: List[base_metric.BaseMetric] = []
@@ -87,11 +86,11 @@ def split_into_regular_and_task_span_metrics(
 def _build_failed_score_result(
     metric_name: str, exception: Exception
 ) -> score_result.ScoreResult:
-    """Represent an error raised outside the metric body as a failed score.
+    """将指标体之外抛出的错误表示为失败的分数。
 
-    ``reason`` is the exception message, matching what a failure raised inside
-    ``score`` already produces. The structured payload goes to ``metadata``
-    under the same ``error_info`` key used on spans and traces.
+    ``reason`` 是异常消息，与在 ``score`` 内部抛出的失败所产生的内容一致。
+    结构化载荷放入 ``metadata`` 中，使用与 span 和 trace 上相同的
+    ``error_info`` 键。
     """
     return score_result.ScoreResult(
         name=metric_name,
@@ -103,14 +102,13 @@ def _build_failed_score_result(
 
 
 def _describe_evaluator_error(exception: Exception) -> str:
-    """Describe a failure to build an item evaluator without echoing its config.
+    """描述构建项目评估器的失败，但不回显其配置。
 
-    ``evaluator_item.config`` comes from the dataset and can carry credentials.
-    Pydantic embeds the rejected input in the exception message and therefore in
-    the traceback too, so neither may reach the log; ``include_input=False``
-    keeps the field paths, which is the part worth having. Nothing is lost: the
-    full exception still reaches the caller, re-raised at the default tolerance
-    and on the failed score result above it.
+    ``evaluator_item.config`` 来自数据集，可能携带凭据。
+    Pydantic 会把被拒绝的输入嵌入异常消息，因此也会嵌入 traceback，
+    所以两者都不能进入日志；``include_input=False`` 保留字段路径，
+    这才是值得保留的部分。没有丢失任何信息：完整的异常仍然会到达调用方，
+    在默认容错级别重新抛出，并体现在其上的失败分数结果中。
     """
     if isinstance(exception, pydantic.ValidationError):
         errors = exception.errors(include_url=False, include_input=False)
@@ -124,17 +122,16 @@ def _extract_item_evaluators(
     error_tolerance: ErrorTolerance,
 ) -> Tuple[List[base_metric.BaseMetric], List[score_result.ScoreResult]]:
     """
-    Extract evaluators from dataset item.
+    从数据集项目中提取评估器。
 
-    If the item has evaluator configs, instantiate LLMJudge evaluators from them.
+    如果项目带有评估器配置，则从中实例化 LLMJudge 评估器。
 
     Args:
-        item: The dataset item.
-        evaluator_model: Optional model name to use for LLMJudge evaluators.
+        item: 数据集项目。
+        evaluator_model: 供 LLMJudge 评估器使用的可选模型名称。
 
     Returns:
-        Tuple of (evaluator instances extracted from the item, failed score
-        results for the evaluators that were configured but could not be run).
+        (从项目提取的评估器实例，已配置但无法运行的评估器的失败分数结果) 元组。
     """
     if not item.evaluators:
         return [], []
@@ -150,13 +147,13 @@ def _extract_item_evaluators(
                 )
                 evaluators.append(evaluator)
             else:
-                # Not an error the caller can act on mid-run (an older SDK
-                # against a newer dataset), so it must not abort the
-                # evaluation. It must not disappear either: without a result
-                # the item just looks under-evaluated (OPIK-6925).
+                # 这不是调用方在运行中途能够处理的错误（较旧的 SDK
+                # 面对较新的数据集），因此它不应中止评估。
+                # 它也不应消失：没有结果的话，该项目看起来就像被
+                # 欠评估了一样（OPIK-6925）。
                 unsupported_type = exceptions.EvaluationError(
-                    f"Unsupported evaluator type: {evaluator_item.type}. "
-                    "Only 'llm_judge' is supported."
+                    f"不支持的评估器类型：{evaluator_item.type}。"
+                    "仅支持 'llm_judge'。"
                 )
                 LOGGER.warning(str(unsupported_type))
                 skipped_evaluator_scores.append(
@@ -164,7 +161,7 @@ def _extract_item_evaluators(
                 )
         except Exception as exception:
             LOGGER.error(
-                "Failed to instantiate evaluator %s from its config (keys: %s): %s.",
+                "实例化评估器 %s 失败（配置键：%s）：%s。",
                 evaluator_item.name,
                 sorted(evaluator_item.config),
                 _describe_evaluator_error(exception),
@@ -185,7 +182,7 @@ def build_metrics_evaluator(
     evaluator_model: Optional[str],
     error_tolerance: ErrorTolerance,
 ) -> "MetricsEvaluator":
-    """Build a MetricsEvaluator with suite-level + item-level metrics."""
+    """使用套件级 + 项目级指标构建 MetricsEvaluator。"""
     all_metrics: List[base_metric.BaseMetric] = list(regular_metrics)
     skipped_evaluator_scores: List[score_result.ScoreResult] = []
     if item is not None:
@@ -209,13 +206,13 @@ def build_metrics_evaluator(
 
 
 @opik.track(  # type: ignore[attr-defined,has-type]
-    # Replaced per call with the metric's own name — `@track` fixes the name at
-    # decoration time, so the real one is set from inside the body.
+    # 每次调用时替换为指标自身的名称 —— `@track` 在装饰时固定名称，
+    # 因此真正的名称是在函数体内设置的。
     name=f"score{ARGUMENT_VALIDATION_SPAN_SUFFIX}",
     tags=[INTERNAL_SPAN_TAG],
-    # `metric_name` is the only argument worth recording: the rest is either the
-    # dataset item, already on the parent span, or objects whose serialization
-    # would drag a whole LLM client into the span input.
+    # `metric_name` 是唯一值得记录的参数：其余参数要么是数据集项目
+    # （已在父 span 上），要么是序列化时会把整个 LLM 客户端拖入
+    # span 输入的对象。
     ignore_arguments=[
         "metric",
         "mapped_scoring_inputs",
@@ -230,13 +227,13 @@ def _prepare_score_arguments(
     scoring_key_mapping: ScoringKeyMappingType,
     trace_tool_context: Any,
 ) -> Tuple[List[Any], Dict[str, Any]]:
-    """Everything that has to happen before ``score`` can be called.
+    """在调用 ``score`` 之前必须发生的所有事情。
 
-    Tracked, so this step gets a span of its own: ``score`` is ``@track``-wrapped
-    and reports its own failures, but a metric that never gets that far would
-    otherwise leave no trace of why — a failed score is not persisted either.
-    Using the decorator rather than a hand-rolled span also means the global
-    ``set_tracing_active`` switch is honoured here as everywhere else.
+    此步骤被追踪，因此拥有自己的 span：``score`` 被 ``@track`` 包装并
+    自行报告失败，但一个从未走到那一步的指标原本不会留下任何原因线索
+    —— 失败的分数也不会被持久化。使用装饰器而不是手动创建 span，
+    还意味着全局的 ``set_tracing_active`` 开关在这里与在其他地方一样
+    得到遵循。
     """
     opik_context.update_current_span(
         name=f"{metric_name}{ARGUMENT_VALIDATION_SPAN_SUFFIX}"
@@ -248,9 +245,8 @@ def _prepare_score_arguments(
         scoring_key_mapping=scoring_key_mapping,
     )
 
-    # Only inject trace_tool_context into metrics whose signature can absorb it;
-    # otherwise the call would fail with "unexpected keyword argument" for narrow
-    # metrics.
+    # 仅将 trace_tool_context 注入到签名能够吸收它的指标中；
+    # 否则对于窄指标的调用会因“意外的关键字参数”而失败。
     if trace_tool_context is not None and _accepts_trace_tool_context(metric.score):
         score_kwargs = {
             **mapped_scoring_inputs,
@@ -276,26 +272,26 @@ def _compute_metric_scores(
     error_tolerance: ErrorTolerance,
 ) -> List[score_result.ScoreResult]:
     """
-    Compute scores using given metrics.
+    使用给定指标计算分数。
 
     Args:
-        scoring_metrics: List of metrics to compute
-        mapped_scoring_inputs: Scoring inputs after key mapping (will be used for regular metrics)
-        scoring_key_mapping: Mapping for renaming score arguments (empty dict if no mapping)
-        dataset_item_content: Dataset item content (will be used for ScorerWrapperMetric)
-        task_output: Task output (will be used for ScorerWrapperMetric)
+        scoring_metrics: 要计算的指标列表
+        mapped_scoring_inputs: 键映射后的评分输入（将用于常规指标）
+        scoring_key_mapping: 用于重命名评分参数的映射（无映射时为空字典）
+        dataset_item_content: 数据集项目内容（将用于 ScorerWrapperMetric）
+        task_output: 任务输出（将用于 ScorerWrapperMetric）
 
     Returns:
-        List of computed score results
+        计算出的分数结果列表
     """
     score_results: List[score_result.ScoreResult] = []
 
     for metric in scoring_metrics:
         try:
-            LOGGER.debug("Metric %s score started", metric.name)
+            LOGGER.debug("指标 %s 的评分已开始", metric.name)
 
             if isinstance(metric, scorer_wrapper_metric.ScorerWrapperMetric):
-                # ScorerWrapperMetric uses original dataset item and task output without mappings
+                # ScorerWrapperMetric 使用原始数据集项目和任务输出，不做映射
                 if (
                     task_span := mapped_scoring_inputs.get(
                         EVALUATION_SPAN_PARAMETER_NAME
@@ -321,7 +317,7 @@ def _compute_metric_scores(
                 )
                 result = metric.score(*positional_arguments, **keyword_arguments)
 
-            LOGGER.debug("Metric %s score ended", metric.name)
+            LOGGER.debug("指标 %s 的评分已结束", metric.name)
 
             if isinstance(result, list):
                 score_results += result
@@ -332,14 +328,14 @@ def _compute_metric_scores(
             if error_tolerance < ErrorTolerance.ALL_SCORING_ERRORS:
                 raise
             LOGGER.error(
-                "Metric %s cannot be scored. Its score will be marked as failed. %s",
+                "指标 %s 无法评分。其分数将被标记为失败。%s",
                 metric.name,
                 exception,
             )
             score_results.append(_build_failed_score_result(metric.name, exception))
         except Exception as exception:
             LOGGER.error(
-                "Failed to compute metric %s. Score result will be marked as failed.",
+                "计算指标 %s 失败。分数结果将被标记为失败。",
                 metric.name,
                 exc_info=True,
             )
@@ -356,11 +352,11 @@ def _compute_metric_scores(
 
 class MetricsEvaluator:
     """
-    Handles metric computation and scoring.
+    处理指标计算和评分。
 
-    Separates metrics into:
-    - Regular metrics: Score based on inputs/outputs
-    - Task span metrics: Score based on LLM call metadata (tokens, latency, etc)
+    将指标分为：
+    - 常规指标：基于输入/输出评分
+    - 任务 span 指标：基于 LLM 调用元数据（token、延迟等）评分
     """
 
     def __init__(
@@ -380,36 +376,36 @@ class MetricsEvaluator:
 
     @property
     def has_task_span_metrics(self) -> bool:
-        """Check if any task span scoring metrics are configured."""
+        """检查是否配置了任何任务 span 评分指标。"""
         return len(self._task_span_metrics) > 0
 
     @property
     def task_span_metrics(self) -> List[base_metric.BaseMetric]:
-        """Get list of task span scoring metrics."""
+        """获取任务 span 评分指标列表。"""
         return self._task_span_metrics
 
     @property
     def regular_metrics(self) -> List[base_metric.BaseMetric]:
-        """Get list of regular scoring metrics."""
+        """获取常规评分指标列表。"""
         return self._regular_metrics
 
     @property
     def scoring_key_mapping(self) -> ScoringKeyMappingType:
-        """Get the scoring key mapping."""
+        """获取评分键映射。"""
         return self._scoring_key_mapping
 
     def _analyze_metrics(
         self,
         scoring_metrics: List[base_metric.BaseMetric],
     ) -> None:
-        """Separate metrics into regular and task-span categories."""
+        """将指标分为常规指标和任务 span 指标两类。"""
         self._regular_metrics, self._task_span_metrics = (
             split_into_regular_and_task_span_metrics(scoring_metrics)
         )
 
         if self.has_task_span_metrics:
             LOGGER.debug(
-                "Detected %d LLM task span scoring metrics.",
+                "检测到 %d 个 LLM 任务 span 评分指标。",
                 len(self._task_span_metrics),
             )
 
@@ -420,17 +416,16 @@ class MetricsEvaluator:
         trace_tool_context: Any = None,
     ) -> Tuple[List[score_result.ScoreResult], Dict[str, Any]]:
         """
-        Compute scores using regular metrics.
+        使用常规指标计算分数。
 
         Args:
-            dataset_item_content: Dataset item content
-            task_output: Task output
-            trace_tool_context: Optional agentic-judge context built from the
-                local emulator. Threaded only to metrics whose score
-                signature can accept it (LLMJudge in particular).
+            dataset_item_content: 数据集项目内容
+            task_output: 任务输出
+            trace_tool_context: 可选的、由本地模拟器构建的代理判断器上下文。
+                仅传递给 score 签名能够接受它的指标（尤其是 LLMJudge）。
 
         Returns:
-            Tuple of (score results, mapped scoring inputs used for scoring regular non-wrapper metrics)
+            (分数结果，用于对常规非包装指标评分的映射评分输入) 元组
         """
         mapped_scoring_inputs = arguments_helpers.create_scoring_inputs(
             dataset_item=dataset_item_content,
@@ -447,8 +442,8 @@ class MetricsEvaluator:
             trace_tool_context=trace_tool_context,
             error_tolerance=self._error_tolerance,
         )
-        # Appended, not prepended: consumers index into `score_results`, so a
-        # skipped evaluator must not displace the first configured metric.
+        # 追加而不是前置：消费者会按索引访问 `score_results`，因此被跳过的
+        # 评估器不得挤占第一个已配置指标的位置。
         score_results += self._skipped_evaluator_scores
 
         return score_results, mapped_scoring_inputs
@@ -460,15 +455,15 @@ class MetricsEvaluator:
         task_span: models.SpanModel,
     ) -> Tuple[List[score_result.ScoreResult], Dict[str, Any]]:
         """
-        Compute scores using task span metrics.
+        使用任务 span 指标计算分数。
 
         Args:
-            dataset_item_content: Dataset item content
-            task_output: Task output
-            task_span: Span model containing task execution metadata
+            dataset_item_content: 数据集项目内容
+            task_output: 任务输出
+            task_span: 包含任务执行元数据的 span 模型
 
         Returns:
-            Tuple of (score results, mapped scoring inputs used for scoring regular non-wrapper metrics)
+            (分数结果，用于对常规非包装指标评分的映射评分输入) 元组
         """
         mapped_scoring_inputs = arguments_helpers.create_scoring_inputs(
             dataset_item=dataset_item_content,

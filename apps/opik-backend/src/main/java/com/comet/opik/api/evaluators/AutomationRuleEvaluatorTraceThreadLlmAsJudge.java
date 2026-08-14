@@ -44,8 +44,8 @@ public final class AutomationRuleEvaluatorTraceThreadLlmAsJudge
 
         public static final String CONTEXT_VARIABLE_NAME = "context";
 
-        // Optional per-evaluation spend limit; overload preserves the prior positional shape
-        // (maxCostUsd = null = no limit).
+        // 可选的单次评估花费上限；该重载保留了先前的
+        // 位置参数形态（maxCostUsd = null = 无限制）。
         public TraceThreadLlmAsJudgeCode(LlmAsJudgeModelParameters model, List<LlmAsJudgeMessage> messages,
                 List<LlmAsJudgeOutputSchema> schema) {
             this(model, messages, schema, null);

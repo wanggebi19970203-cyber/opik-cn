@@ -14,19 +14,19 @@ def _validate_json_like_fields(
     failure_reasons: List[str],
     location: str,
 ) -> None:
-    """Reject str/list where the backend expects a JSON object.
+    """在后端期望 JSON 对象的位置拒绝 str/list。
 
-    The wire type accepts ``str`` and ``List[Dict]`` as well as ``Dict``, but a
-    string lands in ClickHouse as an opaque blob that the UI cannot render as
-    structured input/output. Callers hitting the raw Fern client discover this
-    only after the data is already stored, so we reject it up front.
+    线缆类型既接受 ``str`` 和 ``List[Dict]``，也接受 ``Dict``，但字符串
+    落入 ClickHouse 时会成为不透明 blob，UI 无法将其渲染为结构化的
+    输入/输出。直接调用原始 Fern 客户端的调用者只有在数据已存储之后才会
+    发现这一点，因此我们在此前置拒绝。
     """
     for field_name in _JSON_LIKE_FIELDS:
         value = getattr(source, field_name, None)
         if value is None or isinstance(value, dict):
             continue
         failure_reasons.append(
-            f"{location}.{field_name} must be a dict, got {type(value).__name__}"
+            f"{location}.{field_name} 必须是 dict，实际为 {type(value).__name__}"
         )
 
 
@@ -35,17 +35,17 @@ def _validate_feedback_score(
     failure_reasons: List[str],
     location: str,
 ) -> None:
-    """Check the keys the conversion reads, which would otherwise raise KeyError."""
+    """检查转换所读取的键，否则会引发 KeyError。"""
     if not isinstance(score, dict):
-        failure_reasons.append(f"{location} must be a dict, got {type(score).__name__}")
+        failure_reasons.append(f"{location} 必须是 dict，实际为 {type(score).__name__}")
         return
 
     if not score.get("name"):
-        failure_reasons.append(f"{location}.name is required and must be non-empty")
+        failure_reasons.append(f"{location}.name 为必填项且不能为空")
 
     value = score.get("value")
     if not isinstance(value, (int, float)) or isinstance(value, bool):
-        failure_reasons.append(f"{location}.value is required and must be a number")
+        failure_reasons.append(f"{location}.value 为必填项且必须是数字")
 
 
 def _validate_error_info(
@@ -53,20 +53,20 @@ def _validate_error_info(
     failure_reasons: List[str],
     location: str,
 ) -> None:
-    """Check the fields the wire model requires, avoiding a raw pydantic error."""
+    """检查线缆模型所需的字段，避免出现原始的 pydantic 错误。"""
     if error_info is None:
         return
 
     if not isinstance(error_info, dict):
         failure_reasons.append(
-            f"{location}.error_info must be a dict, got {type(error_info).__name__}"
+            f"{location}.error_info 必须是 dict，实际为 {type(error_info).__name__}"
         )
         return
 
     for required_key in ("exception_type", "traceback"):
         if not error_info.get(required_key):
             failure_reasons.append(
-                f"{location}.error_info.{required_key} is required and must be non-empty"
+                f"{location}.error_info.{required_key} 为必填项且不能为空"
             )
 
 
@@ -78,26 +78,26 @@ def _validate_record(
     location = f"items[{index}]"
 
     if not record.dataset_item_id:
-        failure_reasons.append(f"{location}.dataset_item_id must be a non-empty string")
+        failure_reasons.append(f"{location}.dataset_item_id 必须是非空字符串")
 
     if record.evaluate_task_result is not None and record.trace is not None:
         failure_reasons.append(
-            f"{location} must provide either evaluate_task_result or trace, but not both"
+            f"{location} 必须提供 evaluate_task_result 或 trace 其中之一，但不能同时提供"
         )
 
-    # Without either field the backend silently creates a hidden trace whose
-    # output is null, so the item is stored but invisible to the user.
+    # 如果两个字段都没有，后端会静默创建一个输出为 null 的隐藏 trace，
+    # 因此项目被存储了但对用户不可见。
     if record.evaluate_task_result is None and record.trace is None:
         failure_reasons.append(
-            f"{location} must provide either evaluate_task_result or trace"
+            f"{location} 必须提供 evaluate_task_result 或 trace 其中之一"
         )
 
     if record.evaluate_task_result is not None and not isinstance(
         record.evaluate_task_result, dict
     ):
         failure_reasons.append(
-            f"{location}.evaluate_task_result must be a dict, "
-            f"got {type(record.evaluate_task_result).__name__}"
+            f"{location}.evaluate_task_result 必须是 dict，"
+            f"实际为 {type(record.evaluate_task_result).__name__}"
         )
 
     if record.trace is not None:
@@ -122,10 +122,10 @@ def _validate_project_name_consistency(
     project_name: Optional[str],
     failure_reasons: List[str],
 ) -> None:
-    """Mirror ExperimentItemBulkUploadValidator.
+    """镜像 ExperimentItemBulkUploadValidator。
 
-    When a request-level project_name is set, the backend rejects the whole
-    upload if any item-level trace names a different project.
+    当设置了请求级 project_name 时，如果任何项目级 trace 指定了不同的项目，
+    后端会拒绝整个上传。
     """
     if project_name is None or not project_name.strip():
         return
@@ -140,8 +140,8 @@ def _validate_project_name_consistency(
             continue
         if trace.project_name.casefold() != project_name.casefold():
             failure_reasons.append(
-                f"items[{index}].trace.project_name ({trace.project_name!r}) does not match "
-                f"the upload project_name ({project_name!r})"
+                f"items[{index}].trace.project_name ({trace.project_name!r}) 与 "
+                f"上传的 project_name ({project_name!r}) 不匹配"
             )
 
 
@@ -149,7 +149,7 @@ def validate_records(
     records: List[bulk_item.ExperimentItemBulkRecord],
     project_name: Optional[str],
 ) -> None:
-    """Raise :class:`opik.exceptions.ValidationError` if any record is invalid."""
+    """如果有任何记录无效，则引发 :class:`opik.exceptions.ValidationError`。"""
     failure_reasons: List[str] = []
 
     for index, record in enumerate(records):
@@ -226,12 +226,11 @@ def _to_rest_feedback_score(
 def to_rest_record(
     record: bulk_item.ExperimentItemBulkRecord,
 ) -> rest_api_types.ExperimentItemBulkRecordExperimentItemBulkWriteView:
-    # Only set the fields the caller actually provided. The backend maps
-    # evaluate_task_result to a Jackson JsonNode, so an explicit JSON null
-    # deserializes to NullNode rather than Java null — sending
-    # "evaluate_task_result": null next to a trace trips the
-    # "cannot provide both" validator. Unset fields are omitted from the
-    # request body, which is what the backend expects.
+    # 仅设置调用者实际提供的字段。后端将 evaluate_task_result 映射为
+    # Jackson JsonNode，因此显式的 JSON null 会反序列化为 NullNode 而非
+    # Java null——在 trace 旁发送 "evaluate_task_result": null 会触发
+    # “不能同时提供两者”的校验器。未设置的字段会从请求体中省略，
+    # 这正是后端所期望的。
     optional_fields: Dict[str, Any] = {}
 
     if record.evaluate_task_result is not None:

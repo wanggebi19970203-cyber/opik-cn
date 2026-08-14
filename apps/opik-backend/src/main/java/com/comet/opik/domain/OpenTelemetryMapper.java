@@ -44,17 +44,17 @@ import static com.comet.opik.domain.mapping.OpenTelemetryMappingUtils.storageKey
 public class OpenTelemetryMapper {
 
     /**
-     * Converts an OpenTelemetry Span into an Opik Span. Despite similar conceptually, but require some translation
-     * of concepts, especially around ids.
+     * 将 OpenTelemetry Span 转换为 Opik Span。尽管概念上相似，但仍需要一些转换，
+     * 尤其是在 ID 方面。
      * <p>
-     * We will be linking this span to a given Opik traceId precalculated with the closest timestamp we could get for
-     * it. We can extract the timestamp from this traceId and use into spanId otel -> opik conversion, so all span ids
-     * for the trace can be predictable, but using the same reference timestamp.
+     * 我们会将该 span 关联到一个预先计算好的 Opik traceId，该 traceId 带有我们能获取到的最近时间戳。
+     * 我们可以从该 traceId 中提取时间戳，并用于 spanId 的 otel -> opik 转换，这样该 trace 的所有 span ID
+     * 都可预测，并且使用相同的时间戳参考。
      *
-     * @param otelSpan        an OpenTelemetry Span
-     * @param opikTraceId     the Opik UUID to be used for this span
-     * @param integrationName the detected (if any) integration name
-     * @return a converted Opik Span
+     * @param otelSpan        OpenTelemetry Span
+     * @param opikTraceId     用于该 span 的 Opik UUID
+     * @param integrationName 检测到的集成名称（如有）
+     * @return 转换后的 Opik Span
      */
     public static com.comet.opik.api.Span toOpikSpan(Span otelSpan, UUID opikTraceId, String integrationName) {
         var traceTimestamp = extractTimestampFromUUIDv7(opikTraceId);
@@ -64,10 +64,10 @@ public class OpenTelemetryMapper {
 
         var otelSpanId = otelSpan.getSpanId();
 
-        // Check for opik.trace_id, opik.span_id, and opik.parent_span_id override attributes.
-        // When present, these connect the span to an existing OPIK trace/span as-is (no ID conversion).
-        // opik.span_id is typically set by the SDK's OpikSpanProcessor, which mints a UUIDv7 per span and
-        // chains it via opik.parent_span_id so descendants of an attached subtree stay properly linked.
+        // 检查 opik.trace_id、opik.span_id 和 opik.parent_span_id 覆盖属性。
+        // 当这些属性存在时，会将 span 原样连接到现有的 OPIK trace/span（无需 ID 转换）。
+        // opik.span_id 通常由 SDK 的 OpikSpanProcessor 设置，它为每个 span 生成一个 UUIDv7，
+        // 并通过 opik.parent_span_id 将其串联起来，使附加子树的子孙 span 保持正确的链接关系。
         var opikSpanIdOverride = extractOpikSpanId(otelSpan);
         var opikTraceIdOverride = extractOpikTraceId(otelSpan);
         var opikParentSpanIdOverride = extractOpikParentSpanId(otelSpan);
@@ -80,20 +80,20 @@ public class OpenTelemetryMapper {
 
         if (opikTraceIdOverride.isPresent()) {
             effectiveTraceId = opikTraceIdOverride.get();
-            // When opik.trace_id is set, use opik.parent_span_id if available, otherwise null
-            // (span connects directly to the trace as a root span)
+            // 当设置 opik.trace_id 时，如果存在 opik.parent_span_id 则使用它，否则为 null
+            // （span 作为根 span 直接连接到 trace）
             opikParentSpanId = opikParentSpanIdOverride.orElse(null);
         } else {
             if (opikParentSpanIdOverride.isPresent()) {
-                log.warn("Span '{}' has '{}' without '{}', ignoring parent span ID override",
+                log.warn("Span '{}' 具有 '{}' 但缺少 '{}'，忽略父 span ID 覆盖",
                         otelSpan.getName(), GeneralMappingRules.OPIK_PARENT_SPAN_ID_ATTR,
                         GeneralMappingRules.OPIK_TRACE_ID_ATTR);
             }
             effectiveTraceId = opikTraceId;
             var otelParentSpanId = otelSpan.getParentSpanId();
-            // Some instrumentations set parent_span_id to the 16-byte trace id to mean "top-level span".
-            // Converting it yields a dangling UUID that doesn't match the Redis-mapped trace id, so
-            // treat it as a root span.
+            // 有些插桩会将 parent_span_id 设置为 16 字节的 trace id，表示“顶层 span”。
+            // 转换它会得到一个与 Redis 中映射的 trace id 不匹配的悬空 UUID，
+            // 因此将其视为根 span。
             boolean parentIsTraceId = !otelParentSpanId.isEmpty()
                     && otelParentSpanId.equals(otelSpan.getTraceId());
             opikParentSpanId = (otelParentSpanId.isEmpty() || parentIsTraceId)
@@ -121,12 +121,12 @@ public class OpenTelemetryMapper {
     }
 
     /**
-     * Extracts whats relevant from the messy KeyValues list adding the values into input/output/metadata/model/usage.
+     * 从杂乱的 KeyValue 列表中提取相关内容，并将值添加到 input/output/metadata/model/usage。
      *
-     * @param spanBuilder the span builder where we will be injecting the extracted values
-     * @param attributes the list of span attributes extracted from the otel payload
-     * @param integrationName the name of the integration sending the spans (can be empty)
-     * @param events the list of events extracted from the otel payload
+     * @param spanBuilder 我们将注入提取值的 span 构建器
+     * @param attributes 从 otel 负载中提取的 span 属性列表
+     * @param integrationName 发送 span 的集成名称（可以为空）
+     * @param events 从 otel 负载中提取的事件列表
      */
     public static void enrichSpanWithAttributes(SpanBuilder spanBuilder, List<KeyValue> attributes,
             String integrationName, List<Span.Event> events) {
@@ -136,15 +136,15 @@ public class OpenTelemetryMapper {
     private static final String CLAUDE_CODE_LLM_SPAN = "claude_code.llm_request";
     private static final String NEW_CONTEXT_ATTR = "new_context";
 
-    // Reserved metadata keys that must not be overwritten by user-supplied JSON merged from opik.metadata.
+    // 保留的元数据键，不得被来自 opik.metadata 合并的用户提供 JSON 覆盖。
     private static final Set<String> RESERVED_METADATA_KEYS = Set.of("thread_id", "integration", "server.address");
 
     /**
-     * Same as {@link #enrichSpanWithAttributes(SpanBuilder, List, String, List)} but with the OTEL
-     * span name, used for span-name-aware routing (e.g. Claude Code's {@code new_context} maps to
-     * input only on {@code claude_code.llm_request} spans).
+     * 与 {@link #enrichSpanWithAttributes(SpanBuilder, List, String, List)} 相同，但带有 OTEL
+     * span 名称，用于基于 span 名称的路由（例如，Claude Code 的 {@code new_context} 仅在
+     * {@code claude_code.llm_request} span 上映射到 input）。
      *
-     * @param spanName the OTEL span name (may be null)
+     * @param spanName OTEL span 名称（可以为 null）
      */
     public static void enrichSpanWithAttributes(SpanBuilder spanBuilder, List<KeyValue> attributes,
             String integrationName, List<Span.Event> events, String spanName) {
@@ -153,18 +153,18 @@ public class OpenTelemetryMapper {
         ObjectNode output = JsonUtils.createObjectNode();
         ObjectNode metadata = JsonUtils.createObjectNode();
         Set<String> tags = new HashSet<>();
-        // Claude Code spans carry a lot of session/config attributes that aren't input. For that
-        // integration the default bucket for unmapped attributes is metadata (not input), so only
-        // the explicitly promoted content attributes land in input/output/usage.
-        // Decided per span by name (not from the batch-level integrationName below): a single OTLP
-        // batch can mix scopes from more than one integration, so gating this on the batch-wide
-        // value could misroute a non-Claude span or skip routing for a real Claude Code span.
+        // Claude Code span 携带大量并非 input 的会话/配置属性。对于该集成，
+        // 未映射属性的默认存储位置是 metadata（而非 input），因此只有显式提升的内容属性
+        // 才会进入 input/output/usage。
+        // 按 span 名称逐个决定（而非根据下方的批次级 integrationName）：单个 OTLP
+        // 批次可能混合多个集成的 scope，因此若按批次级值判断，
+        // 可能会错误路由非 Claude span，或跳过真正的 Claude Code span 的路由。
         boolean isClaudeCode = OpenTelemetryMappingRuleFactory.isClaudeCodeSpan(spanName);
         ObjectNode defaultBucket = isClaudeCode ? metadata : input;
 
-        // Hold model and provider until the attribute loop completes so we can apply
-        // post-processing (e.g. Elastic Inference Service routing) that needs both values.
-        // Claude Code is Anthropic-only and never sends a provider attribute, so set it directly.
+        // 将 model 和 provider 保留到属性循环完成之后，以便应用需要这两个值的
+        // 后处理（例如 Elastic Inference Service 路由）。
+        // Claude Code 仅使用 Anthropic，从不发送 provider 属性，因此直接设置它。
         String model = null;
         String provider = isClaudeCode ? "anthropic" : null;
 
@@ -172,14 +172,14 @@ public class OpenTelemetryMapper {
             metadata.put("integration", integrationName);
         }
 
-        // Iterate over each attribute key-value pair
+        // 遍历每个属性键值对
         for (KeyValue attribute : attributes) {
             var key = attribute.getKey();
             var value = attribute.getValue();
 
-            // Claude Code's `new_context` is the latest message fed to the model on llm_request
-            // spans (the real LLM input); on interaction/tool spans it just repeats the prompt /
-            // tool result, so it's kept in metadata there rather than input.
+            // Claude Code 的 `new_context` 是 llm_request span 上送入模型的最新消息
+            // （即真正的 LLM 输入）；在 interaction/tool span 上它只是重复 prompt /
+            // 工具结果，因此在那里将其保留在 metadata 而非 input 中。
             if (isClaudeCode && NEW_CONTEXT_ATTR.equals(key)) {
                 extractToJsonColumn(CLAUDE_CODE_LLM_SPAN.equals(spanName) ? input : metadata, key, value);
                 continue;
@@ -188,7 +188,7 @@ public class OpenTelemetryMapper {
             var ruleOpt = OpenTelemetryMappingRuleFactory.findRule(key, isClaudeCode);
 
             if (ruleOpt.isEmpty()) {
-                log.debug("No rule found for unmapped attribute key '{}'. Using default bucket.", key);
+                log.debug("未映射的属性键 '{}' 未找到规则。使用默认存储位置。", key);
                 extractToJsonColumn(defaultBucket, key, value);
                 continue;
             }
@@ -223,8 +223,8 @@ public class OpenTelemetryMapper {
                     };
 
                     String jsonKey = storageKey(rule, key);
-                    // If the suffix is empty then try merging as a JSON object,
-                    // otherwise nest under the stripped key or the rule key.
+                    // 如果后缀为空，则尝试作为 JSON 对象合并，
+                    // 否则嵌套在去掉前缀的键或规则键之下。
                     if (jsonKey.isEmpty() && value.getValueCase() == AnyValue.ValueCase.STRING_VALUE) {
                         mergeJsonObjectOrFallback(node, rule.getRule(), key, value);
                     } else if (jsonKey.isEmpty()) {
@@ -242,42 +242,42 @@ public class OpenTelemetryMapper {
                     break;
 
                 case THREAD_ID :
-                    // Store as 'thread_id' in metadata for trace grouping
-                    // First value wins if multiple attributes map to THREAD_ID
+                    // 作为 'thread_id' 存入 metadata 以进行 trace 分组
+                    // 如果多个属性映射到 THREAD_ID，以第一个值为准
                     if (!metadata.has("thread_id")) {
                         extractToJsonColumn(metadata, "thread_id", value);
                     }
                     break;
 
                 case DROP :
-                    // Explicitly drop this attribute
+                    // 显式丢弃该属性
                     break;
             }
         }
 
-        // Process events and add them to metadata
+        // 处理事件并将其添加到 metadata
         processEvents(events, metadata);
 
-        // Claude Code emits the tool result as a `tool.output` span event (Bash carries it on
-        // `output`, file tools on `content`). Surface it as the tool span's output instead of
-        // leaving it only in metadata.opentelemetry.events.
+        // Claude Code 将工具结果作为 `tool.output` span 事件发出（Bash 将其放在
+        // `output` 上，文件工具放在 `content` 上）。将其作为工具 span 的 output 展示，
+        // 而不是只保留在 metadata.opentelemetry.events 中。
         if (isClaudeCode) {
             extractToolOutputEvent(events, output);
         }
 
-        // Rewrite Elastic Inference Service model/provider into the underlying provider so
-        // that cost lookup and provider-based filtering see the real upstream. Records the
-        // original values in metadata for traceability. Returns the (possibly unchanged) pair.
+        // 将 Elastic Inference Service 的 model/provider 改写为底层 provider，
+        // 以便成本查询和基于 provider 的过滤能看到真实的上游。为便于追溯，
+        // 在 metadata 中记录原始值。返回（可能未改变的）二元组。
         var resolved = ElasticInferenceServiceResolver.resolve(model, provider, metadata);
         model = resolved.model();
         provider = resolved.provider();
 
-        // Disambiguate the generic 'google' provider (PydanticAI / google-genai) into the Vertex AI
-        // vs Gemini API canonical name using server.address, so cost lookup can match a price row.
+        // 使用 server.address 将泛化的 'google' provider（PydanticAI / google-genai）
+        // 区分为 Vertex AI 与 Gemini API 的规范名称，以便成本查询能匹配到价格行。
         provider = GoogleProviderResolver.resolve(provider, metadata);
 
-        // Agent-run spans (gen_ai.operation.name=invoke_agent) are not LLM calls. Other attributes
-        // on them (e.g. gen_ai.system_instructions) would otherwise type them as llm; force general.
+        // 代理运行的 span（gen_ai.operation.name=invoke_agent）不是 LLM 调用。
+        // 其上的其他属性（如 gen_ai.system_instructions）否则会将其归类为 llm；强制为 general。
         if ("invoke_agent".equals(metadata.path("gen_ai.operation.name").asText(null))) {
             spanBuilder.type(SpanType.general);
         }
@@ -299,8 +299,8 @@ public class OpenTelemetryMapper {
             spanBuilder.input(input);
         }
         if (!usage.isEmpty()) {
-            // Some integrations (e.g. PydanticAI) send prompt_tokens and completion_tokens
-            // but omit total_tokens. Compute it so callers always get a complete picture.
+            // 有些集成（如 PydanticAI）会发送 prompt_tokens 和 completion_tokens，
+            // 但省略 total_tokens。计算它，以便调用方始终获得完整的信息。
             if (!usage.containsKey("total_tokens")
                     && usage.containsKey("prompt_tokens")
                     && usage.containsKey("completion_tokens")) {
@@ -314,15 +314,14 @@ public class OpenTelemetryMapper {
     }
 
     /**
-     * When the storage key is empty and the value is a string, try parsing it as a JSON object
-     * and merge its fields into {@code node}, skipping {@link #RESERVED_METADATA_KEYS}. On a
-     * non-object JSON value or a parse failure, fall back to storing the raw value under the
-     * rule's key via {@link #extractToJsonColumn}.
+     * 当存储键为空且值为字符串时，尝试将其解析为 JSON 对象，并将其字段合并到 {@code node} 中，
+     * 跳过 {@link #RESERVED_METADATA_KEYS}。当 JSON 值不是对象或解析失败时，
+     * 回退为通过 {@link #extractToJsonColumn} 将原始值存储到规则键下。
      */
     private static void mergeJsonObjectOrFallback(ObjectNode node, String ruleKey, String key, AnyValue value) {
         String stringValue = value.getStringValue();
 
-        // Only try to parse JSON-looking strings
+        // 仅尝试解析看起来像 JSON 的字符串
         String trimmed = StringUtils.trimToEmpty(stringValue);
         if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
             extractToJsonColumn(node, ruleKey, value);
@@ -341,7 +340,7 @@ public class OpenTelemetryMapper {
                 extractToJsonColumn(node, ruleKey, value);
             }
         } catch (UncheckedIOException e) {
-            log.warn("Failed to parse JSON, falling back to text for key '{}'", key, e);
+            log.warn("解析 JSON 失败，键 '{}' 回退为文本", key, e);
             extractToJsonColumn(node, ruleKey, value);
         }
     }
@@ -350,12 +349,12 @@ public class OpenTelemetryMapper {
     private static final Set<String> TOOL_OUTPUT_CONTENT_KEYS = Set.of("output", "content");
 
     /**
-     * Maps a Claude Code {@code tool.output} span event into the tool span's output. The event
-     * carries the tool result on {@code output} (Bash) or {@code content} (file tools). The last
-     * event wins if several are present.
+     * 将 Claude Code 的 {@code tool.output} span 事件映射到工具 span 的 output 中。
+     * 该事件在 {@code output}（Bash）或 {@code content}（文件工具）上携带工具结果。
+     * 如果存在多个事件，以最后一个为准。
      *
-     * @param events the list of events extracted from the otel payload
-     * @param output the output node to populate
+     * @param events 从 otel 负载中提取的事件列表
+     * @param output 要填充的输出节点
      */
     private static void extractToolOutputEvent(List<Span.Event> events, ObjectNode output) {
         findLastEvent(events, TOOL_OUTPUT_EVENT_NAME)
@@ -365,7 +364,7 @@ public class OpenTelemetryMapper {
     }
 
     /**
-     * Finds the last span event with the given name; the last one wins when several exist.
+     * 查找具有给定名称的最后一个 span 事件；当存在多个时，以最后一个为准。
      */
     private static Optional<Span.Event> findLastEvent(List<Span.Event> events, String name) {
         if (CollectionUtils.isEmpty(events)) {
@@ -383,18 +382,18 @@ public class OpenTelemetryMapper {
     private static final String DEFAULT_EXCEPTION_TYPE = "Error";
 
     /**
-     * Translates the OpenTelemetry error signals into Opik's {@link ErrorInfo}, so failed spans
-     * surface as errors instead of hiding the failure inside raw event metadata. Both signals are
-     * OTel core conventions emitted by every instrumentation, not PydanticAI-specific:
+     * 将 OpenTelemetry 错误信号转换为 Opik 的 {@link ErrorInfo}，使失败的 span
+     * 以错误形式呈现，而不是将失败隐藏在原始事件元数据中。这两种信号都是
+     * 每个插桩都会发出的 OTel 核心约定，并非 PydanticAI 特有：
      * <ul>
-     *     <li>An {@code exception} span event (from {@code Span.record_exception}) carrying
-     *     {@code exception.type} / {@code exception.message} / {@code exception.stacktrace}.</li>
-     *     <li>A span {@code STATUS_CODE_ERROR} status with an optional message.</li>
+     *     <li>携带 {@code exception.type} / {@code exception.message} / {@code exception.stacktrace}
+     *     的 {@code exception} span 事件（来自 {@code Span.record_exception}）。</li>
+     *     <li>带有可选消息的 span {@code STATUS_CODE_ERROR} 状态。</li>
      * </ul>
-     * The exception event is richer, so it takes precedence; the last one wins when several exist.
+     * 异常事件信息更丰富，因此优先；当存在多个时，以最后一个为准。
      *
-     * @param otelSpan the OpenTelemetry span to inspect
-     * @return the extracted error info, or empty when the span did not fail
+     * @param otelSpan 要检查的 OpenTelemetry span
+     * @return 提取的错误信息；当 span 未失败时为空
      */
     static Optional<ErrorInfo> extractErrorInfo(Span otelSpan) {
         var exceptionEvent = findLastEvent(otelSpan.getEventsList(), EXCEPTION_EVENT_NAME);
@@ -432,26 +431,26 @@ public class OpenTelemetryMapper {
     }
 
     /**
-     * Uses 64-bit integer OpenTelemetry SpanId and its timestamp to prepare a good UUIDv7 id. This is actually
-     * a good UUIDv7 (in opposition of the traceId) as its composed from an id and a timestamp, so spans will be
-     * properly ordered in the span table.
-     * The truncate timestamp option is relevant when you receive non-UUIDs in multiple batches and can't predict
-     * what's going to be the actual Opik UUID from the Otel integer id you know. So we take the span timestamp truncated
-     * by time window as form to make it predictable. This works fine as makes UUID predictable and they are stored next
-     * to each other on Clickhouse, but it has two drawbacks: (1) traces might show up un-ordered in Traces page (a trace
-     * from Monday can appear as 'newer' than a Friday trace as their UUID have the same timestamp: Sunday at 00:00:00;
-     * (2) a routine running between Saturday 23:59:30 and Sunday 00:00:30 will be split in 2 traces; both incomplete.
+     * 使用 64 位整数 OpenTelemetry SpanId 及其时间戳来生成一个良好的 UUIDv7 ID。这实际上是
+     * 一个良好的 UUIDv7（与 traceId 相反），因为它由 ID 和时间戳组成，因此 span 会在
+     * span 表中正确排序。
+     * 当你分多个批次接收到非 UUID，且无法从已知的 Otel 整数 ID 预测出实际的 Opik UUID 时，
+     * 截断时间戳选项就很有用。因此我们采用按时间窗口截断的 span 时间戳，使其可预测。
+     * 这能很好地使 UUID 可预测，并且它们在 ClickHouse 上彼此相邻存储，但有两个缺点：
+     * (1) trace 在 Traces 页面中可能显示为无序（周一的 trace 可能显示为比周五的 trace “更新”，
+     * 因为它们的 UUID 具有相同的时间戳：周日 00:00:00）；
+     * (2) 在周六 23:59:30 到周日 00:00:30 之间运行的例程会被拆分为 2 个 trace，两者都不完整。
      *
-     * @param otelSpanId a OpenTelemetry 64-bit integer spanId
-     * @param timestampMs a timestamp for the span in millis
-     * @return a valid UUIDv7
+     * @param otelSpanId OpenTelemetry 64 位整数 spanId
+     * @param timestampMs span 的时间戳（毫秒）
+     * @return 有效的 UUIDv7
      */
     public static UUID convertOtelIdToUUIDv7(byte[] otelSpanId, long timestampMs) {
-        // Prepare the 16-byte array for the UUID
+        // 为 UUID 准备 16 字节数组
         byte[] uuidBytes = new byte[16];
 
-        // Bytes 0-5: 48-bit timestamp (big-endian)
-        long ts48 = timestampMs & 0xFFFFFFFFFFFFL; // 48 bits
+        // 字节 0-5：48 位时间戳（大端序）
+        long ts48 = timestampMs & 0xFFFFFFFFFFFFL; // 48 位
         uuidBytes[0] = (byte) ((ts48 >> 40) & 0xFF);
         uuidBytes[1] = (byte) ((ts48 >> 32) & 0xFF);
         uuidBytes[2] = (byte) ((ts48 >> 24) & 0xFF);
@@ -459,39 +458,39 @@ public class OpenTelemetryMapper {
         uuidBytes[4] = (byte) ((ts48 >> 8) & 0xFF);
         uuidBytes[5] = (byte) (ts48 & 0xFF);
 
-        // Bytes 6-15: 80 bits derived from the spanId hash
-        // Hash the spanId (8 bytes) using SHA-256 and take the first 10 bytes (80 bits)
+        // 字节 6-15：由 spanId 哈希派生的 80 位
+        // 使用 SHA-256 对 spanId（8 字节）进行哈希，并取前 10 字节（80 位）
         byte[] hash = DigestUtils.sha256(otelSpanId);
         System.arraycopy(hash, 0, uuidBytes, 6, 10);
 
-        // Set the version to 7 (stored in the high nibble of byte 6)
+        // 将版本设置为 7（存储在字节 6 的高半字节中）
         uuidBytes[6] = (byte) ((uuidBytes[6] & 0x0F) | 0x70);
-        // Set the variant (the two most-significant bits of byte 8 should be 10)
+        // 设置变体（字节 8 的最高两位应为 10）
         uuidBytes[8] = (byte) ((uuidBytes[8] & 0x3F) | 0x80);
 
-        // Build the UUID from the byte array
+        // 从字节数组构建 UUID
         ByteBuffer byteBuffer = ByteBuffer.wrap(uuidBytes);
-        long mostSigBits = byteBuffer.getLong(); // FYI: it reads and change offset
+        long mostSigBits = byteBuffer.getLong(); // 提示：它会读取并改变偏移量
         long leastSigBits = byteBuffer.getLong();
         return new UUID(mostSigBits, leastSigBits);
     }
 
     /**
-     * Extracts the Unix epoch timestamp in milliseconds from a UUIDv7.
+     * 从 UUIDv7 中提取以毫秒为单位的 Unix 纪元时间戳。
      *
-     * @param uuid the UUIDv7 instance
-     * @return the extracted timestamp as a long (milliseconds since Unix epoch)
+     * @param uuid UUIDv7 实例
+     * @return 提取的时间戳（long，自 Unix 纪元以来的毫秒数）
      */
     private long extractTimestampFromUUIDv7(UUID uuid) {
         return RetentionUtils.extractInstant(uuid).toEpochMilli();
     }
 
     /**
-     * Extracts the opik.trace_id attribute from an OTEL span, if present.
-     * This attribute allows connecting an OTEL span to an existing OPIK trace.
+     * 从 OTEL span 中提取 opik.trace_id 属性（如果存在）。
+     * 该属性允许将 OTEL span 连接到现有的 OPIK trace。
      *
-     * @param otelSpan the OTEL span to extract from
-     * @return the OPIK trace UUID if the attribute is present and valid
+     * @param otelSpan 要从中提取的 OTEL span
+     * @return 如果属性存在且有效，则返回 OPIK trace UUID
      */
     public static Optional<UUID> extractOpikTraceId(Span otelSpan) {
         return extractStringAttribute(otelSpan, GeneralMappingRules.OPIK_TRACE_ID_ATTR)
@@ -499,12 +498,12 @@ public class OpenTelemetryMapper {
     }
 
     /**
-     * Extracts the opik.parent_span_id attribute from an OTEL span, if present.
-     * This attribute allows connecting an OTEL span to an existing OPIK span as its parent.
-     * Only meaningful when opik.trace_id is also present.
+     * 从 OTEL span 中提取 opik.parent_span_id 属性（如果存在）。
+     * 该属性允许将 OTEL span 作为子节点连接到现有的 OPIK span。
+     * 仅在 opik.trace_id 也存在时才有意义。
      *
-     * @param otelSpan the OTEL span to extract from
-     * @return the OPIK parent span UUID if the attribute is present and valid
+     * @param otelSpan 要从中提取的 OTEL span
+     * @return 如果属性存在且有效，则返回 OPIK 父 span UUID
      */
     public static Optional<UUID> extractOpikParentSpanId(Span otelSpan) {
         return extractStringAttribute(otelSpan, GeneralMappingRules.OPIK_PARENT_SPAN_ID_ATTR)
@@ -512,14 +511,14 @@ public class OpenTelemetryMapper {
     }
 
     /**
-     * Extracts the opik.span_id attribute from an OTEL span, if present.
-     * When set, the value is used verbatim as the Opik span id, bypassing the SHA-256
-     * conversion of the OTEL span id. The SDK's OpikSpanProcessor mints this per span
-     * and threads it as opik.parent_span_id on each child, so descendants of an attached
-     * OTEL subtree stay linked across batch boundaries without relying on Redis.
+     * 从 OTEL span 中提取 opik.span_id 属性（如果存在）。
+     * 当设置时，该值将原样用作 Opik span ID，绕过对 OTEL span ID 的 SHA-256
+     * 转换。SDK 的 OpikSpanProcessor 为每个 span 生成该值，
+     * 并在每个子节点上将其作为 opik.parent_span_id 传递，这样附加的
+     * OTEL 子树的子孙在跨批次边界时仍保持链接，而无需依赖 Redis。
      *
-     * @param otelSpan the OTEL span to extract from
-     * @return the OPIK span UUID if the attribute is present and valid
+     * @param otelSpan 要从中提取的 OTEL span
+     * @return 如果属性存在且有效，则返回 OPIK span UUID
      */
     public static Optional<UUID> extractOpikSpanId(Span otelSpan) {
         return extractStringAttribute(otelSpan, GeneralMappingRules.OPIK_SPAN_ID_ATTR)
@@ -538,13 +537,13 @@ public class OpenTelemetryMapper {
         try {
             var uuid = UUID.fromString(value);
             if (uuid.version() != 7) {
-                log.warn("Attribute '{}' value '{}' is not a UUIDv7 (version {}), ignoring",
+                log.warn("属性 '{}' 的值 '{}' 不是 UUIDv7（版本 {}），忽略",
                         attributeName, value, uuid.version());
                 return Optional.empty();
             }
             return Optional.of(uuid);
         } catch (IllegalArgumentException e) {
-            log.warn("Attribute '{}' value '{}' is not a valid UUIDv7, ignoring", attributeName, value);
+            log.warn("属性 '{}' 的值 '{}' 不是有效的 UUIDv7，忽略", attributeName, value);
             return Optional.empty();
         }
     }

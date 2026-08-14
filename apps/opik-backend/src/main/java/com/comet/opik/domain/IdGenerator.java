@@ -28,44 +28,44 @@ public interface IdGenerator {
     UUID getTimeOrderedEpoch(long epochMilli);
 
     /**
-     * Validates an ingested {@code id}: it must be a version 7 UUID
-     * ({@link #validateVersion(UUID, String)}) whose embedded timestamp is within the configured
-     * ingestion window, throwing {@link InvalidUUIDException} otherwise. {@code workspaceId} attributes
-     * the source workspace for observability; pass {@link ErrorMetricsResolver#UNKNOWN} when unavailable.
+     * 校验摄取进来的 {@code id}：它必须是版本 7 的 UUID
+     * （{@link #validateVersion(UUID, String)}），其内嵌时间戳必须在配置的
+     * 摄取时间窗口内，否则抛出 {@link InvalidUUIDException}。{@code workspaceId} 用于
+     * 标注来源工作区以便观测；不可用时传入 {@link ErrorMetricsResolver#UNKNOWN}。
      */
     void validateId(UUID id, String resource, String workspaceId);
 
     Mono<UUID> validateIdAsync(UUID id, String resource);
 
     /**
-     * Validates an {@code id} that may legitimately point at an entity created in the past: it must be a
-     * version 7 UUID ({@link #validateVersion(UUID, String)}) and must not embed a timestamp far in the
-     * future (which would corrupt the partition layout / retention id-range). Unlike {@link #validateId},
-     * old ids are allowed.
+     * 校验一个可能合法指向过去创建实体的 {@code id}：它必须是
+     * 版本 7 的 UUID（{@link #validateVersion(UUID, String)}），且不得内嵌过于未来的时间戳
+     * （否则会破坏分区布局 / 保留期的 ID 范围）。与 {@link #validateId} 不同，
+     * 这里允许旧的 ID。
      *
-     * <p>Used both on the update path (updating a long-lived entity created months ago is legitimate) and
-     * for referenced/foreign ids on ingest (e.g. a span's {@code traceId}: retention orders spans by the
-     * {@code trace_id} range assuming it is a time-ordered UUIDv7, and late spans on old traces are common,
-     * so old is fine but non-v7 or future-dated must be rejected).
+     * <p>在更新路径（更新几个月前创建的长期实体是合法的）以及
+     * 摄取时被引用/外键的 ID（例如 span 的 {@code traceId}：保留期按
+     * {@code trace_id} 范围对 span 排序，假定它是按时间排序的 UUIDv7，而旧追踪上的迟到 span 很常见，
+     * 因此旧的没问题，但非 v7 或未来日期的必须被拒绝）上都会使用。
      */
     void validateIdNotInFuture(UUID id, String resource);
 
     /**
-     * Workspace-attributed overload of {@link #validateIdNotInFuture(UUID, String)}: callers that know the
-     * request workspace pass it so the audit metric is attributed. The 2-arg form defaults to
-     * {@link ErrorMetricsResolver#UNKNOWN} for callers that don't carry a workspace.
+     * {@link #validateIdNotInFuture(UUID, String)} 的带工作区属性的重载：知道
+     * 请求工作区的调用方会传入它，以便归属审计指标。对于不携带工作区的调用方，2 参数形式默认使用
+     * {@link ErrorMetricsResolver#UNKNOWN}。
      */
     void validateIdNotInFuture(UUID id, String resource, String workspaceId);
 
     Mono<UUID> validateIdNotInFutureAsync(UUID id, String resource);
 
     /**
-     * Null-safe variant of {@link #validateIdNotInFuture} for optional referenced ids (e.g. an optional
-     * {@code projectId} that may be resolved by name instead). No-op when {@code id} is null.
+     * {@link #validateIdNotInFuture} 的空安全变体，用于可选的被引用 ID（例如可选的
+     * {@code projectId}，可能改为按名称解析）。当 {@code id} 为 null 时为空操作。
      */
     void validateIdNotInFutureIfPresent(UUID id, String resource);
 
-    /** Workspace-attributed overload of {@link #validateIdNotInFutureIfPresent(UUID, String)}. */
+    /** {@link #validateIdNotInFutureIfPresent(UUID, String)} 的带工作区属性的重载。 */
     void validateIdNotInFutureIfPresent(UUID id, String resource, String workspaceId);
 
     Mono<UUID> validateIdNotInFutureIfPresentAsync(UUID id, String resource);
@@ -122,7 +122,7 @@ class IdGeneratorImpl implements IdGenerator {
 
     @Override
     public void validateIdNotInFuture(@NonNull UUID id, String resource) {
-        // Callers that don't carry a workspace (most config-entity references) default to UNKNOWN.
+        // 不携带工作区的调用方（大多数配置实体引用）默认使用 UNKNOWN。
         validateIdNotInFuture(id, resource, ErrorMetricsResolver.UNKNOWN);
     }
 
@@ -141,9 +141,9 @@ class IdGeneratorImpl implements IdGenerator {
     }
 
     /**
-     * Reads the {@code workspace_id} from the reactive context (the async ingestion paths carry it
-     * there, not in a request-scoped thread-local), falling back to {@link ErrorMetricsResolver#UNKNOWN}
-     * so the audit metric always has a value.
+     * 从响应式上下文中读取 {@code workspace_id}（异步摄取路径将其放在
+     * 那里，而不是请求作用域的线程本地变量中），回退到 {@link ErrorMetricsResolver#UNKNOWN}，
+     * 以便审计指标始终有值。
      */
     private static String workspaceId(ContextView ctx) {
         return ctx.getOrDefault(RequestContext.WORKSPACE_ID, ErrorMetricsResolver.UNKNOWN);

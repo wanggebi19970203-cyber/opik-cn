@@ -65,7 +65,7 @@ public interface ThreadDAO {
 @Slf4j
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-// TODO: after v1 drop, remove annotation_queue_filters conditions and keep only annotation_queue_id
+// TODO: 在 v1 下线后，移除 annotation_queue_filters 条件，仅保留 annotation_queue_id
 class ThreadDAOImpl implements ThreadDAO {
 
     private static final String THREAD_SEARCH_CLAUSE = """
@@ -75,9 +75,9 @@ class ThreadDAOImpl implements ThreadDAO {
             OR ilike(output, :search_text))""";
 
     /***
-     * When treating a list of traces as threads, many aggregations are performed to get the thread details.
+     * 当将一组 trace 视为线程时，会执行多项聚合来获取线程详情。
      * <p>
-     * Please refer to the SELECT_TRACES_THREAD_BY_ID query for more details.
+     * 更多详情请参考 SELECT_TRACES_THREAD_BY_ID 查询。
      ***/
     private static final String SELECT_TRACES_THREADS_BY_PROJECT_IDS = """
             WITH <if(traces_final_ids)>traces_final_ids AS (
@@ -490,9 +490,9 @@ class ThreadDAOImpl implements ThreadDAO {
             """;
 
     /***
-     * When treating a list of traces as threads, many aggregations are performed to get the thread details.
+     * 当将一组 trace 视为线程时，会执行多项聚合来获取线程详情。
      * <p>
-     * Please refer to the SELECT_TRACES_THREAD_BY_ID query for more details.
+     * 更多详情请参考 SELECT_TRACES_THREAD_BY_ID 查询。
      ***/
     private static final String SELECT_COUNT_TRACES_THREADS_BY_PROJECT_IDS = """
             WITH <if(traces_final_ids)>traces_final_ids AS (
@@ -755,16 +755,16 @@ class ThreadDAOImpl implements ThreadDAO {
             """;
 
     /***
-     * When treating a list of traces as threads, a number of aggregation are performed to get the thread details.
+     * 当将一组 trace 视为线程时，会执行多项聚合来获取线程详情。
      * <p>
-     * Among the aggregation performed are:
-     *  - The duration of the thread, which is calculated as the difference between the start_time and end_time of the first and last trace in the list.
-     *  - The first message in the thread, which is the input of the first trace in the list.
-     *  - The last message in the thread, which is the output of the last trace in the list.
-     *  - The number of messages in the thread, which is the count of the traces in the list multiplied by 2.
-     *  - The last updated time of the thread, which is the last_updated_at of the last trace in the list.
-     *  - The creator of the thread, which is the created_by of the first trace in the list.
-     *  - The creation time of the thread, which is the created_at of the first trace in the list.
+     * 所执行的聚合包括：
+     *  - 线程的时长，计算为列表中第一条和最后一条 trace 的 start_time 与 end_time 之差。
+     *  - 线程中的第一条消息，即列表中第一条 trace 的 input。
+     *  - 线程中的最后一条消息，即列表中最后一条 trace 的 output。
+     *  - 线程中的消息数量，即列表中 trace 的数量乘以 2。
+     *  - 线程的最后更新时间，即列表中最后一条 trace 的 last_updated_at。
+     *  - 线程的创建者，即列表中第一条 trace 的 created_by。
+     *  - 线程的创建时间，即列表中第一条 trace 的 created_at。
      ***/
     private static final String SELECT_TRACES_THREAD_BY_ID = """
             WITH traces_ids AS (
@@ -1008,9 +1008,9 @@ class ThreadDAOImpl implements ThreadDAO {
             """;
 
     /***
-     * Calculates statistics for threads by performing two-level aggregation:
-     * 1. First level: Uses the same thread aggregation as SELECT_TRACES_THREADS_BY_PROJECT_IDS (reusing the exact CTEs and aggregation logic)
-     * 2. Second level: Wraps the thread results and calculates stats across all threads (AVG, SUM, quantiles)
+     * 通过执行两级聚合来计算线程统计信息：
+     * 1. 第一级：使用与 SELECT_TRACES_THREADS_BY_PROJECT_IDS 相同的线程聚合（复用完全相同的 CTE 和聚合逻辑）
+     * 2. 第二级：包装线程结果，并跨所有线程计算统计信息（AVG、SUM、分位数）
      ***/
     private static final String SELECT_TRACE_THREADS_STATS = """
             SELECT
@@ -1347,36 +1347,35 @@ class ThreadDAOImpl implements ThreadDAO {
     private final @NonNull OpikConfiguration configuration;
 
     /**
-     * Sort mapping applied under {@code traceColumnsNonNullable}: a thread's {@code end_time} is
-     * {@code max(traces.end_time)}, the epoch sentinel when every trace is unfinished; {@code nullIf} restores
-     * {@code NULL} so it sorts last in ASC like a Nullable column did. {@code duration} needs no entry — ClickHouse
-     * sorts {@code NaN} like {@code NULL}.
+     * 在 {@code traceColumnsNonNullable} 下应用的排序映射：线程的 {@code end_time} 是
+     * {@code max(traces.end_time)}，当每条 trace 都未完成时为 epoch 哨兵值；{@code nullIf} 会将其恢复为
+     * {@code NULL}，使其像 Nullable 列那样在 ASC 排序中排在最后。{@code duration} 无需条目——ClickHouse
+     * 会将 {@code NaN} 视同 {@code NULL} 进行排序。
      */
     private static final Map<String, String> SORT_FIELD_MAPPING_END_TIME_SENTINEL = Map.of(
             SortableFields.END_TIME, "nullIf(end_time, toDateTime64('1970-01-01 00:00:00.000', 9))");
 
     /**
-     * Determines whether to activate the traces_final_ids CTE for narrowing the raw traces / spans scans
-     * in the thread list and count queries. Mirrors {@code TraceDAO#shouldUseTraceIdPrefilter}.
+     * 确定是否激活 traces_final_ids CTE，以缩小线程列表和计数查询中原始 traces / spans 的扫描范围。
+     * 与 {@code TraceDAO#shouldUseTraceIdPrefilter} 保持一致。
      *
-     * <p>Only activates when there are narrowing predicates beyond the workspace/project/uuid-range filters:
-     * either a free-text search or a TRACE-strategy filter ({@code <filters>}). When neither is present,
-     * the downstream CTEs apply the uuid range directly, skipping the prefilter scan.
+     * <p>仅当存在工作区/项目/uuid 范围过滤之外的收窄谓词时才激活：
+     * 即自由文本搜索或 TRACE 策略过滤（{@code <filters>}）。当两者都不存在时，
+     * 下游 CTE 会直接应用 uuid 范围，跳过预过滤扫描。
      */
     private static boolean shouldUseTracesFinalIdsPrefilter(TraceSearchCriteria criteria, ST template) {
         return criteria.searchText() != null || template.getAttribute("filters") != null;
     }
 
     /**
-     * OPIK-7035: template attributes that make the page-pushdown unsafe. The pushdown resolves the page in
-     * one narrow {@code traces} scan ({@code page_thread_ids}: per-thread min/max sort keys + the filter,
-     * joined to {@code trace_threads} for the {@code last_updated_at} coalesce, limit pushed early), then
-     * enriches only that page so the wide {@code input}/{@code output} columns and spans are read for
-     * ~page-size threads instead of the whole project. It is only output-equivalent when page membership
-     * and ordering are fully determined by that narrow {@code traces}+{@code trace_threads} scan. Any of
-     * these attributes means the page can only be resolved by the full enrichment query (filters/sorts
-     * that need the spans/feedback/annotation joins, or the uuid time-range path that uses a different
-     * INNER join), so we fall back.
+     * OPIK-7035：导致 page-pushdown 不安全的模板属性。pushdown 通过一次窄范围的 {@code traces} 扫描
+     * （{@code page_thread_ids}：每个线程的 min/max 排序键 + 过滤器，与 {@code trace_threads} 连接以进行
+     * {@code last_updated_at} 合并，limit 提前下推）来解析页面，然后仅对该页面进行富化，
+     * 从而使宽列 {@code input}/{@code output} 列和 spans 仅针对约一页大小的线程读取，而非整个项目。
+     * 仅当页面成员关系和排序完全由那次窄范围的 {@code traces}+{@code trace_threads} 扫描决定时，它才是
+     * 输出等价的。出现这些属性中的任何一个，都意味着页面只能由完整的富化查询来解析（需要
+     * spans/feedback/annotation 连接的过滤器/排序，或使用不同 INNER 连接的 uuid 时间范围路径），
+     * 因此我们会回退。
      */
     private static final List<String> PAGE_PUSHDOWN_DISQUALIFIERS = List.of(
             "sort_fields", "uuid_from_time", "uuid_to_time", "traces_pushdown_filter",
@@ -1387,9 +1386,9 @@ class ThreadDAOImpl implements ThreadDAO {
             "stream");
 
     /**
-     * The page-pushdown is eligible only for the common listing case: default sort over {@code trace_threads}
-     * recency, with no filter/sort that needs the wide-column / spans / feedback / annotation joins to
-     * determine which threads land on the page. Otherwise the full scan query runs unchanged.
+     * page-pushdown 仅适用于常见的列表场景：对 {@code trace_threads} 的新近度使用默认排序，
+     * 且没有任何需要宽列 / spans / feedback / annotation 连接来确定哪些线程落在页面上的过滤器/排序。
+     * 否则将按原样运行完整的扫描查询。
      */
     private static boolean isPagePushdownEligible(ST template) {
         return PAGE_PUSHDOWN_DISQUALIFIERS.stream().noneMatch(attr -> template.getAttribute(attr) != null);
@@ -1424,13 +1423,12 @@ class ThreadDAOImpl implements ThreadDAO {
 
                             var hasDynamicKeys = sortingQueryBuilder.hasDynamicKeys(criteria.sortingFields());
 
-                            // OPIK-7035: resolve the page first (one narrow filter+order scan over traces,
-                            // limit pushed early), then enrich only that page so the wide input/output columns
-                            // and spans are read for ~page-size threads instead of the whole project. The page
-                            // resolver applies the filter itself, so it is mutually exclusive with the
-                            // traces_final_ids prefilter — enabling both would scan the project traces twice and
-                            // compound under ClickHouse CTE re-evaluation. Falls back to the full query for any
-                            // filter/sort that needs the joined sources to determine the page.
+                            // OPIK-7035：先解析页面（对 traces 做一次窄范围的 filter+order 扫描，
+                            // limit 提前下推），然后仅对该页面进行富化，从而使宽列 input/output 列
+                            // 和 spans 仅针对约一页大小的线程读取，而非整个项目。页面
+                            // 解析器会自行应用过滤器，因此它与 traces_final_ids 预过滤互斥——
+                            // 同时启用两者会扫描项目 traces 两次，并在 ClickHouse CTE 重新求值下叠加开销。
+                            // 对于任何需要连接来源才能确定页面的过滤器/排序，回退到完整查询。
                             if (isPagePushdownEligible(finalTemplate)) {
                                 finalTemplate.add("page_pushdown", true);
                             } else if (shouldUseTracesFinalIdsPrefilter(criteria, finalTemplate)) {
@@ -1489,17 +1487,16 @@ class ThreadDAOImpl implements ThreadDAO {
     }
 
     /**
-     * Collapses the by-id thread stream to the first matching thread, or empty when none is found.
-     * Using {@code reduce} rather than {@code single()}/{@code singleOrEmpty()} is deliberate:
-     * SELECT_TRACES_THREAD_BY_ID can legitimately return more than one row for a single
-     * {@code (workspace_id, project_id, thread_id)}. The trace_threads table's dedup/sort key includes
-     * the internal thread_model_id ({@code id}), so several thread_model_ids may coexist for one
-     * user-facing thread_id; trace_threads_final keeps one row per id ({@code LIMIT 1 BY id}), and the
-     * final {@code LEFT JOIN ... ON (workspace_id, project_id, thread_id)} (not on id) fans the single
-     * aggregated trace row out to one row per thread_model_id. Each row maps to one TraceThread, so
-     * {@code singleOrEmpty()} would throw {@code IndexOutOfBoundsException} ("Source emitted more than
-     * one item") and surface as an unmapped HTTP 500. Folding to the first emission tolerates the
-     * multi-row result while preserving the not-found (empty) contract.
+     * 将按 id 查询的线程流折叠为第一个匹配的线程，未找到时返回空。
+     * 有意使用 {@code reduce} 而非 {@code single()}/{@code singleOrEmpty()}：
+     * 对于单个 {@code (workspace_id, project_id, thread_id)}，SELECT_TRACES_THREAD_BY_ID
+     * 可以合法地返回多行。trace_threads 表的去重/排序键包含内部的 thread_model_id（{@code id}），
+     * 因此一个面向用户的 thread_id 可能同时存在多个 thread_model_id；trace_threads_final 为每个 id
+     * 保留一行（{@code LIMIT 1 BY id}），而最终的 {@code LEFT JOIN ... ON (workspace_id, project_id, thread_id)}
+     * （不是按 id 连接）会将单个聚合的 trace 行展开为每个 thread_model_id 一行。每一行映射到一个
+     * TraceThread，因此 {@code singleOrEmpty()} 会抛出 {@code IndexOutOfBoundsException}
+     * （"Source emitted more than one item"），并表现为未映射的 HTTP 500。折叠到第一条发射结果可容忍
+     * 多行结果，同时保留未找到（空）的约定。
      */
     @VisibleForTesting
     static Mono<TraceThread> firstThreadOrEmpty(Flux<TraceThread> threads) {
@@ -1659,9 +1656,8 @@ class ThreadDAOImpl implements ThreadDAO {
     }
 
     /**
-     * Reads a {@code DateTime64} column, translating the epoch sentinel to {@code null} only once the columns are
-     * non-nullable — symmetric with {@code TraceDAO} so a legitimate epoch value is preserved while the columns
-     * are still {@code Nullable}.
+     * 读取 {@code DateTime64} 列，仅当列变为非空时才将 epoch 哨兵值转换为 {@code null}——
+     * 与 {@code TraceDAO} 对称，因此在列仍为 {@code Nullable} 时会保留合法的 epoch 值。
      */
     private Instant readEpochSentinel(Row row, String fieldName) {
         var value = row.get(fieldName, Instant.class);

@@ -25,10 +25,10 @@ import static com.comet.opik.domain.evaluators.TraceThreadUserDefinedMetricPytho
 import static com.comet.opik.domain.evaluators.UserDefinedMetricPythonAutomationRuleEvaluatorModel.UserDefinedMetricPythonCode;
 
 /**
- * Custom row mapper for AutomationRuleEvaluatorModel that handles:
- * 1. Legacy project_id fallback (for rules created before multi-project support)
- * 2. Type-specific code field parsing
- * 3. Fields that will be enriched later by Service layer (projectId, projectName, projects)
+ * AutomationRuleEvaluatorModel 的自定义行映射器，处理：
+ * 1. 旧版 project_id 回退（针对多项目支持之前创建的规则）
+ * 2. 类型特定的 code 字段解析
+ * 3. 稍后由服务层丰富的字段（projectId、projectName、projects）
  */
 public class AutomationRuleEvaluatorRowMapper implements RowMapper<AutomationRuleEvaluatorModel<?>> {
 
@@ -36,7 +36,7 @@ public class AutomationRuleEvaluatorRowMapper implements RowMapper<AutomationRul
 
     @Override
     public AutomationRuleEvaluatorModel<?> map(ResultSet rs, StatementContext ctx) throws SQLException {
-        // Extract common fields from ResultSet
+        // 从 ResultSet 中提取公共字段
         UUID id = UUID.fromString(rs.getString("id"));
         String name = rs.getString("name");
         Float samplingRate = rs.getFloat("sampling_rate");
@@ -49,32 +49,32 @@ public class AutomationRuleEvaluatorRowMapper implements RowMapper<AutomationRul
         Instant lastUpdatedAt = rs.getTimestamp("last_updated_at").toInstant();
         String lastUpdatedBy = rs.getString("last_updated_by");
 
-        // Legacy fallback: If rule was created before multi-project support,
-        // it will have project_id set but no entries in automation_rule_projects junction table.
-        // We initialize projectIds with the legacy value as a fallback.
-        // The service layer will replace this with junction table data if available.
+        // 旧版回退：如果规则是在多项目支持之前创建的，
+        // 它会有 project_id 但 automation_rule_projects 连接表中没有条目。
+        // 我们用旧版值初始化 projectIds 作为回退。
+        // 服务层会在可用时用连接表数据替换它。
         Set<UUID> projectIds = new HashSet<>();
         String legacyProjectIdStr = rs.getString("legacy_project_id");
         if (legacyProjectIdStr != null) {
             projectIds.add(UUID.fromString(legacyProjectIdStr));
         }
 
-        // These fields will be enriched by Service layer:
-        // - projectId: Derived from first project (for backward compatibility)
-        // - projectName: Derived from first project (for backward compatibility)
-        // - projects: SortedSet of ProjectReference built from projectIds + fetched names
+        // 这些字段将由服务层丰富：
+        // - projectId：从第一个项目派生（用于向后兼容）
+        // - projectName：从第一个项目派生（用于向后兼容）
+        // - projects：由 projectIds + 获取到的名称构建的 ProjectReference 的 SortedSet
         UUID projectId = null;
         String projectName = null;
         SortedSet<ProjectReference> projects = null;
 
-        // Parse type-specific code field
+        // 解析类型特定的 code 字段
         AutomationRuleEvaluatorType type = AutomationRuleEvaluatorType.fromString(rs.getString("type"));
         String codeJson = rs.getString("code");
 
         try {
             JsonNode codeNode = OBJECT_MAPPER.readTree(codeJson);
 
-            // Build the appropriate model type based on evaluator type
+            // 根据评估器类型构建相应的模型类型
             return switch (type) {
                 case LLM_AS_JUDGE -> LlmAsJudgeAutomationRuleEvaluatorModel.builder()
                         .id(id)

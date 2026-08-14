@@ -32,9 +32,9 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
 
     @Override
     public Response toResponse(JsonProcessingException exception) {
-        // A StreamConstraintsException (often wrapped by Jackson during binding) is a stream-read limit
-        // tripping mid-parse. getThrowableList is cycle-safe, so no manual bound is needed. A size limit
-        // (document/string length) -> 413; a structural limit (nesting/number) or anything else -> 400.
+        // StreamConstraintsException（在绑定期常被 Jackson 包装）是流读取限制在解析中途触发的表现。
+        // getThrowableList 是循环安全的，因此无需手动设界。大小限制
+        // （文档/字符串长度）→ 413；结构限制（嵌套/数字）或其他情况 → 400。
         StreamConstraintsException streamConstraint = ExceptionUtils.getThrowableList(exception).stream()
                 .filter(StreamConstraintsException.class::isInstance)
                 .map(StreamConstraintsException.class::cast)
@@ -48,31 +48,31 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
             String guard = IngestionSizeGuardMetrics.classifyStreamConstraint(streamConstraint);
             if (IngestionSizeGuardMetrics.GUARD_DOCUMENT_LENGTH.equals(guard)
                     || IngestionSizeGuardMetrics.GUARD_STRING_LENGTH.equals(guard)) {
-                log.debug("Ingestion size guard rejected a request", exception); // expected; already on the metric
+                log.debug("摄取大小守卫拒绝了请求", exception); // 预期情况；已在指标中记录
                 status = Response.Status.REQUEST_ENTITY_TOO_LARGE;
-                clientMessage = "Request payload exceeds the maximum allowed size."; // redacted; detail in the log
+                clientMessage = "Request payload exceeds the maximum allowed size."; // 已脱敏；详情见日志
             } else {
-                // A structural limit (nesting/number depth), not an oversize -> 400; kept generic since the
-                // message also carries Jackson internals.
-                log.info("Rejecting a request that violates a JSON structural limit for workspace '{}'",
+                // 结构限制（嵌套/数字深度），而非超大小 → 400；保持通用描述，
+                // 因为该消息还包含 Jackson 的内部信息。
+                log.info("拒绝违反 JSON 结构限制的请求，工作区 '{}'",
                         ErrorMetricsResolver.workspaceId(requestContext));
                 status = Response.Status.BAD_REQUEST;
                 clientMessage = "Unable to process JSON. The request exceeds an allowed structural limit.";
             }
         } else {
-            // Redacted summary only: the exception message carries the caller's own body content (potential
-            // PII), so log the type + workspace, never the throwable (SKILL.md "Never Log PII").
-            log.info("Deserialization exception for workspace '{}': {}",
+            // 仅记录脱敏摘要：异常消息携带调用者自身的请求体内容（可能是 PII），
+            // 因此只记录类型 + 工作区，绝不记录异常本身（SKILL.md "Never Log PII"）。
+            log.info("工作区 '{}' 的反序列化异常：{}",
                     ErrorMetricsResolver.workspaceId(requestContext), exception.getClass().getSimpleName());
             status = Response.Status.BAD_REQUEST;
-            // Keep the parser detail (the caller's own payload, not internal limits) - a long-standing contract
-            // many endpoints assert; do NOT genericize this branch (that broke ~8 test suites once).
+            // 保留解析器细节（调用者自身的载荷，而非内部限制）—— 这是许多端点依赖的长期约定；
+            // 不要将该分支通用化（曾导致约 8 个测试套件失败）。
             clientMessage = "Unable to process JSON. " + exception.getMessage();
         }
 
-        // Force JSON: ingestion endpoints negotiate non-JSON (e.g. OTel protobuf) with no writer for
-        // ErrorMessage, so without an explicit type the error fails to serialize and surfaces as a 500
-        // (matches InvalidUUIDExceptionMapper and RequestSizeLimitFilter).
+        // 强制使用 JSON：摄取端点会协商非 JSON 类型（例如 OTel protobuf），
+        // 而 ErrorMessage 没有对应的写入器，因此若未显式指定类型，错误会序列化失败并表现为 500
+        // （与 InvalidUUIDExceptionMapper 和 RequestSizeLimitFilter 一致）。
         return Response.status(status)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .entity(new ErrorMessage(status.getStatusCode(), clientMessage))

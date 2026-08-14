@@ -9,8 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * This information is taken from <a href="https://openrouter.ai/models">OpenRouter docs</a>
- * To extract models' list:
+ * 此信息取自 <a href="https://openrouter.ai/models">OpenRouter 文档</a>
+ * 提取模型列表的方法：
  *  document.querySelectorAll('tr.text-sm')
  *      .forEach(elem => console.log(elem.firstChild.querySelector('code.text-xs').textContent))
  */
@@ -654,7 +654,7 @@ public enum OpenRouterModelName implements StructuredOutputSupported {
     OPENAI_GPT_MINI_LATEST("~openai/gpt-mini-latest"),
     X_AI_GROK_LATEST("~x-ai/grok-latest");
 
-    private static final String WARNING_UNKNOWN_MODEL = "could not find OpenRouterModelName with value '{}'";
+    private static final String WARNING_UNKNOWN_MODEL = "无法找到值为 '{}' 的 OpenRouterModelName";
 
     private static final Set<OpenRouterModelName> STRUCTURED_OUTPUT_SUPPORTED_MODELS = Set.of(
             ANTHROPIC_CLAUDE_OPUS_4_7,

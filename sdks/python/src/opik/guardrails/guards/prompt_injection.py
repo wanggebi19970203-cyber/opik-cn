@@ -6,10 +6,10 @@ import functools
 
 class PromptInjection(guard.Guard):
     """
-    Guard that detects prompt injection and jailbreak attempts.
+    检测提示注入和越狱（jailbreak）尝试的 guard。
 
-    Runs a fine-tuned classifier on the guardrails backend, which requires the
-    guardrails server (with a Hugging Face token configured) to be running.
+    在 guardrails 后端上运行微调分类器，这要求 guardrails
+    服务器（已配置 Hugging Face token）正在运行。
     """
 
     def __init__(
@@ -17,21 +17,21 @@ class PromptInjection(guard.Guard):
         threshold: float = 0.5,
     ) -> None:
         """
-        Initialize a prompt injection guard.
+        初始化一个提示注入 guard。
 
         Args:
-            threshold: Injection-probability threshold above which the guard fails
-                (default: 0.5). Lower it to be stricter, raise it to be more permissive.
+            threshold: 注入概率阈值，超过该阈值时 guard 判定失败
+                （默认：0.5）。调低该值会更严格，调高则更宽松。
         """
         self._threshold = threshold
 
     @functools.lru_cache()
     def get_validation_configs(self) -> List[Dict[str, Any]]:
         """
-        Get the validation configuration for prompt injection detection.
+        获取提示注入检测的校验配置。
 
         Returns:
-            List containing the prompt injection validation configuration
+            包含提示注入校验配置的列表
         """
         return [
             {

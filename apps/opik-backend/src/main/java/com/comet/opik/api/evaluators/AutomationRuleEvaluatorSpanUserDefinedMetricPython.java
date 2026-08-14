@@ -62,9 +62,9 @@ public final class AutomationRuleEvaluatorSpanUserDefinedMetricPython
     }
 
     /**
-     * Two purposes:
-     * - Makes the polymorphic T code available for serialization.
-     * - Provides the specific type T for Open API and Fern.
+     * 两个用途：
+     * - 使多态 T 类型的 code 可用于序列化。
+     * - 为 Open API 和 Fern 提供具体的 T 类型。
      */
     @JsonView({View.Public.class, View.Write.class})
     @Override
@@ -79,9 +79,9 @@ public final class AutomationRuleEvaluatorSpanUserDefinedMetricPython
     }
 
     /**
-     * Two purposes:
-     * - Makes the polymorphic T code available for serialization.
-     * - Provides the specific type T for Open API and Fern.
+     * 两个用途：
+     * - 使多态 T 类型的 code 可用于序列化。
+     * - 为 Open API 和 Fern 提供具体的 T 类型。
      */
     @JsonView({View.Public.class, View.Write.class})
     @Override

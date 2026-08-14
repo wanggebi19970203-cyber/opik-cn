@@ -4,44 +4,40 @@ from opik.api_objects.span.span_data import SpanData
 
 from .bounded_cache import DEFAULT_MAX_SIZE, BoundedCache
 
-# ADK creates the Opik LLM span in ``before_model_callback`` and finalizes it in
-# ``after_model_callback``, normally handing it over through Opik's contextvar
-# span stack (``OpikContextStorage``). When ADK's ``ContextCacheConfig`` is
-# active, its ``handle_context_caching`` / ``create_cache`` OpenTelemetry spans
-# add extra ``context.attach()/detach()`` cycles that, across an SSE streaming
-# async-generator suspension, revert the contextvar to a snapshot predating that
-# push -- so ``top_span_data()`` returns ``None`` in ``after_model_callback`` and
-# the span is never finalized (comet-ml/opik#5524).
+# ADK 在 ``before_model_callback`` 中创建 Opik LLM span，并在
+# ``after_model_callback`` 中最终化它，通常通过 Opik 的 contextvar
+# span 栈（``OpikContextStorage``）进行交接。当 ADK 的 ``ContextCacheConfig``
+# 处于活动状态时，其 ``handle_context_caching`` / ``create_cache`` OpenTelemetry span
+# 会增加额外的 ``context.attach()/detach()`` 循环，这些循环在一次 SSE 流式
+# 异步生成器挂起期间将 contextvar 回退到该 push 之前的快照——
+# 因此 ``top_span_data()`` 在 ``after_model_callback`` 中返回 ``None``，
+# span 永远不会被最终化（comet-ml/opik#5524）。
 #
-# This registry is a contextvar-independent handoff: ``before_model_callback``
-# registers the span against the ADK ``EventActions`` object that ADK builds once
-# per model call and passes to both callbacks (invariant across streaming
-# partials, immune to contextvar mutation), and ``after_model_callback`` recovers
-# it by the same object.
+# 此注册表是一种与 contextvar 无关的交接方式：``before_model_callback``
+# 将 span 注册到 ADK 每次模型调用构建一次并传递给两个回调的
+# ``EventActions`` 对象上（在流式分片之间保持不变，不受 contextvar
+# 变更影响），``after_model_callback`` 则通过同一对象恢复它。
 #
-# ``EventActions`` is not reliably hashable, so entries are keyed by
-# ``id(actions)`` but ALSO hold a strong reference to the ``actions`` object and
-# verify identity on lookup. That closes the ``id()``-recycling hazard: an entry
-# that outlives its callback (a call whose ``after_model_callback`` never runs --
-# a short-circuiting before-callback or a model error) keeps its ``actions``
-# alive, so CPython can't reuse that id for a later call's ``EventActions``; and
-# if an id ever did collide, the identity check refuses the stale span rather
-# than returning it for the wrong call.
+# ``EventActions`` 无法可靠地进行哈希，因此条目以 ``id(actions)`` 为键，
+# 但同时持有对 ``actions`` 对象的强引用，并在查找时校验身份。这消除了
+# ``id()`` 复用带来的隐患：一个比其回调存续更久的条目（其
+# ``after_model_callback`` 从未运行的调用——例如提前短路的前置回调或模型错误）
+# 会使其 ``actions`` 保持存活，因此 CPython 无法将该 id 复用于后续调用的
+# ``EventActions``；而即使某个 id 真的发生了碰撞，身份校验也会拒绝过期的
+# span，而不是将其返回给错误的调用。
 #
-# It is size-bounded (see ``BoundedCache``) because those unclaimed entries must
-# not accumulate on a long-lived shared tracer. An evicted entry is dropped
-# WITHOUT mutating its span: eviction only happens under more than ``max_size``
-# concurrently-in-flight model calls, where the oldest may still be live, and
-# force-finalizing it would replace a normally-traceable call with an empty span
-# and block its real ``after_model_callback`` from finalizing it. Dropping the
-# entry instead leaves the span on the context stack, where the normal
-# stack-fallback still finalizes it (the detached-context recovery this registry
-# adds simply reverts to the pre-registry behavior beyond the bound).
+# 它做了大小限制（见 ``BoundedCache``），因为这些未被认领的条目绝不能
+# 在长期存活的共享追踪器上不断累积。被逐出的条目会被丢弃，且
+# 不会变更其 span：逐出只会在超过 ``max_size`` 个并发在途模型调用时发生，
+# 此时最旧的调用可能仍然存活，强制最终化它会把一个原本可正常追踪的调用
+# 替换为空 span，并阻止其真正的 ``after_model_callback`` 将其最终化。
+# 丢弃条目反而会让 span 留在上下文栈上，由正常的栈回退路径将其最终化
+# （此注册表新增的分离上下文恢复在超出上限后只会退回到注册表出现之前的行为）。
 
 
 class PendingLlmSpanRegistry:
-    """Bounded registry of in-flight LLM spans, keyed by the per-model-call
-    ``EventActions`` object (by id, with an identity check).
+    """在途 LLM span 的有界注册表，以每次模型调用的
+    ``EventActions`` 对象为键（按 id，并进行身份校验）。
     """
 
     def __init__(self, max_size: int = DEFAULT_MAX_SIZE) -> None:

@@ -65,19 +65,19 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
     @Override
     public Mono<Long> parseAndStoreSpans(@NonNull ExportTraceServiceRequest traceRequest, @NonNull String projectName) {
 
-        // make sure project exists before starting processing
+        // 在开始处理之前确保项目存在
         return projectService.getOrCreate(projectName)
                 .map(Project::id)
                 .flatMap(projectId -> Mono.deferContextual(ctx -> {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
 
-                    // extracts all otel spans in the batch, sorted by start time
+                    // 提取批次中的所有 otel span，按开始时间排序
                     var otelSpans = traceRequest.getResourceSpansList().stream()
                             .flatMap(resourceSpans -> resourceSpans.getScopeSpansList().stream())
                             .flatMap(scopeSpans -> scopeSpans.getSpansList().stream())
                             .toList();
 
-                    // find out whats the name of the integration library
+                    // 找出集成库的名称
                     var integrationName = traceRequest.getResourceSpansList().stream()
                             .flatMap(resourceSpans -> resourceSpans.getScopeSpansList().stream())
                             .map(scopeSpans -> scopeSpans.getScope().getName())
@@ -86,11 +86,11 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
                             .findFirst()
                             .orElse(null);
 
-                    // otelTraceId -> minimum timestamp seen with that traceId
+                    // otelTraceId -> 该 traceId 出现的最小时间戳
                     var otelTracesAndMinTimestamp = otelSpans.stream()
                             .collect(Collectors.toMap(Span::getTraceId, Span::getStartTimeUnixNano, Math::min));
 
-                    // get or create a mapping of otel trace id -> opik trace id
+                    // 获取或创建 otel trace id -> opik trace id 的映射
                     return otelToOpikTraceIdMapper(otelTracesAndMinTimestamp, projectId, workspaceId)
                             .flatMap(traceMapper -> doStoreSpans(otelSpans, traceMapper, projectName, integrationName));
                 })).subscribeOn(Schedulers.boundedElastic());
@@ -107,11 +107,11 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
     private Mono<Long> doStoreSpans(List<Span> otelSpans, Map<String, UUID> traceIdMapper, String projectName,
             String integrationName) {
 
-        // Track trace IDs that came from opik.trace_id attribute overrides.
-        // These spans connect to existing OPIK traces, so we must not create new traces for them.
+        // 跟踪来自 opik.trace_id 属性覆盖的 trace ID。
+        // 这些 span 连接到现有的 OPIK trace，因此我们不能为它们创建新的 trace。
         Set<UUID> overriddenTraceIds = new HashSet<>();
 
-        // converts otel spans into opik spans, using the mapped opik trace id
+        // 使用映射后的 opik trace id 将 otel span 转换为 opik span
         var opikSpans = otelSpans.stream()
                 .map(otelSpan -> {
                     var otelTraceIdBase64 = base64OtelId(otelSpan.getTraceId());
@@ -128,10 +128,10 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
                         .build())
                 .toList();
 
-        // Some integrations (e.g. PydanticAI/Logfire) put cumulative usage tokens on parent/agent spans
-        // that already represent the sum of all child LLM call spans. Including both the parent and children
-        // in sumMap() aggregation would double-count tokens. Clear usage from parent spans whose children
-        // also carry usage, so only the leaf LLM spans contribute to the aggregated token counts.
+        // 有些集成（如 PydanticAI/Logfire）将累计使用量 token 放在父/代理 span 上，
+        // 而这些 token 已经表示所有子 LLM 调用 span 的总和。若将父 span 和子 span 都
+        // 计入 sumMap() 聚合，会导致 token 重复计数。清除那些子 span 也携带使用量的
+        // 父 span 的使用量，使只有叶子 LLM span 对聚合 token 计数做出贡献。
         var parentIdsWithChildrenHavingUsage = opikSpans.stream()
                 .filter(span -> span.parentSpanId() != null
                         && span.usage() != null
@@ -149,10 +149,10 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
                                         : span)
                         .toList();
 
-        // Use spans without parentId as Trace roots. Skip opik.trace_id overrides (they attach to
-        // existing traces). Multiple roots can share one traceId (e.g. when parent_span_id==trace_id
-        // is nulled in the mapper), so dedup by traceId to create only one trace per id. First
-        // root in encounter order wins.
+        // 使用没有 parentId 的 span 作为 Trace 根节点。跳过 opik.trace_id 覆盖
+        // （它们附加到现有 trace）。多个根节点可以共享同一个 traceId
+        // （例如当 mapper 中将 parent_span_id==trace_id 置空时），因此按 traceId
+        // 去重，每个 ID 只创建一个 trace。按遇到顺序，第一个根节点生效。
         var seenTraceIds = new HashSet<UUID>();
         var rootSpansByTraceId = dedupedSpans.stream()
                 .filter(span -> span.parentSpanId() == null)
@@ -161,7 +161,7 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
                 .toList();
         return Flux.fromStream(rootSpansByTraceId.stream())
                 .flatMap(rootSpan -> {
-                    // Extract thread_id from root span metadata if present
+                    // 如果存在，从根 span 元数据中提取 thread_id
                     String threadId = null;
                     if (rootSpan.metadata() != null && rootSpan.metadata().has("thread_id")) {
                         threadId = rootSpan.metadata().get("thread_id").asText();
@@ -187,11 +187,11 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
 
                     return traceService.create(traceBuilder.build());
                 })
-                .doOnNext(traceId -> log.info("TraceId '{}' created", traceId))
+                .doOnNext(traceId -> log.info("TraceId '{}' 已创建", traceId))
                 .then(Mono.defer(() -> {
                     var spanBatch = SpanBatch.builder().spans(dedupedSpans).build();
 
-                    log.info("Parsed OpenTelemetry span batch for project '{}' into {} spans", projectName,
+                    log.info("已将项目 '{}' 的 OpenTelemetry span 批次解析为 {} 个 span", projectName,
                             dedupedSpans.size());
 
                     return spanService.create(spanBatch);
@@ -200,24 +200,24 @@ class OpenTelemetryServiceImpl implements OpenTelemetryService {
 
     private Mono<Map<String, UUID>> otelToOpikTraceIdMapper(Map<ByteString, Long> otelTraceIds, UUID projectId,
             String workspaceId) {
-        // checks Redis for the otel traceIds in the batch; have we seen them before?
-        // maps (base64 otel id -> UUIDv7 opik id)
+        // 在 Redis 中检查批次中的 otel traceId；我们之前是否见过它们？
+        // 建立映射（base64 otel id -> UUIDv7 opik id）
         return Flux.fromIterable(otelTraceIds.entrySet()).flatMap(otelPack -> {
             var otelTraceId = otelPack.getKey();
             var otelTimestamp = Duration.ofNanos(otelPack.getValue()).toMillis();
 
             var otelTraceIdBase64 = base64OtelId(otelTraceId);
 
-            // checks if this key is mapped in redis
+            // 检查该键在 redis 中是否已映射
             var otelTraceIdRedisKey = redisKey(workspaceId, projectId, otelTraceIdBase64);
             var checkId = redisson.getBucket(otelTraceIdRedisKey).getAndExpire(config.getTtl().toJavaDuration());
 
             return checkId.switchIfEmpty(Mono.defer(() -> {
-                // its an unknown otel trace id, lets create an opik trace id with this span timestamp as we sorted otel
-                // spans by time on previous step, it will be the closest time possible for the actual trace start
+                // 这是一个未知的 otel trace id，让我们使用该 span 时间戳创建 opik trace id，
+                // 由于上一步已按时间对 otel span 排序，这将是尽可能接近实际 trace 开始的时间
                 var opikTraceId = OpenTelemetryMapper.convertOtelIdToUUIDv7(otelTraceId.toByteArray(), otelTimestamp);
 
-                log.info("Creating mapping in Redis for otel trace id '{}' -> opik trace id '{}'", otelTraceIdRedisKey,
+                log.info("在 Redis 中为 otel trace id '{}' -> opik trace id '{}' 创建映射", otelTraceIdRedisKey,
                         opikTraceId);
                 return redisson.getBucket(otelTraceIdRedisKey)
                         .set(opikTraceId.toString(), config.getTtl().toJavaDuration())

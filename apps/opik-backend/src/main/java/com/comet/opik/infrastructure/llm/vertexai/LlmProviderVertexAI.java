@@ -53,22 +53,22 @@ public class LlmProviderVertexAI implements LlmProviderService {
                         return;
                     }
 
-                    // Release the client's GAX threads exactly once, once the stream terminates
-                    // (onComplete/onError) — never when this task returns, which is before the first token.
+                    // 一旦流终止（onComplete/onError）就恰好释放一次客户端的 GAX 线程
+                    // —— 绝不在本任务返回时释放，因为那是在第一个 token 之前。
                     var closed = new AtomicBoolean(false);
                     Runnable closeOnce = () -> {
                         if (closed.compareAndSet(false, true)) {
                             client.close();
                         }
                     };
-                    // The consumer gets exactly one terminal; a handler that throws is logged, not propagated.
+                    // 消费者恰好得到一个终止信号；抛异常的处理器会被记录日志，而不会向上传播。
                     var terminalReached = new AtomicBoolean(false);
                     Runnable handleCloseAndRelease = () -> {
                         terminalReached.set(true);
                         try {
                             handleClose.run();
                         } catch (Exception e) {
-                            log.warn("Vertex AI stream close handler failed", e);
+                            log.warn("Vertex AI 流关闭处理器失败", e);
                         } finally {
                             closeOnce.run();
                         }
@@ -78,7 +78,7 @@ public class LlmProviderVertexAI implements LlmProviderService {
                         try {
                             handleError.accept(throwable);
                         } catch (Exception e) {
-                            log.warn("Vertex AI stream error handler failed", e);
+                            log.warn("Vertex AI 流错误处理器失败", e);
                         } finally {
                             closeOnce.run();
                         }
@@ -91,19 +91,19 @@ public class LlmProviderVertexAI implements LlmProviderService {
                                         request.model()));
                     } catch (Exception e) {
                         if (terminalReached.compareAndSet(false, true)) {
-                            // Synchronous failure before any terminal — deliver the error and close the stream.
+                            // 在任何终止信号之前的同步失败 —— 传递错误并关闭流。
                             try {
                                 handleError.accept(e);
                             } catch (Exception ex) {
-                                log.warn("Vertex AI stream error handler failed", ex);
+                                log.warn("Vertex AI 流错误处理器失败", ex);
                             }
                             try {
                                 handleClose.run();
                             } catch (Exception ex) {
-                                log.warn("Vertex AI stream close handler failed", ex);
+                                log.warn("Vertex AI 流关闭处理器失败", ex);
                             }
                         } else {
-                            log.warn("Vertex AI stream failed after a terminal callback had already run", e);
+                            log.warn("Vertex AI 流在一个终止回调已经运行之后失败", e);
                         }
                         closeOnce.run();
                     }
@@ -113,11 +113,11 @@ public class LlmProviderVertexAI implements LlmProviderService {
     private List<ChatMessage> getChatMessages(ChatCompletionRequest request) {
         List<ChatMessage> chatMessages = LlmProviderLangChainMapper.INSTANCE.mapMessages(request);
 
-        // This is a workaround for the Vertex AI API, which requires at least one user or AI message in the request.
+        // 这是对 Vertex AI API 的变通：它要求请求中至少有一条用户或 AI 消息。
         if (chatMessages.stream().noneMatch(chatMessage -> chatMessage.type() == ChatMessageType.AI
                 || chatMessage.type() == ChatMessageType.USER)) {
             var newMessages = new ArrayList<ChatMessage>();
-            newMessages.add(AiMessage.from("User message:")); // Add an empty user message to the list as has to have at least one user or ai message
+            newMessages.add(AiMessage.from("User message:")); // 向列表添加一条空用户消息，因为必须至少有一条用户或 AI 消息
             newMessages.addAll(chatMessages);
             chatMessages = newMessages;
         }

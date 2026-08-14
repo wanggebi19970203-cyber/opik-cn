@@ -45,16 +45,16 @@ class RemoteAuthService implements AuthService {
     private static final String USER_NOT_FOUND = "User not found";
     private static final String NOT_LOGGED_USER = "Please login first";
 
-    // Remote error bodies are arbitrary upstream content, so cap what reaches the logs.
+    // 远程错误响应体是任意的上游内容，因此要限制进入日志的量。
     private static final int MAX_LOGGED_BODY_LENGTH = 512;
 
-    // GenericType instances are thread-safe and expensive to build, so reuse a single instance.
+    // GenericType 实例是线程安全的且构建代价高，因此复用一个实例。
     private static final GenericType<List<WorkspaceIdNameResponse>> WORKSPACE_LIST_TYPE = new GenericType<>() {
     };
 
     private static final Map<String, Set<String>> PUBLIC_ENDPOINTS = new HashMap<>() {
         {
-            // Private projects related endpoints
+            // 私有项目相关端点
             put("^/v1/private/projects/?$", Set.of("GET"));
             put("^/v1/private/projects/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/?$",
                     Set.of("GET"));
@@ -74,7 +74,7 @@ class RemoteAuthService implements AuthService {
             put("^/v1/private/traces/threads/retrieve/?$", Set.of("POST"));
             put("^/v1/private/traces/search/?$", Set.of("POST"));
 
-            // Public datasets related endpoints
+            // 公共数据集相关端点
             put("^/v1/private/datasets/?$", Set.of("GET"));
             put("^/v1/private/datasets/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/?$",
                     Set.of("GET"));
@@ -152,7 +152,7 @@ class RemoteAuthService implements AuthService {
         var currentWorkspaceName = Optional.ofNullable(headers.getHeaderString(RequestContext.WORKSPACE_HEADER))
                 .orElseGet(() -> uriInfo.getQueryParameters().getFirst(WORKSPACE_QUERY_PARAM));
         if (StringUtils.isBlank(currentWorkspaceName)) {
-            log.warn("Workspace name is missing");
+            log.warn("缺少工作区名称");
             throw new ClientErrorException(MISSING_WORKSPACE, Response.Status.FORBIDDEN);
         }
 
@@ -167,7 +167,7 @@ class RemoteAuthService implements AuthService {
         } catch (ClientErrorException authException) {
             if (!isDefaultWorkspace(currentWorkspaceName) && isNotAuthenticated(authException)
                     && isEndpointPublic(contextInfo)) {
-                log.info("Using visibility PUBLIC for endpoint: {}", path);
+                log.info("对端点使用 PUBLIC 可见性: {}", path);
                 String workspaceId = getWorkspaceId(currentWorkspaceName);
                 requestContext.get().setWorkspaceId(workspaceId);
                 requestContext.get().setWorkspaceName(currentWorkspaceName);
@@ -182,7 +182,7 @@ class RemoteAuthService implements AuthService {
     @Override
     public void authenticateSession(Cookie sessionToken) {
         if (sessionToken == null || StringUtils.isBlank(sessionToken.getValue())) {
-            log.info("No cookies found");
+            log.info("未找到 cookie");
             throw new ClientErrorException(NOT_LOGGED_USER, Response.Status.FORBIDDEN);
         }
     }
@@ -195,7 +195,7 @@ class RemoteAuthService implements AuthService {
                 .queryParam("withoutExtendedData", true)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                // avoids gzip double-decompression issue in case of huge workspaces list
+                // 在巨大工作区列表的情况下避免 gzip 双重解压问题
                 .acceptEncoding("identity")
                 .cookie(sessionToken)
                 .get()) {
@@ -220,7 +220,7 @@ class RemoteAuthService implements AuthService {
                 .path("auth-by-username")
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                // avoids gzip double-decompression issue, same as in listEligibleWorkspaces
+                // 避免 gzip 双重解压问题，与 listEligibleWorkspaces 中相同
                 .acceptEncoding("identity")
                 .header(OAUTH_USERNAME_HEADER, token.userName())
                 .post(Entity.json(AuthRequest.builder()
@@ -245,7 +245,7 @@ class RemoteAuthService implements AuthService {
                 .path("auth-session")
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                // avoids gzip double-decompression issue, same as in listEligibleWorkspaces
+                // 避免 gzip 双重解压问题，与 listEligibleWorkspaces 中相同
                 .acceptEncoding("identity")
                 .cookie(sessionToken)
                 .post(Entity.json(AuthRequest.builder().workspaceName(workspaceName).build()))) {
@@ -273,21 +273,21 @@ class RemoteAuthService implements AuthService {
     }
 
     /**
-     * Logs the remote response (status and best-effort body, for production debugging) and builds an
-     * {@link InternalServerErrorException} carrying a custom message that identifies the failing operation. The body is
-     * only logged, never surfaced to the caller, so no internal/remote detail bubbles up to the endpoint.
+     * 记录远程响应（状态码和尽力而为的响应体，用于生产环境调试）并构建一个
+     * {@link InternalServerErrorException}，携带标识失败操作的自定义消息。响应体只是
+     * 被记录日志，绝不会暴露给调用方，因此任何内部/远程细节都不会冒泡到端点。
      */
     private InternalServerErrorException unexpectedRemoteError(String operation, Response response) {
-        log.error("Unexpected error while {}, received status code: {}, body: '{}'",
+        log.error("在 {} 时发生意外错误，收到的状态码: {}，响应体: '{}'",
                 operation, response.getStatus(), readBodySafely(response));
         return new InternalServerErrorException("Unexpected error while " + operation);
     }
 
     /**
-     * Reads the response body for diagnostics only, never to be surfaced to the caller. The result is capped at
-     * {@link #MAX_LOGGED_BODY_LENGTH} characters: a remote error body is arbitrary upstream content (a proxy error page
-     * or a stack trace, not necessarily our own JSON), so it must not be able to flood the logs or carry an unbounded
-     * amount of upstream detail into them.
+     * 仅为诊断而读取响应体，绝不会暴露给调用方。结果被截断到
+     * {@link #MAX_LOGGED_BODY_LENGTH} 个字符：远程错误响应体是任意的上游内容（代理错误页
+     * 或堆栈跟踪，不一定是我们自己的 JSON），因此绝不能让它淹没日志或把无界的
+     * 上游细节带进日志。
      */
     private static String readBodySafely(Response response) {
         try {
@@ -296,18 +296,18 @@ class RemoteAuthService implements AuthService {
             }
             return StringUtils.abbreviate(response.readEntity(String.class), MAX_LOGGED_BODY_LENGTH);
         } catch (RuntimeException e) {
-            log.warn("Failed to read remote response body for debugging", e);
+            log.warn("读取远程响应体用于调试时失败", e);
             return "";
         }
     }
 
     /**
-     * Guards a {@code readEntity} call: reports whether the response carries an entity and that entity was buffered, so
-     * that it can be read, and read again. A client response entity is backed by a single-shot input stream, so without
-     * buffering the first reader consumes it and every later read fails. Buffering is idempotent — an already buffered
-     * entity reports success — so callers do not need to track whether it already happened.
+     * 守护一次 {@code readEntity} 调用：报告响应是否携带实体、以及该实体是否已被缓冲，
+     * 从而可以被读取、并再次读取。客户端响应实体由一次性输入流支撑，因此如果不缓冲，
+     * 第一个读取者会消耗掉它，之后每次读取都会失败。缓冲是幂等的 —— 已经缓冲过的
+     * 实体会报告成功 —— 因此调用方无需跟踪它是否已经发生过。
      *
-     * @return {@code false} when there is no entity, or when it could not be buffered and is therefore unsafe to read
+     * @return 当没有实体、或实体无法缓冲从而读取不安全时返回 {@code false}
      */
     private static boolean isEntityReadable(Response response) {
         if (!response.hasEntity()) {
@@ -316,18 +316,18 @@ class RemoteAuthService implements AuthService {
         try {
             return response.bufferEntity();
         } catch (RuntimeException e) {
-            log.warn("Failed to buffer remote response entity, status: '{}'", response.getStatus(), e);
+            log.warn("缓冲远程响应实体失败，状态: '{}'", response.getStatus(), e);
             return false;
         }
     }
 
     /**
-     * Reports whether the body should be read as JSON, matching what the registered Jackson provider actually parses
-     * rather than only the exact {@code application/json} type. A structured suffix ({@code application/problem+json})
-     * and a non-{@code application} type ({@code text/json}) both deserialize fine, so gating on
-     * {@code APPLICATION_JSON_TYPE.isCompatible} would discard a perfectly good remote message. A wildcard or absent
-     * type tells us nothing about the body and is not treated as JSON — including a wildcard carrying the suffix
-     * ({@code application/*+json}), which is not a legal response content type in the first place.
+     * 报告响应体是否应作为 JSON 读取，依据的是注册的 Jackson provider 实际会解析的内容，
+     * 而不仅仅是精确的 {@code application/json} 类型。结构化后缀（{@code application/problem+json}）
+     * 和非 {@code application} 类型（{@code text/json}）都能正常反序列化，因此用
+     * {@code APPLICATION_JSON_TYPE.isCompatible} 来做门控会丢弃一条完全可用的远程消息。通配符或缺失的
+     * 类型不能告诉我们关于响应体的任何信息，也不会被当作 JSON —— 包括携带后缀的通配符
+     * （{@code application/*+json}），它本来就不是合法的响应内容类型。
      */
     private static boolean isJson(MediaType mediaType) {
         if (mediaType == null) {
@@ -341,23 +341,23 @@ class RemoteAuthService implements AuthService {
     }
 
     /**
-     * Extracts the error message from a non-successful react-service response without assuming the body is JSON.
+     * 在不假设响应体是 JSON 的前提下，从非成功的 react-service 响应中提取错误消息。
      * <p>
-     * The react service does not always answer with a {@link ReactServiceErrorResponse}: endpoints guarded by
-     * Dropwizard's {@code @Auth} filter (for example {@code /opik/auth-session}) reject an expired or invalid session
-     * cookie through the default {@code UnauthorizedHandler}, which replies {@code 401} with a {@code text/plain} body.
-     * Reading such a response as {@link ReactServiceErrorResponse} makes Jersey raise
-     * {@code MessageBodyProviderNotFoundException}, a {@code ProcessingException} that is not a
-     * {@link ClientErrorException} and therefore escapes the auth filter and surfaces as a {@code 500} instead of the
-     * intended client error.
+     * react 服务并不总是以 {@link ReactServiceErrorResponse} 应答：由 Dropwizard 的
+     * {@code @Auth} 过滤器守护的端点（例如 {@code /opik/auth-session}）会通过默认的
+     * {@code UnauthorizedHandler} 拒绝过期或无效的会话 cookie，后者以 {@code text/plain} 响应体
+     * 返回 {@code 401}。把这样的响应当作 {@link ReactServiceErrorResponse} 读取会让 Jersey 抛出
+     * {@code MessageBodyProviderNotFoundException}，这是一个不是 {@link ClientErrorException} 的
+     * {@code ProcessingException}，因此会逃过认证过滤器并以 {@code 500} 而不是预期的
+     * 客户端错误暴露出来。
      * <p>
-     * Only a JSON body is treated as a message intended for the caller. Any other content type is a framework-level
-     * response rather than an application error, so it is logged and the caller-facing {@code fallback} is used instead
-     * of leaking the remote framework's wording. Every read is guarded by {@link #isEntityReadable(Response)}, which
-     * also buffers, so that both the diagnostic logging here and any later reader of the same response can read it
-     * rather than relying on being the first to consume the single-shot entity stream.
+     * 只有 JSON 响应体才被视为面向调用方的消息。任何其他内容类型都是框架级的
+     * 响应而非应用错误，因此会被记录日志，并使用面向调用方的 {@code fallback} 而不是
+     * 泄漏远程框架的措辞。每次读取都由 {@link #isEntityReadable(Response)} 守护，它
+     * 同时也会缓冲，从而让这里的诊断日志和同一响应的任何后续读取者都能读取它，
+     * 而不是依赖成为第一个消费一次性实体流的人。
      *
-     * @param fallback message used when the body is absent, not JSON, unreadable or empty
+     * @param fallback 当响应体缺失、不是 JSON、不可读或为空时使用的消息
      */
     private static String readErrorMessage(Response response, String fallback) {
         if (!isEntityReadable(response)) {
@@ -365,7 +365,7 @@ class RemoteAuthService implements AuthService {
         }
         var mediaType = response.getMediaType();
         if (!isJson(mediaType)) {
-            log.warn("React service replied with a non-JSON error body, status: '{}', contentType: '{}', body: '{}'",
+            log.warn("React 服务回复了非 JSON 错误体，状态: '{}'，contentType: '{}'，响应体: '{}'",
                     response.getStatus(), mediaType, readBodySafely(response));
             return fallback;
         }
@@ -375,7 +375,7 @@ class RemoteAuthService implements AuthService {
                     ? fallback
                     : errorResponse.msg().strip();
         } catch (RuntimeException e) {
-            log.warn("Failed to read react service error response, status: '{}', body: '{}'",
+            log.warn("读取 react 服务错误响应失败，状态: '{}'，响应体: '{}'",
                     response.getStatus(), readBodySafely(response), e);
             return fallback;
         }
@@ -384,7 +384,7 @@ class RemoteAuthService implements AuthService {
     private void authenticateUsingSessionToken(Cookie sessionToken, String workspaceName, String path,
             List<String> requiredPermissions) {
         if (isDefaultWorkspace(workspaceName)) {
-            log.warn("Default workspace name is not allowed for UI authentication");
+            log.warn("UI 认证不允许默认工作区名称");
             throw new ClientErrorException(
                     NOT_ALLOWED_TO_ACCESS_WORKSPACE, Response.Status.FORBIDDEN);
         }
@@ -393,7 +393,7 @@ class RemoteAuthService implements AuthService {
                 .path("auth-session")
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                // avoids gzip double-decompression issue, same as in listEligibleWorkspaces
+                // 避免 gzip 双重解压问题，与 listEligibleWorkspaces 中相同
                 .acceptEncoding("identity")
                 .cookie(sessionToken)
                 .post(Entity.json(AuthRequest.builder()
@@ -411,12 +411,12 @@ class RemoteAuthService implements AuthService {
             List<String> requiredPermissions) {
         var apiKey = Optional.ofNullable(headers.getHeaderString(HttpHeaders.AUTHORIZATION)).orElse("");
         if (apiKey.isBlank()) {
-            log.info("API key not found in headers");
+            log.info("请求头中未找到 API key");
             throw new ClientErrorException(MISSING_API_KEY, Response.Status.UNAUTHORIZED);
         }
         var credentials = validateApiKeyAndGetCredentials(workspaceName, apiKey, path, requiredPermissions);
         if (credentials.shouldCache()) {
-            log.debug("Caching user and workspace id for API key");
+            log.debug("正在缓存 API key 对应的用户和工作区 id");
             cacheService.cache(apiKey, workspaceName, requiredPermissions, credentials.toAuthCredentials());
         }
         setCredentialIntoContext(credentials, workspaceName, apiKey);
@@ -427,13 +427,13 @@ class RemoteAuthService implements AuthService {
         var credentials = cacheService.resolveApiKeyUserAndWorkspaceIdFromCache(apiKey, workspaceName,
                 requiredPermissions);
         if (credentials.isEmpty()) {
-            log.debug("User and workspace id not found in cache for API key");
+            log.debug("缓存中未找到 API key 对应的用户和工作区 id");
             try (var response = client.target(URI.create(reactServiceUrl.url()))
                     .path("opik")
                     .path("auth")
                     .request()
                     .accept(MediaType.APPLICATION_JSON)
-                    // avoids gzip double-decompression issue, same as in listEligibleWorkspaces
+                    // 避免 gzip 双重解压问题，与 listEligibleWorkspaces 中相同
                     .acceptEncoding("identity")
                     .header(HttpHeaders.AUTHORIZATION,
                             apiKey)
@@ -454,7 +454,7 @@ class RemoteAuthService implements AuthService {
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             var authResponse = response.readEntity(AuthResponse.class);
             if (StringUtils.isEmpty(authResponse.user())) {
-                log.warn("User not found");
+                log.warn("未找到用户");
                 throw new ClientErrorException(USER_NOT_FOUND, Response.Status.UNAUTHORIZED);
             }
             return authResponse;
@@ -462,7 +462,7 @@ class RemoteAuthService implements AuthService {
             throw new ClientErrorException(readErrorMessage(response, NOT_LOGGED_USER),
                     Response.Status.UNAUTHORIZED);
         } else if (response.getStatus() == Response.Status.FORBIDDEN.getStatusCode()) {
-            // EM never returns FORBIDDEN as of now
+            // EM 目前从不返回 FORBIDDEN
             throw new ClientErrorException(
                     NOT_ALLOWED_TO_ACCESS_WORKSPACE, Response.Status.FORBIDDEN);
         } else if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
@@ -476,7 +476,7 @@ class RemoteAuthService implements AuthService {
             ValidatedAuthCredentials credentials, String fallbackWorkspaceName, String apiKey) {
         var workspaceName = Optional.ofNullable(credentials.workspaceName()).orElse(fallbackWorkspaceName);
         log.debug(
-                "setting credentials into context, userName: '{}', workspaceId: '{}', workspaceName: '{}', quotas: '{}'",
+                "正在将凭证设置到上下文中，userName: '{}'，workspaceId: '{}'，workspaceName: '{}'，quotas: '{}'",
                 credentials.userName(), credentials.workspaceId(), workspaceName, credentials.quotas());
         requestContext.get().setUserName(credentials.userName());
         requestContext.get().setWorkspaceId(credentials.workspaceId());
@@ -513,7 +513,7 @@ class RemoteAuthService implements AuthService {
                 .path("workspace-id")
                 .queryParam("name", workspaceName)
                 .request()
-                // avoids gzip double-decompression issue, same as in listEligibleWorkspaces
+                // 避免 gzip 双重解压问题，与 listEligibleWorkspaces 中相同
                 .acceptEncoding("identity")
                 .get()) {
 
@@ -526,8 +526,8 @@ class RemoteAuthService implements AuthService {
             return response.readEntity(String.class);
         } else if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
             var message = readErrorMessage(response, MISSING_WORKSPACE);
-            // An unknown workspace name is a caller mistake on the public-endpoint fallback path, not a server fault.
-            log.warn("Workspace not found by name: '{}'", message);
+            // 在公共端点回退路径上，未知的工作区名称是调用方的错误，而非服务器故障。
+            log.warn("按名称未找到工作区: '{}'", message);
             throw new ClientErrorException(message, Response.Status.BAD_REQUEST);
         }
 

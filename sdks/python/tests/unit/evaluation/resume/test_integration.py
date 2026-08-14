@@ -86,7 +86,7 @@ class TestResumeStateForEvaluate:
 
         blob = _blob(result)
         assert blob["resumable"] is False
-        assert "pinned dataset version" in blob["non_resumable_reason"]
+        assert "恢复需要固定的数据集版本" in blob["non_resumable_reason"]
         # No iteration configs leak through when resumable=False.
         assert "default_runs_per_item" not in blob
         assert "dataset_version_name" not in blob

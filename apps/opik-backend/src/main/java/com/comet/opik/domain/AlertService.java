@@ -475,7 +475,7 @@ class AlertServiceImpl implements AlertService {
     @Override
     @Cacheable(name = "alert_find_all_per_workspace", key = "$workspaceId +'-'+ $eventTypes", returnType = Alert.class, wrapperType = List.class)
     public List<Alert> findAllByWorkspaceAndEventTypes(String workspaceId, @NonNull Set<AlertEventType> eventTypes) {
-        log.info("Fetching all enabled alerts for workspace '{}', eventTypes '{}'", workspaceId, eventTypes);
+        log.info("获取工作区 '{}'、事件类型 '{}' 的所有已启用告警", workspaceId, eventTypes);
         return transactionTemplate.inTransaction(READ_ONLY, handle -> {
             AlertDAO alertDAO = handle.attach(AlertDAO.class);
 
@@ -537,7 +537,7 @@ class AlertServiceImpl implements AlertService {
                 .contextWrite(ctx -> setRequestContext(ctx, userName, workspaceId))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(responseBody -> {
-                    log.info("Successfully sent webhook: id='{}', type='{}', url='{}', response='{}'",
+                    log.info("成功发送 webhook：id='{}'、type='{}'、url='{}'、response='{}'",
                             event.getId(), event.getEventType(), event.getUrl(), responseBody);
 
                     return WebhookTestResult.builder()
@@ -548,7 +548,7 @@ class AlertServiceImpl implements AlertService {
                             .build();
                 })
                 .onErrorResume(throwable -> {
-                    log.error("Failed to send webhook: id='{}', type='{}', url='{}', error='{}'",
+                    log.error("发送 webhook 失败：id='{}'、type='{}'、url='{}'、error='{}'",
                             event.getId(), event.getEventType(), event.getUrl(), throwable.getMessage(), throwable);
 
                     // 从RetryableHttpException中提取状态码（如果可用）
@@ -755,7 +755,7 @@ class AlertServiceImpl implements AlertService {
 
         UUID id = alert.id() == null ? idGenerator.generateId() : alert.id();
         IdGenerator.validateVersion(id, "Alert");
-        // projectId is persisted without an existence check here, so enforce v7 to avoid storing an orphan v4.
+        // projectId 在此处持久化时不做存在性检查，因此强制 v7 以避免存储孤立的 v4。
         idGenerator.validateIdNotInFutureIfPresent(alert.projectId(), "project");
 
         UUID webhookId = alert.webhook().id() == null ? idGenerator.generateId() : alert.webhook().id();

@@ -14,11 +14,11 @@ import lombok.Builder;
 import java.util.List;
 
 /**
- * Configuration for Optimization Studio runs.
- * This represents the full payload sent from the frontend to create a Studio optimization.
+ * Optimization Studio 运行的配置。
+ * 这表示从前端发送的用于创建 Studio 优化的完整负载。
  *
- * The opikApiKey is internal-only: populated server-side from the request header, never serialized to clients.
- * Required for cloud deployments, as it'll be used to automate SDK in behalf of the user.
+ * opikApiKey 仅供内部使用：在服务端从请求头中填充，绝不会序列化给客户端。
+ * 云部署需要它，因为它将用于代表用户自动化 SDK。
  */
 @Builder(toBuilder = true)
 @JsonIgnoreProperties(ignoreUnknown = true)

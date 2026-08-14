@@ -393,11 +393,11 @@ public interface DatasetVersionDAO {
             @Bind("last_updated_by") String lastUpdatedBy, @Bind("workspace_id") String workspaceId);
 
     /**
-     * Resolves the 'latest'-tagged version per dataset. The latest version is always the max-id row,
-     * so its version number equals the dataset's total version count: a correlated {@code COUNT(*)}
-     * served by the covering index {@code idx_dataset_versions_workspace_id_dataset_id_id} replaces a
-     * {@code ROW_NUMBER()} window over every version, which sorted the full version set into an
-     * on-disk temp table at scale. The subquery runs once per result row (one latest row per dataset).
+     * 解析每个数据集标记为 'latest' 的版本。最新版本始终是 ID 最大的行，
+     * 因此其版本号等于数据集的总版本数：一个由覆盖索引
+     * {@code idx_dataset_versions_workspace_id_dataset_id_id} 服务的相关 {@code COUNT(*)}
+     * 取代了对每个版本执行的 {@code ROW_NUMBER()} 窗口函数——后者在大规模下会将整个
+     * 版本集排序到磁盘临时表中。该子查询对每个结果行运行一次（每个数据集一个最新行）。
      */
     @SqlQuery("""
             SELECT
@@ -603,12 +603,12 @@ public interface DatasetVersionDAO {
             @Bind("items_total") long itemsTotal);
 
     /**
-     * Batch update items_total for multiple dataset versions.
-     * Uses JDBI's @SqlBatch to execute multiple updates efficiently in a single batch.
+     * 批量更新多个数据集版本的 items_total。
+     * 使用 JDBI 的 @SqlBatch 在单个批次中高效地执行多次更新。
      *
-     * @param workspaceIds list of workspace IDs (must match versionIds order and size)
-     * @param versionIds list of version IDs to update
-     * @param itemsTotals list of items_total values (must match versionIds order and size)
+     * @param workspaceIds 工作区 ID 列表（顺序和大小必须与 versionIds 匹配）
+     * @param versionIds 要更新的版本 ID 列表
+     * @param itemsTotals items_total 值列表（顺序和大小必须与 versionIds 匹配）
      */
     @SqlBatch("""
             UPDATE dataset_versions
@@ -622,18 +622,18 @@ public interface DatasetVersionDAO {
             @Bind("items_total") List<Long> itemsTotals);
 
     /**
-     * Finds dataset versions that need items_total migration using cursor-based pagination.
-     * These are versions where:
-     * - dataset_id = id (version created by Liquibase migration)
-     * - items_total = -1 (sentinel value indicating not yet migrated)
-     * - id > lastSeenVersionId (for pagination)
+     * 使用基于游标的分页查找需要进行 items_total 迁移的数据集版本。
+     * 这些版本满足：
+     * - dataset_id = id（由 Liquibase 迁移创建的版本）
+     * - items_total = -1（表示尚未迁移的哨兵值）
+     * - id > lastSeenVersionId（用于分页）
      *
-     * Returns workspace_id, dataset_id, and version_id to optimize ClickHouse queries
-     * using the table's ordering key (workspace_id, dataset_id, dataset_version_id, id).
+     * 返回 workspace_id、dataset_id 和 version_id，以利用表的排序键
+     * (workspace_id, dataset_id, dataset_version_id, id) 优化 ClickHouse 查询。
      *
-     * @param lastSeenVersionId cursor for pagination (use empty string for first batch)
-     * @param limit maximum number of versions to return
-     * @return list of version info for migration
+     * @param lastSeenVersionId 分页游标（第一批使用空字符串）
+     * @param limit 要返回的最大版本数
+     * @return 用于迁移的版本信息列表
      */
     @SqlQuery("""
             SELECT workspace_id, dataset_id, id AS version_id

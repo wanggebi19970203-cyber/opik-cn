@@ -41,8 +41,8 @@ interface LlmProviderAnthropicMapper {
 
     Logger LOG = LoggerFactory.getLogger(LlmProviderAnthropicMapper.class);
 
-    // Anthropic requires max_tokens; default applied when callers don't set it (Playground default
-    // config, SDK without an explicit cap). 4096 mirrors langchain4j's default on the judge path.
+    // Anthropic 要求 max_tokens；当调用方没有设置时应用默认值（Playground 默认
+    // 配置、没有显式上限的 SDK）。4096 对应 langchain4j 在 judge 路径上的默认值。
     int DEFAULT_MAX_COMPLETION_TOKENS = 4096;
 
     @Mapping(source = "response", target = "choices", qualifiedByName = "mapToChoices")
@@ -76,24 +76,24 @@ interface LlmProviderAnthropicMapper {
         if (!samplingParamsAllowed(request)) {
             return null;
         }
-        // Anthropic recommends against sending temperature and top_p together; temperature wins when both are set.
+        // Anthropic 建议不要同时发送 temperature 和 top_p；两者都设置时以 temperature 为准。
         return request.temperature() != null ? null : request.topP();
     }
 
     /**
-     * Anthropic rejects sampling params (temperature/top_p) with a 400 for adaptive-thinking models
-     * (claude-sonnet-5, claude-opus-4-7/4-8) and whenever extended thinking is enabled for the request.
-     * Gate them server-side so API-created requests — which bypass the FE sanitizer from OPIK-6244 — don't
-     * fail. Mirrors the judge-path logic in {@code AnthropicClientGenerator}.
+     * Anthropic 对自适应思考模型（claude-sonnet-5、claude-opus-4-7/4-8）以及
+     * 请求启用了扩展思考的任何情况，会以 400 拒绝采样参数（temperature/top_p）。
+     * 在服务端门控它们，这样 API 创建的请求 —— 它们绕过 OPIK-6244 的 FE 净化器 —— 就不会
+     * 失败。与 {@code AnthropicClientGenerator} 中的 judge 路径逻辑一致。
      */
     private boolean samplingParamsAllowed(ChatCompletionRequest request) {
         return AnthropicModelName.supportsSamplingParams(request.model()) && !thinkingEnabled(request);
     }
 
     /**
-     * Extended thinking counts as enabled only when the request's {@code custom_parameters.thinking.type} is an
-     * explicit, non-blank value other than {@code "disabled"} — so {@code "enabled"}, {@code "adaptive"}, and any
-     * future type gate sampling params off, while a missing/blank type (or absent block) leaves them untouched.
+     * 仅当请求的 {@code custom_parameters.thinking.type} 是除 {@code "disabled"} 以外的
+     * 显式、非空值时，扩展思考才算启用 —— 因此 {@code "enabled"}、{@code "adaptive"} 以及任何
+     * 未来的类型都会关闭采样参数门控，而缺失/空白的类型（或缺块）则保持不变。
      */
     private boolean thinkingEnabled(ChatCompletionRequest request) {
         if (request.customParameters() == null
@@ -110,7 +110,7 @@ interface LlmProviderAnthropicMapper {
         if (request.maxCompletionTokens() != null) {
             return request.maxCompletionTokens();
         }
-        LOG.info("Anthropic request for model '{}' has no maxCompletionTokens; defaulting to {}",
+        LOG.info("模型 '{}' 的 Anthropic 请求没有 maxCompletionTokens；默认使用 {}",
                 request.model(), DEFAULT_MAX_COMPLETION_TOKENS);
         return DEFAULT_MAX_COMPLETION_TOKENS;
     }
@@ -169,20 +169,20 @@ interface LlmProviderAnthropicMapper {
     }
 
     /**
-     * Convert OpikUserMessage content to Anthropic message content list.
-     * Handles both string content and structured multimodal content (text, images, etc.).
+     * 将 OpikUserMessage 内容转换为 Anthropic 消息内容列表。
+     * 同时处理字符串内容和结构化的多模态内容（文本、图片等）。
      */
     default List<AnthropicMessageContent> toAnthropicMessageContents(@NonNull Object rawContent) {
-        // If it's a string, return a single text content (if not empty)
+        // 如果是字符串，返回单个文本内容（若非空）
         if (rawContent instanceof String stringContent) {
             if (StringUtils.isNotBlank(stringContent)) {
                 return List.of(new AnthropicTextContent(stringContent));
             }
-            // Empty string - return empty list (Anthropic will reject empty text blocks)
+            // 空字符串 - 返回空列表（Anthropic 会拒绝空文本块）
             return List.of();
         }
 
-        // If it's a list of OpikContent, convert each item
+        // 如果是 OpikContent 列表，转换每一项
         if (rawContent instanceof List<?> contentList) {
             return contentList.stream()
                     .filter(OpikContent.class::isInstance)
@@ -197,7 +197,7 @@ interface LlmProviderAnthropicMapper {
                     .toList();
         }
 
-        // Fallback: flatten to string
+        // 回退：扁平化为字符串
         var content = MessageContentNormalizer.flattenContent(rawContent);
         if (StringUtils.isNotBlank(content)) {
             return List.of(new AnthropicTextContent(content));

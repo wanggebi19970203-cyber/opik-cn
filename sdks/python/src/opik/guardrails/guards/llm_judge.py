@@ -48,11 +48,11 @@ def _usage_dict(response: Any) -> Optional[Dict[str, Any]]:
 
 class LLMJudge(guard.Guard):
     """
-    Guard that validates text against a natural-language policy using an LLM as a judge.
+    使用 LLM 作为判定器，依据自然语言策略校验文本的 guard。
 
-    The judge runs in the SDK and calls the Opik chat completions endpoint, which uses
-    the LLM provider configured in your Opik workspace. It does not require the guardrails
-    backend. The judge call is logged as a nested LLM span under the guardrail span.
+    判定器在 SDK 中运行，并调用 Opik 的 chat completions 端点，该端点使用
+    你在 Opik 工作区中配置的 LLM 提供商。它不需要 guardrails
+    后端。判定器调用会作为 guardrail span 下的嵌套 LLM span 被记录。
     """
 
     local = True
@@ -64,13 +64,13 @@ class LLMJudge(guard.Guard):
         model: str,
     ) -> None:
         """
-        Initialize an LLM judge guard.
+        初始化一个 LLM 判定器 guard。
 
         Args:
-            name: Name of the check, used to label the guardrail results.
-            instructions: Natural-language policy describing what the text must comply with.
-            model: Name of the model to judge with. Must be available through the LLM
-                provider configured in your Opik workspace.
+            name: 检查的名称，用于标记 guardrail 结果。
+            instructions: 描述文本必须遵守内容的自然语言策略。
+            model: 用于判定的模型名称。必须能通过你在 Opik 工作区中配置的 LLM
+                提供商访问到。
         """
         self._name = name
         self._instructions = instructions
@@ -89,8 +89,8 @@ class LLMJudge(guard.Guard):
 
         start_time = datetime_helpers.local_timestamp()
 
-        # Any failure to run or parse the judgement fails closed (raises), so the
-        # protected code path does not proceed on an inconclusive check.
+        # 运行或解析判定的任何失败都会故障关闭（抛出异常），
+        # 以免受保护的代码路径在无法得出结论的检查上继续执行。
         try:
             raw_response = client.rest_client.chat_completions.with_raw_response.create_chat_completions(
                 model=self._model,
@@ -98,8 +98,8 @@ class LLMJudge(guard.Guard):
                 messages=messages,  # type: ignore[arg-type]
             )
             response = raw_response.data
-            # The provider and resolved model are returned as response headers, not
-            # in the body, so they must be read from the raw response.
+            # 提供商和解析后的模型通过响应头返回，而不是在响应体中，
+            # 因此必须从原始响应中读取。
             provider = raw_response.headers.get("x-opik-provider")
             actual_model = raw_response.headers.get("x-opik-actual-model")
             content = response.choices[0].message.content
@@ -117,7 +117,7 @@ class LLMJudge(guard.Guard):
                 },
             )
             raise exceptions.GuardrailValidationError(
-                f"LLM judge '{self._name}' could not be evaluated, failing closed: {e}"
+                f"LLM 判定器 '{self._name}' 无法被评估，故障关闭：{e}"
             ) from e
 
         self._log_span(
@@ -154,10 +154,10 @@ class LLMJudge(guard.Guard):
         start_time: Any,
         **kwargs: Any,
     ) -> None:
-        # Log the judge call as a nested LLM span under the guardrail span, in a
-        # single create call (with start and end times) to avoid the data loss
-        # that a create-then-end update can hit under batching. Recording is
-        # best-effort and must never affect the guardrail outcome.
+        # 将判定器调用作为 guardrail span 下的嵌套 LLM span，在单次 create 调用中
+        # 记录（同时带上开始和结束时间），以避免 create 后再 end 的更新方式
+        # 在批处理下可能遇到的数据丢失问题。记录是尽力而为的，
+        # 绝不能影响 guardrail 的结果。
         current_span = opik_context.get_current_span_data()
         if current_span is None:
             return
@@ -179,6 +179,6 @@ class LLMJudge(guard.Guard):
     def _parse_decision(self, content: str) -> _LLMJudgeDecision:
         match = _JSON_OBJECT_PATTERN.search(content or "")
         if match is None:
-            raise ValueError(f"LLM judge returned a non-JSON response: {content}")
+            raise ValueError(f"LLM 判定器返回了非 JSON 响应：{content}")
 
         return _LLMJudgeDecision.model_validate(json.loads(match.group(0)))

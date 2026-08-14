@@ -18,10 +18,10 @@ import static com.comet.opik.infrastructure.metrics.ErrorMetricsResolver.WORKSPA
 import static com.comet.opik.infrastructure.metrics.ErrorMetricsResolver.WORKSPACE_NAME_KEY;
 
 /**
- * Emits {@code ingestion_size_guard_rejections_total} for requests rejected by a server-side ingestion
- * size guard (OPIK-7333/7334), labelled by {@code component}, {@code guard}, {@code endpoint} and
- * {@code workspace_id}/{@code workspace_name}. These rejections never reach {@link HttpErrorMetrics},
- * so they need their own counter.
+ * 为被服务端摄入大小守卫（OPIK-7333/7334）拒绝的请求发出
+ * {@code ingestion_size_guard_rejections_total}，按 {@code component}、{@code guard}、
+ * {@code endpoint} 以及 {@code workspace_id}/{@code workspace_name} 打标签。这些拒绝
+ * 永远不会到达 {@link HttpErrorMetrics}，因此它们需要自己的计数器。
  */
 @Singleton
 public class IngestionSizeGuardMetrics {
@@ -34,7 +34,7 @@ public class IngestionSizeGuardMetrics {
     public static final String GUARD_REQUEST_SIZE = "request_size";
     public static final String GUARD_DOCUMENT_LENGTH = "document_length";
     public static final String GUARD_STRING_LENGTH = "string_length";
-    public static final String GUARD_UNCLASSIFIED = "unclassified"; // unclassified fallback
+    public static final String GUARD_UNCLASSIFIED = "unclassified"; // 未分类回退
 
     public static final String COMPONENT_REQUEST_FILTER = "request_filter";
     public static final String COMPONENT_JSON_PARSER = "json_parser";
@@ -75,8 +75,8 @@ public class IngestionSizeGuardMetrics {
                 .build());
     }
 
-    // Classifies via Jackson's message text (the only signal it exposes): version-dependent, guarded by
-    // IngestionSizeGuardMetricsTest; re-check on a Jackson bump. Unrecognized -> unclassified.
+    // 通过 Jackson 的消息文本（它暴露的唯一信号）来分类：版本相关，由
+    // IngestionSizeGuardMetricsTest 守护；Jackson 升级时需重新检查。无法识别 -> 未分类。
     public static String classifyStreamConstraint(StreamConstraintsException exception) {
         String message = exception.getMessage();
         if (message == null) {

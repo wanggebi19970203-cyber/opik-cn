@@ -15,23 +15,19 @@ ExperimentScoreFunction = Callable[
 
 
 class ErrorTolerance(enum.IntEnum):
-    """Which classes of failure an evaluation tolerates before it aborts.
+    """评估在中止前所容忍的失败类别。
 
-    Higher values tolerate more. Only the members defined here — or their exact int
-    values, since this is an ``IntEnum`` — are accepted; anything else raises
-    ``ValueError``. Values are spaced by ten so levels can be inserted above, below
-    or between the existing ones without renumbering.
+    值越大，容忍的越多。仅接受此处定义的成员——或它们精确的整数值，因为
+    这是 ``IntEnum``——其他任何值都会抛出 ``ValueError``。取值按十间隔，
+    因此可以在现有级别之上、之下或之间插入新的级别，而无需重新编号。
     """
 
     METRIC_ERRORS = 10
-    """Default. Errors raised while a metric computes its score are recorded as
-    failed score results and the run continues. Of the failures that happen before
-    ``score`` is entered, a missing required score argument and an item-level
-    evaluator that cannot be built abort the run; an evaluator whose type this SDK
-    does not support is always reported as a failed score instead."""
+    """默认值。指标计算其分数时抛出的错误会被记录为失败的评分结果，运行会
+    继续。对于在进入 ``score`` 之前发生的失败，缺少必需的评分参数以及无法
+    构建的项级评估器会使运行中止；而本 SDK 不支持的评估器类型始终被报告为
+    失败的评分。"""
 
     ALL_SCORING_ERRORS = 20
-    """Also tolerate errors that prevent a metric from being scored at all — a
-    required score argument the dataset does not provide, or an item-level
-    evaluator that cannot be built. A failure of the evaluation task itself
-    still aborts."""
+    """同时容忍那些导致指标完全无法被评分的错误——数据集未提供的必需评分
+    参数，或无法构建的项级评估器。评估任务自身的失败仍会使运行中止。"""

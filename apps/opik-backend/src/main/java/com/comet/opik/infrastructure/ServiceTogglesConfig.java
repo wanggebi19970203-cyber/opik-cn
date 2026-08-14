@@ -36,7 +36,7 @@ public class ServiceTogglesConfig {
     @NotNull boolean datasetExportEnabled;
     @JsonProperty
     @NotNull boolean demoDataEnabled;
-    // LLM Provider feature flags
+    // LLM Provider 功能开关
     @JsonProperty
     @NotNull boolean openaiProviderEnabled;
     @JsonProperty

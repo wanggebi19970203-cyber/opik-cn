@@ -39,11 +39,11 @@ public class MessageContentNormalizer {
         }
 
         if (allowStructuredContent) {
-            // For vision-capable models: expand string content with image tags to structured content
+            // 对于支持视觉的模型：把带有图片标签的字符串内容展开为结构化内容
             return expandImagePlaceholders(request);
         }
 
-        // For non-vision models: flatten structured content to string
+        // 对于非视觉模型：把结构化内容扁平化为字符串
         var needsNormalization = request.messages().stream()
                 .anyMatch(message -> (message instanceof UserMessage userMessage
                         && !(userMessage.content() instanceof String))
@@ -71,8 +71,9 @@ public class MessageContentNormalizer {
     }
 
     /**
-     * For vision-capable models: converts string content with image placeholders to structured content.
-     * Example: "text\n<<<image>>>url<<</image>>>" becomes [{type: "text", text: "text"}, {type: "image_url", image_url: {url: "url"}}]
+     * 对于支持视觉的模型：把带有图片占位符的字符串内容转换为结构化内容。
+     * 示例："text\n<<<image>>>url<<</image>>>" 变为
+     * [{type: "text", text: "text"}, {type: "image_url", image_url: {url: "url"}}]
      */
     private ChatCompletionRequest expandImagePlaceholders(ChatCompletionRequest request) {
         var needsExpansion = request.messages().stream()
@@ -105,36 +106,35 @@ public class MessageContentNormalizer {
     }
 
     /**
-     * Expands a UserMessage with string content containing image placeholders to structured content.
-     * Parses image placeholders and creates a list of Content objects (text and image_url).
+     * 把包含图片占位符的字符串内容的 UserMessage 展开为结构化内容。
+     * 解析图片占位符并创建一个 Content 对象列表（text 和 image_url）。
      */
     private UserMessage expandUserMessage(UserMessage userMessage, String content) {
         var matcher = IMAGE_PLACEHOLDER_PATTERN.matcher(content);
 
         if (!matcher.find()) {
-            // No image placeholders found, return as-is
+            // 未找到图片占位符，原样返回
             return userMessage;
         }
 
-        // Reset matcher to start from beginning
+        // 重置匹配器以从头开始
         matcher.reset();
 
         var contentList = new ArrayList<Content>();
         var lastIndex = 0;
 
         while (matcher.find()) {
-            // Add text content before the image placeholder
+            // 在图片占位符之前添加文本内容
             if (matcher.start() > lastIndex) {
                 var textSegment = content.substring(lastIndex, matcher.start());
                 appendTextContent(contentList, textSegment);
             }
 
-            // Extract and add image URL
+            // 提取并添加图片 URL
             var url = matcher.group(1).trim();
             if (!url.isEmpty()) {
-                // Defensive: runs on every image URL reaching chat completions, whatever the source.
-                // Template rendering itself no longer escapes (OPIK-7354), so entities now only arrive
-                // from URLs that were already stored escaped.
+                // 防御性处理：对每一个到达聊天补全的图片 URL 都执行，无论其来源如何。
+                // 模板渲染本身不再转义（OPIK-7354），因此现在实体只会来自已经以转义形式存储的 URL。
                 var unescapedUrl = StringEscapeUtils.unescapeHtml4(url);
                 contentList.add(Content.builder()
                         .type(ContentType.IMAGE_URL)
@@ -145,13 +145,13 @@ public class MessageContentNormalizer {
             lastIndex = matcher.end();
         }
 
-        // Add any remaining text after the last image placeholder
+        // 添加最后一个图片占位符之后的任何剩余文本
         if (lastIndex < content.length()) {
             var trailingText = content.substring(lastIndex);
             appendTextContent(contentList, trailingText);
         }
 
-        // Build the expanded UserMessage
+        // 构建展开后的 UserMessage
         var builder = UserMessage.builder();
         if (userMessage.name() != null) {
             builder.name(userMessage.name());
@@ -162,7 +162,7 @@ public class MessageContentNormalizer {
     }
 
     /**
-     * Appends text content to the content list if the text is not blank.
+     * 如果文本不为空白，则将其追加到内容列表中。
      */
     private void appendTextContent(List<Content> contentList, String textSegment) {
         if (StringUtils.isNotBlank(textSegment)) {
@@ -204,15 +204,15 @@ public class MessageContentNormalizer {
     }
 
     /**
-     * Normalize OpikUserMessage by flattening structured content to string.
+     * 通过把结构化内容扁平化为字符串来规范化 OpikUserMessage。
      */
     private Message normalizeOpikUserMessage(OpikUserMessage opikUserMessage) {
-        // If content is already a string, return as-is
+        // 如果内容已经是字符串，原样返回
         if (opikUserMessage.content() instanceof String) {
             return opikUserMessage;
         }
 
-        // If content is a list, flatten it to string
+        // 如果内容是列表，将其扁平化为字符串
         var flattened = flattenContent(opikUserMessage.content());
         return OpikUserMessage.builder()
                 .name(opikUserMessage.name())
@@ -221,17 +221,17 @@ public class MessageContentNormalizer {
     }
 
     /**
-     * Expand OpikUserMessage with string content containing image placeholders to structured content.
+     * 把包含图片占位符的字符串内容的 OpikUserMessage 展开为结构化内容。
      */
     private OpikUserMessage expandOpikUserMessage(OpikUserMessage opikUserMessage, String content) {
         var matcher = IMAGE_PLACEHOLDER_PATTERN.matcher(content);
 
         if (!matcher.find()) {
-            // No image placeholders found, return as-is
+            // 未找到图片占位符，原样返回
             return opikUserMessage;
         }
 
-        // Reset matcher to start from beginning
+        // 重置匹配器以从头开始
         matcher.reset();
 
         var builder = OpikUserMessage.builder();
@@ -242,7 +242,7 @@ public class MessageContentNormalizer {
         var lastIndex = 0;
 
         while (matcher.find()) {
-            // Add text content before the image placeholder
+            // 在图片占位符之前添加文本内容
             if (matcher.start() > lastIndex) {
                 var textSegment = content.substring(lastIndex, matcher.start());
                 if (StringUtils.isNotBlank(textSegment)) {
@@ -250,7 +250,7 @@ public class MessageContentNormalizer {
                 }
             }
 
-            // Extract and add image URL
+            // 提取并添加图片 URL
             var url = matcher.group(1).trim();
             if (!url.isEmpty()) {
                 var unescapedUrl = StringEscapeUtils.unescapeHtml4(url);
@@ -260,7 +260,7 @@ public class MessageContentNormalizer {
             lastIndex = matcher.end();
         }
 
-        // Add any remaining text after the last image placeholder
+        // 添加最后一个图片占位符之后的任何剩余文本
         if (lastIndex < content.length()) {
             var trailingText = content.substring(lastIndex);
             if (StringUtils.isNotBlank(trailingText)) {
@@ -282,7 +282,7 @@ public class MessageContentNormalizer {
             case "text" -> StringUtils.isBlank(content.text()) ? "" : content.text();
             case "image_url" -> renderImagePlaceholder(content.imageUrl());
             default -> {
-                log.warn("Skipping unknown content type during normalization: '{}'", normalized);
+                log.warn("规范化期间跳过未知内容类型: '{}'", normalized);
                 yield "";
             }
         };

@@ -36,27 +36,25 @@ import static com.comet.opik.api.FeedbackScoreItem.FeedbackScoreBatchItemThread;
 import static com.comet.opik.infrastructure.log.LogContextAware.wrapWithMdc;
 
 /**
- * Base online scorer for all particular implementations to extend. It listens to a Redis stream for
- * Traces/Spans/Threads to be scored. Subclasses provide a particular {@link #score(Object)} implementation that
- * returns a {@link Mono} so the entire processing chain stays non-blocking from Redis read to feedback-score
- * persistence. The Reactor pipeline owned by {@link BaseRedisSubscriber} schedules execution on the per-stream
- * worker scheduler; subclasses should NOT call {@code .block()} from {@code score()}.
+ * 供所有具体实现继承的基础在线评分器。它监听 Redis 流中待评分的追踪/跨度/线程。子类提供一个特定的
+ * {@link #score(Object)} 实现，返回 {@link Mono}，从而使整个处理链从 Redis 读取到反馈评分持久化保持非阻塞。
+ * 由 {@link BaseRedisSubscriber} 拥有的 Reactor 管道在每流工作调度器上调度执行；子类不应在 {@code score()} 中
+ * 调用 {@code .block()}。
  */
 public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> extends BaseRedisSubscriber<M> {
 
     public static final int TRACE_PAGE_LIMIT = 2000;
 
     /**
-     * Truncation marker hint for the no-tools inline {@code {{trace}}} / {@code {{span}}} fallback. There
-     * are no {@code read}/{@code jq} tools to drill in, so the hint just flags that the value was
-     * truncated rather than pointing at a (non-existent) follow-up tool.
+     * 用于无工具内联 {@code {{trace}}} / {@code {{span}}} 回退的截断标记提示。没有 {@code read}/{@code jq}
+     * 工具可供下钻，因此该提示仅标记值已被截断，而非指向一个（不存在的）后续工具。
      */
     protected static final String INLINE_TRUNCATION_HINT = "full content not shown";
 
     private static final String ONLINE_SCORING_NAMESPACE = "online_scoring";
 
     /**
-     * Logger for the actual subclass, in order to have the correct class name in the logs.
+     * 用于实际子类的 Logger，以便在日志中拥有正确的类名。
      */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -83,29 +81,27 @@ public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> 
     }
 
     /**
-     * The trace-thread span-preload cap in bytes. Single place that converts the MB-denominated config
-     * ({@code onlineScoring.agenticToolsMaxPreloadMb}) so the trace-thread scorers pass a consistent value
-     * to both the size gate and the bounded preload. See OPIK-7454.
+     * 追踪线程跨度预加载的上限（以字节为单位）。这是转换以 MB 为单位的配置
+     * （{@code onlineScoring.agenticToolsMaxPreloadMb}）的唯一位置，使追踪线程评分器向大小门控和
+     * 有界预加载传递一致的值。参见 OPIK-7454。
      */
     protected long agenticToolsMaxPreloadBytes() {
         return (long) onlineScoringConfig.getAgenticToolsMaxPreloadMb() * 1024 * 1024;
     }
 
     /**
-     * Returns the buffered spans from a bounded preload and, as a side effect, emits a user-facing warning
-     * when the preload {@link ThreadSpanPreload#overflowed()} the byte cap even though the size estimate had
-     * routed the thread to the enriched path — i.e. the cheap size aggregate under-counted the real
-     * serialized size. The overflow is already handled safely upstream (the buffer was dropped, so the
-     * returned list is empty and the thread scores with the unenriched context); the warning just makes the
-     * otherwise-silent fallback visible. See OPIK-7454.
+     * 从有界预加载返回缓冲的跨度，并作为副作用，当预加载 {@link ThreadSpanPreload#overflowed()}
+     * 超出字节上限（尽管大小估算已将线程路由到增强路径）时发出面向用户的警告——即廉价的大小聚合
+     * 低估了真实的序列化大小。溢出已在上游被安全处理（缓冲区被丢弃，因此返回列表为空，
+     * 线程使用未增强的上下文进行评分）；该警告只是让原本静默的回退可见。参见 OPIK-7454。
      */
     protected List<Span> getSpansFromPreloadAndLogOverflow(@NonNull ThreadSpanPreload preload,
             @NonNull Logger userFacingLogger, String threadId, Map<String, String> mdc) {
         if (preload.overflowed()) {
             try (var logContext = wrapWithMdc(mdc)) {
                 userFacingLogger.warn("""
-                        Thread span preload exceeded the enrichment cap despite a fitting size estimate; \
-                        scoring with the unenriched context. threadId='{}', approxBytes='{}', capBytes='{}'""",
+                        线程跨度预加载超出了增强上限，尽管大小估算合适；\
+                        使用未增强的上下文进行评分。threadId='{}', approxBytes='{}', capBytes='{}'""",
                         threadId, preload.approxBytes(), agenticToolsMaxPreloadBytes());
             }
         }
@@ -113,16 +109,15 @@ public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> 
     }
 
     /**
-     * Propagates the workspace/user the message belongs to onto the reactive context for the whole
-     * scoring chain (feedback-score persistence reads it). Per-message throughput and error metrics are
-     * attributed automatically by {@link BaseRedisSubscriber} from {@link #messageContext(Object)}.
+     * 将消息所属的工作区/用户传播到整个评分链的响应式上下文中（反馈评分持久化会读取它）。
+     * 每条消息的吞吐量和错误指标由 {@link BaseRedisSubscriber} 根据
+     * {@link #messageContext(Object)} 自动归属。
      */
     @Override
     protected final Mono<Void> processEvent(M message) {
         var workspaceName = StringUtils.defaultIfBlank(message.workspaceName(), message.workspaceId());
         return doScore(message)
-                // Sourced from the message (resolved from RequestContext.WORKSPACE_NAME at trace-event
-                // publish time).
+                // 来源于消息（在追踪事件发布时从 RequestContext.WORKSPACE_NAME 解析）。
                 .contextWrite(ctx -> ctx
                         .put(RequestContext.WORKSPACE_ID, message.workspaceId())
                         .put(RequestContext.WORKSPACE_NAME, workspaceName)
@@ -130,26 +125,23 @@ public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> 
     }
 
     /**
-     * Full per-message processing chain. Defaults to {@link #score(Object)}, deferred so any
-     * synchronous work runs at subscription time on the per-stream worker scheduler. Subclasses
-     * that need post-scoring steps (e.g. test-suite assertion finalization) override this — not
-     * {@code processEvent} — so the base class records the message as processed only once the whole
-     * chain completes successfully.
+     * 完整的每条消息处理链。默认使用 {@link #score(Object)}，并延迟执行，使任何同步工作
+     * 在订阅时于每流工作调度器上运行。需要评分后步骤（例如测试套件断言收尾）的子类应覆盖此方法——
+     * 而非 {@code processEvent}——从而使基类仅在整个链成功完成后才将消息记录为已处理。
      */
     protected Mono<Void> doScore(M message) {
         return Mono.defer(() -> score(message));
     }
 
     /**
-     * Scores the message and persists the resulting feedback scores. Implementations must compose
-     * reactive operators (no {@code .block()}); see {@link #storeScores}, {@link #storeSpanScores},
-     * {@link #storeThreadScores}.
+     * 对消息进行评分并持久化所得的反馈评分。实现必须组合响应式操作符（不得 {@code .block()}）；
+     * 参见 {@link #storeScores}、{@link #storeSpanScores}、{@link #storeThreadScores}。
      */
     protected abstract Mono<Void> score(M message);
 
     protected Mono<Map<String, List<BigDecimal>>> storeScores(
             List<FeedbackScoreBatchItem> scores, Trace trace, String userName, String workspaceId) {
-        log.info("Received '{}' scores for traceId '{}' in workspace '{}'. Storing them",
+        log.info("收到 '{}' 条针对 traceId '{}'（工作区 '{}'）的评分。正在存储它们",
                 scores.size(), trace.id(), workspaceId);
         return feedbackScoreService.scoreBatchOfTraces(scores)
                 .contextWrite(ctx -> ctx.put(RequestContext.USER_NAME, userName)
@@ -159,7 +151,7 @@ public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> 
 
     protected Mono<Map<String, List<BigDecimal>>> storeSpanScores(
             List<FeedbackScoreBatchItem> scores, com.comet.opik.api.Span span, String userName, String workspaceId) {
-        log.info("Received '{}' scores for spanId '{}' in workspace '{}'. Storing them",
+        log.info("收到 '{}' 条针对 spanId '{}'（工作区 '{}'）的评分。正在存储它们",
                 scores.size(), span.id(), workspaceId);
         return feedbackScoreService.scoreBatchOfSpans(scores)
                 .contextWrite(ctx -> ctx.put(RequestContext.USER_NAME, userName)
@@ -169,7 +161,7 @@ public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> 
 
     protected Mono<Map<String, List<BigDecimal>>> storeThreadScores(
             List<FeedbackScoreBatchItemThread> scores, String threadId, String userName, String workspaceId) {
-        log.info("Received '{}' scores for threadId '{}' in workspace '{}'. Storing them",
+        log.info("收到 '{}' 条针对 threadId '{}'（工作区 '{}'）的评分。正在存储它们",
                 scores.size(), threadId, workspaceId);
         return feedbackScoreService.scoreBatchOfThreads(scores)
                 .contextWrite(ctx -> ctx.put(RequestContext.USER_NAME, userName)
@@ -184,14 +176,14 @@ public abstract class OnlineScoringBaseScorer<M extends RedisSubscriberMessage> 
     }
 
     /**
-     * Retrieves the full thread context for a given thread ID, recursively fetching traces until no more are found.
+     * 检索给定线程 ID 的完整线程上下文，递归获取追踪直到找不到更多为止。
      *
-     * @param threadId the ID of the thread to retrieve context for
-     * @param lastReceivedIdRef a reference to store the last received trace ID
-     * @param projectId the ID of the project to which the thread belongs
-     * @return a Flux of Trace objects representing the full thread context
+     * @param threadId 要检索其上下文的线程的 ID
+     * @param lastReceivedIdRef 用于存储最后接收到的追踪 ID 的引用
+     * @param projectId 线程所属项目的 ID
+     * @return 表示完整线程上下文的 Trace 对象 Flux
      */
-    //TODO: Move this to a common service or utility class
+    //TODO: 将其移动到通用服务或工具类
     protected Flux<Trace> retrieveFullThreadContext(@NotNull String threadId,
             @NotNull AtomicReference<UUID> lastReceivedIdRef, @NotNull UUID projectId) {
 

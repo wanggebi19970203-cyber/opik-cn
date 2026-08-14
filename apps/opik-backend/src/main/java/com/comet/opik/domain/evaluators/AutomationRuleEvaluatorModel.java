@@ -28,31 +28,31 @@ public sealed interface AutomationRuleEvaluatorModel<T> extends AutomationRuleMo
     }
 
     /**
-     * Rebuilds this model with new project IDs.
-     * Each concrete implementation provides this method using their Lombok-generated builder.
+     * 使用新的项目 ID 重建此模型。
+     * 每个具体实现都使用其 Lombok 生成的构建器来提供此方法。
      *
-     * @param projectIds the new set of project IDs
-     * @return a new instance with updated project IDs
+     * @param projectIds 新的项目 ID 集合
+     * @return 带有更新后项目 ID 的新实例
      */
     AutomationRuleEvaluatorModel<?> withProjectIds(Set<UUID> projectIds);
 
     /**
-     * Rebuilds this model with a new trigger scope.
-     * Used by the service layer to default null scope to PRODUCTION for backward compatibility.
+     * 使用新的触发范围重建此模型。
+     * 由服务层使用，将 null 范围默认为 PRODUCTION 以保持向后兼容。
      *
-     * @param triggerScope the trigger scope to set
-     * @return a new instance with the updated trigger scope
+     * @param triggerScope 要设置的触发范围
+     * @return 带有更新后触发范围的新实例
      */
     AutomationRuleEvaluatorModel<?> withTriggerScope(EvalTriggerScope triggerScope);
 
     /**
-     * Rebuilds this model with enriched project details.
-     * Each concrete implementation provides this method using their Lombok-generated builder.
+     * 使用丰富的项目详情重建此模型。
+     * 每个具体实现都使用其 Lombok 生成的构建器来提供此方法。
      *
-     * @param projectId the legacy project ID (for backward compatibility)
-     * @param projectName the legacy project name (for backward compatibility)
-     * @param projects the sorted set of project references
-     * @return a new instance with updated project details
+     * @param projectId 旧版项目 ID（用于向后兼容）
+     * @param projectName 旧版项目名称（用于向后兼容）
+     * @param projects 项目引用的有序集合
+     * @return 带有更新后项目详情的新实例
      */
     AutomationRuleEvaluatorModel<?> withProjectDetails(
             UUID projectId,

@@ -16,10 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import ru.vyarus.dropwizard.guice.module.yaml.bind.Config;
 
 /**
- * Rejects an oversized request with 413 by its {@code Content-Length}, before the body is read and ahead of
- * authentication (low {@code @Priority}). Global (no path scoping) by design, so it caps every request
- * carrying a Content-Length; a chunked request has none, passes here, and is still bounded by
- * {@code maxDocumentLength} during parsing.
+ * 通过 {@code Content-Length} 在读取请求体之前、且在认证之前（较低的 {@code @Priority}）
+ * 以 413 拒绝超大请求。设计上是全局的（不限定路径），因此它会限制每个携带 Content-Length
+ * 的请求；分块请求没有该头，会在这里直接通过，但解析期间仍受 {@code maxDocumentLength} 约束。
  */
 @Slf4j
 @Priority(Priorities.HEADER_DECORATOR)
@@ -41,13 +40,13 @@ public class RequestSizeLimitFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext containerRequestContext) {
         String contentLengthHeader = containerRequestContext.getHeaderString(HttpHeaders.CONTENT_LENGTH);
 
-        // No Content-Length (chunked): can't check here; the body is still bounded by maxDocumentLength at parse time.
+        // 没有 Content-Length（分块）：此处无法检查；解析时请求体仍受 maxDocumentLength 约束。
         if (contentLengthHeader == null) {
             return;
         }
 
-        // Parse as long, not jakarta's int getLength() (returns -1 above ~2GB, letting the largest bodies
-        // slip). A present-but-invalid Content-Length is malformed framing -> fail closed with 400.
+        // 以 long 解析，而不是 jakarta 的 int getLength()（超过约 2GB 时会返回 -1，从而放过最大的请求体）。
+        // 存在但非法的 Content-Length 属于畸形的帧格式 -> 以 400 快速失败关闭。
         long contentLength;
         try {
             contentLength = Long.parseLong(contentLengthHeader.trim());
@@ -63,7 +62,7 @@ public class RequestSizeLimitFilter implements ContainerRequestFilter {
 
         long maxRequestSizeBytes = jacksonConfig.getMaxRequestSizeBytes();
         if (contentLength > maxRequestSizeBytes) {
-            log.warn("Rejecting request with Content-Length '{}' bytes exceeding limit '{}' bytes",
+            log.warn("拒绝请求，Content-Length '{}' 字节超过了限制 '{}' 字节",
                     contentLength, maxRequestSizeBytes);
             sizeGuardMetrics.recordRequestSizeRejection(containerRequestContext.getUriInfo(), requestContext);
             abort(containerRequestContext, Response.Status.REQUEST_ENTITY_TOO_LARGE,

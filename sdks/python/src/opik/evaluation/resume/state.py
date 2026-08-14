@@ -1,25 +1,22 @@
 """
-Resume state persisted in ``experiment_config[_opik_resume]``.
+持久化在 ``experiment_config[_opik_resume]`` 中的恢复状态。
 
-The schema is modelled as a sum type:
+该模式被建模为和类型：
 
-- :class:`ResumableState` — the experiment **can** be resumed; carries all
-  configuration needed to rebuild iteration deterministically.
-- :class:`NonResumableState` — the experiment **cannot** be resumed; carries
-  the human-facing reason.
+- :class:`ResumableState` — 实验**可以**被恢复；携带确定性重建迭代所需的
+  全部配置。
+- :class:`NonResumableState` — 实验**无法**被恢复；携带面向用户的原因。
 
-This module owns the encoding (:func:`embed_resumable_state` /
-:func:`embed_non_resumable_state`) and decoding (:func:`read_resume_state`).
-The schema deliberately stores only small, reproducible configuration —
-never resolved data lists. When iteration cannot be rebuilt from config
-alone (custom sampler or explicit ``dataset_item_ids``), a
-``requires_local_checkpoint`` flag points the resume flow at the companion
-checkpoint file (see :mod:`opik.evaluation.resume.checkpoint`).
+本模块负责编码（:func:`embed_resumable_state` /
+:func:`embed_non_resumable_state`）与解码（:func:`read_resume_state`）。
+该模式刻意只存储小型的、可重现的配置——绝不存储已解析的数据列表。当
+仅凭配置无法重建迭代时（自定义采样器或显式的 ``dataset_item_ids``），
+``requires_local_checkpoint`` 标志会将恢复流程指向配套的检查点文件（参见
+:mod:`opik.evaluation.resume.checkpoint`）。
 
-Neither dataclass nor encoding function carries default values — callers
-must be explicit. Defaults belong on user-facing APIs (e.g.
-``evaluate_resume``), not on internal persistence boundaries where an
-omitted field would silently produce a corrupt blob.
+数据类和编码函数都不携带默认值——调用方必须显式提供。默认值应归属于
+面向用户的 API（例如 ``evaluate_resume``），而非内部持久化边界，因为遗漏
+字段会在那里静默产生损坏的 blob。
 """
 
 import dataclasses
@@ -40,10 +37,10 @@ RESUME_SCHEMA_VERSION = 1
 @dataclasses.dataclass(frozen=True)
 class ResumableState:
     """
-    Full configuration needed to rebuild iteration on resume.
+    恢复时重建迭代所需的完整配置。
 
-    ``dataset_version_name`` is non-optional: resume only operates against a
-    pinned :class:`DatasetVersion`, never a moving ``Dataset`` HEAD.
+    ``dataset_version_name`` 是必填项：恢复仅针对固定的
+    :class:`DatasetVersion` 操作，而绝不会针对不断变动的 ``Dataset`` HEAD。
     """
 
     default_runs_per_item: int
@@ -56,7 +53,7 @@ class ResumableState:
 
 @dataclasses.dataclass(frozen=True)
 class NonResumableState:
-    """Marker that the experiment cannot be safely resumed."""
+    """标记该实验无法被安全地恢复。"""
 
     reason: str
 
@@ -69,11 +66,10 @@ def embed_resumable_state(
     state: ResumableState,
 ) -> Dict[str, Any]:
     """
-    Embed a :class:`ResumableState` blob into ``experiment_config``.
+    将 :class:`ResumableState` blob 嵌入 ``experiment_config``。
 
-    The blob is stored as a single JSON-string value under
-    ``RESUME_METADATA_KEY`` so the experiment Configuration UI shows one
-    row instead of one row per nested field.
+    该 blob 以单个 JSON 字符串值的形式存储在 ``RESUME_METADATA_KEY`` 下，
+    以便实验的 Configuration UI 只显示一行，而不是每个嵌套字段各占一行。
     """
     new_config = dict(experiment_config) if experiment_config else {}
     new_config[RESUME_METADATA_KEY] = json.dumps(
@@ -96,11 +92,10 @@ def embed_non_resumable_state(
     state: NonResumableState,
 ) -> Dict[str, Any]:
     """
-    Embed a non-resumable marker into ``experiment_config``.
+    将不可恢复标记嵌入 ``experiment_config``。
 
-    Only the marker + reason are stored; no iteration configs leak through.
-    Serialized as a JSON string for the same UI-display reason as
-    :func:`embed_resumable_state`.
+    仅存储标记 + 原因；不会泄漏任何迭代配置。出于与
+    :func:`embed_resumable_state` 相同的 UI 展示原因，以 JSON 字符串序列化。
     """
     new_config = dict(experiment_config) if experiment_config else {}
     new_config[RESUME_METADATA_KEY] = json.dumps(
@@ -117,21 +112,19 @@ def read_resume_state(
     experiment: experiment_module.Experiment,
 ) -> Optional[PersistedResumeState]:
     """
-    Decode the resume blob attached to the experiment.
+    解码附加到实验上的恢复 blob。
 
     Returns:
-        * :class:`ResumableState` when the blob marks the experiment resumable
-          and carries a pinned dataset version.
-        * :class:`NonResumableState` when the blob marks the experiment
-          non-resumable.
-        * ``None`` when no blob is present (e.g. created by an older SDK
-          version, or by an external client) — callers must treat this as
-          unresumable and surface a clear error.
+        * 当 blob 将实验标记为可恢复且携带固定数据集版本时，返回
+          :class:`ResumableState`。
+        * 当 blob 将实验标记为不可恢复时，返回
+          :class:`NonResumableState`。
+        * 当不存在 blob 时返回 ``None``（例如由较旧版本的 SDK 或外部客户端
+          创建）——调用方必须将其视为不可恢复，并给出明确的错误。
 
-    A resumable blob with no pinned ``dataset_version_name`` is downgraded
-    to :class:`NonResumableState`. Iteration against a moving dataset HEAD
-    would break the resume contract; rather than silently allowing it, this
-    function refuses at the decode boundary.
+    没有固定 ``dataset_version_name`` 的可恢复 blob 会被降级为
+    :class:`NonResumableState`。针对不断变动的数据集 HEAD 进行迭代会破坏
+    恢复契约；与其静默地允许，此函数在解码边界即予以拒绝。
     """
     raw_state = _read_raw_resume_state(experiment)
     if raw_state is None:
@@ -140,15 +133,15 @@ def read_resume_state(
     if not raw_state.get("resumable", False):
         return NonResumableState(
             reason=_coerce_optional_str(raw_state.get("non_resumable_reason"))
-            or "unspecified"
+            or "未指定"
         )
 
     dataset_version_name = _coerce_optional_str(raw_state.get("dataset_version_name"))
     if dataset_version_name is None:
         return NonResumableState(
             reason=(
-                "resume blob is missing the pinned dataset_version_name; "
-                "the experiment cannot be safely resumed"
+                "恢复 blob 缺少固定的 dataset_version_name；"
+                "该实验无法被安全地恢复"
             )
         )
 
@@ -172,11 +165,11 @@ def _read_raw_resume_state(
     experiment: experiment_module.Experiment,
 ) -> Optional[Dict[str, Any]]:
     """
-    Decode the raw resume blob from the experiment metadata.
+    从实验元数据解码原始恢复 blob。
 
-    The blob is always a JSON-encoded string under ``RESUME_METADATA_KEY``.
-    Any other shape (missing, non-string, malformed JSON) is treated as
-    "no resume state" so callers raise the appropriate error.
+    该 blob 始终是 ``RESUME_METADATA_KEY`` 下的 JSON 编码字符串。
+    任何其他形态（缺失、非字符串、JSON 格式错误）都被视为“无恢复状态”，
+    以便调用方抛出相应的错误。
     """
     experiment_data = experiment.get_experiment_data()
     metadata = getattr(experiment_data, "metadata", None) or {}
@@ -191,8 +184,8 @@ def _read_raw_resume_state(
         decoded = json.loads(raw)
     except json.JSONDecodeError:
         LOGGER.warning(
-            "Failed to decode JSON resume state on experiment metadata; "
-            "treating the experiment as having no resume state.",
+            "无法解码实验元数据上的 JSON 恢复状态；"
+            "将该实验视为没有恢复状态。",
             exc_info=True,
         )
         return None
@@ -201,20 +194,18 @@ def _read_raw_resume_state(
 
 
 def _coerce_error_tolerance(value: Any) -> ErrorTolerance:
-    """Decode the persisted tolerance, falling back to the default.
+    """解码持久化的容错设置，失败时回退到默认值。
 
-    Blobs written before this field existed omit it, and a value this SDK does
-    not recognise (an experiment created by a newer version) is not something to
-    fail a resume over — both resume at the default.
+    在该字段存在之前写入的 blob 会省略它，而本 SDK 无法识别的值（由较新
+    版本创建的实验）不应导致恢复失败——这两种情况都在默认值下恢复。
     """
     try:
         return ErrorTolerance(value)
     except (ValueError, TypeError):
         if value is not None:
-            # Only the type and a bounded excerpt: the blob is external input and
-            # could carry an arbitrarily large value.
+            # 仅包含类型和有界摘录：该 blob 是外部输入，可能携带任意大的值。
             LOGGER.warning(
-                "Unrecognised error_tolerance in resume state (%s: %.40s); resuming at %s.",
+                "恢复状态中存在无法识别的 error_tolerance（%s：%.40s）；将在 %s 下恢复。",
                 type(value).__name__,
                 value,
                 ErrorTolerance.METRIC_ERRORS.name,

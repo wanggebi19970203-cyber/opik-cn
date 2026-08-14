@@ -72,10 +72,9 @@ public class PythonEvaluatorService {
         Response.StatusType statusInfo = response.getStatusInfo();
 
         if (statusInfo.getFamily() == Response.Status.Family.SUCCESSFUL) {
-            // Buffer before reading: the response is consumed further down the reactive chain on a
-            // boundedElastic thread, after which the underlying connection can already be recycled and
-            // readEntity would yield null. A null body (or null scores) must surface as a clean error
-            // rather than a NullPointerException.
+            // 在读取前先缓冲：响应会在响应式链下游的 boundedElastic 线程上被消费，此后底层连接可能已被回收，
+            // readEntity 会返回 null。null 响应体（或 null 分数）必须表现为一个干净的错误，
+            // 而不是 NullPointerException。
             var body = response.hasEntity() && response.bufferEntity()
                     ? response.readEntity(PythonEvaluatorResponse.class)
                     : null;
@@ -105,22 +104,20 @@ public class PythonEvaluatorService {
                     return StringUtils.truncate(errorResponse.error(), MAX_ERROR_MESSAGE_LENGTH);
                 }
             } catch (RuntimeException parseErrorResponse) {
-                // Expected when the body is not the structured error shape; fall back to the raw body.
-                log.debug("Failed to parse structured error response, falling back to parsing string",
-                        parseErrorResponse);
+                // 当响应体不是结构化错误格式时属于预期情况；回退到原始响应体。
+                log.debug("解析结构化错误响应失败，回退到解析字符串", parseErrorResponse);
             }
 
-            // Fall back to the raw body when the structured error is absent/blank so the backend
-            // detail is not lost (e.g. python-backend "can't be evaluated:" with an empty message).
-            // The body is the evaluated user metric's own error, which we want to surface; bound its
-            // length so an oversized payload can't bloat the thrown exception message.
+            // 当结构化错误缺失/为空时回退到原始响应体，以免后端细节丢失
+            // （例如 python-backend 的 "can't be evaluated:" 带有空消息）。响应体是被评估的用户指标自身的错误，
+            // 我们希望把它暴露出来；限制其长度，避免过大的负载使抛出的异常消息膨胀。
             try {
                 var body = response.readEntity(String.class);
                 if (StringUtils.isNotBlank(body)) {
                     return StringUtils.truncate(body, MAX_ERROR_MESSAGE_LENGTH);
                 }
             } catch (RuntimeException parseStringResponse) {
-                log.warn("Failed to read error response body", parseStringResponse);
+                log.warn("读取错误响应体失败", parseStringResponse);
             }
         }
 

@@ -104,25 +104,24 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
     }
 
     /**
-     * Use AI Proxy to score the trace thread and store it as a feedback scores.
-     * If the evaluator has multiple score definitions, it calls the LLM once per score definition.
+     * 使用 AI Proxy 对追踪线程评分并将其存储为反馈评分。
+     * 如果评估器有多个分数定义，它会为每个分数定义调用一次 LLM。
      *
-     * @param message a Redis message with the trace thread to score with an Evaluator code, workspace and username.
+     * @param message 一条 Redis 消息，包含要使用评估器代码、工作区和用户名评分的追踪线程。
      */
     @Override
     protected Mono<Void> score(@NonNull TraceThreadToScoreLlmAsJudge message) {
 
-        log.info("Message received with projectId: '{}', ruleId: '{}', threadIds: '{}' for workspace '{}'",
+        log.info("收到消息，projectId：'{}'、ruleId：'{}'、threadIds：'{}'，工作区 '{}'",
                 message.projectId(), message.ruleId(), message.threadIds(), message.workspaceId());
 
         return Flux.fromIterable(message.threadIds())
-                // Score each thread id independently: a single thread's failure must not stop scoring the
-                // sibling thread ids. Per-thread errors are materialized (onErrorResume) so the flatMap
-                // completes for every thread; the batch's first failure is then re-surfaced below. This keeps
-                // the failure on the Mono error path handled by BaseRedisSubscriber.processMessage's
-                // onErrorResume — classified as a processing error, following the normal retryable/
-                // non-retryable path — instead of leaking into the enclosing onErrorContinue via Flux.flatMap
-                // (which would drop the element and count it as an "unexpected" error).
+                // 独立评分每个 thread id：单个线程的失败绝不能阻止对兄弟 thread id 的评分。
+                // 每个线程的错误被物化（onErrorResume），使 flatMap 对每个线程都完成；
+                // 批次的第一个失败随后在下面被重新抛出。这使失败保留在由
+                // BaseRedisSubscriber.processMessage 的 onErrorResume 处理的 Mono 错误路径上——
+                // 被归类为处理错误，遵循正常的可重试/不可重试路径——而不是通过 Flux.flatMap
+                // 泄漏到外围的 onErrorContinue（后者会丢弃该元素并将其计为 "unexpected" 错误）。
                 .flatMap(threadId -> processThreadScores(message, threadId)
                         .then(Mono.<Throwable>empty())
                         .onErrorResume(Mono::just))
@@ -132,10 +131,10 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                         .put(RequestContext.USER_NAME, message.userName())
                         .put(RequestContext.VISIBILITY, Visibility.PRIVATE))
                 .doOnSuccess(unused -> log.info(
-                        "Processed trace threads for projectId '{}', ruleId '{}' for workspace '{}'",
+                        "已处理 projectId '{}'、ruleId '{}'（工作区 '{}'）的追踪线程",
                         message.projectId(), message.ruleId(), message.workspaceId()))
                 .doOnError(error -> log.error(
-                        "Error processing trace thread for projectId '{}', ruleId '{}' for workspace '{}'",
+                        "处理 projectId '{}'、ruleId '{}'（工作区 '{}'）的追踪线程时出错",
                         message.projectId(), message.ruleId(), message.workspaceId(), error))
                 .then();
     }
@@ -152,7 +151,7 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                     if (traces.isEmpty()) {
                         try (var logContext = wrapWithMdc(mdc)) {
                             userFacingLogger.info(
-                                    "No traces found for threadId '{}' in projectId '{}'. Skipping scoring.",
+                                    "未找到 threadId '{}'（在 projectId '{}' 中）的追踪。跳过评分。",
                                     currentThreadId, message.projectId());
                         }
                         return Mono.empty();
@@ -161,7 +160,7 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                             .switchIfEmpty(Mono.defer(() -> {
                                 try (var logContext = wrapWithMdc(mdc)) {
                                     userFacingLogger.info(
-                                            "Thread model not found for threadId '{}' in projectId '{}'. Skipping scoring.",
+                                            "未找到 threadId '{}'（在 projectId '{}' 中）的线程模型。跳过评分。",
                                             currentThreadId, message.projectId());
                                 }
                                 return Mono.empty();
@@ -173,7 +172,7 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
     }
 
     /**
-     * Scores a single thread for a given rule and persists the resulting feedback scores.
+     * 针对给定规则对单个线程评分，并持久化所得的反馈评分。
      */
     private Mono<Void> processScoring(TraceThreadToScoreLlmAsJudge message, List<Trace> traces,
             UUID threadModelId, String threadId) {
@@ -185,7 +184,7 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
         return Mono.fromCallable(() -> findRule(message, threadId, mdc))
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(withMdc(mdc, error -> userFacingLogger
-                        .error("Unexpected error while looking up rule for threadId '{}': \n\n{}",
+                        .error("查找 threadId '{}' 的规则时发生意外错误：\n\n{}",
                                 threadId,
                                 Optional.ofNullable(error.getCause()).map(Throwable::getMessage)
                                         .orElse(error.getMessage()))))
@@ -195,8 +194,8 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
     }
 
     /**
-     * Resolves the automation rule for this scoring run. Returns {@link Optional#empty()} if the rule
-     * has been deleted, signalling the caller to skip without throwing.
+     * 为本次评分运行解析自动化规则。如果规则已被删除，返回 {@link Optional#empty()}，
+     * 示意调用方跳过而不抛出异常。
      */
     private Optional<AutomationRuleEvaluator<?, ?>> findRule(TraceThreadToScoreLlmAsJudge message, String threadId,
             Map<String, String> mdc) {
@@ -207,7 +206,7 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                 return Optional.of(rule);
             } catch (NotFoundException ex) {
                 log.warn(
-                        "Automation rule with ID '{}' not found in projectId '{}' for workspace '{}'. Skipping scoring for threadId '{}'.",
+                        "未找到 ID 为 '{}' 的自动化规则，projectId '{}'、工作区 '{}'。跳过对 threadId '{}' 的评分。",
                         message.ruleId(), message.projectId(), message.workspaceId(), threadId);
                 return Optional.empty();
             }
@@ -215,29 +214,26 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
     }
 
     /**
-     * Runs the scoring chain for a known rule and persists the resulting feedback scores. Caller
-     * guarantees {@code traces} is non-empty.
+     * 针对已知规则运行评分链路并持久化所得的反馈评分。调用方保证 {@code traces} 非空。
      */
     private Mono<Void> scoreThread(TraceThreadToScoreLlmAsJudge message, List<Trace> traces, UUID threadModelId,
             String threadId, AutomationRuleEvaluator<?, ?> rule, Map<String, String> mdc) {
         var traceIds = traces.stream().map(Trace::id).collect(Collectors.toSet());
-        // OPIK-7454 — route before fetch. When the flag is on, size the whole thread with a cheap
-        // ClickHouse aggregate (sum of span field lengths) that materializes no spans: a large thread is
-        // detected from this number alone and takes the tools path (skeleton + per-trace ReadTool
-        // drill-down) without any bulk fetch. Spans are fetched further down only on the inline path,
-        // where the thread is under the threshold by construction.
+        // OPIK-7454——在获取之前路由。当标志开启时，用一个廉价的 ClickHouse 聚合
+        // （span 字段长度之和）来确定整个线程的大小，该聚合不物化任何 span：仅从这个数字就能检测出
+        // 大线程，并走工具路径（骨架 + 每个 trace 的 ReadTool 向下钻取），无需任何批量获取。
+        // spans 只在更下方的内联路径上获取，而那里线程按构造低于阈值。
         //
-        // When the flag is off, size is 0 (no query) and the inline serializer omits the `spans` field
-        // via @JsonInclude(NON_NULL), so the rendered JSON is unchanged.
+        // 当标志关闭时，大小为 0（不查询），内联序列化器通过 @JsonInclude(NON_NULL) 省略 `spans` 字段，
+        // 因此渲染出的 JSON 不变。
         var spansSizeMono = serviceTogglesConfig.isAgenticToolsEnabled()
                 ? spanService.getSpansSizeByTraceIds(traceIds)
                         .contextWrite(ctx -> ctx
                                 .put(RequestContext.WORKSPACE_ID, message.workspaceId())
                                 .put(RequestContext.USER_NAME, message.userName()))
                 : Mono.just(0L);
-        // Monitoring recorder (OPIK-6994): one hidden evaluator trace per thread evaluation, with an
-        // llm span per LLM round and tool spans for the agentic loop. NOOP when the toggle is off.
-        // Resolved reactively because the project-name lookup is blocking.
+        // 监控记录器（OPIK-6994）：每次线程评估一个隐藏的评估器 trace，每轮 LLM 一个 llm span，
+        // agentic 循环对应工具 span。开关关闭时为 NOOP。响应式解析，因为项目名称查找是阻塞的。
         Mono<EvaluationRecorder> recorderMono = Mono.fromCallable(
                 () -> serviceTogglesConfig.isOnlineScoringTracingEnabled()
                         ? onlineEvaluationRecorder.begin(
@@ -251,17 +247,16 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                                 message.workspaceId(), message.userName())
                         : EvaluationRecorder.NOOP)
                 .subscribeOn(Schedulers.boundedElastic())
-                // Monitoring is best-effort: a project-name lookup failure (e.g. missing project) must
-                // not abort the actual thread scoring, so degrade to NOOP instead of failing the zip.
+                // 监控是尽力而为的：项目名称查找失败（例如缺少项目）绝不能中止实际的线程评分，
+                // 因此降级为 NOOP 而不是让 zip 失败。
                 .onErrorResume(error -> {
-                    log.warn("Failed to start online-evaluation monitoring for thread '{}', "
-                            + "proceeding without it", threadId, error);
+                    log.warn("启动线程 '{}' 的在线评估监控失败，继续而不带监控", threadId, error);
                     return Mono.just(EvaluationRecorder.NOOP);
                 });
 
-        // Check whether any trace in the thread has attachments — if so, force the agentic-tools
-        // path regardless of context size (the judge needs get_attachment to fetch them). Best-effort:
-        // a transient listing error returns false and falls back to the normal size-based routing.
+        // 检查线程中是否有任何 trace 有附件——如果有，则无视上下文大小强制走 agentic 工具路径
+        // （评判器需要 get_attachment 来获取它们）。尽力而为：临时列表错误返回 false，
+        // 并回退到正常的基于大小的路由。
         Mono<Boolean> hasAttachmentsMono = serviceTogglesConfig.isAgenticToolsEnabled()
                 ? attachmentService.hasAnyAttachmentByEntityIds(EntityType.TRACE, traceIds)
                         .onErrorReturn(false)
@@ -276,16 +271,14 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                     var spanBytes = tuple.getT2();
                     var hasAttachments = tuple.getT3();
 
-                    // Estimate the inline prompt size (trace bodies + span content) to route; 0 when the
-                    // toggle is off. spanBytes comes from the cheap aggregate; the service adds the in-heap
-                    // trace bodies.
+                    // 估算内联提示词大小（trace 正文 + span 内容）以进行路由；开关关闭时为 0。
+                    // spanBytes 来自廉价聚合；服务再加上堆内的 trace 正文。
                     var estimatedTokens = serviceTogglesConfig.isAgenticToolsEnabled()
                             ? agenticScoringService.estimateThreadContextTokens(traces, spanBytes)
                             : 0;
-                    // Fetch spans only for the inline/enriched path: toggle on, under the routing threshold,
-                    // and no attachments (attachments force the tools path). Such a thread is small by
-                    // construction, so the fetch is bounded; the streaming byte-cap stays a backstop. The
-                    // tools path fetches nothing here — it drills per-trace via ReadTool on demand.
+                    // 仅在内联/富化路径上获取 spans：开关开启、低于路由阈值、且没有附件
+                    // （附件会强制走工具路径）。这样的线程按构造是小的，因此获取是有界的；
+                    // 流式字节上限仍是兜底。工具路径在这里不获取任何内容——它按需通过 ReadTool 逐 trace 钻取。
                     var maxPreloadBytes = agenticToolsMaxPreloadBytes();
                     var fetchSpansForInline = serviceTogglesConfig.isAgenticToolsEnabled()
                             && estimatedTokens < onlineScoringConfig.getAgenticToolsThresholdTokens()
@@ -307,9 +300,9 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                                     message.workspaceId())));
                 })
                 .doOnNext(withMdc(mdc, loggedScores -> userFacingLogger
-                        .info("Scores for threadId '{}' stored successfully:\n\n{}", threadId, loggedScores)))
+                        .info("threadId '{}' 的分数已成功存储：\n\n{}", threadId, loggedScores)))
                 .doOnError(withMdc(mdc, error -> userFacingLogger
-                        .error("Unexpected error while scoring threadId '{}' with rule '{}': \n\n{}",
+                        .error("对 threadId '{}' 使用规则 '{}' 评分时发生意外错误：\n\n{}",
                                 threadId, rule.getName(),
                                 Optional.ofNullable(error.getCause()).map(Throwable::getMessage)
                                         .orElse(error.getMessage()))))
@@ -317,21 +310,20 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
     }
 
     /**
-     * Builds and runs the LLM scoring chain for the thread. Routes through the agentic-tools
-     * branch (skeleton + ReadTool/JqTool/SearchTool drill-down) when the toggle is on AND either
-     * the inline-rendered thread would exceed the configured size threshold OR the thread has
-     * attachments (so the judge can call get_attachment). Provider must support tool-calling and
-     * the template must be text-only. Otherwise the inline path runs unchanged — same shape as today.
+     * 为线程构建并运行 LLM 评分链路。当开关开启且满足以下任一条件时，通过 agentic 工具分支路由
+     * （骨架 + ReadTool/JqTool/SearchTool 向下钻取）：内联渲染的线程会超过配置的大小阈值，或线程有附件
+     * （使评判器可以调用 get_attachment）。提供方必须支持工具调用，且模板必须仅含文本。
+     * 否则内联路径保持不变地运行——形态与现在相同。
      */
     private Mono<List<FeedbackScoreBatchItemThread>> evaluate(TraceThreadToScoreLlmAsJudge message,
             List<Trace> traces, List<Span> spans, int estimatedTokens, boolean hasAttachments,
             UUID threadModelId, String threadId, AutomationRuleEvaluator<?, ?> rule, Map<String, String> mdc,
             EvaluationRecorder recorder) {
-        // `spans` is empty on the tools path (nothing was fetched — the model drills per-trace via
-        // ReadTool) and the bounded inline span list otherwise. `estimatedTokens` was computed up front
-        // from the cheap size aggregate, so no spans are needed to size the routing decision.
-        // One guard per thread evaluation; UNLIMITED when the rule sets no maxCostUsd. Charges every
-        // LLM call (initial + tool rounds + wrap-up) and tells the tool loop when to start wrapping up.
+        // `spans` 在工具路径上为空（没有获取任何内容——模型通过 ReadTool 逐 trace 钻取），
+        // 否则为有界的内联 span 列表。`estimatedTokens` 已预先从廉价大小聚合计算出来，
+        // 因此路由决策的大小估算不需要 spans。
+        // 每次线程评估一个守卫；当规则未设置 maxCostUsd 时为 UNLIMITED。对每次 LLM 调用计费
+        // （初始 + 工具轮 + 收尾），并告诉工具循环何时开始收尾。
         var costGuard = BudgetGuard.create(message.code().maxCostUsd(), message.code().model().name(),
                 llmProviderFactory);
         return Mono.fromCallable(
@@ -339,14 +331,13 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                         mdc))
                 .subscribeOn(Schedulers.parallel())
                 .flatMap(prepared -> {
-                    // Uniform structure with trace evals: prepare_evaluation span (fetched spans,
-                    // size estimate, mode) before the first LLM round. The agentic flag also sets
-                    // the parent trace's mode.
+                    // 与 trace 评估统一的结构：在第一轮 LLM 之前记录 prepare_evaluation span
+                    // （获取的 spans、大小估算、模式）。agentic 标志也会设置父 trace 的模式。
                     recorder.recordPreparation(spans.size(), prepared.estimatedTokens(), prepared.useTools());
                     return scoreTraceReactive(prepared.scoreRequest(), message, recorder, costGuard)
                             .doOnNext(withMdc(mdc, chatResponse -> {
                                 if (userFacingLogger.isInfoEnabled()) {
-                                    userFacingLogger.info("Received response for threadId '{}': '{}'",
+                                    userFacingLogger.info("收到 threadId '{}' 的响应：'{}'",
                                             threadId, agenticScoringService.summarizeResponse(chatResponse));
                                 }
                             }))
@@ -359,14 +350,13 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                     try (var logContext = wrapWithMdc(mdc)) {
                         Project project = projectService.get(message.projectId(), message.workspaceId());
                         if (costGuard.wasBudgetEnforced()) {
-                            // Keyed on wasBudgetEnforced() (the loop's budget gate actually cut the run
-                            // short), not shouldWrapUp() (mere spend >= limit): this warn claims the
-                            // investigation was stopped, so it must not fire on the inline single-call path
-                            // or a natural stop that only crossed spend. Same authoritative signal as the
-                            // budget_exceeded trace tag flagged inside ToolCallLoop.
+                            // 以 wasBudgetEnforced()（循环的预算门控确实缩短了运行）为键，
+                            // 而非 shouldWrapUp()（仅仅花费 >= 限制）：此警告声称调查被停止，因此它
+                            // 绝不能在内联单次调用路径或仅跨越花费的自然停止上触发。
+                            // 与 ToolCallLoop 内标记的 budget_exceeded trace 标签是同一权威信号。
                             userFacingLogger.warn(
-                                    "Spend budget of '{}' USD reached for threadId '{}' (spent '{}'); "
-                                            + "stopped investigating and wrapped up with the scores gathered so far.",
+                                    "已达到 '{}' USD 的花费预算，threadId '{}'（已花费 '{}'）；"
+                                            + "停止调查，并用目前收集到的分数收尾。",
                                     costGuard.limitUsd(), threadId, costGuard.spentUsd());
                         }
                         var parsed = OnlineScoringEngine.toFeedbackScores(chatResponse, message.code().schema());
@@ -387,22 +377,21 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
     }
 
     /**
-     * Sync preparation step — picks the path (inline vs agentic-tools) and builds the chat
-     * request(s). Wrapped in {@code Mono.fromCallable} on {@code Schedulers.parallel()} by the
-     * caller because the body is CPU-bound (prompt rendering / JSON serialization of the inline
-     * context); no blocking I/O happens here. The size estimate is supplied by the caller (from the
-     * cheap ClickHouse aggregate), so this step no longer serializes spans just to size the route.
+     * 同步准备步骤——选择路径（内联 vs agentic 工具）并构建聊天请求。由调用方用
+     * {@code Schedulers.parallel()} 上的 {@code Mono.fromCallable} 包裹，因为其主体是 CPU 密集的
+     * （提示词渲染 / 内联上下文的 JSON 序列化）；这里没有阻塞 I/O。大小估算由调用方提供
+     * （来自廉价的 ClickHouse 聚合），因此此步骤不再仅仅为了估算路由大小而序列化 spans。
      */
     private PreparedEvaluation prepareEvaluation(TraceThreadToScoreLlmAsJudge message, List<Trace> traces,
             List<Span> spans, int estimatedContextTokens, boolean hasAttachments, String threadId,
             AutomationRuleEvaluator<?, ?> rule, Map<String, String> mdc) {
         try (var logContext = wrapWithMdc(mdc)) {
-            userFacingLogger.info("Evaluating threadId '{}' sampled by rule '{}'", threadId, rule.getName());
+            userFacingLogger.info("正在评估 threadId '{}'，由规则 '{}' 采样", threadId, rule.getName());
 
             String modelName = message.code().model().name();
-            // estimatedContextTokens was derived up front from the cheap ClickHouse size aggregate (0 when
-            // the toggle is off). shouldUseAgenticTools re-checks the toggle, provider tool-support and
-            // template modality; `spans` is used only to render the inline path (empty on the tools path).
+            // estimatedContextTokens 已预先从廉价的 ClickHouse 大小聚合得出（开关关闭时为 0）。
+            // shouldUseAgenticTools 重新检查开关、提供方工具支持和模板模态；`spans` 仅用于渲染内联路径
+            // （在工具路径上为空）。
             boolean useTools = shouldUseAgenticTools(estimatedContextTokens, hasAttachments, modelName,
                     threadId, message.code().messages());
 
@@ -411,20 +400,17 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
             try {
                 var strategy = llmProviderFactory.getStructuredOutputStrategy(modelName);
                 if (useTools) {
-                    // Tools path: skeleton + drill-down hint instead of full trace dump. The agent
-                    // drills into specific traces via read(type=trace, id=X) — same lazy pattern
-                    // the trace-level path uses. Spans for any one trace are fetched reactively in
-                    // ReadTool.readTrace only when the model actually asks for that trace.
+                    // 工具路径：骨架 + 向下钻取提示，而不是完整 trace 转储。代理通过
+                    // read(type=trace, id=X) 钻取特定 trace——与 trace 级别路径相同的惰性模式。
+                    // 任何一个 trace 的 spans 仅在模型实际请求该 trace 时于 ReadTool.readTrace 中响应式获取。
                     scoreRequest = OnlineScoringEngine.prepareThreadLlmRequestWithTools(
                             message.code(), traces, strategy);
-                    // The post-tool-loop wrap-up uses the same structured-output strategy — for
-                    // threads there is no separate InstructionStrategy variant, so the initial and
-                    // wrap-up requests share a shape (modulo tool specs).
+                    // 工具循环后的收尾使用相同的结构化输出策略——对于线程没有单独的 InstructionStrategy
+                    // 变体，因此初始和收尾请求共享一种形态（除工具规格外）。
                     structuredRequest = scoreRequest;
                 } else {
-                    // Inline path: render {{context}} with the enriched per-assistant `spans`
-                    // shape. When the toggle is off, `spans` is an empty list and the JSON is
-                    // wire-identical to today's [{role, content}, ...].
+                    // 内联路径：使用富化的每个 assistant `spans` 形态渲染 {{context}}。
+                    // 当开关关闭时，`spans` 是空列表，JSON 与当前的 [{role, content}, ...] 在线上完全一致。
                     scoreRequest = OnlineScoringEngine.prepareThreadLlmRequest(message.code(), traces, strategy,
                             spans);
                     structuredRequest = scoreRequest;
@@ -436,29 +422,28 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
             }
 
             if (useTools) {
-                // REQUIRED on the first call only — same reasoning as the trace scorer: forces
-                // ≥1 tool call before the model can answer from skeleton alone. Follow-up rounds
-                // switch to AUTO so the wrap-up turn can emit JSON without invoking a tool.
+                // 仅在第一次调用时 REQUIRED——与 trace 评分器相同的理由：强制在模型能够仅从骨架回答之前
+                // 至少调用一次工具。后续轮切换到 AUTO，使收尾轮可以发出 JSON 而无需调用工具。
                 scoreRequest = agenticScoringService.addToolSpecs(scoreRequest, ToolChoice.REQUIRED);
             }
 
-            // summarizeRequest is cheap (no per-message toString streaming). At INFO to mirror
-            // the trace scorer's symmetric Evaluating / Sending / Received chain.
-            userFacingLogger.info("Sending threadId '{}' to LLM: {}",
+            // summarizeRequest 很廉价（没有逐消息 toString 流式处理）。使用 INFO 级别以镜像
+            // trace 评分器对称的 Evaluating / Sending / Received 链路。
+            userFacingLogger.info("将 threadId '{}' 发送到 LLM：{}",
                     threadId, agenticScoringService.summarizeRequest(scoreRequest, modelName, useTools));
             return new PreparedEvaluation(scoreRequest, structuredRequest, useTools, estimatedContextTokens);
         }
     }
 
     /**
-     * Routing decision for whether to attach tool specs + run the tool-call loop for a thread.
-     * Requires the toggle on AND at least one of:
+     * 关于是否为线程附加工具规格 + 运行工具调用循环的路由决策。
+     * 要求开关开启且至少满足以下之一：
      * <ul>
-     *   <li>estimated thread context exceeds the configured token threshold, OR</li>
-     *   <li>the thread has attachments (the judge needs get_attachment to fetch them)</li>
+     *   <li>估算的线程上下文超过配置的 token 阈值，或</li>
+     *   <li>线程有附件（评判器需要 get_attachment 来获取它们）</li>
      * </ul>
-     * Both cases also require the provider to support tool-calling and the template to be
-     * text-only. Falls back to inline with a user-facing warn when those secondary guards fail.
+     * 两种情况还要求提供方支持工具调用且模板仅含文本。当这些次级守卫失败时，
+     * 回退到内联并发出面向用户的警告。
      */
     boolean shouldUseAgenticTools(int estimatedContextTokens, boolean hasAttachments, String modelName,
             String threadId, List<LlmAsJudgeMessage> templateMessages) {
@@ -466,8 +451,8 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
             return false;
         }
         boolean overSizeThreshold = estimatedContextTokens >= onlineScoringConfig.getAgenticToolsThresholdTokens();
-        // Skip the provider lookup when neither trigger is met — most evaluations are toggle-off
-        // or have neither large contexts nor attachments.
+        // 当两个触发器都未满足时跳过提供方查找——大多数评估要么开关关闭，
+        // 要么既没有大上下文也没有附件。
         if (!overSizeThreshold && !hasAttachments) {
             return false;
         }
@@ -475,36 +460,32 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
                 llmProviderFactory.getLlmProvider(modelName));
         if (!providerSupportsTools) {
             userFacingLogger.warn(
-                    "Thread has attachments or context exceeds '{}' tokens but provider for model '{}'"
-                            + " does not support tool calling; falling back to inline path for threadId"
-                            + " '{}' — may overflow context window.",
+                    "线程有附件或上下文超过 '{}' 个 token，但模型 '{}' 的提供方不支持工具调用；"
+                            + "为 threadId '{}' 回退到内联路径——可能溢出上下文窗口。",
                     onlineScoringConfig.getAgenticToolsThresholdTokens(), modelName, threadId);
             return false;
         }
-        // The thread agentic-tools render path only substitutes string content; multimodal
-        // templates (image / audio / video parts alongside text) would otherwise hit the
-        // safety throw in renderThreadMessagesWithReplacement and fail the evaluation.
+        // 线程的 agentic 工具渲染路径只替换字符串内容；多模态模板（与文本并存的图片 / 音频 / 视频部分）
+        // 否则会触发 renderThreadMessagesWithReplacement 中的安全抛出并使评估失败。
         if (OnlineScoringEngine.hasMultimodalTemplate(templateMessages)) {
             userFacingLogger.warn(
-                    "Thread has attachments or context exceeds '{}' tokens but evaluator template has"
-                            + " multimodal content; falling back to inline path for threadId '{}'"
-                            + " — may overflow context window.",
+                    "线程有附件或上下文超过 '{}' 个 token，但评估器模板含有多模态内容；"
+                            + "为 threadId '{}' 回退到内联路径——可能溢出上下文窗口。",
                     onlineScoringConfig.getAgenticToolsThresholdTokens(), threadId);
             return false;
         }
         if (hasAttachments) {
-            log.debug("Thread has attachments; switching to agentic-tools mode for threadId '{}'", threadId);
+            log.debug("线程有附件；为 threadId '{}' 切换到 agentic 工具模式", threadId);
         } else {
-            log.debug("Thread context exceeds '{}' tokens; switching to agentic-tools mode for threadId '{}'",
+            log.debug("线程上下文超过 '{}' 个 token；为 threadId '{}' 切换到 agentic 工具模式",
                     onlineScoringConfig.getAgenticToolsThresholdTokens(), threadId);
         }
         return true;
     }
 
     /**
-     * Wraps the synchronous {@code ChatLanguageModel.chat} call in a Mono and schedules it on
-     * {@link Schedulers#boundedElastic()} so the blocking Jersey-client I/O doesn't pin the
-     * per-stream worker scheduler thread (OPIK-6308). Mirrors the trace scorer.
+     * 将同步的 {@code ChatLanguageModel.chat} 调用包装进 Mono，并在 {@link Schedulers#boundedElastic()}
+     * 上调度，使阻塞的 Jersey 客户端 I/O 不会钉住每个流的 worker 调度器线程（OPIK-6308）。镜像 trace 评分器。
      */
     private Mono<ChatResponse> scoreTraceReactive(ChatRequest request, TraceThreadToScoreLlmAsJudge message,
             EvaluationRecorder recorder, BudgetGuard costGuard) {
@@ -514,14 +495,13 @@ public class OnlineScoringTraceThreadLlmAsJudgeScorer extends OnlineScoringBaseS
         return costGuard.track(recorder.recordLlmCall(request, call));
     }
 
-    // Package-private for unit tests.
+    // 包私有，供单元测试使用。
     Mono<ChatResponse> handleToolCalls(ChatResponse chatResponse, ChatRequest toolRequest,
             ChatRequest structuredRequest, TraceThreadToScoreLlmAsJudge message, Map<String, String> mdc,
             EvaluationRecorder recorder, BudgetGuard costGuard) {
-        // Shared loop orchestration lives in AgenticScoringService; here we provide only the
-        // thread-scoped context — no single active trace. ReadTool fetches any trace from the
-        // thread on demand via the standard read(type=trace, id=X) path. GetTraceSpansTool
-        // returns a redirect error on this context (see GetTraceSpansTool#execute).
+        // 共享的循环编排位于 AgenticScoringService 中；这里我们只提供线程作用域的上下文——
+        // 没有单一的活动 trace。ReadTool 通过标准的 read(type=trace, id=X) 路径按需从线程中获取任何 trace。
+        // GetTraceSpansTool 在此上下文上返回重定向错误（参见 GetTraceSpansTool#execute）。
         return agenticScoringService.runToolCallLoop(chatResponse, toolRequest, structuredRequest,
                 () -> TraceToolContext.forThread(message.workspaceId(), message.userName(), message.projectId(),
                         onlineScoringConfig.getAgenticToolsMaxInjectedBytes()),

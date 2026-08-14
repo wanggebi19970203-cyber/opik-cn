@@ -1,20 +1,17 @@
 """
-Evaluator-facing glue that keeps :mod:`opik.evaluation.evaluator` thin.
+面向评估器的粘合代码，使 :mod:`opik.evaluation.evaluator` 保持精简。
 
-Two responsibilities:
+两项职责：
 
-1. Build the resume state for each evaluation entrypoint and embed it into
-   ``experiment_config``. The entrypoints differ in which kwargs flow into
-   the state, so a small per-entrypoint helper lives here rather than in
-   :mod:`state` (which stays generic).
+1. 为每个评估入口构建恢复状态，并将其嵌入 ``experiment_config``。
+   各入口流入状态的 kwargs 各不相同，因此这里放置一个小型的逐入口辅助
+   函数，而不是放在 :mod:`state`（它保持通用）中。
 
-2. After items are resolved, write a local checkpoint of their ids when
-   iteration cannot be rebuilt from configuration alone (sampler or explicit
-   ``dataset_item_ids`` were used at evaluation time).
+2. 在项解析完成后，当仅凭配置无法重建迭代时（评估时使用了采样器或显式的
+   ``dataset_item_ids``），将这些 id 写入本地检查点。
 
-The checkpoint writer is injectable so this module does not hard-depend on
-local-file persistence: alternate stores can plug in for tests or future
-backends.
+检查点写入器通过注入提供，因此本模块不硬性依赖本地文件持久化：可以为
+测试或未来的后端接入其他存储。
 """
 
 import logging
@@ -33,9 +30,8 @@ CheckpointWriter = Callable[[str, List[str]], None]
 
 
 _NO_DATASET_VERSION_REASON = (
-    "evaluation ran against a dataset with no versioning; resume requires a "
-    "pinned dataset version so iteration is reproducible against the same "
-    "set of items the original run saw"
+    "评估针对的是未启用版本管理的数据集；恢复需要固定的数据集版本，"
+    "以便迭代能够对原始运行所见的同一组项可重现"
 )
 
 
@@ -50,7 +46,7 @@ def resume_state_for_evaluate(
     dataset_item_ids: Optional[List[str]],
     error_tolerance: ErrorTolerance,
 ) -> Dict[str, Any]:
-    """Build the resume blob for ``evaluate`` / ``evaluate_prompt`` / ``evaluate_optimization_trial``."""
+    """为 ``evaluate`` / ``evaluate_prompt`` / ``evaluate_optimization_trial`` 构建恢复 blob。"""
     dataset_version_name = _dataset_version_name_or_none(dataset_)
     if dataset_version_name is None:
         return state_module.embed_non_resumable_state(
@@ -80,17 +76,15 @@ def write_checkpoint_if_needed(
     checkpoint_writer: Optional[CheckpointWriter] = None,
 ) -> None:
     """
-    Snapshot resolved item ids when iteration cannot be rebuilt from
-    configuration alone (sampler or explicit ``dataset_item_ids`` was used).
+    当仅凭配置无法重建迭代时（使用了采样器或显式的 ``dataset_item_ids``），
+    对已解析的项 id 进行快照。
 
-    Callers pass ``resolved_ids`` directly: explicit ``dataset_item_ids`` is
-    known up front (no need to consume the iterator), and the sampler path
-    has already materialized the list to sample from. The streaming case
-    passes ``None`` and is a no-op — the resume state alone reproduces it.
+    调用方直接传入 ``resolved_ids``：显式的 ``dataset_item_ids`` 在前期即
+    已知（无需消费迭代器），而采样器路径已经物化了用于采样的列表。流式
+    场景传入 ``None`` 且为无操作——仅靠恢复状态即可重现。
 
-    ``checkpoint_writer`` defaults to ``checkpoint.write_checkpoint``
-    resolved at call time, so module-level patches on the checkpoint module
-    take effect in tests.
+    ``checkpoint_writer`` 默认为 ``checkpoint.write_checkpoint``，在调用时
+    解析，因此对 checkpoint 模块的模块级补丁在测试中会生效。
     """
     if resolved_ids is None:
         return
@@ -103,12 +97,11 @@ def _dataset_version_name_or_none(
     dataset_: Union[dataset.Dataset, dataset.DatasetVersion],
 ) -> Optional[str]:
     """
-    Return the version name to pin for resume.
+    返回用于恢复时要固定的版本名称。
 
-    For a ``DatasetVersion`` we have the version name directly. For a
-    ``Dataset`` we use the latest version's name at the moment of evaluation
-    — the same version id ``create_experiment`` writes to the experiment
-    record. Returns None when the dataset has no versions.
+    对于 ``DatasetVersion``，我们可直接获得版本名称。对于 ``Dataset``，我们
+    使用评估时刻的最新版本名称——也就是 ``create_experiment`` 写入实验记录
+    的同一版本 id。当数据集没有任何版本时返回 None。
     """
     version_info = dataset_.get_version_info()
     if version_info is None:

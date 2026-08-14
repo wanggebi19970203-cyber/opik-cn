@@ -17,8 +17,8 @@ class ContextExtractorNotSet(OpikException):
 
 
 class LocalRecordingAlreadyActive(OpikException):
-    """Raised when record_traces_locally() is entered while a recording is
-    already active on the same connection (nested/overlapping recording)."""
+    """当在同一连接上已存在活动录制时再次进入 record_traces_locally()
+    （嵌套/重叠录制）时抛出。"""
 
     pass
 
@@ -43,30 +43,30 @@ class ScoreMethodMissingArguments(OpikException):
 
     def _get_error_message(self) -> str:
         message = (
-            f"The scoring method {self.score_name} is missing arguments: {self.missing_required_arguments}. "
-            f"These keys were not present in either the dataset item or the dictionary returned by the evaluation task. "
-            f"You can either update the dataset or evaluation task to return this key or use the `scoring_key_mapping` to map existing items to the expected arguments. "
-            f"The available keys found in the dataset item and evaluation task output are: {self.available_keys}. "
+            f"评分方法 {self.score_name} 缺少参数：{self.missing_required_arguments}。"
+            f"这些键既不存在于数据集项中，也不存在于评估任务返回的字典中。"
+            f"你可以更新数据集或评估任务以返回该键，或使用 `scoring_key_mapping` 将现有项映射到期望的参数。"
+            f"在数据集项和评估任务输出中找到的可用键为：{self.available_keys}。"
         )
         if self.unused_mapping_arguments:
-            message += f" Some keys in `scoring_key_mapping` didn't match anything: {self.unused_mapping_arguments}"
+            message += f" `scoring_key_mapping` 中的某些键未匹配到任何内容：{self.unused_mapping_arguments}"
         return message
 
 
 class MetricComputationError(OpikException):
-    """Exception raised when a metric cannot be computed."""
+    """当指标无法计算时抛出的异常。"""
 
     pass
 
 
 class EvaluationError(OpikException):
-    """Exception raised when an evaluation fails."""
+    """当评估失败时抛出的异常。"""
 
     pass
 
 
 class JSONParsingError(OpikException):
-    """Exception raised when we fail to parse an LLM response to a dictionary"""
+    """当无法将 LLM 响应解析为字典时抛出的异常"""
 
     pass
 
@@ -81,15 +81,15 @@ class PromptPlaceholdersDontMatchFormatArguments(OpikException):
 
     def __str__(self) -> str:
         return (
-            f"The `prompt.format(**kwargs)` arguments must exactly match the prompt placeholders. "
-            f"Prompt placeholders: {list(self.prompt_placeholders)}. "
-            f"Format arguments: {list(self.format_arguments)}. "
-            f"Difference: {list(self.symmetric_difference)}. "
+            f"`prompt.format(**kwargs)` 的参数必须与提示词占位符完全匹配。"
+            f"提示词占位符：{list(self.prompt_placeholders)}。"
+            f"格式化参数：{list(self.format_arguments)}。"
+            f"差异：{list(self.symmetric_difference)}。"
         )
 
 
 class PromptTemplateStructureMismatch(OpikException):
-    """Exception raised when attempting to create a prompt version with a different template structure than the existing prompt."""
+    """当尝试使用与现有提示词不同的模板结构创建提示词版本时抛出的异常。"""
 
     def __init__(
         self, prompt_name: str, existing_structure: str, attempted_structure: str
@@ -100,8 +100,8 @@ class PromptTemplateStructureMismatch(OpikException):
 
     def __str__(self) -> str:
         return (
-            f"Prompt with name '{self.prompt_name}' already exists and has immutable "
-            f"'{self.existing_structure}' template structure, not '{self.attempted_structure}'. "
+            f"名称为 '{self.prompt_name}' 的提示词已存在，且具有不可变的 "
+            f"'{self.existing_structure}' 模板结构，而非 '{self.attempted_structure}'。"
         )
 
 
@@ -110,26 +110,23 @@ class ExperimentNotFound(OpikException):
 
 
 class EmptyExperiment(OpikException):
-    """Exception raised when an experiment requires test cases for evaluation and has none"""
+    """当实验评估需要测试用例但一个都没有时抛出的异常"""
 
     pass
 
 
 class ExperimentNotResumable(OpikException):
-    """Raised when an experiment cannot be safely resumed via ``evaluate_resume``."""
+    """当实验无法通过 ``evaluate_resume`` 安全恢复时抛出。"""
 
 
 class LocalCheckpointMissing(ExperimentNotResumable):
     """
-    Raised when an experiment was created with a non-deterministic iteration
-    config (custom sampler or explicit ``dataset_item_ids``) and the local
-    checkpoint file with the resolved item ids cannot be found.
+    当实验以非确定性迭代配置（自定义采样器或显式的 ``dataset_item_ids``）
+    创建，且包含已解析项 id 的本地检查点文件无法找到时抛出。
 
-    The checkpoint is written next to the calling machine's opik state
-    (``~/.opik/resume/<experiment_id>.json``) at evaluation time, so resume
-    is a same-machine operation by default. Users hitting this from a
-    different machine should re-supply the original ``dataset_item_ids``
-    explicitly.
+    检查点在评估时写入调用机器 opik 状态旁
+    （``~/.opik/resume/<experiment_id>.json``），因此恢复默认是同机操作。
+    从不同机器触发此错误的用户应显式重新提供原始的 ``dataset_item_ids``。
     """
 
 
@@ -138,19 +135,19 @@ class DatasetNotFound(OpikException):
 
 
 class DashboardValidationError(OpikException):
-    """Raised when a dashboard configuration violates a structural or semantic invariant."""
+    """当仪表盘配置违反结构或语义不变量时抛出。"""
 
     pass
 
 
 class DatasetVersionNotFound(OpikException):
-    """Exception raised when a dataset version is not found."""
+    """当数据集版本未找到时抛出的异常。"""
 
     pass
 
 
 class GuardrailValidationFailed(OpikException):
-    """Exception raised when a guardrail validation fails."""
+    """当护栏校验失败时抛出的异常。"""
 
     def __init__(
         self,
@@ -164,17 +161,17 @@ class GuardrailValidationFailed(OpikException):
         super().__init__(message)
 
     def __str__(self) -> str:
-        return f"{self.message}. Failed validations: {self.failed_validations}\n"
+        return f"{self.message}。失败的校验：{self.failed_validations}\n"
 
 
 class GuardrailValidationError(GuardrailValidationFailed):
-    """Raised when a guardrail cannot be evaluated, for example when the guardrails
-    backend is unreachable, times out, or the LLM judge provider call fails.
+    """当护栏无法被评估时抛出，例如护栏后端不可达、超时，或 LLM 评判器提供
+    方的调用失败。
 
-    Opik guardrails fail closed: if a check cannot be completed, validation is treated
-    as failed so the protected code path does not proceed. This subclasses
-    ``GuardrailValidationFailed`` so existing ``except GuardrailValidationFailed``
-    handlers also block on evaluation errors.
+    Opik 护栏采用故障关闭策略：如果某项检查无法完成，校验将被视为失败，
+    从而不会继续执行受保护的代码路径。此类继承自
+    ``GuardrailValidationFailed``，因此现有的 ``except GuardrailValidationFailed``
+    处理器也会对评估错误进行阻断。
     """
 
     def __init__(self, message: str):
@@ -185,100 +182,99 @@ class GuardrailValidationError(GuardrailValidationFailed):
 
 
 class GuardrailPolicyError(OpikException):
-    """Raised when a guardrail policy stored in the workspace cannot be turned into a
-    runtime guard, for example when it holds a guard type this SDK version does not know."""
+    """当工作空间中存储的护栏策略无法转换为运行时护栏时抛出，例如它包含
+    本 SDK 版本不认识的护栏类型。"""
 
 
 class GuardrailTrainingError(OpikException):
-    """Raised when training a custom guardrail fails or does not complete in time."""
+    """当训练自定义护栏失败或未能及时完成时抛出。"""
 
 
 class OpikCloudRequestsRateLimited(OpikException):
-    """Exception raised when the Opik Cloud limits the request rate."""
+    """当 Opik Cloud 限制请求速率时抛出的异常。"""
 
     def __init__(self, headers: Dict[str, Any], retry_after: float):
         self.headers = headers
         self.retry_after = retry_after
 
     def __str__(self) -> str:
-        return f"Requests rate limited. Response headers: {self.headers}, retry after: {self.retry_after} seconds"
+        return f"请求被限速。响应头：{self.headers}，{self.retry_after} 秒后重试"
 
 
 class ValidationError(OpikException):
-    """Exception raised when a validation fails."""
+    """当校验失败时抛出的异常。"""
 
     def __init__(self, prefix: str, failure_reasons: List[str]):
         self._prefix = prefix
         self._failure_reasons = failure_reasons
 
     def __str__(self) -> str:
-        return f"Validation failed in {self._prefix}(): {self._failure_reasons}"
+        return f"{self._prefix}() 中的校验失败：{self._failure_reasons}"
 
     def __repr__(self) -> str:
         return f"ValidationError(prefix={self._prefix}, failure_reasons={self._failure_reasons})"
 
 
 class BaseLLMError(OpikException):
-    """Base class for all LLM errors during evaluation."""
+    """评估期间所有 LLM 错误的基类。"""
 
     def __init__(self, message: str) -> None:
         self.message = message
 
     def __str__(self) -> str:
-        return f"LLM infrastructure error: {self.message}"
+        return f"LLM 基础设施错误：{self.message}"
 
 
 class SearchTimeoutError(OpikException):
-    """Exception raised when a search times out."""
+    """当搜索超时时抛出的异常。"""
 
     pass
 
 
 class ConfigNotFound(OpikException):
-    """Exception raised when no config is found for the requested env/version."""
+    """当未找到所请求 env/版本对应的配置时抛出的异常。"""
 
     pass
 
 
 class ConfigMismatch(OpikException):
-    """Exception raised when the backend config blueprint schema does not match the expected config class.
+    """当后端配置蓝本模式与期望的配置类不匹配时抛出的异常。
 
-    This typically occurs when the backend blueprint is missing one or more fields
-    declared in the requested ``Config`` subclass.
+    这通常发生在后端蓝本缺少所请求 ``Config`` 子类中声明的一个或多个字段时。
     """
 
     pass
 
 
 class EnvironmentAlreadyExists(OpikException):
-    """Raised when creating an environment whose name is already taken in the workspace."""
+    """当创建的环境名称在工作空间中已被占用时抛出。"""
 
     pass
 
 
 class EnvironmentConfigurationError(OpikException):
-    """Raised when an environment configuration operation is not permitted."""
+    """当环境配置操作不被允许时抛出。"""
 
     pass
 
 
 class PromptNotFoundError(OpikException):
-    """Raised when no prompt with the given name (or commit) exists in the project."""
+    """当项目中不存在具有给定名称（或提交）的提示词时抛出。"""
 
     pass
 
 
 class EnvironmentNotFoundError(OpikException):
-    """Raised when referencing an environment that is not registered in the workspace."""
+    """当引用未在工作空间中注册的环境时抛出。"""
 
     pass
 
 
 class LLMJudgeParseError(OpikException):
-    """Raised when LLMJudge output fails validation.
+    """当 LLMJudge 输出未通过校验时抛出。
 
-    Carries the partial ``ScoreResult`` list so callers can inspect what was
-    parsed before the error was raised.
+    携带部分的 ``ScoreResult`` 列表，以便调用方可以检查在抛出错误之前解析
+    出的内容。
     """
 
     def __init__(self, results: list, message: str) -> None:

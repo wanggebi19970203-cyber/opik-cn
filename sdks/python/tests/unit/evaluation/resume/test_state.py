@@ -197,7 +197,7 @@ class TestReadResumeState:
         persisted = state.read_resume_state(experiment)
 
         assert isinstance(persisted, state.NonResumableState)
-        assert "pinned dataset_version_name" in persisted.reason
+        assert "缺少固定的 dataset_version_name" in persisted.reason
 
     def test_round_trip__embedded_json_string_decodes_back(self):
         """``embed_resumable_state`` writes a JSON string; ``read_resume_state``

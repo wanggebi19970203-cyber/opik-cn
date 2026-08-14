@@ -92,16 +92,16 @@ public interface LlmProviderLangChainMapper {
     }
 
     /**
-     * Convert OpikUserMessage to public API UserMessage.
-     * OpikUserMessage supports multimodal content (text, images, videos, etc.)
-     * and its content can be either a String or a List<OpikContent>.
+     * 将 OpikUserMessage 转换为公共 API UserMessage。
+     * OpikUserMessage 支持多模态内容（文本、图片、视频等），
+     * 其 content 可以是 String 或 List&lt;OpikContent&gt;。
      */
     private dev.langchain4j.data.message.UserMessage convertOpikUserMessage(OpikUserMessage opikUserMessage) {
         if (opikUserMessage.content() instanceof String stringContent) {
             validateMessageContent(stringContent);
             return dev.langchain4j.data.message.UserMessage.from(stringContent);
         } else if (opikUserMessage.content() instanceof List<?> contentList) {
-            // Convert OpikContent list to public API Content list
+            // 将 OpikContent 列表转换为公共 API Content 列表
             List<Content> publicApiContents = new java.util.ArrayList<>();
             for (Object item : contentList) {
                 if (item instanceof OpikContent opikContent) {
@@ -114,7 +114,7 @@ public interface LlmProviderLangChainMapper {
     }
 
     /**
-     * Convert OpikContent to public API Content.
+     * 将 OpikContent 转换为公共 API Content。
      */
     private Content convertOpikContent(OpikContent opikContent) {
         return switch (opikContent.type()) {
@@ -131,18 +131,18 @@ public interface LlmProviderLangChainMapper {
                     var videoBuilder = Video.builder()
                             .url(URI.create(videoUrl));
 
-                    // Use explicit mimeType if provided
+                    // 如果提供了显式 mimeType 就使用它
                     String mimeType = opikContent.videoUrl().mimeType();
 
-                    // Only detect MIME type if not provided AND URL has no file extension
-                    // (LangChain4j can detect MIME type from extensions automatically)
+                    // 仅当未提供 mimeType 且 URL 没有文件扩展名时才检测 MIME 类型
+                    // （LangChain4j 可以从扩展名自动检测 MIME 类型）
                     if (mimeType == null && !VideoMimeTypeUtils.hasVideoFileExtension(videoUrl)) {
                         mimeType = VideoMimeTypeUtils.detectMimeTypeFromHttpHead(videoUrl);
                     }
 
                     if (mimeType != null) {
                         videoBuilder.mimeType(mimeType);
-                        log.debug("Set mimeType '{}' for video URL: '{}'", mimeType,
+                        log.debug("设置 mimeType '{}' 用于视频 URL: '{}'", mimeType,
                                 videoUrl.substring(0, Math.min(60, videoUrl.length())));
                     }
                     yield new VideoContent(videoBuilder.build());
@@ -206,7 +206,7 @@ public interface LlmProviderLangChainMapper {
             Class<T> errorType) {
         Optional<String> errorJson = extractErrorJson(throwable);
 
-        String failToGetErrorMessage = "failed to parse %s message".formatted(errorType.getSimpleName());
+        String failToGetErrorMessage = "无法解析 %s 消息".formatted(errorType.getSimpleName());
 
         if (errorJson.isEmpty()) {
             log.warn(failToGetErrorMessage, throwable);
@@ -218,7 +218,7 @@ public interface LlmProviderLangChainMapper {
 
     private <E, T extends LlmProviderError<E>> Optional<T> parseError(Logger log, String jsonPart, Class<T> errorType) {
 
-        String failToGetErrorMessage = "failed to parse %s message".formatted(errorType.getSimpleName());
+        String failToGetErrorMessage = "无法解析 %s 消息".formatted(errorType.getSimpleName());
 
         try {
             var error = JsonUtils.readValue(jsonPart, errorType);
@@ -243,9 +243,9 @@ public interface LlmProviderLangChainMapper {
     }
 
     /**
-     * OpenRouter reports a numeric {@code error.code} (mapped by {@link OpenRouterErrorMessage});
-     * OpenAI-compatible providers report a string {@code error.code} (mapped by
-     * {@link OpenAiErrorMessage}). Returns {@code true} only for a numeric code.
+     * OpenRouter 上报数值型 {@code error.code}（由 {@link OpenRouterErrorMessage} 映射）；
+     * OpenAI 兼容的 provider 上报字符串型 {@code error.code}（由
+     * {@link OpenAiErrorMessage} 映射）。仅当 code 为数值型时返回 {@code true}。
      */
     private boolean hasNumericErrorCode(String errorJson) {
         try {
@@ -256,13 +256,13 @@ public interface LlmProviderLangChainMapper {
     }
 
     /**
-     * Resolves an upstream LLM error payload to an {@link ErrorMessage}. OpenRouter and OpenAI share
-     * the same error envelope but differ on the {@code code} type — OpenRouter a numeric HTTP status,
-     * OpenAI a string code. The OpenRouter model is attempted only when the payload actually carries
-     * a numeric code, so a string-code payload is never run through OpenRouter's {@code Integer code}
-     * (which would raise, and log, an {@code InvalidFormatException} on every provider error). OpenAI
-     * is the fallback for everything else. The order must not be flipped unconditionally: OpenAI would
-     * silently coerce OpenRouter's numeric code into its String field and degrade the status to 500.
+     * 将上游 LLM 错误负载解析为 {@link ErrorMessage}。OpenRouter 和 OpenAI 共享
+     * 相同的错误信封，但在 {@code code} 类型上不同 —— OpenRouter 是数值型 HTTP 状态，
+     * OpenAI 是字符串型 code。仅当负载确实携带数值型 code 时才尝试 OpenRouter 模型，
+     * 这样字符串型 code 的负载绝不会经过 OpenRouter 的 {@code Integer code}
+     * （否则每次 provider 出错都会抛出并记录一条 {@code InvalidFormatException}）。OpenAI
+     * 是所有其他情况的回退。顺序绝不能无条件对调：OpenAI 会把
+     * OpenRouter 的数值型 code 静默地强转进它的 String 字段，并把状态降级为 500。
      */
     default Optional<ErrorMessage> getErrorObject(@NonNull Throwable throwable, @NonNull Logger log) {
 

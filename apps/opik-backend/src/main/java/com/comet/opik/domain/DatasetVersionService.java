@@ -48,11 +48,11 @@ public interface DatasetVersionService {
 
     String LATEST_TAG = "latest";
 
-    // Distributed-lock name serializing all version-creating writers on a dataset (OPIK-7264).
-    // Shared by DatasetItemService (save/patch/delete/applyDeltaChanges) and the restore path here.
+    // 序列化数据集上所有创建版本的写入者的分布式锁名称（OPIK-7264）。
+    // 由 DatasetItemService（save/patch/delete/applyDeltaChanges）和这里的恢复路径共享。
     String DATASET_VERSION_LOCK = "DatasetVersion";
 
-    // Error message templates
+    // 错误消息模板
     String ERROR_VERSION_HASH_EXISTS = "Version hash collision detected for dataset '%s'";
     String ERROR_TAG_EXISTS = "Tag already exists for this dataset, tag='%s'";
     String ERROR_CANNOT_DELETE_LATEST_TAG = "Cannot delete '%s' tag - it is automatically managed";
@@ -61,171 +61,170 @@ public interface DatasetVersionService {
     String ERROR_LATEST_MOVED = "Concurrent modification detected for dataset '%s'; the latest version changed during this operation. Please retry.";
 
     /**
-     * Retrieves a paginated list of versions for the specified dataset, ordered by creation time (newest first).
+     * 检索指定数据集的分页版本列表，按创建时间排序（最新在前）。
      *
-     * @param datasetId the unique identifier of the dataset
-     * @param page the page number (1-indexed, must be >= 1)
-     * @param size the number of versions per page (must be >= 1)
-     * @return a page containing dataset versions with their associated tags and metadata
-     * @throws IllegalArgumentException if page or size are less than 1
+     * @param datasetId 数据集的唯一标识符
+     * @param page 页码（从 1 开始，必须 >= 1）
+     * @param size 每页版本数（必须 >= 1）
+     * @return 包含数据集版本及其关联标签和元数据的分页
+     * @throws IllegalArgumentException 如果 page 或 size 小于 1
      */
     DatasetVersionPage getVersions(UUID datasetId, int page, int size);
 
     /**
-     * Adds a tag to an existing dataset version for easy reference.
+     * 为现有数据集版本添加标签，以便于引用。
      *
-     * @param datasetId the unique identifier of the dataset
-     * @param versionHash the hash of the version to tag
-     * @param tag the tag to create (e.g., "baseline", "production")
-     * @throws NotFoundException if the version with the specified hash is not found
-     * @throws ConflictException if the tag already exists for this dataset
+     * @param datasetId 数据集的唯一标识符
+     * @param versionHash 要打标签的版本哈希
+     * @param tag 要创建的标签（例如 "baseline"、"production"）
+     * @throws NotFoundException 如果未找到具有指定哈希的版本
+     * @throws ConflictException 如果该数据集的标签已存在
      */
     void createTag(UUID datasetId, String versionHash, DatasetVersionTag tag);
 
     /**
-     * Deletes a tag from a dataset version.
+     * 从数据集版本删除标签。
      * <p>
-     * Note: The 'latest' tag cannot be deleted as it is automatically managed by the system.
-     * Attempting to delete it will result in a BadRequestException.
+     * 注意：'latest' 标签不能删除，因为它由系统自动管理。
+     * 尝试删除它会导致 BadRequestException。
      *
-     * @param datasetId the unique identifier of the dataset
-     * @param tag the tag name to delete
-     * @throws NotFoundException if the tag does not exist
-     * @throws ClientErrorException if attempting to delete the 'latest' tag
+     * @param datasetId 数据集的唯一标识符
+     * @param tag 要删除的标签名称
+     * @throws NotFoundException 如果标签不存在
+     * @throws ClientErrorException 如果尝试删除 'latest' 标签
      */
     void deleteTag(UUID datasetId, String tag);
 
     /**
-     * Updates an existing dataset version's change_description and/or adds new tags.
+     * 更新现有数据集版本的 change_description 和/或添加新标签。
      * <p>
-     * This operation:
+     * 此操作：
      * <ul>
-     *   <li>Updates the change_description if provided</li>
-     *   <li>Adds new tags to the version if provided</li>
+     *   <li>如果提供了 change_description 则更新它</li>
+     *   <li>如果提供了新标签则将其添加到版本</li>
      * </ul>
      *
-     * @param datasetId the unique identifier of the dataset
-     * @param versionHash the hash of the version to update
-     * @param request the update request containing optional change_description and tags_to_add
-     * @return the updated dataset version
-     * @throws NotFoundException if the version with the specified hash is not found
-     * @throws ConflictException if any of the tags already exist for this dataset
+     * @param datasetId 数据集的唯一标识符
+     * @param versionHash 要更新的版本哈希
+     * @param request 包含可选 change_description 和 tags_to_add 的更新请求
+     * @return 更新后的数据集版本
+     * @throws NotFoundException 如果未找到具有指定哈希的版本
+     * @throws ConflictException 如果任何标签已存在于该数据集
      */
     DatasetVersion updateVersion(UUID datasetId, String versionHash, DatasetVersionUpdate request);
 
     /**
-     * Resolves a version identifier (hash or tag) to a version ID.
+     * 将版本标识符（哈希或标签）解析为版本 ID。
      * <p>
-     * This method tries to find a version by hash first, then by tag if not found by hash.
+     * 此方法先尝试按哈希查找版本，如果按哈希未找到，则按标签查找。
      *
-     * @param workspaceId the workspace ID for the request
-     * @param datasetId the unique identifier of the dataset
-     * @param hashOrTag either a version hash or a tag name
-     * @return the UUID of the matching version
-     * @throws NotFoundException if no version is found with the given hash or tag
+     * @param workspaceId 请求的工作区 ID
+     * @param datasetId 数据集的唯一标识符
+     * @param hashOrTag 版本哈希或标签名称
+     * @return 匹配版本的 UUID
+     * @throws NotFoundException 如果未找到具有给定哈希或标签的版本
      */
     UUID resolveVersionId(String workspaceId, UUID datasetId, String hashOrTag);
 
     DatasetVersionDiff compareVersions(UUID datasetId, String fromHashOrTag, String toHashOrTag);
 
     /**
-     * Gets the latest version for a dataset.
-     * Safe to call from reactive contexts where RequestContext is not available.
+     * 获取数据集的最新版本。
+     * 从 RequestContext 不可用的响应式上下文中调用是安全的。
      *
-     * @param datasetId the dataset ID
-     * @param workspaceId the workspace ID
-     * @return Optional containing the latest version, or empty if no versions exist
+     * @param datasetId 数据集 ID
+     * @param workspaceId 工作区 ID
+     * @return 包含最新版本的 Optional，如果没有版本则为空
      */
     Optional<DatasetVersion> getLatestVersion(UUID datasetId, String workspaceId);
 
     /**
-     * Returns only the UUID of the latest version. Uses a PK lookup on
-     * dataset_version_tags and avoids the row-numbering CTE in
-     * {@link #getLatestVersion}, so cost stays O(1) regardless of how many
-     * versions a dataset has accumulated.
+     * 仅返回最新版本的 UUID。使用 dataset_version_tags 上的主键查找，
+     * 避免了 {@link #getLatestVersion} 中的行编号 CTE，因此无论数据集累积了
+     * 多少版本，成本都保持 O(1)。
      */
     Optional<UUID> getLatestVersionId(UUID datasetId, String workspaceId);
 
     /**
-     * Gets a specific version by its ID.
+     * 按 ID 获取特定版本。
      *
-     * @param workspaceId the workspace ID
-     * @param datasetId the dataset ID
-     * @param versionId the version ID
-     * @return the version
-     * @throws NotFoundException if the version is not found
+     * @param workspaceId 工作区 ID
+     * @param datasetId 数据集 ID
+     * @param versionId 版本 ID
+     * @return 版本
+     * @throws NotFoundException 如果未找到版本
      */
     DatasetVersion getVersionById(String workspaceId, UUID datasetId, UUID versionId);
 
     /**
-     * Gets a specific version by its version name (e.g., 'v1', 'v373').
+     * 按版本名称（例如 'v1'、'v373'）获取特定版本。
      *
-     * @param datasetId the dataset ID
-     * @param versionName the version name (e.g., 'v1', 'v373')
-     * @return the version
-     * @throws NotFoundException if the version is not found
+     * @param datasetId 数据集 ID
+     * @param versionName 版本名称（例如 'v1'、'v373'）
+     * @return 版本
+     * @throws NotFoundException 如果未找到版本
      */
     DatasetVersion getVersionByName(UUID datasetId, String versionName);
 
     /**
-     * Gets multiple versions by their IDs.
+     * 按 ID 获取多个版本。
      *
-     * @param versionIds the collection of version IDs to retrieve
-     * @param workspaceId the workspace ID
-     * @return list of versions (may be empty if no versions found)
+     * @param versionIds 要检索的版本 ID 集合
+     * @param workspaceId 工作区 ID
+     * @return 版本列表（如果没有找到版本则可能为空）
      */
     List<DatasetVersion> findByIds(Collection<UUID> versionIds, String workspaceId);
 
     /**
-     * Checks if the given version ID is the latest version for the dataset.
-     * Safe to call from reactive contexts where RequestContext is not available.
+     * 检查给定版本 ID 是否是数据集的最新版本。
+     * 从 RequestContext 不可用的响应式上下文中调用是安全的。
      *
-     * @param workspaceId the workspace ID
-     * @param datasetId the dataset ID
-     * @param versionId the version ID to check
-     * @return true if versionId is the latest version, false otherwise
+     * @param workspaceId 工作区 ID
+     * @param datasetId 数据集 ID
+     * @param versionId 要检查的版本 ID
+     * @return 如果 versionId 是最新版本则为 true，否则为 false
      */
     boolean isLatestVersion(String workspaceId, UUID datasetId, UUID versionId);
 
     /**
-     * Checks if the dataset has any versions.
-     * Safe to call from reactive contexts where RequestContext is not available.
+     * 检查数据集是否有任何版本。
+     * 从 RequestContext 不可用的响应式上下文中调用是安全的。
      */
     boolean hasVersions(String workspaceId, UUID datasetId);
 
     /**
-     * Finds the most recent version for a batch group. When more than one version shares a
-     * batch_group_id (possible under concurrent writes), the newest one is returned.
-     * Used to support SDK batch operations where multiple API calls share the same batch_group_id.
+     * 查找批次组的最近版本。当多个版本共享一个
+     * batch_group_id（并发写入下可能发生）时，返回最新的那个。
+     * 用于支持多个 API 调用共享同一 batch_group_id 的 SDK 批量操作。
      *
-     * @param batchGroupId the batch group ID to search for
-     * @param datasetId the dataset ID
-     * @param workspaceId the workspace ID
-     * @return Optional containing the latest version for the batch group if found, empty otherwise
+     * @param batchGroupId 要搜索的批次组 ID
+     * @param datasetId 数据集 ID
+     * @param workspaceId 工作区 ID
+     * @return 如果找到则包含该批次组最新版本的 Optional，否则为空
      */
     Optional<DatasetVersion> findByBatchGroupId(UUID batchGroupId, UUID datasetId, String workspaceId);
 
     /**
-     * Creates a new version from the result of applying delta changes.
-     * This is called after items have been written to the versions table.
+     * 从应用增量变更的结果创建新版本。
+     * 在条目已写入版本表之后调用。
      *
-     * @param datasetId the dataset ID
-     * @param newVersionId the ID for the new version
-     * @param itemsTotal total number of items in the new version
-     * @param baseVersionId the base version ID (for diff calculation)
-     * @param tags optional tags for the new version
-     * @param changeDescription optional description of the changes
-     * @param evaluators optional default evaluators for the version
-     * @param executionPolicy optional default execution policy for the version
-     * @param batchGroupId optional batch group ID for SDK batch operations
-     * @param enforceLatestCas when {@code true} and {@code baseVersionId} is non-null, the 'latest'
-     *        tag is compare-and-swapped against {@code baseVersionId}: if a concurrent writer already
-     *        moved 'latest', this throws a retryable 409 instead of clobbering it. Pass {@code false}
-     *        to flip unconditionally — for the first version, or a caller that deliberately branches
-     *        off a non-latest base (e.g. applyDeltaChanges with override=true).
-     * @param workspaceId the workspace ID (required when called from reactive context)
-     * @param userName the user name (required when called from reactive context)
-     * @return the created version
+     * @param datasetId 数据集 ID
+     * @param newVersionId 新版本的 ID
+     * @param itemsTotal 新版本中的条目总数
+     * @param baseVersionId 基础版本 ID（用于差异计算）
+     * @param tags 新版本的可选标签
+     * @param changeDescription 变更的可选描述
+     * @param evaluators 版本的可选默认评估器
+     * @param executionPolicy 版本的可选默认执行策略
+     * @param batchGroupId SDK 批量操作的可选批次组 ID
+     * @param enforceLatestCas 当为 {@code true} 且 {@code baseVersionId} 非 null 时，'latest'
+     *        标签会针对 {@code baseVersionId} 进行 compare-and-swap：如果并发写入者已经
+     *        移动了 'latest'，则抛出可重试的 409 而不是覆盖它。传 {@code false}
+     *        则无条件翻转——用于第一个版本，或有意从非最新基础
+     *        分支出去的调用方（例如 override=true 的 applyDeltaChanges）。
+     * @param workspaceId 工作区 ID（从响应式上下文调用时必需）
+     * @param userName 用户名（从响应式上下文调用时必需）
+     * @return 创建的版本
      */
     DatasetVersion createVersionFromDelta(UUID datasetId, UUID newVersionId, int itemsTotal,
             UUID baseVersionId, List<String> tags, String changeDescription,
@@ -234,20 +233,20 @@ public interface DatasetVersionService {
             UUID batchGroupId, boolean enforceLatestCas, String workspaceId, String userName);
 
     /**
-     * Restores a dataset to a previous version state by creating a new version.
+     * 通过创建新版本将数据集恢复到之前的版本状态。
      * <p>
-     * This operation copies items directly from the source version to a new version
-     * within the versioned items table, bypassing the draft table entirely.
+     * 此操作在版本化条目表内将条目直接从源版本复制到新版本，
+     * 完全绕过草稿表。
      * <ul>
-     *   <li>If the version is the latest, returns it as-is (no-op)</li>
-     *   <li>Otherwise, creates a new version with items copied from the source version</li>
-     *   <li>Calculates diff statistics between the previous latest and the new version</li>
+     *   <li>如果该版本就是最新版本，则原样返回（no-op）</li>
+     *   <li>否则，创建新版本并从源版本复制条目</li>
+     *   <li>计算上一个最新版本与新版本之间的差异统计</li>
      * </ul>
      *
-     * @param datasetId the unique identifier of the dataset
-     * @param versionRef version hash or tag to restore from
-     * @return Mono emitting the restored version (existing if latest, new if not latest)
-     * @throws NotFoundException if the version is not found
+     * @param datasetId 数据集的唯一标识符
+     * @param versionRef 要从中恢复的版本哈希或标签
+     * @return 发出恢复版本的 Mono（如果是最新则返回现有版本，如果不是最新则返回新版本）
+     * @throws NotFoundException 如果未找到版本
      */
     Mono<DatasetVersion> restoreVersion(UUID datasetId, String versionRef);
 }
@@ -270,7 +269,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
         Preconditions.checkArgument(page >= 1, "Page must be greater than or equal to 1");
         Preconditions.checkArgument(size >= 1, "Size must be greater than or equal to 1");
 
-        log.info("Getting versions for dataset: '{}', page: '{}', size: '{}'", datasetId, page, size);
+        log.info("获取数据集 '{}' 的版本，页码 '{}'，每页大小 '{}'", datasetId, page, size);
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
@@ -287,7 +286,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
 
     private Optional<DatasetVersion> getVersionByTag(@NonNull String workspaceId, @NonNull UUID datasetId,
             @NonNull String tag) {
-        log.info("Getting version by tag for dataset: '{}', tag: '{}'", datasetId, tag);
+        log.info("按标签获取数据集 '{}' 的版本，标签 '{}'", datasetId, tag);
 
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
@@ -309,7 +308,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     @Override
     public Optional<DatasetVersion> findByBatchGroupId(@NonNull UUID batchGroupId, @NonNull UUID datasetId,
             @NonNull String workspaceId) {
-        log.info("Finding version by batch_group_id '{}' for dataset '{}'", batchGroupId, datasetId);
+        log.info("按 batch_group_id '{}' 为数据集 '{}' 查找版本", batchGroupId, datasetId);
 
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
@@ -320,7 +319,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     @Override
     public DatasetVersion getVersionById(@NonNull String workspaceId, @NonNull UUID datasetId,
             @NonNull UUID versionId) {
-        log.info("Getting version by ID '{}' for dataset '{}'", versionId, datasetId);
+        log.info("按 ID '{}' 为数据集 '{}' 获取版本", versionId, datasetId);
 
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
@@ -332,7 +331,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
 
     @Override
     public DatasetVersion getVersionByName(@NonNull UUID datasetId, @NonNull String versionName) {
-        log.info("Getting version by name '{}' for dataset '{}'", versionName, datasetId);
+        log.info("按名称 '{}' 为数据集 '{}' 获取版本", versionName, datasetId);
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
@@ -350,7 +349,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             return List.of();
         }
 
-        log.info("Finding '{}' versions by IDs", versionIds.size());
+        log.info("按 ID 查找 '{}' 个版本", versionIds.size());
 
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
@@ -381,7 +380,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             UUID batchGroupId, boolean enforceLatestCas, @NonNull String workspaceId, @NonNull String userName) {
 
         log.info(
-                "Creating version from delta for dataset '{}', newVersionId '{}', itemsTotal '{}', baseVersionId '{}', batchGroupId '{}'",
+                "从增量创建数据集 '{}' 的版本，newVersionId '{}'、itemsTotal '{}'、baseVersionId '{}'、batchGroupId '{}'",
                 datasetId, newVersionId, itemsTotal, baseVersionId, batchGroupId);
 
         String versionHash = CommitUtils.getCommit(newVersionId);
@@ -389,21 +388,21 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
         return template.inTransaction(WRITE, handle -> {
             var datasetVersionDAO = handle.attach(DatasetVersionDAO.class);
 
-            // Calculate diff statistics against the base version (if exists)
+            // 针对基础版本（如果存在）计算差异统计
             DatasetVersionDiffStats diffStats;
             if (baseVersionId != null) {
                 diffStats = calculateDiffStatistics(datasetId, baseVersionId, newVersionId,
                         workspaceId, userName);
             } else {
-                // First version - all items are "added"
+                // 第一个版本——所有条目都是“新增”
                 diffStats = new DatasetVersionDiffStats(itemsTotal, 0, 0, 0);
             }
 
-            log.info("Delta diff for dataset '{}': added='{}', modified='{}', deleted='{}', unchanged='{}'",
+            log.info("数据集 '{}' 的增量差异：added='{}'、modified='{}'、deleted='{}'、unchanged='{}'",
                     datasetId, diffStats.itemsAdded(), diffStats.itemsModified(),
                     diffStats.itemsDeleted(), diffStats.itemsUnchanged());
 
-            // Create version record
+            // 创建版本记录
             var version = DatasetVersionMapper.INSTANCE.toDatasetVersion(
                     newVersionId, datasetId, versionHash,
                     itemsTotal,
@@ -428,24 +427,24 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             }).withError(() -> new EntityAlreadyExistsException(
                     new ErrorMessage(List.of(ERROR_VERSION_HASH_EXISTS.formatted(datasetId)))));
 
-            log.info("Created version with hash '{}' for dataset '{}'", versionHash, datasetId);
+            log.info("已创建哈希为 '{}' 的版本（数据集 '{}'）", versionHash, datasetId);
 
-            // Associate batch_group_id if provided
+            // 如果提供了 batch_group_id 则关联
             if (batchGroupId != null) {
                 datasetVersionDAO.updateBatchGroupId(newVersionId, batchGroupId, workspaceId, userName);
-                log.info("Associated batch_group_id '{}' with version '{}' for dataset '{}'",
+                log.info("已将 batch_group_id '{}' 与版本 '{}' 关联（数据集 '{}'）",
                         batchGroupId, versionHash, datasetId);
             }
 
-            // Flip the 'latest' tag to the new version. Callers that branch off the current latest under
-            // a lock pass enforceLatestCas=true so the flip is compare-and-swapped against that base;
-            // callers intentionally branching off a non-latest base (applyDeltaChanges with override)
-            // pass false to opt out.
+            // 将 'latest' 标签翻转到新版本。在锁下从当前最新版本分支出去的调用方
+            // 传 enforceLatestCas=true，以便翻转针对该基础版本进行 compare-and-swap；
+            // 有意从非最新基础版本分支出去的调用方（override 的 applyDeltaChanges）
+            // 传 false 以选择退出。
             UUID casBase = enforceLatestCas ? baseVersionId : null;
             flipLatestTag(datasetVersionDAO, datasetId, newVersionId, casBase, userName, workspaceId);
-            log.info("Added '{}' tag to version '{}' for dataset '{}'", LATEST_TAG, versionHash, datasetId);
+            log.info("已将 '{}' 标签添加到版本 '{}'（数据集 '{}'）", LATEST_TAG, versionHash, datasetId);
 
-            // Add custom tags from the request
+            // 从请求添加自定义标签
             insertTags(datasetVersionDAO, datasetId, newVersionId, tags, userName, workspaceId);
 
             return datasetVersionDAO.findById(newVersionId, workspaceId).orElseThrow();
@@ -453,10 +452,10 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     }
 
     /**
-     * Inserts multiple tags for a dataset version in a single batch operation.
-     * Filters out blank tags and duplicates before insertion.
+     * 在单个批量操作中为数据集版本插入多个标签。
+     * 插入前过滤掉空白标签和重复标签。
      *
-     * @throws EntityAlreadyExistsException if any tag already exists for the dataset
+     * @throws EntityAlreadyExistsException 如果任何标签已存在于该数据集
      */
     private void insertTags(DatasetVersionDAO dao, UUID datasetId, UUID versionId,
             Collection<String> tags, String userName, String workspaceId) {
@@ -479,13 +478,13 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
         }).withError(() -> new EntityAlreadyExistsException(
                 new ErrorMessage(List.of("One or more tags already exist for this dataset"))));
 
-        log.info("Added '{}' tags to version for dataset '{}'", validTags.size(), datasetId);
+        log.info("已添加 '{}' 个标签到数据集 '{}' 的版本", validTags.size(), datasetId);
     }
 
     @Override
     public void createTag(@NonNull UUID datasetId, @NonNull String versionHash,
             @NonNull DatasetVersionTag tagRequest) {
-        log.info("Creating tag, tag='{}', version='{}', dataset='{}'", tagRequest.tag(), versionHash, datasetId);
+        log.info("创建标签，tag='{}'、version='{}'、dataset='{}'", tagRequest.tag(), versionHash, datasetId);
 
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
@@ -493,12 +492,12 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
         template.inTransaction(WRITE, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
 
-            // Find version by hash
+            // 按哈希查找版本
             var version = dao.findByHash(datasetId, versionHash, workspaceId)
                     .orElseThrow(() -> new NotFoundException(
                             ERROR_VERSION_HASH_NOT_FOUND.formatted(versionHash, datasetId)));
 
-            // Insert tag
+            // 插入标签
             EntityConstraintHandler.handle(() -> {
                 dao.insertTag(datasetId, tagRequest.tag(), version.id(), userName, workspaceId);
                 return null;
@@ -508,14 +507,14 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             return null;
         });
 
-        log.info("Created tag, tag='{}', version='{}', dataset='{}'", tagRequest.tag(), versionHash, datasetId);
+        log.info("已创建标签，tag='{}'、version='{}'、dataset='{}'", tagRequest.tag(), versionHash, datasetId);
     }
 
     @Override
     public void deleteTag(@NonNull UUID datasetId, @NonNull String tag) {
-        log.info("Deleting tag, tag='{}', dataset='{}'", tag, datasetId);
+        log.info("删除标签，tag='{}'、dataset='{}'", tag, datasetId);
 
-        // Prevent deletion of 'latest' tag - it's managed automatically
+        // 防止删除 'latest' 标签——它是自动管理的
         if (LATEST_TAG.equals(tag)) {
             throw new ClientErrorException(
                     Response.status(Response.Status.BAD_REQUEST)
@@ -532,13 +531,13 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             return null;
         });
 
-        log.info("Deleted tag, tag='{}', dataset='{}'", tag, datasetId);
+        log.info("已删除标签，tag='{}'、dataset='{}'", tag, datasetId);
     }
 
     @Override
     public DatasetVersion updateVersion(@NonNull UUID datasetId, @NonNull String versionHash,
             @NonNull DatasetVersionUpdate request) {
-        log.info("Updating version, hash='{}', dataset='{}'", versionHash, datasetId);
+        log.info("更新版本，hash='{}'、dataset='{}'", versionHash, datasetId);
 
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
@@ -546,28 +545,28 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
         return template.inTransaction(WRITE, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
 
-            // Find version by hash
+            // 按哈希查找版本
             var version = dao.findByHash(datasetId, versionHash, workspaceId)
                     .orElseThrow(() -> new NotFoundException(
                             ERROR_VERSION_HASH_NOT_FOUND.formatted(versionHash, datasetId)));
 
-            // Update change_description if provided
+            // 如果提供了 change_description 则更新
             if (request.changeDescription() != null) {
                 dao.updateChangeDescription(version.id(), request.changeDescription(), userName, workspaceId);
-                log.info("Updated change_description for version '{}' of dataset '{}'", versionHash, datasetId);
+                log.info("已更新版本 '{}' 的 change_description（数据集 '{}'）", versionHash, datasetId);
             }
 
-            // Add new tags if provided
+            // 如果提供了新标签则添加
             insertTags(dao, datasetId, version.id(), request.tagsToAdd(), userName, workspaceId);
 
-            log.info("Updated version, hash='{}', dataset='{}'", versionHash, datasetId);
+            log.info("已更新版本，hash='{}'、dataset='{}'", versionHash, datasetId);
             return dao.findById(version.id(), workspaceId).orElseThrow();
         });
     }
 
     @Override
     public UUID resolveVersionId(@NonNull String workspaceId, @NonNull UUID datasetId, @NonNull String hashOrTag) {
-        log.info("Resolving version ID, hashOrTag='{}', dataset='{}'", hashOrTag, datasetId);
+        log.info("解析版本 ID，hashOrTag='{}'、dataset='{}'", hashOrTag, datasetId);
 
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetVersionDAO.class);
@@ -583,11 +582,11 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     public DatasetVersionDiff compareVersions(@NonNull UUID datasetId, @NonNull String fromHashOrTag,
             String toHashOrTag) {
 
-        log.info("Comparing versions: from='{}', to='{}', dataset='{}'", fromHashOrTag, toHashOrTag, datasetId);
+        log.info("比较版本：from='{}'、to='{}'、dataset='{}'", fromHashOrTag, toHashOrTag, datasetId);
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        // Resolve 'from' and to 'to' version IDs
+        // 解析 'from' 和 'to' 版本 ID
         UUID fromVersionId = resolveVersionId(workspaceId, datasetId, fromHashOrTag);
         UUID toVersionId = Optional.ofNullable(toHashOrTag)
                 .map(hashOrTag -> resolveVersionId(workspaceId, datasetId, hashOrTag))
@@ -596,7 +595,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
 
         String toVersionLabel = toHashOrTag != null ? toHashOrTag : "draft";
 
-        log.info("Computed diff: from='{}', to='{}', added='{}', modified='{}', deleted='{}', unchanged='{}'",
+        log.info("已计算差异：from='{}'、to='{}'、added='{}'、modified='{}'、deleted='{}'、unchanged='{}'",
                 fromHashOrTag, toVersionLabel,
                 stats.itemsAdded(), stats.itemsModified(),
                 stats.itemsDeleted(), stats.itemsUnchanged());
@@ -638,15 +637,15 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     }
 
     /**
-     * Calculate diff statistics between two lists of items (identified by ID and hash).
-     * Compares items by itemId and detects additions, deletions, modifications, and unchanged items.
+     * 计算两个条目列表（按 ID 和哈希标识）之间的差异统计。
+     * 按 itemId 比较条目，并检测新增、删除、修改和未更改的条目。
      */
     private static DatasetVersionDiffStats calculateDiffStatistics(List<DatasetItemIdAndHash> fromItems,
             List<DatasetItemIdAndHash> toItems) {
 
-        log.debug("Calculating diff: fromItems count='{}', toItems count='{}'", fromItems.size(), toItems.size());
+        log.debug("计算差异：fromItems count='{}'、toItems count='{}'", fromItems.size(), toItems.size());
 
-        // Build maps for efficient lookup by itemId
+        // 构建映射以便按 itemId 高效查找
         var fromMap = fromItems.stream()
                 .collect(Collectors.toMap(DatasetItemIdAndHash::itemId, item -> item));
 
@@ -656,15 +655,15 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
         var fromIds = fromMap.keySet();
         var toIds = toMap.keySet();
 
-        // Calculate added items (in 'to' but not in 'from')
+        // 计算新增条目（在 'to' 中但不在 'from' 中）
         var addedIds = CollectionUtils.subtract(toIds, fromIds);
         int added = addedIds.size();
 
-        // Calculate deleted items (in 'from' but not in 'to')
+        // 计算删除条目（在 'from' 中但不在 'to' 中）
         var deletedIds = CollectionUtils.subtract(fromIds, toIds);
         int deleted = deletedIds.size();
 
-        // Calculate modified and unchanged items (items in both versions)
+        // 计算修改和未更改的条目（两个版本中都存在的条目）
         var commonIds = CollectionUtils.intersection(fromIds, toIds);
         int modified = 0;
         int unchanged = 0;
@@ -673,10 +672,10 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             var fromItem = fromMap.get(itemId);
             var toItem = toMap.get(itemId);
 
-            // Compare data hash
+            // 比较数据哈希
             boolean dataChanged = fromItem.dataHash() != toItem.dataHash();
 
-            // Compare tags as sets (order-independent)
+            // 将标签作为集合比较（顺序无关）
             boolean tagsChanged = !toTagSet(fromItem.tags()).equals(toTagSet(toItem.tags()));
 
             boolean evaluatorsChanged = fromItem.evaluatorsHash() != toItem.evaluatorsHash();
@@ -690,18 +689,18 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             }
         }
 
-        log.info("Diff calculated: added='{}', modified='{}', deleted='{}', unchanged='{}'",
+        log.info("已计算差异：added='{}'、modified='{}'、deleted='{}'、unchanged='{}'",
                 added, modified, deleted, unchanged);
 
         return new DatasetVersionDiffStats(added, modified, deleted, unchanged);
     }
 
     /**
-     * Converts a set of tags to a non-null Set for order-independent comparison.
-     * Returns an empty set if the input is null.
+     * 将标签集合转换为非 null 的 Set 以进行顺序无关的比较。
+     * 如果输入为 null，则返回空集合。
      *
-     * @param tags the tags set to convert, may be null
-     * @return a Set containing the tags, or an empty set if input is null
+     * @param tags 要转换的标签集合，可为 null
+     * @return 包含标签的 Set，如果输入为 null 则为空集合
      */
     private static Set<String> toTagSet(Set<String> tags) {
         return Optional.ofNullable(tags).orElseGet(Set::of);
@@ -709,19 +708,19 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
 
     @Override
     public Mono<DatasetVersion> restoreVersion(@NonNull UUID datasetId, @NonNull String versionRef) {
-        log.info("Restoring dataset '{}' to version '{}'", datasetId, versionRef);
+        log.info("将数据集 '{}' 恢复到版本 '{}'", datasetId, versionRef);
 
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
 
-        // Serialize restore under the same per-dataset lock as the other version-creating writers so a
-        // concurrent item write can't move 'latest' mid-restore and race the flip (OPIK-7264).
+        // 在与其他创建版本的写入者相同的按数据集锁下串行化恢复，以便
+        // 并发的条目写入不会在恢复中途移动 'latest' 并与翻转发生竞争（OPIK-7264）。
         Mono<DatasetVersion> restore = Mono
                 .fromCallable(() -> buildRestoreContext(datasetId, versionRef, workspaceId, userName))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(context -> {
                     if (context.isLatestVersion) {
-                        log.info("Version '{}' is already the latest for dataset '{}', returning as-is",
+                        log.info("版本 '{}' 已是数据集 '{}' 的最新版本，原样返回",
                                 versionRef, datasetId);
                         return Mono.just(context.sourceVersion);
                     }
@@ -752,14 +751,14 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     }
 
     private Mono<DatasetVersion> createRestoredVersion(UUID datasetId, String versionRef, RestoreContext context) {
-        log.info("Creating new version by copying items from version '{}' for dataset '{}'", versionRef, datasetId);
+        log.info("通过复制版本 '{}' 的条目为数据集 '{}' 创建新版本", versionRef, datasetId);
 
         UUID newVersionId = idGenerator.generateId();
         String newVersionHash = CommitUtils.getCommit(newVersionId);
 
         return copyItemsToNewVersion(datasetId, context, newVersionId)
                 .flatMap(copiedCount -> {
-                    log.info("Copied '{}' items from version '{}' to new version '{}' for dataset '{}'",
+                    log.info("已复制 '{}' 个条目（从版本 '{}' 到新版本 '{}'，数据集 '{}'）",
                             copiedCount, versionRef, newVersionHash, datasetId);
                     return createRestoredVersionMetadata(datasetId, versionRef, context,
                             newVersionId, newVersionHash, copiedCount.intValue());
@@ -767,7 +766,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     }
 
     private Mono<Long> copyItemsToNewVersion(UUID datasetId, RestoreContext context, UUID newVersionId) {
-        // Generate UUID pool based on source version item count
+        // 根据源版本条目数生成 UUID 池
         int sourceItemCount = context.sourceVersion.itemsTotal();
         List<UUID> uuids = generateUuidPool(idGenerator, sourceItemCount);
 
@@ -784,7 +783,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             var dao = handle.attach(DatasetVersionDAO.class);
 
             DatasetVersionDiffStats diffStats = calculateRestoreDiffStats(datasetId, context, newVersionId);
-            log.info("Restore diff for dataset '{}': added='{}', modified='{}', deleted='{}', unchanged='{}'",
+            log.info("数据集 '{}' 的恢复差异：added='{}'、modified='{}'、deleted='{}'、unchanged='{}'",
                     datasetId, diffStats.itemsAdded(), diffStats.itemsModified(),
                     diffStats.itemsDeleted(), diffStats.itemsUnchanged());
 
@@ -800,7 +799,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
 
             insertVersionAndUpdateTags(dao, datasetId, version, newVersionId, context);
 
-            log.info("Created restored version '{}' for dataset '{}'", newVersionHash, datasetId);
+            log.info("已创建恢复版本 '{}'（数据集 '{}'）", newVersionHash, datasetId);
             return dao.findById(newVersionId, context.workspaceId).orElseThrow();
         })).subscribeOn(Schedulers.boundedElastic());
     }
@@ -829,11 +828,11 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
     }
 
     /**
-     * Moves the 'latest' tag to {@code newVersionId}. When {@code casBase} is non-null, the flip is
-     * compare-and-swapped against it: the old tag is removed only if it still points at {@code casBase},
-     * otherwise a concurrent writer already moved 'latest' and we abort with a retryable 409 rather than
-     * silently clobbering their version (OPIK-7264 backstop). A null {@code casBase} flips unconditionally
-     * (first version, or a caller managing its own concurrency).
+     * 将 'latest' 标签移动到 {@code newVersionId}。当 {@code casBase} 非 null 时，翻转会
+     * 针对它进行 compare-and-swap：仅当旧标签仍指向 {@code casBase} 时才移除，
+     * 否则说明并发写入者已经移动了 'latest'，我们会以可重试的 409 中止，而不是
+     * 静默覆盖其版本（OPIK-7264 兜底）。当 {@code casBase} 为 null 时则无条件翻转
+     * （第一个版本，或自行管理并发的调用方）。
      */
     private void flipLatestTag(DatasetVersionDAO dao, UUID datasetId, UUID newVersionId, UUID casBase,
             String userName, String workspaceId) {
@@ -841,7 +840,7 @@ class DatasetVersionServiceImpl implements DatasetVersionService {
             int swapped = dao.deleteTagIfVersion(datasetId, LATEST_TAG, casBase, workspaceId);
             if (swapped != 1) {
                 log.warn(
-                        "Concurrent 'latest' move detected: CAS failed. workspaceId='{}', datasetId='{}', casBase='{}', newVersionId='{}'",
+                        "检测到并发的 'latest' 移动：CAS 失败。workspaceId='{}'、datasetId='{}'、casBase='{}'、newVersionId='{}'",
                         workspaceId, datasetId, casBase, newVersionId);
                 throw new ClientErrorException(Response.status(Response.Status.CONFLICT)
                         .entity(new ErrorMessage(List.of(ERROR_LATEST_MOVED.formatted(datasetId))))

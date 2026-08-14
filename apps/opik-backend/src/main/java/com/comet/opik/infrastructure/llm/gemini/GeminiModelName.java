@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * This information is taken from <a href="https://ai.google.dev/gemini-api/docs/models/gemini">gemini docs</a>
+ * 此信息取自 <a href="https://ai.google.dev/gemini-api/docs/models/gemini">gemini 文档</a>
  */
 @Slf4j
 @Getter
@@ -48,7 +48,7 @@ public enum GeminiModelName implements StructuredOutputSupported {
     NANO_BANANA_PRO_PREVIEW("nano-banana-pro-preview", false),
     TEXT_EMBEDDING("text-embedding-004", false);
 
-    private static final String WARNING_UNKNOWN_MODEL = "could not find GeminiModelName with value '{}'";
+    private static final String WARNING_UNKNOWN_MODEL = "无法找到值为 '{}' 的 GeminiModelName";
 
     private final String value;
     private final boolean structuredOutputSupported;

@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener {
 
-    // This event cannot depend on authentication
+    // 此事件不能依赖认证
     private final AtomicReference<Injector> injector = new AtomicReference<>();
 
     private final AtomicReference<GuiceJobManager> guiceJobManager = new AtomicReference<>();
@@ -88,9 +88,9 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         if (event instanceof InjectorPhaseEvent injectorEvent) {
             injector.set(injectorEvent.getInjector());
 
-            log.info("Installing jobs...");
+            log.info("正在安装作业...");
             guiceJobManager.set(injector.get().getInstance(GuiceJobManager.class));
-            log.info("Jobs installed.");
+            log.info("作业已安装。");
         }
     }
 
@@ -110,7 +110,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getTraceThreadConfig();
 
         if (!traceThreadConfig.isEnabled()) {
-            log.info("Trace thread closing job is disabled, skipping job setup");
+            log.info("Trace 线程关闭作业已禁用，跳过作业设置");
             return;
         }
 
@@ -123,7 +123,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getExperimentDenormalization();
 
         if (!denormConfig.isEnabled()) {
-            log.info("Experiment denormalization job is disabled, skipping job setup");
+            log.info("实验反规范化作业已禁用，跳过作业设置");
             return;
         }
 
@@ -135,7 +135,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         var webhookConfig = injector.get().getInstance(OpikConfiguration.class).getWebhook();
 
         if (webhookConfig == null || webhookConfig.getMetrics() == null) {
-            log.warn("Webhook metrics configuration not found, skipping metrics alert job setup");
+            log.warn("未找到 Webhook 指标配置，跳过指标告警作业设置");
             return;
         }
 
@@ -149,7 +149,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getProjectLastUpdatedFlush();
 
         if (!flushConfig.isEnabled() || !flushConfig.isJobEnabled()) {
-            log.info("Project last-updated flush job is disabled, skipping job setup");
+            log.info("项目最近更新刷新作业已禁用，跳过作业设置");
             return;
         }
 
@@ -169,7 +169,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getStreamConsumerReaper();
 
         if (!reaperConfig.enabled()) {
-            log.info("Stream consumer reaper job is disabled, skipping job setup");
+            log.info("流消费者回收器作业已禁用，跳过作业设置");
             return;
         }
 
@@ -183,7 +183,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getOptimizationStalledReaper();
 
         if (!reaperConfig.enabled()) {
-            log.info("Optimization stalled reaper job is disabled, skipping job setup");
+            log.info("Optimization 停滞回收器作业已禁用，跳过作业设置");
             return;
         }
 
@@ -196,7 +196,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         RetentionConfig retentionConfig = injector.get().getInstance(OpikConfiguration.class).getRetention();
 
         if (!retentionConfig.isEnabled()) {
-            log.info("Retention jobs are disabled, skipping job setup");
+            log.info("保留作业已禁用，跳过作业设置");
             return;
         }
 
@@ -208,7 +208,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
             scheduleRepeatingJob(RetentionCatchUpJob.class,
                     retentionConfig.getCatchUp().getCatchUpInterval(), null);
         } else {
-            log.info("Retention catch-up jobs are disabled, skipping estimation and catch-up job setup");
+            log.info("保留追补作业已禁用，跳过估算和追补作业设置");
         }
     }
 
@@ -217,7 +217,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getPartitionMetrics();
 
         if (!partitionMetricsConfig.isEnabled()) {
-            log.info("ClickHouse partition metrics job is disabled, skipping job setup");
+            log.info("ClickHouse 分区指标作业已禁用，跳过作业设置");
             return;
         }
 
@@ -229,7 +229,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         var serviceToggles = injector.get().getInstance(OpikConfiguration.class).getServiceToggles();
 
         if (!serviceToggles.isOllieEnabled()) {
-            log.info("Agent Insights is disabled, skipping report job setup");
+            log.info("Agent Insights 已禁用，跳过报告作业设置");
             return;
         }
 
@@ -252,9 +252,9 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
             var scheduler = getScheduler();
             scheduler.addJob(jobDetail, false);
             scheduler.scheduleJob(trigger);
-            log.info("'{}' scheduled successfully with cron '{}'", jobClass.getSimpleName(), cronExpression);
+            log.info("'{}' 已使用 cron '{}' 成功调度", jobClass.getSimpleName(), cronExpression);
         } catch (SchedulerException e) {
-            log.error("Failed to schedule '{}'", jobClass.getSimpleName(), e);
+            log.error("调度 '{}' 失败", jobClass.getSimpleName(), e);
         }
     }
 
@@ -281,9 +281,9 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
             var scheduler = getScheduler();
             scheduler.addJob(jobDetail, false);
             scheduler.scheduleJob(triggerBuilder.build());
-            log.info("'{}' scheduled successfully with interval '{}'", jobClass.getSimpleName(), interval);
+            log.info("'{}' 已使用间隔 '{}' 成功调度", jobClass.getSimpleName(), interval);
         } catch (SchedulerException e) {
-            log.error("Failed to schedule '{}'", jobClass.getSimpleName(), e);
+            log.error("调度 '{}' 失败", jobClass.getSimpleName(), e);
         }
     }
 
@@ -294,14 +294,14 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
             var scheduler = getScheduler();
             var trigger = TriggerBuilder.newTrigger().startNow().forJob(key).build();
             scheduler.scheduleJob(trigger);
-            log.info("Daily usage report enabled, running job during startup.");
+            log.info("每日用量报告已启用，在启动期间运行作业。");
         } catch (SchedulerException e) {
-            log.error("Failed to schedule job '{}'", key, e);
+            log.error("调度作业 '{}' 失败", key, e);
         }
     }
 
     private void disableJob() {
-        log.info("Daily usage report disabled, unregistering job.");
+        log.info("每日用量报告已禁用，正在注销作业。");
 
         var scheduler = getScheduler();
 
@@ -310,12 +310,12 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         try {
             if (scheduler.checkExists(jobKey)) {
                 var deleted = scheduler.deleteJob(jobKey);
-                log.info("Job '{}' unregistered. Deleted: {}", jobKey, deleted);
+                log.info("作业 '{}' 已注销。已删除: {}", jobKey, deleted);
             } else {
-                log.info("Job '{}' not found.", jobKey);
+                log.info("作业 '{}' 未找到。", jobKey);
             }
         } catch (SchedulerException e) {
-            log.error("Failed to unregister job '{}'", jobKey, e);
+            log.error("注销作业 '{}' 失败", jobKey, e);
         }
     }
 
@@ -326,26 +326,26 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
     private void shutdownJobManagerScheduler() {
         var jobManager = guiceJobManager.get();
         if (jobManager == null) {
-            log.info("GuiceJobManager instance already cleared, nothing to shutdown");
+            log.info("GuiceJobManager 实例已清空，无需关闭");
             return;
         }
         var scheduler = jobManager.getScheduler();
         try {
-            log.info("Attempting to delete all jobs from the scheduler...");
+            log.info("正在尝试从调度器中删除所有作业...");
             scheduler.deleteJobs(scheduler.getJobKeys(GroupMatcher.anyGroup()).stream().toList());
-            log.info("Jobs deleted");
+            log.info("作业已删除");
         } catch (SchedulerException exception) {
-            log.warn("Error deleting jobs during scheduler shutdown", exception);
+            log.warn("调度器关闭期间删除作业出错", exception);
         }
         try {
-            log.info("Attempting scheduler shutdown...");
-            scheduler.shutdown(false); // Don't wait for jobs to complete
-            log.info("Scheduler shutdown completed");
+            log.info("正在尝试关闭调度器...");
+            scheduler.shutdown(false); // 不等待作业完成
+            log.info("调度器关闭完成");
         } catch (SchedulerException exception) {
-            log.warn("Error shutting down scheduler", exception);
+            log.warn("关闭调度器出错", exception);
         }
         guiceJobManager.set(null);
-        log.info("Cleared GuiceJobManager instance");
+        log.info("已清空 GuiceJobManager 实例");
     }
 
     private void setLlmModelRegistryRefreshJob() {
@@ -353,7 +353,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 .getLlmModelRegistry();
 
         if (!registryConfig.isRemoteEnabled()) {
-            log.info("LLM model registry remote refresh is disabled, skipping job setup");
+            log.info("LLM 模型注册表远程刷新已禁用，跳过作业设置");
             return;
         }
 
@@ -362,18 +362,18 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
     }
 
     /**
-     * Schedules the dataset version items_total migration job if enabled.
+     * 如果启用，则调度数据集版本 items_total 迁移作业。
      * <p>
-     * This is a one-time migration job that runs after application startup with a configurable delay.
-     * The job calculates and updates the items_total field for dataset versions created by
-     * Liquibase migrations. After successful completion, disable the job by setting
-     * {@code datasetVersioningMigration.itemsTotalEnabled: false} in the configuration.
+     * 这是一个在应用启动后以可配置延迟运行的一次性迁移作业。
+     * 该作业会计算并更新由 Liquibase 迁移创建的数据集版本的 items_total 字段。
+     * 成功完成后，通过在配置中设置
+     * {@code datasetVersioningMigration.itemsTotalEnabled: false} 来禁用该作业。
      */
     private void scheduleDatasetVersionItemsTotalMigrationJobIfEnabled() {
         var config = injector.get().getInstance(OpikConfiguration.class).getDatasetVersioningMigration();
 
         if (config == null || !config.isItemsTotalEnabled()) {
-            log.info("Dataset version items_total migration job is disabled");
+            log.info("数据集版本 items_total 迁移作业已禁用");
             return;
         }
 
@@ -384,7 +384,7 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                     .storeDurably()
                     .build();
 
-            // Schedule job to run once after startup delay
+            // 调度作业在启动延迟后运行一次
             var trigger = TriggerBuilder.newTrigger()
                     .forJob(jobDetail)
                     .startAt(java.util.Date.from(java.time.Instant.now().plus(startupDelay)))
@@ -394,14 +394,14 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
             scheduler.addJob(jobDetail, false);
             scheduler.scheduleJob(trigger);
 
-            log.info("Dataset version items_total migration job scheduled successfully with startup delay of '{}'",
+            log.info("数据集版本 items_total 迁移作业已使用启动延迟 '{}' 成功调度",
                     startupDelay);
-            log.info("The job will run once. After successful completion, disable it by setting " +
-                    "datasetVersioningMigration.itemsTotalEnabled: false");
+            log.info("该作业将运行一次。成功完成后，通过设置 " +
+                    "datasetVersioningMigration.itemsTotalEnabled: false 来禁用它");
         } catch (SchedulerException e) {
-            log.error("Failed to schedule dataset version items_total migration job", e);
+            log.error("调度数据集版本 items_total 迁移作业失败", e);
         } catch (Exception e) {
-            log.error("Unexpected error setting up dataset version items_total migration job", e);
+            log.error("设置数据集版本 items_total 迁移作业时发生意外错误", e);
         }
     }
 

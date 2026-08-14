@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
 import java.util.List;
 
 /**
- * Mapping rules for GenAI integration.
+ * GenAI 集成的映射规则。
  */
 @UtilityClass
 public final class GenAIMappingRules {
@@ -63,9 +63,8 @@ public final class GenAIMappingRules {
             OpenTelemetryMappingRule.builder()
                     .rule("gen_ai.cost.").isPrefix(true).source(SOURCE)
                     .outcome(OpenTelemetryMappingRule.Outcome.METADATA).spanType(SpanType.llm).build(),
-            // Tool call arguments/result carry the tool span's input/output. They must be
-            // matched before the broad `gen_ai.tool.` prefix below, otherwise that prefix
-            // would bucket them into METADATA and the tool span would lose input/output.
+            // 工具调用的参数/结果携带工具 span 的输入/输出。它们必须在下方的宽泛 `gen_ai.tool.` 前缀之前匹配，
+            // 否则该前缀会把它们归入 METADATA，工具 span 就会丢失输入/输出。
             OpenTelemetryMappingRule.builder()
                     .rule("gen_ai.tool.call.arguments").source(SOURCE)
                     .outcome(OpenTelemetryMappingRule.Outcome.INPUT)

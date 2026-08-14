@@ -26,9 +26,9 @@ import java.util.Set;
 public class MustacheParser implements TemplateParser {
 
     /**
-     * Renders values as written: every consumer feeds an LLM, and escaping a substituted trace input hid its
-     * JSON structure from the judge (OPIK-7354). Escaping also mangled {@code =} and backticks, not just
-     * quotes. Matches the frontend preview and {@link PythonTemplateParser}, which never escaped.
+     * 按原样渲染值：每个消费者都会把内容喂给 LLM，而对替换后的 trace 输入进行转义会向评判模型隐藏其 JSON 结构
+     * （OPIK-7354）。转义还会弄乱 {@code =} 和反引号，而不仅仅是引号。这与前端预览以及从不转义的
+     * {@link PythonTemplateParser} 保持一致。
      */
     private static final MustacheFactory MF = new DefaultMustacheFactory() {
         @Override
@@ -50,17 +50,17 @@ public class MustacheParser implements TemplateParser {
         }
 
         try {
-            // Initialize Mustache Factory
+            // 初始化 Mustache 工厂
             Mustache mustache = MF.compile(new StringReader(template), "template");
 
-            // Get the root node of the template
+            // 获取模板的根节点
             Code[] codes = mustache.getCodes();
             collectVariables(codes, variables);
 
             return variables;
         } catch (MustacheException | IllegalArgumentException ex) {
-            log.warn("Failed to parse Mustache template for variable extraction", ex);
-            return variables; // Return empty set when parsing fails
+            log.warn("解析 Mustache 模板以提取变量失败", ex);
+            return variables; // 解析失败时返回空集
         }
     }
 
@@ -74,7 +74,7 @@ public class MustacheParser implements TemplateParser {
             Mustache mustache = MF.compile(new StringReader(template), "template");
             return renderTemplate(context, mustache);
         } catch (MustacheException ex) {
-            log.error("Failed to parse Mustache template for rendering:", ex);
+            log.error("解析 Mustache 模板以进行渲染失败:", ex);
             throw new IllegalArgumentException("Invalid Mustache template", ex);
         }
     }

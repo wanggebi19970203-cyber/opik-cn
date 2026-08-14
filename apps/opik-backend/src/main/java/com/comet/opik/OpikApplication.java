@@ -115,13 +115,13 @@ public class OpikApplication extends Application<OpikConfiguration> {
     public void run(OpikConfiguration configuration, Environment environment) {
         EncryptionUtils.setConfig(configuration);
 
-        // Resources
+        // 资源
         var jersey = environment.jersey();
 
-        // Configure ObjectMapper with standard settings
+        // 使用标准设置配置 ObjectMapper
         environment.getObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        // Naming strategy, this is the default for all objects serving as a fallback.
-        // However, it does not apply to OpenAPI documentation.
+        // 命名策略，这是所有对象的默认回退策略。
+        // 但它不适用于 OpenAPI 文档。
         environment.getObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SnakeCaseStrategy.INSTANCE);
         environment.getObjectMapper().configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         environment.getObjectMapper().configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false);
@@ -135,8 +135,8 @@ public class OpikApplication extends Application<OpikConfiguration> {
         int maxStringLength = configuration.getJacksonConfig().getMaxStringLength();
         long maxDocumentLength = configuration.getJacksonConfig().getMaxDocumentLength();
 
-        // Apply the same stream-read limits to both the HTTP (Dropwizard) and internal (JsonUtils) mappers,
-        // so an oversized batch aborts mid-parse before a huge node tree is built.
+        // 将相同的流读取限制同时应用于 HTTP（Dropwizard）和内部（JsonUtils）映射器，
+        // 以便超大的批次在构建庞大的节点树之前就在解析中途中止。
         JsonUtils.applyStreamReadConstraints(environment.getObjectMapper(), maxStringLength, maxDocumentLength);
         JsonUtils.configure(maxStringLength, maxDocumentLength);
 

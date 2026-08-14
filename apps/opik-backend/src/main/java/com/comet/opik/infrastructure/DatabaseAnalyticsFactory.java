@@ -29,8 +29,8 @@ public class DatabaseAnalyticsFactory {
     private static final String ASYNC_INSERT_MAX_DATA_SIZE = "async_insert_max_data_size";
     private static final String KEY_VALUE_FORMAT = "%s=%s";
 
-    // Split each `&`/`,`-chunk on the FIRST `=` only — values may themselves contain `=`,
-    // e.g. `custom_http_params=max_query_size=100000000,async_insert=1`.
+    // 只按第一个 `=` 拆分每个 `&`/`,` 分块——值本身可能包含 `=`，
+    // 例如 `custom_http_params=max_query_size=100000000,async_insert=1`。
     private static final Splitter KV_SPLITTER = Splitter.on('=').trimResults().limit(2);
     private static final Splitter.MapSplitter TOP_LEVEL_SPLITTER = Splitter.on('&')
             .trimResults().omitEmptyStrings().withKeyValueSeparator(KV_SPLITTER);
@@ -46,41 +46,39 @@ public class DatabaseAnalyticsFactory {
     private String queryParameters;
 
     /**
-     * Optional override (ms) for {@code async_insert_busy_timeout_max_ms}. When set it is applied to the
-     * {@code custom_http_params} chain — overriding a present value, or added when absent; when unset the
-     * {@code queryParameters} / ClickHouse-server value is left untouched. With
-     * {@code async_insert_use_adaptive_busy_timeout=1} this is the ceiling of the adaptive buffer window.
+     * {@code async_insert_busy_timeout_max_ms} 的可选覆盖值（毫秒）。设置后会应用到 {@code custom_http_params}
+     * 链——覆盖已有值，或在缺失时添加；未设置时 {@code queryParameters} / ClickHouse 服务端的值保持不变。
+     * 在 {@code async_insert_use_adaptive_busy_timeout=1} 时，这是自适应缓冲窗口的上限。
      */
     private @Min(1) Integer asyncInsertBusyTimeoutMaxMs;
 
     /**
-     * Optional override (ms) for {@code async_insert_busy_timeout_min_ms} — the floor of the adaptive buffer window.
-     * Same semantics as {@link #asyncInsertBusyTimeoutMaxMs}.
+     * {@code async_insert_busy_timeout_min_ms} 的可选覆盖值（毫秒）——自适应缓冲窗口的下限。
+     * 语义与 {@link #asyncInsertBusyTimeoutMaxMs} 相同。
      */
     private @Min(1) Integer asyncInsertBusyTimeoutMinMs;
 
     /**
-     * Optional override (bytes) for {@code async_insert_max_data_size} — the buffered size that forces an async-insert
-     * flush. Same semantics as {@link #asyncInsertBusyTimeoutMaxMs}. Larger values yield fewer, larger parts under high
-     * ingestion at the cost of more buffer memory.
+     * {@code async_insert_max_data_size} 的可选覆盖值（字节）——触发异步插入刷新的缓冲大小。
+     * 语义与 {@link #asyncInsertBusyTimeoutMaxMs} 相同。更大的值在高吞吐摄入下会产生更少、更大的分区，
+     * 代价是占用更多缓冲内存。
      */
     private @Min(1) Long asyncInsertMaxDataSize;
 
     private Duration healthCheckTimeout = Duration.seconds(1);
 
-    // Optional socket timeout, applied in buildClient() only when set (null = library default of 0/no timeout).
+    // 可选的套接字超时，仅在设置时于 buildClient() 中应用（null = 库默认值 0/无超时）。
     private Duration clientSocketTimeout;
 
     /**
-     * Gates the {@code clickhouse-cluster} health check. Off for single-shard / non-Distributed
-     * deployments; on only for the Distributed (Hyperscale) topology where the cluster definition
-     * must be visible from every node.
+     * 控制 {@code clickhouse-cluster} 健康检查。单分片 / 非 Distributed 部署时关闭；
+     * 仅对 Distributed（Hyperscale）拓扑打开，因为该拓扑下集群定义必须对每个节点可见。
      */
     private boolean clusterHealthCheckEnabled;
 
     /**
-     * Gates the {@code clickhouse-cold-storage-disk} health check. Off for deployments without tier
-     * storage (OSS Docker); on only once the {@code cold_s3} S3 disk is activated.
+     * 控制 {@code clickhouse-cold-storage-disk} 健康检查。没有分层存储的部署（OSS Docker）时关闭；
+     * 仅在 {@code cold_s3} S3 磁盘激活后打开。
      */
     private boolean coldStorageDiskHealthCheckEnabled;
 
@@ -92,20 +90,17 @@ public class DatabaseAnalyticsFactory {
     }
 
     /**
-     * Builds the ClickHouse V2 HTTP {@link Client} used by bulk-insert paths
-     * (see {@code ExperimentAggregatesDAO.insertExperimentItemAggregates}).
+     * 构建批量插入路径使用的 ClickHouse V2 HTTP {@link Client}
+     * （参见 {@code ExperimentAggregatesDAO.insertExperimentItemAggregates}）。
      *
-     * <p>Credentials, host, port, database and {@code queryParameters} mirror {@link #build()}
-     * so the two clients share a single source of truth. Connection pool, timeouts and other
-     * driver-level behavior are intentionally left at library defaults unless explicitly set
-     * via {@code queryParameters} (e.g. {@code compress=1}, {@code health_check_interval=2000}).
+     * <p>凭据、主机、端口、数据库和 {@code queryParameters} 与 {@link #build()} 保持一致，
+     * 使两个客户端共享单一事实来源。连接池、超时和其他驱动级行为有意保持库默认值，除非通过
+     * {@code queryParameters} 显式设置（例如 {@code compress=1}、{@code health_check_interval=2000}）。
      *
-     * <p>{@code queryParameters} parsing: top-level {@code &}-separated keys are applied as
-     * driver options via {@link Client.Builder#setOption(String, String)}; the
-     * {@code custom_http_params} value is a comma-separated list of ClickHouse server settings,
-     * applied via {@link Client.Builder#serverSetting(String, String)}. This matches the
-     * R2DBC convention where the top-level holds driver flags and {@code custom_http_params}
-     * carries the server-side {@code SETTINGS ...} payload.
+     * <p>{@code queryParameters} 解析：顶层的 {@code &} 分隔键通过
+     * {@link Client.Builder#setOption(String, String)} 应用为驱动选项；{@code custom_http_params} 的值是
+     * 逗号分隔的 ClickHouse 服务端设置列表，通过 {@link Client.Builder#serverSetting(String, String)} 应用。
+     * 这与 R2DBC 约定一致：顶层持有驱动标志，{@code custom_http_params} 携带服务端 {@code SETTINGS ...} 负载。
      */
     public Client buildClient() {
         var builder = new Client.Builder()
@@ -115,17 +110,15 @@ public class DatabaseAnalyticsFactory {
                 .setDefaultDatabase(databaseName)
                 .compressClientRequest(true)
                 .compressServerResponse(true)
-                // Truly non-blocking: without this, Client.query() runs the HTTP round-trip
-                // synchronously on the calling thread and returns an already-completed future,
-                // defeating Mono.fromFuture(). With async on, work runs on the v2 client's
-                // executor and the future genuinely defers until the response is back.
+                // 真正的非阻塞：没有它，Client.query() 会在调用线程上同步执行 HTTP 往返并返回一个已完成的
+                // future，使 Mono.fromFuture() 失去意义。开启 async 后，工作运行在 v2 客户端的执行器上，
+                // future 会真正延迟到响应返回。
                 .useAsyncRequests(true);
 
-        // Only server settings (custom_http_params content) are forwarded to the v2 client.
-        // Top-level driver options (compress=1, health_check_interval, auto_discovery, failover)
-        // are R2DBC-specific and do not translate to the v2 driver surface; connection pool,
-        // timeouts and compression are owned by the v2 Client.Builder methods above. Values
-        // are still returned by parseQueryParameters() for tests/observability.
+        // 只有服务端设置（custom_http_params 的内容）会被转发给 v2 客户端。
+        // 顶层驱动选项（compress=1、health_check_interval、auto_discovery、failover）
+        // 是 R2DBC 特有的，无法对应到 v2 驱动接口；连接池、超时和压缩由上面的 v2 Client.Builder 方法负责。
+        // parseQueryParameters() 仍会返回值，供测试/可观测性使用。
         var parsed = parseQueryParameters(getQueryParametersOverrides(queryParameters));
         parsed.serverSettings().forEach(builder::serverSetting);
 
@@ -137,9 +130,9 @@ public class DatabaseAnalyticsFactory {
     }
 
     /**
-     * Returns {@code queryParameters} with every set {@link #configurableServerSettings() override} applied to
-     * {@code custom_http_params} — overriding a present value, or added when absent (including when
-     * {@code queryParameters} is blank). Returned unchanged when no override field is set.
+     * 返回已应用每个已设置的 {@link #configurableServerSettings()} 覆盖值的 {@code queryParameters}，
+     * 应用到 {@code custom_http_params}——覆盖已有值，或在缺失时添加（包括 {@code queryParameters} 为空白时）。
+     * 未设置任何覆盖字段时原样返回。
      */
     private String getQueryParametersOverrides(String queryParameters) {
         var overrides = configurableServerSettings();
@@ -153,9 +146,9 @@ public class DatabaseAnalyticsFactory {
     }
 
     /**
-     * Server settings from dedicated config fields, included when the field is set. Each is applied to
-     * {@code custom_http_params} by {@link #getQueryParametersOverrides(String)} — overriding a present value, or
-     * added when absent — so an unset field leaves the {@code queryParameters} / ClickHouse-server value untouched.
+     * 来自专用配置字段的服务端设置，字段已设置时才包含。每个都由
+     * {@link #getQueryParametersOverrides(String)} 应用到 {@code custom_http_params}——覆盖已有值，或在缺失时
+     * 添加——因此未设置的字段会让 {@code queryParameters} / ClickHouse 服务端的值保持不变。
      */
     private Map<String, String> configurableServerSettings() {
         var overrides = new LinkedHashMap<String, String>();
@@ -193,13 +186,12 @@ public class DatabaseAnalyticsFactory {
     }
 
     /**
-     * Split a {@code queryParameters} string into two maps:
+     * 把一个 {@code queryParameters} 字符串拆分为两个映射：
      * <ul>
-     *   <li>{@code driverOptions} — top-level {@code &}-separated entries, intended for
-     *       {@link Client.Builder#setOption(String, String)}.</li>
-     *   <li>{@code serverSettings} — contents of {@code custom_http_params=...}, which is a
-     *       comma-separated list of ClickHouse server settings (destined for
-     *       {@link Client.Builder#serverSetting(String, String)}).</li>
+     *   <li>{@code driverOptions} — 顶层 {@code &} 分隔条目，用于
+     *       {@link Client.Builder#setOption(String, String)}。</li>
+     *   <li>{@code serverSettings} — {@code custom_http_params=...} 的内容，即逗号分隔的
+     *       ClickHouse 服务端设置列表（用于 {@link Client.Builder#serverSetting(String, String)}）。</li>
      * </ul>
      */
     static ParsedQueryParameters parseQueryParameters(String queryParameters) {

@@ -25,10 +25,10 @@ public sealed interface AutomationRule permits AutomationRuleEvaluator {
 
     UUID getId();
 
-    // Dual-field architecture for backward compatibility
-    UUID getProjectId(); // Legacy - derived from first project
-    String getProjectName(); // Legacy - derived from first project
-    SortedSet<ProjectReference> getProjects(); // Primary field (unique, sorted alphabetically by name)
+    // 双字段架构，用于向后兼容
+    UUID getProjectId(); // 遗留字段 - 从第一个项目派生
+    String getProjectName(); // 遗留字段 - 从第一个项目派生
+    SortedSet<ProjectReference> getProjects(); // 主字段（唯一，按名称字母顺序排序）
 
     String getName();
 

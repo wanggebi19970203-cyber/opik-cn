@@ -1,22 +1,22 @@
 import { detectMimeType, fileExtensionForMimeType } from "./mimeTypes";
 
 /**
- * Client-side base64 attachment extraction (parity with the Python SDK, OPIK-7335 family).
+ * 客户端 base64 附件提取（与 Python SDK 保持一致，属于 OPIK-7335 系列）。
  *
- * Large inline base64 blobs (e.g. images) in a span/trace's `input`/`output`/`metadata`
- * bloat the payload and can trip the per-object size cap. This walks those fields, replaces
- * each recognized blob with a compact `[<context>-attachment-...-sdk.<ext>]` placeholder,
- * and returns the decoded bytes so the caller can upload them as real attachments. Running
- * this BEFORE the size measurement is what lets images bypass the cap.
+ * span/trace 的 `input`/`output`/`metadata` 中较大的内联 base64 数据块（例如图片）
+ * 会使载荷膨胀，并可能触发每个对象的大小上限。此函数遍历这些字段，将每个
+ * 识别出的数据块替换为紧凑的 `[<context>-attachment-...-sdk.<ext>]` 占位符，
+ * 并返回解码后的字节，以便调用方将其作为真正的附件上传。在大小测量之前
+ * 运行此逻辑，正是让图片绕过大小上限的关键。
  *
- * Blobs are found with a manual single-pass character scan (see `extractFromString`), NOT a
- * regex. V8's regex engine throws `RangeError: Maximum call stack size exceeded` on a multi-MB
- * contiguous base64 run — an unbounded quantifier over the base64 alphabet backtracks into the
- * call stack — which silently skips extraction for exactly the large-media case this targets
- * (reproduced: an inline image >= ~4 MB base64 crashed the old regex). A linear scan is O(n) and
- * cannot overflow the stack.
+ * 数据块通过手动的单遍字符扫描（参见 `extractFromString`）来查找，而不是
+ * 正则表达式。V8 的正则引擎会对数 MB 的连续 base64 串抛出
+ * `RangeError: Maximum call stack size exceeded`——对 base64 字符集的无界量词会回溯到
+ * 调用栈中——这会静默地跳过提取，而这种情况恰好正是本功能所针对的大媒体场景
+ * （已复现：内联图片 >= ~4 MB base64 会导致旧的正则崩溃）。线性扫描的复杂度为 O(n)，
+ * 不会溢出栈。
  *
- * Pure and non-mutating: returns the same reference when nothing was extracted.
+ * 纯函数且不产生变更：未提取任何内容时返回相同的引用。
  */
 
 const FIELDS = ["input", "output", "metadata"] as const;
@@ -43,11 +43,11 @@ const createAttachmentFileName = (
   return `${context}-attachment-${random}-${Date.now()}-sdk.${extension}`;
 };
 
-// Decode a scanned run. URL-safe base64 (`-`/`_` instead of `+`/`/`, emitted by e.g. google.genai)
-// is normalized to the standard alphabet first — Node's base64 decoder silently drops `-`/`_`,
-// which would corrupt the bytes and truncate the blob at the first such char (parity with the
-// Python SDK's base64_normalizer, OPIK-6387). The run is otherwise valid base64 by construction, so
-// Buffer.from never throws; an empty decode means "not a real blob".
+// 解码扫描到的一段字符。URL 安全的 base64（用 `-`/`_` 代替 `+`/`/`，例如 google.genai 会发出这种）
+// 会先被规范化为标准字符集——Node 的 base64 解码器会静默地丢弃 `-`/`_`，
+// 这会在第一个此类字符处损坏字节并截断数据块（与
+// Python SDK 的 base64_normalizer 保持一致，OPIK-6387）。这段字符按构造来说本身是合法的 base64，
+// 因此 Buffer.from 永远不会抛出异常；解码结果为空意味着“不是真正的数据块”。
 const decodeBase64 = (base64: string): Buffer | null => {
   const normalized =
     base64.includes("-") || base64.includes("_")
@@ -63,15 +63,15 @@ const isBase64Char = (code: number): boolean =>
   (code >= 48 && code <= 57) || // 0-9
   code === 43 || // +
   code === 47 || // /
-  code === 45 || // - (URL-safe base64 alias for +, e.g. google.genai — OPIK-6387)
-  code === 95; // _ (URL-safe base64 alias for /)
+  code === 45 || // - （+ 的 URL 安全 base64 别名，例如 google.genai — OPIK-6387）
+  code === 95; // _ （/ 的 URL 安全 base64 别名）
 const EQUALS = 61; // '='
 
-// An optional `data:<mime>;base64,` prefix immediately before a run is absorbed so the whole URI
-// is replaced, not just the base64 body. We search back to the actual `data:` (a long mime/params
-// header can exceed any fixed window — sdks/typescript/AGENTS.md forbids a fixed-size look-back) and
-// confirm the slice is a real prefix with a tiny anchored regex. `:` is not a base64 char, so any
-// `data:` we find lies outside the run, and the `;base64,$` anchor rejects a spurious `data:`.
+// 紧邻一段字符之前的可选 `data:<mime>;base64,` 前缀会被一并吸收，以便替换整个 URI，
+// 而不仅仅是 base64 主体。我们回退搜索到真正的 `data:`（较长的 mime/参数
+// 头可能超过任何固定窗口——sdks/typescript/AGENTS.md 禁止固定长度的回看），并
+// 用一个小的锚定正则确认该片段确实是前缀。`:` 不是 base64 字符，因此我们找到的任何
+// `data:` 都位于该段字符之外，而 `;base64,$` 锚点会拒绝伪造的 `data:`。
 const DATA_URI_PREFIX_RE = /data:[^,]*;base64,$/;
 
 const extractFromString = (
@@ -80,8 +80,8 @@ const extractFromString = (
   attachments: ExtractedAttachment[],
   minChars: number,
 ): string => {
-  // A blob can't be a match if the whole string is shorter than the minimum (parity with
-  // the Python SDK), and skipping short strings up front avoids scanning ordinary text.
+  // 如果整个字符串比最小长度还短，就不可能是匹配的数据块（与
+  // Python SDK 保持一致），提前跳过短字符串可避免扫描普通文本。
   if (value.length < minChars) {
     return value;
   }
@@ -96,7 +96,7 @@ const extractFromString = (
       i++;
       continue;
     }
-    // Consume a maximal run of base64 chars, then up to two '=' padding chars.
+    // 消费一段最大长度的 base64 字符，然后是至多两个 '=' 填充字符。
     let end = i;
     while (end < n && isBase64Char(value.charCodeAt(end))) {
       end++;
@@ -111,9 +111,9 @@ const extractFromString = (
     if (runLength >= minChars) {
       const decoded = decodeBase64(value.slice(i, end));
       const mimeType = decoded ? detectMimeType(decoded) : null;
-      // Leave unrecognized blobs (plain base64, unknown types) inline, like the Python SDK.
+      // 像 Python SDK 一样，将未识别的数据块（纯 base64、未知类型）保留为内联。
       if (decoded && mimeType) {
-        // Absorb a preceding `data:<mime>;base64,` prefix so the whole URI is replaced.
+        // 吸收前面的 `data:<mime>;base64,` 前缀，以便替换整个 URI。
         let replaceStart = i;
         const dataStart = value.lastIndexOf("data:", i);
         if (dataStart >= 0 && DATA_URI_PREFIX_RE.test(value.slice(dataStart, i))) {
@@ -137,8 +137,8 @@ const extractFromString = (
   return parts.join("");
 };
 
-// `seen` guards against circular references: a payload with a cycle would otherwise recurse
-// forever. An already-visited object/array is returned unchanged (nothing to extract there).
+// `seen` 用于防止循环引用：如果载荷中存在环，否则会无限递归。
+// 已访问过的对象/数组会原样返回（其中没有可提取的内容）。
 const walk = (
   value: unknown,
   context: Field,
@@ -176,16 +176,16 @@ const walk = (
 };
 
 /**
- * Walk `input`/`output`/`metadata`, replacing base64 blobs at least `minSizeBytes` long
- * with placeholders. Returns a shallow copy with the replacements applied (or the original
- * reference if nothing was extracted) plus the list of decoded attachments.
+ * 遍历 `input`/`output`/`metadata`，将至少 `minSizeBytes` 长的 base64 数据块
+ * 替换为占位符。返回应用了替换的浅拷贝（若未提取任何内容则返回原始
+ * 引用），以及解码后的附件列表。
  */
 export const extractInlineAttachments = <T extends AttachmentSource>(
   payload: T,
   minSizeBytes: number,
 ): { result: T; attachments: ExtractedAttachment[] } => {
-  // Threshold on base64 character length: 4 base64 chars encode 3 bytes, and the Python SDK
-  // gates on `floor(minSizeBytes / 4)` groups of 4 — mirror that (rounded to a whole group).
+  // 基于 base64 字符长度的阈值：4 个 base64 字符编码 3 个字节，Python SDK
+  // 以 `floor(minSizeBytes / 4)` 组（每组 4 个）为门槛——与此保持一致（向上取整到整组）。
   const minChars = Math.max(4, Math.floor(minSizeBytes / 4) * 4);
 
   const attachments: ExtractedAttachment[] = [];
@@ -195,7 +195,7 @@ export const extractInlineAttachments = <T extends AttachmentSource>(
     if (original == null) {
       continue;
     }
-    // A fresh `seen` per field: the guard is only for cycles within one field's own graph.
+    // 每个字段使用新的 `seen`：该防护仅用于单个字段自身图内的环。
     const walked = walk(original, field, attachments, minChars, new WeakSet());
     if (walked !== original) {
       overrides[field] = walked;

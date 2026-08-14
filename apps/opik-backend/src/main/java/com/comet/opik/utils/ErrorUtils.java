@@ -14,11 +14,11 @@ import java.util.UUID;
 public class ErrorUtils {
 
     /**
-     * Returns true when the throwable is ClickHouse rejecting a malformed JSON path with a
-     * BAD_ARGUMENTS "Unable to parse JSONPath" error. Callers treat this as an empty result rather
-     * than surfacing a 500. The surrounding wording varies across ClickHouse versions (e.g.
-     * "JSONPath. (BAD_ARGUMENTS)" vs "JSONPath: In scope ... (BAD_ARGUMENTS)"), so this matches on
-     * the stable substrings instead of an exact phrase.
+     * 当 throwable 是 ClickHouse 以 BAD_ARGUMENTS "Unable to parse JSONPath" 错误
+     * 拒绝畸形的 JSON 路径时返回 true。调用方把它视为空结果，而不是
+     * 暴露 500。周围的措辞因 ClickHouse 版本而异（例如
+     * "JSONPath. (BAD_ARGUMENTS)" 对比 "JSONPath: In scope ... (BAD_ARGUMENTS)"），因此这里
+     * 匹配稳定的子串而不是精确短语。
      */
     public static boolean isMalformedJsonPath(Throwable e) {
         return e instanceof ClickHouseException && e.getMessage() != null
@@ -27,17 +27,17 @@ public class ErrorUtils {
     }
 
     /**
-     * Recovers a read whose filter carried a JSON path ClickHouse could not parse, yielding
-     * {@code defaultValue} rather than surfacing a 500. ClickHouse rejects such a path while it
-     * analyses the query, so the failure arrives before any row is read and says nothing about the
-     * data; an empty result is the honest answer. Every other error is propagated untouched.
+     * 恢复一次其过滤器携带了 ClickHouse 无法解析的 JSON 路径的读取，产出
+     * {@code defaultValue} 而不是暴露 500。ClickHouse 在分析查询时会拒绝这样的路径，
+     * 因此失败在任何行被读取之前就到达，与数据无关；
+     * 空结果才是诚实的答案。所有其他错误都原样传播。
      * <p>
-     * Filter keys are built to be parseable in the first place, so this only catches an expression a
-     * caller authored that survives construction but the server still refuses.
+     * 过滤器键本来就被构建为可解析的，因此这里只捕获调用方编写的、
+     * 通过构建但在服务器端仍被拒绝的表达式。
      */
     public static <T> Mono<T> handleMalformedJsonPath(@NonNull Throwable e, @NonNull T defaultValue) {
         if (isMalformedJsonPath(e)) {
-            log.info("Filter used a JSON path ClickHouse cannot parse, returning an empty result");
+            log.info("过滤器使用了 ClickHouse 无法解析的 JSON 路径，返回空结果");
             return Mono.just(defaultValue);
         }
         return Mono.error(e);

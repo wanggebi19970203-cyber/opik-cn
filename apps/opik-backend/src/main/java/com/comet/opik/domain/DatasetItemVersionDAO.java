@@ -75,14 +75,14 @@ public interface DatasetItemVersionDAO {
     Mono<DatasetItemPage> getItems(DatasetItemSearchCriteria searchCriteria, int page, int size, UUID versionId);
 
     /**
-     * Get dataset items with their associated experiment items.
-     * This method joins dataset items with experiment items, traces, feedback scores, and comments.
+     * 获取数据集条目及其关联的实验条目。
+     * 此方法将数据集条目与实验条目、trace、反馈评分和评论进行连接。
      *
-     * @param searchCriteria the search criteria including experiment IDs
-     * @param page the page number
-     * @param size the page size
-     * @param versionId the dataset version ID
-     * @return a Mono containing the page of dataset items with experiment items
+     * @param searchCriteria 包含实验 ID 的搜索条件
+     * @param page 页码
+     * @param size 每页大小
+     * @param versionId 数据集版本 ID
+     * @return 包含带实验条目的数据集条目分页的 Mono
      */
     Mono<DatasetItemPage> getItemsWithExperimentItems(DatasetItemSearchCriteria searchCriteria, int page, int size,
             String versionId);
@@ -100,60 +100,60 @@ public interface DatasetItemVersionDAO {
     Flux<DatasetItemIdAndHash> getItemIdsAndHashes(UUID datasetId, UUID versionId);
 
     /**
-     * Counts how many of {@code itemIds} already exist in the given version.
+     * 统计 {@code itemIds} 中有多少个已经存在于给定版本中。
      * <p>
-     * Bounded alternative to {@link #getItemIdsAndHashes(UUID, UUID)} for the insert path, which only needs
-     * to classify an incoming batch as new vs. updated and does not need the hashes. Rows read scale with
-     * the batch size instead of the version size.
+     * 用于插入路径的 {@link #getItemIdsAndHashes(UUID, UUID)} 的有界替代方案，插入路径只需要
+     * 将传入批次分类为新增 vs. 已更新，而无需哈希。读取的行数随
+     * 批次大小增长，而不是随版本大小增长。
      *
-     * @param itemIds the stable ids to look up; should be deduplicated by the caller. Null or empty
-     *                yields {@code 0} without querying.
-     * @return the number of distinct {@code itemIds} present in the version
+     * @param itemIds 要查找的稳定 ID；应由调用方去重。为 null 或空时
+     *                不查询直接返回 {@code 0}。
+     * @return 版本中存在的不同 {@code itemIds} 数量
      */
     Mono<Long> countExistingItemIds(UUID datasetId, UUID versionId, Set<UUID> itemIds);
 
     /**
-     * Copies items from a source version to a new target version directly within dataset_item_versions.
-     * Each copied item gets a new UUIDv7 but retains the same dataset_item_id.
+     * 直接在 dataset_item_versions 内将条目从源版本复制到新的目标版本。
+     * 每个复制的条目获得一个新的 UUIDv7，但保留相同的 dataset_item_id。
      * <p>
-     * Optionally excludes items matching filters (items matching filters will NOT be copied).
-     * If excludeFilters is null or empty, all items are copied.
+     * 可选地排除匹配过滤器的条目（匹配过滤器的条目将不会被复制）。
+     * 如果 excludeFilters 为 null 或空，则复制所有条目。
      *
-     * @param datasetId the dataset ID
-     * @param sourceDatasetId the source dataset to copy rows from (typically equals targetDatasetId;
-     *                        OPIK-6696 allows them to differ when the caller wants to read carry-forward
-     *                        rows from a stable upstream dataset to avoid multi-replica read-after-write)
-     * @param sourceVersionId the source version to copy from
-     * @param targetDatasetId the destination dataset (inserted rows carry this dataset_id, not source's)
-     * @param targetVersionId the new version ID to copy to
-     * @param excludeFilters optional filters to exclude items (null or empty = copy all)
-     * @param uuids pre-generated UUIDv7 pool for the new item IDs (should be at least 2x expected item count)
-     * @return the number of items copied
+     * @param datasetId 数据集 ID
+     * @param sourceDatasetId 要从中复制行的源数据集（通常等于 targetDatasetId；
+     *                        OPIK-6696 允许它们不同，当调用方希望从稳定的上游数据集读取
+     *                        结转行以避免多副本的读后写时）
+     * @param sourceVersionId 要从中复制的源版本
+     * @param targetDatasetId 目标数据集（插入的行携带此 dataset_id，而非源数据集的）
+     * @param targetVersionId 要复制到的新版本 ID
+     * @param excludeFilters 可选的要排除条目的过滤器（null 或空 = 复制全部）
+     * @param uuids 为新条目 ID 预生成的 UUIDv7 池（至少应为预期条目数的 2 倍）
+     * @return 复制的条目数量
      */
     Mono<Long> copyVersionItems(UUID sourceDatasetId, UUID sourceVersionId,
             UUID targetDatasetId, UUID targetVersionId,
             List<DatasetItemFilter> excludeFilters, List<UUID> uuids);
 
     /**
-     * Apply delta changes to create a new dataset version.
-     * Added and edited items should already have their row IDs (id field) set.
-     * Unchanged items will be copied with UUIDs from unchangedUuids.
+     * 应用增量变更以创建新的数据集版本。
+     * 新增和已编辑的条目应已设置其行 ID（id 字段）。
+     * 未更改的条目将使用 unchangedUuids 中的 UUID 复制。
      *
-     * @param datasetId         Dataset ID
-     * @param datasetId         Dataset whose versions are being mutated (destination)
-     * @param newVersionId      New version ID to create
-     * @param addedItems        Items to add (with id already set)
-     * @param editedItems       Items to edit (with id already set)
-     * @param deletedIds        Stable dataset_item_ids to delete
-     * @param unchangedUuids    UUIDs to assign to unchanged items (pre-generated in correct order)
-     * @param additionalExcludeIds  Extra stable IDs to exclude from the copy (callers that ran a separate
-     *                              edit/insert step pass those IDs here)
-     * @param copyFromDatasetId Dataset to read carry-forward rows from. OPIK-6696: when this differs
-     *                          from {@code datasetId}, the COPY reads from a (typically stable) source
-     *                          version instead of the destination's just-minted prior version,
-     *                          avoiding the multi-replica read-after-write window.
-     * @param copyFromVersionId Version within {@code copyFromDatasetId} to read carry-forward rows from
-     * @return Number of items in the new version
+     * @param datasetId         数据集 ID
+     * @param datasetId         其版本正在被变更的数据集（目标）
+     * @param newVersionId      要创建的新版本 ID
+     * @param addedItems        要添加的条目（id 已设置）
+     * @param editedItems       要编辑的条目（id 已设置）
+     * @param deletedIds        要删除的稳定 dataset_item_ids
+     * @param unchangedUuids    要分配给未更改条目的 UUID（按正确顺序预生成）
+     * @param additionalExcludeIds  要从复制中排除的额外稳定 ID（运行了单独
+     *                              编辑/插入步骤的调用方将这些 ID 传到这里）
+     * @param copyFromDatasetId 要从中读取结转行的数据集。OPIK-6696：当它与
+     *                          {@code datasetId} 不同时，COPY 从（通常是稳定的）源
+     *                          版本读取，而不是从目标刚刚创建的前一个版本读取，
+     *                          从而避免多副本的读后写窗口。
+     * @param copyFromVersionId {@code copyFromDatasetId} 中要从中读取结转行的版本
+     * @return 新版本中的条目数量
      */
     Mono<Long> applyDelta(UUID datasetId, UUID newVersionId,
             List<DatasetItem> addedItems, List<DatasetItem> editedItems, Set<UUID> deletedIds,
@@ -161,124 +161,124 @@ public interface DatasetItemVersionDAO {
             UUID copyFromDatasetId, UUID copyFromVersionId);
 
     /**
-     * Edit items via INSERT...SELECT. Reads each item's base row from
-     * {@code (sourceDatasetId, sourceVersionId)} and inserts the edited row into
-     * {@code (targetDatasetId, newVersionId)}. OPIK-6696: source coords may point at a stable
-     * upstream version to avoid the destination's read-after-write window.
+     * 通过 INSERT...SELECT 编辑条目。从
+     * {@code (sourceDatasetId, sourceVersionId)} 读取每个条目的基础行，并将编辑后的行插入
+     * {@code (targetDatasetId, newVersionId)}。OPIK-6696：源坐标可以指向稳定的
+     * 上游版本，以避免目标的读后写窗口。
      */
     Mono<Long> editItemsViaSelectInsert(UUID sourceDatasetId, UUID sourceVersionId,
             UUID targetDatasetId, UUID newVersionId,
             List<DatasetItemEdit> editedItems, List<UUID> newRowIds);
 
     /**
-     * Applies batch updates to items from a base version, creating updated copies in a new version.
-     * This is an efficient database-side operation using INSERT ... SELECT with conditional updates.
+     * 对基础版本中的条目应用批量更新，在新版本中创建更新后的副本。
+     * 这是一个高效的数据库端操作，使用带条件更新的 INSERT ... SELECT。
      * <p>
-     * Supports both ID-based updates (via batchUpdate.ids()) and filter-based updates (via batchUpdate.filters()).
-     * Only non-null fields in the update are applied.
+     * 既支持基于 ID 的更新（通过 batchUpdate.ids()），也支持基于过滤器的更新（通过 batchUpdate.filters()）。
+     * 更新中仅应用非 null 字段。
      *
-     * @param datasetId the dataset ID
-     * @param baseVersionId the base version to copy from
-     * @param newVersionId the new version to insert into
-     * @param batchUpdate the batch update containing either IDs or filters and the update to apply
-     * @param uuids pre-generated UUIDv7 pool for new row IDs
-     * @return the number of items updated
+     * @param datasetId 数据集 ID
+     * @param baseVersionId 要从中复制的基础版本
+     * @param newVersionId 要插入到的新版本
+     * @param batchUpdate 包含 ID 或过滤器以及要应用的更新的批量更新
+     * @param uuids 为新行 ID 预生成的 UUIDv7 池
+     * @return 更新的条目数量
      */
     Mono<Long> batchUpdateItems(UUID datasetId, UUID baseVersionId, UUID newVersionId,
             DatasetItemBatchUpdate batchUpdate, List<UUID> uuids);
 
     /**
-     * Inserts items directly into a new version without copying from any base version.
+     * 直接将条目插入新版本，不从任何基础版本复制。
      * <p>
-     * For items passed to this method:
-     * - Use {@code datasetItemId} field as the stable ID (maintained across versions)
-     * - The {@code id} field is ignored (row IDs are generated internally)
+     * 对于传入此方法的条目：
+     * - 使用 {@code datasetItemId} 字段作为稳定 ID（跨版本维护）
+     * - {@code id} 字段被忽略（行 ID 在内部生成）
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID to insert into
-     * @param items the items to insert
-     * @param workspaceId the workspace ID
-     * @param userName the username
-     * @return the number of items inserted
+     * @param datasetId 数据集 ID
+     * @param versionId 要插入到的版本 ID
+     * @param items 要插入的条目
+     * @param workspaceId 工作区 ID
+     * @param userName 用户名
+     * @return 插入的条目数量
      */
     Mono<Long> insertItems(UUID datasetId, UUID versionId, List<DatasetItem> items,
             String workspaceId, String userName);
 
     /**
-     * Removes items from an existing version in ClickHouse.
-     * This is used for batch delete operations where multiple batches share the same batch_group_id.
+     * 从 ClickHouse 中现有版本移除条目。
+     * 用于多个批次共享同一 batch_group_id 的批量删除操作。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID to remove items from
-     * @param itemIds the set of dataset_item_id values to remove
-     * @param workspaceId the workspace ID
-     * @return the number of items removed
+     * @param datasetId 数据集 ID
+     * @param versionId 要从中移除条目的版本 ID
+     * @param itemIds 要移除的 dataset_item_id 值集合
+     * @param workspaceId 工作区 ID
+     * @return 移除的条目数量
      */
     Mono<Long> removeItemsFromVersion(UUID datasetId, UUID versionId, Set<UUID> itemIds, String workspaceId);
 
     /**
-     * Removes items from an existing version in ClickHouse based on filters.
-     * This is used for filter-based delete operations where items matching the filters should be removed.
-     * Null or empty filter list means "delete all" (no filters = match everything).
+     * 基于过滤器从 ClickHouse 中现有版本移除条目。
+     * 用于基于过滤器的删除操作，其中匹配过滤器的条目应被移除。
+     * null 或空过滤器列表表示“全部删除”（无过滤器 = 匹配所有）。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID to remove items from
-     * @param filters the filters to match items to remove (null or empty = delete all)
-     * @param workspaceId the workspace ID
-     * @return the number of items removed
+     * @param datasetId 数据集 ID
+     * @param versionId 要从中移除条目的版本 ID
+     * @param filters 要匹配以移除条目的过滤器（null 或空 = 删除全部）
+     * @param workspaceId 工作区 ID
+     * @return 移除的条目数量
      */
     Mono<Long> removeItemsFromVersionByFilters(UUID datasetId, UUID versionId, List<DatasetItemFilter> filters,
             String workspaceId);
 
     /**
-     * Resolves which dataset contains the given item by looking across all versions.
-     * This is used for initial lookup when only the item ID is known.
-     * Note: This method queries across versions to find which dataset contains the item.
-     * It's only used for dataset resolution - actual data retrieval should use version-specific methods.
+     * 通过查找所有版本来解析哪个数据集包含给定条目。
+     * 用于只知道条目 ID 时的初始查找。
+     * 注意：此方法跨版本查询以找出哪个数据集包含该条目。
+     * 它仅用于数据集解析——实际数据检索应使用版本特定的方法。
      *
-     * @param datasetItemId the stable item ID (dataset_item_id)
-     * @return Mono emitting the dataset ID, or empty if item not found
+     * @param datasetItemId 稳定条目 ID（dataset_item_id）
+     * @return 发出数据集 ID 的 Mono，若未找到条目则为空
      */
     Mono<UUID> resolveDatasetIdFromItemId(UUID datasetItemId);
 
     /**
-     * Resolves the dataset ID from a set of dataset_item_ids in a single query.
-     * Returns the first valid dataset ID found.
-     * This is more efficient than calling resolveDatasetIdFromItemId multiple times.
+     * 在单个查询中从一组 dataset_item_ids 解析数据集 ID。
+     * 返回找到的第一个有效数据集 ID。
+     * 这比多次调用 resolveDatasetIdFromItemId 更高效。
      *
-     * @param datasetItemIds the set of stable item IDs (dataset_item_ids)
-     * @return Mono emitting the list of distinct dataset IDs found, or empty list if none exist
+     * @param datasetItemIds 稳定条目 ID 集合（dataset_item_ids）
+     * @return 发出找到的不同数据集 ID 列表的 Mono，若不存在则为空列表
      */
     Mono<List<UUID>> resolveDatasetIdsFromItemIds(Set<UUID> datasetItemIds);
 
     /**
-     * Gets an item by its dataset_item_id from a specific version.
+     * 从特定版本按其 dataset_item_id 获取条目。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID to retrieve the item from
-     * @param datasetItemId the stable item ID (dataset_item_id)
-     * @return Mono emitting the DatasetItem, or empty if not found
+     * @param datasetId 数据集 ID
+     * @param versionId 要从中检索条目的版本 ID
+     * @param datasetItemId 稳定条目 ID（dataset_item_id）
+     * @return 发出 DatasetItem 的 Mono，若未找到则为空
      */
     Mono<DatasetItem> getItemByDatasetItemId(UUID datasetId, UUID versionId, UUID datasetItemId);
 
     /**
-     * Gets an item by its ID (id field).
-     * This is used when the frontend sends the ID from the API response.
+     * 按其 ID（id 字段）获取条目。
+     * 当前端发送来自 API 响应的 ID 时使用。
      *
-     * @param id the item ID (id field value)
-     * @return Mono emitting the DatasetItem, or empty if not found
+     * @param id 条目 ID（id 字段值）
+     * @return 发出 DatasetItem 的 Mono，若未找到则为空
      */
     Mono<DatasetItem> getItemById(UUID id);
 
     Mono<DatasetItem> getItemById(UUID id, UUID datasetVersionId);
 
     /**
-     * Gets workspace IDs for stable dataset item IDs (dataset_item_id field from dataset_item_versions).
-     * Used for validating that dataset items belong to the correct workspace.
-     * Intentionally unscoped by workspace so cross-workspace items return their true workspace_id.
+     * 获取稳定数据集条目 ID（dataset_item_versions 的 dataset_item_id 字段）的工作区 ID。
+     * 用于验证数据集条目属于正确的工作区。
+     * 有意地不按工作区限定作用域，以便跨工作区条目返回其真实 workspace_id。
      *
-     * @param datasetItemIds the stable dataset_item_id values
-     * @return Mono emitting a list of workspace and resource ID pairs
+     * @param datasetItemIds 稳定 dataset_item_id 值
+     * @return 发出工作区与资源 ID 对列表的 Mono
      */
     Mono<List<WorkspaceAndResourceId>> getDatasetItemWorkspace(Set<UUID> datasetItemIds);
 
@@ -289,64 +289,63 @@ public interface DatasetItemVersionDAO {
             Set<UUID> datasetVersionIds);
 
     /**
-     * Soft deletes all items from a specific dataset version.
+     * 软删除特定数据集版本中的所有条目。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID
-     * @param workspaceId the workspace ID
-     * @return Mono emitting the number of deleted rows
+     * @param datasetId 数据集 ID
+     * @param versionId 版本 ID
+     * @param workspaceId 工作区 ID
+     * @return 发出已删除行数的 Mono
      */
     Mono<Long> deleteItemsFromVersion(UUID datasetId, UUID versionId, String workspaceId);
 
     /**
-     * Copies all items from legacy dataset_items table to dataset_item_versions for a specific dataset.
-     * Preserves all original timestamps and user information.
+     * 将指定数据集的所有条目从旧版 dataset_items 表复制到 dataset_item_versions。
+     * 保留所有原始时间戳和用户信息。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID (should equal datasetId for version 1)
-     * @param workspaceId the workspace ID
-     * @return Mono emitting the number of copied rows
+     * @param datasetId 数据集 ID
+     * @param versionId 版本 ID（对于版本 1 应等于 datasetId）
+     * @param workspaceId 工作区 ID
+     * @return 发出已复制行数的 Mono
      */
     Mono<Long> copyItemsFromLegacy(UUID datasetId, UUID versionId, String workspaceId);
 
     /**
-     * Counts items in a specific dataset version.
+     * 统计特定数据集版本中的条目。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the version ID
-     * @param workspaceId the workspace ID
-     * @return Mono emitting the count of items
+     * @param datasetId 数据集 ID
+     * @param versionId 版本 ID
+     * @param workspaceId 工作区 ID
+     * @return 发出条目计数的 Mono
      */
     Mono<Long> countItemsInVersion(UUID datasetId, UUID versionId, String workspaceId);
 
     /**
-     * Counts distinct {@code dataset_item_id}s in a version after applying the same exclusion
-     * semantics used by the copy-from-base path: exclude a set of stable item IDs and/or exclude
-     * rows matching a set of filters.
+     * 在应用与从基础版本复制路径相同的排除语义后，统计版本中不同的
+     * {@code dataset_item_id}：排除一组稳定条目 ID 和/或排除
+     * 匹配一组过滤器的行。
      *
-     * <p>Source of truth for sizing the UUID pool passed into {@link #copyVersionItems} and
-     * {@link #applyDelta}. Replaces the previous reliance on the MySQL-stored {@code items_total},
-     * which can drift away from the actual ClickHouse row count and silently truncate copies
-     * (OPIK-6390).
+     * <p>这是传给 {@link #copyVersionItems} 和 {@link #applyDelta} 的 UUID 池大小的事实来源。
+     * 取代了之前依赖 MySQL 存储的 {@code items_total}，后者可能偏离
+     * 实际的 ClickHouse 行数并静默截断复制（OPIK-6390）。
      *
-     * @param datasetId the dataset ID
-     * @param versionId the source version ID
-     * @param excludedIds stable {@code dataset_item_id}s to exclude (deletes + edits); may be empty
-     * @param excludeFilters filters whose matching rows should be excluded; may be null/empty
-     * @param workspaceId the workspace ID
-     * @return Mono emitting the count of rows that would be copied
+     * @param datasetId 数据集 ID
+     * @param versionId 源版本 ID
+     * @param excludedIds 要排除的稳定 {@code dataset_item_id}（删除 + 编辑）；可为空
+     * @param excludeFilters 匹配行应被排除的过滤器；可为 null/空
+     * @param workspaceId 工作区 ID
+     * @return 发出将被复制的行数的 Mono
      */
     Mono<Long> countRowsInVersion(UUID datasetId, UUID versionId, Set<UUID> excludedIds,
             List<DatasetItemFilter> excludeFilters, String workspaceId);
 
     /**
-     * Counts items for multiple dataset versions in a single query.
-     * This is used for batch migration of items_total field.
-     * Uses workspace_id, dataset_id, and dataset_version_id to optimize the query
-     * according to the table's ordering key: (workspace_id, dataset_id, dataset_version_id, id).
+     * 在单个查询中统计多个数据集版本的条目。
+     * 用于 items_total 字段的批量迁移。
+     * 使用 workspace_id、dataset_id 和 dataset_version_id 根据表的排序键
+     * (workspace_id, dataset_id, dataset_version_id, id) 优化查询。
      *
-     * @param versions list of version info (workspace_id, dataset_id, version_id) to count items for
-     * @return Flux emitting item counts for each version
+     * @param versions 要统计条目的版本信息列表（workspace_id、dataset_id、version_id）
+     * @return 发出每个版本条目计数的 Flux
      */
     Flux<DatasetVersionItemsCount> countItemsInVersionsBatch(List<DatasetVersionInfo> versions);
 
@@ -396,13 +395,13 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             """;
 
     /**
-     * Counts how many of the given stable ids already exist in a version.
+     * 统计给定稳定 ID 中有多少个已经存在于版本中。
      * <p>
-     * The first three predicates are a prefix of the table's ordering key
-     * {@code (workspace_id, dataset_id, dataset_version_id, id)}, narrowing to the version's granules;
-     * {@code dataset_item_id} is not in the sort key and is instead served by the bloom-filter and
-     * minmax skip indexes added in migration {@code 000074}. This keeps rows read bounded by the
-     * incoming batch rather than by the size of the version being written to.
+     * 前三个谓词是表排序键 {@code (workspace_id, dataset_id, dataset_version_id, id)}
+     * 的前缀，将范围缩小到该版本的 granule；
+     * {@code dataset_item_id} 不在排序键中，而是由迁移 {@code 000074} 中添加的
+     * bloom-filter 和 minmax 跳过索引来服务。这使读取的行数
+     * 受传入批次限制，而不是受正在写入的版本大小限制。
      */
     private static final String COUNT_EXISTING_ITEM_IDS = """
             SELECT count(DISTINCT dataset_item_id) AS count
@@ -473,9 +472,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
               <if(dataset_item_filters)>AND (<dataset_item_filters>)<endif>
             """;
 
-    // OPIK-6390: count distinct stable items that would be copied from a source version after
-    // applying the same exclusion semantics as COPY_VERSION_ITEMS. Used to size the UUID pool
-    // from the actual ClickHouse row count rather than the (drift-prone) MySQL items_total.
+    // OPIK-6390：统计在应用与 COPY_VERSION_ITEMS 相同的排除语义后
+    // 将从源版本复制的不同稳定条目数。用于从实际的 ClickHouse 行数
+    // 而非（易漂移的）MySQL items_total 来确定 UUID 池的大小。
     private static final String COUNT_ROWS_IN_VERSION = """
             SELECT count(DISTINCT dataset_item_id) as count
             FROM dataset_item_versions
@@ -488,15 +487,14 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             """;
 
     /**
-     * Counts dataset items with experiment items. The {@code slim_count} branch routes the count
-     * through {@code experiment_item_aggregates}; the legacy branch keeps the full CTE chain for
-     * search and raw-only inputs. OPIK-6177 stable-id resolution shape is preserved in both.
+     * 统计带实验条目的数据集条目。{@code slim_count} 分支将计数
+     * 路由经过 {@code experiment_item_aggregates}；旧版分支为搜索和仅 raw 的输入保留完整的 CTE 链。
+     * 两者都保留了 OPIK-6177 稳定 ID 解析的形态。
      *
-     * <p>The slim branch's {@code dataset_items_filtered_ids} CTE mirrors the one in
-     * {@link #SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS}'s {@code push_top_limit} branch,
-     * minus the {@code dataset_version_id} predicate (the slim path doesn't have
-     * {@code experiment_aggregated_scope_ids} in scope). Keep the column list and dataset scoping
-     * aligned across both call sites.
+     * <p>slim 分支的 {@code dataset_items_filtered_ids} CTE 与
+     * {@link #SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS} 的 {@code push_top_limit} 分支中的对应 CTE
+     * 相同，只是少了 {@code dataset_version_id} 谓词（slim 路径的作用域中没有
+     * {@code experiment_aggregated_scope_ids}）。请保持两处调用点的列列表和数据集作用域对齐。
      */
     private static final String SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS_COUNT = """
             <if(slim_count)>
@@ -860,7 +858,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             <endif>
             """;
 
-    // Query to extract columns from trace output for experiment items view
+    // 从 trace 输出中提取实验条目视图列的查询
     private static final String SELECT_EXPERIMENT_ITEMS_OUTPUT_COLUMNS = """
             WITH experiments_resolved AS (
                 SELECT DISTINCT
@@ -898,7 +896,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             )
             """;
 
-    // Query to get target project_ids from traces for experiment items (executed separately to reduce table scans)
+    // 从 trace 中获取实验条目目标 project_ids 的查询（单独执行以减少表扫描）
     private static final String SELECT_TARGET_PROJECTS = """
             WITH experiments_scope AS (
                 SELECT id
@@ -925,49 +923,49 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             """;
 
     /**
-     * Fetch versioned dataset items with their associated experiment items.
+     * 获取版本化数据集条目及其关联的实验条目。
      *
-     * <p><b>OPIK-6177 stable-id resolution.</b> {@code experiment_items_scope} LEFT JOINs
-     * {@code dataset_item_versions} on {@code lookup_div.id = ei.dataset_item_id} to project a
-     * {@code stable_dataset_item_id}. This resolves legacy rows (pre-OPIK-4518 BE cutover) where
-     * {@code ei.dataset_item_id} was a per-version {@code dataset_item_versions.id}; for modern
-     * rows it is already the stable id and the JOIN misses, falling back via
-     * {@code if(notEmpty(...))} to the raw value.
+     * <p><b>OPIK-6177 稳定 ID 解析。</b>{@code experiment_items_scope} 在
+     * {@code lookup_div.id = ei.dataset_item_id} 上 LEFT JOIN
+     * {@code dataset_item_versions} 以投影出一个
+     * {@code stable_dataset_item_id}。这解决了旧版行（OPIK-4518 BE 切换之前）中
+     * {@code ei.dataset_item_id} 是按版本的 {@code dataset_item_versions.id} 的问题；对于现代
+     * 行，它已经是稳定 ID，JOIN 会缺失，通过
+     * {@code if(notEmpty(...))} 回退到原始值。
      *
-     * <p>The JOIN uses the direct {@code dataset_item_versions} table — NOT a CTE-based lookup.
-     * A CTE-based LEFT JOIN drops rows in deletion-cascade scenarios in ClickHouse (known
-     * analyzer behavior; direct table reference works correctly).
+     * <p>JOIN 直接使用 {@code dataset_item_versions} 表——而不是基于 CTE 的查找。
+     * 在 ClickHouse 中，基于 CTE 的 LEFT JOIN 会在删除级联场景中丢失行（已知的
+     * 分析器行为；直接表引用可正确工作）。
      *
-     * <p><b>{@code lookup_for_count} CTE.</b> Used by the aggregated branch (count +
-     * row {@code !push_top_limit}) to build a skip-index-friendly IN list when DI filters are
-     * active: it narrows by {@code <dataset_item_filters>} first, then INNER JOINs
-     * {@code dataset_item_versions FINAL} on {@code div.dataset_item_id = latest_passing.id}
-     * and emits {@code arrayJoin([div.id, latest_passing.id])} so the IN list covers every
-     * version's {@code row_id} (legacy EIA referencing an older version's {@code row_id})
-     * plus the stable id. The {@code dataset_item_id}-narrowed inner-join lets the
-     * {@code bloom_filter} skip index on
-     * {@code idx_experiment_item_aggregates_dataset_item_id} prune as in #6567. The
-     * {@code push_top_limit} branch doesn't use this CTE — it filters via
-     * {@code top_dataset_items} (already stable-id-resolved through {@code lookup_div}).
+     * <p><b>{@code lookup_for_count} CTE。</b>由聚合分支（count +
+     * 行 {@code !push_top_limit}）在 DI 过滤器活跃时使用，用于构建对跳过索引友好的 IN 列表：
+     * 它先按 {@code <dataset_item_filters>} 缩小范围，然后 INNER JOIN
+     * {@code dataset_item_versions FINAL}，条件为 {@code div.dataset_item_id = latest_passing.id}，
+     * 并发出 {@code arrayJoin([div.id, latest_passing.id])}，使 IN 列表覆盖每个
+     * 版本的 {@code row_id}（引用旧版本 {@code row_id} 的旧版 EIA）
+     * 加上稳定 ID。按 {@code dataset_item_id} 缩小的内连接使得
+     * {@code idx_experiment_item_aggregates_dataset_item_id} 上的
+     * {@code bloom_filter} 跳过索引能像 #6567 那样剪枝。
+     * {@code push_top_limit} 分支不使用此 CTE——它通过
+     * {@code top_dataset_items}（已通过 {@code lookup_div} 完成稳定 ID 解析）来过滤。
      *
-     * <p><b>{@code FINAL} on {@code dataset_item_versions} reads is load-bearing.</b> The
-     * table is a {@code ReplicatedReplacingMergeTree} ordered by
-     * {@code (workspace_id, dataset_id, dataset_version_id, id)} with {@code last_updated_at}
-     * as the version column. The upsert flow (PUT {@code /datasets/items} →
-     * {@code BATCH_INSERT_ITEMS}) re-INSERTs the same {@code (ws, ds, dvid, id)} tuple when a
-     * client PUTs the same item ids twice with changed {@code data} / {@code description} /
-     * {@code tags} / {@code evaluators} / {@code execution_policy} (the endpoint contract
-     * says: "Each item's id is the stable identifier and upsert key"). Pre-merge duplicates
-     * are routine; {@code FINAL} is required so reads see only the latest row per PK.
-     * Subqueries that already do {@code LIMIT 1 BY dataset_item_id ORDER BY dvid DESC,
-     * last_updated_at DESC} dedupe at read time and don't need {@code FINAL} on the inner
-     * scan.
+     * <p><b>{@code dataset_item_versions} 读取上的 {@code FINAL} 是承重关键。</b>
+     * 该表是一个 {@code ReplicatedReplacingMergeTree}，按
+     * {@code (workspace_id, dataset_id, dataset_version_id, id)} 排序，以 {@code last_updated_at}
+     * 作为版本列。upsert 流程（PUT {@code /datasets/items} →
+     * {@code BATCH_INSERT_ITEMS}）在客户端用变化的 {@code data} / {@code description} /
+     * {@code tags} / {@code evaluators} / {@code execution_policy} 两次 PUT 相同的条目 ID 时，
+     * 会重新 INSERT 相同的 {@code (ws, ds, dvid, id)} 元组（端点契约
+     * 规定：“每个条目的 id 是稳定标识符和 upsert 键”）。合并前的重复
+     * 是常态；需要 {@code FINAL} 才能让读取只看到每个 PK 的最新行。
+     * 已经执行 {@code LIMIT 1 BY dataset_item_id ORDER BY dvid DESC,
+     * last_updated_at DESC} 的子查询会在读取时去重，因此内部
+     * 扫描不需要 {@code FINAL}。
      *
-     * <p>The outer SELECT over the aggregated/raw UNION dedupes across branches so a stable
-     * id that appears in both branches yields one row with a flattened
-     * {@code experiment_items_array}. The {@code argMax} tiebreaker on
-     * {@code dataset_version_id} matches single-branch's "latest version wins" semantic
-     * ({@code dataset_items_(aggr_)resolved} orders by {@code dataset_version_id} DESC).
+     * <p>聚合/raw UNION 上的外层 SELECT 跨分支去重，因此一个出现在两个分支中的
+     * 稳定 ID 会产生一行带有扁平化 {@code experiment_items_array} 的结果。
+     * {@code dataset_version_id} 上的 {@code argMax} 决胜规则与单分支的
+     * “最新版本胜出”语义一致（{@code dataset_items_(aggr_)resolved} 按 {@code dataset_version_id} DESC 排序）。
      */
     private static final String SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS = """
             WITH experiment_aggregated_scope_ids AS (
@@ -1758,7 +1756,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             ;
             """;
 
-    // Batch insert items
+    // 批量插入条目
     private static final String BATCH_INSERT_ITEMS = """
             INSERT INTO dataset_item_versions (
                 id,
@@ -1812,9 +1810,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                 }>
             """;
 
-    // Batch update items using INSERT ... SELECT with conditional field updates
-    // Similar to legacy table's bulk update but for versioned items
-    // Supports both ID-based and filter-based updates
+    // 使用带条件字段更新的 INSERT ... SELECT 批量更新条目
+    // 类似旧版表的批量更新，但针对版本化条目
+    // 同时支持基于 ID 和基于过滤器的更新
     private static final String BATCH_UPDATE_ITEMS = """
             INSERT INTO dataset_item_versions (
                 id,
@@ -1884,9 +1882,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     SETTINGS short_circuit_function_evaluation = 'force_enable'
                     """;
 
-    // OPIK-6696: the inserted rows carry :targetDatasetId, not the source's dataset_id. This supports
-    // cross-dataset edit-via-SELECT-INSERT where the read source (:sourceDatasetId) differs from the
-    // destination dataset.
+    // OPIK-6696：插入的行携带 :targetDatasetId，而不是源的 dataset_id。这支持
+    // 跨数据集的通过-SELECT-INSERT 的编辑，其中读取源（:sourceDatasetId）不同于
+    // 目标数据集。
     private static final String EDIT_ITEM_VIA_SELECT_INSERT = """
             INSERT INTO dataset_item_versions (
                 id,
@@ -1947,32 +1945,30 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             ) AS src
             """;
 
-    // Copy items from source version to target version
-    // Optionally excludes items matching filters (when exclude_filters is set)
-    // Optionally excludes specific item IDs (when exclude_ids is set)
+    // 将条目从源版本复制到目标版本
+    // 可选地排除匹配过滤器的条目（当设置 exclude_filters 时）
+    // 可选地排除特定条目 ID（当设置 exclude_ids 时）
     //
-    // OPIK-6390:
-    //   - LIMIT 1 BY dataset_item_id (not id) so that any duplicate physical rows for the same
-    //     stable item within a version collapse to one, matching the dedup pattern used by every
-    //     other read path in this file.
-    //   - row_number() OVER (ORDER BY id DESC) AS rn is computed on the *post-dedup* result
-    //     (inner `deduped` subquery wraps the WHERE + LIMIT 1 BY). Numbering before LIMIT 1 BY
-    //     would leave sparse ranks (e.g. 1,3,5) on unmerged ReplacingMergeTree duplicates and
-    //     the `rn <= length(:uuids)` predicate would push valid rows onto the generateUUIDv7
-    //     fallback even when the pool size is correct, breaking the sort-order invariant.
-    //   - if(rn <= length(:uuids), arrayElement(...), generateUUIDv7()) guarantees each copied row
-    //     receives a unique id even when the Java-supplied pool is shorter than the source row
-    //     count. Previously, out-of-range arrayElement returned an empty string which was padded
-    //     to a NUL-byte FixedString(36); identical NUL ids then collapsed under ReplacingMergeTree
-    //     and items disappeared silently. The fallback UUIDv7 preserves insert atomicity at the
-    //     cost of putting overflowing rows ahead of added/edited rows in id-desc order — a
-    //     visible-but-non-destructive degradation only reached if the pool is undersized.
+    // OPIK-6390：
+    //   - LIMIT 1 BY dataset_item_id（而非 id），使同一版本内同一稳定条目的任何重复物理行
+    //     折叠为一行，与本文件中其它读取路径使用的去重模式一致。
+    //   - row_number() OVER (ORDER BY id DESC) AS rn 是在*去重后*的结果上计算的
+    //     （内部 `deduped` 子查询包裹 WHERE + LIMIT 1 BY）。在 LIMIT 1 BY 之前编号
+    //     会在未合并的 ReplacingMergeTree 重复项上留下稀疏排名（例如 1,3,5），
+    //     并且 `rn <= length(:uuids)` 谓词即使池大小正确也会把有效行推到 generateUUIDv7
+    //     回退，破坏排序顺序不变量。
+    //   - if(rn <= length(:uuids), arrayElement(...), generateUUIDv7()) 保证每个复制的行
+    //     都获得唯一 ID，即使 Java 提供的池比源行数短。此前，越界的 arrayElement
+    //     会返回空字符串，并被填充为 NUL 字节的 FixedString(36)；相同的 NUL ID 随后在
+    //     ReplacingMergeTree 下折叠，条目静默消失。回退的 UUIDv7 保持了插入原子性，
+    //     代价是让溢出的行在 id 降序中排在新增/已编辑行之前——这是一种
+    //     可见但非破坏性的降级，仅在池被设置得过小时才会触发。
     //
-    // OPIK-6696:
-    //   - the inserted rows carry :targetDatasetId, not the source's dataset_id. When
-    //     copy_from_dataset_id differs from the destination, the read source is a different dataset
-    //     (e.g. migrate replay reads from the source workspace's dataset and writes into the
-    //     destination workspace's dataset), so the inserted rows must carry the destination dataset_id.
+    // OPIK-6696：
+    //   - 插入的行携带 :targetDatasetId，而非源的 dataset_id。当
+    //     copy_from_dataset_id 与目标不同时，读取源是一个不同的数据集
+    //     （例如迁移重放从源工作区的数据集读取，并写入
+    //     目标工作区的数据集），因此插入的行必须携带目标的 dataset_id。
     private static final String COPY_VERSION_ITEMS = """
             INSERT INTO dataset_item_versions (
                 id,
@@ -2549,7 +2545,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             ;
             """;
 
-    // Migration queries
+    // 迁移查询
     private static final String DELETE_ITEMS_FROM_VERSION_MIGRATION = """
             DELETE FROM dataset_item_versions
             WHERE workspace_id = :workspaceId
@@ -2595,10 +2591,10 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             """;
 
     /**
-     * Query to count items for multiple versions in a single statement.
-     * Uses (workspace_id, dataset_id, dataset_version_id) tuples to optimize the query
-     * according to the table's ordering key: (workspace_id, dataset_id, dataset_version_id, id).
-     * This allows ClickHouse to efficiently skip irrelevant data partitions.
+     * 在单个语句中统计多个版本条目的查询。
+     * 使用 (workspace_id, dataset_id, dataset_version_id) 元组根据表的排序键
+     * (workspace_id, dataset_id, dataset_version_id, id) 优化查询。
+     * 这使 ClickHouse 能够高效地跳过无关的数据分区。
      */
     private static final String COUNT_ITEMS_IN_VERSIONS_BATCH = """
             SELECT
@@ -2616,10 +2612,10 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     private final @NonNull OpikConfiguration config;
     private final @NonNull ExperimentAggregatesDAO experimentAggregatesDAO;
     /**
-     * v2 ClickHouse client used for {@code INSERT ... SELECT} on {@code dataset_item_versions},
-     * which reports authoritative {@code written_rows} on the response. The r2dbc driver reads
-     * from the interim progress event and is unreliable for this query shape; see
-     * {@code ClickHouse/clickhouse-java#2860}.
+     * 用于在 {@code dataset_item_versions} 上执行 {@code INSERT ... SELECT} 的 v2 ClickHouse 客户端，
+     * 它会在响应中报告权威的 {@code written_rows}。r2dbc 驱动程序读取的是
+     * 中间的进度事件，对这种查询形态不可靠；参见
+     * {@code ClickHouse/clickhouse-java#2860}。
      */
     private final @NonNull Client clickHouseClient;
     private final @NonNull ZeroRowsRetryPolicy zeroRowsRetryPolicy;
@@ -2627,7 +2623,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     @Override
     @WithSpan
     public Flux<DatasetItemIdAndHash> getItemIdsAndHashes(@NonNull UUID datasetId, @NonNull UUID versionId) {
-        log.debug("Getting item IDs and hashes for dataset '{}', version '{}'", datasetId, versionId);
+        log.debug("获取数据集 '{}'、版本 '{}' 的条目 ID 和哈希", datasetId, versionId);
 
         return asyncTemplate.stream(connection -> {
             var statement = connection.createStatement(SELECT_ITEM_IDS_AND_HASHES)
@@ -2647,7 +2643,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         var evaluatorsHash = row.get("evaluators_hash", Long.class);
                         var executionPolicyHash = row.get("execution_policy_hash", Long.class);
                         var descriptionHash = row.get("description_hash", Long.class);
-                        log.debug("Retrieved versioned item: dataset_item_id='{}', hash='{}', tags='{}'",
+                        log.debug("已检索版本化条目：dataset_item_id='{}'、hash='{}'、tags='{}'",
                                 datasetItemId, hash, tags);
                         return DatasetItemIdAndHash.builder()
                                 .itemId(datasetItemId)
@@ -2659,7 +2655,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                                 .build();
                     }))
                     .collectList()
-                    .doOnSuccess(items -> log.info("Retrieved '{}' item IDs and hashes for version '{}'", items.size(),
+                    .doOnSuccess(items -> log.info("已检索 '{}' 个条目 ID 和哈希（版本 '{}'）", items.size(),
                             versionId))
                     .flatMapMany(Flux::fromIterable);
         });
@@ -2673,7 +2669,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return Mono.just(0L);
         }
 
-        log.debug("Counting existing item IDs among '{}' for dataset '{}', version '{}'", itemIds.size(), datasetId,
+        log.debug("统计 '{}' 个条目 ID 中已存在的数量（数据集 '{}'，版本 '{}'）", itemIds.size(), datasetId,
                 versionId);
 
         return asyncTemplate.nonTransaction(connection -> {
@@ -2689,7 +2685,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .next()
                     .defaultIfEmpty(0L)
                     .doOnSuccess(count -> log.debug(
-                            "Found existing items for version '{}' among '{}' incoming ids: '{}'", versionId,
+                            "在版本 '{}' 中、'{}' 个传入 ID 中找到 '{}' 个已存在的条目", versionId,
                             itemIds.size(), count))
                     .doFinally(signalType -> endSegment(segment));
         });
@@ -2738,21 +2734,21 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Helper method to add common filter conditions to a StringTemplate.
-     * This encapsulates the repeated pattern of adding filters and search criteria to templates.
+     * 向 StringTemplate 添加通用过滤条件的辅助方法。
+     * 封装了向模板添加过滤器和搜索条件的重复模式。
      *
-     * @param template The StringTemplate to add filters to
-     * @param criteria The search criteria containing filters and search terms
+     * @param template 要向其添加过滤器的 StringTemplate
+     * @param criteria 包含过滤器和搜索词的搜索条件
      */
     private void addFiltersToTemplate(@NonNull ST template, @NonNull DatasetItemSearchCriteria criteria) {
         DatasetItemSearchCriteriaMapper.applyToTemplate(template, criteria, FILTER_STRATEGY_PARAMS);
     }
 
     /**
-     * Adds dataset item filters to the StringTemplate if filters are present.
+     * 如果存在过滤器，则向 StringTemplate 添加数据集条目过滤器。
      *
-     * @param template the StringTemplate to add filters to
-     * @param filters the list of filters to apply, may be null or empty
+     * @param template 要向其添加过滤器的 StringTemplate
+     * @param filters 要应用的过滤器列表，可为 null 或空
      */
     private void addDatasetItemFiltersToTemplate(ST template, List<? extends Filter> filters) {
         if (CollectionUtils.isNotEmpty(filters)) {
@@ -2763,10 +2759,10 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Binds dataset item filter parameters to the R2DBC statement.
+     * 将数据集条目过滤参数绑定到 R2DBC 语句。
      *
-     * @param statement the R2DBC statement to bind parameters to
-     * @param filters the list of filters to bind, may be null or empty
+     * @param statement 要绑定参数的 R2DBC 语句
+     * @param filters 要绑定的过滤器列表，可为 null 或空
      */
     private void bindDatasetItemFilters(Statement statement, List<? extends Filter> filters) {
         if (CollectionUtils.isNotEmpty(filters)) {
@@ -2775,12 +2771,12 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Helper method to bind search terms and filters to a statement.
-     * This encapsulates the repeated pattern of binding search and filter parameters.
+     * 将搜索词和过滤器绑定到语句的辅助方法。
+     * 封装了绑定搜索和过滤参数的重复模式。
      *
-     * @param statement The R2DBC statement to bind parameters to
-     * @param criteria The search criteria containing search terms and filters
-     * @return The statement with all parameters bound
+     * @param statement 要绑定参数的 R2DBC 语句
+     * @param criteria 包含搜索词和过滤器的搜索条件
+     * @return 所有参数都绑定完毕的语句
      */
     private Statement bindSearchAndFilters(@NonNull Statement statement, @NonNull DatasetItemSearchCriteria criteria) {
         return DatasetItemSearchCriteriaMapper.bindSearchCriteria(statement, criteria, BIND_STRATEGIES,
@@ -2798,7 +2794,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     Set<Column> columns = tuple.getT2();
 
                     return asyncTemplate.nonTransaction(connection -> {
-                        // Build template with filters and truncation
+                        // 构建带过滤器和截断的模板
                         ST template = TemplateUtils.newST(SELECT_DATASET_ITEM_VERSIONS);
                         template = ImageUtils.addTruncateToTemplate(template, criteria.truncate());
                         template.add("truncationSize", config.getResponseFormatting().getTruncationSize());
@@ -2810,7 +2806,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                                 .bind("limit", size)
                                 .bind("offset", (page - 1) * size);
 
-                        // Bind filter parameters
+                        // 绑定过滤参数
                         bindDatasetItemFilters(statement, criteria.filters());
 
                         Segment segment = startSegment(DATASET_ITEM_VERSIONS, CLICKHOUSE,
@@ -2831,7 +2827,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     public Mono<DatasetItemPage> getItemsWithExperimentItems(@NonNull DatasetItemSearchCriteria criteria, int page,
             int size, @NonNull String versionId) {
         log.info(
-                "Getting versioned dataset items with experiment items for dataset '{}', version '{}', experiments '{}'",
+                "获取数据集 '{}'、版本 '{}'、实验 '{}' 的带实验条目版本化数据集条目",
                 criteria.datasetId(), versionId, criteria.experimentIds());
 
         return Mono.deferContextual(ctx -> {
@@ -2842,7 +2838,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .experimentIds(criteria.experimentIds())
                     .build();
 
-            // Run pre-queries in parallel: target project IDs and aggregated experiment IDs
+            // 并行运行预查询：目标项目 ID 和聚合实验 ID
             var targetProjectIdsMono = getTargetProjectIds(workspaceId, criteria.datasetId(), criteria.experimentIds());
             var branchCountsMono = getAggregationBranchCounts(aggregationCriteria);
 
@@ -2855,7 +2851,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         boolean hasRaw = counts.hasRaw();
 
                         return asyncTemplate.nonTransaction(connection -> {
-                            // Build the query using StringTemplate
+                            // 使用 StringTemplate 构建查询
                             ST template = TemplateUtils
                                     .newST(SELECT_DATASET_ITEM_VERSIONS_WITH_EXPERIMENT_ITEMS);
 
@@ -2863,22 +2859,22 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                             template.add("truncationSize",
                                     config.getResponseFormatting().getTruncationSize());
 
-                            // Add experiment IDs to template
+                            // 向模板添加实验 ID
                             if (CollectionUtils.isNotEmpty(criteria.experimentIds())) {
                                 template.add("experiment_ids", criteria.experimentIds());
                             }
 
-                            // Add branch flags to conditionally include/exclude UNION ALL branches
+                            // 添加分支标志以有条件地包含/排除 UNION ALL 分支
                             template.add("has_aggregated", hasAggregated);
                             template.add("has_raw", hasRaw);
 
                             boolean pushTopLimit = applyPushTopLimit(template, criteria, hasAggregated,
                                     hasRaw);
 
-                            // Add filters and search criteria using helper method
+                            // 使用辅助方法添加过滤器和搜索条件
                             addFiltersToTemplate(template, criteria);
 
-                            // Add sorting if present
+                            // 如果存在排序则添加
                             var fieldMapping = criteria.sortingFields() != null
                                     ? filterQueryBuilder
                                             .buildDatasetItemFieldMapping(criteria.sortingFields())
@@ -2895,7 +2891,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                                 }
                             }
 
-                            // Add target project IDs flag to template (from separate query to reduce traces table scans)
+                            // 向模板添加目标项目 ID 标志（来自单独查询以减少 traces 表扫描）
                             if (CollectionUtils.isNotEmpty(targetProjectIds)) {
                                 template.add("has_target_projects", true);
                             }
@@ -2915,27 +2911,27 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                                 statement.bind("offset", (page - 1) * size);
                             }
 
-                            // Bind target project IDs (from separate query to reduce traces table scans)
+                            // 绑定目标项目 ID（来自单独查询以减少 traces 表扫描）
                             if (CollectionUtils.isNotEmpty(targetProjectIds)) {
                                 statement.bind("target_project_ids",
                                         targetProjectIds.toArray(UUID[]::new));
                             }
 
-                            // Bind experiment IDs as array
+                            // 绑定实验 ID 数组
                             if (CollectionUtils.isNotEmpty(criteria.experimentIds())) {
                                 statement.bind("experiment_ids",
                                         criteria.experimentIds().toArray(UUID[]::new));
                             }
 
-                            // Bind dynamic sorting keys if present.
-                            // Pass without fieldMapping so ALL dynamic keys are bound,
-                            // including those used in the top_sorting SELECT expression.
+                            // 如果存在动态排序键则绑定。
+                            // 不传 fieldMapping，以便绑定 ALL 动态键，
+                            // 包括 top_sorting SELECT 表达式中使用的那些。
                             if (hasDynamicKeys) {
                                 statement = sortingQueryBuilder.bindDynamicKeys(statement,
                                         criteria.sortingFields());
                             }
 
-                            // Bind search and filter parameters using helper method
+                            // 使用辅助方法绑定搜索和过滤参数
                             statement = bindSearchAndFilters(statement, criteria);
 
                             Segment segment = startSegment(DATASET_ITEM_VERSIONS, CLICKHOUSE,
@@ -2965,8 +2961,8 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Get target project IDs from traces for the given experiment items.
-     * This is executed as a separate query to reduce traces table scans in the main query.
+     * 从 trace 中获取给定实验条目的目标项目 ID。
+     * 作为单独查询执行，以减少主查询中 traces 表的扫描次数。
      */
     private Mono<List<UUID>> getTargetProjectIds(String workspaceId, UUID datasetId, Set<UUID> experimentIds) {
         return asyncTemplate.nonTransaction(connection -> {
@@ -3000,7 +2996,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
 
     @Override
     public Mono<List<Column>> getExperimentItemsOutputColumns(@NonNull UUID datasetId, Set<UUID> experimentIds) {
-        log.debug("Getting experiment items output columns for dataset '{}'", datasetId);
+        log.debug("获取数据集 '{}' 的实验条目输出列", datasetId);
 
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -3036,11 +3032,11 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     private Mono<Long> getCountWithExperimentFilters(@NonNull DatasetItemSearchCriteria criteria,
             @NonNull String versionId, List<UUID> targetProjectIds,
             boolean hasAggregated, boolean hasRaw) {
-        log.debug("Getting filtered count for dataset '{}' version '{}' with experiment filters", criteria.datasetId(),
+        log.debug("获取数据集 '{}' 版本 '{}' 带实验过滤器的过滤计数", criteria.datasetId(),
                 versionId);
 
-        // OPIK-6311: slim_count routes the count through EIA when search is absent; filters use
-        // the same renderable strategies as the data path's top_dataset_items CTE.
+        // OPIK-6311：当没有搜索时，slim_count 将计数路由经过 EIA；过滤器使用
+        // 与数据路径的 top_dataset_items CTE 相同的可渲染策略。
         boolean slimCount = hasAggregated && !hasRaw && StringUtils.isBlank(criteria.search());
 
         return Mono.deferContextual(ctx -> {
@@ -3061,19 +3057,19 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                 template = ImageUtils.addTruncateToTemplate(template, criteria.truncate());
                 template.add("truncationSize", config.getResponseFormatting().getTruncationSize());
 
-                // Add experiment IDs if present
+                // 如果存在实验 ID 则添加
                 if (CollectionUtils.isNotEmpty(criteria.experimentIds())) {
                     template.add("experiment_ids", true);
                 }
 
-                // Add branch flags to conditionally include/exclude UNION ALL branches
+                // 添加分支标志以有条件地包含/排除 UNION ALL 分支
                 template.add("has_aggregated", hasAggregated);
                 template.add("has_raw", hasRaw);
 
-                // Add filters and search criteria using helper method
+                // 使用辅助方法添加过滤器和搜索条件
                 addFiltersToTemplate(template, criteria);
 
-                // Add target project IDs flag to template (from separate query to reduce traces table scans)
+                // 向模板添加目标项目 ID 标志（来自单独查询以减少 traces 表扫描）
                 if (CollectionUtils.isNotEmpty(targetProjectIds)) {
                     template.add("has_target_projects", true);
                 }
@@ -3111,7 +3107,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
 
     private Mono<Long> getCount(DatasetItemSearchCriteria criteria, UUID versionId) {
         return asyncTemplate.nonTransaction(connection -> {
-            // Build template with filters
+            // 构建带过滤器的模板
             ST template = TemplateUtils.newST(SELECT_DATASET_ITEM_VERSIONS_COUNT);
             addDatasetItemFiltersToTemplate(template, criteria.filters());
 
@@ -3119,7 +3115,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .bind("datasetId", criteria.datasetId().toString())
                     .bind("versionId", versionId.toString());
 
-            // Bind filter parameters
+            // 绑定过滤参数
             bindDatasetItemFilters(statement, criteria.filters());
 
             Segment segment = startSegment(DATASET_ITEM_VERSIONS, CLICKHOUSE, "count_dataset_item_versions");
@@ -3133,14 +3129,14 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Copies items from a source version into a target version via {@code INSERT ... SELECT}.
+     * 通过 {@code INSERT ... SELECT} 将条目从源版本复制到目标版本。
      *
-     * <p>Executes against the v2 ClickHouse client (not r2dbc) so the returned count is the
-     * authoritative {@code written_rows} from the server, not an interim progress reading
-     * (see OPIK-6674 and {@code ClickHouse/clickhouse-java#2860}).
+     * <p>针对 v2 ClickHouse 客户端（而非 r2dbc）执行，因此返回的计数是来自服务器的
+     * 权威 {@code written_rows}，而不是中间的进度读数
+     * （参见 OPIK-6674 和 {@code ClickHouse/clickhouse-java#2860}）。
      *
-     * <p>The result is wrapped in {@link ZeroRowsRetryPolicy} so that a 0-row outcome with a
-     * non-empty input set is retried with backoff before being surfaced as an error.
+     * <p>结果被包装在 {@link ZeroRowsRetryPolicy} 中，因此当输入集非空却得到 0 行结果时，
+     * 会先带退避地重试，再将其作为错误暴露出来。
      */
     @Override
     @WithSpan
@@ -3149,15 +3145,15 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             List<DatasetItemFilter> excludeFilters, @NonNull List<UUID> uuids) {
 
         log.debug(
-                "Copying items from (dataset '{}', version '{}') to (dataset '{}', version '{}'), excludeFilters='{}', uuidPoolSize='{}'",
+                "将条目从（数据集 '{}'，版本 '{}'）复制到（数据集 '{}'，版本 '{}'），excludeFilters='{}'、uuidPoolSize='{}'",
                 sourceDatasetId, sourceVersionId, targetDatasetId, targetVersionId,
                 excludeFilters != null ? excludeFilters.size() : 0, uuids.size());
 
-        // With excludeFilters present the pool size is no longer a valid lower bound on the row
-        // count: a filter can legitimately exclude every source row (e.g. a delete or batch-update
-        // whose filter matches all items), making 0 written rows a valid outcome rather than the
-        // catastrophic-zero replica-lag signature. Only assert the zero-rows guard on the unfiltered
-        // carry-forward path (OPIK-6674); passing expectedRows=0 bypasses it for the filtered path.
+        // 当存在 excludeFilters 时，池大小不再是行数的有效下界：
+        // 过滤器可以合法地排除每一行源数据（例如删除或批量更新
+        // 其过滤器匹配所有条目），使 0 写入行成为合法结果，而不是
+        // 灾难性的零副本滞后信号。仅在无过滤器的
+        // 结转路径上断言零行守卫（OPIK-6674）；对过滤路径传 expectedRows=0 以绕过它。
         long expectedRows = CollectionUtils.isEmpty(excludeFilters)
                 ? FilterUtils.expectedRowsFromPool(uuids)
                 : 0L;
@@ -3169,29 +3165,28 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Builds and executes the COPY_VERSION_ITEMS query via the v2 client.
-     * Shared between {@link #copyVersionItems} and the exclusion branch of
-     * {@link #copyUnchangedItems}.
+     * 通过 v2 客户端构建并执行 COPY_VERSION_ITEMS 查询。
+     * 由 {@link #copyVersionItems} 和 {@link #copyUnchangedItems} 的排除分支共享。
      *
-     * <p>Returned via {@link com.comet.opik.utils.AsyncUtils#makeMonoContextAware} ({@code
-     * Mono.deferContextual}) so SQL build, parameter formatting, and the {@code clickHouseClient.query()}
-     * invocation re-run on every subscription, including retry-driven resubscriptions.
+     * <p>通过 {@link com.comet.opik.utils.AsyncUtils#makeMonoContextAware}（{@code
+     * Mono.deferContextual}）返回，因此 SQL 构建、参数格式化以及 {@code clickHouseClient.query()}
+     * 调用会在每次订阅时重新运行，包括由重试驱动的重新订阅。
      */
     private Mono<Long> executeCopyVersionItems(UUID sourceDatasetId, UUID sourceVersionId, UUID targetDatasetId,
             UUID targetVersionId, List<UUID> uuids, Set<UUID> excludedIds, List<DatasetItemFilter> excludeFilters) {
 
-        // makeMonoContextAware = Mono.deferContextual; the lambda re-runs on every subscription,
-        // so each retry rebuilds the SQL/params and gets a fresh CompletableFuture.
+        // makeMonoContextAware = Mono.deferContextual；该 lambda 会在每次订阅时重新运行，
+        // 因此每次重试都会重建 SQL/参数并获得全新的 CompletableFuture。
         return makeMonoContextAware((userName, workspaceId) -> {
             boolean hasExcludedIds = CollectionUtils.isNotEmpty(excludedIds);
             boolean hasExcludeFilters = CollectionUtils.isNotEmpty(excludeFilters);
 
             ST template = TemplateUtils.newST(COPY_VERSION_ITEMS);
-            // Inline the UUID arrays directly in the SQL body via StringTemplate. They can be
-            // large (thousands of UUIDs at ~38 bytes each) and would otherwise be URL-encoded
-            // as HTTP query params — the v2 client puts param values on the request line, which
-            // has an ~8KB length limit. The SQL itself is sent in the request body and has no
-            // such limit. Safe because UUID.toString() is [0-9a-f-] only — no injection vector.
+            // 通过 StringTemplate 将 UUID 数组直接内联到 SQL 主体中。它们可能
+            // 很大（数千个 UUID，每个约 38 字节），否则会被 URL 编码
+            // 为 HTTP 查询参数——v2 客户端把参数值放在请求行上，而请求行
+            // 有约 8KB 的长度限制。SQL 本身放在请求体中发送，没有
+            // 这种限制。之所以安全，是因为 UUID.toString() 只包含 [0-9a-f-]——没有注入途径。
             template.add("uuids_literal", uuidsToArrayLiteral(uuids));
             if (hasExcludedIds) {
                 template.add("exclude_ids", true);
@@ -3225,7 +3220,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         try (response) {
                             long written = response.getWrittenRows();
                             log.info(
-                                    "Copied '{}' items from (dataset '{}', version '{}') to (dataset '{}', version '{}')",
+                                    "已将 '{}' 个条目从（数据集 '{}'，版本 '{}'）复制到（数据集 '{}'，版本 '{}'）",
                                     written, sourceDatasetId, sourceVersionId, targetDatasetId, targetVersionId);
                             return written;
                         }
@@ -3234,7 +3229,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
         });
     }
 
-    /** Delegates to the shared {@link FilterQueryBuilder#formatStringArrayLiteral} helper. */
+    /** 委托给共享的 {@link FilterQueryBuilder#formatStringArrayLiteral} 辅助方法。 */
     private static String uuidsToArrayLiteral(Collection<UUID> ids) {
         return FilterQueryBuilder.formatStringArrayLiteral(ids.stream().map(UUID::toString).toList());
     }
@@ -3248,17 +3243,17 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             @NonNull UUID copyFromDatasetId, @NonNull UUID copyFromVersionId) {
 
         log.info(
-                "Applying delta for dataset '{}': newVersion='{}', copyFromDataset='{}', copyFromVersion='{}', "
-                        + "added='{}', edited='{}', deleted='{}', additionalExclude='{}'",
+                "为数据集 '{}' 应用增量：newVersion='{}'、copyFromDataset='{}'、copyFromVersion='{}'、"
+                        + "added='{}'、edited='{}'、deleted='{}'、additionalExclude='{}'",
                 datasetId, newVersionId, copyFromDatasetId, copyFromVersionId, addedItems.size(),
                 editedItems.size(), deletedIds.size(), additionalExcludeIds.size());
 
-        // Collect all stable item IDs that are being edited (so we don't copy them from base)
+        // 收集所有正在被编辑的稳定条目 ID（这样我们就不会从基础版本复制它们）
         Set<UUID> editedItemIds = editedItems.stream()
                 .map(DatasetItem::datasetItemId)
                 .collect(Collectors.toSet());
 
-        // Combine deleted, edited, and additional IDs for exclusion when copying
+        // 复制时合并已删除、已编辑和额外 ID 用于排除
         Set<UUID> excludedIds = new HashSet<>(deletedIds);
         excludedIds.addAll(editedItemIds);
         excludedIds.addAll(additionalExcludeIds);
@@ -3267,38 +3262,38 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             String userName = ctx.get(RequestContext.USER_NAME);
 
-            // Step 1: Insert added items (will sort first due to latest/largest UUIDs)
+            // 步骤 1：插入新增条目（由于最新/最大的 UUID，将排在最前）
             Mono<Long> insertAdded = insertItems(datasetId, newVersionId, addedItems, workspaceId, userName);
 
-            // Step 2: Insert edited items (will sort after added due to middle UUIDs)
+            // 步骤 2：插入已编辑条目（由于中间的 UUID，将排在新增之后）
             Mono<Long> insertEdited = insertItems(datasetId, newVersionId, editedItems, workspaceId, userName);
 
-            // Step 3: Copy unchanged items (will sort last due to earliest/smallest UUIDs).
-            // OPIK-6696: reads from caller-supplied source coordinates instead of destination prior version.
-            // Source coords = (copyFromDatasetId, copyFromVersionId); target coords = (datasetId, newVersionId).
+            // 步骤 3：复制未更改条目（由于最早/最小的 UUID，将排在最后）。
+            // OPIK-6696：从调用方提供的源坐标读取，而不是从目标的前一个版本读取。
+            // 源坐标 = (copyFromDatasetId, copyFromVersionId)；目标坐标 = (datasetId, newVersionId)。
             Mono<Long> copyUnchanged = copyUnchangedItems(
                     copyFromDatasetId, copyFromVersionId,
                     datasetId, newVersionId,
                     excludedIds, unchangedUuids, workspaceId, userName);
 
-            // Execute all operations and sum the results
+            // 执行所有操作并汇总结果
             return insertAdded
                     .zipWith(insertEdited, Long::sum)
                     .zipWith(copyUnchanged, Long::sum)
-                    .doOnSuccess(total -> log.info("Applied delta for dataset '{}': total items in new version '{}'",
+                    .doOnSuccess(total -> log.info("已为数据集 '{}' 应用增量：新版本中条目总数 '{}'",
                             datasetId, total));
         });
     }
 
     /**
-     * Edits a batch of dataset items by INSERTing a new row per item via {@code INSERT ... SELECT}.
+     * 通过 {@code INSERT ... SELECT} 为每个条目 INSERT 一行新行来编辑一批数据集条目。
      *
-     * <p>Each item runs against the v2 ClickHouse client (OPIK-6674) so {@code getWrittenRows()}
-     * reflects the authoritative server count. The actual sum is fed to {@link ZeroRowsRetryPolicy};
-     * on success we still report {@code itemCount} to preserve the original API contract.
+     * <p>每个条目针对 v2 ClickHouse 客户端（OPIK-6674）运行，因此 {@code getWrittenRows()}
+     * 反映权威的服务器计数。实际总和被送入 {@link ZeroRowsRetryPolicy}；
+     * 成功后我们仍上报 {@code itemCount} 以保留原始 API 契约。
      *
-     * <p>Retries re-insert the same rows with the same {@code newRowIds}; ReplacingMergeTree
-     * dedup on {@code (workspace_id, dataset_id, dataset_version_id, id)} keeps this idempotent.
+     * <p>重试会用相同的 {@code newRowIds} 重新插入相同的行；ReplacingMergeTree
+     * 在 {@code (workspace_id, dataset_id, dataset_version_id, id)} 上去重，使其保持幂等。
      */
     @Override
     @WithSpan
@@ -3329,7 +3324,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                             sourceDatasetId, sourceVersionId, targetDatasetId, newVersionId, userName, workspaceId))
                     .reduce(0L, Long::sum)
                     .doOnSuccess(actualSum -> log.info(
-                            "Edited '{}' items via SELECT INSERT into (dataset '{}', version '{}') (actual rows written: {})",
+                            "已通过 SELECT INSERT 编辑 '{}' 个条目到（数据集 '{}'，版本 '{}'）（实际写入行数：{}）",
                             editedItems.size(), targetDatasetId, newVersionId, actualSum))
                     .doFinally(signalType -> endSegment(segment));
         });
@@ -3371,16 +3366,16 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
 
         if (edit.data() != null) {
             Map<String, String> dataAsStrings = DatasetItemResultMapper.getOrDefault(edit.data());
-            // Array(String) params must be ClickHouse array literals — the v2 client serialises
-            // Map values via String.valueOf and would otherwise emit Java's unquoted [a, b] form.
+            // Array(String) 参数必须是 ClickHouse 数组字面量——v2 客户端会通过 String.valueOf
+            // 序列化 Map 值，否则会输出 Java 的未加引号 [a, b] 形式。
             params.put("data_keys", FilterQueryBuilder.formatStringArrayLiteral(dataAsStrings.keySet()));
             params.put("data_values", FilterQueryBuilder.formatStringArrayLiteral(dataAsStrings.values()));
         }
-        // Free-text / JSON params bound via the v2-client {:String} substitution must be base64'd:
-        // ClickHouse processes backslash escapes in the substituted value, so a raw '\n' is turned
-        // into a literal newline — corrupting JSON (evaluators) or the stored text and even failing
-        // the write (description). base64Decode in the SQL restores the exact bytes. Add the same
-        // treatment to any new free-text/JSON {:String} param added here.
+        // 通过 v2 客户端 {:String} 替换绑定的自由文本 / JSON 参数必须先 base64：
+        // ClickHouse 会处理替换值中的反斜杠转义，因此原始 '\n' 会被转换为
+        // 字面换行——这会损坏 JSON（evaluators）或存储的文本，甚至导致
+        // 写入失败（description）。SQL 中的 base64Decode 会还原精确字节。请对
+        // 这里新增的任何自由文本/JSON {:String} 参数做同样的处理。
         if (edit.description() != null) {
             params.put("description", base64Encode(edit.description()));
         }
@@ -3408,16 +3403,16 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Copies the unchanged subset of a version's items into the new version, optionally
-     * excluding specific {@code dataset_item_id}s (e.g. items being deleted or replaced).
+     * 将一个版本条目的未更改子集复制到新版本，可选地
+     * 排除特定 {@code dataset_item_id}（例如正在被删除或替换的条目）。
      *
-     * <p>Routes through {@link #executeCopyVersionItems} so the underlying {@code INSERT ... SELECT}
-     * runs on the v2 ClickHouse client and reports authoritative {@code written_rows} (OPIK-6674).
+     * <p>路由经过 {@link #executeCopyVersionItems}，因此底层 {@code INSERT ... SELECT}
+     * 在 v2 ClickHouse 客户端上运行并报告权威的 {@code written_rows}（OPIK-6674）。
      *
-     * <p>OPIK-6696: rows are read from {@code (sourceDatasetId, sourceVersionId)} and the inserted
-     * rows carry {@code targetDatasetId} as their dataset_id, so cross-dataset copies (migrate replay
-     * reading from a stable source dataset and writing into a destination dataset) land in the correct
-     * dataset. When source == destination this is the legacy behavior.
+     * <p>OPIK-6696：行从 {@code (sourceDatasetId, sourceVersionId)} 读取，插入的
+     * 行以 {@code targetDatasetId} 作为其 dataset_id，因此跨数据集复制（迁移重放
+     * 从稳定的源数据集读取并写入目标数据集）会落入正确的
+     * 数据集。当 source == destination 时即为旧版行为。
      */
     private Mono<Long> copyUnchangedItems(UUID sourceDatasetId, UUID sourceVersionId,
             UUID targetDatasetId, UUID newVersionId,
@@ -3438,18 +3433,18 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     public Mono<Long> batchUpdateItems(@NonNull UUID datasetId, @NonNull UUID baseVersionId,
             @NonNull UUID newVersionId, @NonNull DatasetItemBatchUpdate batchUpdate, @NonNull List<UUID> uuids) {
 
-        // Early return ONLY if IDs are explicitly empty AND filters are null (not provided at all)
-        // Note: empty filters list means "select all items", so we should NOT early return in that case
+        // 仅当 ID 明确为空且 filters 为 null（完全未提供）时才提前返回
+        // 注意：空 filters 列表表示“选择全部条目”，因此这种情况不应提前返回
         boolean hasIds = CollectionUtils.isNotEmpty(batchUpdate.ids());
-        boolean hasFilters = batchUpdate.filters() != null; // null means not provided, empty list means "select all"
+        boolean hasFilters = batchUpdate.filters() != null; // null 表示未提供，空列表表示“选择全部”
 
         if (!hasIds && !hasFilters) {
-            // Neither IDs nor filters provided - nothing to update
+            // 既没有提供 ID 也没有提供过滤器——无需更新
             return Mono.just(0L);
         }
 
         log.info(
-                "Batch updating items in dataset '{}' from version '{}' to version '{}', idsSize='{}', filtersSize='{}'",
+                "批量更新数据集 '{}' 中从版本 '{}' 到版本 '{}' 的条目，idsSize='{}'、filtersSize='{}'",
                 datasetId, baseVersionId, newVersionId,
                 batchUpdate.ids() != null ? batchUpdate.ids().size() : 0,
                 batchUpdate.filters() != null ? batchUpdate.filters().size() : 0);
@@ -3459,10 +3454,10 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             String userName = ctx.get(RequestContext.USER_NAME);
 
             return asyncTemplate.nonTransaction(connection -> {
-                // Build query using StringTemplate for conditional fields
+                // 使用 StringTemplate 为条件字段构建查询
                 ST template = new ST(BATCH_UPDATE_ITEMS);
 
-                // Add conditional parameters based on what fields are being updated
+                // 根据正在更新的字段添加条件参数
                 if (batchUpdate.update().data() != null) {
                     template.add("data", true);
                 }
@@ -3482,7 +3477,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     template.add("execution_policy", true);
                 }
 
-                // Add either item IDs or filters based on what's provided
+                // 根据所提供的内容添加条目 ID 或过滤器
                 if (batchUpdate.ids() != null && !batchUpdate.ids().isEmpty()) {
                     template.add("item_ids", true);
                 } else if (batchUpdate.filters() != null && !batchUpdate.filters().isEmpty()) {
@@ -3492,7 +3487,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
 
                 String query = template.render();
 
-                // Convert UUIDs to strings for ClickHouse
+                // 将 UUID 转换为字符串以供 ClickHouse 使用
                 String[] uuidStrings = uuids.stream()
                         .map(UUID::toString)
                         .toArray(String[]::new);
@@ -3505,7 +3500,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         .bind("uuids", uuidStrings)
                         .bind("userName", userName);
 
-                // Bind item IDs if provided
+                // 如果提供了条目 ID 则绑定
                 if (batchUpdate.ids() != null && !batchUpdate.ids().isEmpty()) {
                     String[] itemIdStrings = batchUpdate.ids().stream()
                             .map(UUID::toString)
@@ -3513,12 +3508,12 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     statement.bind("itemIds", itemIdStrings);
                 }
 
-                // Bind filter parameters if provided
+                // 如果提供了过滤参数则绑定
                 if (batchUpdate.filters() != null && !batchUpdate.filters().isEmpty()) {
                     FilterQueryBuilder.bind(statement, batchUpdate.filters(), FilterStrategy.DATASET_ITEM);
                 }
 
-                // Bind optional update fields
+                // 绑定可选更新字段
                 if (batchUpdate.update().data() != null) {
                     Map<String, String> dataAsStrings = DatasetItemResultMapper
                             .getOrDefault(batchUpdate.update().data());
@@ -3544,7 +3539,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                 return Flux.from(statement.execute())
                         .flatMap(Result::getRowsUpdated)
                         .reduce(0L, Long::sum)
-                        .doOnSuccess(count -> log.info("Batch updated '{}' items in dataset '{}'", count, datasetId))
+                        .doOnSuccess(count -> log.info("已批量更新 '{}' 个条目（数据集 '{}'）", count, datasetId))
                         .doFinally(signalType -> endSegment(segment));
             });
         });
@@ -3559,14 +3554,14 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return Mono.just(0L);
         }
 
-        // Note: ClickHouse with async inserts returns 0 immediately before commit.
-        // We return the count of items we're inserting instead of relying on getRowsUpdated.
+        // 注意：ClickHouse 的异步插入会在提交前立即返回 0。
+        // 我们返回正在插入的条目数，而不是依赖 getRowsUpdated。
         long itemCount = items.size();
 
         return asyncTemplate.nonTransaction(connection -> {
             Segment segment = startSegment(DATASET_ITEM_VERSIONS, CLICKHOUSE, "insert_delta_items");
 
-            // Build batch insert query using template
+            // 使用模板构建批量插入查询
             List<TemplateUtils.QueryItem> queryItems = TemplateUtils.getQueryItemPlaceHolder(items.size());
             var template = TemplateUtils.newST(BATCH_INSERT_ITEMS)
                     .add("items", queryItems);
@@ -3578,7 +3573,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .bind("last_updated_by", userName)
                     .bind("workspace_id", workspaceId);
 
-            // Bind all item-specific parameters
+            // 绑定所有条目特定的参数
             int i = 0;
             for (DatasetItem item : items) {
                 UUID stableItemId = item.datasetItemId();
@@ -3608,9 +3603,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return Flux.from(statement.execute())
                     .flatMap(Result::getRowsUpdated)
                     .reduce(0L, Long::sum)
-                    .map(results -> itemCount) // Return item count instead of sum of results
-                    .doOnSuccess(count -> log.debug("Inserted '{}' items in batch", count))
-                    .doOnError(e -> log.error("Batch insert items failed for dataset '{}', version '{}'",
+                    .map(results -> itemCount) // 返回条目数而不是结果之和
+                    .doOnSuccess(count -> log.debug("已批量插入 '{}' 个条目", count))
+                    .doOnError(e -> log.error("数据集 '{}'、版本 '{}' 的批量插入条目失败",
                             datasetId, newVersionId, e))
                     .doFinally(signalType -> endSegment(segment));
         });
@@ -3625,22 +3620,22 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return Mono.just(0L);
         }
 
-        log.info("Removing '{}' items from version '{}' for dataset '{}'", itemIds.size(), versionId, datasetId);
+        log.info("移除 '{}' 个条目（版本 '{}'，数据集 '{}'）", itemIds.size(), versionId, datasetId);
 
         return asyncTemplate.nonTransaction(connection -> {
             Segment segment = startSegment(DATASET_ITEM_VERSIONS, CLICKHOUSE, "remove_items_from_version");
 
-            // First, count how many items actually exist (to handle non-existent IDs)
+            // 首先统计实际存在多少条目（以处理不存在的 ID）
             return countItemsByIds(datasetId, versionId, itemIds, workspaceId)
                     .flatMap(existingCount -> {
                         if (existingCount == 0) {
-                            log.info("No items found to delete for version '{}'", versionId);
+                            log.info("未找到版本 '{}' 需要删除的条目", versionId);
                             return Mono.just(0L);
                         }
 
-                        // Use StringTemplate to generate query with item_ids condition
+                        // 使用 StringTemplate 生成带 item_ids 条件的查询
                         var template = new ST(DELETE_ITEMS_FROM_VERSION);
-                        template.add("item_ids", true); // Enable item_ids condition
+                        template.add("item_ids", true); // 启用 item_ids 条件
                         String deleteQuery = template.render();
 
                         var statement = connection.createStatement(deleteQuery)
@@ -3648,21 +3643,21 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                                 .bind("version_id", versionId.toString())
                                 .bind("workspace_id", workspaceId);
 
-                        // Bind the item IDs array
+                        // 绑定条目 ID 数组
                         String[] itemIdStrings = itemIds.stream()
                                 .map(UUID::toString)
                                 .toArray(String[]::new);
                         statement.bind("item_ids", itemIdStrings);
 
-                        // delete async and returns 0, so return the count we calculated
+                        // delete 是异步的并返回 0，因此返回我们计算出的计数
                         return Flux.from(statement.execute())
                                 .flatMap(Result::getRowsUpdated)
                                 .reduce(0L, Long::sum)
-                                .map(results -> existingCount) // Return the actual count of existing items
+                                .map(results -> existingCount) // 返回实际存在的条目数
                                 .doOnSuccess(count -> log.info(
-                                        "Removed '{}' items from version '{}' (requested '{}' IDs, '{}' existed)",
+                                        "已移除 '{}' 个条目（版本 '{}'）（请求了 '{}' 个 ID，其中 '{}' 个存在）",
                                         count, versionId, itemIds.size(), existingCount))
-                                .doOnError(e -> log.error("Failed to remove items from version '{}' for dataset '{}'",
+                                .doOnError(e -> log.error("从版本 '{}'（数据集 '{}'）移除条目失败",
                                         versionId, datasetId, e));
                     })
                     .doFinally(signalType -> endSegment(segment));
@@ -3674,29 +3669,29 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     public Mono<Long> removeItemsFromVersionByFilters(@NonNull UUID datasetId, @NonNull UUID versionId,
             List<DatasetItemFilter> filters, @NonNull String workspaceId) {
 
-        // Null or empty filter list means "delete all" (no filters = match everything)
-        log.info("Removing items from version '{}' for dataset '{}' using '{}' filters (null or empty = delete all)",
+        // null 或空过滤器列表表示“删除全部”（无过滤器 = 匹配所有）
+        log.info("从版本 '{}'（数据集 '{}'）使用 '{}' 个过滤器移除条目（null 或空 = 删除全部）",
                 versionId, datasetId, filters != null ? filters.size() : 0);
 
         return asyncTemplate.nonTransaction(connection -> {
             Segment segment = startSegment(DATASET_ITEM_VERSIONS, CLICKHOUSE,
                     "remove_items_from_version_by_filters");
 
-            // First, count how many items will be deleted
+            // 首先统计将被删除的条目数
             return countItemsMatchingFilters(datasetId, versionId, filters, workspaceId)
                     .flatMap(deletedCount -> {
                         if (deletedCount == 0) {
-                            log.info("No items match filters for version '{}'", versionId);
+                            log.info("没有条目匹配版本 '{}' 的过滤器", versionId);
                             return Mono.just(0L);
                         }
 
-                        // Build the filter query using StringTemplate
-                        // Empty filters means "delete all" - no filter conditions
+                        // 使用 StringTemplate 构建过滤器查询
+                        // 空过滤器表示“删除全部”——没有过滤条件
                         Optional<String> filterConditionsOpt = CollectionUtils.isEmpty(filters)
                                 ? Optional.empty()
                                 : FilterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM);
 
-                        // Use StringTemplate to generate query with optional filter conditions
+                        // 使用 StringTemplate 生成带可选过滤条件的查询
                         var template = new ST(DELETE_ITEMS_FROM_VERSION);
                         filterConditionsOpt.ifPresent(filterConditions -> template.add("dataset_item_filters",
                                 filterConditions));
@@ -3707,7 +3702,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                                 .bind("version_id", versionId.toString())
                                 .bind("workspace_id", workspaceId);
 
-                        // Bind filter parameters using FilterQueryBuilder (only if filters exist)
+                        // 使用 FilterQueryBuilder 绑定过滤参数（仅当存在过滤器时）
                         if (CollectionUtils.isNotEmpty(filters)) {
                             statement = FilterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
                         }
@@ -3715,11 +3710,11 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         return Flux.from(statement.execute())
                                 .flatMap(Result::getRowsUpdated)
                                 .reduce(0L, Long::sum)
-                                .map(results -> deletedCount) // Return the count we calculated earlier
+                                .map(results -> deletedCount) // 返回之前计算出的计数
                                 .doOnSuccess(
-                                        count -> log.info("Removed '{}' items from version '{}'", count, versionId))
+                                        count -> log.info("已移除 '{}' 个条目（版本 '{}'）", count, versionId))
                                 .doOnError(e -> log.error(
-                                        "Failed to remove items from version '{}' for dataset '{}' using filters",
+                                        "使用过滤器从版本 '{}'（数据集 '{}'）移除条目失败",
                                         versionId, datasetId, e));
                     })
                     .doFinally(signalType -> endSegment(segment));
@@ -3727,19 +3722,19 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Counts items matching the given filters in a specific version.
-     * Used to determine how many items will be deleted before performing the deletion.
+     * 统计特定版本中匹配给定过滤器的条目。
+     * 用于在执行删除前确定将删除多少个条目。
      */
     private Mono<Long> countItemsMatchingFilters(UUID datasetId, UUID versionId, List<DatasetItemFilter> filters,
             String workspaceId) {
 
         return asyncTemplate.nonTransaction(connection -> {
-            // Empty filters means "count all" - no filter conditions
+            // 空过滤器表示“统计全部”——没有过滤条件
             Optional<String> filterConditionsOpt = CollectionUtils.isEmpty(filters)
                     ? Optional.empty()
                     : FilterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.DATASET_ITEM);
 
-            // Use StringTemplate to generate query with optional filter conditions
+            // 使用 StringTemplate 生成带可选过滤条件的查询
             var template = new ST(COUNT_ITEMS);
             filterConditionsOpt.ifPresent(filterConditions -> template.add("dataset_item_filters", filterConditions));
             String countQuery = template.render();
@@ -3749,7 +3744,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .bind("version_id", versionId.toString())
                     .bind("workspace_id", workspaceId);
 
-            // Bind filter parameters (only if filters exist)
+            // 绑定过滤参数（仅当存在过滤器时）
             if (CollectionUtils.isNotEmpty(filters)) {
                 statement = FilterQueryBuilder.bind(statement, filters, FilterStrategy.DATASET_ITEM);
             }
@@ -3804,13 +3799,13 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Counts items by their IDs in a specific version.
-     * Used to determine how many of the requested IDs actually exist before deletion.
+     * 按特定版本中的 ID 统计条目。
+     * 用于在删除前确定请求的 ID 中实际存在多少个。
      */
     private Mono<Long> countItemsByIds(UUID datasetId, UUID versionId, Set<UUID> itemIds, String workspaceId) {
         return asyncTemplate.nonTransaction(connection -> {
             var template = new ST(COUNT_ITEMS);
-            template.add("item_ids", true); // Enable item_ids condition
+            template.add("item_ids", true); // 启用 item_ids 条件
             String countQuery = template.render();
 
             var statement = connection.createStatement(countQuery)
@@ -3827,8 +3822,8 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Formats an Instant for ClickHouse DateTime64(9, 'UTC').
-     * ClickHouse doesn't accept the 'Z' suffix from ISO-8601 format.
+     * 将 Instant 格式化为 ClickHouse 的 DateTime64(9, 'UTC')。
+     * ClickHouse 不接受 ISO-8601 格式中的 'Z' 后缀。
      */
     private static String formatTimestamp(Instant timestamp) {
         if (timestamp == null) {
@@ -3858,7 +3853,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     @Override
     @WithSpan
     public Mono<UUID> resolveDatasetIdFromItemId(@NonNull UUID datasetItemId) {
-        log.debug("Resolving dataset ID for item '{}'", datasetItemId);
+        log.debug("正在解析条目 '{}' 的数据集 ID", datasetItemId);
 
         return asyncTemplate.nonTransaction(connection -> {
             var statement = connection.createStatement(RESOLVE_DATASET_ID_FROM_ITEM_ID)
@@ -3875,9 +3870,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         .next()
                         .doOnSuccess(datasetId -> {
                             if (datasetId != null) {
-                                log.debug("Resolved dataset '{}' for item '{}'", datasetId, datasetItemId);
+                                log.debug("已解析出数据集 '{}'（条目 '{}'）", datasetId, datasetItemId);
                             } else {
-                                log.debug("No dataset found for item '{}'", datasetItemId);
+                                log.debug("未为条目 '{}' 找到数据集", datasetItemId);
                             }
                         })
                         .doFinally(signalType -> endSegment(segment));
@@ -3889,11 +3884,11 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     @WithSpan
     public Mono<List<UUID>> resolveDatasetIdsFromItemIds(@NonNull Set<UUID> datasetItemIds) {
         if (datasetItemIds.isEmpty()) {
-            log.debug("Empty dataset_item_ids set provided, returning empty list");
+            log.debug("提供了空的 dataset_item_ids 集合，返回空列表");
             return Mono.just(List.of());
         }
 
-        log.debug("Resolving dataset IDs from '{}' item IDs", datasetItemIds.size());
+        log.debug("从 '{}' 个条目 ID 解析数据集 ID", datasetItemIds.size());
 
         return asyncTemplate.nonTransaction(connection -> {
             var statement = connection.createStatement(RESOLVE_DATASET_ID_FROM_ITEM_IDS)
@@ -3910,7 +3905,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         .flatMap(result -> result
                                 .map((row, rowMetadata) -> UUID.fromString(row.get("dataset_id", String.class))))
                         .collectList()
-                        .doOnSuccess(datasetIds -> log.debug("Resolved '{}' dataset(s) from '{}' item IDs",
+                        .doOnSuccess(datasetIds -> log.debug("已解析出 '{}' 个数据集（来自 '{}' 个条目 ID）",
                                 datasetIds.size(), datasetItemIds.size()))
                         .doFinally(signalType -> endSegment(segment));
             });
@@ -3921,10 +3916,10 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     @WithSpan
     public Mono<DatasetItem> getItemByDatasetItemId(@NonNull UUID datasetId, @NonNull UUID versionId,
             @NonNull UUID datasetItemId) {
-        log.debug("Getting item by dataset_item_id '{}' from dataset '{}' version '{}'", datasetItemId, datasetId,
+        log.debug("按 dataset_item_id '{}' 从数据集 '{}' 版本 '{}' 获取条目", datasetItemId, datasetId,
                 versionId);
 
-        // Use the batch method with a single item for consistency
+        // 为保持一致性，使用单个条目的批量方法
         return getItemsByDatasetItemIds(datasetId, versionId, Set.of(datasetItemId)).next();
     }
 
@@ -3935,7 +3930,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return Flux.empty();
         }
 
-        log.debug("Getting '{}' items by dataset_item_ids from dataset '{}' version '{}'", datasetItemIds.size(),
+        log.debug("按 dataset_item_ids 获取 '{}' 个条目（数据集 '{}'，版本 '{}'）", datasetItemIds.size(),
                 datasetId, versionId);
 
         return asyncTemplate.stream(connection -> {
@@ -3954,7 +3949,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     private DatasetItem mapVersionedItemToDatasetItem(io.r2dbc.spi.Row row, io.r2dbc.spi.RowMetadata rowMetadata) {
-        // Map data field - stored as Map<String, String> in ClickHouse
+        // 映射 data 字段——在 ClickHouse 中存储为 Map<String, String>
         Map<String, JsonNode> data = Optional.ofNullable(row.get("data", Map.class))
                 .filter(m -> !m.isEmpty())
                 .map(value -> (Map<String, String>) value)
@@ -3997,7 +3992,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     private Mono<Set<Column>> getColumns(UUID datasetId, String versionId) {
-        log.debug("Getting columns for dataset '{}', version '{}'", datasetId, versionId);
+        log.debug("获取数据集 '{}'、版本 '{}' 的列", datasetId, versionId);
 
         return asyncTemplate.nonTransaction(connection -> {
             var statement = connection.createStatement(SELECT_COLUMNS_BY_VERSION)
@@ -4027,7 +4022,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     @Override
     @WithSpan
     public Mono<DatasetItem> getItemById(@NonNull UUID id, UUID datasetVersionId) {
-        log.debug("Getting item by ID '{}', version '{}'", id, datasetVersionId);
+        log.debug("按 ID '{}'、版本 '{}' 获取条目", id, datasetVersionId);
 
         var template = TemplateUtils.newST(SELECT_ITEM_BY_ID);
         if (datasetVersionId != null) {
@@ -4054,9 +4049,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         .next()
                         .doOnSuccess(item -> {
                             if (item != null) {
-                                log.debug("Found item by ID '{}', version '{}'", id, datasetVersionId);
+                                log.debug("已按 ID '{}'、版本 '{}' 找到条目", id, datasetVersionId);
                             } else {
-                                log.debug("Item not found by ID '{}', version '{}'", id, datasetVersionId);
+                                log.debug("按 ID '{}'、版本 '{}' 未找到条目", id, datasetVersionId);
                             }
                         })
                         .doFinally(signalType -> endSegment(segment));
@@ -4071,7 +4066,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return Mono.just(List.of());
         }
 
-        log.debug("Getting workspace IDs for '{}' dataset item row IDs", datasetItemRowIds.size());
+        log.debug("获取 '{}' 个数据集条目行 ID 的工作区 ID", datasetItemRowIds.size());
 
         return asyncTemplate.nonTransaction(connection -> {
             var statement = connection.createStatement(SELECT_DATASET_WORKSPACE_ITEMS_BY_ROW_IDS)
@@ -4124,7 +4119,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             @NonNull UUID versionId,
             @NonNull Set<UUID> experimentIds,
             List<ExperimentsComparisonFilter> filters) {
-        log.info("Getting experiment items stats for dataset '{}', version '{}', experiments '{}' with filters '{}'",
+        log.info("获取数据集 '{}'、版本 '{}'、实验 '{}' 带过滤器 '{}' 的实验条目统计",
                 datasetId, versionId, experimentIds, filters);
 
         return Mono.deferContextual(ctx -> {
@@ -4178,7 +4173,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                         });
                     });
         })
-                .doOnError(error -> log.error("Failed to get experiment items stats", error));
+                .doOnError(error -> log.error("获取实验条目统计失败", error));
     }
 
     private void applyFiltersToTemplate(ST template, List<ExperimentsComparisonFilter> filters) {
@@ -4243,7 +4238,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
 
     @Override
     public Mono<Long> deleteItemsFromVersion(UUID datasetId, UUID versionId, String workspaceId) {
-        log.debug("Deleting items from version '{}' for dataset '{}' in workspace '{}'", versionId, datasetId,
+        log.debug("从版本 '{}' 中删除数据集 '{}' 在工作区 '{}' 的条目", versionId, datasetId,
                 workspaceId);
 
         return asyncTemplate.nonTransaction(connection -> {
@@ -4258,14 +4253,14 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .flatMap(result -> Mono.from(result.getRowsUpdated()))
                     .next()
                     .defaultIfEmpty(0L)
-                    .doOnSuccess(count -> log.debug("Deleted '{}' items from version '{}'", count, versionId))
+                    .doOnSuccess(count -> log.debug("已删除 '{}' 个条目（版本 '{}'）", count, versionId))
                     .doFinally(signalType -> endSegment(segment));
         });
     }
 
     @Override
     public Mono<Long> copyItemsFromLegacy(UUID datasetId, UUID versionId, String workspaceId) {
-        log.debug("Copying items from legacy table for dataset '{}' to version '{}' in workspace '{}'", datasetId,
+        log.debug("将数据集 '{}' 的条目从旧版表复制到版本 '{}'（工作区 '{}'）", datasetId,
                 versionId, workspaceId);
 
         return asyncTemplate.nonTransaction(connection -> {
@@ -4280,7 +4275,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .flatMap(result -> Mono.from(result.getRowsUpdated()))
                     .next()
                     .defaultIfEmpty(0L)
-                    .doOnSuccess(count -> log.debug("Copied '{}' items from legacy table for dataset '{}'", count,
+                    .doOnSuccess(count -> log.debug("已从旧版表复制 '{}' 个条目（数据集 '{}'）", count,
                             datasetId))
                     .doFinally(signalType -> endSegment(segment));
         });
@@ -4288,7 +4283,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
 
     @Override
     public Mono<Long> countItemsInVersion(UUID datasetId, UUID versionId, String workspaceId) {
-        log.debug("Counting items in version '{}' for dataset '{}' in workspace '{}'", versionId, datasetId,
+        log.debug("统计版本 '{}' 中数据集 '{}'（工作区 '{}'）的条目", versionId, datasetId,
                 workspaceId);
 
         return asyncTemplate.nonTransaction(connection -> {
@@ -4303,7 +4298,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     .flatMap(result -> result.map((row, rowMetadata) -> row.get("count", Long.class)))
                     .next()
                     .defaultIfEmpty(0L)
-                    .doOnSuccess(count -> log.debug("Counted '{}' items in version '{}'", count, versionId))
+                    .doOnSuccess(count -> log.debug("已统计 '{}' 个条目（版本 '{}'）", count, versionId))
                     .doFinally(signalType -> endSegment(segment));
         });
     }
@@ -4311,14 +4306,14 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     @Override
     public Flux<DatasetVersionItemsCount> countItemsInVersionsBatch(List<DatasetVersionInfo> versions) {
         if (versions.isEmpty()) {
-            log.debug("No versions to count items for");
+            log.debug("没有需要统计条目的版本");
             return Flux.empty();
         }
 
-        log.debug("Counting items for '{}' versions in batch", versions.size());
+        log.debug("批量为 '{}' 个版本统计条目", versions.size());
 
-        // Build the tuple IN clause to match ClickHouse ordering key
-        // Format: ('workspace1', 'dataset1', 'version1'), ('workspace2', 'dataset2', 'version2'), ...
+        // 构建元组 IN 子句以匹配 ClickHouse 排序键
+        // 格式：('workspace1', 'dataset1', 'version1'), ('workspace2', 'dataset2', 'version2'), ...
         String versionTuples = versions.stream()
                 .map(v -> "('" + v.workspaceId() + "', '" + v.datasetId() + "', '" + v.versionId() + "')")
                 .collect(Collectors.joining(", "));
@@ -4330,8 +4325,8 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
         return asyncTemplate.stream(connection -> {
             var statement = connection.createStatement(query);
 
-            // Note: We don't use bindWorkspaceIdToFlux here because workspace_id is explicitly
-            // included in the query tuples. This is a cross-workspace migration query.
+            // 注意：这里不使用 bindWorkspaceIdToFlux，因为 workspace_id 已显式
+            // 包含在查询元组中。这是一个跨工作区的迁移查询。
             return Flux.from(statement.execute())
                     .doFinally(signalType -> endSegment(segment))
                     .flatMap(result -> result.map((row, rowMetadata) -> {
@@ -4347,45 +4342,44 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
                     }));
         })
                 .collectList()
-                .doOnSuccess(itemCounts -> log.debug("Completed counting items for '{}' versions", itemCounts.size()))
+                .doOnSuccess(itemCounts -> log.debug("已完成对 '{}' 个版本的条目统计", itemCounts.size()))
                 .flatMapMany(Flux::fromIterable);
     }
 
     /**
-     * Conditionally enables the push-top-limit optimization on the aggregated branch of the
-     * dataset items + experiment items query, returning whether it was applied so the caller
-     * can bind {@code top_limit}/{@code top_offset} parameters accordingly.
+     * 在数据集条目 + 实验条目查询的聚合分支上有条件地启用 push-top-limit 优化，
+     * 返回是否已应用，以便调用方可以相应地绑定 {@code top_limit}/{@code top_offset} 参数。
      *
-     * <p>The optimization wraps the result page in a {@code top_dataset_items} CTE that
-     * pre-resolves the page's {@code dataset_item_id}s, so the IN filter on
-     * {@code dataset_item_id} can prune both the EIA outer scan and the
-     * {@code dataset_items_aggr_resolved} dedup CTE via the existing minmax / bloom_filter
-     * skip indexes.
+     * <p>该优化将结果页包装在 {@code top_dataset_items} CTE 中，
+     * 预解析该页的 {@code dataset_item_id}s，因此对
+     * {@code dataset_item_id} 的 IN 过滤可以通过现有的 minmax / bloom_filter
+     * 跳过索引同时剪枝 EIA 外层扫描和
+     * {@code dataset_items_aggr_resolved} 去重 CTE。
      *
-     * <p>Aggregated-branch filters are folded into the Top-N CTE before its {@code LIMIT}:
+     * <p>聚合分支的过滤器在其 {@code LIMIT} 之前折叠进 Top-N CTE：
      * <ul>
-     *     <li>EIA-only filters ({@code experiment_item_filters},
-     *         {@code feedback_scores_filters_agg}, {@code feedback_scores_empty_filters_agg})
-     *         are inlined directly.</li>
-     *     <li>{@code dataset_item_filters} drives a slim {@code dataset_items_filtered_ids}
-     *         CTE; its ID set feeds the Top-N CTE via {@code arrayJoin([id, row_id]) IN}.</li>
+     *     <li>仅 EIA 的过滤器（{@code experiment_item_filters}、
+     *         {@code feedback_scores_filters_agg}、{@code feedback_scores_empty_filters_agg}）
+     *         会被直接内联。</li>
+     *     <li>{@code dataset_item_filters} 驱动一个精简的 {@code dataset_items_filtered_ids}
+     *         CTE；其 ID 集合通过 {@code arrayJoin([id, row_id]) IN} 馈入 Top-N CTE。</li>
      * </ul>
      *
-     * <p>The optimization is skipped when:
+     * <p>在以下情况下跳过该优化：
      * <ul>
-     *     <li>The query is not on the aggregated-only branch ({@code !hasAggregated || hasRaw}).</li>
-     *     <li>Search is active — search references {@code di.data} and forces post-DI placement,
-     *         which was measured as a net regression in that placement.</li>
-     *     <li>Sort requires DI fields and any filter is present — the post-DI Top-N CTE
-     *         doesn't fold filters; folding them there duplicates the outer JOIN+GROUP BY.</li>
-     *     <li>The supplied sorting field is unsupported by
-     *         {@link SortingFactoryDatasets#supportsPushTopLimit}.</li>
+     *     <li>查询不在仅聚合分支上（{@code !hasAggregated || hasRaw}）。</li>
+     *     <li>搜索处于活跃状态——搜索引用 {@code di.data} 并强制采用 post-DI 放置，
+     *         而该放置方式被测量为净回归。</li>
+     *     <li>排序需要 DI 字段且存在任何过滤器——post-DI 的 Top-N CTE
+     *         不会折叠过滤器；在那里折叠会重复外层的 JOIN+GROUP BY。</li>
+     *     <li>提供的排序字段不被
+     *         {@link SortingFactoryDatasets#supportsPushTopLimit} 支持。</li>
      * </ul>
      *
-     * <p>Sets {@code push_top_limit}, {@code top_sorting}, and {@code push_top_needs_div}
-     * template variables as appropriate.
+     * <p>视情况设置 {@code push_top_limit}、{@code top_sorting} 和 {@code push_top_needs_div}
+     * 模板变量。
      *
-     * @return {@code true} when the optimization was applied to the template, {@code false} otherwise.
+     * @return 当优化被应用到模板时返回 {@code true}，否则返回 {@code false}。
      */
     private boolean applyPushTopLimit(ST template, DatasetItemSearchCriteria criteria,
             boolean hasAggregated, boolean hasRaw) {
@@ -4413,9 +4407,9 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
     }
 
     /**
-     * Builds the ORDER BY expression for the top_dataset_items CTE.
-     * Maps outer query field names to CTE-context expressions using experiment_item_aggregates (eia_t)
-     * and optionally dataset_items_aggr_resolved (di_t).
+     * 构建 top_dataset_items CTE 的 ORDER BY 表达式。
+     * 使用 experiment_item_aggregates (eia_t) 以及可选的 dataset_items_aggr_resolved (di_t)
+     * 将外层查询字段名映射到 CTE 上下文的表达式。
      */
     private String buildTopItemsSorting(List<com.comet.opik.api.sorting.SortingField> sortingFields) {
         String primarySort = sortingFields.stream()
@@ -4478,7 +4472,7 @@ class DatasetItemVersionDAOImpl implements DatasetItemVersionDAO {
             return "JSONExtractRaw(argMax(eia_t.metadata, eia_t.id), :%s)".formatted(sf.bindKey());
         }
 
-        // Fallback — should not happen if supportsPushTopLimit is checked first
+        // 回退——如果先检查了 supportsPushTopLimit，则不应走到这里
         return "eia_t.dataset_item_id";
     }
 

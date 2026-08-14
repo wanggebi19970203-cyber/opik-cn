@@ -1,19 +1,17 @@
-"""Connection-scoped transport resources shared by :class:`opik.Opik` handles.
+"""由 :class:`opik.Opik` 句柄共享的连接作用域传输资源。
 
-The objects built here (httpx pool, REST client, message-processing chain, file
-upload manager, replay manager + connection monitor, and the streamer with its
-consumer threads) are properties of the *connection* ``(url, workspace, api_key,
-...)`` rather than of an individual client.
+这里构建的对象（httpx 连接池、REST 客户端、消息处理链、文件上传管理器、
+重放管理器 + 连接监视器，以及带有消费线程的流处理器）是*连接*
+``(url, workspace, api_key, ...)`` 的属性，而不是单个客户端的属性。
 
-Responsibilities are split so each type does one thing:
+职责被拆分，使每种类型只做一件事：
 
-- :class:`SharedConnectionResourcesBundle` — the value object: holds the live
-  transport objects and knows how to dispose them (``close``).
-- :class:`ConnectionResourceManager` — the lifecycle authority: derives the
-  connection identity, builds-or-reuses a bundle, ref-counts it, and decides
-  when to tear it down (including at process exit).
-- :class:`Lease` — a per-handle, release-once token that delegates all lifecycle
-  decisions back to the manager.
+- :class:`SharedConnectionResourcesBundle` —— 值对象：持有存活的传输对象，
+  并知道如何销毁它们（``close``）。
+- :class:`ConnectionResourceManager` —— 生命周期权威：派生连接身份，
+  构建或复用 bundle，对其进行引用计数，并决定何时拆除它（包括进程退出时）。
+- :class:`Lease` —— 每个句柄一个、仅释放一次的令牌，将所有生命周期决策
+  委托回管理器。
 """
 
 import atexit
@@ -45,14 +43,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 class SharedConnectionResourcesBundle:
-    """Owns the expensive transport objects for one connection identity.
+    """持有一个连接身份的昂贵传输对象。
 
-    Connection-scoped: it carries no ``project_name`` or per-call state, so it
-    can back multiple :class:`opik.Opik` handles. ``close`` disposes what the
-    bundle owns — the streamer's threads and the file-upload worker pool, plus
-    the httpx connection pool on a durable (``flush=True``) close — so evicting a
-    bundle never leaks threads. ``flush_timeout`` is the connection's configured
-    drain budget, used when the process-exit hook closes the bundle.
+    连接作用域：它不携带 ``project_name`` 或每次调用的状态，因此可以支撑
+    多个 :class:`opik.Opik` 句柄。``close`` 会销毁 bundle 所拥有的内容——
+    流处理器的线程和文件上传工作线程池，以及在持久化（``flush=True``）关闭时
+    的 httpx 连接池——因此驱逐一个 bundle 永远不会泄漏线程。``flush_timeout``
+    是连接的已配置排空预算，在进程退出钩子关闭 bundle 时使用。
     """
 
     def __init__(
@@ -79,34 +76,33 @@ class SharedConnectionResourcesBundle:
         self.flush_timeout = flush_timeout
 
     def close(self, timeout: Optional[int], *, flush: bool) -> bool:
-        # Drain/stop the streamer (consumer threads, replay, batch preprocessor);
-        # on flush=True it also flushes pending file uploads.
-        # Closing the streamer also stops and joins the replay manager (its own
-        # daemon thread), so there is no separate replay teardown to do here.
+        # 排空/停止流处理器（消费线程、重放、批量预处理器）；
+        # 当 flush=True 时，还会刷新待处理的文件上传。
+        # 关闭流处理器也会停止并 join 重放管理器（它自己的守护线程），
+        # 因此这里无需单独的重放拆除操作。
         flushed = self.streamer.close(timeout, flush=flush)
-        # Stop the upload worker pool too, so eviction doesn't leave its threads
-        # running. wait=flush mirrors the streamer: block for in-flight uploads
-        # on a durable close, return immediately on fire-and-forget teardown.
+        # 同时停止上传工作线程池，这样驱逐就不会让它的线程继续运行。
+        # wait=flush 与流处理器保持一致：持久化关闭时阻塞等待进行中的上传，
+        # 即发即弃的拆除时立即返回。
         self.file_upload_manager.close(wait=flush)
         if flush:
-            # Close the httpx pool only on a durable close, and last — after the
-            # streamer has joined the replay thread and uploads have drained, so
-            # no request is in flight. Each bundle owns a dedicated client (built
-            # per connection identity), so this never affects another bundle.
-            # flush=False is fire-and-forget: the streamer deliberately leaves
-            # daemon threads to finish in-flight requests, so closing the pool
-            # here would race them — leave it for GC / process-exit close_all.
+            # 仅在持久化关闭时、且最后才关闭 httpx 连接池——在流处理器
+            # 已 join 重放线程且上传已排空之后，这样就不会有请求仍在进行中。
+            # 每个 bundle 拥有一个专用客户端（按连接身份构建），因此这
+            # 绝不会影响其他 bundle。
+            # flush=False 是即发即弃：流处理器故意让守护线程继续完成
+            # 进行中的请求，因此在这里关闭连接池会与它们发生竞态——
+            # 留给 GC / 进程退出的 close_all 处理。
             self.httpx_client.close()
         return flushed
 
     def flush(self, timeout: Optional[int]) -> bool:
-        """Drain the shared message queue without tearing the bundle down.
+        """排空共享消息队列，而不拆除 bundle。
 
-        Used when a handle releases with ``flush=True`` while other handles still
-        share the bundle: the queued data is persisted now, but the transport
-        stays alive for the remaining handles.
+        当一个句柄以 ``flush=True`` 释放、而其他句柄仍共享该 bundle 时使用：
+        已排队的数据现在被持久化，但传输层仍为剩余的句柄保持存活。
 
-        Returns whether the queue drained fully within ``timeout``.
+        返回队列是否在 ``timeout`` 内完全排空。
         """
         return self.streamer.flush(timeout)
 
@@ -136,10 +132,10 @@ def _create_replay_manager(
 def create_connection_resources(
     config: opik_config.OpikConfig, *, use_batching: bool
 ) -> SharedConnectionResourcesBundle:
-    """Build a full transport stack for ``config``.
+    """为 ``config`` 构建完整的传输栈。
 
-    Pure construction with no cache awareness — this is the default builder that
-    :class:`ConnectionResourceManager` invokes on a cache miss.
+    纯粹构建、无缓存感知——这是 :class:`ConnectionResourceManager`
+    在缓存未命中时调用的默认构建器。
     """
     httpx_client_ = httpx_client.get(
         workspace=config.workspace,
@@ -153,7 +149,7 @@ def create_connection_resources(
     )
     rest_client._client_wrapper._timeout = (
         httpx.USE_CLIENT_DEFAULT
-    )  # See https://github.com/fern-api/fern/issues/5321
+    )  # 参见 https://github.com/fern-api/fern/issues/5321
     rest_client_configurator.configure(rest_client)
 
     max_queue_size = message_queue.calculate_max_queue_size(
@@ -206,36 +202,34 @@ def create_connection_resources(
     )
 
 
-# Opaque, hashable connection identity produced by ``_connection_key``.
+# 由 ``_connection_key`` 生成的不透明、可哈希的连接身份。
 ConnectionKey = Tuple[str, bool]
 
 
 def _connection_key(
     config: opik_config.OpikConfig, *, use_batching: bool
 ) -> ConnectionKey:
-    # The whole config defines a connection's identity: any differing field
-    # yields a different bundle. Hashing the serialized config keeps the key
-    # compact and, by construction, never holds the api_key (or any field) in
-    # plaintext.
+    # 整个配置定义了一个连接的身份：任何不同的字段都会产生不同的 bundle。
+    # 对序列化后的配置进行哈希可保持键紧凑，并且按构造方式，永远不以明文
+    # 持有 api_key（或任何字段）。
     #
-    # Note this means clients that differ only by per-handle settings (e.g. a
-    # different default ``project_name`` or ``default_flush_timeout``) get
-    # separate bundles. That is safe — project is carried per trace and the flush
-    # timeout is a per-``end()`` argument — but to share one connection across
-    # projects, use a single client and pass ``project_name`` per call.
+    # 注意，这意味着仅因每个句柄的设置（例如不同的默认 ``project_name``
+    # 或 ``default_flush_timeout``）而不同的客户端会获得独立的 bundle。
+    # 这是安全的——项目是按 trace 携带的，flush 超时是每个 ``end()`` 的
+    # 参数——但要在项目之间共享一个连接，应使用单个客户端并在每次调用时
+    # 传入 ``project_name``。
     fingerprint = json.dumps(config.model_dump(mode="json"), sort_keys=True)
     digest = hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()
     return (digest, use_batching)
 
 
 class Lease:
-    """Per-handle, release-once token over a bundle.
+    """每个句柄持有、仅释放一次的 bundle 令牌。
 
-    Each :class:`opik.Opik` handle holds its own lease. It carries the bundle so
-    the handle can delegate without re-looking it up, and guards a single
-    ``release`` so an explicit ``end()`` followed by the GC finalizer cannot
-    release twice. All lifecycle *decisions* (refcount, teardown) live on the
-    manager — the lease only forwards.
+    每个 :class:`opik.Opik` 句柄都持有自己的租约。它携带 bundle，使句柄
+    无需重新查找即可委托，并守护单次 ``release``，这样显式 ``end()`` 之后
+    再跟 GC 终结器就不会释放两次。所有生命周期*决策*（引用计数、拆除）
+    都在管理器上——租约只负责转发。
     """
 
     def __init__(
@@ -253,10 +247,9 @@ class Lease:
     def release(
         self, timeout: Optional[int], *, flush: bool = True, close_on_zero: bool
     ) -> Optional[bool]:
-        """Release this handle's reference. Returns the authoritative flush
-        outcome when this release performed the drain (an explicit
-        ``flush=True`` release), ``None`` otherwise (already released, or a GC
-        finalizer that does no network I/O)."""
+        """释放此句柄的引用。当本次释放执行了排空（显式的 ``flush=True``
+        释放）时，返回权威的 flush 结果；否则返回 ``None``（已释放，或是
+        不做网络 I/O 的 GC 终结器）。"""
         with self._once_lock:
             if self._released:
                 return None
@@ -275,17 +268,15 @@ class _Entry:
 
 
 class ConnectionResourceManager:
-    """Single owner of the shared connection-resource lifecycle.
+    """共享连接资源生命周期的唯一所有者。
 
-    Derives the connection identity from a config, builds-or-reuses a bundle
-    ref-counted by that identity, and tears a bundle down only when its last
-    lease is released *explicitly* (``Opik.end()``) — always after evicting it
-    under the lock, so a concurrent ``acquire`` never receives a closing bundle.
-    A reference dropped by a GC finalizer (``close_on_zero=False``) only
-    decrements the count and leaves the bundle cached; closing is never done in
-    garbage collection. Whatever survives to process exit is disposed by
-    ``close_all``. Disposal mechanics are delegated to the bundle's ``close``;
-    this class owns *when* it happens.
+    从配置派生连接身份，构建或复用按该身份进行引用计数的 bundle，
+    并且仅当其最后一个租约被*显式*释放（``Opik.end()``）时才拆除 bundle——
+    总是在锁内将其驱逐之后，这样并发的 ``acquire`` 永远不会收到正在关闭
+    的 bundle。由 GC 终结器丢弃的引用（``close_on_zero=False``）仅递减计数
+    并让 bundle 保持缓存；关闭绝不在垃圾回收中执行。任何存活到进程退出的
+    内容都由 ``close_all`` 销毁。销毁机制委托给 bundle 的 ``close``；
+    本类负责*何时*发生。
     """
 
     def __init__(
@@ -306,15 +297,15 @@ class ConnectionResourceManager:
     ) -> Lease:
         key = _connection_key(config, use_batching=use_batching)
 
-        # Fast path: an existing bundle is reused under the lock.
+        # 快速路径：在锁内复用现有 bundle。
         with self._lock:
             entry = self._entries.get(key)
             if entry is not None:
                 entry.refcount += 1
                 return Lease(manager=self, key=key, resources=entry.resources)
 
-        # No bundle yet — build outside the lock so a slow transport-stack
-        # construction does not serialize unrelated acquisitions.
+        # 还没有 bundle——在锁外构建，这样缓慢的传输栈构建
+        # 不会串行化不相关的获取操作。
         bundle = self._builder(config, use_batching=use_batching)
 
         with self._lock:
@@ -322,19 +313,18 @@ class ConnectionResourceManager:
             if entry is None:
                 self._entries[key] = _Entry(resources=bundle, refcount=1)
                 return Lease(manager=self, key=key, resources=bundle)
-            # Lost the construction race: keep the bundle that won, take a
-            # reference on it, and drop ours below (outside the lock).
+            # 在构建竞态中落败：保留胜出的 bundle，在其上取一个引用，
+            # 并在下方（锁外）丢弃我们自己的那个。
             entry.refcount += 1
             lease = Lease(manager=self, key=key, resources=entry.resources)
 
-        # Discard the bundle we lost the race with. A teardown failure here must
-        # not reject the caller — the winning lease is already valid — so log and
-        # move on.
+        # 丢弃我们在竞态中落败的那个 bundle。这里的拆除失败不得拒绝调用者——
+        # 胜出的租约已经有效——因此记录日志并继续。
         try:
             bundle.close(timeout=0, flush=False)
         except Exception:
             LOGGER.debug(
-                "Failed to close connection resources discarded after an acquire race",
+                "关闭在获取竞态后被丢弃的连接资源失败",
                 exc_info=True,
             )
         return lease
@@ -347,21 +337,18 @@ class ConnectionResourceManager:
         flush: bool = True,
         close_on_zero: bool,
     ) -> Optional[bool]:
-        # Durability under sharing: an explicit ``end(flush=True)`` on a handle
-        # that still shares its bundle must drain the shared queue *before* this
-        # handle gives up its reference. Flushing while our reference is still
-        # counted keeps refcount >= 1, so a concurrent last-release cannot evict
-        # and ``close(flush=False)`` the bundle — which would clear the message
-        # queue out from under this flush and lose the data the ``flush=True``
-        # caller was promised. Pre-flush only when another handle also shares the
-        # bundle; a sole holder's ``close(flush=True)`` below already drains
-        # durably. A GC finalizer (``close_on_zero=False``) never does network
-        # I/O, so it never pre-flushes.
-        # Authoritative flush outcome for the caller: set by whichever branch
-        # below actually drains — the shared pre-flush or the last-reference
-        # close. Stays None when this release did no draining (GC finalizer, or
-        # a bundle already released elsewhere), so the caller can tell "not
-        # confirmed" apart from "confirmed not flushed".
+        # 共享下的持久性：在仍然共享其 bundle 的句柄上执行显式的
+        # ``end(flush=True)`` 必须在此句柄放弃其引用*之前*排空共享队列。
+        # 在我们的引用仍被计数时刷新可保持 refcount >= 1，因此并发的
+        # 最后一次释放无法驱逐并 ``close(flush=False)`` 该 bundle——那会
+        # 从这次 flush 底下清空消息队列，丢失 ``flush=True`` 调用者所被
+        # 承诺的数据。仅当另一个句柄也共享该 bundle 时才预刷新；唯一持有者的
+        # ``close(flush=True)``（见下方）已经持久地排空。GC 终结器
+        # （``close_on_zero=False``）从不做网络 I/O，因此它从不预刷新。
+        # 调用者的权威 flush 结果：由下方实际执行排空的分支设置——共享的
+        # 预刷新或最后一次引用的关闭。当本次释放未执行排空（GC 终结器，或
+        # bundle 已在别处释放）时保持 None，这样调用者就能区分“未确认”与
+        # “确认未刷新”。
         flushed: Optional[bool] = None
         if flush and close_on_zero:
             with self._lock:
@@ -374,10 +361,9 @@ class ConnectionResourceManager:
             if shared_bundle is not None:
                 flushed = shared_bundle.flush(timeout)
 
-        # Now drop our reference. Because we only decrement here — after any
-        # pre-flush above has completed — a close can never run while another
-        # handle is mid pre-flush: that handle still holds its reference, so the
-        # count cannot reach zero until its flush returns.
+        # 现在丢弃我们的引用。因为我们只在这里——在上方任何预刷新完成之后——
+        # 递减，所以在另一个句柄预刷新进行中时，关闭绝不会运行：该句柄
+        # 仍持有其引用，因此在其 flush 返回之前计数不可能达到零。
         with self._lock:
             entry = self._entries.get(key)
             if entry is None:
@@ -386,29 +372,28 @@ class ConnectionResourceManager:
             if entry.refcount > 0:
                 return flushed
             if not close_on_zero:
-                # The last reference was dropped by a GC finalizer (see
-                # ``Opik._acquire_shared_resources``). Only the refcount
-                # decrement above is safe to run there; closing — streamer
-                # thread joins, file-upload pool shutdown, network flush — must
-                # never happen inside garbage collection. Leave the bundle
-                # cached so a later same-identity ``acquire`` reuses it, or
-                # ``close_all`` disposes it at process exit.
+                # 最后一个引用由 GC 终结器丢弃（参见
+                # ``Opik._acquire_shared_resources``）。在那里只能安全地执行
+                # 上方的引用计数递减；关闭——流处理器线程 join、文件上传池
+                # 关闭、网络 flush——绝不能发生在垃圾回收内部。让 bundle
+                # 保持缓存，以便之后相同身份的 ``acquire`` 复用它，或由
+                # ``close_all`` 在进程退出时销毁它。
                 return flushed
-            # Evict before close, under the lock, so a concurrent acquire never
-            # receives a bundle that is being torn down.
+            # 在锁内、关闭之前驱逐，这样并发的 acquire 永远不会收到
+            # 正在被拆除的 bundle。
             del self._entries[key]
             bundle = entry.resources
 
         closed_flushed = bundle.close(timeout, flush=flush)
-        # A non-draining teardown has no flush outcome to report — return None
-        # (not close()'s bool) so the result stays "no drain happened here".
+        # 非排空式的拆除没有 flush 结果可报告——返回 None（而非 close()
+        # 的布尔值），使结果保持为“这里未发生排空”。
         return closed_flushed if flush else None
 
     def close_all(self, *, flush: bool = True) -> None:
-        """Close and evict every cached bundle. Registered as the process
-        ``atexit`` hook (``flush=True``), where each bundle is drained within its
-        own connection's configured ``flush_timeout`` rather than unbounded;
-        ``flush=False`` resets the registry without network I/O."""
+        """关闭并驱逐每个缓存的 bundle。注册为进程的 ``atexit`` 钩子
+        （``flush=True``），此时每个 bundle 都在其自身连接配置的
+        ``flush_timeout`` 内排空，而非无界地排空；``flush=False`` 则
+        在不做网络 I/O 的情况下重置注册表。"""
         with self._lock:
             entries = list(self._entries.values())
             self._entries.clear()
@@ -418,19 +403,19 @@ class ConnectionResourceManager:
                 entry.resources.close(entry.resources.flush_timeout, flush=flush)
             except Exception:
                 LOGGER.debug(
-                    "Failed to close shared connection resources",
+                    "关闭共享连接资源失败",
                     exc_info=True,
                 )
 
     def active_connection_count(self) -> int:
-        """Number of live cached bundles. For tests and debugging."""
+        """存活的缓存 bundle 数量。用于测试和调试。"""
         with self._lock:
             return len(self._entries)
 
     def reference_count(
         self, config: opik_config.OpikConfig, *, use_batching: bool
     ) -> int:
-        """Number of handles currently sharing ``config``'s bundle (0 if none)."""
+        """当前共享 ``config`` 的 bundle 的句柄数量（若没有则为 0）。"""
         key = _connection_key(config, use_batching=use_batching)
         with self._lock:
             entry = self._entries.get(key)

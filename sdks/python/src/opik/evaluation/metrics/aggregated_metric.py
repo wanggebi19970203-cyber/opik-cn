@@ -9,21 +9,19 @@ class AggregatedMetric(
     base_metric.BaseMetric, arguments_validator.ScoreArgumentsValidator
 ):
     """
-    Combine the output of multiple metrics into a single aggregated ``ScoreResult``.
+    将多个指标的输出合并为单个聚合的 ``ScoreResult``。
 
-    Each metric in ``metrics`` is executed with the provided scoring kwargs, then the
-    ``aggregator`` callback decides how to merge the individual results. This is
-    handy for building ensembles such as min/max, weighted averages, or custom
-    pass/fail checks without re-implementing the metrics themselves.
+    ``metrics`` 中的每个指标都会使用提供的评分 kwargs 执行，然后由
+    ``aggregator`` 回调决定如何合并各个结果。这非常适合构建诸如最小/最大值、
+    加权平均或自定义通过/失败检查之类的集成，而无需重新实现指标本身。
 
     Args:
-        name: Display name for the aggregated metric result.
-        metrics: Ordered list of metric instances that should be executed.
-        aggregator: Callable receiving the list of ``ScoreResult`` objects and
-            returning the final aggregated ``ScoreResult``.
-        track: Whether to automatically track the metric in Opik. Defaults to
-            ``True``.
-        project_name: Optional tracking project used when no parent context exists.
+        name: 聚合指标结果的显示名称。
+        metrics: 应执行的有序指标实例列表。
+        aggregator: 接收 ``ScoreResult`` 对象列表并返回最终聚合
+            ``ScoreResult`` 的回调。
+        track: 是否在 Opik 中自动跟踪该指标。默认为 ``True``。
+        project_name: 在没有父级上下文时使用的可选跟踪项目。
 
     Example:
         >>> from opik.evaluation.metrics import AggregatedMetric, Contains, RegexMatch
@@ -62,18 +60,18 @@ class AggregatedMetric(
         self.aggregator = aggregator
 
         if self.metrics is None or len(self.metrics) == 0:
-            raise ValueError("No metrics provided")
+            raise ValueError("未提供任何指标")
 
         if aggregator is None:
-            raise ValueError("No aggregator provided")
+            raise ValueError("未提供聚合器")
 
     def score(self, **kwargs: Any) -> score_result.ScoreResult:
         score_results: List[score_result.ScoreResult] = []
         for metric in self.metrics:
-            # Narrow per sub-metric, exactly as the engine does when it dispatches
-            # directly: this metric accepts `**kwargs`, so without this a wrapped
-            # metric that declares only what it needs would get every dataset key
-            # and fail with an `unexpected keyword argument` TypeError.
+            # 按子指标逐个收窄参数，与引擎直接分发时的行为一致：
+            # 该指标接受 `**kwargs`，因此若不这样做，一个仅声明了自身所需
+            # 参数的被包装指标会收到所有数据集键，并因
+            # `unexpected keyword argument` TypeError 而失败。
             positional_arguments, keyword_arguments = (
                 arguments_helpers.select_score_arguments(
                     score_function=metric.score,

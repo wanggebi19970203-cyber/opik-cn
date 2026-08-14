@@ -56,10 +56,9 @@ class KpiCardDAOImpl implements KpiCardDAO {
     private final @NonNull OpikConfiguration configuration;
 
     /**
-     * trace_costs buckets the TOTAL_COST KPI into current/previous periods keyed on trace_id (a
-     * UUIDv7 matching the trace id used for the count/error/duration split) and is CROSS JOINed as a
-     * single row, avoiding the per-trace LEFT JOIN whose hash build dominated peak memory on large
-     * projects. Identical results; the trace_id IN (traces_filtered) semijoin is retained. OPIK-7319.
+     * trace_costs 将 TOTAL_COST 指标按 trace_id（与用于计数/错误/时长拆分的追踪 ID 相匹配的
+     * UUIDv7）分桶为当前/上一周期，并以单行 CROSS JOIN 连接，避免了每条追踪的 LEFT JOIN
+     * ——其哈希构建在大项目上占据了峰值内存。结果相同；保留了 trace_id IN (traces_filtered) 的半连接。OPIK-7319。
      */
     private static final String GET_TRACE_KPI_CARDS = """
             WITH feedback_scores_deduped AS (
@@ -651,10 +650,10 @@ class KpiCardDAOImpl implements KpiCardDAO {
         Optional.ofNullable(filters).ifPresent(f -> {
             FilterQueryBuilder.toAnalyticsDbFilters(f, FilterStrategy.TRACE_THREAD, traceColumnsNonNullable())
                     .ifPresent(threadFilters -> template.add("trace_thread_filters", threadFilters));
-            // first_message/last_message aggregate the full input/output payloads, so only project
-            // them in threads_filtered when a filter actually references them (otherwise the thread
-            // KPI query would needlessly materialize large columns). number_of_messages is cheap and
-            // always projected. See OPIK-7050.
+            // first_message/last_message 聚合了完整的输入/输出负载，因此仅在过滤器实际引用它们时
+            // 才在 threads_filtered 中投影这些字段（否则线程
+            // KPI 查询会无谓地物化大列）。number_of_messages 开销很小且
+            // 总是被投影。参见 OPIK-7050。
             FilterQueryBuilder.hasField(f, TraceThreadField.FIRST_MESSAGE)
                     .ifPresent(present -> template.add("trace_thread_first_message_filter", true));
             FilterQueryBuilder.hasField(f, TraceThreadField.LAST_MESSAGE)

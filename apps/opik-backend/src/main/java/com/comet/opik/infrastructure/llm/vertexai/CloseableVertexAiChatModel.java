@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-// Owns the VertexAI and closes it; the langchain4j model can't (its two-arg ctor nulls its handle, so its close() is a no-op).
+// 持有 VertexAI 并关闭它；langchain4j 模型做不到（它的双参构造函数把句柄置空，因此它的 close() 是空操作）。
 @Slf4j
 class CloseableVertexAiChatModel implements ChatModel, AutoCloseable {
 
@@ -44,21 +44,21 @@ class CloseableVertexAiChatModel implements ChatModel, AutoCloseable {
         return delegate.supportedCapabilities();
     }
 
-    // Best-effort: a close failure must never surface on an otherwise-successful call.
+    // 尽力而为：关闭失败绝不能在一个本应成功的调用上暴露出来。
     @Override
     public void close() {
         try {
             vertexAI.close();
         } catch (Exception e) {
-            log.warn("Failed to close Vertex AI client", e);
+            log.warn("关闭 Vertex AI 客户端失败", e);
         }
-        // Symmetry: a no-op today, but the delegate is the only thing that can release resources it may own.
+        // 对称性：今天是无操作，但委托对象是唯一能释放它可能拥有的资源的东西。
         try {
             if (delegate instanceof AutoCloseable closeable) {
                 closeable.close();
             }
         } catch (Exception e) {
-            log.warn("Failed to close the delegate Vertex AI model", e);
+            log.warn("关闭委托的 Vertex AI 模型失败", e);
         }
     }
 

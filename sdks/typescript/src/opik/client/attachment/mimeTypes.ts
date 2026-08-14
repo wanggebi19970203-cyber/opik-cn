@@ -1,7 +1,7 @@
 /**
- * Magic-byte MIME sniffing for decoded base64 blobs. Recognizes binary media types
- * (PNG/JPEG/GIF/WebP/PDF/SVG/MP4) plus JSON (leading `{`/`[`), matching the Python SDK's
- * `detect_mime_type`; anything else returns null and is left inline.
+ * 对解码后的 base64 数据块进行魔数（magic-byte）MIME 探测。识别二进制媒体类型
+ * （PNG/JPEG/GIF/WebP/PDF/SVG/MP4）以及 JSON（以 `{`/`[` 开头），与 Python SDK 的
+ * `detect_mime_type` 保持一致；其他情况返回 null 并保留为内联。
  */
 
 const startsWith = (
@@ -27,13 +27,13 @@ const GIF89A = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61];
 const RIFF = [0x52, 0x49, 0x46, 0x46];
 const WEBP = [0x57, 0x45, 0x42, 0x50];
 const PDF = [0x25, 0x50, 0x44, 0x46];
-const FTYP = [0x66, 0x74, 0x79, 0x70]; // "ftyp" box, appears at byte offset 4 in MP4
+const FTYP = [0x66, 0x74, 0x79, 0x70]; // "ftyp" 盒子，在 MP4 中出现在字节偏移量 4 处
 
 export const detectMimeType = (bytes: Buffer): string | null => {
   if (startsWith(bytes, PNG)) return "image/png";
-  // JPEG (parity with the Python SDK): the SOI header alone isn't enough — a complete JPEG
-  // ends with the EOI marker (FFD9). A header-only/truncated blob falls through to the other
-  // checks so random data that merely starts with FFD8FF isn't misclassified as an image.
+  // JPEG（与 Python SDK 保持一致）：仅有 SOI 头还不够——完整的 JPEG
+  // 以 EOI 标记（FFD9）结尾。仅含头部/被截断的数据块会落到其他
+  // 检查中，这样仅仅以 FFD8FF 开头的随机数据不会被误判为图片。
   if (
     startsWith(bytes, JPEG) &&
     bytes.length >= 2 &&
@@ -49,16 +49,16 @@ export const detectMimeType = (bytes: Buffer): string | null => {
   if (startsWith(bytes, PDF)) return "application/pdf";
   if (startsWith(bytes, FTYP, 4)) return "video/mp4";
 
-  // Case-insensitive, anywhere in the first 1 KB (matches the Python SDK) — catches SVGs
-  // that open with a DOCTYPE, an XML comment, or a stylesheet PI before the <svg> tag.
+  // 不区分大小写，在前 1 KB 内任意位置查找（与 Python SDK 保持一致）——可捕获
+  // 在 <svg> 标签之前以 DOCTYPE、XML 注释或样式表 PI 开头的 SVG。
   const head = bytes.subarray(0, 1024).toString("utf8").toLowerCase();
   if (head.includes("<svg")) {
     return "image/svg+xml";
   }
 
-  // JSON (matches the Python SDK): the first ~100 bytes must be valid UTF-8 and, once
-  // leading whitespace is trimmed, begin with `{` or `[`. A fatal decoder means a binary
-  // blob (or a multibyte char split at the 100-byte window) is treated as not-JSON.
+  // JSON（与 Python SDK 保持一致）：前约 100 个字节必须是合法的 UTF-8，并且在
+  // 去除前导空白后以 `{` 或 `[` 开头。致命的解码错误意味着二进制
+  // 数据块（或在 100 字节窗口处被截断的多字节字符）被视为非 JSON。
   try {
     const text = new TextDecoder("utf-8", { fatal: true })
       .decode(bytes.subarray(0, 100))
@@ -67,7 +67,7 @@ export const detectMimeType = (bytes: Buffer): string | null => {
       return "application/json";
     }
   } catch {
-    // not valid UTF-8 in the sampled window -> not JSON
+    // 采样窗口内不是合法的 UTF-8 -> 非 JSON
   }
   return null;
 };

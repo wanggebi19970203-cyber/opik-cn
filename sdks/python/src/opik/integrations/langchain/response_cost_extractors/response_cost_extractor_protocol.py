@@ -6,10 +6,10 @@ class ResponseCostExtractorProtocol(Protocol):
         self, response_metadata: Dict[str, Any]
     ) -> Optional[float]:
         """
-        Returns the provider-reported cost (in USD) found in an LLM run's
-        ``response_metadata``, or None if this extractor doesn't recognize it.
+        返回在 LLM 运行的 ``response_metadata`` 中找到的提供商报告的成本
+        （以美元计）；若该提取器无法识别，则返回 None。
 
-        Implementations should look only for their own fingerprint (e.g. a
-        specific proxy response header) so multiple extractors can coexist.
+        实现应只查找自身的指纹（例如特定的代理响应头），以便多个提取器可以
+        共存。
         """
         ...

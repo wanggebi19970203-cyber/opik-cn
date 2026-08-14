@@ -814,13 +814,13 @@ public class SpanDAO {
             """;
 
     /**
-     * Cheap size estimate for all spans across a set of trace ids, used only to route trace-thread online
-     * scoring between the inline and agentic-tools paths without materializing spans. Sums the
-     * pre-computed {@code *_length} materialized columns, so ClickHouse reads only small numeric columns
-     * instead of the (potentially large) {@code input}/{@code output}/{@code metadata} text. The latest
-     * version of each span is taken with {@code argMax(..., last_updated_at)} grouped by {@code id} —
-     * a hash aggregation that dedups the {@code ReplacingMergeTree} versions without the full-row
-     * {@code ORDER BY} + {@code LIMIT 1 BY workspace_id, project_id, id} sort that {@link #SELECT_BY_TRACE_IDS} pays. See OPIK-7454.
+     * 一组 trace id 下所有 span 的廉价大小估算，仅用于在不物化 span 的情况下，将 trace 线程在线
+     * 评分路由到内联与 agentic 工具路径之间。它对预先计算的 {@code *_length} 物化列求和，
+     * 因此 ClickHouse 只读取小的数值列，而不是（可能很大的）{@code input}/{@code output}/{@code metadata}
+     * 文本。每个 span 的最新版本通过按 {@code id} 分组的 {@code argMax(..., last_updated_at)} 获取——
+     * 这是一种哈希聚合，可以在不支付 {@link #SELECT_BY_TRACE_IDS} 所承担的全行
+     * {@code ORDER BY} + {@code LIMIT 1 BY workspace_id, project_id, id} 排序的情况下，对
+     * {@code ReplacingMergeTree} 版本进行去重。参见 OPIK-7454。
      */
     private static final String SELECT_SPANS_SIZE_BY_TRACE_IDS = """
             WITH target_projects AS (
@@ -845,26 +845,26 @@ public class SpanDAO {
     /**
      * 两阶段、宽列延迟的span分页查询。
      * <p>
-     * Phase 1 ({@code page_ids}) paginates on the light, deduped id + sort-key set only — wide text columns
-     * (input/output/metadata) are dropped from the scanned {@code spans_deduped} CTE unless the sort targets them
-     * ({@code sort_needs_wide}). Phase 2 ({@code page_wide}) re-reads the full rows, including wide columns, for just
-     * the page ids. The custom {@code sort_fields} are rendered into both the {@code page_ids} ORDER BY (so pagination
-     * picks the right page) and the final ORDER BY (so the page is returned in order); {@code page_wide}'s own order is
-     * immaterial since it is id-bounded and {@code LIMIT 1 BY id}. Field exclusion ({@code exclude_fields}) and
-     * truncation are layered on top without dropping the sort key.
+     * 第一阶段（{@code page_ids}）仅在轻量、去重后的 id + 排序键集合上进行分页——宽文本列
+     * （input/output/metadata）会从被扫描的 {@code spans_deduped} CTE 中丢弃，除非排序以它们为目标
+     * （{@code sort_needs_wide}）。第二阶段（{@code page_wide}）仅针对页面 id 重新读取完整行（包括宽列）。
+     * 自定义的 {@code sort_fields} 会同时渲染到 {@code page_ids} 的 ORDER BY（使分页
+     * 选中正确的页面）和最终的 ORDER BY（使页面按顺序返回）；{@code page_wide} 自身的顺序
+     * 无关紧要，因为它以 id 为边界并使用 {@code LIMIT 1 BY id}。字段排除（{@code exclude_fields}）和
+     * 截断在不丢弃排序键的情况下叠加在其上。
      * <p>
-     * Each {@code spans} id-range bound carries a parallel {@code toMonday(id_at)} bound: a strict consequence of the
-     * id-range — and, unlike a {@code created_at} predicate, safe against late-arriving rows since it derives from
-     * {@code id} — that lets the planner prune partitions once {@code spans} is partitioned. The {@code page_wide}
-     * re-read carries the same week bounds via the window it re-reads.
+     * 每个 {@code spans} id 范围边界都带有一个平行的 {@code toMonday(id_at)} 边界：这是
+     * id 范围的严格推论——并且与 {@code created_at} 谓词不同，由于它派生自 {@code id}，因此对迟到的行是安全的——
+     * 一旦 {@code spans} 被分区，它就能让优化器裁剪分区。{@code page_wide}
+     * 重新读取通过其重新读取的窗口携带相同的周边界。
      * <p>
-     * When aggregates are enrichment-only ({@code page_keyed_aggregates}, see
-     * {@code shouldPageKeyAggregates}), the feedback-score and comment CTEs are keyed on
-     * {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} instead of
-     * {@code span_id_prefilter}: the inner scalar subquery is evaluated once and cached for the whole query,
-     * so each aggregate scans only the page's spans instead of the full filtered project. The aggregate CTEs
-     * referencing {@code page_ids} before its definition is fine — CTE names resolve independently of
-     * declaration order.
+     * 当聚合仅为富化目的时（{@code page_keyed_aggregates}，参见
+     * {@code shouldPageKeyAggregates}），反馈分数和评论 CTE 以
+     * {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} 为键，而不是
+     * {@code span_id_prefilter}：内部的标量子查询在整个查询中只求值一次并被缓存，
+     * 因此每个聚合只扫描页面的 span，而不是整个过滤后的项目。聚合 CTE
+     * 在其定义之前引用 {@code page_ids} 是没有问题的——CTE 名称的解析与
+     * 声明顺序无关。
      */
     private static final String SELECT_BY_PROJECT_ID = """
             WITH <if(span_id_prefilter)>span_id_prefilter AS (
@@ -1135,10 +1135,10 @@ public class SpanDAO {
             """;
 
     /**
-     * Cheap "does the project have any span?" probe for the Logs empty state. Deliberately minimal — project
-     * scope only — so it is always a primary-key-prunable {@code LIMIT 1}. It intentionally does not support
-     * filters, search, trace_id, type, or time ranges: no consumer needs them, and adding them back would
-     * reintroduce a full-project COUNT fallback.
+     * 用于 Logs 空状态的廉价“项目是否有任何 span？”探测。有意保持最小化——仅限项目
+     * 范围——因此它始终是一个可进行主键裁剪的 {@code LIMIT 1}。它有意不支持
+     * 过滤器、搜索、trace_id、type 或时间范围：没有消费者需要它们，重新加回它们会
+     * 重新引入全项目 COUNT 回退。
      */
     private static final String EXISTS_BY_PROJECT_ID = """
             SELECT 1 AS exist
@@ -1279,14 +1279,14 @@ public class SpanDAO {
             """;
 
     /**
-     * Retention sweep for the applyToPast=true window: spans whose {@code trace_id} is in
-     * {@code [lower_bound, cutoff_id)} and not linked to experiments.
+     * 针对 applyToPast=true 窗口的保留清理：删除 {@code trace_id} 位于
+     * {@code [lower_bound, cutoff_id)} 范围内且未关联到实验的 span。
      * <p>
-     * Filters on {@code trace_id} only. Unlike {@code TraceDAO}, the spans retention range is keyed on
-     * {@code trace_id} while the future partition column {@code id_at} is MATERIALIZED from the span's own UUIDv7 id
-     * (migration 000105). A span's id can land in a later week than its {@code trace_id}, so a {@code toMonday(id_at)}
-     * bound derived from the trace-id range would wrongly exclude valid candidates. No partition-pruning predicate is
-     * applied here until {@code spans} can be pruned by a column aligned with {@code trace_id}.
+     * 仅按 {@code trace_id} 过滤。与 {@code TraceDAO} 不同，span 的保留范围以
+     * {@code trace_id} 为键，而未来的分区列 {@code id_at} 是由 span 自身的 UUIDv7 id
+     * 物化而来的（迁移 000105）。span 的 id 可能落在比其 {@code trace_id} 更晚的一周，
+     * 因此从 trace-id 范围推导出的 {@code toMonday(id_at)} 边界会错误地排除有效候选。
+     * 在 {@code spans} 能够通过与 {@code trace_id} 对齐的列进行裁剪之前，此处不应用任何分区裁剪谓词。
      */
     private static final String DELETE_FOR_RETENTION = """
             DELETE FROM spans
@@ -1797,9 +1797,9 @@ public class SpanDAO {
     private static final String ESTIMATED_COST_VERSION = "1.1";
 
     /**
-     * Sort mapping applied under {@code spanColumnsNonNullable}: {@code nullIf} restores an absent (epoch)
-     * {@code end_time} to {@code NULL} so it sorts last in ASC like a Nullable column did. Mirrors the trace-side
-     * mapping; {@code duration} needs no entry — ClickHouse sorts {@code NaN} like {@code NULL}.
+     * 在 {@code spanColumnsNonNullable} 下应用的排序映射：{@code nullIf} 将缺失（epoch）的
+     * {@code end_time} 恢复为 {@code NULL}，使其像 Nullable 列那样在 ASC 排序中排在最后。与 trace 侧的
+     * 映射保持一致；{@code duration} 无需条目——ClickHouse 会将 {@code NaN} 视同 {@code NULL} 进行排序。
      */
     private static final Map<String, String> SORT_FIELD_MAPPING_END_TIME_SENTINEL = Map.of(
             SortableFields.END_TIME, "nullIf(end_time, toDateTime64('1970-01-01 00:00:00.000', 9))");
@@ -1996,9 +1996,9 @@ public class SpanDAO {
     }
 
     /**
-     * Binds a {@code DateTime64} write parameter, applying the epoch sentinel for an absent value once the column is
-     * non-nullable (a {@code null} bind would be rejected); while still Nullable an absent value binds {@code null}.
-     * The span sibling of the trace-side helper.
+     * 绑定 {@code DateTime64} 写入参数，一旦列变为非空（此时绑定 {@code null} 会被拒绝），
+     * 就对缺失值应用 epoch 哨兵值；而在列仍为 Nullable 时，缺失值绑定 {@code null}。
+     * 这是 trace 侧辅助方法的 span 对应版本。
      */
     private void bindEpochSentinel(Statement statement, String parameter, Instant value) {
         if (spanColumnsNonNullable()) {
@@ -2011,8 +2011,8 @@ public class SpanDAO {
     }
 
     /**
-     * Binds a {@code Float64} write parameter, applying the {@code NaN} sentinel for an absent value once the column is
-     * non-nullable; while still Nullable an absent value binds {@code null}.
+     * 绑定 {@code Float64} 写入参数，一旦列变为非空，就对缺失值应用 {@code NaN} 哨兵值；
+     * 而在列仍为 Nullable 时，缺失值绑定 {@code null}。
      */
     private void bindNanSentinel(Statement statement, String parameter, Double value) {
         if (spanColumnsNonNullable()) {
@@ -2025,9 +2025,9 @@ public class SpanDAO {
     }
 
     /**
-     * Reads a {@code DateTime64} column, translating the epoch sentinel to {@code null} only once the columns are
-     * non-nullable. While still {@code Nullable} the value is returned as-is so a legitimate epoch timestamp is
-     * preserved (the column distinguishes it from {@code null}). Symmetric with the flag-gated write binding.
+     * 读取 {@code DateTime64} 列，仅当列变为非空时才将 epoch 哨兵值转换为 {@code null}。
+     * 当列仍为 {@code Nullable} 时，值按原样返回，从而保留合法的 epoch 时间戳
+     * （该列可以将其与 {@code null} 区分开）。与受标志控制的写入绑定对称。
      */
     private Instant readEpochSentinel(Set<SpanField> exclude, SpanField field, Row row, String fieldName) {
         var value = getValue(exclude, field, row, fieldName, Instant.class);
@@ -2035,10 +2035,10 @@ public class SpanDAO {
     }
 
     /**
-     * Reads a {@code Float64} column and maps the {@code NaN} sentinel to {@code null}. No flag is needed (unlike
-     * {@code end_time}): neither {@code duration} (materialized, never {@code NaN} today) nor {@code ttft} (cannot
-     * arrive as {@code NaN} via JSON) is ever {@code NaN} while the column is still {@code Nullable}, so the
-     * translation is always a no-op today and correct once the column is non-nullable.
+     * 读取 {@code Float64} 列并将 {@code NaN} 哨兵值映射为 {@code null}。无需标志（不同于
+     * {@code end_time}）：在列仍为 {@code Nullable} 时，{@code duration}（已物化，今天永远不会是 {@code NaN}）
+     * 和 {@code ttft}（无法通过 JSON 以 {@code NaN} 到达）都不会是 {@code NaN}，
+     * 因此该转换在今天始终是空操作，且在列变为非空后也依然正确。
      */
     private Double readNanSentinel(Set<SpanField> exclude, SpanField field, Row row, String fieldName) {
         return nanToNull(getValue(exclude, field, row, fieldName, Double.class));
@@ -2077,9 +2077,9 @@ public class SpanDAO {
 
                     bindUpdateParams(spanUpdate, statement, false);
 
-                    // PARTIAL_INSERT builds the full new_span row, so end_time/ttft are referenced unconditionally and
-                    // must always be bound (sentinel or null for an absent value) — unlike the conditional UPDATE
-                    // keep-column path.
+                    // PARTIAL_INSERT 构建完整的 new_span 行，因此 end_time/ttft 被无条件引用，且
+                    // 必须始终绑定（缺失值绑定哨兵值或 null）——不同于有条件的 UPDATE
+                    // 保留列路径。
                     bindEpochSentinel(statement, "end_time", spanUpdate.endTime());
                     bindNanSentinel(statement, "ttft", spanUpdate.ttft());
 
@@ -2233,14 +2233,14 @@ public class SpanDAO {
 
     @WithSpan
     public Mono<Span> getById(@NonNull UUID id) {
-        log.info("Getting span by id '{}'", id);
+        log.info("按 id '{}' 获取 span", id);
         return getByIds(Set.of(id))
                 .singleOrEmpty();
     }
 
     @WithSpan
     public Mono<Span> getOnlySpanDataById(@NonNull UUID id, @NonNull UUID projectId) {
-        log.info("Getting span by id '{}'", id);
+        log.info("按 id '{}' 获取 span", id);
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
                     var template = getSTWithLogComment(SELECT_ONLY_SPAN_BY_ID, "get_only_span_by_id", workspaceId,
@@ -2261,7 +2261,7 @@ public class SpanDAO {
 
     @WithSpan
     public Mono<Span> getPartialById(@NonNull UUID id) {
-        log.info("Getting partial span by id '{}'", id);
+        log.info("按 id '{}' 获取部分 span", id);
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> getPartialById(id, connection))
                 .flatMap(this::mapToPartialDto)
@@ -2287,7 +2287,7 @@ public class SpanDAO {
             return Flux.empty();
         }
 
-        log.info("Getting spans for '{}' traces", traceIds.size());
+        log.info("获取 '{}' 条 trace 的 span", traceIds.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
@@ -2307,16 +2307,15 @@ public class SpanDAO {
     }
 
     /**
-     * Cheap approximate size (bytes) of all spans across the given trace ids, used to route trace-thread
-     * online scoring without materializing spans. Streaming aggregate — see
-     * {@link #SELECT_SPANS_SIZE_BY_TRACE_IDS}. Returns 0 for an empty input or when no spans match.
+     * 给定 trace id 下所有 span 的廉价近似大小（字节），用于在不物化 span 的情况下路由 trace 线程
+     * 在线评分。流式聚合——参见 {@link #SELECT_SPANS_SIZE_BY_TRACE_IDS}。输入为空或没有 span 匹配时返回 0。
      */
     public Mono<Long> getSpansSizeByTraceIds(Set<UUID> traceIds) {
         if (CollectionUtils.isEmpty(traceIds)) {
             return Mono.just(0L);
         }
 
-        log.info("Getting spans size estimate for '{}' traces", traceIds.size());
+        log.info("估算 '{}' 条 trace 的 span 大小", traceIds.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
@@ -2364,7 +2363,7 @@ public class SpanDAO {
             return Flux.empty();
         }
 
-        log.info("Getting '{}' spans by IDs", ids.size());
+        log.info("按 ID 获取 '{}' 个 span", ids.size());
 
         return getTargetProjectIdsForSpans(ids)
                 .flatMapMany(targetProjectIds -> Mono.deferContextual(ctx -> {
@@ -2531,7 +2530,7 @@ public class SpanDAO {
 
     @WithSpan
     public Mono<SpanPage> find(int page, int size, @NonNull SpanSearchCriteria spanSearchCriteria) {
-        log.info("Finding span by '{}'", spanSearchCriteria);
+        log.info("按 '{}' 查找 span", spanSearchCriteria);
         return countTotal(spanSearchCriteria).flatMap(total -> find(page, size, spanSearchCriteria, total))
                 .onErrorResume(e -> ErrorUtils.handleMalformedJsonPath(e,
                         SpanPage.empty(page, sortingFactory.getSortableFields())));
@@ -2605,11 +2604,11 @@ public class SpanDAO {
     }
 
     private Flux<? extends Result> findSpanStream(int limit, SpanSearchCriteria criteria, Connection connection) {
-        log.info("Searching spans by '{}'", criteria);
+        log.info("按 '{}' 搜索 span", criteria);
         return makeFluxContextAware((userName, workspaceId) -> {
             var template = newFindTemplate(SELECT_BY_PROJECT_ID, criteria, "find_span_stream", workspaceId, userName);
 
-            // The stream has no custom sorting, so only filters can make aggregates drive page selection.
+            // 流没有自定义排序，因此只有过滤器才能让聚合驱动页面选择。
             addAggregateKeyingFlags(template, criteria, false);
 
             bindTemplateExcludeFieldVariables(criteria, template);
@@ -2631,7 +2630,7 @@ public class SpanDAO {
 
             return Flux.from(statement.execute())
                     .doFinally(signalType -> {
-                        log.info("Closing span search stream");
+                        log.info("关闭 span 搜索流");
                         endSegment(segment);
                     });
         });
@@ -2795,14 +2794,14 @@ public class SpanDAO {
      * 确定是否激活span_id_prefilter CTE以缩小feedback_scores和comments扫描范围。
      * 使用newFindTemplate已计算的模板属性，避免冗余的toAnalyticsDbFilters调用。
      *
-     * <p>Only activates for filters that narrow beyond what time-range alone provides:
-     * uuidFromTime/uuidToTime are excluded because the if/else fallback applies them directly
-     * to feedback_scores; lastReceivedSpanId is excluded because it's a pagination cursor,
-     * not a semantic filter.
+     * <p>仅对超出时间范围单独所能提供的收窄范围的过滤器激活：
+     * uuidFromTime/uuidToTime 被排除，因为 if/else 回退会直接将它们应用到
+     * feedback_scores；lastReceivedSpanId 被排除，因为它是一个分页游标，
+     * 而非语义过滤器。
      *
-     * <p>Feedback score filters use separate template variables ({@code feedback_scores_filters})
-     * and are NOT injected into {@code <filters>}, so the prefilter CTE is safe to use
-     * alongside them (OPIK-7076).
+     * <p>反馈分数过滤器使用单独的模板变量（{@code feedback_scores_filters}），
+     * 且不会注入到 {@code <filters>} 中，因此预过滤 CTE 可以安全地与
+     * 它们一起使用（OPIK-7076）。
      */
     private boolean shouldUseSpanIdPrefilter(SpanSearchCriteria criteria, ST template) {
         boolean hasNarrowingFilters = criteria.traceId() != null
@@ -2814,35 +2813,35 @@ public class SpanDAO {
     }
 
     /**
-     * Determines whether the enrichment aggregate CTEs (feedback scores, comments) can be keyed on the page ids
-     * instead of the full filtered span id set.
+     * 确定富化聚合 CTE（反馈分数、评论）是否可以以页面 id 为键，
+     * 而不是以完整过滤后的 span id 集合为键。
      *
-     * <p>Those CTEs are joined to {@code page_wide} only to enrich the returned rows, so whenever neither
-     * filtering nor sorting reads them, computing them for every candidate span is wasted work that grows with
-     * project size: the final LEFT JOINs discard everything outside the page. Keying them on the page ids turns
-     * whole-project scans into page-sized, primary-key-prunable lookups.
+     * <p>这些 CTE 仅为了富化返回的行而与 {@code page_wide} 连接，因此只要过滤
+     * 和排序都不读取它们，为每个候选 span 计算它们就是随项目规模增长而浪费的工作：
+     * 最终的 LEFT JOIN 会丢弃页面之外的所有内容。以页面 id 为键可以将
+     * 全项目扫描转换为页面大小、可进行主键裁剪的查找。
      *
-     * <p>The page ids are consumed via {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))}:
-     * the inner scalar subquery is evaluated once and cached for the whole query, so the {@code page_ids} CTE is
-     * not re-executed at every reference (ClickHouse inlines plain CTE references), and the materialized constant
-     * array is usable for primary-key index analysis.
+     * <p>页面 id 通过 {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} 消费：
+     * 内部的标量子查询在整个查询中只求值一次并被缓存，因此 {@code page_ids} CTE
+     * 不会在每次引用时重新执行（ClickHouse 会内联普通的 CTE 引用），且物化的常量
+     * 数组可用于主键索引分析。
      *
-     * <p>Must stay disabled whenever page selection depends on an aggregate: feedback-score filters
-     * ({@code spans_deduped} filters on feedback_scores_final/fsc) or sorting by feedback scores
-     * ({@code page_ids} joins feedback_scores_agg).
+     * <p>只要页面选择依赖于聚合，就必须保持禁用：反馈分数过滤器
+     * （{@code spans_deduped} 在 feedback_scores_final/fsc 上过滤）或按反馈分数排序
+     * （{@code page_ids} 连接 feedback_scores_agg）。
      */
     private boolean shouldPageKeyAggregates(ST template, boolean sortHasFeedbackScores) {
         return !hasFeedbackScoreFilters(template) && !sortHasFeedbackScores;
     }
 
     /**
-     * Applies the aggregate-keying decision shared by {@code find} and {@code findSpanStream}: page-keyed
-     * aggregates when they are enrichment-only, otherwise the narrowing span id prefilter when filters allow it.
+     * 应用 {@code find} 和 {@code findSpanStream} 共享的聚合键选择决策：当聚合仅为富化目的时使用
+     * 页面键聚合，否则在过滤器允许时使用收窄的 span id 预过滤。
      *
-     * <p>The prefilter branch fires for feedback-score-sorted queries with narrowing filters: page-keying is
-     * unsafe there (page selection reads feedback_scores_agg), but the prefilter set — all filtered span ids —
-     * is a superset of any page, so keying the aggregate CTEs on it preserves the sort while avoiding
-     * whole-project feedback-score and comment scans.
+     * <p>预过滤分支适用于带有收窄过滤器且按反馈分数排序的查询：此处页面键不安全
+     * （页面选择会读取 feedback_scores_agg），但预过滤集合——所有过滤后的 span id——
+     * 是任何页面的超集，因此以它为键聚合 CTE 可以在保留排序的同时避免
+     * 全项目的反馈分数和评论扫描。
      */
     private void addAggregateKeyingFlags(ST template, SpanSearchCriteria criteria, boolean sortHasFeedbackScores) {
         if (shouldPageKeyAggregates(template, sortHasFeedbackScores)) {
@@ -3161,7 +3160,7 @@ public class SpanDAO {
     @WithSpan
     public Mono<Void> bulkUpdate(@NonNull Set<UUID> ids, @NonNull SpanUpdate update, boolean mergeTags) {
         Preconditions.checkArgument(!ids.isEmpty(), "ids must not be empty");
-        log.info("Bulk updating '{}' spans", ids.size());
+        log.info("批量更新 '{}' 个 span", ids.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
@@ -3181,7 +3180,7 @@ public class SpanDAO {
                             .doFinally(signalType -> endSegment(segment));
                 }))
                 .then()
-                .doOnSuccess(__ -> log.info("Completed bulk update for '{}' spans", ids.size()));
+                .doOnSuccess(__ -> log.info("完成 '{}' 个 span 的批量更新", ids.size()));
     }
 
     private ST newBulkUpdateTemplate(SpanUpdate spanUpdate, String sql, boolean mergeTags, String workspaceId,
@@ -3295,7 +3294,7 @@ public class SpanDAO {
         Preconditions.checkArgument(
                 CollectionUtils.isNotEmpty(workspaceIds), "Argument 'workspaceIds' must not be empty");
 
-        log.info("Retention delete spans: workspaces='{}', cutoffId='{}', lowerBound='{}'",
+        log.info("保留删除 span：工作区='{}'，cutoffId='{}'，lowerBound='{}'",
                 workspaceIds.size(), cutoffId, lowerBound);
 
         var template = getSTWithLogComment(DELETE_FOR_RETENTION, "retention_delete_spans", null, "",
@@ -3347,7 +3346,7 @@ public class SpanDAO {
             @NonNull UUID cutoffId, @NonNull UUID lowerBound) {
         Preconditions.checkArgument(!workspaceMinIds.isEmpty(), "Argument 'workspaceMinIds' must not be empty");
 
-        log.info("Retention delete spans (bounded): workspaces='{}', cutoffId='{}'", workspaceMinIds.size(), cutoffId);
+        log.info("保留删除 span（有界）：工作区='{}'，cutoffId='{}'", workspaceMinIds.size(), cutoffId);
 
         var logComment = getLogComment("retention_delete_spans_bounded", null, "", workspaceMinIds.size());
         var entries = List.copyOf(workspaceMinIds.entrySet());
@@ -3401,7 +3400,7 @@ public class SpanDAO {
      */
     public Mono<VelocityEstimate> estimateVelocityForRetention(@NonNull String workspaceId, @NonNull UUID lowerBound,
             @NonNull UUID cutoffId) {
-        log.debug("Estimating retention velocity for workspace '{}'", workspaceId);
+        log.debug("估算工作区 '{}' 的保留速度", workspaceId);
 
         var template = getSTWithLogComment(ESTIMATE_VELOCITY_FOR_RETENTION,
                 "retention_estimate_velocity", workspaceId, "", "");

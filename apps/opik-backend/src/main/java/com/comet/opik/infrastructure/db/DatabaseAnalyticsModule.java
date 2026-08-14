@@ -40,8 +40,8 @@ public class DatabaseAnalyticsModule extends DropwizardAwareModule<OpikConfigura
             }
         });
 
-        // Read-only client used for Agent Insights freeform SQL. The v2 client connects lazily, so building it is
-        // cheap and never contacts ClickHouse until a query runs; the ollieEnabled toggle gates all usage.
+        // 用于 Agent Insights 自由格式 SQL 的只读客户端。v2 客户端是惰性连接的，因此构建它
+        // 很便宜，且在查询运行前绝不会联系 ClickHouse；ollieEnabled 开关门控了所有使用。
         readOnlyFreeFormSqlClickHouseClient = buildReadOnlyFreeFormSqlClient();
         environment().lifecycle().manage(new Managed() {
             @Override
@@ -52,13 +52,13 @@ public class DatabaseAnalyticsModule extends DropwizardAwareModule<OpikConfigura
 
         ClickHouseLogAppenderConfig clickHouseLogAppenderConfig = configuration(ClickHouseLogAppenderConfig.class);
 
-        // Initialize the UserFacingRuleLollingFactory
+        // 初始化 UserFacingRuleLollingFactory
         UserFacingLoggingFactory.init(connectionFactory, clickHouseLogAppenderConfig.getBatchSize(),
                 clickHouseLogAppenderConfig.getFlushIntervalDuration());
     }
 
-    // Reuse the main analytics connection params (same ClickHouse instance) and only swap in the restricted user's
-    // credentials. No queryParameters: the user runs under readonly=1 and would reject per-query server settings.
+    // 复用主分析连接参数（同一个 ClickHouse 实例），只换入受限用户的
+    // 凭证。没有 queryParameters：该用户在 readonly=1 下运行，会拒绝按查询的服务器设置。
     private Client buildReadOnlyFreeFormSqlClient() {
         var main = configuration().getDatabaseAnalytics();
         var freeFormSqlConfig = configuration().getDatabaseAnalyticsReadOnlyFreeFormSql();

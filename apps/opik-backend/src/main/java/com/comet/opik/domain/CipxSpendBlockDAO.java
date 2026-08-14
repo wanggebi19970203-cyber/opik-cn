@@ -25,38 +25,38 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Writes the cipx_spend_blocks table: one row per cipx block, with the token allocation and dashboard
- * groupings derived in Java at ingestion time ({@link BlockRow#from}) so retrieval never re-derives
- * them. Two kinds of rows, discriminated by {@code src}: 'a' (attributed, one per real block) and
- * 'r' (residual — billed tiers with no block to absorb them, surfaced as 'unattributed').
+ * 写入 cipx_spend_blocks 表：每个 cipx block 一行，其 token 分配和仪表盘
+ * 分组在摄取时于 Java 中派生（{@link BlockRow#from}），因此检索时无需重新派生。
+ * 有两种行，通过 {@code src} 区分：'a'（归属行，每个真实 block 一行）和
+ * 'r'（残差行——已计费但没有任何 block 可吸收的层级，显示为 'unattributed'）。
  *
- * <p>The allocation splits each of the span's four billed usage counters across the span's blocks of
- * the matching tier, proportionally to chars: {@code alloc = chars * u_tier / tier_chars}. Every input
- * comes from the single span payload, so the whole derivation is one pass over the span's blocks.
+ * <p>分配将 span 的四个已计费用量计数器分别拆分到 span 中匹配层级的 block 上，
+ * 按字符数成比例：{@code alloc = chars * u_tier / tier_chars}。每个输入
+ * 都来自单个 span 载荷，因此整个派生过程只是对 span 的 block 做一次遍历。
  *
- * <p>block_idx keeps the ReplacingMergeTree sorting key unique per row and is deterministic (raw
- * position in cipx.blocks[] for attributed rows, 65531 + tier ordinal for residual rows) so a replayed
- * insert produces identical keys and dedups instead of duplicating. Plain INSERT, same contract as
- * {@link CipxSpendDAO}: create-only ingestion, project_id must be non-empty, last_updated_at is left
- * to the column DEFAULT now64(6).
+ * <p>block_idx 使 ReplacingMergeTree 的排序键每行保持唯一，并且是确定性的（归属行为
+ * cipx.blocks[] 中的原始位置，残差行为 65531 + 层级序号），因此重放
+ * 的插入会产生相同的键并去重，而不是重复。普通 INSERT，契约与
+ * {@link CipxSpendDAO} 相同：只创建摄取，project_id 必须非空，last_updated_at 留给
+ * 列 DEFAULT now64(6)。
  */
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 @Slf4j
 public class CipxSpendBlockDAO {
 
-    /** Tier names ordered by the residual block_idx ordinal. The cache_creation entry (ordinal 2) is a
-     * placeholder: its written label is the per-span TTL variant (cache_creation_5m / cache_creation_1h),
-     * resolved by {@link BlockRow#tierName(int, String)}. */
+    /** 按残差 block_idx 序号排序的层级名称。cache_creation 条目（序号 2）是一个
+     * 占位符：其实际写入的标签是每个 span 的 TTL 变体（cache_creation_5m / cache_creation_1h），
+     * 由 {@link BlockRow#tierName(int, String)} 解析。 */
     private static final String[] TIER_NAMES = {"input", "cache_read", "cache_creation", "output"};
     private static final int RESIDUAL_IDX_BASE = 65531;
     private static final int CACHE_CREATION_TIER = 2;
-    /** Rows per bulk-insert chunk; caps the JSON payload at ~35MB (~650 bytes/row). */
+    /** 每个批量插入块的行数；将 JSON 载荷限制在约 35MB（约 650 字节/行）。 */
     private static final int INSERT_CHUNK_SIZE = 50_000;
     private static final String SRC_ATTRIBUTED = "a";
     private static final String SRC_RESIDUAL = "r";
 
-    /** A cipx_spend_blocks row: raw block fields plus the ingestion-derived columns. */
+    /** 一个 cipx_spend_blocks 行：原始 block 字段加上摄取派生的列。 */
     @Builder(toBuilder = true)
     public record BlockRow(
             @NonNull String spanId,
@@ -64,9 +64,9 @@ public class CipxSpendBlockDAO {
             @NonNull String projectId,
             @NonNull Instant startTime,
             @NonNull String model,
-            /** Per-call speed modifier; selects the rate table that prices the call. Carried on
-             * every block because block-level cost needs the value that priced it. '' = standard,
-             * incl. every row written before the field existed. */
+            /** 每次调用的速度修饰符；选择为该调用定价的费率表。被携带在
+             * 每个 block 上，因为 block 级别的成本需要为其定价的那个值。'' = 标准，
+             * 包括该字段存在之前写入的每一行。 */
             @NonNull String speed,
             int blockIdx,
             @NonNull String src,
@@ -80,9 +80,9 @@ public class CipxSpendBlockDAO {
             @NonNull String toolUseId,
             @NonNull String resource,
             @NonNull String kind,
-            /** Which variant of `category` the block is (memory: auto_memory vs project_instructions
-             * vs rule vs user_global). '' = unknown, incl. every block written before cipx emitted
-             * it -- consumers must treat it as "can't tell", not as a default value. */
+            /** 该 block 是 `category` 的哪个变体（memory：auto_memory vs project_instructions
+             * vs rule vs user_global）。'' = 未知，包括 cipx 发出该字段之前写入的每一个 block
+             * ——消费者必须将其视为“无法判断”，而不是一个默认值。 */
             @NonNull String subcategory,
             @NonNull String tier,
             @NonNull String lane,
@@ -93,11 +93,11 @@ public class CipxSpendBlockDAO {
             @NonNull String contentSha256) {
 
         /**
-         * Derives all rows for one cipx span: one attributed row per non-identity block (keeping the
-         * block's raw array position as block_idx) plus a residual row for each tier billed on the
-         * span with no block in it. Parity rules with the pre-derivation queries: a tier whose blocks
-         * sum to zero chars allocates 0 and produces NO residual (the tier is present); blocks whose
-         * (side, cache_status) maps to no tier still get rows with alloc 0 (breakdowns count them).
+         * 为一个 cipx span 派生所有行：每个非 identity block 一个归属行（保留
+         * 该 block 的原始数组位置作为 block_idx），外加为 span 上已计费但其中没有 block 的
+         * 每个层级生成一个残差行。与派生之前的查询保持对等规则：blocks 字符数
+         * 之和为零的层级分配 0 且不产生残差行（该层级是存在的）；其
+         * (side, cache_status) 映射不到任何层级的 block 仍会得到 alloc 为 0 的行（拆分会统计它们）。
          */
         public static List<BlockRow> from(UUID spanId, UUID traceId, UUID projectId, JsonNode metadata,
                 Instant startTime) {
@@ -111,10 +111,10 @@ public class CipxSpendBlockDAO {
                     usage.path("cache_creation_input_tokens").asLong(0),
                     usage.path("output_tokens").asLong(0),
             };
-            // A cipx span is a single LLM call, and Claude Code writes all of a call's cache breakpoints
-            // with one TTL, so every write block on the span inherits the span's TTL. Pick it from the
-            // usage split; when the split is absent (legacy / not reported) fall back to 1h, since CC's
-            // cache writes are overwhelmingly 1h (OPIK-7392).
+            // 一个 cipx span 是一次单独的 LLM 调用，Claude Code 会用同一个 TTL 写入一次调用的所有缓存断点，
+            // 因此 span 上的每个 write block 都继承 span 的 TTL。从用量拆分中选取它；
+            // 当拆分缺失（旧版 / 未上报）时回退到 1h，因为 CC 的
+            // 缓存写入绝大多数是 1h（OPIK-7392）。
             JsonNode cacheCreation = usage.path("cache_creation");
             String writeTier = cacheCreation.path("ephemeral_5m_input_tokens").asLong(0) > 0
                     && cacheCreation.path("ephemeral_1h_input_tokens").asLong(0) == 0
@@ -162,7 +162,7 @@ public class CipxSpendBlockDAO {
             return rows;
         }
 
-        /** cache_creation (ordinal 2) is written as its per-span TTL variant; the rest are fixed. */
+        /** cache_creation（序号 2）写为其每个 span 的 TTL 变体；其余则是固定的。 */
         private static String tierName(int tier, String writeTier) {
             return tier == CACHE_CREATION_TIER ? writeTier : TIER_NAMES[tier];
         }
@@ -251,7 +251,7 @@ public class CipxSpendBlockDAO {
             return -1;
         }
 
-        /** Composition lane: every category maps somewhere; unknown categories fall to 'unattributed'. */
+        /** 组合通道：每个 category 都映射到某处；未知 category 落入 'unattributed'。 */
         private static String lane(String category, String toolServer) {
             return switch (category) {
                 case "tool_io" -> toolServer.isEmpty() ? "built_in_tools" : "mcp_servers";
@@ -275,9 +275,9 @@ public class CipxSpendBlockDAO {
         }
 
         /**
-         * Breakdown lane: like {@link #lane} but categories with no breakdown rows map to '' (excluded).
-         * Delegates to {@link #lane} for the shared dispatch table and only overrides the two
-         * intentional differences, so the two tables can't drift apart on a future category addition.
+         * 拆分通道：类似 {@link #lane}，但没有拆分行的 category 映射到 ''（被排除）。
+         * 委托 {@link #lane} 处理共享的分派表，只覆盖两处
+         * 有意为之的差异，这样两张表就不会在将来新增 category 时发生漂移。
          */
         private static String bdLane(String category, String toolServer) {
             if (category.equals("mcp_tools_deferred") || category.equals("mcp_server_instructions")) {
@@ -287,7 +287,7 @@ public class CipxSpendBlockDAO {
             return baseLane.equals("unattributed") ? "" : baseLane;
         }
 
-        /** Breakdown row key; which raw field names the row depends on the category. */
+        /** 拆分行的键；行依赖哪些原始字段名取决于 category。 */
         private static String label(String category, String toolServer, String toolName, String resource,
                 String kind, long chars) {
             return switch (category) {
@@ -308,7 +308,7 @@ public class CipxSpendBlockDAO {
             };
         }
 
-        /** 1 = cost of carrying the thing (schemas, menus, standing context); 0 = cost of using it. */
+        /** 1 = 承载该事物的成本（schema、菜单、常驻上下文）；0 = 使用它的成本。 */
         private static int isDefinition(String category) {
             return switch (category) {
                 case "skills_menu", "custom_agents", "memory", "mcp_tools_active",
@@ -322,23 +322,23 @@ public class CipxSpendBlockDAO {
     private final @NonNull Client clickHouseClient;
 
     /**
-     * Bulk insert via the ClickHouse v2 HTTP client using JSONEachRow, NOT the R2DBC statement path
-     * the sibling cipx DAOs use. One span event fans out to hundreds of block rows (~350/span, so a
-     * 200-span batch is ~70k rows x 26 columns), and the R2DBC driver resolves every named bind with
-     * a linear scan over the statement's parameter list — O(n^2) over ~1.7M parameters, hours of CPU
-     * for a single event (see ExperimentAggregatesDAO.insertExperimentItems for the same trade-off).
-     * The JSONEachRow payload is one HTTP body with no per-parameter work at all.
+     * 通过 ClickHouse v2 HTTP 客户端使用 JSONEachRow 进行批量插入，而不是走同类 cipx DAO
+     * 使用的 R2DBC 语句路径。一个 span 事件会扇出成数百个 block 行（约 350 行/span，因此
+     * 一个 200 span 的批次约为 70k 行 × 26 列），而 R2DBC 驱动程序对每个命名绑定都用
+     * 语句参数列表的线性扫描来解析——约 170 万个参数上是 O(n^2)，单个事件就要
+     * 数小时的 CPU（参见 ExperimentAggregatesDAO.insertExperimentItems 中的同一权衡）。
+     * JSONEachRow 载荷是一个 HTTP 主体，完全没有按参数的额外工作。
      *
-     * <p>last_updated_at is omitted from the payload so the column DEFAULT now64(6) applies
-     * (input_format_defaults_for_omitted_fields is on by default). Fully non-blocking: the client is
-     * built with useAsyncRequests(true) (see DatabaseAnalyticsFactory.buildClient), so the returned
-     * future runs the HTTP round-trip on the v2 client's own executor — no shared scheduler
-     * (boundedElastic or otherwise) is borrowed for the I/O.
+     * <p>last_updated_at 从载荷中省略，因此列 DEFAULT now64(6) 会生效
+     * （input_format_defaults_for_omitted_fields 默认开启）。完全非阻塞：客户端
+     * 以 useAsyncRequests(true) 构建（参见 DatabaseAnalyticsFactory.buildClient），因此返回的
+     * future 在 v2 客户端自己的执行器上运行 HTTP 往返——不借用任何共享调度器
+     * （boundedElastic 或其他）来做 I/O。
      *
-     * <p>Rows are inserted in sequential chunks so the peak payload allocation per event is bounded
-     * by one chunk regardless of the incoming span batch size (which is client-controlled): a
-     * 1000-span batch fans out to ~350k block rows, which as a single JSON body would transiently
-     * allocate on the order of 1GB (UTF-16 builder + String copy + UTF-8 bytes).
+     * <p>行按顺序分块插入，因此每个事件的峰值载荷分配以
+     * 一个块为上限，而与传入 span 批次大小（由客户端控制）无关：一个
+     * 1000 span 的批次会扇出约 350k 个 block 行，若作为单个 JSON 主体会瞬时
+     * 分配约 1GB（UTF-16 builder + String 复制 + UTF-8 字节）。
      */
     public Mono<Long> insert(@NonNull List<BlockRow> rows, @NonNull String workspaceId, @NonNull String userName) {
         if (rows.isEmpty()) {

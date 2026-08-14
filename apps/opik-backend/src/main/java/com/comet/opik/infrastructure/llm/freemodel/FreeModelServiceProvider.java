@@ -20,8 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Optional;
 
 /**
- * Service provider for the Opik Free Model LLM provider.
- * This provider transforms the model name from "opik-free-model" to the actual model.
+ * Opik Free Model LLM provider 的服务提供者。
+ * 该 provider 把模型名从 "opik-free-model" 转换为实际模型。
  */
 @Slf4j
 public class FreeModelServiceProvider implements LlmServiceProvider {
@@ -41,7 +41,7 @@ public class FreeModelServiceProvider implements LlmServiceProvider {
 
         if (freeModelConfig.isEnabled()) {
             factory.register(LlmProvider.OPIK_FREE, this);
-            log.info("Registered OPIK_FREE provider with actual model '{}'", freeModelConfig.getActualModel());
+            log.info("已注册 OPIK_FREE provider，实际模型为 '{}'", freeModelConfig.getActualModel());
         }
     }
 
@@ -60,7 +60,7 @@ public class FreeModelServiceProvider implements LlmServiceProvider {
 
         if (freeModelConfig.isReasoningModel() && temperature != null
                 && temperature < FreeModelConfig.OPENAI_REASONING_MODEL_MIN_TEMPERATURE) {
-            log.debug("Clamping temperature from '{}' to '{}' for reasoning model '{}'",
+            log.debug("将 temperature 从 '{}' 限制到 '{}'，用于推理模型 '{}'",
                     temperature, FreeModelConfig.OPENAI_REASONING_MODEL_MIN_TEMPERATURE,
                     freeModelConfig.getActualModel());
             temperature = FreeModelConfig.OPENAI_REASONING_MODEL_MIN_TEMPERATURE;
@@ -75,8 +75,8 @@ public class FreeModelServiceProvider implements LlmServiceProvider {
         var builder = OpenAiChatModel.builder()
                 .modelName(transformedParameters.name())
                 .apiKey(config.apiKey())
-                // Treat insufficient_quota (429, out-of-credits) as non-retryable so the model's
-                // internal retry does not keep hitting an exhausted key.
+                // 将 insufficient_quota（429，额度耗尽）视为不可重试，这样模型的
+                // 内部重试就不会持续打击一个已耗尽的 key。
                 .httpClientBuilder(QuotaAwareHttpClient.builder())
                 .logRequests(true)
                 .logResponses(true);

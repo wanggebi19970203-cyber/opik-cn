@@ -50,8 +50,8 @@ public abstract sealed class AutomationRuleEvaluatorUpdate<T, E extends Filter> 
         AutomationRuleEvaluatorUpdateUserDefinedMetricPython,
         AutomationRuleEvaluatorUpdateSpanLlmAsJudge, AutomationRuleEvaluatorUpdateSpanUserDefinedMetricPython {
 
-    // Bounded to match the automation_rules.name VARCHAR(150) column, so an over-long rename is rejected at
-    // the API boundary instead of failing the update (OPIK-7371).
+    // 长度上限与 automation_rules.name 的 VARCHAR(150) 列相匹配，因此过长的重命名会在
+    // API 边界处被拒绝，而不是导致更新失败（OPIK-7371）。
     @NotBlank @Size(max = 150, message = "cannot exceed 150 characters") private final String name;
 
     private final float samplingRate;
@@ -67,14 +67,14 @@ public abstract sealed class AutomationRuleEvaluatorUpdate<T, E extends Filter> 
     private final List<E> filters = List.of();
 
     @JsonIgnore
-    // @Valid cascades bean-validation into the polymorphic code record so nested constraints
-    // (e.g. @Positive on maxCostUsd) are enforced on update, matching the create path.
+    // @Valid 会将 bean 校验级联到多态 code 记录中，从而使嵌套约束
+    // （例如 maxCostUsd 上的 @Positive）在更新时得到执行，与创建路径保持一致。
     @NotNull @Valid private final T code;
 
-    // Dual-field backwards compatible architecture:
-    // - project_id: Legacy single project field (nullable for backwards compatibility)
-    // - project_ids: New multi-project field (required for new rules)
-    // Service layer keeps both fields in sync for seamless migration
+    // 双字段向后兼容架构：
+    // - project_id：旧版单一项目字段（为向后兼容而为可空）
+    // - project_ids：新的多项目字段（新规则必需）
+    // 服务层保持两个字段同步，以实现无缝迁移
 
     @Schema(description = "Primary project ID (legacy field, maintained for backwards compatibility)")
     private final UUID projectId;

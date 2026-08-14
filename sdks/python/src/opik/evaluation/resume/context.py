@@ -1,23 +1,19 @@
 """
-The orchestrator that turns a stored experiment into a live ``ResumeContext``.
+将已存储的实验转换为实时 ``ResumeContext`` 的编排器。
 
-Reads the persisted state (:mod:`opik.evaluation.resume.state`), optionally
-loads a checkpoint of resolved item ids (default reader pulls from
-:mod:`opik.evaluation.resume.checkpoint`, injectable), resolves the dataset
-**at its pinned version**, and counts the completed runs per dataset item
-from the experiment's existing items.
+读取持久化状态（:mod:`opik.evaluation.resume.state`），可选地加载已解析
+项 id 的检查点（默认读取器来自 :mod:`opik.evaluation.resume.checkpoint`，
+可注入），在**其固定版本**上解析数据集，并根据实验现有的项统计每个
+数据集项的已完成运行次数。
 
-A resume is always bound to a specific :class:`DatasetVersion`. If the
-experiment record has no pinned ``dataset_version_name`` (because it was
-created before resume support, by an external client, or against a dataset
-with versioning disabled), this module refuses to build a context and
-raises :class:`ExperimentNotResumable`. Iteration against a moving
-``Dataset`` HEAD would silently include / exclude items added or removed
-since the original run, which breaks the resume contract.
+恢复始终绑定到特定的 :class:`DatasetVersion`。如果实验记录没有固定的
+``dataset_version_name``（因为它是在恢复支持之前创建的、由外部客户端
+创建的，或是针对禁用版本管理的数据集创建的），本模块会拒绝构建上下文，
+并抛出 :class:`ExperimentNotResumable`。针对不断变动的 ``Dataset`` HEAD
+进行迭代会静默地包含/排除自原始运行以来新增或删除的项，从而破坏恢复契约。
 
-The checkpoint reader is injected so this module does not hard-depend on
-the local-file implementation: a future server-side artifact store can
-plug in without touching this orchestrator.
+检查点读取器通过注入提供，因此本模块不硬性依赖本地文件实现：未来的
+服务端工件存储可以接入而无需改动此编排器。
 """
 
 import dataclasses
@@ -41,11 +37,11 @@ CheckpointReader = Callable[[str], Optional[List[str]]]
 
 @dataclasses.dataclass(frozen=True)
 class ResumeContext:
-    """Everything required to continue an interrupted experiment.
+    """继续一个被中断的实验所需的全部内容。
 
-    ``dataset`` is always a :class:`DatasetVersion` pinned to the version
-    the original ``evaluate()`` call ran against. The type narrowing here
-    is intentional — resume is undefined against a moving dataset HEAD.
+    ``dataset`` 始终是固定到原始 ``evaluate()`` 调用所运行版本的
+    :class:`DatasetVersion`。这里的类型收窄是有意为之——针对不断变动的数据集
+    HEAD 的恢复行为是未定义的。
     """
 
     experiment: experiment_module.Experiment
@@ -56,8 +52,7 @@ class ResumeContext:
     nb_samples: Optional[int]
     candidate_dataset_item_ids: Optional[List[str]]
     error_tolerance: types.ErrorTolerance
-    """Tolerance the original evaluation call ran with, so a resumed run does not
-    silently revert to the default."""
+    """原始评估调用运行时使用的容错设置，以便恢复后的运行不会静默回退到默认值。"""
 
 
 def prepare_resume_context(
@@ -67,17 +62,16 @@ def prepare_resume_context(
     checkpoint_reader: Optional[CheckpointReader] = None,
 ) -> ResumeContext:
     """
-    Build a :class:`ResumeContext` from a stored experiment.
+    根据已存储的实验构建 :class:`ResumeContext`。
 
-    ``checkpoint_reader`` defaults to the local-file reader but can be
-    swapped (tests, alternate storage). Returning ``None`` from the reader
-    when the experiment requires a checkpoint raises
-    :class:`LocalCheckpointMissing`.
+    ``checkpoint_reader`` 默认为本地文件读取器，但可以被替换（用于测试或
+    其他存储）。当实验需要检查点而读取器返回 ``None`` 时，会抛出
+    :class:`LocalCheckpointMissing`。
 
     Raises:
-        opik.exceptions.ExperimentNotFound: when the experiment does not exist.
-        ExperimentNotResumable: when the experiment is marked non-resumable.
-        LocalCheckpointMissing: when a required checkpoint is unreachable.
+        opik.exceptions.ExperimentNotFound: 实验不存在时。
+        ExperimentNotResumable: 实验被标记为不可恢复时。
+        LocalCheckpointMissing: 必需的检查点无法获取时。
     """
     reader = checkpoint_reader or checkpoint_module.read_checkpoint
 
@@ -92,10 +86,9 @@ def prepare_resume_context(
         candidate_ids = reader(experiment_id)
         if candidate_ids is None:
             raise opik_exceptions.LocalCheckpointMissing(
-                f"Experiment {experiment_id} requires a checkpoint of "
-                "resolved dataset item ids but it could not be read. Resume "
-                "from the machine that wrote the checkpoint, or re-supply "
-                "the original dataset_item_ids explicitly."
+                f"实验 {experiment_id} 需要已解析数据集项 id 的检查点，"
+                "但无法读取。请在写入检查点的机器上恢复，或显式重新提供"
+                "原始的 dataset_item_ids。"
             )
 
     dataset_version = _resolve_dataset_version(
@@ -125,21 +118,20 @@ def _require_resumable_state(
     persisted: Optional[state_module.PersistedResumeState],
 ) -> state_module.ResumableState:
     """
-    Dispatch on the sum type returned by :func:`read_resume_state`.
+    根据 :func:`read_resume_state` 返回的和类型进行分发。
 
-    Returns the :class:`ResumableState` payload when present; raises
-    :class:`ExperimentNotResumable` for all non-resumable paths (missing
-    blob, explicit non-resumable marker).
+    存在时返回 :class:`ResumableState` 载荷；对所有不可恢复的路径（缺少
+    blob、显式的不可恢复标记）抛出 :class:`ExperimentNotResumable`。
     """
     if persisted is None:
         raise opik_exceptions.ExperimentNotResumable(
-            f"Experiment {experiment_id} has no resume state in its config "
-            "(created with an older SDK version or by an external client). "
-            "Resume requires a pinned dataset version that was not recorded."
+            f"实验 {experiment_id} 的配置中没有恢复状态 "
+            "（由较旧版本的 SDK 或外部客户端创建）。"
+            "恢复需要固定版本的数据集版本，但该信息未被记录。"
         )
     if isinstance(persisted, state_module.NonResumableState):
         raise opik_exceptions.ExperimentNotResumable(
-            f"Experiment {experiment_id} cannot be resumed: {persisted.reason}"
+            f"实验 {experiment_id} 无法恢复：{persisted.reason}"
         )
     return persisted
 
@@ -152,9 +144,8 @@ def _resolve_dataset_version(
     dataset_version_name: str,
 ) -> dataset.DatasetVersion:
     """
-    Always returns a :class:`DatasetVersion` pinned to the original run's
-    version. The caller has already validated via :func:`_ensure_resumable`
-    that ``dataset_version_name`` is non-empty.
+    始终返回固定到原始运行版本的 :class:`DatasetVersion`。调用方已通过
+    :func:`_ensure_resumable` 验证 ``dataset_version_name`` 非空。
     """
     dataset_ = client.get_dataset(name=dataset_name, project_name=project_name)
     return dataset_.get_version_view(dataset_version_name)
@@ -163,7 +154,7 @@ def _resolve_dataset_version(
 def _count_completed_runs_by_item_id(
     experiment_items: List[experiment_item.ExperimentItemContent],
 ) -> Mapping[str, int]:
-    """Count fully-completed trials per dataset item."""
+    """统计每个数据集项完全完成的试验次数。"""
     counts: Dict[str, int] = {}
     for item in experiment_items:
         if not is_trial_fully_completed(item):
@@ -175,12 +166,10 @@ def _count_completed_runs_by_item_id(
 def is_trial_fully_completed(
     item: experiment_item.ExperimentItemContent,
 ) -> bool:
-    """True iff the trial reached the engine's happy-path-only line.
+    """当且仅当该试验到达引擎的仅正常路径代码行时返回 True。
 
-    The engine sets ``trace.output`` only after task + scoring +
-    score-logging all returned (see
-    :func:`opik.evaluation.engine.helpers.evaluate_llm_task_context`).
-    A persisted trace's output presence is therefore exactly the
-    completion signal resume needs.
+    引擎仅在任务 + 评分 + 评分日志全部返回后才设置 ``trace.output``（参见
+    :func:`opik.evaluation.engine.helpers.evaluate_llm_task_context`）。
+    因此，持久化 trace 的 output 是否存在，正是恢复所需的完成信号。
     """
     return item.evaluation_task_output is not None

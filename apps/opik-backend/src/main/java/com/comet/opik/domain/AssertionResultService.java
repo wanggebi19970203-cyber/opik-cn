@@ -63,7 +63,7 @@ class AssertionResultServiceImpl implements AssertionResultService {
             return Mono.error(new BadRequestException("Argument 'assertionResults' must not be empty"));
         }
 
-        // Validate up front so a bad id fails fast and independently of project-name normalisation.
+        // 提前校验，以便错误的 ID 快速失败，且独立于项目名称规范化。
         assertionResults.forEach(item -> idGenerator.validateIdNotInFuture(item.entityId(), entityType.getType()));
 
         return Mono.deferContextual(ctx -> {

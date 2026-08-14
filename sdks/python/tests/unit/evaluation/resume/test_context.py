@@ -190,7 +190,7 @@ class TestPrepareResumeContext:
         with pytest.raises(exceptions.ExperimentNotResumable) as exc_info:
             context.prepare_resume_context(client, "exp-1")
 
-        assert "pinned dataset version" in str(exc_info.value)
+        assert "缺少固定的 dataset_version_name" in str(exc_info.value)
 
     def test_resumable_blob_with_null_version_name__raises(self):
         """
@@ -214,7 +214,7 @@ class TestPrepareResumeContext:
         with pytest.raises(exceptions.ExperimentNotResumable) as exc_info:
             context.prepare_resume_context(client, "exp-1")
 
-        assert "pinned dataset_version_name" in str(exc_info.value)
+        assert "缺少固定的 dataset_version_name" in str(exc_info.value)
 
 
 class TestIsTrialFullyCompleted:

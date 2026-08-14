@@ -10,9 +10,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Request for the distinct span token-usage key names across projects. When {@code projectIds} is empty, the service
- * resolves it to every project in the workspace before querying; otherwise only the given projects are used. Mirrors
- * the per-project {@code GET /v1/private/projects/{id}/token-usage/names} endpoint, extended to a project set.
+ * 跨项目获取去重的 span token 用量键名称的请求。当 {@code projectIds} 为空时，服务会在查询前
+ * 将其解析为工作区中的每个项目；否则只使用给定的项目。该请求与单项目
+ * {@code GET /v1/private/projects/{id}/token-usage/names} 端点保持一致，并扩展到项目集合。
  */
 @Builder(toBuilder = true)
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -9,12 +9,11 @@ DEFAULT_MAX_SIZE = 1000
 
 
 class BoundedCache(Generic[_K, _V]):
-    """A thread-safe, size-bounded mapping that evicts the oldest entry once it
-    grows past ``max_size``.
+    """一个线程安全、大小受限的映射，当大小超过 ``max_size`` 时会逐出最旧的条目。
 
-    Shared by the ADK tracer's runtime caches (the per-invocation model-output
-    cache and the pending-LLM-span registry), which are held on a long-lived,
-    concurrently-used tracer and so must stay bounded and locked in one place.
+    供 ADK 追踪器的运行时缓存（按 invocation 区分的模型输出缓存和
+    待处理 LLM span 注册表）共享，这些缓存保存在一个长期存在、
+    并发使用的追踪器上，因此必须保持有界并在同一处加锁。
     """
 
     def __init__(self, max_size: int = DEFAULT_MAX_SIZE) -> None:

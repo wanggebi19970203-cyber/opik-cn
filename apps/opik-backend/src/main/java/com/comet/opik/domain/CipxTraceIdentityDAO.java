@@ -25,19 +25,19 @@ import static com.comet.opik.infrastructure.FilterUtils.getSTWithLogComment;
 import static com.comet.opik.utils.template.TemplateUtils.getQueryItemPlaceHolder;
 
 /**
- * Writes the cipx_trace_identities table from cipx traces. Triggered asynchronously off trace
- * create/update events (identity can arrive or change on a trace update); never reads the traces or
- * cipx_trace_identities tables. Identity fields are parsed from metadata in Java
- * ({@link TraceIdentityRow#from}). Plain INSERT relying on ReplacingMergeTree to merge by sorting
- * key; last_updated_at is left to the column DEFAULT now64(6). project_id must be non-empty, so
- * blank rows are dropped.
+ * 从 cipx trace 写入 cipx_trace_identities 表。由 trace 创建/更新事件异步触发
+ * （身份信息可能随 trace 更新而到达或变化）；从不读取 traces 或
+ * cipx_trace_identities 表。身份字段在 Java 中从 metadata 解析
+ * （{@link TraceIdentityRow#from}）。普通 INSERT，依靠 ReplacingMergeTree 按排序键合并；
+ * last_updated_at 留给列 DEFAULT now64(6)。project_id 必须非空，因此
+ * 空行会被丢弃。
  */
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 @Slf4j
 public class CipxTraceIdentityDAO {
 
-    /** A cipx_trace_identities row constructed from a trace's metadata. */
+    /** 由 trace 的 metadata 构造的 cipx_trace_identities 行。 */
     @Builder(toBuilder = true)
     public record TraceIdentityRow(
             @NonNull String traceId,
@@ -104,8 +104,8 @@ public class CipxTraceIdentityDAO {
         }
     }
 
-    // One tuple per row (mirrors SpanDAO.BULK_INSERT). start_time is bound from Java (the source
-    // trace's stored start).
+    // 每行一个元组（对应 SpanDAO.BULK_INSERT）。start_time 从 Java 绑定（来源
+    // trace 已存储的开始时间）。
     private static final String INSERT = """
             INSERT INTO cipx_trace_identities
                 (workspace_id, project_id, trace_id, start_time, user_uuid,
@@ -169,10 +169,10 @@ public class CipxTraceIdentityDAO {
         template.add("items", queryItems);
         Statement statement = connection.createStatement(template.render());
 
-        // Positional binds: the driver resolves named binds with a linear indexOf over the statement's
-        // parameter list (quadratic per statement), while bind(int) is a direct array write. Indices
-        // follow the placeholders' first-appearance order in the rendered SQL: workspace_id once at 0
-        // (repeats dedup), then 25 parameters per row tuple in template order.
+        // 位置绑定：驱动程序通过语句参数列表的线性 indexOf 来解析命名绑定
+        // （每条语句为二次复杂度），而 bind(int) 是直接数组写入。索引
+        // 遵循占位符在渲染后的 SQL 中的首次出现顺序：workspace_id 在 0 处出现一次
+        // （重复项去重），然后每行元组按模板顺序有 25 个参数。
         statement.bind(0, workspaceId);
         int index = 1;
         for (TraceIdentityRow row : rows) {

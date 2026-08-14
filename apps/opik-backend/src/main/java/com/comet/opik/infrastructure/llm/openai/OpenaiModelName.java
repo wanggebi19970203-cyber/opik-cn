@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * This information is taken from <a href="https://platform.openai.com/docs/models">openai docs</a>
+ * 此信息取自 <a href="https://platform.openai.com/docs/models">openai 文档</a>
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -82,7 +82,7 @@ public enum OpenaiModelName implements StructuredOutputSupported {
     GPT_O4_MINI("o4-mini", true),
     GPT_O4_MINI_DEEP_RESEARCH("o4-mini-deep-research", true);
 
-    private static final String WARNING_UNKNOWN_MODEL = "could not find OpenaiModelName with value '{}'";
+    private static final String WARNING_UNKNOWN_MODEL = "无法找到值为 '{}' 的 OpenaiModelName";
 
     private final String value;
     private final boolean structuredOutputSupported;

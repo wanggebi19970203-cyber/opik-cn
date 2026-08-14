@@ -14,11 +14,11 @@ import static com.comet.opik.infrastructure.db.DatabaseAnalyticsModule.CLICKHOUS
 import static com.comet.opik.infrastructure.db.DatabaseAnalyticsModule.READ_ONLY_FREE_FORM_SQL_CLICKHOUSE_CLIENT;
 
 /**
- * Probes the Agent Insights read-only free-form SQL ClickHouse user via the v2 HTTP client.
+ * 通过 v2 HTTP 客户端探测 Agent Insights 只读自由格式 SQL ClickHouse 用户。
  *
- * <p>Gated by {@code ollieEnabled}: when the feature is off the probe reports healthy
- * without querying ClickHouse, so a misconfigured read-only user never gates overall readiness
- * for an environment that doesn't use the feature.
+ * <p>由 {@code ollieEnabled} 门控：当该功能关闭时，探针会报告健康
+ * 而不查询 ClickHouse，因此配置错误的只读用户绝不会为不使用该功能的
+ * 环境阻断整体就绪状态。
  */
 @Singleton
 public class ClickHouseReadOnlyFreeFormSqlHealthCheck extends AbstractClickHouseHealthCheck {
@@ -43,12 +43,12 @@ public class ClickHouseReadOnlyFreeFormSqlHealthCheck extends AbstractClickHouse
     }
 
     /**
-     * The Agent Insights read-only free-form SQL user runs under the production settings profile
-     * (see {@code provision_agent_insights_readonly_user.sh}): {@code readonly=1} with only
-     * {@code SQL_workspace_id} / {@code SQL_project_id} marked {@code CHANGEABLE_IN_READONLY}.
-     * That explicit allowlist makes ClickHouse reject any other per-call setting change —
-     * including {@code max_execution_time}. The probe must therefore carry no per-call settings;
-     * the caller-side {@code future.get(healthCheckTimeout)} is the deadline.
+     * Agent Insights 只读自由格式 SQL 用户在 production settings profile 下运行
+     * （参见 {@code provision_agent_insights_readonly_user.sh}）：{@code readonly=1}，并且只有
+     * {@code SQL_workspace_id} / {@code SQL_project_id} 被标记为 {@code CHANGEABLE_IN_READONLY}。
+     * 这个显式白名单会让 ClickHouse 拒绝任何其他按调用设置变更 ——
+     * 包括 {@code max_execution_time}。因此探针绝不能携带任何按调用设置；
+     * 调用方一侧的 {@code future.get(healthCheckTimeout)} 就是截止时间。
      */
     @Override
     protected QuerySettings newQuerySettings() {

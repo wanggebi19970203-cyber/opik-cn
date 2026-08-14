@@ -23,19 +23,17 @@ def _raise_on_oversized_items(
         rest_api_types.ExperimentItemBulkRecordExperimentItemBulkWriteView
     ],
 ) -> None:
-    """Reject items that cannot fit in a request on their own.
+    """拒绝自身就无法放入单个请求的项目。
 
-    ``split_into_batches`` puts an oversized item in a batch by itself rather
-    than dropping it, which would send a request the backend is guaranteed to
-    reject with a 422. Failing here names the offending item instead.
+    ``split_into_batches`` 会把超大项目单独放入一个批次而不是丢弃它，
+    这会发送一个后端必定以 422 拒绝的请求。在此处失败则会指明有问题的项目。
 
-    The bound is inclusive, matching ``split_into_batches``: an item measuring
-    exactly the limit already fills a batch on its own, leaving no room for the
-    request envelope.
+    该界限是包含式的，与 ``split_into_batches`` 保持一致：一个大小恰好
+    等于限制的项目本身就已占满一个批次，没有为请求信封留出空间。
     """
     failure_reasons = [
-        f"items[{index}] is {size_MB:.1f}MB, which is at or above the "
-        f"{constants.EXPERIMENT_ITEMS_BULK_MAX_BATCH_SIZE_MB}MB per-request limit"
+        f"items[{index}] 大小为 {size_MB:.1f}MB，达到或超过了 "
+        f"{constants.EXPERIMENT_ITEMS_BULK_MAX_BATCH_SIZE_MB}MB 的每请求限制"
         for index, size_MB in (
             (index, sequence_splitter.get_payload_size_MB(item))
             for index, item in enumerate(rest_items)
@@ -170,7 +168,7 @@ class Experiment:
             operation_name="experiment_items_bulk",
         )
         LOGGER.debug(
-            "Successfully sent experiment items bulk batch of size %d", len(batch)
+            "成功发送大小为 %d 的实验项目批量批次", len(batch)
         )
 
     def batch_upload_items(
@@ -180,48 +178,41 @@ class Experiment:
         num_threads: int = 1,
     ) -> None:
         """
-        Upload experiment items together with their traces, spans and feedback scores.
+        将实验项目连同它们的 trace、span 和反馈分数一起上传。
 
-        Unlike :meth:`insert`, which only links already-existing traces to dataset
-        items, this method creates the traces and spans as part of the same request.
+        与 :meth:`insert`（仅将已存在的 trace 链接到数据集项目）不同，
+        此方法会在同一个请求中创建 trace 和 span。
 
-        Items are validated up front, split into batches that respect the backend's
-        1000-item and 4MB-per-request limits, and sent with automatic retry on rate
-        limiting (HTTP 429).
+        项目会先经过前置校验，拆分为遵守后端每请求 1000 项和 4MB 限制的
+        批次，并在遇到速率限制（HTTP 429）时自动重试后发送。
 
-        If a batch fails, the exception propagates and the remaining batches are
-        not sent, leaving the experiment partially populated. Rate-limit retries
-        re-send the identical payload, so they never duplicate anything. Calling
-        this method again, however, mints new ids for any trace or span left
-        without one, which would duplicate whatever the first call did manage to
-        write — set ``id`` on the traces and spans you pass in if you intend to
-        retry a failed upload.
+        如果某个批次失败，异常会向上传播，剩余的批次不会被发送，导致实验
+        处于部分填充状态。速率限制重试会重新发送完全相同的负载，因此绝不会
+        重复任何内容。不过，再次调用此方法会为任何没有 id 的 trace 或 span
+        铸造新的 id，这会重复第一次调用已成功写入的内容——如果你打算重试
+        一次失败的上传，请为你传入的 trace 和 span 设置 ``id``。
 
         Args:
-            items: The experiment items to upload. Each item must provide exactly
-                one of ``evaluate_task_result`` or ``trace``.
-            project_name: Project for traces auto-created from items that provide
-                ``evaluate_task_result``. Defaults to the experiment's project;
-                blank is treated as unset. When set, every item-level
-                ``trace.project_name`` must match it.
-            num_threads: Number of batches to upload concurrently. Defaults to 1
-                (sequential). Raising it trades ordering and a higher chance of
-                being rate limited for throughput. Capped at the number of
-                batches and at
-                ``constants.EXPERIMENT_ITEMS_BULK_MAX_THREADS``.
+            items: 要上传的实验项目。每个项目必须恰好提供
+                ``evaluate_task_result`` 或 ``trace`` 其中之一。
+            project_name: 为从提供 ``evaluate_task_result`` 的项目自动创建的
+                trace 指定的项目。默认为实验的项目；空白字符串按未设置处理。
+                设置后，每个项目级的 ``trace.project_name`` 都必须与它匹配。
+            num_threads: 并发上传的批次数。默认为 1（顺序）。增大它以吞吐量
+                换取顺序性和更高的被限流概率。上限为批次数以及
+                ``constants.EXPERIMENT_ITEMS_BULK_MAX_THREADS``。
 
         Returns:
             None
 
         Raises:
-            opik.exceptions.ValidationError: If any item fails validation, if a
-                single item is too large to fit in one request, or if
-                ``num_threads`` is less than 1.
+            opik.exceptions.ValidationError: 如果有任何项目校验失败、某个
+                项目过大无法放入单个请求，或 ``num_threads`` 小于 1。
         """
         if num_threads < 1:
             raise exceptions.ValidationError(
                 prefix="batch_upload_items",
-                failure_reasons=[f"num_threads must be at least 1, got {num_threads}"],
+                failure_reasons=[f"num_threads 必须至少为 1，实际为 {num_threads}"],
             )
 
         if not items:
@@ -230,9 +221,9 @@ class Experiment:
         resolved_project_name = (
             project_name if project_name is not None else self._project_name
         )
-        # The backend annotates project_name with @Pattern(NULL_OR_NOT_BLANK), so a
-        # blank string is rejected outright rather than falling back to the default
-        # project. Treat it as unset, which is what the caller meant.
+        # 后端用 @Pattern(NULL_OR_NOT_BLANK) 注解 project_name，因此空白字符串
+        # 会被直接拒绝，而不是回退到默认项目。将它按未设置处理，
+        # 这正是调用者的本意。
         if resolved_project_name is not None and not resolved_project_name.strip():
             resolved_project_name = None
 
@@ -249,7 +240,7 @@ class Experiment:
         )
 
         LOGGER.debug(
-            "Uploading %d experiment items in %d batch(es) using %d thread(s)",
+            "正在上传 %d 个实验项目，分为 %d 个批次，使用 %d 个线程",
             len(rest_items),
             len(batches),
             num_threads,
@@ -262,12 +253,11 @@ class Experiment:
                 )
             return
 
-        # Deliberately not a `with` block: ThreadPoolExecutor.__exit__ always
-        # calls shutdown(wait=True), which would re-join batches we just chose
-        # not to wait for and park the caller behind a batch stuck in the
-        # rate-limit retry loop.
-        # More workers than batches is pure waste, and an unbounded caller-supplied
-        # value would spawn a thread per batch.
+        # 故意不用 `with` 块：ThreadPoolExecutor.__exit__ 总会调用
+        # shutdown(wait=True)，这会重新 join 我们刚刚选择不等待的批次，
+        # 并把调用者阻塞在一个陷入限流重试循环的批次后面。
+        # 工作线程多于批次纯粹是浪费，而调用者提供无界的值会为每个批次
+        # 派生一个线程。
         worker_count = min(
             num_threads, len(batches), constants.EXPERIMENT_ITEMS_BULK_MAX_THREADS
         )
@@ -286,8 +276,8 @@ class Experiment:
             for future in futures.as_completed(submitted):
                 future.result()
         except BaseException:
-            # Fail fast: drop batches that have not started and return without
-            # joining the ones already in flight.
+            # 快速失败：丢弃尚未开始的批次，并在不 join 已在进行中的批次
+            # 的情况下返回。
             pool.shutdown(wait=False, cancel_futures=True)
             raise
         else:

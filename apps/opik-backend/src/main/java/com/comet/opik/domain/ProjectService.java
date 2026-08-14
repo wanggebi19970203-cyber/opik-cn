@@ -338,7 +338,7 @@ class ProjectServiceImpl implements ProjectService {
     @Override
     public void delete(Set<UUID> ids) {
         if (ids.isEmpty()) {
-            log.info("ids list is empty, returning");
+            log.info("ids 列表为空，直接返回");
             return;
         }
 
@@ -397,7 +397,7 @@ class ProjectServiceImpl implements ProjectService {
     @Override
     public List<Project> findByIds(String workspaceId, Set<UUID> ids) {
         if (ids.isEmpty()) {
-            log.info("ids list is empty, returning");
+            log.info("ids 列表为空，直接返回");
             return List.of();
         }
 
@@ -509,7 +509,7 @@ class ProjectServiceImpl implements ProjectService {
                 .stream()
                 .findFirst()
                 .orElseGet(() -> {
-                    log.info("Creating project with name '{}' on workspaceId '{}'", projectName, workspaceId);
+                    log.info("创建项目，名称 '{}'，workspaceId '{}'", projectName, workspaceId);
                     var project = Project.builder()
                             .name(projectName)
                             .visibility(Visibility.PRIVATE)
@@ -519,7 +519,7 @@ class ProjectServiceImpl implements ProjectService {
 
                     project = createProject(project, projectId, userName, workspaceId);
 
-                    log.info("Created project with id '{}', name '{}' on workspaceId '{}'", projectId, projectName,
+                    log.info("已创建项目，id '{}'，名称 '{}'，workspaceId '{}'", projectId, projectName,
                             workspaceId);
                     return project;
                 });
@@ -680,7 +680,7 @@ class ProjectServiceImpl implements ProjectService {
                             projectDAO.save(workspaceId, newProject);
                         } catch (UnableToExecuteStatementException e) {
                             if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
-                                log.warn("Project {} already exists", projectName);
+                                log.warn("项目 {} 已存在", projectName);
                             } else {
                                 throw e;
                             }

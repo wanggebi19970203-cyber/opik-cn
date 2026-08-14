@@ -23,27 +23,27 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.comet.opik.infrastructure.lock.LockService.Lock;
 
 /**
- * Periodically transitions stalled Optimization Studio runs to {@code ERROR} (OPIK-7159).
+ * 定期将停滞的 Optimization Studio 运行转为 {@code ERROR}（OPIK-7159）。
  * <p>
- * A studio run's status is only ever advanced by the Python optimizer worker calling back to the API.
- * If the worker never runs (worker down, Redis/queue unreachable, job lost) or crashes before it can
- * report, the run is frozen on {@code INITIALIZED} (or {@code RUNNING}) forever with no error surfaced.
- * This reaper is the environment-independent safety net that guarantees a run can never stay stuck
- * indefinitely. It selects a non-terminal run on either of two independent conditions and asks
- * {@link OptimizationService#reconcileStalledStudioOptimizations} to mark it failed with a clear reason:
+ * Studio 运行的状态只会由 Python 优化器 worker 回调 API 来推进。
+ * 如果 worker 从未运行（worker 宕机、Redis/队列不可达、作业丢失）或在能够上报之前崩溃，
+ * 运行将永远冻结在 {@code INITIALIZED}（或 {@code RUNNING}）状态，且不会暴露任何错误。
+ * 此回收器是与环境无关的安全网，保证运行永远不会无限期卡住。
+ * 它根据两个独立条件之一选择一个非终结态的运行，并要求
+ * {@link OptimizationService#reconcileStalledStudioOptimizations} 以明确的原因将其标记为失败：
  * <ul>
- * <li><b>No liveness</b> — the newest of the row's {@code last_updated_at}, the latest trial experiment's
- * {@code created_at} and the latest experiment item's {@code created_at} (OPIK-7459) is older than
- * {@code initializedTimeout} / {@code runningTimeout}, per the status the row is stuck on.</li>
- * <li><b>Past the hard ceiling</b> — the run started more than {@code runningHardTimeout} ago, reaped
- * <em>even if</em> trial and item writes are still arriving. The liveness rule alone weakened the
- * never-stuck-indefinitely guarantee asserted above, because a zombie worker that keeps writing rows
- * without ever reporting a terminal status would satisfy it forever; this ceiling is what restores it.</li>
+ * <li><b>无活跃度</b>——行的 {@code last_updated_at}、最新试验实验的
+ * {@code created_at} 与最新实验条目的 {@code created_at}（OPIK-7459）三者中最新的一个，
+ * 早于该运行所卡住的对应状态的 {@code initializedTimeout} / {@code runningTimeout}。</li>
+ * <li><b>超过硬上限</b>——运行开始于 {@code runningHardTimeout} 之前，<em>即使</em>
+ * 试验和条目的写入仍在到达也会被回收。仅靠活跃度规则会削弱上面断言的
+ * “永不会无限期卡住”保证，因为一个持续写入行却从不报告终结状态的僵尸 worker
+ * 会永远满足该规则；这个上限正是用来恢复该保证的。</li>
  * </ul>
- * The two are checked in that order everywhere, and the ceiling wins: {@code OptimizationService} short
- * circuits its pre-update activity veto for a hard-capped run, and reports the ceiling as the reason.
+ * 这两个条件在任何地方都按此顺序检查，且上限优先：{@code OptimizationService} 对
+ * 达到硬上限的运行短路其更新前的活动否决，并将上限作为原因上报。
  * <p>
- * A distributed lock with hold-until-expiry keeps only one instance reconciling per cycle.
+ * 一个持有到过期的分布式锁确保每个周期只有一个实例进行协调。
  */
 @Slf4j
 @Singleton
@@ -58,13 +58,13 @@ public class OptimizationStalledReaperJob extends Job implements InterruptableJo
 
     private final AtomicBoolean interrupted = new AtomicBoolean(false);
 
-    /** Tracks the in-flight reactive pass so {@link #interrupt()} can dispose it. */
+    /** 跟踪进行中的响应式过程，以便 {@link #interrupt()} 可以将其释放。 */
     private final AtomicReference<Disposable> currentExecution = new AtomicReference<>();
 
-    // Explicit @Inject constructor (not Lombok's onConstructor_): the sibling reaper jobs
-    // (StreamConsumerReaperJob, LocalRunnerReaperJob) declare the @Config qualifier on an
-    // explicit constructor parameter, because Quartz/Guice instantiation of a Lombok-propagated
-    // @Config qualifier has been fragile here. Keep this consistent with them (review: thiagohora).
+    // 显式 @Inject 构造函数（而非 Lombok 的 onConstructor_）：同类的回收器作业
+    // （StreamConsumerReaperJob、LocalRunnerReaperJob）将 @Config 限定符声明在
+    // 显式构造函数参数上，因为 Quartz/Guice 对 Lombok 传播的 @Config 限定符的实例化
+    // 在这里一直很脆弱。请与它们保持一致（审查者：thiagohora）。
     @Inject
     public OptimizationStalledReaperJob(@NonNull OptimizationService optimizationService,
             @NonNull LockService lockService,
@@ -77,7 +77,7 @@ public class OptimizationStalledReaperJob extends Job implements InterruptableJo
     @Override
     public void doJob(JobExecutionContext context) {
         if (interrupted.get()) {
-            log.info("Optimization stalled reaper job interrupted before execution, skipping");
+            log.info("优化停滞回收器作业在执行前被中断，跳过");
             return;
         }
 
@@ -85,7 +85,7 @@ public class OptimizationStalledReaperJob extends Job implements InterruptableJo
                 JOB_LOCK,
                 Mono.defer(() -> {
                     if (interrupted.get()) {
-                        log.info("Optimization stalled reaper interrupted before processing, skipping");
+                        log.info("优化停滞回收器在处理前被中断，跳过");
                         return Mono.empty();
                     }
                     return optimizationService.reconcileStalledStudioOptimizations(
@@ -97,24 +97,24 @@ public class OptimizationStalledReaperJob extends Job implements InterruptableJo
                             config.candidateScanFactor())
                             .doOnSuccess(count -> {
                                 if (count > 0) {
-                                    log.warn("Optimization stalled reaper marked '{}' stalled studio run(s) as ERROR",
+                                    log.warn("优化停滞回收器已将 '{}' 个停滞的 Studio 运行标记为 ERROR",
                                             count);
                                 } else {
-                                    log.debug("Optimization stalled reaper found no stalled studio runs");
+                                    log.debug("优化停滞回收器未发现停滞的 Studio 运行");
                                 }
                             });
                 }),
                 Mono.fromRunnable(() -> log.debug(
-                        "Could not acquire lock for optimization stalled reaper, another instance is running")),
+                        "无法获取优化停滞回收器的锁，另一个实例正在运行")),
                 config.lockDuration().toJavaDuration(),
                 Duration.ZERO,
-                true) // holdUntilExpiry: prevent redundant runs across instances until the next cycle
-                // Resume on errors so the recurring job stays alive.
+                true) // holdUntilExpiry：防止在下一个周期前跨实例重复运行
+                // 出错后继续，使周期性作业保持存活。
                 .onErrorResume(throwable -> {
                     if (interrupted.get()) {
-                        log.warn("Optimization stalled reaper interrupted", throwable);
+                        log.warn("优化停滞回收器被中断", throwable);
                     } else {
-                        log.error("Optimization stalled reaper failed", throwable);
+                        log.error("优化停滞回收器失败", throwable);
                     }
                     return Mono.empty();
                 })
@@ -127,11 +127,11 @@ public class OptimizationStalledReaperJob extends Job implements InterruptableJo
     @Override
     public void interrupt() {
         interrupted.set(true);
-        log.info("Optimization stalled reaper job interrupted");
+        log.info("优化停滞回收器作业被中断");
         var execution = currentExecution.get();
         if (execution != null && !execution.isDisposed()) {
             execution.dispose();
-            log.info("Optimization stalled reaper job interrupted successfully");
+            log.info("优化停滞回收器作业已成功中断");
         }
     }
 }

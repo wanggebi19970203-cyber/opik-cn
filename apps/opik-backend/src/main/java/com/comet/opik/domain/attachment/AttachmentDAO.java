@@ -243,9 +243,9 @@ class AttachmentDAOImpl implements AttachmentDAO {
     }
 
     /**
-     * Shared statement setup for the by-entity-id SELECT and DELETE: renders the template with the optional
-     * {@code container_id} clause and binds {@code entity_ids}, {@code entity_type}, and (when scoped) {@code
-     * container_id}, so the two paths can't drift on bind order or the optional-scope wiring.
+     * 按实体 ID 的 SELECT 和 DELETE 共用的语句设置：使用可选的
+     * {@code container_id} 子句渲染模板，并绑定 {@code entity_ids}、{@code entity_type} 以及（在限定范围时）{@code
+     * container_id}，这样两条路径就不会在绑定顺序或可选范围的接线上发生偏差。
      */
     private Statement bindEntityIdsStatement(Connection connection, String sql, EntityType entityType,
             Set<UUID> entityIds, UUID containerId) {

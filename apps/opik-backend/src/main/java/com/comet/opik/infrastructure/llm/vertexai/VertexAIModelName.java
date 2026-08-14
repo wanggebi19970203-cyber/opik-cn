@@ -33,7 +33,7 @@ public enum VertexAIModelName implements StructuredOutputSupported {
     GEMINI_3_5_FLASH_LITE("vertex_ai/gemini-3.5-flash-lite", "gemini-3.5-flash-lite", true),
     GEMINI_3_6_FLASH("vertex_ai/gemini-3.6-flash", "gemini-3.6-flash", true);
 
-    private static final String WARNING_UNKNOWN_MODEL = "could not find VertexAIModelName with name '{}'";
+    private static final String WARNING_UNKNOWN_MODEL = "无法找到名称为 '{}' 的 VertexAIModelName";
 
     private final String qualifiedName;
     private final String value;

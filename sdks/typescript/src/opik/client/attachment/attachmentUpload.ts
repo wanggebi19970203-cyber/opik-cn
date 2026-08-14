@@ -2,17 +2,17 @@ import type { OpikApiClientTemp } from "@/client/OpikApiClientTemp";
 import type { ExtractedAttachment } from "./attachmentExtraction";
 
 /**
- * Uploads an extracted base64 blob as an Opik attachment (parity with the Python SDK's
- * file_upload). The backend decides the path: a `BEMinIO` upload id means "PUT the bytes
- * to the single local URL"; anything else is an S3 multipart upload (PUT each part to its
- * presigned URL, collect the ETags, then complete).
+ * 将提取出的 base64 数据块作为 Opik 附件上传（与 Python SDK 的
+ * file_upload 保持一致）。后端决定路径：`BEMinIO` 上传 id 表示“将字节
+ * PUT 到单一的本地 URL”；其他情况则是 S3 分片上传（将每个分片 PUT 到其
+ * 预签名 URL，收集 ETag，然后完成上传）。
  */
 
 const LOCAL_UPLOAD_MAGIC_ID = "BEMinIO";
-const PART_SIZE_BYTES = 5 * 1024 * 1024; // S3 minimum part size
+const PART_SIZE_BYTES = 5 * 1024 * 1024; // S3 分片最小大小
 
-// Static config resolved once from OpikConfig; carries what the raw PUT to the local
-// backend needs (that PUT bypasses the generated client, so it must supply auth itself).
+// 从 OpikConfig 解析一次得到的静态配置；包含对本地后端执行原始 PUT
+// 所需的内容（该 PUT 绕过了生成的客户端，因此必须自行提供鉴权）。
 export interface AttachmentUploadConfig {
   minSizeBytes: number;
   apiUrl: string;
@@ -69,7 +69,7 @@ export const uploadInlineAttachment = async (
   );
 
   if (response.uploadId === LOCAL_UPLOAD_MAGIC_ID) {
-    // Local backend: a single authenticated PUT of the whole file, no completion call.
+    // 本地后端：对整个文件执行一次带鉴权的 PUT，无需完成调用。
     const headers: Record<string, string> = {
       "Content-Type": mimeType,
       "Comet-Workspace": config.workspaceName,
@@ -82,8 +82,8 @@ export const uploadInlineAttachment = async (
     return;
   }
 
-  // Cloud: PUT each part to its presigned S3 URL (self-authenticating), collect the
-  // ETags, then finalize the multipart upload on the backend.
+  // 云端：将每个分片 PUT 到其预签名的 S3 URL（自鉴权），收集
+  // ETag，然后在后端完成分片上传。
   const uploadedFileParts = [];
   for (let i = 0; i < response.preSignUrls.length; i++) {
     const start = i * PART_SIZE_BYTES;

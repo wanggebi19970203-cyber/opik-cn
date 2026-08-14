@@ -28,77 +28,76 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Service for synchronizing optimization logs from Redis to S3.
+ * 用于将优化日志从 Redis 同步到 S3 的服务。
  * <p>
- * The Python backend writes logs to Redis during optimization execution.
- * This service is responsible for:
- * 1. Periodically syncing logs from Redis to S3 (called by scheduled job)
- * 2. Finalizing logs when optimization completes (on-demand)
+ * Python 后端在优化执行期间会把日志写入 Redis。
+ * 该服务负责：
+ * 1. 定期将日志从 Redis 同步到 S3（由定时任务调用）
+ * 2. 在优化完成时终结日志（按需）
  * <p>
- * Redis key structure (set by Python backend):
- * - Logs: opik:logs:{workspace_id}:{optimization_id} (LIST of raw log lines)
- * - Meta: opik:logs:{workspace_id}:{optimization_id}:meta (HASH with timestamps)
+ * Redis 键结构（由 Python 后端设置）：
+ * - 日志：opik:logs:{workspace_id}:{optimization_id}（原始日志行的 LIST）
+ * - 元数据：opik:logs:{workspace_id}:{optimization_id}:meta（带时间戳的 HASH）
  * <p>
- * S3 key structure:
+ * S3 键结构：
  * - logs/{workspace_id}/{optimization_id}.log
  */
 @ImplementedBy(OptimizationLogSyncServiceImpl.class)
 public interface OptimizationLogSyncService {
 
     /**
-     * Redis key pattern for optimization log metadata.
-     * Used by OptimizationLogFlusherJob to scan for active optimizations.
+     * 优化日志元数据的 Redis 键模式。
+     * 供 OptimizationLogFlusherJob 用于扫描活动中的优化。
      */
     String META_KEY_PATTERN = "opik:logs:*:meta";
 
     /**
-     * S3 key pattern for optimization logs.
-     * Format: logs/optimization-studio/{workspace_id}/{optimization_id}.log.gz
+     * 优化日志的 S3 键模式。
+     * 格式：logs/optimization-studio/{workspace_id}/{optimization_id}.log.gz
      */
     String S3_KEY_PATTERN = "logs/optimization-studio/%s/%s.log.gz";
 
     /**
-     * Formats the S3 key for an optimization's log file.
+     * 为某个优化的日志文件格式化 S3 键。
      *
-     * @param workspaceId    the workspace ID
-     * @param optimizationId the optimization ID
-     * @return the S3 key path
+     * @param workspaceId    工作空间 ID
+     * @param optimizationId 优化 ID
+     * @return S3 键路径
      */
     static String formatS3Key(String workspaceId, UUID optimizationId) {
         return String.format(S3_KEY_PATTERN, workspaceId, optimizationId);
     }
 
     /**
-     * Sync logs from Redis to S3 if there are new logs since last flush.
-     * Uses distributed locking to prevent duplicate work across instances.
+     * 如果自上次刷新以来有新日志，则将日志从 Redis 同步到 S3。
+     * 使用分布式锁来防止跨实例重复工作。
      *
-     * @param workspaceId    the workspace ID
-     * @param optimizationId the optimization ID
-     * @return Mono that completes when sync is done (or skipped if no new logs)
+     * @param workspaceId    工作空间 ID
+     * @param optimizationId 优化 ID
+     * @return 同步完成后（或没有新日志时跳过）完成的 Mono
      */
     Mono<Void> syncLogsToS3(@NonNull String workspaceId, @NonNull UUID optimizationId);
 
     /**
-     * Finalize logs for a completed optimization.
-     * This flushes any remaining logs from Redis to S3 and deletes the Redis keys.
+     * 为已完成的优化终结日志。
+     * 这会把 Redis 中剩余的任何日志刷到 S3，并删除 Redis 键。
      *
-     * @param workspaceId    the workspace ID
-     * @param optimizationId the optimization ID
-     * @return Mono that completes when logs are finalized
+     * @param workspaceId    工作空间 ID
+     * @param optimizationId 优化 ID
+     * @return 日志终结完成后完成的 Mono
      */
     Mono<Void> finalizeLogsOnCompletion(@NonNull String workspaceId, @NonNull UUID optimizationId);
 
     /**
-     * Append a single system-generated log line to an optimization's Redis log stream so it is surfaced
-     * to the UI alongside the worker's own logs. Used when the backend, not the worker, terminates a run
-     * (e.g. the stalled-run reaper) and needs to record a human-readable reason — for a run whose worker
-     * never started there are otherwise no logs at all. Bumps {@code last_append_ts} so the periodic
-     * flusher and completion finalization sync the line to S3. Best-effort: never fails the caller.
+     * 把单条系统生成的日志行追加到某优化的 Redis 日志流，使其与 worker 自身的日志一起在 UI 中呈现。
+     * 当后端（而不是 worker）终止一次运行时（例如停滞运行回收器），需要记录一个人类可读的原因时使用——
+     * 对于 worker 从未启动的运行，否则根本没有任何日志。它会递增 {@code last_append_ts}，让定期刷新器和
+     * 完成终结都能把该行同步到 S3。尽力而为：绝不使调用方失败。
      *
-     * @param workspaceId    the workspace ID
-     * @param optimizationId the optimization ID
-     * @param message        the log line to append (no trailing newline needed)
-     * @return Mono that completes when the line is appended (or immediately if logging is disabled)
+     * @param workspaceId    工作空间 ID
+     * @param optimizationId 优化 ID
+     * @param message        要追加的日志行（无需尾部换行）
+     * @return 该行追加完成后（或日志被禁用时立即）完成的 Mono
      */
     Mono<Void> appendSystemLogLine(@NonNull String workspaceId, @NonNull UUID optimizationId,
             @NonNull String message);
@@ -119,7 +118,7 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     private static final String CONTENT_TYPE_GZIP = "application/gzip";
 
     /**
-     * Record to hold log timestamp information for decision logging.
+     * 用于保存日志时间戳信息以供决策日志的记录。
      */
     private record LogTimestamps(long lastAppend, long lastFlush) {
     }
@@ -133,14 +132,14 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     @WithSpan
     public Mono<Void> syncLogsToS3(@NonNull String workspaceId, @NonNull UUID optimizationId) {
         if (!config.isEnabled()) {
-            log.debug("Optimization log sync is disabled");
+            log.debug("优化日志同步已禁用");
             return Mono.empty();
         }
 
         String logKey = formatLogKey(workspaceId, optimizationId);
         String metaKey = formatMetaKey(workspaceId, optimizationId);
 
-        // First check if there are new logs (fast path, no lock needed)
+        // 首先检查是否有新日志（快速路径，无需锁）
         return getLogTimestamps(metaKey)
                 .flatMap(timestamps -> {
                     long lastAppend = timestamps.lastAppend;
@@ -151,13 +150,13 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
                         return Mono.empty();
                     }
 
-                    // Acquire lock and perform sync
+                    // 获取锁并执行同步
                     return executeWithLock(workspaceId, optimizationId,
                             doSyncToS3(workspaceId, optimizationId, logKey, metaKey, false));
                 });
     }
 
-    // TTL to set on Redis keys after finalization (1 hour) - allows late logs to be captured
+    // 终结后设置在 Redis 键上的 TTL（1 小时）- 允许捕获迟到的日志
     private static final long FINALIZATION_TTL_SECONDS = 3600;
 
     @Override
@@ -165,7 +164,7 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     public Mono<Void> appendSystemLogLine(@NonNull String workspaceId, @NonNull UUID optimizationId,
             @NonNull String message) {
         if (!config.isEnabled()) {
-            log.debug("Optimization log sync is disabled, skipping system log line");
+            log.debug("优化日志同步已禁用，跳过系统日志行");
             return Mono.empty();
         }
 
@@ -175,13 +174,12 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
         RListReactive<String> logList = redisClient.getList(logKey, StringCodec.INSTANCE);
         RMapReactive<String, String> metaMap = redisClient.getMap(metaKey, StringCodec.INSTANCE);
 
-        // Append the line and bump last_append_ts so both the periodic flusher and completion
-        // finalization treat it as new content and sync it to S3.
+        // 追加该行并递增 last_append_ts，这样定期刷新器和完成终结都会把它当作新内容并同步到 S3。
         return logList.add(message)
                 .then(metaMap.put(META_LAST_APPEND_TS, String.valueOf(System.currentTimeMillis())))
-                .doOnSuccess(__ -> log.info("Appended system log line for optimization '{}'", optimizationId))
+                .doOnSuccess(__ -> log.info("已为优化 '{}' 追加系统日志行", optimizationId))
                 .onErrorResume(error -> {
-                    log.warn("Failed to append system log line for optimization '{}'", optimizationId, error);
+                    log.warn("为优化 '{}' 追加系统日志行失败", optimizationId, error);
                     return Mono.empty();
                 })
                 .then();
@@ -191,24 +189,23 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     @WithSpan
     public Mono<Void> finalizeLogsOnCompletion(@NonNull String workspaceId, @NonNull UUID optimizationId) {
         if (!config.isEnabled()) {
-            log.debug("Optimization log sync is disabled");
+            log.debug("优化日志同步已禁用");
             return Mono.empty();
         }
 
-        log.info("Finalizing logs for optimization '{}' in workspace '{}'", optimizationId, workspaceId);
+        log.info("正在终结工作空间 '{}' 中优化 '{}' 的日志", optimizationId, workspaceId);
 
         String logKey = formatLogKey(workspaceId, optimizationId);
         String metaKey = formatMetaKey(workspaceId, optimizationId);
 
-        // Sync logs to S3 and reduce TTL (don't delete - allow late logs to be captured)
+        // 将日志同步到 S3 并缩短 TTL（不删除 - 允许捕获迟到的日志）
         return executeWithLock(workspaceId, optimizationId,
                 doSyncToS3AndReduceTTL(workspaceId, optimizationId, logKey, metaKey));
     }
 
     /**
-     * Sync logs to S3 and reduce Redis key TTL to 1 hour.
-     * We don't delete immediately to allow any late-arriving logs to be captured
-     * by the periodic flusher job.
+     * 将日志同步到 S3，并将 Redis 键的 TTL 缩短为 1 小时。
+     * 我们不会立即删除，以允许定期刷新器任务捕获任何迟到的日志。
      */
     private Mono<Void> doSyncToS3AndReduceTTL(String workspaceId, UUID optimizationId,
             String logKey, String metaKey) {
@@ -216,26 +213,26 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     }
 
     /**
-     * Reduce TTL on Redis keys to 1 hour after finalization.
-     * This allows late-arriving logs to still be captured by the periodic flusher.
+     * 终结后将 Redis 键的 TTL 缩短为 1 小时。
+     * 这允许迟到的日志仍能被定期刷新器捕获。
      */
     private Mono<Void> reduceRedisTTL(String logKey, String metaKey, UUID optimizationId) {
         return Mono.zip(
                 redisClient.getKeys().expire(logKey, FINALIZATION_TTL_SECONDS, TimeUnit.SECONDS),
                 redisClient.getKeys().expire(metaKey, FINALIZATION_TTL_SECONDS, TimeUnit.SECONDS))
-                .doOnSuccess(__ -> log.info("Reduced TTL to 1 hour for optimization '{}' Redis keys", optimizationId))
+                .doOnSuccess(__ -> log.info("已将优化 '{}' 的 Redis 键 TTL 缩短为 1 小时", optimizationId))
                 .then();
     }
 
     /**
-     * Get log timestamps from meta to determine if sync is needed.
-     * Uses HMGET to fetch both timestamps in a single Redis call.
+     * 从元数据中获取日志时间戳以确定是否需要同步。
+     * 使用 HMGET 在单次 Redis 调用中获取两个时间戳。
      */
     private Mono<LogTimestamps> getLogTimestamps(String metaKey) {
-        // Use StringCodec since Python stores plain text values
+        // 使用 StringCodec，因为 Python 存储纯文本值
         RMapReactive<String, String> metaMap = redisClient.getMap(metaKey, StringCodec.INSTANCE);
 
-        // Use getAll (HMGET) to fetch both timestamps in one Redis call
+        // 使用 getAll (HMGET) 在单次 Redis 调用中获取两个时间戳
         return metaMap.getAll(Set.of(META_LAST_APPEND_TS, META_LAST_FLUSH_TS))
                 .map(values -> {
                     long lastAppend = parseLong(values.getOrDefault(META_LAST_APPEND_TS, "0"));
@@ -246,34 +243,34 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     }
 
     /**
-     * Perform the actual sync: read logs from Redis, upload to S3, update meta.
+     * 执行实际同步：从 Redis 读取日志，上传到 S3，更新元数据。
      *
-     * @param isFinalize if true, reduce TTL on Redis keys after sync (for finalization)
+     * @param isFinalize 如果为 true，同步后缩短 Redis 键的 TTL（用于终结）
      */
     private Mono<Void> doSyncToS3(String workspaceId, UUID optimizationId,
             String logKey, String metaKey, boolean isFinalize) {
 
-        // Use StringCodec for log list and meta map since Python stores plain text values
+        // 为日志列表和元数据映射使用 StringCodec，因为 Python 存储纯文本值
         RListReactive<String> logList = redisClient.getList(logKey, StringCodec.INSTANCE);
         RMapReactive<String, String> metaMap = redisClient.getMap(metaKey, StringCodec.INSTANCE);
 
         return logList.readAll()
                 .flatMap(logs -> {
                     if (logs == null || logs.isEmpty()) {
-                        log.debug("No logs found in Redis for optimization '{}'", optimizationId);
+                        log.debug("在 Redis 中未找到优化 '{}' 的日志", optimizationId);
                         return Mono.empty();
                     }
 
-                    // Join all log lines with newlines
+                    // 用换行符连接所有日志行
                     String logContent = String.join("\n", logs);
                     String s3Key = OptimizationLogSyncService.formatS3Key(workspaceId, optimizationId);
 
-                    // Compress logs with gzip
+                    // 使用 gzip 压缩日志
                     byte[] compressedLogs = compressGzip(logContent);
-                    log.info("Uploading '{}' log lines ({} bytes -> {} bytes gzipped) for optimization '{}' to S3",
+                    log.info("正在将优化 '{}' 的 '{}' 行日志（{} 字节 -> {} 字节 gzip 后）上传到 S3",
                             logs.size(), logContent.length(), compressedLogs.length, optimizationId);
 
-                    // Upload to S3 (blocking call wrapped in scheduler)
+                    // 上传到 S3（阻塞调用被包装到调度器中）
                     Mono<Void> uploadAndUpdate = Mono.fromCallable(() -> {
                         fileService.upload(s3Key, compressedLogs, CONTENT_TYPE_GZIP);
                         return true;
@@ -281,7 +278,7 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
                             .subscribeOn(Schedulers.boundedElastic())
                             .then(updateLastFlushTimestamp(metaMap, optimizationId));
 
-                    // If finalizing, also reduce TTL on Redis keys
+                    // 如果正在终结，还要缩短 Redis 键的 TTL
                     if (isFinalize) {
                         return uploadAndUpdate.then(reduceRedisTTL(logKey, metaKey, optimizationId));
                     }
@@ -290,17 +287,17 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
     }
 
     /**
-     * Update the last_flush_ts in meta after successful S3 upload.
+     * 在 S3 上传成功后更新元数据中的 last_flush_ts。
      */
     private Mono<Void> updateLastFlushTimestamp(RMapReactive<String, String> metaMap, UUID optimizationId) {
         String now = String.valueOf(System.currentTimeMillis());
         return metaMap.put(META_LAST_FLUSH_TS, now)
-                .doOnSuccess(__ -> log.debug("Updated last_flush_ts for optimization '{}'", optimizationId))
+                .doOnSuccess(__ -> log.debug("已更新优化 '{}' 的 last_flush_ts", optimizationId))
                 .then();
     }
 
     /**
-     * Execute action with distributed lock.
+     * 使用分布式锁执行操作。
      */
     private Mono<Void> executeWithLock(String workspaceId, UUID optimizationId, Mono<Void> action) {
         String lockKey = formatLockKey(workspaceId, optimizationId);
@@ -309,7 +306,7 @@ class OptimizationLogSyncServiceImpl implements OptimizationLogSyncService {
         return lockService.lockUsingToken(new LockService.Lock(lockKey), lockDuration)
                 .flatMap(acquired -> {
                     if (!acquired) {
-                        log.debug("Could not acquire lock for optimization '{}', another instance is syncing",
+                        log.debug("无法获取优化 '{}' 的锁，另一个实例正在同步",
                                 optimizationId);
                         return Mono.empty();
                     }

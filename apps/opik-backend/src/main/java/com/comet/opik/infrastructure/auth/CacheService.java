@@ -28,7 +28,7 @@ class NoopCacheService implements CacheService {
     @Override
     public void cache(
             String apiKey, String requestWorkspaceName, List<String> requiredPermissions, AuthCredentials credentials) {
-        // no-op
+        // 空操作
     }
 
     @Override

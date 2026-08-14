@@ -107,14 +107,11 @@ public class OnlineScoringEngine {
             .comparing(Span::startTime, Comparator.nullsLast(Comparator.naturalOrder()));
 
     /**
-     * Prepare a request to a LLM-as-Judge evaluator (a ChatLanguageModel) rendering
-     * the template messages with
-     * Trace variables and with the proper structured output format.
+     * 准备一个发往 LLM 评判器（ChatLanguageModel）的请求，使用 Trace 变量和正确的结构化输出格式来渲染模板消息。
      *
-     * @param evaluatorCode the LLM-as-Judge 'code'
-     * @param trace         the sampled Trace to be scored
-     * @return a request to trigger to any supported provider with a
-     *         ChatLanguageModel
+     * @param evaluatorCode LLM 评判器的 'code'
+     * @param trace         待评分的采样 Trace
+     * @return 一个可触发任何受支持提供方（具备 ChatLanguageModel）的请求
      */
     public static ChatRequest prepareLlmRequest(
             @NonNull LlmAsJudgeCode evaluatorCode, Trace trace,
@@ -143,14 +140,13 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Variant of {@link #prepareLlmRequest(LlmAsJudgeCode, Trace, StructuredOutputStrategy, PromptType, List)}
-     * that caps sentinel variable substitutions (e.g. {@code {{spans}}}) at {@code maxReplacementChars}
-     * while leaving user-mapped variables (e.g. {@code output}, {@code expected_output}) uncapped.
+     * {@link #prepareLlmRequest(LlmAsJudgeCode, Trace, StructuredOutputStrategy, PromptType, List)}
+     * 的变体，它在 {@code maxReplacementChars} 处截断哨兵变量替换（例如 {@code {{spans}}}），
+     * 同时让用户映射的变量（例如 {@code output}、{@code expected_output}）保持不截断。
      *
-     * <p>User-mapped variables are the scoring data the judge needs to evaluate — capping them forces
-     * the LLM to drill down via tools, which is non-deterministic and produces intermittent
-     * "Insufficient data" failures (OPIK-7110). Sentinel variables are structural context that the
-     * judge can optionally drill into via {@code read}/{@code jq} tools.
+     * <p>用户映射的变量是评判器评估所需的评分数据——对它们截断会迫使 LLM 通过工具向下钻取，
+     * 这是非确定性的，并会产生间歇性的 "Insufficient data" 失败（OPIK-7110）。哨兵变量是结构性上下文，
+     * 评判器可以通过 {@code read}/{@code jq} 工具按需向下钻取。
      */
     public static ChatRequest prepareLlmRequest(
             @NonNull LlmAsJudgeCode evaluatorCode, Trace trace,
@@ -178,10 +174,10 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Whether the rule needs the trace's spans list rendered into the prompt — opt-in via the
-     * {@code "spans"} sentinel (see {@link #referencesSpecialVariable} for the two opt-in shapes).
-     * Used by the trace scorer to opt-in to the {@code spanService.getByTraceIds(...)} fetch for
-     * inline LLM-as-judge evaluations whose template references {@code {{spans}}}.
+     * 规则是否需要将 trace 的 spans 列表渲染进提示词——通过 {@code "spans"} 哨兵选择加入
+     * （两种选择加入形态参见 {@link #referencesSpecialVariable}）。
+     * 供 trace 评分器用来为模板引用了 {@code {{spans}}} 的内联 LLM 评判评估
+     * 选择加入 {@code spanService.getByTraceIds(...)} 的获取。
      */
     public static boolean templateReferencesSpans(
             @NonNull List<LlmAsJudgeMessage> messages,
@@ -191,10 +187,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Whether the rule references the {@code {{trace}}} structure variable — the declarative signal that
-     * the judge needs the agentic-tools loop (it injects the trace id, span ids and attachment
-     * {@code file_name}s into the prompt so the judge can call {@code get_attachment} without fabricating
-     * ids). Opt-in via the {@code "trace"} sentinel (see {@link #referencesSpecialVariable}).
+     * 规则是否引用了 {@code {{trace}}} 结构变量——这是评判器需要 agentic 工具循环的声明式信号
+     * （它会将 trace id、span id 和附件 {@code file_name} 注入提示词，使评判器无需伪造 id 即可调用
+     * {@code get_attachment}）。通过 {@code "trace"} 哨兵选择加入（参见 {@link #referencesSpecialVariable}）。
      */
     public static boolean templateReferencesTraceStructure(
             @NonNull List<LlmAsJudgeMessage> messages,
@@ -204,11 +199,10 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Whether a span-level rule references the {@code {{span}}} structure variable — the declarative
-     * signal that the span judge needs the agentic-tools loop (it injects the span id + the span's own
-     * attachment {@code file_name}s so the judge can call {@code get_attachment(type=span, ...)} without
-     * fabricating ids). Opt-in via the {@code "span"} sentinel (see {@link #referencesSpecialVariable});
-     * distinct from the trace-level {@code {{spans}}} list sentinel.
+     * 跨度级别的规则是否引用了 {@code {{span}}} 结构变量——这是 span 评判器需要 agentic 工具循环的声明式信号
+     * （它会注入 span id 加上 span 自身的附件 {@code file_name}，使评判器无需伪造 id 即可调用
+     * {@code get_attachment(type=span, ...)}）。通过 {@code "span"} 哨兵选择加入（参见 {@link #referencesSpecialVariable}）；
+     * 与 trace 级别的 {@code {{spans}}} 列表哨兵不同。
      */
     public static boolean templateReferencesSpanStructure(
             @NonNull List<LlmAsJudgeMessage> messages,
@@ -218,13 +212,13 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Whether a rule opts into the special variable named {@code sentinel} — the shared detection behind
-     * {@code {{spans}}}, {@code {{trace}}} and {@code {{span}}}. Two opt-in shapes:
+     * 规则是否选择了名为 {@code sentinel} 的特殊变量——这是 {@code {{spans}}}、{@code {{trace}}} 和
+     * {@code {{span}}} 背后的共享检测。两种选择加入形态：
      * <ul>
-     *   <li>Sentinel-valued variable: any entry in {@code variables} whose value is the bare sentinel
-     *       string (no JSONPath prefix) — what the FE writes when the user types {@code {{<sentinel>}}}.
-     *   <li>Direct template reference: a message references {@code {{<sentinel>}}} (per {@code promptType})
-     *       without the variables map binding it to a custom path, so an explicit user mapping wins.
+     *   <li>哨兵值变量：{@code variables} 中值为纯哨兵字符串（无 JSONPath 前缀）的任何条目——
+     *       即用户输入 {@code {{<sentinel>}}} 时 FE 写入的内容。
+     *   <li>直接模板引用：消息引用了 {@code {{<sentinel>}}}（根据 {@code promptType}），
+     *       且 variables 映射未将其绑定到自定义路径，因此显式的用户映射优先。
      * </ul>
      */
     private static boolean referencesSpecialVariable(
@@ -235,11 +229,10 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * True when at least one message template references {@code {{<sentinel>}}} (per {@code promptType})
-     * AND the variables map does not bind {@code sentinel} to a custom path. Walks both message shapes —
-     * the simple-string {@code content} and the multimodal {@code contentArray} text parts (via
-     * {@link #renderableTextOf}); scanning only {@code content} would miss references in multimodal
-     * prompts, leaving the rendered text part unsubstituted because the opt-in never fires.
+     * 当至少一个消息模板引用了 {@code {{<sentinel>}}}（根据 {@code promptType}）且 variables 映射
+     * 未将 {@code sentinel} 绑定到自定义路径时为 true。遍历两种消息形态——简单字符串 {@code content}
+     * 和多模态 {@code contentArray} 的文本部分（通过 {@link #renderableTextOf}）；只扫描 {@code content}
+     * 会漏掉多模态提示词中的引用，导致渲染后的文本部分因选择加入从未触发而未被替换。
      */
     private static boolean messagesReferenceSpecialVariableDirectly(
             List<LlmAsJudgeMessage> messages, Map<String, String> variables, PromptType promptType,
@@ -254,11 +247,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Stream of all variable-substitutable text in a message: the simple {@code content}
-     * string when present, otherwise each non-null {@code text} part inside {@code contentArray}.
-     * Mirrors what the renderer would substitute into — anything we should scan for
-     * {@code {{spans}}} references must also be scanned by this helper, or detection
-     * drifts from rendering.
+     * 消息中所有可替换变量的文本流：存在时是简单 {@code content} 字符串，否则是 {@code contentArray}
+     * 中每个非空的 {@code text} 部分。镜像渲染器会替换的内容——任何我们需要扫描 {@code {{spans}}}
+     * 引用的内容也必须由这个辅助方法扫描，否则检测会偏离渲染。
      */
     private static Stream<String> renderableTextOf(LlmAsJudgeMessage message) {
         if (message.isStringContent()) {
@@ -274,17 +265,15 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Replace any variable mapped to the {@code "spans"} sentinel (and the implicit {@code {{spans}}}
-     * reference) with the JSON-serialized spans list (parent→child tree, siblings sorted by start_time).
-     * See {@link #injectSpecialVariable} for the shared substitution mechanics; the tree is serialized
-     * lazily, only when the sentinel is actually referenced.
+     * 将任何映射到 {@code "spans"} 哨兵的变量（以及隐式的 {@code {{spans}}} 引用）替换为 JSON 序列化的
+     * spans 列表（父→子树，兄弟节点按 start_time 排序）。共享替换机制参见 {@link #injectSpecialVariable}；
+     * 该树是惰性序列化的，仅在实际引用了哨兵时才会序列化。
      *
-     * <p>An empty spans list still triggers the rewrite (rendering as {@code "[]"}).
-     * <strong>Intentionally not gated by {@code isAgenticToolsEnabled}</strong>: when the toggle is off,
-     * the scorer skips the spans fetch and threads an empty list here, which still rewrites
-     * sentinel-mapped variables to {@code "[]"}. Gating this would resurrect the bare-word leak for rules
-     * whose variables map still carries the sentinel from before the toggle flipped. See
-     * {@code OnlineScoringLlmAsJudgeScorer.shouldFetchSpans} for the full toggle-semantics rationale.
+     * <p>空的 spans 列表仍会触发重写（渲染为 {@code "[]"}）。
+     * <strong>有意不受 {@code isAgenticToolsEnabled} 门控</strong>：当开关关闭时，评分器跳过 spans 获取，
+     * 并在这里传入空列表，这仍会将哨兵映射的变量重写为 {@code "[]"}。对此进行门控会再次导致那些在开关
+     * 翻转之前 variables 映射仍携带哨兵的规则泄漏裸单词。开关语义的完整理由参见
+     * {@code OnlineScoringLlmAsJudgeScorer.shouldFetchSpans}。
      */
     private static void injectSpansIntoReplacements(
             Map<String, String> replacements, Map<String, String> variables,
@@ -294,9 +283,8 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Replace the {@code "trace"} sentinel with the pre-built trace structure JSON (built upstream in the
-     * scorer's reactive attachment fetch). A null structure renders as {@code "{}"} so the variable never
-     * leaks the bare word "trace". See {@link #injectSpecialVariable}.
+     * 用预先构建的 trace 结构 JSON（在评分器的响应式附件获取中于上游构建）替换 {@code "trace"} 哨兵。
+     * 空结构渲染为 {@code "{}"}，因此变量永远不会泄漏裸单词 "trace"。参见 {@link #injectSpecialVariable}。
      */
     private static void injectTraceIntoReplacements(
             Map<String, String> replacements, Map<String, String> variables,
@@ -306,9 +294,8 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Replace the {@code "span"} sentinel with the pre-built span structure JSON. A null structure renders
-     * as {@code "{}"}. Span-level mirror of {@link #injectTraceIntoReplacements}; see
-     * {@link #injectSpecialVariable}.
+     * 用预先构建的 span 结构 JSON 替换 {@code "span"} 哨兵。空结构渲染为 {@code "{}"}。
+     * {@link #injectTraceIntoReplacements} 的跨度级别镜像；参见 {@link #injectSpecialVariable}。
      */
     private static void injectSpanIntoReplacements(
             Map<String, String> replacements, Map<String, String> variables,
@@ -318,17 +305,15 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Shared substitution for a sentinel-named special variable. Mutates {@code replacements} in place:
-     * every variable whose source path is {@code sentinel} (and, for an implicit {@code {{<sentinel>}}}
-     * template reference with no binding, the sentinel key itself) is set to {@code value}. No-op — and
-     * {@code value} is never invoked — when nothing references the sentinel, so callers can defer
-     * expensive value construction (e.g. serializing the spans tree) into the supplier.
+     * 哨兵命名的特殊变量的共享替换。就地修改 {@code replacements}：源路径为 {@code sentinel} 的每个变量
+     * （以及对于没有绑定的隐式 {@code {{<sentinel>}}} 模板引用，哨兵键本身）都被设置为 {@code value}。
+     * 当没有任何内容引用哨兵时不执行操作——且 {@code value} 不会被调用——因此调用方可以将昂贵值的构建
+     * （例如序列化 spans 树）推迟到 supplier 中。
      *
-     * <p>An empty/placeholder value still triggers the rewrite (e.g. {@code "[]"} / {@code "{}"}): without
-     * it, {@code toReplacements} would leave the bare sentinel as a literal and the prompt would render
-     * the sentinel word instead. Also handles the implicit-reference case (template uses
-     * {@code {{<sentinel>}}} but the variables map doesn't bind it), mirroring the FE auto-fill so
-     * API-created rules behave the same without knowing the sentinel convention.
+     * <p>空值/占位值仍会触发重写（例如 {@code "[]"} / {@code "{}"}）：如果没有它，{@code toReplacements}
+     * 会将裸哨兵保留为字面量，提示词就会渲染出哨兵单词而不是实际内容。同时处理隐式引用的情况（模板使用
+     * {@code {{<sentinel>}}} 但 variables 映射未绑定它），镜像 FE 的自动填充，使通过 API 创建的规则无需
+     * 了解哨兵约定也能表现一致。
      */
     private static void injectSpecialVariable(
             Map<String, String> replacements, Map<String, String> variables,
@@ -351,9 +336,9 @@ public class OnlineScoringEngine {
     }
 
     private static String serializeSpansTree(List<Span> spans) {
-        // Project to SpanForLlm and reconstruct the parent→child hierarchy so the judge sees the call
-        // tree, not a flat list. Drops audit metadata, feedback scores, comments, cost data — none help
-        // the judge and all burn tokens. Siblings are sorted by start_time inside buildSpanTree.
+        // 投影为 SpanForLlm 并重建父→子层级，使评判器看到调用树而不是扁平列表。
+        // 丢弃审计元数据、反馈评分、评论、成本数据——这些都无助于评判器且都会消耗 token。
+        // 兄弟节点在 buildSpanTree 内部按 start_time 排序。
         try {
             return OBJECT_MAPPER.writeValueAsString(buildSpanTree(spans));
         } catch (JsonProcessingException e) {
@@ -362,10 +347,8 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Returns the set of replacement-map keys that correspond to user-mapped variables (trace
-     * sections like {@code output}, {@code input.question}, or literal constants) as opposed to
-     * sentinel variables (like {@code spans}). Used by {@link #capReplacements} to decide which
-     * keys to leave uncapped.
+     * 返回替换映射中对应于用户映射变量（如 {@code output}、{@code input.question} 等 trace 节或字面常量）
+     * 的键集合，与哨兵变量（如 {@code spans}）相对。供 {@link #capReplacements} 用来决定哪些键保持不截断。
      */
     @VisibleForTesting
     static Set<String> userMappedVariableKeys(Map<String, String> variables) {
@@ -375,10 +358,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Caps replacement values at {@code maxReplacementChars}, skipping keys in
-     * {@code uncappedKeys}. Pass {@code Set.of()} to cap everything. User-mapped scoring
-     * variables should be uncapped — capping them forces non-deterministic tool drill-down
-     * (OPIK-7110).
+     * 将替换值在 {@code maxReplacementChars} 处截断，跳过 {@code uncappedKeys} 中的键。
+     * 传入 {@code Set.of()} 可截断所有内容。用户映射的评分变量不应截断——截断它们会迫使
+     * 非确定性的工具向下钻取（OPIK-7110）。
      */
     @VisibleForTesting
     static Map<String, String> capReplacements(Map<String, String> replacements,
@@ -393,12 +375,11 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Prepare a request to a LLM-as-Judge evaluator (a ChatLanguageModel) rendering
-     * the template messages with Span variables and with the proper structured output format.
+     * 准备一个发往 LLM 评判器（ChatLanguageModel）的请求，使用 Span 变量和正确的结构化输出格式来渲染模板消息。
      *
-     * @param evaluatorCode the LLM-as-Judge 'code'
-     * @param span          the sampled Span to be scored
-     * @return a request to trigger to any supported provider with a ChatLanguageModel
+     * @param evaluatorCode LLM 评判器的 'code'
+     * @param span          待评分的采样 Span
+     * @return 一个可触发任何受支持提供方（具备 ChatLanguageModel）的请求
      */
     public static ChatRequest prepareSpanLlmRequest(
             @NonNull AutomationRuleEvaluatorSpanLlmAsJudge.SpanLlmAsJudgeCode evaluatorCode,
@@ -409,10 +390,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Inline variant that injects the pre-built {@code {{span}}} structure (span id + the span's own
-     * attachment {@code file_name}s) without capping — used by the span scorer when a rule references
-     * {@code {{span}}} but the provider can't call tools, so the variable still renders the structure
-     * instead of the bare word "span". Span templates always render with {@link PromptType#MUSTACHE}.
+     * 内联变体，注入预先构建的 {@code {{span}}} 结构（span id + span 自身的附件 {@code file_name}）而不截断——
+     * 供 span 评分器在规则引用了 {@code {{span}}} 但提供方无法调用工具时使用，因此变量仍会渲染结构
+     * 而不是裸单词 "span"。Span 模板始终使用 {@link PromptType#MUSTACHE} 渲染。
      */
     public static ChatRequest prepareSpanLlmRequest(
             @NonNull AutomationRuleEvaluatorSpanLlmAsJudge.SpanLlmAsJudgeCode evaluatorCode,
@@ -428,11 +408,11 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Tool-mode variant of {@link #prepareSpanLlmRequest(AutomationRuleEvaluatorSpanLlmAsJudge.SpanLlmAsJudgeCode, Span, StructuredOutputStrategy)}
-     * used by the span scorer's agentic-tools path: injects the pre-built {@code {{span}}} structure
-     * (span id + the span's own attachment {@code file_name}s) and caps sentinel variable substitutions
-     * (e.g. {@code {{span}}}) at {@code maxReplacementChars} while leaving user-mapped variables
-     * uncapped (OPIK-7110). Span templates always render with {@link PromptType#MUSTACHE}.
+     * {@link #prepareSpanLlmRequest(AutomationRuleEvaluatorSpanLlmAsJudge.SpanLlmAsJudgeCode, Span, StructuredOutputStrategy)}
+     * 的工具模式变体，供 span 评分器的 agentic 工具路径使用：注入预先构建的 {@code {{span}}} 结构
+     * （span id + span 自身的附件 {@code file_name}），并在 {@code maxReplacementChars} 处截断哨兵变量替换
+     * （例如 {@code {{span}}}），同时让用户映射的变量保持不截断（OPIK-7110）。Span 模板始终使用
+     * {@link PromptType#MUSTACHE} 渲染。
      */
     public static ChatRequest prepareSpanLlmRequest(
             @NonNull AutomationRuleEvaluatorSpanLlmAsJudge.SpanLlmAsJudgeCode evaluatorCode,
@@ -450,8 +430,8 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Common implementation for building ChatRequest from rendered messages.
-     * Extracted to reduce duplication between prepareLlmRequest, prepareSpanLlmRequest, and prepareThreadLlmRequest.
+     * 从渲染后的消息构建 ChatRequest 的公共实现。
+     * 提取出来以减少 prepareLlmRequest、prepareSpanLlmRequest 和 prepareThreadLlmRequest 之间的重复。
      */
     private static ChatRequest buildChatRequest(
             List<ChatMessage> renderedMessages,
@@ -462,14 +442,11 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Prepare a request to a LLM-as-Judge evaluator (a ChatLanguageModel) rendering
-     * the template messages with
-     * Trace variables and with the proper structured output format.
+     * 准备一个发往 LLM 评判器（ChatLanguageModel）的请求，使用 Trace 变量和正确的结构化输出格式来渲染模板消息。
      *
-     * @param evaluatorCode the LLM-as-Judge 'code'
-     * @param traces        the sampled traces from the trace threads to be scored
-     * @return a request to trigger to any supported provider with a
-     *         ChatLanguageModel
+     * @param evaluatorCode LLM 评判器的 'code'
+     * @param traces        来自待评分 trace 线程的采样 traces
+     * @return 一个可触发任何受支持提供方（具备 ChatLanguageModel）的请求
      */
     public static ChatRequest prepareThreadLlmRequest(
             @NonNull TraceThreadLlmAsJudgeCode evaluatorCode, @NonNull List<Trace> traces,
@@ -481,22 +458,17 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Variant for the agentic-tools branch: renders only a compact per-trace
-     * <em>skeleton</em> for the thread (ids, names, durations, span counts) plus a
-     * drill-down hint pointing at {@code read(type=trace, id=X)}. The model fetches
-     * any specific trace's full content (and its spans) on demand via ReadTool —
-     * the same lazy mechanism the trace-level path uses. Keeps the inline prompt
-     * bounded even on threads with thousands of traces.
+     * agentic 工具分支的变体：仅为线程渲染一个紧凑的每个 trace 的 <em>骨架</em>
+     * （id、名称、时长、span 数量）以及一个指向 {@code read(type=trace, id=X)} 的向下钻取提示。
+     * 模型通过 ReadTool 按需获取任何特定 trace 的完整内容（及其 spans）——与 trace 级别路径相同的惰性机制。
+     * 即使在有数千个 trace 的线程上也能保持内联提示词有界。
      *
-     * <p>The {@code context} variable is replaced with the skeleton + drill-down
-     * guidance so user-supplied prompt templates referencing {@code {{context}}}
-     * keep working without modification.
+     * <p>{@code context} 变量被替换为骨架 + 向下钻取指引，因此引用了 {@code {{context}}} 的
+     * 用户提供的提示词模板无需修改即可继续工作。
      *
-     * <p><strong>Precondition:</strong> all {@code evaluatorCode.messages()} must declare
-     * string content. Multimodal templates aren't supported on this path —
-     * {@link #renderThreadMessagesWithReplacement} throws on the first non-string entry.
-     * Callers should detect multimodal templates upstream via
-     * {@link #hasMultimodalTemplate(List)} and fall back to the inline path.
+     * <p><strong>前置条件：</strong>所有 {@code evaluatorCode.messages()} 必须声明字符串内容。
+     * 多模态模板在此路径上不受支持——{@link #renderThreadMessagesWithReplacement} 会在第一个非字符串
+     * 条目处抛出异常。调用方应通过 {@link #hasMultimodalTemplate(List)} 在上游检测多模态模板并回退到内联路径。
      */
     public static ChatRequest prepareThreadLlmRequestWithTools(
             @NonNull TraceThreadLlmAsJudgeCode evaluatorCode, @NonNull List<Trace> traces,
@@ -519,10 +491,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Compact per-trace summary the agentic-tools branch renders into the prompt
-     * instead of the full trace list. ~100 chars per trace — so a 10K-trace thread
-     * is ~1 MB, well under the model's window even without further compression. The
-     * model picks ids from this list and drills in via ReadTool.
+     * agentic 工具分支渲染进提示词而非完整 trace 列表的紧凑每个 trace 摘要。
+     * 每个 trace 约 100 个字符——因此一个 1 万个 trace 的线程约为 1 MB，即使不进一步压缩也远低于模型窗口。
+     * 模型从该列表中挑选 id 并通过 ReadTool 向下钻取。
      */
     static List<ThreadTraceSkeleton> toThreadSkeleton(List<Trace> traces) {
         return traces.stream()
@@ -538,14 +509,12 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Compact per-trace summary shipped to the model as part of the thread skeleton.
-     * Field set is small on purpose — anything beyond this is a {@code read} away.
+     * 作为线程骨架的一部分发送给模型的紧凑每个 trace 摘要。
+     * 字段集有意保持精简——任何超出此范围的内容都只需一次 {@code read} 即可获得。
      *
-     * <p>{@code @JsonNaming(SnakeCaseStrategy)} keeps the wire shape consistent with
-     * {@link Trace}'s serialization (also snake_case via the same strategy), so the
-     * model sees the same field names in the skeleton and in a follow-up
-     * {@code read(type=trace, id=X)} response. Camel-case here would surprise the
-     * model with two different schemas for the same entity.
+     * <p>{@code @JsonNaming(SnakeCaseStrategy)} 使线上结构与 {@link Trace} 的序列化保持一致
+     * （同样通过该策略使用 snake_case），因此模型在骨架和后续 {@code read(type=trace, id=X)}
+     * 响应中看到相同的字段名。这里若使用驼峰命名会让模型对同一实体看到两种不同的模式。
      */
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     @Builder(toBuilder = true)
@@ -560,18 +529,13 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Light-weight twin of {@link #renderThreadMessages} that substitutes the
-     * already-rendered {@code context} string directly, skipping the
-     * Jackson-serialize-the-traces step. Used by the tools path where the variable
-     * value (the skeleton + drill-down hint) is computed by the caller.
+     * {@link #renderThreadMessages} 的轻量孪生版本，直接替换已渲染的 {@code context} 字符串，
+     * 跳过 Jackson 序列化 traces 的步骤。供工具路径使用，其中变量值（骨架 + 向下钻取提示）由调用方计算。
      *
-     * <p>The caller (the thread scorer's {@code shouldUseAgenticTools} gate) detects
-     * multimodal templates upstream via {@link #hasMultimodalTemplate(List)} and falls
-     * back to the inline path, so by the time we get here {@code templateMessages} is
-     * guaranteed string-only. The assertion below is a defensive net rather than the
-     * primary safety mechanism — actual rendering delegates to
-     * {@link #renderMessagesWithReplacements} so role-switch / template-engine logic
-     * stays in one place.
+     * <p>调用方（线程评分器的 {@code shouldUseAgenticTools} 门控）通过 {@link #hasMultimodalTemplate(List)}
+     * 在上游检测多模态模板并回退到内联路径，因此到达这里时 {@code templateMessages} 保证只包含字符串。
+     * 下面的断言是防御性兜底而非主要安全机制——实际渲染委托给 {@link #renderMessagesWithReplacements}，
+     * 使角色切换/模板引擎逻辑集中在一处。
      */
     private static List<ChatMessage> renderThreadMessagesWithReplacement(
             List<LlmAsJudgeMessage> templateMessages, String variableName, String contextValue) {
@@ -586,13 +550,13 @@ public class OnlineScoringEngine {
     static List<ChatMessage> renderThreadMessages(
             List<LlmAsJudgeMessage> templateMessages, Map<String, String> variablesMap, List<Trace> traces,
             List<Span> spans) {
-        // prepare the map of replacements to use in all messages
+        // 准备用于所有消息的替换映射
         Map<String, String> replacements = variablesMap.keySet().stream()
                 .map(variableName -> switch (variableName) {
                     case TraceThreadLlmAsJudgeCode.CONTEXT_VARIABLE_NAME -> {
-                        // Always use the enriched shape — when `spans` is empty (toggle off),
-                        // the `spans` field is omitted via @JsonInclude(NON_NULL) and the
-                        // JSON is wire-identical to today's [{role, content}, ...] shape.
+                        // 始终使用富化形态——当 `spans` 为空（开关关闭）时，
+                        // `spans` 字段通过 @JsonInclude(NON_NULL) 被省略，且
+                        // JSON 与当前的 [{role, content}, ...] 形态在线上完全一致。
                         try {
                             yield MessageVariableMapping.builder()
                                     .variableName(variableName)
@@ -607,28 +571,22 @@ public class OnlineScoringEngine {
                 })
                 .collect(
                         Collectors.toMap(MessageVariableMapping::variableName, MessageVariableMapping::valueToReplace));
-        // Rendering itself is identical to trace / span flows once replacements are built —
-        // delegate so role-fan-out, multimodal handling, and prompt-type defaults stay in
-        // one place. The thread-specific bit is just the replacements assembly above.
+        // 一旦构建好替换，渲染本身与 trace / span 流程相同——
+        // 委托出去，使角色展开、多模态处理和提示词类型默认值集中在一处。
+        // 线程特有的部分只是上面的替换组装。
         return renderMessagesWithReplacements(templateMessages, replacements);
     }
 
     /**
-     * Render the rule evaluator message template using the values from an actual
-     * trace.
+     * 使用实际 trace 中的值渲染规则评估器的消息模板。
      * <p>
-     * As the rule may consist in multiple messages, we check each one of them for
-     * variables to fill.
-     * Then we go through every variable template to replace them for the value from
-     * the trace.
+     * 由于规则可能由多条消息组成，我们检查每条消息中是否有需要填充的变量。
+     * 然后遍历每个变量模板，将其替换为来自 trace 的值。
      *
-     * @param templateMessages a list of messages with variables to fill with a
-     *                         Trace value
-     * @param variablesMap     a map of template variable to a path to a value into
-     *                         a Trace
-     * @param trace            the trace with value to use to replace template
-     *                         variables
-     * @return a list of AI messages, with templates rendered
+     * @param templateMessages 需要填充 Trace 值的带变量消息列表
+     * @param variablesMap     模板变量到 Trace 中值路径的映射
+     * @param trace            用于替换模板变量的带值的 trace
+     * @return 渲染了模板的 AI 消息列表
      */
     static List<ChatMessage> renderMessages(
             List<LlmAsJudgeMessage> templateMessages, Map<String, String> variablesMap, Trace trace) {
@@ -637,13 +595,13 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Render the rule evaluator message template using the values from an actual span.
-     * Similar to renderMessages but for spans.
+     * 使用实际 span 中的值渲染规则评估器的消息模板。
+     * 与 renderMessages 类似，但用于 span。
      *
-     * @param templateMessages a list of messages with variables to fill with a Span value
-     * @param variablesMap     a map of template variable to a path to a value into a Span
-     * @param span             the span with value to use to replace template variables
-     * @return a list of AI messages, with templates rendered
+     * @param templateMessages 需要填充 Span 值的带变量消息列表
+     * @param variablesMap     模板变量到 Span 中值路径的映射
+     * @param span             用于替换模板变量的带值的 span
+     * @return 渲染了模板的 AI 消息列表
      */
     static List<ChatMessage> renderMessages(
             List<LlmAsJudgeMessage> templateMessages, Map<String, String> variablesMap, Span span) {
@@ -652,8 +610,8 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Common implementation for rendering messages with replacements.
-     * This method handles the actual message rendering logic that is shared between traces and spans.
+     * 使用替换渲染消息的公共实现。
+     * 此方法处理 traces 和 spans 之间共享的实际消息渲染逻辑。
      */
     private static List<ChatMessage> renderMessagesWithReplacements(
             List<LlmAsJudgeMessage> templateMessages, Map<String, String> replacements) {
@@ -662,29 +620,29 @@ public class OnlineScoringEngine {
 
     private static List<ChatMessage> renderMessagesWithReplacements(
             List<LlmAsJudgeMessage> templateMessages, Map<String, String> replacements, PromptType promptType) {
-        // render the message templates from evaluator rule
+        // 渲染来自评估器规则的消息模板
         return templateMessages.stream()
                 .map(templateMessage -> {
-                    // Check if content is string (text) or array (multimodal)
+                    // 检查内容是字符串（文本）还是数组（多模态）
                     if (templateMessage.isStringContent()) {
-                        // String format: plain text content
+                        // 字符串格式：纯文本内容
                         var txtContent = templateMessage.asString();
                         var renderedMessage = TemplateParseUtils.render(txtContent, replacements, promptType);
                         return switch (templateMessage.role()) {
                             case USER -> UserMessage.from(renderedMessage);
                             case SYSTEM -> SystemMessage.from(renderedMessage);
                             default -> {
-                                log.info("No mapping for message role type {}", templateMessage.role());
+                                log.info("消息角色类型 {} 无映射", templateMessage.role());
                                 yield null;
                             }
                         };
                     } else if (templateMessage.isStructuredContent()) {
-                        // Array format: structured content parts
+                        // 数组格式：结构化内容部分
                         return switch (templateMessage.role()) {
                             case USER -> buildUserMessageFromContentParts(
                                     templateMessage.asContentList(), replacements, promptType);
                             case SYSTEM -> {
-                                // For SYSTEM messages with array content, extract first text part
+                                // 对于带数组内容的 SYSTEM 消息，提取第一个文本部分
                                 var textContent = templateMessage.asContentList().stream()
                                         .filter(part -> "text".equals(part.type()))
                                         .map(LlmAsJudgeMessageContent::text)
@@ -695,12 +653,12 @@ public class OnlineScoringEngine {
                                 yield SystemMessage.from(textContent);
                             }
                             default -> {
-                                log.info("No mapping for message role type {}", templateMessage.role());
+                                log.info("消息角色类型 {} 无映射", templateMessage.role());
                                 yield null;
                             }
                         };
                     } else {
-                        log.warn("Unknown content type for message role {}", templateMessage.role());
+                        log.warn("消息角色 {} 的内容类型未知", templateMessage.role());
                         return null;
                     }
                 })
@@ -709,7 +667,7 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Functional interface to extract JSON sections (input/output/metadata) from an entity.
+     * 从实体中提取 JSON 节（input/output/metadata）的函数式接口。
      */
     @FunctionalInterface
     private interface JsonSectionExtractor {
@@ -725,29 +683,23 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Variant that injects a built-in {@code spans} variable holding the trace's spans
-     * projected to {@link SpanForLlm} and reconstructed as a parent→child tree. Used by
-     * Python metrics whose {@code score(...)} signature accepts {@code spans}; the user
-     * opts in by including a {@code "spans"} key in their {@code arguments} map. The value
-     * the user maps for {@code spans} is overridden with the typed list — {@code spans} is
-     * a reserved built-in, not a regular path-resolved variable.
+     * 注入内置 {@code spans} 变量的变体，该变量持有投影为 {@link SpanForLlm} 并重建为父→子树的
+     * trace 的 spans。供其 {@code score(...)} 签名接受 {@code spans} 的 Python 指标使用；
+     * 用户通过在 {@code arguments} 映射中包含 {@code "spans"} 键来选择加入。用户为 {@code spans}
+     * 映射的值会被类型化列表覆盖——{@code spans} 是保留的内置变量，不是普通的按路径解析的变量。
      *
-     * <p>The shape matches every other span-render path on this PR (trace-scope
-     * {@code {{spans}}} for LLM-as-judge, thread-scope {@code {{context}}} for both LLM-as-
-     * judge and Python): lean {@link SpanForLlm} projection (11 fields — name, type, in/out,
-     * timing, model/provider, error_info, plus nested children), {@code @JsonInclude(NON_NULL)}
-     * to keep the JSON tight, and call-order preserved by sorting siblings on {@code startTime}
-     * at every level inside {@link #buildSpanTree}.
+     * <p>该形态与此 PR 上所有其他 span 渲染路径一致（LLM 评判的 trace 作用域 {@code {{spans}}}、
+     * LLM 评判和 Python 的线程作用域 {@code {{context}}}）：精简的 {@link SpanForLlm} 投影
+     * （11 个字段——name、type、in/out、timing、model/provider、error_info，加上嵌套的子节点）、
+     * {@code @JsonInclude(NON_NULL)} 使 JSON 紧凑，以及在 {@link #buildSpanTree} 内部的每一层按
+     * {@code startTime} 排序兄弟节点以保留调用顺序。
      *
-     * <p>The returned map is typed as {@code Map<String, Object>} so the spans value can
-     * carry the {@code List<SpanForLlm>} tree through Jackson serialization to the Python
-     * runner as a JSON array. The Python side receives {@code spans} as a list of dicts
-     * after {@code json.loads(...)} — not as a JSON string that the user would have to
-     * re-parse.
+     * <p>返回的映射类型为 {@code Map<String, Object>}，因此 spans 值可以通过 Jackson 序列化将
+     * {@code List<SpanForLlm>} 树作为 JSON 数组传递给 Python 运行器。Python 端在 {@code json.loads(...)}
+     * 之后将 {@code spans} 接收为字典列表——而不是用户需要重新解析的 JSON 字符串。
      *
-     * <p>Caller is responsible for only invoking this overload when the user actually
-     * requested spans (i.e. {@code arguments.containsKey("spans")}). The scorer makes this
-     * decision so the span fetch is skipped on metrics that don't need it.
+     * <p>调用方负责仅在用户确实请求了 spans 时调用此重载（即 {@code arguments.containsKey("spans")}）。
+     * 评分器做出此决定，从而在不需要 spans 的指标上跳过 span 获取。
      */
     public static Map<String, Object> toReplacements(
             @NonNull Map<String, String> variables, @NonNull Trace trace, @NonNull List<Span> spans) {
@@ -766,17 +718,17 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Common implementation for converting variables to replacements.
-     * Works for both Trace and Span by accepting a function to extract JSON sections.
+     * 将变量转换为替换的公共实现。
+     * 通过接受提取 JSON 节的函数，同时适用于 Trace 和 Span。
      */
     private static Map<String, String> toReplacements(
             Map<String, String> variables, JsonSectionExtractor sectionExtractor) {
         var parsedVariables = toVariableMapping(variables);
-        // extract the actual value from the entity
+        // 从实体中提取实际值
         return parsedVariables.stream().map(mapper -> {
             var section = mapper.traceSection();
             var jsonSection = section != null ? sectionExtractor.extract(section) : null;
-            // if no section, there's no replacement and the literal value is taken
+            // 如果没有节，就没有替换，直接采用字面值
             var valueToReplace = jsonSection != null
                     ? extractFromJson(jsonSection, mapper.jsonPath())
                     : mapper.valueToReplace;
@@ -789,11 +741,10 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Parse evaluator's variable mapper into a usable list of mappings.
+     * 将评估器的变量映射解析为可用的映射列表。
      *
-     * @param evaluatorVariables a map with variables and a path into a trace
-     *                           input/output/metadata to replace
-     * @return a parsed list of mappings, easier to use for the template rendering
+     * @param evaluatorVariables 包含变量及指向 trace input/output/metadata 中待替换值的路径的映射
+     * @return 解析后的映射列表，更便于模板渲染使用
      */
     static List<MessageVariableMapping> toVariableMapping(Map<String, String> evaluatorVariables) {
         return evaluatorVariables.entrySet().stream()
@@ -801,23 +752,23 @@ public class OnlineScoringEngine {
                     var templateVariable = mapper.getKey();
                     var tracePath = mapper.getValue();
                     var builder = MessageVariableMapping.builder().variableName(templateVariable);
-                    // check if its input/output/metadata variable and fix the json path
+                    // 检查它是否为 input/output/metadata 变量并修正 json 路径
                     Arrays.stream(TraceSection.values())
                             .filter(traceSection -> {
-                                // Match "input." or just "input" (same for output/metadata)
+                                // 匹配 "input." 或仅 "input"（output/metadata 同理）
                                 String prefixWithDot = traceSection.prefix;
                                 String prefixWithoutDot = prefixWithDot.substring(0, prefixWithDot.length() - 1);
                                 return tracePath.startsWith(prefixWithDot) || tracePath.equals(prefixWithoutDot);
                             })
                             .findFirst()
                             .ifPresentOrElse(traceSection -> {
-                                // If path contains a dot, extract nested path; otherwise use root "$"
+                                // 如果路径包含点，提取嵌套路径；否则使用根 "$"
                                 String jsonPath = tracePath.contains(".")
                                         ? "$." + tracePath.substring(traceSection.prefix.length())
                                         : "$";
                                 builder.traceSection(traceSection).jsonPath(jsonPath);
                             },
-                                    // if not a trace section, it's a literal value to replace
+                                    // 如果不是 trace 节，它就是待替换的字面值
                                     () -> builder.valueToReplace(tracePath));
 
                     return builder.build();
@@ -827,8 +778,8 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Build a UserMessage from structured content parts (array format).
-     * Supports text, image_url, video_url, and audio_url content types.
+     * 从结构化内容部分（数组格式）构建 UserMessage。
+     * 支持 text、image_url、video_url 和 audio_url 内容类型。
      */
     private UserMessage buildUserMessageFromContentParts(
             List<LlmAsJudgeMessageContent> contentParts, Map<String, String> replacements) {
@@ -867,7 +818,7 @@ public class OnlineScoringEngine {
                         builder.addContent(AudioContent.from(url));
                     }
                 }
-                default -> log.warn("Unknown content type: {}", part.type());
+                default -> log.warn("未知内容类型：{}", part.type());
             }
         }
 
@@ -875,24 +826,24 @@ public class OnlineScoringEngine {
     }
 
     private static String extractFromJson(JsonNode json, String path) {
-        // Special case: if path is "$", return the entire JSON object as string
+        // 特殊情况：如果 path 为 "$"，将整个 JSON 对象作为字符串返回
         if ("$".equals(path)) {
             try {
                 return OBJECT_MAPPER.writeValueAsString(json);
             } catch (JsonProcessingException e) {
-                log.warn("failed to serialize entire json object, json={}", json, e);
+                log.warn("无法序列化整个 json 对象，json={}", json, e);
                 return null;
             }
         }
 
         Map<String, Object> forcedObject;
         try {
-            // JsonPath didn't work with JsonNode, even explicitly using
-            // JacksonJsonProvider, so we convert to a Map
+            // JsonPath 与 JsonNode 不兼容，即使显式使用
+            // JacksonJsonProvider 也是如此，因此我们转换为 Map
             forcedObject = OBJECT_MAPPER.convertValue(json, new TypeReference<>() {
             });
         } catch (InvalidArgumentException e) {
-            log.warn("failed to parse json, json={}", json, e);
+            log.warn("解析 json 失败，json={}", json, e);
             return null;
         }
 
@@ -900,36 +851,36 @@ public class OnlineScoringEngine {
             var value = JsonPath.parse(forcedObject).read(path);
             return value != null ? serializeToJsonString(value) : null;
         } catch (Exception e) {
-            log.warn("couldn't find path inside json, trying flat structure, path={}, json={}", path, json, e);
+            log.warn("在 json 中找不到路径，尝试扁平结构，path={}, json={}", path, json, e);
             return Optional.ofNullable(forcedObject.get(path.replace("$.", "")))
                     .map(OnlineScoringEngine::serializeToJsonString)
                     .orElseGet(() -> {
-                        log.info("couldn't find flat or nested path in json, path={}, json={}", path, json);
+                        log.info("在 json 中找不到扁平或嵌套路径，path={}, json={}", path, json);
                         return null;
                     });
         }
     }
 
     /**
-     * Serialize a value to a JSON string. For simple types (String, Number, Boolean),
-     * returns the value directly as a string. For complex types (Map, List), serializes to JSON.
+     * 将值序列化为 JSON 字符串。对于简单类型（String、Number、Boolean），
+     * 直接将值作为字符串返回。对于复杂类型（Map、List），序列化为 JSON。
      */
     private static String serializeToJsonString(Object value) {
         if (value == null) {
             return null;
         }
-        // For simple types, return as-is to preserve backward compatibility
+        // 对于简单类型，按原样返回以保持向后兼容
         if (value instanceof String) {
             return (String) value;
         }
         if (value instanceof Number || value instanceof Boolean) {
             return value.toString();
         }
-        // For complex types (Map, List, etc.), serialize to proper JSON
+        // 对于复杂类型（Map、List 等），序列化为正确的 JSON
         try {
             return OBJECT_MAPPER.writeValueAsString(value);
         } catch (JsonProcessingException e) {
-            log.warn("Failed to serialize value to JSON, falling back to toString(), value={}", value, e);
+            log.warn("无法将值序列化为 JSON，回退到 toString()，value={}", value, e);
             return value.toString();
         }
     }
@@ -949,20 +900,18 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Build the chat-message list that fills {@code {{context}}} on the LLM thread render
-     * path, optionally enriched with each trace's child spans attached to its assistant
-     * message. Backward-compatible: the {@code spans} field is omitted from the JSON whenever
-     * a trace has no spans (or the caller passed an empty list), so a rule written against
-     * today's {@code [{role, content}, ...]} shape sees no difference.
+     * 构建聊天消息列表，用于在 LLM 线程渲染路径中填充 {@code {{context}}}，
+     * 可选择性地用附加到其 assistant 消息上的每个 trace 的子 spans 进行富化。
+     * 向后兼容：只要 trace 没有 spans（或调用方传入空列表），JSON 中就会省略 {@code spans} 字段，
+     * 因此针对当前 {@code [{role, content}, ...]} 形态编写的规则不会看到任何差异。
      *
-     * <p>Spans within each trace are sorted by start_time so the wire order matches call
-     * order — same convention as the trace-scope {@code {{spans}}} path.
+     * <p>每个 trace 内的 spans 按 start_time 排序，使线上顺序与调用顺序一致——
+     * 与 trace 作用域 {@code {{spans}}} 路径相同的约定。
      *
-     * <p>Returns the same {@link TraceThreadPythonEvaluatorRequest.ChatMessage} type as
-     * {@link #fromTraceToThread(List)} so both render paths share one wire shape: the
-     * unified {@code ChatMessage} carries an optional {@code spans} field (omitted via
-     * {@code @JsonInclude(NON_NULL)} when null), making the enriched JSON a strict
-     * superset of the legacy {@code [{role, content}, ...]} contract.
+     * <p>返回与 {@link #fromTraceToThread(List)} 相同的 {@link TraceThreadPythonEvaluatorRequest.ChatMessage}
+     * 类型，使两条渲染路径共享一种线上形态：统一的 {@code ChatMessage} 携带一个可选的 {@code spans} 字段
+     * （为 null 时通过 {@code @JsonInclude(NON_NULL)} 省略），使富化后的 JSON 成为旧版
+     * {@code [{role, content}, ...]} 契约的严格超集。
      */
     public static List<TraceThreadPythonEvaluatorRequest.ChatMessage> fromTraceToThreadEnriched(
             @NonNull List<Trace> traces, @NonNull List<Span> spans) {
@@ -970,9 +919,8 @@ public class OnlineScoringEngine {
                 .collect(Collectors.groupingBy(Span::traceId));
         return traces.stream()
                 .flatMap(trace -> {
-                    // Reconstruct parent → child hierarchy per-trace so the assistant entry
-                    // carries a tree of spans, not a flat list. buildSpanTree handles sorting
-                    // siblings by start_time at every level.
+                    // 按每个 trace 重建父 → 子层级，使 assistant 条目携带 spans 树而非扁平列表。
+                    // buildSpanTree 负责在每一层按 start_time 排序兄弟节点。
                     List<SpanForLlm> traceSpans = buildSpanTree(
                             spansByTrace.getOrDefault(trace.id(), List.of()));
                     return Stream.of(
@@ -990,17 +938,15 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Build a nested-tree projection of the given spans for inline LLM rendering.
+     * 为内联 LLM 渲染构建给定 spans 的嵌套树投影。
      *
-     * <p>Reconstructs parent → child hierarchy from {@code parentSpanId} links, projects each
-     * node to {@link SpanForLlm} (dropping the audit/score/cost noise that {@code Span}
-     * carries), and sorts siblings at every level by {@code startTime} so the wire order
-     * tracks call order within each branch. Returns the top-level roots.
+     * <p>从 {@code parentSpanId} 链接重建父 → 子层级，将每个节点投影为 {@link SpanForLlm}
+     * （丢弃 {@code Span} 携带的审计/评分/成本噪音），并在每一层按 {@code startTime} 排序兄弟节点，
+     * 使线上顺序跟踪每个分支内的调用顺序。返回顶层根节点。
      *
-     * <p>Orphans (spans whose {@code parentSpanId} isn't in the input list) are promoted to
-     * roots — happens when the caller passes a subset of a trace's spans, or when a parent
-     * was dropped server-side. The tree stays well-formed instead of silently dropping the
-     * orphaned subtree.
+     * <p>孤儿节点（其 {@code parentSpanId} 不在输入列表中的 spans）会被提升为根节点——
+     * 发生在调用方传入 trace 的 spans 子集，或父节点在服务端被丢弃时。树保持良好结构，
+     * 而不是静默丢弃孤儿子树。
      */
     public static List<SpanForLlm> buildSpanTree(@NonNull List<Span> spans) {
         if (spans.isEmpty()) {
@@ -1017,7 +963,7 @@ public class OnlineScoringEngine {
                 childrenByParent.computeIfAbsent(parentId, k -> new ArrayList<>()).add(span);
             }
         }
-        // Roots: parent is null OR parent isn't in the visible set (orphan promotion).
+        // 根节点：parent 为 null 或 parent 不在可见集合中（孤儿提升）。
         List<Span> roots = spans.stream()
                 .filter(s -> s.parentSpanId() == null || !presentIds.contains(s.parentSpanId()))
                 .sorted(BY_SPAN_START_TIME)
@@ -1051,9 +997,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * @param unreadableScoreNames scores whose value the judge gave in a form we cannot read
-     * @param undeclaredScoreNames scores the judge returned under a name the rule does not declare
-     * @param problem              set when the answer as a whole yielded nothing; null otherwise
+     * @param unreadableScoreNames 评判器以我们无法读取的形式给出的分数值
+     * @param undeclaredScoreNames 评判器以规则未声明的名称返回的分数
+     * @param problem              当整个回答没有产生任何结果时设置；否则为 null
      */
     @Builder(toBuilder = true)
     public record ParsedFeedbackScores(List<FeedbackScoreBatchItem> scores, List<String> nullScoreNames,
@@ -1074,9 +1020,9 @@ public class OnlineScoringEngine {
         }
 
         /**
-         * Re-keys every score name through {@code mapping} so the rule's logs and the stored scores use the
-         * names the user configured. The test-suite path rewrites each schema name to {@code assertion_N}
-         * before prompting, so without this the logs name a score the user has never seen.
+         * 通过 {@code mapping} 重新映射每个分数名称，使规则日志和存储的分数使用用户配置的名称。
+         * 测试套件路径在提示前会将每个模式名重写为 {@code assertion_N}，因此没有这个操作，
+         * 日志会显示用户从未见过的分数名称。
          */
         public ParsedFeedbackScores withUserFacingNames(@NonNull Map<String, String> mapping) {
             if (mapping.isEmpty()) {
@@ -1091,7 +1037,7 @@ public class OnlineScoringEngine {
                             .toList())
                     .nullScoreNames(nullScoreNames.stream().map(userFacing).toList())
                     .unreadableScoreNames(unreadableScoreNames.stream().map(userFacing).toList())
-                    // Undeclared names are the judge's own, absent from the mapping, so they pass through.
+                    // 未声明的名称是评判器自己的，不在映射中，因此原样通过。
                     .undeclaredScoreNames(undeclaredScoreNames.stream().map(userFacing).toList())
                     .problem(problem == null
                             ? null
@@ -1105,7 +1051,7 @@ public class OnlineScoringEngine {
     @Builder(toBuilder = true)
     public record ResponseProblem(@NonNull Kind kind, @NonNull String evidence, @NonNull List<String> fields,
             int omittedFields) {
-        /** Snapshots the field names: this record is a diagnostic record of one answer, not a live view. */
+        /** 快照字段名称：此记录是一次回答的诊断记录，不是实时视图。 */
         public ResponseProblem {
             fields = List.copyOf(fields);
         }
@@ -1120,47 +1066,46 @@ public class OnlineScoringEngine {
     public static void logSkippedNullScores(
             Logger userFacingLogger, ParsedFeedbackScores parsed, String entityType, Object entityId) {
         parsed.nullScoreNames().forEach(name -> userFacingLogger.info(
-                "Skipped score '{}' for {} '{}' because the judge returned a null value (treated as not applicable)",
+                "跳过分数 '{}'（{} '{}'），因为评判器返回了 null 值（视为不适用）",
                 name, entityType, entityId));
     }
 
     /**
-     * Surfaces a judge answer we could not read on the rule's logs. Without it a failed parse looked like a
-     * successful run to the user: no score, no explanation (OPIK-7354).
+     * 将我们无法读取的评判器回答展示在规则日志上。没有它，一次失败的解析在用户看来就像一次成功运行：
+     * 没有分数，也没有解释（OPIK-7354）。
      */
     public static void logResponseIssues(
             Logger userFacingLogger, ParsedFeedbackScores parsed, String entityType, Object entityId) {
         if (!parsed.unreadableScoreNames().isEmpty()) {
             userFacingLogger.warn(
-                    "Could not use the score value for {} on {} '{}' — expected a boolean or a number"
-                            + " between {} and {}",
+                    "无法使用 {} 在 {} '{}' 上的分数值——预期为 {} 到 {} 之间的布尔值或数字",
                     renderNames(parsed.unreadableScoreNames(), 0), entityType, entityId,
                     ValidationUtils.MIN_FEEDBACK_SCORE_VALUE, ValidationUtils.MAX_FEEDBACK_SCORE_VALUE);
         }
         if (!parsed.undeclaredScoreNames().isEmpty()) {
             userFacingLogger.warn(
-                    "Ignored {} on {} '{}' — the judge scored it but this rule does not declare that name",
+                    "忽略 {}（{} '{}'）——评判器为其打了分，但此规则未声明该名称",
                     renderNames(parsed.undeclaredScoreNames(), 0), entityType, entityId);
         }
         if (parsed.problem() != null) {
-            userFacingLogger.warn("Nothing was scored for {} '{}': {}", entityType, entityId,
+            userFacingLogger.warn("{} '{}' 未得到任何评分：{}", entityType, entityId,
                     describe(parsed.problem()));
         }
     }
 
     private static String describe(ResponseProblem problem) {
         return switch (problem.kind()) {
-            case NOT_JSON -> "the judge's answer was not valid JSON (%s)".formatted(problem.evidence());
-            case NOT_A_JSON_OBJECT -> "the judge's answer was not a JSON object (%s)"
+            case NOT_JSON -> "评判器的回答不是有效的 JSON（%s）".formatted(problem.evidence());
+            case NOT_A_JSON_OBJECT -> "评判器的回答不是 JSON 对象（%s）"
                     .formatted(problem.evidence());
-            case NO_SCORE_FIELDS -> ("the judge's answer had none of the expected score fields. Its fields were "
-                    + "%s; expected { '<scoreName>': { 'score': <number|boolean>, 'reason': <string> } }")
+            case NO_SCORE_FIELDS -> ("评判器的回答没有任何预期的分数字段。其字段为 "
+                    + "%s；预期为 { '<scoreName>': { 'score': <number|boolean>, 'reason': <string> } }")
                     .formatted(renderNames(problem.fields(), problem.omittedFields()));
         };
     }
 
     private static String sizeOf(String content) {
-        return "%,d chars".formatted(content.length());
+        return "%,d 个字符".formatted(content.length());
     }
 
     public static ParsedFeedbackScores toFeedbackScores(@NonNull ChatResponse chatResponse,
@@ -1171,32 +1116,32 @@ public class OnlineScoringEngine {
         try {
             structuredResponse = OBJECT_MAPPER.readTree(content);
             if (!structuredResponse.isObject()) {
-                log.warn("Judge answer was not a JSON object: size='{}'", sizeOf(content));
+                log.warn("评判器回答不是 JSON 对象：size='{}'", sizeOf(content));
                 return ParsedFeedbackScores.problem(
                         ResponseProblem.Kind.NOT_A_JSON_OBJECT, sizeOf(content), List.of(), 0);
             }
         } catch (JsonProcessingException e) {
-            log.warn("Judge answer was not valid JSON: size='{}' error='{}'", sizeOf(content),
+            log.warn("评判器回答不是有效的 JSON：size='{}' error='{}'", sizeOf(content),
                     e.getOriginalMessage());
             return ParsedFeedbackScores.problem(ResponseProblem.Kind.NOT_JSON, sizeOf(content), List.of(), 0);
         }
-        // Each pass runs only while nothing has been recognised yet, so the order is the precedence.
+        // 每一轮仅在尚未识别出任何内容时运行，因此顺序即优先级。
         var collected = new CollectedScores(declaredSchemas);
 
-        // 1. The shape we ask for: every score the judge named as the rule declares it.
+        // 1. 我们要求的形态：评判器按规则声明的方式命名的每个分数。
         collected.collectDeclared(structuredResponse);
 
-        // 2. Nothing matched by name — read a flat {"score": ...} answer as the only declared score.
+        // 2. 没有任何名称匹配——将扁平的 {"score": ...} 回答解读为唯一声明的分数。
         if (collected.foundNothing()) {
             collected.collectFlatSingleScore(structuredResponse);
         }
 
-        // 3. Still nothing — attribute a single differently-named score to the only declared one.
+        // 3. 仍然没有——将单个不同名称的分数归因到唯一声明的分数。
         if (collected.foundNothing()) {
             collected.collectRenamedSingleScore(structuredResponse);
         }
 
-        // 4. No pass understood the answer.
+        // 4. 没有任何一轮能理解该回答。
         if (collected.foundNothing()) {
             return noRecognisableScoreFields(structuredResponse, content);
         }
@@ -1204,7 +1149,7 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Reads a judge's answer into scores, owning both the attribution passes and the state they build up.
+     * 将评判器的回答读取为分数，同时拥有归因各轮及其累积的状态。
      */
     private static final class CollectedScores {
         private final List<LlmAsJudgeOutputSchema> schema;
@@ -1224,7 +1169,7 @@ public class OnlineScoringEngine {
                     (first, dup) -> first));
         }
 
-        /** Every top-level object carrying a score, in the order the judge wrote them. */
+        /** 每个携带分数的顶层对象，按评判器书写它们的顺序。 */
         private static List<Map.Entry<String, JsonNode>> scoreCandidates(JsonNode structuredResponse) {
             return structuredResponse.properties().stream()
                     .filter(entry -> entry.getValue() != null && !entry.getValue().isMissingNode()
@@ -1233,17 +1178,17 @@ public class OnlineScoringEngine {
         }
 
         /**
-         * First pass, and the only one that can yield several scores. Names match case-insensitively.
+         * 第一轮，也是唯一可能产生多个分数的一轮。名称匹配不区分大小写。
          */
         void collectDeclared(JsonNode structuredResponse) {
             for (var candidate : scoreCandidates(structuredResponse)) {
                 var scoreName = candidate.getKey();
-                // An empty schema declares nothing to match against, and nothing that could be hijacked.
+                // 空的 schema 不声明任何可匹配的内容，也不声明任何可能被劫持的内容。
                 var declaredName = declaredNames.isEmpty()
                         ? scoreName
                         : declaredNames.get(scoreName.toLowerCase(Locale.ROOT));
                 if (declaredName == null) {
-                    log.debug("Ignoring undeclared score field: '{}'", sanitize(scoreName));
+                    log.debug("忽略未声明的分数字段：'{}'", sanitize(scoreName));
                     undeclaredScoreNames.add(scoreName);
                 } else {
                     accept(declaredName, candidate.getValue());
@@ -1251,49 +1196,49 @@ public class OnlineScoringEngine {
             }
         }
 
-        /** Second pass: a flat {@code {"score": ...}} answer belongs to the only declared score. */
+        /** 第二轮：扁平的 {@code {"score": ...}} 回答属于唯一声明的分数。 */
         void collectFlatSingleScore(JsonNode structuredResponse) {
             if (schema.size() != 1 || !structuredResponse.has(SCORE_FIELD_NAME)) {
                 return;
             }
-            log.debug("Reading flat single-score response as score: '{}'", schema.getFirst().name());
+            log.debug("将扁平的单分数响应解读为分数：'{}'", schema.getFirst().name());
             accept(schema.getFirst().name(), structuredResponse);
         }
 
         /**
-         * Third pass: the judge named its one score something the rule does not declare ({@code
-         * relevance_score} against a schema entry named {@code Relevance}). With one declared score there is
-         * only one thing it can mean. Runs after the flat pass, so a stray nested object cannot outrank it.
+         * 第三轮：评判器将其唯一分数命名为规则未声明的名称（例如 {@code relevance_score}
+         * 对应名为 {@code Relevance} 的 schema 条目）。只有一个声明分数时，它只能有一种含义。
+         * 在扁平轮之后运行，因此散落的嵌套对象无法压过它。
          */
         void collectRenamedSingleScore(JsonNode structuredResponse) {
             var candidates = scoreCandidates(structuredResponse);
-            // Several candidates: report rather than guess.
+            // 多个候选：报告而不是猜测。
             if (schema.size() != 1 || candidates.size() != 1) {
                 return;
             }
             var declaredName = schema.getFirst().name();
             var judgeName = candidates.getFirst().getKey();
-            // Attributed after all, so withdraw the "ignored" note the first pass recorded for it.
+            // 毕竟已归因，因此撤回第一轮为其记录的 "ignored" 备注。
             undeclaredScoreNames.remove(judgeName);
-            log.debug("Attributing renamed score to the only declared one: '{}' -> '{}'",
+            log.debug("将重命名的分数归因到唯一声明的分数：'{}' -> '{}'",
                     sanitize(judgeName), sanitize(declaredName));
             accept(declaredName, candidates.getFirst().getValue());
         }
 
         void accept(String declaredName, JsonNode scoreNode) {
             if (StringUtils.isBlank(declaredName)) {
-                log.warn("Skipping a score the rule declares with a blank name");
+                log.warn("跳过规则以空名称声明的分数");
                 return;
             }
-            // Names match case-insensitively, so several keys in one answer can claim the same declared score.
-            // Both would be inserted and collapse to whichever row wins on timestamp, so the first one wins.
+            // 名称匹配不区分大小写，因此一个回答中的多个键可能声索同一个声明的分数。
+            // 两者都会被插入并折叠为在时间戳上胜出的那一行，因此第一个获胜。
             if (!claimedNames.add(declaredName)) {
-                log.debug("Skipping score claimed more than once: '{}'", sanitize(declaredName));
+                log.debug("跳过多于一次声索的分数：'{}'", sanitize(declaredName));
                 return;
             }
             var actualScore = scoreNode.path(SCORE_FIELD_NAME);
             if (actualScore.isNull()) {
-                log.debug("Skipping score the judge returned as null: '{}'", sanitize(declaredName));
+                log.debug("跳过评判器返回为 null 的分数：'{}'", sanitize(declaredName));
                 nullScoreNames.add(declaredName);
                 return;
             }
@@ -1308,9 +1253,9 @@ public class OnlineScoringEngine {
                             () -> unreadableScoreNames.add(declaredName));
         }
 
-        // Nothing usable and nothing explicitly not-applicable — i.e. the pass did not recognise the shape.
-        // Undeclared names deliberately do not count: an answer of only those should still reach the flat
-        // fallback and, failing that, be reported as having no recognisable score fields.
+        // 没有任何可用内容，也没有任何明确不适用——即该轮未识别出该形态。
+        // 未声明的名称有意不计入：只包含这些名称的回答仍应进入扁平回退，
+        // 若仍失败，则报告为没有可识别的分数字段。
         boolean foundNothing() {
             return scores.isEmpty() && nullScoreNames.isEmpty() && unreadableScoreNames.isEmpty();
         }
@@ -1325,18 +1270,18 @@ public class OnlineScoringEngine {
         }
     }
 
-    /** How a list of judge-supplied names is shown, wherever it is shown — logs and user messages agree. */
+    /** 评判器提供的名称列表在任何展示处如何展示——日志和用户消息保持一致。 */
     private static String renderNames(List<String> names, int omitted) {
         if (names.isEmpty()) {
-            return "(none)";
+            return "（无）";
         }
         var shown = names.stream()
                 .map(name -> "'%s'".formatted(sanitize(name)))
                 .collect(Collectors.joining(", "));
-        return omitted == 0 ? shown : "%s and %,d more".formatted(shown, omitted);
+        return omitted == 0 ? shown : "%s 以及另外 %,d 个".formatted(shown, omitted);
     }
 
-    /** Judge-chosen text headed for a log line: a newline must not forge an entry, nor a huge value flood one. */
+    /** 评判器选择的即将写入日志行的文本：换行符不得伪造条目，超大的值也不得淹没条目。 */
     private static String sanitize(String value) {
         var stripped = CONTROL_CHARS.matcher(value).replaceAll(" ");
         return stripped.length() <= MAX_LOGGED_VALUE_CHARS
@@ -1345,10 +1290,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * {@code feedback_scores.value} is {@code Decimal(18, 9)} and ClickHouse silently drops extra digits
-     * rather than rejecting them, so a judge answering with more precision would be stored as a different
-     * number than the one scoring used. Rounded here so the two agree; values already within scale are
-     * returned untouched, keeping their exact representation.
+     * {@code feedback_scores.value} 是 {@code Decimal(18, 9)}，ClickHouse 会静默丢弃多余的数字而不是拒绝它们，
+     * 因此评判器以更高精度回答时，存储的数字会与评分所使用的数字不同。在此处四舍五入使两者一致；
+     * 已在精度范围内的值原样返回，保持其精确表示。
      */
     private static BigDecimal toStorableScale(BigDecimal value) {
         return value.scale() > ValidationUtils.SCALE
@@ -1357,13 +1301,13 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Accepts the flat {@code { "score": ... }} shape that rules created before OPIK-7354 still instruct, on
-     * top of the schema-named nested shape. Single-score schemas only: a flat object carries no name, so with
-     * several scores there is nothing to attribute it to.
+     * 接受 OPIK-7354 之前创建的规则仍然指示的扁平 {@code { "score": ... }} 形态，
+     * 以及在 schema 命名的嵌套形态之上。仅限单分数 schema：扁平对象不携带名称，
+     * 因此有多个分数时没有可归因的对象。
      */
     private static ParsedFeedbackScores noRecognisableScoreFields(JsonNode structuredResponse, String content) {
-        // Capped here rather than where it is rendered: the count comes from the judge's answer, so one
-        // reply would otherwise decide how much this error path allocates and carries.
+        // 在此处而非渲染处进行上限限制：数量来自评判器的回答，否则一次回复
+        // 将决定此错误路径分配和携带多少内容。
         var topLevelKeys = StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(structuredResponse.fieldNames(),
                         Spliterator.ORDERED | Spliterator.NONNULL),
@@ -1371,17 +1315,17 @@ public class OnlineScoringEngine {
                 .limit(MAX_REPORTED_FIELD_NAMES)
                 .toList();
         var omittedFields = structuredResponse.size() - topLevelKeys.size();
-        log.warn("Judge answer had no recognisable score fields: fields=\"{}\" size='{}'",
+        log.warn("评判器回答没有可识别的分数字段：fields=\"{}\" size='{}'",
                 renderNames(topLevelKeys, omittedFields), sizeOf(content));
         return ParsedFeedbackScores.problem(
                 ResponseProblem.Kind.NO_SCORE_FIELDS, "", topLevelKeys, omittedFields);
     }
 
     /**
-     * {@code decimalValue()} answers {@code ZERO} for any non-numeric node, so a quoted score
-     * ({@code "score": "0.8"}) used to be stored as 0 — a wrong score rather than a missing one, and
-     * indistinguishable from a genuine zero (OPIK-7354). Quoted numbers and booleans are parsed, since
-     * judges quote them routinely; anything else yields empty so the caller can report it.
+     * {@code decimalValue()} 对任何非数字节点都返回 {@code ZERO}，因此带引号的分数
+     * （{@code "score": "0.8"}）过去会被存储为 0——这是错误的分数而非缺失的分数，
+     * 且与真实的零无法区分（OPIK-7354）。带引号的数字和布尔值会被解析，因为评判器经常给它们加引号；
+     * 其他任何内容都会产生空值，以便调用方报告。
      */
     private static Optional<BigDecimal> toScoreValue(JsonNode actualScore) {
         if (actualScore.isBoolean()) {
@@ -1402,29 +1346,28 @@ public class OnlineScoringEngine {
         try {
             return Optional.of(new BigDecimal(text));
         } catch (NumberFormatException e) {
-            log.debug("Score value is neither a number nor a boolean: '{}'", sanitize(text));
+            log.debug("分数值既不是数字也不是布尔值：'{}'", sanitize(text));
             return Optional.empty();
         }
     }
 
     /**
-     * The feedback-score column is {@code Decimal(18, 9)}. The {@code @DecimalMin}/{@code @DecimalMax} on
-     * {@link FeedbackScoreBatchItem} only run for request bodies, and this path builds the item directly, so
-     * an out-of-range judge value would reach the insert and fail the whole batch — losing every score in it,
-     * not just this one. Reported as unreadable instead.
+     * feedback-score 列为 {@code Decimal(18, 9)}。{@link FeedbackScoreBatchItem} 上的
+     * {@code @DecimalMin}/{@code @DecimalMax} 仅对请求体生效，而此路径直接构建条目，
+     * 因此超出范围的评判器值会到达插入操作并使整个批次失败——丢失其中所有分数而不只是这一个。
+     * 改为报告为不可读。
      */
     private static boolean isStorable(BigDecimal value) {
         if (value.compareTo(MIN_SCORE_VALUE) >= 0 && value.compareTo(MAX_SCORE_VALUE) <= 0) {
             return true;
         }
-        log.debug("Score value is outside the storable range: '{}'", value);
+        log.debug("分数值超出可存储范围：'{}'", value);
         return false;
     }
 
     /**
-     * Built-in templates asked for {@code "reason": ["..."]}, and {@code asText()} on an array yields an empty
-     * string — silently dropping the explanation. Comma-joined to match how the UI concatenates several
-     * reasons into one cell ({@code ReasonCell.tsx}).
+     * 内置模板要求 {@code "reason": ["..."]}，而对数组调用 {@code asText()} 会产生空字符串——
+     * 静默丢弃解释。用逗号连接以匹配 UI 将多个原因合并到一个单元格的方式（{@code ReasonCell.tsx}）。
      */
     private static String extractReason(JsonNode scoreNode) {
         var reason = scoreNode.path(REASON_FIELD_NAME);
@@ -1432,8 +1375,8 @@ public class OnlineScoringEngine {
             return reason.asText();
         }
         return StreamSupport.stream(reason.spliterator(), false)
-                // asText() is empty for an object or array, which the blank filter would then drop, losing
-                // whatever the judge put there. Serialise those instead so the reason keeps its content.
+                // 对于对象或数组，asText() 为空，空值过滤器随后会将其丢弃，
+                // 从而丢失评判器放入的任何内容。改为序列化这些内容，使原因保留其内容。
                 .map(element -> element.isContainerNode() ? element.toString() : element.asText())
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.joining(", "));
@@ -1445,7 +1388,7 @@ public class OnlineScoringEngine {
             return matcher.group(1);
         }
 
-        // Assume the whole response is raw JSON
+        // 假设整个响应是原始 JSON
         return response.trim();
     }
 
@@ -1464,17 +1407,15 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Shared "evaluate → prepare → log" wrapper used by the trace and span Python scorers.
-     * Eliminates the boilerplate that duplicated the MDC scope, the "Evaluating X 'id' sampled
-     * by rule 'name'" entry log, the "Sending X 'id' to Python evaluator: '<summary>'" exit
-     * log, and the rethrow-with-error-log fallback. Callers supply only what actually differs:
-     * the entity label ({@code "traceId"} / {@code "spanId"}), the id, the rule name, and a
-     * supplier that builds the rendered evaluator input.
+     * trace 和 span Python 评分器使用的共享 "evaluate → prepare → log" 包装器。
+     * 消除了重复的样板代码：MDC 作用域、"Evaluating X 'id' sampled by rule 'name'" 入口日志、
+     * "Sending X 'id' to Python evaluator: '<summary>'" 出口日志，以及重新抛出并记录错误的回退。
+     * 调用方只提供真正不同的内容：实体标签（{@code "traceId"} / {@code "spanId"}）、id、规则名称，
+     * 以及构建渲染后评估器输入的 supplier。
      *
-     * <p>Error-path logging is split: {@code userFacingLogger} gets a sanitized one-liner
-     * (no Throwable, so internal class names / paths from the stack trace don't leak into the
-     * user-facing log sink), and {@code internalLogger} (the scorer's slf4j logger) gets the
-     * full stack trace.
+     * <p>错误路径的日志被拆分：{@code userFacingLogger} 获得经过净化的单行日志
+     * （不含 Throwable，因此内部类名/栈跟踪中的路径不会泄漏到用户可见的日志槽），
+     * 而 {@code internalLogger}（评分器的 slf4j 日志器）获得完整栈跟踪。
      */
     public static Map<String, Object> logAndPrepareEvaluatorInput(
             @NonNull Logger userFacingLogger,
@@ -1485,17 +1426,17 @@ public class OnlineScoringEngine {
             String ruleName,
             @NonNull Supplier<Map<String, Object>> dataSupplier) {
         try (var logContext = LogContextAware.wrapWithMdc(mdc)) {
-            userFacingLogger.info("Evaluating {} '{}' sampled by rule '{}'", entityLabel, entityId, ruleName);
+            userFacingLogger.info("正在评估 {} '{}'，由规则 '{}' 采样", entityLabel, entityId, ruleName);
             try {
                 Map<String, Object> data = dataSupplier.get();
                 if (userFacingLogger.isInfoEnabled()) {
-                    userFacingLogger.info("Sending {} '{}' to Python evaluator: '{}'",
+                    userFacingLogger.info("将 {} '{}' 发送到 Python 评估器：'{}'",
                             entityLabel, entityId, summarizeEvaluatorInput(data));
                 }
                 return data;
             } catch (Exception exception) {
-                userFacingLogger.error("Error preparing Python request for {} '{}'", entityLabel, entityId);
-                internalLogger.error("Error preparing Python request for {} '{}'",
+                userFacingLogger.error("为 {} '{}' 准备 Python 请求时出错", entityLabel, entityId);
+                internalLogger.error("为 {} '{}' 准备 Python 请求时出错",
                         entityLabel, entityId, exception);
                 throw exception;
             }
@@ -1503,10 +1444,9 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Shape-only summary of the rendered Python evaluator input for user-facing logs.
-     * Values are rendered trace/span content (input/output/metadata/spans); logging them
-     * verbatim would land user data downstream of whatever sinks the user-facing log feeds,
-     * so we surface key names and sizes only.
+     * 仅包含形态的渲染后 Python 评估器输入摘要，用于用户可见日志。
+     * 值是渲染后的 trace/span 内容（input/output/metadata/spans）；逐字记录它们
+     * 会让用户数据落入用户可见日志所馈送的任何下游槽，因此我们只展示键名和大小。
      */
     public static String summarizeEvaluatorInput(@NonNull Map<String, Object> data) {
         var parts = data.entrySet().stream()
@@ -1523,30 +1463,29 @@ public class OnlineScoringEngine {
     }
 
     /**
-     * Shared error-logging helper for the {@code prepareEvaluation} catch blocks on the trace
-     * and thread scorers. The two loggers are intentional:
+     * trace 和 thread 评分器上 {@code prepareEvaluation} catch 块共享的错误日志辅助方法。
+     * 两个日志器是有意为之：
      * <ul>
-     *   <li>{@code userFacingLogger} carries a sanitized one-liner with the entity id only —
-     *       no Throwable, so the stack trace (with internal class names / paths) doesn't leak
-     *       into the user-facing log sink.</li>
-     *   <li>{@code internalLogger} (the scorer's slf4j logger) carries the full stack trace
-     *       so an operator can diagnose what actually broke.</li>
+     *   <li>{@code userFacingLogger} 携带仅含实体 id 的净化单行日志——
+     *       不含 Throwable，因此栈跟踪（含内部类名/路径）不会泄漏到用户可见的日志槽。</li>
+     *   <li>{@code internalLogger}（评分器的 slf4j 日志器）携带完整栈跟踪，
+     *       使运维人员能够诊断实际出错的原因。</li>
      * </ul>
-     * <p>The {@code idLabel} parameter ({@code "traceId"} / {@code "threadId"}) and {@code id}
-     * are formatted with single-quoted placeholders per the backend logging convention.
+     * <p>参数 {@code idLabel}（{@code "traceId"} / {@code "threadId"}）和 {@code id}
+     * 按后端日志约定使用单引号占位符格式化。
      */
     public static void logPreparingLlmRequestError(@NonNull Logger userFacingLogger,
             @NonNull Logger internalLogger, @NonNull String idLabel, @NonNull Object id,
             @NonNull Exception exception) {
-        userFacingLogger.error("Error preparing LLM request for {} '{}'", idLabel, id);
-        internalLogger.error("Error preparing LLM request for {} '{}'", idLabel, id, exception);
+        userFacingLogger.error("为 {} '{}' 准备 LLM 请求时出错", idLabel, id);
+        internalLogger.error("为 {} '{}' 准备 LLM 请求时出错", idLabel, id, exception);
     }
 
     /**
-     * Whether any of the template messages declares non-string (multimodal) content. The
-     * agentic-tools render path on threads only substitutes the context variable into string
-     * content — multimodal templates (image / audio / video alongside text) are rejected.
-     * Callers detect this here and fall back to the inline path rather than throwing.
+     * 是否有任何模板消息声明了非字符串（多模态）内容。
+     * 线程上的 agentic 工具渲染路径只将上下文变量替换进字符串内容——
+     * 多模态模板（图片 / 音频 / 视频与文本并存）会被拒绝。
+     * 调用方在此处检测并回退到内联路径，而不是抛出异常。
      */
     public static boolean hasMultimodalTemplate(@NonNull List<LlmAsJudgeMessage> templateMessages) {
         return templateMessages.stream().anyMatch(m -> !m.isStringContent());

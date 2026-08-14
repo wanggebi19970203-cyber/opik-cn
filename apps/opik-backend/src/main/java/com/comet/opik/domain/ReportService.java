@@ -101,7 +101,7 @@ public class ReportService {
     public UUID createAndTriggerReport(@NonNull String workspaceId, @NonNull String workspaceName,
             @NonNull UUID projectId) {
         if (!orchestratorClient.isEnabled()) {
-            log.warn("Report generation not configured, skipping for project '{}'", projectId);
+            log.warn("报告生成未配置，跳过项目 '{}'", projectId);
             return null;
         }
 
@@ -114,7 +114,7 @@ public class ReportService {
         int inserted = transactionTemplate.inTransaction(WRITE, handle -> handle.attach(OllieReportDAO.class)
                 .insert(reportId, workspaceId, projectId, ReportStatus.PENDING.getValue()));
         if (inserted == 0) {
-            log.info("Report already pending for project '{}', skipping", projectId);
+            log.info("项目 '{}' 已有待处理的报告，跳过", projectId);
             return null;
         }
 
@@ -223,11 +223,11 @@ public class ReportService {
                         RESULT_KEY, "trigger_failed",
                         WORKSPACE_ID_KEY, workspaceId,
                         WORKSPACE_NAME_KEY, StringUtils.defaultIfBlank(workspaceName, workspaceId)));
-                log.info("Marked report as failed reportId='{}' workspaceId='{}' projectId='{}'",
+                log.info("已将报告标记为失败 reportId='{}' workspaceId='{}' projectId='{}'",
                         reportId, workspaceId, projectId);
             }
         } catch (Exception e) {
-            log.error("Failed to mark report as failed reportId='{}' workspaceId='{}' projectId='{}'",
+            log.error("将报告标记为失败时出错 reportId='{}' workspaceId='{}' projectId='{}'",
                     reportId, workspaceId, projectId, e);
         }
     }
@@ -240,7 +240,7 @@ public class ReportService {
                     .collect(Collectors.groupingBy(id -> id, Collectors.counting()));
             int failed = dao.failStaleReports(reportGenerationConfig.getStaleReportTimeoutMinutes());
             if (failed > 0) {
-                log.info("Marked {} stale pending reports as failed", failed);
+                log.info("已将 {} 个陈旧的待处理报告标记为失败", failed);
             }
             return sweptByWorkspace;
         });

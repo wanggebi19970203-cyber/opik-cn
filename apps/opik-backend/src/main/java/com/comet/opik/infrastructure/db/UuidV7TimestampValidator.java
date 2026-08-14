@@ -18,26 +18,26 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Validates that an ingested {@code id}'s embedded UUIDv7 timestamp falls within
- * {@code [now() - window, now() + window]}.
+ * 校验摄入的 {@code id} 所内嵌的 UUIDv7 时间戳是否落在
+ * {@code [now() - window, now() + window]} 范围内。
  *
- * <p>The embedded timestamp is what ClickHouse uses to compute the partition, so a row claiming
- * a far-future timestamp would land in a partition that retention never reaches and corrupt
- * the partition layout. Bounding the timestamp at ingestion makes broken clients surface
- * as HTTP 400 instead of silent partition corruption.
+ * <p>内嵌时间戳正是 ClickHouse 用来计算分区的时间戳，因此一行声称
+ * 遥远未来时间戳的数据会落进保留策略永远触及不到的分区，并破坏
+ * 分区布局。在摄入时约束时间戳能让有问题的客户端表现为
+ * HTTP 400，而不是静默地破坏分区。
  *
- * <p>The validation is intentionally version-agnostic on the timestamp bits: it checks the top 48
- * bits regardless of UUID version, because those bits drive partition placement on every write.
+ * <p>该校验有意对时间戳位不区分版本：无论 UUID 版本如何，它都检查高 48
+ * 位，因为每次写入时这些位都决定分区放置位置。
  *
- * <p>Three modes, derived from {@link UuidValidationConfig}:
+ * <p>三种模式，派生自 {@link UuidValidationConfig}：
  * <ul>
- *   <li><b>disabled</b> ({@code enabled=false}): a no-op kill-switch, ids are not checked.</li>
- *   <li><b>reject</b> ({@code enabled=true, auditOnly=false}): out-of-window ids are rejected via
- *   {@link InvalidUUIDException} (HTTP 400); the reject-rate metric is recorded by its
- *   {@link com.comet.opik.api.error.InvalidUUIDExceptionMapper}.</li>
- *   <li><b>audit</b> ({@code enabled=true, auditOnly=true}): out-of-window ids are counted
- *   ({@link UuidValidationMetrics}, tagged by workspace) and logged but NOT rejected — the shadow /
- *   log-only mode that surfaces offenders without breaking ingestion (OPIK-7402).</li>
+ *   <li><b>disabled</b>（{@code enabled=false}）：空操作的紧急开关，不检查 id。</li>
+ *   <li><b>reject</b>（{@code enabled=true, auditOnly=false}）：超出窗口的 id 通过
+ *   {@link InvalidUUIDException}（HTTP 400）被拒绝；拒绝率指标由其
+ *   {@link com.comet.opik.api.error.InvalidUUIDExceptionMapper} 记录。</li>
+ *   <li><b>audit</b>（{@code enabled=true, auditOnly=true}）：超出窗口的 id 被计数
+ *   （{@link UuidValidationMetrics}，按工作区打标签）并记录日志，但不被拒绝 —— 这是在不破坏摄入的
+ *   前提下暴露有问题的客户端的影子 / 仅日志模式（OPIK-7402）。</li>
  * </ul>
  */
 @Slf4j
@@ -59,19 +59,18 @@ public class UuidV7TimestampValidator {
     }
 
     /**
-     * Rejects (HTTP 400) an id whose embedded timestamp is out of window (too old or too far in the
-     * future) in reject mode; counts + logs it without rejecting in audit mode; no-op when validation is
-     * disabled or the id is acceptable. Used by the creation path. {@code resource} (trace/span) and
-     * {@code workspaceId} are attached to the audit metric.
+     * 在拒绝模式下拒绝（HTTP 400）一个内嵌时间戳超出窗口（太旧或太靠未来）
+     * 的 id；在审计模式下计数并记录日志但不拒绝；当校验被禁用或 id 可接受时为空操作。
+     * 用于创建路径。{@code resource}（trace/span）和 {@code workspaceId} 会附加到审计指标上。
      */
     public void validate(@NonNull UUID id, String resource, String workspaceId) {
         evaluate(id).ifPresent(rejection -> handle(rejection, resource, workspaceId));
     }
 
     /**
-     * Like {@link #validate}, but only acts when the embedded timestamp is too far in the future. Old
-     * ids are accepted, so updating a long-lived entity (e.g. created months ago) is never flagged. Used
-     * by the update path.
+     * 与 {@link #validate} 类似，但仅在内嵌时间戳过于靠未来时才采取行动。旧的
+     * id 会被接受，因此更新一个长生命周期的实体（例如几个月前创建的）永远不会被标记。
+     * 用于更新路径。
      */
     public void validateNotInFuture(@NonNull UUID id, String resource, String workspaceId) {
         evaluate(id)
@@ -80,8 +79,8 @@ public class UuidV7TimestampValidator {
     }
 
     /**
-     * Pure validation decision: returns the rejection reason paired with the id's embedded timestamp if
-     * it falls outside the window, or empty if it is acceptable (or validation is disabled).
+     * 纯校验决策：如果 id 的内嵌时间戳落在窗口之外，返回拒绝原因及其配对的时间戳；
+     * 如果可接受（或校验被禁用），则返回空。
      */
     private Optional<Pair<Reason, Instant>> evaluate(UUID id) {
         if (!enabled) {
@@ -99,18 +98,18 @@ public class UuidV7TimestampValidator {
     }
 
     /**
-     * In audit mode, records the per-workspace reject-rate metric and logs the would-be rejection, then
-     * lets the write through. Otherwise throws {@link InvalidUUIDException} (HTTP 400).
+     * 在审计模式下，记录按工作区的拒绝率指标并记录本会被拒绝的情况，然后
+     * 放行写入。否则抛出 {@link InvalidUUIDException}（HTTP 400）。
      */
     private void handle(Pair<Reason, Instant> rejection, String resource, String workspaceId) {
         var reason = rejection.getLeft();
         var timestamp = rejection.getRight();
         if (auditOnly) {
             metrics.recordAudit(reason.getValue(), resource, workspaceId);
-            // Keep a fixed, searchable prefix ("UUIDv7 audit: would-reject id ...") and append the
-            // variable fields at the end, so log searches match on the message rather than the values.
+            // 保留一个固定、可搜索的前缀（“UUIDv7 audit: would-reject id ...”），并把
+            // 可变字段追加在末尾，这样日志搜索按消息而不是按值匹配。
             log.info(
-                    "UUIDv7 audit: would-reject id, embedded timestamp '{}' outside window '{}', reason '{}', resource '{}', workspace '{}'",
+                    "UUIDv7 审计：将拒绝 id，内嵌时间戳 '{}' 超出窗口 '{}'，原因 '{}'，资源 '{}'，工作区 '{}'",
                     timestamp, window, reason.getValue(), resource, workspaceId);
             return;
         }

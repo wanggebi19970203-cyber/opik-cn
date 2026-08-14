@@ -7,18 +7,16 @@ if TYPE_CHECKING:
 
 
 class Guard(abc.ABC):
-    # Whether this guard executes locally in the SDK (True) or remotely on the
-    # guardrails backend (False).
+    # 此 guard 是在 SDK 本地执行（True），还是在 guardrails 后端远程执行（False）。
     local: bool = False
 
     def get_validation_configs(self) -> List[Dict[str, Any]]:
         """
-        Get the validation configuration for this guard, to be sent to the
-        guardrails backend. Local guards do not run on the backend and return
-        an empty list.
+        获取此 guard 的校验配置，用于发送到 guardrails 后端。
+        本地 guard 不在后端运行，因此返回空列表。
 
         Returns:
-            List of validation configurations to be sent to the API
+            要发送到 API 的校验配置列表
         """
         return []
 
@@ -26,13 +24,13 @@ class Guard(abc.ABC):
         self, text: str, client: "opik_client.Opik"
     ) -> List["schemas.ValidationResult"]:
         """
-        Run this guard locally in the SDK. Only called for guards with ``local = True``.
+        在 SDK 本地运行此 guard。仅对 ``local = True`` 的 guard 调用。
 
         Args:
-            text: Text to validate
-            client: Opik client, used to reach Opik backend endpoints
+            text: 要校验的文本
+            client: Opik 客户端，用于访问 Opik 后端端点
 
         Returns:
-            List of validation results produced by this guard
+            此 guard 产生的校验结果列表
         """
         raise NotImplementedError

@@ -1,0 +1,287 @@
+---
+description: 从这里开始，将 Opik 集成到你的 Twilio Agent Connect 语音智能体中，实现端到端的 LLM 可观测性、单元测试和优化。
+headline: Twilio Agent Connect
+og:description: 了解如何将 Opik 与 Twilio Agent Connect 集成，以追踪每一次来电者的对话轮次，并将通话录音附加到你的语音智能体对话中。
+og:site_name: Opik 文档
+og:title: 将 Opik 与 Twilio Agent Connect 集成
+title: 使用 Opik 为 Twilio Agent Connect 提供可观测性
+---
+
+[Twilio Agent Connect](https://www.twilio.com/docs/conversations/agent-connect)（TAC）是一个用于构建接听真实电话的 AI 智能体的框架。它负责处理电话通信、语音转文字和文字转语音，并将来电者转写后的消息传给你的处理器。
+
+本指南说明如何将你的语音智能体记录到 Opik。你将追踪每一次来电者的对话轮次，将一次通话的各个轮次归入同一次对话，并附加通话录音，以便你能听到来电者听到的内容。
+
+## 账户设置
+
+[Comet](https://www.comet.com/site?from=llm&utm_source=opik&utm_medium=docs&utm_content=twilio&utm_campaign=opik) 提供 Opik 平台的托管版本，[只需创建一个账户](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=docs&utm_content=twilio&utm_campaign=opik)并获取你的 API Key。
+
+> 你也可以在本地运行 Opik 平台，更多信息请参阅[安装指南](https://www.comet.com/docs/opik/self-host/overview/?from=llm&utm_source=opik&utm_medium=docs&utm_content=twilio&utm_campaign=opik)。
+
+## 快速开始
+
+### 安装
+
+安装 `opik` 和 `twilio-agent-connect` 包：
+
+```bash
+pip install opik twilio-agent-connect
+```
+
+### 配置 Opik
+
+根据你的部署类型配置 Opik Python SDK。有关以下内容的详细说明，请参阅 [Python SDK 配置指南](/tracing/advanced/sdk_configuration)：
+
+- **CLI 配置**：`opik configure`
+- **代码配置**：`opik.configure()`
+- **自托管、Cloud 与企业版**的设置
+- **配置文件**和环境变量
+
+## 记录追踪
+
+Twilio Agent Connect 会为每一次来电者的对话轮次调用一次你的处理器。在该处理器上添加 `@opik.track` 装饰器，每一次对话轮次就会变成一条追踪。
+
+将 `thread_id` 设置为对话 ID，这样同一通电话的每一次对话轮次都会被归入单个 Opik 线程：
+
+```python title="agent.py"
+import opik
+from opik import opik_context
+from tac import TAC, TACConfig
+from tac.models.session import ConversationSession
+from tac.models.tac import TACMemoryResponse
+
+tac = TAC(TACConfig(
+    account_sid=TWILIO_ACCOUNT_SID,
+    auth_token=TWILIO_AUTH_TOKEN,
+    api_key=TWILIO_API_KEY,
+    api_secret=TWILIO_API_SECRET,
+    phone_number=TWILIO_PHONE_NUMBER,
+))
+
+
+@opik.track(name="voice-agent-turn", project_name="my-voice-agent")
+async def handle_message_ready(
+    message: str,
+    context: ConversationSession,
+    memory: TACMemoryResponse | None,
+) -> str:
+    # Group every turn of this call into one Opik thread
+    opik_context.update_current_trace(thread_id=context.conversation_id)
+
+    response = await run_my_agent(message, context, memory)
+    return response
+
+
+tac.on_message_ready(handle_message_ready)
+```
+
+这就是完整的追踪设置。一次来电者的对话轮次是一条追踪，一通电话是一个线程。
+
+你也可以将有用的通话详情记录为元数据：
+
+```python
+opik_context.update_current_trace(
+    thread_id=context.conversation_id,
+    metadata={
+        "channel": context.channel,
+        "profile_id": context.profile_id,
+    },
+)
+```
+
+## 为对话轮次添加跨度
+
+语音智能体在回答之前通常要完成几件事：查找来电者、搜索知识库、调用几个工具，然后调用 LLM。为这些函数分别添加 `@opik.track`，它们就会作为该轮次追踪下的嵌套跨度出现，这样你就能看到时间花在了哪里，以及每一步返回了什么。
+
+使用 `type` 参数告诉 Opik 这是哪种类型的步骤。Opik 会以不同方式展示 `llm` 和 `tool` 跨度，而 `llm` 跨度是 Token 使用量和成本出现的地方。
+
+```python title="agent.py"
+@opik.track(name="knowledge-search", type="general")
+def search_knowledge_base(query: str) -> list[str]:
+    return my_vector_store.search(query)
+
+
+@opik.track(name="account-lookup", type="tool")
+def account_lookup(phone: str) -> dict:
+    return billing_api.get_account(phone)
+
+
+@opik.track(name="generate-reply", type="llm")
+def generate_reply(messages: list[dict]) -> str:
+    ...
+
+
+@opik.track(name="voice-agent-turn")
+async def handle_message_ready(message, context, memory) -> str:
+    opik_context.update_current_trace(thread_id=context.conversation_id)
+
+    # Each call below becomes a span on this turn's trace
+    docs = search_knowledge_base(message)
+    account = account_lookup(context.author_info.address)
+    return generate_reply(build_messages(message, docs, account))
+```
+
+### 为跨度添加详情
+
+在被追踪的函数内部，使用 `update_current_span` 来记录参数和返回值尚未捕获的任何内容：
+
+```python
+from opik import opik_context
+
+
+@opik.track(name="knowledge-search", type="general")
+def search_knowledge_base(query: str) -> list[str]:
+    results = my_vector_store.search(query)
+
+    opik_context.update_current_span(
+        metadata={"index": "support-articles", "top_k": 5},
+        output={"documents": results, "hit_count": len(results)},
+    )
+    return results
+```
+
+<Tip>
+  有关完整选项，包括如何在不使用装饰器的情况下记录跨度，请参阅
+  [记录追踪](/tracing/advanced/log_traces)指南。
+</Tip>
+
+### 自动追踪 LLM 调用
+
+如果你直接调用某个 LLM 提供商，请使用对应的 Opik 集成，而不是自己编写 `llm` 跨度。这样 Token 使用量、成本和模型参数都会自动为你记录，并且这些跨度仍然嵌套在当前对话轮次之下：
+
+```python title="agent.py"
+from opik.integrations.openai import track_openai
+from openai import OpenAI
+
+client = track_openai(OpenAI())
+
+
+@opik.track(name="voice-agent-turn")
+async def handle_message_ready(message, context, memory) -> str:
+    opik_context.update_current_trace(thread_id=context.conversation_id)
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=build_messages(message, context),
+    )
+    return response.choices[0].message.content
+```
+
+请参阅 [OpenAI](/integrations/openai)、[Anthropic](/integrations/anthropic) 和 [Gemini](/integrations/gemini) 集成，或浏览[所有集成](/integrations/overview)以找到你使用的框架。
+
+## 添加护栏
+
+电话是一个实时的、无人值守的渠道，因此很适合检查来电者说了什么，以及智能体即将说什么。Opik 护栏在同一个请求中运行，每一次检查都会带着各自的通过或失败结果出现在该轮次的追踪上。
+
+```python title="agent.py"
+from opik import exceptions
+from opik.guardrails import Guardrail, PII, PromptInjection
+
+inbound = Guardrail(guards=[PromptInjection(threshold=0.5), PII()])
+
+
+@opik.track(name="voice-agent-turn")
+async def handle_message_ready(message, context, memory) -> str:
+    opik_context.update_current_trace(thread_id=context.conversation_id)
+
+    try:
+        inbound.validate(message)
+    except exceptions.GuardrailValidationFailed:
+        return "Sorry, I can't help with that. Let me put you through to a colleague."
+
+    return await run_my_agent(message, context, memory)
+```
+
+有关可用的检查，请参阅[护栏概览](/guardrails/overview)；如果你需要基于自己的策略训练的检查，请参阅[自定义护栏](/guardrails/custom-guardrails)。
+
+## 记录通话录音
+
+你的处理器接收的是文本，因为 Twilio 负责语音转文字和文字转语音。要在 Opik 中收听对话，请使用 Twilio 录制通话并将音频附加到你的线程。Opik 会内联播放音频附件。
+
+### 步骤 1：开始录音
+
+Twilio Agent Connect 允许你在来电到达时运行代码。使用该钩子开始录音，并告诉 Twilio 在音频就绪时通知你的位置：
+
+```python title="recording.py"
+from twilio.rest import Client
+from tac.models.voice import TwiMLOptions, TwiMLRequest
+
+twilio = Client(TWILIO_API_KEY, TWILIO_API_SECRET, TWILIO_ACCOUNT_SID)
+
+
+async def start_recording(request: TwiMLRequest) -> TwiMLOptions:
+    twilio.calls(request.call_sid).recordings.create(
+        recording_channels="dual",
+        recording_status_callback=f"{PUBLIC_URL}/recording",
+    )
+    return TwiMLOptions()
+
+
+voice_channel.on_inbound_call_twiml(start_recording)
+```
+
+`recording_channels="dual"` 将来电者和智能体分别保留在独立的音频声道上。
+
+### 步骤 2：附加录音
+
+通话结束时，Twilio 会调用你的 webhook，并带上音频的链接。下载它并将它附加到同一线程中的一条追踪上：
+
+```python title="recording.py"
+import httpx
+import opik
+from opik import Attachment
+
+opik_client = opik.Opik(project_name="my-voice-agent")
+
+
+@app.post("/recording")
+async def recording_ready(request: Request):
+    form = await request.form()
+    call_sid = form["CallSid"]
+
+    audio = httpx.get(
+        f"{form['RecordingUrl']}.mp3",
+        auth=(TWILIO_API_KEY, TWILIO_API_SECRET),
+    )
+
+    opik_client.trace(
+        name="call-recording",
+        thread_id=call_sid,
+        output={"duration_s": int(form["RecordingDuration"])},
+        attachments=[
+            Attachment(
+                data=audio.content,
+                file_name=f"call-{call_sid}.mp3",
+                content_type="audio/mpeg",
+            )
+        ],
+    )
+    opik_client.flush()
+```
+
+Twilio 使用通话 SID 作为对话 ID，因此录音会与这通电话的各对话轮次落到同一个 Opik 线程中。在 Opik 中打开该线程，你就能并排阅读转写文本并播放音频。
+
+<Note>
+  通话录音受当地同意相关法律的约束。在启用之前，请核对你所在地区适用于来电者的规则。
+</Note>
+
+## 会记录什么
+
+采用此设置后，Opik 会记录：
+
+- **线程**：每通电话一个线程，按顺序包含每一个对话轮次
+- **追踪**：每次来电者的对话轮次一条追踪，包含来电者的消息和智能体的回复
+- **跨度**：你的检索、工具和 LLM 调用，包括 Token 使用量和成本
+- **护栏结果**：你在该对话轮次上运行的每一次检查的通过或失败结果
+- **附件**：通话录音，可在 Opik UI 中播放
+
+## 后续步骤
+
+- [记录追踪](/tracing/advanced/log_traces) — 完整的跨度和追踪 API
+- [记录媒体和附件](/tracing/advanced/log_multimodal_traces) — 附件限制和支持的类型
+- [护栏](/guardrails/overview) — 在请求路径中检查输入和输出
+- [在线评估](/production/online-evaluation/rules) — 每次通话一旦被记录就自动评分
+- [所有集成](/integrations/overview) — 你使用的 LLM 提供商和框架
+
+## 进一步改进
+
+如果你对改进 Twilio Agent Connect 集成有任何问题或建议，请在我们的 GitHub 仓库上[提交 issue](https://github.com/comet-ml/opik/issues/new/choose)。

@@ -49,25 +49,25 @@ class ExperimentItemDAO {
     }
 
     /**
-     * Plain multi-row insert. Duplicate ids are tolerated rather than rejected: {@code experiment_items} is
-     * a {@code ReplicatedReplacingMergeTree(last_updated_at)} (migration 000017), so re-posting an existing
-     * id appends a new version that wins dedup — which is why {@link #SELECT} carries
-     * {@code ORDER BY last_updated_at DESC LIMIT 1} and {@link #STREAM} carries {@code LIMIT 1 BY id}.
-     * {@code ExperimentItemService} only validates the UUID version of client-supplied ids, not their
-     * existence.
+     * 普通的多行插入。重复 ID 会被容忍而不是拒绝：{@code experiment_items} 是
+     * {@code ReplicatedReplacingMergeTree(last_updated_at)}（迁移 000017），因此重新提交一个已存在的
+     * ID 会追加一个在去重中胜出的新版本——这就是 {@link #SELECT} 携带
+     * {@code ORDER BY last_updated_at DESC LIMIT 1}、而 {@link #STREAM} 携带 {@code LIMIT 1 BY id} 的原因。
+     * {@code ExperimentItemService} 只校验客户端提供的 ID 的 UUID 版本，而不校验其
+     * 存在性。
      *
-     * <p>{@code created_at} is deliberately absent from the column list, so the column DEFAULT
-     * ({@code now64}) stamps it server-side. Keep it that way: the stalled-run reaper reads it as its
-     * item-level liveness signal ({@code OptimizationDAO#FIND_STALLED_STUDIO_OPTIMIZATIONS}, OPIK-7459),
-     * and binding it from the client, or adding a path that rewrites an existing row's value, would let a
-     * dead run look alive or a live one look dead.
+     * <p>{@code created_at} 被有意地从列列表中省略，因此列 DEFAULT
+     * （{@code now64}）会在服务端为其打时间戳。请保持这种写法：停滞运行回收器将其读取为
+     * 条目级别的活跃度信号（{@code OptimizationDAO#FIND_STALLED_STUDIO_OPTIMIZATIONS}，OPIK-7459），
+     * 而从客户端绑定它，或添加一条重写现有行该值的路径，都会让
+     * 已死的运行看起来是活的，或让活着的运行看起来是死的。
      *
-     * <p>The invariant is per physical row — nothing rewrites a row's {@code created_at} — not per item id.
-     * A client re-posting an old trial's item id publishes a NEW version dated now, which the reaper reads
-     * as fresh progress. The other paths in this class that affect the signal are the two lightweight
-     * deletes ({@link #DELETE}, {@link #DELETE_BY_EXPERIMENT_IDS}): the reaper's probes read raw rows with
-     * no {@code FINAL}, so deleting a running trial's items removes the liveness rows and makes a live run
-     * read as silent.
+     * <p>该不变量是针对物理行的——没有任何东西会重写某一行的 {@code created_at}——而不是针对条目 ID。
+     * 客户端重新提交一个旧试验的条目 ID 会发布一个日期为现在的新版本，回收器会将其读取为
+     * 新的进展。本类中影响该信号的其它路径是两次轻量级
+     * 删除（{@link #DELETE}、{@link #DELETE_BY_EXPERIMENT_IDS}）：回收器的探测读取的是不带
+     * {@code FINAL} 的原始行，因此删除一个运行中试验的条目会移除活跃度行，并使活着的运行
+     * 被读取为静默。
      */
     private static final String INSERT = """
             INSERT INTO experiment_items (
@@ -613,7 +613,7 @@ class ExperimentItemDAO {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(experimentItems),
                 "Argument 'experimentItems' must not be empty");
 
-        log.info("Inserting experiment items, count '{}'", experimentItems.size());
+        log.info("插入实验条目，数量 '{}'", experimentItems.size());
 
         if (experimentItems.isEmpty()) {
             return Mono.just(0L);
@@ -672,7 +672,7 @@ class ExperimentItemDAO {
     }
 
     private Publisher<? extends Result> get(UUID id, Connection connection) {
-        log.info("Getting experiment item by id '{}'", id);
+        log.info("根据 ID '{}' 获取实验条目", id);
 
         Statement statement = connection.createStatement(SELECT)
                 .bind("id", id);
@@ -683,7 +683,7 @@ class ExperimentItemDAO {
     public Flux<ExperimentItem> getItems(@NonNull Set<UUID> experimentIds,
             @NonNull ExperimentItemSearchCriteria criteria) {
         if (experimentIds.isEmpty()) {
-            log.info("Getting experiment items by empty experimentIds, limit '{}', lastRetrievedId '{}'",
+            log.info("按空的 experimentIds 获取实验条目，limit '{}'，lastRetrievedId '{}'",
                     criteria.limit(), criteria.lastRetrievedId());
             return Flux.empty();
         }
@@ -730,7 +730,7 @@ class ExperimentItemDAO {
         int limit = criteria.limit();
         UUID lastRetrievedId = criteria.lastRetrievedId();
 
-        log.info("Getting experiment items by experimentIds count '{}', limit '{}', lastRetrievedId '{}'",
+        log.info("按 experimentIds 获取实验条目，数量 '{}'，limit '{}'，lastRetrievedId '{}'",
                 experimentIds.size(), limit, lastRetrievedId);
 
         return makeFluxContextAware((userName, workspaceId) -> {
@@ -778,7 +778,7 @@ class ExperimentItemDAO {
     }
 
     private Publisher<? extends Result> delete(UUID experimentId, Set<UUID> ids, Connection connection) {
-        log.info("Deleting experiment items, experimentId '{}', count '{}'", experimentId, ids.size());
+        log.info("删除实验条目，experimentId '{}'，数量 '{}'", experimentId, ids.size());
 
         Statement statement = connection.createStatement(DELETE)
                 .bind("ids", ids.stream().map(UUID::toString).toArray(String[]::new))
@@ -793,7 +793,7 @@ class ExperimentItemDAO {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(experimentIds),
                 "Argument 'experimentIds' must not be empty");
 
-        log.info("Deleting experiment items by experiment ids, size '{}'", experimentIds.size());
+        log.info("按实验 ID 删除实验条目，数量 '{}'", experimentIds.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> deleteByExperimentIds(experimentIds, connection))
@@ -801,7 +801,7 @@ class ExperimentItemDAO {
                 .reduce(0L, Long::sum)
                 .doFinally(signalType -> {
                     if (signalType == SignalType.ON_COMPLETE) {
-                        log.info("Deleted experiment items by experiment ids, size '{}'", experimentIds.size());
+                        log.info("已按实验 ID 删除实验条目，数量 '{}'", experimentIds.size());
                     }
                 });
     }

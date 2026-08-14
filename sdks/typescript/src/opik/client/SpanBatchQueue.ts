@@ -31,8 +31,8 @@ export class SpanBatchQueue extends BatchQueue<SavedSpan> {
     return entity.id;
   }
 
-  // Extract inline base64 attachments (when enabled) BEFORE truncation, so images become
-  // attachments and no longer count toward the per-span size cap.
+  // 在截断之前（启用时）提取内联 base64 附件，使图片变为
+  // 附件，不再计入每个 span 的大小上限。
   private async extractAttachments<T extends AttachmentPayload>(
     payload: T,
     entityId: string,

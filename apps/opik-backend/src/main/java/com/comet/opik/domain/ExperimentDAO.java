@@ -2595,7 +2595,7 @@ public class ExperimentDAO {
                             .filter(Objects::nonNull)
                             .collect(Collectors.toSet())
                             .doOnNext(projectIds -> log.info(
-                                    "Target project IDs query returned '{}' project IDs: '{}', criteria='{}'",
+                                    "目标项目 ID 查询返回 '{}' 个项目 ID：'{}'，条件='{}'",
                                     projectIds.size(), projectIds, criteria));
                 });
     }

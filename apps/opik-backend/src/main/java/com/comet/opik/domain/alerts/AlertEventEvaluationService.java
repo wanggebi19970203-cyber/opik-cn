@@ -34,11 +34,11 @@ public class AlertEventEvaluationService {
     private final @NonNull IdGenerator idGenerator;
 
     public void evaluateAlertEvent(@NonNull AlertEvent alertEvent) {
-        log.debug("Evaluating alert event {}", alertEvent);
+        log.debug("评估告警事件 {}", alertEvent);
         alertService.findAllByWorkspaceAndEventTypes(alertEvent.workspaceId(), Set.of(alertEvent.eventType()))
                 .forEach(alert -> {
                     if (isValidForAlert(alertEvent, alert)) {
-                        log.debug("Alert {} matches event {}", alert.id(), alertEvent);
+                        log.debug("告警 {} 匹配事件 {}", alert.id(), alertEvent);
 
                         String eventId = idGenerator.generateId().toString();
                         alertBucketService
@@ -63,10 +63,10 @@ public class AlertEventEvaluationService {
     }
 
     /**
-     * Restricts a guardrails alert to the guardrail types configured on its triggers. The alert fires
-     * if ANY matching-event-type trigger accepts the event: a trigger without a {@code filter:guardrail_type}
-     * config accepts any guardrail type; a filtered trigger accepts only its configured types (OR-ed).
-     * Evaluated per trigger so an unfiltered trigger is not narrowed by a sibling filtered trigger.
+     * 将防护规则告警限制到其触发器上配置的防护规则类型。只要任一匹配事件类型的
+     * 触发器接受该事件，告警就会触发：没有 {@code filter:guardrail_type} 配置的
+     * 触发器接受任意防护规则类型；带过滤的触发器只接受其配置的类型（按 OR 合并）。
+     * 按触发器逐个评估，这样未过滤的触发器不会被兄弟的过滤触发器所收窄。
      */
     private boolean matchesGuardrailTypeFilter(AlertEvent alertEvent, Alert alert) {
         List<AlertTrigger> guardrailTriggers = CollectionUtils.emptyIfNull(alert.triggers()).stream()
@@ -75,21 +75,21 @@ public class AlertEventEvaluationService {
 
         Set<String> failedTypes = failedGuardrailTypes(alertEvent.payload());
         if (failedTypes == null) {
-            // Unexpected payload shape — do not silently drop the event.
+            // 意外的负载结构 —— 不要静默丢弃该事件。
             return true;
         }
 
         return guardrailTriggers.stream().anyMatch(trigger -> {
             Set<String> configuredTypes = configuredGuardrailTypes(trigger);
-            // No filter on this trigger → fire on any guardrail type.
+            // 此触发器上无过滤器 → 对任意防护规则类型触发。
             return configuredTypes.isEmpty()
                     || failedTypes.stream().anyMatch(configuredTypes::contains);
         });
     }
 
     /**
-     * The set of guardrail type names present in the alert event payload, or {@code null} when the
-     * payload cannot be inspected (so callers can fail open rather than drop the event).
+     * 告警事件负载中存在的防护规则类型名称集合，当负载无法检查时为 {@code null}
+     * （这样调用方可以选择放开而不是丢弃该事件）。
      */
     private Set<String> failedGuardrailTypes(Object payload) {
         if (!(payload instanceof List<?> guardrails)) {
@@ -103,7 +103,7 @@ public class AlertEventEvaluationService {
                 .collect(Collectors.toSet());
     }
 
-    /** The guardrail type names configured on a single trigger's {@code filter:guardrail_type} configs. */
+    /** 单个触发器的 {@code filter:guardrail_type} 配置中所配置的防护规则类型名称。 */
     private Set<String> configuredGuardrailTypes(AlertTrigger trigger) {
         return CollectionUtils.emptyIfNull(trigger.triggerConfigs()).stream()
                 .filter(config -> config.type() == AlertTriggerConfigType.FILTER_GUARDRAIL_TYPE)
@@ -119,12 +119,12 @@ public class AlertEventEvaluationService {
     }
 
     private boolean isWithinProjectScope(AlertEvent alertEvent, Alert alert) {
-        // Events without a project ID are workspace-wide (e.g. prompt events) — bypass project scope
+        // 没有项目 ID 的事件是工作区级别的（例如提示词事件）—— 绕过项目范围
         if (alertEvent.projectId() == null) {
             return true;
         }
 
-        // Only inspect the trigger whose eventType matches the incoming event
+        // 只检查其 eventType 与传入事件匹配的触发器
         var matchingTriggerConfigs = CollectionUtils.isNotEmpty(alert.triggers())
                 ? alert.triggers().stream()
                         .filter(t -> t.eventType() == alertEvent.eventType())
@@ -136,7 +136,7 @@ public class AlertEventEvaluationService {
         var projectIds = AlertScopeUtils.collectProjectIds(alert.projectId(), matchingTriggerConfigs);
 
         if (projectIds.isEmpty()) {
-            // No project scope defined — alert applies to all projects
+            // 未定义项目范围 —— 告警适用于所有项目
             return true;
         }
 

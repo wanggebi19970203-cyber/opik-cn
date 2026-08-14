@@ -67,7 +67,7 @@ public class OllieDailyReportJob extends Job {
         LocalTime windowStart = windowEnd.minusMinutes(WINDOW_MINUTES);
 
         String startStr = windowStart.toString();
-        // At 00:00, window is [23:50, 00:00) — use "24:00:00" so the SQL range is continuous
+        // 在 00:00 时，时间窗口为 [23:50, 00:00)——使用 "24:00:00" 使 SQL 范围连续
         String endStr = windowEnd.equals(LocalTime.MIDNIGHT) ? "24:00:00" : windowEnd.toString();
         return new TimeWindow(startStr, endStr);
     }
@@ -78,31 +78,31 @@ public class OllieDailyReportJob extends Job {
         String startStr = window.start();
         String endStr = window.end();
 
-        log.info("Daily report job checking window [{}, {})", startStr, endStr);
+        log.info("日报作业正在检查时间窗口 [{}, {})", startStr, endStr);
 
         lockService.bestEffortLock(
                 JOB_LOCK,
                 Mono.fromRunnable(() -> triggerReports(startStr, endStr)),
                 Mono.defer(() -> {
-                    log.debug("Could not acquire lock for daily report job, another instance is running");
+                    log.debug("无法获取日报作业的锁，另一个实例正在运行");
                     return Mono.empty();
                 }),
                 Duration.ofMinutes(5),
                 Duration.ofSeconds(5),
                 true).subscribe(
-                        __ -> log.info("Daily report job completed"),
-                        error -> log.error("Daily report job failed", error));
+                        __ -> log.info("日报作业已完成"),
+                        error -> log.error("日报作业失败", error));
     }
 
     private void triggerReports(String windowStart, String windowEnd) {
         List<ReportPreference> prefs = reportService.findEnabledPreferencesInTimeWindow(windowStart, windowEnd);
-        log.info("Found {} projects scheduled in window [{}, {})", prefs.size(), windowStart, windowEnd);
+        log.info("找到 {} 个已排程的项目，时间窗口为 [{}, {})", prefs.size(), windowStart, windowEnd);
 
         for (var pref : prefs) {
             try {
                 reportService.createAndTriggerReport(pref.workspaceId(), pref.workspaceName(), pref.projectId());
             } catch (Exception e) {
-                log.error("Failed to trigger report for project '{}'", pref.projectId(), e);
+                log.error("触发项目 '{}' 的报告失败", pref.projectId(), e);
                 triggerErrorCounter.add(1, Attributes.of(
                         WORKSPACE_ID_KEY, pref.workspaceId(),
                         WORKSPACE_NAME_KEY, StringUtils.defaultIfBlank(pref.workspaceName(), pref.workspaceId()),

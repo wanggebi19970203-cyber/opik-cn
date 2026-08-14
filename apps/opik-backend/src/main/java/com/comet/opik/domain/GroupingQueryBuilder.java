@@ -17,20 +17,20 @@ import java.util.stream.IntStream;
 public class GroupingQueryBuilder {
 
     /**
-     * Regex pattern for validating JSON path keys.
+     * 用于校验 JSON 路径键的正则表达式。
      *
-     * Validates JSON paths that:
-     * - Start with '$'
-     * - May be followed by:
-     *   - Dot notation for object keys (e.g., .key, .key_name)
-     *   - Array indices (e.g., [0], [123])
-     *   - Bracket notation for string keys (e.g., ['key'], ['complex.key'])
-     * - Allows multiple segments (e.g., $.key[0]['another_key'], $.key1.key2)
+     * 校验满足以下条件的 JSON 路径：
+     * - 以 '$' 开头
+     * - 后面可以跟：
+     *   - 对象键的点号表示法（例如 .key、.key_name）
+     *   - 数组索引（例如 [0]、[123]）
+     *   - 字符串键的方括号表示法（例如 ['key']、['complex.key']）
+     * - 允许多个分段（例如 $.key[0]['another_key']、$.key1.key2）
      *
-     * Examples of valid paths:
+     * 有效路径示例：
      *   $, $.key, $['key'], $[0], $[4].model, $.key[0]['another_key'], $.key1.key2, $.input.key[4].role, $.input['key1'][12]['key2']
      *
-     * Examples of invalid paths:
+     * 无效路径示例：
      *   $[0].['model weird'], $.key with space, $[abc], $['unterminated], model.xx, $.
      *
      */
@@ -64,7 +64,7 @@ public class GroupingQueryBuilder {
     }
 
     static boolean isValidJsonPath(String path) {
-        // must start with "$" and match allowed patterns
+        // 必须以 "$" 开头并匹配允许的模式
         return path.matches(VALID_JSON_KEY_REGEXP);
     }
 }

@@ -98,7 +98,7 @@ public class ExperimentService {
     @WithSpan
     public Mono<ExperimentPage> find(
             int page, int size, @NonNull ExperimentSearchCriteria experimentSearchCriteria) {
-        log.info("Finding experiments by '{}', page '{}', size '{}'", experimentSearchCriteria, page, size);
+        log.info("按 '{}' 查找实验，页码 '{}'，每页大小 '{}'", experimentSearchCriteria, page, size);
 
         if (experimentSearchCriteria.datasetDeleted()) {
             return experimentDAO.findAllDatasetIds(DatasetCriteria.builder()
@@ -284,7 +284,7 @@ public class ExperimentService {
 
     public Flux<Experiment> findByName(String name, String projectName) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "Argument 'name' must not be blank");
-        log.info("Finding experiments by name '{}' and projectName '{}'", name, projectName);
+        log.info("按名称 '{}' 和项目名称 '{}' 查找实验", name, projectName);
 
         if (StringUtils.isBlank(projectName)) {
             return experimentDAO.findByName(name);
@@ -301,7 +301,7 @@ public class ExperimentService {
 
     public Flux<Experiment> findByName(String name, UUID projectId) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "Argument 'name' must not be blank");
-        log.info("Finding experiments by name '{}' and projectId '{}'", name, projectId);
+        log.info("按名称 '{}' 和项目ID '{}' 查找实验", name, projectId);
 
         if (projectId == null) {
             return experimentDAO.findByName(name);
@@ -312,7 +312,7 @@ public class ExperimentService {
 
     @WithSpan
     public Mono<ExperimentGroupResponse> findGroups(@NonNull ExperimentGroupCriteria criteria) {
-        log.info("Finding experiment groups by criteria '{}'", criteria);
+        log.info("按条件 '{}' 查找实验分组", criteria);
 
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -333,7 +333,7 @@ public class ExperimentService {
 
     @WithSpan
     public Mono<ExperimentGroupAggregationsResponse> findGroupsAggregations(@NonNull ExperimentGroupCriteria criteria) {
-        log.info("Finding experiment groups aggregations by criteria '{}'", criteria);
+        log.info("按条件 '{}' 查找实验分组聚合", criteria);
 
         return experimentDAO.findGroupsAggregations(criteria)
                 .collectList()
@@ -355,7 +355,7 @@ public class ExperimentService {
 
     @WithSpan
     public Mono<Experiment> getById(@NonNull UUID id) {
-        log.info("Getting experiment by id '{}'", id);
+        log.info("按ID '{}' 获取实验", id);
         return enrichExperiment(experimentDAO.getById(id), "Not found experiment with id '%s'".formatted(id))
                 .doOnEach(signal -> {
                     if (signal.isOnNext()) {
@@ -375,14 +375,14 @@ public class ExperimentService {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             String userName = ctx.get(RequestContext.USER_NAME);
 
-            log.debug("Checking if lazy aggregation trigger needed for experiment: '{}', workspaceId: '{}'",
+            log.debug("检查实验 '{}' 是否需要触发惰性聚合，workspaceId: '{}'",
                     experimentId, workspaceId);
 
             experimentAggregatesService.getExperimentFromAggregates(experimentId)
                     .hasElement()
                     .filter(inAggregates -> !inAggregates)
                     .flatMap(__ -> {
-                        log.info("Triggering lazy aggregation for experiment: '{}', workspaceId: '{}'",
+                        log.info("为实验 '{}' 触发惰性聚合，workspaceId: '{}'",
                                 experimentId, workspaceId);
                         return experimentAggregationPublisher.publish(Set.of(experimentId), workspaceId,
                                 userName);
@@ -391,16 +391,16 @@ public class ExperimentService {
                     .subscribeOn(Schedulers.boundedElastic())
                     .subscribe(
                             null,
-                            error -> log.error("Failed lazy aggregation trigger for experiment: '{}'",
+                            error -> log.error("实验 '{}' 惰性聚合触发失败",
                                     experimentId, error));
         } catch (Exception e) {
-            log.warn("Could not trigger lazy aggregation for experiment '{}': missing request context", experimentId);
+            log.warn("无法为实验 '{}' 触发惰性聚合：缺少请求上下文", experimentId);
         }
     }
 
     @WithSpan
     public Flux<Experiment> get(@NonNull ExperimentStreamRequest request) {
-        log.info("Getting experiments by '{}'", request);
+        log.info("按 '{}' 获取实验", request);
         if (StringUtils.isBlank(request.projectName())) {
             return experimentDAO.get(request, null)
                     .collectList()
@@ -495,7 +495,7 @@ public class ExperimentService {
     public Mono<UUID> create(@NonNull Experiment experiment) {
         var id = experiment.id() == null ? idGenerator.generateId() : experiment.id();
         IdGenerator.validateVersion(id, "Experiment");
-        // optimizationId is stored without an existence check, so enforce v7 to avoid storing an orphan v4.
+        // optimizationId 存储时不进行存在性检查，因此强制使用 v7 以避免存储孤立的 v4。
         idGenerator.validateIdNotInFutureIfPresent(experiment.optimizationId(), "optimization");
         var name = StringUtils.getIfBlank(experiment.name(), nameGenerator::generateName);
         return resolveProjectId(experiment)
@@ -519,7 +519,7 @@ public class ExperimentService {
                                     })
                                     .switchIfEmpty(Mono.defer(() -> {
                                         log.info(
-                                                "No dataset version found for dataset '{}', creating experiment with null dataset_version_id",
+                                                "未找到数据集 '{}' 的数据集版本，将以 null dataset_version_id 创建实验",
                                                 datasetId);
                                         var experimentWithNullVersion = resolvedExperiment.toBuilder()
                                                 .datasetVersionId(null)
@@ -587,7 +587,7 @@ public class ExperimentService {
 
             // 情况1：显式提供了版本ID - 验证并使用它
             if (experiment.datasetVersionId() != null) {
-                log.info("Validating explicitly provided dataset version ID '{}' for experiment on dataset '{}'",
+                log.info("验证显式提供的数据集版本ID '{}'（实验所属数据集 '{}'）",
                         experiment.datasetVersionId(), datasetId);
                 return Mono.fromCallable(() -> {
                     var version = datasetVersionService.getVersionById(workspaceId, datasetId,
@@ -599,13 +599,13 @@ public class ExperimentService {
                                         .formatted(experiment.datasetVersionId(), datasetId));
                     }
 
-                    log.info("Using validated dataset version ID '{}' for experiment on dataset '{}'",
+                    log.info("使用已验证的数据集版本ID '{}' 用于数据集 '{}' 上的实验",
                             version.id(), datasetId);
                     return new ResolvedVersion(version.id(), version.executionPolicy());
                 }).subscribeOn(Schedulers.boundedElastic())
                         .onErrorResume(e -> {
                             if (e instanceof NotFoundException) {
-                                log.warn("Dataset version not found: '{}'", e.getMessage(), e);
+                                log.warn("未找到数据集版本：'{}'", e.getMessage(), e);
                                 return Mono.error(new ClientErrorException("Dataset version not found",
                                         Response.Status.CONFLICT));
                             }
@@ -620,12 +620,12 @@ public class ExperimentService {
                         if (latestVersion.isPresent()) {
                             var v = latestVersion.get();
                             log.info(
-                                    "No version specified, using latest version '{}' for experiment on dataset '{}'",
+                                    "未指定版本，使用最新版本 '{}' 用于数据集 '{}' 上的实验",
                                     v.id(), datasetId);
                             return Mono.just(new ResolvedVersion(v.id(), v.executionPolicy()));
                         }
                         log.warn(
-                                "No latest version found for dataset '{}', experiment will have null dataset_version_id",
+                                "未找到数据集 '{}' 的最新版本，实验将具有 null dataset_version_id",
                                 datasetId);
                         return Mono.empty();
                     });
@@ -666,7 +666,7 @@ public class ExperimentService {
                 .datasetId(datasetId)
                 .createdAt(Instant.now())
                 .build();
-        log.info("Inserting experiment with id '{}', name '{}', datasetId '{}', datasetName '{}'",
+        log.info("插入实验，id '{}'，name '{}'，datasetId '{}'，datasetName '{}'",
                 newExperiment.id(), newExperiment.name(), newExperiment.datasetId(), newExperiment.datasetName());
         var executionPolicyJson = ExecutionPolicyMapper.serialize(executionPolicy);
         return makeMonoContextAware(
@@ -678,7 +678,7 @@ public class ExperimentService {
     }
 
     private void postExperimentCreatedEvent(Experiment partialExperiment, String workspaceId, String userName) {
-        log.info("Posting experiment created event for experiment id '{}', datasetId '{}', workspaceId '{}'",
+        log.info("发布实验创建事件，实验ID '{}'，datasetId '{}'，workspaceId '{}'",
                 partialExperiment.id(), partialExperiment.datasetId(), workspaceId);
         eventBus.post(new ExperimentCreated(
                 partialExperiment.id(),
@@ -693,7 +693,7 @@ public class ExperimentService {
                 workspaceId,
                 userName,
                 Optional.ofNullable(partialExperiment.type()).orElse(ExperimentType.REGULAR)));
-        log.info("Posted experiment created event for experiment id '{}', datasetId '{}', workspaceId '{}'",
+        log.info("已发布实验创建事件，实验ID '{}'，datasetId '{}'，workspaceId '{}'",
                 partialExperiment.id(), partialExperiment.datasetId(), workspaceId);
 
         trackEvalSuiteRunIfApplicable(partialExperiment, workspaceId, userName);
@@ -710,7 +710,7 @@ public class ExperimentService {
                                 "experiment_id", experiment.id().toString(),
                                 "project_id", String.valueOf(experiment.projectId())), userName));
             } catch (Exception e) {
-                log.warn("Failed to track eval_suite_run analytics event for experiment '{}'",
+                log.warn("为实验 '{}' 跟踪 eval_suite_run 分析事件失败",
                         experiment.id(), e);
             }
         });
@@ -720,16 +720,16 @@ public class ExperimentService {
         if (throwable instanceof ClickHouseException
                 && throwable.getMessage().contains("TOO_LARGE_STRING_SIZE")
                 && throwable.getMessage().contains("_CAST(id, FixedString(36))")) {
-            log.warn("Already exists experiment with id '{}'", id);
+            log.warn("已存在ID为 '{}' 的实验", id);
             return Mono.just(id);
         }
-        log.error("Unexpected exception creating experiment with id '{}'", id);
+        log.error("创建ID为 '{}' 的实验时发生意外异常", id);
         return Mono.error(throwable);
     }
 
     @WithSpan
     public Mono<Void> update(@NonNull UUID id, @NonNull ExperimentUpdate experimentUpdate) {
-        log.info("Updating experiment with id '{}'", id);
+        log.info("更新ID为 '{}' 的实验", id);
 
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -743,12 +743,12 @@ public class ExperimentService {
                                 : experiment.status();
                         return experimentDAO.update(id, experimentUpdate)
                                 .doOnSuccess(unused -> {
-                                    log.info("Successfully updated experiment with id '{}'", id);
+                                    log.info("成功更新ID为 '{}' 的实验", id);
                                     eventBus.post(new ExperimentUpdated(id, effectiveStatus, workspaceId, userName));
                                 })
                                 .onErrorResume(TagOperations::mapTagLimitError)
                                 .onErrorResume(throwable -> {
-                                    log.error("Failed to update experiment with id '{}'", id, throwable);
+                                    log.error("更新ID为 '{}' 的实验失败", id, throwable);
                                     return Mono.error(throwable);
                                 });
                     });
@@ -756,7 +756,7 @@ public class ExperimentService {
     }
 
     public Mono<Void> batchUpdate(@NonNull ExperimentBatchUpdate batchUpdate) {
-        log.info("Batch updating '{}' experiments", batchUpdate.ids().size());
+        log.info("批量更新 '{}' 个实验", batchUpdate.ids().size());
 
         boolean mergeTags = batchUpdate.mergeTags();
         return Mono.deferContextual(ctx -> {
@@ -766,7 +766,7 @@ public class ExperimentService {
                     .collectMap(Experiment::id, Experiment::status)
                     .flatMap(currentStatuses -> experimentDAO.update(batchUpdate.ids(), batchUpdate.update(), mergeTags)
                             .doOnSuccess(__ -> {
-                                log.info("Completed batch update for '{}' experiments",
+                                log.info("已完成 '{}' 个实验的批量更新",
                                         batchUpdate.ids().size());
                                 batchUpdate.ids().forEach(id -> {
                                     var effectiveStatus = batchUpdate.update().status() != null
@@ -780,7 +780,7 @@ public class ExperimentService {
                             }))
                     .onErrorResume(TagOperations::mapTagLimitError)
                     .onErrorResume(throwable -> {
-                        log.error("Failed to complete batch update of the '{}' experiments",
+                        log.error("完成 '{}' 个实验的批量更新失败",
                                 batchUpdate.ids().size(), throwable);
                         return Mono.error(throwable);
                     });
@@ -815,13 +815,13 @@ public class ExperimentService {
             String workspaceName = ctx.get(RequestContext.WORKSPACE_NAME);
             String userName = ctx.get(RequestContext.USER_NAME);
 
-            log.info("Finishing experiments, count '{}', workspaceId '{}'", ids.size(), workspaceId);
+            log.info("完成实验，数量 '{}'，workspaceId '{}'", ids.size(), workspaceId);
 
             return experimentDAO.getByIds(ids)
                     .collectList()
                     .doOnNext(experiments -> {
                         if (CollectionUtils.isNotEmpty(experiments)) {
-                            log.info("Raising alert event for finished experiments, count '{}'", experiments.size());
+                            log.info("为已完成的实验触发告警事件，数量 '{}'", experiments.size());
                             experiments.stream()
                                     .collect(Collectors.groupingBy(
                                             e -> Optional.ofNullable(e.projectId())))
@@ -837,7 +837,7 @@ public class ExperimentService {
                     })
                     .then(Mono.defer(() -> experimentAggregationPublisher.publish(ids, workspaceId, userName)
                             .onErrorResume(error -> {
-                                log.error("Failed to publish aggregation for finished experiments, workspaceId '{}'",
+                                log.error("为已完成的实验发布聚合失败，workspaceId '{}'",
                                         workspaceId, error);
                                 return Mono.empty();
                             })));
@@ -868,7 +868,7 @@ public class ExperimentService {
 
     @WithSpan
     public Mono<BiInformationResponse> getExperimentBIInformation() {
-        log.info("Getting experiment BI events daily data");
+        log.info("获取实验 BI 事件每日数据");
         return experimentDAO.getExperimentBIInformation()
                 .collectList()
                 .flatMap(items -> Mono.just(

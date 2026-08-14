@@ -239,17 +239,17 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
             ;
             """;
 
-    // Shared with ProjectMetricsDAO via SpanMetricsQueries. Workspace aggregation queries an explicit set of
-    // projects: WorkspaceMetricsService resolves the "all projects" request into every project id up front, so the
-    // predicate is always a bounded `project_id IN :project_ids` list that prunes on the spans primary key
-    // (workspace_id, project_id, ...) — never an unconstrained workspace-wide scan.
+    // 通过 SpanMetricsQueries 与 ProjectMetricsDAO 共享。工作区聚合查询显式的项目集合：
+    // WorkspaceMetricsService 会预先将 "all projects" 请求解析为每个项目 id，因此
+    // 谓词始终是有界的 `project_id IN :project_ids` 列表，可在 spans 主键
+    // (workspace_id, project_id, ...) 上裁剪——绝不会进行无约束的全工作区扫描。
     private static final String SPAN_FILTERED_PREFIX = SpanMetricsQueries
             .spanFilteredPrefix("project_id IN :project_ids");
 
-    // Span filtering is reused from ProjectMetricsDAO's SPAN_FILTERED_PREFIX (above), but the output is shaped in the
-    // workspace-native style like GET_COSTS_DAILY: each row is a finished series {project_id, name, data}, where data is
-    // a groupArray(tuple(bucket, value)). No breakdown => one series per usage key; with a provider/model breakdown =>
-    // one series per group, mirroring how GET_COSTS_DAILY_BY_PROJECT groups by project.
+    // Span 过滤复用了 ProjectMetricsDAO 的 SPAN_FILTERED_PREFIX（见上文），但输出按照
+    // 与 GET_COSTS_DAILY 相同的工作区原生风格来组织：每一行是一个完整的序列 {project_id, name, data}，其中 data 是
+    // groupArray(tuple(bucket, value))。无拆分时 => 每个 usage 键一个序列；带 provider/model 拆分时 =>
+    // 每个分组一个序列，与 GET_COSTS_DAILY_BY_PROJECT 按项目分组的方式一致。
     private static final String GET_SPAN_TOKEN_USAGE = """
             %s, spans_usage AS (
                 SELECT span_time,
@@ -305,8 +305,8 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
             SETTINGS log_comment = '<log_comment>';
             """.formatted(SPAN_FILTERED_PREFIX);
 
-    // Distinct span token-usage key names across an explicit project set, all-time. Shares SpanMetricsQueries with
-    // ProjectMetricsDAO's per-project query; only the project predicate differs (a bounded project_id IN (...) list).
+    // 在显式的项目集合上、全时段范围内去重 span token-usage 的键名。与 ProjectMetricsDAO 的按项目查询
+    // 共享 SpanMetricsQueries；只有项目谓词不同（有界的 project_id IN (...) 列表）。
     private static final String GET_WORKSPACE_TOKEN_USAGE_NAMES = SpanMetricsQueries
             .tokenUsageNames("project_id IN :project_ids");
 
@@ -317,8 +317,8 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
             TimeInterval.DAILY, "toIntervalDay(1)",
             TimeInterval.HOURLY, "toIntervalHour(1)");
 
-    // Span-filter strategies with the SPAN_FILTERED_PREFIX template placeholder each renders into. Drives both the
-    // template `add` pass and the statement `bind` pass so a strategy is declared once, not on two sides that can drift.
+    // 每个 Span 过滤策略所渲染到的 SPAN_FILTERED_PREFIX 模板占位符。同时驱动
+    // 模板 `add` 阶段和语句 `bind` 阶段，使每个策略只声明一次，而无需在可能漂移的两处维护。
     private static final Map<FilterStrategy, String> SPAN_FILTER_TEMPLATE_PLACEHOLDERS = Map.of(
             FilterStrategy.SPAN, "span_filters",
             FilterStrategy.SPAN_FEEDBACK_SCORES, "span_feedback_scores_filters",
@@ -379,8 +379,8 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
 
     @Override
     public Mono<List<String>> getWorkspaceTokenUsageNames(@NonNull Set<UUID> projectIds) {
-        // The service resolves "all projects" into the explicit project set before calling the DAO, so the query is
-        // always bounded by project_id IN (...) and prunes on the spans primary key rather than scanning the workspace.
+        // 服务在调用 DAO 之前已将 "all projects" 解析为显式的项目集合，因此查询
+        // 始终以 project_id IN (...) 为界，并在 spans 主键上裁剪，而不是扫描整个工作区。
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(projectIds),
                 "projectIds must be resolved before querying workspace token usage names");
         return template.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
@@ -402,8 +402,8 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
 
     private Mono<? extends Result> getSpanMetric(WorkspaceSpanMetricRequest request, Connection connection,
             String query, String segmentName) {
-        // The service resolves "all projects" into the explicit project set before calling the DAO, so the query is
-        // always bounded by project_id IN (...) and prunes on the spans primary key rather than scanning the workspace.
+        // 服务在调用 DAO 之前已将 "all projects" 解析为显式的项目集合，因此查询
+        // 始终以 project_id IN (...) 为界，并在 spans 主键上裁剪，而不是扫描整个工作区。
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(request.projectIds()),
                 "projectIds must be resolved before querying workspace span metrics");
         return makeMonoContextAware((userName, workspaceId) -> {
@@ -453,7 +453,7 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
                 statement.bind("metadata_key", request.breakdown().metadataKey());
             }
 
-            // SPAN_TOKEN_USAGE breakdown sums a single token-usage entry, selected by its name (sub_metric)
+            // SPAN_TOKEN_USAGE 拆分按名称 (sub_metric) 选中并累加单个 token-usage 条目
             if (request.hasBreakdown() && request.metricType() == MetricType.SPAN_TOKEN_USAGE) {
                 statement.bind("sub_metric", Optional.ofNullable(request.breakdown().subMetric()).orElse(""));
             }
@@ -546,10 +546,10 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
     }
 
     private Instant getPriorStart(Instant intervalStart, Instant intervalEnd) {
-        // Calculate duration between the two timestamps
+        // 计算两个时间戳之间的时长
         Duration duration = Duration.between(intervalStart, intervalEnd);
 
-        // Subtract the duration from intervalStart to get prior start timestamp
+        // 从 intervalStart 减去该时长以得到前一个起始时间戳
         return intervalStart.minus(duration);
     }
 
@@ -579,8 +579,8 @@ class WorkspaceMetricsDAOImpl implements WorkspaceMetricsDAO {
         return dataItems.isEmpty() ? null : dataItems;
     }
 
-    // Bucket timestamps come back as OffsetDateTime for DateTime64 columns (e.g. the cost query's start_time) but as
-    // LocalDateTime for plain DateTime expressions (e.g. UUIDv7ToDateTime-derived span_time). Both represent UTC.
+    // 对于 DateTime64 列（如 cost 查询的 start_time），bucket 时间戳以 OffsetDateTime 返回；而对于
+    // 普通的 DateTime 表达式（如由 UUIDv7ToDateTime 派生的 span_time），则以 LocalDateTime 返回。二者都表示 UTC。
     private Instant toInstant(Object bucket) {
         return switch (bucket) {
             case OffsetDateTime offsetDateTime -> offsetDateTime.toInstant();

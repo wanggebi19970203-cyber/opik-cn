@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * The table a deletion-events bridge row was captured from, stored as the {@code source_table} column.
+ * 删除事件桥接行所来源的表，存储为 {@code source_table} 列。
  */
 @Getter
 @RequiredArgsConstructor

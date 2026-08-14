@@ -19,10 +19,10 @@ public class RetryUtils {
 
     public static RetryBackoffSpec handleConnectionError() {
         return Retry.backoff(3, Duration.ofMillis(100))
-                .doBeforeRetry(retrySignal -> log.warn("Retrying due to: {}", retrySignal.failure().getMessage()))
+                .doBeforeRetry(retrySignal -> log.warn("因以下原因重试: {}", retrySignal.failure().getMessage()))
                 .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> retrySignal.failure())
                 .filter(throwable -> {
-                    log.debug("Filtering for retry: {}", throwable.getMessage());
+                    log.debug("为重试进行过滤: {}", throwable.getMessage());
 
                     return SocketException.class.isAssignableFrom(throwable.getClass())
                             || (throwable instanceof IllegalStateException
@@ -33,12 +33,12 @@ public class RetryUtils {
     public static RetryBackoffSpec handleOnDeadLocks() {
         return Retry.backoff(5, Duration.ofMillis(250))
                 .maxBackoff(Duration.ofSeconds(2))
-                .jitter(0.5) // Add jitter to reduce thundering herd effect
-                .doBeforeRetry(retrySignal -> log.warn("Retrying due to database deadlock",
+                .jitter(0.5) // 添加抖动以减少惊群效应
+                .doBeforeRetry(retrySignal -> log.warn("因数据库死锁而重试",
                         retrySignal.failure()))
                 .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> retrySignal.failure())
                 .filter(throwable -> {
-                    log.debug("Filtering for retry due to database deadlock", throwable);
+                    log.debug("因数据库死锁为重试进行过滤", throwable);
 
                     return isDatabaseDeadlock(throwable);
                 });
@@ -60,20 +60,20 @@ public class RetryUtils {
     }
 
     /**
-     * Retry specification for handling transient HTTP errors such as timeouts and connection issues.
+     * 处理瞬时 HTTP 错误（如超时和连接问题）的重试规范。
      *
-     * @param maxAttempts Maximum number of retry attempts.
-     * @param minBackoff  Minimum backoff duration between retries.
-     * @param maxBackoff  Maximum backoff duration between retries.
-     * @return Configured RetryBackoffSpec instance.
+     * @param maxAttempts 最大重试次数。
+     * @param minBackoff  两次重试之间的最小退避时长。
+     * @param maxBackoff  两次重试之间的最大退避时长。
+     * @return 已配置的 RetryBackoffSpec 实例。
      */
     public static RetryBackoffSpec handleHttpErrors(int maxAttempts, Duration minBackoff, Duration maxBackoff) {
         return Retry.backoff(maxAttempts, minBackoff)
                 .maxBackoff(maxBackoff)
-                .doBeforeRetry(retrySignal -> log.warn("Retrying due to: {}", retrySignal.failure().getMessage()))
+                .doBeforeRetry(retrySignal -> log.warn("因以下原因重试: {}", retrySignal.failure().getMessage()))
                 .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> retrySignal.failure())
                 .filter(throwable -> {
-                    log.debug("Filtering for retry: {}", throwable.getMessage());
+                    log.debug("为重试进行过滤: {}", throwable.getMessage());
                     return isRetriableException(throwable);
                 });
     }
@@ -86,24 +86,24 @@ public class RetryUtils {
         String className = throwable.getClass().getName();
         String message = throwable.getMessage();
 
-        // Check for MySQL transaction rollback exception (deadlock)
+        // 检查 MySQL 事务回滚异常（死锁）
         boolean isMySQLDeadlock = "com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException".equals(className)
                 && message != null && message.contains("Deadlock found");
 
-        // If not a direct match, check the cause recursively
+        // 如果不是直接匹配，递归检查 cause
         return isMySQLDeadlock || (throwable.getCause() != null && isDatabaseDeadlock(throwable.getCause()));
     }
 
     private static boolean isRetriableException(Throwable throwable) {
         return switch (throwable) {
-            // Network and timeout transient errors
+            // 网络和超时瞬时错误
             case SocketException ex -> true;
             case TimeoutException ex -> true;
             case InterruptedIOException ex -> true;
-            // HTTP client transient errors (server closes connection, temporary unavailability)
+            // HTTP 客户端瞬时错误（服务器关闭连接、暂时不可用）
             case NoHttpResponseException ex -> true;
             case RetryableHttpException ex -> true;
-            // Wrapped exceptions: check cause recursively for transient errors
+            // 包装的异常：递归检查 cause 以查找瞬时错误
             case ProcessingException ex -> {
                 var cause = ex.getCause();
                 yield cause != null && isRetriableException(cause);

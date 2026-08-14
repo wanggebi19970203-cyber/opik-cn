@@ -48,15 +48,14 @@ import static com.comet.opik.infrastructure.log.LogContextAware.withMdc;
 import static com.comet.opik.infrastructure.log.LogContextAware.wrapWithMdc;
 
 /**
- * This service listens to a Redis stream for Spans to be scored in a LLM provider. It renders the
- * evaluator's message templates with values from the Span and prepares the structured-output schema.
+ * 此服务监听 Redis 流，以获取要在 LLM 提供方中评分的 Span。它使用 Span 中的值渲染
+ * 评估器的消息模板，并准备结构化输出模式。
  *
- * <p>By default scoring is inline (template variables substituted, one LLM call). When a rule's prompt
- * references the {@code {{span}}} structure variable (and the {@code agentic_tools} toggle is on and the
- * provider supports tool-calling), the scorer instead injects a compact span structure (span id + the
- * span's own attachment {@code file_name}s) and runs the agentic tool loop, so the judge can call
- * {@code get_attachment(type=span, ...)} / {@code read} / {@code jq} to load and inspect the span's
- * attachments. Span-level analogue of the {@code {{trace}}} path in {@link OnlineScoringLlmAsJudgeScorer}.
+ * <p>默认情况下评分是内联的（替换模板变量，一次 LLM 调用）。当规则的提示词引用了 {@code {{span}}}
+ * 结构变量（且 {@code agentic_tools} 开关开启、提供方支持工具调用）时，评分器改为注入一个紧凑的
+ * span 结构（span id + span 自身的附件 {@code file_name}）并运行 agentic 工具循环，使评判器可以调用
+ * {@code get_attachment(type=span, ...)} / {@code read} / {@code jq} 来加载和检查 span 的附件。
+ * 这是 {@link OnlineScoringLlmAsJudgeScorer} 中 {@code {{trace}}} 路径的跨度级别对应物。
  */
 @EagerSingleton
 @Slf4j
@@ -96,20 +95,20 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
         if (serviceTogglesConfig.isSpanLlmAsJudgeEnabled()) {
             super.start();
         } else {
-            log.info("Online Scoring Span LLM as Judge consumer won't start as it is disabled");
+            log.info("在线评分 Span LLM 评判器消费者因被禁用而不会启动");
         }
     }
 
     /**
-     * Use AI Proxy to score the span and store it as a FeedbackScore.
-     * If the evaluator has multiple score definitions, it calls the LLM once per score definition.
+     * 使用 AI Proxy 对 span 评分并将其存储为 FeedbackScore。
+     * 如果评估器有多个分数定义，它会为每个分数定义调用一次 LLM。
      *
-     * @param message a Redis message with the Span to score with an Evaluator code, workspace and username.
+     * @param message 一条 Redis 消息，包含要使用评估器代码、工作区和用户名评分的 Span。
      */
     @Override
     protected Mono<Void> score(@NonNull SpanToScoreLlmAsJudge message) {
         var span = message.span();
-        log.info("Message received with spanId '{}', userName '{}', to be scored in '{}'",
+        log.info("收到消息，spanId '{}'、userName '{}'，将在 '{}' 中评分",
                 span.id(), message.userName(), message.llmAsJudgeCode().model().name());
 
         var mdc = Map.of(
@@ -118,21 +117,20 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
                 UserLog.SPAN_ID, span.id().toString(),
                 UserLog.RULE_ID, message.ruleId().toString());
 
-        // The {{span}} variable is the declarative agentic trigger. Detection is independent of the
-        // agentic-tools toggle so the variable is always substituted (never leaking the bare "span"
-        // sentinel as a literal):
-        //   - toggle ON  → build the real span structure (span id + attachment file_names); if the
-        //                  provider supports tools, run the agentic loop so the judge can get_attachment.
-        //   - toggle OFF → skip the attachment fetch and inject a null structure, so {{span}} renders as
-        //                  "{}" inline (handled by the inline branch in prepareEvaluation).
+        // {{span}} 变量是声明式的 agentic 触发器。检测独立于 agentic 工具开关，
+        // 因此该变量始终被替换（绝不会泄漏裸 "span" 哨兵字面量）：
+        //   - 开关开 → 构建真实的 span 结构（span id + 附件 file_name）；如果提供方支持工具，
+        //              运行 agentic 循环，使评判器可以 get_attachment。
+        //   - 开关关 → 跳过附件获取并注入空结构，因此 {{span}} 在内联中渲染为
+        //              "{}"（由 prepareEvaluation 中的内联分支处理）。
         boolean referencesSpan = OnlineScoringEngine.templateReferencesSpanStructure(
                 message.llmAsJudgeCode().messages(),
                 message.llmAsJudgeCode().variables(),
                 PromptType.MUSTACHE);
         boolean agenticToolsEnabled = serviceTogglesConfig.isAgenticToolsEnabled();
 
-        // Monitoring recorder (OPIK-6994): one hidden source=evaluator trace per span evaluation with an
-        // llm span for the scoring call. NOOP when the toggle is off — no extra writes.
+        // 监控记录器（OPIK-6994）：每次 span 评估一个隐藏的 source=evaluator trace，
+        // 评分调用对应一个 llm span。开关关闭时为 NOOP——没有额外写入。
         EvaluationRecorder recorder = serviceTogglesConfig.isOnlineScoringTracingEnabled()
                 ? onlineEvaluationRecorder.begin(span, message.ruleId(), message.ruleName(),
                         message.llmAsJudgeCode().model().name(), message.workspaceId(), message.userName())
@@ -146,9 +144,9 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
         return recorder.monitor(scoresMono)
                 .flatMap(scores -> storeSpanScores(scores, span, message.userName(), message.workspaceId()))
                 .doOnNext(withMdc(mdc, loggedScores -> userFacingLogger
-                        .info("Scores for spanId '{}' stored successfully:\n\n{}", span.id(), loggedScores)))
+                        .info("spanId '{}' 的分数已成功存储：\n\n{}", span.id(), loggedScores)))
                 .doOnError(withMdc(mdc, error -> userFacingLogger
-                        .error("Unexpected error while scoring spanId '{}' with rule '{}': \n\n{}",
+                        .error("对 spanId '{}' 使用规则 '{}' 评分时发生意外错误：\n\n{}",
                                 span.id(), message.ruleName(),
                                 Optional.ofNullable(error.getCause()).map(Throwable::getMessage)
                                         .orElse(error.getMessage()))))
@@ -156,12 +154,11 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
     }
 
     /**
-     * Builds the {@code {{span}}} structure injected into the prompt: a small envelope
-     * ({@code span_id} + the span's own {@code attachments} list + {@code data} = the span JSON) so the
-     * judge has the real span id and attachment {@code file_name}s inline and can call
-     * {@code get_attachment(type=span, id=<span_id>, file_name=...)} with correct values. The attachment
-     * metadata isn't carried on the {@link Span} object, so it's fetched via a single best-effort lookup
-     * — a listing failure degrades to no attachments rather than blocking scoring.
+     * 构建注入提示词的 {@code {{span}}} 结构：一个小信封
+     * （{@code span_id} + span 自身的 {@code attachments} 列表 + {@code data} = span JSON），
+     * 使评判器内联拥有真实的 span id 和附件 {@code file_name}，并能用正确的值调用
+     * {@code get_attachment(type=span, id=<span_id>, file_name=...)}。附件元数据不携带在
+     * {@link Span} 对象上，因此通过一次尽力而为的查找获取——列表失败会降级为无附件，而不是阻塞评分。
      */
     private Mono<String> buildSpanStructure(Span span, SpanToScoreLlmAsJudge message) {
         return fetchSpanAttachments(span, message)
@@ -175,9 +172,8 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
     }
 
     /**
-     * Lists the span's own attachments, tolerating the upload race via
-     * {@link AgenticScoringService#listAttachmentsToleratingUploadRace} (gated on the span body
-     * referencing an attachment).
+     * 列出 span 自身的附件，通过 {@link AgenticScoringService#listAttachmentsToleratingUploadRace}
+     * 容忍上传竞态（以 span 正文引用附件为门控）。
      */
     private Mono<List<AttachmentInfo>> fetchSpanAttachments(Span span, SpanToScoreLlmAsJudge message) {
         Mono<List<AttachmentInfo>> fetch = attachmentService
@@ -194,19 +190,19 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
             String spanStructureJson, boolean referencesSpan, Map<String, String> mdc,
             EvaluationRecorder recorder) {
         var span = message.span();
-        // Sync prep (prompt rendering) is CPU-bound — schedule on Schedulers.parallel() so we don't tax
-        // the R2DBC scheduler that emits the attachment fetch upstream. MDC is re-applied via withMdc()
-        // on the reactive operators below because they may run on a different thread.
+        // 同步准备（提示词渲染）是 CPU 密集的——在 Schedulers.parallel() 上调度，
+        // 这样就不会加重上游发出附件获取的 R2DBC 调度器的负担。MDC 通过 withMdc()
+        // 在下面的响应式操作符上重新应用，因为它们可能运行在不同的线程上。
         return Mono.fromCallable(() -> prepareEvaluation(message, spanStructureJson, referencesSpan, mdc))
                 .subscribeOn(Schedulers.parallel())
                 .flatMap(prepared -> {
-                    // No span-fetch or token estimate on the span path; record the mode decision so the
-                    // parent monitoring trace still reflects agentic vs inline.
+                    // span 路径上没有 span 获取或 token 估算；记录模式决策，
+                    // 使父监控 trace 仍能反映 agentic 与内联的区分。
                     recorder.recordPreparation(0, 0, prepared.useTools());
                     return scoreSpanReactive(prepared.scoreRequest(), message, recorder)
                             .doOnNext(withMdc(mdc, chatResponse -> {
                                 if (userFacingLogger.isInfoEnabled()) {
-                                    userFacingLogger.info("Received response for spanId '{}': '{}'",
+                                    userFacingLogger.info("收到 spanId '{}' 的响应：'{}'",
                                             span.id(), agenticScoringService.summarizeResponse(chatResponse));
                                 }
                             }))
@@ -236,25 +232,24 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
             boolean referencesSpan, Map<String, String> mdc) {
         var span = message.span();
         try (var logContext = wrapWithMdc(mdc)) {
-            userFacingLogger.info("Evaluating spanId '{}' sampled by rule '{}'", span.id(), message.ruleName());
+            userFacingLogger.info("正在评估 spanId '{}'，由规则 '{}' 采样", span.id(), message.ruleName());
 
             String modelName = message.llmAsJudgeCode().model().name();
             boolean agenticToolsEnabled = serviceTogglesConfig.isAgenticToolsEnabled();
             boolean providerSupportsTools = agenticScoringService.supportsToolCalling(
                     llmProviderFactory.getLlmProvider(modelName));
-            // Tools require the {{span}} trigger AND the agentic-tools toggle AND a tool-calling provider.
-            // The {{span}} substitution itself is independent of tools — see the inline branch below.
+            // 工具需要 {{span}} 触发器 AND agentic 工具开关 AND 支持工具调用的提供方。
+            // {{span}} 替换本身独立于工具——参见下面的内联分支。
             boolean useTools = referencesSpan && agenticToolsEnabled && providerSupportsTools;
 
             if (referencesSpan && agenticToolsEnabled && !providerSupportsTools) {
-                // Actionable misconfiguration: the prompt references {{span}} (so the user expects
-                // tool-driven inspection / attachment loading) but the chosen model's provider can't
-                // call tools. We still inject the structure inline so the judge at least sees the ids.
+                // 可操作的配置错误：提示词引用了 {{span}}（因此用户期望工具驱动的检查 / 附件加载），
+                // 但所选模型的提供方无法调用工具。我们仍在内联中注入结构，使评判器至少能看到 id。
                 userFacingLogger.warn(
-                        "Span '{}' rule references {{span}} but provider for model '{}' does not support tool"
-                                + " calling; falling back to inline path — the judge cannot load attachments."
-                                + " Pick a tool-calling provider (OpenAI / Anthropic / Gemini / OpenRouter /"
-                                + " Vertex / Bedrock).",
+                        "跨度 '{}' 的规则引用了 {{span}}，但模型 '{}' 的提供方不支持工具调用；"
+                                + "回退到内联路径——评判器无法加载附件。"
+                                + "请选择一个支持工具调用的提供方（OpenAI / Anthropic / Gemini / OpenRouter /"
+                                + " Vertex / Bedrock）。",
                         span.id(), modelName);
             }
 
@@ -270,12 +265,12 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
                     requests = buildPlainRequests(message, span, modelName);
                 }
             } catch (Exception exception) {
-                userFacingLogger.error("Error preparing LLM request for spanId '{}':",
+                userFacingLogger.error("为 spanId '{}' 准备 LLM 请求时出错：",
                         span.id(), exception);
                 throw exception;
             }
 
-            userFacingLogger.info("Sending spanId '{}' to LLM: {}",
+            userFacingLogger.info("将 spanId '{}' 发送到 LLM：{}",
                     span.id(), agenticScoringService.summarizeRequest(requests.score(), modelName, useTools));
 
             return PreparedEvaluation.builder()
@@ -286,16 +281,15 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
         }
     }
 
-    /** Score and structured-output requests produced by one of the {@code build*Requests} branches. */
+    /** 由 {@code build*Requests} 分支之一产生的评分和结构化输出请求。 */
     @Builder(toBuilder = true)
     private record LlmRequests(ChatRequest score, ChatRequest structured) {
     }
 
     /**
-     * {@code useTools}: {{span}} + agentic tools + tool-calling provider. The tool-loop request uses the
-     * soft InstructionStrategy; the wrap-up uses the provider-native structured-output strategy (same
-     * asymmetry as the trace scorer — Anthropic in particular returns prose at the wrap-up turn under
-     * InstructionStrategy).
+     * {@code useTools}：{{span}} + agentic 工具 + 支持工具调用的提供方。工具循环请求使用软
+     * InstructionStrategy；收尾使用提供方原生的结构化输出策略（与 trace 评分器相同的不对称性——
+     * 在 InstructionStrategy 下 Anthropic 尤其会在收尾轮返回散文）。
      */
     private LlmRequests buildToolCallingRequests(SpanToScoreLlmAsJudge message, Span span, String modelName,
             String spanStructureJson) {
@@ -310,17 +304,16 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
                 message.llmAsJudgeCode(), span,
                 llmProviderFactory.getStructuredOutputStrategy(modelName),
                 onlineScoringConfig.getMaxPromptFieldChars(), drillDownHint, spanStructureJson);
-        // REQUIRED on the first call only forces ≥1 tool call; follow-ups switch to AUTO in
-        // handleToolCalls so the model can decide when to stop investigating.
+        // 仅在第一次调用时 REQUIRED 强制至少一次工具调用；后续轮在 handleToolCalls 中切换到 AUTO，
+        // 使模型可以决定何时停止调查。
         scoreRequest = agenticScoringService.addToolSpecs(scoreRequest, ToolChoice.REQUIRED);
         return LlmRequests.builder().score(scoreRequest).structured(structuredRequest).build();
     }
 
     /**
-     * Inline fallback: {{span}} on a non-tool-calling provider (toggle ON, real structure). No read/jq
-     * tools to drill in, so cap the substitutions to bound the context window — otherwise a large span
-     * would inject uncapped and could overflow the model's context. No drill-down hint: the model can't
-     * act on one, so over-cap values are just truncated.
+     * 内联回退：非工具调用提供方上的 {{span}}（开关开启，真实结构）。没有 read/jq 工具可向下钻取，
+     * 因此截断替换以限制上下文窗口——否则大型 span 会以不截断的方式注入，并可能溢出模型的上下文。
+     * 没有向下钻取提示：模型无法对其采取行动，因此超出上限的值只是被截断。
      */
     private LlmRequests buildInlineStructureRequests(SpanToScoreLlmAsJudge message, Span span,
             String modelName, String spanStructureJson) {
@@ -332,9 +325,8 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
     }
 
     /**
-     * Inline path that still injects the {{span}} structure so the variable renders rather than leaking
-     * the bare sentinel. Toggle OFF: spanStructureJson is null → renders "{}" (tiny, no cap needed; user
-     * variables stay uncapped as on the normal inline path).
+     * 仍注入 {{span}} 结构的内联路径，使变量得以渲染而不是泄漏裸哨兵。
+     * 开关关闭：spanStructureJson 为 null → 渲染 "{}"（很小，无需截断；用户变量像正常内联路径一样保持不截断）。
      */
     private LlmRequests buildSentinelStructureRequests(SpanToScoreLlmAsJudge message, Span span,
             String modelName, String spanStructureJson) {
@@ -344,7 +336,7 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
         return LlmRequests.builder().score(scoreRequest).structured(scoreRequest).build();
     }
 
-    /** Normal inline path: no {{span}} reference, so no structure injection. */
+    /** 正常内联路径：没有 {{span}} 引用，因此不注入结构。 */
     private LlmRequests buildPlainRequests(SpanToScoreLlmAsJudge message, Span span, String modelName) {
         ChatRequest scoreRequest = OnlineScoringEngine.prepareSpanLlmRequest(
                 message.llmAsJudgeCode(), span,
@@ -353,9 +345,8 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
     }
 
     /**
-     * Wraps the synchronous {@code ChatLanguageModel.chat} call in a Mono scheduled on
-     * {@link Schedulers#boundedElastic()} so the blocking Jersey-client I/O doesn't pin the per-stream
-     * worker scheduler thread.
+     * 将同步的 {@code ChatLanguageModel.chat} 调用包装进在 {@link Schedulers#boundedElastic()}
+     * 上调度的 Mono，使阻塞的 Jersey 客户端 I/O 不会钉住每个流的 worker 调度器线程。
      */
     private Mono<ChatResponse> scoreSpanReactive(ChatRequest request, SpanToScoreLlmAsJudge message,
             EvaluationRecorder recorder) {
@@ -365,16 +356,16 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
         return recorder.recordLlmCall(request, call);
     }
 
-    // Package-private for unit tests.
+    // 包私有，供单元测试使用。
     Mono<ChatResponse> handleToolCalls(ChatResponse chatResponse, ChatRequest toolRequest,
             ChatRequest structuredRequest, SpanToScoreLlmAsJudge message, Map<String, String> mdc,
             EvaluationRecorder recorder) {
         var span = message.span();
-        // Shared loop orchestration lives in the base scorer; here we provide only the span-specific
-        // context seeding — pre-seed the active span so read(type=span) / jq(type=span) resolve it
-        // without a re-fetch. This method runs the same multi-turn agentic tool loop as the trace/thread
-        // scorers, but the span evaluator DTO exposes no maxCostUsd field (unlike trace/thread), so there
-        // is no per-evaluation spend budget to enforce — always pass the unlimited guard.
+        // 共享的循环编排位于基础评分器中；这里我们只提供 span 特有的上下文填充——
+        // 预填充活动 span，使 read(type=span) / jq(type=span) 无需重新获取即可解析它。
+        // 此方法运行与 trace/thread 评分器相同的多轮 agentic 工具循环，但 span 评估器 DTO
+        // 不暴露 maxCostUsd 字段（不同于 trace/thread），因此没有需要强制执行的每次评估花费预算——
+        // 始终传入无限守卫。
         return agenticScoringService.runToolCallLoop(chatResponse, toolRequest, structuredRequest,
                 () -> {
                     var ctx = TraceToolContext.forActiveSpan(span, message.workspaceId(),
@@ -390,8 +381,8 @@ public class OnlineScoringSpanLlmAsJudgeScorer extends OnlineScoringBaseScorer<S
     }
 
     /**
-     * Carry from {@link #prepareEvaluation} to {@link #evaluate}. {@code useTools} drives whether
-     * {@code handleToolCalls} runs the agentic loop after the first response.
+     * 从 {@link #prepareEvaluation} 传递到 {@link #evaluate}。{@code useTools} 决定在第一个响应之后
+     * {@code handleToolCalls} 是否运行 agentic 循环。
      */
     @Builder(toBuilder = true)
     private record PreparedEvaluation(ChatRequest scoreRequest, ChatRequest structuredRequest, boolean useTools) {

@@ -16,9 +16,9 @@ import ru.vyarus.dropwizard.guice.module.installer.feature.eager.EagerSingleton;
 import ru.vyarus.dropwizard.guice.module.yaml.bind.Config;
 
 /**
- * Consumes queued Agent Insights report triggers (published by {@code AgentInsightsReportPublisher}) and
- * performs the actual report call via {@link AgentInsightsReportClient}. The Redis consumer group caps
- * concurrent runs, so neither the manual {@code /trigger} endpoint nor the daily sweep blocks on the call.
+ * 消费排队的 Agent Insights 报告触发器（由 {@code AgentInsightsReportPublisher} 发布），并
+ * 通过 {@link AgentInsightsReportClient} 执行实际的报告调用。Redis 消费组会限制
+ * 并发运行次数，因此手动 {@code /trigger} 端点和每日定时扫描都不会阻塞在该调用上。
  */
 @Slf4j
 @EagerSingleton
@@ -51,7 +51,7 @@ public class AgentInsightsReportSubscriber extends BaseRedisSubscriber<AgentInsi
         if (isDisabled()) {
             return;
         }
-        log.info("Starting Agent Insights report subscriber with config: streamName='{}', consumerGroupName='{}', "
+        log.info("正在启动 Agent Insights 报告订阅者，配置：streamName='{}', consumerGroupName='{}', "
                 + "batchSize='{}'", config.getStreamName(), config.getConsumerGroupName(),
                 config.getConsumerBatchSize());
         super.start();
@@ -62,16 +62,16 @@ public class AgentInsightsReportSubscriber extends BaseRedisSubscriber<AgentInsi
         if (isDisabled()) {
             return;
         }
-        log.info("Stopping Agent Insights report subscriber");
+        log.info("正在停止 Agent Insights 报告订阅者");
         super.stop();
     }
 
     @Override
     protected Mono<Void> processEvent(@NonNull AgentInsightsReportMessage message) {
-        log.info("Processing Agent Insights report trigger: reportId='{}', project='{}', workspace='{}'",
+        log.info("正在处理 Agent Insights 报告触发器：reportId='{}', project='{}', workspace='{}'",
                 message.reportId(), message.projectId(), message.workspaceId());
 
-        // Default a null (legacy message queued before triggerSource existed) to the scheduled sweep.
+        // 将 null（在 triggerSource 出现之前入队的遗留消息）默认为定时扫描。
         String triggerSource = message.triggerSource() != null
                 ? message.triggerSource()
                 : AgentInsightsMetrics.SCHEDULED;
@@ -81,23 +81,23 @@ public class AgentInsightsReportSubscriber extends BaseRedisSubscriber<AgentInsi
                 .subscribeOn(Schedulers.boundedElastic())
                 .then()
                 .doOnSuccess(unused -> {
-                    // The base class records every message as success because processEvent swallows failures
-                    // (at-most-once drop), so its processing-errors metric never fires for a failed trigger.
-                    // This counter restores the success/failure outcome signal for the platform trigger call.
+                    // 基类会将每条消息记录为成功，因为 processEvent 会吞掉失败
+                    // （至多一次丢弃），因此其 processing-errors 指标永远不会因触发失败而触发。
+                    // 此计数器为平台触发调用恢复了成功/失败的结果信号。
                     AgentInsightsMetrics.REPORTS_TRIGGERED.add(1, AgentInsightsMetrics.OUTCOME_SUCCESS);
-                    log.info("Triggered Agent Insights report: reportId='{}', project='{}'",
+                    log.info("已触发 Agent Insights 报告：reportId='{}', project='{}'",
                             message.reportId(), message.projectId());
                 })
                 .onErrorResume(throwable -> {
                     AgentInsightsMetrics.REPORTS_TRIGGERED.add(1, AgentInsightsMetrics.OUTCOME_FAILURE);
-                    // At-most-once on purpose: report generation is a non-idempotent side effect (Ollie
-                    // compute + a user-facing report), and the trigger isn't deduplicated downstream, so a
-                    // redelivery would run the same report twice. We ack on failure (log + complete) rather
-                    // than rethrow; the run is dropped (best-effort daily briefing) instead of duplicated.
-                    // reportId is carried on the message as the idempotency key if downstream dedup is added.
-                    log.error("Failed to trigger Agent Insights report, dropping reportId='{}', project='{}'",
+                    // 有意采用至多一次语义：报告生成是一个非幂等的副作用（Ollie
+                    // 计算 + 面向用户的报告），且触发器在下游不会去重，因此
+                    // 重新投递会导致同一份报告运行两次。我们在失败时确认（记录日志 + 完成）而不是
+                    // 重新抛出；该运行会被丢弃（尽力而为的每日简报）而非重复执行。
+                    // 如果下游添加了去重，reportId 会作为幂等键携带在消息上。
+                    log.error("触发 Agent Insights 报告失败，正在丢弃 reportId='{}', project='{}'",
                             message.reportId(), message.projectId(), throwable);
-                    // Ollie never ran, so it can't report this itself: record "did not start" so the UI stops.
+                    // Ollie 从未运行，因此无法自行上报此情况：记录 "did not start" 以便 UI 停止。
                     markDidNotStart(message, throwable);
                     return Mono.empty();
                 });
@@ -108,14 +108,14 @@ public class AgentInsightsReportSubscriber extends BaseRedisSubscriber<AgentInsi
             jobService.markRunFailed(message.workspaceId(), message.projectId(), "did_not_start",
                     throwable.getMessage());
         } catch (Exception e) {
-            log.warn("Failed to record run failure for reportId='{}', project='{}'",
+            log.warn("未能记录 reportId='{}', project='{}' 的运行失败",
                     message.reportId(), message.projectId(), e);
         }
     }
 
     private boolean isDisabled() {
         if (!serviceToggles.isOllieEnabled()) {
-            log.info("Agent Insights is disabled, skipping report subscriber lifecycle operation");
+            log.info("Agent Insights 已禁用，跳过报告订阅者的生命周期操作");
             return true;
         }
         return false;

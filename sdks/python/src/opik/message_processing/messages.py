@@ -20,25 +20,24 @@ T = TypeVar("T", bound="BaseMessage")
 
 
 def from_db_message_dict(message_class: Type[T], data: Dict[str, Any]) -> T:
-    """Deserialize a message from a dict.
+    """从字典反序列化消息。
 
-    Handles fields with init=False by filtering them from constructor args
-    and restoring them after object creation.
+    通过从构造函数参数中过滤掉 init=False 的字段，并在对象创建后恢复这些字段来处理它们。
     """
-    # Get field info for the message class
+    # 获取消息类的字段信息
     fields_info = {f.name: f for f in dataclasses.fields(message_class)}
     init_fields = {name for name, f in fields_info.items() if f.init}
 
-    # Split data into init and non-init fields
+    # 将数据拆分为 init 字段和非 init 字段
     init_data = {k: v for k, v in data.items() if k in init_fields}
     non_init_data = {
         k: v for k, v in data.items() if k in fields_info and k not in init_fields
     }
 
-    # Create the object with init fields
+    # 使用 init 字段创建对象
     obj = message_class(**init_data)
 
-    # Restore non-init fields
+    # 恢复非 init 字段
     for key, value in non_init_data.items():
         setattr(obj, key, value)
 
@@ -54,8 +53,8 @@ class BaseMessage:
     message_type: str = field(init=False, default="BaseMessage")
 
     def as_payload_dict(self) -> Dict[str, Any]:
-        # we are not using dataclasses.as_dict() here
-        # because it will try to deepcopy all objects and will fail if there is a non-serializable object
+        # 这里不使用 dataclasses.as_dict()，
+        # 因为它会尝试深拷贝所有对象，遇到不可序列化的对象时会失败
         data = {**self.__dict__}
         attributes_to_remove = [
             "delivery_time",
@@ -73,10 +72,9 @@ class BaseMessage:
 
     @property
     def item_count(self) -> int:
-        """Number of data items (traces/spans/...) this message carries.
+        """此消息携带的数据项（traces/spans/...）数量。
 
-        Batch messages hold many; a plain message counts as one. Used to report
-        how much data is lost when a message is dropped.
+        批量消息可携带多个；普通消息计为一个。用于报告消息被丢弃时丢失了多少数据。
         """
         batch = getattr(self, "batch", None)
         return len(batch) if batch is not None else 1
@@ -120,7 +118,7 @@ class CreateTraceMessage(BaseMessage):
 @dataclasses.dataclass
 class UpdateTraceMessage(BaseMessage):
     """
-    "Not recommended to use. Kept only for low level update operations in public API"
+    "不建议使用。仅为公共 API 中的底层更新操作而保留"
     """
 
     trace_id: str
@@ -197,7 +195,7 @@ class CreateSpanMessage(BaseMessage):
 
 @dataclasses.dataclass
 class UpdateSpanMessage(BaseMessage):
-    """Not recommended to use. Kept only for low-level update operations in public API"""
+    """不建议使用。仅为公共 API 中的底层更新操作而保留"""
 
     span_id: str
     parent_span_id: Optional[str]
@@ -238,8 +236,7 @@ class UpdateSpanMessage(BaseMessage):
 @dataclasses.dataclass
 class FeedbackScoreMessage(BaseMessage):
     """
-    There is no handler for that in the message processor, it exists
-    only as an item of BatchMessage
+    消息处理器中没有对应的处理程序，它仅作为 BatchMessage 的一个条目存在
     """
 
     id: str
@@ -280,8 +277,7 @@ class AddSpanFeedbackScoresBatchMessage(AddFeedbackScoresBatchMessage):
 @dataclasses.dataclass
 class ThreadsFeedbackScoreMessage(FeedbackScoreMessage):
     """
-    There is no handler for that in the message processor, it exists
-    only as an item of AddThreadsFeedbackScoresBatchMessage
+    消息处理器中没有对应的处理程序，它仅作为 AddThreadsFeedbackScoresBatchMessage 的一个条目存在
     """
 
     def as_payload_dict(self) -> Dict[str, Any]:
@@ -343,8 +339,7 @@ class CreateTraceBatchMessage(BaseMessage):
 @dataclasses.dataclass
 class GuardrailBatchItemMessage(BaseMessage):
     """
-    There is no handler for that in the message processor, it exists
-    only as an item of BatchMessage
+    消息处理器中没有对应的处理程序，它仅作为 BatchMessage 的一个条目存在
     """
 
     project_name: Optional[str]
@@ -382,8 +377,7 @@ class GuardrailBatchMessage(BaseMessage):
 @dataclasses.dataclass
 class AssertionResultMessage(BaseMessage):
     """
-    There is no handler for that in the message processor, it exists
-    only as an item of AddAssertionResultsBatchMessage.
+    消息处理器中没有对应的处理程序，它仅作为 AddAssertionResultsBatchMessage 的一个条目存在。
     """
 
     entity_id: str
@@ -400,9 +394,8 @@ class AssertionResultMessage(BaseMessage):
 class AddAssertionResultsBatchMessage(BaseMessage):
     batch: List[AssertionResultMessage]
     entity_type: Literal["TRACE", "SPAN", "THREAD"] = "TRACE"
-    # Producers (Opik.log_assertion_results) already split via
-    # sequence_splitter; bypass BatchManager so the streamer doesn't try to
-    # re-batch (no batcher mapping is registered for this message type).
+    # 生产者（Opik.log_assertion_results）已通过 sequence_splitter 进行拆分；
+    # 绕过 BatchManager，使 streamer 不会尝试重新批处理（未为此消息类型注册批处理映射）。
     supports_batching: bool = False
 
     message_type = "AddAssertionResultsBatchMessage"
@@ -417,8 +410,7 @@ class AddAssertionResultsBatchMessage(BaseMessage):
 @dataclasses.dataclass
 class ExperimentItemMessage(BaseMessage):
     """
-    There is no handler for that in the message processor, it exists
-    only as an item of CreateExperimentItemsBatchMessage
+    消息处理器中没有对应的处理程序，它仅作为 CreateExperimentItemsBatchMessage 的一个条目存在
     """
 
     id: str
@@ -470,7 +462,7 @@ def _deserialize_base_message_batch(
     batch: List[Any],
     item_class: Type[T],
 ) -> List[T]:
-    """Convert dict items in a batch to BaseMessage-derived objects."""
+    """将批次中的字典项转换为 BaseMessage 派生对象。"""
     return [
         from_db_message_dict(item_class, item) if isinstance(item, dict) else item
         for item in batch
@@ -481,7 +473,7 @@ def _deserialize_pydantic_batch(
     batch: List[Any],
     item_class: Type[pydantic_utilities.T],
 ) -> List[Any]:
-    """Convert dict items in a batch to Pydantic model objects."""
+    """将批次中的字典项转换为 Pydantic 模型对象。"""
     return [
         pydantic_utilities.parse_obj_as(item_class, item)
         if isinstance(item, dict)
@@ -494,7 +486,7 @@ def _serialize_base_message_batch_to_dict(
     instance_dict: Dict[str, Any],
     batch: List[T],
 ) -> Dict[str, Any]:
-    """Serialize a BaseMessage batch to dict."""
+    """将 BaseMessage 批次序列化为字典。"""
     batch_items = [item.as_db_message_dict() for item in batch]
     return {**instance_dict, "batch": batch_items}
 
@@ -503,6 +495,6 @@ def _serialize_pydantic_batch_to_dict(
     instance_dict: Dict[str, Any],
     batch: List[Any],
 ) -> Dict[str, Any]:
-    """Serialize a Pydantic model batch to dict."""
+    """将 Pydantic 模型批次序列化为字典。"""
     batch_items = [item.dict() for item in batch]
     return {**instance_dict, "batch": batch_items}

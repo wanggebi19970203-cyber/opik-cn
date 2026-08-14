@@ -118,10 +118,10 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
 
         UUID id = idGenerator.generateId();
         IdGenerator.validateVersion(id, "AutomationRuleEvaluator");
-        // projectIds are persisted without an existence check, so enforce v7 to avoid storing orphan v4 ids.
+        // projectIds 在持久化时不进行存在性检查，因此强制使用 v7 以避免存储孤立的 v4 id。
         projectIds.forEach(projectId -> idGenerator.validateIdNotInFutureIfPresent(projectId, "project"));
 
-        // Dual-field sync: First projectId becomes the legacy project_id field
+        // 双字段同步：第一个 projectId 会成为旧版 project_id 字段
         UUID primaryProjectId = projectIds.isEmpty() ? null : projectIds.iterator().next();
 
         var savedEvaluator = template.inTransaction(WRITE, handle -> {
@@ -129,9 +129,8 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             var projectsDAO = handle.attach(AutomationRuleProjectsDAO.class);
             var ruleDAO = handle.attach(AutomationRuleDAO.class);
 
-            // Auto-suffix the name when it collides with existing rules in the same project(s) (OPIK-7371).
-            // Names are not unique at the DB layer, so re-running an SDK script would otherwise create
-            // rules that are indistinguishable in the UI.
+            // 当名称与同一项目中的现有规则冲突时，自动为名称添加后缀（OPIK-7371）。
+            // 名称在数据库层面并不唯一，否则重新运行 SDK 脚本会创建在 UI 中无法区分的规则。
             String requestedName = inputRuleEvaluator.getName();
             String uniqueName = resolveUniqueName(ruleDAO, requestedName, projectIds, workspaceId, null);
 
@@ -218,14 +217,14 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             }
 
             try {
-                log.debug("Creating {} AutomationRuleEvaluator with id '{}' in projectIds '{}' and workspaceId '{}'",
+                log.debug("正在创建 {} AutomationRuleEvaluator，id 为 '{}'，projectIds 为 '{}'，workspaceId 为 '{}'",
                         evaluator.type(), id, evaluator.projectIds(), workspaceId);
 
                 evaluatorsDAO.saveBaseRule(evaluator, workspaceId);
                 evaluatorsDAO.saveEvaluator(evaluator);
 
-                // Save project associations
-                log.debug("Saving {} project associations for rule '{}'", projectIds.size(), id);
+                // 保存项目关联
+                log.debug("正在保存 {} 个规则 '{}' 的项目关联", projectIds.size(), id);
                 projectsDAO.saveRuleProjects(id, projectIds, workspaceId);
 
                 return evaluator;
@@ -245,25 +244,25 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     }
 
     /**
-     * Resolves a name that is free within the target project(s), appending a {@code -N} suffix on collision
-     * (OPIK-7371). Shared by create and update so the suffixing rules cannot drift between them.
-     * {@code excludeRuleId} is null on create; on update it is the rule being edited, so it is not treated
-     * as colliding with its own current name.
+     * 解析在目标项目内空闲的名称，冲突时追加 {@code -N} 后缀（OPIK-7371）。
+     * 创建和更新共用此方法，使后缀规则不会在两者之间产生漂移。
+     * {@code excludeRuleId} 在创建时为 null；在更新时它是正在被编辑的规则，
+     * 因此不会被视为与其自身当前名称冲突。
      */
     private String resolveUniqueName(AutomationRuleDAO ruleDAO, String requestedName, Set<UUID> projectIds,
             String workspaceId, UUID excludeRuleId) {
-        // Only names sharing the requested prefix are fetched, so the candidate set stays small.
+        // 仅获取与请求前缀共享的名称，使候选集合保持较小。
         Set<String> candidates = ruleDAO.findCandidateNames(projectIds, workspaceId,
                 AutomationRuleNames.likePrefix(requestedName), excludeRuleId);
         return AutomationRuleNames.generateUniqueName(requestedName, candidates);
     }
 
-    // Logged after the write transaction commits (not inside it) so a rolled-back write never leaves a
-    // misleading line behind. Values trail the fixed text so the prefix stays greppable in production.
+    // 在写事务提交后（而非事务内）记录日志，这样回滚的写入绝不会留下误导性的日志行。
+    // 值跟在固定文本之后，使前缀在生产环境中保持可 grep。
     private void logSuffixApplied(String requestedName, String appliedName, String workspaceId) {
         if (appliedName != null && !appliedName.equals(requestedName)) {
-            log.info("Automation rule name already existed in project scope, stored under a new name: "
-                    + "requestedName '{}', appliedName '{}', workspaceId '{}'",
+            log.info("自动化规则名称在项目范围内已存在，已使用新名称存储："
+                    + "requestedName '{}'、appliedName '{}'、workspaceId '{}'",
                     requestedName, appliedName, workspaceId);
         }
     }
@@ -275,7 +274,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
 
         projectIds.forEach(projectId -> idGenerator.validateIdNotInFutureIfPresent(projectId, "project"));
 
-        log.debug("Updating AutomationRuleEvaluator with id '{}' in projectIds '{}' and workspaceId '{}'", id,
+        log.debug("正在更新 AutomationRuleEvaluator，id 为 '{}'，projectIds 为 '{}'，workspaceId 为 '{}'", id,
                 projectIds,
                 workspaceId);
         String requestedName = evaluatorUpdate.getName();
@@ -287,16 +286,16 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             try {
                 String filtersJson = AutomationModelEvaluatorMapper.INSTANCE.map(evaluatorUpdate.getFilters());
 
-                // Only resolve a unique name on an actual rename. A non-name edit (sampling rate, enabled,
-                // filters) must never rename the rule, even if a same-named rule already exists in the
-                // project (e.g. legacy duplicates). This guard stays outside resolveUniqueName because it is
-                // specific to update - a create has no current name to compare against (OPIK-7371).
+                // 仅在真正重命名时才解析唯一名称。非名称编辑（采样率、enabled、
+                // filters）绝不能重命名规则，即使项目中已存在同名规则（例如旧版重复项）。
+                // 该守卫保留在 resolveUniqueName 之外，因为它特定于更新场景 ——
+                // 创建时没有可比较的当前名称（OPIK-7371）。
                 String currentName = ruleDAO.findNameById(id, workspaceId).orElse(null);
                 String uniqueName = Objects.equals(requestedName, currentName)
                         ? requestedName
                         : resolveUniqueName(ruleDAO, requestedName, projectIds, workspaceId, id);
 
-                // Update base rule (project associations handled separately in junction table)
+                // 更新基础规则（项目关联在联结表中单独处理）
                 var triggerScope = evaluatorUpdate.getTriggerScope() != null
                         ? evaluatorUpdate.getTriggerScope()
                         : EvalTriggerScope.PRODUCTION;
@@ -304,11 +303,11 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
                         evaluatorUpdate.getSamplingRate(), evaluatorUpdate.isEnabled(),
                         triggerScope, filtersJson);
 
-                // Update project associations in junction table
+                // 更新联结表中的项目关联
                 projectsDAO.deleteByRuleIds(Set.of(id), workspaceId);
                 projectsDAO.saveRuleProjects(id, projectIds, workspaceId);
 
-                // Clear legacy project_id field to prevent stale data
+                // 清除旧版 project_id 字段以防止出现陈旧数据
                 dao.clearLegacyProjectId(id, workspaceId);
 
                 AutomationRuleEvaluatorModel<?> modelUpdate = switch (evaluatorUpdate) {
@@ -385,7 +384,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     public <E, F extends Filter, T extends AutomationRuleEvaluator<E, F>> T findById(@NonNull UUID id,
             Set<UUID> projectIds,
             @NonNull String workspaceId) {
-        log.debug("Finding AutomationRuleEvaluator with id '{}' in projectIds '{}' and workspaceId '{}'", id,
+        log.debug("正在查找 AutomationRuleEvaluator，id 为 '{}'，projectIds 为 '{}'，workspaceId 为 '{}'", id,
                 projectIds,
                 workspaceId);
 
@@ -396,7 +395,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             List<AutomationRuleEvaluatorModel<?>> models = findRulesWithProjects(dao, workspaceId, projectIds,
                     criteria, null, null, Map.of(), null, null);
 
-            // Enrich models with project names for backward compatibility
+            // 为向后兼容，用项目名称丰富模型
             List<AutomationRuleEvaluatorModel<?>> enrichedModels = enrichWithProjectNames(models, workspaceId);
 
             return enrichedModels.stream()
@@ -424,7 +423,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     public <E, F extends Filter, T extends AutomationRuleEvaluator<E, F>> List<T> findByIds(@NonNull Set<UUID> ids,
             Set<UUID> projectIds,
             @NonNull String workspaceId) {
-        log.debug("Finding AutomationRuleEvaluators with ids '{}' in projectIds '{}' and workspaceId '{}'", ids,
+        log.debug("正在查找 AutomationRuleEvaluators，ids 为 '{}'，projectIds 为 '{}'，workspaceId 为 '{}'", ids,
                 projectIds, workspaceId);
 
         return template.inTransaction(READ_ONLY, handle -> {
@@ -433,7 +432,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             List<AutomationRuleEvaluatorModel<?>> models = findRulesWithProjects(dao, workspaceId, projectIds,
                     criteria, null, null, Map.of(), null, null);
 
-            // Enrich models with project names for backward compatibility
+            // 为向后兼容，用项目名称丰富模型
             List<AutomationRuleEvaluatorModel<?>> enrichedModels = enrichWithProjectNames(models, workspaceId);
 
             return enrichedModels.stream()
@@ -460,11 +459,11 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     @CacheEvict(name = "automation_rule_evaluators_find_all", key = "'*-' + $workspaceId + '-*'", keyUsesPatternMatching = true)
     public void delete(@NonNull Set<UUID> ids, Set<UUID> projectIds, @NonNull String workspaceId) {
         if (ids.isEmpty()) {
-            log.info("Delete AutomationRuleEvaluator: ids list is empty, returning");
+            log.info("删除 AutomationRuleEvaluator：ids 列表为空，直接返回");
             return;
         }
 
-        log.debug("Deleting AutomationRuleEvaluators with ids {} in projectIds '{}' and workspaceId '{}'", ids,
+        log.debug("正在删除 ids 为 {} 的 AutomationRuleEvaluators，projectIds 为 '{}'，workspaceId 为 '{}'", ids,
                 projectIds, workspaceId);
 
         template.inTransaction(WRITE, handle -> {
@@ -490,7 +489,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             @NonNull String workspaceId,
             @NonNull List<String> sortableBy) {
 
-        log.debug("Finding AutomationRuleEvaluators with searchCriteria '{}' in workspaceId '{}'",
+        log.debug("正在按 searchCriteria '{}' 在 workspaceId '{}' 中查找 AutomationRuleEvaluators",
                 searchCriteria, workspaceId);
 
         String filtersSQL = Optional.ofNullable(searchCriteria.filters())
@@ -518,7 +517,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             List<AutomationRuleEvaluatorModel<?>> models = findRulesWithProjects(dao, workspaceId,
                     searchCriteria.projectId(), criteria, sortingFieldsSql, filtersSQL, filterMapping, offset, size);
 
-            // Enrich models with project names for backward compatibility
+            // 为向后兼容，用项目名称丰富模型
             List<AutomationRuleEvaluatorModel<?>> enrichedModels = enrichWithProjectNames(models, workspaceId);
 
             List<AutomationRuleEvaluator<?, ?>> automationRuleEvaluators = List.copyOf(
@@ -539,7 +538,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
                             })
                             .toList());
 
-            log.info("Found {} AutomationRuleEvaluators for searchCriteria '{}'", automationRuleEvaluators.size(),
+            log.info("找到 {} 个符合 searchCriteria '{}' 的 AutomationRuleEvaluators", automationRuleEvaluators.size(),
                     searchCriteria);
             return AutomationRuleEvaluatorPage.builder()
                     .page(pageNum)
@@ -552,21 +551,20 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     }
 
     /**
-     * Find all automation rule evaluators for a project.
+     * 查找某个项目的所有自动化规则评估器。
      * <p>
-     * <strong>WARNING:</strong> Do NOT add {@code @Cacheable} annotation to this method.
-     * This method delegates to the 3-parameter {@link #findAll(UUID, String, AutomationRuleEvaluatorType)}
-     * which already has caching. Adding {@code @Cacheable} here would create nested cache operations
-     * that cause nested {@code Mono.block()} calls, leading to reactor threading violations and
-     * Redis timeout exceptions.
+     * <strong>警告：</strong>不要向此方法添加 {@code @Cacheable} 注解。
+     * 此方法委托给已具备缓存的 3 参数 {@link #findAll(UUID, String, AutomationRuleEvaluatorType)}。
+     * 在此处添加 {@code @Cacheable} 会创建嵌套的缓存操作，进而导致嵌套的
+     * {@code Mono.block()} 调用，引发 reactor 线程违规和 Redis 超时异常。
      * </p>
      *
-     * @param projectId the project ID
-     * @param workspaceId the workspace ID
-     * @param <E> the entity type
-     * @param <F> the filter type
-     * @param <T> the automation rule evaluator type
-     * @return list of automation rule evaluators
+     * @param projectId 项目 ID
+     * @param workspaceId 工作空间 ID
+     * @param <E> 实体类型
+     * @param <F> 过滤器类型
+     * @param <T> 自动化规则评估器类型
+     * @return 自动化规则评估器列表
      */
     @Override
     public <E, F extends Filter, T extends AutomationRuleEvaluator<E, F>> List<T> findAll(
@@ -578,16 +576,16 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     @Cacheable(name = "automation_rule_evaluators_find_all", key = "$projectId + '-' + $workspaceId + '-' + ($type != null ? $type : 'all')", returnType = AutomationRuleEvaluator.class, wrapperType = List.class)
     public <E, F extends Filter, T extends AutomationRuleEvaluator<E, F>> List<T> findAll(
             @NonNull UUID projectId, @NonNull String workspaceId, AutomationRuleEvaluatorType type) {
-        log.info("Finding AutomationRuleEvaluators, projectId '{}', workspaceId '{}', type '{}'", projectId,
+        log.info("正在查找 AutomationRuleEvaluators，projectId '{}'、workspaceId '{}'、type '{}'", projectId,
                 workspaceId, type);
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(AutomationRuleEvaluatorDAO.class);
             var criteria = AutomationRuleEvaluatorCriteria.builder().type(type).build();
             var results = findRulesWithProjects(dao, workspaceId, projectId, criteria);
-            log.debug("Found {} evaluators for projectId '{}', workspaceId '{}', type '{}'",
+            log.debug("找到 {} 个评估器，projectId '{}'、workspaceId '{}'、type '{}'",
                     results.size(), projectId, workspaceId, type);
 
-            // Enrich models with project names for backward compatibility
+            // 为向后兼容，用项目名称丰富模型
             List<AutomationRuleEvaluatorModel<?>> enrichedModels = enrichWithProjectNames(results, workspaceId);
 
             return enrichedModels
@@ -633,7 +631,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             Integer offset,
             Integer limit) {
 
-        // Query 1: Get paginated rules without project data (no duplication)
+        // 查询 1：获取不带项目数据的分页规则（无重复）
         var rules = dao.findRulesWithoutProjects(workspaceId, projectIds, criteria.action(), criteria.type(),
                 criteria.ids(), criteria.id(), criteria.name(), sortingFields, filters, filterMapping, offset, limit);
 
@@ -641,23 +639,23 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             return List.of();
         }
 
-        // Query 2: Bulk fetch project associations for these rules
+        // 查询 2：批量获取这些规则的项目关联
         var ruleIds = rules.stream().map(AutomationRuleEvaluatorModel::id).toList();
         var projectMappings = dao.findProjectMappings(ruleIds, workspaceId);
 
-        // Merge project IDs into rules with legacy fallback (business logic)
+        // 将项目 ID 合并到规则中，并带旧版回退（业务逻辑）
         return rules.stream()
                 .<AutomationRuleEvaluatorModel<?>>map(rule -> {
                     var projectsFromJunction = projectMappings.getOrDefault(rule.id(), Set.of());
 
-                    // Legacy fallback: If junction table is empty but rule has legacy project_id,
-                    // keep the legacy value (set by row mapper)
+                    // 旧版回退：如果联结表为空但规则带有旧版 project_id，
+                    // 则保留旧版值（由行映射器设置）
                     if (projectsFromJunction.isEmpty() && !rule.projectIds().isEmpty()) {
-                        // Rule was created before multi-project support, use legacy value
+                        // 规则创建于多项目支持之前，使用旧版值
                         return rule;
                     }
 
-                    // Use junction table data (new/updated rules)
+                    // 使用联结表数据（新规则/已更新规则）
                     return rule.withProjectIds(projectsFromJunction);
                 })
                 .toList();
@@ -673,7 +671,7 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             Map<String, Object> filterMapping,
             Integer offset,
             Integer limit) {
-        // Backward compatibility: convert single projectId to set
+        // 向后兼容：将单个 projectId 转换为集合
         return findRulesWithProjects(dao, workspaceId,
                 Optional.ofNullable(projectId).map(Set::of).orElse(null),
                 criteria, sortingFields, filters, filterMapping, offset, limit);
@@ -688,12 +686,12 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
     }
 
     /**
-     * Enriches a list of AutomationRuleEvaluatorModel with project names resolved from their projectId.
-     * This supports backwards compatibility by populating the legacy projectName field.
+     * 用根据其 projectId 解析出的项目名称来丰富 AutomationRuleEvaluatorModel 列表。
+     * 这通过填充旧版 projectName 字段来支持向后兼容。
      *
-     * @param models the models to enrich
-     * @param workspaceId the workspace ID for fetching projects
-     * @return the enriched models with projectName populated
+     * @param models 要丰富的模型
+     * @param workspaceId 用于获取项目的工作空间 ID
+     * @return 已填充 projectName 的丰富后的模型
      */
     private List<AutomationRuleEvaluatorModel<?>> enrichWithProjectNames(
             List<AutomationRuleEvaluatorModel<?>> models,
@@ -703,12 +701,12 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             return models;
         }
 
-        // Log incoming models for debugging
+        // 记录传入的模型以便调试
         models.forEach(model -> log.debug(
-                "Model before enrichment - id: '{}', projectId: '{}', projectIds: '{}'",
+                "丰富前的模型 - id：'{}'、projectId：'{}'、projectIds：'{}'",
                 model.id(), model.projectId(), model.projectIds()));
 
-        // Extract unique project IDs from all models' projectIds sets
+        // 从所有模型的 projectIds 集合中提取唯一的项目 ID
         Set<UUID> allProjectIds = models.stream()
                 .flatMap(model -> model.projectIds().stream())
                 .collect(java.util.stream.Collectors.toSet());
@@ -717,46 +715,46 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
             return models;
         }
 
-        // Use ProjectService to fetch project names (ensures consistent logic and forward compatibility)
+        // 使用 ProjectService 获取项目名称（确保逻辑一致性和前向兼容性）
         Map<UUID, String> projectNameMap = projectService.findIdToNameByIds(workspaceId, allProjectIds);
 
-        // Log enrichment details
-        log.debug("Fetched '{}' project names for '{}' project IDs", projectNameMap.size(), allProjectIds.size());
+        // 记录丰富详情
+        log.debug("获取到 '{}' 个项目名称，对应 '{}' 个项目 ID", projectNameMap.size(), allProjectIds.size());
 
-        // Enrich each model with its project name
+        // 为每个模型丰富其项目名称
         List<AutomationRuleEvaluatorModel<?>> enrichedModels = models.stream()
                 .<AutomationRuleEvaluatorModel<?>>map(model -> enrichModelWithProjectName(model, projectNameMap))
                 .toList();
 
-        // Log enriched models for debugging
-        enrichedModels.forEach(model -> log.debug("Model after enrichment - id: '{}', projectId: '{}'",
+        // 记录丰富后的模型以便调试
+        enrichedModels.forEach(model -> log.debug("丰富后的模型 - id：'{}'、projectId：'{}'",
                 model.id(), model.projectId()));
 
         return enrichedModels;
     }
 
     /**
-     * Enriches a single AutomationRuleEvaluatorModel with project references.
+     * 用项目引用丰富单个 AutomationRuleEvaluatorModel。
      *
-     * @param model the model to enrich
-     * @param projectNameMap map of projectId to projectName
-     * @return the enriched model
+     * @param model 要丰富的模型
+     * @param projectNameMap projectId 到 projectName 的映射
+     * @return 丰富后的模型
      */
     private AutomationRuleEvaluatorModel<?> enrichModelWithProjectName(
             AutomationRuleEvaluatorModel<?> model,
             Map<UUID, String> projectNameMap) {
 
         if (model.projectIds().isEmpty()) {
-            log.debug("Skipping enrichment for rule '{}' - no projects assigned", model.id());
+            log.debug("跳过规则 '{}' 的丰富 - 未分配任何项目", model.id());
             return model;
         }
 
-        // Build SortedSet of ProjectReference objects (unique, sorted alphabetically by name)
+        // 构建 ProjectReference 对象的 SortedSet（唯一、按名称字母顺序排序）
         SortedSet<ProjectReference> projects = model.projectIds().stream()
                 .map(id -> {
                     String name = projectNameMap.get(id);
                     if (name == null) {
-                        log.warn("Project name not found for projectId '{}' in rule '{}'", id, model.id());
+                        log.warn("未找到 projectId '{}' 在规则 '{}' 中的项目名称", id, model.id());
                         return null;
                     }
                     return new ProjectReference(id, name);
@@ -764,19 +762,19 @@ class AutomationRuleEvaluatorServiceImpl implements AutomationRuleEvaluatorServi
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        log.debug("Enriched rule '{}' with {} projects", model.id(), projects.size());
+        log.debug("已为规则 '{}' 丰富 {} 个项目", model.id(), projects.size());
 
-        // For backward compatibility: derive legacy fields from first project
+        // 为向后兼容：从第一个项目推导旧版字段
         UUID projectId = projects.isEmpty() ? null : projects.first().projectId();
         String projectName = projects.isEmpty() ? null : projects.first().projectName();
 
-        // Use polymorphic method to update the model with projects and legacy fields
+        // 使用多态方法，用项目和旧版字段更新模型
         return model.withProjectDetails(projectId, projectName, projects);
     }
 
     @Override
     @CacheEvict(name = "automation_rule_evaluators_find_all", key = "'*-' + $workspaceId + '-*'", keyUsesPatternMatching = true)
     public void evictCache(@NonNull String workspaceId) {
-        log.debug("Evicted automation rule cache for workspace, workspaceId='{}'", workspaceId);
+        log.debug("已驱逐工作空间的自动化规则缓存，workspaceId='{}'", workspaceId);
     }
 }

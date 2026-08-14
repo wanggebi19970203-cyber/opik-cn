@@ -9,7 +9,7 @@ JsonLike = Dict[str, Any]
 
 @dataclasses.dataclass
 class ExperimentItemBulkTrace:
-    """A trace to create alongside an experiment item in a bulk upload."""
+    """在批量上传中与实验项目一起创建的 trace。"""
 
     start_time: datetime.datetime
     id: Optional[str] = None
@@ -26,7 +26,7 @@ class ExperimentItemBulkTrace:
 
 @dataclasses.dataclass
 class ExperimentItemBulkSpan:
-    """A span to create alongside an experiment item in a bulk upload."""
+    """在批量上传中与实验项目一起创建的 span。"""
 
     start_time: datetime.datetime
     id: Optional[str] = None
@@ -48,10 +48,10 @@ class ExperimentItemBulkSpan:
 @dataclasses.dataclass
 class ExperimentItemBulkRecord:
     """
-    A single experiment item to upload via :meth:`Experiment.batch_upload_items`.
+    通过 :meth:`Experiment.batch_upload_items` 上传的单个实验项目。
 
-    Provide either ``evaluate_task_result`` (the backend creates the trace) or
-    ``trace`` (you supply it), but never both.
+    提供 ``evaluate_task_result``（由后端创建 trace）或 ``trace``
+    （由你提供），但绝不能同时提供两者。
     """
 
     dataset_item_id: str

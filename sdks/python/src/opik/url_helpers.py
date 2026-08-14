@@ -41,7 +41,7 @@ def get_experiment_url_by_id(
 
 def get_project_url_by_workspace(
     workspace: str, project_name: str
-) -> str:  # don't use or update, will be removed soon
+) -> str:  # 请勿使用或更新，即将被移除
     ui_url = get_ui_url()
 
     project_path = urllib.parse.quote(

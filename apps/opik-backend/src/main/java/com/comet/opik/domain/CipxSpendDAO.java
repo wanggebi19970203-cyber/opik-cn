@@ -25,24 +25,23 @@ import static com.comet.opik.infrastructure.FilterUtils.getSTWithLogComment;
 import static com.comet.opik.utils.template.TemplateUtils.getQueryItemPlaceHolder;
 
 /**
- * Writes the cipx_spends table from cipx LLM-call spans: span-level call data only (model + usage
- * counters); the blocks land in cipx_spend_blocks via {@link CipxSpendBlockDAO}. Triggered
- * asynchronously off span create events; never reads the spans or cipx_spends tables. The cipx fields
- * are parsed from metadata in Java ({@link SpanRow#from}); the listener only passes rows it has
- * already gated to cipx.
+ * 从 cipx LLM 调用 span 写入 cipx_spends 表：仅包含 span 级别的调用数据（模型 + 用量
+ * 计数器）；block 通过 {@link CipxSpendBlockDAO} 落入 cipx_spend_blocks。由 span 创建事件
+ * 异步触发；从不读取 spans 或 cipx_spends 表。cipx 字段在 Java 中从 metadata 解析
+ * （{@link SpanRow#from}）；监听器只传递它已经筛选为 cipx 的行。
  *
- * <p>This is a plain INSERT: ingestion is create-only (cipx data is complete on the create event and
- * immutable), so the ReplacingMergeTree is only a safeguard against replayed events — a replay
- * produces the same sorting key and dedups at merge time. last_updated_at is left to the column
- * DEFAULT now64(6). project_id must be non-empty for the row to land under the correct key — callers
- * must drop blank rows before calling insert (the listener does).
+ * <p>这是一个普通 INSERT：摄取是只创建的（cipx 数据在创建事件上即完整且
+ * 不可变），因此 ReplacingMergeTree 仅作为对重放事件的防护——重放
+ * 会产生相同的排序键，并在合并时去重。last_updated_at 留给列
+ * DEFAULT now64(6)。project_id 必须非空，行才能落在正确的键下——调用方
+ * 在调用 insert 之前必须丢弃空行（监听器会这样做）。
  */
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 @Slf4j
 public class CipxSpendDAO {
 
-    /** A cipx_spends row constructed from a span's metadata. */
+    /** 由 span 的 metadata 构造的 cipx_spends 行。 */
     @Builder(toBuilder = true)
     public record SpanRow(
             @NonNull String spanId,
@@ -88,8 +87,8 @@ public class CipxSpendDAO {
         }
     }
 
-    // One tuple per row (mirrors SpanDAO.BULK_INSERT). start_time is bound from Java (the source
-    // span's stored start).
+    // 每行一个元组（对应 SpanDAO.BULK_INSERT）。start_time 从 Java 绑定（来源
+    // span 已存储的开始时间）。
     private static final String INSERT = """
             INSERT INTO cipx_spends
                 (workspace_id, project_id, trace_id, span_id, start_time, model,
@@ -141,10 +140,10 @@ public class CipxSpendDAO {
         template.add("items", queryItems);
         Statement statement = connection.createStatement(template.render());
 
-        // Positional binds: the driver resolves named binds with a linear indexOf over the statement's
-        // parameter list (quadratic per statement), while bind(int) is a direct array write. Indices
-        // follow the placeholders' first-appearance order in the rendered SQL: workspace_id once at 0
-        // (repeats dedup), then 16 parameters per row tuple in template order.
+        // 位置绑定：驱动程序通过语句参数列表的线性 indexOf 来解析命名绑定
+        // （每条语句为二次复杂度），而 bind(int) 是直接数组写入。索引
+        // 遵循占位符在渲染后的 SQL 中的首次出现顺序：workspace_id 在 0 处出现一次
+        // （重复项去重），然后每行元组按模板顺序有 16 个参数。
         statement.bind(0, workspaceId);
         int index = 1;
         for (SpanRow row : rows) {

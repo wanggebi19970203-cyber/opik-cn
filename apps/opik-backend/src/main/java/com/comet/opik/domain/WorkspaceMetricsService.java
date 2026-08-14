@@ -90,12 +90,11 @@ class WorkspaceMetricsServiceImpl implements WorkspaceMetricsService {
                         .build());
     }
 
-    // "All projects" (empty projectIds) is resolved into the explicit set of workspace project ids so the DAO always
-    // queries a bounded `project_id IN (...)` list. This prunes well on the spans primary key for small and moderate
-    // selections, but it is only bounded to the workspace's projects: for a tenant with many projects, IN(<all ids>)
-    // reads roughly the same granules as a full workspace scan, since the id/time window can't prune at the primary-key
-    // level across many disjoint project prefixes. An explicit selection passes through unchanged; a workspace with no
-    // projects yields nothing.
+    // "All projects"（projectIds 为空）会被解析为显式的工作区项目 id 集合，使 DAO 始终
+    // 查询有界的 `project_id IN (...)` 列表。对于中小规模的选取，这在 spans 主键上裁剪得很好，
+    // 但它只以工作区的项目为界：对于项目很多的租户，IN(<all ids>)
+    // 读取的颗粒数量与全工作区扫描大致相同，因为 id/时间窗口无法在许多不相交的项目前缀上
+    // 做主键级裁剪。显式选取原样通过；没有任何项目的工作区则返回空。
     private Mono<WorkspaceSpanMetricRequest> resolveProjectIds(WorkspaceSpanMetricRequest request) {
         if (CollectionUtils.isNotEmpty(request.projectIds())) {
             return Mono.just(request);
@@ -112,8 +111,8 @@ class WorkspaceMetricsServiceImpl implements WorkspaceMetricsService {
                         : workspaceMetricsDAO.getWorkspaceTokenUsageNames(resolved));
     }
 
-    // "All projects" (empty projectIds) is resolved into the explicit set of workspace project ids so the DAO always
-    // queries a bounded `project_id IN (...)` list; an explicit selection passes through unchanged.
+    // "All projects"（projectIds 为空）会被解析为显式的工作区项目 id 集合，使 DAO 始终
+    // 查询有界的 `project_id IN (...)` 列表；显式选取原样通过。
     private Mono<Set<UUID>> resolveProjectIds(Set<UUID> projectIds) {
         return CollectionUtils.isNotEmpty(projectIds)
                 ? Mono.just(projectIds)

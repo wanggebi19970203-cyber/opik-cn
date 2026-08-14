@@ -426,7 +426,7 @@ class TestBulkUploadItemsConcurrency:
         with pytest.raises(exceptions.ValidationError) as exc_info:
             experiment.batch_upload_items([_record()], num_threads=0)
 
-        assert "num_threads must be at least 1" in str(exc_info.value)
+        assert "num_threads 必须至少为 1" in str(exc_info.value)
         assert mock_rest_client.experiments.experiment_items_bulk.call_count == 0
 
     def test_batch_upload_items__batch_stuck_when_another_fails__returns_without_waiting(
@@ -508,7 +508,7 @@ class TestBulkUploadItemsValidation:
         with pytest.raises(exceptions.ValidationError) as exc_info:
             experiment.batch_upload_items([_record(trace=trace)])
 
-        assert f"items[0].trace.{field_name} must be a dict" in str(exc_info.value)
+        assert f"items[0].trace.{field_name} 必须是 dict" in str(exc_info.value)
         assert mock_rest_client.experiments.experiment_items_bulk.call_count == 0
 
     def test_batch_upload_items__span_output_is_a_string__raises_validation_error(
@@ -520,7 +520,7 @@ class TestBulkUploadItemsValidation:
         with pytest.raises(exceptions.ValidationError) as exc_info:
             experiment.batch_upload_items([_record(spans=[span])])
 
-        assert "items[0].spans[0].output must be a dict" in str(exc_info.value)
+        assert "items[0].spans[0].output 必须是 dict" in str(exc_info.value)
 
     def test_batch_upload_items__both_trace_and_evaluate_task_result__raises_validation_error(
         self,
@@ -537,7 +537,7 @@ class TestBulkUploadItemsValidation:
                 ]
             )
 
-        assert "but not both" in str(exc_info.value)
+        assert "但不能同时提供" in str(exc_info.value)
 
     def test_batch_upload_items__neither_trace_nor_evaluate_task_result__raises_validation_error(
         self,
@@ -550,7 +550,7 @@ class TestBulkUploadItemsValidation:
                 [bulk_item.ExperimentItemBulkRecord(dataset_item_id="dataset-item-id")]
             )
 
-        assert "items[0] must provide either evaluate_task_result or trace" in str(
+        assert "items[0] 必须提供 evaluate_task_result 或 trace 其中之一" in str(
             exc_info.value
         )
         assert mock_rest_client.experiments.experiment_items_bulk.call_count == 0
@@ -563,7 +563,7 @@ class TestBulkUploadItemsValidation:
         with pytest.raises(exceptions.ValidationError) as exc_info:
             experiment.batch_upload_items([_record(evaluate_task_result="plain")])
 
-        assert "items[0].evaluate_task_result must be a dict" in str(exc_info.value)
+        assert "items[0].evaluate_task_result 必须是 dict" in str(exc_info.value)
 
     def test_batch_upload_items__trace_project_name_differs_from_upload__raises_validation_error(
         self,
@@ -578,7 +578,7 @@ class TestBulkUploadItemsValidation:
                 [_record(trace=trace)], project_name="upload-project"
             )
 
-        assert "does not match the upload project_name" in str(exc_info.value)
+        assert "不匹配" in str(exc_info.value)
 
     def test_batch_upload_items__trace_project_name_differs_only_by_case__is_accepted(
         self,
@@ -597,10 +597,10 @@ class TestBulkUploadItemsValidation:
         "score,expected",
         [
             ({"value": 1.0}, "feedback_scores[0].name is required"),
-            ({"name": "acc"}, "feedback_scores[0].value is required"),
+            ({"name": "acc"}, "feedback_scores[0].value 为必填项且必须是数字"),
             (
                 {"name": "acc", "value": "high"},
-                "feedback_scores[0].value is required and must be a number",
+                "feedback_scores[0].value 为必填项且必须是数字",
             ),
         ],
     )
@@ -646,7 +646,7 @@ class TestBulkUploadItemsValidation:
             )
 
         message = str(exc_info.value)
-        assert "items[0].evaluate_task_result must be a dict" in message
+        assert "items[0].evaluate_task_result 必须是 dict" in message
         assert "items[1].dataset_item_id must be a non-empty string" in message
 
     def test_batch_upload_items__single_item_larger_than_request_limit__raises_validation_error(
@@ -661,7 +661,7 @@ class TestBulkUploadItemsValidation:
         with pytest.raises(exceptions.ValidationError) as exc_info:
             experiment.batch_upload_items([_record(trace=oversized_trace)])
 
-        assert "at or above the" in str(exc_info.value)
+        assert "达到或超过了" in str(exc_info.value)
         assert mock_rest_client.experiments.experiment_items_bulk.call_count == 0
 
     def test_batch_upload_items__item_exactly_at_the_limit__is_rejected(self) -> None:
@@ -689,7 +689,7 @@ class TestBulkUploadItemsValidation:
             with pytest.raises(exceptions.ValidationError) as exc_info:
                 experiment.batch_upload_items([record])
 
-        assert "at or above the" in str(exc_info.value)
+        assert "达到或超过了" in str(exc_info.value)
         assert mock_rest_client.experiments.experiment_items_bulk.call_count == 0
 
 

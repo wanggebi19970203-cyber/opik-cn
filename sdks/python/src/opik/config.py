@@ -39,7 +39,7 @@ LOGGER = logging.getLogger(__name__)
 
 class IniConfigSettingsSource(InitSettingsSource, ConfigFileSourceMixin):
     """
-    A source class that loads variables from a INI file
+    从 INI 文件加载变量的源类
     """
 
     def __init__(
@@ -50,7 +50,7 @@ class IniConfigSettingsSource(InitSettingsSource, ConfigFileSourceMixin):
         expanded_path = pathlib.Path(config_file_path).expanduser()
         if config_file_path != CONFIG_FILE_PATH_DEFAULT and not expanded_path.exists():
             LOGGER.warning(
-                f"Config file not found at the path '{expanded_path}' provided by the `OPIK_CONFIG_PATH` environment variable."
+                f"在 `OPIK_CONFIG_PATH` 环境变量提供的路径 '{expanded_path}' 处未找到配置文件。"
             )
         self.ini_data = self._read_files(expanded_path)
 
@@ -71,13 +71,12 @@ class IniConfigSettingsSource(InitSettingsSource, ConfigFileSourceMixin):
 
 class OpikConfig(pydantic_settings.BaseSettings):
     """
-    Initializes every configuration variable with the first
-    found value. The order of sources used:
-    1. User passed values
-    2. Session config dict (can be populated by calling `update_session_config(...)`)
-    3. Environment variables (they must start with "OPIK_" prefix)
-    4. Load from file
-    5. Default values
+    使用第一个找到的值初始化每个配置变量。使用的来源顺序为：
+    1. 用户传入的值
+    2. 会话配置字典（可通过调用 `update_session_config(...)` 填充）
+    3. 环境变量（必须以 "OPIK_" 前缀开头）
+    4. 从文件加载
+    5. 默认值
     """
 
     model_config = pydantic_settings.SettingsConfigDict(env_prefix="opik_")
@@ -100,233 +99,227 @@ class OpikConfig(pydantic_settings.BaseSettings):
             IniConfigSettingsSource(settings_cls=cls),
         )
 
-    # Below are Opik configurations
+    # 以下是 Opik 配置
 
     url_override: str = OPIK_URL_CLOUD
-    """Opik backend base URL"""
+    """Opik 后端基础 URL"""
 
     project_name: str = OPIK_PROJECT_DEFAULT_NAME
-    """Opik project name"""
+    """Opik 项目名称"""
 
     workspace: str = OPIK_WORKSPACE_DEFAULT_NAME
-    """Opik workspace"""
+    """Opik 工作区"""
 
     default_llm: str = "openai/gpt-5-nano"
-    """Default LLM model name used by evaluation model factories when model is not provided."""
+    """未提供 model 时，评估模型工厂使用的默认 LLM 模型名称。"""
 
     api_key: Optional[str] = None
-    """Opik API key. This is not required if you are running against open source Opik installation"""
+    """Opik API 密钥。如果你针对开源 Opik 安装运行，则不需要此项。"""
 
     default_flush_timeout: Optional[int] = None
     """
-    Maximum time to wait when flushing Opik messages queues (in seconds).
-    In particular waiting happens when calling:
+    刷新 Opik 消息队列时等待的最长时间（以秒为单位）。
+    特别是在调用以下方法时会等待：
     * Opik().flush()
     * Opik().end()
     * flush_tracker()
-    And when the process is ending.
+    以及在进程结束时。
 
-    If it's not set - there is no timeout.
+    如果未设置，则没有超时。
     """
 
     background_workers: int = 4
     """
-    The amount of background threads that submit data to the backend.
+    向后端提交数据的后台线程数量。
     """
 
     file_upload_background_workers: int = 16
     """
-    The amount of background threads that upload files to the backend.
+    向后端上传文件的后台线程数量。
     """
 
     console_logging_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = (
         "INFO"
     )
     """
-    Logging level for console logs.
+    控制台日志的日志级别。
     """
 
     file_logging_level: Optional[
         Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
     ] = None
     """
-    Logging level for file logs. Is not configured - nothing is logged to the file.
+    文件日志的日志级别。未配置时不会向文件写入任何日志。
     """
 
     logging_file: str = "opik.log"
     """
-    File to write the logs to.
+    写入日志的文件。
     """
 
     pytest_experiment_enabled: bool = True
     """
-    If enabled, tests decorated with `llm_unit` will log data to Opik experiments
+    如果启用，使用 `llm_unit` 装饰的测试会将数据记录到 Opik 实验中。
     """
 
     check_tls_certificate: bool = True
     """
-    If enabled, TLS verification is enabled for all HTTP requests.
+    如果启用，将对所有 HTTP 请求启用 TLS 验证。
     """
 
     track_disable: bool = False
     """
-    If set to True, then `@track` decorator and `track_LIBRARY(...)` integrations do not log any data.
-    Any other API will continue working.
+    如果设置为 True，则 `@track` 装饰器和 `track_LIBRARY(...)` 集成不会记录任何数据。
+    其他任何 API 都将继续正常工作。
 
-    This setting can be overridden at runtime using:
-    - opik.set_tracing_active(False)  # Disable tracing
-    - opik.set_tracing_active(True)   # Enable tracing
-    - opik.is_tracing_active()        # Check current state
-    - opik.reset_tracing_to_config_default()  # Reset to this config value
+    可以在运行时通过以下方式覆盖此设置：
+    - opik.set_tracing_active(False)  # 禁用追踪
+    - opik.set_tracing_active(True)   # 启用追踪
+    - opik.is_tracing_active()        # 检查当前状态
+    - opik.reset_tracing_to_config_default()  # 重置为此配置值
 
-    Runtime overrides take precedence over this static configuration.
+    运行时覆盖优先于此静态配置。
 
-    We do not recommend disable tracking unless you only use tracking functionalities in your project because
-    it might lead to unexpected results for the features that rely on spans/traces created.
+    我们建议不要禁用追踪，除非你的项目中只使用追踪功能，因为
+    它可能导致依赖已创建 span/trace 的功能出现意外结果。
     """
 
     sentry_enable: bool = True
     """
-    If set to True, Opik will send the information about the errors to Sentry.
+    如果设置为 True，Opik 会将错误信息发送到 Sentry。
     """
 
     sentry_dsn: str = "https://fbde8a9ef528f379de25bdfb19749ca5@o168229.ingest.us.sentry.io/4508620148441088"  # 16.04.2026
     """
-    Sentry project DSN which is used as a destination for sentry events.
-    In case there is a need to update reporting rules and stop receiving events from existing users,
-    current DSN should disabled in Sentry project settings, a new DSN should be created and placed here
-    instead of the old one.
+    用作 Sentry 事件目标的 Sentry 项目 DSN。
+    如果需要更新报告规则并停止从现有用户接收事件，
+    应在 Sentry 项目设置中禁用当前 DSN，创建一个新的 DSN 并将其放在此处，
+    以替换旧的 DSN。
     """
 
     enable_litellm_models_monitoring: bool = True
     """
-    If set to True - Opik will create llm spans for LiteLLMChatModel calls.
-    It is mainly to be used in tests since litellm uses external Opik callback
-    which makes HTTP requests not via the opik package.
+    如果设置为 True，Opik 将为 LiteLLMChatModel 调用创建 llm span。
+    这主要用于测试，因为 litellm 使用外部的 Opik 回调，
+    其 HTTP 请求不经过 opik 包。
     """
 
     enable_json_request_compression: bool = True
     """
-    If set to True - Opik will compress the JSON request body.
+    如果设置为 True，Opik 将压缩 JSON 请求体。
     """
 
     guardrail_timeout: int = 30
     """
-    Timeout for guardrail.validate calls in seconds. If response takes more than this, it will be considered failed and raises an Exception.
+    guardrail.validate 调用的超时时间（以秒为单位）。如果响应耗时超过此值，将被视为失败并抛出异常。
     """
 
     guardrails_url_override: Optional[str] = None
     """
-    URL for the guardrails backend service.
-    When set, overrides the default guardrails URL derived from url_override.
+    guardrails 后端服务的 URL。
+    设置后，将覆盖根据 url_override 推导出的默认 guardrails URL。
     """
 
     maximal_queue_size: int = 1_000_000
     """
-    Specifies the maximum number of messages that can be queued for delivery when a connection error occurs or rate limiting is in effect.
+    指定在发生连接错误或速率限制生效时，可以排队等待投递的最大消息数量。
     """
     maximal_queue_size_batch_factor: int = 10
     """
-    Defines the factor applied to the `maximal_queue_size` to reduce the maximal message queue size when batching is enabled.
+    定义应用于 `maximal_queue_size` 的因子，用于在启用批处理时减小最大消息队列大小。
     """
 
     log_start_trace_span: bool = True
     """
-    If set to True, both the start and end of the trace and span will be logged. This is useful for traces and spans that span long durations.
-    For shorter traces/spans, it is recommended to keep this setting disabled to minimize data logging overhead.
+    如果设置为 True，将记录 trace 和 span 的开始与结束。这对于持续时间较长的 trace 和 span 很有用。
+    对于较短的 trace/span，建议保持此设置禁用，以尽量减少数据记录开销。
     """
 
     min_base64_embedded_attachment_size: int = 256_000
     """
-    Minimum size of the attachment string in bytes that will be kept embedded in the base64 string. (250KB)
-    Attachments larger than this size will be extracted from inputs/outputs of spans/traces and uploaded to the Opik backend.
+    附件字符串保持内嵌在 base64 字符串中的最小大小（以字节为单位）。(250KB)
+    大于此大小的附件将从 span/trace 的输入/输出中提取并上传到 Opik 后端。
     """
 
     is_attachment_extraction_active: bool = True
     """
-    If set to True, attachments larger than `min_base64_embedded_attachment_size` will be extracted from spans/traces and uploaded to the Opik backend.
+    如果设置为 True，大于 `min_base64_embedded_attachment_size` 的附件将从 span/trace 中提取并上传到 Opik 后端。
     """
 
     max_payload_size_mb: int = 20
     """
-    Per-object size limit (in MB) for the truncatable fields (``input``/``output``) of every span
-    **and trace**, applied right before it is sent to the backend (after attachments have been
-    extracted). An ``input`` or ``output`` over this limit - or the two together over it - is
-    replaced with a truncation marker and a warning is logged. ``metadata`` is never truncated (it
-    holds small routing/cost fields the backend relies on, e.g. ``thread_id`` and ``model``) and is
-    not counted toward this limit; an oversized ``metadata`` is left to the server-side
-    request/document guards (413/400) rather than trimmed. Set to ``0`` (or any value ``<= 0``) to
-    disable truncation entirely. Log large payloads as attachments instead to avoid truncation.
+    每个 span **和 trace** 的可截断字段（``input``/``output``）的单个对象大小限制（以 MB 为单位），
+    在发送到后端之前（附件已提取之后）应用。超过此限制的 ``input`` 或 ``output`` ——
+    或者两者合计超过此限制 —— 将被替换为截断标记并记录一条警告。``metadata`` 从不被截断
+    （它保存后端依赖的小型路由/成本字段，例如 ``thread_id`` 和 ``model``），且不计入此限制；
+    过大的 ``metadata`` 会交由服务端请求/文档防护（413/400）处理，而不是被裁剪。设置为 ``0``
+    （或任何 ``<= 0`` 的值）可完全禁用截断。为避免截断，可将大负载作为附件记录。
     """
 
     connection_monitor_ping_interval: float = 10
     """
-    Interval in seconds between OPIK server's connection monitoring pings.
+    OPIK 服务器连接监控 ping 之间的间隔（以秒为单位）。
     """
 
     connection_monitor_check_timeout: float = 5
     """
-    Timeout in seconds for OPIK server's connection monitoring checks.
+    OPIK 服务器连接监控检查的超时时间（以秒为单位）。
     """
 
     runner_poll_interval: float = 0.5
     """
-    Interval in seconds between polls for new jobs while the local runner
-    (`opik connect` / `opik endpoint`) is idle. Each idle poll is one request to
-    the Opik server, so the default of 0.5s produces ~120 requests/minute.
-    Increase this value if a corporate firewall or proxy throttles or blocks the
-    sustained polling traffic (at the cost of slower job pickup).
+    本地运行器（`opik connect` / `opik endpoint`）空闲时，轮询新作业的间隔（以秒为单位）。
+    每次空闲轮询都会向 Opik 服务器发送一个请求，因此默认的 0.5 秒会产生约 120 个请求/分钟。
+    如果企业防火墙或代理会限制或阻断持续轮询流量，请增大此值（代价是作业接收变慢）。
     """
 
     replay_batch_size: int = 50
     """
-    Number of failed messages to replay in a single batch after connection to the OPIK server is restored.
-    The messages are replayed in batches to avoid overwhelming the system with too many requests at once and to control memory consumption.
+    连接到 OPIK 服务器恢复后，单批重放失败消息的数量。
+    消息按批重放，以避免一次性发送过多请求压垮系统，并控制内存消耗。
     """
     replay_batch_replay_delay: float = 0.5
     """
-    Delay in seconds between replaying batches of failed messages after connection to the OPIK server is restored.
-    This is to control memory consumption and to avoid overwhelming the system with too many requests at once.
+    连接到 OPIK 服务器恢复后，重放各批失败消息之间的延迟（以秒为单位）。
+    这是为了控制内存消耗，并避免一次性发送过多请求压垮系统。
     """
 
     replay_tick_interval: float = 0.3
     """
-    Interval in seconds between replay manager thread's ticks.
-    This is to control the frequency of replay manager thread's operations, such as checking for status of connection to the OPIK server and replaying failed messages if connection restored.
+    重放管理器线程每次 tick 之间的间隔（以秒为单位）。
+    这是为了控制重放管理器线程操作的频率，例如检查与 OPIK 服务器的连接状态，以及在连接恢复时重放失败消息。
     """
 
     unauthorized_message_type_retry_interval: float = 10.0
     """
-    Interval in seconds between retrying unauthorized message types.
-    This is to control the frequency of retrying unauthorized message types.
+    重试未授权消息类型之间的间隔（以秒为单位）。
+    这是为了控制重试未授权消息类型的频率。
     """
 
     unauthorized_message_type_max_retry_count: Optional[int] = None
     """
-    Maximum number of retries for unauthorized message types.
-    This is to control the number of times unauthorized message types are retried before giving up. If None, there is no limit.
+    未授权消息类型的最大重试次数。
+    这是为了控制未授权消息类型在放弃之前重试的次数。如果为 None，则没有限制。
     """
 
     environment: Optional[str] = None
     """
-    Default environment name applied to traces and spans when no explicit
-    ``environment=`` argument is provided.
-    Env var: OPIK_ENVIRONMENT
+    当未显式提供 ``environment=`` 参数时，应用于 trace 和 span 的默认环境名称。
+    环境变量：OPIK_ENVIRONMENT
     """
 
     suppress_batching_update_warning: bool = False
     """
-    Suppress the warning about potential data loss when calling .end() or .update()
-    on spans/traces with batching enabled. Set to True if your updates happen well
-    after creation and the warning is not relevant.
-    Env var: OPIK_SUPPRESS_BATCHING_UPDATE_WARNING
+    在启用批处理时，抑制对 span/trace 调用 .end() 或 .update() 可能造成数据丢失的警告。
+    如果你的更新发生在创建之后很久且该警告不相关，请设置为 True。
+    环境变量：OPIK_SUPPRESS_BATCHING_UPDATE_WARNING
     """
 
     prompt_cache_ttl_seconds: pydantic.PositiveInt = 300
     """
-    TTL in seconds for cached prompts. Controls how long unpinned prompts are kept
-    before being refreshed from the backend. Minimum value is 1.
-    Env var: OPIK_PROMPT_CACHE_TTL_SECONDS
+    缓存提示词的 TTL（以秒为单位）。控制未固定的提示词在从后端刷新之前保留多长时间。
+    最小值为 1。
+    环境变量：OPIK_PROMPT_CACHE_TTL_SECONDS
     """
 
     @property
@@ -337,14 +330,14 @@ class OpikConfig(pydantic_settings.BaseSettings):
     @property
     def config_file_exists(self) -> bool:
         """
-        Determines whether the configuration file exists at the specified path.
+        确定配置文件是否存在于指定路径。
         """
         return self.config_file_fullpath.exists()
 
     @property
     def is_cloud_installation(self) -> bool:
         """
-        Determine if the installation type is a cloud installation.
+        确定安装类型是否为云安装。
         """
         return url_helpers.get_base_url(self.url_override) == url_helpers.get_base_url(
             OPIK_URL_CLOUD
@@ -382,10 +375,10 @@ class OpikConfig(pydantic_settings.BaseSettings):
 
     def save_to_file(self) -> None:
         """
-        Save configuration to a file
+        将配置保存到文件
 
         Raises:
-            OSError: If there is an issue writing to the file.
+            OSError: 写入文件时出现问题。
         """
         config_file_content = configparser.ConfigParser()
 
@@ -403,14 +396,14 @@ class OpikConfig(pydantic_settings.BaseSettings):
                 self.config_file_fullpath, mode="w+", encoding="utf-8"
             ) as config_file:
                 config_file_content.write(config_file)
-            LOGGER.info(f"Configuration saved to file: {self.config_file_fullpath}")
+            LOGGER.info(f"配置已保存到文件：{self.config_file_fullpath}")
         except OSError as e:
-            LOGGER.error(f"Failed to save configuration: {e}")
+            LOGGER.error(f"保存配置失败：{e}")
             raise
 
     def as_dict(self, mask_api_key: bool) -> Dict[str, Any]:
         """
-        Retrieves the current configuration with the API key value masked.
+        检索当前配置，其中 API 密钥值已被遮蔽。
         """
         current_values = self.model_dump()
         if current_values.get("api_key") is not None and mask_api_key:
@@ -421,13 +414,12 @@ class OpikConfig(pydantic_settings.BaseSettings):
         self, show_misconfiguration_message: bool = False
     ) -> bool:
         """
-        Attempts to detects if Opik is misconfigured and optionally displays
-        a corresponding error message.
-        Works only for Opik cloud and OSS localhost installations.
+        尝试检测 Opik 是否配置错误，并可选择显示相应的错误消息。
+        仅适用于 Opik 云和 OSS localhost 安装。
 
         Parameters:
-        show_misconfiguration_message : A flag indicating whether to display detailed error messages if the configuration
-            is determined to be misconfigured. Defaults to False.
+        show_misconfiguration_message : 一个标志，指示当配置被判定为错误时是否显示详细的错误消息。
+            默认为 False。
         """
         if "pytest" in sys.modules:
             return False
@@ -450,15 +442,14 @@ class OpikConfig(pydantic_settings.BaseSettings):
 
     def get_misconfiguration_detection_results(self) -> Tuple[bool, Optional[str]]:
         """
-        Tries detecting misconfigurations for either cloud or localhost environments.
-        The detection will not work for any other kind of installation.
+        尝试检测云或 localhost 环境的配置错误。
+        对于任何其他类型的安装，此检测将不起作用。
 
         Returns:
-            Tuple[bool, Optional[str]]: A tuple where the first element indicates
-            whether the configuration is misconfigured (True for misconfigured, False for valid).
-            The second element is an optional string that contains
-            an error message if there is a configuration issue, or None if the
-            configuration is valid.
+            Tuple[bool, Optional[str]]: 一个元组，其中第一个元素表示
+            配置是否错误（True 表示配置错误，False 表示有效）。
+            第二个元素是一个可选字符串，如果存在配置问题则包含错误消息，
+            如果配置有效则为 None。
         """
         is_misconfigured_for_cloud_flag, error_message = (
             self._is_misconfigured_for_cloud()
@@ -476,12 +467,11 @@ class OpikConfig(pydantic_settings.BaseSettings):
 
     def _is_misconfigured_for_cloud(self) -> Tuple[bool, Optional[str]]:
         """
-        Determines if the current Opik configuration is misconfigured for cloud logging.
+        确定当前 Opik 配置对于云日志记录是否配置错误。
 
         Returns:
-            Tuple[bool, Optional[str]]: A tuple where the first element is a boolean indicating if
-            the configuration is misconfigured for cloud logging, and the second element is either
-            an error message indicating the reason for misconfiguration or None.
+            Tuple[bool, Optional[str]]: 一个元组，其中第一个元素是一个布尔值，指示
+            配置对于云日志记录是否错误；第二个元素是指示配置错误原因的错误消息，或 None。
         """
         api_key_configured = self.api_key is not None
         tracking_disabled = self.track_disable
@@ -492,9 +482,9 @@ class OpikConfig(pydantic_settings.BaseSettings):
             and (not tracking_disabled)
         ):
             error_message = (
-                "The API key must be specified to log data to https://www.comet.com/opik.\n"
-                "You can use `opik configure` CLI command to configure your environment for logging.\n"
-                "See the configuration details in the docs: https://www.comet.com/docs/opik/tracing/advanced/sdk_configuration.\n"
+                "必须指定 API 密钥才能将数据记录到 https://www.comet.com/opik。\n"
+                "你可以使用 `opik configure` CLI 命令为日志记录配置环境。\n"
+                "请参阅文档中的配置详情：https://www.comet.com/docs/opik/tracing/advanced/sdk_configuration。\n"
             )
             return True, error_message
 
@@ -502,12 +492,11 @@ class OpikConfig(pydantic_settings.BaseSettings):
 
     def _is_misconfigured_for_localhost(self) -> Tuple[bool, Optional[str]]:
         """
-        Determines if the current setup is misconfigured for a local open-source installation.
+        确定当前设置对于本地开源安装是否配置错误。
 
         Returns:
-            Tuple[bool, Optional[str]]: A tuple where the first element is a boolean indicating if
-            the configuration is misconfigured for local logging, and the second element is either
-            an error message indicating the reason for misconfiguration or None.
+            Tuple[bool, Optional[str]]: 一个元组，其中第一个元素是一个布尔值，指示
+            配置对于本地日志记录是否错误；第二个元素是指示配置错误原因的错误消息，或 None。
         """
 
         workspace_is_default = self.workspace == OPIK_WORKSPACE_DEFAULT_NAME
@@ -519,10 +508,10 @@ class OpikConfig(pydantic_settings.BaseSettings):
             and (not tracking_disabled)
         ):
             error_message = (
-                "Open source installations do not support workspace specification. Only `default` is available.\n"
-                "See the configuration details in the docs: https://www.comet.com/docs/opik/tracing/advanced/sdk_configuration\n"
-                "If you need advanced workspace management - you may consider using our cloud offer (https://www.comet.com/site/pricing/)\n"
-                "or contact our team for purchasing and setting up a self-hosted installation.\n"
+                "开源安装不支持指定工作区。仅可使用 `default`。\n"
+                "请参阅文档中的配置详情：https://www.comet.com/docs/opik/tracing/advanced/sdk_configuration\n"
+                "如果你需要高级工作区管理，可以考虑使用我们的云服务 (https://www.comet.com/site/pricing/)\n"
+                "或联系我们的团队购买和设置自托管安装。\n"
             )
             return True, error_message
 
@@ -535,7 +524,7 @@ def update_session_config(key: str, value: Any) -> None:
 
 def get_from_user_inputs(**user_inputs: Any) -> OpikConfig:
     """
-    Instantiates an OpikConfig using provided user inputs.
+    使用提供的用户输入实例化 OpikConfig。
     """
     cleaned_user_inputs = dict_utils.remove_none_from_dict(user_inputs)
 

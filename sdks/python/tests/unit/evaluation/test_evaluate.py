@@ -4279,7 +4279,7 @@ def test_evaluate__experiment_config_not_set__only_resume_state_added(
     assert list(sent_config.keys()) == [resume.RESUME_METADATA_KEY]
     blob = _json.loads(sent_config[resume.RESUME_METADATA_KEY])
     assert blob["resumable"] is False
-    assert "pinned dataset version" in blob["non_resumable_reason"]
+    assert "恢复需要固定的数据集版本" in blob["non_resumable_reason"]
 
 
 def test_evaluate__no_scoring_metrics__completes_and_writes_no_feedback_scores(

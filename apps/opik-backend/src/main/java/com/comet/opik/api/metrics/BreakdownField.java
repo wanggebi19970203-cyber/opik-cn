@@ -8,12 +8,12 @@ import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Supported group by dimensions for dashboard widget metrics.
- * Each field represents a dimension by which metrics can be grouped.
- * Compatibility with metric types is based on entity type:
- * - Trace metrics: DURATION, TRACE_COUNT, TOKEN_USAGE, COST, FEEDBACK_SCORES, GUARDRAILS_FAILED_COUNT
- * - Thread metrics: THREAD_COUNT, THREAD_DURATION, THREAD_FEEDBACK_SCORES
- * - Span metrics: SPAN_COUNT, SPAN_DURATION, SPAN_TOKEN_USAGE, SPAN_FEEDBACK_SCORES
+ * 仪表盘小部件指标支持的 group by 维度。
+ * 每个字段代表一个可用于对指标进行分组的维度。
+ * 与指标类型的兼容性基于实体类型：
+ * - Trace 指标：DURATION, TRACE_COUNT, TOKEN_USAGE, COST, FEEDBACK_SCORES, GUARDRAILS_FAILED_COUNT
+ * - Thread 指标：THREAD_COUNT, THREAD_DURATION, THREAD_FEEDBACK_SCORES
+ * - Span 指标：SPAN_COUNT, SPAN_DURATION, SPAN_TOKEN_USAGE, SPAN_FEEDBACK_SCORES
  */
 @RequiredArgsConstructor
 @Getter
@@ -35,7 +35,7 @@ public enum BreakdownField {
     private final String displayName;
     private final boolean requiresKey;
 
-    // Trace-based metrics
+    // 基于 Trace 的指标
     private static final Set<MetricType> TRACE_METRICS = EnumSet.of(
             MetricType.DURATION,
             MetricType.TRACE_COUNT,
@@ -44,13 +44,13 @@ public enum BreakdownField {
             MetricType.FEEDBACK_SCORES,
             MetricType.GUARDRAILS_FAILED_COUNT);
 
-    // Thread-based metrics
+    // 基于 Thread 的指标
     private static final Set<MetricType> THREAD_METRICS = EnumSet.of(
             MetricType.THREAD_COUNT,
             MetricType.THREAD_DURATION,
             MetricType.THREAD_FEEDBACK_SCORES);
 
-    // Span-based metrics
+    // 基于 Span 的指标
     public static final Set<MetricType> SPAN_METRICS = EnumSet.of(
             MetricType.SPAN_COUNT,
             MetricType.SPAN_DURATION,
@@ -58,15 +58,15 @@ public enum BreakdownField {
             MetricType.SPAN_FEEDBACK_SCORES);
 
     /**
-     * Check if this group by field is compatible with the given metric type.
-     * Based on the Jira ticket OPIK-3790 "Supported Breakdown Fields" table:
-     * - TAGS: Trace, Span, Thread
-     * - METADATA: Trace, Span (not Thread)
-     * - NAME: Trace, Span (not Thread)
-     * - ERROR_INFO: Trace, Span (not Thread)
-     * - MODEL: Spans only
-     * - PROVIDER: Spans only
-     * - TYPE: Spans only
+     * 检查此 group by 字段是否与给定的指标类型兼容。
+     * 基于 Jira 工单 OPIK-3790 "Supported Breakdown Fields" 表格：
+     * - TAGS：Trace、Span、Thread
+     * - METADATA：Trace、Span（不支持 Thread）
+     * - NAME：Trace、Span（不支持 Thread）
+     * - ERROR_INFO：Trace、Span（不支持 Thread）
+     * - MODEL：仅 Span
+     * - PROVIDER：仅 Span
+     * - TYPE：仅 Span
      */
     public boolean isCompatibleWith(MetricType metricType) {
         if (this == NONE) {
@@ -86,7 +86,7 @@ public enum BreakdownField {
     }
 
     /**
-     * Get a user-friendly description of which metric types are compatible with this field.
+     * 获取关于哪些指标类型与此字段兼容的用户友好描述。
      */
     public String getCompatibleMetricTypesDescription() {
         return switch (this) {

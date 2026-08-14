@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Custom Gemini chat model that converts VideoContent to ImageContent.
- * Gemini's API treats videos as images, so we convert video URLs before sending to the model.
+ * 自定义 Gemini 聊天模型，将 VideoContent 转换为 ImageContent。
+ * Gemini 的 API 把视频当作图片处理，因此我们在发送给模型之前先转换视频 URL。
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -30,10 +30,10 @@ public class OpikGeminiChatModel implements ChatModel {
 
     @Override
     public ChatResponse chat(ChatRequest chatRequest) {
-        // Convert messages: if any UserMessage has VideoContent, convert to ImageContent
+        // 转换消息：如果任何 UserMessage 含有 VideoContent，则转换为 ImageContent
         List<ChatMessage> convertedMessages = convertMessagesForGemini(chatRequest.messages());
 
-        // Create new request with converted messages
+        // 用转换后的消息创建新请求
         ChatRequest convertedRequest = ChatRequest.builder()
                 .messages(convertedMessages)
                 .parameters(chatRequest.parameters())
@@ -43,7 +43,7 @@ public class OpikGeminiChatModel implements ChatModel {
     }
 
     /**
-     * Convert messages for Gemini: VideoContent -> ImageContent
+     * 为 Gemini 转换消息：VideoContent -> ImageContent
      */
     private List<ChatMessage> convertMessagesForGemini(List<ChatMessage> messages) {
         return messages.stream()
@@ -52,48 +52,48 @@ public class OpikGeminiChatModel implements ChatModel {
     }
 
     /**
-     * Convert a single message, handling VideoContent in UserMessages.
+     * 转换单条消息，处理 UserMessages 中的 VideoContent。
      */
     private ChatMessage convertMessageForGemini(ChatMessage message) {
-        // Only UserMessage can have VideoContent
+        // 只有 UserMessage 可以含有 VideoContent
         if (!(message instanceof UserMessage)) {
             return message;
         }
 
         UserMessage userMessage = (UserMessage) message;
 
-        // Simple text-only message - no conversion needed
+        // 纯文本消息 - 无需转换
         if (userMessage.hasSingleText()) {
             return message;
         }
 
-        // Multi-content message - check if it has video
+        // 多内容消息 - 检查是否含有视频
         boolean hasVideo = userMessage.contents().stream()
                 .anyMatch(content -> content instanceof VideoContent);
 
         if (!hasVideo) {
-            // No video, return as-is
+            // 没有视频，原样返回
             return message;
         }
 
-        // Has video - convert VideoContent to ImageContent
+        // 有视频 - 将 VideoContent 转换为 ImageContent
         List<Content> convertedContents = new ArrayList<>();
         for (Content content : userMessage.contents()) {
             if (content instanceof VideoContent videoContent) {
-                // Gemini treats videos as images. A Video carries either a url or inline base64, never
-                // both: MinIO-staged attachments arrive as base64, so reading url() here would throw.
+                // Gemini 把视频当作图片处理。一个 Video 要么携带 url，要么携带内联 base64，绝不会两者都有：
+                // 由 MinIO 暂存的附件以 base64 形式到达，因此在这里读取 url() 会抛出异常。
                 var video = videoContent.video();
                 var imageBuilder = Image.builder();
                 if (video.url() != null) {
                     var url = video.url().toString();
-                    log.debug("Converting VideoContent to ImageContent for Gemini: {}",
+                    log.debug("正在为 Gemini 将 VideoContent 转换为 ImageContent: {}",
                             url.substring(0, Math.min(50, url.length())));
                     imageBuilder.url(video.url());
                 } else if (StringUtils.isNotEmpty(video.base64Data())) {
-                    log.debug("Converting inline VideoContent to ImageContent for Gemini");
+                    log.debug("正在为 Gemini 将内联 VideoContent 转换为 ImageContent");
                     imageBuilder.base64Data(video.base64Data());
                 } else {
-                    // Nothing convertible; pass it through rather than build an empty image.
+                    // 没有可转换的内容；原样透传，而不是构建一个空图片。
                     convertedContents.add(content);
                     continue;
                 }
@@ -102,7 +102,7 @@ public class OpikGeminiChatModel implements ChatModel {
                 }
                 convertedContents.add(ImageContent.from(imageBuilder.build()));
             } else {
-                // Audio, files and text are left untouched — dropping them would silently lose input
+                // 音频、文件和文本保持不变——丢弃它们会悄然丢失输入
                 convertedContents.add(content);
             }
         }

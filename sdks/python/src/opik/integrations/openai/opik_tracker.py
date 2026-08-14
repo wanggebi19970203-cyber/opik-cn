@@ -14,10 +14,7 @@ OpenAIClient = TypeVar("OpenAIClient", openai.OpenAI, openai.AsyncOpenAI)
 
 
 def _get_provider(openai_client: OpenAIClient) -> str:
-    """Get the provider name from the OpenAI client's base URL.
-
-    从 OpenAI 客户端的 base URL 中获取提供商名称。
-    """
+    """从 OpenAI 客户端的 base URL 中获取提供商名称。"""
     if openai_client.base_url.host != "api.openai.com":
         return openai_client.base_url.host
     return "openai"
@@ -28,9 +25,7 @@ def track_openai(
     project_name: Optional[str] = None,
     provider: Optional[Union[str, LLMProvider]] = None,
 ) -> OpenAIClient:
-    """Adds Opik tracking wrappers to an OpenAI client.
-
-    为 OpenAI 客户端添加 Opik 追踪包装器。
+    """为 OpenAI 客户端添加 Opik 追踪包装器。
 
     追踪以下调用：
 

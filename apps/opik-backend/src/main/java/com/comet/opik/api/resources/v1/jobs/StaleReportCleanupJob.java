@@ -61,7 +61,7 @@ public class StaleReportCleanupJob extends Job {
                                 WORKSPACE_ID_KEY, workspaceId,
                                 WORKSPACE_NAME_KEY, workspaceId)))),
                 Mono.defer(() -> {
-                    log.debug("Could not acquire lock for stale report cleanup, another instance is running");
+                    log.debug("无法获取陈旧报告清理的锁，另一个实例正在运行");
                     return Mono.empty();
                 }),
                 Duration.ofMinutes(1),
@@ -69,6 +69,6 @@ public class StaleReportCleanupJob extends Job {
                 true).subscribe(
                         __ -> {
                         },
-                        error -> log.error("Stale report cleanup failed", error));
+                        error -> log.error("陈旧报告清理失败", error));
     }
 }
