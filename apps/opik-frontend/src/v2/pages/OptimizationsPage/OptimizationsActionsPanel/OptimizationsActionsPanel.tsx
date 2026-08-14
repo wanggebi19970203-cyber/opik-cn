@@ -43,7 +43,7 @@ const OptimizationsActionsPanel: React.FunctionComponent<
       <TooltipWrapper content={t("optimizations.delete")}>
         <Button
           variant="outline"
-          size="icon-sm"
+          size="icon-2xs"
           onClick={() => {
             setOpen(true);
             resetKeyRef.current = resetKeyRef.current + 1;

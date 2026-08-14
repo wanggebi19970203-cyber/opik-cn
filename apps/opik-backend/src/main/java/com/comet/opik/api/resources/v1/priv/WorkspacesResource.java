@@ -1,16 +1,17 @@
 package com.comet.opik.api.resources.v1.priv;
 
 import com.codahale.metrics.annotation.Timed;
+import com.comet.opik.api.TokenUsageNames;
 import com.comet.opik.api.WorkspaceConfiguration;
-import com.comet.opik.api.WorkspaceVersion;
 import com.comet.opik.api.error.ErrorMessage;
 import com.comet.opik.api.metrics.WorkspaceMetricRequest;
 import com.comet.opik.api.metrics.WorkspaceMetricResponse;
 import com.comet.opik.api.metrics.WorkspaceMetricsSummaryRequest;
 import com.comet.opik.api.metrics.WorkspaceMetricsSummaryResponse;
+import com.comet.opik.api.metrics.WorkspaceSpanMetricRequest;
+import com.comet.opik.api.metrics.WorkspaceTokenUsageNamesRequest;
 import com.comet.opik.domain.WorkspaceConfigurationService;
 import com.comet.opik.domain.WorkspaceMetricsService;
-import com.comet.opik.domain.workspaces.WorkspaceVersionService;
 import com.comet.opik.infrastructure.auth.RequestContext;
 import com.comet.opik.infrastructure.auth.RequiredPermissions;
 import com.comet.opik.infrastructure.auth.WorkspaceUserPermission;
@@ -39,6 +40,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 import static com.comet.opik.utils.AsyncUtils.setRequestContext;
 
 @Path("/v1/private/workspaces")
@@ -52,7 +55,6 @@ public class WorkspacesResource {
 
     private final @NonNull WorkspaceMetricsService workspaceMetricsService;
     private final @NonNull WorkspaceConfigurationService workspaceConfigurationService;
-    private final @NonNull WorkspaceVersionService workspaceVersionService;
     private final @NonNull Provider<RequestContext> requestContext;
 
     @Deprecated
@@ -150,34 +152,50 @@ public class WorkspacesResource {
         return Response.ok().entity(response).build();
     }
 
-    @GET
-    @Path("/versions")
-    @Operation(operationId = "getWorkspaceVersion", summary = "获取工作空间版本", description = """
-            确定工作空间应使用 Opik V1（传统工作空间范围）还是 Opik V2（项目优先）导航。
-            后端是此确定的唯一权威，客户端绝不能自行推导版本。
-
-            确定逻辑（优先级顺序）：
-            1) V2 工作空间白名单 (TOGGLE_V2_WORKSPACE_ALLOWLIST)
-            2) 功能标志覆盖 (TOGGLE_FORCE_WORKSPACE_VERSION)
-            3) 认证单向 V2 门控（仅限已认证模式）
-            4) 版本 1 实体检查（没有 project_id 的实体）
-            5) 失败时回退
-
-            在未认证模式下（authentication.enabled=false），跳过认证步骤。
-            由前端在工作空间加载时调用。""", responses = {
-            @ApiResponse(responseCode = "200", description = "工作空间版本", content = @Content(schema = @Schema(implementation = WorkspaceVersion.class)))
+    @POST
+    @Path("/metrics/spans")
+    @Operation(operationId = "getWorkspaceSpanMetric", summary = "Get workspace span metric", description = "Gets a span metric time series aggregated across the workspace. When project_ids is empty, all projects in the workspace are included; otherwise only the given projects.", responses = {
+            @ApiResponse(responseCode = "200", description = "Workspace span metric", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
-    public Response getWorkspaceVersion() {
-        var workspaceId = requestContext.get().getWorkspaceId();
-        var authSuggestedVersion = requestContext.get().getOpikVersion();
-        log.info("Determining workspace version, workspaceId '{}', authSuggestedVersion '{}'",
-                workspaceId, authSuggestedVersion);
-        var workspaceVersion = workspaceVersionService.getWorkspaceVersion(workspaceId, authSuggestedVersion)
+    @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
+    public Response getWorkspaceSpanMetric(
+            @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceSpanMetricRequest.class))) @NotNull @Valid WorkspaceSpanMetricRequest request) {
+
+        String workspaceId = requestContext.get().getWorkspaceId();
+
+        log.info("Retrieve workspace span metric '{}' for projectIds '{}', on workspace_id '{}'", request.metricType(),
+                request.projectIds(), workspaceId);
+        WorkspaceMetricResponse response = workspaceMetricsService.getWorkspaceSpanMetric(request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Determined workspace, workspaceId '{}', authSuggestedVersion '{}', version '{}'",
-                workspaceId, authSuggestedVersion, workspaceVersion.opikVersion().getValue());
-        return Response.ok().entity(workspaceVersion).build();
+        log.info("Retrieved workspace span metric '{}' for projectIds '{}', on workspace_id '{}'", request.metricType(),
+                request.projectIds(), workspaceId);
+
+        return Response.ok().entity(response).build();
+    }
+
+    @POST
+    @Path("/token-usage/names")
+    @Operation(operationId = "getWorkspaceTokenUsageNames", summary = "Get workspace token usage names", description = "Gets the distinct span token usage key names aggregated across the workspace. When project_ids is empty, all projects in the workspace are included; otherwise only the given projects.", responses = {
+            @ApiResponse(responseCode = "200", description = "Token Usage names resource", content = @Content(schema = @Schema(implementation = TokenUsageNames.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
+    public Response getWorkspaceTokenUsageNames(
+            @RequestBody(content = @Content(schema = @Schema(implementation = WorkspaceTokenUsageNamesRequest.class))) @NotNull @Valid WorkspaceTokenUsageNamesRequest request) {
+
+        String workspaceId = requestContext.get().getWorkspaceId();
+
+        log.info("Retrieve workspace token usage names for projectIds '{}', on workspace_id '{}'", request.projectIds(),
+                workspaceId);
+        List<String> tokenUsageNames = workspaceMetricsService.getWorkspaceTokenUsageNames(request.projectIds())
+                .contextWrite(ctx -> setRequestContext(ctx, requestContext))
+                .block();
+        log.info("Retrieved workspace token usage names '{}' for projectIds '{}', on workspace_id '{}'",
+                tokenUsageNames.size(), request.projectIds(), workspaceId);
+
+        return Response.ok(TokenUsageNames.builder().names(tokenUsageNames).build()).build();
     }
 
     @GET

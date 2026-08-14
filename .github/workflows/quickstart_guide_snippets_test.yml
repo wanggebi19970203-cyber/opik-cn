@@ -27,23 +27,26 @@ jobs:
 
         steps:
             - name: Checkout repo
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
               with:
                 ref: ${{ github.ref }}
             
             - name: Setup Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@v7
               with:
                 python-version: 3.12
 
+            - name: Set up uv
+              uses: astral-sh/setup-uv@v9.0.0
+
             - name: Install Opik
-              run: pip install opik
+              run: uv pip install --system opik
 
             - name: Install Test Dependencies
               run: |
-                pip install -r ${{ github.workspace }}/tests_end_to_end/test_requirements.txt
-                pip install -r ${{ github.workspace }}/tests_end_to_end/integrations_requirements.txt
-                pip install allure-pytest
+                uv pip install --system -r ${{ github.workspace }}/tests_end_to_end/test_requirements.txt
+                uv pip install --system -r ${{ github.workspace }}/tests_end_to_end/integrations_requirements.txt
+                uv pip install --system allure-pytest
                 playwright install
           
             - name: Install allurectl

@@ -51,7 +51,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.comet.opik.api.Dataset.DatasetPage;
 import static com.comet.opik.domain.ExperimentItemDAO.ExperimentSummary;
@@ -80,14 +79,6 @@ public interface DatasetService {
     void verifyVisibilityIfExists(UUID id, String workspaceId, Visibility visibility);
 
     List<Dataset> findByIds(Set<UUID> ids, String workspaceId);
-
-    /**
-     * 批量查找非空项目关联的 {@code (dataset_id → project_id)} 映射。
-     * 供 {@code OptimizationProjectMigrationService} 路径 B 推断使用：
-     * {@code project_id} 仍为 {@code NULL} 的数据集将从映射中<b>排除</b>，
-     * 调用方可通过与候选集的差集来识别无推断的条目。
-     */
-    Map<UUID, UUID> findProjectIdsByDatasetIds(Set<UUID> ids, String workspaceId);
 
     Dataset findByNameDetailed(DatasetIdentifier identifier, Visibility visibility);
 
@@ -334,16 +325,6 @@ class DatasetServiceImpl implements DatasetService {
             log.info("Found datasets with ids '{}', workspaceId '{}'", ids, workspaceId);
             return datasets;
         });
-    }
-
-    @Override
-    public Map<UUID, UUID> findProjectIdsByDatasetIds(Set<UUID> ids, @NonNull String workspaceId) {
-        if (CollectionUtils.isEmpty(ids)) {
-            return Map.of();
-        }
-        return template.inTransaction(READ_ONLY, handle -> handle.attach(DatasetDAO.class)
-                .findProjectIdsByDatasetIds(workspaceId, ids).stream()
-                .collect(Collectors.toMap(DatasetProjectIdRow::id, DatasetProjectIdRow::projectId)));
     }
 
     private Dataset findByNameNoContext(String workspaceId, String name, UUID projectId, Visibility visibility) {

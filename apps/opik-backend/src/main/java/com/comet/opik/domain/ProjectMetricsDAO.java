@@ -304,134 +304,9 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             )
             """;
 
-    private static final String SPAN_FILTERED_PREFIX = """
-            WITH feedback_scores_deduped AS (
-                SELECT workspace_id,
-                       project_id,
-                       entity_id,
-                       name,
-                       value,
-                       last_updated_at,
-                       author,
-                       source_queue_id
-                FROM (
-                    SELECT workspace_id,
-                           project_id,
-                           entity_id,
-                           name,
-                           value,
-                           last_updated_at,
-                           last_updated_by AS author,
-                           CAST('' AS FixedString(36)) AS source_queue_id
-                    FROM feedback_scores
-                    WHERE entity_type = 'span'
-                      AND workspace_id = :workspace_id
-                      AND project_id = :project_id
-                      <if(uuid_from_time)> AND entity_id >= :uuid_from_time<endif>
-                      <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time<endif>
-                    UNION ALL
-                    SELECT workspace_id,
-                           project_id,
-                           entity_id,
-                           name,
-                           value,
-                           last_updated_at,
-                           author,
-                           source_queue_id
-                    FROM authored_feedback_scores
-                    WHERE entity_type = 'span'
-                      AND workspace_id = :workspace_id
-                      AND project_id = :project_id
-                      <if(uuid_from_time)> AND entity_id >= :uuid_from_time<endif>
-                      <if(uuid_to_time)> AND entity_id \\<= :uuid_to_time<endif>
-                )
-                ORDER BY last_updated_at DESC
-                LIMIT 1 BY workspace_id, project_id, entity_id, name, author, source_queue_id
-             ), feedback_scores_final AS (
-                SELECT
-                    workspace_id,
-                    project_id,
-                    entity_id,
-                    name,
-                    if(count() = 1, any(value), toDecimal64(avg(value), 9)) AS value,
-                    max(last_updated_at) AS last_updated_at
-                FROM feedback_scores_deduped
-                GROUP BY workspace_id, project_id, entity_id, name
-            ),
-            <if(feedback_scores_empty_filters)>
-             fsc AS (SELECT entity_id, COUNT(entity_id) AS feedback_scores_count
-                 FROM (
-                    SELECT *
-                    FROM feedback_scores_final
-                    ORDER BY (workspace_id, project_id, entity_id, name) DESC, last_updated_at DESC
-                    LIMIT 1 BY entity_id, name
-                 )
-                 GROUP BY entity_id
-                 HAVING <feedback_scores_empty_filters>
-            ),
-            <endif>
-            spans_filtered AS (
-                SELECT
-                    id,
-                    UUIDv7ToDateTime(toUUID(id)) as span_time,
-                    duration,
-                    usage,
-                    error_info,
-                    total_estimated_cost
-                    <if(group_expression)>,
-                    project_id,
-                    name,
-                    tags,
-                    metadata,
-                    model,
-                    provider,
-                    type
-                    <endif>
-                FROM (
-                    SELECT
-                        id,
-                        duration,
-                        usage,
-                        error_info,
-                        total_estimated_cost
-                        <if(group_expression)>,
-                        project_id,
-                        name,
-                        tags,
-                        metadata,
-                        model,
-                        provider,
-                        type
-                        <endif>
-                    FROM spans FINAL
-                    <if(feedback_scores_empty_filters)>
-                    LEFT JOIN fsc ON fsc.entity_id = spans.id
-                    <endif>
-                    WHERE project_id = :project_id
-                    AND workspace_id = :workspace_id
-                    <if(uuid_from_time)> AND id >= :uuid_from_time<endif>
-                    <if(uuid_to_time)> AND id \\<= :uuid_to_time<endif>
-                    <if(span_filters)> AND <span_filters> <endif>
-                    <if(span_feedback_scores_filters)>
-                    AND id in (
-                        SELECT
-                            entity_id
-                        FROM (
-                            SELECT *
-                            FROM feedback_scores_final
-                            ORDER BY (workspace_id, project_id, entity_id, name) DESC, last_updated_at DESC
-                            LIMIT 1 BY entity_id, name
-                        )
-                        GROUP BY entity_id
-                        HAVING <span_feedback_scores_filters>
-                    )
-                    <endif>
-                    <if(feedback_scores_empty_filters)>
-                    AND fsc.feedback_scores_count = 0
-                    <endif>
-                ) AS t
-            )
-            """;
+    // Shared with WorkspaceMetricsDAO via SpanMetricsQueries; per-project aggregation fixes a single project_id.
+    private static final String SPAN_FILTERED_PREFIX = SpanMetricsQueries
+            .spanFilteredPrefix("project_id = :project_id");
 
     private static final String THREAD_FILTERED_PREFIX = """
             WITH trace_threads_final AS (
@@ -675,8 +550,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     WHERE project_id = :project_id
                     AND workspace_id = :workspace_id
                     AND trace_id IN (SELECT id FROM traces_filtered)
-                    <if(uuid_from_time)> AND id >= :uuid_from_time<endif>
-                    <if(uuid_to_time)> AND id \\<= :uuid_to_time<endif>
+                    <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))<endif>
+                    <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))<endif>
                 ) s ON s.trace_id = t.id
             )
             SELECT <bucket> AS bucket,
@@ -705,8 +582,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     WHERE project_id = :project_id
                     AND workspace_id = :workspace_id
                     AND trace_id IN (SELECT id FROM traces_filtered)
-                    <if(uuid_from_time)> AND id >= :uuid_from_time<endif>
-                    <if(uuid_to_time)> AND id \\<= :uuid_to_time<endif>
+                    <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))<endif>
+                    <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))<endif>
                 ) s ON s.trace_id = t.id
             )
             SELECT <bucket> AS bucket,
@@ -732,8 +611,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     WHERE project_id = :project_id
                     AND workspace_id = :workspace_id
                     AND trace_id IN (SELECT id FROM traces_filtered)
-                    <if(uuid_from_time)> AND id >= :uuid_from_time<endif>
-                    <if(uuid_to_time)> AND id \\<= :uuid_to_time<endif>
+                    <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))<endif>
+                    <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))<endif>
                 ) s ON s.trace_id = t.id
                 ARRAY JOIN mapKeys(usage) AS name, mapValues(usage) AS value
                 WHERE value > 0
@@ -766,8 +647,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     WHERE project_id = :project_id
                     AND workspace_id = :workspace_id
                     AND trace_id IN (SELECT id FROM traces_filtered)
-                    <if(uuid_from_time)> AND id >= :uuid_from_time<endif>
-                    <if(uuid_to_time)> AND id \\<= :uuid_to_time<endif>
+                    <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))<endif>
+                    <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))<endif>
                 ) s ON s.trace_id = t.id
                 ARRAY JOIN mapKeys(usage) AS name, mapValues(usage) AS value
                 WHERE value > 0
@@ -1213,7 +1096,7 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
     private static final String GET_SPAN_AVERAGE_DURATION = """
             %s
             SELECT <bucket> AS bucket,
-                   avg(duration) AS avg_duration
+                   avgIf(duration, NOT isNaN(duration)) AS avg_duration
             FROM spans_filtered
             GROUP BY bucket
             ORDER BY bucket
@@ -1280,8 +1163,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
                     FROM spans final
                     WHERE project_id = :project_id
                     AND workspace_id = :workspace_id
-                    <if(uuid_from_time)> AND id >= :uuid_from_time<endif>
-                    <if(uuid_to_time)> AND id \\<= :uuid_to_time<endif>
+                    <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))<endif>
+                    <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))<endif>
                 ) s ON s.trace_id = tr.id
             )
             SELECT <bucket> AS bucket,
@@ -1296,21 +1181,8 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             SETTINGS log_comment = '<log_comment>';
             """.formatted(THREAD_FILTERED_PREFIX);
 
-    private static final String GET_PROJECT_TOKEN_USAGE_NAMES = """
-            SELECT DISTINCT name
-            FROM (
-                SELECT
-                    usage
-                FROM spans final
-                WHERE project_id = :project_id
-                AND workspace_id = :workspace_id
-            )
-            ARRAY JOIN
-                mapKeys(usage) AS name,
-                mapValues(usage) AS value
-            WHERE value > 0
-            SETTINGS log_comment = '<log_comment>';
-            """;
+    private static final String GET_PROJECT_TOKEN_USAGE_NAMES = SpanMetricsQueries
+            .tokenUsageNames("project_id = :project_id");
 
     @Override
     public Mono<List<Entry>> getDuration(@NonNull UUID projectId, @NonNull ProjectMetricRequest request) {
@@ -1759,7 +1631,8 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
             } else if (SPAN_TIME_METRICS.contains(metricType)) {
                 Optional.ofNullable(request.spanFilters())
                         .ifPresent(filters -> {
-                            filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.SPAN)
+                            filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.SPAN,
+                                    spanColumnsNonNullable())
                                     .ifPresent(spanFilters -> template.add("span_filters", spanFilters));
                             filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.SPAN_FEEDBACK_SCORES)
                                     .ifPresent(
@@ -1845,6 +1718,10 @@ class ProjectMetricsDAOImpl implements ProjectMetricsDAO {
 
     private boolean traceColumnsNonNullable() {
         return configuration.getDatabaseAnalyticsDataModel().traceColumnsNonNullable();
+    }
+
+    private boolean spanColumnsNonNullable() {
+        return configuration.getDatabaseAnalyticsDataModel().spanColumnsNonNullable();
     }
 
     private static final Set<MetricType> SPAN_TIME_METRICS = EnumSet.of(

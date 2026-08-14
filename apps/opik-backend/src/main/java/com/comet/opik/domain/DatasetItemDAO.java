@@ -1345,6 +1345,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
 
         boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
 
+        // Choose the appropriate query and segment names based on experiment IDs
         String query = hasExperimentIds ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS : SELECT_DATASET_ITEMS;
         String summarySegmentName = hasExperimentIds
                 ? "select_dataset_items_experiments_filters_summary"
@@ -1372,6 +1373,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                             selectTemplate = selectTemplate.add("truncationSize",
                                     configuration.getResponseFormatting().getTruncationSize());
 
+                            // Add sorting if present
                             var finalTemplate = selectTemplate;
                             var itemFieldMapping = datasetItemSearchCriteria.sortingFields() != null
                                     ? filterQueryBuilder
@@ -1398,12 +1400,14 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                                     .bind("offset", (page - 1) * size)
                                     .bind("workspace_id", workspaceId);
 
+                            // Only bind experimentIds and entityType if we have experiment IDs
                             if (hasExperimentIds) {
                                 selectStatement = selectStatement.bind("experimentIds",
                                         datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new))
                                         .bind("entityType", datasetItemSearchCriteria.entityType().getType());
                             }
 
+                            // Bind dynamic sorting keys if present
                             if (hasDynamicKeys) {
                                 selectStatement = sortingQueryBuilder.bindDynamicKeys(selectStatement,
                                         datasetItemSearchCriteria.sortingFields(), itemFieldMapping);
@@ -1418,7 +1422,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                                     .doFinally(signalType -> endSegment(segmentContent))
                                     .flatMap(DatasetItemResultMapper::mapItem)
                                     .collectList()
-                                    .onErrorResume(e -> handleSqlError(e, List.of()))
+                                    .onErrorResume(e -> ErrorUtils.handleMalformedJsonPath(e, List.of()))
                                     .flatMap(
                                             items -> Mono
                                                     .just(new DatasetItemPage(items, page, items.size(), total, columns,
@@ -1427,6 +1431,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
     }
 
     private Mono<Long> getCount(DatasetItemSearchCriteria datasetItemSearchCriteria) {
+        // Choose the appropriate count query based on whether we have experiment IDs
         boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
         String countQuery = hasExperimentIds
                 ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_COUNT
@@ -1442,6 +1447,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                     .bind("datasetId", datasetItemSearchCriteria.datasetId())
                     .bind("workspace_id", workspaceId);
 
+            // Only bind experimentIds if we have them
             if (hasExperimentIds) {
                 statement = statement.bind("experimentIds",
                         datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new));
@@ -1452,7 +1458,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             return Flux.from(statement.execute())
                     .flatMap(DatasetItemResultMapper::mapCount)
                     .reduce(0L, Long::sum)
-                    .onErrorResume(e -> handleSqlError(e, 0L))
+                    .onErrorResume(e -> ErrorUtils.handleMalformedJsonPath(e, 0L))
                     .doFinally(signalType -> endSegment(segment));
         }));
     }
@@ -1472,15 +1478,6 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                 .doFinally(signalType -> endSegment(segment));
     }
 
-    private <T> Mono<T> handleSqlError(Throwable e, T defaultValue) {
-        // 用户提供的非法 JSON path 会被 ClickHouse 拒绝；这里按空结果处理。
-        if (ErrorUtils.isMalformedJsonPath(e)) {
-            return Mono.just(defaultValue);
-        }
-        return Mono.error(e);
-    }
-
-    @Override
     @WithSpan
     public Mono<com.comet.opik.api.ProjectStats> getExperimentItemsStats(
             @NonNull UUID datasetId,
@@ -1549,6 +1546,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
 
         Optional.ofNullable(filters)
                 .ifPresent(filtersParam -> {
+                    // Bind all filters - the builder will handle both regular and aggregated filters
                     filterQueryBuilder.bind(statement, filtersParam,
                             com.comet.opik.domain.filter.FilterStrategy.EXPERIMENT_ITEM);
                     filterQueryBuilder.bind(statement, filtersParam,
@@ -1563,7 +1561,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
     @Override
     @WithSpan
     public Mono<Void> bulkUpdate(Set<UUID> ids, UUID datasetId, List<DatasetItemFilter> filters,
-            @NonNull com.comet.opik.api.DatasetItemUpdate update, boolean mergeTags) {
+            @NonNull DatasetItemUpdate update, boolean mergeTags) {
         boolean hasIds = CollectionUtils.isNotEmpty(ids);
         // 空过滤器数组表示选中全部条目，null 表示未提供过滤器
         boolean hasFilters = filters != null;

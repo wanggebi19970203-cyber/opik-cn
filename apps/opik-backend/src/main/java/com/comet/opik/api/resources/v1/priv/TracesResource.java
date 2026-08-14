@@ -464,10 +464,11 @@ public class TracesResource {
     @POST
     @Path("/delete")
     @Operation(operationId = "deleteTraces", summary = "Delete traces / 批量删除追踪", description = "Delete traces / 批量删除追踪", responses = {
-            @ApiResponse(responseCode = "204", description = "No Content / 无内容")})
+            @ApiResponse(responseCode = "204", description = "No Content / 无内容"),
+            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RequiredPermissions(WorkspaceUserPermission.TRACE_DELETE)
     public Response deleteTraces(
-            @RequestBody(content = @Content(schema = @Schema(implementation = BatchDelete.class))) @NotNull @Valid BatchDeleteByProject request) {
+            @RequestBody(content = @Content(schema = @Schema(implementation = BatchDeleteByProject.class))) @NotNull @Valid BatchDeleteByProject request) {
         log.info("删除追踪，项目ID '{}'，数量 '{}'", request.projectId(), request.ids().size());
         service.delete(request.ids(), request.projectId())
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))

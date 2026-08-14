@@ -10,6 +10,11 @@ from .api_objects.dashboard import Dashboard
 from .api_objects.dataset import Dataset
 from .api_objects.dataset.test_suite import TestSuite
 from .api_objects.dataset.test_suite.types import TestSuiteResult
+from .api_objects.experiment.bulk_item import (
+    ExperimentItemBulkRecord,
+    ExperimentItemBulkSpan,
+    ExperimentItemBulkTrace,
+)
 from .api_objects.experiment.experiment_item import (
     ExperimentItemContent,
     ExperimentItemReferences,
@@ -24,7 +29,14 @@ from .api_objects.span import Span
 from .api_objects.trace import Trace
 from .configurator.configure import configure
 from .decorator.tracker import flush_tracker, track
+from .message_processing.data_loss import (
+    ErrorsReport,
+    FailedMessageInfo,
+    FailureReason,
+    FlushResult,
+)
 from .evaluation import (
+    ErrorTolerance,
     evaluate,
     evaluate_experiment,
     evaluate_on_dict_items,
@@ -58,16 +70,24 @@ __all__ = [
     "ThreadsAnnotationQueue",
     "Attachment",
     "Environment",
+    "ErrorTolerance",
     "evaluate",
     "evaluate_prompt",
     "evaluate_experiment",
     "evaluate_on_dict_items",
     "evaluate_resume",
     "run_tests",
+    "ExperimentItemBulkRecord",
+    "ExperimentItemBulkSpan",
+    "ExperimentItemBulkTrace",
     "ExperimentItemContent",
     "ExperimentItemReferences",
     "track",
     "flush_tracker",
+    "FlushResult",
+    "FailedMessageInfo",
+    "FailureReason",
+    "ErrorsReport",
     "Opik",
     "get_global_client",
     "set_global_client",

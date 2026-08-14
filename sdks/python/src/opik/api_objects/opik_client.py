@@ -8,6 +8,7 @@ import threading
 import weakref
 from typing import (
     Any,
+    Callable,
     Dict,
     List,
     Optional,
@@ -70,6 +71,7 @@ from .. import (
     url_helpers,
 )
 from ..message_processing import (
+    data_loss,
     messages,
 )
 from ..message_processing.batching import sequence_splitter
@@ -216,6 +218,8 @@ class Opik:
         self._rest_client = self._resources.rest_client
         self.__internal_api__message_processor__ = self._resources.message_processor
         self._streamer = self._resources.streamer
+        self._flush_reporter = self._resources.flush_reporter
+        self._last_flush_result: Optional[data_loss.FlushResult] = None
 
     def _display_trace_url(self, trace_id: str, project_name: str) -> None:
         project_url = url_helpers.get_project_url_by_trace_id(
@@ -231,12 +235,36 @@ class Opik:
             )
             self._project_name_most_recent_trace = project_name
 
-    def _display_created_dataset_url(self, dataset_name: str, dataset_id: str) -> None:
-        dataset_url = url_helpers.get_dataset_url_by_id(
-            dataset_id, self._config.url_override
-        )
+    def _log_created_resource_url(
+        self,
+        *,
+        kind: str,
+        name: str,
+        project_name: str,
+        build_url: Callable[[str, str], str],
+    ) -> None:
+        """Log the direct, project-scoped URL of a just-created resource.
 
-        LOGGER.info(f'Created a "{dataset_name}" dataset at {dataset_url}.')
+        Best-effort: the resource is already persisted by the time this runs,
+        so a failure to resolve the project or workspace must not turn a
+        successful creation into an error. ``build_url`` receives the resolved
+        ``(workspace, project_id)``.
+        """
+        try:
+            project_id = rest_helpers.resolve_project_id_by_name(
+                self._rest_client, project_name
+            )
+            url = build_url(self._dereferenced_workspace(), project_id)
+        except Exception:
+            LOGGER.debug(
+                "Could not resolve the URL for the created %s %r",
+                kind,
+                name,
+                exc_info=True,
+            )
+            return
+
+        LOGGER.info(f'Created a "{name}" {kind} at {url}.')
 
     def auth_check(self) -> None:
         """
@@ -474,32 +502,31 @@ class Opik:
         创建并记录一个新的span。
 
         Args:
-            trace_id: trace的唯一标识符。如果未提供，将生成新的ID。必须是有效的[UUIDv7](https://uuid7.com/) ID。
-            id: span的唯一标识符。如果未提供，将生成新的ID。必须是有效的[UUIDv7](https://uuid.ramsey.dev/en/stable/rfc4122/version8.html) ID。
-            parent_span_id: 父span的唯一标识符。
-            name: span的名称。
-            type: span的类型。默认为"general"。
-            start_time: span的开始时间。如果未提供，将使用当前本地时间。
-            end_time: span的结束时间。
-            metadata: span的附加元数据。可以是任何有效的JSON可序列化对象。
-            input: span的输入数据。可以是任何有效的JSON可序列化对象。
-            output: span的输出数据。可以是任何有效的JSON可序列化对象。
-            tags: 与span关联的标签。
-            feedback_scores: 与span关联的反馈分数字典列表。字典不需要包含`id`值。
-            project_name: 项目名称。如果未提供，则回退到活动项目上下文
-                （来自@track或opik.project_context），然后使用客户端默认值。
-            usage: span的使用数据。为了在UI中显示输入、输出和总token数，
-                usage必须包含OpenAI格式的键（可以在字典顶层额外传递）：
-                prompt_tokens、completion_tokens和total_tokens。
-                如果未找到OpenAI格式的键，Opik将尝试自动计算（如果识别出使用格式），
-                但不保证成功。可以在opik.LLMProvider枚举中查看支持的提供商格式。
-            model: LLM的名称（在这种情况下`type`参数应为== `llm`）
-            provider: LLM的提供商。可以在`opik.LLMProvider`枚举中找到Opik官方支持的成本跟踪提供商。
-                如果您的提供商不在其中，请在我们的GitHub上提交issue - https://github.com/comet-ml/opik。
-                如果您的提供商不在列表中，仍然可以指定它，但成本跟踪将不可用。
-            error_info: 包含错误信息的字典（通常在span函数失败时使用）。
-            total_cost: span的成本（以美元为单位）。此值优先于Opik根据使用情况计算的成本。
-            attachments: 要上传到span的附件列表。
+            trace_id: The unique identifier for the trace. If not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid7.com/) ID.
+            id: The unique identifier for the span. If not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid7.com/) ID.
+            parent_span_id: The unique identifier for the parent span.
+            name: The name of the span.
+            type: The type of the span. Default is "general".
+            start_time: The start time of the span. If not provided, the current local time will be used.
+            end_time: The end time of the span.
+            metadata: Additional metadata for the span. This can be any valid JSON serializable object.
+            input: The input data for the span. This can be any valid JSON serializable object.
+            output: The output data for the span. This can be any valid JSON serializable object.
+            tags: Tags associated with the span.
+            feedback_scores: The list of feedback score dicts associated with the span. Dicts don't require having an `id` value.
+            project_name: The name of the project. If not provided, falls back to the active project context
+                (from @track or opik.project_context), then to the client's default.
+            usage: Usage data for the span. In order for input, output, and total tokens to be visible in the UI,
+                the usage must contain OpenAI-formatted keys (they can be passed additionally to the original usage on the top level of the dict): prompt_tokens, completion_tokens, and total_tokens.
+                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
+                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
+            model: The name of LLM (in this case `type` parameter should be == `llm`)
+            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
+                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our GitHub - https://github.com/comet-ml/opik.
+                If your provider is not in the list, you can still specify it, but the cost tracking will not be available
+            error_info: The dictionary with error information (typically used when the span function has failed).
+            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
+            attachments: The list of attachments to be uploaded to the span.
 
         Returns:
             span.Span: 创建的span对象。
@@ -1175,9 +1202,9 @@ class Opik:
 
         Args:
             project_name: 数据集所属的项目名称。如果未提供，则回退到活动项目上下文
-                （来自@track或opik.project_context），然后使用客户端默认值。
+            （来自@track或opik.project_context），然后使用客户端默认值。
             max_results: 要返回的最大数据集数量。
-            sync_items: 如果为True，则为每个返回的数据集预先加载项目哈希——
+                sync_items: 如果为True，则为每个返回的数据集预先加载项目哈希——
                 每个数据集一次REST往返。默认为False：哈希在首次``dataset.insert(...)``
                 调用时懒加载，因此仅检查元数据的调用者无需支付任何代价，
                 而插入数据的调用者仍然可以正确获得内容哈希去重。
@@ -1276,7 +1303,17 @@ class Opik:
             client=self,
         )
 
-        self._display_created_dataset_url(dataset_name=name, dataset_id=result.id)
+        self._log_created_resource_url(
+            kind="dataset",
+            name=name,
+            project_name=project_name,
+            build_url=lambda workspace, project_id: url_helpers.get_dataset_url_by_id(
+                base_url=self._config.url_override,
+                workspace=workspace,
+                project_id=project_id,
+                dataset_id=result.id,
+            ),
+        )
 
         return result
 
@@ -1493,7 +1530,7 @@ class Opik:
         )
 
         project_name = self._resolve_project_name(project_name)
-        rest_operations.create_test_suite_dataset(
+        suite_id = rest_operations.create_test_suite_dataset(
             rest_client=self._rest_client,
             dataset_name=name,
             project_name=project_name,
@@ -1509,6 +1546,20 @@ class Opik:
             rest_client=self._rest_client,
             dataset_items_count=0,
             client=self,
+        )
+
+        self._log_created_resource_url(
+            kind="test suite",
+            name=name,
+            project_name=project_name,
+            build_url=lambda workspace, project_id: (
+                url_helpers.get_test_suite_url_by_id(
+                    base_url=self._config.url_override,
+                    workspace=workspace,
+                    project_id=project_id,
+                    test_suite_id=suite_id,
+                )
+            ),
         )
 
         return test_suite.TestSuite(
@@ -1885,9 +1936,13 @@ class Opik:
             project_name=experiment_public.project_name,
         )
 
-    def end(self, timeout: Optional[int] = None, *, flush: bool = True) -> None:
+    def end(
+        self, timeout: Optional[int] = None, *, flush: bool = True
+    ) -> Optional[data_loss.FlushResult]:
         """
-        结束Opik会话并提交所有待处理消息。
+        End the Opik session, releasing this client's connection reference. When
+        ``flush`` is True (the default), all pending messages are submitted
+        first; when ``flush`` is False, anything still queued is dropped.
 
         Connection resources are shared and ref-counted across clients with a
         matching configuration: this releases the current client's reference.
@@ -1911,29 +1966,103 @@ class Opik:
         is shared — it may still succeed by riding another live client's
         resources. Do not rely on either outcome; create a new client instead.
 
+        The outcome is also available afterwards via :attr:`last_flush_result`.
+
         Returns:
-            None
+            The flush outcome (including any data-loss detail) when ``flush`` is
+            True; ``None`` when ``flush`` is False (nothing was flushed).
         """
         timeout = timeout if timeout is not None else self._flush_timeout
+        marker = self._flush_reporter.marker()
         # Explicit teardown on a user thread, so close on the last reference
         # (close_on_zero=True). Releasing is idempotent, so the detached GC
-        # finalizer cannot double-decrement.
-        self._lease.release(timeout, flush=flush, close_on_zero=True)
+        # finalizer cannot double-decrement. release() returns the authoritative
+        # flush outcome computed inside the drain (streamer.flush) — the same
+        # source flush() uses — rather than the weaker queue_size()==0 proxy,
+        # which can read empty on the pop-vs-processed race and while file
+        # uploads are still in flight.
+        flushed = self._lease.release(timeout, flush=flush, close_on_zero=True)
         self._finalizer.detach()
+        if not flush:
+            return None
+        if flushed is None:
+            # No drain ran on this call — e.g. a repeated end() after the client
+            # was already released. Keep the outcome from the release that did
+            # the work rather than overwriting it with a spurious not-flushed
+            # result, so end() is idempotent.
+            return self._last_flush_result
+        self._last_flush_result = self._flush_reporter.build_result(
+            marker, flushed=flushed
+        )
+        return self._last_flush_result
 
     def flush(self, timeout: Optional[int] = None) -> bool:
         """
         刷新流处理器以确保所有消息已发送。
+
+        Attachment/file upload *failures* are not counted in the data-loss
+        detail (``dropped_*`` / ``failures``), but an incomplete upload still
+        makes the flush report as not fully flushed — so ``flushed`` (and hence
+        the returned bool) does reflect uploads. Never raises and never blocks
+        beyond ``timeout``: an observability SDK must not disrupt the app it
+        instruments. Detailed outcome — including any data that was dropped — is
+        available via :attr:`last_flush_result`.
 
         Args:
             timeout (Optional[int]): 刷新流处理器的超时时间。一旦达到超时，
                 刷新方法将返回，无论所有消息是否已发送。
 
         Returns:
-            如果在指定超时内所有消息已发送则返回True，否则返回False。
+            True if all messages were delivered within the timeout with no data
+            loss; False if the timeout was hit or any message was dropped.
         """
         timeout = timeout if timeout is not None else self._flush_timeout
-        return self._streamer.flush(timeout)
+        try:
+            marker = self._flush_reporter.marker()
+            flushed = self._streamer.flush(timeout)
+            self._last_flush_result = self._flush_reporter.build_result(
+                marker, flushed=flushed
+            )
+            return self._last_flush_result.success
+        except Exception:
+            # An observability SDK must not disrupt the app it instruments: a
+            # failure inside flush is reported as "not flushed", never raised.
+            # Record a failed outcome so last_flush_result reflects this attempt
+            # rather than keeping a stale prior success. Built directly (not via
+            # build_result, which may itself be what raised) so it cannot re-raise.
+            LOGGER.error("Opik flush failed unexpectedly", exc_info=True)
+            self._last_flush_result = data_loss.FlushResult(
+                flushed=False,
+                remaining_queue_size=0,
+                dropped_messages=0,
+                dropped_items=0,
+                failures=(),
+            )
+            return False
+
+    @property
+    def last_flush_result(self) -> Optional[data_loss.FlushResult]:
+        """Outcome of the most recent ``flush()``/``end()`` on this client.
+
+        ``None`` until the first flush.
+        """
+        return self._last_flush_result
+
+    def get_errors_report(self) -> data_loss.ErrorsReport:
+        """Report of messages the background sender terminally dropped.
+
+        Unlike :attr:`last_flush_result`, which is scoped to a single flush, this
+        reports the sender's retained data-loss history — including drops that
+        happened before or between flushes.
+
+        The report is **capped**: the total counts are exact, but the per-drop
+        ``failures`` list keeps only the most recent entries (bounded, drop-oldest)
+        so it never grows without bound — see :class:`~opik.ErrorsReport`.
+
+        The sender is shared across clients with a matching configuration, so
+        the report may include drops from sibling clients on the same connection.
+        """
+        return self._flush_reporter.build_errors_report()
 
     def __internal_api__drain_to_processors__(
         self, timeout: Optional[float] = None
@@ -2225,17 +2354,22 @@ class Opik:
             str: URL
         """
 
-        dereferenced_workspace = self._workspace
-        if dereferenced_workspace == opik_config.OPIK_WORKSPACE_DEFAULT_NAME:
-            dereferenced_workspace = (
-                self._rest_client.check.get_workspace_name().workspace_name
-            )
-
         project_name = self._resolve_project_name(project_name)
 
         return url_helpers.get_project_url_by_workspace(
-            workspace=dereferenced_workspace, project_name=project_name
+            workspace=self._dereferenced_workspace(), project_name=project_name
         )
+
+    def _dereferenced_workspace(self) -> str:
+        """Resolve the configured workspace to the concrete workspace name.
+
+        The self-hosted default ``"default"`` placeholder is looked up against
+        the backend so URLs point at the actual workspace.
+        """
+        if self._workspace == opik_config.OPIK_WORKSPACE_DEFAULT_NAME:
+            return self._rest_client.check.get_workspace_name().workspace_name
+
+        return self._workspace
 
     def get_threads_client(self) -> threads_client.ThreadsClient:
         """
@@ -2607,30 +2741,32 @@ class Opik:
             PromptTemplateStructureMismatch: 如果提示词存在但是聊天提示词（模板结构不匹配）。
 
         Example:
-            # 获取提示词的所有版本
-            versions = client.get_prompt_history(name="my-prompt", project_name="my-project")
+            .. code-block:: python
 
-            # 按标签过滤（包含"production"标签的版本）
-            versions = client.get_prompt_history(
-                name="my-prompt",
-                project_name="my-project",
-                filter_string='tags contains "production"'
-            )
+                # 获取提示词的所有版本
+                versions = client.get_prompt_history(name="my-prompt", project_name="my-project")
 
-            # 在模板或更改描述字段中搜索特定文本
-            versions = client.get_prompt_history(
-                name="my-prompt",
-                project_name="my-project",
-                search="customer"
-            )
+                # 按标签过滤（包含"production"标签的版本）
+                versions = client.get_prompt_history(
+                    name="my-prompt",
+                    project_name="my-project",
+                    filter_string='tags contains "production"'
+                )
 
-            # 组合搜索和过滤
-            versions = client.get_prompt_history(
-                name="my-prompt",
-                project_name="my-project",
-                search="customer",
-                filter_string='tags contains "production"'
-            )
+                # 在模板或更改描述字段中搜索特定文本
+                versions = client.get_prompt_history(
+                    name="my-prompt",
+                    project_name="my-project",
+                    search="customer"
+                )
+
+                # 组合搜索和过滤
+                versions = client.get_prompt_history(
+                    name="my-prompt",
+                    project_name="my-project",
+                    search="customer",
+                    filter_string='tags contains "production"'
+                )
         """
         prompt_client_ = prompt_client.PromptClient(self._rest_client)
         project_name = self._resolve_project_name(project_name)
@@ -2700,30 +2836,32 @@ class Opik:
             PromptTemplateStructureMismatch: 如果提示词存在但是文本提示词（模板结构不匹配）。
 
         Example:
-            # 获取聊天提示词的所有版本
-            versions = client.get_chat_prompt_history(name="my-chat-prompt", project_name="my-project")
+            .. code-block:: python
 
-            # 按标签过滤（包含"production"标签的版本）
-            versions = client.get_chat_prompt_history(
-                name="my-chat-prompt",
-                project_name="my-project",
-                filter_string='tags contains "production"'
-            )
+                # 获取聊天提示词的所有版本
+                versions = client.get_chat_prompt_history(name="my-chat-prompt", project_name="my-project")
 
-            # 在模板或更改描述字段中搜索特定文本
-            versions = client.get_chat_prompt_history(
-                name="my-chat-prompt",
-                project_name="my-project",
-                search="helpful assistant"
-            )
+                # 按标签过滤（包含"production"标签的版本）
+                versions = client.get_chat_prompt_history(
+                    name="my-chat-prompt",
+                    project_name="my-project",
+                    filter_string='tags contains "production"'
+                )
 
-            # 组合搜索和过滤
-            versions = client.get_chat_prompt_history(
-                name="my-chat-prompt",
-                project_name="my-project",
-                search="helpful assistant",
-                filter_string='tags contains "production"'
-            )
+                # 在模板或更改描述字段中搜索特定文本
+                versions = client.get_chat_prompt_history(
+                    name="my-chat-prompt",
+                    project_name="my-project",
+                    search="helpful assistant"
+                )
+
+                # 组合搜索和过滤
+                versions = client.get_chat_prompt_history(
+                    name="my-chat-prompt",
+                    project_name="my-project",
+                    search="helpful assistant",
+                    filter_string='tags contains "production"'
+                )
         """
         prompt_client_ = prompt_client.PromptClient(self._rest_client)
         project_name = self._resolve_project_name(project_name)
@@ -2910,11 +3048,13 @@ class Opik:
             使用缓存的REST客户端初始化的PromptClient实例。
 
         Example:
-            prompts_client = client.get_prompts_client()
-            prompts_client.batch_update_prompt_version_tags(
-                version_ids=["version-id-1", "version-id-2"],
-                tags=["production", "v2"]
-            )
+            .. code-block:: python
+
+                prompts_client = client.get_prompts_client()
+                prompts_client.batch_update_prompt_version_tags(
+                    version_ids=["version-id-1", "version-id-2"],
+                    tags=["production", "v2"]
+                )
         """
         return prompt_client.PromptClient(self._rest_client)
 

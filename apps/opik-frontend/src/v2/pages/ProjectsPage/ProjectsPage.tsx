@@ -23,7 +23,7 @@ import CostCell from "@/shared/DataTableCells/CostCell";
 import useProjectWithStatisticsList from "@/hooks/useProjectWithStatisticsList";
 import useQueryParamAndLocalStorageState from "@/hooks/useQueryParamAndLocalStorageState";
 import { ProjectWithStatistic } from "@/types/projects";
-import AddEditProjectDialog from "@/v2/pages/ProjectsPage/AddEditProjectDialog";
+import AddEditProjectDialog from "@/v2/pages-shared/ProjectsPage/AddEditProjectDialog";
 import ProjectsActionsPanel from "@/v2/pages/ProjectsPage/ProjectsActionsPanel";
 import { ProjectRowActionsCell } from "@/v2/pages/ProjectsPage/ProjectRowActionsCell";
 import { Button } from "@/ui/button";
@@ -112,6 +112,9 @@ export const DEFAULT_SORTING_COLUMNS: ColumnSort[] = [
     desc: true,
   },
 ];
+
+const PROJECT_STATS_WINDOW_DAYS = 30;
+const WINDOW_SUFFIX = ` (${PROJECT_STATS_WINDOW_DAYS}d)`;
 
 const ProjectsPage: React.FunctionComponent = () => {
   const { t } = useTranslation("pages/projects");
@@ -342,6 +345,7 @@ const ProjectsPage: React.FunctionComponent = () => {
         page: page!,
         size: size!,
         logsSource: LOGS_SOURCE.sdk,
+        windowDays: PROJECT_STATS_WINDOW_DAYS,
       },
       {
         placeholderData: keepPreviousData,

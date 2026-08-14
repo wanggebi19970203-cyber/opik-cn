@@ -205,6 +205,11 @@ export const OPTIMIZATION_METRIC_OPTIONS = [
       "common.constants.optimizations.metricOptions.numericalSimilarity.description",
     ),
   },
+  {
+    value: METRIC_TYPE.CODE,
+    label: "Custom code",
+    description: "Score outputs with a custom Python metric.",
+  },
 ];
 
 export type IconConfig = { icon: LucideIcon; color: string };

@@ -1,35 +1,52 @@
 import i18next from "i18next";
 import { GuardrailTypes, PiiSupportedEntities } from "@/types/guardrails";
 
-export interface GuardrailConfig {
+export type GuardrailFields = {
+  threshold: number;
+  entities: string[];
+  modelName: string;
+  model: string;
+  instructions: string;
+  name: string;
+};
+
+export interface GuardrailConfig extends GuardrailFields {
   id: string;
   title: string;
   hintText: string;
   enabled: boolean;
-  threshold: number;
-  entities: string[];
   codeImportName: string;
-  codeBuilder: (entities: string[], threshold: number) => string;
+  codeBuilder: (fields: GuardrailFields) => string;
 }
+
+const EMPTY_FIELDS: GuardrailFields = {
+  threshold: 0.5,
+  entities: [],
+  modelName: "",
+  model: "",
+  instructions: "",
+  name: "",
+};
 
 export const getGuardrailsMap = (): Record<GuardrailTypes, GuardrailConfig> => {
   const t = i18next.getFixedT(null, "tracing");
   return {
     [GuardrailTypes.TOPIC]: {
+      ...EMPTY_FIELDS,
       id: "topic-guardrail",
       title: t("guardrail.topicTitle"),
       hintText: t("guardrail.topicHintText"),
       enabled: true,
       threshold: 0.8,
-      entities: [],
       codeImportName: "Topic",
-      codeBuilder(entities, threshold) {
+      codeBuilder({ entities, threshold }) {
         return `Topic(restricted_topics=${JSON.stringify(
           entities,
         )}, threshold=${threshold})`;
       },
     },
     [GuardrailTypes.PII]: {
+      ...EMPTY_FIELDS,
       id: "pii-guardrail",
       title: t("guardrail.piiTitle"),
       hintText: t("guardrail.piiHintText"),
@@ -40,64 +57,81 @@ export const getGuardrailsMap = (): Record<GuardrailTypes, GuardrailConfig> => {
         PiiSupportedEntities.PHONE_NUMBER,
       ],
       codeImportName: "PII",
-      codeBuilder(entities, threshold) {
+      codeBuilder({ entities, threshold }) {
         return `PII(blocked_entities=${JSON.stringify(
           entities,
         )}, threshold=${threshold})`;
+      },
+    },
+    [GuardrailTypes.PROMPT_INJECTION]: {
+      ...EMPTY_FIELDS,
+      id: "prompt-injection-guardrail",
+      title: "Prompt injection guardrail",
+      hintText:
+        "The prompt injection guardrail runs a fine-tuned classifier on the guardrails server to detect prompt injection and jailbreak attempts.",
+      enabled: false,
+      threshold: 0.5,
+      codeImportName: "PromptInjection",
+      codeBuilder({ threshold }) {
+        return `PromptInjection(threshold=${threshold})`;
+      },
+    },
+    [GuardrailTypes.CUSTOM_CLASSIFIER]: {
+      ...EMPTY_FIELDS,
+      id: "custom-classifier-guardrail",
+      title: "Custom guardrail",
+      hintText:
+        "The custom guardrail runs a binary classifier you trained on your own labeled examples. The guardrails server loads the model by name from its local adapters directory.",
+      enabled: false,
+      threshold: 0.5,
+      codeImportName: "CustomGuardrail",
+      codeBuilder({ modelName, threshold }) {
+        return `CustomGuardrail(model_name=${JSON.stringify(
+          modelName,
+        )}, threshold=${threshold})`;
+      },
+    },
+    [GuardrailTypes.LLM_JUDGE]: {
+      ...EMPTY_FIELDS,
+      id: "llm-judge-guardrail",
+      title: "LLM judge guardrail",
+      hintText:
+        "The LLM judge guardrail validates text against a natural-language policy using an LLM. It runs in the SDK against the provider configured in your Opik workspace and does not require the guardrails server.",
+      enabled: false,
+      codeImportName: "LLMJudge",
+      codeBuilder({ name, instructions, model }) {
+        return `LLMJudge(name=${JSON.stringify(
+          name,
+        )}, instructions=${JSON.stringify(instructions)}, model=${JSON.stringify(
+          model,
+        )})`;
       },
     },
   };
 };
 
 /** @deprecated Use getGuardrailsMap() instead */
-export const guardrailsMap: Record<GuardrailTypes, GuardrailConfig> = (() => {
-  const t = i18next.getFixedT(null, "tracing");
-  return {
-    [GuardrailTypes.TOPIC]: {
-      id: "topic-guardrail",
-      title: t("guardrail.topicTitle"),
-      hintText: t("guardrail.topicHintText"),
-      enabled: true,
-      threshold: 0.8,
-      entities: [],
-      codeImportName: "Topic",
-      codeBuilder(entities, threshold) {
-        return `Topic(restricted_topics=${JSON.stringify(
-          entities,
-        )}, threshold=${threshold})`;
-      },
-    },
-    [GuardrailTypes.PII]: {
-      id: "pii-guardrail",
-      title: t("guardrail.piiTitle"),
-      hintText: t("guardrail.piiHintText"),
-      enabled: true,
-      threshold: 0.5,
-      entities: [
-        PiiSupportedEntities.CREDIT_CARD,
-        PiiSupportedEntities.PHONE_NUMBER,
-      ],
-      codeImportName: "PII",
-      codeBuilder(entities, threshold) {
-        return `PII(blocked_entities=${JSON.stringify(
-          entities,
-        )}, threshold=${threshold})`;
-      },
-    },
-  };
-})();
+export const guardrailsMap: Record<GuardrailTypes, GuardrailConfig> =
+  getGuardrailsMap();
 
 export type GuardrailsState = Record<
   GuardrailTypes,
-  Pick<GuardrailConfig, "threshold" | "entities" | "enabled">
+  GuardrailFields & { enabled: boolean }
 >;
+
 export const guardrailsDefaultState: GuardrailsState = (
   Object.keys(guardrailsMap) as GuardrailTypes[]
 ).reduce<GuardrailsState>((acc, key) => {
+  const { threshold, entities, modelName, model, instructions, name, enabled } =
+    guardrailsMap[key];
   acc[key] = {
-    threshold: guardrailsMap[key].threshold,
-    entities: guardrailsMap[key].entities,
-    enabled: guardrailsMap[key].enabled,
+    threshold,
+    entities,
+    modelName,
+    model,
+    instructions,
+    name,
+    enabled,
   };
   return acc;
 }, {} as GuardrailsState);

@@ -96,6 +96,7 @@ const WorkspacePreloader: React.FunctionComponent<WorkspacePreloaderProps> = ({
     setAppUser({
       apiKey: user.apiKeys[0],
       userName: user.userName,
+      email: user.email,
     });
 
     posthog?.identify(user.userName, {

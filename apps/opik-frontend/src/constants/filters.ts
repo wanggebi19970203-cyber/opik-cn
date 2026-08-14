@@ -124,5 +124,10 @@ export const getOperatorsMap = (): Record<
   ],
 });
 
+/**
+ * @deprecated 上游新增代码仍引用此导出；请使用 getOperatorsMap() 代替。
+ */
+export const OPERATORS_MAP = getOperatorsMap();
+
 export const CUSTOM_FILTER_VALIDATION_REGEXP =
   /^((\$\.)?input|\$?input\[\d+\]|(\$\.)?output|\$?output\[\d+\])(\.[^.]+)*$/;

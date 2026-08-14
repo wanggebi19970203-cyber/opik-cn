@@ -4,11 +4,15 @@ export {
   type ProjectRef,
   type DatasetRef as BackendDatasetRef,
   type DatasetItemRef,
+  type DatasetVersionRef,
+  type ProjectStatsRef,
   type ExperimentRefDetail,
   type TestSuiteRef as BackendTestSuiteRef,
   type TestSuiteItemRef,
   type FeedbackScoreRef,
   type TraceDetail,
   type AutomationRuleRef,
+  type AnnotationQueueDetail,
+  type AnnotationQueueReviewerRef,
 } from './client';
 export { type PollFeedbackScoreOpts } from './poll-feedback-score';

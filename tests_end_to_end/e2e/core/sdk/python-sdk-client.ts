@@ -17,6 +17,15 @@ export interface PythonSdkClient {
     tags?: string[];
     thread_id?: string;
     feedback_scores?: Array<{ name: string; value: number; reason?: string }>;
+    error_info?: { exception_type: string; message: string; traceback?: string };
+    duration_seconds?: number;
+    /**
+     * Ages the trace (and its spans) by this many days, stamping a matching
+     * UUIDv7 id. Time-windowed read paths — `GET /v1/private/projects/stats`
+     * above all — window on the id's embedded timestamp, so this is what puts
+     * a seeded trace deterministically inside or outside a rolling window.
+     */
+    age_days?: number;
     spans: Array<{
       name: string;
       type?: 'general' | 'llm' | 'tool';
@@ -47,6 +56,18 @@ export interface PythonSdkClient {
     items?: Array<Record<string, unknown>>;
     workspace?: string;
   }): Promise<{ id: string; name: string }>;
+  /**
+   * One `Dataset.insert(...)` into an existing dataset — and therefore exactly
+   * one new dataset version, however many 1000-item batches the SDK splits the
+   * payload into. `num_threads` > 1 uploads those batches in parallel.
+   */
+  insertDatasetItems(args: {
+    dataset_name: string;
+    project_name: string;
+    items: Array<Record<string, unknown>>;
+    num_threads?: number;
+    workspace?: string;
+  }): Promise<{ dataset_id: string; inserted: number }>;
   evaluateExperiment(args: {
     project_name: string;
     dataset_name: string;
@@ -67,6 +88,30 @@ export interface PythonSdkClient {
       task_output: string;
       score_name: string;
       score_value: number;
+    }>;
+  }>;
+  compareSeed(args: {
+    project_name: string;
+    dataset_name: string;
+    items: Array<{ input: string; expected_output: string }>;
+    experiments: Array<{ experiment_name: string; task_outputs: string[] }>;
+    dataset_description?: string;
+    workspace?: string;
+  }): Promise<{
+    dataset_id: string;
+    dataset_name: string;
+    item_count: number;
+    experiments: Array<{
+      experiment_id: string;
+      experiment_name: string;
+      scores: Array<{
+        dataset_item_id: string;
+        input: string;
+        expected_output: string;
+        task_output: string;
+        score_name: string;
+        score_value: number;
+      }>;
     }>;
   }>;
   createTextPrompt(args: {
@@ -122,6 +167,13 @@ export interface PythonSdkClient {
     items_failed: number;
     items_total: number;
   }>;
+  createAnnotationQueue(args: {
+    project_name: string;
+    name: string;
+    trace_ids: string[];
+    feedback_definition_names?: string[];
+    workspace?: string;
+  }): Promise<{ id: string; name: string }>;
 }
 
 export class PythonSdkBridgeError extends Error {
@@ -148,10 +200,12 @@ export function makePythonSdkClient(opts: { bridgeUrl?: string } = {}): PythonSd
     method: 'GET' | 'POST' | 'DELETE',
     path: string,
     body?: unknown,
+    opts: { timeoutMs?: number } = {},
   ): Promise<TResponse> {
     const endpoint = `${method} ${path}`;
+    const timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
       const headers: Record<string, string> = {};
       if (body !== undefined) headers['content-type'] = 'application/json';
@@ -173,7 +227,7 @@ export function makePythonSdkClient(opts: { bridgeUrl?: string } = {}): PythonSd
             status: 0,
             endpoint,
             detail: 'client-timeout',
-            message: `opik-sdk-driver ${endpoint} aborted after ${REQUEST_TIMEOUT_MS}ms (client-side timeout — the bridge or backend did not respond in time)`,
+            message: `opik-sdk-driver ${endpoint} aborted after ${timeoutMs}ms (client-side timeout — the bridge or backend did not respond in time)`,
           });
         }
         throw err;
@@ -211,10 +265,16 @@ export function makePythonSdkClient(opts: { bridgeUrl?: string } = {}): PythonSd
       return request<{ id: string; name: string; project_id: string }>('POST', '/traces', args);
     },
     async createNestedTrace(args) {
+      // The route confirms the trace and its spans are queryable before
+      // returning, and that read-back is rate-limited on shared cloud
+      // workspaces: a 429 makes the SDK back off for up to a minute, which is
+      // slow but not a failure. Aborting at the default 30s would turn a
+      // throttled seed into a red test.
       return request<{ id: string; name: string; project_id: string; span_count: number }>(
         'POST',
         '/traces/nested',
         args,
+        { timeoutMs: 150_000 },
       );
     },
     async createFeedbackDefinition(args) {
@@ -225,6 +285,36 @@ export function makePythonSdkClient(opts: { bridgeUrl?: string } = {}): PythonSd
     },
     async createDataset(args) {
       return request<{ id: string; name: string }>('POST', '/datasets', args);
+    },
+    async insertDatasetItems(args) {
+      // Multi-batch inserts against a cloud backend outlive the default budget
+      // when the workspace is being rate-limited, and a client-side abort here
+      // would leave a half-written dataset behind.
+      return request<{ dataset_id: string; inserted: number }>(
+        'POST',
+        '/datasets/insert-items',
+        args,
+        { timeoutMs: 180_000 },
+      );
+    },
+    async compareSeed(args) {
+      return request<{
+        dataset_id: string;
+        dataset_name: string;
+        item_count: number;
+        experiments: Array<{
+          experiment_id: string;
+          experiment_name: string;
+          scores: Array<{
+            dataset_item_id: string;
+            input: string;
+            expected_output: string;
+            task_output: string;
+            score_name: string;
+            score_value: number;
+          }>;
+        }>;
+      }>('POST', '/experiments/compare-seed', args);
     },
     async createTextPrompt(args) {
       return request<{ id: string; name: string }>('POST', '/prompts/text', args);
@@ -268,6 +358,9 @@ export function makePythonSdkClient(opts: { bridgeUrl?: string } = {}): PythonSd
         items_failed: number;
         items_total: number;
       }>('POST', '/test-suites/run', args);
+    },
+    async createAnnotationQueue(args) {
+      return request<{ id: string; name: string }>('POST', '/annotation-queues', args);
     },
   };
 }

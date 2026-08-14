@@ -2,6 +2,7 @@ import i18next from "i18next";
 import { useMemo } from "react";
 
 import {
+  CELL_HORIZONTAL_ALIGNMENT,
   COLUMN_ID_ID,
   COLUMN_NAME_ID,
   COLUMN_TYPE,
@@ -21,9 +22,9 @@ import {
 } from "@/v2/pages/OptimizationPage/TrialMetricCells";
 import { TrialPromptCell } from "@/v2/pages/OptimizationPage/TrialPromptCell";
 import { getObjectiveLabel } from "@/lib/optimizations";
+import { type TrialStatus } from "@/v2/pages-shared/experiments/OptimizationProgressChart/optimizationChartUtils";
 
 type UseOptimizationColumnsParams = {
-  candidates: AggregatedCandidate[];
   experiments: Experiment[];
   baselineExperiment?: Experiment;
   columnsOrder: string[];
@@ -32,17 +33,12 @@ type UseOptimizationColumnsParams = {
   bestCandidateId?: string;
   baselineCandidate?: AggregatedCandidate;
   isTestSuite?: boolean;
-  isInProgress?: boolean;
-  inProgressInfo?: {
-    candidateId: string;
-    stepIndex: number;
-    parentCandidateIds: string[];
-  };
+  /** Whole-run status map (computed once on the page) keyed by candidate id. */
+  statusMap: Map<string, TrialStatus>;
   objectiveName?: string;
 };
 
 export const useOptimizationColumns = ({
-  candidates,
   experiments,
   baselineExperiment,
   columnsOrder,
@@ -51,8 +47,7 @@ export const useOptimizationColumns = ({
   bestCandidateId,
   baselineCandidate,
   isTestSuite,
-  isInProgress,
-  inProgressInfo,
+  statusMap,
   objectiveName,
 }: UseOptimizationColumnsParams) => {
   const experimentMap = useMemo(
@@ -66,16 +61,16 @@ export const useOptimizationColumns = ({
         id: COLUMN_NAME_ID,
         label: i18next.t("common.optimization.trialNumber"),
         type: COLUMN_TYPE.string,
-        size: 100,
-        cell: TrialNumberCell as never,
+        size: 80,
+        cell: TrialNumberCell,
       },
       {
         id: "step",
         label: i18next.t("common.optimization.step"),
         type: COLUMN_TYPE.string,
-        size: 100,
+        size: 80,
         accessorFn: (row) => row.stepIndex,
-        cell: TrialStepCell as never,
+        cell: TrialStepCell,
       },
       {
         id: COLUMN_ID_ID,
@@ -83,49 +78,58 @@ export const useOptimizationColumns = ({
         type: COLUMN_TYPE.string,
       },
       {
+        id: "prompt",
+        label: i18next.t("common.labels.prompt"),
+        type: COLUMN_TYPE.string,
+        size: 322,
+        accessorFn: (row) => row.experimentIds?.[0],
+        cell: TrialPromptCell,
+        customMeta: {
+          experimentMap,
+          baselineExperiment,
+        },
+      },
+      {
         id: "objective_name",
         label: getObjectiveLabel(isTestSuite, objectiveName),
         type: COLUMN_TYPE.numberDictionary,
-        size: 160,
+        size: 130,
+        // numberDictionary defaults to start; all metric columns key to the
+        // right edge.
+        horizontalAlignment: CELL_HORIZONTAL_ALIGNMENT.end,
         accessorFn: (row) => row.score,
-        cell: TrialAccuracyCell as never,
+        cell: TrialAccuracyCell,
+        // statusMap lets the metric cells drop the baseline delta while a trial
+        // is still evaluating — a partial average is not comparable to the
+        // fully evaluated baseline (OPIK-7460).
         customMeta: {
           baselineCandidate,
           isTestSuite,
+          statusMap,
         },
       },
       {
         id: "runtime_cost",
         label: i18next.t("common.optimization.runtimeCost"),
         type: COLUMN_TYPE.cost,
-        size: 160,
+        size: 130,
         accessorFn: (row) => row.runtimeCost,
-        cell: TrialCandidateCostCell as never,
+        cell: TrialCandidateCostCell,
         customMeta: {
           baselineCandidate,
+          statusMap,
         },
       },
       {
         id: "latency",
         label: i18next.t("common.optimization.latency"),
         type: COLUMN_TYPE.duration,
-        size: 160,
+        size: 130,
         accessorFn: (row) => row.latencyP50,
-        cell: TrialCandidateLatencyCell as never,
+        cell: TrialCandidateLatencyCell,
         customMeta: {
           baselineCandidate,
-        },
-      },
-      {
-        id: "prompt",
-        label: i18next.t("common.labels.prompt"),
-        type: COLUMN_TYPE.string,
-        size: 280,
-        accessorFn: (row) => row.experimentIds?.[0],
-        cell: TrialPromptCell as never,
-        customMeta: {
-          experimentMap,
-          baselineExperiment,
+          statusMap,
         },
       },
       {
@@ -141,19 +145,18 @@ export const useOptimizationColumns = ({
         type: COLUMN_TYPE.string,
         size: 120,
         accessorFn: () => undefined,
-        cell: TrialStatusCell as never,
+        cell: TrialStatusCell,
         customMeta: {
-          candidates,
+          statusMap,
           bestCandidateId,
-          isTestSuite,
-          isInProgress,
-          inProgressInfo,
         },
       },
       {
         id: "created_at",
         label: i18next.t("common.labels.created"),
         type: COLUMN_TYPE.time,
+        size: 140,
+        // TimeCell is shared and typed for unknown rows; the one remaining cast.
         cell: TimeCell as never,
         customMeta: {
           timeMode: "absolute",
@@ -161,14 +164,12 @@ export const useOptimizationColumns = ({
       },
     ];
   }, [
-    candidates,
     experimentMap,
     baselineExperiment,
     bestCandidateId,
     baselineCandidate,
     isTestSuite,
-    isInProgress,
-    inProgressInfo,
+    statusMap,
     objectiveName,
   ]);
 

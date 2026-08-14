@@ -113,6 +113,7 @@ const MetricConfigs = ({
         <CodeMetricConfigs
           configs={configs as Partial<CodeMetricParameters>}
           onChange={onChange}
+          datasetVariables={datasetVariables}
           error={errors?.code?.message}
         />
       );

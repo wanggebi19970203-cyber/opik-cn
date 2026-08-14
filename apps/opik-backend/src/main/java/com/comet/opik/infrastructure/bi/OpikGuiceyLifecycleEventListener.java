@@ -1,17 +1,13 @@
 package com.comet.opik.infrastructure.bi;
 
 import com.comet.opik.api.resources.v1.jobs.AgentInsightsReportJob;
-import com.comet.opik.api.resources.v1.jobs.AlertProjectMigrationJob;
-import com.comet.opik.api.resources.v1.jobs.AutomationRuleProjectMigrationJob;
-import com.comet.opik.api.resources.v1.jobs.DatasetProjectMigrationJob;
+import com.comet.opik.api.resources.v1.jobs.ClickHousePartitionMetricsJob;
 import com.comet.opik.api.resources.v1.jobs.DatasetVersionItemsTotalMigrationJob;
 import com.comet.opik.api.resources.v1.jobs.ExperimentDenormalizationJob;
-import com.comet.opik.api.resources.v1.jobs.ExperimentProjectMigrationJob;
 import com.comet.opik.api.resources.v1.jobs.LocalRunnerReaperJob;
 import com.comet.opik.api.resources.v1.jobs.MetricsAlertJob;
-import com.comet.opik.api.resources.v1.jobs.OptimizationProjectMigrationJob;
+import com.comet.opik.api.resources.v1.jobs.OptimizationStalledReaperJob;
 import com.comet.opik.api.resources.v1.jobs.ProjectLastUpdatedFlushJob;
-import com.comet.opik.api.resources.v1.jobs.PromptProjectMigrationJob;
 import com.comet.opik.api.resources.v1.jobs.RetentionCatchUpJob;
 import com.comet.opik.api.resources.v1.jobs.RetentionEstimationJob;
 import com.comet.opik.api.resources.v1.jobs.RetentionSlidingWindowJob;
@@ -21,6 +17,8 @@ import com.comet.opik.infrastructure.ExperimentDenormalizationConfig;
 import com.comet.opik.infrastructure.LlmModelRegistryConfig;
 import com.comet.opik.infrastructure.LocalRunnerConfig;
 import com.comet.opik.infrastructure.OpikConfiguration;
+import com.comet.opik.infrastructure.OptimizationStalledReaperConfig;
+import com.comet.opik.infrastructure.PartitionMetricsConfig;
 import com.comet.opik.infrastructure.ProjectLastUpdatedFlushConfig;
 import com.comet.opik.infrastructure.RetentionConfig;
 import com.comet.opik.infrastructure.StreamConsumerReaperConfig;
@@ -69,15 +67,11 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 setProjectLastUpdatedFlushJob();
                 setLocalRunnerReaperJob();
                 setStreamConsumerReaperJob();
+                setOptimizationStalledReaperJob();
                 setRetentionJobs();
+                setPartitionMetricsJob();
                 setLlmModelRegistryRefreshJob();
                 scheduleDatasetVersionItemsTotalMigrationJobIfEnabled();
-                scheduleExperimentProjectMigrationJobIfEnabled();
-                scheduleDatasetProjectMigrationJobIfEnabled();
-                scheduleOptimizationProjectMigrationJobIfEnabled();
-                schedulePromptProjectMigrationJobIfEnabled();
-                scheduleAutomationRuleProjectMigrationJobIfEnabled();
-                scheduleAlertProjectMigrationJobIfEnabled();
             }
 
             case GuiceyLifecycle.ApplicationShutdown -> shutdownJobManagerScheduler();
@@ -184,6 +178,20 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
                 reaperConfig.startupDelay().toJavaDuration());
     }
 
+    private void setOptimizationStalledReaperJob() {
+        OptimizationStalledReaperConfig reaperConfig = injector.get().getInstance(OpikConfiguration.class)
+                .getOptimizationStalledReaper();
+
+        if (!reaperConfig.enabled()) {
+            log.info("Optimization stalled reaper job is disabled, skipping job setup");
+            return;
+        }
+
+        scheduleRepeatingJob(OptimizationStalledReaperJob.class,
+                reaperConfig.jobInterval().toJavaDuration(),
+                reaperConfig.startupDelay().toJavaDuration());
+    }
+
     private void setRetentionJobs() {
         RetentionConfig retentionConfig = injector.get().getInstance(OpikConfiguration.class).getRetention();
 
@@ -204,10 +212,23 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         }
     }
 
+    private void setPartitionMetricsJob() {
+        PartitionMetricsConfig partitionMetricsConfig = injector.get().getInstance(OpikConfiguration.class)
+                .getPartitionMetrics();
+
+        if (!partitionMetricsConfig.isEnabled()) {
+            log.info("ClickHouse partition metrics job is disabled, skipping job setup");
+            return;
+        }
+
+        scheduleRepeatingJob(ClickHousePartitionMetricsJob.class,
+                partitionMetricsConfig.getInterval().toJavaDuration(), null);
+    }
+
     private void setAgentInsightsReportJob() {
         var serviceToggles = injector.get().getInstance(OpikConfiguration.class).getServiceToggles();
 
-        if (!serviceToggles.isAgentInsightsEnabled()) {
+        if (!serviceToggles.isOllieEnabled()) {
             log.info("Agent Insights is disabled, skipping report job setup");
             return;
         }
@@ -384,69 +405,4 @@ public class OpikGuiceyLifecycleEventListener implements GuiceyLifecycleListener
         }
     }
 
-    private void scheduleExperimentProjectMigrationJobIfEnabled() {
-        var config = injector.get().getInstance(OpikConfiguration.class).getExperimentProjectMigration();
-        if (config == null || !config.enabled()) {
-            log.info("Experiment project migration job is disabled");
-            return;
-        }
-        scheduleRepeatingJob(ExperimentProjectMigrationJob.class,
-                config.interval().toJavaDuration(),
-                config.startupDelay().toJavaDuration());
-    }
-
-    private void scheduleDatasetProjectMigrationJobIfEnabled() {
-        var config = injector.get().getInstance(OpikConfiguration.class).getDatasetProjectMigration();
-        if (config == null || !config.enabled()) {
-            log.info("Dataset project migration job is disabled");
-            return;
-        }
-        scheduleRepeatingJob(DatasetProjectMigrationJob.class,
-                config.interval().toJavaDuration(),
-                config.startupDelay().toJavaDuration());
-    }
-
-    private void scheduleOptimizationProjectMigrationJobIfEnabled() {
-        var config = injector.get().getInstance(OpikConfiguration.class).getOptimizationProjectMigration();
-        if (config == null || !config.enabled()) {
-            log.info("Optimization project migration job is disabled");
-            return;
-        }
-        scheduleRepeatingJob(OptimizationProjectMigrationJob.class,
-                config.interval().toJavaDuration(),
-                config.startupDelay().toJavaDuration());
-    }
-
-    private void schedulePromptProjectMigrationJobIfEnabled() {
-        var config = injector.get().getInstance(OpikConfiguration.class).getPromptProjectMigration();
-        if (config == null || !config.enabled()) {
-            log.info("Prompt project migration job is disabled");
-            return;
-        }
-        scheduleRepeatingJob(PromptProjectMigrationJob.class,
-                config.interval().toJavaDuration(),
-                config.startupDelay().toJavaDuration());
-    }
-
-    private void scheduleAutomationRuleProjectMigrationJobIfEnabled() {
-        var config = injector.get().getInstance(OpikConfiguration.class).getAutomationRuleProjectMigration();
-        if (config == null || !config.enabled()) {
-            log.info("Automation rule project migration job is disabled");
-            return;
-        }
-        scheduleRepeatingJob(AutomationRuleProjectMigrationJob.class,
-                config.interval().toJavaDuration(),
-                config.startupDelay().toJavaDuration());
-    }
-
-    private void scheduleAlertProjectMigrationJobIfEnabled() {
-        var config = injector.get().getInstance(OpikConfiguration.class).getAlertProjectMigration();
-        if (config == null || !config.enabled()) {
-            log.info("Alert project migration job is disabled");
-            return;
-        }
-        scheduleRepeatingJob(AlertProjectMigrationJob.class,
-                config.interval().toJavaDuration(),
-                config.startupDelay().toJavaDuration());
-    }
 }

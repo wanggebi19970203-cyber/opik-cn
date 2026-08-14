@@ -231,6 +231,10 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
             return Mono.just(0L);
         }
 
+        // Queue items reference trace/thread ids (v7 by construction); enforce so the referenced-id
+        // policy is uniform. Past allowed — queues commonly collect older traces/threads.
+        itemIds.forEach(itemId -> idGenerator.validateIdNotInFuture(itemId, "AnnotationQueue item"));
+
         return annotationQueueDAO.findQueueInfoById(queueId)
                 .switchIfEmpty(Mono.error(createNotFoundError(queueId)))
                 .flatMap(queue -> annotationQueueDAO.addItems(queueId, itemIds, queue.projectId()))
@@ -386,6 +390,8 @@ class AnnotationQueueServiceImpl implements AnnotationQueueService {
     private AnnotationQueue prepareAnnotationQueue(AnnotationQueue annotationQueue) {
         UUID id = annotationQueue.id() == null ? idGenerator.generateId() : annotationQueue.id();
         IdGenerator.validateVersion(id, "AnnotationQueue");
+        // projectId is persisted without an existence check here, so enforce v7 to avoid storing an orphan v4.
+        idGenerator.validateIdNotInFutureIfPresent(annotationQueue.projectId(), "project");
 
         log.debug("准备注解队列，ID '{}'，名称 '{}'，项目 '{}'",
                 id, annotationQueue.name(), annotationQueue.projectId());

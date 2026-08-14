@@ -9,7 +9,7 @@
       "trials": "Trials"
     },
     "header": {
-      "rerun": "Rerun",
+      "rerun": "Duplicate run",
       "stopExecution": "Stop Execution",
       "dataset": "Dataset",
       "goToDataset": "Go to {{name}}"
@@ -49,7 +49,7 @@
       "running": "Running"
     },
     "prompt": {
-      "diffVsBaseline": "Prompt diff vs baseline"
+      "diffVsBaseline": "Diff vs baseline"
     },
     "view": {
       "logs": "Logs",

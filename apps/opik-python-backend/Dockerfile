@@ -18,6 +18,10 @@ RUN if [ -n "${ALPINE_PACKAGE_MIRROR}" ]; then \
     fi && \
     apk add --no-cache python3 py3-pip build-base python3-dev musl-dev gcc libffi-dev rust cargo
 
+# uv is a drop-in faster pip; the binary is copied from the official distroless
+# image (pinned) and used only in this builder stage — it never reaches runtime.
+COPY --from=ghcr.io/astral-sh/uv:0.11.29 /uv /usr/local/bin/uv
+
 WORKDIR /opt/opik-python-backend
 
 # Install deps into a venv that we copy whole into the runtime stage.
@@ -27,7 +31,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV PIP_INDEX_URL="${PYPI_INDEX_URL}" \
     PIP_DEFAULT_TIMEOUT=120 \
     PIP_RETRIES=10
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --python /opt/venv/bin/python --no-cache -r requirements.txt
 
 # Bytecode-only deps (-o 2, -b = fastest layout); strip source/stubs + package
 # managers. src/ keeps its .py; *.dist-info kept for importlib.metadata.

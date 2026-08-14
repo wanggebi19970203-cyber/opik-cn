@@ -9,7 +9,7 @@
       "trials": "试验"
     },
     "header": {
-      "rerun": "重新运行",
+      "rerun": "复制运行",
       "stopExecution": "停止执行",
       "dataset": "数据集",
       "goToDataset": "前往 {{name}}"
@@ -49,7 +49,7 @@
       "running": "运行中"
     },
     "prompt": {
-      "diffVsBaseline": "与基线的提示词差异"
+      "diffVsBaseline": "与基线对比"
     },
     "view": {
       "logs": "日志",

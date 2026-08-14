@@ -54,7 +54,7 @@
       "created": "创建时间",
       "startTime": "开始时间",
       "passRate": "通过率",
-      "accuracy": "准确率",
+      "accuracy": "最佳分数",
       "latency": "延迟",
       "cost": "成本",
       "optCost": "优化成本"

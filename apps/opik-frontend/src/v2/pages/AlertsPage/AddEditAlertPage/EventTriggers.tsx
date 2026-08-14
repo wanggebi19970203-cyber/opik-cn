@@ -22,8 +22,11 @@ import { Separator } from "@/ui/separator";
 import { Input } from "@/ui/input";
 import SelectBox from "@/shared/SelectBox/SelectBox";
 import { AlertFormType } from "./schema";
+import { TRIGGER_CONFIG } from "./helpers";
 import { getWindowOptions } from "./constants";
 import { ALERT_EVENT_TYPE } from "@/types/alerts";
+import { GuardrailTypes } from "@/types/guardrails";
+import { GuardrailNamesLabelMap } from "@/constants/guardrails";
 import { useIsFeatureEnabled } from "@/contexts/feature-toggles-provider";
 import { FeatureToggleKeys } from "@/types/feature-toggles";
 import { cn } from "@/lib/utils";
@@ -199,6 +202,51 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
     );
   };
 
+  const renderGuardrailTypesConfig = (index: number) => {
+    return (
+      <FormField
+        control={form.control}
+        name={`triggers.${index}.guardrailTypes` as Path<AlertFormType>}
+        render={({ field }) => {
+          const selected = (field.value as GuardrailTypes[] | undefined) ?? [];
+          const toggle = (type: GuardrailTypes, checked: boolean) => {
+            field.onChange(
+              checked
+                ? [...selected, type]
+                : selected.filter((t) => t !== type),
+            );
+          };
+          return (
+            <FormItem>
+              <Label className="comet-body-s">Guardrail types</Label>
+              <Description>
+                Alert only on the selected guardrail types. Leave empty to alert
+                on any guardrail failure.
+              </Description>
+              <div className="flex flex-col gap-2 pt-1">
+                {Object.values(GuardrailTypes).map((type) => (
+                  <label
+                    key={type}
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    <Checkbox
+                      checked={selected.includes(type)}
+                      onCheckedChange={(checked) => toggle(type, !!checked)}
+                    />
+                    <span className="comet-body-s">
+                      {GuardrailNamesLabelMap[type]}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
+      />
+    );
+  };
+
   const windowOptions = useMemo(() => getWindowOptions(t), [t]);
 
   const allEventTypes = useMemo(() => {
@@ -229,6 +277,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
             <div className="flex flex-col">
               <div className="max-h-[400px] overflow-y-auto p-1">
                 {allEventTypes.map((eventType) => {
+                  const config = TRIGGER_CONFIG[eventType];
                   const isChecked = selectedEventTypes.has(eventType);
 
                   return (
@@ -244,11 +293,11 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                           }
                         />
                         <span className="comet-body-s-accented flex-1">
-                          {t(`alerts.triggerTypes.${eventType}.title`)}
+                          {config.title}
                         </span>
                       </div>
                       <Description className="pl-7">
-                        {t(`alerts.triggerTypes.${eventType}.description`)}
+                        {config.description}
                       </Description>
                     </label>
                   );
@@ -306,6 +355,7 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
           <CardContent className="p-4">
             <div className="flex flex-col gap-2">
               {fields.map((field, index) => {
+                const config = TRIGGER_CONFIG[field.eventType];
                 const isLastItem = index === fields.length - 1;
                 const isThresholdTrigger =
                   field.eventType === ALERT_EVENT_TYPE.trace_cost ||
@@ -315,6 +365,9 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                   field.eventType === ALERT_EVENT_TYPE.trace_feedback_score ||
                   field.eventType ===
                     ALERT_EVENT_TYPE.trace_thread_feedback_score;
+                const isGuardrailsTrigger =
+                  field.eventType ===
+                  ALERT_EVENT_TYPE.trace_guardrails_triggered;
 
                 return (
                   <div key={field.id}>
@@ -323,15 +376,9 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                         <div className="flex gap-4">
                           <div className="flex flex-1 flex-col gap-1">
                             <Label className="comet-body-s-accented">
-                              {t(
-                                `alerts.triggerTypes.${field.eventType}.title`,
-                              )}
+                              {config.title}
                             </Label>
-                            <Description>
-                              {t(
-                                `alerts.triggerTypes.${field.eventType}.description`,
-                              )}
-                            </Description>
+                            <Description>{config.description}</Description>
                           </div>
                         </div>
                         {isThresholdTrigger &&
@@ -341,6 +388,8 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
                             index,
                             field.eventType,
                           )}
+                        {isGuardrailsTrigger &&
+                          renderGuardrailTypesConfig(index)}
                       </div>
                       <div className="flex items-start pt-0.5">
                         <Button

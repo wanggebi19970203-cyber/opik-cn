@@ -137,41 +137,20 @@ public class OpikConfiguration extends JobConfiguration {
     private OptimizationLogsConfig optimizationLogs = new OptimizationLogsConfig();
 
     @Valid @NotNull @JsonProperty
+    private OptimizationStalledReaperConfig optimizationStalledReaper = OptimizationStalledReaperConfig.builder()
+            .build();
+
+    @Valid @NotNull @JsonProperty
     private RetentionConfig retention = new RetentionConfig();
+
+    @Valid @NotNull @JsonProperty
+    private PartitionMetricsConfig partitionMetrics = new PartitionMetricsConfig();
 
     @Valid @NotNull @JsonProperty
     private DatasetVersioningMigrationConfig datasetVersioningMigration = new DatasetVersioningMigrationConfig();
 
     @Valid @NotNull @JsonProperty
     private DatasetVersioningConfig datasetVersioning = DatasetVersioningConfig.builder().build();
-
-    @Valid @NotNull @JsonProperty
-    private MigrationConfig migration = new MigrationConfig();
-
-    @Valid @NotNull @JsonProperty
-    private ExperimentProjectMigrationConfig experimentProjectMigration = ExperimentProjectMigrationConfig.builder()
-            .build();
-
-    @Valid @NotNull @JsonProperty
-    private DatasetProjectMigrationConfig datasetProjectMigration = DatasetProjectMigrationConfig.builder()
-            .build();
-
-    @Valid @NotNull @JsonProperty
-    private OptimizationProjectMigrationConfig optimizationProjectMigration = OptimizationProjectMigrationConfig
-            .builder()
-            .build();
-
-    @Valid @NotNull @JsonProperty
-    private PromptProjectMigrationConfig promptProjectMigration = PromptProjectMigrationConfig.builder()
-            .build();
-
-    @Valid @NotNull @JsonProperty
-    private AutomationRuleProjectMigrationConfig automationRuleProjectMigration = AutomationRuleProjectMigrationConfig
-            .builder()
-            .build();
-
-    @Valid @NotNull @JsonProperty
-    private AlertProjectMigrationConfig alertProjectMigration = AlertProjectMigrationConfig.builder().build();
 
     @Valid @NotNull @JsonProperty
     private LocalRunnerConfig localRunner = new LocalRunnerConfig();

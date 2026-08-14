@@ -17,9 +17,12 @@ from opik import Dataset
 
 from ..api_objects import chat_prompt
 from ..api_objects.types import MetricFunction
+from ..constants import DEFAULT_SCORING_FAILURE_THRESHOLD
 from ..core.results import OptimizationResult, OptimizationRound
 from ..core.state import AlgorithmResult, OptimizationContext
 from ..utils.logging import debug_log
+from ..utils.scoring import improves_over
+from .exceptions import ScoringFailedError
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..base_optimizer import BaseOptimizer
@@ -104,8 +107,34 @@ def select_result_prompts(
     return best_prompts, initial_prompts
 
 
+def _apply_reused_baseline(
+    details: dict[str, Any],
+    best_score: float | None,
+    baseline_score: float | None,
+) -> None:
+    """Set the ``reused_baseline`` flag on ``details``.
+
+    OPIK-7038: True when no trial STRICTLY beat the baseline score (a tie keeps
+    the seed). A ``None`` baseline means we can't claim to have reused it, so the
+    flag defaults to False. This is an SDK result signal carried in ``details``
+    (alongside ``finish_reason``/``stopped_early``); surfacing it to the backend
+    and UI is separate plumbing. It is derived from the same tie policy the
+    optimizers apply, so it matches keep-original-on-tie. NOTE: it is score-
+    derived — for it to be a reliable "the seed prompt was returned" signal, the
+    optimizer must return the seed when it does not beat the baseline (GEPA,
+    few-shot, and — as of this change — evolutionary do).
+    """
+    details["reused_baseline"] = baseline_score is not None and not improves_over(
+        best_score, baseline_score
+    )
+
+
 def build_early_result(**kwargs: Any) -> OptimizationResult:
     score = kwargs["score"]
+    details = kwargs["details"]
+    # Early/baseline-only result: the returned prompt IS the baseline, so this is
+    # by definition a reused baseline (no improving trial was produced).
+    _apply_reused_baseline(details, score, score)
     return OptimizationResult(
         optimizer=kwargs["optimizer_name"],
         prompt=kwargs["prompt"],
@@ -152,8 +181,51 @@ def build_final_result(
         "verbose": optimizer.verbose,
     }
 
+    # Always populate scoring_health so downstream layers (worker, UI) can rely on
+    # the key being present.  The counts reflect the returned (best/baseline) prompt's
+    # evaluation — captured for the baseline and updated whenever a candidate genuinely
+    # beats it. When all items scored successfully failed_count=0.
+    scoring_health = context.scoring_health or {"failed_count": 0, "total_count": 0}
+    details["scoring_health"] = scoring_health
+
+    # Decide the scoring pass/fail ONCE, here at the end, against the prompt the run
+    # actually returns — not on every candidate evaluation. A transient outage that
+    # fails a single attempt is tolerated (that attempt just loses to a later one); we
+    # only fail the run when the prompt it finishes with couldn't be scored at all,
+    # which is exactly the OPIK-7029 "COMPLETED but empty" case.
+    #   - Skipped when the run already failed with a real exception (finish_reason ==
+    #     "error"): that error is the true root cause and must not be masked.
+    #   - Skipped when total == 0 (custom evaluation / empty dataset never recorded a
+    #     score), so it can never fire a false error.
+    #   - Skipped when the returned prompt scored strictly above zero. For optimizers
+    #     that score candidates outside evaluate() (evolutionary, GEPA's search phase),
+    #     scoring_health is only ever the baseline's — so a baseline that failed on a
+    #     brief outage but a run that then found a genuinely-scoring prompt would else
+    #     false-raise. A positive best_score proves at least one item scored, so the
+    #     all-failed health must be stale; don't abort. When every item truly fails to
+    #     score, all values are 0.0 and best_score is 0.0, so the guard still fires.
+    failed_count = scoring_health["failed_count"]
+    total_count = scoring_health["total_count"]
+    best_score = algorithm_result.best_score
+    returned_prompt_scored_nothing = best_score is None or best_score <= 0.0
+    if (
+        context.finish_reason != "error"
+        and total_count > 0
+        and failed_count / total_count >= DEFAULT_SCORING_FAILURE_THRESHOLD
+        and returned_prompt_scored_nothing
+    ):
+        raise ScoringFailedError(
+            failed=failed_count,
+            total=total_count,
+            objective_metric_name=context.metric.__name__,
+        )
+
     details.update(optimizer_metadata)
     details.update(algorithm_result.metadata)
+
+    # Canonical, algorithm-agnostic "kept the original prompt" signal (OPIK-7038).
+    # Set last so it is authoritative over any per-optimizer metadata.
+    _apply_reused_baseline(details, algorithm_result.best_score, context.baseline_score)
 
     history_entries = _coerce_history_entries(algorithm_result.history)
     if not history_entries:
@@ -461,7 +533,16 @@ def build_early_stop_details(
     early_stop_details = {
         "initial_score": baseline_score,
         "stopped_early": True,
+        # finish_reason is the canonical machine-readable signal (same key as
+        # build_final_result); stop_reason keeps the legacy descriptive value.
+        "finish_reason": context.finish_reason or "perfect_score",
         "stop_reason": "baseline_score_met_threshold",
+        # The baseline eval's scoring health — build_final_result always carries
+        # this key, and downstream consumers (worker metadata forwarding, the
+        # "No usable scores" UI heuristic) rely on it being present on every
+        # completion path, including this baseline-only one (OPIK-7511 e2e).
+        "scoring_health": context.scoring_health
+        or {"failed_count": 0, "total_count": 0},
         "stop_reason_details": {"best_score": baseline_score},
         "perfect_score": optimizer.perfect_score,
         "skip_perfect_score": optimizer.skip_perfect_score,
@@ -644,41 +725,57 @@ def finalize_finish_reason(context: OptimizationContext) -> None:
             context.finish_reason = "completed"
 
 
+# Evaluation runs agent calls on a worker pool, so these accumulators are written
+# concurrently. A bare += loses increments, which under-reports the run's LLM call
+# count (OPIK-7521).
+_usage_lock = threading.Lock()
+
+
 def reset_usage(optimizer: BaseOptimizer) -> None:
-    optimizer.llm_call_counter = 0
-    optimizer.llm_call_tools_counter = 0
-    optimizer.llm_cost_total = 0.0
-    optimizer.llm_token_usage_total = {
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-    }
+    # Under the same lock as the accumulators: a reset that interleaves with an
+    # in-flight increment would drop it, leaving the run reporting fewer LLM
+    # calls than it made.
+    with _usage_lock:
+        optimizer.llm_call_counter = 0
+        optimizer.llm_call_tools_counter = 0
+        optimizer.llm_cost_total = 0.0
+        optimizer.llm_token_usage_total = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
 
 
 def increment_llm_call(optimizer: BaseOptimizer) -> None:
-    optimizer.llm_call_counter += 1
+    with _usage_lock:
+        optimizer.llm_call_counter += 1
 
 
 def increment_llm_tool_call(optimizer: BaseOptimizer) -> None:
-    optimizer.llm_call_tools_counter += 1
+    with _usage_lock:
+        optimizer.llm_call_tools_counter += 1
 
 
 def add_llm_cost(optimizer: BaseOptimizer, cost: float | None) -> None:
     if cost is None:
         return
-    optimizer.llm_cost_total += float(cost)
+    with _usage_lock:
+        optimizer.llm_cost_total += float(cost)
 
 
 def add_llm_usage(optimizer: BaseOptimizer, usage: dict[str, Any] | None) -> None:
     if not usage:
         return
-    optimizer.llm_token_usage_total["prompt_tokens"] += int(
-        usage.get("prompt_tokens", 0)
-    )
-    optimizer.llm_token_usage_total["completion_tokens"] += int(
-        usage.get("completion_tokens", 0)
-    )
-    optimizer.llm_token_usage_total["total_tokens"] += int(usage.get("total_tokens", 0))
+    with _usage_lock:
+        optimizer.llm_token_usage_total["prompt_tokens"] += int(
+            usage.get("prompt_tokens", 0)
+        )
+        optimizer.llm_token_usage_total["completion_tokens"] += int(
+            usage.get("completion_tokens", 0)
+        )
+        optimizer.llm_token_usage_total["total_tokens"] += int(
+            usage.get("total_tokens", 0)
+        )
 
 
 def coerce_score(raw_score: Any) -> float:

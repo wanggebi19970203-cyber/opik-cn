@@ -18,7 +18,8 @@ import useAppStore, { useActiveProjectId } from "@/store/AppStore";
 import useOptimizationById from "@/api/optimizations/useOptimizationById";
 import useExperimentsList from "@/api/datasets/useExperimentsList";
 import { useOptimizationScores } from "@/v2/pages-shared/experiments/useOptimizationScores";
-import { AggregatedCandidate } from "@/types/optimizations";
+import { selectBestCandidate } from "@/v2/pages-shared/experiments/OptimizationProgressChart/optimizationChartUtils";
+import { getOptimizationRefetchInterval } from "./optimizationOverviewHelpers";
 
 export const useOptimizationExperiments = () => {
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
@@ -38,7 +39,9 @@ export const useOptimizationExperiments = () => {
     {
       placeholderData: keepPreviousData,
       enabled: !!optimizationId,
-      refetchInterval: OPTIMIZATION_ACTIVE_REFETCH_INTERVAL,
+      // Poll only while the run is active (reads the freshest status).
+      refetchInterval: (query) =>
+        getOptimizationRefetchInterval(query.state.data?.status),
     },
   );
 
@@ -61,7 +64,7 @@ export const useOptimizationExperiments = () => {
     },
     {
       placeholderData: keepPreviousData,
-      refetchInterval: OPTIMIZATION_ACTIVE_REFETCH_INTERVAL,
+      refetchInterval: getOptimizationRefetchInterval(optimization?.status),
     },
   );
 
@@ -128,7 +131,12 @@ export const useOptimizationExperiments = () => {
   }, [data?.content, isTestSuite, optimization?.objective_name]);
 
   const candidates = useMemo(
-    () => aggregateCandidates(experiments, optimization?.objective_name),
+    () =>
+      // v2 numbers only real candidate trials (1..N, matching max_trials); the
+      // baseline is not a trial and carries no number (OPIK-7589).
+      aggregateCandidates(experiments, optimization?.objective_name, {
+        unnumberedBaseline: true,
+      }),
     [experiments, optimization?.objective_name],
   );
 
@@ -166,15 +174,27 @@ export const useOptimizationExperiments = () => {
     [candidates],
   );
 
-  const bestCandidate = useMemo(() => {
-    if (!candidates.length) return undefined;
+  // Shares the chart's selection so the badge, the best-prompt panel and the
+  // trials table cannot disagree — and so a trial that has not finished
+  // evaluating never wins on a partial average (OPIK-7460).
+  const bestCandidate = useMemo(
+    () => selectBestCandidate(candidates),
+    [candidates],
+  );
 
-    return candidates.reduce<AggregatedCandidate | undefined>((best, c) => {
-      if (c.score == null) return best;
-      if (!best || best.score == null || c.score > best.score) return c;
-      return best;
-    }, undefined);
-  }, [candidates]);
+  // Mirror the SDK tie policy (OPIK-7038, utils/scoring.improves_over): a
+  // candidate must STRICTLY beat the baseline to count as an improvement — a
+  // tie keeps the seed/original prompt as the result. Compare best vs baseline
+  // on the SAME aggregated-candidate path (not the experiment-derived
+  // `baseScore`, which defaults to 0 and can diverge), so an unscored baseline
+  // reads as `undefined` ("not comparable yet") rather than a real 0. When this
+  // is `false` the best-scoring trial did NOT win: the original prompt was kept.
+  const improvedOverBaseline = useMemo<boolean | undefined>(() => {
+    const bestScore = bestCandidate?.score;
+    const baselineScore = baselineCandidate?.score;
+    if (bestScore == null || baselineScore == null) return undefined;
+    return bestScore > baselineScore;
+  }, [bestCandidate, baselineCandidate]);
 
   const baselineExperiment = useMemo(() => {
     if (!experiments.length) return undefined;
@@ -200,6 +220,7 @@ export const useOptimizationExperiments = () => {
     baseScore,
     bestExperiment: bestExperiment,
     bestCandidate,
+    improvedOverBaseline,
     baselineCandidate,
     baselineExperiment,
     inProgressInfo,

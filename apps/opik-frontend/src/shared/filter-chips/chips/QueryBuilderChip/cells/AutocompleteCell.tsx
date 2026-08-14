@@ -23,6 +23,7 @@ interface AutocompleteCellProps {
   autoFocus?: boolean;
   grow?: boolean;
   hasError?: boolean;
+  testId?: string;
 }
 
 const filterItems = (items: string[], query: string): string[] => {
@@ -58,11 +59,13 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
   autoFocus = false,
   grow = false,
   hasError = false,
+  testId,
 }) => {
   const { t } = useTranslation("common");
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pickedRef = useRef(false);
   const { items, isLoading } = options;
 
   useEffect(() => {
@@ -90,6 +93,7 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
 
   const pick = useCallback(
     (item: string) => {
+      pickedRef.current = true;
       setDraft(item);
       commit(item);
       onPick?.(item);
@@ -107,7 +111,7 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
   };
 
   const itemClass = cn(
-    "comet-body-s-accented flex h-8 items-center rounded-[4px] px-4",
+    "comet-body-s-accented flex min-h-8 items-center rounded-[4px] px-4 py-1.5",
     "data-[selected=true]:bg-primary-foreground",
   );
 
@@ -123,6 +127,12 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
             onFocus={() => setFocused(true)}
             onBlur={() => {
               setFocused(false);
+              // A pick already committed the selected value; skip re-committing the
+              // stale draft this blur closure still holds (setDraft hasn't flushed).
+              if (pickedRef.current) {
+                pickedRef.current = false;
+                return;
+              }
               commit(draft);
             }}
             onKeyDown={handleKeyDown}
@@ -130,6 +140,7 @@ export const AutocompleteCell: React.FC<AutocompleteCellProps> = ({
             <input
               type="text"
               data-filter-cell
+              data-testid={testId}
               placeholder={placeholder}
               className={cn(
                 cellInput,

@@ -1,4 +1,4 @@
-import { TFunction } from "i18next";
+import i18next, { TFunction } from "i18next";
 import TimeCell from "@/shared/DataTableCells/TimeCell";
 import IdCell from "@/shared/DataTableCells/IdCell";
 import { COLUMN_DATASET_ID, COLUMN_TYPE, ColumnData } from "@/types/shared";
@@ -7,23 +7,24 @@ import { getFeedbackScore } from "@/lib/feedback-scores";
 import {
   getOptimizerLabel,
   getOptimizationOptimizerType,
+  getMetricLabel,
 } from "@/lib/optimizations";
-import { getMetricLabel } from "@/lib/optimization-config";
 import { RESOURCE_TYPE } from "@/shared/ResourceLink/ResourceLink";
 import ItemSourceCell, {
   ITEM_SOURCE_LABEL,
 } from "@/v2/pages-shared/experiments/ItemSourceCell";
 import OptimizationStatusCell from "@/v2/pages/OptimizationsPage/OptimizationStatusCell";
 import {
-  OptimizationPassRateCell,
-  OptimizationAccuracyCell,
+  OptimizationObjectiveScoreCell,
   OptimizationLatencyCell,
   OptimizationCostCell,
   OptimizationTotalCostCell,
 } from "@/v2/pages/OptimizationsPage/OptimizationMetricCells";
 
-// Bumped to v2 keys to reset stale column prefs (drops the dead `deploy` id).
-export const SELECTED_COLUMNS_KEY = "optimizations-selected-columns-v2";
+// selected-columns bumped to v3 to roll out the default-visible Item source
+// column to existing users; width/order keys stay at v2 so those customizations
+// survive (matches how other tables bump only the selected-columns key).
+export const SELECTED_COLUMNS_KEY = "optimizations-selected-columns-v4";
 export const COLUMNS_WIDTH_KEY = "optimizations-columns-width-v2";
 export const COLUMNS_ORDER_KEY = "optimizations-columns-order-v2";
 
@@ -90,21 +91,22 @@ export const getDefaultColumns = (t: TFunction): ColumnData<Optimization>[] => [
     size: 120,
   },
   {
-    id: "pass_rate",
-    label: t("columns.passRate"),
-    type: COLUMN_TYPE.numberDictionary,
-    size: DEFAULT_METRIC_COLUMN_WIDTH,
-    accessorFn: (row) => row.best_objective_score,
-    cell: OptimizationPassRateCell as never,
-  },
-  {
+    // Merged objective-score column (was the separate "Pass rate" + "Accuracy"
+    // pair, each of which rendered "-" for the run type it did not handle). The
+    // id stays "accuracy" deliberately: it is already present in existing users'
+    // saved selected-columns/order state, so the merged column stays visible and
+    // keeps its position without bumping SELECTED_COLUMNS_KEY and resetting
+    // everyone's column customizations. The now-unused "pass_rate" id simply
+    // no longer matches a column and is ignored.
     id: "accuracy",
     label: t("columns.accuracy"),
     type: COLUMN_TYPE.numberDictionary,
     size: DEFAULT_METRIC_COLUMN_WIDTH,
     accessorFn: (row) =>
-      getFeedbackScore(row.feedback_scores ?? [], row.objective_name),
-    cell: OptimizationAccuracyCell as never,
+      (row.experiment_scores?.length ?? 0) > 0
+        ? row.best_objective_score
+        : getFeedbackScore(row.feedback_scores ?? [], row.objective_name),
+    cell: OptimizationObjectiveScoreCell as never,
   },
   {
     id: "latency",
@@ -132,6 +134,11 @@ export const getDefaultColumns = (t: TFunction): ColumnData<Optimization>[] => [
   },
 ];
 
+/** @deprecated Use getDefaultColumns instead */
+export const DEFAULT_COLUMNS: ColumnData<Optimization>[] = getDefaultColumns(
+  i18next.getFixedT(null, "optimizations"),
+);
+
 export const getFilterColumns = (t: TFunction): ColumnData<Optimization>[] => [
   {
     id: COLUMN_DATASET_ID,
@@ -141,13 +148,20 @@ export const getFilterColumns = (t: TFunction): ColumnData<Optimization>[] => [
   },
 ];
 
-// Default-visible columns; Run ID, Item source, Algorithm and Metric ship
-// hidden and are enabled from the Columns picker.
+/** @deprecated Use getFilterColumns instead */
+export const FILTER_COLUMNS: ColumnData<Optimization>[] = getFilterColumns(
+  i18next.getFixedT(null, "optimizations"),
+);
+
+// Default-visible columns; Run ID ships hidden and is enabled from the Columns
+// picker. Algorithm and Metric are shown by default (design QA round 2).
 export const DEFAULT_SELECTED_COLUMNS: string[] = [
   "name",
+  "dataset_name",
+  "algorithm",
+  "metric",
   "created_at",
   "status",
-  "pass_rate",
   "accuracy",
   "latency",
   "cost",
@@ -162,7 +176,6 @@ export const DEFAULT_COLUMNS_ORDER: string[] = [
   "metric",
   "created_at",
   "status",
-  "pass_rate",
   "accuracy",
   "latency",
   "cost",

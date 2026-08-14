@@ -54,7 +54,7 @@
       "created": "Created",
       "startTime": "Start time",
       "passRate": "Pass rate",
-      "accuracy": "Accuracy",
+      "accuracy": "Best score",
       "latency": "Latency",
       "cost": "Cost",
       "optCost": "Opt. cost"

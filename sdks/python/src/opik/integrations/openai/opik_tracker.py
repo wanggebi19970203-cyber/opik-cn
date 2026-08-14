@@ -32,12 +32,9 @@ def track_openai(
 
     为 OpenAI 客户端添加 Opik 追踪包装器。
 
-    客户端始终会被修补；但每个被包装的调用在发送遥测数据之前会检查
-    `opik.is_tracing_active()`。如果在调用时追踪处于禁用状态，
-    被包装的函数会正常执行，但不会发送 span/trace。
+    Tracks calls to:
 
-    追踪以下调用：
-    * `openai_client.chat.completions.create()`，包括支持 stream=True 模式。
+    * `openai_client.chat.completions.create()`, including support for stream=True mode.
     * `openai_client.beta.chat.completions.parse()`
     * `openai_client.beta.chat.completions.stream()`
     * `openai_client.responses.create()`

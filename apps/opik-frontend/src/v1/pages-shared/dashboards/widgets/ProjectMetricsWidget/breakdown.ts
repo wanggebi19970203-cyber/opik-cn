@@ -20,6 +20,7 @@ export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
   [BREAKDOWN_FIELD.MODEL]: i18next.t("dashboards.breakdown.fields.model"),
   [BREAKDOWN_FIELD.PROVIDER]: i18next.t("dashboards.breakdown.fields.provider"),
   [BREAKDOWN_FIELD.TYPE]: i18next.t("dashboards.breakdown.fields.spanType"),
+  [BREAKDOWN_FIELD.GUARDRAIL_NAME]: "Guardrail name",
 };
 
 /**
@@ -112,6 +113,7 @@ export const BREAKDOWN_FIELD_COMPATIBILITY: Record<BREAKDOWN_FIELD, string[]> =
     [BREAKDOWN_FIELD.MODEL]: SPAN_METRICS,
     [BREAKDOWN_FIELD.PROVIDER]: SPAN_METRICS,
     [BREAKDOWN_FIELD.TYPE]: SPAN_METRICS,
+    [BREAKDOWN_FIELD.GUARDRAIL_NAME]: [METRIC_TYPES.FAILED_GUARDRAILS],
   };
 
 /**

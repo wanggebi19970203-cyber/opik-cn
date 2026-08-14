@@ -69,7 +69,9 @@ logging.getLogger("LiteLLM").setLevel(logging.WARNING)
 # Configure opik_optimizer log level separately (default: DEBUG to show optimizer output)
 # This can be set via OPIK_OPTIMIZER_LOG_LEVEL env var (automatically inherited by subprocess)
 OPTIMIZER_LOG_LEVEL = os.environ.get("OPIK_OPTIMIZER_LOG_LEVEL", "DEBUG").upper()
-logging.getLogger("opik_optimizer").setLevel(getattr(logging, OPTIMIZER_LOG_LEVEL, logging.DEBUG))
+logging.getLogger("opik_optimizer").setLevel(
+    getattr(logging, OPTIMIZER_LOG_LEVEL, logging.DEBUG)
+)
 
 # Suppress Pydantic serialization warnings from LiteLLM
 # These occur due to LiteLLM's varying response structures across providers
@@ -185,9 +187,7 @@ def route_litellm_calls_through_gateway(workspace_name):
 
     litellm.completion = completion_with_workspace
     litellm.acompletion = acompletion_with_workspace
-    logger.debug(
-        "Routing LiteLLM calls through gateway with Comet-Workspace header"
-    )
+    logger.debug("Routing LiteLLM calls through gateway with Comet-Workspace header")
 
 
 def _gateway_model(model: str) -> str:
@@ -254,7 +254,11 @@ def build_optimizer_and_prompt(config):
     prompt = ChatPrompt(
         messages=config.prompt_messages,
         model=task_model,
-        model_parameters=ensure_default_model_params(task_params),
+        # deterministic: this model's completions are what the metric scores, so
+        # pin its temperature where the provider honours it. Best-effort, not a
+        # guarantee — models that fix their own temperature (the gpt-5 family)
+        # stay sampled, so the stop conditions tolerate score noise themselves.
+        model_parameters=ensure_default_model_params(task_params, deterministic=True),
     )
     return optimizer, prompt
 
@@ -282,6 +286,7 @@ def main():
         from opik_backend.studio.types import (
             OptimizationConfig,
             OptimizationRunResult,
+            extract_completion_metadata,
         )
         from opik_backend.studio.helpers import (
             initialize_opik_client,
@@ -317,7 +322,9 @@ def main():
         # Run optimization with lifecycle management
         with optimization_lifecycle(status_manager):
             # Load dataset
-            dataset = load_and_validate_dataset(client, config.dataset_name)
+            dataset, dataset_size = load_and_validate_dataset(
+                client, config.dataset_name
+            )
 
             # Build the optimizer + prompt: resolves the gateway-routed prompt
             # (task) model and the optimizer (algorithm) model, each with their
@@ -341,6 +348,7 @@ def main():
                 dataset=dataset,
                 metric_fn=metric_fn,
                 project_name=context.project_name,
+                dataset_size=dataset_size,
             )
 
             # Build result dict
@@ -361,6 +369,19 @@ def main():
                 else:
                     output["optimized_prompt"] = str(result.prompt)
 
+            # Forward scoring_health and finish_reason from the SDK result to
+            # the backend as metadata.scoring_health / metadata.finish_reason
+            # so the UI can show an exact failed/total count and the
+            # authoritative stop cause (OPIK-7511/OPIK-7458). The extractor
+            # returns {} for older SDKs or malformed data and never raises.
+            completion_metadata = extract_completion_metadata(result)
+            output.update(completion_metadata)
+            if completion_metadata:
+                status_manager.set_completion_metadata(completion_metadata)
+                logger.debug(
+                    "Queued completion metadata: %s", sorted(completion_metadata)
+                )
+
         # Output result as JSON on last line of stdout
         print(json.dumps(output))
 
@@ -372,9 +393,24 @@ def main():
         # Local import: an exception can fire before the deferred import above.
         from opik_backend.studio.types import OptimizationErrorResult
 
+        # Classify HERE, where the real exception object (typed Studio errors and
+        # provider SDK exceptions) is available, into a high-level user-facing
+        # message. Fall back to a generic message if even the classifier import
+        # fails (e.g. a very early environment failure).
+        try:
+            from opik_backend.studio.errors import to_user_facing_message
+
+            user_message = to_user_facing_message(e)
+        except Exception:
+            user_message = (
+                "The optimization run ran into an unexpected error and stopped. "
+                "Open the logs for the full details."
+            )
+
         error_output: OptimizationErrorResult = {
             "success": False,
             "error": str(e),
+            "user_message": user_message,
             "traceback": traceback.format_exc(),
         }
         print(json.dumps(error_output))

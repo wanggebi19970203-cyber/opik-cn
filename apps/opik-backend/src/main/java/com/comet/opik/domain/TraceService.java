@@ -34,7 +34,6 @@ import com.comet.opik.utils.AsyncUtils;
 import com.comet.opik.utils.BinaryOperatorUtils;
 import com.comet.opik.utils.WorkspaceUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.ImplementedBy;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -56,6 +55,7 @@ import ru.vyarus.dropwizard.guice.module.yaml.bind.Config;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,150 +66,54 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.comet.opik.api.Trace.TracePage;
-import static com.comet.opik.infrastructure.FilterUtils.ANALYTICS_DELETE_BATCH_SIZE;
 import static com.comet.opik.utils.ErrorUtils.failWithNotFound;
 
 @ImplementedBy(TraceServiceImpl.class)
 public interface TraceService {
 
-    /** 项目名称和工作区名称与现有追踪记录不匹配 */
     String PROJECT_NAME_AND_WORKSPACE_NAME_MISMATCH = "Project name and workspace name do not match the existing trace";
 
-    /**
-     * 创建单个追踪记录
-     * @param trace 追踪对象
-     * @return 追踪记录的UUID
-     */
     Mono<UUID> create(Trace trace);
 
-    /**
-     * 批量创建追踪记录
-     * @param batch 追踪批次对象
-     * @return 创建的记录数量
-     */
     Mono<Long> create(TraceBatch batch);
 
-    /**
-     * 更新追踪记录
-     * @param trace 追踪更新对象
-     * @param id 追踪记录的UUID
-     * @return 空返回值
-     */
     Mono<Void> update(TraceUpdate trace, UUID id);
 
-    /**
-     * 批量更新追踪记录
-     * @param batchUpdate 批量更新对象
-     * @return 空返回值
-     */
     Mono<Void> batchUpdate(TraceBatchUpdate batchUpdate);
 
-    /**
-     * 根据ID获取追踪记录
-     * @param id 追踪记录的UUID
-     * @return 追踪对象
-     */
     Mono<Trace> get(UUID id);
 
-    /**
-     * 根据ID获取追踪记录，可选择是否剥离附件
-     * @param id 追踪记录的UUID
-     * @param stripAttachments 是否剥离附件
-     * @return 追踪对象
-     */
     Mono<Trace> get(UUID id, boolean stripAttachments);
 
-    /**
-     * 根据ID列表批量获取追踪记录
-     * @param ids 追踪记录的UUID列表
-     * @return 追踪对象流
-     */
     Flux<Trace> getByIds(List<UUID> ids);
 
-    /**
-     * 根据ID获取追踪详情
-     * @param id 追踪记录的UUID
-     * @return 追踪详情对象
-     */
     Mono<TraceDetails> getTraceDetailsById(UUID id);
 
-    /**
-     * 删除指定的追踪记录
-     * @param ids 追踪记录的UUID集合
-     * @param projectId 项目ID
-     * @return 空返回值
-     */
     Mono<Void> delete(Set<UUID> ids, UUID projectId);
 
-    /**
-     * 分页查询追踪记录
-     * @param page 页码
-     * @param size 每页大小
-     * @param criteria 搜索条件
-     * @return 追踪分页结果
-     */
     Mono<TracePage> find(int page, int size, TraceSearchCriteria criteria);
 
     Mono<Boolean> existsByProjectId(TraceSearchCriteria criteria, boolean threadScoped);
 
     Mono<Boolean> validateTraceWorkspace(String workspaceId, Set<UUID> traceIds);
 
-    /**
-     * 统计每个工作区的追踪记录数量
-     * @return 追踪计数响应
-     */
     Mono<TraceCountResponse> countTracesPerWorkspace();
 
-    /**
-     * 获取追踪记录的BI信息
-     * @return BI信息响应
-     */
     Mono<BiInformationResponse> getTraceBIInformation();
 
-    /**
-     * 获取项目统计信息
-     * @param searchCriteria 搜索条件
-     * @return 项目统计对象
-     */
     Mono<ProjectStats> getStats(TraceSearchCriteria searchCriteria);
 
-    /**
-     * 获取每日创建的追踪记录数量
-     * @return 每日创建数量
-     */
     Mono<Long> getDailyCreatedCount();
 
     Mono<Set<UUID>> getProjectsWithTracesInRange(@NonNull Collection<Pair<String, UUID>> workspaceProjectPairs,
             @NonNull Instant from, @NonNull Instant to);
 
-    /**
-     * 删除追踪线程
-     * @param traceThreads 追踪线程删除对象
-     * @return 空返回值
-     */
     Mono<Void> deleteTraceThreads(DeleteTraceThreads traceThreads);
 
-    /**
-     * 搜索追踪记录
-     * @param limit 结果数量限制
-     * @param searchCriteria 搜索条件
-     * @return 追踪对象流
-     */
     Flux<Trace> search(int limit, TraceSearchCriteria searchCriteria);
 
-    /**
-     * 统计项目的追踪记录数量
-     * @param projectIds 项目ID集合
-     * @return 追踪记录数量
-     */
     Mono<Long> countTraces(Set<UUID> projectIds);
 
-    /**
-     * 根据ID获取线程的最小信息
-     * @param projectId 项目ID
-     * @param threadId 线程ID集合
-     * @return 线程信息列表
-     */
     Mono<List<TraceThread>> getMinimalThreadInfoByIds(UUID projectId, Set<String> threadId);
 }
 
@@ -218,7 +122,6 @@ public interface TraceService {
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 class TraceServiceImpl implements TraceService {
 
-    /** 追踪记录键名 */
     public static final String TRACE_KEY = "Trace";
 
     private final @NonNull TraceDAO dao;
@@ -234,11 +137,6 @@ class TraceServiceImpl implements TraceService {
     private final @NonNull AttachmentReinjectorService attachmentReinjectorService;
     private final @NonNull @Config OpikConfiguration config;
 
-    /**
-     * 创建单个追踪记录
-     * @param trace 追踪对象
-     * @return 追踪记录的UUID
-     */
     @Override
     @WithSpan
     public Mono<UUID> create(@NonNull Trace trace) {
@@ -270,11 +168,6 @@ class TraceServiceImpl implements TraceService {
                 }));
     }
 
-    /**
-     * 批量创建追踪记录
-     * @param batch 追踪批次对象
-     * @return 创建的记录数量
-     */
     @WithSpan
     public Mono<Long> create(TraceBatch batch) {
 
@@ -297,7 +190,18 @@ class TraceServiceImpl implements TraceService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        return attachmentService.deleteAutoStrippedAttachments(EntityType.TRACE, traceIds)
+        // Fail fast on invalid ids BEFORE any side effect below (auto-stripped attachment deletion, project
+        // creation), so a rejected batch never mutates state. Runs inside deferContextual so the audit
+        // metric can attribute the batch's own ids to the request workspace.
+        return Mono.deferContextual(validationCtx -> {
+            String validationWorkspaceId = validationCtx.get(RequestContext.WORKSPACE_ID);
+            dedupedTraces.forEach(trace -> {
+                if (trace.id() != null) {
+                    idGenerator.validateId(trace.id(), TRACE_KEY, validationWorkspaceId);
+                }
+            });
+            return attachmentService.deleteAutoStrippedAttachments(EntityType.TRACE, traceIds);
+        })
                 .then(Mono.deferContextual(ctx -> {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
                     String workspaceName = ctx.getOrDefault(RequestContext.WORKSPACE_NAME, "");
@@ -323,12 +227,6 @@ class TraceServiceImpl implements TraceService {
                 }));
     }
 
-    /**
-     * 对追踪记录进行去重处理
-     * 按照ID和最后更新时间进行去重，保留最新的记录
-     * @param initialTraces 原始追踪记录列表
-     * @return 去重后的追踪记录列表
-     */
     private List<Trace> dedupTraces(List<Trace> initialTraces) {
 
         Map<Boolean, List<Trace>> shouldBeDeduped = initialTraces.stream()
@@ -349,12 +247,6 @@ class TraceServiceImpl implements TraceService {
         return result;
     }
 
-    /**
-     * 将追踪记录绑定到项目和ID
-     * @param traces 追踪记录列表
-     * @param projects 项目列表
-     * @return 绑定后的追踪记录列表
-     */
     private List<Trace> bindTraceToProjectAndId(List<Trace> traces, List<Project> projects) {
         Map<String, Project> projectPerName = projects.stream()
                 .collect(Collectors.toMap(
@@ -369,21 +261,14 @@ class TraceServiceImpl implements TraceService {
                     String projectName = WorkspaceUtils.getProjectName(trace.projectName());
                     Project project = projectPerName.get(projectName);
 
+                    // Ids are already validated up-front in create(TraceBatch); generated ids are inherently valid.
                     UUID id = trace.id() == null ? idGenerator.generateId() : trace.id();
-                    idGenerator.validateId(id, TRACE_KEY);
 
                     return trace.toBuilder().id(id).projectId(project.id()).projectName(project.name()).build();
                 })
                 .toList();
     }
 
-    /**
-     * 插入追踪记录
-     * @param newTrace 新的追踪记录
-     * @param project 项目对象
-     * @param id 追踪记录ID
-     * @return 追踪记录的UUID
-     */
     private Mono<UUID> insertTrace(Trace newTrace, Project project, UUID id) {
         return dao.getPartialById(id)
                 .flatMap(existingTrace -> insertTrace(newTrace, project, id, existingTrace))
@@ -391,11 +276,6 @@ class TraceServiceImpl implements TraceService {
                 .onErrorResume(this::handleDBError);
     }
 
-    /**
-     * 处理数据库错误
-     * @param ex 异常对象
-     * @return 错误结果
-     */
     private <T> Mono<T> handleDBError(Throwable ex) {
         if (ex instanceof ClickHouseException
                 && ex.getMessage().contains("TOO_LARGE_STRING_SIZE")
@@ -408,11 +288,6 @@ class TraceServiceImpl implements TraceService {
         return TagOperations.mapTagLimitError(ex);
     }
 
-    /**
-     * 根据追踪更新对象获取项目
-     * @param traceUpdate 追踪更新对象
-     * @return 项目对象
-     */
     private Mono<Project> getProjectById(TraceUpdate traceUpdate) {
         return AsyncUtils.makeMonoContextAware((userName, workspaceId) -> {
 
@@ -424,14 +299,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 插入追踪记录（已存在追踪记录时）
-     * @param newTrace 新的追踪记录
-     * @param project 项目对象
-     * @param id 追踪记录ID
-     * @param existingTrace 已存在的追踪记录
-     * @return 追踪记录的UUID
-     */
     private Mono<UUID> insertTrace(Trace newTrace, Project project, UUID id, Trace existingTrace) {
         return Mono.defer(() -> {
             // 检查是否存在由补丁请求引起的部分追踪记录
@@ -451,13 +318,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 创建追踪记录（带项目和ID）
-     * @param trace 追踪对象
-     * @param project 项目对象
-     * @param id 追踪记录ID
-     * @return 追踪记录的UUID
-     */
     private Mono<UUID> create(Trace trace, Project project, UUID id) {
         return template.nonTransaction(connection -> {
             var newTrace = trace.toBuilder().id(id).projectId(project.id()).build();
@@ -465,12 +325,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 更新追踪记录
-     * @param traceUpdate 追踪更新对象
-     * @param id 追踪记录的UUID
-     * @return 空返回值
-     */
     @Override
     @WithSpan
     public Mono<Void> update(@NonNull TraceUpdate traceUpdate, @NonNull UUID id) {
@@ -478,7 +332,7 @@ class TraceServiceImpl implements TraceService {
         var projectName = WorkspaceUtils.getProjectName(traceUpdate.projectName());
 
         return Mono.deferContextual(ctx -> idGenerator
-                .validateIdForUpdateAsync(id, TRACE_KEY)
+                .validateIdNotInFutureAsync(id, TRACE_KEY)
                 .then(getProjectById(traceUpdate)
                         .switchIfEmpty(Mono.defer(() -> projectService.getOrCreate(projectName)))
                         .subscribeOn(Schedulers.boundedElastic())
@@ -504,11 +358,6 @@ class TraceServiceImpl implements TraceService {
                         .then()));
     }
 
-    /**
-     * 批量更新追踪记录
-     * @param batchUpdate 批量更新对象
-     * @return 空返回值
-     */
     @Override
     @WithSpan
     public Mono<Void> batchUpdate(@NonNull TraceBatchUpdate batchUpdate) {
@@ -535,13 +384,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 插入更新的追踪记录
-     * @param project 项目对象
-     * @param traceUpdate 追踪更新对象
-     * @param id 追踪记录ID
-     * @return 空返回值
-     */
     private Mono<Void> insertUpdate(Project project, TraceUpdate traceUpdate, UUID id) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -556,14 +398,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 更新追踪记录或失败
-     * @param traceUpdate 追踪更新对象
-     * @param id 追踪记录ID
-     * @param trace 已存在的追踪记录
-     * @param project 项目对象
-     * @return 空返回值
-     */
     private Mono<Void> updateOrFail(TraceUpdate traceUpdate, UUID id, Trace trace, Project project) {
         if (!project.id().equals(trace.projectId())) {
             return failWithConflict(PROJECT_NAME_AND_WORKSPACE_NAME_MISMATCH);
@@ -599,11 +433,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 根据项目名称获取项目
-     * @param projectName 项目名称
-     * @return 项目对象
-     */
     private Mono<Project> getProjectByName(String projectName) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -614,11 +443,6 @@ class TraceServiceImpl implements TraceService {
         });
     }
 
-    /**
-     * 查找项目并验证可见性
-     * @param criteria 搜索条件
-     * @return 更新后的搜索条件
-     */
     private Mono<TraceSearchCriteria> findProjectAndVerifyVisibility(TraceSearchCriteria criteria) {
         return projectService.resolveProjectIdAndVerifyVisibility(criteria.projectId(), criteria.projectName())
                 .map(projectId -> criteria.toBuilder()
@@ -626,33 +450,17 @@ class TraceServiceImpl implements TraceService {
                         .build());
     }
 
-    /**
-     * 抛出冲突错误
-     * @param error 错误信息
-     * @return 错误结果
-     */
     private <T> Mono<T> failWithConflict(String error) {
         log.info(error);
         return Mono.error(new IdentifierMismatchException(new ErrorMessage(List.of(error))));
     }
 
-    /**
-     * 根据ID获取追踪记录
-     * @param id 追踪记录的UUID
-     * @return 追踪对象
-     */
     @Override
     @WithSpan
     public Mono<Trace> get(@NonNull UUID id) {
         return get(id, false);
     }
 
-    /**
-     * 根据ID获取追踪记录，可选择是否剥离附件
-     * @param id 追踪记录的UUID
-     * @param stripAttachments 是否剥离附件
-     * @return 追踪对象
-     */
     @WithSpan
     public Mono<Trace> get(@NonNull UUID id, boolean stripAttachments) {
         return template.nonTransaction(connection -> dao.findById(id, connection))
@@ -669,17 +477,21 @@ class TraceServiceImpl implements TraceService {
         return template.stream(connection -> dao.findByIds(ids, connection));
     }
 
-    /**
-     * 根据ID获取追踪详情
-     * @param id 追踪记录的UUID
-     * @return 追踪详情对象
-     */
     @Override
     public Mono<TraceDetails> getTraceDetailsById(UUID id) {
         return template.nonTransaction(connection -> dao.getTraceDetailsById(id, connection))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(failWithNotFound("Trace", id.toString()))));
     }
 
+    /**
+     * Deletes the given trace ids. With an explicit {@code projectId}, deletes only within that project. Without one
+     * (delete-by-id, or a batch spanning projects), resolves every owning project for each id and deletes it under the
+     * full {@code (workspace_id, project_id, id)} key, once per project group - so an id reused across projects is
+     * removed from all of them and no delete is ever project-less (OPIK-7483). Ids that resolve to no owning project
+     * have no live trace anywhere and are skipped: no {@code TracesDeleted} is emitted for them, because a project-less
+     * cascade would be an unscoped, workspace-wide child delete that could over-delete a concurrently-ingested trace's
+     * children; genuine orphan child rows are cleaned via the child entities' own delete endpoints.
+     */
     @Override
     @WithSpan
     public Mono<Void> delete(@NonNull Set<UUID> ids, UUID projectId) {
@@ -687,106 +499,122 @@ class TraceServiceImpl implements TraceService {
         log.info("Deleting traces, count '{}'", ids.size());
 
         if (projectId != null) {
-            return template.nonTransaction(connection -> delete(ids, projectId, connection));
+            var pairs = ids.stream().map(id -> Pair.of(projectId, id)).collect(Collectors.toUnmodifiableSet());
+            return template.nonTransaction(connection -> delete(pairs, connection));
         }
 
-        // No project provided (e.g. delete-by-id, or a batch spanning projects): resolve each trace's owning
-        // project and delete per project group, so every delete - and its async span/feedback cascade carried
-        // by the TracesDeleted event - filters by project_id and prunes on the (workspace_id, project_id)
-        // sorting-key prefix instead of scanning the whole workspace. Trace ids with no resolvable project
-        // (the trace row is already gone) fall back to a workspace-scoped delete to still clean up orphan rows.
-        log.info("Resolving owning projects for trace ids to delete per project group (count={})", ids.size());
-        return dao.getProjectIdsByTraceIdsBounded(ids)
-                .flatMap(traceToProject -> {
-                    var idsByProject = ids.stream()
-                            .filter(traceToProject::containsKey)
-                            .collect(Collectors.groupingBy(traceToProject::get, Collectors.toSet()));
-                    var unresolvedIds = ids.stream()
-                            .filter(id -> !traceToProject.containsKey(id))
-                            .collect(Collectors.toSet());
+        log.info("Resolving owning projects to delete traces, count '{}'", ids.size());
+        return resolveOwningProjects(ids)
+                .flatMap(projectsByTrace -> {
+                    // Flatten to (project_id, trace_id) pairs so a reused id maps to one pair per owning project.
+                    var pairs = projectsByTrace.entrySet().stream()
+                            .flatMap(entry -> entry.getValue().stream()
+                                    .map(project -> Pair.of(project, entry.getKey())))
+                            .collect(Collectors.toUnmodifiableSet());
 
-                    return template.nonTransaction(connection -> Flux.fromIterable(idsByProject.entrySet())
-                            .concatMap(group -> delete(group.getValue(), group.getKey(), connection))
-                            .then(Mono.defer(() -> unresolvedIds.isEmpty()
-                                    ? Mono.empty()
-                                    : delete(unresolvedIds, null, connection)))
-                            .then());
+                    // Resolution only returns queried ids, so its key set is a subset of ids.
+                    var unresolvedIds = ids.stream()
+                            .filter(id -> !projectsByTrace.containsKey(id))
+                            .collect(Collectors.toUnmodifiableSet());
+                    if (!unresolvedIds.isEmpty()) {
+                        // No live trace in any project: skip, emitting no project-less cascade (see delete() javadoc).
+                        log.info(
+                                "Trace ids with no live row (already absent), skipped from trace delete '{}', total '{}'",
+                                unresolvedIds.size(), ids.size());
+                    }
+
+                    return pairs.isEmpty()
+                            ? Mono.empty()
+                            : template.nonTransaction(connection -> delete(pairs, connection));
                 });
     }
 
     /**
-     * 删除追踪记录（带连接）
-     * @param ids 追踪记录的UUID集合
-     * @param projectId 项目ID
-     * @param connection 数据库连接
-     * @return 空返回值
+     * Resolves every owning project for each id: a bounded fast pass, then an unbounded pass over only the ids the
+     * bounded one leaves unresolved. Returns id -> owning projects; ids absent from the result have no live row.
+     * <p>
+     * The bounded pass's {@code toMonday(id_at)} window can miss a row whose {@code id_at} is not monotonic in its id
+     * (e.g. a wrapped timestamp, OPIK-7456), so the unbounded pass re-resolves the miss set - the bounded query is
+     * never a delete's sole resolver. The resolver-query javadocs cover how each pass prunes.
      */
-    private Mono<Void> delete(Set<UUID> ids, UUID projectId, Connection connection) {
+    private Mono<Map<UUID, Set<UUID>>> resolveOwningProjects(Set<UUID> ids) {
+        return dao.getAllProjectIdsByTraceIdsBounded(ids)
+                .flatMap(bounded -> {
+                    var missSet = ids.stream()
+                            .filter(id -> !bounded.containsKey(id))
+                            .collect(Collectors.toUnmodifiableSet());
+                    if (missSet.isEmpty()) {
+                        return Mono.just(bounded);
+                    }
+                    log.info(
+                            "Bounded project resolution incomplete, re-resolving miss set unbounded, missed '{}', total '{}'",
+                            missSet.size(), ids.size());
+                    return dao.getAllProjectIdsByTraceIds(missSet)
+                            .map(unbounded -> {
+                                // Keys are disjoint: unbounded only carries the miss set, none of which is in bounded.
+                                var merged = new HashMap<>(bounded);
+                                merged.putAll(unbounded);
+                                return merged;
+                            });
+                });
+    }
+
+    private Mono<Void> delete(Set<Pair<UUID, UUID>> projectIdTraceIdPairs, Connection connection) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             String userName = ctx.get(RequestContext.USER_NAME);
-            return Flux.fromIterable(Lists.partition(new ArrayList<>(ids), ANALYTICS_DELETE_BATCH_SIZE))
-                    .flatMap(batch -> {
-                        var batchIds = Set.copyOf(batch);
-                        return dao.delete(batchIds, projectId, connection)
-                                .doOnSuccess(_ -> {
-                                    eventBus.post(TracesDeleted.builder()
-                                            .traceIds(batchIds)
-                                            .projectId(projectId)
-                                            .workspaceId(workspaceId)
-                                            .userName(userName)
-                                            .build());
-                                    log.info(
-                                            "Published TracesDeleted event for trace ids count '{}' for project_id '{}' on workspace '{}'",
-                                            batchIds.size(), projectId, workspaceId);
-                                })
-                                .then(captureDeletions(batchIds, projectId, workspaceId, userName));
-                    })
-                    .then();
+            return dao.delete(projectIdTraceIdPairs, connection)
+                    .doOnSuccess(_ -> projectIdTraceIdPairs.stream()
+                            .collect(Collectors.groupingBy(Pair::getLeft,
+                                    Collectors.mapping(Pair::getRight, Collectors.toUnmodifiableSet())))
+                            .forEach((projectId, traceIds) -> {
+                                eventBus.post(TracesDeleted.builder()
+                                        .traceIds(traceIds)
+                                        .projectId(projectId)
+                                        .workspaceId(workspaceId)
+                                        .userName(userName)
+                                        .build());
+                                log.info(
+                                        "Published TracesDeleted event, trace ids count '{}', project id '{}', workspace '{}'",
+                                        traceIds.size(), projectId, workspaceId);
+                            }))
+                    .then(captureDeletions(projectIdTraceIdPairs, workspaceId, userName));
         });
     }
 
     /**
-     * Records the deleted ids in the deletion-events bridge so deletes issued while the table is being migrated
-     * survive the copy. Runs after the delete and is best-effort: capture is auxiliary and must never disrupt
-     * the delete, so failures are logged and swallowed. Running after the delete also avoids recording a delete
-     * that did not happen. No-op unless capture is enabled. Deferred so that nothing is built or run until
-     * subscribed, i.e. only after the delete succeeds.
+     * Records the deleted (project_id, trace_id) pairs in the deletion-events bridge so deletes issued while the table
+     * is being migrated survive the copy. Runs after the delete and is best-effort: capture is auxiliary and must never
+     * disrupt the delete, so failures are logged and swallowed. Running after the delete also avoids recording a delete
+     * that did not happen. No-op unless capture is enabled. Deferred so that nothing is built or run until subscribed,
+     * i.e. only after the delete succeeds.
      */
-    private Mono<Void> captureDeletions(Set<UUID> ids, UUID projectId, String workspaceId, String userName) {
+    private Mono<Void> captureDeletions(Set<Pair<UUID, UUID>> projectIdTraceIdPairs, String workspaceId,
+            String userName) {
         return Mono.defer(() -> {
             if (!config.getDatabaseAnalyticsDataModel().traceDeletionEventsCaptureEnabled()) {
                 return Mono.empty();
             }
-            var events = ids.stream()
-                    .map(id -> DeletionEvent.builder()
+            var events = projectIdTraceIdPairs.stream()
+                    .map(pair -> DeletionEvent.builder()
                             .sourceTable(SourceTable.TRACES)
                             .workspaceId(workspaceId)
-                            .projectId(projectId)
-                            .deletedId(id.toString())
+                            .projectId(pair.getLeft())
+                            .deletedId(pair.getRight().toString())
                             .deletionReason(DeletionReason.USER_REQUEST)
                             .build())
                     .collect(Collectors.toUnmodifiableSet());
             return deletionEventDAO.insert(events, userName)
-                    .doOnSuccess(_ -> log.info(
-                            "Captured trace deletion events, count '{}' for projectId '{}' on workspaceId '{}'",
-                            ids.size(), projectId, workspaceId))
+                    .doOnSuccess(_ -> log.info("Captured trace deletion events, count '{}' on workspace '{}'",
+                            events.size(), workspaceId))
                     .onErrorResume(throwable -> {
-                        log.warn(
-                                "Failed to capture trace deletion events, count '{}' for projectId '{}' on workspaceId '{}'",
-                                ids.size(), projectId, workspaceId, throwable);
+                        log.warn("Failed to capture trace deletion events, count '{}' on workspace '{}'",
+                                projectIdTraceIdPairs.size(), workspaceId, throwable);
                         return Mono.empty();
                     });
         });
     }
 
-    /**
-     * 分页查询追踪记录
-     * @param page 页码
-     * @param size 每页大小
-     * @param criteria 搜索条件
-     * @return 追踪分页结果
-     */
     @Override
     @WithSpan
     public Mono<TracePage> find(int page, int size, @NonNull TraceSearchCriteria criteria) {
@@ -810,12 +638,6 @@ class TraceServiceImpl implements TraceService {
                 .switchIfEmpty(Mono.just(TracePage.empty(page, traceSortingFactory.getSortableFields())));
     }
 
-    /**
-     * 验证追踪记录是否属于指定工作区
-     * @param workspaceId 工作区ID
-     * @param traceIds 追踪记录的UUID集合
-     * @return 验证结果
-     */
     @Override
     @WithSpan
     public Mono<Boolean> existsByProjectId(@NonNull TraceSearchCriteria criteria, boolean threadScoped) {
@@ -838,10 +660,6 @@ class TraceServiceImpl implements TraceService {
                         .allMatch(trace -> workspaceId.equals(trace.workspaceId()))));
     }
 
-    /**
-     * 统计每个工作区的追踪记录数量
-     * @return 追踪计数响应
-     */
     @Override
     @WithSpan
     public Mono<TraceCountResponse> countTracesPerWorkspace() {
@@ -856,10 +674,6 @@ class TraceServiceImpl implements TraceService {
                 .switchIfEmpty(Mono.just(TraceCountResponse.empty()));
     }
 
-    /**
-     * 获取追踪记录的BI信息
-     * @return BI信息响应
-     */
     @Override
     @WithSpan
     public Mono<BiInformationResponse> getTraceBIInformation() {
@@ -875,11 +689,6 @@ class TraceServiceImpl implements TraceService {
                 .switchIfEmpty(Mono.just(BiInformationResponse.empty()));
     }
 
-    /**
-     * 获取项目统计信息
-     * @param criteria 搜索条件
-     * @return 项目统计对象
-     */
     @Override
     @WithSpan
     public Mono<ProjectStats> getStats(@NonNull TraceSearchCriteria criteria) {
@@ -888,10 +697,6 @@ class TraceServiceImpl implements TraceService {
                 .switchIfEmpty(Mono.just(ProjectStats.empty()));
     }
 
-    /**
-     * 获取每日创建的追踪记录数量
-     * @return 每日创建数量
-     */
     @Override
     @WithSpan
     public Mono<Long> getDailyCreatedCount() {
@@ -899,13 +704,6 @@ class TraceServiceImpl implements TraceService {
                 .switchIfEmpty(Mono.just(Map.of())).flatMap(dao::getDailyTraces);
     }
 
-    /**
-     * 获取项目中最后更新的追踪记录时间
-     * @param projectIds 项目ID集合
-     * @param workspaceId 工作区ID
-     * @param lastUpdatedAfter 最后更新时间之后的时间点
-     * @return 项目ID与最后更新时间的映射
-     */
     @Override
     public Mono<Set<UUID>> getProjectsWithTracesInRange(@NonNull Collection<Pair<String, UUID>> workspaceProjectPairs,
             @NonNull Instant from, @NonNull Instant to) {
@@ -916,11 +714,6 @@ class TraceServiceImpl implements TraceService {
                 connection -> dao.getProjectsWithTracesInRange(workspaceProjectPairs, from, to, connection));
     }
 
-    /**
-     * 删除追踪线程
-     * @param traceThreads 追踪线程删除对象
-     * @return 空返回值
-     */
     @Override
     public Mono<Void> deleteTraceThreads(@NonNull DeleteTraceThreads traceThreads) {
         if (traceThreads.projectId() == null && traceThreads.projectName() == null) {
@@ -936,12 +729,6 @@ class TraceServiceImpl implements TraceService {
                 .flatMap(project -> deleteTraceThreadsByProjectId(project.id(), traceThreads.threadIds()));
     }
 
-    /**
-     * 根据项目ID删除追踪线程
-     * @param projectId 项目ID
-     * @param threadIds 线程ID列表
-     * @return 空返回值
-     */
     private Mono<Void> deleteTraceThreadsByProjectId(@NonNull UUID projectId, @NonNull List<String> threadIds) {
         log.info("根据项目ID '{}' 和线程ID数量 '{}' 删除追踪线程", projectId, threadIds.size());
 
@@ -955,16 +742,12 @@ class TraceServiceImpl implements TraceService {
                     }
                     log.info("找到 '{}' 条线程ID对应的追踪记录，继续删除", traceIds.size());
 
-                    return delete(traceIds, projectId, connection);
+                    var pairs = traceIds.stream().map(id -> Pair.of(projectId, id))
+                            .collect(Collectors.toUnmodifiableSet());
+                    return delete(pairs, connection);
                 })));
     }
 
-    /**
-     * 搜索追踪记录
-     * @param limit 结果数量限制
-     * @param criteria 搜索条件
-     * @return 追踪对象流
-     */
     @Override
     public Flux<Trace> search(int limit, @NonNull TraceSearchCriteria criteria) {
         return findProjectAndVerifyVisibility(criteria)
@@ -973,22 +756,11 @@ class TraceServiceImpl implements TraceService {
                                 !it.stripAttachments())));
     }
 
-    /**
-     * 统计项目的追踪记录数量
-     * @param projectIds 项目ID集合
-     * @return 追踪记录数量
-     */
     @Override
     public Mono<Long> countTraces(@NonNull Set<UUID> projectIds) {
         return dao.countTraces(projectIds);
     }
 
-    /**
-     * 根据ID获取线程的最小信息
-     * @param projectId 项目ID
-     * @param threadId 线程ID集合
-     * @return 线程信息列表
-     */
     @Override
     public Mono<List<TraceThread>> getMinimalThreadInfoByIds(@NonNull UUID projectId, @NonNull Set<String> threadId) {
         return dao.getMinimalThreadInfoByIds(projectId, threadId)

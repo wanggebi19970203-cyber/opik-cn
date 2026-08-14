@@ -26,6 +26,7 @@ import com.comet.opik.api.validation.DatasetItemBatchValidator;
 import com.comet.opik.infrastructure.FeatureFlags;
 import com.comet.opik.infrastructure.OpikConfiguration;
 import com.comet.opik.infrastructure.auth.RequestContext;
+import com.comet.opik.infrastructure.lock.LockService;
 import com.comet.opik.utils.JsonUtils;
 import com.comet.opik.utils.RetryUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -49,6 +50,7 @@ import reactor.core.scheduler.Schedulers;
 import ru.vyarus.dropwizard.guice.module.yaml.bind.Config;
 import ru.vyarus.guicey.jdbi3.tx.TransactionTemplate;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -58,6 +60,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -149,6 +152,8 @@ public interface DatasetItemService {
 @Slf4j
 class DatasetItemServiceImpl implements DatasetItemService {
 
+    private static final String DATASET_VERSION_LOCK = DatasetVersionService.DATASET_VERSION_LOCK;
+
     private final @NonNull DatasetItemDAO dao;
     private final @NonNull DatasetItemVersionDAO versionDao;
     private final @NonNull DatasetService datasetService;
@@ -164,6 +169,15 @@ class DatasetItemServiceImpl implements DatasetItemService {
     private final @NonNull DatasetVersioningMigrationService migrationService;
     private final @NonNull ProjectService projectService;
     private final @NonNull @Config OpikConfiguration config;
+    private final @NonNull LockService lockService;
+
+    // Serialize the read-latest -> create-version -> flip-latest sequence per dataset so parallel
+    // uploads can't race on the dataset's mutable 'latest' pointer (OPIK-7264).
+    private <T> Mono<T> withDatasetVersionLock(UUID datasetId, Mono<T> action) {
+        Duration lockLease = config.getDatasetVersioning().lockLease().toJavaDuration();
+        return lockService.executeWithLockCustomExpire(
+                new LockService.Lock(datasetId, DATASET_VERSION_LOCK), action, lockLease);
+    }
 
     @WithSpan
     private Mono<Void> verifyDatasetExistsAndSave(@NonNull DatasetItemBatch batch) {
@@ -186,6 +200,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
             ExecutionPolicy executionPolicy) {
 
         log.info("Creating dataset items from '{}' traces for dataset '{}'", traceIds.size(), datasetId);
+
+        traceIds.forEach(traceId -> idGenerator.validateIdNotInFuture(traceId, "dataset_item trace"));
 
         // 验证数据集是否存在
         return Mono.deferContextual(ctx -> {
@@ -215,10 +231,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
                         // 保存数据集条目 - 根据开关路由到版本化或传统存储
                         if (featureFlags.isDatasetVersioningEnabled()) {
                             log.info("Creating dataset items from traces with versioning for dataset '{}'", datasetId);
-                            return saveItemsWithVersion(
+                            return withDatasetVersionLock(datasetId, saveItemsWithVersion(
                                     DatasetItemBatch.builder().datasetId(datasetId).items(datasetItems).build(),
                                     datasetId, null)
-                                    .then(Mono.just(0L));
+                                    .then(Mono.just(0L)));
                         }
 
                         // 传统方式：保存到传统表
@@ -239,6 +255,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
             ExecutionPolicy executionPolicy) {
 
         log.info("Creating dataset items from '{}' spans for dataset '{}'", spanIds.size(), datasetId);
+
+        spanIds.forEach(spanId -> idGenerator.validateIdNotInFuture(spanId, "dataset_item span"));
 
         // 验证数据集是否存在
         return Mono.deferContextual(ctx -> {
@@ -268,10 +286,10 @@ class DatasetItemServiceImpl implements DatasetItemService {
                         // 保存数据集条目 - 根据开关路由到版本化或传统存储
                         if (featureFlags.isDatasetVersioningEnabled()) {
                             log.info("Creating dataset items from spans with versioning for dataset '{}'", datasetId);
-                            return saveItemsWithVersion(
+                            return withDatasetVersionLock(datasetId, saveItemsWithVersion(
                                     DatasetItemBatch.builder().datasetId(datasetId).items(datasetItems).build(),
                                     datasetId, null)
-                                    .then(Mono.just(0L));
+                                    .then(Mono.just(0L)));
                         }
 
                         // 传统方式：保存到传统表
@@ -382,6 +400,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
     @Override
     @WithSpan
     public Mono<Void> patch(@NonNull UUID id, @NonNull DatasetItem item) {
+        validateReferencedTraceAndSpan(item);
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             String userName = ctx.get(RequestContext.USER_NAME);
@@ -423,7 +442,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     return ensureLazyMigration(datasetId, workspaceId)
                             .thenReturn(datasetId);
                 })
-                .flatMap(datasetId -> {
+                .flatMap(datasetId -> withDatasetVersionLock(datasetId, Mono.defer(() -> {
                     // 获取最新版本（使用接受 workspaceId 的重载方法）
                     Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
 
@@ -471,12 +490,13 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     null, // 从基础版本继承执行策略
                                                     false, // 不清除执行策略
                                                     null, // 无批次组 ID
+                                                    true, // enforceLatestCas: diffs against current latest under lock
                                                     workspaceId,
                                                     userName)
                                                     .thenReturn(itemsTotal);
                                         });
                             });
-                });
+                })));
     }
 
     /**
@@ -542,14 +562,15 @@ class DatasetItemServiceImpl implements DatasetItemService {
             datasetId = batchUpdate.datasetId();
             log.info("Using provided dataset ID '{}' for batch update by filters with versioning", datasetId);
 
-            return batchUpdateByFiltersWithVersioning(datasetId, batchUpdate, workspaceId, userName);
+            return withDatasetVersionLock(datasetId,
+                    batchUpdateByFiltersWithVersioning(datasetId, batchUpdate, workspaceId, userName));
         }
 
         if (CollectionUtils.isNotEmpty(batchUpdate.ids())) {
             return resolveDatasetIdFromItemIds(batchUpdate.ids())
                     .switchIfEmpty(Mono.error(failWithNotFound("Dataset items not found")))
-                    .flatMap(resolvedDatasetId -> batchUpdateByIdsWithVersioning(resolvedDatasetId, batchUpdate,
-                            workspaceId, userName));
+                    .flatMap(resolvedDatasetId -> withDatasetVersionLock(resolvedDatasetId,
+                            batchUpdateByIdsWithVersioning(resolvedDatasetId, batchUpdate, workspaceId, userName)));
         }
 
         // 由于验证逻辑，此情况不应发生，但做优雅处理
@@ -563,54 +584,56 @@ class DatasetItemServiceImpl implements DatasetItemService {
      */
     private Mono<Void> batchUpdateByIdsWithVersioning(UUID datasetId, DatasetItemBatchUpdate batchUpdate,
             String workspaceId, String userName) {
-
         int updateSize = batchUpdate.ids().size();
-        log.info("Batch updating '{}' items by IDs with versioning for dataset '{}'", updateSize, datasetId);
+        log.info("Batch updating items by IDs with versioning for dataset '{}' (count='{}')", datasetId, updateSize);
 
-        // 如果启用了延迟迁移，确保数据集已迁移
-        return ensureLazyMigration(datasetId, workspaceId)
-                .then(Mono.defer(() -> {
-                    // 获取最新版本
-                    return getLatestVersionOrError(datasetId, workspaceId)
-                            .flatMap(latestVersion -> {
-                                UUID baseVersionId = latestVersion.id();
-                                UUID newVersionId = idGenerator.generateId();
+        return runVersionedBatchUpdate(datasetId, workspaceId, userName, latestVersion -> {
+            UUID baseVersionId = latestVersion.id();
+            UUID newVersionId = idGenerator.generateId();
 
-                                // 用于更新条目 INSERT...SELECT 的 UUID。先生成以便它们
-                                // 排在未更改条目 UUID（在下方生成）之前。
-                                List<UUID> updateUuids = generateUuidPool(idGenerator, updateSize);
+            // 用于更新条目 INSERT...SELECT 的 UUID。先生成以便它们
+            // 排在未更改条目 UUID（在下方生成）之前。
+            List<UUID> updateUuids = generateUuidPool(idGenerator, updateSize);
 
-                                // 执行批量更新
-                                return versionDao
-                                        .batchUpdateItems(datasetId, baseVersionId, newVersionId,
-                                                batchUpdate,
-                                                updateUuids)
-                                        .flatMap(updatedCount -> {
-                                            if (updatedCount == 0) {
-                                                log.info("No items found to update for dataset '{}'", datasetId);
-                                                return Mono.empty();
-                                            }
+            // 执行批量更新
+            return versionDao
+                    .batchUpdateItems(datasetId, baseVersionId, newVersionId, batchUpdate, updateUuids)
+                    .flatMap(updatedCount -> {
+                        if (updatedCount == 0) {
+                            log.info("No items found to update for dataset '{}'", datasetId);
+                            return Mono.empty();
+                        }
 
-                                            log.info(
-                                                    "Batch updated '{}' items by IDs for dataset '{}', baseVersion='{}'",
-                                                    updatedCount, datasetId, baseVersionId);
+                        log.info("Batch updated items by IDs for dataset '{}' (count='{}', baseVersion='{}')",
+                                datasetId, updatedCount, baseVersionId);
 
-                                            // OPIK-6390: 将刚更新的 ID 作为 applyDelta 的"已删除"槽位传入，
-                                            // 使它们从未更改条目的复制中排除。
-                                            // 辅助方法根据实时 ClickHouse 计数确定 UUID 池大小。
-                                            return applyEditDeleteWithLiveCount(datasetId, baseVersionId,
-                                                    newVersionId, List.of(), batchUpdate.ids(), workspaceId)
-                                                    .flatMap(unchangedCount -> createVersionMetadata(
-                                                            datasetId, newVersionId, baseVersionId,
-                                                            updatedCount, unchangedCount, false,
-                                                            workspaceId, userName));
-                                        });
-                            });
-                }))
+                        // OPIK-6390: 将刚更新的 ID 作为 applyDelta 的"已删除"槽位传入，
+                        // 使它们从未更改条目的复制中排除。
+                        // 辅助方法根据实时 ClickHouse 计数确定 UUID 池大小。
+                        return applyEditDeleteWithLiveCount(datasetId, baseVersionId,
+                                newVersionId, List.of(), batchUpdate.ids(), workspaceId)
+                                .flatMap(unchangedCount -> createVersionMetadata(
+                                        datasetId, newVersionId, baseVersionId,
+                                        updatedCount, unchangedCount, false,
+                                        workspaceId, userName));
+                    });
+        });
+    }
+
+    /**
+     * Shared scaffold for the versioned batch-update paths: defers so nothing runs until the caller's
+     * per-dataset lock is held (OPIK-7264), ensures lazy migration, reads the latest version, and runs
+     * {@code body} against it under the request context. Only the path-specific work (by-ids vs
+     * by-filters) differs and is supplied as {@code body}.
+     */
+    private Mono<Void> runVersionedBatchUpdate(UUID datasetId, String workspaceId, String userName,
+            Function<DatasetVersion, Mono<Void>> body) {
+        return Mono.defer(() -> ensureLazyMigration(datasetId, workspaceId)
+                .then(Mono.defer(() -> getLatestVersionOrError(datasetId, workspaceId).flatMap(body)))
                 .contextWrite(ctx -> ctx
                         .put(RequestContext.WORKSPACE_ID, workspaceId)
                         .put(RequestContext.USER_NAME, userName))
-                .then();
+                .then());
     }
 
     /**
@@ -618,80 +641,67 @@ class DatasetItemServiceImpl implements DatasetItemService {
      */
     private Mono<Void> batchUpdateByFiltersWithVersioning(UUID datasetId, DatasetItemBatchUpdate batchUpdate,
             String workspaceId, String userName) {
-
         log.info("Batch updating items by filters with versioning for dataset '{}'", datasetId);
 
-        // 如果启用了延迟迁移，确保数据集已迁移
-        return ensureLazyMigration(datasetId, workspaceId)
-                .then(Mono.defer(() -> {
-                    // 获取最新版本
-                    return getLatestVersionOrError(datasetId, workspaceId)
-                            .flatMap(latestVersion -> {
-                                UUID baseVersionId = latestVersion.id();
-                                UUID newVersionId = idGenerator.generateId();
+        return runVersionedBatchUpdate(datasetId, workspaceId, userName, latestVersion -> {
+            UUID baseVersionId = latestVersion.id();
+            UUID newVersionId = idGenerator.generateId();
 
-                                // OPIK-6390: 从基础版本的实时 ClickHouse 计数中调整两个 UUID 池的大小，
-                                // 而非使用（易漂移的）MySQL items_total。精确的基础计数是匹配（更新）
-                                // 和不匹配（复制）行数的上限，因此不需要余量乘数；
-                                // COPY_VERSION_ITEMS 中的防御性 arrayElement 回退
-                                // 可以覆盖任何残余的不匹配而不会丢失数据。
-                                return versionDao
-                                        .countRowsInVersion(datasetId, baseVersionId, Set.of(), null, workspaceId)
-                                        .flatMap(baseRowCount -> {
-                                            int poolSize = baseRowCount.intValue();
-                                            List<UUID> updateUuids = generateUuidPool(idGenerator, poolSize);
-                                            List<UUID> copyUuids = generateUuidPool(idGenerator, poolSize);
+            // OPIK-6390: 从基础版本的实时 ClickHouse 计数中调整两个 UUID 池的大小，
+            // 而非使用（易漂移的）MySQL items_total。精确的基础计数是匹配（更新）
+            // 和不匹配（复制）行数的上限，因此不需要余量乘数；
+            // COPY_VERSION_ITEMS 中的防御性 arrayElement 回退
+            // 可以覆盖任何残余的不匹配而不会丢失数据。
+            return versionDao
+                    .countRowsInVersion(datasetId, baseVersionId, Set.of(), null, workspaceId)
+                    .flatMap(baseRowCount -> {
+                        int poolSize = baseRowCount.intValue();
+                        List<UUID> updateUuids = generateUuidPool(idGenerator, poolSize);
+                        // Select-all (empty filters) copies no unchanged rows, so skip the
+                        // copy pool allocation for it.
+                        boolean selectAll = batchUpdate.filters() != null && batchUpdate.filters().isEmpty();
+                        List<UUID> copyUuids = selectAll ? List.of() : generateUuidPool(idGenerator, poolSize);
 
-                                            log.debug(
-                                                    "Generated separate UUID pools for filter-based update: updateSize='{}', copySize='{}'",
-                                                    updateUuids.size(), copyUuids.size());
+                        log.debug(
+                                "Generated separate UUID pools for filter-based update: updateSize='{}', copySize='{}'",
+                                updateUuids.size(), copyUuids.size());
 
-                                            // 执行批量更新
-                                            return versionDao
-                                                    .batchUpdateItems(datasetId, baseVersionId, newVersionId,
-                                                            batchUpdate,
-                                                            updateUuids)
-                                                    .flatMap(updatedCount -> {
-                                                        if (updatedCount == 0) {
-                                                            log.info("No items found to update for dataset '{}'",
-                                                                    datasetId);
-                                                            return Mono.empty();
-                                                        }
+                        // 执行批量更新
+                        return versionDao
+                                .batchUpdateItems(datasetId, baseVersionId, newVersionId, batchUpdate, updateUuids)
+                                .flatMap(updatedCount -> {
+                                    if (updatedCount == 0) {
+                                        log.info("No items found to update for dataset '{}'", datasetId);
+                                        return Mono.empty();
+                                    }
 
-                                                        log.info(
-                                                                "Batch updated '{}' items by filters for dataset '{}', baseVersion='{}'",
-                                                                updatedCount, datasetId, baseVersionId);
+                                    log.info(
+                                            "Batch updated items by filters for dataset '{}' (count='{}', baseVersion='{}')",
+                                            datasetId, updatedCount, baseVersionId);
 
-                                                        // 复制未更改的条目（不匹配过滤器的条目）
-                                                        // 特殊情况：空过滤器列表表示"全选" - 没有未更改的条目需要复制
-                                                        if (batchUpdate.filters() != null
-                                                                && batchUpdate.filters().isEmpty()) {
-                                                            // 空过滤器表示所有条目都已更新 - 无需复制
-                                                            log.info(
-                                                                    "Empty filters (select all) - skipping copy of unchanged items");
-                                                            return createVersionMetadata(
-                                                                    datasetId, newVersionId, baseVersionId,
-                                                                    updatedCount, 0L, true,
-                                                                    workspaceId, userName);
-                                                        }
+                                    // 复制未更改的条目（不匹配过滤器的条目）
+                                    // 特殊情况：空过滤器列表表示"全选" - 没有未更改的条目需要复制
+                                    if (selectAll) {
+                                        // 空过滤器表示所有条目都已更新 - 无需复制
+                                        log.info("Empty filters (select all) - skipping copy of unchanged items");
+                                        return createVersionMetadata(
+                                                datasetId, newVersionId, baseVersionId,
+                                                updatedCount, 0L, true,
+                                                workspaceId, userName);
+                                    }
 
-                                                        // 使用 copyVersionItems 复制未更改的条目（排除匹配过滤器的）
-                                                        return versionDao
-                                                                .copyVersionItems(datasetId, baseVersionId,
-                                                                        datasetId, newVersionId,
-                                                                        batchUpdate.filters(), copyUuids)
-                                                                .flatMap(unchangedCount -> createVersionMetadata(
-                                                                        datasetId, newVersionId, baseVersionId,
-                                                                        updatedCount, unchangedCount, true,
-                                                                        workspaceId, userName));
-                                                    });
-                                        });
-                            });
-                }))
-                .contextWrite(ctx -> ctx
-                        .put(RequestContext.WORKSPACE_ID, workspaceId)
-                        .put(RequestContext.USER_NAME, userName))
-                .then();
+                                    // 使用 copyVersionItems 复制未更改的条目（排除匹配过滤器的）
+                                    return versionDao
+                                            .copyVersionItems(datasetId, baseVersionId,
+                                                    datasetId, newVersionId,
+                                                    batchUpdate.filters(), copyUuids)
+                                            .flatMap(unchangedCount -> createVersionMetadata(
+                                                    datasetId, newVersionId, baseVersionId,
+                                                    updatedCount, unchangedCount, true,
+                                                    workspaceId, userName));
+                                });
+                    });
+        });
     }
 
     /**
@@ -733,6 +743,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 null, // 从基础版本继承执行策略
                 false, // 不清除执行策略
                 null, // 无批次组 ID
+                true, // enforceLatestCas: diffs against current latest under lock
                 workspaceId,
                 userName)
                 .then();
@@ -838,9 +849,18 @@ class DatasetItemServiceImpl implements DatasetItemService {
         // 根据开关路由到版本化或传统存储
         if (featureFlags.isDatasetVersioningEnabled()) {
             log.info("Saving batch with versioning for dataset '{}', itemCount '{}'", datasetId, items.size());
-            return saveItemsWithVersion(batch, datasetId, null)
+            // Unlike the other callers of saveItemsWithVersion, this public overload has no prior
+            // dataset-existence read, so guard here (under the lock) to fail fast on a missing dataset.
+            // Mutate the latest version rather than minting one per batch: a multi-batch upload
+            // (e.g. a large CSV/JSON file split into chunks) must land in a single version, matching
+            // the null-batch_group_id contract the array API honors via save(DatasetItemBatch).
+            return withDatasetVersionLock(datasetId, Mono.deferContextual(ctx -> {
+                datasetService.findById(datasetId, ctx.get(RequestContext.WORKSPACE_ID), null);
+                return mutateLatestVersionWithInsert(batch, datasetId,
+                        ctx.get(RequestContext.WORKSPACE_ID), ctx.get(RequestContext.USER_NAME));
+            })
                     .map(version -> (long) items.size())
-                    .defaultIfEmpty((long) items.size());
+                    .defaultIfEmpty((long) items.size()));
         }
 
         // 传统方式：保存到传统表
@@ -901,9 +921,21 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 .stream()
                 .map(item -> {
                     IdGenerator.validateVersion(item.id(), "dataset_item");
+                    validateReferencedTraceAndSpan(item);
                     return item;
                 })
                 .toList();
+    }
+
+    // The dataset_item's referenced trace_id / span_id must be a time-ordered UUIDv7 (past allowed:
+    // items are commonly linked to older traces/spans). Reuses the shared referenced-id policy.
+    private void validateReferencedTraceAndSpan(DatasetItem item) {
+        if (item.traceId() != null) {
+            idGenerator.validateIdNotInFuture(item.traceId(), "dataset_item trace");
+        }
+        if (item.spanId() != null) {
+            idGenerator.validateIdNotInFuture(item.spanId(), "dataset_item span");
+        }
     }
 
     private <T> Mono<T> failWithConflict(String message) {
@@ -936,7 +968,9 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 log.info(
                         "Mutating latest version with delete (no batch_group_id). datasetId='{}', itemIdsSize='{}', filtersSize='{}'",
                         datasetId, ids != null ? ids.size() : 0, filters != null ? filters.size() : 0);
-                return deleteItemsWithVersion(ids, datasetId, filters, workspaceId, userName, null);
+                return getDatasetIdOrResolveItemDatasetId(datasetId, ids)
+                        .flatMap(resolvedDatasetId -> withDatasetVersionLock(resolvedDatasetId,
+                                deleteItemsWithVersion(ids, resolvedDatasetId, filters, workspaceId, userName, null)));
             }
 
             // 提供了 batch_group_id：使用批次分组创建新版本
@@ -944,8 +978,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     "Creating version with batch grouping for delete. batchGroupId='{}', datasetId='{}', itemIdsSize='{}', filtersSize='{}'",
                     batchGroupId, datasetId, ids != null ? ids.size() : 0, filters != null ? filters.size() : 0);
             return getDatasetIdOrResolveItemDatasetId(datasetId, ids)
-                    .flatMap(resolvedDatasetId -> handleGroupedDeletion(
-                            batchGroupId, ids, resolvedDatasetId, filters, workspaceId, userName));
+                    .flatMap(resolvedDatasetId -> withDatasetVersionLock(resolvedDatasetId, handleGroupedDeletion(
+                            batchGroupId, ids, resolvedDatasetId, filters, workspaceId, userName)));
         });
     }
 
@@ -963,18 +997,21 @@ class DatasetItemServiceImpl implements DatasetItemService {
      */
     private Mono<Void> deleteItemsWithVersion(Set<UUID> ids, UUID datasetId, List<DatasetItemFilter> filters,
             String workspaceId, String userName, UUID batchGroupId) {
-        // 情况 1：按条目 ID 删除
-        if (CollectionUtils.isNotEmpty(ids)) {
-            return deleteByItemIdsWithVersion(ids, workspaceId, userName, batchGroupId);
-        }
+        // Defer so nothing runs until the caller's withDatasetVersionLock is held (OPIK-7264).
+        return Mono.defer(() -> {
+            // 情况 1：按条目 ID 删除
+            if (CollectionUtils.isNotEmpty(ids)) {
+                return deleteByItemIdsWithVersion(ids, datasetId, workspaceId, userName, batchGroupId);
+            }
 
-        // 情况 2：按 datasetId 和过滤器删除
-        if (datasetId != null) {
-            return deleteByDatasetIdWithVersion(datasetId, filters, workspaceId, userName, batchGroupId);
-        }
+            // 情况 2：按 datasetId 和过滤器删除
+            if (datasetId != null) {
+                return deleteByDatasetIdWithVersion(datasetId, filters, workspaceId, userName, batchGroupId);
+            }
 
-        // 无有效输入
-        return Mono.empty();
+            // 无有效输入
+            return Mono.empty();
+        });
     }
 
     /**
@@ -991,11 +1028,15 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 "Deleting items by datasetId '{}' with versioning, filtersSize='{}', batchGroupId='{}', createVersion='{}'",
                 datasetId, filters != null ? filters.size() : 0, batchGroupId, createVersion);
 
-        // 验证数据集是否存在
-        datasetService.findById(datasetId, workspaceId, null);
+        // Defer the dataset-existence read and everything after it so this runs under the caller's
+        // per-dataset lock rather than at assembly time (OPIK-7264).
+        return Mono.defer(() -> {
+            // 验证数据集是否存在
+            datasetService.findById(datasetId, workspaceId, null);
 
-        // 如果启用了延迟迁移，确保数据集已迁移
-        return ensureLazyMigration(datasetId, workspaceId)
+            // 如果启用了延迟迁移，确保数据集已迁移
+            return ensureLazyMigration(datasetId, workspaceId);
+        })
                 .then(Mono.defer(() -> {
                     // 获取最新版本（使用接受 workspaceId 的重载方法）
                     Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId, workspaceId);
@@ -1068,6 +1109,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                                     null, // 从基础版本继承执行策略
                                                     false, // 不清除执行策略
                                                     batchGroupId,
+                                                    true, // enforceLatestCas: diffs against current latest under lock
                                                     workspaceId,
                                                     userName);
                                         });
@@ -1079,14 +1121,20 @@ class DatasetItemServiceImpl implements DatasetItemService {
     /**
      * 按条目 ID 删除条目，创建新版本或修改最新版本。
      */
-    private Mono<Void> deleteByItemIdsWithVersion(Set<UUID> ids, String workspaceId, String userName,
-            UUID batchGroupId) {
+    private Mono<Void> deleteByItemIdsWithVersion(Set<UUID> ids, UUID resolvedDatasetId, String workspaceId,
+            String userName, UUID batchGroupId) {
         // 从 batchGroupId 派生 createVersion：null 表示修改最新版本，非 null 表示创建新版本
         boolean createVersion = batchGroupId != null;
         log.info("Deleting '{}' items by IDs with versioning, batchGroupId='{}', createVersion='{}'",
                 ids.size(), batchGroupId, createVersion);
 
-        return resolveDatasetIdFromItemIds(ids)
+        // Reuse the datasetId the caller already resolved (for the lock) instead of resolving from
+        // ClickHouse a second time; only resolve here when the caller didn't have one.
+        Mono<UUID> datasetIdMono = resolvedDatasetId != null
+                ? Mono.just(resolvedDatasetId)
+                : resolveDatasetIdFromItemIds(ids);
+
+        return datasetIdMono
                 .flatMap(datasetId -> {
                     log.info("Resolved dataset '{}' for deletion request with '{}' item IDs", datasetId, ids.size());
                     return deleteByDatasetItemIdsInDataset(ids, datasetId, workspaceId, userName,
@@ -1166,6 +1214,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             null, // 从基础版本继承执行策略
                             false, // 不清除执行策略
                             batchGroupId,
+                            true, // enforceLatestCas: diffs against current latest under lock
                             workspaceId,
                             userName);
                 })
@@ -1362,7 +1411,11 @@ class DatasetItemServiceImpl implements DatasetItemService {
     public Mono<DatasetVersion> applyDeltaChanges(@NonNull UUID datasetId,
             @NonNull DatasetItemChanges changes, boolean override) {
 
-        return Mono.deferContextual(ctx -> {
+        // Serialize under the per-dataset lock like every other version-creating path so the
+        // is-latest check and the 'latest' flip are atomic. Without it, the check-then-act at
+        // isLatestVersion(...) below is a TOCTOU: a concurrent writer can move 'latest' between the
+        // check and the flip, reopening the OPIK-7264 lost-update on this endpoint (OPIK-7383).
+        return withDatasetVersionLock(datasetId, Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
             String userName = ctx.get(RequestContext.USER_NAME);
 
@@ -1406,7 +1459,8 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             changes.tags(), changes.changeDescription(),
                             changes.evaluators(), changes.executionPolicy(),
                             Boolean.TRUE.equals(changes.clearExecutionPolicy()),
-                            null, workspaceId, userName);
+                            // First version (baseVersionId == null): no prior 'latest' to CAS against.
+                            null, false, workspaceId, userName);
                     log.info("Created first version '{}' for dataset '{}' with hash '{}'",
                             version.id(), datasetId, version.versionHash());
                     return version;
@@ -1518,11 +1572,14 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                             changes.executionPolicy(),
                                             Boolean.TRUE.equals(changes.clearExecutionPolicy()),
                                             null, // 无批次组 ID
+                                            // CAS the 'latest' flip against baseVersionId unless override=true,
+                                            // which intentionally branches off a possibly-non-latest base.
+                                            !override,
                                             workspaceId,
                                             userName);
                                 });
                     });
-        });
+        }));
     }
 
     /**
@@ -1559,7 +1616,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
         }
 
         return getDatasetId(batch)
-                .flatMap(datasetId -> Mono.deferContextual(ctx -> {
+                .flatMap(datasetId -> withDatasetVersionLock(datasetId, Mono.deferContextual(ctx -> {
 
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
                     String userName = ctx.get(RequestContext.USER_NAME);
@@ -1576,7 +1633,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                     log.info("Creating version with batch grouping for dataset '{}', batch_group_id: '{}'", datasetId,
                             batchGroupId);
                     return handleGroupedInsertion(batchGroupId, batch, datasetId, workspaceId, userName);
-                }));
+                })));
     }
 
     /**
@@ -1640,29 +1697,16 @@ class DatasetItemServiceImpl implements DatasetItemService {
             return validateSpans(workspaceId, normalizedItems)
                     .then(validateTraces(workspaceId, normalizedItems))
                     .then(Mono.defer(() -> {
-                        // 获取现有条目 ID 以确定哪些是新的 vs 更新
-                        return versionDao.getItemIdsAndHashes(datasetId, versionId)
-                                .collectList()
-                                .flatMap(existingItems -> {
-                                    Set<UUID> existingItemIds = existingItems.stream()
-                                            .map(DatasetItemIdAndHash::itemId)
-                                            .collect(Collectors.toSet());
+                        // Classify incoming items as new vs updates with a lookup bounded by the batch,
+                        // rather than reading the whole version out of ClickHouse (OPIK-7705).
+                        Set<UUID> incomingItemIds = normalizedItems.stream()
+                                .map(DatasetItem::datasetItemId)
+                                .collect(Collectors.toSet());
 
-                                    // 将条目分类为新的或更新
-                                    int newItemsCount = 0;
-                                    int updatedItemsCount = 0;
-
-                                    for (DatasetItem item : normalizedItems) {
-                                        UUID stableId = item.datasetItemId();
-                                        if (existingItemIds.contains(stableId)) {
-                                            updatedItemsCount++;
-                                        } else {
-                                            newItemsCount++;
-                                        }
-                                    }
-
-                                    int finalNewItemsCount = newItemsCount;
-                                    int finalUpdatedItemsCount = updatedItemsCount;
+                        return versionDao.countExistingItemIds(datasetId, versionId, incomingItemIds)
+                                .flatMap(existingCount -> {
+                                    int finalUpdatedItemsCount = existingCount.intValue();
+                                    int finalNewItemsCount = incomingItemIds.size() - finalUpdatedItemsCount;
 
                                     log.info("Inserting into version '{}': new='{}', updated='{}'",
                                             versionId, finalNewItemsCount, finalUpdatedItemsCount);
@@ -1742,50 +1786,51 @@ class DatasetItemServiceImpl implements DatasetItemService {
      * 然后将 batch_group_id 与创建的版本关联。
      */
     private Mono<DatasetVersion> saveItemsWithVersion(DatasetItemBatch batch, UUID datasetId, UUID batchGroupId) {
-        if (batch.items() == null || batch.items().isEmpty()) {
-            log.debug("Empty batch, skipping version creation for dataset '{}'", datasetId);
-            return Mono.empty();
-        }
+        // Defer everything so callers can wrap this in withDatasetVersionLock and be guaranteed that
+        // no work (not even the item validation below) runs until the lock is acquired (OPIK-7264).
+        return Mono.defer(() -> {
+            if (batch.items() == null || batch.items().isEmpty()) {
+                log.debug("Empty batch, skipping version creation for dataset '{}'", datasetId);
+                return Mono.empty();
+            }
 
-        // 验证 UUID 版本并在缺失时添加 ID
-        List<DatasetItem> validatedItems = addIdIfAbsent(batch);
+            // 验证 UUID 版本并在缺失时添加 ID
+            List<DatasetItem> validatedItems = addIdIfAbsent(batch);
 
-        return Mono.deferContextual(ctx -> {
-            String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
-            String userName = ctx.get(RequestContext.USER_NAME);
+            return Mono.deferContextual(ctx -> {
+                String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
+                String userName = ctx.get(RequestContext.USER_NAME);
 
-            log.info("Saving items with version for dataset '{}', itemCount '{}', batchGroupId '{}'",
-                    datasetId, batch.items().size(), batchGroupId);
+                log.debug("Saving items with version for dataset '{}', itemCount '{}', batchGroupId '{}'",
+                        datasetId, batch.items().size(), batchGroupId);
 
-            // 在继续之前验证 span 和 trace 工作空间
-            return validateSpans(workspaceId, validatedItems)
-                    .then(Mono.defer(() -> validateTraces(workspaceId, validatedItems)))
-                    .then(Mono.defer(() -> {
-                        // 验证数据集是否存在
-                        datasetService.findById(datasetId, workspaceId, null);
+                // Ensure dataset is migrated if lazy migration is enabled. Dataset existence is already
+                // guaranteed by every caller (createFromTraces/Spans, save(), saveBatch), so no redundant
+                // findById here.
+                return ensureLazyMigration(datasetId, workspaceId)
+                        // 在继续之前验证 span 和 trace 工作空间
+                        .then(Mono.defer(() -> validateSpans(workspaceId, validatedItems)))
+                        .then(Mono.defer(() -> validateTraces(workspaceId, validatedItems)))
+                        .then(Mono.defer(() -> {
 
-                        // 如果启用了延迟迁移，确保数据集已迁移
-                        return ensureLazyMigration(datasetId, workspaceId);
-                    }))
-                    .then(Mono.defer(() -> {
+                            // 获取最新版本（如果存在）- 使用接受 workspaceId 的重载方法
+                            Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId,
+                                    workspaceId);
 
-                        // 获取最新版本（如果存在）- 使用接受 workspaceId 的重载方法
-                        Optional<DatasetVersion> latestVersion = versionService.getLatestVersion(datasetId,
-                                workspaceId);
+                            if (latestVersion.isEmpty()) {
+                                // 尚不存在版本 - 创建第一个版本，所有条目为"已添加"
+                                return createFirstVersion(datasetId, validatedItems, batchGroupId, workspaceId,
+                                        userName);
+                            }
 
-                        if (latestVersion.isEmpty()) {
-                            // 尚不存在版本 - 创建第一个版本，所有条目为"已添加"
-                            return createFirstVersion(datasetId, validatedItems, batchGroupId, workspaceId,
-                                    userName);
-                        }
-
-                        // 版本存在 - 在最新版本之上应用增量。OPIK-6696：如果调用者
-                        // 提供了 copy-from 坐标，未更改行的 COPY 将从该
-                        // (dataset, version) 对读取，而非目标刚创建的先前版本。
-                        UUID baseVersionId = latestVersion.get().id();
-                        return createVersionWithDelta(datasetId, baseVersionId, validatedItems, batchGroupId,
-                                workspaceId, userName, batch.copyFromDatasetId(), batch.copyFromVersionId());
-                    }));
+                            // 版本存在 - 在最新版本之上应用增量。OPIK-6696：如果调用者
+                            // 提供了 copy-from 坐标，未更改行的 COPY 将从该
+                            // (dataset, version) 对读取，而非目标刚创建的先前版本。
+                            UUID baseVersionId = latestVersion.get().id();
+                            return createVersionWithDelta(datasetId, baseVersionId, validatedItems, batchGroupId,
+                                    workspaceId, userName, batch.copyFromDatasetId(), batch.copyFromVersionId());
+                        }));
+            });
         });
     }
 
@@ -1831,6 +1876,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                             null, // 首个版本无执行策略
                             false, // 不清除执行策略
                             batchGroupId,
+                            true, // enforceLatestCas (no-op for first version, base is null)
                             workspaceId,
                             userName);
                 });
@@ -1951,6 +1997,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                                         null, // 从基础版本继承执行策略
                                         false, // 不清除执行策略
                                         batchGroupId,
+                                        true, // enforceLatestCas: diffs against current latest under lock
                                         workspaceId,
                                         userName);
                             });
@@ -1983,6 +2030,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
             ExecutionPolicy executionPolicy,
             boolean clearExecutionPolicy,
             UUID batchGroupId,
+            boolean enforceLatestCas,
             String workspaceId,
             String userName) {
 
@@ -1997,6 +2045,7 @@ class DatasetItemServiceImpl implements DatasetItemService {
                 executionPolicy,
                 clearExecutionPolicy,
                 batchGroupId,
+                enforceLatestCas,
                 workspaceId,
                 userName))
                 .subscribeOn(Schedulers.boundedElastic())
@@ -2222,21 +2271,24 @@ class DatasetItemServiceImpl implements DatasetItemService {
      */
     private Mono<Void> handleGroupedDeletion(UUID batchGroupId, Set<UUID> ids, UUID datasetId,
             List<DatasetItemFilter> filters, String workspaceId, String userName) {
+        // Defer so nothing runs until the caller's withDatasetVersionLock is held (OPIK-7264).
+        return Mono.defer(() -> {
+            // 对于基于过滤器的删除，ids 为空 - 跳过映射并直接继续
+            if (ids == null) {
+                return proceedWithGroupedDeletion(batchGroupId, Set.of(), datasetId, filters, workspaceId, userName);
+            }
 
-        // 对于基于过滤器的删除，ids 为空 - 跳过映射并直接继续
-        if (ids == null) {
-            return proceedWithGroupedDeletion(batchGroupId, Set.of(), datasetId, filters, workspaceId, userName);
-        }
+            if (datasetId != null) {
+                return proceedWithGroupedDeletion(batchGroupId, ids, datasetId, filters, workspaceId, userName);
+            }
 
-        if (datasetId != null) {
-            return proceedWithGroupedDeletion(batchGroupId, ids, datasetId, filters, workspaceId, userName);
-        }
-
-        return resolveDatasetIdFromItemIds(ids)
-                .flatMap(resolvedId -> {
-                    log.info("Resolved dataset '{}' for batch_group_id '{}'", resolvedId, batchGroupId);
-                    return proceedWithGroupedDeletion(batchGroupId, ids, resolvedId, filters, workspaceId, userName);
-                });
+            return resolveDatasetIdFromItemIds(ids)
+                    .flatMap(resolvedId -> {
+                        log.info("Resolved dataset '{}' for batch_group_id '{}'", resolvedId, batchGroupId);
+                        return proceedWithGroupedDeletion(batchGroupId, ids, resolvedId, filters, workspaceId,
+                                userName);
+                    });
+        });
     }
 
     /**

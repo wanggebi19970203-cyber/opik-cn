@@ -196,7 +196,8 @@ public class DatasetVersionsResource {
     @Path("/restore")
     @Operation(operationId = "restoreDatasetVersion", summary = "将数据集恢复到指定版本", description = "通过创建一个从指定版本复制项目的新版本，将数据集恢复到之前的版本状态。如果该版本已是最新版本，则原样返回（无操作）。", responses = {
             @ApiResponse(responseCode = "200", description = "版本恢复成功", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
-            @ApiResponse(responseCode = "404", description = "版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))})
+            @ApiResponse(responseCode = "404", description = "版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
+            @ApiResponse(responseCode = "409", description = "Concurrent modification - the latest version changed during the restore; retry", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))})
     @RateLimited
     @JsonView(DatasetVersion.View.Public.class)
     public Response restoreVersion(

@@ -21,6 +21,7 @@ import com.comet.opik.domain.workspaces.WorkspacesService;
 import com.comet.opik.infrastructure.OpikConfiguration;
 import com.comet.opik.infrastructure.auth.RequestContext;
 import com.comet.opik.utils.ClickHouseDateTimeFormat;
+import com.comet.opik.utils.ErrorUtils;
 import com.comet.opik.utils.JsonUtils;
 import com.comet.opik.utils.TruncationUtils;
 import com.comet.opik.utils.UsageUtils;
@@ -72,6 +73,10 @@ import static com.comet.opik.infrastructure.instrumentation.InstrumentAsyncUtils
 import static com.comet.opik.infrastructure.instrumentation.InstrumentAsyncUtils.startSegment;
 import static com.comet.opik.utils.AsyncUtils.makeFluxContextAware;
 import static com.comet.opik.utils.AsyncUtils.makeMonoContextAware;
+import static com.comet.opik.utils.SentinelTranslation.epochToNull;
+import static com.comet.opik.utils.SentinelTranslation.nanToNull;
+import static com.comet.opik.utils.SentinelTranslation.nullToEpoch;
+import static com.comet.opik.utils.SentinelTranslation.nullToNaN;
 import static com.comet.opik.utils.template.TemplateUtils.getQueryItemPlaceHolder;
 import static java.util.function.Predicate.not;
 
@@ -228,7 +233,7 @@ public class SpanDAO {
                     new_span.start_time
                 ) as start_time,
                 multiIf(
-                    isNotNull(old_span.end_time), old_span.end_time,
+                    notEquals(old_span.end_time, toDateTime64('1970-01-01 00:00:00.000', 9)) AND old_span.end_time >= toDateTime64('1970-01-01 00:00:00.000', 9), old_span.end_time,
                     new_span.end_time
                 ) as end_time,
                 multiIf(
@@ -290,7 +295,7 @@ public class SpanDAO {
                     new_span.output_slim
                 ) as output_slim,
                 multiIf(
-                    isNotNull(old_span.ttft), old_span.ttft,
+                    old_span.id != '' AND NOT isNaN(old_span.ttft), old_span.ttft,
                     new_span.ttft
                 ) as ttft,
                 multiIf(
@@ -311,7 +316,7 @@ public class SpanDAO {
                     :name as name,
                     :type as type,
                     parseDateTime64BestEffort(:start_time, 9) as start_time,
-                    <if(end_time)> parseDateTime64BestEffort(:end_time, 9) as end_time, <else> null as end_time, <endif>
+                    parseDateTime64BestEffort(:end_time, 9) as end_time,
                     :input as input,
                     :output as output,
                     :metadata as metadata,
@@ -338,7 +343,7 @@ public class SpanDAO {
                 FROM spans
                 WHERE workspace_id = :workspace_id
                 AND id = :id
-                ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+                ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
                 LIMIT 1
             ) as old_span
             ON new_span.id = old_span.id
@@ -413,7 +418,7 @@ public class SpanDAO {
             FROM spans
             WHERE id = :id
             AND workspace_id = :workspace_id
-            ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+            ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
             LIMIT 1
             SETTINGS log_comment = '<log_comment>'
             ;
@@ -543,8 +548,8 @@ public class SpanDAO {
                     new_span.output_slim
                 ) as output_slim,
                 multiIf(
-                    isNotNull(new_span.ttft), new_span.ttft,
-                    isNotNull(old_span.ttft), old_span.ttft,
+                    NOT isNaN(new_span.ttft), new_span.ttft,
+                    old_span.id != '' AND NOT isNaN(old_span.ttft), old_span.ttft,
                     new_span.ttft
                 ) as ttft,
                 multiIf(
@@ -565,7 +570,7 @@ public class SpanDAO {
                     <if(name)> :name <else> '' <endif> as name,
                     <if(type)> :type <else> 'unknown' <endif> as type,
                     toDateTime64('1970-01-01 00:00:00.000', 9) as start_time,
-                    <if(end_time)> parseDateTime64BestEffort(:end_time, 9) <else> null <endif> as end_time,
+                    parseDateTime64BestEffort(:end_time, 9) as end_time,
                     <if(input)> :input <else> '' <endif> as input,
                     <if(output)> :output <else> '' <endif> as output,
                     <if(metadata)> :metadata <else> '' <endif> as metadata,
@@ -582,7 +587,7 @@ public class SpanDAO {
                     :truncation_threshold as truncation_threshold,
                     <if(input)> :input_slim <else> '' <endif> as input_slim,
                     <if(output)> :output_slim <else> '' <endif> as output_slim,
-                    <if(ttft)> :ttft <else> null <endif> as ttft,
+                    :ttft as ttft,
                     :source as source,
                     <if(environment)> :environment <else> '' <endif> as environment
             ) as new_span
@@ -592,7 +597,7 @@ public class SpanDAO {
                 FROM spans
                 WHERE id = :id
                 AND workspace_id = :workspace_id
-                ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+                ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
                 LIMIT 1
             ) as old_span
             ON new_span.id = old_span.id
@@ -716,8 +721,8 @@ public class SpanDAO {
                 WHERE id IN :ids
                 AND workspace_id = :workspace_id
                 <if(has_target_projects)>AND project_id IN :target_project_ids<endif>
-                ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
-                LIMIT 1 BY id
+                ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+                <if(has_target_projects)>LIMIT 1 BY workspace_id, project_id, id<else>LIMIT 1 BY id<endif>
             ) AS s
             LEFT JOIN (
                 SELECT
@@ -734,7 +739,7 @@ public class SpanDAO {
                 AND entity_id IN :ids
                 <if(has_target_projects)>AND project_id IN :target_project_ids<endif>
                 ORDER BY (workspace_id, project_id, entity_id, id) DESC, last_updated_at DESC
-                LIMIT 1 BY id
+                <if(has_target_projects)>LIMIT 1 BY workspace_id, project_id, id<else>LIMIT 1 BY id<endif>
             ) AS c ON s.id = c.entity_id
             LEFT JOIN (
                 SELECT
@@ -770,7 +775,7 @@ public class SpanDAO {
             WHERE id = :id
             AND project_id = :project_id
             AND workspace_id = :workspace_id
-            ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+            ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
             LIMIT 1
             SETTINGS log_comment = '<log_comment>'
             ;
@@ -782,7 +787,7 @@ public class SpanDAO {
             FROM spans
             WHERE workspace_id = :workspace_id
             AND id = :id
-            ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+            ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
             LIMIT 1
             SETTINGS log_comment = '<log_comment>'
             ;
@@ -802,8 +807,37 @@ public class SpanDAO {
             WHERE workspace_id = :workspace_id
             AND project_id IN (SELECT project_id FROM target_projects)
             AND trace_id IN :trace_ids
-            ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
-            LIMIT 1 BY id
+            ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+            LIMIT 1 BY workspace_id, project_id, id
+            SETTINGS log_comment = '<log_comment>'
+            ;
+            """;
+
+    /**
+     * Cheap size estimate for all spans across a set of trace ids, used only to route trace-thread online
+     * scoring between the inline and agentic-tools paths without materializing spans. Sums the
+     * pre-computed {@code *_length} materialized columns, so ClickHouse reads only small numeric columns
+     * instead of the (potentially large) {@code input}/{@code output}/{@code metadata} text. The latest
+     * version of each span is taken with {@code argMax(..., last_updated_at)} grouped by {@code id} —
+     * a hash aggregation that dedups the {@code ReplacingMergeTree} versions without the full-row
+     * {@code ORDER BY} + {@code LIMIT 1 BY workspace_id, project_id, id} sort that {@link #SELECT_BY_TRACE_IDS} pays. See OPIK-7454.
+     */
+    private static final String SELECT_SPANS_SIZE_BY_TRACE_IDS = """
+            WITH target_projects AS (
+                SELECT DISTINCT project_id
+                FROM spans
+                WHERE workspace_id = :workspace_id
+                AND trace_id IN :trace_ids
+            )
+            SELECT sum(span_size) AS size_bytes
+            FROM (
+                SELECT argMax(input_length + output_length + metadata_length, last_updated_at) AS span_size
+                FROM spans
+                WHERE workspace_id = :workspace_id
+                AND project_id IN (SELECT project_id FROM target_projects)
+                AND trace_id IN :trace_ids
+                GROUP BY id
+            )
             SETTINGS log_comment = '<log_comment>'
             ;
             """;
@@ -819,6 +853,11 @@ public class SpanDAO {
      * immaterial since it is id-bounded and {@code LIMIT 1 BY id}. Field exclusion ({@code exclude_fields}) and
      * truncation are layered on top without dropping the sort key.
      * <p>
+     * Each {@code spans} id-range bound carries a parallel {@code toMonday(id_at)} bound: a strict consequence of the
+     * id-range — and, unlike a {@code created_at} predicate, safe against late-arriving rows since it derives from
+     * {@code id} — that lets the planner prune partitions once {@code spans} is partitioned. The {@code page_wide}
+     * re-read carries the same week bounds via the window it re-reads.
+     * <p>
      * When aggregates are enrichment-only ({@code page_keyed_aggregates}, see
      * {@code shouldPageKeyAggregates}), the feedback-score and comment CTEs are keyed on
      * {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} instead of
@@ -832,9 +871,12 @@ public class SpanDAO {
                 SELECT DISTINCT id FROM spans
                 WHERE project_id = :project_id
                 AND workspace_id = :workspace_id
-                <if(last_received_span_id)> AND id \\< :last_received_span_id <endif>
-                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
-                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(last_received_span_id)> AND id \\< :last_received_span_id
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:last_received_span_id), 'UTC')) <endif>
+                <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
                 <if(trace_id)> AND trace_id = :trace_id <endif>
                 <if(type)> AND type = :type <endif>
                 <if(filters)> AND <filters> <endif>
@@ -1007,9 +1049,12 @@ public class SpanDAO {
                 FROM spans s
                 WHERE project_id = :project_id
                 AND workspace_id = :workspace_id
-                <if(last_received_span_id)> AND id \\< :last_received_span_id <endif>
-                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
-                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(last_received_span_id)> AND id \\< :last_received_span_id
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:last_received_span_id), 'UTC')) <endif>
+                <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
                 <if(trace_id)> AND trace_id = :trace_id <endif>
                 <if(type)> AND type = :type <endif>
                 <if(filters)> AND <filters> <endif>
@@ -1029,7 +1074,7 @@ public class SpanDAO {
                 <if(stream)>
                 ORDER BY (workspace_id, project_id, id) DESC, last_updated_at DESC
                 <else>
-                ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+                ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
                 <endif>
                 LIMIT 1 BY id
             ), page_ids AS (
@@ -1041,7 +1086,7 @@ public class SpanDAO {
                 <if(stream)>
                 ORDER BY (workspace_id, project_id, id) DESC, last_updated_at DESC
                 <else>
-                ORDER BY <if(sort_fields)> <sort_fields>, <endif>(workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+                ORDER BY <if(sort_fields)> <sort_fields>, <endif>(workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
                 <endif>
                 LIMIT :limit <if(offset)>OFFSET :offset <endif>
             ), page_wide AS (
@@ -1055,10 +1100,13 @@ public class SpanDAO {
                 WHERE workspace_id = :workspace_id
                 AND project_id = :project_id
                 AND id IN (SELECT id FROM page_ids)
+                <if(uuid_from_time)> AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
+                <if(last_received_span_id)> AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:last_received_span_id), 'UTC')) <endif>
                 <if(stream)>
                 ORDER BY (workspace_id, project_id, id) DESC, last_updated_at DESC
                 <else>
-                ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+                ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
                 <endif>
                 LIMIT 1 BY id
             )
@@ -1080,7 +1128,7 @@ public class SpanDAO {
             <if(stream)>
             ORDER BY (workspace_id, project_id, id) DESC, last_updated_at DESC
             <else>
-            ORDER BY <if(sort_fields)> <sort_fields>, <endif>(workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+            ORDER BY <if(sort_fields)> <sort_fields>, <endif>(workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
             <endif>
             SETTINGS log_comment = '<log_comment>'
             ;
@@ -1109,8 +1157,10 @@ public class SpanDAO {
                 FROM spans
                 WHERE workspace_id = :workspace_id
                 AND project_id = :project_id
-                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
-                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
                 <if(trace_id)> AND trace_id = :trace_id <endif>
                 <if(type)> AND type = :type <endif>
                 <if(filters)> AND <filters> <endif>
@@ -1192,8 +1242,10 @@ public class SpanDAO {
                 <endif>
                 WHERE project_id = :project_id
                 AND workspace_id = :workspace_id
-                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
-                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
                 <if(trace_id)> AND trace_id = :trace_id <endif>
                 <if(type)> AND type = :type <endif>
                 <if(filters)> AND <filters> <endif>
@@ -1210,7 +1262,7 @@ public class SpanDAO {
                 <if(feedback_scores_empty_filters)>
                 AND fsc.feedback_scores_count = 0
                 <endif>
-                ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
+                ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
                 LIMIT 1 BY id
             ) AS latest_rows
             SETTINGS log_comment = '<log_comment>'
@@ -1226,6 +1278,16 @@ public class SpanDAO {
             ;
             """;
 
+    /**
+     * Retention sweep for the applyToPast=true window: spans whose {@code trace_id} is in
+     * {@code [lower_bound, cutoff_id)} and not linked to experiments.
+     * <p>
+     * Filters on {@code trace_id} only. Unlike {@code TraceDAO}, the spans retention range is keyed on
+     * {@code trace_id} while the future partition column {@code id_at} is MATERIALIZED from the span's own UUIDv7 id
+     * (migration 000105). A span's id can land in a later week than its {@code trace_id}, so a {@code toMonday(id_at)}
+     * bound derived from the trace-id range would wrongly exclude valid candidates. No partition-pruning predicate is
+     * applied here until {@code spans} can be pruned by a column aligned with {@code trace_id}.
+     */
     private static final String DELETE_FOR_RETENTION = """
             DELETE FROM spans
             WHERE workspace_id IN :workspace_ids
@@ -1401,8 +1463,10 @@ public class SpanDAO {
                 <endif>
                 WHERE project_id = :project_id
                 AND workspace_id = :workspace_id
-                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
-                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
                 <if(trace_id)> AND trace_id = :trace_id <endif>
                 <if(type)> AND type = :type <endif>
                 <if(filters)> AND <filters> <endif>
@@ -1542,8 +1606,10 @@ public class SpanDAO {
                 <endif>
                 WHERE project_id = :project_id
                 AND workspace_id = :workspace_id
-                <if(uuid_from_time)> AND id >= :uuid_from_time <endif>
-                <if(uuid_to_time)> AND id \\<= :uuid_to_time <endif>
+                <if(uuid_from_time)> AND id >= :uuid_from_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC')) <endif>
+                <if(uuid_to_time)> AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC')) <endif>
                 <if(trace_id)> AND trace_id = :trace_id <endif>
                 <if(type)> AND type = :type <endif>
                 <if(filters)> AND <filters> <endif>
@@ -1720,7 +1786,7 @@ public class SpanDAO {
                         <if(environment)> :environment <else> s.environment <endif> as environment
                     FROM spans s
                     WHERE s.id IN :ids AND s.workspace_id = :workspace_id
-                    ORDER BY (s.workspace_id, s.project_id, s.trace_id, s.parent_span_id, s.id) DESC, s.last_updated_at DESC
+                    ORDER BY (s.workspace_id, s.project_id, s.trace_id, s.id) DESC, s.last_updated_at DESC
                     LIMIT 1 BY s.id
                     SETTINGS log_comment = '<log_comment>', short_circuit_function_evaluation = 'force_enable'
                     ;
@@ -1729,6 +1795,14 @@ public class SpanDAO {
     // 预估成本变更
     // 1.1 - 为OpenAI添加了缓存token
     private static final String ESTIMATED_COST_VERSION = "1.1";
+
+    /**
+     * Sort mapping applied under {@code spanColumnsNonNullable}: {@code nullIf} restores an absent (epoch)
+     * {@code end_time} to {@code NULL} so it sorts last in ASC like a Nullable column did. Mirrors the trace-side
+     * mapping; {@code duration} needs no entry — ClickHouse sorts {@code NaN} like {@code NULL}.
+     */
+    private static final Map<String, String> SORT_FIELD_MAPPING_END_TIME_SENTINEL = Map.of(
+            SortableFields.END_TIME, "nullIf(end_time, toDateTime64('1970-01-01 00:00:00.000', 9))");
 
     private final @NonNull ConnectionFactory connectionFactory;
     private final @NonNull FilterQueryBuilder filterQueryBuilder;
@@ -1794,11 +1868,7 @@ public class SpanDAO {
                         .bind("input_slim" + i, TruncationUtils.createSlimJsonString(inputValue))
                         .bind("output_slim" + i, TruncationUtils.createSlimJsonString(outputValue));
 
-                if (span.endTime() != null) {
-                    statement.bind("end_time" + i, ClickHouseDateTimeFormat.formatNanos(span.endTime()));
-                } else {
-                    statement.bindNull("end_time" + i, String.class);
-                }
+                bindEpochSentinel(statement, "end_time" + i, span.endTime());
 
                 statement.bind("usage" + i, UsageUtils.sanitizeUsage(span.usage()));
 
@@ -1820,11 +1890,7 @@ public class SpanDAO {
                                 ? ESTIMATED_COST_VERSION
                                 : "");
 
-                if (span.ttft() != null) {
-                    statement.bind("ttft" + i, span.ttft());
-                } else {
-                    statement.bindNull("ttft" + i, Double.class);
-                }
+                bindNanSentinel(statement, "ttft" + i, span.ttft());
 
                 if (span.source() != null) {
                     statement.bind("source" + i, span.source().getValue());
@@ -1848,7 +1914,7 @@ public class SpanDAO {
 
     private Publisher<? extends Result> insert(Span span, Connection connection) {
         return makeFluxContextAware((userName, workspaceId) -> {
-            var template = newInsertTemplate(span, workspaceId, userName);
+            var template = newInsertTemplate(workspaceId, userName);
             String inputValue = TruncationUtils.toJsonString(span.input());
             String outputValue = TruncationUtils.toJsonString(span.output());
             var statement = connection.createStatement(template.render())
@@ -1870,9 +1936,7 @@ public class SpanDAO {
             } else {
                 statement.bind("parent_span_id", "");
             }
-            if (span.endTime() != null) {
-                statement.bind("end_time", span.endTime().toString());
-            }
+            bindEpochSentinel(statement, "end_time", span.endTime());
 
             if (span.tags() != null) {
                 statement.bind("tags", span.tags().toArray(String[]::new));
@@ -1908,11 +1972,7 @@ public class SpanDAO {
 
             bindCost(span, statement, "");
 
-            if (span.ttft() != null) {
-                statement.bind("ttft", span.ttft());
-            } else {
-                statement.bindNull("ttft", Double.class);
-            }
+            bindNanSentinel(statement, "ttft", span.ttft());
 
             if (span.source() != null) {
                 statement.bind("source", span.source().getValue());
@@ -1931,14 +1991,61 @@ public class SpanDAO {
         });
     }
 
-    private ST newInsertTemplate(Span span, String workspaceId, String userName) {
-        var template = getSTWithLogComment(INSERT, "insert_span", workspaceId, userName, "");
-        Optional.ofNullable(span.endTime())
-                .ifPresent(endTime -> template.add("end_time", endTime));
-        Optional.ofNullable(span.ttft())
-                .ifPresent(ttft -> template.add("ttft", ttft));
+    private boolean spanColumnsNonNullable() {
+        return configuration.getDatabaseAnalyticsDataModel().spanColumnsNonNullable();
+    }
 
-        return template;
+    /**
+     * Binds a {@code DateTime64} write parameter, applying the epoch sentinel for an absent value once the column is
+     * non-nullable (a {@code null} bind would be rejected); while still Nullable an absent value binds {@code null}.
+     * The span sibling of the trace-side helper.
+     */
+    private void bindEpochSentinel(Statement statement, String parameter, Instant value) {
+        if (spanColumnsNonNullable()) {
+            statement.bind(parameter, ClickHouseDateTimeFormat.formatNanos(nullToEpoch(value)));
+        } else if (value != null) {
+            statement.bind(parameter, ClickHouseDateTimeFormat.formatNanos(value));
+        } else {
+            statement.bindNull(parameter, String.class);
+        }
+    }
+
+    /**
+     * Binds a {@code Float64} write parameter, applying the {@code NaN} sentinel for an absent value once the column is
+     * non-nullable; while still Nullable an absent value binds {@code null}.
+     */
+    private void bindNanSentinel(Statement statement, String parameter, Double value) {
+        if (spanColumnsNonNullable()) {
+            statement.bind(parameter, nullToNaN(value));
+        } else if (value != null) {
+            statement.bind(parameter, value);
+        } else {
+            statement.bindNull(parameter, Double.class);
+        }
+    }
+
+    /**
+     * Reads a {@code DateTime64} column, translating the epoch sentinel to {@code null} only once the columns are
+     * non-nullable. While still {@code Nullable} the value is returned as-is so a legitimate epoch timestamp is
+     * preserved (the column distinguishes it from {@code null}). Symmetric with the flag-gated write binding.
+     */
+    private Instant readEpochSentinel(Set<SpanField> exclude, SpanField field, Row row, String fieldName) {
+        var value = getValue(exclude, field, row, fieldName, Instant.class);
+        return spanColumnsNonNullable() ? epochToNull(value) : value;
+    }
+
+    /**
+     * Reads a {@code Float64} column and maps the {@code NaN} sentinel to {@code null}. No flag is needed (unlike
+     * {@code end_time}): neither {@code duration} (materialized, never {@code NaN} today) nor {@code ttft} (cannot
+     * arrive as {@code NaN} via JSON) is ever {@code NaN} while the column is still {@code Nullable}, so the
+     * translation is always a no-op today and correct once the column is non-nullable.
+     */
+    private Double readNanSentinel(Set<SpanField> exclude, SpanField field, Row row, String fieldName) {
+        return nanToNull(getValue(exclude, field, row, fieldName, Double.class));
+    }
+
+    private ST newInsertTemplate(String workspaceId, String userName) {
+        return getSTWithLogComment(INSERT, "insert_span", workspaceId, userName, "");
     }
 
     @WithSpan
@@ -1969,6 +2076,12 @@ public class SpanDAO {
                     }
 
                     bindUpdateParams(spanUpdate, statement, false);
+
+                    // PARTIAL_INSERT builds the full new_span row, so end_time/ttft are referenced unconditionally and
+                    // must always be bound (sentinel or null for an absent value) — unlike the conditional UPDATE
+                    // keep-column path.
+                    bindEpochSentinel(statement, "end_time", spanUpdate.endTime());
+                    bindNanSentinel(statement, "ttft", spanUpdate.ttft());
 
                     if (spanUpdate.source() != null) {
                         statement.bind("source", spanUpdate.source().getValue());
@@ -2193,6 +2306,38 @@ public class SpanDAO {
                 .flatMap(this::mapToDto);
     }
 
+    /**
+     * Cheap approximate size (bytes) of all spans across the given trace ids, used to route trace-thread
+     * online scoring without materializing spans. Streaming aggregate — see
+     * {@link #SELECT_SPANS_SIZE_BY_TRACE_IDS}. Returns 0 for an empty input or when no spans match.
+     */
+    public Mono<Long> getSpansSizeByTraceIds(Set<UUID> traceIds) {
+        if (CollectionUtils.isEmpty(traceIds)) {
+            return Mono.just(0L);
+        }
+
+        log.info("Getting spans size estimate for '{}' traces", traceIds.size());
+
+        return Mono.from(connectionFactory.create())
+                .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
+                    var template = getSTWithLogComment(SELECT_SPANS_SIZE_BY_TRACE_IDS, "get_spans_size_by_trace_ids",
+                            workspaceId, userName, "traces_size=%s".formatted(traceIds.size()));
+                    var statement = connection.createStatement(template.render())
+                            .bind("trace_ids", traceIds.toArray(new UUID[0]))
+                            .bind("workspace_id", workspaceId);
+
+                    Segment segment = startSegment("spans", "Clickhouse", "get_spans_size_by_trace_ids");
+
+                    return Flux.from(statement.execute())
+                            .doFinally(signalType -> endSegment(segment));
+                }))
+                .flatMap(result -> result.map((row, rowMetadata) -> {
+                    var size = row.get("size_bytes", Long.class);
+                    return size == null ? 0L : size;
+                }))
+                .reduce(0L, Long::sum);
+    }
+
     private Mono<List<UUID>> getTargetProjectIdsForSpans(Set<UUID> ids) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -2316,7 +2461,7 @@ public class SpanDAO {
                         null))
                 .type(SpanType.fromString(getValue(exclude, SpanField.TYPE, row, "type", String.class)))
                 .startTime(getValue(exclude, SpanField.START_TIME, row, "start_time", Instant.class))
-                .endTime(getValue(exclude, SpanField.END_TIME, row, "end_time", Instant.class))
+                .endTime(readEpochSentinel(exclude, SpanField.END_TIME, row, "end_time"))
                 .input(Optional.ofNullable(getValue(exclude, SpanField.INPUT, row, "input", String.class))
                         .filter(str -> !str.isBlank())
                         .map(value -> TruncationUtils.getJsonNodeOrTruncatedString(rowMetadata, "input_truncated",
@@ -2368,8 +2513,8 @@ public class SpanDAO {
                 .createdBy(getValue(exclude, SpanField.CREATED_BY, row, "created_by", String.class))
                 .lastUpdatedBy(
                         getValue(exclude, SpanField.LAST_UPDATED_BY, row, "last_updated_by", String.class))
-                .duration(getValue(exclude, SpanField.DURATION, row, "duration", Double.class))
-                .ttft(getValue(exclude, SpanField.TTFT, row, "ttft", Double.class))
+                .duration(readNanSentinel(exclude, SpanField.DURATION, row, "duration"))
+                .ttft(readNanSentinel(exclude, SpanField.TTFT, row, "ttft"))
                 .source(Optional.ofNullable(
                         getValue(exclude, SpanField.SOURCE, row, "source", String.class))
                         .flatMap(Source::fromString)
@@ -2387,7 +2532,9 @@ public class SpanDAO {
     @WithSpan
     public Mono<SpanPage> find(int page, int size, @NonNull SpanSearchCriteria spanSearchCriteria) {
         log.info("Finding span by '{}'", spanSearchCriteria);
-        return countTotal(spanSearchCriteria).flatMap(total -> find(page, size, spanSearchCriteria, total));
+        return countTotal(spanSearchCriteria).flatMap(total -> find(page, size, spanSearchCriteria, total))
+                .onErrorResume(e -> ErrorUtils.handleMalformedJsonPath(e,
+                        SpanPage.empty(page, sortingFactory.getSortableFields())));
     }
 
     @WithSpan
@@ -2442,7 +2589,8 @@ public class SpanDAO {
                 .buffer(limit > 100 ? limit / 2 : limit)
                 .concatWith(Mono.just(List.of()))
                 .filter(CollectionUtils::isNotEmpty)
-                .flatMap(Flux::fromIterable);
+                .flatMap(Flux::fromIterable)
+                .onErrorResume(ErrorUtils::isMalformedJsonPath, e -> Flux.empty());
     }
 
     private BigDecimal calculateCost(Span span) {
@@ -2504,7 +2652,8 @@ public class SpanDAO {
 
             addSortNeedsWideFlag(template, spanSearchCriteria.sortingFields());
 
-            var orderBySql = sortingQueryBuilder.toOrderBySql(spanSearchCriteria.sortingFields());
+            var orderBySql = sortingQueryBuilder.toOrderBySql(spanSearchCriteria.sortingFields(),
+                    spanColumnsNonNullable() ? SORT_FIELD_MAPPING_END_TIME_SENTINEL : null);
             boolean sortHasFeedbackScores = Optional.ofNullable(orderBySql)
                     .map(sortFields -> sortFields.contains("feedback_scores"))
                     .orElse(false);
@@ -2621,7 +2770,7 @@ public class SpanDAO {
                 .ifPresent(type -> template.add("type", type.toString()));
         Optional.ofNullable(spanSearchCriteria.filters())
                 .ifPresent(filters -> {
-                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.SPAN)
+                    filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.SPAN, spanColumnsNonNullable())
                             .ifPresent(spanFilters -> template.add("filters", spanFilters));
                     filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.FEEDBACK_SCORES)
                             .ifPresent(scoresFilters -> template.add("feedback_scores_filters", scoresFilters));
@@ -2821,7 +2970,8 @@ public class SpanDAO {
                             .singleOrEmpty();
 
                     return StatsMerger.zipAndMerge(spansMono, feedbackMono);
-                }));
+                }))
+                .onErrorResume(e -> ErrorUtils.handleMalformedJsonPath(e, ProjectStats.empty()));
     }
 
     @SuppressWarnings("unchecked")

@@ -92,7 +92,12 @@ describe("buildPromptComparisonTargets", () => {
 
       expect(targets).toEqual([
         { id: "base", label: "Baseline", prompt: "baseline prompt" },
-        { id: "p-1", label: "Parent", prompt: "parent prompt" },
+        {
+          id: "p-1",
+          label: "Parent",
+          caption: "Trial #4",
+          prompt: "parent prompt",
+        },
       ]);
     });
 
@@ -116,9 +121,33 @@ describe("buildPromptComparisonTargets", () => {
       });
 
       expect(targets.map((t) => t.id)).toEqual(["p-b", "p-a"]);
-      expect(targets.map((t) => t.label)).toEqual([
-        "Parent (Trial #3)",
-        "Parent (Trial #2)",
+      // Both keep the plain "Parent" label; the trial tag distinguishes them.
+      expect(targets.map((t) => t.label)).toEqual(["Parent", "Parent"]);
+      expect(targets.map((t) => t.caption)).toEqual(["Trial #3", "Trial #2"]);
+    });
+
+    it("gives an unnumbered (baseline) parent no trial tag", () => {
+      // v2 leaves the baseline unnumbered (OPIK-7589); a caption of
+      // "Trial #null" must never render.
+      const parent = createCandidate({
+        id: "p-base",
+        stepIndex: 1,
+        trialNumber: null,
+      });
+      const candidate = createCandidate({
+        id: "c-2",
+        trialNumber: 1,
+        parentCandidateIds: ["p-base"],
+      });
+
+      const targets = buildPromptComparisonTargets({
+        candidate,
+        candidates: [parent, candidate],
+        getPrompt: promptResolver({ "p-base": "parent", "c-2": "current" }),
+      });
+
+      expect(targets).toEqual([
+        { id: "p-base", label: "Parent", caption: undefined, prompt: "parent" },
       ]);
     });
 
@@ -192,7 +221,12 @@ describe("buildPromptComparisonTargets", () => {
       });
 
       expect(targets).toEqual([
-        { id: "p-1", label: "Parent", prompt: "parent prompt" },
+        {
+          id: "p-1",
+          label: "Parent",
+          caption: "Trial #3",
+          prompt: "parent prompt",
+        },
       ]);
     });
   });

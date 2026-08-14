@@ -6,6 +6,9 @@ set -euo pipefail
 
 # Variables
 DEBUG_MODE=${DEBUG_MODE:-false}
+# opik.sh guardrails flag to append (empty = guardrails off). Set by --guardrails
+# (GPU-capable image, runs on CPU when no GPU) or --guardrails-cpu (slim CPU image).
+GUARDRAILS_OPIK_FLAG=""
 ORIGINAL_COMMAND="$0 $@"
 
 # Local dev defaults to version_2 (matches the bundled config.yml and
@@ -16,11 +19,11 @@ ORIGINAL_COMMAND="$0 $@"
 # version_1) before invoking the script.
 export TOGGLE_FORCE_WORKSPACE_VERSION="${TOGGLE_FORCE_WORKSPACE_VERSION:-version_2}"
 
-# Agent Insights read-only freeform SQL is off by default for local dev (the feature is driven by the Ollie agent,
-# which isn't available locally). Set TOGGLE_AGENT_INSIGHTS_ENABLED=true before invoking to opt in: start_backend
+# Ollie / Agent Insights read-only freeform SQL is off by default for local dev (the feature is driven by the Ollie
+# agent, which isn't available locally). Set TOGGLE_OLLIE_ENABLED=true before invoking to opt in: start_backend
 # then provisions the restricted read-only ClickHouse user/profile/policies and the JVM connects with the feature on.
 # Exported here so this single variable controls both the provisioning gate and the JAR-mode backend (config.yml).
-export TOGGLE_AGENT_INSIGHTS_ENABLED="${TOGGLE_AGENT_INSIGHTS_ENABLED:-false}"
+export TOGGLE_OLLIE_ENABLED="${TOGGLE_OLLIE_ENABLED:-false}"
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
@@ -69,11 +72,16 @@ OLLIE_CONSOLE_PORT="${OLLIE_CONSOLE_PORT:-3333}"
 # unique across worktrees. cost-api's own standalone default is still 8000.
 AI_COST_BACKEND_PORT="${AI_COST_BACKEND_PORT:-$((8400 + PORT_OFFSET))}"
 
+# Guardrails backend host port. Offset per worktree so guardrails-enabled worktrees don't
+# collide on 5000; exported so the docker-compose override (${OPIK_GUARDRAILS_PORT:-5000})
+# and the SDK guidance printed below use the same value.
+export OPIK_GUARDRAILS_PORT="${OPIK_GUARDRAILS_PORT:-$((5000 + PORT_OFFSET))}"
+
 # Comet EM stack (comet-backend + comet-react + single-origin proxy).
-# All EM logic lives in dev-runner-em.sh to keep this script focused; it is inert
+# All EM logic lives in dev-runner-platform.sh to keep this script focused; it is inert
 # unless PLATFORM_ENABLED=true. Sourced here so its EM_* vars and em_* functions
-# are in scope for the thin hooks below (start_em_stack, em_print_status, …).
-source "$SCRIPT_DIR/dev-runner-em.sh"
+# are in scope for the thin hooks below (start_platform_stack, platform_print_status, …).
+source "$SCRIPT_DIR/dev-runner-platform.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -157,7 +165,7 @@ find_jar_files() {
     while IFS= read -r -d '' jar; do
         jar_files+=("$jar")
     done < <(find target -maxdepth 1 -type f -name 'opik-backend-*.jar' ! -name '*original*' ! -name '*sources*' ! -name '*javadoc*' -print0)
-    
+
     if [ "${#jar_files[@]}" -eq 0 ]; then
         return 1  # No JAR files found
     elif [ "${#jar_files[@]}" -eq 1 ]; then
@@ -168,25 +176,36 @@ find_jar_files() {
         for jar in "${jar_files[@]}"; do
             log_warning "  - $jar"
         done
-        
+
         # Sort JAR files by version (assuming semantic versioning in filename)
         JAR_FILE=$(printf '%s\n' "${jar_files[@]}" | sort -V | tail -n 1)
         log_warning "Automatically selected JAR with highest version: $JAR_FILE"
         log_warning "To use a different JAR, clean up target/ directory and rebuild"
     fi
-    
+
     return 0  # JAR file found and selected
+}
+
+# Invoke opik.sh, appending the guardrails flag when guardrails are enabled.
+# The dev modes (--local-be / --local-be-fe) already force port mapping, so the
+# guardrails backend is published on http://localhost:${OPIK_GUARDRAILS_PORT:-5000}.
+run_opik_sh() {
+    if [ -n "$GUARDRAILS_OPIK_FLAG" ]; then
+        ./opik.sh "$@" "$GUARDRAILS_OPIK_FLAG"
+    else
+        ./opik.sh "$@"
+    fi
 }
 
 # Function to start Docker services (infrastructure or infrastructure + frontend or etc.)
 # Args: $1 = mode (--infra or --local-be or etc.)
 start_docker_services() {
     local mode="$1"
-    
+
     log_info "Starting Docker services..."
     cd "$PROJECT_ROOT" || { log_error "Project root directory not found"; exit 1; }
-    
-    if ./opik.sh "$mode"; then
+
+    if run_opik_sh "$mode"; then
         log_success "Docker services started successfully"
     else
         log_error "Failed to start Docker services"
@@ -198,11 +217,11 @@ start_docker_services() {
 # Args: $1 = mode (--infra or --local-be or etc.)
 stop_docker_services() {
     local mode="$1"
-    
+
     log_info "Stopping Docker services..."
     cd "$PROJECT_ROOT" || { log_error "Project root directory not found"; exit 1; }
-    
-    if ./opik.sh "$mode" --stop; then
+
+    if run_opik_sh "$mode" --stop; then
         log_success "Docker services stopped"
     else
         log_warning "Failed to stop some Docker services"
@@ -213,9 +232,9 @@ stop_docker_services() {
 # Args: $1 = mode (--infra or --local-be or etc.)
 verify_docker_services() {
     local mode="$1"
-    
+
     cd "$PROJECT_ROOT" || { log_error "Project root directory not found"; exit 1; }
-    ./opik.sh "$mode" --verify >/dev/null 2>&1
+    run_opik_sh "$mode" --verify >/dev/null 2>&1
     return $?
 }
 
@@ -746,7 +765,7 @@ start_cost_api_local() {
     # tell whether the running instance has AUTH_ENABLED=true, so a reused
     # OSS-mode instance would fail org-scoped /ai-spend/* requests. Start our own.
     if cost_api_healthy; then
-        if em_stack_enabled; then
+        if platform_stack_enabled; then
             log_warning "cost-api already healthy on port ${AI_COST_BACKEND_PORT}, but EM mode needs AUTH_ENABLED=true — not reusing it (start our own; will warn if the port is taken)"
         else
             log_success "cost-api is already healthy on port ${AI_COST_BACKEND_PORT} — reusing existing instance"
@@ -769,12 +788,12 @@ start_cost_api_local() {
 
     # Point cost-api at the dev-runner's ClickHouse + MySQL (host-published
     # ports, opik/opik). In platform (EM) mode, cost-api targets local comet-backend
-    # (the React service on EM_BACKEND_PORT) and delegates auth to it (cookie /
+    # (the React service on PLATFORM_BACKEND_PORT) and delegates auth to it (cookie /
     # API-key), so org-scoped endpoints resolve the real org. In OSS mode there is
     # no platform to delegate to, so keep auth off and pin to the default workspace.
     local cost_api_auth="false"
-    if em_stack_enabled; then
-        export PLATFORM_BASE_URL="http://localhost:${EM_BACKEND_PORT}"
+    if platform_stack_enabled; then
+        export PLATFORM_BASE_URL="http://localhost:${PLATFORM_BACKEND_PORT}"
         cost_api_auth="true"
     fi
     (
@@ -782,8 +801,10 @@ start_cost_api_local() {
         AUTH_ENABLED="$cost_api_auth" \
         CLICKHOUSE_HOST=localhost CLICKHOUSE_PORT="$CLICKHOUSE_HTTP_PORT" \
         CLICKHOUSE_DATABASE=opik CLICKHOUSE_USER=opik CLICKHOUSE_PASSWORD=opik \
-        MYSQL_HOST=localhost MYSQL_PORT="$MYSQL_PORT" \
-        MYSQL_DATABASE=opik MYSQL_USER=opik MYSQL_PASSWORD=opik \
+        OPIK_DB_HOST=localhost OPIK_DB_PORT="$MYSQL_PORT" \
+        OPIK_DB_NAME=opik OPIK_DB_USERNAME=opik OPIK_DB_PASSWORD=opik \
+        AI_COST_DB_HOST=localhost AI_COST_DB_PORT="$MYSQL_PORT" \
+        AI_COST_DB_NAME=opik AI_COST_DB_USERNAME=opik AI_COST_DB_PASSWORD=opik \
         PORT="$AI_COST_BACKEND_PORT" \
         nohup uv run uvicorn cost_api.main:app --host 0.0.0.0 --port "$AI_COST_BACKEND_PORT" \
             > "$COST_API_LOG_FILE" 2>&1 &
@@ -827,7 +848,10 @@ stop_cost_api_local() {
     if [ -f "$COST_API_PID_FILE" ]; then
         local cost_api_pid
         cost_api_pid=$(cat "$COST_API_PID_FILE")
-        if kill -0 "$cost_api_pid" 2>/dev/null; then
+        # A negative value would make `kill` signal a whole process group, so anything
+        # that is not a plain decimal PID is treated as no process at all.
+        case "$cost_api_pid" in ''|*[!0-9]*) cost_api_pid="" ;; esac
+        if [ -n "$cost_api_pid" ] && kill -0 "$cost_api_pid" 2>/dev/null; then
             log_info "Stopping cost-api (PID: $cost_api_pid)..."
             # `uv run` spawns the uvicorn worker as a child; snapshot the
             # descendant tree before killing the parent so we can chase it down.
@@ -851,6 +875,40 @@ stop_cost_api_local() {
 
     rm -f "$COST_API_PID_FILE" "$COST_API_REPO_PATH_FILE"
     log_success "cost-api stopped"
+}
+
+# Bounce only cost-api, leaving the rest of the stack running. Goes through the same
+# start path as a full run, so its env, ports and auth mode can't drift from what
+# dev-runner would otherwise set. Combine with the modifier flags as usual, e.g.
+# `--platform-enabled --cost-api-restart`.
+cost_api_managed_alive() {
+    [ -f "$COST_API_PID_FILE" ] || return 1
+    local pid
+    pid=$(cat "$COST_API_PID_FILE")
+    case "$pid" in ''|*[!0-9]*) return 1 ;; esac
+    kill -0 "$pid" 2>/dev/null
+}
+
+restart_cost_api_only() {
+    if ! cost_api_enabled; then
+        log_error "cost-api is not configured: AI_COST_BACKEND_PATH is empty and no sibling ai-cost-backend checkout was found"
+        return 1
+    fi
+
+    log_info "=== Restarting cost-api (leaving the rest of the stack up) ==="
+
+    # Liveness, not just the file: with a PID file left over from a dead process and
+    # something healthy on the port, stop_cost_api_local would clean up the file
+    # without killing anything and start_cost_api_local would adopt that instance --
+    # reporting a restart that never happened.
+    if cost_api_healthy && ! cost_api_managed_alive; then
+        log_error "cost-api on port ${AI_COST_BACKEND_PORT} was not started by this dev-runner, so it cannot be stopped here"
+        log_error "Stop it where you started it, then re-run this command"
+        return 1
+    fi
+
+    stop_cost_api_local
+    start_cost_api_local
 }
 
 display_cost_api_process_status() {
@@ -899,11 +957,11 @@ start_backend() {
     # read-only ClickHouse user (via the shared script also used by the docker-compose backend container) and export
     # its credentials so the locally-launched backend connects as that user. Default off: behavior unchanged. The
     # script runs against the docker-compose ClickHouse on localhost:${ANALYTICS_DB_PORT} exported just above.
-    if [ "${TOGGLE_AGENT_INSIGHTS_ENABLED}" = "true" ]; then
+    if [ "${TOGGLE_OLLIE_ENABLED}" = "true" ]; then
         export ANALYTICS_DB_READ_ONLY_FREEFORM_SQL_USER="${ANALYTICS_DB_READ_ONLY_FREEFORM_SQL_USER:-comet_readonly_freeform_sql_user}"
         export ANALYTICS_DB_READ_ONLY_FREEFORM_SQL_PASS="${ANALYTICS_DB_READ_ONLY_FREEFORM_SQL_PASS:-opik}"
         bash "$BACKEND_DIR/provision_agent_insights_readonly_user.sh"
-        log_debug "  TOGGLE_AGENT_INSIGHTS_ENABLED=true (read-only CH user: ${ANALYTICS_DB_READ_ONLY_FREEFORM_SQL_USER})"
+        log_debug "  TOGGLE_OLLIE_ENABLED=true (read-only CH user: ${ANALYTICS_DB_READ_ONLY_FREEFORM_SQL_USER})"
     fi
 
     log_debug "Backend configured with:"
@@ -962,8 +1020,9 @@ start_backend() {
 }
 
 # Symlink the sibling private ai-spend plugin's source into the FE plugins
-# folder (gitignored) so it compiles as part of opik. Removes the link when no
-# sibling is present, so toggling the checkout is clean.
+# folder (gitignored) so it compiles as part of opik. Links whenever a sibling
+# checkout is present; removes the link when it is not, so toggling the checkout
+# is clean.
 sync_ai_spend_plugin_link() {
     if [ -n "${AI_SPEND_PLUGIN_PATH:-}" ] && [ -d "${AI_SPEND_PLUGIN_PATH}/src" ]; then
         ln -sfn "${AI_SPEND_PLUGIN_PATH}/src" "$AI_SPEND_PLUGIN_LINK"
@@ -1029,8 +1088,10 @@ start_frontend() {
         log_warning "OLLIE_REPO_PATH is set but ollie healthz is not responding; sidebar disabled"
     fi
 
-    # Link the private ai-spend plugin (if checked out) and activate it
-    # alongside the local development plugin.
+    # Link + activate the private ai-spend plugin whenever a sibling checkout is
+    # present (sync_ai_spend_plugin_link only creates the link then). This sets
+    # the OSS-mode plugin list; comet mode overrides it in
+    # platform_prepare_opik_comet_env below (same present-link condition).
     sync_ai_spend_plugin_link
     if [ -L "$AI_SPEND_PLUGIN_LINK" ]; then
         export VITE_FE_PLUGINS="development,ai-spend"
@@ -1048,11 +1109,11 @@ start_frontend() {
     fi
 
     # Opik FE runs in comet mode when the platform stack is enabled; see
-    # em_prepare_opik_comet_env / em_opik_vite_args in dev-runner-em.sh
-    # (em_opik_vite_args is empty when the platform stack is off).
+    # platform_prepare_opik_comet_env / platform_opik_vite_args in dev-runner-platform.sh
+    # (platform_opik_vite_args is empty when the platform stack is off).
     log_debug "Starting frontend with: npm run start"
-    em_prepare_opik_comet_env
-    CI=true nohup npm run start $(em_opik_vite_args) > "$FRONTEND_LOG_FILE" 2>&1 &
+    platform_prepare_opik_comet_env
+    CI=true nohup npm run start $(platform_opik_vite_args) > "$FRONTEND_LOG_FILE" 2>&1 &
     FRONTEND_PID=$!
     echo "$FRONTEND_PID" > "$FRONTEND_PID_FILE"
 
@@ -1086,7 +1147,7 @@ stop_backend() {
                 fi
                 sleep 1
             done
-            
+
             # Force kill if still running
             if kill -0 "$BACKEND_PID" 2>/dev/null; then
                 log_warning "Force killing backend..."
@@ -1120,7 +1181,7 @@ stop_frontend() {
                 fi
                 sleep 1
             done
-            
+
             # Force kill if still running (kill main process and find children)
             if kill -0 "$FRONTEND_PID" 2>/dev/null; then
                 log_warning "Force killing frontend..."
@@ -1148,13 +1209,13 @@ stop_frontend() {
     # Clean up any orphaned processes by looking for processes with our frontend directory path
     # This is safe and compatible across Unix systems
     ORPHANED_PIDS=$(pgrep -f "$FRONTEND_DIR" 2>/dev/null || true)
-    
+
     if [ -n "$ORPHANED_PIDS" ]; then
         for PID in $ORPHANED_PIDS; do
             if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
                 # Get process info to verify it's actually our frontend process
                 PROCESS_INFO=$(ps -p "$PID" -o comm,args --no-headers 2>/dev/null || true)
-                
+
                 # Only kill if it's an npm/node/vite process AND contains our directory path
                 if [[ "$PROCESS_INFO" =~ (npm|node|vite) ]] && [[ "$PROCESS_INFO" =~ $FRONTEND_DIR ]]; then
                     log_warning "Cleaning up orphaned process: PID $PID - $PROCESS_INFO"
@@ -1229,6 +1290,14 @@ show_access_information() {
         echo "  export OPIK_URL_OVERRIDE='${ui_url}/api'"
     fi
     echo "  export OPIK_WORKSPACE='default'"
+
+    if [ -n "$GUARDRAILS_OPIK_FLAG" ]; then
+        echo ""
+        echo -e "${BLUE}Guardrails enabled:${NC}"
+        echo "  # The guardrails backend is published directly on port ${OPIK_GUARDRAILS_PORT:-5000}."
+        echo "  export OPIK_GUARDRAILS_URL_OVERRIDE='http://localhost:${OPIK_GUARDRAILS_PORT:-5000}'"
+    fi
+
     echo ""
     echo -e "${YELLOW}Important Notes:${NC}"
 
@@ -1247,11 +1316,11 @@ show_access_information() {
 
 create_demo_data() {
     local mode="$1"
-    
+
     log_info "Creating demo data..."
     cd "$PROJECT_ROOT" || { log_error "Project root directory not found"; return 1; }
 
-    if ./opik.sh "$mode" --demo-data; then
+    if run_opik_sh "$mode" --demo-data; then
         log_success "Demo data created"
         return 0
     else
@@ -1300,7 +1369,7 @@ verify_services() {
     if cost_api_enabled || [ -f "$COST_API_PID_FILE" ]; then
         display_cost_api_process_status || true
     fi
-    em_print_status
+    platform_print_status
 
     # Show access information if all services are running
     if [ "$docker_services_running" = true ] && [ "$backend_running" = true ] && [ "$frontend_running" = true ]; then
@@ -1317,7 +1386,7 @@ verify_services() {
     if cost_api_enabled || [ -f "$COST_API_LOG_FILE" ]; then
         echo "  cost-api Process: tail -f $COST_API_LOG_FILE"
     fi
-    em_print_logs
+    platform_print_logs
 }
 
 # Function to verify BE-only services
@@ -1366,8 +1435,8 @@ start_services() {
     run_db_migrations
     log_info "Step 3/6: Starting backend process..."
     # Platform auth for the Opik backend — full FE+BE flows only (BE-only can't host
-    # the EM stack). Set before start_backend so its JVM inherits it. See dev-runner-em.sh.
-    em_prepare_opik_backend_auth_env
+    # the EM stack). Set before start_backend so its JVM inherits it. See dev-runner-platform.sh.
+    platform_prepare_opik_backend_auth_env
     start_backend
     log_info "Step 4/6: Starting ollie-assist (optional)..."
     start_ollie_local || log_warning "ollie-assist startup failed; continuing without sidebar"
@@ -1376,7 +1445,7 @@ start_services() {
     log_info "Step 6/6: Creating demo data..."
     create_demo_data "--local-be-fe"
     # Comet EM stack (comet-backend + comet-react), gated on PLATFORM_ENABLED.
-    start_em_stack
+    start_platform_stack
     log_success "=== Start Complete ==="
     verify_services
 }
@@ -1387,7 +1456,7 @@ stop_services() {
     log_info "Step 1/4: Stopping frontend..."
     stop_frontend
     # Comet EM stack first — it depends on Opik's infra (MySQL/Redis/MinIO).
-    stop_em_stack
+    stop_platform_stack
     log_info "Step 2/4: Stopping ollie-assist (if running)..."
     stop_ollie_local
     stop_cost_api_local
@@ -1416,7 +1485,7 @@ restart_services() {
     log_info "Step 1/12: Stopping frontend process..."
     stop_frontend
     # Comet EM stack first — it depends on Opik's infra (MySQL/Redis/MinIO).
-    stop_em_stack
+    stop_platform_stack
     log_info "Step 2/12: Stopping ollie-assist (if running)..."
     stop_ollie_local
     stop_cost_api_local
@@ -1430,11 +1499,11 @@ restart_services() {
     build_backend
     log_info "Step 7/12: Building frontend..."
     build_frontend
-    em_restart_build
+    platform_restart_build
     log_info "Step 8/12: Running DB migrations..."
     run_db_migrations
     log_info "Step 9/12: Starting backend process..."
-    em_prepare_opik_backend_auth_env
+    platform_prepare_opik_backend_auth_env
     start_backend
     log_info "Step 10/12: Starting ollie-assist (optional)..."
     start_ollie_local || log_warning "ollie-assist startup failed; continuing without sidebar"
@@ -1443,7 +1512,7 @@ restart_services() {
     log_info "Step 12/12: Creating demo data..."
     create_demo_data "--local-be-fe"
     # Comet EM stack (comet-backend + comet-react), gated on PLATFORM_ENABLED.
-    start_em_stack
+    start_platform_stack
     log_success "=== Restart Complete ==="
     verify_services
 }
@@ -1451,7 +1520,7 @@ restart_services() {
 # Function for quick restart (only rebuild backend, keep infrastructure running)
 quick_restart_services() {
     log_info "=== Quick Restart (Backend Only) ==="
-    
+
     # Check if infrastructure is running, start it if not
     log_info "Step 1/7: Checking Docker infrastructure..."
     if verify_local_be_fe; then
@@ -1462,7 +1531,7 @@ quick_restart_services() {
         log_info "Running DB migrations..."
         run_db_migrations
     fi
-    
+
     log_info "Step 2/8: Stopping frontend..."
     stop_frontend
     log_info "Step 3/8: Stopping backend..."
@@ -1470,7 +1539,7 @@ quick_restart_services() {
     log_info "Step 4/8: Building backend..."
     build_backend
     log_info "Step 5/8: Starting backend..."
-    em_prepare_opik_backend_auth_env
+    platform_prepare_opik_backend_auth_env
     start_backend
 
     log_info "Step 6/8: Ensuring ollie-assist is running (optional)..."
@@ -1487,9 +1556,9 @@ quick_restart_services() {
     local package_json="$FRONTEND_DIR/package.json"
     local package_lock="$FRONTEND_DIR/package-lock.json"
     local node_modules="$FRONTEND_DIR/node_modules"
-    
+
     local needs_install=false
-    
+
     if [ ! -d "$node_modules" ]; then
         log_info "node_modules not found, will install dependencies"
         needs_install=true
@@ -1502,7 +1571,7 @@ quick_restart_services() {
     else
         log_info "Frontend dependencies are up to date, skipping npm install"
     fi
-    
+
     if [ "$needs_install" = true ]; then
         build_frontend
     fi
@@ -1511,7 +1580,7 @@ quick_restart_services() {
     start_frontend
     # Ensure the Comet EM stack is up (gated). Builds the jar only if missing;
     # use --restart or --platform-build to force a comet-backend rebuild.
-    start_em_stack
+    start_platform_stack
     log_success "=== Quick Restart Complete ==="
     verify_services
 }
@@ -1578,6 +1647,8 @@ show_usage() {
     echo "  --stop          - Stop Docker infrastructure, and BE and FE processes"
     echo "  --restart       - Stop, build, and start Docker infrastructure, and BE and FE processes (DEFAULT IF NO OPTIONS PROVIDED)"
     echo "  --quick-restart - Quick restart: stop BE/FE, rebuild BE only, start BE/FE (keeps infrastructure running)"
+    echo "  --cost-api-restart - Opik-team only: restart just cost-api (ai-cost-backend), leaving"
+    echo "                     everything else running. Combine with --platform-enabled to keep auth on."
     echo "  --verify        - Verify status of Docker infrastructure, and BE and FE processes"
     echo ""
     echo "BE-Only Mode (BE as process, FE in Docker):"
@@ -1594,6 +1665,13 @@ show_usage() {
     echo "  --lint-be        - Lint backend code"
     echo "  --lint-fe        - Lint frontend code"
     echo "  --debug          - Enable debug mode (meant to be combined with other flags)"
+    echo "  --guardrails     - Also run guardrails (default GPU-capable image; runs on CPU"
+    echo "                     when no GPU is present). Combine with an action, e.g."
+    echo "                     '--guardrails --restart'"
+    echo "  --guardrails-cpu - Also run guardrails using the slim CPU-only image (no GPU required)"
+    echo "  --platform-enabled - Opik-team only: also run the Comet Platform stack (combine"
+    echo "                     with an action, e.g. '--platform-enabled --restart'; alone it"
+    echo "                     implies the default restart). Same as PLATFORM_ENABLED=true."
     echo "  --logs           - Show logs for backend and frontend services"
     echo "  --help           - Show this help message"
     echo ""
@@ -1617,7 +1695,11 @@ show_usage() {
     echo "                          cost-api (uv, auth disabled) against the dev ClickHouse+MySQL"
     echo "                          and serves the AI Spend pages. Opt out: AI_COST_BACKEND_PATH="
     echo "  AI_COST_BACKEND_PORT=<n> - Override cost-api port (default: 8400 + worktree offset)"
-    em_print_usage
+    echo "  AI_SPEND_PLUGIN_PATH=<p> - Opik-team only: path to a local opik-plugin-ai-spend"
+    echo "                          checkout. Auto-detected as a sibling; when present the"
+    echo "                          ai-spend FE plugin (Cost Intelligence pages) is compiled"
+    echo "                          in. Opt out with AI_SPEND_PLUGIN_PATH= (empty string)."
+    platform_print_usage
 }
 
 # Function to handle unknown options
@@ -1686,10 +1768,10 @@ check_port_collisions() {
         ports_to_check+=("$AI_COST_BACKEND_PORT:cost-api")
     fi
 
-    # EM stack ports (empty unless PLATFORM_ENABLED); see em_collision_ports.
+    # EM stack ports (empty unless PLATFORM_ENABLED); see platform_collision_ports.
     while IFS= read -r _em_port; do
         [ -n "$_em_port" ] && ports_to_check+=("$_em_port")
-    done < <(em_collision_ports)
+    done < <(platform_collision_ports)
 
     log_info "Checking for port collisions..."
 
@@ -1730,6 +1812,24 @@ while [[ $# -gt 0 ]]; do
       DEBUG_MODE=true
       shift # Remove --debug from arguments
       ;;
+    --platform-enabled|--platform_enabled)
+      # Modifier flag (like --debug): opt into the Comet Platform stack, then
+      # fall through to whatever action follows (default: restart). Equivalent to
+      # the PLATFORM_ENABLED=true env var; platform_stack_enabled reads this at runtime.
+      PLATFORM_ENABLED=true
+      shift
+      ;;
+    --guardrails)
+      # Modifier flag (like --debug): also run guardrails using the default
+      # GPU-capable image (runs on CPU when no GPU is present).
+      GUARDRAILS_OPIK_FLAG="--guardrails"
+      shift
+      ;;
+    --guardrails-cpu)
+      # Modifier flag: also run guardrails using the slim CPU-only image.
+      GUARDRAILS_OPIK_FLAG="--guardrails-cpu"
+      shift
+      ;;
     *)
       ARGS+=("$1") # Keep other arguments
       shift
@@ -1758,7 +1858,7 @@ case "${1:-}" in
         build_frontend
         ;;
     "--platform-build")
-        em_build || exit 1
+        platform_build || exit 1
         ;;
     "--migrate")
         migrate_services
@@ -1774,6 +1874,9 @@ case "${1:-}" in
         ;;
     "--quick-restart")
         quick_restart_services
+        ;;
+    "--cost-api-restart")
+        restart_cost_api_only || exit 1
         ;;
     "--verify")
         verify_services

@@ -14,8 +14,14 @@ import i18next from "i18next";
 export type PromptComparisonTarget = {
   /** Stable id of the target candidate (used as the Select value). */
   id: string;
-  /** Human-readable label, e.g. "Baseline" or "Parent (Trial #3)". */
+  /** Human-readable label, e.g. "Baseline" or "Parent". */
   label: string;
+  /**
+   * Optional muted caption shown as a tag beside the label, e.g. "Trial #2".
+   * Parent targets carry their trial number here so the picker can render it
+   * as a secondary tag (and so multiple parents stay distinguishable).
+   */
+  caption?: string;
   /** The prompt to diff the current prompt against. */
   prompt: unknown;
 };
@@ -31,8 +37,9 @@ export type ComparisonCandidate = {
   stepIndex: number;
   /** Ids of the candidates this one was derived from. */
   parentCandidateIds: string[];
-  /** 1-indexed trial number, used to label parent targets. */
-  trialNumber: number;
+  /** 1-indexed trial number, used to label parent targets. `null` for the
+   *  baseline, which is not a trial and carries no number (OPIK-7589). */
+  trialNumber: number | null;
 };
 
 export const BASELINE_TARGET_LABEL = "Baseline";
@@ -43,13 +50,13 @@ export const getBaselineTargetLabel = (): string =>
 export const getParentTargetLabel = (): string => i18next.t("codeDiff.parent");
 
 /**
- * A candidate usually has a single parent, shown simply as "Parent" (matching
- * the Figma design). Evolutionary crossover can produce multiple parents, so we
- * disambiguate those by trial number — otherwise the dropdown would list two
- * identical "Parent" options.
+ * Parent targets are labelled simply "Parent" and carry their trial number as
+ * a caption tag (e.g. "Trial #2"). The caption both matches the design and
+ * keeps the rare multi-parent (crossover) case distinguishable — otherwise the
+ * picker would list two identical "Parent" options.
  */
-export const buildParentTargetLabel = (trialNumber: number): string =>
-  i18next.t("codeDiff.parentTrial", { trialNumber });
+export const buildTrialTag = (trialNumber: number): string =>
+  `Trial #${trialNumber}`;
 
 type BuildTargetsParams<T extends ComparisonCandidate> = {
   /** The candidate whose prompt is being compared. */
@@ -82,12 +89,12 @@ export const buildPromptComparisonTargets = <T extends ComparisonCandidate>({
   const targets: PromptComparisonTarget[] = [];
   const seen = new Set<string>();
 
-  const pushTarget = (target: T, label: string) => {
+  const pushTarget = (target: T, label: string, caption?: string) => {
     if (target.id === candidate.id || seen.has(target.id)) return;
     const prompt = getPrompt(target);
     if (prompt === null || prompt === undefined) return;
     seen.add(target.id);
-    targets.push({ id: target.id, label, prompt });
+    targets.push({ id: target.id, label, caption, prompt });
   };
 
   const baseline = candidates.find((c) => c.stepIndex === 0);
@@ -95,15 +102,16 @@ export const buildPromptComparisonTargets = <T extends ComparisonCandidate>({
     pushTarget(baseline, getBaselineTargetLabel());
   }
 
-  const hasMultipleParents = candidate.parentCandidateIds.length > 1;
   candidate.parentCandidateIds.forEach((parentId) => {
     const parent = byId.get(parentId);
     if (parent) {
+      // An unnumbered parent is the baseline; it gets no "Trial #N" caption.
       pushTarget(
         parent,
-        hasMultipleParents
-          ? buildParentTargetLabel(parent.trialNumber)
-          : getParentTargetLabel(),
+        getParentTargetLabel(),
+        parent.trialNumber == null
+          ? undefined
+          : buildTrialTag(parent.trialNumber),
       );
     }
   });

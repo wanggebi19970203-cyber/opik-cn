@@ -199,7 +199,7 @@ public class OptimizationsResource {
             @ApiResponse(responseCode = "204", description = "无内容")})
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
     public Response updateOptimizationsById(@PathParam("id") UUID id,
-            @RequestBody(content = @Content(schema = @Schema(implementation = OptimizationUpdate.class))) @NotNull OptimizationUpdate request) {
+            @RequestBody(content = @Content(schema = @Schema(implementation = OptimizationUpdate.class))) @NotNull @Valid OptimizationUpdate request) {
         log.info("Update optimization with id '{}', with request '{}'", id, request);
 
         optimizationService.update(id, request)
@@ -212,16 +212,6 @@ public class OptimizationsResource {
     }
 
     // ==================== Studio 端点 ====================
-
-    @GET
-    @Path("/studio/{id}/cancel")
-    @Operation(operationId = "cancelStudioOptimizations", summary = "取消Studio优化", description = "根据ID取消Studio优化", responses = {
-            @ApiResponse(responseCode = "501", description = "未实现")})
-    @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
-    public Response cancelStudioOptimization(@PathParam("id") UUID id) {
-        log.info("Cancel Studio optimization endpoint called for id '{}' - not yet implemented", id);
-        return Response.status(Response.Status.NOT_IMPLEMENTED).build();
-    }
 
     @GET
     @Path("/studio/{id}/logs")

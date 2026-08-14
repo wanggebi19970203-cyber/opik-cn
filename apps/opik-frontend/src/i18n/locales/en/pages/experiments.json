@@ -159,7 +159,7 @@
     "generatingNewCandidate": "Generating new candidate...",
     "selectScores": "Select scores",
     "idCopiedToClipboard": "ID successfully copied to clipboard",
-    "bestCandidate": "Best candidate",
+    "bestCandidate": "Best trial",
     "experimentsCountLabel": "{{count}} experiments",
     "description": "Description",
     "dataLabel": "Data",

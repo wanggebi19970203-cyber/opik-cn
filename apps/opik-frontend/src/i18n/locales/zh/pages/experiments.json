@@ -159,7 +159,7 @@
     "generatingNewCandidate": "正在生成新候选...",
     "selectScores": "选择评分",
     "idCopiedToClipboard": "ID 已成功复制到剪贴板",
-    "bestCandidate": "最佳候选",
+    "bestCandidate": "最佳试验",
     "experimentsCountLabel": "{{count}} 个实验",
     "description": "描述",
     "dataLabel": "数据",

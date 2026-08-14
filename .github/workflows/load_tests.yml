@@ -30,12 +30,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9.0.0
 
       - name: Run latest Opik server
         env:
@@ -57,12 +60,12 @@ jobs:
       - name: Install Opik SDK
         run: |
           cd ${{ github.workspace }}/sdks/python
-          pip install .
+          uv pip install --system .
 
       - name: Install Python SDK load-test requirements
         run: |
           cd ${{ github.workspace }}/tests_load/suite/python_sdk
-          pip install -r requirements.txt
+          uv pip install --system -r requirements.txt
 
       - name: Run Python SDK load tests
         # -n 2 + --dist=worksteal runs two scenarios in parallel at a time.

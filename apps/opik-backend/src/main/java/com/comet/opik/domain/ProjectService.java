@@ -78,6 +78,8 @@ public interface ProjectService {
 
     List<Project> findByIds(String workspaceId, Set<UUID> ids);
 
+    Mono<Set<UUID>> findProjectIdsByWorkspace();
+
     List<Project> findByNames(String workspaceId, List<String> names);
 
     Optional<UUID> findProjectIdByName(String workspaceId, String projectName);
@@ -378,7 +380,8 @@ class ProjectServiceImpl implements ProjectService {
 
     private Map<UUID, Map<String, Object>> getProjectStats(List<UUID> projectIds, String workspaceId,
             ProjectCriteria criteria) {
-        return traceDAO.getStatsByProjectIds(projectIds, workspaceId, criteria.filters())
+        return traceDAO.getStatsByProjectIds(projectIds, workspaceId, criteria.filters(), criteria.fromTime(),
+                criteria.toTime())
                 .map(stats -> stats.entrySet().stream()
                         .map(entry -> {
                             Map<String, Object> statsMap = entry.getValue().stats()
@@ -399,6 +402,15 @@ class ProjectServiceImpl implements ProjectService {
         }
 
         return template.inTransaction(READ_ONLY, handle -> handle.attach(ProjectDAO.class).findByIds(ids, workspaceId));
+    }
+
+    @Override
+    public Mono<Set<UUID>> findProjectIdsByWorkspace() {
+        return Mono.deferContextual(ctx -> Mono
+                .fromCallable(() -> template.inTransaction(READ_ONLY,
+                        handle -> handle.attach(ProjectDAO.class)
+                                .findIdsByWorkspaceId(ctx.get(RequestContext.WORKSPACE_ID))))
+                .subscribeOn(Schedulers.boundedElastic()));
     }
 
     @Override

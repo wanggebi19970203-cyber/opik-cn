@@ -145,7 +145,7 @@
       "newOpikExperience": "新版 Opik 体验",
       "actionsMenu": "操作菜单",
       "organizations": "组织",
-      "manageWorkspaces": "管理工作区",
+      "manageWorkspaces": "查看全部工作区",
       "user": "用户",
       "emailsOrUsernames": "邮箱或用户名",
       "template": "模板",
@@ -639,7 +639,7 @@
     },
     "shared": {
       "experiments": "{{count}} 个实验",
-      "navigateTo": "导航到{{resource}}：{{name}}",
+      "navigateTo": "前往{{resource}}：{{name}}",
       "save": "保存",
       "cancel": "取消",
       "resetToDefault": "重置为默认值",
@@ -1036,7 +1036,7 @@
       "taskIntroductionRequired": "任务介绍为必填项",
       "evaluationCriteriaRequired": "评估标准为必填项",
       "pythonCodeRequired": "Python 代码为必填项",
-      "testSuiteRequired": "测试套件为必填项",
+      "testSuiteRequired": "数据源为必填项",
       "atLeastOneMessageRequired": "至少需要一条消息",
       "allMessagesMustHaveContent": "所有消息必须包含内容",
       "modelRequired": "模型为必填项",
@@ -1241,9 +1241,9 @@
       "failedToLoadTraces": "加载实验追踪用于评估失败。"
     },
     "optimization": {
-      "trialNumber": "试验 #",
+      "trialNumber": "试验",
       "step": "步骤",
-      "runtimeCost": "运行成本",
+      "runtimeCost": "优化成本",
       "latency": "延迟",
       "trialItems": "试验项目"
     },

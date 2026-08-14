@@ -28,6 +28,7 @@ type FiltersButtonProps<TColumnData> = {
   disabled?: boolean;
   deferOnChange?: boolean;
   tooltip?: string;
+  className?: string;
 };
 
 const FiltersButton = <TColumnData,>({
@@ -42,6 +43,7 @@ const FiltersButton = <TColumnData,>({
   disabled,
   deferOnChange = false,
   tooltip,
+  className,
 }: FiltersButtonProps<TColumnData>) => {
   const { t } = useTranslation("common");
   const { t: tActions } = useTranslation("actions");
@@ -97,7 +99,10 @@ const FiltersButton = <TColumnData,>({
           <Button
             variant={variant}
             size={buttonSize}
-            className={cn(isIconLayout && validFilters.length && "w-auto px-3")}
+            className={cn(
+              isIconLayout && validFilters.length && "w-auto px-3",
+              className,
+            )}
             disabled={disabled}
           >
             <FilterIcon

@@ -61,6 +61,10 @@ const useTraceDeleteMutation = () => {
       }
     },
     onSettled: (data, error, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ["traces-statistic"] });
+      queryClient.invalidateQueries({ queryKey: ["spans-statistic"] });
+      queryClient.invalidateQueries({ queryKey: ["project-kpi-cards"] });
+
       if (context) {
         queryClient.invalidateQueries({
           queryKey: [SPANS_KEY, { projectId: variables.projectId }],

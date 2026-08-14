@@ -523,34 +523,29 @@ export class WorkspacesClient {
     }
 
     /**
-     * Determines whether the workspace should use Opik V1 (legacy workspace-scoped)
-     * or Opik V2 (project-first) navigation. The backend is the single authority for this
-     * determination, clients must never derive the version themselves.
+     * Gets a span metric time series aggregated across the workspace. When project_ids is empty, all projects in the workspace are included; otherwise only the given projects.
      *
-     * Determination logic (priority order):
-     * 1) V2 workspace allowlist (TOGGLE_V2_WORKSPACE_ALLOWLIST)
-     * 2) Feature flag override (TOGGLE_FORCE_WORKSPACE_VERSION)
-     * 3) Auth one-way V2 gate (authenticated mode only)
-     * 4) Version 1 entity check (entities without project_id)
-     * 5) Fallback on failure
-     *
-     * In unauthenticated mode (authentication.enabled=false), auth steps are skipped.
-     * Called by the frontend on workspace load.
-     *
+     * @param {OpikApi.WorkspaceSpanMetricRequest} request
      * @param {WorkspacesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link OpikApi.BadRequestError}
+     *
      * @example
-     *     await client.workspaces.getWorkspaceVersion()
+     *     await client.workspaces.getWorkspaceSpanMetric({
+     *         intervalStart: new Date("2024-01-15T09:30:00.000Z")
+     *     })
      */
-    public getWorkspaceVersion(
+    public getWorkspaceSpanMetric(
+        request: OpikApi.WorkspaceSpanMetricRequest,
         requestOptions?: WorkspacesClient.RequestOptions,
-    ): core.HttpResponsePromise<OpikApi.WorkspaceVersion> {
-        return core.HttpResponsePromise.fromPromise(this.__getWorkspaceVersion(requestOptions));
+    ): core.HttpResponsePromise<OpikApi.WorkspaceMetricResponse> {
+        return core.HttpResponsePromise.fromPromise(this.__getWorkspaceSpanMetric(request, requestOptions));
     }
 
-    private async __getWorkspaceVersion(
+    private async __getWorkspaceSpanMetric(
+        request: OpikApi.WorkspaceSpanMetricRequest,
         requestOptions?: WorkspacesClient.RequestOptions,
-    ): Promise<core.WithRawResponse<OpikApi.WorkspaceVersion>> {
+    ): Promise<core.WithRawResponse<OpikApi.WorkspaceMetricResponse>> {
         const _headers: core.Fetcher.Args["headers"] = mergeHeaders(
             this._options?.headers,
             mergeOnlyDefinedHeaders({
@@ -563,11 +558,17 @@ export class WorkspacesClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.OpikApiEnvironment.Default,
-                "v1/private/workspaces/versions",
+                "v1/private/workspaces/metrics/spans",
             ),
-            method: "GET",
+            method: "POST",
             headers: _headers,
+            contentType: "application/json",
             queryParameters: requestOptions?.queryParams,
+            requestType: "json",
+            body: serializers.WorkspaceSpanMetricRequest.jsonOrThrow(request, {
+                unrecognizedObjectKeys: "strip",
+                omitUndefined: true,
+            }),
             timeoutMs: (requestOptions?.timeoutInSeconds ?? this._options?.timeoutInSeconds ?? 60) * 1000,
             maxRetries: requestOptions?.maxRetries ?? this._options?.maxRetries,
             withCredentials: true,
@@ -577,7 +578,7 @@ export class WorkspacesClient {
         });
         if (_response.ok) {
             return {
-                data: serializers.WorkspaceVersion.parseOrThrow(_response.body, {
+                data: serializers.WorkspaceMetricResponse.parseOrThrow(_response.body, {
                     unrecognizedObjectKeys: "passthrough",
                     allowUnrecognizedUnionMembers: true,
                     allowUnrecognizedEnumValues: true,
@@ -589,18 +590,109 @@ export class WorkspacesClient {
         }
 
         if (_response.error.reason === "status-code") {
-            throw new errors.OpikApiError({
-                statusCode: _response.error.statusCode,
-                body: _response.error.body,
-                rawResponse: _response.rawResponse,
-            });
+            switch (_response.error.statusCode) {
+                case 400:
+                    throw new OpikApi.BadRequestError(_response.error.body, _response.rawResponse);
+                default:
+                    throw new errors.OpikApiError({
+                        statusCode: _response.error.statusCode,
+                        body: _response.error.body,
+                        rawResponse: _response.rawResponse,
+                    });
+            }
         }
 
         return handleNonStatusCodeError(
             _response.error,
             _response.rawResponse,
-            "GET",
-            "/v1/private/workspaces/versions",
+            "POST",
+            "/v1/private/workspaces/metrics/spans",
+        );
+    }
+
+    /**
+     * Gets the distinct span token usage key names aggregated across the workspace. When project_ids is empty, all projects in the workspace are included; otherwise only the given projects.
+     *
+     * @param {OpikApi.WorkspaceTokenUsageNamesRequest} request
+     * @param {WorkspacesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link OpikApi.BadRequestError}
+     *
+     * @example
+     *     await client.workspaces.getWorkspaceTokenUsageNames()
+     */
+    public getWorkspaceTokenUsageNames(
+        request: OpikApi.WorkspaceTokenUsageNamesRequest = {},
+        requestOptions?: WorkspacesClient.RequestOptions,
+    ): core.HttpResponsePromise<OpikApi.TokenUsageNames> {
+        return core.HttpResponsePromise.fromPromise(this.__getWorkspaceTokenUsageNames(request, requestOptions));
+    }
+
+    private async __getWorkspaceTokenUsageNames(
+        request: OpikApi.WorkspaceTokenUsageNamesRequest = {},
+        requestOptions?: WorkspacesClient.RequestOptions,
+    ): Promise<core.WithRawResponse<OpikApi.TokenUsageNames>> {
+        const _headers: core.Fetcher.Args["headers"] = mergeHeaders(
+            this._options?.headers,
+            mergeOnlyDefinedHeaders({
+                "Comet-Workspace": requestOptions?.workspaceName ?? this._options?.workspaceName,
+            }),
+            requestOptions?.headers,
+        );
+        const _response = await core.fetcher({
+            url: core.url.join(
+                (await core.Supplier.get(this._options.baseUrl)) ??
+                    (await core.Supplier.get(this._options.environment)) ??
+                    environments.OpikApiEnvironment.Default,
+                "v1/private/workspaces/token-usage/names",
+            ),
+            method: "POST",
+            headers: _headers,
+            contentType: "application/json",
+            queryParameters: requestOptions?.queryParams,
+            requestType: "json",
+            body: serializers.WorkspaceTokenUsageNamesRequest.jsonOrThrow(request, {
+                unrecognizedObjectKeys: "strip",
+                omitUndefined: true,
+            }),
+            timeoutMs: (requestOptions?.timeoutInSeconds ?? this._options?.timeoutInSeconds ?? 60) * 1000,
+            maxRetries: requestOptions?.maxRetries ?? this._options?.maxRetries,
+            withCredentials: true,
+            abortSignal: requestOptions?.abortSignal,
+            fetchFn: this._options?.fetch,
+            logging: this._options.logging,
+        });
+        if (_response.ok) {
+            return {
+                data: serializers.TokenUsageNames.parseOrThrow(_response.body, {
+                    unrecognizedObjectKeys: "passthrough",
+                    allowUnrecognizedUnionMembers: true,
+                    allowUnrecognizedEnumValues: true,
+                    skipValidation: true,
+                    breadcrumbsPrefix: ["response"],
+                }),
+                rawResponse: _response.rawResponse,
+            };
+        }
+
+        if (_response.error.reason === "status-code") {
+            switch (_response.error.statusCode) {
+                case 400:
+                    throw new OpikApi.BadRequestError(_response.error.body, _response.rawResponse);
+                default:
+                    throw new errors.OpikApiError({
+                        statusCode: _response.error.statusCode,
+                        body: _response.error.body,
+                        rawResponse: _response.rawResponse,
+                    });
+            }
+        }
+
+        return handleNonStatusCodeError(
+            _response.error,
+            _response.rawResponse,
+            "POST",
+            "/v1/private/workspaces/token-usage/names",
         );
     }
 

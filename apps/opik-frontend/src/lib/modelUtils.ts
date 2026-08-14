@@ -147,6 +147,7 @@ const OPENAI_EFFORT_LABELS: Record<ReasoningEffort, string> = {
   medium: i18next.t("common:modelUtils.medium"),
   high: i18next.t("common:modelUtils.highDefault"),
   xhigh: i18next.t("common:modelUtils.xhigh"),
+  max: "Max",
 };
 
 export const supportsOpenAIReasoningEffort = (

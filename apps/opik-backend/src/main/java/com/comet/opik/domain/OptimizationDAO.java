@@ -1,6 +1,7 @@
 package com.comet.opik.domain;
 
 import com.comet.opik.api.DatasetLastOptimizationCreated;
+import com.comet.opik.api.ErrorInfo;
 import com.comet.opik.api.Optimization;
 import com.comet.opik.api.OptimizationStatus;
 import com.comet.opik.api.OptimizationStudioConfig;
@@ -8,6 +9,7 @@ import com.comet.opik.api.OptimizationUpdate;
 import com.comet.opik.domain.filter.FilterQueryBuilder;
 import com.comet.opik.domain.filter.FilterStrategy;
 import com.comet.opik.infrastructure.FilterUtils;
+import com.comet.opik.utils.ClickHouseDateTimeFormat;
 import com.comet.opik.utils.JsonUtils;
 import com.comet.opik.utils.template.TemplateUtils;
 import com.google.common.base.Function;
@@ -16,9 +18,11 @@ import com.google.inject.ImplementedBy;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
+import io.r2dbc.spi.Row;
 import io.r2dbc.spi.Statement;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +34,16 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.comet.opik.api.ErrorInfo.ERROR_INFO_TYPE;
 import static com.comet.opik.domain.AsyncContextUtils.bindUserNameAndWorkspaceContextToStream;
 import static com.comet.opik.domain.AsyncContextUtils.bindWorkspaceIdToFlux;
 import static com.comet.opik.domain.ExperimentDAO.getFeedbackScores;
@@ -53,6 +60,15 @@ public interface OptimizationDAO {
         }
     }
 
+    /**
+     * A studio optimization whose latest status is non-terminal and older than the reaper threshold,
+     * i.e. stuck because the worker never advanced it. Carries {@code workspaceId} so the reconciler
+     * can seed the workspace context required to update the row and finalize its logs (OPIK-7159).
+     */
+    @Builder(toBuilder = true)
+    record StalledOptimization(@NonNull UUID id, @NonNull String workspaceId, @NonNull OptimizationStatus status) {
+    }
+
     Mono<Void> upsert(Optimization optimization);
 
     Mono<Optimization> getById(UUID id);
@@ -63,7 +79,15 @@ public interface OptimizationDAO {
 
     Flux<DatasetLastOptimizationCreated> getMostRecentCreatedExperimentFromDatasets(Set<UUID> datasetIds);
 
-    Mono<Long> update(UUID id, OptimizationUpdate update);
+    /**
+     * @param clearErrorInfo blanks the {@code error_info} column instead of carrying it forward. True only
+     *                       when a worker report supersedes a failure the platform detected rather than the
+     *                       worker reporting it: the recorded reason described a run that turned out to be
+     *                       alive, and nothing else ever clears that column. Deliberately not an overload —
+     *                       a two-argument convenience form would let a caller (or a test stub) miss this
+     *                       decision silently.
+     */
+    Mono<Long> update(UUID id, OptimizationUpdate update, boolean clearErrorInfo);
 
     Mono<Long> updateDatasetDeleted(Set<UUID> datasetIds);
 
@@ -71,16 +95,36 @@ public interface OptimizationDAO {
 
     Flux<OptimizationSummary> findOptimizationSummaryByDatasetIds(Set<UUID> datasetIds);
 
-    Mono<Boolean> hasVersion1Optimizations(String workspaceId, List<String> demoOptimizationNames);
+    Flux<StalledOptimization> findStalledStudioOptimizations(Duration initializedTimeout, Duration runningTimeout,
+            Duration runningHardTimeout, Duration lookbackMargin, int limit, int candidateScanFactor);
 
-    Flux<EligibleOptimizationWorkspace> findEligibleOptimizationWorkspaces(
-            Set<String> excludedWorkspaceIds, int limit);
+    Mono<Boolean> hasRecentStudioActivity(UUID optimizationId, Duration window);
 
-    Flux<OrphanOptimization> findOrphanOptimizationsInWorkspace(String workspaceId);
+    /**
+     * Latest status + row timestamp of a run, straight off the {@code optimizations} table. The reaper's
+     * pre-update re-read MUST use this instead of {@link #getById} (the full {@code FIND} with its
+     * experiment/trace/score joins): the reaper only needs these two fields, and its liveness decision
+     * must stay decoupled from {@code FIND}'s mapping of related data — {@code FIND} used to silently
+     * drop a run whose trial item referenced a still-unfinished trace (exactly the state a worker killed
+     * mid-trial leaves behind; found by OPIK-7459 e2e, fixed in {@code FIND}'s NaN guards), and an empty
+     * re-read made the reaper skip that run on every cycle, resurrecting the eternal spinner this job
+     * exists to prevent. The bare read keeps any future {@code FIND} regression from ever re-breaking
+     * the reaper.
+     */
+    @Builder(toBuilder = true)
+    record OptimizationStatusSnapshot(@NonNull OptimizationStatus status, @NonNull Instant lastUpdatedAt,
+            @NonNull Instant startedAt) {
+    }
 
-    Flux<OptimizationProjectMapping> computeOptimizationProjectMappingViaExperiments(Set<UUID> optimizationIds);
+    Mono<OptimizationStatusSnapshot> getStatusSnapshotById(UUID id);
 
-    Mono<Long> batchSetProjectId(Set<UUID> optimizationIds, UUID projectId);
+    /**
+     * The optimization row alone — no experiment/trace/score joins, so the aggregate fields
+     * ({@code numTrials}, scores, durations, costs) are left null. Fallback for write paths in case
+     * {@link #getById}'s full {@code FIND} ever fails to map the run again (see
+     * {@link #getStatusSnapshotById}): a status update must never be blocked by related data.
+     */
+    Mono<Optimization> getRowById(UUID id);
 }
 
 @Singleton
@@ -88,138 +132,248 @@ public interface OptimizationDAO {
 @Slf4j
 class OptimizationDAOImpl implements OptimizationDAO {
 
-    private static final String HAS_VERSION1_OPTIMIZATIONS = """
-            SELECT 1 FROM optimizations
-            WHERE workspace_id = :workspace_id AND project_id = ''
-            AND name NOT IN :demo_optimization_names
-            LIMIT 1
-            SETTINGS log_comment = '<log_comment>'""";
-
     /**
-     * 返回至少有一个孤立优化的工作区，按数量从小到大排序。
-     * 当优化的最新行的 {@code project_id = ''} 时，该优化被视为孤立——通过
-     * {@code GROUP BY id + argMax(project_id, last_updated_at)} 对 {@code ReplacingMergeTree}
-     * 版本进行去重。演示名称和环境排除的工作区在数据库层面过滤，因此服务层只遍历
-     * 可以实际迁移的工作区。与 D1 的 {@code FIND_ELIGIBLE_EXPERIMENT_WORKSPACES} 结构一致。
+     * Studio runs whose latest row version is stuck in a non-terminal status past the reaper threshold
+     * (OPIK-7159 / OPIK-7459). Selects on either "no liveness" or "past the hard ceiling"; see
+     * {@code OptimizationStalledReaperJob} for what those two mean and why both exist.
+     *
+     * <p>Liveness is the newest of the row's {@code last_updated_at}, the latest trial experiment's
+     * {@code created_at} and the latest experiment item's {@code created_at}. {@code last_updated_at}
+     * advances only on a status change, so the other two are what keep a healthy long run alive: one trial
+     * evaluates up to {@code OPTSTUDIO_DATASET_SAMPLES} items and can run for hours, so trial-creation
+     * alone would false-positive mid-trial. Because the {@code HAVING} already requires the row timestamp
+     * to be past the threshold, liveness reduces to the {@code active_optimizations} anti-join.
+     *
+     * <p>Things the SQL will not tell you, and that break the query if changed:
+     * <ul>
+     * <li>The status/timeout predicates must stay in {@code HAVING} — above the dedup, out of the
+     * {@code WHERE}. In the {@code WHERE} they reference an aggregate and ClickHouse raises
+     * {@code ILLEGAL_AGGREGATION}; above the dedup is also what stops a run being selected off a stale
+     * version after it reached a terminal status.</li>
+     * <li>The nested {@code (workspace_id, experiment_id) IN (SELECT ... FROM candidate_trials)} is
+     * load-bearing. The outer {@code IN} already makes it redundant for correctness, but it is the only
+     * thing keeping the item probe from scanning every recent {@code experiment_items} row in the
+     * deployment. Do not simplify it away.</li>
+     * <li>ClickHouse inlines {@code WITH} subqueries rather than materialising them, so a CTE referenced
+     * N times is evaluated N times. One tick aggregates {@code optimizations} 3x, scans
+     * {@code experiments} 2x and {@code experiment_items} 1x. Kept deliberately: bounded by the id sets
+     * below, the duplicated work is a rounding error against a 5-minute cadence.</li>
+     * <li>Both probes are scoped by <em>id sets</em>, not by a time floor: {@code experiments} by
+     * {@code (workspace_id, optimization_id) IN candidates} (resolved through
+     * {@code idx_experiments_optimization_id}, migration 000069) and {@code experiment_items} by
+     * {@code (workspace_id, experiment_id) IN candidate_trials}, which is the primary-key prefix. The
+     * {@code created_at} comparisons are residual predicates — they are the liveness semantics, and cost
+     * nothing once the read is bounded by the key. The tuple form is also what keeps both probes
+     * workspace-precise.</li>
+     * <li>No {@code experiments.type} filter, unlike {@link #FIND}'s {@code experiment_candidates}, which
+     * excludes {@code 'mini-batch'} / {@code 'mutation'}. That exclusion is presentational; here the only
+     * question is whether the worker is still writing anything. GEPA spends much of a run recording
+     * {@code 'mini-batch'} evaluations, so filtering them would make a healthy run look silent — and drop
+     * the item-level signal with them, since items are reached through this scan's ids.</li>
+     * <li>The ceiling reads {@code created_at}, not {@code last_updated_at}: every write to the row
+     * refreshes the latter, so a metadata PATCH or an SDK re-upsert would postpone the backstop forever.
+     * It is {@code argMax(created_at, last_updated_at)} rather than {@code min(created_at)} because old
+     * versions live on in a {@code ReplacingMergeTree} — {@code min} would keep returning the first
+     * attempt's start forever, so a run restarted under an existing id would be born past the ceiling.
+     * See the upsert path in {@code OptimizationService} for the restart reset this enables. Residual
+     * exposure, accepted: for a run created before this branch shipped, the winning version carries a
+     * {@code created_at} that an earlier re-upsert re-stamped forward, so its ceiling starts later than
+     * the real start. That only ever postpones a reap, and it cannot recur once re-upserts preserve the
+     * column.</li>
+     * <li>{@code dataset_id} is out of the {@code GROUP BY} even though it is in the sorting key:
+     * {@code getOrCreateDataset} resolves by dataset <em>name</em>, so a re-upsert naming a different
+     * dataset writes a row the dedup never merges, and grouping by the full key would emit the run twice
+     * with independent statuses — letting the reaper ERROR a live run off a stale half.</li>
+     * <li>The hard-ceiling branch is guarded by {@code latest_status IN ('initialized', 'running')} and
+     * not hoisted to a bare top-level {@code OR}: without the guard every run that merely finished longer
+     * ago than the ceiling becomes a candidate and crowds genuine stalls out of the {@code LIMIT}.</li>
+     * <li>{@code latest_status} and {@code started_at} come out of ONE {@code argMax} over a tuple, not two
+     * over separate columns. {@code last_updated_at} is {@code DateTime64(6)}, so two versions can tie on
+     * it, and two independent {@code argMax} calls are then each free to pick a different physical row —
+     * combining a status from one version with a start instant from another. One aggregate cannot
+     * disagree with itself.</li>
+     * <li>Both {@code ORDER BY}s end in {@code id ASC}. Without a unique final key the sort is
+     * unstable across ties, so the bounded prefix can differ between passes — and a set of tied healthy
+     * rows can keep filling it, get dropped by the activity veto, and starve the stalled runs behind
+     * them indefinitely.</li>
+     * <li>Both {@code ORDER BY}s put hard-capped runs first and only then sort by {@code latest_updated_at}.
+     * Ordering by the timestamp alone looks natural but inverts the priority for exactly the branch that
+     * carries the never-stuck-indefinitely guarantee: a metadata PATCH or an SDK re-upsert refreshes
+     * {@code last_updated_at}, so a zombie run still receiving writes sorts LAST and — unlike a
+     * soft-timeout candidate, which ages into position — never advances. It could then be truncated out
+     * of every pass by the bounds below.</li>
+     * </ul>
      */
-    private static final String FIND_ELIGIBLE_OPTIMIZATION_WORKSPACES = """
-            SELECT
-                workspace_id,
-                count(DISTINCT id) AS optimizations_count
-            FROM (
+    private static final String FIND_STALLED_STUDIO_OPTIMIZATIONS = """
+            WITH candidates AS (
                 SELECT
-                    o.workspace_id AS workspace_id,
-                    o.id AS id
-                FROM optimizations o
-                WHERE o.name NOT IN :demo_optimization_names
-                <if(excluded_workspace_ids)>
-                AND o.workspace_id NOT IN :excluded_workspace_ids
-                <endif>
-                GROUP BY o.workspace_id, o.id
-                HAVING argMax(o.project_id, o.last_updated_at) = ''
+                    workspace_id,
+                    id,
+                    argMax(tuple(status, created_at), last_updated_at).1 AS latest_status,
+                    argMax(tuple(status, created_at), last_updated_at).2 AS started_at,
+                    max(last_updated_at) AS latest_updated_at
+                FROM optimizations
+                WHERE studio_config != ''
+                  AND greaterOrEquals(last_updated_at, subtractSeconds(now64(6), :lookback_seconds))
+                GROUP BY workspace_id, id
+                HAVING (latest_status IN ('initialized', 'running')
+                        AND less(started_at, subtractSeconds(now64(6), :running_hard_timeout_seconds)))
+                    OR (latest_status = 'initialized'
+                        AND less(latest_updated_at, subtractSeconds(now64(6), :initialized_timeout_seconds)))
+                    OR (latest_status = 'running'
+                        AND less(latest_updated_at, subtractSeconds(now64(6), :running_timeout_seconds)))
+                ORDER BY less(started_at, subtractSeconds(now64(6), :running_hard_timeout_seconds)) DESC,
+                         latest_updated_at ASC,
+                         id ASC
+                LIMIT :candidate_limit
+            ), candidate_trials AS (
+                SELECT
+                    workspace_id,
+                    id,
+                    optimization_id,
+                    created_at
+                FROM experiments
+                WHERE (workspace_id, optimization_id) IN (SELECT workspace_id, toString(id) FROM candidates)
+            ), active_optimizations AS (
+                SELECT
+                    workspace_id,
+                    optimization_id
+                FROM candidate_trials
+                WHERE greaterOrEquals(created_at, subtractSeconds(now64(6), :running_timeout_seconds))
+                   OR (workspace_id, id) IN (
+                       SELECT workspace_id, experiment_id
+                       FROM experiment_items
+                       WHERE (workspace_id, experiment_id) IN (SELECT workspace_id, id FROM candidate_trials)
+                         AND greaterOrEquals(created_at, subtractSeconds(now64(6), :running_timeout_seconds))
+                   )
             )
-            GROUP BY workspace_id
-            ORDER BY optimizations_count ASC
+            SELECT
+                id,
+                workspace_id,
+                latest_status AS status
+            FROM candidates
+            WHERE less(started_at, subtractSeconds(now64(6), :running_hard_timeout_seconds))
+               OR (workspace_id, toString(id)) NOT IN (
+                   SELECT workspace_id, optimization_id FROM active_optimizations
+               )
+            ORDER BY less(started_at, subtractSeconds(now64(6), :running_hard_timeout_seconds)) DESC,
+                     latest_updated_at ASC,
+                     id ASC
             LIMIT :limit
             SETTINGS log_comment = '<log_comment>'
             """;
 
     /**
-     * 工作区中的 V1 优化 (id, dataset_id) 对，排除演示数据。服务层需要 {@code dataset_id}
-     * 以便对 Path A（实验）未分类的优化执行 Path B（跨数据库数据集查找），
-     * 无需额外的 ClickHouse 往返。通过 {@code argMax} 对 ReplacingMergeTree 版本去重，
-     * 防止进行中的写入被重复计数。
+     * Latest row version by id, no joins — see {@link #getRowById}. Columns are exactly the set
+     * {@link #mapRowColumns} reads, so a future heavyweight column cannot silently widen this read.
      */
-    private static final String FIND_ORPHAN_OPTIMIZATIONS_IN_WORKSPACE = """
+    private static final String GET_RAW_BY_ID = """
             SELECT
-                id AS optimization_id,
-                argMax(dataset_id, last_updated_at) AS dataset_id
+                id,
+                name,
+                dataset_id,
+                project_id,
+                objective_name,
+                status,
+                metadata,
+                studio_config,
+                error_info,
+                created_at,
+                last_updated_at,
+                created_by,
+                last_updated_by
             FROM optimizations
             WHERE workspace_id = :workspace_id
-            AND name NOT IN :demo_optimization_names
-            GROUP BY id
-            HAVING argMax(project_id, last_updated_at) = ''
+              AND id = :id
+            ORDER BY last_updated_at DESC
+            LIMIT 1
             SETTINGS log_comment = '<log_comment>'
             """;
 
     /**
-     * Path A 推断：对 {@code :optimization_ids} 中的每个孤立优化，返回推断的
-     * {@code project_id}、引用项目的 {@code distinct_project_count}，以及包含在
-     * 每次分配日志条目中的排序 {@code project_breakdown}（{@code projectId=count,...}）。
+     * Bare status/timestamp re-read for the reaper — see {@link #getStatusSnapshotById}. The aliases
+     * deliberately differ from the source column names: {@code max(last_updated_at) AS last_updated_at}
+     * would make the CH 26.3 analyzer resolve the {@code argMax} ordering argument to the alias (an
+     * aggregate inside an aggregate, ILLEGAL_AGGREGATION).
      *
-     * <p>推断读取 {@code experiments.project_id}（由 D1 的实验-项目迁移设置）；
-     * 仍然为 {@code project_id = ''} 的实验会被排除，因此实验全部未迁移的优化
-     * 不会出现在结果中，服务层将其视为无推断（回退到 Path B，最终使用工作区的默认项目）。
-     * 当只有一个引用项目时选择是明确的；有多个时，主导项目胜出，
-     * 按 {@code (count DESC, last_activity DESC, project_id ASC)} 排序，因此重复运行
-     * 会产生相同结果——与数据集迁移 (OPIK-6701) 一致。
-     *
-     * <p>内部的 {@code argMax(project_id, last_updated_at) GROUP BY id} 去除重复的
-     * ReplacingMergeTree 行版本：迁移进行中时，表可能短暂同时保存实验的旧行和更新行，
-     * 取最新版本可防止外层聚合计数两次。
+     * <p>{@code latest_status} and {@code started_at} must resolve to the same values here as in
+     * {@link #FIND_STALLED_STUDIO_OPTIMIZATIONS}, or {@code isPastHardCap} could fire on a run the fleet
+     * query selected on a soft timeout — short-circuiting the activity veto and reporting "exceeded the
+     * maximum running time" for a run that had not. Two things make that hold, and both are load-bearing:
+     * <ul>
+     * <li>Reading off the winning version. The fleet query aggregates over versions inside its lookback
+     * floor and this one over all of them, but a {@code >=} floor cannot drop the version carrying the
+     * maximum {@code last_updated_at}, so both {@code argMax} calls pick the same one. No floor here
+     * deliberately — it would buy nothing and could return an empty result for a run whose row aged past
+     * the window, which the caller cannot distinguish from "no longer stalled".</li>
+     * <li>The same {@code studio_config != ''} predicate. Without it the two aggregate over different
+     * version SETS, not just different windows: prod ClickHouse has no read-your-own-writes, so an SDK
+     * re-upsert that saw an empty {@code existing} writes a newest version with an empty
+     * {@code studio_config}. The fleet query excludes that version and picks an older one; an unfiltered
+     * snapshot would pick it, disagreeing on both fields.</li>
+     * </ul>
      */
-    private static final String COMPUTE_OPTIMIZATION_PROJECT_MAPPING_VIA_EXPERIMENTS = """
-            WITH arraySort(proj -> (-proj.1, -proj.2, proj.3),
-                    groupArray((per_proj_count, per_proj_last_activity_nanos, experiment_project_id))) AS ranked
+    private static final String GET_STATUS_SNAPSHOT = """
             SELECT
-                optimization_id AS optimization_id,
-                length(ranked) AS distinct_project_count,
-                ranked[1].3 AS project_id,
-                arrayStringConcat(
-                    arrayMap(proj -> concat(proj.3, '=', toString(proj.1)), ranked), ','
-                ) AS project_breakdown
-            FROM (
-                SELECT
-                    optimization_id,
-                    experiment_project_id,
-                    count() AS per_proj_count,
-                    toUnixTimestamp64Nano(max(experiment_last_updated_at)) AS per_proj_last_activity_nanos
-                FROM (
-                    SELECT
-                        optimization_id,
-                        argMax(project_id, last_updated_at) AS experiment_project_id,
-                        max(last_updated_at) AS experiment_last_updated_at
-                    FROM experiments
-                    WHERE workspace_id = :workspace_id
-                    AND optimization_id IN :optimization_ids
-                    AND name NOT IN :demo_experiment_names
-                    GROUP BY id, optimization_id
-                    HAVING experiment_project_id != ''
-                )
-                GROUP BY optimization_id, experiment_project_id
-            )
-            GROUP BY optimization_id
+                argMax(tuple(status, created_at), last_updated_at).1 AS latest_status,
+                argMax(tuple(status, created_at), last_updated_at).2 AS started_at,
+                max(last_updated_at) AS latest_updated_at
+            FROM optimizations
+            WHERE workspace_id = :workspace_id
+              AND id = :id
+              AND studio_config != ''
+            GROUP BY id
             SETTINGS log_comment = '<log_comment>'
             """;
 
     /**
-     * 将每个 id 的最新行重新 INSERT，覆盖 {@code project_id}、{@code last_updated_by}
-     * 和 {@code last_updated_at}。使用 {@code SELECT * REPLACE}，因此未来添加到
-     * {@code optimizations} 的任何列都会被自动复制，无需修改此查询的 schema——
-     * 与 D1 的 {@code ExperimentDAO.BATCH_SET_PROJECT_ID} 一致。
-     *
-     * <p>外层的 {@code WHERE project_id = ''} 保证幂等性：已有非空 {@code project_id}
-     * 的优化会被跳过，因此重复运行迁移是安全的。
+     * Single-run, workspace-scoped mirror of the reaper query's liveness probe: did this optimization
+     * write a trial experiment or an experiment item within the window? Used as the pre-update re-read
+     * guard (OPIK-7459) — the fleet-wide reaper query and the ERROR update are not atomic, so a trial or
+     * item landing in between must veto the transition, exactly like the status re-read vetoes a
+     * terminal-status race. Same id-set scoping as the fleet query, one run wide: the {@code trials} CTE
+     * sits behind {@code (workspace_id, optimization_id)} — the workspace prefix of the primary key plus
+     * the {@code minmax} index on {@code optimization_id} (migration 000069) — and the item probe behind
+     * {@code (workspace_id, experiment_id) IN trials}, which is the {@code experiment_items} primary-key
+     * prefix. Neither needs a {@code created_at} index; the timestamps are residual predicates. Scoping
+     * the items by this run's trials, rather than by the workspace alone, is what keeps a busy workspace's
+     * unrelated item traffic out of the scan. As in the fleet query, {@code trials} is inlined twice (its
+     * own {@code FROM} plus the nested item {@code IN}), so {@code experiments} is scanned twice per call;
+     * the call only happens for candidates that are not already past the hard ceiling.
      */
-    private static final String BATCH_SET_PROJECT_ID = """
-            INSERT INTO optimizations
-            SELECT * REPLACE (
-                :user_name AS last_updated_by,
-                now64(9) AS last_updated_at,
-                :project_id AS project_id
-            )
-            FROM (
-                SELECT *
-                FROM optimizations
+    private static final String HAS_RECENT_STUDIO_ACTIVITY = """
+            WITH trials AS (
+                SELECT
+                    workspace_id,
+                    id,
+                    created_at
+                FROM experiments
                 WHERE workspace_id = :workspace_id
-                AND id IN :optimization_ids
-                ORDER BY (workspace_id, dataset_id, id) DESC, last_updated_at DESC
-                LIMIT 1 BY id
+                  AND optimization_id = :optimization_id
             )
-            WHERE project_id = ''
+            SELECT 1
+            FROM trials
+            WHERE greaterOrEquals(created_at, subtractSeconds(now64(6), :window_seconds))
+               OR (workspace_id, id) IN (
+                   SELECT workspace_id, experiment_id
+                   FROM experiment_items
+                   WHERE (workspace_id, experiment_id) IN (SELECT workspace_id, id FROM trials)
+                     AND greaterOrEquals(created_at, subtractSeconds(now64(6), :window_seconds))
+               )
+            LIMIT 1
             SETTINGS log_comment = '<log_comment>'
             """;
 
+    /**
+     * Every cell must stay a plain bound placeholder: this is a {@code FORMAT Values} insert, and any
+     * function expression in a tuple cell ({@code COALESCE}, {@code parseDateTime64BestEffortOrNull},
+     * {@code now64}) trips ClickHouse's fast-path parser — the insert still succeeds, but every row
+     * silently increments {@code system.errors} codes 26 / 27 / 43 / 70 and writes to pod stderr
+     * (OPIK-5694, see {@link ClickHouseDateTimeFormat}). Both {@code DateTime64(9, 'UTC')} timestamps are
+     * therefore formatted in Java via {@link ClickHouseDateTimeFormat#formatNanos}, and the column
+     * DEFAULT that {@code now64()} used to supply is substituted in Java too — {@code Instant.toString()}
+     * would not do, since its {@code T}/{@code Z} form is exactly what the fast path rejects.
+     */
     private static final String UPSERT = """
             INSERT INTO optimizations (
                 id,
@@ -231,9 +385,11 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 status,
                 metadata,
                 studio_config,
+                error_info,
                 created_by,
                 last_updated_by,
-                last_updated_at
+                last_updated_at,
+                created_at
             )
             VALUES (
                 :id,
@@ -245,13 +401,127 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 :status,
                 :metadata,
                 :studio_config,
+                :error_info,
                 :created_by,
                 :last_updated_by,
-                COALESCE(parseDateTime64BestEffortOrNull(:last_updated_at, 6), now64(6))
+                :last_updated_at,
+                :created_at
             )
             ;
             """;
 
+    /**
+     * The queries in this file carry no SQL comments; the reasoning lives here, keyed by CTE name, as it
+     * does in the other DAOs. Keep it that way, and not only for consistency: a line containing only
+     * {@code --} inside a query breaks the r2dbc driver's placeholder scanner
+     * ({@code ClickHouseParameterizedQuery}), which from that line on stops recognising {@code :params}, so
+     * every later one reaches ClickHouse literally and the statement fails with
+     * {@code Code: 62 Syntax error ... :workspace_id} - a 500 on every request, from a comment-only edit.
+     * {@code -- } with any character after the dashes is safe, but a trailing space is one formatter away
+     * from vanishing. Documenting outside the query removes the hazard rather than tiptoeing around it.
+     * <p>
+     * The tagged-cost CTEs ({@code optimization_tagged_trace_ids} onwards) are deliberately duplicated in
+     * {@link #FIND_WITHOUT_EXPERIMENTS} rather than shared through one templated constant: sharing would need a
+     * flag every call site must remember to set, and forgetting it silently double-counts trial spend. The two
+     * copies are held in step by the {@code findAndGetById__*} tests in
+     * {@code OptimizationsResourceTest.GetOptimizerById}, each of which asserts the list and {@code getById}
+     * report the same figure - change one copy and they fail.
+     * <p>
+     * The spans read inside those CTEs dedup on the logical span key {@code (workspace_id, project_id, id)},
+     * reading rows in storage sort-key order so the newest write per key wins. {@code parent_span_id} is
+     * deliberately excluded from both the sort tuple and the {@code LIMIT 1 BY}, matching every other spans
+     * read since OPIK-7750 (#7764). That column is mutable across writes, so ahead of
+     * {@code last_updated_at} in the sort it picks the winner by largest parent rather than newest write, and
+     * inside the grouping a span re-ingested under a different parent survives as two rows and its cost
+     * enters this sum twice. Both halves are pinned by
+     * {@code findAndGetById__whenTaggedSpanIsRewrittenUnderAnotherParent__spendIsChargedOnce}.
+     * <p>
+     * Note the scope in that key: because {@code project_id} is part of it while the aggregation above keys on
+     * {@code trace_id} alone, one span id written under two projects survives the dedup twice and is summed
+     * twice. That exposure is pre-existing and shared with {@code experiment_durations} here and with
+     * {@code ExperimentDAO}; it is deliberately not fixed in this query alone, because deduping only the
+     * tagged half would leave the trial half double-charging and make the two halves of one figure disagree
+     * about what a canonical per-trace cost is. OPIK-7691 covers it across all sites.
+     * <p>
+     * No numeric column this query returns may ever be NaN/Inf: the row mapper reads them as
+     * {@code BigDecimal}, {@code BigDecimal.valueOf(NaN)} throws, and the clickhouse-r2dbc driver
+     * swallows mapper exceptions and silently drops the row — the run then 404s in getById and
+     * vanishes from find. The two float sources are guarded where non-finite values can enter:
+     * {@code duration_p50} (quantiles over zero finished traces yields NaN — the state a worker
+     * killed mid-trial leaves behind, OPIK-7459) and {@code experiment_scores_parsed.value}
+     * (JSON-parsed, so unbounded input). Costs are Decimal and cannot be non-finite.
+     *
+     * <p>The score value is parsed with {@code toFloat64OrNull} rather than {@code CAST(... AS Float64)}:
+     * the column holds raw JSON that older or foreign writers may have shaped differently, and a
+     * non-numeric value in a <em>named</em> entry made {@code CAST} throw {@code CANNOT_PARSE_TEXT},
+     * 500-ing the whole endpoint. {@code toFloat64OrNull} never throws, and
+     * {@code isFinite(NULL)} is NULL — falsy in the {@code WHERE} — so unparseable and non-finite entries
+     * are dropped alike. The result is re-wrapped in {@code assumeNotNull} so the aggregated map stays
+     * {@code Map(String, Float64)}: {@code getScoresAggregation} calls {@code doubleValue()} on each
+     * value, and a nullable map value would reintroduce exactly the swallowed-mapper-exception row loss
+     * this javadoc is about. The {@code WHERE} already guarantees the value is non-null.
+     *
+     * <p><b>{@code optimization_tagged_trace_ids}</b> is the candidate scan: every trace that has ever
+     * carried one of these optimization ids as a tag. Deliberately a superset, because the authoritative
+     * check runs in {@code optimization_tagged_traces} on the latest version of each trace, so a tag
+     * removed by a later update stops counting. There is deliberately no {@code created_at} bound: that
+     * column is not stable across re-writes of an optimization row, and a reset would silently drop
+     * optimizer-internal traces from the total. An optimization with no {@code project_id} predates that
+     * column, so its cost stays trial-only.
+     *
+     * <p>Two things it deliberately does <em>not</em> do, both measured on production rather than reasoned
+     * about. It does not {@code DISTINCT}: the CTE is consumed only as an {@code IN} set, which dedups on
+     * its own, so the distinct pass was pure overhead (list p50 1338 -> 1145 ms, CPU 2198 -> 1910 ms, peak
+     * memory flat). And it no longer bounds {@code project_id} to the optimizations in scope: at
+     * production shape that prune is free either way (534 vs 539 ms, same peak memory), so the
+     * {@code arrayExists} tag test is left as the single condition. Do not replace that test with
+     * {@code hasAny} against a {@code groupArray} of the ids, which measured 22x the latency and 38x the
+     * CPU.
+     *
+     * <p>Note for anyone reasoning about the cost of naming a CTE more than once: ClickHouse evaluates it
+     * <em>per reference</em>, and {@code EXPLAIN} cannot show that, because an {@code IN (SELECT ... FROM
+     * cte)} set is built eagerly and appears only as {@code trace_id in N-element set}. Counting plan
+     * nodes therefore understates the repeats. An isolated probe differing only in reference count went
+     * 2.45 M -> 4.90 M rows and 214 -> 398 MiB.
+     *
+     * <p><b>{@code optimization_tagged_traces}</b> selects traces tagged with the optimization id but
+     * linked to no experiment item: the optimizer-internal LLM calls (GEPA reflection, candidate
+     * generation) whose spend belongs to the run's total even though it belongs to no trial (OPIK-7521).
+     * A trial trace whose {@code experiment_item} row is not visible yet is counted through this branch
+     * rather than through {@code experiment_durations}, and moves over once the link lands; either way it
+     * is counted exactly once, so the ingestion race cannot double-charge a run.
+     *
+     * <p>Its experiment-item exclusion is keyed on {@code (trace, owning optimization)}, not on the trace
+     * alone. It exists to stop a trial trace that also carries its run's id as a tag from being charged
+     * twice, once through {@code experiment_durations} and once here, so it must only fire for the run
+     * that owns the trial. Excluding on {@code trace_id} alone would drop a trace tagged with run X
+     * because it happens to be a trial of run Y, and since the set of experiments in scope differs
+     * between the list (every optimization matching the filters) and {@code getById} (one), the two would
+     * report different totals for the same run. That is why the tuple test sits after the
+     * {@code ARRAY JOIN}, where {@code tag} is available, rather than as a cheaper {@code trace_id}
+     * prefilter in the subquery.
+     *
+     * <p>{@code project_id} is deliberately not projected out of that CTE: it would split one trace into
+     * one row per project it was ever written to, and the cost join keys on {@code trace_id} alone, so
+     * that would charge the same spend twice. One scope-dependence is left in the candidate CTE as a
+     * result: it prunes to the projects of the optimizations in scope, so a trace tagged with run X but
+     * stored in another run's project is found by the list and not by {@code getById}. The optimizer does
+     * not produce that shape, and dropping the project bound would turn the candidate scan
+     * workspace-wide. A dedicated attribution column (OPIK-7691) is what settles it.
+     *
+     * <p><b>{@code optimization_tagged_costs}</b> prunes the spans scan on {@code project_id} because
+     * {@code trace_id} is only the third primary-key column. That project set comes from
+     * {@code optimization_final} rather than from either trace CTE: ClickHouse substitutes CTEs
+     * textually, so naming a trace CTE there would re-run its tags scan. Reading {@code optimizations} is
+     * cheap by comparison, and a superset of the candidate projects is all a prefix prune needs; the
+     * authoritative filter is the {@code trace_id IN} beside it.
+     *
+     * <p>In {@link #FIND_WITHOUT_EXPERIMENTS} the same two trace CTEs appear without the experiment-item
+     * exclusion, which is unnecessary there because that projection is only chosen when nothing in scope
+     * has an experiment, and its final {@code ifNull} yields a non-nullable zero when nothing is
+     * attributed, matching {@code FIND}, where {@code sum()} over an empty group returns 0 rather than
+     * NULL. The {@code ifNull} covers both {@code join_use_nulls} modes.
+     */
     private static final String FIND = """
             WITH optimization_final AS (
                 SELECT
@@ -369,11 +639,12 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 SELECT
                     e.id AS experiment_id,
                     JSON_VALUE(score, '$.name') AS name,
-                    CAST(JSON_VALUE(score, '$.value') AS Float64) AS value
+                    assumeNotNull(toFloat64OrNull(JSON_VALUE(score, '$.value'))) AS value
                 FROM experiments_final AS e
                 ARRAY JOIN JSONExtractArrayRaw(e.experiment_scores) AS score
                 WHERE e.experiment_scores != '' AND e.experiment_scores != '[]'
                   AND length(JSON_VALUE(score, '$.name')) > 0
+                  AND isFinite(toFloat64OrNull(JSON_VALUE(score, '$.value')))
             ), experiment_scores_agg AS (
                 SELECT
                     experiment_id,
@@ -387,8 +658,10 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 SELECT
                     ei.experiment_id,
                     count(DISTINCT ei.trace_id) AS trace_count,
-                    arrayElement(
-                        quantiles(0.5)(t.duration), 1
+                    if(
+                        isFinite(arrayElement(quantiles(0.5)(t.duration), 1)),
+                        arrayElement(quantiles(0.5)(t.duration), 1),
+                        NULL
                     ) AS duration_p50,
                     sum(s.total_estimated_cost) AS total_estimated_cost
                 FROM experiment_items_final ei
@@ -404,13 +677,13 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 LEFT JOIN (
                     SELECT trace_id, sum(total_estimated_cost) AS total_estimated_cost
                     FROM (
-                        SELECT workspace_id, project_id, trace_id, parent_span_id, id, total_estimated_cost, last_updated_at
+                        SELECT workspace_id, project_id, trace_id, id, total_estimated_cost, last_updated_at
                         FROM spans
                         WHERE workspace_id = :workspace_id
                         AND trace_id IN (SELECT trace_id FROM experiment_items_final)
                         AND project_id IN (SELECT DISTINCT project_id FROM traces WHERE workspace_id = :workspace_id AND id IN (SELECT trace_id FROM experiment_items_final))
-                        ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
-                        LIMIT 1 BY workspace_id, project_id, trace_id, parent_span_id, id
+                        ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+                        LIMIT 1 BY workspace_id, project_id, id
                     )
                     GROUP BY trace_id
                 ) AS s ON t.id = s.trace_id
@@ -456,30 +729,79 @@ class OptimizationDAOImpl implements OptimizationDAO {
                     AND ec.optimization_id = ospe.optimization_id
                 LEFT JOIN experiment_durations ed ON ec.experiment_id = ed.experiment_id
                 GROUP BY ec.optimization_id, ec.candidate_id
-            ), best_candidate AS (
+            ), candidate_rollup AS (
                 SELECT
                     optim_id AS optimization_id,
-                    max(weighted_score) AS best_score,
-                    argMax(weighted_duration, weighted_score) AS best_duration,
-                    argMax(per_trace_cost, weighted_score) AS best_cost
-                FROM candidate_metrics
-                WHERE isNotNull(weighted_score)
-                GROUP BY optim_id
-            ), baseline_candidate AS (
-                SELECT
-                    optim_id AS optimization_id,
+                    maxIf(weighted_score, isNotNull(weighted_score)) AS best_score,
+                    argMinIf(weighted_duration, tuple(-weighted_score, earliest_created_at),
+                        isNotNull(weighted_score)) AS best_duration,
+                    argMinIf(per_trace_cost, tuple(-weighted_score, earliest_created_at),
+                        isNotNull(weighted_score)) AS best_cost,
                     argMin(weighted_score, earliest_created_at) AS baseline_score,
                     argMin(weighted_duration, earliest_created_at) AS baseline_duration,
                     argMin(per_trace_cost, earliest_created_at) AS baseline_cost
                 FROM candidate_metrics
                 GROUP BY optim_id
+            ), optimization_tagged_trace_ids AS (
+                SELECT id, project_id
+                FROM traces
+                WHERE workspace_id = :workspace_id
+                AND arrayExists(x -> x IN (SELECT toString(id) FROM optimization_final), tags)
+            ), optimization_tagged_traces AS (
+                SELECT DISTINCT
+                    tag AS optimization_id_str,
+                    trace_id
+                FROM (
+                    SELECT id AS trace_id, project_id, tags
+                    FROM traces
+                    WHERE workspace_id = :workspace_id
+                    AND id IN (SELECT id FROM optimization_tagged_trace_ids)
+                    ORDER BY (workspace_id, project_id, id) DESC, last_updated_at DESC
+                    LIMIT 1 BY workspace_id, project_id, id
+                )
+                ARRAY JOIN tags AS tag
+                WHERE tag IN (SELECT toString(id) FROM optimization_final)
+                AND (toString(trace_id), tag) NOT IN (
+                    SELECT toString(ei.trace_id), ef.optimization_id
+                    FROM experiment_items_final ei
+                    INNER JOIN experiments_final ef ON ei.experiment_id = ef.id
+                )
+            ), optimization_tagged_costs AS (
+                SELECT
+                    ott.optimization_id_str AS optimization_id_str,
+                    sum(s.total_estimated_cost) AS total_estimated_cost
+                FROM optimization_tagged_traces ott
+                INNER JOIN (
+                    SELECT trace_id, sum(total_estimated_cost) AS total_estimated_cost
+                    FROM (
+                        SELECT workspace_id, project_id, trace_id, id, total_estimated_cost, last_updated_at
+                        FROM spans
+                        WHERE workspace_id = :workspace_id
+                        AND project_id IN (SELECT project_id FROM optimization_final WHERE notEmpty(project_id))
+                        AND trace_id IN (SELECT trace_id FROM optimization_tagged_traces)
+                        ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+                        LIMIT 1 BY workspace_id, project_id, id
+                    )
+                    GROUP BY trace_id
+                ) AS s ON s.trace_id = ott.trace_id
+                GROUP BY ott.optimization_id_str
             ), optimization_costs AS (
                 SELECT
-                    ef2.optimization_id AS optimization_id,
-                    sum(ed2.total_estimated_cost) AS total_optimization_cost
-                FROM experiments_final ef2
-                LEFT JOIN experiment_durations ed2 ON ef2.id = ed2.experiment_id
-                GROUP BY ef2.optimization_id
+                    optimization_id,
+                    sum(cost) AS total_optimization_cost
+                FROM (
+                    SELECT
+                        ef2.optimization_id AS optimization_id,
+                        ed2.total_estimated_cost AS cost
+                    FROM experiments_final ef2
+                    LEFT JOIN experiment_durations ed2 ON ef2.id = ed2.experiment_id
+                    UNION ALL
+                    SELECT
+                        otc.optimization_id_str AS optimization_id,
+                        otc.total_estimated_cost AS cost
+                    FROM optimization_tagged_costs otc
+                )
+                GROUP BY optimization_id
             )
             SELECT
                 o.*,
@@ -488,22 +810,147 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 maxMap(fs.feedback_scores) AS feedback_scores,
                 maxMap(es.experiment_scores) AS experiment_scores,
                 any(bc.best_score) AS best_objective_score,
-                any(blc.baseline_score) AS baseline_objective_score,
+                any(bc.baseline_score) AS baseline_objective_score,
                 any(bc.best_duration) AS best_duration,
                 any(bc.best_cost) AS best_cost,
-                any(blc.baseline_duration) AS baseline_duration,
-                any(blc.baseline_cost) AS baseline_cost,
+                any(bc.baseline_duration) AS baseline_duration,
+                any(bc.baseline_cost) AS baseline_cost,
                 any(oc.total_optimization_cost) AS total_optimization_cost
             FROM optimization_final AS o
             LEFT JOIN experiments_final AS e ON o.id = e.optimization_id
             LEFT JOIN feedback_scores_agg AS fs ON e.id = fs.experiment_id
             LEFT JOIN experiment_scores_agg AS es ON e.id = es.experiment_id
-            LEFT JOIN best_candidate AS bc ON o.id = bc.optimization_id
-            LEFT JOIN baseline_candidate AS blc ON o.id = blc.optimization_id
+            LEFT JOIN candidate_rollup AS bc ON o.id = bc.optimization_id
             LEFT JOIN optimization_costs AS oc ON o.id = oc.optimization_id
             GROUP BY o.*
             ORDER BY o.id DESC
             <if(limit)> LIMIT :limit <endif> <if(offset)> OFFSET :offset <endif>
+            ;
+            """;
+
+    /**
+     * Does any optimization in scope have an experiment? Deliberately applies only the direct column filters
+     * and omits the narrowing ones ({@code name}, {@code dataset_deleted}, {@code studio_only}, {@code filters}),
+     * so the optimization set considered here is a superset of {@code optimization_final}. That makes a negative
+     * answer conservative: if this finds nothing, the narrowed set has nothing either.
+     */
+    private static final String HAS_EXPERIMENTS_FOR_DIRECT_FILTERS = """
+            SELECT 1 AS has_experiments
+            FROM experiments
+            WHERE workspace_id = :workspace_id
+            AND optimization_id IN (
+                SELECT id
+                FROM optimizations
+                WHERE workspace_id = :workspace_id
+                <if(dataset_id)>AND dataset_id = :dataset_id <endif>
+                <if(dataset_ids)>AND dataset_id IN :dataset_ids <endif>
+                <if(project_id)>AND project_id = :project_id <endif>
+            )
+            LIMIT 1
+            SETTINGS log_comment = '<log_comment>'
+            ;
+            """;
+
+    /**
+     * The check that selects this projection runs as its own statement, so an experiment inserted between the
+     * two reads leaves the aggregates at these empty-input values for that one response. Reads in this system are
+     * already eventually consistent through replica lag, so this sits inside existing behaviour and self-corrects
+     * on the next request rather than needing a shared read boundary.
+     * <p>
+     * The {@link #FIND} projection for the case where no optimization in scope has an experiment. Every
+     * aggregate in {@link #FIND} except {@code total_optimization_cost} is derived from
+     * {@code experiments_final}, so with no experiments they all collapse to their empty-input values and the
+     * fifteen-CTE pipeline reads nothing useful. The literals below reproduce those values and their exact
+     * declared types.
+     * <p>
+     * {@code total_optimization_cost} is the exception and must be computed for real (OPIK-7521): it also sums
+     * optimizer-internal traces attributed by tag, which exist without any experiment. A run that died during
+     * candidate generation has zero experiments and non-zero spend, and hardcoding a zero here would make the
+     * runs list disagree with the run page - {@link #getById(UUID)} always takes the {@link #FIND} path. The
+     * three CTEs below are {@link #FIND}'s tagged-cost pipeline minus the experiment-item exclusion, which is
+     * unnecessary here because this projection is only chosen when no experiment exists to link a trace to.
+     * Keep them in step with {@link #FIND} - see that field's note on why they are duplicated and which test
+     * fails when they drift.
+     * They read nothing when no optimization in scope carries a {@code project_id}, which is every row written
+     * before that column existed.
+     */
+    private static final String FIND_WITHOUT_EXPERIMENTS = """
+            WITH optimization_final AS (
+                SELECT
+                    *
+                FROM (
+                    SELECT *
+                    FROM optimizations
+                    WHERE workspace_id = :workspace_id
+                    <if(dataset_id)>AND dataset_id = :dataset_id <endif>
+                    <if(dataset_ids)>AND dataset_id IN :dataset_ids <endif>
+                    <if(id)>AND id = :id <endif>
+                    <if(project_id)>AND project_id = :project_id <endif>
+                    ORDER BY (workspace_id, dataset_id, id) DESC, last_updated_at DESC
+                    LIMIT 1 BY workspace_id, dataset_id, id
+                )
+                WHERE 1=1
+                <if(name)>AND ilike(name, CONCAT('%%', :name ,'%%'))<endif>
+                <if(dataset_deleted)>AND dataset_deleted = :dataset_deleted<endif>
+                <if(studio_only)>AND studio_config != ''<endif>
+                <if(filters)>AND <filters><endif>
+            ), optimization_tagged_trace_ids AS (
+                SELECT id, project_id
+                FROM traces
+                WHERE workspace_id = :workspace_id
+                AND arrayExists(x -> x IN (SELECT toString(id) FROM optimization_final), tags)
+            ), optimization_tagged_traces AS (
+                SELECT DISTINCT
+                    tag AS optimization_id_str,
+                    trace_id
+                FROM (
+                    SELECT id AS trace_id, project_id, tags
+                    FROM traces
+                    WHERE workspace_id = :workspace_id
+                    AND id IN (SELECT id FROM optimization_tagged_trace_ids)
+                    ORDER BY (workspace_id, project_id, id) DESC, last_updated_at DESC
+                    LIMIT 1 BY workspace_id, project_id, id
+                )
+                ARRAY JOIN tags AS tag
+                WHERE tag IN (SELECT toString(id) FROM optimization_final)
+            ), optimization_costs AS (
+                SELECT
+                    ott.optimization_id_str AS optimization_id,
+                    sum(s.total_estimated_cost) AS total_optimization_cost
+                FROM optimization_tagged_traces ott
+                INNER JOIN (
+                    SELECT trace_id, sum(total_estimated_cost) AS total_estimated_cost
+                    FROM (
+                        SELECT workspace_id, project_id, trace_id, id, total_estimated_cost, last_updated_at
+                        FROM spans
+                        WHERE workspace_id = :workspace_id
+                        AND project_id IN (SELECT project_id FROM optimization_final WHERE notEmpty(project_id))
+                        AND trace_id IN (SELECT trace_id FROM optimization_tagged_traces)
+                        ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+                        LIMIT 1 BY workspace_id, project_id, id
+                    )
+                    GROUP BY trace_id
+                ) AS s ON s.trace_id = ott.trace_id
+                GROUP BY ott.optimization_id_str
+            )
+            SELECT
+                o.*,
+                o.id as id,
+                toUInt64(0) AS num_trials,
+                CAST(map(), 'Map(String, Float64)') AS feedback_scores,
+                CAST(map(), 'Map(String, Float64)') AS experiment_scores,
+                CAST(NULL, 'Nullable(Float64)') AS best_objective_score,
+                CAST(NULL, 'Nullable(Float64)') AS baseline_objective_score,
+                CAST(NULL, 'Nullable(Float64)') AS best_duration,
+                CAST(NULL, 'Nullable(Decimal(38, 12))') AS best_cost,
+                CAST(NULL, 'Nullable(Float64)') AS baseline_duration,
+                CAST(NULL, 'Nullable(Decimal(38, 12))') AS baseline_cost,
+                CAST(ifNull(oc.total_optimization_cost, toDecimal128(0, 12)), 'Decimal(38, 12)') AS total_optimization_cost
+            FROM optimization_final AS o
+            LEFT JOIN optimization_costs AS oc ON o.id = oc.optimization_id
+            ORDER BY o.id DESC
+            <if(limit)> LIMIT :limit <endif> <if(offset)> OFFSET :offset <endif>
+            SETTINGS log_comment = '<log_comment>'
             ;
             """;
 
@@ -553,7 +1000,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
 
     private static final String UPDATE_BY_ID = """
             INSERT INTO optimizations (
-            	id, dataset_id, name, workspace_id, project_id, objective_name, status, metadata, created_at, created_by, last_updated_by, studio_config
+            	id, dataset_id, name, workspace_id, project_id, objective_name, status, metadata, created_at, created_by, last_updated_by, studio_config, error_info
             )
             SELECT
                 id,
@@ -563,11 +1010,12 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 project_id,
                 objective_name,
                 <if(status)> :status <else> status <endif> as status,
-                metadata,
+                <if(metadata)> :metadata <else> metadata <endif> as metadata,
                 created_at,
                 created_by,
                 :user_name as last_updated_by,
-                studio_config
+                studio_config,
+                <if(clear_error_info)> '' <elseif(error_info)> :error_info <else> error_info <endif> as error_info
             FROM optimizations
             WHERE id = :id
             AND workspace_id = :workspace_id
@@ -578,7 +1026,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
 
     private static final String SET_DATASET_DELETED_TO_TRUE_BY_DATASET_ID = """
             INSERT INTO optimizations (
-            	id, dataset_id, name, workspace_id, project_id, objective_name, status, metadata, created_at, created_by, last_updated_at, last_updated_by, dataset_deleted, studio_config
+            	id, dataset_id, name, workspace_id, project_id, objective_name, status, metadata, created_at, created_by, last_updated_at, last_updated_by, dataset_deleted, studio_config, error_info
             )
             SELECT
                 id,
@@ -594,7 +1042,8 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 last_updated_at,
                 last_updated_by,
                 true as dataset_deleted,
-                studio_config
+                studio_config,
+                error_info
             FROM optimizations
             WHERE workspace_id = :workspace_id
             AND dataset_id IN :dataset_ids
@@ -713,11 +1162,11 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     @Override
-    public Mono<Long> update(@NonNull UUID id, @NonNull OptimizationUpdate update) {
+    public Mono<Long> update(@NonNull UUID id, @NonNull OptimizationUpdate update, boolean clearErrorInfo) {
         log.info("Update optimization by id '{}'", id);
 
         return Mono.from(connectionFactory.create())
-                .flatMapMany(connection -> update(id, update, connection))
+                .flatMapMany(connection -> update(id, update, clearErrorInfo, connection))
                 .flatMap(Result::getRowsUpdated)
                 .reduce(Long::sum)
                 .doFinally(signalType -> {
@@ -746,8 +1195,29 @@ class OptimizationDAOImpl implements OptimizationDAO {
     public Mono<Optimization.OptimizationPage> find(int page, int size,
             @NonNull OptimizationSearchCriteria searchCriteria) {
         return getCount(searchCriteria)
-                .flatMap(totalCount -> find(page, size, totalCount, searchCriteria))
+                .filter(totalCount -> totalCount > 0)
+                .flatMap(totalCount -> hasExperimentsForDirectFilters(searchCriteria)
+                        .flatMap(hasExperiments -> find(page, size, totalCount, searchCriteria, hasExperiments)))
                 .defaultIfEmpty(Optimization.OptimizationPage.empty(page, List.of()));
+    }
+
+    private Mono<Boolean> hasExperimentsForDirectFilters(OptimizationSearchCriteria searchCriteria) {
+        return Mono.from(connectionFactory.create())
+                .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
+                    var template = FilterUtils.getSTWithLogComment(HAS_EXPERIMENTS_FOR_DIRECT_FILTERS,
+                            "has_optimization_experiments", workspaceId, userName, "");
+
+                    bindScopeTemplateParams(template, searchCriteria);
+
+                    Statement statement = connection.createStatement(template.render())
+                            .bind("workspace_id", workspaceId);
+
+                    bindScopeQueryParams(searchCriteria, statement);
+
+                    return Flux.from(statement.execute());
+                }))
+                .flatMap(result -> result.map(row -> row.get("has_experiments", Integer.class)))
+                .hasElements();
     }
 
     @Override
@@ -788,36 +1258,44 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     private Mono<Optimization.OptimizationPage> find(int page, int size, long total,
-            OptimizationSearchCriteria searchCriteria) {
-        var template = TemplateUtils.newST(FIND);
-
-        bindTemplateParams(template, searchCriteria);
-
+            OptimizationSearchCriteria searchCriteria, boolean hasExperiments) {
         var offset = (page - 1) * size;
 
-        template.add("limit", size);
-        template.add("offset", offset);
-
         return Mono.from(connectionFactory.create())
-                .flatMapMany(connection -> {
+                .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
+                    var template = hasExperiments
+                            ? TemplateUtils.newST(FIND)
+                            : FilterUtils.getSTWithLogComment(FIND_WITHOUT_EXPERIMENTS,
+                                    "find_optimizations_without_experiments", workspaceId, userName, "");
+
+                    bindTemplateParams(template, searchCriteria);
+
+                    template.add("limit", size);
+                    template.add("offset", offset);
+
                     Statement statement = connection.createStatement(template.render())
+                            .bind("workspace_id", workspaceId)
                             .bind("limit", size)
                             .bind("offset", offset);
 
-                    bindQueryParams(searchCriteria, statement, true);
+                    // entity_type is only declared by FIND; the fast path omits the feedback-score CTEs that use it,
+                    // and binding a parameter the rendered query does not contain fails the statement.
+                    bindQueryParams(searchCriteria, statement, hasExperiments);
 
-                    return makeFluxContextAware(bindWorkspaceIdToFlux(statement));
-                })
+                    return Flux.from(statement.execute());
+                }))
                 .flatMap(this::mapToDto)
                 .collectList()
                 .map(optimizations -> new Optimization.OptimizationPage(page, optimizations.size(), total,
                         optimizations, List.of()));
     }
 
-    private void bindTemplateParams(ST template, OptimizationSearchCriteria searchCriteria) {
-
-        Optional.ofNullable(searchCriteria.datasetDeleted())
-                .ifPresent(datasetDeleted -> template.add("dataset_deleted", datasetDeleted.toString()));
+    /**
+     * The subset of criteria that select which optimizations are in scope by identity rather than by attribute.
+     * Shared with {@link #HAS_EXPERIMENTS_FOR_DIRECT_FILTERS}, which declares only these placeholders - binding a
+     * parameter the rendered query does not contain fails the statement, so the two must stay in step.
+     */
+    private void bindScopeTemplateParams(ST template, OptimizationSearchCriteria searchCriteria) {
 
         Optional.ofNullable(searchCriteria.datasetId())
                 .ifPresent(datasetId -> template.add("dataset_id", datasetId));
@@ -826,15 +1304,23 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .filter(ids -> !ids.isEmpty())
                 .ifPresent(datasetIds -> template.add("dataset_ids", datasetIds));
 
+        Optional.ofNullable(searchCriteria.projectId())
+                .ifPresent(projectId -> template.add("project_id", projectId));
+    }
+
+    private void bindTemplateParams(ST template, OptimizationSearchCriteria searchCriteria) {
+
+        bindScopeTemplateParams(template, searchCriteria);
+
+        Optional.ofNullable(searchCriteria.datasetDeleted())
+                .ifPresent(datasetDeleted -> template.add("dataset_deleted", datasetDeleted.toString()));
+
         Optional.ofNullable(searchCriteria.name())
                 .ifPresent(name -> template.add("name", name));
 
         Optional.ofNullable(searchCriteria.studioOnly())
                 .filter(Boolean.TRUE::equals)
                 .ifPresent(studioOnly -> template.add("studio_only", "true"));
-
-        Optional.ofNullable(searchCriteria.projectId())
-                .ifPresent(projectId -> template.add("project_id", projectId));
 
         Optional.ofNullable(searchCriteria.filters())
                 .flatMap(filters -> filterQueryBuilder.toAnalyticsDbFilters(filters, FilterStrategy.OPTIMIZATION))
@@ -844,10 +1330,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .ifPresent(entityType -> template.add("entity_type", EntityType.TRACE.getType()));
     }
 
-    private void bindQueryParams(OptimizationSearchCriteria searchCriteria, Statement statement, boolean isFindQuery) {
-
-        Optional.ofNullable(searchCriteria.datasetDeleted())
-                .ifPresent(datasetDeleted -> statement.bind("dataset_deleted", datasetDeleted));
+    private void bindScopeQueryParams(OptimizationSearchCriteria searchCriteria, Statement statement) {
 
         Optional.ofNullable(searchCriteria.datasetId())
                 .ifPresent(datasetId -> statement.bind("dataset_id", datasetId));
@@ -856,11 +1339,19 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .filter(ids -> !ids.isEmpty())
                 .ifPresent(datasetIds -> statement.bind("dataset_ids", datasetIds));
 
-        Optional.ofNullable(searchCriteria.name())
-                .ifPresent(name -> statement.bind("name", name));
-
         Optional.ofNullable(searchCriteria.projectId())
                 .ifPresent(projectId -> statement.bind("project_id", projectId.toString()));
+    }
+
+    private void bindQueryParams(OptimizationSearchCriteria searchCriteria, Statement statement, boolean isFindQuery) {
+
+        bindScopeQueryParams(searchCriteria, statement);
+
+        Optional.ofNullable(searchCriteria.datasetDeleted())
+                .ifPresent(datasetDeleted -> statement.bind("dataset_deleted", datasetDeleted));
+
+        Optional.ofNullable(searchCriteria.name())
+                .ifPresent(name -> statement.bind("name", name));
 
         Optional.ofNullable(searchCriteria.filters())
                 .ifPresent(filters -> filterQueryBuilder.bind(statement, filters, FilterStrategy.OPTIMIZATION));
@@ -880,7 +1371,9 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .bind("project_id", optimization.projectId() != null ? optimization.projectId().toString() : "")
                 .bind("objective_name", optimization.objectiveName())
                 .bind("status", optimization.status().getValue())
-                .bind("metadata", getStringOrDefault(optimization.metadata()));
+                .bind("metadata", getStringOrDefault(optimization.metadata()))
+                .bind("error_info",
+                        optimization.errorInfo() != null ? JsonUtils.writeValueAsString(optimization.errorInfo()) : "");
 
         if (optimization.studioConfig() != null) {
             try {
@@ -894,11 +1387,23 @@ class OptimizationDAOImpl implements OptimizationDAO {
             statement.bindNull("studio_config", String.class);
         }
 
-        if (optimization.lastUpdatedAt() != null) {
-            statement.bind("last_updated_at", optimization.lastUpdatedAt().toString());
-        } else {
-            statement.bindNull("last_updated_at", String.class);
-        }
+        // Both timestamps are bound as canonical ClickHouse literals, with the column DEFAULT that
+        // now64() used to supply substituted here — see the UPSERT javadoc (OPIK-5694). The two columns
+        // have DIFFERENT precision and must be formatted accordingly: migration 000026 narrowed
+        // last_updated_at to DateTime64(6) while created_at stayed at (9). Writing a 9-digit literal into
+        // the (6) column re-trips the FORMAT Values parse path that javadoc exists to avoid; SpanDAO's
+        // last_updated_at binding is the precedent for the micros form.
+        statement.bind("last_updated_at",
+                ClickHouseDateTimeFormat.formatMicros(
+                        optimization.lastUpdatedAt() != null ? optimization.lastUpdatedAt() : Instant.now()));
+
+        // created_at used to be absent from the INSERT, so the column DEFAULT re-stamped it on every
+        // re-upsert: a run's creation time drifted forward, and the stalled-run reaper's hard ceiling
+        // (which is measured from it) could be postponed indefinitely by writes that are not status
+        // changes. The service carries the existing row's value in on re-upsert (OPIK-7459).
+        statement.bind("created_at",
+                ClickHouseDateTimeFormat.formatNanos(
+                        optimization.createdAt() != null ? optimization.createdAt() : Instant.now()));
 
         return makeFluxContextAware((userName, workspaceId) -> {
             log.info("Inserting optimization with id '{}', datasetId '{}', datasetName '{}', workspaceId '{}'",
@@ -917,46 +1422,91 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     private Publisher<Optimization> mapToDto(Result result) {
-        return result.map((row, rowMetadata) -> {
-            OptimizationStudioConfig studioConfig = null;
-            String studioConfigJson = row.get("studio_config", String.class);
-            if (StringUtils.isNotEmpty(studioConfigJson)) {
-                try {
-                    studioConfig = JsonUtils.readValue(studioConfigJson, OptimizationStudioConfig.class);
-                } catch (Exception e) {
-                    log.error("Failed to deserialize studio_config for optimization: '{}'",
-                            row.get("id", UUID.class), e);
-                }
+        return result.map((row, rowMetadata) -> mapRowColumns(row).toBuilder()
+                .feedbackScores(getFeedbackScores(row, "feedback_scores"))
+                .experimentScores(getFeedbackScores(row, "experiment_scores"))
+                .numTrials(row.get("num_trials", Long.class))
+                .baselineObjectiveScore(getFiniteBigDecimal(row, "baseline_objective_score"))
+                .bestObjectiveScore(getFiniteBigDecimal(row, "best_objective_score"))
+                .baselineDuration(getFiniteBigDecimal(row, "baseline_duration"))
+                .bestDuration(getFiniteBigDecimal(row, "best_duration"))
+                .baselineCost(row.get("baseline_cost", BigDecimal.class))
+                .bestCost(row.get("best_cost", BigDecimal.class))
+                .totalOptimizationCost(row.get("total_optimization_cost", BigDecimal.class))
+                .build());
+    }
+
+    /**
+     * Reads a {@code Nullable(Float64)} aggregate as a {@code BigDecimal}, mapping any non-finite value to
+     * {@code null} rather than letting it reach the driver's {@code BigDecimal} conversion.
+     *
+     * <p>This is the mapper-side half of the same defence {@link #FIND} applies in SQL, and it is here
+     * because the mapper is where the failure actually happens and how badly it fails is out of all
+     * proportion to the cause: {@code BigDecimal.valueOf(NaN)} throws {@code NumberFormatException},
+     * clickhouse-r2dbc rethrows it as a misleading {@code NoSuchElementException}, and
+     * {@code ClickHouseResult.map} catches every mapper exception, logs it, and <em>silently drops the
+     * row</em> — so one non-finite cell 404s a whole run and erases it from the paginated list
+     * (OPIK-7459). {@code FIND} guards the two places non-finite values can <em>enter</em>
+     * ({@code duration_p50}, the JSON-parsed score), but the columns read here are <em>derived</em> from
+     * those by the divisions and sums in {@code candidate_metrics}, so any future arithmetic added there
+     * that can overflow to +/-Inf would reopen the same class of bug in the same invisible way. Guarding at
+     * the boundary makes the row-loss mode unreachable regardless of what the query does upstream.
+     *
+     * <p>The finite path deliberately re-reads through {@code BigDecimal.class} instead of converting the
+     * {@code Double} itself, so the value's scale and representation stay byte-identical to what the driver
+     * produced before this guard existed. Both reads hit an already-decoded in-memory cell. Costs are
+     * {@code Decimal} and cannot be non-finite, so they keep the direct read.
+     */
+    private static BigDecimal getFiniteBigDecimal(Row row, String column) {
+        Double value = row.get(column, Double.class);
+        if (value == null || !Double.isFinite(value)) {
+            return null;
+        }
+        return row.get(column, BigDecimal.class);
+    }
+
+    /** Maps the plain {@code optimizations} table columns — everything except FIND's computed aggregates. */
+    private Optimization mapRowColumns(Row row) {
+        OptimizationStudioConfig studioConfig = null;
+        String studioConfigJson = row.get("studio_config", String.class);
+        if (StringUtils.isNotEmpty(studioConfigJson)) {
+            try {
+                studioConfig = JsonUtils.readValue(studioConfigJson, OptimizationStudioConfig.class);
+            } catch (UncheckedIOException e) {
+                log.error("Failed to deserialize studio_config for optimization: '{}'",
+                        row.get("id", UUID.class), e);
             }
+        }
 
-            String projectIdStr = row.get("project_id", String.class);
-            UUID projectId = StringUtils.isNotBlank(projectIdStr) ? UUID.fromString(projectIdStr) : null;
+        ErrorInfo errorInfo = null;
+        String errorInfoJson = row.get("error_info", String.class);
+        if (StringUtils.isNotBlank(errorInfoJson)) {
+            try {
+                errorInfo = JsonUtils.readValue(errorInfoJson, ERROR_INFO_TYPE);
+            } catch (UncheckedIOException e) {
+                log.error("Failed to deserialize error_info for optimization: '{}'",
+                        row.get("id", UUID.class), e);
+            }
+        }
 
-            return Optimization.builder()
-                    .id(row.get("id", UUID.class))
-                    .name(row.get("name", String.class))
-                    .datasetId(row.get("dataset_id", UUID.class))
-                    .projectId(projectId)
-                    .objectiveName(row.get("objective_name", String.class))
-                    .status(OptimizationStatus.fromString(row.get("status", String.class)))
-                    .metadata(getJsonNodeOrDefault(row.get("metadata", String.class)))
-                    .studioConfig(studioConfig)
-                    .createdAt(row.get("created_at", Instant.class))
-                    .lastUpdatedAt(row.get("last_updated_at", Instant.class))
-                    .createdBy(row.get("created_by", String.class))
-                    .lastUpdatedBy(row.get("last_updated_by", String.class))
-                    .feedbackScores(getFeedbackScores(row, "feedback_scores"))
-                    .experimentScores(getFeedbackScores(row, "experiment_scores"))
-                    .numTrials(row.get("num_trials", Long.class))
-                    .baselineObjectiveScore(row.get("baseline_objective_score", BigDecimal.class))
-                    .bestObjectiveScore(row.get("best_objective_score", BigDecimal.class))
-                    .baselineDuration(row.get("baseline_duration", BigDecimal.class))
-                    .bestDuration(row.get("best_duration", BigDecimal.class))
-                    .baselineCost(row.get("baseline_cost", BigDecimal.class))
-                    .bestCost(row.get("best_cost", BigDecimal.class))
-                    .totalOptimizationCost(row.get("total_optimization_cost", BigDecimal.class))
-                    .build();
-        });
+        String projectIdStr = row.get("project_id", String.class);
+        UUID projectId = StringUtils.isNotBlank(projectIdStr) ? UUID.fromString(projectIdStr) : null;
+
+        return Optimization.builder()
+                .id(row.get("id", UUID.class))
+                .name(row.get("name", String.class))
+                .datasetId(row.get("dataset_id", UUID.class))
+                .projectId(projectId)
+                .objectiveName(row.get("objective_name", String.class))
+                .status(OptimizationStatus.fromString(row.get("status", String.class)))
+                .metadata(getJsonNodeOrDefault(row.get("metadata", String.class)))
+                .studioConfig(studioConfig)
+                .errorInfo(errorInfo)
+                .createdAt(row.get("created_at", Instant.class))
+                .lastUpdatedAt(row.get("last_updated_at", Instant.class))
+                .createdBy(row.get("created_by", String.class))
+                .lastUpdatedBy(row.get("last_updated_by", String.class))
+                .build();
     }
 
     private Publisher<DatasetEventInfoHolder> mapDatasetId(Result result) {
@@ -971,10 +1521,11 @@ class OptimizationDAOImpl implements OptimizationDAO {
         return makeFluxContextAware(bindWorkspaceIdToFlux(statement));
     }
 
-    private Flux<? extends Result> update(UUID id, OptimizationUpdate update, Connection connection) {
-        var template = buildUpdateTemplate(update);
+    private Flux<? extends Result> update(UUID id, OptimizationUpdate update, boolean clearErrorInfo,
+            Connection connection) {
+        var template = buildUpdateTemplate(update, clearErrorInfo);
 
-        var statement = createUpdateStatement(id, update, connection, template.render());
+        var statement = createUpdateStatement(id, update, clearErrorInfo, connection, template.render());
 
         return makeFluxContextAware(bindUserNameAndWorkspaceContextToStream(statement));
     }
@@ -986,7 +1537,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
         return makeFluxContextAware(bindWorkspaceIdToFlux(statement));
     }
 
-    private ST buildUpdateTemplate(OptimizationUpdate update) {
+    private ST buildUpdateTemplate(OptimizationUpdate update, boolean clearErrorInfo) {
         var template = TemplateUtils.newST(UPDATE_BY_ID);
 
         Optional.ofNullable(update.name())
@@ -995,10 +1546,24 @@ class OptimizationDAOImpl implements OptimizationDAO {
         Optional.ofNullable(update.status())
                 .ifPresent(status -> template.add("status", status.getValue()));
 
+        if (clearErrorInfo) {
+            template.add("clear_error_info", true);
+        } else {
+            Optional.ofNullable(update.errorInfo())
+                    .ifPresent(errorInfo -> template.add("error_info", errorInfo));
+        }
+
+        // When absent, the SELECT carries the existing metadata column forward untouched. When present,
+        // the update.metadata() is already the FULL merged object (see OptimizationService.update) — a
+        // new ReplacingMergeTree version must carry the complete metadata, never a delta.
+        Optional.ofNullable(update.metadata())
+                .ifPresent(metadata -> template.add("metadata", true));
+
         return template;
     }
 
-    private Statement createUpdateStatement(UUID id, OptimizationUpdate update, Connection connection, String sql) {
+    private Statement createUpdateStatement(UUID id, OptimizationUpdate update, boolean clearErrorInfo,
+            Connection connection, String sql) {
         Statement statement = connection.createStatement(sql);
 
         Optional.ofNullable(update.name())
@@ -1007,124 +1572,111 @@ class OptimizationDAOImpl implements OptimizationDAO {
         Optional.ofNullable(update.status())
                 .ifPresent(status -> statement.bind("status", status.getValue()));
 
+        if (!clearErrorInfo) {
+            Optional.ofNullable(update.errorInfo())
+                    .ifPresent(errorInfo -> statement.bind("error_info", JsonUtils.writeValueAsString(errorInfo)));
+        }
+
+        Optional.ofNullable(update.metadata())
+                .ifPresent(metadata -> statement.bind("metadata", getStringOrDefault(metadata)));
+
         statement.bind("id", id);
 
         return statement;
     }
 
-    /**
-     * 检查是否存在 V1（工作区范围）的优化，排除已知的演示名称。
-     * ClickHouse 字符串比较区分大小写——演示名称的每种已知大小写形式
-     * 必须在 {@link DemoData#OPTIMIZATIONS} 中显式列出。
-     */
     @Override
-    public Mono<Boolean> hasVersion1Optimizations(
-            @NonNull String workspaceId, @NonNull List<String> demoOptimizationNames) {
-        var template = FilterUtils.getSTWithLogComment(HAS_VERSION1_OPTIMIZATIONS,
-                "has_version1_optimizations", workspaceId, "", demoOptimizationNames);
-        return Mono.from(connectionFactory.create())
-                .flatMapMany(connection -> Flux.from(connection.createStatement(template.render())
-                        .bind("workspace_id", workspaceId)
-                        .bind("demo_optimization_names", demoOptimizationNames.toArray(String[]::new))
-                        .execute())
-                        .flatMap(result -> Flux.from(result.map((row, metadata) -> true))))
-                .hasElements();
-    }
-
-    @Override
-    public Flux<EligibleOptimizationWorkspace> findEligibleOptimizationWorkspaces(
-            Set<String> excludedWorkspaceIds, int limit) {
-        var details = "excludedWorkspacesCount=%d, limit=%d"
-                .formatted(CollectionUtils.size(excludedWorkspaceIds), limit);
-        var template = FilterUtils.getSTWithLogComment(FIND_ELIGIBLE_OPTIMIZATION_WORKSPACES,
-                "find_eligible_optimization_workspaces", "", "", details);
-        if (CollectionUtils.isNotEmpty(excludedWorkspaceIds)) {
-            template.add("excluded_workspace_ids", true);
-        }
+    public Flux<StalledOptimization> findStalledStudioOptimizations(@NonNull Duration initializedTimeout,
+            @NonNull Duration runningTimeout, @NonNull Duration runningHardTimeout, @NonNull Duration lookbackMargin,
+            int limit, int candidateScanFactor) {
+        // How far back the query scans (the last_updated_at FLOOR that lets the minmax skip index prune
+        // granules): the largest timeout plus the configured reaper-downtime margin, so in normal operation
+        // the floor is purely a scan bound and never a coverage gap — a run's last status change is only
+        // older than this if the reaper was down longer than the margin, in which case that run is not
+        // reaped (documented tradeoff, review: thiagohora).
+        long lookbackSeconds = Math.max(Math.max(initializedTimeout.toSeconds(), runningTimeout.toSeconds()),
+                runningHardTimeout.toSeconds()) + lookbackMargin.toSeconds();
+        // Bound on the CTE the two liveness probes fan out from. Without it `candidates` is "every
+        // non-terminal studio run whose row has not changed in runningTimeout" — and because
+        // last_updated_at only advances on a status change, that includes every HEALTHY in-flight run
+        // older than the timeout, so the probes' cost would scale with fleet size rather than with
+        // configuration. Deliberately a multiple of the batch size rather than the batch size itself:
+        // the ordering puts the stalest first, and a healthy long run sorts alongside a dead one (that
+        // is the premise of this whole feature), so a bound of exactly `limit` could let live runs
+        // crowd dead ones out of every pass. With the multiplier, starving a dead run needs that many
+        // simultaneously-alive stale runs ahead of it, and alive runs eventually turn terminal and drop
+        // out of the CTE entirely. The multiplier is operator-tunable
+        // (OPTIMIZATION_STALLED_REAPER_CANDIDATE_SCAN_FACTOR) so a deployment can trade probe cost against
+        // the query's reach without a release (review: thiagohora).
+        int candidateLimit = limit * candidateScanFactor;
+        var details = "initializedTimeoutSeconds=%d, runningTimeoutSeconds=%d, runningHardTimeoutSeconds=%d, lookbackSeconds=%d, limit=%d, candidateLimit=%d"
+                .formatted(initializedTimeout.toSeconds(), runningTimeout.toSeconds(),
+                        runningHardTimeout.toSeconds(), lookbackSeconds, limit, candidateLimit);
+        var template = FilterUtils.getSTWithLogComment(FIND_STALLED_STUDIO_OPTIMIZATIONS,
+                "find_stalled_studio_optimizations", "", "", details);
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> {
                     var statement = connection.createStatement(template.render())
-                            .bind("demo_optimization_names", DemoData.OPTIMIZATIONS.toArray(String[]::new))
+                            .bind("initialized_timeout_seconds", initializedTimeout.toSeconds())
+                            .bind("running_timeout_seconds", runningTimeout.toSeconds())
+                            .bind("running_hard_timeout_seconds", runningHardTimeout.toSeconds())
+                            .bind("lookback_seconds", lookbackSeconds)
+                            .bind("candidate_limit", candidateLimit)
                             .bind("limit", limit);
-                    if (CollectionUtils.isNotEmpty(excludedWorkspaceIds)) {
-                        statement.bind("excluded_workspace_ids", excludedWorkspaceIds.toArray(String[]::new));
-                    }
                     return Flux.from(statement.execute());
                 })
-                .flatMap(result -> result.map((row, metadata) -> EligibleOptimizationWorkspace.builder()
+                .flatMap(result -> result.map((row, metadata) -> StalledOptimization.builder()
+                        .id(row.get("id", UUID.class))
                         .workspaceId(row.get("workspace_id", String.class))
-                        .optimizationsCount(row.get("optimizations_count", Long.class))
+                        .status(OptimizationStatus.fromString(row.get("status", String.class)))
                         .build()));
     }
 
     @Override
-    public Flux<OrphanOptimization> findOrphanOptimizationsInWorkspace(@NonNull String workspaceId) {
-        var template = FilterUtils.getSTWithLogComment(FIND_ORPHAN_OPTIMIZATIONS_IN_WORKSPACE,
-                "find_orphan_optimizations_in_workspace", workspaceId, "", "");
-        return Mono.from(connectionFactory.create())
-                .flatMapMany(connection -> Flux.from(connection.createStatement(template.render())
-                        .bind("workspace_id", workspaceId)
-                        .bind("demo_optimization_names", DemoData.OPTIMIZATIONS.toArray(String[]::new))
-                        .execute()))
-                .flatMap(result -> result.map((row, metadata) -> OrphanOptimization.builder()
-                        .optimizationId(UUID.fromString(row.get("optimization_id", String.class)))
-                        .datasetId(UUID.fromString(row.get("dataset_id", String.class)))
-                        .build()));
-    }
-
-    /**
-     * Path A 推断行映射器。SQL 通过 {@code HAVING} 过滤掉 {@code experiment_project_id = ''}
-     * 的实验，因此正常情况下每行都有非空的 project_id。防御性的 {@code Optional.ofNullable(...).filter(...)}
-     * 保护一个窄并发窗口：写入者在 {@code HAVING} 求值和行物化之间将唯一匹配实验的
-     * {@code project_id} 翻转为 {@code ''} 可能导致结果中该列为空。在这种情况下我们
-     * 丢弃该行（通过 {@code Mono::justOrEmpty}），服务层将该优化视为无推断——
-     * 回退到 Path B（数据集查找），最终使用工作区的默认项目。因此调用方必须容忍
-     * 优化不在 Flux 中，即使其 id 在输入集合中。
-     */
-    @Override
-    public Flux<OptimizationProjectMapping> computeOptimizationProjectMappingViaExperiments(Set<UUID> optimizationIds) {
-        if (CollectionUtils.isEmpty(optimizationIds)) {
-            return Flux.empty();
-        }
-        var optimizationIdsAsStrings = optimizationIds.stream().map(UUID::toString).toArray(String[]::new);
-        var details = "optimizationCount=%d".formatted(optimizationIds.size());
-        var template = FilterUtils.getSTWithLogComment(COMPUTE_OPTIMIZATION_PROJECT_MAPPING_VIA_EXPERIMENTS,
-                "compute_optimization_project_mapping_via_experiments", null, null, details);
+    public Mono<OptimizationStatusSnapshot> getStatusSnapshotById(@NonNull UUID id) {
+        var template = FilterUtils.getSTWithLogComment(GET_STATUS_SNAPSHOT,
+                "get_optimization_status_snapshot", "", "", "id=%s".formatted(id));
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> {
                     var statement = connection.createStatement(template.render())
-                            .bind("optimization_ids", optimizationIdsAsStrings)
-                            .bind("demo_experiment_names", DemoData.EXPERIMENTS.toArray(new String[0]));
+                            .bind("id", id);
                     return makeFluxContextAware(bindWorkspaceIdToFlux(statement));
                 })
-                .flatMap(result -> result.map((row, metadata) -> Optional
-                        .ofNullable(row.get("project_id", String.class))
-                        .filter(StringUtils::isNotBlank)
-                        .map(projectId -> OptimizationProjectMapping.builder()
-                                .optimizationId(UUID.fromString(row.get("optimization_id", String.class)))
-                                .projectId(UUID.fromString(projectId))
-                                .distinctProjectCount(row.get("distinct_project_count", Long.class))
-                                .projectBreakdown(row.get("project_breakdown", String.class))
-                                .build())))
-                .flatMap(Mono::justOrEmpty);
+                .flatMap(result -> result.map((row, metadata) -> OptimizationStatusSnapshot.builder()
+                        .status(OptimizationStatus.fromString(row.get("latest_status", String.class)))
+                        .lastUpdatedAt(row.get("latest_updated_at", Instant.class))
+                        .startedAt(row.get("started_at", Instant.class))
+                        .build()))
+                .singleOrEmpty();
     }
 
     @Override
-    public Mono<Long> batchSetProjectId(Set<UUID> optimizationIds, @NonNull UUID projectId) {
-        if (CollectionUtils.isEmpty(optimizationIds)) {
-            return Mono.just(0L);
-        }
-        var details = "optimizationCount=%d, projectId=%s".formatted(optimizationIds.size(), projectId);
-        var template = FilterUtils.getSTWithLogComment(BATCH_SET_PROJECT_ID,
-                "batch_set_optimization_project_id", null, null, details);
+    public Mono<Optimization> getRowById(@NonNull UUID id) {
+        var template = FilterUtils.getSTWithLogComment(GET_RAW_BY_ID,
+                "get_optimization_row_by_id", "", "", "id=%s".formatted(id));
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> {
                     var statement = connection.createStatement(template.render())
-                            .bind("optimization_ids", optimizationIds.toArray(UUID[]::new))
-                            .bind("project_id", projectId);
-                    return makeFluxContextAware(bindUserNameAndWorkspaceContextToStream(statement));
+                            .bind("id", id);
+                    return makeFluxContextAware(bindWorkspaceIdToFlux(statement));
                 })
-                .flatMap(Result::getRowsUpdated)
-                .reduce(0L, Long::sum);
+                .flatMap(result -> result.map((row, metadata) -> mapRowColumns(row)))
+                .singleOrEmpty();
+    }
+
+    @Override
+    public Mono<Boolean> hasRecentStudioActivity(@NonNull UUID optimizationId, @NonNull Duration window) {
+        var details = "optimizationId=%s, windowSeconds=%d".formatted(optimizationId, window.toSeconds());
+        var template = FilterUtils.getSTWithLogComment(HAS_RECENT_STUDIO_ACTIVITY,
+                "has_recent_studio_activity", "", "", details);
+        return Mono.from(connectionFactory.create())
+                .flatMapMany(connection -> {
+                    var statement = connection.createStatement(template.render())
+                            .bind("optimization_id", optimizationId)
+                            .bind("window_seconds", window.toSeconds());
+                    return makeFluxContextAware(bindWorkspaceIdToFlux(statement));
+                })
+                .flatMap(result -> Flux.from(result.map((row, metadata) -> true)))
+                .hasElements();
     }
 }

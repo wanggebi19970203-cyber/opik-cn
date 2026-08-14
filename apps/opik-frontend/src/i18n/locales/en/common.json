@@ -145,7 +145,7 @@
       "newOpikExperience": "New Opik experience",
       "actionsMenu": "Actions menu",
       "organizations": "Organizations",
-      "manageWorkspaces": "Manage workspaces",
+      "manageWorkspaces": "View all workspaces",
       "user": "User",
       "emailsOrUsernames": "Emails or Usernames",
       "template": "Template",
@@ -660,7 +660,7 @@
     },
     "shared": {
       "experiments": "{{count}} experiments",
-      "navigateTo": "Navigate to {{resource}}: {{name}}",
+      "navigateTo": "Go to {{resource}}: {{name}}",
       "save": "Save",
       "cancel": "Cancel",
       "resetToDefault": "Reset to default",
@@ -1036,7 +1036,7 @@
       "taskIntroductionRequired": "Task introduction is required",
       "evaluationCriteriaRequired": "Evaluation criteria is required",
       "pythonCodeRequired": "Python code is required",
-      "testSuiteRequired": "Test suite is required",
+      "testSuiteRequired": "Item source is required",
       "atLeastOneMessageRequired": "At least one message is required",
       "allMessagesMustHaveContent": "All messages must have content",
       "modelRequired": "Model is required",
@@ -1241,9 +1241,9 @@
       "failedToLoadTraces": "Failed to load experiment traces for evaluation."
     },
     "optimization": {
-      "trialNumber": "Trial #",
+      "trialNumber": "Trial",
       "step": "Step",
-      "runtimeCost": "Runtime cost",
+      "runtimeCost": "Opt. cost",
       "latency": "Latency",
       "trialItems": "Trial items"
     },

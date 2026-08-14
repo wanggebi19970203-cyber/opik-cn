@@ -1,26 +1,41 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
-import { GitCompareArrows } from "lucide-react";
+import { GitCompare } from "lucide-react";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
 import { AggregatedCandidate } from "@/types/optimizations";
 import { Experiment } from "@/types/datasets";
 import { ROW_HEIGHT } from "@/types/shared";
-import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
+import { Button } from "@/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/ui/hover-card";
+import TooltipWrapper from "@/shared/TooltipWrapper/TooltipWrapper";
 import PromptDiff from "@/shared/CodeDiff/PromptDiff";
 import { extractMessages } from "@/lib/optimization-config";
+import { restorePromptVariableFormat } from "@/lib/optimizations";
+import { cn } from "@/lib/utils";
 
-const getPromptFromExperiment = (experiment: Experiment): unknown => {
+/**
+ * Read a trial's prompt off its experiment configuration.
+ *
+ * Single-experiment sibling of {@link getCandidatePrompt} in ./candidatePrompt —
+ * and, like it, restores the authored `{{variable}}` syntax for display (the
+ * stored value uses the optimizer's single-brace form). Both the cell preview
+ * and the "Diff vs baseline" hover card render from here, so without this the
+ * trials table would contradict the overview's best-trial panel on the same
+ * page: one showing `{question}` and the other `{{question}}`.
+ */
+export const getPromptFromExperiment = (experiment: Experiment): unknown => {
   const metadata = experiment.metadata;
   if (!metadata || !isObject(metadata)) return null;
   const config = get(metadata, "configuration");
   if (!config || !isObject(config)) return null;
   const c = config as Record<string, unknown>;
-  if ("prompt" in c) return c["prompt"];
-  if ("prompt_messages" in c) return c["prompt_messages"];
+  if ("prompt" in c) return restorePromptVariableFormat(c["prompt"]);
+  if ("prompt_messages" in c)
+    return restorePromptVariableFormat(c["prompt_messages"]);
   return null;
 };
 
@@ -47,14 +62,18 @@ const getPromptSingleLine = (prompt: unknown): string => {
   return "";
 };
 
-export const TrialPromptCell = (context: CellContext<unknown, unknown>) => {
-  const row = context.row.original as AggregatedCandidate;
+export const TrialPromptCell = (
+  context: CellContext<AggregatedCandidate, unknown>,
+) => {
+  const row = context.row.original;
   const { t } = useTranslation("pages/optimization");
   const { custom } = context.column.columnDef.meta ?? {};
   const { experimentMap, baselineExperiment } = (custom ?? {}) as {
     experimentMap: Map<string, Experiment>;
     baselineExperiment?: Experiment;
   };
+
+  const [diffOpen, setDiffOpen] = useState(false);
 
   const rowHeight =
     (context.table.options.meta as { rowHeight?: ROW_HEIGHT } | undefined)
@@ -95,39 +114,69 @@ export const TrialPromptCell = (context: CellContext<unknown, unknown>) => {
     <CellWrapper
       metadata={context.column.columnDef.meta}
       tableMetadata={context.table.options.meta}
-      className="gap-2"
+      className="relative"
     >
       {isLarge ? (
-        <div className="comet-body-s h-full min-w-0 flex-1 overflow-y-auto whitespace-pre-line break-words">
+        <div className="h-full min-w-0 flex-1 overflow-y-auto whitespace-pre-line break-words">
           {preview || "-"}
         </div>
       ) : (
-        <span className="comet-body-s min-w-0 flex-1 truncate">
-          {preview || "-"}
-        </span>
+        <span className="min-w-0 flex-1 truncate">{preview || "-"}</span>
       )}
       {showDiff && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              onClick={(e) => e.stopPropagation()}
-              className="shrink-0 self-start text-muted-slate hover:text-foreground"
-            >
-              <GitCompareArrows className="size-4" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="max-h-[400px] w-[500px] overflow-y-auto p-4"
+        <HoverCard
+          open={diffOpen}
+          onOpenChange={setDiffOpen}
+          openDelay={300}
+          closeDelay={150}
+        >
+          {/* The diff button floats over the right edge of the cell (absolute,
+              out of flow) so the prompt text always uses the full column width.
+              It reveals on row hover (rows carry the `group/row` class) and
+              stays while the popover is open. We toggle `opacity`, never
+              `hidden`: a `display:none` trigger loses its bounding box, so Radix
+              would re-anchor the popover to the top-left corner on hover-out. */}
+          <div
+            className={cn(
+              "absolute right-2 flex items-center opacity-0 transition-opacity group-hover/row:opacity-100",
+              isLarge ? "top-2" : "inset-y-0",
+              diffOpen && "opacity-100",
+            )}
+          >
+            <TooltipWrapper content="View diff vs baseline">
+              <HoverCardTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-2xs"
+                  aria-label="View diff vs baseline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDiffOpen(true);
+                  }}
+                >
+                  <GitCompare />
+                </Button>
+              </HoverCardTrigger>
+            </TooltipWrapper>
+          </div>
+          <HoverCardContent
             align="end"
+            className="w-[660px] max-w-[90vw] p-3 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <h4 className="comet-body-s-accented mb-3">
+            <h4 className="comet-body-s-accented mb-2 pl-1 text-foreground">
               {t("optimization.prompt.diffVsBaseline")}
             </h4>
-            <PromptDiff baseline={baselinePrompt} current={currentPrompt} />
-          </PopoverContent>
-        </Popover>
+            <div className="max-h-[420px] overflow-y-auto">
+              <PromptDiff
+                baseline={baselinePrompt}
+                current={currentPrompt}
+                variant="panel"
+              />
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       )}
     </CellWrapper>
   );

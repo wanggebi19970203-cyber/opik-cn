@@ -623,6 +623,265 @@ class CostServiceTest {
     }
 
     /**
+     * Covers both branches of registering {@code deepseek} as a canonical provider so that the 12
+     * deepseek-tagged entries in {@code model_prices_and_context_window.json} (the
+     * {@code deepseek-chat} / {@code deepseek-reasoner} / {@code deepseek/deepseek-v3} /
+     * {@code deepseek/deepseek-v4-*} families) are no longer silently dropped at load time:
+     * <ul>
+     *   <li>DeepSeek model with no cache rates falls through to {@link SpanCostCalculator#textGenerationCost}.</li>
+     *   <li>DeepSeek model with cache rates routes through
+     *       {@link SpanCostCalculator#textGenerationWithCacheCostOpenAI} — DeepSeek's cost calculator
+     *       in LiteLLM ({@code litellm/llms/deepseek/cost_calculator.py}) delegates to
+     *       {@code generic_cost_per_token}, so its usage payload follows the same OpenAI shape
+     *       (cached tokens flattened under {@code prompt_tokens_details.cached_tokens}).</li>
+     * </ul>
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideDeepseekProviderCases")
+    void calculateCostHandlesDeepseekModels(String description, String model, Map<String, Integer> usage,
+            String expectedCost) {
+        BigDecimal cost = CostService.calculateCost(model, "deepseek", usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> provideDeepseekProviderCases() {
+        // deepseek/deepseek-coder: input 1.4e-7, output 2.8e-7 (no cache rates) -> textGenerationCost
+        // 1000 * 1.4e-7 + 200 * 2.8e-7 = 0.00014 + 0.000056 = 0.000196
+        // deepseek/deepseek-chat: input 2.8e-7, output 4.2e-7, cache_read 2.8e-8 -> textGenerationWithCacheCostOpenAI
+        // non-cached input = 1000 - 300 = 700
+        // 700 * 2.8e-7 + 200 * 4.2e-7 + 300 * 2.8e-8 = 0.000196 + 0.000084 + 0.0000084 = 0.0002884
+        return Stream.of(
+                Arguments.of("plain text-generation route", "deepseek/deepseek-coder",
+                        Map.of("prompt_tokens", 1000, "completion_tokens", 200), "0.000196"),
+                Arguments.of("cache-aware route via OpenAI calc", "deepseek/deepseek-chat",
+                        Map.of("original_usage.prompt_tokens", 1000,
+                                "original_usage.completion_tokens", 200,
+                                "original_usage.prompt_tokens_details.cached_tokens", 300),
+                        "0.0002884"));
+    }
+
+    /**
+     * Covers registering {@code perplexity} as a canonical provider so that the 16 non-zero-cost
+     * entries in {@code model_prices_and_context_window.json} tagged with
+     * {@code litellm_provider: "perplexity"} (the {@code sonar} family and legacy
+     * {@code perplexity/llama-*} / {@code perplexity/codellama-*} models) are no longer silently
+     * dropped at load time. No Perplexity model publishes cache rates today, so all Perplexity
+     * requests route through {@link SpanCostCalculator#textGenerationCost}.
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("providePerplexityProviderCases")
+    void calculateCostHandlesPerplexityModels(String model, Map<String, Integer> usage, String expectedCost) {
+        BigDecimal cost = CostService.calculateCost(model, "perplexity", usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> providePerplexityProviderCases() {
+        // perplexity/sonar: input 1e-6, output 1e-6
+        // 1000 * 1e-6 + 200 * 1e-6 = 0.001 + 0.0002 = 0.0012
+        // perplexity/sonar-pro: input 3e-6, output 1.5e-5 (distinct rates for the two dimensions)
+        // 1000 * 3e-6 + 200 * 1.5e-5 = 0.003 + 0.003 = 0.006
+        return Stream.of(
+                Arguments.of("perplexity/sonar",
+                        Map.of("prompt_tokens", 1000, "completion_tokens", 200), "0.0012"),
+                Arguments.of("perplexity/sonar-pro",
+                        Map.of("prompt_tokens", 1000, "completion_tokens", 200), "0.006"));
+    }
+
+    /**
+     * Covers both branches of registering {@code fireworks_ai} as a canonical provider so that the
+     * ~260 non-zero-cost entries in {@code model_prices_and_context_window.json} tagged with
+     * {@code litellm_provider: "fireworks_ai"} (the {@code accounts/fireworks/models/*} catalog) are
+     * no longer silently dropped at load time:
+     * <ul>
+     *   <li>Fireworks model with no cache rates falls through to
+     *       {@link SpanCostCalculator#textGenerationCost}.</li>
+     *   <li>Fireworks model with cache rates routes through
+     *       {@link SpanCostCalculator#textGenerationWithCacheCostOpenAI} — Fireworks' cost calculator
+     *       in LiteLLM ({@code litellm/llms/fireworks_ai/cost_calculator.py}) delegates to
+     *       {@code generic_cost_per_token}, so its usage payload follows the same OpenAI shape
+     *       (cached tokens flattened under {@code prompt_tokens_details.cached_tokens}).</li>
+     * </ul>
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideFireworksProviderCases")
+    void calculateCostHandlesFireworksModels(String description, String model, Map<String, Integer> usage,
+            String expectedCost) {
+        BigDecimal cost = CostService.calculateCost(model, "fireworks_ai", usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> provideFireworksProviderCases() {
+        // fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct: input 9e-7, output 9e-7
+        // (no cache rates) -> textGenerationCost
+        // 1000 * 9e-7 + 200 * 9e-7 = 0.0009 + 0.00018 = 0.00108
+        // fireworks_ai/accounts/fireworks/models/kimi-k2p5: input 6e-7, output 3e-6, cache_read 1e-7
+        // -> textGenerationWithCacheCostOpenAI
+        // non-cached input = 1000 - 300 = 700
+        // 700 * 6e-7 + 200 * 3e-6 + 300 * 1e-7 = 0.00042 + 0.0006 + 0.00003 = 0.00105
+        return Stream.of(
+                Arguments.of("plain text-generation route",
+                        "fireworks_ai/accounts/fireworks/models/llama-v3p1-70b-instruct",
+                        Map.of("prompt_tokens", 1000, "completion_tokens", 200), "0.00108"),
+                Arguments.of("cache-aware route via OpenAI calc",
+                        "fireworks_ai/accounts/fireworks/models/kimi-k2p5",
+                        Map.of("original_usage.prompt_tokens", 1000,
+                                "original_usage.completion_tokens", 200,
+                                "original_usage.prompt_tokens_details.cached_tokens", 300),
+                        "0.00105"));
+    }
+
+    /**
+     * Covers both branches of registering {@code moonshot} as a canonical provider so that the
+     * 22 non-zero-cost entries in {@code model_prices_and_context_window.json} tagged with
+     * {@code litellm_provider: "moonshot"} (the {@code moonshot-v1-*} legacy models and the
+     * {@code kimi-*} family) are no longer silently dropped at load time:
+     * <ul>
+     *   <li>Moonshot model with no cache rates falls through to
+     *       {@link SpanCostCalculator#textGenerationCost}.</li>
+     *   <li>Moonshot model with cache rates routes through
+     *       {@link SpanCostCalculator#textGenerationWithCacheCostOpenAI} — Moonshot's API is
+     *       OpenAI-compatible and its LiteLLM cost calculator delegates to
+     *       {@code generic_cost_per_token}, so cached tokens are flattened under
+     *       {@code prompt_tokens_details.cached_tokens}, matching the OpenAI/Azure/xAI/DeepSeek/
+     *       Fireworks routing.</li>
+     * </ul>
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideMoonshotProviderCases")
+    void calculateCostHandlesMoonshotModels(String description, String model, Map<String, Integer> usage,
+            String expectedCost) {
+        BigDecimal cost = CostService.calculateCost(model, "moonshot", usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> provideMoonshotProviderCases() {
+        // moonshot/moonshot-v1-8k: input 2e-7, output 2e-6 (no cache rates) -> textGenerationCost
+        // 1000 * 2e-7 + 200 * 2e-6 = 0.0002 + 0.0004 = 0.0006
+        // moonshot/kimi-k2-0711-preview: input 6e-7, output 2.5e-6, cache_read 1.5e-7
+        // -> textGenerationWithCacheCostOpenAI
+        // non-cached input = 1000 - 300 = 700
+        // 700 * 6e-7 + 200 * 2.5e-6 + 300 * 1.5e-7 = 0.00042 + 0.0005 + 0.000045 = 0.000965
+        return Stream.of(
+                Arguments.of("plain text-generation route",
+                        "moonshot/moonshot-v1-8k",
+                        Map.of("prompt_tokens", 1000, "completion_tokens", 200), "0.0006"),
+                Arguments.of("cache-aware route via OpenAI calc",
+                        "moonshot/kimi-k2-0711-preview",
+                        Map.of("original_usage.prompt_tokens", 1000,
+                                "original_usage.completion_tokens", 200,
+                                "original_usage.prompt_tokens_details.cached_tokens", 300),
+                        "0.000965"));
+    }
+
+    /**
+     * Covers registering {@code sambanova} as a canonical provider so that the 19 non-zero-cost
+     * entries in {@code model_prices_and_context_window.json} tagged with
+     * {@code litellm_provider: "sambanova"} (the deepseek, llama, qwen and minimax models served
+     * on SambaNova Cloud) are no longer silently dropped at load time. No SambaNova model
+     * publishes cache rates today, so all SambaNova requests route through
+     * {@link SpanCostCalculator#textGenerationCost}.
+     */
+    @Test
+    void calculateCostHandlesSambanovaModels() {
+        // sambanova/MiniMax-M2.7: input 6e-7, output 2.4e-6
+        // 1000 * 6e-7 + 200 * 2.4e-6 = 0.0006 + 0.00048 = 0.00108
+        BigDecimal cost = CostService.calculateCost("sambanova/MiniMax-M2.7", "sambanova",
+                Map.of("prompt_tokens", 1000, "completion_tokens", 200), null);
+
+        assertThat(cost).isEqualByComparingTo("0.00108");
+    }
+
+    /**
+     * Covers registering {@code nebius} as a canonical provider so that the 30 non-zero-cost
+     * entries in {@code model_prices_and_context_window.json} tagged with
+     * {@code litellm_provider: "nebius"} (the {@code nebius/<org>/<model>} catalog: deepseek,
+     * qwen, llama and more) are no longer silently dropped at load time. No Nebius model
+     * publishes cache rates today, so all Nebius requests route through
+     * {@link SpanCostCalculator#textGenerationCost}.
+     */
+    @Test
+    void calculateCostHandlesNebiusModels() {
+        // nebius/deepseek-ai/DeepSeek-R1: input 8e-7, output 2.4e-6
+        // 1000 * 8e-7 + 200 * 2.4e-6 = 0.0008 + 0.00048 = 0.00128
+        BigDecimal cost = CostService.calculateCost("nebius/deepseek-ai/DeepSeek-R1", "nebius",
+                Map.of("prompt_tokens", 1000, "completion_tokens", 200), null);
+
+        assertThat(cost).isEqualByComparingTo("0.00128");
+    }
+
+    /**
+     * Covers the provider-prefix fallback in {@link CostService#findModelPrice}. Callers that
+     * route a model through an aggregator ({@link com.comet.opik.api.resources.v1.events.BudgetGuard}
+     * calls {@code CostService.calculateCost} via {@code LlmProviderFactoryImpl.getResolvedModelInfo},
+     * which enumerates {@code perplexity/*} under OpenRouter and therefore returns
+     * {@code provider="openrouter"}) still get the correct pricing row that lives under the
+     * model's actual origin provider. Same rate math as the direct {@code perplexity} call —
+     * only the routing changes.
+     */
+    @ParameterizedTest(name = "{0} via provider={1}")
+    @MethodSource("provideAggregatorRoutedPerplexityCases")
+    void calculateCostFindsPerplexityViaAggregatorProviderPrefix(String model, String provider,
+            String expectedCost) {
+        Map<String, Integer> usage = Map.of("prompt_tokens", 1000, "completion_tokens", 200);
+
+        BigDecimal cost = CostService.calculateCost(model, provider, usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> provideAggregatorRoutedPerplexityCases() {
+        return Stream.of(
+                // aggregator that we don't register as a canonical provider (openrouter): prefix
+                // fallback kicks in and the perplexity row is found.
+                Arguments.of("perplexity/sonar", "openrouter", "0.0012"),
+                Arguments.of("perplexity/sonar-pro", "openrouter", "0.006"),
+                // custom-llm and empty-adjacent providers hit the same fallback path.
+                Arguments.of("perplexity/sonar", "custom-llm", "0.0012"));
+    }
+
+    /**
+     * OpenRouter exposes Moonshot's Kimi family under a different namespace prefix
+     * ({@code moonshotai/*}) than LiteLLM's canonical ({@code moonshot/*}) — see the
+     * {@code MOONSHOTAI_*} entries in {@code OpenRouterModelName}. Without a
+     * {@code moonshotai -> moonshot} alias in {@link CostService#PROVIDERS_MAPPING}, the
+     * provider-prefix fallback returns null and the aggregator-routed request resolves to
+     * {@code DEFAULT_COST}, silently under-charging every Kimi call routed through OpenRouter.
+     * With the alias, the fallback maps {@code moonshotai} to the canonical {@code moonshot}
+     * and the pricing row is found. Mirrors the existing {@code microsoft -> azure} override
+     * pattern in the same map.
+     */
+    @ParameterizedTest(name = "{0} via provider={1}")
+    @MethodSource("provideAggregatorRoutedMoonshotCases")
+    void calculateCostFindsMoonshotViaAggregatorProviderPrefix(String model, String provider,
+            String expectedCost) {
+        Map<String, Integer> usage = Map.of("prompt_tokens", 1000, "completion_tokens", 200);
+
+        BigDecimal cost = CostService.calculateCost(model, provider, usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> provideAggregatorRoutedMoonshotCases() {
+        // moonshot/kimi-k2-0711-preview: input 6e-7, output 2.5e-6 (cache rates ignored here
+        // because usage carries no cached_tokens key -> textGenerationCost path)
+        // 1000 * 6e-7 + 200 * 2.5e-6 = 0.0006 + 0.0005 = 0.0011
+        // moonshot/moonshot-v1-8k: input 2e-7, output 2e-6
+        // 1000 * 2e-7 + 200 * 2e-6 = 0.0002 + 0.0004 = 0.0006
+        return Stream.of(
+                // OpenRouter-style routing: model carries the moonshotai/ prefix and caller
+                // passes provider="openrouter" (or any non-canonical). Alias makes the lookup
+                // find the underlying moonshot/ price row.
+                Arguments.of("moonshotai/kimi-k2-0711-preview", "openrouter", "0.0011"),
+                Arguments.of("moonshotai/moonshot-v1-8k", "openrouter", "0.0006"),
+                // custom-llm and other pass-through providers hit the same fallback.
+                Arguments.of("moonshotai/kimi-k2-0711-preview", "custom-llm", "0.0011"));
+    }
+
+    /**
      * Test for issue #5130: Bedrock model names carry a version-pin suffix like
      * "anthropic.claude-opus-4-6-v1:0" while the pricing database stores the base name
      * "anthropic.claude-opus-4-6-v1". Stripping the ":N" pin lets these price correctly.
@@ -660,5 +919,58 @@ class CostServiceTest {
                 // 4. Provider prefix + date suffix: prefix stripped first, then date suffix removed
                 Arguments.of("anthropic/claude-sonnet-4.5-2025-12-17", "anthropic"),
                 Arguments.of("openai/gpt-5.2-2025-12-17", "openai"));
+    }
+
+    /**
+     * Same gap as the {@code moonshotai} alias, for five more vendors OpenRouter resells.
+     * {@code ai21}, {@code morph}, {@code inception}, {@code meta} and {@code zai} all carry
+     * non-zero-cost rows in {@code model_prices_and_context_window.json}, but none were in
+     * {@link CostService#PROVIDERS_MAPPING}, so {@code buildModelPrice} dropped every one of
+     * them at load time and the provider-prefix fallback had nothing to resolve against. Any
+     * call routed through OpenRouter fell through to {@code DEFAULT_COST}.
+     * <p>
+     * {@code z-ai} needs two entries for the same reason {@code moonshot} does: the map is read
+     * both with the price file's {@code litellm_provider} ({@code zai}) when loading rows, and
+     * with the model-name prefix OpenRouter uses ({@code z-ai}) when resolving the fallback.
+     * The other four spell both the same way, so one entry each.
+     * <p>
+     * All of these take the {@link SpanCostCalculator#textGenerationCost} path. Four of the
+     * models below publish a {@code cache_read_input_token_cost}, but none of these providers is
+     * registered in {@code PROVIDERS_CACHE_COST_CALCULATOR}, so cached tokens are not discounted
+     * yet. Registering them needs evidence of how each API reports cached tokens, which is a
+     * separate change.
+     */
+    @ParameterizedTest(name = "{0} via provider={1}")
+    @MethodSource("provideAggregatorRoutedVendorCases")
+    void calculateCostFindsOpenRouterVendorPricesViaProviderPrefix(String model, String provider,
+            String expectedCost) {
+        Map<String, Integer> usage = Map.of("prompt_tokens", 1000, "completion_tokens", 200);
+
+        BigDecimal cost = CostService.calculateCost(model, provider, usage, null);
+
+        assertThat(cost).isEqualByComparingTo(expectedCost);
+    }
+
+    private static Stream<Arguments> provideAggregatorRoutedVendorCases() {
+        // ai21/jamba-large-1.7:   input 2e-6,    output 8e-6    -> 1000*2e-6    + 200*8e-6    = 0.0036
+        // ai21/jamba-mini-1.7:    input 2e-7,    output 4e-7    -> 1000*2e-7    + 200*4e-7    = 0.00028
+        // zai/glm-4.5:            input 6e-7,    output 2.2e-6  -> 1000*6e-7    + 200*2.2e-6  = 0.00104
+        // zai/glm-5:              input 1e-6,    output 3.2e-6  -> 1000*1e-6    + 200*3.2e-6  = 0.00164
+        // morph/morph-v3-fast:    input 8e-7,    output 1.2e-6  -> 1000*8e-7    + 200*1.2e-6  = 0.00104
+        // morph/morph-v3-large:   input 9e-7,    output 1.9e-6  -> 1000*9e-7    + 200*1.9e-6  = 0.00128
+        // inception/mercury-2:    input 2.5e-7,  output 7.5e-7  -> 1000*2.5e-7  + 200*7.5e-7  = 0.0004
+        // meta/muse-spark-1.1:    input 1.25e-6, output 4.25e-6 -> 1000*1.25e-6 + 200*4.25e-6 = 0.0021
+        return Stream.of(
+                Arguments.of("ai21/jamba-large-1.7", "openrouter", "0.0036"),
+                Arguments.of("ai21/jamba-mini-1.7", "openrouter", "0.00028"),
+                // OpenRouter namespaces Z.ai as z-ai/, the price file as zai/.
+                Arguments.of("z-ai/glm-4.5", "openrouter", "0.00104"),
+                Arguments.of("z-ai/glm-5", "openrouter", "0.00164"),
+                Arguments.of("morph/morph-v3-fast", "openrouter", "0.00104"),
+                Arguments.of("morph/morph-v3-large", "openrouter", "0.00128"),
+                Arguments.of("inception/mercury-2", "openrouter", "0.0004"),
+                Arguments.of("meta/muse-spark-1.1", "openrouter", "0.0021"),
+                // custom-llm hits the same fallback, as it does for perplexity and moonshot.
+                Arguments.of("z-ai/glm-4.5", "custom-llm", "0.00104"));
     }
 }

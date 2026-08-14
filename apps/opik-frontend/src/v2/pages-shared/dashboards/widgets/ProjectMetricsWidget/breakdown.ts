@@ -3,45 +3,31 @@ import { COLUMN_TYPE } from "@/types/shared";
 import { Filter, FilterOperator } from "@/types/filters";
 import { BREAKDOWN_FIELD } from "@/types/dashboard";
 
+const t = i18next.getFixedT(null, "dashboards");
+
 /**
  * Display labels for group by fields.
  */
-export const getBreakdownFieldLabels = (): Record<BREAKDOWN_FIELD, string> => {
-  const t = i18next.getFixedT(null, "dashboards");
-  return {
-    [BREAKDOWN_FIELD.NONE]: t("breakdown.fields.noGrouping"),
-    [BREAKDOWN_FIELD.TAGS]: t("breakdown.fields.tags"),
-    [BREAKDOWN_FIELD.METADATA]: t("breakdown.fields.metadata"),
-    [BREAKDOWN_FIELD.NAME]: t("breakdown.fields.name"),
-    [BREAKDOWN_FIELD.ERROR_INFO]: t("breakdown.fields.hasError"),
-    [BREAKDOWN_FIELD.ERROR_TYPE]: t("breakdown.fields.errorType"),
-    [BREAKDOWN_FIELD.MODEL]: t("breakdown.fields.model"),
-    [BREAKDOWN_FIELD.PROVIDER]: t("breakdown.fields.provider"),
-    [BREAKDOWN_FIELD.TYPE]: t("breakdown.fields.spanType"),
-  };
+export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
+  [BREAKDOWN_FIELD.NONE]: t("breakdown.fields.noGrouping"),
+  [BREAKDOWN_FIELD.TAGS]: t("breakdown.fields.tags"),
+  [BREAKDOWN_FIELD.METADATA]: t("breakdown.fields.metadata"),
+  [BREAKDOWN_FIELD.NAME]: t("breakdown.fields.name"),
+  [BREAKDOWN_FIELD.ERROR_INFO]: t("breakdown.fields.hasError"),
+  [BREAKDOWN_FIELD.ERROR_TYPE]: t("breakdown.fields.errorType"),
+  [BREAKDOWN_FIELD.MODEL]: t("breakdown.fields.model"),
+  [BREAKDOWN_FIELD.PROVIDER]: t("breakdown.fields.provider"),
+  [BREAKDOWN_FIELD.TYPE]: t("breakdown.fields.spanType"),
+  [BREAKDOWN_FIELD.GUARDRAIL_NAME]: "Guardrail name",
 };
-
-/** @deprecated Use getBreakdownFieldLabels() instead */
-export const BREAKDOWN_FIELD_LABELS = getBreakdownFieldLabels();
 
 /**
  * Special group names used in group by results.
- * OTHERS_DISPLAY and UNKNOWN are used as comparison identifiers.
  */
-export const getBreakdownGroupNames = () => {
-  const t = i18next.getFixedT(null, "dashboards");
-  return {
-    OTHERS: "__others__",
-    OTHERS_DISPLAY: t("breakdownGroups.others"),
-    UNKNOWN: t("breakdownGroups.unknown"),
-  };
-};
-
-/** @deprecated Use getBreakdownGroupNames() instead */
 export const BREAKDOWN_GROUP_NAMES = {
   OTHERS: "__others__",
-  OTHERS_DISPLAY: "Others",
-  UNKNOWN: "Unknown",
+  OTHERS_DISPLAY: t("breakdownGroups.others"),
+  UNKNOWN: t("breakdownGroups.unknown"),
 };
 
 /**
@@ -125,6 +111,7 @@ export const BREAKDOWN_FIELD_COMPATIBILITY: Record<BREAKDOWN_FIELD, string[]> =
     [BREAKDOWN_FIELD.MODEL]: SPAN_METRICS,
     [BREAKDOWN_FIELD.PROVIDER]: SPAN_METRICS,
     [BREAKDOWN_FIELD.TYPE]: SPAN_METRICS,
+    [BREAKDOWN_FIELD.GUARDRAIL_NAME]: [METRIC_TYPES.FAILED_GUARDRAILS],
   };
 
 /**
@@ -146,7 +133,6 @@ export function buildBreakdownDrilldownFilter(
   label: string,
   metadataKey?: string,
 ): Partial<Filter> | null {
-  const t = i18next.getFixedT(null, "dashboards");
   const noError = label === t("breakdownDrilldown.noError");
 
   switch (field) {

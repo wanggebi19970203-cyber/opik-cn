@@ -149,7 +149,11 @@ const FilterChipBar: React.FC<FilterChipBarProps> = ({
         onUnpinChip={onUnpinChip}
         onRequestOpenChip={onOpenChipIdChange}
         trigger={
-          <ChipShell isOpen={managerOpen} className="pr-2">
+          <ChipShell
+            isOpen={managerOpen}
+            className="pr-2"
+            data-testid="filter-chip-manager-trigger"
+          >
             <ListFilter className="size-3 shrink-0" />
             <span>{t("common.labels.allFilters")}</span>
           </ChipShell>
@@ -160,6 +164,7 @@ const FilterChipBar: React.FC<FilterChipBarProps> = ({
         <button
           type="button"
           onClick={onClearAll}
+          data-testid="filter-chips-clear-all"
           className={cn(
             "comet-body-xs flex h-6 shrink-0 items-center whitespace-nowrap rounded-[20px] px-2 py-0.5 text-foreground outline-none transition-colors",
             "hover:bg-primary-foreground",

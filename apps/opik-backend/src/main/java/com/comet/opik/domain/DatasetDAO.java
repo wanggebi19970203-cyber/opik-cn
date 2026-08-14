@@ -34,32 +34,11 @@ import java.util.UUID;
 @RegisterArgumentFactory(UUIDArgumentFactory.class)
 @RegisterConstructorMapper(Dataset.class)
 @RegisterConstructorMapper(BiInformationResponse.BiInformation.class)
-@RegisterConstructorMapper(EligibleDatasetWorkspace.class)
 @RegisterArgumentFactory(SetFlatArgumentFactory.class)
 @RegisterColumnMapper(SetFlatArgumentFactory.class)
 @RegisterArgumentFactory(DatasetTypeMapper.class)
 @RegisterColumnMapper(DatasetTypeMapper.class)
 public interface DatasetDAO {
-
-    /**
-     * 检查是否存在V1版本（工作区级别）的数据集，排除已知的演示数据集名称。
-     * MySQL的utf8mb4_unicode_ci排序规则使NOT IN比较不区分大小写，
-     * 因此仅大小写不同的演示名称变体会被自动排除。
-     *
-     * @param workspaceId    工作区ID
-     * @param demoDatasetNames 需要排除的演示数据集名称列表
-     * @return 如果存在V1数据集则返回true
-     */
-    @SqlQuery("""
-            SELECT EXISTS(
-                SELECT 1 FROM datasets
-                WHERE workspace_id = :workspaceId AND project_id IS NULL
-                AND name NOT IN (<demoDatasetNames>)
-            )""")
-    @UseStringTemplateEngine
-    @AllowUnusedBindings
-    boolean hasVersion1Datasets(@Bind("workspaceId") String workspaceId,
-            @BindList("demoDatasetNames") List<String> demoDatasetNames);
 
     @SqlUpdate("INSERT INTO datasets(id, name, description, visibility, type, workspace_id, project_id, created_by, last_updated_by, tags) "
             +
@@ -224,12 +203,6 @@ public interface DatasetDAO {
     @SqlQuery("SELECT id FROM datasets WHERE workspace_id = :workspace_id AND name LIKE CONCAT('%', :name, '%') ESCAPE '\\\\'")
     List<UUID> findIdsByPartialName(@Bind("workspace_id") String workspaceId, @Bind("name") String name);
 
-    /**
-     * 转义LIKE查询中的元字符（反斜杠、百分号、下划线）。
-     *
-     * @param input 需要转义的原始字符串
-     * @return 转义后的字符串
-     */
     static String escapeLikeMetacharacters(String input) {
         return input.replace("\\", "\\\\")
                 .replace("%", "\\%")
@@ -277,82 +250,4 @@ public interface DatasetDAO {
     int updateStatus(@Bind("workspace_id") String workspaceId,
             @Bind("id") UUID id,
             @Bind("status") DatasetStatus status);
-
-    /**
-     * 返回至少有一个V1数据集（project_id为NULL）的工作区，按数据集数量从小到大排序。
-     * {@code FORCE INDEX}和{@code workspace_id NOT IN (...)}谓词仅在
-     * {@code excludedWorkspaceIds}非空时才会生成：不使用索引提示时，{@code NOT IN}
-     * 谓词会导致查询优化器回退为全表扫描；强制使用{@code (workspace_id, name)}唯一索引
-     * 可将其转换为范围扫描——已在生产环境验证（220k → 170k行，1.4s → 0.35s）。
-     *
-     * @param demoDatasetNames     需要排除的演示数据集名称列表
-     * @param excludedWorkspaceIds 需要排除的工作区ID集合，为空时不排除
-     * @param limit                返回结果的最大数量
-     * @return 符合条件的数据集工作区列表
-     */
-    @SqlQuery("""
-            SELECT workspace_id, COUNT(*) AS datasets_count
-            FROM datasets <if(excludedWorkspaceIds)>FORCE INDEX (datasets_workspace_id_name_uk)<endif>
-            WHERE project_id IS NULL
-            AND name NOT IN (<demoDatasetNames>)
-            <if(excludedWorkspaceIds)> AND workspace_id NOT IN (<excludedWorkspaceIds>) <endif>
-            GROUP BY workspace_id
-            ORDER BY datasets_count ASC, workspace_id ASC
-            LIMIT :limit
-            """)
-    @UseStringTemplateEngine
-    @AllowUnusedBindings
-    List<EligibleDatasetWorkspace> findEligibleDatasetMigrationWorkspaces(
-            @BindList("demoDatasetNames") List<String> demoDatasetNames,
-            @Define("excludedWorkspaceIds") @BindList(onEmpty = BindList.EmptyHandling.NULL_VALUE, value = "excludedWorkspaceIds") Collection<String> excludedWorkspaceIds,
-            @Bind("limit") int limit);
-
-    @SqlBatch("""
-            UPDATE datasets SET project_id = :projectId, last_updated_by = :userName
-            WHERE id = :datasetId AND workspace_id = :workspaceId AND project_id IS NULL
-            """)
-    int[] batchSetProjectId(
-            @BindMethods List<DatasetProjectMapping> mappings,
-            @Bind("workspaceId") String workspaceId,
-            @Bind("userName") String userName);
-
-    // 查询工作区中的V1数据集ID（排除演示名称）。服务层使用此方法检测未推断的孤儿数据集——
-    // 即存在于MySQL中但在ClickHouse推断结果中缺失的数据集。
-    @SqlQuery("""
-            SELECT id FROM datasets
-            WHERE workspace_id = :workspace_id
-            AND project_id IS NULL
-            AND name NOT IN (<demoDatasetNames>)
-            """)
-    @UseStringTemplateEngine
-    @AllowUnusedBindings
-    Set<UUID> findOrphanDatasetIdsInWorkspace(
-            @Bind("workspace_id") String workspaceId,
-            @BindList("demoDatasetNames") List<String> demoDatasetNames);
-
-    /**
-     * 批量查询工作区范围内的{@code (dataset_id, project_id)}配对。
-     * 每个匹配的dataset_id返回一行；{@code project_id}仍为{@code NULL}的数据集会被
-     * <b>跳过</b>，调用方通过与候选集进行差集运算来检测这些数据集。
-     *
-     * <p>由{@code OptimizationProjectMigrationService}用于Path B推断：
-     * 未被Path A（实验）分类的孤立优化记录，可在此处通过单次查询获取其数据集的
-     * {@code project_id}，每个工作区周期仅需一次往返。
-     *
-     * @param workspaceId 工作区ID
-     * @param ids         数据集ID集合
-     * @return 包含数据集ID和项目ID的映射行列表
-     */
-    @SqlQuery("""
-            SELECT id, project_id FROM datasets
-            WHERE workspace_id = :workspace_id
-            AND id IN (<ids>)
-            AND project_id IS NOT NULL
-            """)
-    @UseStringTemplateEngine
-    @AllowUnusedBindings
-    @RegisterConstructorMapper(DatasetProjectIdRow.class)
-    List<DatasetProjectIdRow> findProjectIdsByDatasetIds(
-            @Bind("workspace_id") String workspaceId,
-            @BindList("ids") Set<UUID> ids);
 }

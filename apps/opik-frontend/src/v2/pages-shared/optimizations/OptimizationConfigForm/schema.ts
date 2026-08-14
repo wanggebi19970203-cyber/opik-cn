@@ -1,5 +1,6 @@
 import i18next from "i18next";
 import { z } from "zod";
+import { pythonLanguage } from "@codemirror/lang-python";
 import {
   OPTIMIZER_TYPE,
   METRIC_TYPE,
@@ -59,9 +60,51 @@ export const GEvalMetricParamsSchema = z.object({
     .min(1, i18next.t("common.validation.evaluationCriteriaRequired")),
 });
 
-export const CodeMetricParamsSchema = z.object({
-  code: z.string().min(1, i18next.t("common.validation.pythonCodeRequired")),
-});
+// Client-side Python syntax check using the error-tolerant Lezer grammar that
+// @codemirror/lang-python already ships (no extra dependency). We reuse the
+// language's parser directly instead of building an EditorState, then walk the
+// resulting tree for error nodes. Lezer recovers from syntax errors by
+// inserting nodes whose type reports `isError`, so a valid program yields none.
+// This only catches *syntax* problems (unclosed brackets, bad indentation,
+// stray tokens) — it never inspects semantics, so it can't false-positive on
+// otherwise-valid Python (e.g. metrics that read `kwargs["x"]`).
+export const hasPythonSyntaxError = (code: string): boolean => {
+  const tree = pythonLanguage.parser.parse(code);
+  let hasError = false;
+  tree.iterate({
+    enter: (node) => {
+      if (node.type.isError) {
+        hasError = true;
+        return false;
+      }
+      return undefined;
+    },
+  });
+  return hasError;
+};
+
+export const CodeMetricParamsSchema = z
+  .object({
+    code: z.string().min(1, i18next.t("common.validation.pythonCodeRequired")),
+    // Rename-capable `score()` param → dataset column map. Shape matches the
+    // backend `_build_code_metric` arguments contract (plain column names, not
+    // trace paths). Optional/partial: unmapped params fall back to same-named
+    // columns backend-side, so only explicit renames need entries here.
+    arguments: z.record(z.string()).optional(),
+  })
+  .superRefine((params, ctx) => {
+    // `.min(1)` above already reports empty code; only run the syntax check when
+    // there is something to parse so we don't double-report on an empty editor.
+    if (params.code && hasPythonSyntaxError(params.code)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        // Anchor to the `code` field so the message flows through
+        // `errors?.code?.message` into CodeMetricConfigs' FormErrorSkeleton.
+        path: ["code"],
+        message: "Python code has a syntax error",
+      });
+    }
+  });
 
 export const LevenshteinMetricParamsSchema = z.object({
   normalize: z.boolean().optional(),
@@ -205,7 +248,21 @@ export const convertOptimizationStudioToFormData = (
       id: crypto.randomUUID(),
       role: m.role as LLM_MESSAGE_ROLE,
       content: m.content,
-    })) || [generateDefaultLLMPromptMessage({ role: LLM_MESSAGE_ROLE.user })];
+    })) || [
+      // A new run starts from the shape the optimizers are stable on:
+      // instructions in the system message — the only role a Studio run makes
+      // optimizable — and template variables in the user message, so the
+      // optimizer never rewrites the message holding the user's variables
+      // (OPIK-7510). Seeding a lone user message did the opposite.
+      //
+      // Two cards means the `isMessageEmpty` refinement above requires content
+      // in both before submit (the form validates `onSubmit`, so an untouched
+      // form shows no errors). Deliberate: a user who really wants a lone user
+      // prompt deletes the system card, and that shape is exactly the hazard
+      // this ticket fixes — so it should be an explicit choice, not the default.
+      generateDefaultLLMPromptMessage({ role: LLM_MESSAGE_ROLE.system }),
+      generateDefaultLLMPromptMessage({ role: LLM_MESSAGE_ROLE.user }),
+    ];
 
   const optimizerType =
     (optimization?.studio_config?.optimizer.type as OPTIMIZER_TYPE) ||
@@ -253,9 +310,7 @@ export const convertOptimizationStudioToFormData = (
   };
 
   return {
-    name:
-      optimization?.name ||
-      i18next.t("common.validation.optimizationStudioRun"),
+    name: optimization?.name || "Optimization run",
     datasetId: optimization?.dataset_id || "",
     optimizerType,
     optimizerParams,

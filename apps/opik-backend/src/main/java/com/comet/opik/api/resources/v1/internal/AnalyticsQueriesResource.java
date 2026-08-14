@@ -35,11 +35,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletionException;
 
 /**
- * 内部认证端点，对ClickHouse执行Ollie生成的只读SQL查询，限定在调用者的工作区和请求的项目范围内。认证仅用于确定
- * {@code workspace_id}（{@code project_id}来自请求体）。受{@code agentInsightsEnabled}
- * 开关控制：关闭时返回{@code 501 Not Implemented}且不访问ClickHouse。
+ * Internal, authenticated endpoint that runs Ollie-generated read-only SQL against ClickHouse, bounded to the
+ * caller's workspace and the requested project. Authentication is required only to derive the bounding
+ * {@code workspace_id} ({@code project_id} comes from the body). Gated behind the {@code ollieEnabled}
+ * toggle: when off it returns {@code 501 Not Implemented} and performs no ClickHouse access.
  *
- * <p>调用者的最终查询必须恰好返回一个名为{@code result}的列，通过{@code toJSONString(...)}生成。
+ * <p>The caller's final query must return exactly one column named {@code result}, produced via
+ * {@code toJSONString(...)}.
  */
 @Path("/v1/internal/analytics-queries")
 @Produces(MediaType.APPLICATION_JSON)
@@ -65,7 +67,7 @@ public class AnalyticsQueriesResource {
     public Response executeQuery(@PathParam("projectId") @NotNull UUID projectId,
             @RequestBody(content = @Content(schema = @Schema(implementation = AnalyticsQueryRequest.class))) @NotNull @Valid AnalyticsQueryRequest request) {
 
-        if (!serviceToggles.isAgentInsightsEnabled()) {
+        if (!serviceToggles.isOllieEnabled()) {
             return Response.status(Response.Status.NOT_IMPLEMENTED).build();
         }
 

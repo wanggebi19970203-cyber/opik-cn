@@ -55,6 +55,12 @@ class KpiCardDAOImpl implements KpiCardDAO {
     private final @NonNull InstantToUUIDMapper instantToUUIDMapper;
     private final @NonNull OpikConfiguration configuration;
 
+    /**
+     * trace_costs buckets the TOTAL_COST KPI into current/previous periods keyed on trace_id (a
+     * UUIDv7 matching the trace id used for the count/error/duration split) and is CROSS JOINed as a
+     * single row, avoiding the per-trace LEFT JOIN whose hash build dominated peak memory on large
+     * projects. Identical results; the trace_id IN (traces_filtered) semijoin is retained. OPIK-7319.
+     */
     private static final String GET_TRACE_KPI_CARDS = """
             WITH feedback_scores_deduped AS (
                 SELECT workspace_id,
@@ -186,12 +192,19 @@ class KpiCardDAOImpl implements KpiCardDAO {
                     <endif>
                 ) AS t
             ), trace_costs AS (
-                SELECT trace_id, sum(total_estimated_cost) AS cost
-                FROM spans FINAL
-                WHERE workspace_id = :workspace_id AND project_id = :project_id
-                  AND id >= :uuid_from_time AND id \\<= :uuid_to_time
-                  AND trace_id IN (SELECT id FROM traces_filtered)
-                GROUP BY trace_id
+                SELECT
+                    SUMIf(cost, trace_id >= :id_current_start AND trace_id \\<= :id_end) AS current_total_cost,
+                    SUMIf(cost, trace_id >= :id_prior_start AND trace_id \\< :id_current_start) AS previous_total_cost
+                FROM (
+                    SELECT trace_id, sum(total_estimated_cost) AS cost
+                    FROM spans FINAL
+                    WHERE workspace_id = :workspace_id AND project_id = :project_id
+                      AND id >= :uuid_from_time AND id \\<= :uuid_to_time
+                      AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))
+                      AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))
+                      AND trace_id IN (SELECT id FROM traces_filtered)
+                    GROUP BY trace_id
+                )
             )
             SELECT
                 COUNTIf(tf.id >= :id_current_start AND tf.id \\<= :id_end) AS current_count,
@@ -206,10 +219,10 @@ class KpiCardDAOImpl implements KpiCardDAO {
                     / COUNTIf(tf.id >= :id_prior_start AND tf.id \\< :id_current_start)) AS previous_error_rate,
                 AVGIf(tf.duration, tf.id >= :id_current_start AND tf.id \\<= :id_end) AS current_avg_duration,
                 AVGIf(tf.duration, tf.id >= :id_prior_start AND tf.id \\< :id_current_start) AS previous_avg_duration,
-                SUMIf(tc.cost, tf.id >= :id_current_start AND tf.id \\<= :id_end) AS current_total_cost,
-                SUMIf(tc.cost, tf.id >= :id_prior_start AND tf.id \\< :id_current_start) AS previous_total_cost
+                any(tc.current_total_cost) AS current_total_cost,
+                any(tc.previous_total_cost) AS previous_total_cost
             FROM traces_filtered tf
-            LEFT JOIN trace_costs tc ON tf.id = tc.trace_id
+            CROSS JOIN trace_costs tc
             SETTINGS log_comment = '<log_comment>';
             """;
 
@@ -288,7 +301,7 @@ class KpiCardDAOImpl implements KpiCardDAO {
                 FROM (
                     SELECT
                         id,
-                        if(end_time IS NOT NULL AND start_time IS NOT NULL
+                        if(end_time IS NOT NULL AND notEquals(end_time, toDateTime64('1970-01-01 00:00:00.000', 9)) AND start_time IS NOT NULL
                              AND notEquals(start_time, toDateTime64('1970-01-01 00:00:00.000', 9)),
                          (dateDiff('microsecond', start_time, end_time) / 1000.0),
                          NULL) AS duration,
@@ -302,6 +315,8 @@ class KpiCardDAOImpl implements KpiCardDAO {
                     AND workspace_id = :workspace_id
                     AND id >= :uuid_from_time
                     AND id \\<= :uuid_to_time
+                    AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))
+                    AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))
                     <if(span_filters)> AND <span_filters> <endif>
                     <if(span_feedback_scores_filters)>
                     AND id in (
@@ -493,6 +508,8 @@ class KpiCardDAOImpl implements KpiCardDAO {
                     FROM spans FINAL
                     WHERE workspace_id = :workspace_id AND project_id = :project_id
                       AND id >= :uuid_from_time AND id \\<= :uuid_to_time
+                      AND toMonday(id_at) >= toMonday(UUIDv7ToDateTime(toUUID(:uuid_from_time), 'UTC'))
+                      AND toMonday(id_at) \\<= toMonday(UUIDv7ToDateTime(toUUID(:uuid_to_time), 'UTC'))
                 ) s
                 JOIN traces_final tr ON s.trace_id = tr.id
                 GROUP BY tr.thread_id
@@ -599,6 +616,10 @@ class KpiCardDAOImpl implements KpiCardDAO {
         return configuration.getDatabaseAnalyticsDataModel().traceColumnsNonNullable();
     }
 
+    private boolean spanColumnsNonNullable() {
+        return configuration.getDatabaseAnalyticsDataModel().spanColumnsNonNullable();
+    }
+
     private void bindTraceFilters(Statement statement, List<? extends Filter> filters) {
         Optional.ofNullable(filters).ifPresent(f -> {
             FilterQueryBuilder.bind(statement, f, FilterStrategy.TRACE);
@@ -609,7 +630,7 @@ class KpiCardDAOImpl implements KpiCardDAO {
 
     private void addSpanFilters(ST template, List<? extends Filter> filters) {
         Optional.ofNullable(filters).ifPresent(f -> {
-            FilterQueryBuilder.toAnalyticsDbFilters(f, FilterStrategy.SPAN)
+            FilterQueryBuilder.toAnalyticsDbFilters(f, FilterStrategy.SPAN, spanColumnsNonNullable())
                     .ifPresent(spanFilters -> template.add("span_filters", spanFilters));
             FilterQueryBuilder.toAnalyticsDbFilters(f, FilterStrategy.SPAN_FEEDBACK_SCORES)
                     .ifPresent(scoresFilters -> template.add("span_feedback_scores_filters", scoresFilters));

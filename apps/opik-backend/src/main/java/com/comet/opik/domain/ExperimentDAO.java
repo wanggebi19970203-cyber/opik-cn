@@ -69,7 +69,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.comet.opik.domain.AsyncContextUtils.bindUserNameAndWorkspaceContextToStream;
 import static com.comet.opik.domain.AsyncContextUtils.bindWorkspaceIdToFlux;
 import static com.comet.opik.domain.CommentResultMapper.parseCommentsFromJson;
 import static com.comet.opik.infrastructure.FilterUtils.getSTWithLogComment;
@@ -153,22 +152,6 @@ public class ExperimentDAO {
             FilterStrategy.EXPERIMENT_SCORES_IS_EMPTY,
             FilterStrategy.EXPERIMENT_SCORES_AGGREGATED,
             FilterStrategy.EXPERIMENT_SCORES_AGGREGATED_IS_EMPTY);
-
-    /**
-     * 按工作区检查：是否有任何非演示实验在其最新行上具有 {@code project_id = ''}？
-     * 使用 {@code argMax(project_id, last_updated_at)} 的 GROUP BY id 在 HAVING 中去重
-     * {@code ReplacingMergeTree}；我们避免使用 {@code FINAL}，因为 ClickHouse 会将外部
-     * WHERE 谓词推入 FINAL 扫描，并会掩盖迁移后的行。
-     */
-    private static final String HAS_VERSION1_EXPERIMENTS = """
-            SELECT 1
-            FROM experiments
-            WHERE workspace_id = :workspace_id
-            AND name NOT IN :demo_experiment_names
-            GROUP BY id
-            HAVING argMax(project_id, last_updated_at) = ''
-            LIMIT 1
-            SETTINGS log_comment = '<log_comment>'""";
 
     /**
      * 该查询验证是否已存在具有此ID的记录。如果存在则失败。
@@ -377,15 +360,15 @@ public class ExperimentDAO {
                         sumMap(usage) as usage,
                         sum(total_estimated_cost) as total_estimated_cost
                     FROM (
-                        SELECT workspace_id, project_id, trace_id, parent_span_id, id, usage, total_estimated_cost, last_updated_at
+                        SELECT workspace_id, project_id, trace_id, id, usage, total_estimated_cost, last_updated_at
                         FROM spans
                         WHERE workspace_id = :workspace_id
                         <if(has_target_projects)>
                         AND project_id IN :target_project_ids
                         <endif>
                         AND trace_id IN (SELECT trace_id FROM experiment_items_final)
-                        ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
-                        LIMIT 1 BY workspace_id, project_id, trace_id, parent_span_id, id
+                        ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+                        <if(has_target_projects)>LIMIT 1 BY workspace_id, project_id, id<else>LIMIT 1 BY id<endif>
                     )
                     GROUP BY workspace_id, project_id, trace_id
                 ) AS s ON t.id = s.trace_id
@@ -1313,15 +1296,15 @@ public class ExperimentDAO {
                         trace_id,
                         sum(total_estimated_cost) as total_estimated_cost
                     FROM (
-                        SELECT workspace_id, project_id, trace_id, parent_span_id, id, total_estimated_cost, last_updated_at
+                        SELECT workspace_id, project_id, trace_id, id, total_estimated_cost, last_updated_at
                         FROM spans
                         WHERE workspace_id = :workspace_id
                         <if(has_target_projects)>
                         AND project_id IN :target_project_ids
                         <endif>
                         AND trace_id IN (SELECT trace_id FROM experiment_items_final)
-                        ORDER BY (workspace_id, project_id, trace_id, parent_span_id, id) DESC, last_updated_at DESC
-                        LIMIT 1 BY workspace_id, project_id, trace_id, parent_span_id, id
+                        ORDER BY (workspace_id, project_id, trace_id, id) DESC, last_updated_at DESC
+                        <if(has_target_projects)>LIMIT 1 BY workspace_id, project_id, id<else>LIMIT 1 BY id<endif>
                     )
                     GROUP BY workspace_id, project_id, trace_id
                 ) AS s ON t.id = s.trace_id
@@ -1678,6 +1661,17 @@ public class ExperimentDAO {
             ;
             """;
 
+    /**
+     * Partial update as a new {@code ReplacingMergeTree} row version: every column not being written is
+     * copied forward from the latest existing version.
+     *
+     * <p>{@code created_at} is one of those carried-forward columns and must stay that way — the stalled-run
+     * reaper reads {@code experiments.created_at} as its trial-level liveness signal
+     * ({@code OptimizationDAO#FIND_STALLED_STUDIO_OPTIMIZATIONS}, OPIK-7459), and it reads raw row versions
+     * rather than deduped ones. Re-stamping it here (or in {@link #BATCH_SET_PROJECT_ID}, which preserves it
+     * via {@code SELECT * REPLACE}) would make an update to any long-finished trial register as fresh
+     * progress and pin a dead run alive up to the reaper's hard ceiling.
+     */
     private static final String UPDATE = """
             INSERT INTO experiments (
                 id,
@@ -1733,227 +1727,6 @@ public class ExperimentDAO {
             SETTINGS log_comment = '<log_comment>', short_circuit_function_evaluation = 'force_enable';
             """;
 
-    /**
-     * 返回至少有一个孤立实验的工作区，按最小数量排序。
-     * 当实验的最新行具有 {@code project_id = ''} 时，该实验为孤立实验 —— 通过
-     * {@code GROUP BY id + argMax(project_id, last_updated_at)} 对 {@code ReplacingMergeTree}
-     * 版本进行去重。演示名称和环境排除的工作区在数据库中过滤掉，因此服务只迭代
-     * 实际可以迁移的工作区。
-     */
-    private static final String FIND_ELIGIBLE_EXPERIMENT_WORKSPACES = """
-            SELECT
-                workspace_id,
-                count(DISTINCT id) AS experiments_count
-            FROM (
-                SELECT
-                    e.workspace_id AS workspace_id,
-                    e.id AS id
-                FROM experiments e
-                WHERE e.name NOT IN :demo_experiment_names
-                <if(excluded_workspace_ids)>
-                AND e.workspace_id NOT IN :excluded_workspace_ids
-                <endif>
-                GROUP BY e.workspace_id, e.id
-                HAVING argMax(e.project_id, e.last_updated_at) = ''
-            )
-            GROUP BY workspace_id
-            ORDER BY experiments_count ASC
-            LIMIT :limit
-            SETTINGS log_comment = '<log_comment>'
-            """;
-
-    /**
-     * 对于工作区中的每个孤立实验，返回主导项目：{@code project_id}
-     * （未引用跟踪时为空），{@code distinct_project_count}（{@code 0} = 无推断，
-     * {@code 1} = 确定，{@code > 1} = 主导选择），以及包含在每个分配日志行中的
-     * {@code project_breakdown}（{@code projectId=count,...}）。多项目实验按
-     * {@code (count DESC, last_activity DESC, project_id ASC)} 排序，以便重复运行
-     * 产生相同结果。
-     *
-     * <p>{@code CAST(t.project_id AS String)} converts away from {@code FixedString(36)}, whose
-     * default would slip past the {@code != ''} guard and trip the downstream UUID parser.
-     * {@code count(DISTINCT ei.trace_id)} counts in units of "distinct traces per project"
-     * (the natural unit for the dominant pick, since one trace lives in one project) and
-     * neutralizes join-output inflation from transient ReplacingMergeTree row versions on
-     * either side.
-     *
-     * <p>The {@code t.id IN (SELECT trace_id FROM experiment_items WHERE workspace_id = :workspace_id)}
-     * predicate prunes the traces read to the referenced trace ids. The hash join alone would scan the
-     * whole workspace trace slice into the hash table; this IN set is implied by the join
-     * ({@code ei.trace_id = t.id}), so it adds an {@code id} primary-key condition that bounds the
-     * traces scan without changing the result.
-     */
-    private static final String COMPUTE_EXPERIMENT_PROJECT_MAPPING = """
-            WITH per_experiment_ranked AS (
-                WITH arraySort(
-                        proj -> (-proj.1, -proj.2, proj.3),
-                        groupArray((per_proj_count, per_proj_last_activity_nanos, project_id))
-                    ) AS ranked
-                SELECT
-                    experiment_id,
-                    ranked,
-                    arrayStringConcat(
-                        arrayMap(proj -> concat(proj.3, '=', toString(proj.1)), ranked),
-                        ','
-                    ) AS project_breakdown
-                FROM (
-                    SELECT
-                        ei.experiment_id AS experiment_id,
-                        CAST(t.project_id AS String) AS project_id,
-                        count(DISTINCT ei.trace_id) AS per_proj_count,
-                        toUnixTimestamp64Nano(max(t.last_updated_at)) AS per_proj_last_activity_nanos
-                    FROM experiment_items ei
-                    INNER JOIN traces t
-                        ON ei.workspace_id = t.workspace_id AND ei.trace_id = t.id
-                    WHERE ei.workspace_id = :workspace_id
-                    AND t.id IN (SELECT trace_id FROM experiment_items WHERE workspace_id = :workspace_id)
-                    GROUP BY ei.experiment_id, project_id
-                    HAVING project_id != ''
-                )
-                GROUP BY experiment_id
-            )
-            SELECT
-                e.id AS experiment_id,
-                any(if(length(per_experiment_ranked.ranked) > 0, per_experiment_ranked.ranked[1].3, '')) AS project_id,
-                any(ifNull(length(per_experiment_ranked.ranked), 0)) AS distinct_project_count,
-                any(ifNull(per_experiment_ranked.project_breakdown, '')) AS project_breakdown
-            FROM experiments e
-            LEFT JOIN per_experiment_ranked ON e.id = per_experiment_ranked.experiment_id
-            WHERE e.workspace_id = :workspace_id
-            AND e.name NOT IN :demo_experiment_names
-            GROUP BY e.id
-            HAVING argMax(e.project_id, e.last_updated_at) = ''
-            SETTINGS log_comment = '<log_comment>'
-            """;
-
-    /**
-     * 使用覆盖的 {@code project_id}、{@code last_updated_by} 和 {@code last_updated_at}
-     * 重新插入每个ID的最新行。使用 {@code SELECT * REPLACE}，以便将来添加到 {@code experiments}
-     * 的任何列都会自动复制，无需对此查询进行架构漂移修复 —— 替代方案（显式列列表）会通过写入
-     * 默认值而不是保留源行的值来静默丢失新列。
-     *
-     * <p>假设：{@code experiments} 没有 {@code MATERIALIZED} 或 {@code ALIAS} 列。
-     * 添加一个将需要更新此查询（INSERT 会在执行时大声失败，暴露问题而不是静默损坏数据）。
-     */
-    private static final String BATCH_SET_PROJECT_ID = """
-            INSERT INTO experiments
-            SELECT * REPLACE (
-                :user_name AS last_updated_by,
-                now64(9) AS last_updated_at,
-                :project_id AS project_id
-            )
-            FROM (
-                SELECT *
-                FROM experiments
-                WHERE workspace_id = :workspace_id
-                AND id IN :experiment_ids
-                ORDER BY (workspace_id, dataset_id, id) DESC, last_updated_at DESC
-                LIMIT 1 BY id
-            )
-            WHERE project_id = ''
-            SETTINGS log_comment = '<log_comment>'
-            """;
-
-    /**
-     * 对于一个工作区和给定的孤立数据集ID，返回每个数据集推断的 {@code project_id}、
-     * 引用项目的 {@code distinct_project_count}，以及包含在每个分配日志条目中的排序
-     * {@code project_breakdown}（{@code projectId=count,...}）。
-     *
-     * <p>推断读取 {@code experiments.project_id}（由实验-项目迁移设置）；
-     * 仍然在 {@code project_id = ''} 的实验被排除，因此实验全部未迁移的数据集不会出现在
-     * 结果中，服务将其视为无推断。有一个引用项目时选择是明确的；有多个时，主导项目获胜，
-     * 按 {@code (count DESC, last_activity DESC, project_id ASC)} 排序，以便重复运行
-     * 产生相同结果。
-     *
-     * <p>内部的 {@code argMax(project_id, last_updated_at) GROUP BY id} 移除重复的
-     * ReplacingMergeTree 行版本：当迁移进行中时，表可能短暂持有实验的先前和更新行，
-     * 取最新的可防止外部聚合重复计数。
-     */
-    private static final String COMPUTE_DATASET_PROJECT_MAPPING = """
-            WITH arraySort(proj -> (-proj.1, -proj.2, proj.3),
-                    groupArray((per_proj_count, per_proj_last_activity_nanos, experiment_project_id))) AS ranked
-            SELECT
-                dataset_id AS dataset_id,
-                length(ranked) AS distinct_project_count,
-                ranked[1].3 AS project_id,
-                arrayStringConcat(
-                    arrayMap(proj -> concat(proj.3, '=', toString(proj.1)), ranked), ','
-                ) AS project_breakdown
-            FROM (
-                SELECT
-                    dataset_id,
-                    experiment_project_id,
-                    count() AS per_proj_count,
-                    toUnixTimestamp64Nano(max(experiment_last_updated_at)) AS per_proj_last_activity_nanos
-                FROM (
-                    SELECT
-                        dataset_id,
-                        argMax(project_id, last_updated_at) AS experiment_project_id,
-                        max(last_updated_at) AS experiment_last_updated_at
-                    FROM experiments
-                    WHERE workspace_id = :workspace_id
-                    AND dataset_id IN :dataset_ids
-                    AND name NOT IN :demo_experiment_names
-                    GROUP BY workspace_id, id, dataset_id
-                    HAVING experiment_project_id != ''
-                )
-                GROUP BY dataset_id, experiment_project_id
-            )
-            GROUP BY dataset_id
-            SETTINGS log_comment = '<log_comment>'
-            """;
-
-    /**
-     * 对于一个工作区和一组孤立提示ID，返回每个引用提示推断的 {@code project_id}、
-     * 引用项目的 {@code distinct_project_count}，以及包含在主导分配日志条目中的排序
-     * {@code project_breakdown}（{@code projectId=count,...}）。与
-     * {@link #COMPUTE_DATASET_PROJECT_MAPPING} 形状相同：单项目行是明确的；
-     * 多项目行按 {@code (count DESC, last_activity DESC, project_id ASC)} 选择主导项目，
-     * 以便重复运行产生相同结果。唯一引用实验仍在 {@code project_id = ''} 的提示被内部
-     * {@code HAVING} 丢弃；调用者将缺失视为无推断。
-     *
-     * <p>{@code argMax(_, last_updated_at) GROUP BY id} 对进行中的实验更新的
-     * ReplacingMergeTree 行版本进行去重。{@code arrayDistinct} 折叠通过旧版
-     * {@code prompt_id} 列和 {@code prompt_versions} 映射到达同一提示的实验，
-     * 防止后续 {@code ARRAY JOIN} 中的 {@code per_proj_count} 膨胀。
-     * 演示命名的实验在上游被过滤，因此种子演示项目不能倾斜恰好被演示实验引用的
-     * 用户提示的主导选择。
-     */
-    private static final String COMPUTE_PROMPT_PROJECT_CLASSIFICATION = """
-            WITH arraySort(proj -> (-proj.1, -proj.2, proj.3),
-                    groupArray((per_proj_count, per_proj_last_activity_nanos, experiment_project_id))) AS ranked
-            SELECT
-                prompt_id_ref AS prompt_id,
-                length(ranked) AS distinct_project_count,
-                ranked[1].3 AS project_id,
-                arrayStringConcat(
-                    arrayMap(proj -> concat(proj.3, '=', toString(proj.1)), ranked), ','
-                ) AS project_breakdown
-            FROM (
-                SELECT
-                    prompt_id_ref,
-                    experiment_project_id,
-                    count() AS per_proj_count,
-                    toUnixTimestamp64Nano(max(experiment_last_updated_at)) AS per_proj_last_activity_nanos
-                FROM (
-                    SELECT
-                        argMax(project_id, last_updated_at) AS experiment_project_id,
-                        argMax(arrayDistinct(arrayConcat([prompt_id], mapKeys(prompt_versions))), last_updated_at) AS prompt_id_refs,
-                        max(last_updated_at) AS experiment_last_updated_at
-                    FROM experiments
-                    WHERE workspace_id = :workspace_id
-                    AND name NOT IN :demo_experiment_names
-                    GROUP BY id
-                    HAVING experiment_project_id != ''
-                )
-                ARRAY JOIN prompt_id_refs AS prompt_id_ref
-                WHERE prompt_id_ref IN :prompt_ids
-                GROUP BY prompt_id_ref, experiment_project_id
-            )
-            GROUP BY prompt_id_ref
-            SETTINGS log_comment = '<log_comment>'
-            """;
-
     private final @NonNull ConnectionFactory connectionFactory;
     private final @NonNull TransactionTemplateAsync asyncTemplate;
     private final @NonNull SortingQueryBuilder sortingQueryBuilder;
@@ -1961,24 +1734,6 @@ public class ExperimentDAO {
     private final @NonNull FilterQueryBuilder filterQueryBuilder;
     private final @NonNull GroupingQueryBuilder groupingQueryBuilder;
     private final @NonNull ExperimentAggregatesDAO experimentAggregatesDAO;
-
-    /**
-     * 检查V1（工作区范围）实验，排除已知演示名称。
-     * ClickHouse 字符串比较区分大小写 —— 演示名称的每种已知大小写
-     * 必须在 {@link DemoData#EXPERIMENTS} 中显式列出。
-     */
-    public Mono<Boolean> hasVersion1Experiments(@NonNull String workspaceId,
-            @NonNull List<String> demoExperimentNames) {
-        var template = getSTWithLogComment(HAS_VERSION1_EXPERIMENTS,
-                "has_version1_experiments", workspaceId, "", demoExperimentNames);
-        return Mono.from(connectionFactory.create())
-                .flatMapMany(connection -> Flux.from(connection.createStatement(template.render())
-                        .bind("workspace_id", workspaceId)
-                        .bind("demo_experiment_names", demoExperimentNames.toArray(String[]::new))
-                        .execute())
-                        .flatMap(result -> Flux.from(result.map((row, metadata) -> true))))
-                .hasElements();
-    }
 
     @WithSpan
     Mono<Void> insert(@NonNull Experiment experiment, @NonNull String executionPolicyJson) {
@@ -2284,13 +2039,13 @@ public class ExperimentDAO {
             var aggregationCriteria = AggregationBranchCountsCriteria.builder()
                     .experimentIds(experimentSearchCriteria.experimentIds())
                     .datasetId(experimentSearchCriteria.datasetId())
+                    .projectId(experimentSearchCriteria.projectId())
                     .build();
 
             var targetProjectIdsMono = getTargetProjectIdsForExperiments(
                     TargetProjectsCriteria.from(experimentSearchCriteria));
             var branchCountsMono = getAggregationBranchCounts(aggregationCriteria);
 
-            // 并行运行预查询：目标项目ID和聚合实验计数
             return Mono.zip(targetProjectIdsMono, branchCountsMono)
                     .flatMap(preQueryResults -> {
                         var targetProjectIds = preQueryResults.getT1();
@@ -2980,116 +2735,4 @@ public class ExperimentDAO {
         }
     }
 
-    Flux<EligibleWorkspace> findEligibleExperimentWorkspaces(Set<String> excludedWorkspaceIds, int limit) {
-        var excludedWorkspacesCount = CollectionUtils.size(excludedWorkspaceIds);
-        return asyncTemplate.stream(connection -> makeFluxContextAware((userName, workspaceId) -> {
-            var details = "excludedWorkspacesCount=%d, limit=%d, ".formatted(excludedWorkspacesCount, limit);
-            var template = getSTWithLogComment(FIND_ELIGIBLE_EXPERIMENT_WORKSPACES,
-                    "find_eligible_experiment_workspaces", workspaceId, userName, details);
-            if (excludedWorkspacesCount > 0) {
-                template.add("excluded_workspace_ids", true);
-            }
-            var statement = connection.createStatement(template.render())
-                    .bind("demo_experiment_names", DemoData.EXPERIMENTS)
-                    .bind("limit", limit);
-            if (excludedWorkspacesCount > 0) {
-                statement.bind("excluded_workspace_ids", excludedWorkspaceIds);
-            }
-            return Flux.from(statement.execute())
-                    .flatMap(result -> result.map((row, metadata) -> EligibleWorkspace.builder()
-                            .workspaceId(row.get("workspace_id", String.class))
-                            .experimentsCount(row.get("experiments_count", Long.class))
-                            .build()));
-        }));
-    }
-
-    Flux<ExperimentProjectMapping> computeExperimentProjectMapping() {
-        return asyncTemplate.stream(connection -> makeFluxContextAware((userName, workspaceId) -> {
-            var template = getSTWithLogComment(COMPUTE_EXPERIMENT_PROJECT_MAPPING,
-                    "compute_experiment_project_mapping", workspaceId, userName, "");
-            var statement = connection.createStatement(template.render())
-                    .bind("demo_experiment_names", DemoData.EXPERIMENTS);
-            return bindWorkspaceIdToFlux(statement).subscriberContext(userName, workspaceId);
-        }))
-                .flatMap(result -> result.map((row, metadata) -> ExperimentProjectMapping.builder()
-                        .experimentId(UUID.fromString(row.get("experiment_id", String.class)))
-                        .projectId(Optional.ofNullable(row.get("project_id", String.class))
-                                .filter(StringUtils::isNotBlank)
-                                .map(UUID::fromString)
-                                .orElse(null))
-                        .distinctProjectCount(row.get("distinct_project_count", Long.class))
-                        .projectBreakdown(row.get("project_breakdown", String.class))
-                        .build()));
-    }
-
-    Mono<Long> batchSetProjectId(Set<UUID> experimentIds, @NonNull UUID projectId) {
-        if (CollectionUtils.isEmpty(experimentIds)) {
-            return Mono.just(0L);
-        }
-        return asyncTemplate.stream(connection -> makeFluxContextAware((userName, workspaceId) -> {
-            var details = "experimentCount=%d, projectId=%s".formatted(experimentIds.size(), projectId);
-            var template = getSTWithLogComment(
-                    BATCH_SET_PROJECT_ID, "batch_set_project_id", workspaceId, userName, details);
-            var statement = connection.createStatement(template.render())
-                    .bind("experiment_ids", experimentIds)
-                    .bind("project_id", projectId);
-            return bindUserNameAndWorkspaceContextToStream(statement).subscriberContext(userName, workspaceId);
-        }))
-                .flatMap(Result::getRowsUpdated)
-                .reduce(0L, Long::sum);
-    }
-
-    Flux<DatasetProjectMapping> computeDatasetProjectMapping(Set<UUID> datasetIds) {
-        if (CollectionUtils.isEmpty(datasetIds)) {
-            return Flux.empty();
-        }
-        var datasetIdsAsStrings = datasetIds.stream().map(UUID::toString).toArray(String[]::new);
-        return asyncTemplate.stream(connection -> makeFluxContextAware((userName, workspaceId) -> {
-            var template = getSTWithLogComment(COMPUTE_DATASET_PROJECT_MAPPING,
-                    "compute_dataset_project_mapping", workspaceId, userName, "");
-            var statement = connection.createStatement(template.render())
-                    .bind("dataset_ids", datasetIdsAsStrings)
-                    .bind("demo_experiment_names", DemoData.EXPERIMENTS);
-            return bindWorkspaceIdToFlux(statement).subscriberContext(userName, workspaceId);
-        }))
-                .flatMap(result -> result.map((row, metadata) -> Optional
-                        .ofNullable(row.get("project_id", String.class))
-                        .filter(StringUtils::isNotBlank)
-                        .map(projectId -> DatasetProjectMapping.builder()
-                                .datasetId(UUID.fromString(row.get("dataset_id", String.class)))
-                                .projectId(UUID.fromString(projectId))
-                                .distinctProjectCount(row.get("distinct_project_count", Long.class))
-                                .projectBreakdown(row.get("project_breakdown", String.class))
-                                .build())))
-                .flatMap(Mono::justOrEmpty);
-    }
-
-    /**
-     * 提示项目迁移的批量分类。为每个具有可用推断项目的引用提示返回一个
-     * {@link PromptProjectClassification}；结果中不存在的提示被调用者视为无推断。
-     */
-    Flux<PromptProjectClassification> computePromptProjectClassification(Set<UUID> promptIds) {
-        if (CollectionUtils.isEmpty(promptIds)) {
-            return Flux.empty();
-        }
-        return asyncTemplate.stream(connection -> makeFluxContextAware((userName, workspaceId) -> {
-            var details = "promptCount=%d".formatted(promptIds.size());
-            var template = getSTWithLogComment(COMPUTE_PROMPT_PROJECT_CLASSIFICATION,
-                    "compute_prompt_project_classification", workspaceId, userName, details);
-            var statement = connection.createStatement(template.render())
-                    .bind("prompt_ids", promptIds)
-                    .bind("demo_experiment_names", DemoData.EXPERIMENTS);
-            return bindWorkspaceIdToFlux(statement).subscriberContext(userName, workspaceId);
-        }))
-                .flatMap(result -> result.map((row, metadata) -> Optional
-                        .ofNullable(row.get("project_id", String.class))
-                        .filter(StringUtils::isNotBlank)
-                        .map(projectId -> PromptProjectClassification.builder()
-                                .promptId(UUID.fromString(row.get("prompt_id", String.class)))
-                                .projectId(UUID.fromString(projectId))
-                                .distinctProjectCount(row.get("distinct_project_count", Long.class))
-                                .projectBreakdown(row.get("project_breakdown", String.class))
-                                .build())))
-                .flatMap(Mono::justOrEmpty);
-    }
 }
