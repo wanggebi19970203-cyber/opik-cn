@@ -1500,6 +1500,13 @@
         "demoTemplate": {
           "title": "演示模板 - Opik 聊天机器人",
           "description": "训练聊天机器人回答 Opik 问题并拒绝无关请求"
+        },
+        "status": {
+          "running": "运行中",
+          "completed": "已完成",
+          "cancelled": "已取消",
+          "initialized": "已初始化",
+          "error": "错误"
         }
       },
       "prompts": {

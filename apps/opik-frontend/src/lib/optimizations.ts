@@ -283,11 +283,26 @@ export const OPTIMIZATION_STATUS_OPTIONS: {
   label: string;
   value: OPTIMIZATION_STATUS;
 }[] = [
-  { label: "Running", value: OPTIMIZATION_STATUS.RUNNING },
-  { label: "Completed", value: OPTIMIZATION_STATUS.COMPLETED },
-  { label: "Cancelled", value: OPTIMIZATION_STATUS.CANCELLED },
-  { label: "Initialized", value: OPTIMIZATION_STATUS.INITIALIZED },
-  { label: "Error", value: OPTIMIZATION_STATUS.ERROR },
+  {
+    label: i18next.t("common.constants.optimizations.status.running"),
+    value: OPTIMIZATION_STATUS.RUNNING,
+  },
+  {
+    label: i18next.t("common.constants.optimizations.status.completed"),
+    value: OPTIMIZATION_STATUS.COMPLETED,
+  },
+  {
+    label: i18next.t("common.constants.optimizations.status.cancelled"),
+    value: OPTIMIZATION_STATUS.CANCELLED,
+  },
+  {
+    label: i18next.t("common.constants.optimizations.status.initialized"),
+    value: OPTIMIZATION_STATUS.INITIALIZED,
+  },
+  {
+    label: i18next.t("common.constants.optimizations.status.error"),
+    value: OPTIMIZATION_STATUS.ERROR,
+  },
 ];
 
 export const getDefaultOptimizerConfig = (

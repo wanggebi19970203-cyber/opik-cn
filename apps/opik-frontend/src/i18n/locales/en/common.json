@@ -1500,6 +1500,13 @@
         "demoTemplate": {
           "title": "Demo template - Opik Chatbot",
           "description": "Train a chatbot to answer Opik questions and decline off-topic requests"
+        },
+        "status": {
+          "running": "Running",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "initialized": "Initialized",
+          "error": "Error"
         }
       },
       "prompts": {
