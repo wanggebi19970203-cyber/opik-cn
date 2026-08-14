@@ -55,9 +55,15 @@ export const getBaselineCandidate = (
 // display labels. Studio runs report the OPTIMIZER_TYPE enum value, resolved via
 // OPTIMIZER_OPTIONS below.
 const OPTIMIZER_CLASS_LABELS: Record<string, string> = {
-  GepaOptimizer: "GEPA optimizer",
-  HierarchicalReflectiveOptimizer: "Hierarchical Reflective",
-  EvolutionaryOptimizer: "Evolutionary",
+  GepaOptimizer: i18next.t(
+    "common.constants.optimizations.optimizerOptions.gepa.label",
+  ),
+  HierarchicalReflectiveOptimizer: i18next.t(
+    "common.constants.optimizations.optimizerOptions.hierarchicalReflective.label",
+  ),
+  EvolutionaryOptimizer: i18next.t(
+    "common.constants.optimizations.optimizerOptions.evolutionary.label",
+  ),
 };
 
 export const getOptimizerLabel = (type: string): string =>

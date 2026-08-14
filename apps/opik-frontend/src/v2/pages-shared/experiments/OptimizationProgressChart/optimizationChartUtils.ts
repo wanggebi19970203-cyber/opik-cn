@@ -3,6 +3,7 @@
  */
 
 import isNumber from "lodash/isNumber";
+import i18next from "i18next";
 
 import { AggregatedCandidate } from "@/types/optimizations";
 import { TagProps } from "@/ui/tag";
@@ -111,13 +112,13 @@ export const getTrialDotColor = ({
 };
 
 export const TRIAL_STATUS_LABELS: Record<TrialStatus, string> = {
-  baseline: "Baseline",
-  passed: "Passed",
-  evaluating: "Evaluating",
+  baseline: i18next.t("experiments:optimizationChart.trialStatus.baseline"),
+  passed: i18next.t("experiments:optimizationChart.trialStatus.passed"),
+  evaluating: i18next.t("experiments:optimizationChart.trialStatus.evaluating"),
   // Internal status key stays "pruned"; user-facing label is "Discarded".
-  pruned: "Discarded",
-  running: "Running",
-  failed: "Failed",
+  pruned: i18next.t("experiments:optimizationChart.trialStatus.discarded"),
+  running: i18next.t("experiments:optimizationChart.trialStatus.running"),
+  failed: i18next.t("experiments:optimizationChart.trialStatus.failed"),
 };
 
 export type TrialCardRow = { label: string; value: string };
@@ -171,19 +172,21 @@ export const buildTrialCardModel = ({
 
   const rows: TrialCardRow[] = [
     {
-      label: isTestSuite ? "Pass rate" : "Score",
+      label: isTestSuite
+        ? i18next.t("experiments:passRate")
+        : i18next.t("experiments:score"),
       value: `${percentage}${fraction}`,
     },
   ];
   if (candidate.latencyP50 != null) {
     rows.push({
-      label: "Latency",
+      label: i18next.t("experiments:latency"),
       value: formatAsDuration(candidate.latencyP50),
     });
   }
   if (candidate.runtimeCost != null) {
     rows.push({
-      label: "Runtime cost",
+      label: i18next.t("experiments:runtimeCost"),
       value: formatAsCurrency(candidate.runtimeCost),
     });
   }
@@ -192,9 +195,13 @@ export const buildTrialCardModel = ({
     // The baseline carries no trial number — it is not a trial (OPIK-7589).
     title:
       candidate.trialNumber == null
-        ? "Baseline"
-        : `Trial #${candidate.trialNumber}`,
-    statusLabel: isBest ? "Best trial" : TRIAL_STATUS_LABELS[status],
+        ? TRIAL_STATUS_LABELS.baseline
+        : i18next.t("experiments:trialNumber", {
+            number: candidate.trialNumber,
+          }),
+    statusLabel: isBest
+      ? i18next.t("experiments:bestCandidate")
+      : TRIAL_STATUS_LABELS[status],
     dotColor: isBest ? TRIAL_BEST_COLOR : TRIAL_STATUS_COLORS[status],
     dotRingColor: isBest ? TRIAL_BEST_RING_COLOR : undefined,
     rows,
@@ -250,11 +257,19 @@ export const buildTrialLegendItems = (
   }
 
   return [
-    { color: TRIAL_STATUS_COLORS.passed, label: "Passed trial" },
-    { color: TRIAL_STATUS_COLORS.pruned, label: "Discarded trial" },
+    {
+      color: TRIAL_STATUS_COLORS.passed,
+      label: i18next.t("experiments:optimizationChart.legend.passedTrial"),
+    },
+    {
+      color: TRIAL_STATUS_COLORS.pruned,
+      label: i18next.t("experiments:optimizationChart.legend.discardedTrial"),
+    },
     ...DATASET_UNCOLLAPSED_STATUSES.filter(present).map((s) => ({
       color: TRIAL_STATUS_COLORS[s],
-      label: `${TRIAL_STATUS_LABELS[s]} trial`,
+      label: i18next.t("experiments:optimizationChart.legend.statusTrial", {
+        status: TRIAL_STATUS_LABELS[s],
+      }),
     })),
   ];
 };
@@ -688,7 +703,7 @@ export const buildStepTickLabels = (
   const labels = new Map<number, string>();
   for (const stepIndex of steps) {
     if (stepIndex === 0) {
-      labels.set(stepIndex, "Baseline");
+      labels.set(stepIndex, TRIAL_STATUS_LABELS.baseline);
       continue;
     }
     const range = rangeByStep.get(stepIndex);
@@ -696,8 +711,13 @@ export const buildStepTickLabels = (
     labels.set(
       stepIndex,
       range.min === range.max
-        ? `Trial ${range.min}`
-        : `Trials ${range.min}–${range.max}`,
+        ? i18next.t("experiments:optimizationChart.tick.trial", {
+            number: range.min,
+          })
+        : i18next.t("experiments:optimizationChart.tick.trialsRange", {
+            min: range.min,
+            max: range.max,
+          }),
     );
   }
   return labels;

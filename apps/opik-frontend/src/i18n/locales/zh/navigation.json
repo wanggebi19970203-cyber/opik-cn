@@ -106,10 +106,24 @@
       "openProjectSelector": "打开项目选择器",
       "projects": "项目",
       "newProject": "新建项目",
+      "new": "新建",
+      "pinned": "已固定",
+      "recentlyUpdated": "最近更新",
+      "searchProject": "搜索项目",
+      "viewAllProjects": "查看全部项目",
+      "moreOptions": "更多选项",
+      "pinProject": "固定项目",
+      "unpinProject": "取消固定项目",
       "deleteProject": "删除项目",
       "deleteProjectDescription": "删除项目将同时移除所有追踪及其数据。此操作无法撤销。确定要继续吗？",
       "edit": "编辑",
       "delete": "删除"
+    },
+    "workspaceMenu": {
+      "pinned": "已固定",
+      "recentlyVisited": "最近访问",
+      "pinWorkspace": "固定工作区",
+      "unpinWorkspace": "取消固定工作区"
     },
     "backToProject": {
       "backToName": "返回 {{name}}",

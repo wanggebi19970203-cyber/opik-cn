@@ -120,7 +120,9 @@
       "addToEntity": "添加到{{entity}}",
       "items": "项目",
       "traces": "追踪",
-      "spans": "跨度"
+      "spans": "跨度",
+      "entityTestSuite": "测试套件",
+      "entityDataset": "数据集"
     },
     "addToQueue": {
       "title": "添加到标注队列",
@@ -315,7 +317,18 @@
       "topicTitle": "主题护栏",
       "topicHintText": "主题护栏旨在防止模型在某些可能不合适、不安全、不道德或超出其预期范围的主题上生成回复。",
       "piiTitle": "PII 护栏",
-      "piiHintText": "PII（个人身份信息）护栏旨在防止模型生成、存储或处理可能识别个人身份的敏感个人数据。"
+      "piiHintText": "PII（个人身份信息）护栏旨在防止模型生成、存储或处理可能识别个人身份的敏感个人数据。",
+      "promptInjectionTitle": "提示注入护栏",
+      "promptInjectionHintText": "提示注入护栏在护栏服务器上运行微调分类器，以检测提示注入和越狱尝试。",
+      "customClassifierTitle": "自定义护栏",
+      "customClassifierHintText": "自定义护栏运行一个由您在自己的标注示例上训练的二分类器。护栏服务器从本地适配器目录按名称加载模型。",
+      "llmJudgeTitle": "LLM 评判护栏",
+      "llmJudgeHintText": "LLM 评判护栏使用 LLM 依据自然语言策略验证文本。它在 SDK 中针对您 Opik 工作区中配置的提供商运行，无需护栏服务器。",
+      "modelName": "模型名称",
+      "checkName": "检查名称",
+      "instructions": "指令",
+      "instructionsPlaceholder": "描述文本必须遵守的策略...",
+      "model": "模型"
     },
     "traceLogs": {
       "logs": "日志",

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import useLocalStorageState from "use-local-storage-state";
 import { useActiveWorkspaceName, useUserEmail } from "@/store/AppStore";
 import { trackEvent, OpikEvent } from "@/lib/analytics/tracking";
@@ -14,13 +15,17 @@ import { illustrationUrlsByTheme } from "./illustrations";
 import "./animations.css";
 
 const STEP_CONFIG = [
-  { nextLabel: "See Opik in action" },
-  { nextLabel: "Let Opik recommend fixes" },
-  { nextLabel: "Start sending traces" },
-  { nextLabel: "Explore the platform", nextVariant: "outline" as const },
+  { nextLabel: "getStarted.mobileOnboarding.nextLabels.seeOpikInAction" },
+  { nextLabel: "getStarted.mobileOnboarding.nextLabels.recommendFixes" },
+  { nextLabel: "getStarted.mobileOnboarding.nextLabels.startSendingTraces" },
+  {
+    nextLabel: "getStarted.mobileOnboarding.nextLabels.explorePlatform",
+    nextVariant: "outline" as const,
+  },
 ];
 
 const MobileOnboarding: React.FC = () => {
+  const { t } = useTranslation("pages/get-started");
   const workspaceName = useActiveWorkspaceName();
   const userEmail = useUserEmail();
   const navigate = useNavigate();
@@ -118,7 +123,7 @@ const MobileOnboarding: React.FC = () => {
       onBack={step > 1 ? handleBack : undefined}
       onNext={handleNext}
       onStepChange={handleStepChange}
-      nextLabel={config.nextLabel}
+      nextLabel={t(config.nextLabel)}
       nextVariant={config.nextVariant}
     >
       <WelcomeStep onNext={handleNext} active={step === 1} />

@@ -81,7 +81,12 @@
       "copySuffix": " (副本)",
       "scopeTrace": "追踪",
       "scopeThread": "线程",
-      "scopeSpan": "跨度"
+      "scopeSpan": "跨度",
+      "triggerScopeLabel": "触发范围",
+      "triggerScopeTooltip": "选择此规则是在生产追踪、实验追踪还是两者上都触发。",
+      "triggerScopeProduction": "生产追踪",
+      "triggerScopeExperiment": "实验追踪",
+      "triggerScopeBoth": "两者"
     },
     "pythonCodeRule": {
       "pythonCodeLabel": "Python 代码",

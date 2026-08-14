@@ -81,15 +81,15 @@ public interface AttachmentService {
     Mono<Boolean> hasAnyAttachmentByEntityIds(EntityType entityType, Set<UUID> entityIds);
 
     /**
-     * Lists attachments for a set of entity IDs in a single batch DB call. Each returned
-     * {@link AttachmentInfo} carries its owning {@code entityId} so callers can group by entity.
+     * 在一次批量数据库调用中列出多个实体 ID 的附件。每个返回的
+     * {@link AttachmentInfo} 都携带其所属的 {@code entityId}，以便调用方按实体分组。
      */
     Mono<List<AttachmentInfo>> getAttachmentInfoByEntityIds(EntityType entityType, Set<UUID> entityIds);
 
     /**
-     * Presigned (S3) download URL for a single attachment, reachable by an external
-     * caller (e.g. an LLM provider fetching media during online evaluation). Uses the
-     * same object-key layout as upload/download so it resolves the stored object.
+     * 单个附件的预签名（S3）下载 URL，可供外部调用方
+     * （例如在线评估期间获取媒体的 LLM 提供方）访问。使用与上传/下载相同的
+     * 对象键布局，以便解析存储的对象。
      */
     String presignDownloadUrl(AttachmentInfo attachmentInfo, String workspaceId);
 
@@ -156,7 +156,7 @@ class AttachmentServiceImpl implements AttachmentService {
                 completeUploadRequest.entityType().getValue());
         // 对于 MinIO，不需要 complete 操作，文件通过后端直接上传
         if (config.getS3Config().isMinIO()) {
-            log.info("Skipping completeMultiPartUpload for MinIO");
+            log.info("跳过 MinIO 的 completeMultiPartUpload");
             return;
         }
 
@@ -178,7 +178,7 @@ class AttachmentServiceImpl implements AttachmentService {
     public void uploadAttachment(@NonNull AttachmentInfo attachmentInfo, byte[] data, @NonNull String workspaceId,
             @NonNull String userName) {
         if (!config.getS3Config().isMinIO()) {
-            log.warn("uploadAttachment is forbidden for S3");
+            log.warn("S3 禁止 uploadAttachment");
             throw new ClientErrorException(
                     "Direct attachment upload is forbidden for S3, please use multi-part upload with presigned urls",
                     Response.Status.FORBIDDEN);
@@ -212,7 +212,7 @@ class AttachmentServiceImpl implements AttachmentService {
     @Override
     public InputStream downloadAttachment(@NonNull AttachmentInfo attachmentInfo, @NonNull String workspaceId) {
         if (!config.getS3Config().isMinIO()) {
-            log.warn("downloadAttachment is forbidden for S3");
+            log.warn("S3 禁止 downloadAttachment");
             throw new ClientErrorException(
                     "Direct attachment download is forbidden for S3, please use presigned url",
                     Response.Status.FORBIDDEN);
@@ -377,7 +377,7 @@ class AttachmentServiceImpl implements AttachmentService {
         try {
             return new String(Base64.getUrlDecoder().decode(baseUrlEncoded), StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
-            log.error("Failed to decode base URL: {}", baseUrlEncoded, e);
+            log.error("解码 base URL 失败：{}", baseUrlEncoded, e);
             throw new BadRequestException("Invalid base URL format");
         }
     }
@@ -435,7 +435,7 @@ class AttachmentServiceImpl implements AttachmentService {
 
         return delete(deleteRequest)
                 .onErrorResume(error -> {
-                    log.warn("Failed to delete old attachments for entity '{}' of type '{}', filenames: {}, error: {}",
+                    log.warn("删除实体 '{}'（类型 '{}'）的旧附件失败，文件名：{}，错误：{}",
                             entityId, entityType, fileNames, error.getMessage());
                     return Mono.empty(); // 继续处理
                 })
@@ -475,13 +475,13 @@ class AttachmentServiceImpl implements AttachmentService {
                             .filterAutoStrippedAttachments(attachments);
 
                     if (autoStrippedAttachments.isEmpty()) {
-                        log.info("No auto-stripped attachments found for entityType '{}', entityIds count '{}'",
+                        log.info("未找到实体类型 '{}' 的自动剥离附件，实体ID数量 '{}'",
                                 entityType, entityIds.size());
                         return Mono.just(0L);
                     }
 
                     log.info(
-                            "Deleting '{}' auto-stripped attachments (out of '{}' total) for entityType '{}', entityIds count '{}'",
+                            "正在删除 '{}' 个自动剥离附件（共 '{}' 个），实体类型 '{}'，实体ID数量 '{}'",
                             autoStrippedAttachments.size(), attachments.size(), entityType, entityIds.size());
 
                     Set<String> fileNames = autoStrippedAttachments.stream()
@@ -491,7 +491,7 @@ class AttachmentServiceImpl implements AttachmentService {
                     // 从存储中删除文件
                     return Mono.fromRunnable(() -> fileService.deleteObjects(fileNames))
                             .onErrorResume(error -> {
-                                log.warn("Failed to delete files from storage: {}", error.getMessage());
+                                log.warn("从存储删除文件失败：{}", error.getMessage());
                                 return Mono.empty(); // 即使文件删除失败也继续数据库删除
                             })
                             .then(attachmentDAO.deleteByFileNames(entityType, entityIds, fileNames));

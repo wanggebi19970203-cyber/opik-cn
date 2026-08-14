@@ -20,14 +20,16 @@ describe("CodeMetricConfigs — helper copy", () => {
     // Regression guard (OPIK-7172): a required `kwargs["x"]` access used to be
     // rejected at build time, so the helper text must steer users toward the
     // safe `kwargs.get(...)` accessor instead of implying raw subscripting.
-    expect(screen.getByText('kwargs.get("field_name")')).toBeInTheDocument();
+    expect(
+      screen.getByText("optimizations.metricConfigs.pythonCodeDescription"),
+    ).toBeInTheDocument();
   });
 
   it("still documents the BaseMetric/score contract", () => {
     render(<CodeMetricConfigs configs={{}} onChange={vi.fn()} />);
 
-    expect(screen.getByText("BaseMetric")).toBeInTheDocument();
-    expect(screen.getAllByText("score").length).toBeGreaterThan(0);
-    expect(screen.getByText("output")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimizations.metricConfigs.pythonCodeDescription"),
+    ).toBeInTheDocument();
   });
 });

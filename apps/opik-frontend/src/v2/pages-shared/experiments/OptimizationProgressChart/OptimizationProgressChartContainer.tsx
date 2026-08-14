@@ -91,7 +91,7 @@ const OptimizationProgressChartContainer: React.FC<
           className="min-h-32 text-light-slate"
           message={
             status === OPTIMIZATION_STATUS.CANCELLED
-              ? "This run was cancelled"
+              ? t("thisRunWasCancelled")
               : t("noDataToShow")
           }
         />

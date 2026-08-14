@@ -513,7 +513,7 @@ const ProjectMetricsEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                     htmlFor="metrics-all-projects"
                     className="comet-body-s cursor-pointer font-normal"
                   >
-                    All projects in the workspace
+                    {t("statsCard.allProjectsInWorkspace")}
                   </Label>
                 </div>
                 <FormControl>

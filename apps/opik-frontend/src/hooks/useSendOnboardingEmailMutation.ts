@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import i18next from "i18next";
 import { useToast } from "@/ui/use-toast";
 import usePluginsStore from "@/store/PluginsStore";
 
@@ -10,8 +11,12 @@ const useSendOnboardingEmailMutation = () => {
     mutationFn: (email: string) => sendOnboardingEmail!(email),
     onError: () => {
       toast({
-        title: "Failed to send email",
-        description: "Please try again.",
+        title: i18next.t(
+          "common.hooks.useSendOnboardingEmailMutation.failedToSendEmail",
+        ),
+        description: i18next.t(
+          "common.hooks.useSendOnboardingEmailMutation.tryAgain",
+        ),
         variant: "destructive",
       });
     },

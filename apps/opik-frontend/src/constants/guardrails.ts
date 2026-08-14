@@ -96,9 +96,15 @@ export const PIIEntitiesLabelMap = {
 export const GuardrailNamesLabelMap = {
   [GuardrailTypes.TOPIC]: i18next.t("common.constants.guardrails.names.topic"),
   [GuardrailTypes.PII]: i18next.t("common.constants.guardrails.names.pii"),
-  [GuardrailTypes.LLM_JUDGE]: "LLM judge guardrail",
-  [GuardrailTypes.PROMPT_INJECTION]: "Prompt injection guardrail",
-  [GuardrailTypes.CUSTOM_CLASSIFIER]: "Custom guardrail",
+  [GuardrailTypes.LLM_JUDGE]: i18next.t(
+    "common.constants.guardrails.names.llmJudge",
+  ),
+  [GuardrailTypes.PROMPT_INJECTION]: i18next.t(
+    "common.constants.guardrails.names.promptInjection",
+  ),
+  [GuardrailTypes.CUSTOM_CLASSIFIER]: i18next.t(
+    "common.constants.guardrails.names.customClassifier",
+  ),
 };
 
 export const getGuardrailComputedResult = (

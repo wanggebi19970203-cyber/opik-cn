@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import {
   getMetricLabel,
@@ -10,6 +10,12 @@ import {
   OPTIMIZER_TYPE,
   Optimization,
 } from "@/types/optimizations";
+
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
 
 const studioOptimization = {
   id: "opt-1",
@@ -36,8 +42,8 @@ const studioOptimization = {
 
 describe("getMetricLabel", () => {
   it("maps a known metric type to its display label", () => {
-    expect(getMetricLabel(METRIC_TYPE.G_EVAL)).toBe("Custom (G-Eval)");
-    expect(getMetricLabel(METRIC_TYPE.EQUALS)).toBe("Equals");
+    expect(getMetricLabel(METRIC_TYPE.G_EVAL)).toBe("common.constants.optimizations.metricOptions.gEval.label");
+    expect(getMetricLabel(METRIC_TYPE.EQUALS)).toBe("common.constants.optimizations.metricOptions.equals.label");
   });
 
   it("falls back to the raw value for an unknown type", () => {
@@ -54,9 +60,9 @@ describe("getOptimizationConfigItems", () => {
     const items = getOptimizationConfigItems(studioOptimization);
 
     expect(items.model).toBe("claude-sonnet-4-6");
-    expect(items.algorithmLabel).toBe("Hierarchical Reflective");
+    expect(items.algorithmLabel).toBe("common.constants.optimizations.optimizerOptions.hierarchicalReflective.label");
     expect(items.metric?.type).toBe(METRIC_TYPE.G_EVAL);
-    expect(items.metric?.label).toBe("Custom (G-Eval)");
+    expect(items.metric?.label).toBe("common.constants.optimizations.metricOptions.gEval.label");
     expect(items.metric?.parameters).toMatchObject({
       evaluation_criteria: "Score 0-1",
     });
@@ -70,7 +76,7 @@ describe("getOptimizationConfigItems", () => {
 
     expect(items.model).toBeUndefined();
     expect(items.algorithmLabel).toBeUndefined();
-    expect(items.metric?.label).toBe("Levenshtein");
+    expect(items.metric?.label).toBe("common.constants.optimizations.metricOptions.levenshtein.label");
     expect(items.metric?.parameters).toBeUndefined();
   });
 
@@ -85,8 +91,8 @@ describe("getOptimizationConfigItems", () => {
     } as unknown as Optimization);
 
     expect(items.model).toBe("gpt-4o-mini");
-    expect(items.algorithmLabel).toBe("Hierarchical Reflective");
-    expect(items.metric?.label).toBe("Levenshtein");
+    expect(items.algorithmLabel).toBe("common.constants.optimizations.optimizerOptions.hierarchicalReflective.label");
+    expect(items.metric?.label).toBe("common.constants.optimizations.metricOptions.levenshtein.label");
   });
 
   it("returns empty fields for a missing optimization", () => {
@@ -99,8 +105,8 @@ describe("getOptimizationConfigItems", () => {
 
 describe("formatMetricParameterValue", () => {
   it("renders booleans as Yes/No", () => {
-    expect(formatMetricParameterValue(true)).toBe("Yes");
-    expect(formatMetricParameterValue(false)).toBe("No");
+    expect(formatMetricParameterValue(true)).toBe("common:buttons.yes");
+    expect(formatMetricParameterValue(false)).toBe("common:buttons.no");
   });
 
   it("renders empty values as an em dash", () => {

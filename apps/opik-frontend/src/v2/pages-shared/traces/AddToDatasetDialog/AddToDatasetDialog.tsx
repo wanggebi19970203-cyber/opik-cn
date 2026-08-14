@@ -77,7 +77,9 @@ const AddToDatasetDialog: React.FunctionComponent<AddToDatasetDialogProps> = ({
 }) => {
   const { t } = useTranslation();
   const isTestSuiteMode = datasetType === DATASET_TYPE.TEST_SUITE;
-  const entityName = isTestSuiteMode ? "test suite" : "dataset";
+  const entityName = isTestSuiteMode
+    ? t("tracing.addToDataset.entityTestSuite")
+    : t("tracing.addToDataset.entityDataset");
   const noSelectionExplainerId = isTestSuiteMode
     ? EXPLAINER_ID.why_would_i_want_to_add_traces_to_an_test_suite
     : EXPLAINER_ID.whats_an_experiment;

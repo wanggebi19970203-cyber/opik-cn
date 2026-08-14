@@ -74,9 +74,13 @@ describe("AddEditFeedbackDefinitionDialog", () => {
         />,
       );
 
-      expect(screen.getByText("Clone feedback definition")).toBeInTheDocument();
+      expect(
+        screen.getByText("feedbackDefinition.cloneTitle"),
+      ).toBeInTheDocument();
 
-      const nameInput = screen.getByLabelText("Name") as HTMLInputElement;
+      const nameInput = screen.getByLabelText(
+        "feedbackDefinition.name",
+      ) as HTMLInputElement;
       expect(nameInput.value).toBe("Helpfulness (Copy)");
     });
 
@@ -93,12 +97,12 @@ describe("AddEditFeedbackDefinitionDialog", () => {
       );
 
       const descriptionInput = screen.getByLabelText(
-        "Description",
+        "feedbackDefinition.description",
       ) as HTMLTextAreaElement;
       expect(descriptionInput.value).toBe("Test description");
 
       expect(
-        screen.getByText("Create feedback definition"),
+        screen.getByText("feedbackDefinition.createSubmit"),
       ).toBeInTheDocument();
     });
   });
@@ -116,9 +120,13 @@ describe("AddEditFeedbackDefinitionDialog", () => {
         />,
       );
 
-      expect(screen.getByText("Edit feedback definition")).toBeInTheDocument();
+      expect(
+        screen.getByText("feedbackDefinition.editTitle"),
+      ).toBeInTheDocument();
 
-      const nameInput = screen.getByLabelText("Name") as HTMLInputElement;
+      const nameInput = screen.getByLabelText(
+        "feedbackDefinition.name",
+      ) as HTMLInputElement;
       expect(nameInput.value).toBe("Helpfulness");
     });
   });
@@ -136,10 +144,12 @@ describe("AddEditFeedbackDefinitionDialog", () => {
       );
 
       expect(
-        screen.getByText("Create a new feedback definition"),
+        screen.getByText("feedbackDefinition.createTitle"),
       ).toBeInTheDocument();
 
-      const nameInput = screen.getByLabelText("Name") as HTMLInputElement;
+      const nameInput = screen.getByLabelText(
+        "feedbackDefinition.name",
+      ) as HTMLInputElement;
       expect(nameInput.value).toBe("");
     });
   });

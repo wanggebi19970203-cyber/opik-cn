@@ -39,26 +39,26 @@ describe("ExplainPopover", () => {
   it("shows the Thinking pulse when there is no entry yet", () => {
     seed(null);
     renderPopover();
-    expect(screen.getByText("Thinking...")).toBeInTheDocument();
+    expect(screen.getByText("thinking")).toBeInTheDocument();
   });
 
   it("shows the 'waking up' hint for a waking entry", () => {
     seed(entry({ phase: "waking", text: "" }));
     renderPopover();
-    expect(screen.getByText("Ollie is waking up…")).toBeInTheDocument();
+    expect(screen.getByText("ollieIsWakingUp")).toBeInTheDocument();
   });
 
   it("shows the error message and a Retry button on error", () => {
     seed(entry({ phase: "error", error: "boom" }));
     renderPopover();
     expect(screen.getByText("boom")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "retry" })).toBeInTheDocument();
   });
 
   it("shows 'No explanation available.' for an empty done entry", () => {
     seed(entry({ phase: "done", text: "" }));
     renderPopover();
-    expect(screen.getByText("No explanation available.")).toBeInTheDocument();
+    expect(screen.getByText("noExplanationAvailable")).toBeInTheDocument();
   });
 
   it("renders streamed text + Continue link while still loading", () => {
@@ -66,7 +66,7 @@ describe("ExplainPopover", () => {
     renderPopover();
     expect(screen.getByText("partial answer")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Continue conversation/ }),
+      screen.getByRole("button", { name: /continueConversation/ }),
     ).toBeInTheDocument();
   });
 
@@ -77,7 +77,7 @@ describe("ExplainPopover", () => {
     renderPopover(onContinue);
 
     fireEvent.click(
-      screen.getByRole("button", { name: /Continue conversation/ }),
+      screen.getByRole("button", { name: /continueConversation/ }),
     );
 
     expect(emit).toHaveBeenCalledWith(
@@ -92,7 +92,7 @@ describe("ExplainPopover", () => {
     seed(entry({ phase: "error", error: "boom" }), emit);
     renderPopover();
 
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    fireEvent.click(screen.getByRole("button", { name: "retry" }));
 
     expect(emit).toHaveBeenCalledWith(
       "explain:run",

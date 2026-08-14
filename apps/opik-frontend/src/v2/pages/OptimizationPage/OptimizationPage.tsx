@@ -314,7 +314,6 @@ const OptimizationPage: React.FC = () => {
             <SearchInput
               searchText={search ?? ""}
               setSearchText={setSearch}
-              placeholder="Search"
               className="w-[200px] shrink-0"
               dimension="xs"
             />

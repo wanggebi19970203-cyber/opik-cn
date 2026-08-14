@@ -1662,15 +1662,15 @@ public class ExperimentDAO {
             """;
 
     /**
-     * Partial update as a new {@code ReplacingMergeTree} row version: every column not being written is
-     * copied forward from the latest existing version.
+     * 作为新的 {@code ReplacingMergeTree} 行版本进行部分更新：所有未被写入的列都会
+     * 从最新现有版本中复制过来。
      *
-     * <p>{@code created_at} is one of those carried-forward columns and must stay that way — the stalled-run
-     * reaper reads {@code experiments.created_at} as its trial-level liveness signal
-     * ({@code OptimizationDAO#FIND_STALLED_STUDIO_OPTIMIZATIONS}, OPIK-7459), and it reads raw row versions
-     * rather than deduped ones. Re-stamping it here (or in {@link #BATCH_SET_PROJECT_ID}, which preserves it
-     * via {@code SELECT * REPLACE}) would make an update to any long-finished trial register as fresh
-     * progress and pin a dead run alive up to the reaper's hard ceiling.
+     * <p>{@code created_at} 是这些被复制向前的列之一，必须保持这种方式——停滞运行回收器
+     * 读取 {@code experiments.created_at} 作为其试验级活跃度信号
+     * （{@code OptimizationDAO#FIND_STALLED_STUDIO_OPTIMIZATIONS}，OPIK-7459），并且它读取的是原始行版本
+     * 而非去重后的版本。在这里重新打时间戳（或在 {@link #BATCH_SET_PROJECT_ID} 中，后者通过
+     * {@code SELECT * REPLACE} 保留它）会让对任何早已完成的试验的更新被记录为新的
+     * 进度，并使一个已死运行在回收器的硬上限之前一直保持存活。
      */
     private static final String UPDATE = """
             INSERT INTO experiments (
@@ -1802,7 +1802,7 @@ public class ExperimentDAO {
         }
 
         return makeFluxContextAware((userName, workspaceId) -> {
-            log.info("Inserting experiment with id '{}', datasetId '{}', datasetName '{}', workspaceId '{}'",
+            log.info("插入实验，ID '{}'，数据集ID '{}'，数据集名称 '{}'，工作区 '{}'",
                     experiment.id(), experiment.datasetId(), experiment.datasetName(), workspaceId);
             statement.bind("created_by", userName)
                     .bind("last_updated_by", userName)
@@ -1813,7 +1813,7 @@ public class ExperimentDAO {
 
     @WithSpan
     Mono<Experiment> getById(@NonNull UUID id) {
-        log.info("Getting experiment by id '{}'", id);
+        log.info("根据ID '{}' 获取实验", id);
         var limit = 1;
         var aggregationCriteria = AggregationBranchCountsCriteria.builder().id(id).build();
 
@@ -1842,7 +1842,7 @@ public class ExperimentDAO {
 
     @WithSpan
     Flux<Experiment> getByIds(@NonNull Set<UUID> ids) {
-        log.info("Getting experiment by ids '{}'", ids);
+        log.info("根据ID '{}' 批量获取实验", ids);
 
         var aggregationCriteria = AggregationBranchCountsCriteria.builder()
                 .idsList(ids)
@@ -1872,7 +1872,7 @@ public class ExperimentDAO {
 
     @WithSpan
     Flux<Experiment> get(@NonNull ExperimentStreamRequest request, UUID projectId) {
-        log.info("Getting experiment by '{}'", request);
+        log.info("按 '{}' 获取实验", request);
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
                     var template = getSTWithLogComment(FIND, "get_experiments_stream", workspaceId, userName, "");
@@ -2026,7 +2026,7 @@ public class ExperimentDAO {
                     ExperimentScore.LIST_TYPE_REFERENCE);
             return CollectionUtils.isEmpty(scores) ? null : scores;
         } catch (Exception e) {
-            log.warn("Failed to deserialize experiment_scores from JSON: {}", experimentScoresJson, e);
+            log.warn("从 JSON 反序列化 experiment_scores 失败：{}", experimentScoresJson, e);
             return null;
         }
     }
@@ -2076,7 +2076,7 @@ public class ExperimentDAO {
     private Publisher<? extends Result> find(
             int page, int size, ExperimentSearchCriteria experimentSearchCriteria, Connection connection,
             Set<UUID> targetProjectIds, boolean hasAggregated, boolean hasRaw) {
-        log.info("Finding experiments by '{}', page '{}', size '{}'", experimentSearchCriteria, page, size);
+        log.info("按 '{}' 查询实验，页码 '{}'，每页大小 '{}'", experimentSearchCriteria, page, size);
 
         return makeFluxContextAware((userName, workspaceId) -> {
             var sorting = sortingQueryBuilder.toOrderBySql(experimentSearchCriteria.sortingFields());
@@ -2130,7 +2130,7 @@ public class ExperimentDAO {
     private Publisher<? extends Result> countTotal(
             ExperimentSearchCriteria experimentSearchCriteria, Connection connection, Set<UUID> targetProjectIds,
             boolean hasAggregated, boolean hasRaw) {
-        log.info("Counting experiments by '{}'", experimentSearchCriteria);
+        log.info("按 '{}' 统计实验数量", experimentSearchCriteria);
         return makeFluxContextAware((userName, workspaceId) -> {
             var template = newFindTemplate(FIND_COUNT, experimentSearchCriteria, "count_experiments", workspaceId);
 
@@ -2256,7 +2256,7 @@ public class ExperimentDAO {
 
     private Publisher<? extends Result> findByName(String name, UUID projectId, Connection connection) {
         return makeFluxContextAware((userName, workspaceId) -> {
-            log.info("Finding experiment by name '{}'", name);
+            log.info("按名称 '{}' 查找实验", name);
             var template = getSTWithLogComment(FIND_BY_NAME, "find_experiments_by_name", workspaceId, userName, "");
             if (projectId != null) {
                 template.add("project_id", true);
@@ -2317,7 +2317,7 @@ public class ExperimentDAO {
 
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(ids), "Argument 'ids' must not be empty");
 
-        log.info("Deleting experiments by ids, size '{}'", ids.size());
+        log.info("按ID删除实验，数量 '{}'", ids.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> delete(ids, connection))
@@ -2325,7 +2325,7 @@ public class ExperimentDAO {
                 .reduce(Long::sum)
                 .doFinally(signalType -> {
                     if (signalType == SignalType.ON_COMPLETE) {
-                        log.info("Deleted experiments by ids, size '{}'", ids.size());
+                        log.info("已按ID删除实验，数量 '{}'", ids.size());
                     }
                 });
     }
@@ -2435,7 +2435,7 @@ public class ExperimentDAO {
 
     @WithSpan
     public Flux<ExperimentGroupItem> findGroups(@NonNull ExperimentGroupCriteria criteria) {
-        log.info("Finding experiment groups by criteria '{}'", criteria);
+        log.info("按条件 '{}' 查找实验组", criteria);
 
         return executeQueryWithTargetProjects(
                 FIND_GROUPS,
@@ -2447,7 +2447,7 @@ public class ExperimentDAO {
     @WithSpan
     public Flux<ExperimentGroupAggregationItem> findGroupsAggregations(
             @NonNull ExperimentGroupCriteria criteria) {
-        log.info("Finding experiment groups aggregations by criteria '{}'", criteria);
+        log.info("按条件 '{}' 查找实验组聚合", criteria);
 
         return executeQueryWithTargetProjects(
                 FIND_GROUPS_AGGREGATIONS,
@@ -2523,7 +2523,7 @@ public class ExperimentDAO {
     private Mono<Set<UUID>> getTargetProjectIdsForExperiments(TargetProjectsCriteria criteria) {
         // 当shouldSkipOptimization()返回true时跳过优化（例如projectDeleted=true）
         if (criteria.shouldSkipOptimization()) {
-            log.info("Skipping target project IDs optimization due to projectDeleted='{}', criteria='{}'",
+            log.info("由于 projectDeleted='{}' 跳过目标项目ID优化，条件='{}'",
                     criteria.projectDeleted(), criteria);
             return Mono.just(Set.of());
         }
@@ -2645,7 +2645,7 @@ public class ExperimentDAO {
 
     @WithSpan
     Mono<Void> update(@NonNull UUID id, @NonNull ExperimentUpdate experimentUpdate) {
-        log.info("Updating experiment with id '{}'", id);
+        log.info("更新实验，ID '{}'", id);
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> updateWithInsert(Set.of(id), experimentUpdate, false, "update_experiment",
                         connection))
@@ -2654,7 +2654,7 @@ public class ExperimentDAO {
 
     Mono<Void> update(@NonNull Set<UUID> ids, @NonNull ExperimentUpdate update, boolean mergeTags) {
         Preconditions.checkArgument(!ids.isEmpty(), "experiment IDs must not be empty");
-        log.info("Updating batch of '{}' experiments", ids.size());
+        log.info("批量更新 '{}' 个实验", ids.size());
         return Mono.from(connectionFactory.create())
                 .flatMapMany(
                         connection -> updateWithInsert(ids, update, mergeTags, "bulk_update_experiments", connection))

@@ -1,4 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+    getFixedT: () => (key: string) => key,
+  },
+}));
 
 import {
   DEFAULT_COLUMNS,

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import {
   EMPTY_RUN_CAUSE,
@@ -17,6 +17,12 @@ import {
   OptimizationScoringHealth,
 } from "@/types/optimizations";
 import { OPTIMIZATION_ACTIVE_REFETCH_INTERVAL } from "@/lib/optimizations";
+
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
 
 const makeCandidate = (
   overrides: Partial<AggregatedCandidate> & {
@@ -203,10 +209,10 @@ describe("computeEmptyRunCause", () => {
 describe("getEmptyRunTitle", () => {
   it("names the cause instead of always claiming there are no scores", () => {
     expect(getEmptyRunTitle(EMPTY_RUN_CAUSE.NO_CANDIDATES)).toBe(
-      "No candidates generated",
+      "optimization:emptyRun.noCandidatesGenerated",
     );
     expect(getEmptyRunTitle(EMPTY_RUN_CAUSE.SCORING_FAILED)).toBe(
-      "No usable scores",
+      "optimization:emptyRun.noUsableScores",
     );
   });
 });
@@ -253,10 +259,7 @@ describe("getEmptyRunMessage", () => {
 
   it("names the optimizer, not the metric, when no candidates were generated", () => {
     const msg = getEmptyRunMessage(EMPTY_RUN_CAUSE.NO_CANDIDATES);
-    expect(msg).toContain("produced no prompt variants to score");
-    expect(msg).toContain("the baseline prompt was kept");
-    expect(msg).not.toContain("failed");
-    expect(msg).not.toContain("run it again");
+    expect(msg).toBe("optimization:emptyRun.noCandidatesMessage");
   });
 
   it("ignores scoring_health for NO_CANDIDATES (the baseline scored, so counts can't explain it)", () => {
@@ -287,7 +290,7 @@ describe("getEmptyRunMessage", () => {
       total_count: 5,
     };
     const msg = getEmptyRunMessage(FAILED, health);
-    expect(msg).toContain("All 5 items failed to score");
+    expect(msg).toContain("optimization:emptyRun.allItemsFailedToScore");
   });
 
   it("uses all-failed framing when every item failed (singular — 1 item)", () => {
@@ -297,9 +300,8 @@ describe("getEmptyRunMessage", () => {
     };
     const msg = getEmptyRunMessage(FAILED, health);
     // A one-item dataset reads "The item failed …", never "All 1 item …".
-    expect(msg).toContain("The item failed to score");
-    expect(msg).not.toContain("All 1");
-    expect(msg).not.toContain("1 items");
+    expect(msg).toContain("optimization:emptyRun.itemFailedToScore");
+    expect(msg).not.toContain("optimization:emptyRun.allItemsFailedToScore");
   });
 
   it("uses partial framing when some items failed", () => {
@@ -308,9 +310,9 @@ describe("getEmptyRunMessage", () => {
       total_count: 10,
     };
     const msg = getEmptyRunMessage(FAILED, health);
-    expect(msg).toContain("3 of 10 items failed to score");
+    expect(msg).toContain("optimization:emptyRun.itemsFailedToScore");
     // Partial framing should NOT say "All"
-    expect(msg).not.toMatch(/^All /);
+    expect(msg).not.toContain("optimization:emptyRun.allItemsFailedToScore");
   });
 
   it("uses plural 'items' for a partial single failure (noun agrees with total)", () => {
@@ -320,7 +322,7 @@ describe("getEmptyRunMessage", () => {
     };
     const msg = getEmptyRunMessage(FAILED, health);
     // "1 of 10 items" — the noun agrees with the total, not the failed count.
-    expect(msg).toContain("1 of 10 items failed to score");
+    expect(msg).toContain("optimization:emptyRun.itemsFailedToScore");
   });
 
   it("returns null when failed_count is 0 (nothing failed)", () => {
@@ -341,7 +343,7 @@ describe("getEmptyRunMessage", () => {
     // return the heuristic fallback (non-null).
     const msg = getEmptyRunMessage(FAILED, health);
     expect(msg).not.toBeNull();
-    expect(msg).toContain("no usable scores");
+    expect(msg).toBe("optimization:emptyRun.heuristicFallback");
   });
 
   // --- Heuristic fallback (absent scoring_health) ---
@@ -349,9 +351,7 @@ describe("getEmptyRunMessage", () => {
   it("returns the Wave-1 heuristic copy when scoring_health is absent", () => {
     const msg = getEmptyRunMessage(FAILED, undefined);
     // The static Wave-1 message must be returned unchanged.
-    expect(msg).toBe(
-      "This run finished but produced no usable scores — the metric may have failed on every item. Open the logs, check the metric and model, then run it again.",
-    );
+    expect(msg).toBe("optimization:emptyRun.heuristicFallback");
   });
 });
 
@@ -374,7 +374,7 @@ describe("getEmptyRunKPICaption", () => {
 
   it("captions a no-candidates run neutrally, since the score shown is the baseline's", () => {
     const caption = getEmptyRunKPICaption(EMPTY_RUN_CAUSE.NO_CANDIDATES);
-    expect(caption).toBe("No candidates generated. Baseline prompt kept.");
+    expect(caption).toBe("optimization:emptyRun.noCandidatesCaption");
     expect(caption).not.toContain("failed");
   });
 
@@ -383,8 +383,8 @@ describe("getEmptyRunKPICaption", () => {
       failed_count: 8,
       total_count: 8,
     });
-    expect(caption).toContain("All 8 items failed to score");
-    expect(caption).toContain("check the logs");
+    expect(caption).toContain("optimization:emptyRun.allItemsFailedToScore");
+    expect(caption).toContain("optimization:emptyRun.checkLogsSuffix");
   });
 
   it("all-failed exact count caption (singular)", () => {
@@ -392,9 +392,8 @@ describe("getEmptyRunKPICaption", () => {
       failed_count: 1,
       total_count: 1,
     });
-    expect(caption).toContain("The item failed to score");
-    expect(caption).not.toContain("All 1");
-    expect(caption).not.toContain("1 items");
+    expect(caption).toContain("optimization:emptyRun.itemFailedToScore");
+    expect(caption).not.toContain("optimization:emptyRun.allItemsFailedToScore");
   });
 
   it("partial failure exact count caption", () => {
@@ -402,8 +401,8 @@ describe("getEmptyRunKPICaption", () => {
       failed_count: 4,
       total_count: 12,
     });
-    expect(caption).toContain("4 of 12 items failed to score");
-    expect(caption).toContain("check the logs");
+    expect(caption).toContain("optimization:emptyRun.itemsFailedToScore");
+    expect(caption).toContain("optimization:emptyRun.checkLogsSuffix");
   });
 
   it("returns null when failed_count is 0", () => {
@@ -414,7 +413,7 @@ describe("getEmptyRunKPICaption", () => {
 
   it("falls back to Wave-1 heuristic copy when scoring_health is absent", () => {
     const caption = getEmptyRunKPICaption(FAILED, undefined);
-    expect(caption).toBe("No usable scores — check the logs.");
+    expect(caption).toBe("optimization:emptyRun.noUsableScoresCaption");
   });
 });
 

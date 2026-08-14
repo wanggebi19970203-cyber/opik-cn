@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildDatasetFilterColumns,
   transformDataColumnFilters,
@@ -9,6 +9,10 @@ import {
   DYNAMIC_COLUMN_TYPE,
 } from "@/types/shared";
 import { Filter } from "@/types/filters";
+
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
 
 const createFilter = (
   overrides: Partial<Filter> &
@@ -23,7 +27,7 @@ describe("buildDatasetFilterColumns", () => {
   it("should return tags column for empty dataset columns", () => {
     const result = buildDatasetFilterColumns([]);
     expect(result).toEqual([
-      { id: "tags", label: "Tags", type: COLUMN_TYPE.list, iconType: "tags" },
+      { id: "tags", label: "common.labels.tags", type: COLUMN_TYPE.list, iconType: "tags" },
     ]);
   });
 
@@ -43,7 +47,7 @@ describe("buildDatasetFilterColumns", () => {
         label: "score",
         type: COLUMN_TYPE.number,
       },
-      { id: "tags", label: "Tags", type: COLUMN_TYPE.list, iconType: "tags" },
+      { id: "tags", label: "common.labels.tags", type: COLUMN_TYPE.list, iconType: "tags" },
     ]);
   });
 
@@ -51,7 +55,7 @@ describe("buildDatasetFilterColumns", () => {
     const result = buildDatasetFilterColumns([], true);
     expect(result).toEqual([
       { id: "id", label: "ID", type: COLUMN_TYPE.string },
-      { id: "tags", label: "Tags", type: COLUMN_TYPE.list, iconType: "tags" },
+      { id: "tags", label: "common.labels.tags", type: COLUMN_TYPE.list, iconType: "tags" },
     ]);
   });
 

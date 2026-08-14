@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Mic, ArrowUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { WelcomeIllustration } from "./illustrations";
 
@@ -80,6 +81,8 @@ const WelcomeStep: React.FC<{ onNext?: () => void; active?: boolean }> = ({
   onNext,
   active = true,
 }) => {
+  const { t } = useTranslation("pages/get-started");
+
   return (
     <>
       <div className="slide-fade-left">
@@ -88,19 +91,17 @@ const WelcomeStep: React.FC<{ onNext?: () => void; active?: boolean }> = ({
 
       <div className="flex flex-col gap-1.5 px-0.5">
         <h1 className="slide-fade-left text-lg font-medium leading-7 text-foreground [animation-delay:75ms]">
-          Welcome to Opik
+          {t("getStarted.mobileOnboarding.welcome.title")}
         </h1>
         <p className="slide-fade-left pb-2 text-sm leading-5 text-muted-slate [animation-delay:150ms]">
-          See what happens behind the scenes every time a user interacts with
-          your AI agent or app. Track prompts, tool calls, latency, cost, and
-          failures, all in one place.
+          {t("getStarted.mobileOnboarding.welcome.description")}
         </p>
       </div>
 
       <div className="slide-fade-left flex flex-col gap-2 rounded-lg border border-dashed border-border bg-soft-background p-5 shadow-sm [animation-delay:200ms] dark:bg-accent-background">
         <div className="px-0.5 pb-0.5 pt-1">
           <p className="text-center text-sm font-medium leading-[18px] text-foreground">
-            What can I help you with?
+            {t("getStarted.mobileOnboarding.welcome.chatPrompt")}
           </p>
         </div>
 
@@ -136,8 +137,7 @@ const WelcomeStep: React.FC<{ onNext?: () => void; active?: boolean }> = ({
         </div>
 
         <p className="text-center text-xs leading-[14px] text-light-slate">
-          Here&apos;s an example user interaction. We&apos;ll use Opik to
-          evaluate and improve the agent underneath.
+          {t("getStarted.mobileOnboarding.welcome.exampleCaption")}
         </p>
       </div>
     </>

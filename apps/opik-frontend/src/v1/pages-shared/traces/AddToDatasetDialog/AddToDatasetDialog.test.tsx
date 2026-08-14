@@ -133,7 +133,9 @@ describe("AddToDatasetDialog", () => {
   it("should render the dialog when open", () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
-    expect(screen.getByText("Select a test suite")).toBeInTheDocument();
+    expect(
+      screen.getByText("addToDataset.selectTestSuite"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Test Dataset 1")).toBeInTheDocument();
   });
 
@@ -141,41 +143,41 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Trace metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.traceMetadataConfig");
     fireEvent.click(accordionButton);
 
-    expect(screen.getByLabelText("Nested spans")).toBeInTheDocument();
-    expect(screen.getByLabelText("Tags")).toBeInTheDocument();
-    expect(screen.getByLabelText("Feedback scores")).toBeInTheDocument();
-    expect(screen.getByLabelText("Comments")).toBeInTheDocument();
-    expect(screen.getByLabelText("Usage metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Metadata")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.nestedSpans")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.tags")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.feedbackScores")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.comments")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.usageMetrics")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.metadata")).toBeInTheDocument();
   });
 
   it("should have all enrichment checkboxes checked by default", () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Trace metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.traceMetadataConfig");
     fireEvent.click(accordionButton);
 
-    expect(screen.getByLabelText("Nested spans")).toBeChecked();
-    expect(screen.getByLabelText("Tags")).toBeChecked();
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
-    expect(screen.getByLabelText("Comments")).toBeChecked();
-    expect(screen.getByLabelText("Usage metrics")).toBeChecked();
-    expect(screen.getByLabelText("Metadata")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.nestedSpans")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.tags")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.feedbackScores")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.comments")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.usageMetrics")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.metadata")).toBeChecked();
   });
 
   it("should allow unchecking enrichment options", async () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Trace metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.traceMetadataConfig");
     fireEvent.click(accordionButton);
 
-    const spansCheckbox = screen.getByLabelText("Nested spans");
-    const tagsCheckbox = screen.getByLabelText("Tags");
+    const spansCheckbox = screen.getByLabelText("addToDataset.nestedSpans");
+    const tagsCheckbox = screen.getByLabelText("addToDataset.tags");
 
     fireEvent.click(spansCheckbox);
     fireEvent.click(tagsCheckbox);
@@ -184,7 +186,7 @@ describe("AddToDatasetDialog", () => {
       expect(spansCheckbox).not.toBeChecked();
       expect(tagsCheckbox).not.toBeChecked();
     });
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.feedbackScores")).toBeChecked();
   });
 
   it("should display span enrichment checkboxes when only spans are selected", () => {
@@ -196,17 +198,17 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...propsWithSpan} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Span metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.spanMetadataConfig");
     fireEvent.click(accordionButton);
 
-    // Spans don't have "Nested spans" option
-    expect(screen.queryByLabelText("Nested spans")).not.toBeInTheDocument();
+    // Spans don't have "addToDataset.nestedSpans" option
+    expect(screen.queryByLabelText("addToDataset.nestedSpans")).not.toBeInTheDocument();
     // But they have all other options
-    expect(screen.getByLabelText("Tags")).toBeInTheDocument();
-    expect(screen.getByLabelText("Feedback scores")).toBeInTheDocument();
-    expect(screen.getByLabelText("Comments")).toBeInTheDocument();
-    expect(screen.getByLabelText("Usage metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Metadata")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.tags")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.feedbackScores")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.comments")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.usageMetrics")).toBeInTheDocument();
+    expect(screen.getByLabelText("addToDataset.metadata")).toBeInTheDocument();
   });
 
   it("should have all span enrichment checkboxes checked by default", () => {
@@ -218,15 +220,15 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...propsWithSpan} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Span metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.spanMetadataConfig");
     fireEvent.click(accordionButton);
 
-    // Spans don't have "Nested spans" option, but all others should be checked
-    expect(screen.getByLabelText("Tags")).toBeChecked();
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
-    expect(screen.getByLabelText("Comments")).toBeChecked();
-    expect(screen.getByLabelText("Usage metrics")).toBeChecked();
-    expect(screen.getByLabelText("Metadata")).toBeChecked();
+    // Spans don't have "addToDataset.nestedSpans" option, but all others should be checked
+    expect(screen.getByLabelText("addToDataset.tags")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.feedbackScores")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.comments")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.usageMetrics")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.metadata")).toBeChecked();
   });
 
   it("should allow unchecking span enrichment options", async () => {
@@ -238,11 +240,11 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...propsWithSpan} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Span metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.spanMetadataConfig");
     fireEvent.click(accordionButton);
 
-    const tagsCheckbox = screen.getByLabelText("Tags");
-    const usageCheckbox = screen.getByLabelText("Usage metrics");
+    const tagsCheckbox = screen.getByLabelText("addToDataset.tags");
+    const usageCheckbox = screen.getByLabelText("addToDataset.usageMetrics");
 
     fireEvent.click(tagsCheckbox);
     fireEvent.click(usageCheckbox);
@@ -251,7 +253,7 @@ describe("AddToDatasetDialog", () => {
       expect(tagsCheckbox).not.toBeChecked();
       expect(usageCheckbox).not.toBeChecked();
     });
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
+    expect(screen.getByLabelText("addToDataset.feedbackScores")).toBeChecked();
   });
 
   it("should display available datasets", () => {
@@ -266,14 +268,16 @@ describe("AddToDatasetDialog", () => {
   it("should display search input", () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
-    const searchInput = screen.getByPlaceholderText("Search");
+    const searchInput = screen.getByPlaceholderText("placeholders.search");
     expect(searchInput).toBeInTheDocument();
   });
 
   it("should display create new test suite button", () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
-    expect(screen.getByText("Create new test suite")).toBeInTheDocument();
+    expect(
+      screen.getByText("addToDataset.createNewTestSuite"),
+    ).toBeInTheDocument();
   });
 
   it("should show alert when no valid rows are present", () => {
@@ -284,11 +288,7 @@ describe("AddToDatasetDialog", () => {
 
     render(<AddToDatasetDialog {...propsWithInvalidRows} />, { wrapper });
 
-    expect(
-      screen.getByText(
-        "There are no rows that can be added as test suite items. The input field is missing.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("addToDataset.noValidRows")).toBeInTheDocument();
   });
 
   it("should show alert when only some rows are valid", () => {
@@ -303,9 +303,7 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...propsWithPartialValid} />, { wrapper });
 
     expect(
-      screen.getByText(
-        "Only rows with input fields will be added as test suite items.",
-      ),
+      screen.getByText("addToDataset.partialValidRows"),
     ).toBeInTheDocument();
   });
 
@@ -317,7 +315,7 @@ describe("AddToDatasetDialog", () => {
 
     render(<AddToDatasetDialog {...propsWithInvalidRows} />, { wrapper });
 
-    const createButton = screen.getByText("Create new test suite");
+    const createButton = screen.getByText("addToDataset.createNewTestSuite");
     expect(createButton).toBeDisabled();
   });
 
@@ -329,7 +327,9 @@ describe("AddToDatasetDialog", () => {
     fireEvent.click(dataset);
 
     // Click the "Add to test suite" button
-    const addButton = screen.getAllByText("Add to test suite")[1]; // Get the button, not the dialog title
+    const addButton = screen.getByRole("button", {
+      name: "addToDataset.addToTestSuite",
+    });
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -365,7 +365,9 @@ describe("AddToDatasetDialog", () => {
     fireEvent.click(dataset);
 
     // Click the "Add to test suite" button
-    const addButton = screen.getAllByText("Add to test suite")[1]; // Get the button, not the dialog title
+    const addButton = screen.getByRole("button", {
+      name: "addToDataset.addToTestSuite",
+    });
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -391,20 +393,22 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...defaultProps} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Trace metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.traceMetadataConfig");
     fireEvent.click(accordionButton);
 
     // Uncheck some options
-    fireEvent.click(screen.getByLabelText("Nested spans"));
-    fireEvent.click(screen.getByLabelText("Tags"));
-    fireEvent.click(screen.getByLabelText("Usage metrics"));
+    fireEvent.click(screen.getByLabelText("addToDataset.nestedSpans"));
+    fireEvent.click(screen.getByLabelText("addToDataset.tags"));
+    fireEvent.click(screen.getByLabelText("addToDataset.usageMetrics"));
 
     // Select the dataset
     const dataset = screen.getByText("Test Dataset 1");
     fireEvent.click(dataset);
 
     // Click the "Add to test suite" button
-    const addButton = screen.getAllByText("Add to test suite")[1]; // Get the button, not the dialog title
+    const addButton = screen.getByRole("button", {
+      name: "addToDataset.addToTestSuite",
+    });
     fireEvent.click(addButton);
 
     await waitFor(() => {
@@ -433,20 +437,22 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...propsWithSpan} />, { wrapper });
 
     // Expand the accordion first
-    const accordionButton = screen.getByText("Span metadata configuration");
+    const accordionButton = screen.getByText("addToDataset.spanMetadataConfig");
     fireEvent.click(accordionButton);
 
     // Uncheck some options
-    fireEvent.click(screen.getByLabelText("Tags"));
-    fireEvent.click(screen.getByLabelText("Comments"));
-    fireEvent.click(screen.getByLabelText("Metadata"));
+    fireEvent.click(screen.getByLabelText("addToDataset.tags"));
+    fireEvent.click(screen.getByLabelText("addToDataset.comments"));
+    fireEvent.click(screen.getByLabelText("addToDataset.metadata"));
 
     // Select the dataset
     const dataset = screen.getByText("Test Dataset 1");
     fireEvent.click(dataset);
 
     // Click the "Add to test suite" button
-    const addButton = screen.getAllByText("Add to test suite")[1]; // Get the button, not the dialog title
+    const addButton = screen.getByRole("button", {
+      name: "addToDataset.addToTestSuite",
+    });
     fireEvent.click(addButton);
 
     await waitFor(() => {

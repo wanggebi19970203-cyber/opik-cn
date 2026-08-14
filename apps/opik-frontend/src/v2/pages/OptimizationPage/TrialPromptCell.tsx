@@ -143,13 +143,13 @@ export const TrialPromptCell = (
               diffOpen && "opacity-100",
             )}
           >
-            <TooltipWrapper content="View diff vs baseline">
+            <TooltipWrapper content={t("optimization.prompt.viewDiffVsBaseline")}>
               <HoverCardTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-2xs"
-                  aria-label="View diff vs baseline"
+                  aria-label={t("optimization.prompt.viewDiffVsBaseline")}
                   onClick={(e) => {
                     e.stopPropagation();
                     setDiffOpen(true);

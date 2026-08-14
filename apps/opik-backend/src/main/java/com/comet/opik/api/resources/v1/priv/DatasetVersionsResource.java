@@ -67,10 +67,10 @@ public class DatasetVersionsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Listing versions for dataset '{}', page '{}', size '{}' on workspace '{}'", datasetId, page, size,
+        log.info("列出数据集 '{}' 的版本，页码 '{}'，每页大小 '{}'，工作区 '{}'", datasetId, page, size,
                 workspaceId);
         DatasetVersionPage versionPage = versionService.getVersions(datasetId, page, size);
-        log.info("Found '{}' versions for dataset '{}' on workspace '{}'", versionPage.total(), datasetId,
+        log.info("找到 '{}' 个版本，数据集 '{}'，工作区 '{}'", versionPage.total(), datasetId,
                 workspaceId);
 
         return Response.ok(versionPage).build();
@@ -91,10 +91,10 @@ public class DatasetVersionsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieving version '{}' for dataset '{}' on workspace '{}'", request.versionName(), datasetId,
+        log.info("获取版本 '{}'，数据集 '{}'，工作区 '{}'", request.versionName(), datasetId,
                 workspaceId);
         DatasetVersion version = versionService.getVersionByName(datasetId, request.versionName());
-        log.info("Found version '{}' for dataset '{}' on workspace '{}'", request.versionName(), datasetId,
+        log.info("找到版本 '{}'，数据集 '{}'，工作区 '{}'", request.versionName(), datasetId,
                 workspaceId);
 
         return Response.ok(version).build();
@@ -116,9 +116,9 @@ public class DatasetVersionsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Updating version '{}' for dataset '{}' on workspace '{}'", versionHash, datasetId, workspaceId);
+        log.info("更新版本 '{}'，数据集 '{}'，工作区 '{}'", versionHash, datasetId, workspaceId);
         DatasetVersion version = versionService.updateVersion(datasetId, versionHash, request);
-        log.info("Updated version '{}' for dataset '{}' on workspace '{}'", versionHash, datasetId, workspaceId);
+        log.info("已更新版本 '{}'，数据集 '{}'，工作区 '{}'", versionHash, datasetId, workspaceId);
 
         return Response.ok(version).build();
     }
@@ -139,10 +139,10 @@ public class DatasetVersionsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Creating tag '{}' for version '{}' of dataset '{}' on workspace '{}'", tag.tag(), versionHash,
+        log.info("创建标签 '{}'，版本 '{}'，数据集 '{}'，工作区 '{}'", tag.tag(), versionHash,
                 datasetId, workspaceId);
         versionService.createTag(datasetId, versionHash, tag);
-        log.info("Created tag '{}' for version '{}' of dataset '{}' on workspace '{}'", tag.tag(), versionHash,
+        log.info("已创建标签 '{}'，版本 '{}'，数据集 '{}'，工作区 '{}'", tag.tag(), versionHash,
                 datasetId, workspaceId);
 
         return Response.noContent().build();
@@ -161,10 +161,10 @@ public class DatasetVersionsResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Deleting tag '{}' for version '{}' from dataset '{}' on workspace '{}'", tag, versionHash, datasetId,
+        log.info("删除标签 '{}'，版本 '{}'，数据集 '{}'，工作区 '{}'", tag, versionHash, datasetId,
                 workspaceId);
         versionService.deleteTag(datasetId, tag);
-        log.info("Deleted tag '{}' for version '{}' from dataset '{}' on workspace '{}'", tag, versionHash, datasetId,
+        log.info("已删除标签 '{}'，版本 '{}'，数据集 '{}'，工作区 '{}'", tag, versionHash, datasetId,
                 workspaceId);
 
         return Response.noContent().build();
@@ -180,13 +180,13 @@ public class DatasetVersionsResource {
         featureFlags.checkDatasetVersioningEnabled();
 
         String workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Comparing latest version with draft for dataset='{}', workspace='{}'",
+        log.info("比较数据集='{}' 的最新版本与草稿，工作区='{}'",
                 datasetId, workspaceId);
 
         var diff = versionService.compareVersions(datasetId, DatasetVersionService.LATEST_TAG, null);
 
         log.info(
-                "Computed diff for dataset='{}', from='latest', to='draft': stats='{}'", datasetId,
+                "已计算数据集='{}' 的差异，from='latest'，to='draft'：stats='{}'", datasetId,
                 diff.statistics());
 
         return Response.ok(diff).build();
@@ -197,7 +197,7 @@ public class DatasetVersionsResource {
     @Operation(operationId = "restoreDatasetVersion", summary = "将数据集恢复到指定版本", description = "通过创建一个从指定版本复制项目的新版本，将数据集恢复到之前的版本状态。如果该版本已是最新版本，则原样返回（无操作）。", responses = {
             @ApiResponse(responseCode = "200", description = "版本恢复成功", content = @Content(schema = @Schema(implementation = DatasetVersion.class))),
             @ApiResponse(responseCode = "404", description = "版本未找到", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class))),
-            @ApiResponse(responseCode = "409", description = "Concurrent modification - the latest version changed during the restore; retry", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))})
+            @ApiResponse(responseCode = "409", description = "并发修改 - 恢复期间最新版本已变更；请重试", content = @Content(schema = @Schema(implementation = io.dropwizard.jersey.errors.ErrorMessage.class)))})
     @RateLimited
     @JsonView(DatasetVersion.View.Public.class)
     public Response restoreVersion(
@@ -207,14 +207,14 @@ public class DatasetVersionsResource {
         String workspaceId = requestContext.get().getWorkspaceId();
         String userName = requestContext.get().getUserName();
 
-        log.info("Restoring dataset '{}' to version '{}' on workspace '{}'", datasetId, request.versionRef(),
+        log.info("将数据集 '{}' 恢复到版本 '{}'，工作区 '{}'", datasetId, request.versionRef(),
                 workspaceId);
         DatasetVersion version = versionService.restoreVersion(datasetId, request.versionRef())
                 .contextWrite(ctx -> ctx
                         .put(RequestContext.WORKSPACE_ID, workspaceId)
                         .put(RequestContext.USER_NAME, userName))
                 .block();
-        log.info("Restored dataset '{}' to version '{}' on workspace '{}'", datasetId, request.versionRef(),
+        log.info("已将数据集 '{}' 恢复到版本 '{}'，工作区 '{}'", datasetId, request.versionRef(),
                 workspaceId);
 
         return Response.ok(version).build();

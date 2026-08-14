@@ -137,8 +137,7 @@ const OptimizationsNewPageContent: React.FC<
         )}
         {isMissingProviderKey && (
           <span className="comet-body-s text-destructive">
-            Add or check the API key for this provider before starting — the run
-            will fail without it.
+            {t("optimizations.newPage.providerKeyWarning")}
           </span>
         )}
         <div className="flex items-center gap-2">

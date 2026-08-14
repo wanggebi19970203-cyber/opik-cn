@@ -197,6 +197,9 @@
     "metricTypeLabel": "指标类型",
     "loadingMetrics": "正在加载可用指标...",
     "selectMetric": "选择指标",
+    "allProjectsInWorkspace": "工作区中的所有项目",
+    "usageMetricLabel": "使用量指标",
+    "selectUsageMetric": "选择使用量指标",
     "metrics": {
       "p50Duration": "P50持续时间",
       "p90Duration": "P90持续时间",
@@ -275,7 +278,9 @@
     "learnHowToTrackThreads": "了解如何跟踪Thread",
     "viewFilteredSpans": "查看过滤后的Spans",
     "viewFilteredThreads": "查看过滤后的Threads",
-    "viewFilteredTraces": "查看过滤后的Traces"
+    "viewFilteredTraces": "查看过滤后的Traces",
+    "notAvailableAcrossProjects": "无法跨项目使用",
+    "notAvailableAcrossProjectsMessage": "此指标只能为单个项目显示。请选择一个项目，或选择一个 Span 指标以跨项目聚合。"
   },
   "breakdown": {
     "groupBy": "分组依据",
@@ -295,7 +300,8 @@
       "errorType": "错误类型",
       "model": "模型",
       "provider": "提供商",
-      "spanType": "Span 类型"
+      "spanType": "Span 类型",
+      "guardrailName": "护栏名称"
     }
   },
   "visualization": {

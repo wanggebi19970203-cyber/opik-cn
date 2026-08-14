@@ -153,6 +153,7 @@
     "optimizationInitialized": "Optimization process is initialized...",
     "calculatingBaseline": "Calculating baseline...",
     "noDataToShow": "No data to show",
+    "thisRunWasCancelled": "This run was cancelled",
     "optimizationProgress": "Optimization progress",
     "evaluatingNewCandidate": "Evaluating new candidate...",
     "lookingForFailingExamples": "Looking for failing examples to reflect on...",
@@ -230,12 +231,23 @@
     "optimizationChart": {
       "score": "Score",
       "bestCandidate": "Best candidate",
+      "best": "Best",
       "trialStatus": {
         "baseline": "Baseline",
         "passed": "Passed",
         "evaluating": "Evaluating",
         "discarded": "Discarded",
-        "running": "Running"
+        "running": "Running",
+        "failed": "Failed"
+      },
+      "legend": {
+        "passedTrial": "Passed trial",
+        "discardedTrial": "Discarded trial",
+        "statusTrial": "{{status}} trial"
+      },
+      "tick": {
+        "trial": "Trial {{number}}",
+        "trialsRange": "Trials {{min}}–{{max}}"
       }
     }
   }

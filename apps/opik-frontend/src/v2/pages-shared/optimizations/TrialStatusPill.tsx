@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import StatusDotPill from "@/v2/pages-shared/optimizations/StatusDotPill";
@@ -27,17 +28,21 @@ const TrialStatusPill: React.FC<TrialStatusPillProps> = ({
   status,
   isBest = false,
   className,
-}) => (
-  <StatusDotPill
-    dotColor={isBest ? TRIAL_BEST_COLOR : TRIAL_STATUS_COLORS[status]}
-    className={cn(
-      isBest &&
-        "border-[color-mix(in_srgb,var(--trial-best-ring)_30%,transparent)] bg-[color-mix(in_srgb,var(--trial-best-ring)_25%,transparent)]",
-      className,
-    )}
-  >
-    {isBest ? "Best" : TRIAL_STATUS_LABELS[status]}
-  </StatusDotPill>
-);
+}) => {
+  const { t } = useTranslation("experiments");
+
+  return (
+    <StatusDotPill
+      dotColor={isBest ? TRIAL_BEST_COLOR : TRIAL_STATUS_COLORS[status]}
+      className={cn(
+        isBest &&
+          "border-[color-mix(in_srgb,var(--trial-best-ring)_30%,transparent)] bg-[color-mix(in_srgb,var(--trial-best-ring)_25%,transparent)]",
+        className,
+      )}
+    >
+      {isBest ? t("optimizationChart.best") : TRIAL_STATUS_LABELS[status]}
+    </StatusDotPill>
+  );
+};
 
 export default TrialStatusPill;

@@ -126,13 +126,13 @@ describe("PromptComparison", () => {
 
       // at rest: title + "Show diff", no picker/arrow
       expect(screen.getByText("Trial prompt")).toBeInTheDocument();
-      expect(screen.getByText("Show diff")).toBeInTheDocument();
-      expect(screen.queryByText("→ Trial")).not.toBeInTheDocument();
+      expect(screen.getByText("codeDiff.showDiff")).toBeInTheDocument();
+      expect(screen.queryByText("→ codeDiff.trial")).not.toBeInTheDocument();
 
       // diffing: picker replaces the title
-      fireEvent.click(screen.getByText("Show diff"));
+      fireEvent.click(screen.getByText("codeDiff.showDiff"));
       expect(screen.getByText("Baseline")).toBeInTheDocument();
-      expect(screen.getByText("→ Trial")).toBeInTheDocument();
+      expect(screen.getByText("→ codeDiff.trial")).toBeInTheDocument();
       expect(screen.queryByText("Trial prompt")).not.toBeInTheDocument();
     });
 
@@ -146,8 +146,8 @@ describe("PromptComparison", () => {
       );
 
       expect(screen.getByText("Trial prompt")).toBeInTheDocument();
-      expect(screen.queryByText("Show diff")).not.toBeInTheDocument();
-      expect(screen.queryByText("Hide diff")).not.toBeInTheDocument();
+      expect(screen.queryByText("codeDiff.showDiff")).not.toBeInTheDocument();
+      expect(screen.queryByText("codeDiff.hideDiff")).not.toBeInTheDocument();
     });
   });
 });

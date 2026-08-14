@@ -1,8 +1,14 @@
+import { vi } from "vitest";
+
 import { BlueprintValueType } from "@/types/agent-configs";
 import { LLM_MESSAGE_ROLE, LLMMessage } from "@/types/llm";
 import { PROMPT_TEMPLATE_STRUCTURE } from "@/types/prompts";
 import { NewFieldDraft } from "./NewBlueprintFieldEditor";
 import { isMessageEmpty, validateNewField } from "./useAgentConfigurationSave";
+
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key },
+}));
 
 const makeMessage = (
   content: LLMMessage["content"],
@@ -74,21 +80,19 @@ describe("validateNewField", () => {
     it("returns error for empty key", () => {
       expect(
         validateNewField(makeDraft({ key: "" }), noExisting, noSiblings),
-      ).toBe("Field name is required");
+      ).toBe("common:agentConfig.fieldNameRequired");
     });
 
     it("returns error for whitespace-only key", () => {
       expect(
         validateNewField(makeDraft({ key: "   " }), noExisting, noSiblings),
-      ).toBe("Field name is required");
+      ).toBe("common:agentConfig.fieldNameRequired");
     });
 
     it("returns error for invalid key pattern", () => {
       expect(
         validateNewField(makeDraft({ key: "2bad" }), noExisting, noSiblings),
-      ).toBe(
-        "Use letters, digits and underscore; start with a letter or underscore",
-      );
+      ).toBe("common:agentConfig.fieldNamePattern");
     });
 
     it("returns error when key exists in existing keys", () => {
@@ -98,7 +102,7 @@ describe("validateNewField", () => {
           new Set(["taken"]),
           noSiblings,
         ),
-      ).toBe("A field with this name already exists");
+      ).toBe("common:agentConfig.fieldNameAlreadyExists");
     });
 
     it("returns error for duplicate sibling key", () => {
@@ -108,7 +112,7 @@ describe("validateNewField", () => {
           noExisting,
           new Set(["dup"]),
         ),
-      ).toBe("Duplicate field name in the new fields");
+      ).toBe("common:agentConfig.duplicateFieldName");
     });
   });
 
@@ -138,7 +142,7 @@ describe("validateNewField", () => {
           noExisting,
           noSiblings,
         ),
-      ).toBe("Prompt must not be empty");
+      ).toBe("common:messages.promptMustNotBeEmpty");
     });
   });
 
@@ -153,7 +157,7 @@ describe("validateNewField", () => {
           noExisting,
           noSiblings,
         ),
-      ).toBe("Add at least one message");
+      ).toBe("common:agentConfig.addAtLeastOneMessage");
     });
 
     it("returns error when all messages are empty", () => {
@@ -166,7 +170,7 @@ describe("validateNewField", () => {
           noExisting,
           noSiblings,
         ),
-      ).toBe("Messages must not be empty");
+      ).toBe("common:messages.messagesMustNotBeEmpty");
     });
 
     it("returns empty string when at least one message has content", () => {

@@ -97,55 +97,60 @@ const TargetPicker: React.FC<{
   selected: PromptComparisonTarget;
   currentLabel: string;
   onSelect: (id: string) => void;
-}> = ({ targets, selected, currentLabel, onSelect }) => (
-  <>
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="comet-body-s-accented inline-flex items-center gap-0.5 border-b border-foreground pb-px text-foreground outline-none"
-        >
-          {/* Label + caption share a baseline so "Parent" (14px) and its
-              "Trial #N" caption (12px) sit on the same line rather than
-              centre-aligning to different heights, with a small gap between
-              them (design QA round 2). */}
-          <span className="inline-flex items-baseline gap-1.5">
-            {selected.label}
-            {selected.caption && (
-              <span className="comet-body-xs text-muted-slate">
-                {selected.caption}
-              </span>
-            )}
-          </span>
-          <ChevronDown className="size-3.5" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[180px]">
-        <DropdownMenuLabel size="sm">Compare against</DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-border" />
-        {targets.map((target) => (
-          <DropdownMenuItem
-            key={target.id}
-            size="sm"
-            selected={target.id === selected.id}
-            onSelect={() => onSelect(target.id)}
-            className="justify-between gap-2"
+}> = ({ targets, selected, currentLabel, onSelect }) => {
+  const { t } = useTranslation("common");
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="comet-body-s-accented inline-flex items-center gap-0.5 border-b border-foreground pb-px text-foreground outline-none"
           >
-            <span>{target.label}</span>
-            {target.caption && (
-              <span className="comet-body-xs text-muted-slate">
-                {target.caption}
-              </span>
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-    <span className="comet-body-s-accented text-foreground">
-      → {currentLabel}
-    </span>
-  </>
-);
+            {/* Label + caption share a baseline so "Parent" (14px) and its
+                "Trial #N" caption (12px) sit on the same line rather than
+                centre-aligning to different heights, with a small gap between
+                them (design QA round 2). */}
+            <span className="inline-flex items-baseline gap-1.5">
+              {selected.label}
+              {selected.caption && (
+                <span className="comet-body-xs text-muted-slate">
+                  {selected.caption}
+                </span>
+              )}
+            </span>
+            <ChevronDown className="size-3.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[180px]">
+          <DropdownMenuLabel size="sm">
+            {t("codeDiff.compareAgainst")}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-border" />
+          {targets.map((target) => (
+            <DropdownMenuItem
+              key={target.id}
+              size="sm"
+              selected={target.id === selected.id}
+              onSelect={() => onSelect(target.id)}
+              className="justify-between gap-2"
+            >
+              <span>{target.label}</span>
+              {target.caption && (
+                <span className="comet-body-xs text-muted-slate">
+                  {target.caption}
+                </span>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <span className="comet-body-s-accented text-foreground">
+        → {currentLabel}
+      </span>
+    </>
+  );
+};
 
 /** Toggle between the diff view and the plain current-prompt view. */
 const DiffToggle: React.FC<{ showDiff: boolean; onToggle: () => void }> = ({

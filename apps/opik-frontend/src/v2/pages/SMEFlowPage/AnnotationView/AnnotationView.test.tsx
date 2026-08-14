@@ -95,7 +95,7 @@ describe("AnnotationView", () => {
   it("should enable Next button when there are more default items", () => {
     mockUseSMEFlow.mockReturnValue(defaultContextValue);
     render(<AnnotationView header={<div>Header</div>} />, { wrapper });
-    const nextButton = screen.getByText("Next");
+    const nextButton = screen.getByText("sme.annotationView.next");
     expect(nextButton).not.toBeDisabled();
   });
 
@@ -110,7 +110,7 @@ describe("AnnotationView", () => {
       },
     });
     render(<AnnotationView header={<div>Header</div>} />, { wrapper });
-    const nextButton = screen.getByText("Next");
+    const nextButton = screen.getByText("sme.annotationView.next");
     expect(nextButton).toBeDisabled();
   });
 
@@ -125,8 +125,12 @@ describe("AnnotationView", () => {
       },
     });
     render(<AnnotationView header={<div>Header</div>} />, { wrapper });
-    expect(screen.getByText("Finish annotating")).toBeInTheDocument();
-    expect(screen.queryByText("Next")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("sme.annotationView.finishAnnotating"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("sme.annotationView.next"),
+    ).not.toBeInTheDocument();
   });
 
   it("should show thread viewer when scope is thread", () => {

@@ -198,8 +198,8 @@ const ProjectStatsCardWidget: React.FunctionComponent<
     if (!metric || !workspaceMetricDef) {
       return (
         <DashboardWidget.EmptyState
-          title="No metric selected"
-          message="Choose a metric to display in this widget"
+          title={t("statsCard.noMetricSelected")}
+          message={t("statsCard.noMetricSelectedMessage")}
           action={editAction}
         />
       );

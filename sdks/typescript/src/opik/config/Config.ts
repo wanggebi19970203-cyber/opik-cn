@@ -17,19 +17,18 @@ export interface OpikConfig {
   holdUntilFlush?: boolean;
   promptCacheTtlSeconds?: number;
   trackDisable?: boolean;
-  // Per-object payload cap (MB): span/trace input/output larger than this are truncated
-  // before send; metadata is exempt and excluded from the measurement (parity with the
-  // Python SDK). <= 0 disables. Default 20.
+  // 每个对象的载荷上限（MB）：span/trace 的输入/输出超过此大小会在发送前截断；
+  // 元数据不受此限制，且不计入该度量（与 Python SDK 保持一致）。<= 0 表示禁用。默认 20。
   maxPayloadSizeMb?: number;
-  // Extract inline base64 blobs (e.g. images) from span/trace input/output/metadata and
-  // upload them as attachments before send, so they don't count toward the size cap
-  // (parity with the Python SDK). Default true.
+  // 从 span/trace 的输入/输出/元数据中提取内联 base64 数据块（例如图片），
+  // 并在发送前将它们作为附件上传，使其不计入大小上限
+  // （与 Python SDK 保持一致）。默认 true。
   isAttachmentExtractionActive?: boolean;
-  // Minimum length of an inline base64 blob (in encoded characters/bytes) before it is extracted
-  // as an attachment; smaller blobs are left inline. This gates on the *encoded* string length, so
-  // the decoded blob is ~3/4 of it (the 256000 default extracts blobs ~192 KB+ decoded). Gating on
-  // the encoded length matches the Python SDK and avoids decoding every candidate just to size it.
-  // Default 256000.
+  // 内联 base64 数据块被提取为附件前的最小长度（以编码字符/字节计）；
+  // 更小的数据块保留为内联。此判断基于*编码后*字符串长度，因此
+  // 解码后的数据块约为其 3/4（默认值 256000 提取解码后约 192 KB+ 的数据块）。
+  // 基于编码长度进行判断与 Python SDK 保持一致，并避免仅为测量大小而解码每个候选。
+  // 默认 256000。
   minBase64EmbeddedAttachmentSize?: number;
 }
 
@@ -79,9 +78,9 @@ function loadFromEnv(): Partial<OpikConfig> {
       : undefined,
     holdUntilFlush: parseBooleanFlag(process.env.OPIK_HOLD_UNTIL_FLUSH),
     trackDisable: parseBooleanFlag(process.env.OPIK_TRACK_DISABLE),
-    // A non-numeric value (e.g. the units typo "20MB") must fall back to the default, not NaN:
-    // NaN would survive filterUndefined and the `??` guards downstream and silently disable the
-    // size guard entirely - strictly worse than leaving the var unset.
+    // 非数字值（例如带单位的笔误 "20MB"）必须回退到默认值，而不是 NaN：
+    // NaN 会通过 filterUndefined 和下游的 `??` 保护，从而静默地完全禁用
+    // 大小保护——这比不设置该变量更糟糕。
     maxPayloadSizeMb:
       process.env.OPIK_MAX_PAYLOAD_SIZE_MB &&
       Number.isFinite(Number(process.env.OPIK_MAX_PAYLOAD_SIZE_MB))
@@ -90,7 +89,7 @@ function loadFromEnv(): Partial<OpikConfig> {
     isAttachmentExtractionActive: parseBooleanFlag(
       process.env.OPIK_IS_ATTACHMENT_EXTRACTION_ACTIVE,
     ),
-    // Non-numeric values fall back to the default (see maxPayloadSizeMb above).
+    // 非数字值回退到默认值（参见上面的 maxPayloadSizeMb）。
     minBase64EmbeddedAttachmentSize:
       process.env.OPIK_MIN_BASE64_EMBEDDED_ATTACHMENT_SIZE &&
       Number.isFinite(
@@ -132,9 +131,9 @@ function loadFromConfigFile(): Partial<OpikConfig> {
       return {};
     }
 
-    // Only identity/string settings are read from the config file. Numeric and flag
-    // settings (batchDelayMs, maxPayloadSizeMb, isAttachmentExtractionActive,
-    // minBase64EmbeddedAttachmentSize, ...) are configured via OPIK_* env vars only.
+    // 只有身份/字符串设置从配置文件读取。数值和标志类设置
+    // （batchDelayMs、maxPayloadSizeMb、isAttachmentExtractionActive、
+    // minBase64EmbeddedAttachmentSize 等）仅通过 OPIK_* 环境变量配置。
     return filterUndefined({
       apiKey: config.opik.api_key,
       apiUrl: config.opik.url_override,

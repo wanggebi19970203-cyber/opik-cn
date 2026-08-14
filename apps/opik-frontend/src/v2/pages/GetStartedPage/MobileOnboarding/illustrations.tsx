@@ -1,4 +1,5 @@
 import React from "react";
+import i18next from "i18next";
 import { useTheme } from "@/contexts/theme-provider";
 import { THEME_MODE } from "@/constants/theme";
 
@@ -48,20 +49,48 @@ const Illustration: React.FC<IllustrationProps> = ({ src, alt }) => (
 
 export const WelcomeIllustration: React.FC = () => {
   const urls = useIllustrationUrls();
-  return <Illustration src={urls.welcome} alt="Welcome" />;
+  return (
+    <Illustration
+      src={urls.welcome}
+      alt={i18next.t(
+        "pages/get-started:getStarted.mobileOnboarding.illustrations.welcomeAlt",
+      )}
+    />
+  );
 };
 
 export const TraceIllustration: React.FC = () => {
   const urls = useIllustrationUrls();
-  return <Illustration src={urls.trace} alt="Trace" />;
+  return (
+    <Illustration
+      src={urls.trace}
+      alt={i18next.t(
+        "pages/get-started:getStarted.mobileOnboarding.illustrations.traceAlt",
+      )}
+    />
+  );
 };
 
 export const IssuesIllustration: React.FC = () => {
   const urls = useIllustrationUrls();
-  return <Illustration src={urls.issues} alt="Issues" />;
+  return (
+    <Illustration
+      src={urls.issues}
+      alt={i18next.t(
+        "pages/get-started:getStarted.mobileOnboarding.illustrations.issuesAlt",
+      )}
+    />
+  );
 };
 
 export const ConnectIllustration: React.FC = () => {
   const urls = useIllustrationUrls();
-  return <Illustration src={urls.connect} alt="Connect" />;
+  return (
+    <Illustration
+      src={urls.connect}
+      alt={i18next.t(
+        "pages/get-started:getStarted.mobileOnboarding.illustrations.connectAlt",
+      )}
+    />
+  );
 };

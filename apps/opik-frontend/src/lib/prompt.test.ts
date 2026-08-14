@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   extractMessageContent,
@@ -8,6 +8,10 @@ import {
   isValidOpenAIMessages,
   OpenAIMessage,
 } from "./prompt";
+
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
 
 describe("prompt utilities", () => {
   describe("extractMessageContent", () => {
@@ -148,7 +152,7 @@ describe("prompt utilities", () => {
         { role: "user", content: [{ type: "text", text: "Hello" }] },
       ];
       expect(formatMessagesAsText(messages)).toBe(
-        "System: You are ChatGPT.\n\nUser: Hello",
+        "common.constants.llm.roles.system: You are ChatGPT.\n\ncommon.constants.llm.roles.user: Hello",
       );
     });
   });

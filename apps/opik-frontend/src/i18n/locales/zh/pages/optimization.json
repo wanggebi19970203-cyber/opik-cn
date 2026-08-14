@@ -12,7 +12,8 @@
       "rerun": "复制运行",
       "stopExecution": "停止执行",
       "dataset": "数据集",
-      "goToDataset": "前往 {{name}}"
+      "goToDataset": "前往 {{name}}",
+      "backToOptimizationRuns": "返回优化运行"
     },
     "kpi": {
       "optimizationCost": "优化成本",
@@ -49,11 +50,92 @@
       "running": "运行中"
     },
     "prompt": {
-      "diffVsBaseline": "与基线对比"
+      "diffVsBaseline": "与基线对比",
+      "viewDiffVsBaseline": "查看与基线的对比"
     },
     "view": {
       "logs": "日志",
       "configuration": "配置"
+    },
+    "runStatus": {
+      "running": "运行中",
+      "completed": "已完成",
+      "cancelled": "已取消",
+      "initialized": "已初始化",
+      "error": "错误"
+    },
+    "trialSidebar": {
+      "results": "结果",
+      "prompt": "提示词",
+      "logs": "日志",
+      "optimizationLogs": "优化日志",
+      "baseline": "基线",
+      "trialNumber": "试验 #{{number}}",
+      "trial": "试验"
+    },
+    "trialStatus": {
+      "details": "详情",
+      "best": "最佳",
+      "baseline": "基线",
+      "step": "步骤 {{stepIndex}}"
+    },
+    "trialPrompt": {
+      "title": "试验提示词",
+      "noPromptAvailable": "无可用提示词。",
+      "trial": "试验"
+    },
+    "trialItems": {
+      "testSuiteItemId": "测试套件项目 ID",
+      "noData": "所选试验暂无数据",
+      "testSuite": "测试套件",
+      "testSuiteSuffix": "{{label}}（测试套件）",
+      "evaluationTask": "评估任务",
+      "optimizationsScores": "优化分数",
+      "selectScore": "选择评分",
+      "passed": "通过",
+      "testItems": "测试项目",
+      "evaluationResults": "评估结果"
+    },
+    "errorPanel": {
+      "title": "优化失败",
+      "logsCouldNotBeLoaded": "运行因错误而结束，但无法加载日志。",
+      "openLogsForDetails": "运行因错误而结束。请打开日志查看详情。",
+      "retry": "重试",
+      "viewLogs": "查看日志"
+    },
+    "emptyRun": {
+      "viewLogs": "查看日志",
+      "noCandidatesGenerated": "未生成候选",
+      "noUsableScores": "无可用评分",
+      "noCandidatesMessage": "优化器未生成任何可供评分的提示词变体，因此保留了基线提示词。原始提示词已取得较好评分时，这种情况很常见。",
+      "itemFailedToScore": "该项目评分失败",
+      "allItemsFailedToScore": "全部 {{count}} 个项目评分失败",
+      "itemsFailedToScore": "{{total}} 个项目中有 {{failed}} 个评分失败",
+      "allFailedTail": "指标可能在每次评估中都出错。请打开日志，检查指标和模型，然后重新运行。",
+      "partialTail": "部分评估未产生可用结果。请打开日志查看哪些项目失败，然后重新运行。",
+      "heuristicFallback": "此运行已结束，但未产生可用评分——指标可能在每个项目上都失败了。请打开日志，检查指标和模型，然后重新运行。",
+      "noCandidatesCaption": "未生成候选。已保留基线提示词。",
+      "noUsableScoresCaption": "无可用评分——请查看日志。",
+      "checkLogsSuffix": "请查看日志。"
+    },
+    "bestTrial": {
+      "title": "最佳试验提示词",
+      "viewTrial": "查看试验",
+      "hideDiff": "隐藏对比",
+      "bestTrial": "最佳试验",
+      "noImprovement": "与基线相比无改进——已保留原始提示词。"
+    },
+    "metricPopover": {
+      "noAdditionalConfiguration": "无其他配置"
+    },
+    "metricParameters": {
+      "referenceKey": "引用键",
+      "caseSensitive": "区分大小写",
+      "taskIntroduction": "任务介绍",
+      "evaluationCriteria": "评估标准",
+      "normalize": "归一化",
+      "code": "代码",
+      "arguments": "参数"
     }
   }
 }

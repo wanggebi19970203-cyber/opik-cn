@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   hasPythonSyntaxError,
   CodeMetricParamsSchema,
@@ -8,6 +8,12 @@ import {
 } from "./schema";
 import { METRIC_TYPE, OPTIMIZER_TYPE } from "@/types/optimizations";
 import { LLM_MESSAGE_ROLE } from "@/types/llm";
+
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
 
 const VALID_CODE_METRIC = `
 from opik.evaluation.metrics import BaseMetric
@@ -87,7 +93,9 @@ describe("CodeMetricParamsSchema", () => {
         (issue) => issue.path.join(".") === "code",
       );
       expect(codeIssue).toBeDefined();
-      expect(codeIssue?.message).toMatch(/syntax error/i);
+      expect(codeIssue?.message).toBe(
+        "optimizations:metricConfigs.pythonCodeSyntaxError",
+      );
     }
   });
 

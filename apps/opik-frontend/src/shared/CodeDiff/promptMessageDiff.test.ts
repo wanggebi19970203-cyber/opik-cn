@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import {
   groupMessageContentByRole,
@@ -9,6 +9,10 @@ import {
   promptToText,
   FALLBACK_ROLE,
 } from "./promptMessageDiff";
+
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
 
 describe("promptToText", () => {
   it("passes strings through unchanged", () => {
@@ -29,8 +33,10 @@ describe("promptToText", () => {
 
 describe("getRoleLabel", () => {
   it("resolves known roles to their display names", () => {
-    expect(getRoleLabel("system")).toBe("System");
-    expect(getRoleLabel("assistant")).toBe("Assistant");
+    expect(getRoleLabel("system")).toBe("common.constants.llm.roles.system");
+    expect(getRoleLabel("assistant")).toBe(
+      "common.constants.llm.roles.assistant",
+    );
   });
 
   it("falls back to the raw role for unknown roles", () => {

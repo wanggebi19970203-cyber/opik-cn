@@ -139,8 +139,8 @@ describe("DatasetExportPanel", () => {
     it("should not render when there are no active jobs", () => {
       render(<DatasetExportPanel />, { wrapper });
 
-      expect(screen.queryByText("Preparing download")).not.toBeInTheDocument();
-      expect(screen.queryByText("Download ready")).not.toBeInTheDocument();
+      expect(screen.queryByText("exportPanel.preparingDownload")).not.toBeInTheDocument();
+      expect(screen.queryByText("exportPanel.downloadReady")).not.toBeInTheDocument();
     });
 
     it("should render panel when there are active jobs", () => {
@@ -151,7 +151,7 @@ describe("DatasetExportPanel", () => {
 
       render(<DatasetExportPanel />, { wrapper });
 
-      expect(screen.getByText("Preparing download")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.preparingDownload")).toBeInTheDocument();
     });
 
     it("should show 'Download ready' when all jobs are completed", () => {
@@ -162,7 +162,7 @@ describe("DatasetExportPanel", () => {
 
       render(<DatasetExportPanel />, { wrapper });
 
-      expect(screen.getByText("Download ready")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.downloadReady")).toBeInTheDocument();
     });
 
     it("should display dataset name for each job", () => {
@@ -184,7 +184,7 @@ describe("DatasetExportPanel", () => {
 
       render(<DatasetExportPanel />, { wrapper });
 
-      expect(screen.getByText("Exporting...")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.exporting")).toBeInTheDocument();
     });
 
     it("should show 'Ready' status for completed jobs", () => {
@@ -195,7 +195,7 @@ describe("DatasetExportPanel", () => {
 
       render(<DatasetExportPanel />, { wrapper });
 
-      expect(screen.getByText("Ready")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.ready")).toBeInTheDocument();
     });
 
     it("should show 'Failed' status for failed jobs", () => {
@@ -213,7 +213,7 @@ describe("DatasetExportPanel", () => {
 
       render(<DatasetExportPanel />, { wrapper });
 
-      expect(screen.getByText("Failed")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.failed")).toBeInTheDocument();
     });
   });
 
@@ -237,7 +237,7 @@ describe("DatasetExportPanel", () => {
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith({
-          title: "Export failed",
+          title: "exportPanel.exportFailed",
           description: "Export failed due to timeout",
           variant: "destructive",
         });
@@ -317,8 +317,8 @@ describe("DatasetExportPanel", () => {
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith({
-          title: "Export failed",
-          description: 'Failed to export test suite "My Dataset Name"',
+          title: "exportPanel.exportFailed",
+          description: "exportPanel.exportFailedDescription",
           variant: "destructive",
         });
       });
@@ -401,8 +401,8 @@ describe("DatasetExportPanel", () => {
 
       expect(screen.getByText("Pending Dataset")).toBeInTheDocument();
       expect(screen.getByText("Completed Dataset")).toBeInTheDocument();
-      expect(screen.getByText("Exporting...")).toBeInTheDocument();
-      expect(screen.getByText("Ready")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.exporting")).toBeInTheDocument();
+      expect(screen.getByText("exportPanel.ready")).toBeInTheDocument();
     });
 
     it("should show 'Preparing download' when there are pending jobs mixed with completed", () => {
@@ -428,8 +428,8 @@ describe("DatasetExportPanel", () => {
 
       render(<DatasetExportPanel />, { wrapper });
 
-      // Should show "Preparing download" because there's at least one pending job
-      expect(screen.getByText("Preparing download")).toBeInTheDocument();
+      // Should show "exportPanel.preparingDownload" because there's at least one pending job
+      expect(screen.getByText("exportPanel.preparingDownload")).toBeInTheDocument();
     });
   });
 });

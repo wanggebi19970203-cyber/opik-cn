@@ -475,10 +475,9 @@ class TraceDAOImpl implements TraceDAO {
      * 键格式：{@code author} + 可选的 {@code _queueId} + 可选的 {@code _spanId}（确保跨队列/span 的唯一性）。
      * 值元组：(value, reason, category_name, source, last_updated_at, span_type, span_id, source_queue_id, author)。
      *
-     * <p>experiments_agg collapses to a single canonical row per trace_id (the most recent experiment,
-     * by UUIDv7-ordered id) so the trace-by-id LEFT JOIN cannot fan a trace that belongs to multiple
-     * experiments into multiple rows — which surfaced as an IndexOutOfBoundsException 500 on GET by id
-     * and non-deterministic experiment metadata (OPIK-7396).
+     * <p>experiments_agg 会折叠为每个 trace_id 的唯一规范行（按 UUIDv7 排序的 id 取最近的实验），
+     * 因此按 trace 查找的 LEFT JOIN 不会把属于多个实验的 trace 展开为多行——这曾表现为按 id 执行 GET 时的
+     * IndexOutOfBoundsException 500 以及不确定的实验元数据（OPIK-7396）。
      */
     private static final String SELECT_BY_IDS = """
             WITH target_spans AS (
@@ -885,22 +884,21 @@ class TraceDAOImpl implements TraceDAO {
      * 和最终的 ORDER BY（使页面按序返回）；{@code page_wide} 自身的顺序无关紧要，因为它受 id 约束且使用
      * {@code LIMIT 1 BY id}。字段排除（{@code exclude_fields}）和截断在不丢弃排序键的情况下叠加在上层。
      * <p>
-     * Each {@code traces} id-range bound carries a parallel {@code toMonday(id_at)} bound: a strict consequence of
-     * the id-range — and, unlike a {@code created_at} predicate, safe against late-arriving rows since it derives
-     * from {@code id} — that lets the planner prune partitions once {@code traces} is partitioned.
+     * 每个 {@code traces} 的 id 范围边界都带有并行的 {@code toMonday(id_at)} 边界：这是 id 范围的严格推论——
+     * 并且与 {@code created_at} 谓词不同，它对迟到的行是安全的，因为它源自 {@code id}——一旦 {@code traces}
+     * 完成分区，即可让规划器裁剪分区。
      * <p>
-     * When aggregates are enrichment-only ({@code page_keyed_aggregates}, see
-     * {@code shouldPageKeyAggregates}), the aggregate CTEs are keyed on
-     * {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} instead of
-     * {@code trace_id_prefilter}: the inner scalar subquery is evaluated once and cached for the whole query,
-     * so every aggregate scans only the page's traces instead of the full filtered project. The aggregate CTEs
-     * referencing {@code page_ids} before its definition is fine — CTE names resolve independently of
-     * declaration order.
+     * 当聚合仅用于富化（{@code page_keyed_aggregates}，见
+     * {@code shouldPageKeyAggregates}）时，聚合 CTE 以
+     * {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} 而不是
+     * {@code trace_id_prefilter} 为键：内部标量子查询只求值一次并对整个查询缓存，
+     * 因此每个聚合只扫描当前页的 traces，而不是整个过滤后的项目。聚合 CTE
+     * 在其定义之前就引用 {@code page_ids} 没有问题——CTE 名称的解析与声明顺序无关。
      * <p>
-     * A ClickHouse upgrade must re-verify the three behaviors this mode relies on (validated on 25.3 and 25.8):
-     * forward CTE resolution, scalar-subquery caching (one evaluation reused across all reference sites — if the
-     * cache stops applying, results stay correct but every aggregate silently regresses to a whole-project scan),
-     * and primary-key pruning of the materialized IN-set.
+     * ClickHouse 升级后必须重新验证此模式所依赖的三个行为（在 25.3 和 25.8 上验证过）：
+     * 前向 CTE 解析、标量子查询缓存（一次求值在所有引用处复用——如果
+     * 缓存不再生效，结果仍然正确，但每个聚合都会悄然退化回全项目扫描），
+     * 以及物化 IN 集合的主键裁剪。
      */
     private static final String SELECT_BY_PROJECT_ID = """
             WITH <if(trace_id_prefilter)>trace_id_prefilter AS (
@@ -1510,10 +1508,10 @@ class TraceDAOImpl implements TraceDAO {
             """;
 
     /**
-     * Cheap "does the project have any trace?" probe for the Logs empty state. Deliberately minimal —
-     * project scope only — so it is always a primary-key-prunable {@code LIMIT 1} (traces sort key is
-     * {@code (workspace_id, project_id, id)}). It intentionally does not support arbitrary filters, search, or
-     * time ranges: no consumer needs them, and adding them back would reintroduce a full-project COUNT fallback.
+     * 用于 Logs 空状态的轻量级“项目是否存在任何 trace？”探测。刻意保持最小化——
+     * 仅项目范围——因此它始终是可主键裁剪的 {@code LIMIT 1}（traces 的排序键为
+     * {@code (workspace_id, project_id, id)}）。它有意不支持任意过滤、搜索或
+     * 时间范围：没有消费者需要它们，而加回这些会重新引入全项目 COUNT 回退。
      */
     private static final String EXISTS_BY_PROJECT_ID = """
             SELECT 1 AS exist
@@ -1526,12 +1524,12 @@ class TraceDAOImpl implements TraceDAO {
             """;
 
     /**
-     * Thread-scoped variant backing the Threads tab empty state. Probes {@code trace_threads}, not
-     * {@code traces WHERE thread_id != ''}: {@code thread_id} is not in the {@code traces} sort key, and its
-     * only index there is a bloom filter that serves equality, not the {@code != ''} inequality — so that
-     * predicate could not prune and would scan the whole project on exactly the no-threads empty state it
-     * targets. {@code trace_threads} is ordered by {@code (workspace_id, project_id, thread_id, id)}, so project
-     * scope is primary-key-prunable, and it is the same table the Threads list reads (consistent empty state).
+     * 支撑 Threads 标签页空状态的线程范围变体。探测 {@code trace_threads}，而不是
+     * {@code traces WHERE thread_id != ''}：{@code thread_id} 不在 {@code traces} 的排序键中，它在
+     * 那里唯一的索引是布隆过滤器，只服务于等值匹配而非 {@code != ''} 不等值——因此该
+     * 谓词无法裁剪，且会在它所要针对的“无线程”空状态下扫描整个项目。
+     * {@code trace_threads} 按 {@code (workspace_id, project_id, thread_id, id)} 排序，因此项目
+     * 范围是可主键裁剪的，且它与 Threads 列表读取的是同一张表（保持一致的空状态）。
      */
     private static final String THREADS_EXISTS_BY_PROJECT_ID = """
             SELECT 1 AS exist
@@ -1544,21 +1542,21 @@ class TraceDAOImpl implements TraceDAO {
             """;
 
     /**
-     * Total-row count behind the traces list page. Numbers in OPIK-7836; re-measure before changing either gate.
+     * traces 列表页背后的总行数。数据见 OPIK-7836；在改动任一门槛前请重新测量。
      *
-     * <p>Two things this template must NOT do when nothing consumes them:
+     * <p>当没有任何消费方时，此模板有两件事绝对不能做：
      *
      * <ul>
-     * <li>{@code guardrails_agg} is joined only under {@code guardrails_filters}, matching the other filter-side
-     * joins in this class. Nothing else in the count reads {@code gagg.guardrails_result}, and the join is also what
-     * makes {@code trace_id_prefilter} referenced - so leaving it in costs a second full scan of the project on
-     * every page load (measured 15.9M read rows on a 7.9M-row project). The gate cannot silently return a wrong
-     * count: {@code FilterUtils} sets {@code guardrails_filters} in exactly the cases that render the {@code gagg}
-     * alias into {@code filters}, so a mismatch fails to parse (see {@link #canDedupByArgMax}).</li>
-     * <li>The {@code ORDER BY} + {@code LIMIT 1 BY id} dedup of {@code ReplacingMergeTree} versions is kept only
-     * under {@code trace_aggregation_filters}, whose branch groups by {@code t.id} and so needs one row per version.
-     * Otherwise the count is {@code count(DISTINCT id)}: the {@code WHERE} is applied before dedup either way, so
-     * both forms count the ids where any version matched, but only one of them sorts every matching row.</li>
+     * <li>{@code guardrails_agg} 仅在 {@code guardrails_filters} 下被 join，与本类中其他过滤侧的
+     * join 保持一致。计数中没有别的地方读取 {@code gagg.guardrails_result}，而这个 join 也正是让
+     * {@code trace_id_prefilter} 被引用的原因——因此保留它会在每次页面加载时带来对项目的第二次全量扫描
+     * （在 790 万行的项目上测得读取 1590 万行）。该门槛不会静默返回错误的
+     * 计数：{@code FilterUtils} 恰好会在将 {@code gagg} 别名渲染进 {@code filters} 的情况下设置
+     * {@code guardrails_filters}，因此不匹配会导致解析失败（见 {@link #canDedupByArgMax}）。</li>
+     * <li>{@code ReplacingMergeTree} 版本的 {@code ORDER BY} + {@code LIMIT 1 BY id} 去重仅在
+     * {@code trace_aggregation_filters} 下保留，该分支按 {@code t.id} 分组，因此每个版本需要一行。
+     * 否则计数使用 {@code count(DISTINCT id)}：无论哪种方式 {@code WHERE} 都在去重前应用，因此
+     * 两种形式都统计任意版本匹配的 id，但只有其中一种会对每个匹配行进行排序。</li>
      * </ul>
      */
     private static final String COUNT_BY_PROJECT_ID = """
@@ -1914,18 +1912,18 @@ class TraceDAOImpl implements TraceDAO {
             """;
 
     /**
-     * Deletes by the full {@code (workspace_id, project_id, id)} sort key, matching on {@code (project_id, id)} tuples
-     * so a single statement can span several projects (e.g. a reused id resolved to all its owning projects, or a
-     * cross-project batch) instead of one delete per project (OPIK-7483). Every deleted row carries its {@code
-     * project_id}, so no delete is ever project-less - also required once {@code traces} is a Distributed table
-     * (OPIK-7455). No {@code id_at}/time predicate on purpose, so it still deletes rows whose {@code id_at} is
-     * untrustworthy (e.g. a wrapped timestamp); correctness here does not depend on {@code id_at}.
+     * 按完整的 {@code (workspace_id, project_id, id)} 排序键删除，匹配 {@code (project_id, id)} 元组，
+     * 使单条语句可以跨多个项目（例如复用的 id 解析到其所有所属项目，或
+     * 跨项目批量删除），而不是每个项目一条删除语句（OPIK-7483）。每一行被删除的数据都带有其 {@code
+     * project_id}，因此没有任何删除是无项目的——一旦 {@code traces} 成为 Distributed 表，这也是必需的
+     * （OPIK-7455）。有意不加 {@code id_at}/时间谓词，因此仍会删除 {@code id_at}
+     * 不可信的行（例如被回绕的时间戳）；这里的正确性不依赖 {@code id_at}。
      * <p>
-     * The pairs are bound (never inlined) as two positional string arrays and zipped back into {@code (project_id, id)}
-     * tuples with {@code arrayZip}, so the query text is constant regardless of batch size and no value reaches the SQL
-     * as a literal. {@code arrayZip} is a deterministic function, not a subquery - ClickHouse rejects subqueries in
-     * delete mutations. Callers batch to keep each array within the driver's reliable bind size ({@link
-     * com.comet.opik.infrastructure.FilterUtils#ANALYTICS_DELETE_BATCH_SIZE}).
+     * 这些对以两个位置字符串数组的形式绑定（从不内联），并用 {@code arrayZip} 重新压缩为 {@code (project_id, id)}
+     * 元组，因此查询文本与批量大小无关，也不会有任何值以字面量形式进入 SQL。
+     * {@code arrayZip} 是确定性函数而非子查询——ClickHouse 在删除 mutation 中拒绝子查询。
+     * 调用方分批处理以保持每个数组在驱动程序的可靠绑定大小内（{@link
+     * com.comet.opik.infrastructure.FilterUtils#ANALYTICS_DELETE_BATCH_SIZE}）。
      */
     private static final String DELETE_BY_PROJECT_ID_TRACE_ID_PAIRS = """
             DELETE FROM <if(distributed_wrap)>traces_local<else>traces<endif>
@@ -2192,14 +2190,14 @@ class TraceDAOImpl implements TraceDAO {
             """;
 
     /**
-     * Resolves every distinct {@code (id, project_id)} pair for a set of trace ids. A reused id maps to <b>all</b> its
-     * owning projects - unlike {@code SELECT_PROJECT_IDS_BY_TRACE_IDS}'s {@code any(project_id)} - so the delete path
-     * removes it from each under the full sort key (OPIK-7483). {@code DISTINCT} (not FINAL) suffices: lightweight-delete
-     * masks are honored at read time, so a deleted pair never surfaces and a live pair always does, regardless of
-     * version. Has no time predicate, so it resolves rows regardless of {@code id_at}; the delete path uses it only as
-     * the fallback for the ids the bounded pass could not resolve (malformed wrapped-{@code id_at} rows). Prunes
-     * granules on the {@code idx_traces_id_bf} bloom-filter index (migration 000113): the {@code id IN} lookup skips
-     * granules holding none of the ids instead of scanning the whole workspace, keeping the fallback cheap.
+     * 为一组 trace id 解析每个不同的 {@code (id, project_id)} 对。复用的 id 映射到<b>所有</b>其
+     * 所属项目——不同于 {@code SELECT_PROJECT_IDS_BY_TRACE_IDS} 的 {@code any(project_id)}——因此删除路径
+     * 会在完整排序键下将其从每个项目中移除（OPIK-7483）。{@code DISTINCT}（而非 FINAL）已足够：轻量删除
+     * 掩码在读取时生效，因此已删除的对绝不会出现，而存活的对始终出现，与
+     * 版本无关。没有时间谓词，因此无论 {@code id_at} 如何都会解析行；删除路径仅将其用作
+     * 有界遍历无法解析的 id 的回退（格式错误的回绕 {@code id_at} 行）。在
+     * {@code idx_traces_id_bf} 布隆过滤器索引（migration 000113）上裁剪颗粒：{@code id IN} 查找会跳过
+     * 不含任何这些 id 的颗粒，而不是扫描整个工作区，从而让回退保持廉价。
      */
     private static final String SELECT_ALL_PROJECT_IDS_BY_TRACE_IDS = """
             SELECT DISTINCT id, project_id
@@ -2211,13 +2209,13 @@ class TraceDAOImpl implements TraceDAO {
             """;
 
     /**
-     * Partition-pruning fast pass of {@code SELECT_ALL_PROJECT_IDS_BY_TRACE_IDS}. Constrains {@code toMonday(id_at)}
-     * ({@code id_at} is MATERIALIZED from the UUIDv7 id, migration 000091) to the id set's own min/max week and, like
-     * the unbounded query, prunes granules on the {@code idx_traces_id_bf} bloom index. The week window is a no-op on
-     * the current unpartitioned table but prunes partitions once {@code traces} is partitioned. Well-formed UUIDv7 ids
-     * have {@code id_at} monotonic in id, so the window resolves them; a malformed id whose {@code id_at} wrapped
-     * (OPIK-7456) can fall outside it and is re-resolved by the unbounded fallback, so the bounded query is never a
-     * delete's sole resolver.
+     * {@code SELECT_ALL_PROJECT_IDS_BY_TRACE_IDS} 的分区裁剪快速路径。将 {@code toMonday(id_at)}
+     * （{@code id_at} 由 UUIDv7 id 物化而来，migration 000091）约束到 id 集合自身的最小/最大周，并且与
+     * 无界查询一样，在 {@code idx_traces_id_bf} 布隆索引上裁剪颗粒。周窗口在当前未分区的表上是空操作，
+     * 但一旦 {@code traces} 完成分区即可裁剪分区。格式良好的 UUIDv7 id 的
+     * {@code id_at} 与 id 单调一致，因此该窗口可以解析它们；{@code id_at} 发生回绕的格式错误 id
+     * （OPIK-7456）可能落在窗口之外，并由无界回退重新解析，因此有界查询永远不会成为
+     * 删除操作的唯一解析器。
      */
     private static final String SELECT_ALL_PROJECT_IDS_BY_TRACE_IDS_BOUNDED = """
             SELECT DISTINCT id, project_id
@@ -2243,12 +2241,11 @@ class TraceDAOImpl implements TraceDAO {
             ;
             """;
 
-    // Split-A: traces + spans aggregation. All feedback-score CTEs stay so the existing
-    // feedback_scores_filters / span_feedback_scores_filters / *_empty_filters slots inside
-    // trace_final still resolve. The feedback_scores_agg and span_feedback_scores_agg CTEs
-    // are no longer referenced by the final SELECT and CH prunes them; the per-trace feedback
-    // aggregates are produced in parallel by SELECT_FEEDBACK_SCORES_STATS and merged by
-    // StatsMerger.
+    // Split-A：traces + spans 聚合。保留所有反馈评分 CTE，使 trace_final 中现有的
+    // feedback_scores_filters / span_feedback_scores_filters / *_empty_filters 槽位
+    // 仍然可以解析。feedback_scores_agg 和 span_feedback_scores_agg CTE
+    // 不再被最终 SELECT 引用，CH 会将其裁剪掉；每个 trace 的反馈评分
+    // 聚合由 SELECT_FEEDBACK_SCORES_STATS 并行生成，并由 StatsMerger 合并。
     private static final String SELECT_TRACES_SPANS_STATS = """
              WITH spans_data AS (
                 SELECT
@@ -3210,9 +3207,9 @@ class TraceDAOImpl implements TraceDAO {
     private final @NonNull InstantToUUIDMapper instantToUUIDMapper;
 
     /**
-     * Sort mapping applied under {@code traceColumnsNonNullable}: {@code nullIf} restores an absent (epoch)
-     * {@code end_time} to {@code NULL} so it sorts last in ASC like a Nullable column did. {@code duration} needs no
-     * entry — ClickHouse sorts {@code NaN} like {@code NULL}. Merged with the experiment-id mapping the listing passes.
+     * 在 {@code traceColumnsNonNullable} 下应用的排序映射：{@code nullIf} 将缺失的（epoch）
+     * {@code end_time} 恢复为 {@code NULL}，使其像 Nullable 列一样在 ASC 中排在最后。{@code duration} 无需
+     * 条目——ClickHouse 会像 {@code NULL} 一样对 {@code NaN} 排序。与列表传入的 experiment-id 映射合并。
      */
     private static final Map<String, String> SORT_FIELD_MAPPING_END_TIME_SENTINEL = Stream
             .concat(TraceSortingFactory.EXPERIMENT_FIELD_MAPPING.entrySet().stream(),
@@ -3285,8 +3282,8 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Binds a {@code DateTime64} write parameter, applying the epoch sentinel for an absent value once the column is
-     * non-nullable (a {@code null} bind would be rejected); while still Nullable an absent value binds {@code null}.
+     * 绑定一个 {@code DateTime64} 写入参数，在列变为非空后对缺失值应用 epoch 哨兵值
+     * （绑定 {@code null} 会被拒绝）；在列仍为 Nullable 时，缺失值绑定 {@code null}。
      */
     private void bindEpochSentinel(Statement statement, String parameter, Instant value) {
         if (traceColumnsNonNullable()) {
@@ -3299,8 +3296,8 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Binds a {@code Float64} write parameter, applying the {@code NaN} sentinel for an absent value once the column is
-     * non-nullable; while still Nullable an absent value binds {@code null}.
+     * 绑定一个 {@code Float64} 写入参数，在列变为非空后对缺失值应用 {@code NaN} 哨兵值；
+     * 在列仍为 Nullable 时，缺失值绑定 {@code null}。
      */
     private void bindNanSentinel(Statement statement, String parameter, Double value) {
         if (traceColumnsNonNullable()) {
@@ -3317,33 +3314,33 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Whether the sharding-readiness wrap is live. When it is, {@code traces} is a {@code Distributed} table that
-     * rejects mutations (code 36 / 48), so every trace <b>mutation</b> ({@code DELETE} / {@code ALTER} /
-     * {@code OPTIMIZE}) must target the {@code traces_local} shard instead; while it is off {@code traces} is still a
-     * {@code MergeTree} where deletes work directly. Reads and inserts always route through {@code traces}. Each
-     * mutation query carries both table names in an {@code <if(distributed_wrap)>traces_local<else>traces<endif>}
-     * branch and passes this flag; a new mutation path must do the same. Liquibase migrations split by kind:
-     * {@code DELETE} / {@code MATERIALIZE COLUMN} / {@code ADD INDEX} / {@code MODIFY TTL} target {@code traces_local}
-     * only (the Distributed {@code traces} rejects them), but {@code ADD}/{@code DROP}/{@code MODIFY COLUMN} must target
-     * <b>both</b> {@code traces_local} and {@code traces} — the wrapper takes them as metadata-only, and skipping it
-     * leaves reads unable to see the column (code 47).
+     * 分片就绪包装是否生效。生效时，{@code traces} 是一张会
+     * 拒绝 mutation 的 {@code Distributed} 表（code 36 / 48），因此每个 trace <b>mutation</b>（{@code DELETE} /
+     * {@code ALTER} / {@code OPTIMIZE}）都必须改为针对 {@code traces_local} 分片；关闭时 {@code traces} 仍是
+     * 一张可直接删除的 {@code MergeTree}。读取和插入始终经由 {@code traces}。每条
+     * mutation 查询都在 {@code <if(distributed_wrap)>traces_local<else>traces<endif>}
+     * 分支中携带两个表名并传入此标志；新的 mutation 路径也必须这样做。Liquibase 迁移按类型拆分：
+     * {@code DELETE} / {@code MATERIALIZE COLUMN} / {@code ADD INDEX} / {@code MODIFY TTL} 仅针对 {@code traces_local}
+     * （Distributed {@code traces} 会拒绝它们），但 {@code ADD}/{@code DROP}/{@code MODIFY COLUMN} 必须同时针对
+     * <b>两个</b>表 {@code traces_local} 和 {@code traces}——包装器将它们视为仅元数据操作，跳过它
+     * 会导致读取无法看到该列（code 47）。
      * <p>
-     * The cluster is single-shard today and {@code traces_local} is a {@code ReplicatedMergeTree}, so a lightweight
-     * delete fans out to every replica via the replication log and reaches every matching row — no {@code ON CLUSTER}
-     * needed (no DAO uses it). Activating sharding is a separate, deferred effort with its own rebalance cutover; only
-     * then does a delete issued on one shard miss rows on the others and trace mutations need fanning across shards.
-     * That belongs to the activation work: adding {@code ON CLUSTER} now would not be a no-op (it would run the
-     * mutation on every replica node and stall on a down one), for no single-shard benefit.
+     * 目前集群是单分片的，且 {@code traces_local} 是一张 {@code ReplicatedMergeTree}，因此轻量
+     * 删除会通过复制日志广播到每个副本并到达每一行匹配的数据——无需 {@code ON CLUSTER}
+     * （没有 DAO 使用它）。启用分片是一项单独的、延后的工作，有自己的再平衡切换；只有
+     * 到那时，在单个分片上发出的删除才会漏掉其他分片上的行，trace mutation 才需要跨分片广播。
+     * 这属于启用分片的工作：现在加 {@code ON CLUSTER} 不会是空操作（它会在
+     * 每个副本节点上运行 mutation，并在某个节点宕机时卡住），却没有任何单分片收益。
      */
     private boolean tracesDistributedWrapEnabled() {
         return configuration.getDatabaseAnalyticsDataModel().tracesDistributedWrapEnabled();
     }
 
     /**
-     * Selects the {@code <if(distributed_wrap)>traces_local<else>traces<endif>} branch on a mutation template by adding
-     * the {@code distributed_wrap} attribute when the wrap is live. The flag decision lives only here and in
-     * {@link #tracesDistributedWrapEnabled()}; every ST-based trace mutation routes its table through this method so the
-     * branches cannot drift apart.
+     * 通过在该包装生效时添加 {@code distributed_wrap} 属性，在 mutation 模板上选择
+     * {@code <if(distributed_wrap)>traces_local<else>traces<endif>} 分支。该标志的判定只存在于这里和
+     * {@link #tracesDistributedWrapEnabled()}；每个基于 ST 的 trace mutation 都通过此方法路由其表，因此
+     * 分支不会产生偏差。
      */
     private void selectTracesMutationTable(ST template) {
         if (tracesDistributedWrapEnabled()) {
@@ -3511,7 +3508,7 @@ class TraceDAOImpl implements TraceDAO {
     public Mono<Void> delete(Set<Pair<UUID, UUID>> projectIdTraceIdPairs, @NonNull Connection connection) {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(projectIdTraceIdPairs),
                 "Argument 'projectIdTraceIdPairs' must not be empty");
-        log.info("Deleting traces by (project_id, id) pairs, count '{}'", projectIdTraceIdPairs.size());
+        log.info("按 (project_id, id) 对删除 traces，数量 '{}'", projectIdTraceIdPairs.size());
 
         return makeMonoContextAware((userName, workspaceId) -> Flux
                 .fromIterable(Lists.partition(List.copyOf(projectIdTraceIdPairs), ANALYTICS_DELETE_BATCH_SIZE))
@@ -3570,16 +3567,16 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Reduce the rows returned for a single trace id to at most one {@link Trace}. A get-by-id
-     * query can fan out to more than one row over its join CTEs (e.g. un-merged/duplicated rows);
-     * returning the first row avoids the {@code IndexOutOfBoundsException} ("Source emitted more
-     * than one item") that a strict single-item reducer throws, which surfaces as a 500. The empty
-     * case is preserved (-> 404). A fan-out is logged so the underlying duplication stays visible.
+     * 将单个 trace id 返回的行减少到至多一个 {@link Trace}。按 id 查询
+     * 可能会通过其 join CTE 扩展为多行（例如未合并/重复的行）；
+     * 返回第一行可以避免严格单元素 reducer 抛出的 {@code IndexOutOfBoundsException}
+     * （"Source emitted more than one item"），它表现为 500。空
+     * 情况得以保留（-> 404）。扩展情况会被记录日志，使底层的重复保持可见。
      */
     @VisibleForTesting
     static Optional<Trace> firstOrLogFanOut(@NonNull List<Trace> traces, UUID id, String workspaceId) {
         if (traces.size() > 1) {
-            log.warn("Trace get-by-id resolved to multiple rows; returning the first. workspaceId '{}', traceId '{}'",
+            log.warn("按 id 查询 trace 解析为多行；返回第一行。workspaceId '{}', traceId '{}'",
                     workspaceId, id);
         }
         return traces.stream().findFirst();
@@ -3589,7 +3586,7 @@ class TraceDAOImpl implements TraceDAO {
     @WithSpan
     public Flux<Trace> findByIds(@NonNull List<UUID> ids, @NonNull Connection connection) {
         Preconditions.checkArgument(!ids.isEmpty(), "ids must not be empty");
-        log.info("Finding traces by IDs in batch, count '{}'", ids.size());
+        log.info("按 IDs 批量查找 traces，数量 '{}'", ids.size());
 
         return getTargetProjectIdsForTraces(ids)
                 .flatMapMany(targetProjectIds -> Mono.deferContextual(ctx -> {
@@ -3760,10 +3757,10 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Reads a {@code DateTime64} column, translating the epoch sentinel to {@code null} only once the columns are
-     * non-nullable. While still {@code Nullable}, the value is returned as-is: {@code null} stays {@code null} and a
-     * (legitimate) epoch timestamp is preserved — the column distinguishes the two, so translating unconditionally
-     * would corrupt a client-supplied {@code 1970-01-01} value. Symmetric with the flag-gated write binding.
+     * 读取 {@code DateTime64} 列，仅在列变为非空后才将 epoch 哨兵值转换为 {@code null}。
+     * 在列仍为 {@code Nullable} 时，值按原样返回：{@code null} 保持 {@code null}，而
+     * （合法的）epoch 时间戳得以保留——列能区分二者，因此无条件转换
+     * 会破坏客户端传入的 {@code 1970-01-01} 值。与受标志门控的写入绑定对称。
      */
     private Instant readEpochSentinel(Set<Trace.TraceField> exclude, Trace.TraceField field, Row row,
             String fieldName) {
@@ -3772,10 +3769,10 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Reads a {@code Float64} column and maps the {@code NaN} sentinel to {@code null}. No flag is needed (unlike
-     * {@code end_time}): neither {@code duration} (materialized, never {@code NaN} today) nor {@code ttft} (cannot
-     * arrive as {@code NaN} via JSON) is ever {@code NaN} while the column is still {@code Nullable}, so the
-     * translation is always a no-op today and correct once the column is non-nullable.
+     * 读取 {@code Float64} 列并将 {@code NaN} 哨兵值映射为 {@code null}。无需标志（不同于
+     * {@code end_time}）：在列仍为 {@code Nullable} 时，{@code duration}（已物化，目前永不为 {@code NaN}）和
+     * {@code ttft}（无法通过 JSON 以 {@code NaN} 到达）都不会是 {@code NaN}，因此
+     * 该转换目前始终是空操作，且在列变为非空后是正确的。
      */
     private Double readNanSentinel(Set<Trace.TraceField> exclude, Trace.TraceField field, Row row, String fieldName) {
         return nanToNull(getValue(exclude, field, row, fieldName, Double.class));
@@ -3908,8 +3905,8 @@ class TraceDAOImpl implements TraceDAO {
             bindUserNameAndWorkspace(statement, userName, workspaceId);
             bindUpdateParams(traceUpdate, statement);
 
-            // INSERT_UPDATE builds the full new_trace row, so end_time/ttft are referenced unconditionally and must
-            // always be bound (sentinel or null for an absent value) — unlike the conditional UPDATE keep-column path.
+            // INSERT_UPDATE 会构建完整的 new_trace 行，因此 end_time/ttft 被无条件引用，必须
+            // 始终绑定（缺失值用哨兵值或 null）——不同于条件性的 UPDATE 保留列路径。
             bindEpochSentinel(statement, "end_time", traceUpdate.endTime());
             bindNanSentinel(statement, "ttft", traceUpdate.ttft());
 
@@ -3946,14 +3943,14 @@ class TraceDAOImpl implements TraceDAO {
      * uuidFromTime/uuidToTime 被排除，因为 if/else 回退会将它们直接应用到每个 CTE；
      * lastReceivedId 被排除，因为它是分页游标而非语义过滤器。
      *
-     * <p>Guardrails filters inject {@code gagg.guardrails_result} into the {@code <filters>}
-     * template variable, which references the guardrails_agg CTE alias. Since the prefilter
-     * CTE only queries the traces table, these references would fail. Guard against them.
+     * <p>Guardrails 过滤器会将 {@code gagg.guardrails_result} 注入到 {@code <filters>}
+     * 模板变量中，该变量引用 guardrails_agg CTE 别名。由于 prefilter
+     * CTE 只查询 traces 表，这些引用会失败。需要防范它们。
      *
-     * <p>Feedback score filters use separate template variables ({@code feedback_scores_filters},
-     * {@code span_feedback_scores_filters}) and are NOT injected into {@code <filters>}, so
-     * the prefilter CTE is safe to use alongside them. Enabling it dramatically reduces
-     * feedback score scan volume when trace-column filters are also present (OPIK-7076).
+     * <p>反馈评分过滤器使用独立的模板变量（{@code feedback_scores_filters}、
+     * {@code span_feedback_scores_filters}），并且不会被注入到 {@code <filters>} 中，因此
+     * prefilter CTE 可以安全地与它们一起使用。当 trace 列过滤器同时存在时，启用它可大幅减少
+     * 反馈评分的扫描量（OPIK-7076）。
      */
     private boolean shouldUseTraceIdPrefilter(TraceSearchCriteria criteria, ST template) {
         boolean hasGuardrailsInFilters = template.getAttribute("guardrails_filters") != null;
@@ -3965,29 +3962,29 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Determines whether the aggregate CTEs (feedback scores, spans, comments, guardrails, annotation queues,
-     * experiments) can be keyed on the page ids instead of the full filtered trace id set.
+     * 判断聚合 CTE（反馈评分、spans、comments、guardrails、annotation queues、
+     * experiments）是否可以以 page id 为键，而不是使用完整的过滤后 trace id 集合。
      *
-     * <p>Those CTEs are joined to {@code page_wide} only to enrich the returned rows, so whenever neither
-     * filtering nor sorting reads them, computing them for every candidate trace is wasted work that grows with
-     * project size: the final LEFT JOINs discard everything outside the page. Keying them on the page ids turns
-     * whole-project scans (spans, feedback_scores, ...) into page-sized, primary-key-prunable lookups.
+     * <p>这些 CTE 仅为了富化返回行而与 {@code page_wide} 相 join，因此只要过滤
+     * 和排序都不读取它们，为每个候选 trace 计算它们就是随项目规模增长的浪费工作：
+     * 最终的 LEFT JOIN 会丢弃页外的一切。以 page id 为键可将
+     * 全项目扫描（spans、feedback_scores、……）变成页大小、可主键裁剪的查找。
      *
-     * <p>The page ids are consumed via {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))}:
-     * the inner scalar subquery is evaluated once and cached for the whole query, so the {@code page_ids} CTE is
-     * not re-executed at every reference (ClickHouse inlines plain CTE references), and the materialized constant
-     * array is usable for primary-key index analysis.
+     * <p>page id 通过 {@code IN (SELECT arrayJoin((SELECT groupArray(id) FROM page_ids)))} 消费：
+     * 内部标量子查询只求值一次并对整个查询缓存，因此 {@code page_ids} CTE 不会
+     * 在每次引用时重新执行（ClickHouse 会内联普通的 CTE 引用），并且物化后的常量
+     * 数组可用于主键索引分析。
      *
-     * <p>Must stay disabled whenever page selection depends on an aggregate: feedback-score filters
-     * ({@code traces_deduped} filters on feedback_scores_final/fsc/sfsc), guardrails filters (join on
-     * guardrails_agg), trace aggregation filters (spans_agg), annotation queue filters/id (join on
-     * trace_annotation_queue_ids), or sorting by feedback scores, span statistics, or experiments
-     * ({@code page_ids} joins those aggregates).
+     * <p>当分页选择依赖某个聚合时必须保持禁用：反馈评分过滤器
+     * （{@code traces_deduped} 在 feedback_scores_final/fsc/sfsc 上过滤）、guardrails 过滤器（在
+     * guardrails_agg 上 join）、trace 聚合过滤器（spans_agg）、annotation queue 过滤器/id（在
+     * trace_annotation_queue_ids 上 join），或按反馈评分、span 统计或实验
+     * 排序（{@code page_ids} 会 join 那些聚合）。
      */
     /**
-     * Applies the aggregate-keying decision shared by {@code getTracesByProjectId} and
-     * {@code findTraceStream}: page-keyed aggregates when they are enrichment-only, otherwise the narrowing
-     * trace id prefilter when filters allow it.
+     * 应用由 {@code getTracesByProjectId} 和 {@code findTraceStream} 共享的聚合键决策：
+     * 当聚合仅用于富化时以 page 为键，否则在过滤器允许时使用缩小范围的
+     * trace id prefilter。
      */
     private void addAggregateKeyingFlags(ST template, TraceSearchCriteria criteria, boolean sortHasFeedbackScores,
             boolean sortHasSpanStatistics, boolean sortHasExperiment) {
@@ -4037,9 +4034,9 @@ class TraceDAOImpl implements TraceDAO {
                     .map(sortFields -> sortFields.contains("feedback_scores"))
                     .orElse(false);
             boolean sortHasSpanStatistics = hasSpanStatistics(orderBySql);
-            // Structured check on the requested sort fields rather than a substring match on the rendered
-            // ORDER BY SQL: this now gates page-keyed aggregates, so it must track the experiment sort exactly
-            // even if EXPERIMENT_FIELD_MAPPING changes what SQL the field renders to.
+            // 对请求的排序字段做结构化检查，而不是对渲染出的 ORDER BY SQL 做子串匹配：
+            // 这现在门控着以 page 为键的聚合，因此必须精确跟踪实验排序，
+            // 即使 EXPERIMENT_FIELD_MAPPING 改变了该字段渲染出的 SQL。
             boolean sortHasExperiment = Optional.ofNullable(traceSearchCriteria.sortingFields())
                     .map(sortingFields -> sortingFields.stream()
                             .anyMatch(sortingField -> SortableFields.EXPERIMENT_ID.equals(sortingField.field())))
@@ -4352,10 +4349,10 @@ class TraceDAOImpl implements TraceDAO {
 
     @Override
     public Mono<ProjectStats> getStats(@NonNull TraceSearchCriteria criteria) {
-        // Each branch runs on its own connection from the pool — R2DBC connections do not
-        // tolerate two concurrent statements on the same connection. The legacy-scores flag is
-        // looked up once (sync JDBI) and threaded through both branches so they can skip the
-        // legacy feedback_scores table UNION when no data exists there.
+        // 每个分支在池中各自的连接上运行——R2DBC 连接不允许
+        // 在同一条连接上并发执行两条语句。legacy-scores 标志
+        // 只查询一次（同步 JDBI）并贯穿两个分支，使它们在
+        // legacy feedback_scores 表中没有数据时跳过该 UNION。
         return makeMonoContextAware((userName, workspaceId) -> workspacesService.hasLegacyScores(workspaceId)
                 .flatMap(hasLegacyScores -> {
 
@@ -4468,52 +4465,52 @@ class TraceDAOImpl implements TraceDAO {
     }
 
     /**
-     * Whether {@code SELECT_FEEDBACK_SCORES_STATS}'s {@code trace_final} CTE can dedup with {@code GROUP BY} +
-     * {@code argMax} instead of {@code FINAL}. {@code traces} is a {@code ReplacingMergeTree(last_updated_at)}
-     * ordered by {@code (workspace_id, project_id, id)}, so grouping on that key and taking a predicate's verdict
-     * from the greatest {@code last_updated_at} is what {@code FINAL} + predicate computes.
+     * {@code SELECT_FEEDBACK_SCORES_STATS} 的 {@code trace_final} CTE 是否可以用 {@code GROUP BY} +
+     * {@code argMax} 代替 {@code FINAL} 去重。{@code traces} 是一张按
+     * {@code (workspace_id, project_id, id)} 排序的 {@code ReplacingMergeTree(last_updated_at)}，
+     * 因此按该键分组并从最大的 {@code last_updated_at} 取谓词判定结果，正是 {@code FINAL} + 谓词所计算的内容。
      *
-     * <p>Scoped to this template on purpose. It projects only group keys, so its aggregate state is small and peak
-     * memory improves, and it re-evaluates the CTE from three scopes, which is where the saving comes from.
-     * {@code SELECT_TRACES_SPANS_STATS} projects seven per-version columns and regresses on memory, so it keeps
-     * {@code FINAL}. Numbers in OPIK-7636; re-measure before extending this to a wider projection.
+     * <p>有意只作用于此模板。它只投影分组键，因此聚合状态很小、峰值内存更优，
+     * 并且它从三个作用域重新求值该 CTE，这正是节省的来源。
+     * {@code SELECT_TRACES_SPANS_STATS} 投影七个逐版本列，会在内存上退化，因此它保留
+     * {@code FINAL}。数据见 OPIK-7636；在扩展到更宽的投影前请重新测量。
      *
-     * <p>Two gates:
+     * <p>两个门槛：
      *
      * <ul>
-     * <li>No filter slot may pull in a {@code LEFT JOIN} — a join multiplies row versions inside a group, and a
-     * predicate on a joined alias cannot be evaluated by {@code argMax} over {@code traces} versions.</li>
-     * <li>{@code search_text} must be present — without a heavy per-row scan to amortise it, the aggregation state
-     * is pure overhead in CPU and memory.</li>
+     * <li>任何过滤器槽位都不能引入 {@code LEFT JOIN}——join 会在组内倍增行版本，且
+     * 针对被 join 别名的谓词无法通过 {@code argMax} 在 {@code traces} 版本上求值。</li>
+     * <li>{@code search_text} 必须存在——没有重量级的逐行扫描来分摊，聚合状态
+     * 就是纯粹的 CPU 和内存开销。</li>
      * </ul>
      *
-     * <p>{@code filters} is <em>not</em> vetoed even though {@code TraceField.GUARDRAILS} renders the joined
-     * {@code gagg} alias into it: {@code FilterUtils} always sets {@code guardrails_filters} alongside, and that is
-     * what vetoes. Keep those two in sync — {@code GUARDRAILS} is the only {@code FilterStrategy.TRACE} field
-     * mapping to a joined alias.
+     * <p>{@code filters} <em>不会</em>被否决，即使 {@code TraceField.GUARDRAILS} 会把被 join 的
+     * {@code gagg} 别名渲染进其中：{@code FilterUtils} 总会同时设置 {@code guardrails_filters}，而这
+     * 才是否决的判定。保持二者同步——{@code GUARDRAILS} 是唯一映射到被 join 别名的
+     * {@code FilterStrategy.TRACE} 字段。
      *
-     * <p>Dedup-key predicates and the {@code id IN (...)} slots stay in {@code WHERE}; they are the key, or they
-     * select whole ids. Value-based predicates ({@code filters}, {@code search_text}) must move into
-     * {@code HAVING argMax(...)} — evaluated row-level in {@code WHERE} they drop older versions from the group,
-     * making {@code argMax} report the latest <em>surviving</em> version and resurfacing content the current version
-     * no longer matches.
+     * <p>去重键谓词和 {@code id IN (...)} 槽位保留在 {@code WHERE} 中；它们是键，或者它们
+     * 选择整个 id。基于值的谓词（{@code filters}、{@code search_text}）必须移入
+     * {@code HAVING argMax(...)}——在 {@code WHERE} 中按行求值会从组中丢弃旧版本，
+     * 使 {@code argMax} 报告最新的<em>存活</em>版本，并重新浮现当前版本
+     * 已不再匹配的内容。
      *
-     * <p>{@code filters} is <em>also</em> injected as {@code id IN (SELECT id FROM traces WHERE <filters>)}, because
-     * a predicate inside {@code HAVING} is invisible to the table's skip indexes and losing that pruning costs far
-     * more than this rewrite saves. The subquery needs no dedup: it selects ids where <em>any</em> version matches,
-     * a superset of the answer, which the {@code HAVING} then narrows to the latest version. Keep the two in step.
-     * Do not swap it for a list of "prunable" columns — selectivity depends on the filter's value, not its column.
+     * <p>{@code filters} <em>还</em>会被注入为 {@code id IN (SELECT id FROM traces WHERE <filters>)}，因为
+     * {@code HAVING} 中的谓词对表的跳数索引不可见，而失去该裁剪的代价远
+     * 高于此重写所节省的。子查询无需去重：它选择<em>任意</em>版本匹配的 id，
+     * 这是答案的超集，再由 {@code HAVING} 收窄到最新版本。保持二者一致。
+     * 不要将其替换为“可裁剪”列列表——选择性取决于过滤器的值，而非其列。
      *
-     * <p>Equivalence is scoped, not exact: for a unique latest {@code last_updated_at} this returns exactly
-     * {@code FINAL}'s row, but for tied versions it returns one of them and not contractually the one {@code FINAL}
-     * picks, since {@code argMax}'s tie behaviour is unspecified. Both always return a really-stored row, so it can
-     * only shift which version is reported. No tie-breaker helps — {@code ReplacingMergeTree} breaks ties by
-     * insertion order, which is not a column.
+     * <p>等价性是局部的，而非精确的：对于唯一最新的 {@code last_updated_at}，这会精确返回
+     * {@code FINAL} 的行；但对于并列的版本，它返回其中一行，且不保证是 {@code FINAL}
+     * 所选的那行，因为 {@code argMax} 的并列行为未定义。二者始终返回实际存储的行，因此它只会
+     * 改变所报告的版本。没有任何决胜规则可用——{@code ReplacingMergeTree} 按
+     * 插入顺序打破并列，而插入顺序不是一列。
      *
-     * <p>On a future cutover to {@code traces_local_v2}, that table is
-     * {@code ReplacingMergeTree(last_updated_at, is_deleted)} and {@code FINAL} also drops soft-deleted rows, so the
-     * {@code HAVING} must then require {@code argMax(is_deleted, last_updated_at) = 0} or soft-deleted traces
-     * reappear. Not emitted today because the column does not exist on {@code traces}.
+     * <p>在未来切换到 {@code traces_local_v2} 时，该表是
+     * {@code ReplacingMergeTree(last_updated_at, is_deleted)}，且 {@code FINAL} 也会丢弃软删除行，因此
+     * {@code HAVING} 届时必须要求 {@code argMax(is_deleted, last_updated_at) = 0}，否则软删除的 traces
+     * 会重新出现。目前未输出该条件，因为 {@code traces} 上不存在该列。
      */
     @VisibleForTesting
     static boolean canDedupByArgMax(ST template) {
@@ -4582,16 +4579,16 @@ class TraceDAOImpl implements TraceDAO {
             return Mono.just(Map.of());
         }
 
-        // Each branch runs on its own pooled connection — R2DBC forbids concurrent statements on one
-        // connection. The legacy-scores flag is resolved once (sync JDBI) so both branches can skip the
-        // legacy feedback_scores UNION when it's empty.
-        // Optional window: when the caller opts in (fromTime/toTime, e.g. the Projects table), every metric
-        // is scoped to [fromTime, toTime] via uuid_from_time/uuid_to_time on the UUIDv7 id, the upper bound
-        // excluding (ingestion-tolerated) future-dated ids. Bounds are independent; omitting both keeps the
-        // all-time semantics of the public getProjectStats API. The window is on TRACE time: only the traces
-        // scan carries the parallel toMonday(id_at) predicate, so only it prunes by partition once traces is
-        // partitioned; the spans scan is bounded by trace_id (correct — a span id may predate its trace) and
-        // will still read all partitions. Span feedback scores follow the trace window via scored_span_ids.
+        // 每个分支在池中各自的连接上运行——R2DBC 禁止在同一条连接上并发执行语句。
+        // legacy-scores 标志只解析一次（同步 JDBI），使两个分支在
+        // legacy feedback_scores UNION 为空时跳过它。
+        // 可选时间窗口：当调用方选择启用时（fromTime/toTime，例如 Projects 表），每个指标
+        // 都通过 UUIDv7 id 上的 uuid_from_time/uuid_to_time 限定到 [fromTime, toTime]，上界
+        // 排除（容忍摄取时未来日期）的 id。上下界相互独立；同时省略则保留
+        // 公共 getProjectStats API 的全时段语义。窗口针对 TRACE 时间：只有 traces
+        // 扫描带有并行的 toMonday(id_at) 谓词，因此一旦 traces 完成分区，只有它会按分区裁剪；
+        // spans 扫描受 trace_id 约束（这是正确的——span id 可能早于其 trace），且
+        // 仍会读取所有分区。span 反馈评分通过 scored_span_ids 跟随 trace 窗口。
         String uuidFromTime = Objects.toString(instantToUUIDMapper.toLowerBound(fromTime), null);
         String uuidToTime = Objects.toString(instantToUUIDMapper.toUpperBound(toTime), null);
 
@@ -4805,17 +4802,17 @@ class TraceDAOImpl implements TraceDAO {
         }));
     }
 
-    // Resolves trace -> stored start_time, keyed off workspaceId explicitly so it can run from the Cost
-    // Intelligence subscriber (no request scope). start_time must come from the trace (not the UUIDv7 timestamp)
-    // so a cipx identity update doesn't rewrite it for backfilled/imported traces. Deduped with LIMIT 1 BY id
-    // (latest last_updated_at wins) rather than FINAL, so it stays cheap on the ingestion path.
+    // 解析 trace -> 已存储的 start_time，显式以 workspaceId 为键，使其可以从 Cost
+    // Intelligence 订阅者运行（无请求作用域）。start_time 必须来自 trace（而非 UUIDv7 时间戳），
+    // 这样 cipx 身份更新不会为回填/导入的 traces 重写它。用 LIMIT 1 BY id 去重
+    // （最新 last_updated_at 胜出）而非 FINAL，使其在摄取路径上保持廉价。
     @Override
     @WithSpan
     public Mono<Map<UUID, Instant>> getStartTimesByTraceIds(@NonNull Set<UUID> traceIds, @NonNull String workspaceId) {
         if (traceIds.isEmpty()) {
             return Mono.just(Map.of());
         }
-        log.info("Getting start_times for '{}' trace_ids", traceIds.size());
+        log.info("获取 '{}' 个 trace_ids 的 start_times", traceIds.size());
         return Mono.from(connectionFactory.create())
                 .flatMap(connection -> {
                     var template = getSTWithLogComment(SELECT_START_TIMES_BY_TRACE_IDS, "get_start_times_by_trace_ids",
@@ -4835,7 +4832,7 @@ class TraceDAOImpl implements TraceDAO {
     public Mono<Set<UUID>> getTraceIdsByThreadIds(@NonNull UUID projectId, @NonNull List<String> threadIds,
             @NonNull Connection connection) {
         Preconditions.checkArgument(!threadIds.isEmpty(), "threadIds must not be empty");
-        log.info("Getting trace IDs by thread IDs, count '{}'", threadIds.size());
+        log.info("按 thread IDs 获取 trace IDs，数量 '{}'", threadIds.size());
 
         return makeMonoContextAware((userName, workspaceId) -> {
             var template = getSTWithLogComment(SELECT_TRACE_IDS_BY_THREAD_IDS, "get_trace_ids_by_thread_ids",
@@ -4857,7 +4854,7 @@ class TraceDAOImpl implements TraceDAO {
 
     @WithSpan
     public Mono<Trace> getPartialById(@NonNull UUID id) {
-        log.info("Getting partial trace by id '{}'", id);
+        log.info("按 id '{}' 获取部分 trace", id);
         return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
             var template = getSTWithLogComment(SELECT_PARTIAL_BY_ID, "get_partial_trace_by_id", workspaceId, userName,
                     "");
@@ -4916,7 +4913,7 @@ class TraceDAOImpl implements TraceDAO {
 
     private Flux<? extends Result> findTraceStream(int limit, @NonNull TraceSearchCriteria criteria,
             Connection connection) {
-        log.info("Searching traces by '{}'", criteria);
+        log.info("按 '{}' 搜索 traces", criteria);
 
         return makeFluxContextAware((userName, workspaceId) -> {
             var logComment = getLogComment("find_trace_stream", workspaceId, userName,
@@ -4927,7 +4924,7 @@ class TraceDAOImpl implements TraceDAO {
 
             bindTemplateExcludeFieldVariables(criteria, template);
 
-            // The stream has no custom sorting, so only filters can make aggregates drive page selection.
+            // 流没有自定义排序，因此只有过滤器能让聚合驱动分页选择。
             addAggregateKeyingFlags(template, criteria, false, false, false);
 
             addSortNeedsWideFlag(template, criteria.sortingFields());
@@ -4945,7 +4942,7 @@ class TraceDAOImpl implements TraceDAO {
 
             return Flux.from(statement.execute())
                     .doFinally(signalType -> {
-                        log.info("Closing trace search stream");
+                        log.info("关闭 trace 搜索流");
                         endSegment(segment);
                     });
         });
@@ -4955,7 +4952,7 @@ class TraceDAOImpl implements TraceDAO {
     @WithSpan
     public Mono<Void> bulkUpdate(@NonNull Set<UUID> ids, @NonNull TraceUpdate update, boolean mergeTags) {
         Preconditions.checkArgument(!ids.isEmpty(), "ids must not be empty");
-        log.info("Bulk updating '{}' traces", ids.size());
+        log.info("批量更新 '{}' 个 traces", ids.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> makeFluxContextAware((userName, workspaceId) -> {
@@ -4976,7 +4973,7 @@ class TraceDAOImpl implements TraceDAO {
                             .doFinally(signalType -> endSegment(segment));
                 }))
                 .then()
-                .doOnSuccess(__ -> log.info("Completed bulk update for '{}' traces", ids.size()));
+                .doOnSuccess(__ -> log.info("完成 '{}' 个 traces 的批量更新", ids.size()));
     }
 
     private ST newBulkUpdateTemplate(TraceUpdate traceUpdate, String sql, boolean mergeTags, String workspaceId,
@@ -5064,7 +5061,7 @@ class TraceDAOImpl implements TraceDAO {
         Preconditions.checkArgument(
                 CollectionUtils.isNotEmpty(workspaceIds), "Argument 'workspaceIds' must not be empty");
 
-        log.info("Retention delete traces: workspaces='{}', cutoffId='{}', lowerBound='{}'",
+        log.info("保留策略删除 traces：workspaces='{}', cutoffId='{}', lowerBound='{}'",
                 workspaceIds.size(), cutoffId, lowerBound);
 
         var template = getSTWithLogComment(DELETE_FOR_RETENTION, "retention_delete_traces", null, "",
@@ -5110,7 +5107,7 @@ class TraceDAOImpl implements TraceDAO {
             @NonNull UUID cutoffId, @NonNull UUID lowerBound) {
         Preconditions.checkArgument(!workspaceMinIds.isEmpty(), "Argument 'workspaceMinIds' must not be empty");
 
-        log.info("Retention delete traces (bounded): workspaces='{}', cutoffId='{}'", workspaceMinIds.size(), cutoffId);
+        log.info("保留策略删除 traces（有界）：workspaces='{}', cutoffId='{}'", workspaceMinIds.size(), cutoffId);
 
         var logComment = getLogComment("retention_delete_traces_bounded", null, "", workspaceMinIds.size());
         var entries = List.copyOf(workspaceMinIds.entrySet());
@@ -5158,7 +5155,7 @@ class TraceDAOImpl implements TraceDAO {
     @Override
     public Mono<Instant> scoutFirstDayWithData(@NonNull String workspaceId,
             @NonNull UUID rangeStart, @NonNull UUID rangeEnd) {
-        log.debug("Scouting first day with data for workspace '{}', range=['{}', '{}')",
+        log.debug("探测工作区 '{}' 中第一个有数据的天，范围=['{}', '{}')",
                 workspaceId, rangeStart, rangeEnd);
 
         var template = getSTWithLogComment(SCOUT_FIRST_DAY_WITH_DATA,

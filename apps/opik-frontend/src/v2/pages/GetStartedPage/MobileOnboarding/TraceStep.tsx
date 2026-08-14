@@ -10,6 +10,7 @@ import {
   Link,
   Hammer,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { TraceIllustration } from "./illustrations";
 
 interface SpanMeta {
@@ -144,6 +145,7 @@ const SpanRow: React.FC<{
   animationDelay,
   onClick,
 }) => {
+  const { t } = useTranslation("pages/get-started");
   const {
     name,
     icon: Icon,
@@ -266,7 +268,8 @@ const SpanRow: React.FC<{
               className="onboarding-fade-in flex shrink-0 items-center gap-0.5 text-[10px] leading-none text-chart-yellow"
               style={delay(HIGHLIGHT_DELAY)}
             >
-              <AlertTriangle className="size-2.5" /> Slow
+              <AlertTriangle className="size-2.5" />{" "}
+              {t("getStarted.mobileOnboarding.trace.slow")}
             </span>
           )}
         </div>
@@ -311,6 +314,8 @@ const SpanRow: React.FC<{
 };
 
 const TraceStep: React.FC<{ onNext?: () => void }> = ({ onNext }) => {
+  const { t } = useTranslation("pages/get-started");
+
   return (
     <>
       <div className="slide-fade-right">
@@ -319,21 +324,20 @@ const TraceStep: React.FC<{ onNext?: () => void }> = ({ onNext }) => {
 
       <div className="flex flex-col gap-1.5 px-0.5">
         <h1 className="slide-fade-right text-lg font-medium text-foreground [animation-delay:75ms]">
-          Every AI request becomes a trace
+          {t("getStarted.mobileOnboarding.trace.title")}
         </h1>
         <p className="slide-fade-right pb-2 text-sm text-muted-slate [animation-delay:150ms]">
-          A trace captures every step your AI took to generate an answer.
-          Here&apos;s the one you just sent.
+          {t("getStarted.mobileOnboarding.trace.description")}
         </p>
       </div>
 
       <div className="slide-fade-right overflow-hidden rounded-md border border-border bg-soft-background [animation-delay:200ms] dark:bg-accent-background">
         <div className="flex h-8 items-center justify-between border-b border-border px-3">
           <span className="text-xs font-medium leading-3 text-foreground">
-            Demo trace
+            {t("getStarted.mobileOnboarding.trace.demoTrace")}
           </span>
           <span className="text-[10px] leading-3 text-muted-slate">
-            5 spans
+            {t("getStarted.mobileOnboarding.trace.spansCount", { count: 5 })}
           </span>
         </div>
 

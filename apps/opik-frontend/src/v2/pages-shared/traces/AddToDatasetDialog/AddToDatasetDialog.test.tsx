@@ -180,7 +180,7 @@ describe("AddToDatasetDialog", () => {
 
   const openDropdownAndSelect = (itemName: string) => {
     const trigger = screen.getByRole("button", {
-      name: new RegExp(`Select a|${itemName}`),
+      name: "tracing.addToDataset.selectEntity",
     });
     fireEvent.click(trigger);
     const items = screen.getAllByText(itemName);
@@ -191,7 +191,7 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...testSuiteModeProps} />, { wrapper });
 
     expect(
-      screen.getByRole("button", { name: /Select a test suite/i }),
+      screen.getByRole("button", { name: "tracing.addToDataset.selectEntity" }),
     ).toBeInTheDocument();
   });
 
@@ -200,12 +200,12 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    expect(screen.getByLabelText("Nested spans")).toBeInTheDocument();
-    expect(screen.getByLabelText("Tags")).toBeInTheDocument();
-    expect(screen.getByLabelText("Feedback scores")).toBeInTheDocument();
-    expect(screen.getByLabelText("Comments")).toBeInTheDocument();
-    expect(screen.getByLabelText("Usage metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Metadata")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.nestedSpans")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.tags")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.feedbackScores")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.comments")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.usageMetrics")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.metadata")).toBeInTheDocument();
   });
 
   it("should have all enrichment checkboxes checked by default", () => {
@@ -213,12 +213,12 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    expect(screen.getByLabelText("Nested spans")).toBeChecked();
-    expect(screen.getByLabelText("Tags")).toBeChecked();
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
-    expect(screen.getByLabelText("Comments")).toBeChecked();
-    expect(screen.getByLabelText("Usage metrics")).toBeChecked();
-    expect(screen.getByLabelText("Metadata")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.nestedSpans")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.tags")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.feedbackScores")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.comments")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.usageMetrics")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.metadata")).toBeChecked();
   });
 
   it("should allow unchecking enrichment options", async () => {
@@ -226,8 +226,8 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    const spansCheckbox = screen.getByLabelText("Nested spans");
-    const tagsCheckbox = screen.getByLabelText("Tags");
+    const spansCheckbox = screen.getByLabelText("tracing.addToDataset.nestedSpans");
+    const tagsCheckbox = screen.getByLabelText("tracing.addToDataset.tags");
 
     fireEvent.click(spansCheckbox);
     fireEvent.click(tagsCheckbox);
@@ -236,7 +236,7 @@ describe("AddToDatasetDialog", () => {
       expect(spansCheckbox).not.toBeChecked();
       expect(tagsCheckbox).not.toBeChecked();
     });
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.feedbackScores")).toBeChecked();
   });
 
   it("should display span enrichment checkboxes when selecting a dataset with spans", () => {
@@ -249,12 +249,12 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    expect(screen.queryByLabelText("Nested spans")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Tags")).toBeInTheDocument();
-    expect(screen.getByLabelText("Feedback scores")).toBeInTheDocument();
-    expect(screen.getByLabelText("Comments")).toBeInTheDocument();
-    expect(screen.getByLabelText("Usage metrics")).toBeInTheDocument();
-    expect(screen.getByLabelText("Metadata")).toBeInTheDocument();
+    expect(screen.queryByLabelText("tracing.addToDataset.nestedSpans")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.tags")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.feedbackScores")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.comments")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.usageMetrics")).toBeInTheDocument();
+    expect(screen.getByLabelText("tracing.addToDataset.metadata")).toBeInTheDocument();
   });
 
   it("should have all span enrichment checkboxes checked by default", () => {
@@ -267,11 +267,11 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    expect(screen.getByLabelText("Tags")).toBeChecked();
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
-    expect(screen.getByLabelText("Comments")).toBeChecked();
-    expect(screen.getByLabelText("Usage metrics")).toBeChecked();
-    expect(screen.getByLabelText("Metadata")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.tags")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.feedbackScores")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.comments")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.usageMetrics")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.metadata")).toBeChecked();
   });
 
   it("should allow unchecking span enrichment options", async () => {
@@ -284,8 +284,8 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    const tagsCheckbox = screen.getByLabelText("Tags");
-    const usageCheckbox = screen.getByLabelText("Usage metrics");
+    const tagsCheckbox = screen.getByLabelText("tracing.addToDataset.tags");
+    const usageCheckbox = screen.getByLabelText("tracing.addToDataset.usageMetrics");
 
     fireEvent.click(tagsCheckbox);
     fireEvent.click(usageCheckbox);
@@ -294,14 +294,14 @@ describe("AddToDatasetDialog", () => {
       expect(tagsCheckbox).not.toBeChecked();
       expect(usageCheckbox).not.toBeChecked();
     });
-    expect(screen.getByLabelText("Feedback scores")).toBeChecked();
+    expect(screen.getByLabelText("tracing.addToDataset.feedbackScores")).toBeChecked();
   });
 
   it("should list only datasets matching dataset type when adding to a dataset", () => {
     render(<AddToDatasetDialog {...datasetModeProps} />, { wrapper });
 
     const trigger = screen.getByRole("button", {
-      name: /Select a dataset/i,
+      name: "tracing.addToDataset.selectEntity",
     });
     fireEvent.click(trigger);
 
@@ -314,7 +314,7 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...testSuiteModeProps} />, { wrapper });
 
     const trigger = screen.getByRole("button", {
-      name: /Select a test suite/i,
+      name: "tracing.addToDataset.selectEntity",
     });
     fireEvent.click(trigger);
 
@@ -327,11 +327,11 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...datasetModeProps} />, { wrapper });
 
     const trigger = screen.getByRole("button", {
-      name: /Select a dataset/i,
+      name: "tracing.addToDataset.selectEntity",
     });
     fireEvent.click(trigger);
 
-    const searchInput = screen.getByPlaceholderText("Search datasets");
+    const searchInput = screen.getByPlaceholderText("tracing.addToDataset.searchEntities");
     expect(searchInput).toBeInTheDocument();
   });
 
@@ -339,11 +339,11 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...testSuiteModeProps} />, { wrapper });
 
     const trigger = screen.getByRole("button", {
-      name: /Select a test suite/i,
+      name: "tracing.addToDataset.selectEntity",
     });
     fireEvent.click(trigger);
 
-    expect(screen.getByText("Add test suite")).toBeInTheDocument();
+    expect(screen.getByText("tracing.addToDataset.addEntity")).toBeInTheDocument();
   });
 
   it("should show alert when no valid rows are present", () => {
@@ -356,7 +356,7 @@ describe("AddToDatasetDialog", () => {
 
     expect(
       screen.getByText(
-        "There are no rows that can be added as test suite items. The input field is missing.",
+        "tracing.addToDataset.noValidRowsForEntity",
       ),
     ).toBeInTheDocument();
   });
@@ -374,7 +374,7 @@ describe("AddToDatasetDialog", () => {
 
     expect(
       screen.getByText(
-        "Only rows with input fields will be added as test suite items.",
+        "tracing.addToDataset.partialValidRowsForEntity",
       ),
     ).toBeInTheDocument();
   });
@@ -388,7 +388,7 @@ describe("AddToDatasetDialog", () => {
     render(<AddToDatasetDialog {...propsWithInvalidRows} />, { wrapper });
 
     const trigger = screen.getByRole("button", {
-      name: /Select a test suite/i,
+      name: "tracing.addToDataset.selectEntity",
     });
     expect(trigger).toBeDisabled();
   });
@@ -398,7 +398,7 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    fireEvent.click(screen.getByRole("button", { name: "Add to dataset" }));
+    fireEvent.click(screen.getByRole("button", { name: "tracing.addToDataset.addToEntity" }));
 
     await waitFor(() => {
       expect(mockAddTracesToDataset).toHaveBeenCalledWith(
@@ -430,7 +430,7 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    fireEvent.click(screen.getByRole("button", { name: "Add to dataset" }));
+    fireEvent.click(screen.getByRole("button", { name: "tracing.addToDataset.addToEntity" }));
 
     await waitFor(() => {
       expect(mockAddSpansToDataset).toHaveBeenCalledWith(
@@ -456,11 +456,11 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    fireEvent.click(screen.getByLabelText("Nested spans"));
-    fireEvent.click(screen.getByLabelText("Tags"));
-    fireEvent.click(screen.getByLabelText("Usage metrics"));
+    fireEvent.click(screen.getByLabelText("tracing.addToDataset.nestedSpans"));
+    fireEvent.click(screen.getByLabelText("tracing.addToDataset.tags"));
+    fireEvent.click(screen.getByLabelText("tracing.addToDataset.usageMetrics"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Add to dataset" }));
+    fireEvent.click(screen.getByRole("button", { name: "tracing.addToDataset.addToEntity" }));
 
     await waitFor(() => {
       expect(mockAddTracesToDataset).toHaveBeenCalledWith(
@@ -489,11 +489,11 @@ describe("AddToDatasetDialog", () => {
 
     openDropdownAndSelect("Test Dataset 1");
 
-    fireEvent.click(screen.getByLabelText("Tags"));
-    fireEvent.click(screen.getByLabelText("Comments"));
-    fireEvent.click(screen.getByLabelText("Metadata"));
+    fireEvent.click(screen.getByLabelText("tracing.addToDataset.tags"));
+    fireEvent.click(screen.getByLabelText("tracing.addToDataset.comments"));
+    fireEvent.click(screen.getByLabelText("tracing.addToDataset.metadata"));
 
-    fireEvent.click(screen.getByRole("button", { name: "Add to dataset" }));
+    fireEvent.click(screen.getByRole("button", { name: "tracing.addToDataset.addToEntity" }));
 
     await waitFor(() => {
       expect(mockAddSpansToDataset).toHaveBeenCalledWith(

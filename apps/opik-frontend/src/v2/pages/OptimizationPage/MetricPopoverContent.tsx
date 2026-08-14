@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { Separator } from "@/ui/separator";
 import {
@@ -20,6 +21,7 @@ type MetricPopoverContentProps = {
 const MetricPopoverContent: React.FC<MetricPopoverContentProps> = ({
   metric,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const entries = Object.entries(metric.parameters ?? {}).filter(
     ([, value]) => value !== undefined,
   );
@@ -27,7 +29,7 @@ const MetricPopoverContent: React.FC<MetricPopoverContentProps> = ({
   if (entries.length === 0) {
     return (
       <p className="comet-body-xs p-1 text-muted-slate">
-        No additional configuration
+        {t("optimization.metricPopover.noAdditionalConfiguration")}
       </p>
     );
   }

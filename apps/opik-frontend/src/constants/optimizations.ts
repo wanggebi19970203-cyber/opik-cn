@@ -207,8 +207,10 @@ export const OPTIMIZATION_METRIC_OPTIONS = [
   },
   {
     value: METRIC_TYPE.CODE,
-    label: "Custom code",
-    description: "Score outputs with a custom Python metric.",
+    label: i18next.t("common.constants.optimizations.metricOptions.code.label"),
+    description: i18next.t(
+      "common.constants.optimizations.metricOptions.code.description",
+    ),
   },
 ];
 

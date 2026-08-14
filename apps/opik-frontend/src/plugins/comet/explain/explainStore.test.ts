@@ -14,6 +14,10 @@ vi.mock("@/lib/analytics/tracking", async (importOriginal) => {
   return { ...actual, trackEvent: vi.fn() };
 });
 
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
+
 const target = (
   entityId: string,
   kind: ExplainKind = "trace.error",
@@ -91,7 +95,9 @@ describe("explainStore", () => {
     expect(Object.keys(state.routes)).toHaveLength(3); // error entry has no route
     // 4th is surfaced as a retryable error, not left stuck on "Thinking…".
     expect(state.entries[key("e4")].phase).toBe("error");
-    expect(state.entries[key("e4")].error).toContain("Too many");
+    expect(state.entries[key("e4")].error).toBe(
+      "common:comet.explain.atCapacity",
+    );
   });
 
   it("cancel() stops an in-flight stream and resets the cell", () => {
@@ -424,7 +430,7 @@ describe("explainStore", () => {
     expect(trackEvent).toHaveBeenCalledWith(OpikEvent.EXPLAIN_ERRORED, {
       kind: "trace.error",
       code: "timeout",
-      message: expect.stringMatching(/too long/i),
+      message: "common:comet.explain.ollieTimeout",
     });
     expect(emit).toHaveBeenCalledWith("explain:cancel", { explainId });
     // Route retired, so a late chunk that finally arrives is ignored.

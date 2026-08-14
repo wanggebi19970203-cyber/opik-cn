@@ -50,16 +50,16 @@ language_models.BaseLLM.dict = base_llm_patcher.base_llm_dict_patched()
 SkipErrorCallback = Callable[[str], bool]
 
 # A fixed provider to record on an LLM span: a plain string or an LLMProvider.
+# 要记录在 LLM span 上的固定提供商：一个纯字符串或一个 LLMProvider。
 ProviderOverride = Union[str, LLMProvider]
 
 
 class ProviderResolverContext(NamedTuple):
-    """What a provider-resolver callback receives for a single LLM run.
+    """提供商解析回调针对单次 LLM 运行所接收的内容。
 
-    ``model`` is the model name parsed from the run and is the usual routing key
-    (e.g. return "bedrock" when it contains "anthropic"). ``run`` is the raw
-    LangChain run dict, an escape hatch for routing on anything ``model`` alone
-    can't express.
+    ``model`` 是从运行中解析出的模型名称，通常是路由键
+    （例如，当它包含 "anthropic" 时返回 "bedrock"）。``run`` 是原始的
+    LangChain 运行字典，是仅凭 ``model`` 无法表达的内容进行路由的逃生口。
     """
 
     model: Optional[str]
@@ -69,6 +69,8 @@ class ProviderResolverContext(NamedTuple):
 # A callable that receives a ProviderResolverContext and returns the provider to
 # record for that specific run. Returning None falls back to the provider
 # auto-detected from the run.
+# 接收 ProviderResolverContext 并返回要记录在该特定运行上的提供商的可调用对象。
+# 返回 None 会回退到从运行中自动检测的提供商。
 ProviderResolver = Callable[[ProviderResolverContext], Optional[ProviderOverride]]
 
 # Placeholder output dictionary used when errors are intentionally skipped
@@ -114,38 +116,35 @@ class OpikTracer(BaseTracer):
         使用各种参数初始化类的实例，用于追踪、元数据和项目配置。
 
         Args:
-            tags: List of tags associated with logged traces.
-            metadata: Dictionary containing metadata information for logged traces.
-            graph: A LangGraph Graph object for representing dependencies or flow
-                to track the Graph Definition in Opik.
-            project_name: Name of the project associated with the traces.
-            distributed_headers: Headers for distributed tracing context.
-            thread_id: Unique identifier for the conversational thread
-                to be associated with traces.
-            skip_error_callback : Callback function to handle skip errors logic.
-                Allows defining custom logic for handling errors that are intentionally skipped.
-                Please note that in traces/spans where errors are intentionally skipped,
-                the output will be replaced with `ERROR_SKIPPED_OUTPUTS`. You can provide
-                the output manually using `opik_context.get_current_span_data().update(output=...)`.
-            opik_context_read_only_mode: Whether to adding/popping spans/traces to/from the context storage.
-                * If False (default), OpikTracer will add created spans/traces to the opik context, so if there is a @track-decorated
-                  function called inside the LangChain runnable, it will be attached to it's parent span from LangChain automatically.
-                * If True, OpikTracer will not modify the context storage and only create spans/traces from LangChain's Run objects.
-                  This might be useful when the environment doesn't support proper context isolation for concurrent operations and you
-                  want to avoid modifying the Opik context stack due to unsafety.
-            provider: The provider to record on LLM spans, used by the backend for
-                cost calculation. Useful when calls are routed through an
-                OpenAI-compatible proxy (e.g. a LiteLLM gateway), where the provider
-                would otherwise be auto-detected as the proxy's hostname and no cost
-                could be computed. Accepts:
-                * a string or ``opik.LLMProvider`` to apply to every LLM span (the
-                  common single-provider case), or
-                * a callable receiving a ``ProviderResolverContext`` (``.model`` is
-                  the parsed model name, ``.run`` the raw run dict) and returning
-                  the provider for that specific run (for chains/graphs that mix
-                  providers). Returning None from the callable falls back to the
-                  auto-detected provider for that run.
-            **kwargs: Additional arguments passed to the parent class constructor.
+            tags: 与记录的 trace 关联的标签列表。
+            metadata: 包含记录 trace 的元数据信息的字典。
+            graph: 用于表示依赖关系或流程的 LangGraph Graph 对象，
+                以在 Opik 中追踪图定义。
+            project_name: 与 trace 关联的项目名称。
+            distributed_headers: 分布式追踪上下文的头部信息。
+            thread_id: 要与 trace 关联的对话线程的唯一标识符。
+            skip_error_callback : 用于处理跳过错误逻辑的回调函数。
+                允许为有意跳过的错误定义自定义处理逻辑。
+                请注意，在有意跳过错误的 trace/span 中，
+                输出将被替换为 `ERROR_SKIPPED_OUTPUTS`。您可以
+                使用 `opik_context.get_current_span_data().update(output=...)` 手动提供输出。
+            opik_context_read_only_mode: 是否向/从上下文存储中添加/弹出 span/trace。
+                * 如果为 False（默认值），OpikTracer 会将创建的 span/trace 添加到 opik 上下文中，
+                  因此如果在 LangChain runnable 内部调用 @track 装饰的函数，
+                  它会自动附加到来自 LangChain 的父 span。
+                * 如果为 True，OpikTracer 不会修改上下文存储，仅从 LangChain 的 Run 对象创建 span/trace。
+                  当环境不支持并发操作的适当上下文隔离，且您希望避免
+                  由于不安全而修改 Opik 上下文栈时，这可能很有用。
+            provider: 要在 LLM span 上记录的提供商，后端用于成本计算。
+                当调用通过 OpenAI 兼容代理（例如 LiteLLM 网关）路由时很有用，
+                否则提供商会自动检测为代理的主机名，无法计算成本。接受：
+                * 一个字符串或 ``opik.LLMProvider``，应用于每个 LLM span
+                  （常见的单一提供商情况），或
+                * 一个接收 ``ProviderResolverContext``（``.model`` 是解析出的模型名称，
+                  ``.run`` 是原始运行字典）并返回该特定运行提供商的可调用对象
+                  （用于混合多个提供商的链/图）。从可调用对象返回 None 会回退到
+                  该运行自动检测的提供商。
+            **kwargs: 传递给父类构造函数的其他参数。
         """
         validator = parameters_validator.create_validator(
             method_name="__init__", class_name=self.__class__.__name__
@@ -253,6 +252,11 @@ class OpikTracer(BaseTracer):
         # span), and owns_trace() covers the normal case. A root run running under
         # an external trace (an @track function or distributed headers) is left for
         # its real owner to finalize - we only contributed spans to it.
+        # LangChain 每棵树只对根运行调用一次 _persist_run，因此这正好为每个 trace 最终化一次。
+        # 我们只最终化自己拥有的 trace：`span_data is None` 表示仅 trace 的根
+        # （被跳过的 LangGraph 根，无 span），而 owns_trace() 覆盖正常情况。
+        # 在外部 trace（@track 函数或分布式头部）下运行的根运行留给其真正所有者最终化——
+        # 我们只向它贡献了 span。
         span_data = self._run_state.get_span_data(run.id)
         if span_data is None or self._run_state.owns_trace(span_data.trace_id):
             self._finalize_trace(
@@ -274,7 +278,7 @@ class OpikTracer(BaseTracer):
         trace_data = self._run_state.get_trace_data(run_id)
         if trace_data is None:
             LOGGER.warning(
-                f"Trace data for run '{run_id}' not found in the traces data map. Skipping processing of _finalize_trace."
+                f"在 trace 数据映射中未找到运行 '{run_id}' 的 trace 数据。跳过 _finalize_trace 的处理。"
             )
             return
 
@@ -338,6 +342,7 @@ class OpikTracer(BaseTracer):
         root_metadata = dict_utils.deepmerge(self._trace_default_metadata, run_metadata)
 
         # Track the parent span ID for LangGraph cleanup later
+        # 记录父 span ID 以供后续 LangGraph 清理使用
         current_span_data = self._opik_context_storage.top_span_data()
         parent_span_id_when_langgraph_started = (
             current_span_data.id if current_span_data is not None else None
@@ -386,7 +391,7 @@ class OpikTracer(BaseTracer):
         try:
             self._process_start_span_unsafe(run, allow_duplicating_root_span)
         except Exception as e:
-            LOGGER.error("Failed during _process_start_span: %s", e, exc_info=True)
+            LOGGER.error("_process_start_span 执行失败：%s", e, exc_info=True)
 
     def _process_start_span_unsafe(
         self, run: Run, allow_duplicating_root_span: bool
@@ -404,6 +409,9 @@ class OpikTracer(BaseTracer):
         # Check if the parent is a skipped LangGraph/LangChain root run.
         # If so, attach children directly to trace.
         # Otherwise, attach to the parent span.
+        # 检查父运行是否为被跳过的 LangGraph/LangChain 根运行。
+        # 如果是，则将子项直接附加到 trace。
+        # 否则，附加到父 span。
         if self._run_state.is_skipped_langgraph_root(run.parent_run_id):
             self._attach_span_to_local_or_distributed_trace(
                 run_id=run.id,
@@ -419,12 +427,12 @@ class OpikTracer(BaseTracer):
         self, run_id: UUID, run_dict: Dict[str, Any], allow_duplicating_root_span: bool
     ) -> None:
         """
-        Creates a root trace and span for a given run and records the trace and
-        span data in the tracer's run state for later lookup.
+        为给定运行创建根 trace 和 span，并将 trace 和
+        span 数据记录在追踪器的运行状态中供后续查找。
 
-        The new span is only created if no new trace is created, i.e., when attached to an existing span
-        or distributed headers. If a new trace is created, the span is skipped and only the
-        trace data is recorded for future reference.
+        仅当未创建新 trace 时才会创建新 span，即当附加到现有 span
+        或分布式头部时。如果创建了新 trace，则跳过 span，仅记录
+        trace 数据供将来参考。
         """
         # This is the first run for the chain.
         # 这是链的第一次运行。
@@ -440,12 +448,14 @@ class OpikTracer(BaseTracer):
         # 如果这是新追踪下的LangGraph/LangChain根运行，则跳过创建span
         if root_run_result.new_span_data is None:
             # Mark this run as skipped and record its trace data for child runs
+            # 将此运行标记为已跳过，并记录其 trace 数据供子运行使用
             self._run_state.mark_skipped_langgraph_root(run_id)
 
             if root_run_result.new_trace_data is not None:
                 self._run_state.save_trace_data(run_id, root_run_result.new_trace_data)
         else:
             # Record the new span (and trace, if any) so children can look them up
+            # 记录新的 span（以及 trace，如果有），以便子运行可以查找它们
             self._run_state.save_span_data(run_id, root_run_result.new_span_data)
             if root_run_result.new_trace_data is not None:
                 self._run_state.save_trace_data(run_id, root_run_result.new_trace_data)
@@ -475,9 +485,8 @@ class OpikTracer(BaseTracer):
         """
         将子span附加到父span并更新相关上下文存储。
 
-        This method is responsible for creating a new span data object associated with a
-        run, linking it to the parent span data, and recording it in the tracer's run state.
-        Additionally, it updates the context storage and logs the span if tracing is active.
+        此方法负责创建与某个运行关联的新 span 数据对象，将其链接到父 span 数据，
+        并记录在追踪器的运行状态中。此外，它更新上下文存储，并在追踪处于活动状态时记录该 span。
         """
         parent_span_data = self._run_state.get_span_data(parent_run_id)
         assert parent_span_data is not None
@@ -504,6 +513,9 @@ class OpikTracer(BaseTracer):
             # Parent may be a stream-restart root run that exists only as a span
             # (not a skipped LangGraph root); the store falls back to a trace_id
             # lookup so the child still inherits the trace data.
+            # 父运行可能是一个仅以 span 形式存在的流重启根运行
+            # （而非被跳过的 LangGraph 根）；存储回退到 trace_id 查找，
+            # 使子运行仍能继承 trace 数据。
             self._run_state.link_child_run_to_parent_trace(
                 child_run_id=run_id,
                 parent_run_id=parent_run_id,
@@ -584,7 +596,7 @@ class OpikTracer(BaseTracer):
             )
         else:
             LOGGER.warning(
-                f"Cannot find trace data or distributed headers for LangGraph child run '{run_id}'"
+                f"未找到 LangGraph 子运行 '{run_id}' 的 trace 数据或分布式头部"
             )
             return
 
@@ -607,7 +619,7 @@ class OpikTracer(BaseTracer):
             span_data = self._run_state.get_span_data(run.id)
             if span_data is None:
                 LOGGER.warning(
-                    f"Span data for run '{run.id}' not found in the span data map. Skipping processing of end span."
+                    f"在 span 数据映射中未找到运行 '{run.id}' 的 span 数据。跳过结束 span 的处理。"
                 )
                 return
             run_dict: Dict[str, Any] = run.dict()
@@ -657,19 +669,19 @@ class OpikTracer(BaseTracer):
             if tracing_runtime_config.is_tracing_active():
                 self._opik_client.__internal_api__span__(**span_data.as_parameters)
         except Exception as e:
-            LOGGER.error(f"Failed during _process_end_span: {e}", exc_info=True)
+            LOGGER.error(f"_process_end_span 执行失败：{e}", exc_info=True)
         finally:
             self._release_ended_span_state(run, span_data)
 
     def _release_ended_span_state(
         self, run: Run, span_data: Optional[span.SpanData]
     ) -> None:
-        """Clean up after a run's span has ended.
+        """在运行的 span 结束后进行清理。
 
-        Pops the ended span off the context stack and, when the run is the root
-        of its tree, releases the whole subtree's bookkeeping. A root run's end
-        handler is the last callback LangChain fires for its subtree (after
-        ``_persist_run``), so this is the point at which the state is safe to drop.
+        将已结束的 span 从上下文栈中弹出，并且当该运行是其树的根时，
+        释放整个子树的记账状态。根运行的结束处理程序是 LangChain 为其子树
+        触发的最后一个回调（在 ``_persist_run`` 之后），因此此时可以安全地
+        丢弃该状态。
         """
         if span_data is not None and not self._opik_context_read_only_mode:
             self._opik_context_storage.trim_span_data_stack_to_certain_span(
@@ -693,9 +705,9 @@ class OpikTracer(BaseTracer):
             except Exception:
                 # A user callback must never break trace logging: warn and fall
                 # back to the auto-detected provider for this run.
+                # 用户回调绝不能中断 trace 日志记录：发出警告并回退到该运行自动检测的提供商。
                 LOGGER.warning(
-                    "The provider resolver callback raised an exception; falling "
-                    "back to the auto-detected provider.",
+                    "提供商解析回调引发了异常；回退到自动检测的提供商。",
                     exc_info=True,
                 )
                 return None
@@ -705,6 +717,7 @@ class OpikTracer(BaseTracer):
         if isinstance(resolved, LLMProvider):
             # Normalize to the plain string value so a bare enum member never
             # leaks into logs/spans as "LLMProvider.OPENAI".
+            # 标准化为纯字符串值，避免裸枚举成员以 "LLMProvider.OPENAI" 的形式泄漏到日志/span 中。
             return resolved.value
 
         return resolved
@@ -726,7 +739,7 @@ class OpikTracer(BaseTracer):
             span_data = self._run_state.get_span_data(run.id)
             if span_data is None:
                 LOGGER.warning(
-                    f"Span data for run '{run.id}' not found in the span data map. Skipping processing of _process_end_span_with_error."
+                    f"在 span 数据映射中未找到运行 '{run.id}' 的 span 数据。跳过 _process_end_span_with_error 的处理。"
                 )
                 return
 
@@ -763,7 +776,7 @@ class OpikTracer(BaseTracer):
             if tracing_runtime_config.is_tracing_active():
                 self._opik_client.__internal_api__span__(**span_data.as_parameters)
         except Exception as e:
-            LOGGER.debug(f"Failed during _process_end_span_with_error: {e}")
+            LOGGER.debug(f"_process_end_span_with_error 执行失败：{e}")
         finally:
             self._release_ended_span_state(run, span_data)
 

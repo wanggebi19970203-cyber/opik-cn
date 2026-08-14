@@ -76,6 +76,69 @@
       "hasAgentDescription": "Connect it and track exactly what your agent does on every run.",
       "noAgent": "I don\u2019t have an AI agent yet",
       "altText": "Onboarding illustration"
+    },
+    "mobileOnboarding": {
+      "nextLabels": {
+        "seeOpikInAction": "See Opik in action",
+        "recommendFixes": "Let Opik recommend fixes",
+        "startSendingTraces": "Start sending traces",
+        "explorePlatform": "Explore the platform"
+      },
+      "shell": {
+        "stepCounter": "Step {{step}} of {{totalSteps}}",
+        "back": "Back"
+      },
+      "welcome": {
+        "title": "Welcome to Opik",
+        "description": "See what happens behind the scenes every time a user interacts with your AI agent or app. Track prompts, tool calls, latency, cost, and failures, all in one place.",
+        "chatPrompt": "What can I help you with?",
+        "exampleCaption": "Here's an example user interaction. We'll use Opik to evaluate and improve the agent underneath."
+      },
+      "trace": {
+        "title": "Every AI request becomes a trace",
+        "description": "A trace captures every step your AI took to generate an answer. Here's the one you just sent.",
+        "demoTrace": "Demo trace",
+        "spansCount": "{{count}} spans",
+        "slow": "Slow"
+      },
+      "issues": {
+        "title": "We find issues and suggest fixes",
+        "description": "Opik detects retries, cache misses, and other issues, then recommends concrete fixes.",
+        "impactHigh": "High impact",
+        "impactMedium": "Medium impact",
+        "impactLow": "Low impact",
+        "opikSuggests": "Opik suggests",
+        "slowKnowledgeSearch": "Slow knowledge search",
+        "cachingCommonSearches": "caching common searches",
+        "largeAnswerGeneration": "Large answer generation",
+        "cachingTheSystemPrompt": "caching the system prompt",
+        "tooManyDocsRetrieved": "Too many docs retrieved",
+        "limitingRetrievedPages": "limiting retrieved pages"
+      },
+      "connect": {
+        "title": "Ready to connect your app?",
+        "descriptionPrefix": "Continue on desktop to start sending traces to Opik.",
+        "descriptionEmailAvailable": "We'll email you everything you need to get started.",
+        "descriptionEmailUnavailable": "Check out our quickstart guide for everything you need to get started.",
+        "getInstructions": "Get the instructions",
+        "emailPlaceholder": "your@email.com",
+        "sending": "Sending...",
+        "instructionsSent": "Instructions sent!",
+        "emailInstructions": "Email setup instructions",
+        "or": "OR",
+        "openDocs": "Open docs",
+        "quickstartGuide": "Quickstart guide",
+        "whyDesktop": "Why continue on desktop",
+        "benefitFirstTrace": "Send your first trace in under 5 minutes",
+        "benefitWorksWith": "Works with Claude Code, Cursor, Codex, and more",
+        "benefitIntegrations": "Use one of our 60+ integrations"
+      },
+      "illustrations": {
+        "welcomeAlt": "Welcome",
+        "traceAlt": "Trace",
+        "issuesAlt": "Issues",
+        "connectAlt": "Connect"
+      }
     }
   }
 }

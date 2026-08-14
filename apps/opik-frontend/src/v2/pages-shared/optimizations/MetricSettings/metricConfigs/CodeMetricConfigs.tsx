@@ -129,11 +129,7 @@ const CodeMetricConfigs = ({
         </div>
         {error && <FormErrorSkeleton>{error}</FormErrorSkeleton>}
         <p className="text-xs text-muted-slate">
-          Define a class that extends <code>BaseMetric</code> with a{" "}
-          <code>score</code> method that takes <code>output</code> (the LLM
-          response) and <code>**kwargs</code> (dataset fields). Read fields with{" "}
-          <code>kwargs.get(&quot;field_name&quot;)</code> so a missing field
-          doesn&apos;t raise, returning a <code>ScoreResult</code>.
+          {t("optimizations.metricConfigs.pythonCodeDescription")}
         </p>
       </div>
 
@@ -141,11 +137,12 @@ const CodeMetricConfigs = ({
         <div className="space-y-2 pt-2">
           <div>
             <Label className="text-sm">
-              Argument mapping ({mappableParams.length})
+              {t("optimizations.metricConfigs.argumentMapping", {
+                count: mappableParams.length,
+              })}
             </Label>
             <p className="text-xs text-muted-slate">
-              Map each <code>score()</code> argument to a dataset column. Leave
-              blank to use a column with the same name.
+              {t("optimizations.metricConfigs.argumentMappingDescription")}
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -163,8 +160,8 @@ const CodeMetricConfigs = ({
                       handleArgumentChange(param, value)
                     }
                     items={datasetVariables}
-                    placeholder="Select a dataset column"
-                    emptyMessage="No dataset columns"
+                    placeholder={t("optimizations.metricConfigs.selectDatasetColumn")}
+                    emptyMessage={t("optimizations.metricConfigs.noDatasetColumns")}
                   />
                 </div>
               </div>

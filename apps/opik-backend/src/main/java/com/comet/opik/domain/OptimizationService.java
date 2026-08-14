@@ -78,10 +78,10 @@ public interface OptimizationService {
     Mono<OptimizationStudioLog> generateStudioLogsResponse(UUID optimizationId);
 
     /**
-     * Transition studio runs stuck in a non-terminal status past the given thresholds to {@code ERROR},
-     * recording a human-readable reason in their logs (OPIK-7159). Called by the stalled-run reaper.
+     * 将超过给定阈值、卡在非终态状态的 Studio 运行转换为 {@code ERROR}，
+     * 并在其日志中记录一条人类可读的原因（OPIK-7159）。由停滞运行回收器调用。
      *
-     * @return the number of runs transitioned to ERROR in this pass.
+     * @return 本次遍历中被转换为 ERROR 的运行数量。
      */
     Mono<Long> reconcileStalledStudioOptimizations(Duration initializedTimeout, Duration runningTimeout,
             Duration runningHardTimeout, Duration lookbackMargin, int batchSize, int candidateScanFactor);
@@ -113,8 +113,8 @@ class OptimizationServiceImpl implements OptimizationService {
     private static final Set<OptimizationStatus> CANCELLABLE_STATUSES = EnumSet.of(
             OptimizationStatus.INITIALIZED,
             OptimizationStatus.RUNNING);
-    // ErrorInfo for a failure the platform observed instead of the worker reporting it. There is no
-    // stack to attach, and ErrorInfo#traceback is @NotBlank, so it says that explicitly.
+    // 用于平台观测到（而非 worker 上报）的失败的 ErrorInfo。没有可附加的
+    // 堆栈，而 ErrorInfo#traceback 是 @NotBlank，所以这里明确说明这一点。
     private static final String SYSTEM_ERROR_TYPE = "SystemDetectedFailure";
     private static final String SYSTEM_ERROR_TRACEBACK = "[System] No traceback: this failure was detected by "
             + "the platform, not reported by the optimizer worker.";
@@ -122,7 +122,7 @@ class OptimizationServiceImpl implements OptimizationService {
     @Override
     @WithSpan
     public Mono<Optimization> getById(@NonNull UUID id) {
-        log.info("Getting optimization by id '{}'", id);
+        log.info("按 id '{}' 获取优化", id);
         return optimizationDAO.getById(id)
                 .flatMap(optimization -> Mono.deferContextual(ctx -> {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
@@ -189,9 +189,9 @@ class OptimizationServiceImpl implements OptimizationService {
         boolean isStudioOptimization = optimization.studioConfig() != null;
 
         return resolveProjectId(optimization)
-                // A bad project_id supplied on create is a client mistake, not a missing resource on this
-                // endpoint — map the shared ProjectService NotFoundException (404) to a 400 here only, so
-                // we don't change ProjectService.validateProjectIdExists (used elsewhere) (OPIK-7029, C5).
+                // 创建时传入错误的 project_id 属于客户端错误，而不是此端点上缺少资源 ——
+                // 仅在此处将共享的 ProjectService NotFoundException（404）映射为 400，
+                // 以免改动 ProjectService.validateProjectIdExists（其他位置也在使用）（OPIK-7029，C5）。
                 .onErrorMap(NotFoundException.class,
                         e -> new BadRequestException(e.getMessage(), e))
                 .flatMap(resolvedProjectId -> datasetService.getOrCreateDataset(optimization.datasetName(),
@@ -203,12 +203,12 @@ class OptimizationServiceImpl implements OptimizationService {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
                     String userName = ctx.get(RequestContext.USER_NAME);
 
-                    // Check if optimization already exists to preserve certain fields.
-                    // Same FIND-independence as applyUpdate, and this path needs it most: an empty result
-                    // here is not a skipped update but a run treated as brand new — forced INITIALIZED,
-                    // a regenerated name, and no preservation of studioConfig, errorInfo or createdAt.
-                    // A FIND mapping regression would therefore resurrect a live run as a fresh one and
-                    // reset the reaper's hard ceiling along with it.
+                    // 检查优化是否已存在，以便保留某些字段。
+                    // 与 applyUpdate 一样不依赖 FIND，而此路径最需要这一点：这里的结果为空
+                    // 不是跳过的更新，而是被当作全新运行处理 —— 强制设为 INITIALIZED、
+                    // 重新生成名称，并且不保留 studioConfig、errorInfo 或 createdAt。
+                    // 因此，FIND 映射若出现回归，就会把存活的运行复活为全新运行，
+                    // 并随之重置回收器的硬上限。
                     return optimizationDAO.getById(id)
                             .switchIfEmpty(Mono.defer(() -> optimizationDAO.getRowById(id)))
                             .map(Optional::of)
@@ -222,7 +222,7 @@ class OptimizationServiceImpl implements OptimizationService {
                                 // 更新时保留已有字段（SDK 不了解 studioConfig）
                                 if (existingOpt.isPresent()) {
                                     var existing = existingOpt.get();
-                                    log.info("Optimization '{}' already exists, preserving studioConfig", id);
+                                    log.info("优化 '{}' 已存在，保留 studioConfig", id);
 
                                     // 如果更新中未提供 studioConfig，则保留原有的
                                     if (optimization.studioConfig() == null
@@ -230,58 +230,52 @@ class OptimizationServiceImpl implements OptimizationService {
                                         builder.studioConfig(existing.studioConfig());
                                     }
 
-                                    // A re-upsert that moves a finished run back to a non-terminal status is
-                                    // a RESTART of that id, not another write to the same attempt: the
-                                    // preservations below are scoped to exclude it. Carrying createdAt over
-                                    // would give the new attempt the first attempt's clock, so a run whose
-                                    // original start is older than runningHardTimeout is born past the
-                                    // ceiling — isPastHardCap short-circuits the veto and the reaper ERRORs
-                                    // it on the next tick, seconds after it started. Carrying errorInfo over
-                                    // would likewise pin the previous attempt's failure on it forever, since
-                                    // nothing ever clears that field.
+                                    // 把已完成的运行移回非终态状态的重新 upsert 是对该 id 的
+                                    // 重启，而不是对同一次尝试的再次写入：下面的保留逻辑被限定为
+                                    // 排除这种情况。继承 createdAt 会让新尝试沿用首次尝试的时间，
+                                    // 因此原始启动时间早于 runningHardTimeout 的运行会一出生就
+                                    // 超过上限 —— isPastHardCap 会短路否决，回收器会在启动后
+                                    // 几秒钟的下一个 tick 就把它标记为 ERROR。继承 errorInfo 同样会
+                                    // 把上一次尝试的失败永久钉在它身上，因为该字段永远不会被清除。
                                     boolean isRestart = existing.status() != null
                                             && existing.status().isTerminal()
                                             && optimization.status() != null
                                             && !optimization.status().isTerminal();
 
-                                    // Clearing the reason is scoped more tightly than the restart itself,
-                                    // to stay consistent with the supersede rule on the update path: only
-                                    // a failure the PLATFORM guessed is discarded. A user CANCELLED or a
-                                    // worker-reported ERROR is a real outcome, and re-upserting over it
-                                    // must still preserve it — that is the pre-existing contract this
-                                    // path was built for (SDK re-upserts carry a null errorInfo).
+                                    // 清除原因的范围比重启本身更窄，以保持与更新路径上的
+                                    // 覆盖规则一致：只有平台猜测出来的失败才会被丢弃。用户取消（CANCELLED）
+                                    // 或 worker 上报的 ERROR 是真实结果，在其之上重新 upsert
+                                    // 仍必须保留它 —— 这是此路径为之构建的既有约定
+                                    // （SDK 重新 upsert 时携带 null errorInfo）。
                                     boolean discardsGuessedFailure = isRestart && isSystemDetectedFailure(existing);
 
-                                    // Preserve the persisted failure reason if not provided in update
-                                    // (upsert does a full-row replace; the SDK re-upserts with a null
-                                    // errorInfo and would otherwise clobber a previously recorded failure).
-                                    // errorInfo is normally set through the PATCH/update path.
+                                    // 如果更新中未提供失败原因，则保留已持久化的失败原因
+                                    // （upsert 会整行替换；SDK 以 null errorInfo 重新 upsert，
+                                    // 否则会覆盖之前记录的失败）。errorInfo 通常通过 PATCH/update 路径设置。
                                     if (!discardsGuessedFailure && optimization.errorInfo() == null
                                             && existing.errorInfo() != null) {
                                         builder.errorInfo(existing.errorInfo());
                                     }
 
-                                    // Preserve the original creation time: the upsert is a full-row
-                                    // replace, so without this the column DEFAULT re-stamps created_at on
-                                    // every re-upsert. Beyond the wrong timestamp on screen, the
-                                    // stalled-run reaper's hard ceiling is measured from created_at, and a
-                                    // drifting value would let non-status writes postpone it forever
-                                    // (OPIK-7459). A restart is the one case that must NOT inherit it.
+                                    // 保留原始创建时间：upsert 会整行替换，所以没有这一步的话，
+                                    // 每次重新 upsert 时列的 DEFAULT 都会重新打上 created_at。
+                                    // 除了界面上时间戳错误之外，停滞运行回收器的硬上限是以
+                                    // created_at 为基准计算的，漂移的值会让非状态写入无限期推迟
+                                    // 该上限（OPIK-7459）。重启是唯一不得继承它的情形。
                                     if (!isRestart && existing.createdAt() != null) {
                                         builder.createdAt(existing.createdAt());
                                     }
 
                                     if (isRestart) {
-                                        // Force a server-stamped last_updated_at. Unlike createdAt, that
-                                        // column IS in View.Write, so a client can send a stale value —
-                                        // and the UPSERT binds whatever arrives. A restart carrying a
-                                        // timestamp older than the terminal version it replaces loses
-                                        // ReplacingMergeTree dedup outright: argMax keeps returning the
-                                        // old terminal row, so the run reads as still finished and the
-                                        // reaper never sees the new attempt.
+                                        // 强制由服务端打上 last_updated_at。与 createdAt 不同，
+                                        // 该列在 View.Write 中，因此客户端可以发送一个过期的值 ——
+                                        // 而 UPSERT 会绑定到达的任何值。携带比它所替换的终态版本
+                                        // 更旧时间戳的重启会彻底失去 ReplacingMergeTree 的去重：
+                                        // argMax 会一直返回旧的终态行，于是该运行读起来仍像是已结束，
+                                        // 回收器永远看不到这次新尝试。
                                         builder.lastUpdatedAt(null);
                                         log.info(
-                                                "Optimization '{}' restarted from terminal status '{}': resetting createdAt and lastUpdatedAt, discardingGuessedFailure '{}'",
+                                                "优化 '{}' 从终态状态 '{}' 重启：重置 createdAt 和 lastUpdatedAt，discardingGuessedFailure '{}'",
                                                 id, existing.status(), discardsGuessedFailure);
                                     }
 
@@ -305,7 +299,7 @@ class OptimizationServiceImpl implements OptimizationService {
                                 if (isStudioOptimization && existingOpt.isEmpty()) {
                                     builder.status(OptimizationStatus.INITIALIZED);
                                     log.info(
-                                            "Force INITIALIZED (was '{}') status for NEW Studio optimization id '{}'",
+                                            "为新的 Studio 优化强制设置 INITIALIZED（原为 '{}'）状态，id '{}'",
                                             optimization.status(), id);
                                 }
 
@@ -350,7 +344,7 @@ class OptimizationServiceImpl implements OptimizationService {
                                                                         .url());
                                                     } catch (Exception e) {
                                                         log.warn(
-                                                                "Failed to get workspace name for workspaceId '{}', using workspaceId as name: {}",
+                                                                "获取 workspaceId '{}' 的工作区名称失败，使用 workspaceId 作为名称：{}",
                                                                 workspaceId, e.getMessage());
                                                         workspaceName = workspaceId;
                                                     }
@@ -403,39 +397,39 @@ class OptimizationServiceImpl implements OptimizationService {
             return Mono.empty();
         }
 
-        // Serialize every per-id state change under the lock. The DAO's UPDATE_BY_ID is an INSERT...SELECT
-        // that copies each non-updated column forward from the base version it reads, so two concurrent
-        // partial writes (a rename racing a status write, or the worker racing the reaper) would drop one
-        // side — and a dropped terminal status strands a finished run non-terminal. The lock is lightweight
-        // and guards every write against that lost update. A Redis outage failing the write is acceptable:
-        // the stalled-run reaper is the backstop for a run left non-terminal, so protecting against data loss
-        // is preferred over a lock-free fallback here. NOTE: prod ClickHouse has no
-        // read-your-own-writes (async insert, 2 replicas), so studio metadata must still stay effectively
-        // single-writer — the lock hardens the in-process race, not the cross-replica one.
+        // 在锁下串行化每次按 id 的状态变更。DAO 的 UPDATE_BY_ID 是一条 INSERT...SELECT，
+        // 会把每个未更新的列从它读取的基准版本向前拷贝，因此两个并发的部分写入
+        // （重命名与状态写入竞争，或 worker 与回收器竞争）会丢掉其中一边 ——
+        // 而丢失的终态状态会让一个已完成的运行卡在非终态。这个锁很轻量，
+        // 用丢失更新防护守护每一次写入。Redis 故障导致写入失败是可接受的：
+        // 停滞运行回收器是被留在非终态运行的后备保障，所以这里更倾向于保护数据，
+        // 而不是无锁回退。注意：生产环境 ClickHouse 没有
+        // 读己之写（异步 insert、2 个副本），因此 studio 元数据仍必须保持事实上的
+        // 单写者 —— 锁加固的是进程内竞争，而不是跨副本竞争。
         var lock = new LockService.Lock(id, "optimization-update");
         return lockService.executeWithLock(lock, Mono.defer(() -> applyUpdate(id, update)));
     }
 
     private Mono<Long> applyUpdate(@NonNull UUID id, @NonNull OptimizationUpdate update) {
         return optimizationDAO.getById(id)
-                // Defense in depth: getById's FIND used to drop runs whose related data it could not map
-                // (a trial item pointing at a still-unfinished trace — what a worker killed mid-trial
-                // leaves behind; fixed by FIND's NaN guards, OPIK-7459). A status write must still land
-                // even if FIND ever regresses, or neither the worker's terminal report nor the
-                // stalled-run reaper could move such a run off RUNNING. The raw-row fallback carries
-                // null aggregates, which only degrades the completion analytics event.
+                // 纵深防御：getById 的 FIND 曾会丢弃那些无法映射其相关数据的运行
+                // （一个指向仍未完成 trace 的试验项 —— 是 worker 在试验中途被终止时
+                // 留下的；已由 FIND 的 NaN 防护修复，OPIK-7459）。即使 FIND 再次回归，
+                // 状态写入仍必须落地，否则 worker 的终态上报和停滞运行回收器都无法
+                // 将这类运行移出 RUNNING。原始行回退携带 null 聚合值，只会降低
+                // 完成分析事件的质量。
                 .switchIfEmpty(Mono.defer(() -> optimizationDAO.getRowById(id)))
                 .switchIfEmpty(Mono.error(failWithNotFound("Optimization", id)))
                 .flatMap(optimization -> Mono.deferContextual(ctx -> {
                     String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
-                    // Internal paths (markOptimizationFailedToStart, the stalled-run reaper) seed USER_NAME
-                    // with SYSTEM_USER; getOrDefault keeps the analytics identity resolution tolerant.
+                    // 内部路径（markOptimizationFailedToStart、停滞运行回收器）用 SYSTEM_USER
+                    // 填充 USER_NAME；getOrDefault 让分析身份解析保持宽容。
                     String userName = ctx.getOrDefault(RequestContext.USER_NAME, null);
 
-                    // Validate cancellation request for Studio optimizations. What counts as cancellable —
-                    // including a run parked on a platform-detected failure, for the same reason a worker
-                    // report supersedes that ERROR below — lives in isCancellable, which the Redis signal
-                    // below shares: rejecting the request and signalling the worker have to agree.
+                    // 校验 Studio 优化的取消请求。什么算作可取消 ——
+                    // 包括停在一个平台检测到的失败上的运行，理由与下面 worker
+                    // 上报会覆盖该 ERROR 相同 —— 由 isCancellable 决定，下面的 Redis 信号
+                    // 也共享它：拒绝请求与向 worker 发信号必须保持一致。
                     boolean isStudioCancellation = update.status() == OptimizationStatus.CANCELLED
                             && optimization.studioConfig() != null;
 
@@ -446,30 +440,30 @@ class OptimizationServiceImpl implements OptimizationService {
                                 Response.Status.CONFLICT));
                     }
 
-                    // A reaper-written ERROR is a GUESS — "no worker has reported for a while" — and the
-                    // worker is the authority on its own run. If it reports afterwards the guess was
-                    // wrong, so the run recovers instead of being frozen on a failure that never
-                    // happened. This is what makes a wrongful reap self-healing, and it matters most for
-                    // a run that sat queued behind OPTSTUDIO_MAX_CONCURRENT_JOBS longer than
-                    // initializedTimeout: previously the reaper ERRORed it, every later worker write was
-                    // dropped by the guard below, and the subprocess ran to completion spending the full
-                    // LLM budget on a run permanently displayed as failed (review: thiagohora).
+                    // 回收器写入的 ERROR 是一种猜测 —— "worker 已经有一段时间没有上报" —— 而
+                    // worker 才是它自己运行的权威。如果之后 worker 上报表明这个猜测
+                    // 是错的，那么运行会恢复，而不是被冻结在一个从未发生过的失败上。
+                    // 这正是让误回收能够自愈的原因，而对于一个排队时间超过
+                    // initializedTimeout、排在 OPTSTUDIO_MAX_CONCURRENT_JOBS 之后的运行来说
+                    // 尤其重要：以前回收器会把它标成 ERROR，之后 worker 的每次写入都被
+                    // 下面的防护丢弃，子进程最终跑完却把整个 LLM 预算花在一个
+                    // 永久显示为失败的运行上（review: thiagohora）。
                     //
-                    // Deliberately narrow. Only ERROR, and only an ERROR this service wrote itself
-                    // (SYSTEM_ERROR_TYPE) — a worker-reported failure and a user CANCELLED are real
-                    // outcomes and still win. A genuinely dead run reports nothing, so nothing supersedes
-                    // it, and the hard ceiling still bounds a zombie that reports without ever finishing.
-                    // CANCELLED is admitted along with the non-terminal statuses: it is the user acting on
-                    // the same doubt, and the cancellation signal above needs the write to land.
+                    // 刻意保持收窄。仅限 ERROR，而且仅限本服务自己写入的 ERROR
+                    // （SYSTEM_ERROR_TYPE）—— worker 上报的失败和用户 CANCELLED 都是真实
+                    // 结果，仍然胜出。真正死掉的运行不会上报任何东西，所以没有任何东西会
+                    // 覆盖它，硬上限仍能约束一个只上报却从不完成的僵尸运行。
+                    // CANCELLED 与非终态状态一起被允许：它是用户基于同样的疑虑采取的行动，
+                    // 上面的取消信号需要这次写入落地。
                     boolean supersedesSystemFailure = isSystemDetectedFailure(optimization)
                             && update.status() != null
                             && update.status() != OptimizationStatus.ERROR;
 
-                    // Never let a late status write overwrite an already-terminal Studio run with a
-                    // different terminal status — e.g. the worker's delayed ERROR after a user CANCELLED,
-                    // or the reaper racing a COMPLETED that landed just after its stale read (OPIK-7159).
-                    // Same-status writes and name-only updates still pass through; explicit cancellation
-                    // keeps its 409 above.
+                    // 绝不允许迟到的状态写入用一个不同的终态状态覆盖一个已经处于终态的
+                    // Studio 运行 —— 例如用户 CANCELLED 之后 worker 迟到的 ERROR，
+                    // 或者回收器与刚在其过期读取之后落地的 COMPLETED 竞争（OPIK-7159）。
+                    // 相同状态的写入和仅改名的更新仍然放行；显式取消
+                    // 则保留上面的 409。
                     boolean isTerminalOverwrite = optimization.studioConfig() != null
                             && update.status() != null
                             && optimization.status().isTerminal()
@@ -477,25 +471,25 @@ class OptimizationServiceImpl implements OptimizationService {
                             && !supersedesSystemFailure;
                     if (isTerminalOverwrite) {
                         log.info(
-                                "Skipping status update for optimization '{}': already terminal '{}', ignoring requested '{}'",
+                                "跳过优化 '{}' 的状态更新：已处于终态 '{}'，忽略请求的 '{}'",
                                 id, optimization.status(), update.status());
                         return Mono.just(0L);
                     }
 
-                    // Merge any incoming metadata onto the existing metadata BEFORE handing it to the DAO,
-                    // so the new ReplacingMergeTree row carries the full object (provided keys overwrite,
-                    // existing keys like optimizer/model are preserved). When update.metadata() is null the
-                    // effective update stays null and the DAO carries the existing column forward untouched
-                    // — this keeps Wave-0 status-only updates from wiping metadata (OPIK-7159 regression risk).
+                    // 在交给 DAO 之前，先把任何传入的 metadata 合并到现有 metadata 上，
+                    // 这样新的 ReplacingMergeTree 行就携带完整对象（提供的键覆盖，
+                    // 现有的键如 optimizer/model 被保留）。当 update.metadata() 为 null 时，
+                    // 生效更新保持为 null，DAO 会原样向前拷贝现有列
+                    // —— 这能防止 Wave-0 的仅状态更新清空 metadata（OPIK-7159 回归风险）。
                     OptimizationUpdate effectiveUpdate = update.metadata() == null
                             ? update
                             : update.toBuilder()
                                     .metadata(JsonUtils.merge(optimization.metadata(), update.metadata()))
                                     .build();
 
-                    // Superseding also clears the recorded reason: it described a failure that did not
-                    // happen, and nothing else ever clears that column, so it would otherwise ride along
-                    // into the run's eventual COMPLETED version.
+                    // 覆盖的同时也清除已记录的原因：它描述的是一个并未发生的失败，
+                    // 而该列再没有别的东西会去清除，否则它会一直跟着运行
+                    // 直到最终 COMPLETED 的版本。
                     return signalCancellationIfNeeded(id, optimization, update)
                             .then(optimizationDAO.update(id, effectiveUpdate,
                                     supersedesSystemFailure && update.errorInfo() == null))
@@ -541,7 +535,7 @@ class OptimizationServiceImpl implements OptimizationService {
             return Mono.empty();
         }
 
-        log.info("Signalling cancellation for Studio optimization '{}' (current status: '{}')",
+        log.info("为 Studio 优化 '{}' 发送取消信号（当前状态：'{}'）",
                 id, optimization.status());
 
         String cancelKey = String.format(CANCEL_KEY_PATTERN, id);
@@ -549,14 +543,14 @@ class OptimizationServiceImpl implements OptimizationService {
 
         return redisClient.getBucket(cancelKey)
                 .set("1", ttlSeconds, TimeUnit.SECONDS)
-                .doOnSuccess(__ -> log.debug("Set cancellation signal in Redis for optimization '{}'", id))
-                // Best-effort: a Redis blip must not 500 the cancel request nor block the CANCELLED status
-                // write. The worker also polls the DB status, so the missed signal is not the only stop
-                // path; swallowing it (like OptimizationLogSyncService.appendSystemLogLine) keeps cancel
-                // idempotent and lets the .then(update) still persist CANCELLED (OPIK-7029, U1).
+                .doOnSuccess(__ -> log.debug("已在 Redis 中为优化 '{}' 设置取消信号", id))
+                // 尽力而为：Redis 的短暂抖动不应让取消请求返回 500，也不应阻塞 CANCELLED 状态
+                // 写入。worker 也会轮询 DB 状态，因此漏掉的信号不是唯一的停止
+                // 路径；吞掉它（就像 OptimizationLogSyncService.appendSystemLogLine 那样）能保持取消
+                // 幂等，并让 .then(update) 仍然持久化 CANCELLED（OPIK-7029，U1）。
                 .onErrorResume(error -> {
-                    log.warn("Failed to set cancellation signal in Redis for optimization '{}'; "
-                            + "persisting CANCELLED status anyway", id, error);
+                    log.warn("在 Redis 中为优化 '{}' 设置取消信号失败；"
+                            + "仍继续持久化 CANCELLED 状态", id, error);
                     return Mono.empty();
                 })
                 .then();
@@ -564,7 +558,7 @@ class OptimizationServiceImpl implements OptimizationService {
 
     private void finalizeLogsAsync(String workspaceId, UUID optimizationId) {
         logSyncService.finalizeLogsOnCompletion(workspaceId, optimizationId)
-                .doOnError(error -> log.error("Failed to finalize logs for optimization '{}'",
+                .doOnError(error -> log.error("为优化 '{}' 完成日志收尾失败",
                         optimizationId, error))
                 .subscribe();
     }
@@ -582,15 +576,15 @@ class OptimizationServiceImpl implements OptimizationService {
         if (throwable instanceof ClickHouseException
                 && throwable.getMessage().contains("TOO_LARGE_STRING_SIZE")
                 && throwable.getMessage().contains("_CAST(id, FixedString(36))")) {
-            log.warn("Already exists optimization with id '{}'", id);
+            log.warn("已存在 id 为 '{}' 的优化", id);
             return Mono.just(id);
         }
-        log.error("Unexpected exception creating optimization with id '{}'", id);
+        log.error("创建 id 为 '{}' 的优化时发生意外异常", id);
         return Mono.error(throwable);
     }
 
     private void postOptimizationCreatedEvent(Optimization newOptimization, String workspaceId, String userName) {
-        log.info("Posting optimization created event for optimization id '{}', datasetId '{}', workspaceId '{}'",
+        log.info("发布优化创建事件，优化 id '{}'，datasetId '{}'，workspaceId '{}'",
                 newOptimization.id(), newOptimization.datasetId(), workspaceId);
         eventBus.post(new OptimizationCreated(
                 newOptimization.id(),
@@ -598,7 +592,7 @@ class OptimizationServiceImpl implements OptimizationService {
                 Instant.now(),
                 workspaceId,
                 userName));
-        log.info("Posted optimization created event for optimization id '{}', datasetId '{}', workspaceId '{}'",
+        log.info("已发布优化创建事件，优化 id '{}'，datasetId '{}'，workspaceId '{}'",
                 newOptimization.id(), newOptimization.datasetId(), workspaceId);
     }
 
@@ -606,13 +600,13 @@ class OptimizationServiceImpl implements OptimizationService {
             String opikApiKey) {
         if (workspaceName == null) {
             log.error(
-                    "Cannot enqueue Studio optimization job for id: '{}' - workspaceName is null, marking as ERROR",
+                    "无法为 id '{}' 的 Studio 优化入队任务 - workspaceName 为 null，标记为 ERROR",
                     optimization.id());
             markOptimizationFailedToStart(optimization.id(), workspaceId);
             return;
         }
 
-        log.info("Enqueuing Optimization Studio job for id: '{}', workspace: '{}' (name: '{}')",
+        log.info("为 id '{}' 的优化入队 Studio 任务，工作区：'{}'（名称：'{}'）",
                 optimization.id(), workspaceId, workspaceName);
 
         String projectName = resolveProjectNameForJob(optimization, workspaceId);
@@ -630,10 +624,10 @@ class OptimizationServiceImpl implements OptimizationService {
         var queue = resolveQueue(optimization);
         queueProducer.enqueue(queue, jobMessage)
                 .doOnSuccess(
-                        jobId -> log.info("Studio optimization job enqueued successfully for id: '{}', jobId: '{}'",
+                        jobId -> log.info("Studio 优化任务成功入队，id：'{}'，jobId：'{}'",
                                 optimization.id(), jobId))
                 .doOnError(error -> {
-                    log.error("Failed to enqueue Studio optimization job for id: '{}', marking as ERROR",
+                    log.error("为 id '{}' 的 Studio 优化入队任务失败，标记为 ERROR",
                             optimization.id(), error);
                     markOptimizationFailedToStart(optimization.id(), workspaceId);
                 })
@@ -654,19 +648,19 @@ class OptimizationServiceImpl implements OptimizationService {
             // 项目可能在优化创建和任务入队之间被删除。
             // 优雅降级：studio runner 将回退到 SDK 默认项目。
             // 其他异常则允许传播。
-            log.warn("Project '{}' not found while resolving project name for optimization '{}'",
+            log.warn("未找到项目 '{}'，无法为优化 '{}' 解析项目名称",
                     optimization.projectId(), optimization.id(), exception);
             return null;
         }
     }
 
     /**
-     * The job could not be queued (Redis unreachable, or the workspace name never resolved), so the
-     * worker will never run and the run would otherwise sit INITIALIZED until the reaper collects it.
-     * Mark it ERROR now with a human-readable reason — modeled on {@link #markStalledOptimizationAsError}:
-     * record the reason in the run's logs first (so the UI surfaces it even though the worker produced
-     * no logs), then reuse the standard {@link #update} path. Enqueue failure is not user-initiated, so
-     * ERROR (not CANCELLED) is the honest status (OPIK-7029, Q1).
+     * 任务无法入队（Redis 不可达，或工作区名称始终未能解析），因此
+     * worker 永远不会运行，运行否则会一直停在 INITIALIZED 直到回收器将其收集。
+     * 现在将其标记为 ERROR，并附带一条人类可读的原因 —— 参照 {@link #markStalledOptimizationAsError}：
+     * 先把原因记录到运行日志中（这样即使 worker 没有产生任何日志，UI 也能展示出来），
+     * 然后复用标准的 {@link #update} 路径。入队失败不是用户主动发起的，所以
+     * ERROR（而非 CANCELLED）才是如实的状态（OPIK-7029，Q1）。
      */
     private void markOptimizationFailedToStart(UUID optimizationId, String workspaceId) {
         String reason = "[System] Optimization failed to start: the run could not be queued.";
@@ -675,22 +669,22 @@ class OptimizationServiceImpl implements OptimizationService {
                 .contextWrite(headlessSystemContext(workspaceId))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(
-                        unused -> log.info("Marked optimization '{}' in workspace '{}' as ERROR (failed to start)",
+                        unused -> log.info("已将优化 '{}'（工作区 '{}'）标记为 ERROR（启动失败）",
                                 optimizationId, workspaceId),
-                        error -> log.error("Failed to mark optimization '{}' in workspace '{}' as ERROR",
+                        error -> log.error("将优化 '{}'（工作区 '{}'）标记为 ERROR 失败",
                                 optimizationId, workspaceId, error));
     }
 
     /**
-     * Shared "record a system reason, then flip to ERROR" workflow used by both the enqueue-failure path
-     * ({@link #markOptimizationFailedToStart}) and the stalled-run reaper ({@link #markStalledOptimizationAsError}):
-     * append the {@code [System]} line to the run's logs first (so the UI can surface it even when the worker
-     * produced no logs), then reuse the standard {@link #update} path (which finalizes logs + emits the
-     * completion event). Callers apply {@link #headlessSystemContext} and their own subscribe/guard semantics.
+     * 入队失败路径（{@link #markOptimizationFailedToStart}）和停滞运行回收器
+     * （{@link #markStalledOptimizationAsError}）共用的"记录系统原因，然后翻转为 ERROR"工作流：
+     * 先把 {@code [System]} 行追加到运行日志中（这样即使 worker 没有产生任何日志，UI 也能展示出来），
+     * 然后复用标准的 {@link #update} 路径（它会完成日志收尾 + 发出
+     * 完成事件）。调用方应用 {@link #headlessSystemContext} 及其各自的订阅/防护语义。
      * <p>
-     * The reason is recorded twice on purpose: the UI prefers {@code error_info.message} and only falls back to
-     * scraping the studio log, so a run whose log cannot be fetched (S3 error, expired presigned URL) would
-     * otherwise show a generic "ended with an error" and lose a reason the platform already knows exactly.
+     * 原因被有意记录两次：UI 优先读取 {@code error_info.message}，只有在无法获取日志时才
+     * 回退到抓取 studio 日志，因此一个日志无法获取（S3 错误、预签名 URL 过期）的运行
+     * 否则只会显示一个笼统的"以错误结束"，而丢掉平台已经确切知道的原因。
      */
     private Mono<Long> appendSystemReasonAndMarkError(String workspaceId, UUID optimizationId, String reason) {
         var errorUpdate = OptimizationUpdate.builder()
@@ -706,10 +700,10 @@ class OptimizationServiceImpl implements OptimizationService {
     }
 
     /**
-     * Headless reactive context both system-driven transitions need. Seed BOTH keys: getById/update resolve
-     * through makeFluxContextAware / bindUserNameAndWorkspaceContextToStream, which call ctx.get(USER_NAME)
-     * and throw NoSuchElementException if it is absent — so WORKSPACE_ID alone silently fails the whole
-     * update (this is why enqueue-failure / stalled runs otherwise stayed non-terminal, OPIK-7159/7029).
+     * 两个系统驱动的转换都需要的无头响应式上下文。要填充两个键：getById/update 会
+     * 通过 makeFluxContextAware / bindUserNameAndWorkspaceContextToStream 解析，它们调用 ctx.get(USER_NAME)，
+     * 若缺失则抛出 NoSuchElementException —— 因此只有 WORKSPACE_ID 会静默地让整个
+     * update 失败（这正是入队失败 / 停滞运行此前一直保持非终态的原因，OPIK-7159/7029）。
      */
     private static Function<Context, Context> headlessSystemContext(String workspaceId) {
         return ctx -> ctx
@@ -732,13 +726,13 @@ class OptimizationServiceImpl implements OptimizationService {
                 .toList();
     }
 
-    // ==================== Studio Methods ====================
+    // ==================== Studio 方法 ====================
 
     @Override
     public Mono<OptimizationStudioLog> generateStudioLogsResponse(@NonNull UUID optimizationId) {
         return Mono.deferContextual(ctx -> {
             String workspaceId = ctx.get(RequestContext.WORKSPACE_ID);
-            log.debug("Generating logs response for Studio optimization: '{}' in workspace: '{}'", optimizationId,
+            log.debug("为 Studio 优化 '{}' 生成日志响应，工作区：'{}'", optimizationId,
                     workspaceId);
 
             // 使用 OptimizationLogSyncService 的共享方法构建 S3 键
@@ -766,11 +760,11 @@ class OptimizationServiceImpl implements OptimizationService {
     public Mono<Long> reconcileStalledStudioOptimizations(@NonNull Duration initializedTimeout,
             @NonNull Duration runningTimeout, @NonNull Duration runningHardTimeout, @NonNull Duration lookbackMargin,
             int batchSize, int candidateScanFactor) {
-        // Truncate to whole seconds up front, because that is the resolution the SQL side has: the DAO
-        // binds these as :..._seconds. Leaving the sub-second remainder on the Java copies would make the
-        // query and the guards below disagree by up to a second — the query would select a run the guard
-        // then vetoes, and buildStalledReason could quote a bound the query did not use. Truncating in one
-        // place keeps every consumer on the same numbers (review: baz-reviewer).
+        // 先截断到整秒，因为这是 SQL 侧的分辨率：DAO
+        // 把它们绑定为 :..._seconds。若在 Java 副本上保留亚秒余数，会让
+        // 查询和下面的防护相差最多一秒 —— 查询会选出一个随后被防护
+        // 否决的运行，而 buildStalledReason 可能会引用一个查询并未使用的阈值。在一个
+        // 位置统一截断能让每个消费者使用相同的数值（review: baz-reviewer）。
         var initialized = initializedTimeout.truncatedTo(ChronoUnit.SECONDS);
         var running = runningTimeout.truncatedTo(ChronoUnit.SECONDS);
         var hardCap = runningHardTimeout.truncatedTo(ChronoUnit.SECONDS);
@@ -779,86 +773,85 @@ class OptimizationServiceImpl implements OptimizationService {
         return optimizationDAO
                 .findStalledStudioOptimizations(initialized, running, hardCap, lookback, batchSize,
                         candidateScanFactor)
-                // Sequential: stalled runs are rare and this keeps the reaper's DB/Redis footprint small.
+                // 串行处理：停滞运行很少见，这样能保持回收器的 DB/Redis 占用很小。
                 .concatMap(stalled -> markStalledOptimizationAsError(stalled, initialized, running, hardCap))
                 .reduce(0L, Long::sum);
     }
 
     /**
-     * Best-effort transition of a single stalled run to ERROR. Records the reason in the run's logs first
-     * (so the UI can surface it even when the worker never produced any logs), then reuses the standard
-     * {@link #update} path — which finalizes logs and emits the completion analytics event. Never fails
-     * the overall pass: a single row's failure is logged and counted as 0.
+     * 尽力将单个停滞运行转换为 ERROR。先把原因记录到运行日志中
+     * （这样即使 worker 从未产生任何日志，UI 也能展示出来），然后复用标准的
+     * {@link #update} 路径 —— 它会完成日志收尾并发出完成分析事件。绝不
+     * 使整轮处理失败：单行失败会被记录日志并计为 0。
      */
     private Mono<Long> markStalledOptimizationAsError(OptimizationDAO.StalledOptimization stalled,
             Duration initializedTimeout, Duration runningTimeout, Duration runningHardTimeout) {
         UUID id = stalled.id();
         String workspaceId = stalled.workspaceId();
 
-        // Re-read under the workspace context and only flip if the run is still non-terminal AND still
-        // dead by the same liveness the reaper query used: the fleet-wide query and this update are not
-        // atomic, so a terminal status reported in between (status filter) or a trial/item written in
-        // between (activity re-check, OPIK-7459) must veto the transition — otherwise a genuine
-        // completion or a slow-but-alive trial straddling the window boundary gets overwritten with ERROR.
-        // The re-read is a bare status snapshot, NOT getById: see OptimizationDAO#getStatusSnapshotById
-        // for why the full FIND must not gate reaping.
+        // 在工作区上下文下重新读取，并且只有在运行仍处于非终态、且按照回收器查询所用
+        // 相同的活性标准仍处于死掉状态时才翻转：全量查询和这次更新并非
+        // 原子操作，因此中间上报的终态状态（状态过滤）或中间写入的 trial/item
+        // （活性复查，OPIK-7459）必须否决该转换 —— 否则一个真实的
+        // 完成或一个横跨窗口边界的慢而存活的 trial 就会被覆盖为 ERROR。
+        // 重新读取的是裸状态快照，而非 getById：参见 OptimizationDAO#getStatusSnapshotById
+        // 了解为什么完整的 FIND 不得把关回收。
         return optimizationDAO.getStatusSnapshotById(id)
                 .filter(current -> CANCELLABLE_STATUSES.contains(current.status()))
                 .filterWhen(current -> isStillDead(current, id, initializedTimeout, runningTimeout,
                         runningHardTimeout))
                 .flatMap(current -> {
-                    // Build the reason from the RE-READ current status, not the reaper's stale query
-                    // status: a run that moved INITIALIZED -> RUNNING between the query and here must get
-                    // the "no activity" message, not the "failed to start" one.
+                    // 从重新读取的当前状态（而非回收器查询到的过期状态）构建原因：
+                    // 一个在查询与这里之间从 INITIALIZED 变为 RUNNING 的运行必须得到
+                    // "无活动"消息，而不是"启动失败"消息。
                     String reason = buildStalledReason(current, initializedTimeout, runningTimeout,
                             runningHardTimeout);
                     log.warn(
-                            "Reconciling stalled studio optimization '{}' in workspace '{}' (status '{}') to ERROR: {}",
+                            "正在将停滞的 studio 优化 '{}'（工作区 '{}'，状态 '{}'）调和为 ERROR：{}",
                             id, workspaceId, current.status(), reason);
-                    // Count this row only if update() actually transitioned it. update() returns
-                    // Mono.just(0L) when its own terminal-overwrite guard fires (the worker reported a
-                    // terminal status in the sliver between the re-read above and update()'s own re-read),
-                    // so a bare thenReturn(1L) would over-count that no-op. An empty
-                    // completion means the row was written but ClickHouse reported no count -> still 1.
+                    // 只有当 update() 真正转换了这一行时才计数。当 update() 自身的
+                    // 终态覆盖防护触发时（worker 在上面的重新读取与 update() 自己的重新读取
+                    // 之间的狭小窗口内上报了终态状态），它返回 Mono.just(0L)，
+                    // 因此一个裸的 thenReturn(1L) 会把这个无操作多算一次。空
+                    // 完成意味着该行已写入但 ClickHouse 报告无计数 -> 仍计为 1。
                     return appendSystemReasonAndMarkError(workspaceId, id, reason)
                             .map(rowsUpdated -> rowsUpdated > 0 ? 1L : 0L)
                             .defaultIfEmpty(1L);
                 })
                 .switchIfEmpty(Mono.fromSupplier(() -> {
                     log.info(
-                            "Skipping stalled reconciliation for optimization '{}' in workspace '{}': no longer stalled",
+                            "跳过优化 '{}'（工作区 '{}'）的停滞调和：已不再停滞",
                             id, workspaceId);
                     return 0L;
                 }))
                 .contextWrite(headlessSystemContext(workspaceId))
                 .onErrorResume(error -> {
-                    log.error("Failed to reconcile stalled studio optimization '{}' in workspace '{}'",
+                    log.error("调和停滞的 studio 优化 '{}'（工作区 '{}'）失败",
                             id, workspaceId, error);
                     return Mono.just(0L);
                 });
     }
 
     /**
-     * Re-check that a candidate is still dead by the reaper's own liveness definition. Runs past the hard
-     * ceiling are reaped regardless of recent trial/item writes (that ceiling exists precisely for zombies
-     * that keep producing rows), so the activity probe only runs — and only costs a query — for the rare
-     * non-hard-capped candidate.
+     * 按回收器自身的活性定义复查候选者是否仍然死掉。超过硬上限的运行
+     * 无论最近是否有 trial/item 写入都会被回收（该上限正是为那些持续产生行的
+     * 僵尸运行而存在的），因此活性探测只对少数非硬上限候选者
+     * 运行 —— 而且只花费一次查询。
      *
-     * <p>The probe covers {@code INITIALIZED} as well as {@code RUNNING}, and with the same
-     * {@code runningTimeout} window the fleet query uses for both: a run writing trial experiments is alive
-     * whichever status its row got stuck on, and this guard must stay identical to the query's veto or a run
-     * the query spared could still be reaped here (or vice versa). A run that genuinely never started has no
-     * trials, so the probe finds nothing and it is still reaped on {@code initializedTimeout}.
+     * <p>该探测同时覆盖 {@code INITIALIZED} 和 {@code RUNNING}，且使用与全量查询对两者
+     * 都相同的 {@code runningTimeout} 窗口：一个正在写试验实验的运行无论其行卡在哪个状态
+     * 都是存活的，而且此防护必须与查询的否决保持完全一致，否则一个查询放过的运行
+     * 仍可能在这里被回收（反之亦然）。一个确实从未启动的运行没有任何
+     * trial，所以探测一无所获，它仍会在 {@code initializedTimeout} 上被回收。
      *
-     * <p>Liveness is the newest of three signals, and all three are checked here — the row's own
-     * {@code last_updated_at} included. Checking only the trial/item probe left the guard strictly weaker
-     * than the fleet query it is supposed to mirror: the batch drains sequentially (up to {@code batchSize}
-     * runs, each a snapshot read + activity probe + log append + update), so seconds to minutes pass between
-     * the scan and a given row's update. A run selected as a stale {@code INITIALIZED} candidate whose
-     * worker calls {@code mark_running} in that gap comes back {@code RUNNING} with a fresh row timestamp
-     * and no trials yet — the fleet query would not select it under the {@code RUNNING} branch, so neither
-     * may this guard. The threshold therefore follows the RE-READ status, exactly like
-     * the query's {@code HAVING} branches.
+     * <p>活性是三个信号中最新的一环，三者都在这里检查 —— 包括行自身的
+     * {@code last_updated_at}。只检查 trial/item 探测会让防护严格弱于它所应镜像的
+     * 全量查询：批处理按顺序清空（最多 {@code batchSize} 个运行，每个都是一次快照读取 + 活性探测 +
+     * 日志追加 + 更新），因此从扫描到某一行的更新之间会经过数秒到数分钟。一个被选为
+     * 过期 {@code INITIALIZED} 候选者的运行，若其 worker 在这段间隙调用了 {@code mark_running}，
+     * 就会以全新的行时间戳变回 {@code RUNNING} 且还没有任何 trial —— 全量查询不会
+     * 在 {@code RUNNING} 分支下选中它，因此此防护也不可以。所以阈值跟随重新读取的状态，
+     * 与查询的 {@code HAVING} 分支完全一致。
      */
     private Mono<Boolean> isStillDead(OptimizationDAO.OptimizationStatusSnapshot current, UUID id,
             Duration initializedTimeout, Duration runningTimeout, Duration runningHardTimeout) {
@@ -875,26 +868,26 @@ class OptimizationServiceImpl implements OptimizationService {
     }
 
     /**
-     * May a cancellation be accepted for this run? The two sides of cancelling — rejecting the request with a
-     * 409 and signalling the worker over Redis — MUST ask this one predicate, never
-     * {@link #CANCELLABLE_STATUSES} directly. They diverged once: admitting a system-detected failure only on
-     * the 409 side let the status flip to {@code CANCELLED} while {@code opik:cancel:<id>} was never written,
-     * and that key is the worker's only cancellation channel (it polls it via MGET, with no DB-status
-     * fallback). The run then read as cancelled in the UI while its subprocess ran on and spent the full LLM
-     * budget — the exact outcome admitting the status was meant to prevent (review: thiagohora).
+     * 该运行是否可以被接受取消？取消的两面 —— 用 409 拒绝请求与
+     * 通过 Redis 向 worker 发信号 —— 必须询问这一个谓词，绝不直接询问
+     * {@link #CANCELLABLE_STATUSES}。它们曾经分叉过：只在 409 侧接纳系统检测到的失败
+     * 会让状态翻转为 {@code CANCELLED} 而 {@code opik:cancel:<id>} 却从未写入，
+     * 而那个键是 worker 唯一的取消通道（它通过 MGET 轮询它，没有 DB 状态
+     * 回退）。于是运行在 UI 中显示为已取消，而它的子进程仍在运行并花光了整个 LLM
+     * 预算 —— 这恰恰是接纳该状态本要避免的结果（review: thiagohora）。
      *
-     * <p>Beyond the non-terminal statuses this admits a run parked on a reaper-written ERROR: that ERROR is a
-     * guess, its worker may still be running, and refusing to cancel would deny the user the one action that
-     * stops the work. A worker-reported failure is a real outcome and stays uncancellable.
+     * <p>除了非终态状态外，这里还接纳停在一个由回收器写入的 ERROR 上的运行：该 ERROR 是
+     * 猜测，它的 worker 可能仍在运行，拒绝取消会让用户失去唯一能
+     * 停止工作的动作。worker 上报的失败是真实结果，保持不可取消。
      */
     private static boolean isCancellable(Optimization optimization) {
         return CANCELLABLE_STATUSES.contains(optimization.status()) || isSystemDetectedFailure(optimization);
     }
 
     /**
-     * Was this run's ERROR written by the platform observing a stall, rather than reported by the worker?
-     * Keyed on the {@code exceptionType} this service stamps, which is the only marker distinguishing the
-     * two — both land in the same column through the same update path.
+     * 该运行的 ERROR 是由平台观测到停滞而写入的，还是由 worker 上报的？
+     * 以本服务打上的 {@code exceptionType} 为依据，它是区分两者的唯一标记 ——
+     * 两者都通过同一条更新路径落到同一列。
      */
     private static boolean isSystemDetectedFailure(Optimization optimization) {
         return optimization.studioConfig() != null
@@ -904,18 +897,18 @@ class OptimizationServiceImpl implements OptimizationService {
     }
 
     /**
-     * The ceiling runs from the run's creation, not from {@code last_updated_at}: any write to the row
-     * refreshes the latter (a metadata PATCH, an SDK re-upsert), which would let a run postpone the
-     * backstop forever — exactly the eternal spinner this job exists to end. {@code created_at} is now
-     * preserved across re-upserts (see the upsert path in this class), so an ordinary client write cannot
-     * move it (review: baz-reviewer, OPIK-7459).
+     * 上限从运行创建时刻起算，而不是从 {@code last_updated_at} 起算：对行的任何写入
+     * 都会刷新后者（一次 metadata PATCH、一次 SDK 重新 upsert），这会放任运行无限期推迟
+     * 后备保障 —— 恰恰是这个任务所要终结的永恒转圈。{@code created_at} 现在
+     * 在重新 upsert 之间被保留（参见本类中的 upsert 路径），因此普通客户端写入无法
+     * 移动它（review: baz-reviewer，OPIK-7459）。
      *
-     * <p>Restarting a finished run under the same id is the one case that DOES reset it, deliberately: that
-     * is a new attempt, and inheriting the old clock would make it born past the ceiling. The upsert path
-     * scopes its {@code createdAt} preservation to exclude that transition.
+     * <p>在相同 id 下重启一个已完成的运行是刻意重置它的唯一情形：那是
+     * 一次新尝试，继承旧时钟会让它一出生就超过上限。upsert 路径
+     * 将其 {@code createdAt} 保留限定为排除该转换。
      *
-     * <p>{@code startedAt} is only comparable across the fleet query and this re-read because both derive
-     * it over the same lookback window — see {@link OptimizationDAO#getStatusSnapshotById}.
+     * <p>{@code startedAt} 之所以能在全量查询与这次重新读取之间比较，是因为两者
+     * 都在相同的回溯窗口上推导它 —— 参见 {@link OptimizationDAO#getStatusSnapshotById}。
      */
     private static boolean isPastHardCap(OptimizationDAO.OptimizationStatusSnapshot current,
             Duration runningHardTimeout) {
@@ -923,12 +916,12 @@ class OptimizationServiceImpl implements OptimizationService {
     }
 
     /**
-     * The hard-ceiling case is checked before the status split, because that ceiling now applies to
-     * {@code INITIALIZED} runs too — a run stuck on INITIALIZED while a zombie worker keeps writing rows is
-     * reaped by the ceiling, and "failed to start" would be the wrong thing to tell the user about it.
-     * Every duration is rendered with {@link DurationFormatUtils} rather than a fixed unit, so sub-hour and
-     * multi-hour configurations both read correctly (a raw {@code toMinutes()} rendered the 24h maximum
-     * {@code initializedTimeout} allows as "1440 minutes").
+     * 硬上限情形在状态分支之前检查，因为该上限现在同样适用于
+     * {@code INITIALIZED} 运行 —— 一个卡在 INITIALIZED 而僵尸 worker 仍持续写行的运行
+     * 会被上限回收，而"启动失败"对于告知用户这件事是错误的说辞。
+     * 每个时长都用 {@link DurationFormatUtils} 渲染，而非固定单位，这样亚小时和
+     * 多小时的配置都能正确显示（裸 {@code toMinutes()} 会把 {@code initializedTimeout}
+     * 允许的 24 小时最大值渲染成 "1440 分钟"）。
      */
     private String buildStalledReason(OptimizationDAO.OptimizationStatusSnapshot current,
             Duration initializedTimeout, Duration runningTimeout, Duration runningHardTimeout) {

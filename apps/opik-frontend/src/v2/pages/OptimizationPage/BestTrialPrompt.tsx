@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowUpRight, GitCompare, Info } from "lucide-react";
 
 import GitCompareOff from "@/icons/git-compare-off.svg?react";
@@ -33,6 +34,7 @@ const BestTrialPrompt: React.FC<BestTrialPromptProps> = ({
   noImprovement = false,
   onViewTrial,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const { current, targets } = usePromptComparisonTargets(
     bestCandidate,
     candidates,
@@ -55,7 +57,7 @@ const BestTrialPrompt: React.FC<BestTrialPromptProps> = ({
             <span className="size-1.5 rounded-full bg-[var(--trial-best)] shadow-[0_0_0_1.125px_var(--trial-best-ring)]" />
           </span>
           <span className="comet-body-s-accented text-foreground">
-            Best trial prompt
+            {t("optimization.bestTrial.title")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -70,7 +72,9 @@ const BestTrialPrompt: React.FC<BestTrialPromptProps> = ({
               ) : (
                 <GitCompare className="size-3.5" />
               )}
-              {showDiff ? "Hide diff" : "Diff vs baseline"}
+              {showDiff
+                ? t("optimization.bestTrial.hideDiff")
+                : t("optimization.prompt.diffVsBaseline")}
             </button>
           )}
           {hasTargets && onViewTrial && (
@@ -78,7 +82,7 @@ const BestTrialPrompt: React.FC<BestTrialPromptProps> = ({
           )}
           {onViewTrial && (
             <button type="button" className={actionClass} onClick={onViewTrial}>
-              View trial
+              {t("optimization.bestTrial.viewTrial")}
               <ArrowUpRight className="size-3.5" />
             </button>
           )}
@@ -88,14 +92,14 @@ const BestTrialPrompt: React.FC<BestTrialPromptProps> = ({
         <div className="flex items-center gap-1.5 rounded-md bg-[hsl(var(--warning-box-bg))] px-2.5 py-1.5 text-[hsl(var(--warning-box-text))]">
           <Info className="size-3.5 shrink-0" />
           <span className="comet-body-xs">
-            No improvement over baseline — the original prompt was kept.
+            {t("optimization.bestTrial.noImprovement")}
           </span>
         </div>
       )}
       <PromptComparison
         current={current}
         targets={targets}
-        currentLabel="Best trial"
+        currentLabel={t("optimization.bestTrial.bestTrial")}
         showControls={false}
         diff={showDiff}
       />

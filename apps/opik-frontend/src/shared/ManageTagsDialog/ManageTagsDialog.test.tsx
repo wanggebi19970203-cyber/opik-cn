@@ -46,7 +46,7 @@ describe("ManageTagsDialog", () => {
         />,
       );
 
-      expect(screen.getByText("Manage shared tags")).toBeInTheDocument();
+      expect(screen.getByText("common.tags.manageSharedTags")).toBeInTheDocument();
       expect(screen.getByTestId("add-tag-button")).toBeInTheDocument();
     });
 
@@ -60,7 +60,9 @@ describe("ManageTagsDialog", () => {
         />,
       );
 
-      expect(screen.queryByText("Manage shared tags")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("common.tags.manageSharedTags"),
+      ).not.toBeInTheDocument();
     });
 
     it("should display correct item count in button", () => {
@@ -74,7 +76,7 @@ describe("ManageTagsDialog", () => {
       );
 
       expect(
-        screen.getByRole("button", { name: /Update tags for 2 items/i }),
+        screen.getByRole("button", { name: /common.tags.updateTagsForItems/i }),
       ).toBeInTheDocument();
     });
 
@@ -91,7 +93,7 @@ describe("ManageTagsDialog", () => {
       );
 
       expect(
-        screen.getByRole("button", { name: /Update tags for 100 items/i }),
+        screen.getByRole("button", { name: /common.tags.updateTagsForItems/i }),
       ).toBeInTheDocument();
     });
 
@@ -194,8 +196,8 @@ describe("ManageTagsDialog", () => {
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: "Tag already added",
-            description: 'Tag "tag" is already in the list',
+            title: "common.tags.tagAlreadyAdded",
+            description: "common.tags.tagAlreadyAddedDescription",
             variant: "destructive",
           }),
         );
@@ -257,15 +259,15 @@ describe("ManageTagsDialog", () => {
       });
 
       const updateButton = screen.getByRole("button", {
-        name: /Update tags for/i,
+        name: /common.tags.updateTagsForItems/i,
       });
       fireEvent.click(updateButton);
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: "Tag limit exceeded",
-            description: "An item can only have up to 50 tags",
+            title: "common.tags.tagLimitExceeded",
+            description: "common.tags.tagLimitExceededDescription",
             variant: "destructive",
           }),
         );
@@ -293,13 +295,14 @@ describe("ManageTagsDialog", () => {
 
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: "Error",
-          description:
-            "You can only add tags to up to 1000 items at a time. Please select fewer items.",
+          title: "common.tags.entityLimitErrorTitle",
+          description: "common.tags.entityLimitError",
         }),
       );
       expect(mockSetOpen).toHaveBeenCalledWith(false);
-      expect(screen.queryByText("Manage shared tags")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("common.tags.manageSharedTags"),
+      ).not.toBeInTheDocument();
     });
 
     it("should allow dialog when isAllItemsSelected is true regardless of entities length", () => {
@@ -318,7 +321,7 @@ describe("ManageTagsDialog", () => {
         />,
       );
 
-      expect(screen.getByText("Manage shared tags")).toBeInTheDocument();
+      expect(screen.getByText("common.tags.manageSharedTags")).toBeInTheDocument();
       expect(mockToast).not.toHaveBeenCalled();
     });
   });
@@ -344,7 +347,7 @@ describe("ManageTagsDialog", () => {
       });
 
       const updateButton = screen.getByRole("button", {
-        name: /Update tags for/i,
+        name: /common.tags.updateTagsForItems/i,
       });
       fireEvent.click(updateButton);
 
@@ -373,15 +376,15 @@ describe("ManageTagsDialog", () => {
       });
 
       const updateButton = screen.getByRole("button", {
-        name: /Update tags for/i,
+        name: /common.tags.updateTagsForItems/i,
       });
       fireEvent.click(updateButton);
 
       await waitFor(() => {
         expect(mockToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: "Tags updated",
-            description: "1 added from/to 2 items",
+            title: "common.tags.tagsUpdated",
+            description: "common.tags.tagsUpdatedDescription",
           }),
         );
       });
@@ -407,7 +410,7 @@ describe("ManageTagsDialog", () => {
       });
 
       const updateButton = screen.getByRole("button", {
-        name: /Update tags for/i,
+        name: /common.tags.updateTagsForItems/i,
       });
       fireEvent.click(updateButton);
 
@@ -427,7 +430,7 @@ describe("ManageTagsDialog", () => {
       );
 
       const updateButton = screen.getByRole("button", {
-        name: /Update tags for/i,
+        name: /common.tags.updateTagsForItems/i,
       });
       expect(updateButton).toBeDisabled();
     });

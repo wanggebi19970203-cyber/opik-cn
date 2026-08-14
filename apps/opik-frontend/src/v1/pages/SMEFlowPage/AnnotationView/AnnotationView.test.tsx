@@ -106,7 +106,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Submit + next")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitNext")).toBeInTheDocument();
     });
 
     it('should show "Submit + complete" when current item is the ONLY unprocessed item', () => {
@@ -118,7 +118,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Submit + complete")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitComplete")).toBeInTheDocument();
     });
 
     it('should show "Submit + next" when there are multiple unprocessed items (including cached changes)', () => {
@@ -135,8 +135,8 @@ describe("AnnotationView - Button Label Logic", () => {
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
       // Should show "Submit + next" because there are other unprocessed items
-      expect(screen.queryByText("Submit + complete")).not.toBeInTheDocument();
-      expect(screen.getByText("Submit + next")).toBeInTheDocument();
+      expect(screen.queryByText("annotationView.submitComplete")).not.toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitNext")).toBeInTheDocument();
     });
 
     it('should show "Submit + next" when there are 2 unprocessed items', () => {
@@ -152,8 +152,8 @@ describe("AnnotationView - Button Label Logic", () => {
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
       // Should show "Submit + next" because there are still other unprocessed items
-      expect(screen.queryByText("Submit + complete")).not.toBeInTheDocument();
-      expect(screen.getByText("Submit + next")).toBeInTheDocument();
+      expect(screen.queryByText("annotationView.submitComplete")).not.toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitNext")).toBeInTheDocument();
     });
   });
 
@@ -171,9 +171,9 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Update + next")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.updateNext")).toBeInTheDocument();
       // Button should be disabled when canSubmit is false
-      const button = screen.getByText("Update + next");
+      const button = screen.getByText("annotationView.updateNext");
       expect(button).toBeDisabled();
     });
 
@@ -190,7 +190,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Update + next")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.updateNext")).toBeInTheDocument();
     });
 
     it('should show "Update + next" when reviewing completed items in review mode (not last item)', () => {
@@ -211,7 +211,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Update + next")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.updateNext")).toBeInTheDocument();
     });
 
     it('should show "Update + complete" when reviewing completed items in review mode (last item)', () => {
@@ -233,7 +233,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Update + complete")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.updateComplete")).toBeInTheDocument();
     });
   });
 
@@ -249,7 +249,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      const submitButton = screen.getByText("Submit + next");
+      const submitButton = screen.getByText("annotationView.submitNext");
       expect(submitButton).toBeDisabled();
     });
 
@@ -261,7 +261,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      const previousButton = screen.getByText("Previous");
+      const previousButton = screen.getByText("annotationView.previous");
       expect(previousButton).toBeDisabled();
     });
 
@@ -273,7 +273,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      const nextButton = screen.getByText("Next");
+      const nextButton = screen.getByText("annotationView.next");
       expect(nextButton).toBeDisabled();
     });
 
@@ -300,7 +300,7 @@ describe("AnnotationView - Button Label Logic", () => {
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
       // queueItems has 3 items in defaultContextValue, currentIndex is 1 (second item)
-      expect(screen.getByText("2 of 3")).toBeInTheDocument();
+      expect(screen.getByText("2 annotationView.of 3")).toBeInTheDocument();
     });
 
     it("should display counter in green with check icon when viewing a completed item", () => {
@@ -313,9 +313,9 @@ describe("AnnotationView - Button Label Logic", () => {
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
       // queueItems has 3 items in defaultContextValue, currentIndex is 1 (second item)
-      expect(screen.getByText("2 of 3")).toBeInTheDocument();
+      expect(screen.getByText("2 annotationView.of 3")).toBeInTheDocument();
       // Check that the counter container has the special button color class
-      const counterContainer = screen.getByText("2 of 3").closest("div");
+      const counterContainer = screen.getByText("2 annotationView.of 3").closest("div");
       expect(counterContainer).toHaveClass("text-[var(--special-button)]");
     });
   });
@@ -343,8 +343,8 @@ describe("AnnotationView - Button Label Logic", () => {
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
       // Should show "Submit + next" because unprocessedItems.length = 3
-      expect(screen.getByText("Submit + next")).toBeInTheDocument();
-      expect(screen.queryByText("Submit + complete")).not.toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitNext")).toBeInTheDocument();
+      expect(screen.queryByText("annotationView.submitComplete")).not.toBeInTheDocument();
     });
 
     it("should show Submit + complete only when current is the ONLY unprocessed item", () => {
@@ -361,7 +361,7 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Submit + complete")).toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitComplete")).toBeInTheDocument();
     });
 
     it("should show Submit + next when there are 2 unprocessed items", () => {
@@ -381,8 +381,8 @@ describe("AnnotationView - Button Label Logic", () => {
 
       render(<AnnotationView header={<div>Header</div>} />, { wrapper });
 
-      expect(screen.getByText("Submit + next")).toBeInTheDocument();
-      expect(screen.queryByText("Submit + complete")).not.toBeInTheDocument();
+      expect(screen.getByText("annotationView.submitNext")).toBeInTheDocument();
+      expect(screen.queryByText("annotationView.submitComplete")).not.toBeInTheDocument();
     });
   });
 });

@@ -446,7 +446,7 @@ class Dataset(DatasetExportOperations):
         except ApiError as e:
             if e.status_code == 403:
                 LOGGER.debug(
-                    "Versioning is not enabled for datasets get version info returning None"
+                    "数据集未启用版本控制，获取版本信息时返回 None"
                 )
             else:
                 raise
@@ -489,12 +489,12 @@ class Dataset(DatasetExportOperations):
                     evaluators.append(evaluator)
                 else:
                     LOGGER.warning(
-                        "Unsupported evaluator type in version: %s. Only 'llm_judge' is supported.",
+                        "版本中包含不支持的评估器类型：%s。仅支持 'llm_judge'。",
                         evaluator_item.type,
                     )
             except Exception:
                 LOGGER.error(
-                    "Failed to instantiate evaluator from version config: %s",
+                    "根据版本配置实例化评估器失败：%s",
                     evaluator_item.config,
                     exc_info=True,
                 )
@@ -597,16 +597,15 @@ class Dataset(DatasetExportOperations):
                 project_name=self._project_name,
             )
         )
-        LOGGER.debug("Successfully sent dataset items batch of size %d", len(batch))
+        LOGGER.debug("成功发送大小为 %d 的数据集项目批次", len(batch))
 
     def _resolve_num_threads(self, num_threads: int) -> int:
-        """Downgrade to a sequential upload when the backend predates parallel support.
+        """当后端版本早于并行支持时，降级为顺序上传。
 
-        Older backends race on concurrent batches that share a batch_group_id,
-        so parallelism is only safe from
-        ``constants.MIN_BACKEND_VERSION_FOR_PARALLEL_INSERT`` onwards. When the
-        version cannot be determined at all — unreachable endpoint, non-semver
-        build string — we fall back to sequential rather than risk the race.
+        较旧的后端在共享 batch_group_id 的并发批次上存在竞态，
+        因此只有从 ``constants.MIN_BACKEND_VERSION_FOR_PARALLEL_INSERT``
+        开始才支持并行。当版本完全无法确定时——端点不可达、非语义化版本
+        构建字符串——我们回退到顺序上传，以避免竞态风险。
         """
         try:
             backend_version = self._rest_client.version()["version"]
@@ -616,9 +615,8 @@ class Dataset(DatasetExportOperations):
             )
         except Exception:
             LOGGER.warning(
-                "Could not determine the Opik backend version, falling back to a "
-                "sequential dataset upload. Parallel upload requires backend %s "
-                "or newer.",
+                "无法确定 Opik 后端版本，回退到顺序数据集上传。"
+                "并行上传需要后端 %s 或更高版本。",
                 constants.MIN_BACKEND_VERSION_FOR_PARALLEL_INSERT,
                 exc_info=True,
             )
@@ -626,9 +624,8 @@ class Dataset(DatasetExportOperations):
 
         if not supported:
             LOGGER.warning(
-                "Opik backend %s does not support parallel dataset upload, falling "
-                "back to a sequential upload. Upgrade to backend %s or newer to use "
-                "num_threads.",
+                "Opik 后端 %s 不支持并行数据集上传，回退到顺序上传。"
+                "升级到后端 %s 或更高版本以使用 num_threads。",
                 backend_version,
                 constants.MIN_BACKEND_VERSION_FOR_PARALLEL_INSERT,
             )
@@ -642,15 +639,13 @@ class Dataset(DatasetExportOperations):
         batch_group_id: str,
         num_threads: int,
     ) -> None:
-        """Send batches to the backend, optionally in parallel.
+        """将批次发送到后端，可选择并行发送。
 
-        All batches share ``batch_group_id`` so they fold into a single
-        dataset version regardless of how many workers send them. With
-        ``num_threads <= 1`` batches are sent sequentially in the caller
-        thread. With ``num_threads > 1`` they are fanned out across a thread
-        pool; the first batch that fails re-raises to the caller. There is no
-        rollback, so batches that already succeeded before the failure remain
-        persisted.
+        所有批次共享 ``batch_group_id``，因此无论有多少工作线程发送它们，
+        都会合并为一个数据集版本。当 ``num_threads <= 1`` 时，批次在调用者
+        线程中顺序发送。当 ``num_threads > 1`` 时，它们被分发到线程池中；
+        第一个失败的批次会向调用者重新抛出异常。没有回滚机制，因此在失败前
+        已经成功的批次会保持已持久化状态。
         """
         if num_threads <= 1:
             for batch in batches:
@@ -686,7 +681,7 @@ class Dataset(DatasetExportOperations):
 
             if item_hash in self._hashes:
                 LOGGER.debug(
-                    "Duplicate item found with hash: %s - ignored the event",
+                    "发现具有哈希 %s 的重复项目 - 忽略该事件",
                     item_hash,
                 )
                 continue
@@ -712,30 +707,24 @@ class Dataset(DatasetExportOperations):
 
     def insert(self, items: Sequence[Dict[str, Any]], num_threads: int = 1) -> None:
         """
-        Insert new items into the dataset. A new dataset version will be created.
+        向数据集中插入新项目。将创建一个新的数据集版本。
 
         Args:
-            items: List of dicts (which will be converted to dataset items)
-                to add to the dataset.
-            num_threads: Number of worker threads used to upload the item
-                batches. Must be a positive integer. With ``1`` (the default)
-                batches are uploaded sequentially. With more than ``1`` the
-                batches of this single ``insert`` are uploaded in parallel;
-                they all land in one dataset version. If any batch fails the
-                call re-raises; there is no rollback, so batches that already
-                succeeded remain persisted. Items are keyed by their ``id``, so
-                parallel and sequential inserts of the same items produce
-                identical dataset content; the input order is not a read-back
-                guarantee. Requires an Opik backend of at least
-                ``constants.MIN_BACKEND_VERSION_FOR_PARALLEL_INSERT``; against
-                older backends, or when the backend version cannot be
-                determined, the upload falls back to sequential and logs a
-                warning.
+            items: 要添加到数据集的字典列表（将被转换为数据集项目）。
+            num_threads: 用于上传项目批次的工作线程数。必须为正整数。
+                使用 ``1``（默认值）时批次按顺序上传。使用大于 ``1`` 的值时，
+                单次 ``insert`` 的批次将并行上传；它们都会落入同一个数据集版本。
+                如果任何批次失败，调用会重新抛出异常；没有回滚机制，因此在失败前
+                已经成功的批次会保持已持久化状态。项目按其 ``id`` 作为键，
+                因此相同项目的并行和顺序插入会产生相同的数据集内容；
+                输入顺序不保证读取时的顺序。需要 Opik 后端至少为
+                ``constants.MIN_BACKEND_VERSION_FOR_PARALLEL_INSERT``；
+                对于较旧的后端，或无法确定后端版本时，上传会回退到顺序并记录警告。
         """
         if isinstance(num_threads, bool) or not isinstance(num_threads, int):
-            raise ValueError("num_threads must be a positive integer")
+            raise ValueError("num_threads 必须为正整数")
         if num_threads < 1:
-            raise ValueError("num_threads must be a positive integer")
+            raise ValueError("num_threads 必须为正整数")
 
         if num_threads > 1:
             num_threads = self._resolve_num_threads(num_threads)
@@ -750,14 +739,12 @@ class Dataset(DatasetExportOperations):
 
     @property
     def __internal_api__hashes_synced__(self) -> bool:
-        """Whether the local hash cache is in sync with the backend.
+        """本地哈希缓存是否与后端保持同步。
 
-        `__init__` defaults this to True (a freshly constructed Dataset
-        has no backend state to sync). Factory paths that construct a
-        Dataset from an existing backend state (`from_public`,
-        `rest_operations.get_datasets`) flip it to False so the first
-        :meth:`insert` triggers a one-shot sync instead of paying an
-        N+1 sync at list time.
+        `__init__` 将其默认为 True（新构建的 Dataset 没有需要同步的后端状态）。
+        从现有后端状态构建 Dataset 的工厂路径（`from_public`、
+        `rest_operations.get_datasets`）将其翻转为 False，以便第一次
+        :meth:`insert` 触发一次性同步，而不是在列表时支付 N+1 同步。
         """
         return self._hashes_synced
 
@@ -766,8 +753,8 @@ class Dataset(DatasetExportOperations):
         self._hashes_synced = value
 
     def __internal_api__sync_hashes__(self) -> None:
-        """Updates all the hashes in the dataset"""
-        LOGGER.debug("Start hash sync in dataset")
+        """更新数据集中的所有哈希"""
+        LOGGER.debug("开始同步数据集中的哈希")
 
         self._id_to_hash = {}
         self._hashes = set()
@@ -778,22 +765,23 @@ class Dataset(DatasetExportOperations):
             self._hashes.add(item_hash)
 
         self._hashes_synced = True
-        LOGGER.debug("Finish hash sync in dataset")
+        LOGGER.debug("完成数据集中的哈希同步")
 
     def update(self, items: List[Dict[str, Any]]) -> None:
         """
-        Update existing items in the dataset.
+        更新数据集中的现有项目。
 
         Args:
-            items: List of DatasetItem objects to update in the dataset. You need to provide the full item object as it will override what has been supplied previously.
+            items: 要在数据集中更新的 DatasetItem 对象列表。您需要提供完整的项目对象，
+                因为它将覆盖之前提供的内容。
 
         Raises:
-            DatasetItemUpdateOperationRequiresItemId: If any item in the list is missing an id.
+            DatasetItemUpdateOperationRequiresItemId: 如果列表中的任何项目缺少 id。
         """
         for item in items:
             if "id" not in item:
                 raise exceptions.DatasetItemUpdateOperationRequiresItemId(
-                    "Missing id for dataset item to update: %s", item
+                    "要更新的数据集项目缺少 id：%s", item
                 )
 
         self.insert(items)
@@ -803,20 +791,19 @@ class Dataset(DatasetExportOperations):
         batch: List[str],
         batch_group_id: str,
     ) -> None:
-        """Delete a batch of dataset items with automatic retry on rate limit errors.
+        """删除一批数据集项目，遇到速率限制错误时自动重试。
 
         Args:
-            batch: List of item IDs to delete.
-            batch_group_id: UUIDv7 identifier that groups all batches from a single
-                user operation together. All batches sent as part of one delete
-                call share the same batch_group_id.
+            batch: 要删除的项目 ID 列表。
+            batch_group_id: UUIDv7 标识符，将来自单个用户操作的所有批次组合在一起。
+                作为一次删除调用的一部分发送的所有批次共享相同的 batch_group_id。
         """
         rest_helpers.ensure_rest_api_call_respecting_rate_limit(
             lambda: self._rest_client.datasets.delete_dataset_items(
                 item_ids=batch, batch_group_id=batch_group_id
             )
         )
-        LOGGER.debug("Successfully deleted dataset items batch of size %d", len(batch))
+        LOGGER.debug("成功删除大小为 %d 的数据集项目批次", len(batch))
 
     def delete(self, items_ids: List[str]) -> None:
         """
@@ -832,7 +819,7 @@ class Dataset(DatasetExportOperations):
         batch_group_id = id_helpers.generate_id()
 
         for batch in batches:
-            LOGGER.debug("Deleting dataset items batch: %s", batch)
+            LOGGER.debug("正在删除数据集项目批次：%s", batch)
             self._delete_batch_with_retry(batch, batch_group_id=batch_group_id)
 
             for item_id in batch:
@@ -989,7 +976,7 @@ class Dataset(DatasetExportOperations):
 
         if version_info is None:
             raise exceptions.DatasetVersionNotFound(
-                f"Dataset version '{version_name}' not found in dataset '{self._name}'"
+                f"在数据集 '{self._name}' 中未找到数据集版本 '{version_name}'"
             )
 
         return DatasetVersion(

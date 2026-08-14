@@ -106,10 +106,24 @@
       "openProjectSelector": "Open project selector",
       "projects": "Projects",
       "newProject": "New project",
+      "new": "New",
+      "pinned": "Pinned",
+      "recentlyUpdated": "Recently updated",
+      "searchProject": "Search project",
+      "viewAllProjects": "View all projects",
+      "moreOptions": "More options",
+      "pinProject": "Pin project",
+      "unpinProject": "Unpin project",
       "deleteProject": "Delete project",
       "deleteProjectDescription": "Deleting a project will also remove all the traces and their data. This action can't be undone. Are you sure you want to continue?",
       "edit": "Edit",
       "delete": "Delete"
+    },
+    "workspaceMenu": {
+      "pinned": "Pinned",
+      "recentlyVisited": "Recently visited",
+      "pinWorkspace": "Pin workspace",
+      "unpinWorkspace": "Unpin workspace"
     },
     "backToProject": {
       "backToName": "Back to {{name}}",

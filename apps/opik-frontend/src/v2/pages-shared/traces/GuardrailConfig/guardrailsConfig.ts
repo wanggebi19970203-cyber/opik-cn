@@ -66,9 +66,8 @@ export const getGuardrailsMap = (): Record<GuardrailTypes, GuardrailConfig> => {
     [GuardrailTypes.PROMPT_INJECTION]: {
       ...EMPTY_FIELDS,
       id: "prompt-injection-guardrail",
-      title: "Prompt injection guardrail",
-      hintText:
-        "The prompt injection guardrail runs a fine-tuned classifier on the guardrails server to detect prompt injection and jailbreak attempts.",
+      title: t("guardrail.promptInjectionTitle"),
+      hintText: t("guardrail.promptInjectionHintText"),
       enabled: false,
       threshold: 0.5,
       codeImportName: "PromptInjection",
@@ -79,9 +78,8 @@ export const getGuardrailsMap = (): Record<GuardrailTypes, GuardrailConfig> => {
     [GuardrailTypes.CUSTOM_CLASSIFIER]: {
       ...EMPTY_FIELDS,
       id: "custom-classifier-guardrail",
-      title: "Custom guardrail",
-      hintText:
-        "The custom guardrail runs a binary classifier you trained on your own labeled examples. The guardrails server loads the model by name from its local adapters directory.",
+      title: t("guardrail.customClassifierTitle"),
+      hintText: t("guardrail.customClassifierHintText"),
       enabled: false,
       threshold: 0.5,
       codeImportName: "CustomGuardrail",
@@ -94,9 +92,8 @@ export const getGuardrailsMap = (): Record<GuardrailTypes, GuardrailConfig> => {
     [GuardrailTypes.LLM_JUDGE]: {
       ...EMPTY_FIELDS,
       id: "llm-judge-guardrail",
-      title: "LLM judge guardrail",
-      hintText:
-        "The LLM judge guardrail validates text against a natural-language policy using an LLM. It runs in the SDK against the provider configured in your Opik workspace and does not require the guardrails server.",
+      title: t("guardrail.llmJudgeTitle"),
+      hintText: t("guardrail.llmJudgeHintText"),
       enabled: false,
       codeImportName: "LLMJudge",
       codeBuilder({ name, instructions, model }) {

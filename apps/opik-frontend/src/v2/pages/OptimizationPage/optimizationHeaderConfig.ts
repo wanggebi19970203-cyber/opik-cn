@@ -1,3 +1,5 @@
+import i18next from "i18next";
+
 import {
   METRIC_TYPE,
   MetricParameters,
@@ -33,16 +35,21 @@ export interface OptimizationMetricItem {
 
 /** Human labels for the metric parameter keys shown in the metric popover. */
 export const METRIC_PARAMETER_LABELS: Record<string, string> = {
-  reference_key: "Reference key",
-  case_sensitive: "Case sensitive",
-  task_introduction: "Task introduction",
-  evaluation_criteria: "Evaluation criteria",
-  code: "Code",
+  reference_key: i18next.t("optimizations:metricConfigs.referenceKey"),
+  case_sensitive: i18next.t("optimizations:metricConfigs.caseSensitive"),
+  task_introduction: i18next.t("optimizations:metricConfigs.taskIntroduction"),
+  evaluation_criteria: i18next.t(
+    "optimizations:metricConfigs.evaluationCriteria",
+  ),
+  code: i18next.t("optimizations:metricConfigs.code"),
 };
 
 /** Render a metric parameter value for display: booleans as Yes/No, empty as an em dash. */
 export const formatMetricParameterValue = (value: unknown): string => {
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean")
+    return value
+      ? i18next.t("common:buttons.yes")
+      : i18next.t("common:buttons.no");
   if (value === null || value === undefined || value === "") return "—";
   return String(value);
 };

@@ -1,8 +1,14 @@
+import { vi } from "vitest";
+
 import { BlueprintValueType } from "@/types/agent-configs";
 import {
   BLUEPRINT_FIELD_NAME_PATTERN,
   validateBlueprintFieldValue,
 } from "./blueprintFieldValidation";
+
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key },
+}));
 
 describe("BLUEPRINT_FIELD_NAME_PATTERN", () => {
   it.each(["name", "_private", "my_field_2", "A", "_"])(
@@ -30,14 +36,14 @@ describe("validateBlueprintFieldValue", () => {
 
     it("returns error for empty value", () => {
       expect(validateBlueprintFieldValue(BlueprintValueType.STRING, "")).toBe(
-        "Must not be empty",
+        "common:blueprint.mustNotBeEmpty",
       );
     });
 
     it("returns error for whitespace-only value", () => {
       expect(
         validateBlueprintFieldValue(BlueprintValueType.STRING, "   "),
-      ).toBe("Must not be empty");
+      ).toBe("common:blueprint.mustNotBeEmpty");
     });
   });
 
@@ -56,7 +62,7 @@ describe("validateBlueprintFieldValue", () => {
 
     it("returns error for float value", () => {
       expect(validateBlueprintFieldValue(BlueprintValueType.INT, "3.14")).toBe(
-        "Must be an integer",
+        "common:blueprint.mustBeAnInteger",
       );
     });
 
@@ -68,7 +74,7 @@ describe("validateBlueprintFieldValue", () => {
 
     it("returns error for empty value", () => {
       expect(validateBlueprintFieldValue(BlueprintValueType.INT, "")).toBe(
-        "Must not be empty",
+        "common:blueprint.mustNotBeEmpty",
       );
     });
   });
@@ -88,13 +94,13 @@ describe("validateBlueprintFieldValue", () => {
 
     it("returns error for non-numeric value", () => {
       expect(validateBlueprintFieldValue(BlueprintValueType.FLOAT, "abc")).toBe(
-        "Must be a valid number",
+        "common:blueprint.mustBeAValidNumber",
       );
     });
 
     it("returns error for empty value", () => {
       expect(validateBlueprintFieldValue(BlueprintValueType.FLOAT, "")).toBe(
-        "Must not be empty",
+        "common:blueprint.mustNotBeEmpty",
       );
     });
   });

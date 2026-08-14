@@ -645,8 +645,10 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                     render={({ field }) => (
                       <FormItem>
                         <Label className="flex items-center">
-                          Trigger scope{" "}
-                          <TooltipWrapper content="Choose whether this rule fires on production traces, experiment traces, or both.">
+                          {t("addEditRule.triggerScopeLabel")}{" "}
+                          <TooltipWrapper
+                            content={t("addEditRule.triggerScopeTooltip")}
+                          >
                             <Info className="ml-1 size-4 text-light-slate" />
                           </TooltipWrapper>
                         </Label>
@@ -663,21 +665,21 @@ const AddEditRuleDialog: React.FC<AddEditRuleDialogProps> = ({
                             >
                               <ToggleGroupItem
                                 value={EVAL_TRIGGER_SCOPE.production}
-                                aria-label="Production traces"
+                                aria-label={t("addEditRule.triggerScopeProduction")}
                               >
-                                Production traces
+                                {t("addEditRule.triggerScopeProduction")}
                               </ToggleGroupItem>
                               <ToggleGroupItem
                                 value={EVAL_TRIGGER_SCOPE.experiment}
-                                aria-label="Experiment traces"
+                                aria-label={t("addEditRule.triggerScopeExperiment")}
                               >
-                                Experiment traces
+                                {t("addEditRule.triggerScopeExperiment")}
                               </ToggleGroupItem>
                               <ToggleGroupItem
                                 value={EVAL_TRIGGER_SCOPE.both}
-                                aria-label="Both"
+                                aria-label={t("addEditRule.triggerScopeBoth")}
                               >
-                                Both
+                                {t("addEditRule.triggerScopeBoth")}
                               </ToggleGroupItem>
                             </ToggleGroup>
                           </div>

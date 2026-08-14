@@ -1,9 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 import TrialPromptSection from "./TrialPromptSection";
 import { AggregatedCandidate } from "@/types/optimizations";
 import { Experiment } from "@/types/datasets";
+
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
 
 const makeExperiment = (id: string, prompt: unknown): Experiment =>
   ({ id, metadata: { configuration: { prompt } } }) as unknown as Experiment;
@@ -44,9 +50,11 @@ describe("TrialPromptSection", () => {
       />,
     );
 
-    expect(screen.getByText("Trial prompt")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.trialPrompt.title"),
+    ).toBeInTheDocument();
     expect(container.textContent).toContain("improved prompt");
-    expect(screen.getByText("Show diff")).toBeInTheDocument();
+    expect(screen.getByText("codeDiff.showDiff")).toBeInTheDocument();
     expect(container.textContent).not.toContain("baseline prompt");
   });
 
@@ -59,12 +67,14 @@ describe("TrialPromptSection", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Show diff"));
+    fireEvent.click(screen.getByText("codeDiff.showDiff"));
 
-    expect(screen.getByText("Hide diff")).toBeInTheDocument();
+    expect(screen.getByText("codeDiff.hideDiff")).toBeInTheDocument();
     // the plain title is replaced by the compare picker + arrow
-    expect(screen.getByText("Baseline")).toBeInTheDocument();
-    expect(screen.getByText("→ Trial")).toBeInTheDocument();
+    expect(screen.getByText("codeDiff.baseline")).toBeInTheDocument();
+    expect(
+      screen.getByText("→ optimization.trialPrompt.trial"),
+    ).toBeInTheDocument();
     expect(container.textContent).toContain("baseline prompt");
   });
 
@@ -78,8 +88,8 @@ describe("TrialPromptSection", () => {
       />,
     );
 
-    expect(screen.getByText("Hide diff")).toBeInTheDocument();
-    expect(screen.getByText("Baseline")).toBeInTheDocument();
+    expect(screen.getByText("codeDiff.hideDiff")).toBeInTheDocument();
+    expect(screen.getByText("codeDiff.baseline")).toBeInTheDocument();
   });
 
   it("hides the diff toggle when the trial is the baseline", () => {
@@ -91,8 +101,10 @@ describe("TrialPromptSection", () => {
       />,
     );
 
-    expect(screen.getByText("Trial prompt")).toBeInTheDocument();
-    expect(screen.queryByText("Show diff")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.trialPrompt.title"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("codeDiff.showDiff")).not.toBeInTheDocument();
   });
 
   it("renders a placeholder when the trial has no resolvable prompt", () => {
@@ -104,6 +116,8 @@ describe("TrialPromptSection", () => {
       />,
     );
 
-    expect(screen.getByText("No prompt available.")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.trialPrompt.noPromptAvailable"),
+    ).toBeInTheDocument();
   });
 });

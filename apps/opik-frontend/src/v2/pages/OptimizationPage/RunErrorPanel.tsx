@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { TriangleAlert } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -19,6 +20,7 @@ type RunErrorPanelProps = {
  * bare red status badge.
  */
 const RunErrorPanel: React.FC<RunErrorPanelProps> = ({ optimization }) => {
+  const { t } = useTranslation("pages/optimization");
   const [open, setOpen] = useState(false);
   const { data, dataUpdatedAt, isError, refetch } = useOptimizationStudioLogs(
     { optimizationId: optimization.id },
@@ -44,14 +46,14 @@ const RunErrorPanel: React.FC<RunErrorPanelProps> = ({ optimization }) => {
         <div className="mb-1 flex items-center gap-2">
           <TriangleAlert className="size-4 shrink-0 text-destructive" />
           <h3 className="comet-body-s-accented text-destructive">
-            Optimization failed
+            {t("optimization.errorPanel.title")}
           </h3>
         </div>
         <p className="comet-body-xs whitespace-pre-wrap break-words text-foreground">
           {errorMessage ??
             (logsFailedToLoad
-              ? "The run ended with an error, but the logs could not be loaded."
-              : "The run ended with an error. Open the logs for details.")}
+              ? t("optimization.errorPanel.logsCouldNotBeLoaded")
+              : t("optimization.errorPanel.openLogsForDetails"))}
           {logsFailedToLoad && (
             <>
               {" "}
@@ -62,7 +64,7 @@ const RunErrorPanel: React.FC<RunErrorPanelProps> = ({ optimization }) => {
                 className="comet-body-xs inline h-auto p-0 align-baseline underline"
                 onClick={() => refetch()}
               >
-                Retry
+                {t("optimization.errorPanel.retry")}
               </Button>
             </>
           )}
@@ -74,7 +76,7 @@ const RunErrorPanel: React.FC<RunErrorPanelProps> = ({ optimization }) => {
             className="mt-3"
             onClick={() => setOpen(true)}
           >
-            View logs
+            {t("optimization.errorPanel.viewLogs")}
           </Button>
         )}
       </div>

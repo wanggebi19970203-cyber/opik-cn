@@ -1,102 +1,184 @@
-<div align="center"><b><a href="README.md">English</a> | <a href="readme_CN.md">简体中文</a> | <a href="readme_ES.md">Español</a> | <a href="readme_FR.md">Français</a> | <a href="readme_DE.md">Deutsch</a></b></div>
-
-
-<h1 align="center" style="border-bottom: none">
-    <div>
-        <a href="https://www.comet.com/site/products/opik/?from=llm&utm_source=opik&utm_medium=github&utm_content=header_img&utm_campaign=opik"><picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/comet-ml/opik/refs/heads/main/apps/opik-documentation/documentation/static/img/logo-dark-mode.svg">
-            <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/comet-ml/opik/refs/heads/main/apps/opik-documentation/documentation/static/img/opik-logo.svg">
-            <img alt="Comet Opik logo" src="https://raw.githubusercontent.com/comet-ml/opik/refs/heads/main/apps/opik-documentation/documentation/static/img/opik-logo.svg" width="200" />
-        </picture></a>
-        <br>
-        Opik: Open-Source LLM Observability, Evaluation & AI Agent Tracing
-    </div>
-</h1>
 <p align="center">
-<b>Opik is the open-source LLM observability and evaluation platform for AI agent tracing, LLM evaluation, prompt management, and production monitoring.</b> Built by <a href="https://www.comet.com?from=llm&utm_source=opik&utm_medium=github&utm_content=what_is_opik_link&utm_campaign=opik">Comet</a>. Apache-2.0 licensed, free to self-host the full platform, with 20,000+ GitHub stars.
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="apps/opik-documentation/documentation/fern/img/logo-dark-mode.svg">
+    <source media="(prefers-color-scheme: light)" srcset="apps/opik-documentation/documentation/fern/img/opik-logo.svg">
+    <img alt="Opik" src="apps/opik-documentation/documentation/fern/img/opik-logo.svg" width="180">
+  </picture>
 </p>
 
-<div align="center">
-
-[![Python SDK](https://img.shields.io/pypi/v/opik)](https://pypi.org/project/opik/)
-[![License](https://img.shields.io/github/license/comet-ml/opik)](https://github.com/comet-ml/opik/blob/main/LICENSE)
-[![Build](https://github.com/comet-ml/opik/actions/workflows/build_apps.yml/badge.svg)](https://github.com/comet-ml/opik/actions/workflows/build_apps.yml)
-<!-- [![Quick Start](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/comet-ml/opik/blob/main/apps/opik-documentation/documentation/docs/cookbook/opik_quickstart.ipynb) -->
-
-</div>
+<h1 align="center">Opik 中文版</h1>
 
 <p align="center">
-    <a href="https://www.comet.com/site/products/opik/?from=llm&utm_source=opik&utm_medium=github&utm_content=website_button&utm_campaign=opik"><b>Website</b></a> •
-    <a href="https://chat.comet.com"><b>Slack Community</b></a> •
-    <a href="https://x.com/Cometml"><b>Twitter</b></a> •
-    <a href="https://www.comet.com/docs/opik/changelog"><b>Changelog</b></a> •
-    <a href="https://www.comet.com/docs/opik/?from=llm&utm_source=opik&utm_medium=github&utm_content=docs_button&utm_campaign=opik"><b>Documentation</b></a>
+  面向中文团队的开源 LLM 可观测性、评估与优化平台
 </p>
 
-<p align="center"><sub>Last updated: 2026-07-17</sub></p>
+<p align="center">
+  <a href="LICENSE"><img alt="Apache 2.0 License" src="https://img.shields.io/badge/License-Apache%202.0-4B5563"></a>
+  <img alt="默认界面语言为简体中文" src="https://img.shields.io/badge/默认界面-简体中文-C85C5C">
+  <img alt="支持中文和英文" src="https://img.shields.io/badge/语言切换-中文%20%7C%20English-596579">
+  <a href="https://github.com/comet-ml/opik"><img alt="Upstream comet-ml/opik" src="https://img.shields.io/badge/Upstream-comet--ml%2Fopik-2F343D"></a>
+</p>
 
-<div align="center" style="margin-top: 1em; margin-bottom: 1em;">
-<a href="#-what-is-opik">🚀 What is Opik?</a> • <a href="#-quick-start">⚡ Quick Start</a> • <a href="#-how-opik-compares">📊 How Does Opik Compare?</a> • <a href="#-frequently-asked-questions">❓ FAQ</a> • <a href="#%EF%B8%8F-opik-server-installation">🛠️ Opik Server Installation</a> • <a href="#-opik-client-sdk">💻 Opik Client SDK</a> • <a href="#-logging-traces-with-integrations">📝 Logging Traces</a><br>
-<a href="#-llm-as-a-judge-metrics">🧑‍⚖️ LLM as a Judge</a> • <a href="#-evaluating-your-llm-application">🔍 Evaluating your Application</a> • <a href="#-star-us-on-github">⭐ Star Us</a> • <a href="#-contributing">🤝 Contributing</a>
-</div>
+<p align="center">
+  <a href="#项目介绍">项目介绍</a> ·
+  <a href="#中文化现状">中文化现状</a> ·
+  <a href="#界面预览">界面预览</a> ·
+  <a href="#与同类工具对比">与同类工具对比</a> ·
+  <a href="#快速开始">快速开始</a> ·
+  <a href="#常见问题">常见问题</a> ·
+  <a href="#参与贡献">参与贡献</a>
+</p>
 
-<br>
+> [!IMPORTANT]
+> 本仓库是基于 [Comet Opik](https://github.com/comet-ml/opik) 维护的社区中文化分支，不是 Comet 官方中文发行版。平台能力、SDK 和部署架构继承自上游项目，本仓库重点维护中文界面、中文交互文案及上游合并后的本地化兼容性。
 
-[![Opik platform screenshot (thumbnail)](readme-thumbnail-new.png)](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=github&utm_content=readme_banner&utm_campaign=opik)
+## 项目介绍
 
-<a id="-what-is-opik"></a>
-## 🚀 What is Opik?
+Opik 是一个用于构建、调试、评估和持续优化生成式 AI 应用的开源平台。它可以统一记录 LLM 调用与 Agent 执行链路，管理提示词和评估数据，并通过仪表盘、在线评估与告警能力观察生产表现。Opik 覆盖 LLM 应用从开发阶段的第一条 Trace 到生产监控的完整生命周期，由 [Comet](https://www.comet.com) 构建，采用 Apache-2.0 许可，可免费自托管完整平台。
 
-Opik covers the full LLM application lifecycle, from the first trace in development to production monitoring, for teams building LLM apps and AI agents. Key offerings include:
+这个中文化分支适合以下场景：
 
-- **AI Agent Tracing & Observability**: Deep tracing of LLM calls, conversation logging, and agent activity, with full trace trees for multi-step agents and tool calls.
-- **LLM Evaluation**: Datasets, experiments, and LLM-as-a-judge metrics for hallucination detection, moderation, and RAG assessment.
-- **Prompt & Agent Optimization**: The Opik Agent Optimizer SDK to improve prompts and agents.
-- **Production-Ready Monitoring**: Scalable dashboards and online evaluation rules.
-- **Opik Guardrails**: Features to help you implement safe and responsible AI practices.
-- **CI/CD Evaluation**: A PyTest integration to test LLM pipelines on every commit.
+- 中文研发、算法和业务团队共同使用 LLM 可观测平台；
+- 在内网或私有环境中自托管 Opik；
+- 用统一界面追踪 Trace、Span、线程、Token、延迟与成本；
+- 管理提示词版本、数据集、测试套件、实验和标注任务；
+- 对生产链路执行在线评估、问题诊断、告警和优化。
 
-<br>
+**适合谁**：构建 LLM 驱动的 Agent 的机器学习工程师、从原型走向生产的 AI 团队，以及需要在自有环境中运行开源、可自托管可观测平台的工程团队。
 
-Key capabilities include:
+> **为什么开源很重要**：Opik 采用 Apache-2.0 许可，可免费自托管——是完整平台（含后端），而不只是一个客户端 SDK。本仓库包含服务端后端、Web 应用，以及链路追踪、数据集、实验、评估、提示词管理、在线评估和 Agent 优化等组件，全部采用 Apache-2.0 许可。你可以在自己的基础设施中运行 LLM 可观测能力，数据无需离开你的环境，也不需要任何企业销售沟通。
 
-- **Development & Tracing:**
-  - Track all LLM calls and traces with detailed context during development and in production ([Quickstart](https://www.comet.com/docs/opik/quickstart/?from=llm&utm_source=opik&utm_medium=github&utm_content=quickstart_link&utm_campaign=opik)).
-  - Extensive 3rd-party integrations for easy observability: Seamlessly integrate with a growing list of frameworks, supporting many of the largest and most popular ones natively (including recent additions like **Google ADK**, **Autogen**, and **Flowise AI**). ([Integrations](https://www.comet.com/docs/opik/integrations/overview/?from=llm&utm_source=opik&utm_medium=github&utm_content=integrations_link&utm_campaign=opik))
-  - Annotate traces and spans with feedback scores via the [Python SDK](https://www.comet.com/docs/opik/v1/tracing/annotate_traces/#annotating-traces-and-spans-using-the-sdk?from=llm&utm_source=opik&utm_medium=github&utm_content=sdk_link&utm_campaign=opik) or the [UI](https://www.comet.com/docs/opik/tracing/annotate_traces/#annotating-traces-through-the-ui?from=llm&utm_source=opik&utm_medium=github&utm_content=ui_link&utm_campaign=opik).
-  - Experiment with prompts and models in the [Prompt Playground](https://www.comet.com/docs/opik/prompt_engineering/playground).
+## 中文化现状
 
-- **Evaluation & Testing**:
-  - Automate your LLM application evaluation with [Datasets](https://www.comet.com/docs/opik/v1/evaluation/manage_datasets/?from=llm&utm_source=opik&utm_medium=github&utm_content=datasets_link&utm_campaign=opik) and [Experiments](https://www.comet.com/docs/opik/v1/evaluation/evaluate_your_llm/?from=llm&utm_source=opik&utm_medium=github&utm_content=eval_link&utm_campaign=opik).
-  - Leverage powerful LLM-as-a-judge metrics for complex tasks like [hallucination detection](https://www.comet.com/docs/opik/evaluation/metrics/hallucination/?from=llm&utm_source=opik&utm_medium=github&utm_content=hallucination_link&utm_campaign=opik), [moderation](https://www.comet.com/docs/opik/evaluation/metrics/moderation/?from=llm&utm_source=opik&utm_medium=github&utm_content=moderation_link&utm_campaign=opik), and RAG assessment ([Answer Relevance](https://www.comet.com/docs/opik/evaluation/metrics/answer_relevance/?from=llm&utm_source=opik&utm_medium=github&utm_content=alex_link&utm_campaign=opik), [Context Precision](https://www.comet.com/docs/opik/evaluation/metrics/context_precision/?from=llm&utm_source=opik&utm_medium=github&utm_content=context_link&utm_campaign=opik)).
-  - Integrate evaluations into your CI/CD pipeline with our [PyTest integration](https://www.comet.com/docs/opik/v1/testing/pytest_integration/?from=llm&utm_source=opik&utm_medium=github&utm_content=pytest_link&utm_campaign=opik).
+当前 `main` 分支已经建立完整的中英文国际化结构，中文是默认界面语言，英文作为回退语言。
 
-- **Production Monitoring & Optimization**:
-  - Log high volumes of production traces: Opik is designed for scale (40M+ traces/day).
-  - Monitor feedback scores, trace counts, and token usage over time in the [Opik Dashboard](https://www.comet.com/docs/opik/v1/production/production_monitoring/?from=llm&utm_source=opik&utm_medium=github&utm_content=dashboard_link&utm_campaign=opik).
-  - Utilize [Online Evaluation Rules](https://www.comet.com/docs/opik/v1/production/rules/?from=llm&utm_source=opik&utm_medium=github&utm_content=dashboard_link&utm_campaign=opik) with LLM-as-a-Judge metrics to identify production issues.
-  - Leverage **Opik Agent Optimizer** and **Opik Guardrails** to continuously improve and secure your LLM applications in production.
+| 项目 | 当前状态 |
+| --- | --- |
+| 默认语言 | 简体中文（`zh`） |
+| 语言切换 | 页面右上角可在“中文 / English”之间切换 |
+| 语言记忆 | 浏览器会保存用户选择，下次访问继续使用 |
+| 翻译资源 | 中英文各 51 个资源文件，目录结构保持一致 |
+| 回退策略 | 新增文案缺少中文翻译时自动回退到英文 |
+| 主要覆盖 | 导航、日志、仪表盘、提示词、数据集、实验、测试套件、标注队列、在线评估、告警、优化运行、配置及常用弹窗与操作反馈 |
 
-**Who it's for:** ML engineers building LLM-powered agents, AI teams moving from prototype to production, and engineering teams that need open-source, self-hostable observability they can run in their own environment.
+中文化遵循“界面文案中文优先、技术信息保持原义”的原则。以下内容出现英文属于正常情况：
 
-> **Why open source matters here:** Opik is Apache-2.0 licensed and free to self-host: the full platform, backend included, not just a client SDK. The repository includes the server backend, web application, tracing, datasets, experiments, evaluations, prompt management, online evaluation, and agent optimization components, all under Apache-2.0. You can run LLM observability inside your own infrastructure with no data leaving your environment and no Enterprise sales conversation required.
+- 用户输入、模型输出、Trace 内容和项目名称；
+- 模型、供应商、框架、API 字段及代码片段；
+- 刚从上游合入、尚未补齐中文资源的新功能。
 
-> [!TIP]
-> If you are looking for features that Opik doesn't have today, please raise a new [Feature request](https://github.com/comet-ml/opik/issues/new/choose) 🚀
+## 界面预览
 
-<br>
+### 日志与链路观测
 
-<a id="-quick-start"></a>
-## ⚡ Quick Start
+集中查看线程、Trace 和 Span，并按时间、标签、耗时等条件筛选；顶部汇总会话量、平均耗时和费用。
 
-Install the Python SDK and configure it:
+![Opik 中文版日志与链路观测界面](docs/images/opik-cn/logs.png)
+
+### 项目仪表盘
+
+通过项目概览查看追踪数、错误数、P50/P99 延迟、调用趋势和估算成本。
+
+![Opik 中文版项目仪表盘](docs/images/opik-cn/dashboard.png)
+
+### 提示词库与版本管理
+
+集中维护提示词内容、版本历史和差异，并可继续进入实验、优化或部署流程。
+
+![Opik 中文版提示词库与版本管理界面](docs/images/opik-cn/prompt-library.png)
+
+## 核心能力
+
+- **LLM 与 Agent 可观测性**：记录 Trace、Span、线程、输入输出、Token、耗时、费用、标签和元数据。
+- **项目仪表盘**：按项目聚合调用量、错误、延迟、成本和质量指标。
+- **提示词工程**：管理提示词及版本，比较差异，并在工作台中调试和复用。
+- **评估体系**：使用数据集、测试套件、实验、反馈分数和 LLM-as-a-Judge 评估应用质量。
+- **人工标注**：通过标注队列组织评审任务，沉淀可复用的人工反馈。
+- **生产监控**：配置在线评估、诊断、告警与自动化规则，持续发现线上问题。
+- **优化运行**：基于评估数据执行提示词和 Agent 优化，并跟踪运行过程与结果。
+- **CI/CD 评估**：通过 PyTest 集成，在每次提交时对 LLM 流水线执行自动化测试。
+- **SDK 与集成**：继承上游 Python、TypeScript SDK 及主流 LLM、Agent 和工作流框架集成。
+
+## 与同类工具对比
+
+Opik 属于 **LLM 可观测性 / AI Agent 评估** 品类，与 **LangSmith、Arize（Phoenix 与 Arize AX）、Weights & Biases（Weave）、Langfuse 和 Braintrust** 同场竞争。
+
+| 能力 | Opik | LangSmith | Phoenix | Arize AX | Weights & Biases (Weave) | Langfuse | Braintrust |
+|---|---|---|---|---|---|---|---|
+| 开源 | 是，Apache-2.0（完整平台） | 否 | 源码可用（Elastic License 2.0，非 OSI 认证） | 否 | 开源 SDK/工具集；自托管平台需商业许可 | 核心平台 MIT 许可；企业模块商业 | 否 |
+| 自托管部署 | 是 | 仅企业版 | 是 | 仅企业版 | 仅企业版（Weave 本体） | 是（核心） | 仅企业版 |
+| 免费额度（云或自托管） | 是，两者均可 | 是，云 | 是，自托管 | 是，云 | 是，云 | 是，两者均可 | 是，云 |
+| Agent / 多步链路追踪 | 是 | 是 | 是 | 是 | 是 | 是 | 是 |
+| LLM-as-a-Judge 评估 | 是 | 是 | 是 | 是 | 是 | 是 | 是 |
+| 提示词管理 | 是 | 是 | 部分 | 部分 | 部分 | 是 | 是 |
+| 框架无关 | 是 | 部分（围绕 LangChain 构建） | 是 | 是 | 是 | 是 | 是 |
+
+**何时选择 Opik**：Opik 完整的可观测、评估与优化平台采用 Apache-2.0 许可并可免费自托管。与自托管需要企业版的闭源平台不同，Opik 无需商业许可即可部署，并且框架无关，不会把你锁定在单一 Agent 生态中。各方案在自托管与许可上的差异见上表。
+
+## 快速开始
+
+### 环境要求
+
+- Git
+- Docker
+- Docker Compose v2
+
+macOS 和 Windows 用户可以直接安装 [Docker Desktop](https://docs.docker.com/desktop/)。Docker Compose 方式适合本地体验、开发和测试；生产环境请根据安全、存储、备份和容量要求使用正式的部署方案。
+
+### Linux / macOS
+
+```bash
+git clone https://github.com/wanggebi19970203-cyber/opik-cn.git
+cd opik-cn
+
+# 从当前仓库源码构建中文化镜像并启动完整服务
+./opik.sh --build
+
+# 检查所有容器健康状态
+./opik.sh --verify
+```
+
+服务启动后访问：<http://localhost:5173>
+
+> [!NOTE]
+> 首次启动或中文化代码更新后请使用 `./opik.sh --build`。直接运行 `./opik.sh` 可能使用已发布的上游镜像，无法反映当前仓库中的中文化改动。
+
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/wanggebi19970203-cyber/opik-cn.git
+cd opik-cn
+
+powershell -ExecutionPolicy ByPass -c ".\opik.ps1 --build"
+powershell -ExecutionPolicy ByPass -c ".\opik.ps1 --verify"
+```
+
+### 常用管理命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `./opik.sh --build` | 从当前源码构建镜像并启动服务 |
+| `./opik.sh --verify` | 检查容器健康状态 |
+| `./opik.sh --info` | 查看当前服务和访问地址 |
+| `./opik.sh --stop` | 停止服务，保留数据 |
+| `./opik.sh --infra` | 仅启动数据库、缓存、对象存储等基础设施 |
+| `./opik.sh --backend` | 启动基础设施和后端服务 |
+| `./opik.sh --guardrails` | 启用 Guardrails 服务 |
+| `./opik.sh --clean` | 停止服务并删除 Opik 数据卷 |
+
+> [!WARNING]
+> `./opik.sh --clean` 会删除本地 Opik 数据卷，已有项目、追踪和配置将无法恢复。执行前请先确认数据已备份。
+
+## 连接 Python SDK
+
+安装并配置 SDK：
 
 ```bash
 pip install opik
 opik configure
 ```
 
-Wrap any function with the `@track` decorator to start logging traces:
+使用 `@track` 装饰器包装任意函数即可开始记录链路：
 
 ```python
 from opik import track
@@ -106,286 +188,110 @@ def my_function(input: str) -> str:
     return input
 ```
 
-Every call to `my_function` is now logged to Opik, including nested calls, so this works for full agent and pipeline traces, not just single LLM calls. See the [Quickstart guide](https://www.comet.com/docs/opik/quickstart?from=llm&utm_source=opik&utm_medium=github&utm_content=quickstart_hero_link&utm_campaign=opik) for the TypeScript SDK and other setup options.
-
-<br>
-
-<a id="-how-opik-compares"></a>
-## 📊 How Does Opik Compare?
-
-Opik competes in the **LLM observability / AI agent evaluation** category alongside **LangSmith, Arize (Phoenix and Arize AX), Weights & Biases (Weave), Langfuse, and Braintrust**.
-
-| Capability | Opik | LangSmith | Phoenix | Arize AX | Weights & Biases (Weave) | Langfuse | Braintrust |
-|---|---|---|---|---|---|---|---|
-| Open source | Yes, Apache-2.0 (full platform) | No | Source-available (Elastic License 2.0, not OSI-approved) | No | Open-source SDK/toolkit; self-managed platform requires a commercial license | MIT-licensed core platform; commercial enterprise modules | No |
-| Self-hosted deployment | Yes | Enterprise only | Yes | Enterprise only | Enterprise only for Weave itself | Yes, core | Enterprise only |
-| Free tier available (cloud or self-hosted) | Yes, both | Yes, cloud | Yes, self-hosted | Yes, cloud | Yes, cloud | Yes, both | Yes, cloud |
-| Agent / multi-step tracing | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| LLM-as-a-judge evaluation | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| Prompt management | Yes | Yes | Partly | Partly | Partly | Yes | Yes |
-| Framework-agnostic | Yes | Partly, built around LangChain | Yes | Yes | Yes | Yes | Yes |
-
-**When teams choose Opik:** Opik's full observability, evaluation, and optimization platform is Apache-2.0 licensed and free to self-host. Unlike closed platforms whose self-hosted deployment requires an Enterprise plan, Opik can be deployed without a commercial license, and it's framework-agnostic so it won't lock you into a single agent ecosystem. See the table above for where self-hosting and licensing differ across alternatives.
-
-<br>
-
-<a id="-frequently-asked-questions"></a>
-## ❓ Frequently Asked Questions
-
-#### Is Opik open source?
-Opik is licensed under Apache 2.0. Its server, web application, and core observability and evaluation capabilities can be self-hosted without a commercial license.
-
-#### Can I self-host Opik?
-Yes. Opik can be deployed locally or in your own infrastructure using the documented self-hosting options.
-
-#### Does Opik support AI agent tracing?
-Yes. Opik captures multi-step traces containing LLM calls, tool executions, retrieval steps, and other agent activity.
-
-#### Does Opik support LLM evaluation?
-Yes. Opik supports datasets, experiments, code-based metrics, LLM-as-a-judge evaluation, and online evaluation.
-
-#### Is Opik tied to a specific agent framework?
-No. Opik is framework-agnostic and supports its SDK, OpenTelemetry, and framework-specific integrations.
-
-<br>
-
-<a id="%EF%B8%8F-opik-server-installation"></a>
-## 🛠️ Opik Server Installation
-
-Get your Opik server running in minutes. Choose the option that best suits your needs:
-
-### Option 1: Comet.com Cloud (Easiest & Recommended)
-
-Access Opik instantly without any setup. Ideal for quick starts and hassle-free maintenance.
-
-👉 [Create your free Comet account](https://www.comet.com/signup?from=llm&utm_source=opik&utm_medium=github&utm_content=install_create_link&utm_campaign=opik)
-
-### Option 2: Self-Host Opik for Full Control
-
-Deploy Opik in your own environment. Choose between Docker for local setups or Kubernetes for scalability.
-
-#### Self-Hosting with Docker Compose (for Local Development & Testing)
-
-This is the simplest way to get a local Opik instance running. Note the new `./opik.sh` installation script:
-
-On Linux or Mac Environment:
+此后对 `my_function` 的每次调用（包括嵌套调用）都会被记录到 Opik，因此它适用于完整的 Agent 和流水线链路，而不只是单次 LLM 调用。本地自托管实例使用：
 
 ```bash
-# Clone the Opik repository
-git clone https://github.com/comet-ml/opik.git
-
-# Navigate to the repository
-cd opik
-
-# Start the Opik platform
-./opik.sh
-```
-
-On Windows Environment:
-
-```powershell
-# Clone the Opik repository
-git clone https://github.com/comet-ml/opik.git
-
-# Navigate to the repository
-cd opik
-
-# Start the Opik platform
-powershell -ExecutionPolicy ByPass -c ".\\opik.ps1"
-```
-
-**Service Profiles for Development**
-
-The Opik installation scripts now support service profiles for different development scenarios:
-
-```bash
-# Start full Opik suite (default behavior)
-./opik.sh
-
-# Start only infrastructure services (databases, caches etc.)
-./opik.sh --infra
-
-# Start infrastructure + backend services
-./opik.sh --backend
-
-# Enable guardrails with any profile
-./opik.sh --guardrails # Guardrails with full Opik suite
-./opik.sh --backend --guardrails # Guardrails with infrastructure + backend
-```
-
-Use the `--help` or `--info` options to troubleshoot issues. Dockerfiles now ensure containers run as non-root users for enhanced security. Once all is up and running, you can now visit [localhost:5173](http://localhost:5173) on your browser! For detailed instructions, see the [Local Deployment Guide](https://www.comet.com/docs/opik/self-host/local_deployment?from=llm&utm_source=opik&utm_medium=github&utm_content=self_host_link&utm_campaign=opik).
-
-#### Self-Hosting with Kubernetes & Helm (for Scalable Deployments)
-
-For production or larger-scale self-hosted deployments, Opik can be installed on a Kubernetes cluster using our Helm chart. Click the badge for the full [Kubernetes Installation Guide using Helm](https://www.comet.com/docs/opik/self-host/kubernetes/#kubernetes-installation?from=llm&utm_source=opik&utm_medium=github&utm_content=kubernetes_link&utm_campaign=opik).
-
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-%23326ce5.svg?&logo=kubernetes&logoColor=white)](https://www.comet.com/docs/opik/self-host/kubernetes/#kubernetes-installation?from=llm&utm_source=opik&utm_medium=github&utm_content=kubernetes_link&utm_campaign=opik)
-
-> [!IMPORTANT]
-> **Version 1.7.0 Changes**: Please check the [changelog](https://github.com/comet-ml/opik/blob/main/CHANGELOG.md) for important updates and breaking changes.
-
-<a id="-opik-client-sdk"></a>
-## 💻 Opik Client SDK
-
-Opik provides a suite of client libraries and a REST API to interact with the Opik server. This includes SDKs for Python, TypeScript, and Ruby (via OpenTelemetry), allowing for seamless integration into your workflows. For detailed API and SDK references, see the [Opik Client Reference Documentation](https://www.comet.com/docs/opik/reference/overview?from=llm&utm_source=opik&utm_medium=github&utm_content=reference_link&utm_campaign=opik).
-
-### Python SDK Quick Start
-
-To get started with the Python SDK:
-
-Install the package:
-
-```bash
-# install using pip
 pip install opik
-
-# or install with uv
-uv pip install opik
+opik configure --use_local
 ```
 
-Configure the python SDK by running the `opik configure` command, which will prompt you for your Opik server address (for self-hosted instances) or your API key and workspace (for Comet.com):
-
-```bash
-opik configure
-```
-
-> [!TIP]
-> You can also call `opik.configure(use_local=True)` from your Python code to configure the SDK to run on a local self-hosted installation, or provide API key and workspace details directly for Comet.com. Refer to the [Python SDK documentation](https://www.comet.com/docs/opik/python-sdk-reference/?from=llm&utm_source=opik&utm_medium=github&utm_content=python_sdk_docs_link&utm_campaign=opik) for more configuration options.
-
-You are now ready to start logging traces using the [Python SDK](https://www.comet.com/docs/opik/python-sdk-reference/?from=llm&utm_source=opik&utm_medium=github&utm_content=sdk_link2&utm_campaign=opik).
-
-<a id="-logging-traces-with-integrations"></a>
-### 📝 Logging Traces with Integrations
-
-The easiest way to log traces is to use one of our direct integrations. Opik supports a wide array of frameworks, including recent additions like **Google ADK**, **Autogen**, **AG2**, and **Flowise AI**:
-
-| Integration           | Description                                             | Documentation                                                                                                                                                                  |
-| --------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ADK                   | Log traces for Google Agent Development Kit (ADK)       | [Documentation](https://www.comet.com/docs/opik/integrations/adk?utm_source=opik&utm_medium=github&utm_content=google_adk_link&utm_campaign=opik)                              |
-| AG2                   | Log traces for AG2 LLM calls                            | [Documentation](https://www.comet.com/docs/opik/integrations/ag2?utm_source=opik&utm_medium=github&utm_content=ag2_link&utm_campaign=opik)                                     |
-| Agent Spec            | Log traces for Agent Spec calls                         | [Documentation](https://www.comet.com/docs/opik/integrations/agentspec?utm_source=opik&utm_medium=github&utm_content=agentspec_link&utm_campaign=opik)                         |
-| AIsuite               | Log traces for aisuite LLM calls                        | [Documentation](https://www.comet.com/docs/opik/integrations/aisuite?utm_source=opik&utm_medium=github&utm_content=aisuite_link&utm_campaign=opik)                             |
-| Agno                  | Log traces for Agno agent orchestration framework calls | [Documentation](https://www.comet.com/docs/opik/integrations/agno?utm_source=opik&utm_medium=github&utm_content=agno_link&utm_campaign=opik)                                   |
-| Anthropic             | Log traces for Anthropic LLM calls                      | [Documentation](https://www.comet.com/docs/opik/integrations/anthropic?utm_source=opik&utm_medium=github&utm_content=anthropic_link&utm_campaign=opik)                         |
-| Autogen               | Log traces for Autogen agentic workflows                | [Documentation](https://www.comet.com/docs/opik/integrations/autogen?utm_source=opik&utm_medium=github&utm_content=autogen_link&utm_campaign=opik)                             |
-| Bedrock               | Log traces for Amazon Bedrock LLM calls                 | [Documentation](https://www.comet.com/docs/opik/integrations/bedrock?utm_source=opik&utm_medium=github&utm_content=bedrock_link&utm_campaign=opik)                             |
-| BeeAI (Python)        | Log traces for BeeAI Python agent framework calls       | [Documentation](https://www.comet.com/docs/opik/integrations/beeai?utm_source=opik&utm_medium=github&utm_content=beeai_link&utm_campaign=opik)                                 |
-| BeeAI (TypeScript)    | Log traces for BeeAI TypeScript agent framework calls   | [Documentation](https://www.comet.com/docs/opik/integrations/beeai-typescript?utm_source=opik&utm_medium=github&utm_content=beeai_typescript_link&utm_campaign=opik)           |
-| BytePlus              | Log traces for BytePlus LLM calls                       | [Documentation](https://www.comet.com/docs/opik/integrations/byteplus?utm_source=opik&utm_medium=github&utm_content=byteplus_link&utm_campaign=opik)                           |
-| Claude Code           | Log traces for Claude Code sessions via the Opik plugin | [GitHub](https://github.com/comet-ml/opik-claude-code-plugin)                                                                                                                 |
-| Cloudflare Workers AI | Log traces for Cloudflare Workers AI calls              | [Documentation](https://www.comet.com/docs/opik/integrations/cloudflare-workers-ai?utm_source=opik&utm_medium=github&utm_content=cloudflare_workers_ai_link&utm_campaign=opik) |
-| Cohere                | Log traces for Cohere LLM calls                         | [Documentation](https://www.comet.com/docs/opik/integrations/cohere?utm_source=opik&utm_medium=github&utm_content=cohere_link&utm_campaign=opik)                               |
-| CrewAI                | Log traces for CrewAI calls                             | [Documentation](https://www.comet.com/docs/opik/integrations/crewai?utm_source=opik&utm_medium=github&utm_content=crewai_link&utm_campaign=opik)                               |
-| Cursor                | Log traces for Cursor conversations                     | [Documentation](https://www.comet.com/docs/opik/integrations/cursor?utm_source=opik&utm_medium=github&utm_content=cursor_link&utm_campaign=opik)                               |
-| DeepSeek              | Log traces for DeepSeek LLM calls                       | [Documentation](https://www.comet.com/docs/opik/integrations/deepseek?utm_source=opik&utm_medium=github&utm_content=deepseek_link&utm_campaign=opik)                           |
-| Dify                  | Log traces for Dify agent runs                          | [Documentation](https://www.comet.com/docs/opik/integrations/dify?utm_source=opik&utm_medium=github&utm_content=dify_link&utm_campaign=opik)                                   |
-| DSPY                  | Log traces for DSPy runs                                | [Documentation](https://www.comet.com/docs/opik/integrations/dspy?utm_source=opik&utm_medium=github&utm_content=dspy_link&utm_campaign=opik)                                   |
-| Fireworks AI          | Log traces for Fireworks AI LLM calls                   | [Documentation](https://www.comet.com/docs/opik/integrations/fireworks-ai?utm_source=opik&utm_medium=github&utm_content=fireworks_ai_link&utm_campaign=opik)                   |
-| Flowise AI            | Log traces for Flowise AI visual LLM builder            | [Documentation](https://www.comet.com/docs/opik/integrations/flowise?utm_source=opik&utm_medium=github&utm_content=flowise_link&utm_campaign=opik)                             |
-| Gemini (Python)       | Log traces for Google Gemini LLM calls                  | [Documentation](https://www.comet.com/docs/opik/integrations/gemini?utm_source=opik&utm_medium=github&utm_content=gemini_link&utm_campaign=opik)                               |
-| Gemini (TypeScript)   | Log traces for Google Gemini TypeScript SDK calls       | [Documentation](https://www.comet.com/docs/opik/integrations/gemini-typescript?utm_source=opik&utm_medium=github&utm_content=gemini_typescript_link&utm_campaign=opik)         |
-| Groq                  | Log traces for Groq LLM calls                           | [Documentation](https://www.comet.com/docs/opik/integrations/groq?utm_source=opik&utm_medium=github&utm_content=groq_link&utm_campaign=opik)                                   |
-| Guardrails            | Log traces for Guardrails AI validations                | [Documentation](https://www.comet.com/docs/opik/integrations/guardrails-ai?utm_source=opik&utm_medium=github&utm_content=guardrails_link&utm_campaign=opik)                    |
-| Haystack              | Log traces for Haystack calls                           | [Documentation](https://www.comet.com/docs/opik/integrations/haystack?utm_source=opik&utm_medium=github&utm_content=haystack_link&utm_campaign=opik)                           |
-| Harbor                | Log traces for Harbor benchmark evaluation trials       | [Documentation](https://www.comet.com/docs/opik/integrations/harbor?utm_source=opik&utm_medium=github&utm_content=harbor_link&utm_campaign=opik)                               |
-| Instructor            | Log traces for LLM calls made with Instructor           | [Documentation](https://www.comet.com/docs/opik/integrations/instructor?utm_source=opik&utm_medium=github&utm_content=instructor_link&utm_campaign=opik)                       |
-| LangChain (Python)    | Log traces for LangChain LLM calls                      | [Documentation](https://www.comet.com/docs/opik/integrations/langchain?utm_source=opik&utm_medium=github&utm_content=langchain_link&utm_campaign=opik)                         |
-| LangChain (JS/TS)     | Log traces for LangChain JavaScript/TypeScript calls    | [Documentation](https://www.comet.com/docs/opik/integrations/langchainjs?utm_source=opik&utm_medium=github&utm_content=langchainjs_link&utm_campaign=opik)                     |
-| LangGraph             | Log traces for LangGraph executions                     | [Documentation](https://www.comet.com/docs/opik/integrations/langgraph?utm_source=opik&utm_medium=github&utm_content=langgraph_link&utm_campaign=opik)                         |
-| Langflow              | Log traces for Langflow visual AI builder               | [Documentation](https://www.comet.com/docs/opik/integrations/langflow?utm_source=opik&utm_medium=github&utm_content=langflow_link&utm_campaign=opik)                           |
-| LiteLLM               | Log traces for LiteLLM model calls                      | [Documentation](https://www.comet.com/docs/opik/integrations/litellm?utm_source=opik&utm_medium=github&utm_content=litellm_link&utm_campaign=opik)                             |
-| LiveKit Agents        | Log traces for LiveKit Agents AI agent framework calls  | [Documentation](https://www.comet.com/docs/opik/integrations/livekit?utm_source=opik&utm_medium=github&utm_content=livekit_link&utm_campaign=opik)                             |
-| LlamaIndex            | Log traces for LlamaIndex LLM calls                     | [Documentation](https://www.comet.com/docs/opik/integrations/llama_index?utm_source=opik&utm_medium=github&utm_content=llama_index_link&utm_campaign=opik)                     |
-| Mastra                | Log traces for Mastra AI workflow framework calls       | [Documentation](https://www.comet.com/docs/opik/integrations/mastra?utm_source=opik&utm_medium=github&utm_content=mastra_link&utm_campaign=opik)                               |
-| MCP Server (opik-mcp) | Drive Opik from Claude Code, Cursor, or VS Code via Model Context Protocol | [Documentation](https://www.comet.com/docs/opik/integrations/mcp-server?utm_source=opik&utm_medium=github&utm_content=mcp_server_link&utm_campaign=opik) |
-| Microsoft Agent Framework (Python) | Log traces for Microsoft Agent Framework calls | [Documentation](https://www.comet.com/docs/opik/integrations/microsoft-agent-framework?utm_source=opik&utm_medium=github&utm_content=agent_framework_link&utm_campaign=opik)              |
-| Microsoft Agent Framework (.NET) | Log traces for Microsoft Agent Framework .NET calls | [Documentation](https://www.comet.com/docs/opik/integrations/microsoft-agent-framework-dotnet?utm_source=opik&utm_medium=github&utm_content=agent_framework_dotnet_link&utm_campaign=opik) |
-| Mistral AI            | Log traces for Mistral AI LLM calls                     | [Documentation](https://www.comet.com/docs/opik/integrations/mistral?utm_source=opik&utm_medium=github&utm_content=mistral_link&utm_campaign=opik)                             |
-| n8n                   | Log traces for n8n workflow executions                  | [Documentation](https://www.comet.com/docs/opik/integrations/n8n?utm_source=opik&utm_medium=github&utm_content=n8n_link&utm_campaign=opik)                                     |
-| Novita AI             | Log traces for Novita AI LLM calls                      | [Documentation](https://www.comet.com/docs/opik/integrations/novita-ai?utm_source=opik&utm_medium=github&utm_content=novita_ai_link&utm_campaign=opik)                         |
-| Ollama                | Log traces for Ollama LLM calls                         | [Documentation](https://www.comet.com/docs/opik/integrations/ollama?utm_source=opik&utm_medium=github&utm_content=ollama_link&utm_campaign=opik)                               |
-| OpenAI (Python)       | Log traces for OpenAI LLM calls                         | [Documentation](https://www.comet.com/docs/opik/integrations/openai?utm_source=opik&utm_medium=github&utm_content=openai_link&utm_campaign=opik)                               |
-| OpenAI (JS/TS)        | Log traces for OpenAI JavaScript/TypeScript calls       | [Documentation](https://www.comet.com/docs/opik/integrations/openai-typescript?utm_source=opik&utm_medium=github&utm_content=openai_typescript_link&utm_campaign=opik)         |
-| OpenAI Agents         | Log traces for OpenAI Agents SDK calls                  | [Documentation](https://www.comet.com/docs/opik/integrations/openai_agents?utm_source=opik&utm_medium=github&utm_content=openai_agents_link&utm_campaign=opik)                 |
-| OpenClaw              | Log traces for OpenClaw agent runs                  | [Documentation](https://www.comet.com/docs/opik/integrations/openclaw?utm_source=opik&utm_medium=github&utm_content=openclaw_link&utm_campaign=opik) |
-| OpenRouter            | Log traces for OpenRouter LLM calls                     | [Documentation](https://www.comet.com/docs/opik/integrations/openrouter?utm_source=opik&utm_medium=github&utm_content=openrouter_link&utm_campaign=opik)                       |
-| OpenTelemetry         | Log traces for OpenTelemetry supported calls            | [Documentation](https://www.comet.com/docs/opik/tracing/opentelemetry/overview?utm_source=opik&utm_medium=github&utm_content=opentelemetry_link&utm_campaign=opik)             |
-| OpenWebUI             | Log traces for OpenWebUI conversations                  | [Documentation](https://www.comet.com/docs/opik/integrations/openwebui?utm_source=opik&utm_medium=github&utm_content=openwebui_link&utm_campaign=opik)                         |
-| Pipecat               | Log traces for Pipecat real-time voice agent calls      | [Documentation](https://www.comet.com/docs/opik/integrations/pipecat?utm_source=opik&utm_medium=github&utm_content=pipecat_link&utm_campaign=opik)                             |
-| Predibase             | Log traces for Predibase LLM calls                      | [Documentation](https://www.comet.com/docs/opik/integrations/predibase?utm_source=opik&utm_medium=github&utm_content=predibase_link&utm_campaign=opik)                         |
-| Pydantic AI           | Log traces for PydanticAI agent calls                   | [Documentation](https://www.comet.com/docs/opik/integrations/pydantic-ai?utm_source=opik&utm_medium=github&utm_content=pydantic_ai_link&utm_campaign=opik)                     |
-| Ragas                 | Log traces for Ragas evaluations                        | [Documentation](https://www.comet.com/docs/opik/integrations/ragas?utm_source=opik&utm_medium=github&utm_content=ragas_link&utm_campaign=opik)                                 |
-| Semantic Kernel       | Log traces for Microsoft Semantic Kernel calls          | [Documentation](https://www.comet.com/docs/opik/integrations/semantic-kernel?utm_source=opik&utm_medium=github&utm_content=semantic_kernel_link&utm_campaign=opik)             |
-| Smolagents            | Log traces for Smolagents agents                        | [Documentation](https://www.comet.com/docs/opik/integrations/smolagents?utm_source=opik&utm_medium=github&utm_content=smolagents_link&utm_campaign=opik)                       |
-| Spring AI             | Log traces for Spring AI framework calls                | [Documentation](https://www.comet.com/docs/opik/integrations/spring-ai?utm_source=opik&utm_medium=github&utm_content=spring_ai_link&utm_campaign=opik)                         |
-| Strands Agents        | Log traces for Strands agents calls                     | [Documentation](https://www.comet.com/docs/opik/integrations/strands-agents?utm_source=opik&utm_medium=github&utm_content=strands_agents_link&utm_campaign=opik)               |
-| Together AI           | Log traces for Together AI LLM calls                    | [Documentation](https://www.comet.com/docs/opik/integrations/together-ai?utm_source=opik&utm_medium=github&utm_content=together_ai_link&utm_campaign=opik)                     |
-| Vercel AI SDK         | Log traces for Vercel AI SDK calls                      | [Documentation](https://www.comet.com/docs/opik/integrations/vercel-ai-sdk?utm_source=opik&utm_medium=github&utm_content=vercel_ai_sdk_link&utm_campaign=opik)                 |
-| VoltAgent             | Log traces for VoltAgent agent framework calls          | [Documentation](https://www.comet.com/docs/opik/integrations/voltagent?utm_source=opik&utm_medium=github&utm_content=voltagent_link&utm_campaign=opik)                         |
-| WatsonX               | Log traces for IBM watsonx LLM calls                    | [Documentation](https://www.comet.com/docs/opik/integrations/watsonx?utm_source=opik&utm_medium=github&utm_content=watsonx_link&utm_campaign=opik)                             |
-| xAI Grok              | Log traces for xAI Grok LLM calls                       | [Documentation](https://www.comet.com/docs/opik/integrations/xai-grok?utm_source=opik&utm_medium=github&utm_content=xai_grok_link&utm_campaign=opik)                           |
-
-> [!TIP]
-> If the framework you are using is not listed above, feel free to [open an issue](https://github.com/comet-ml/opik/issues) or submit a PR with the integration.
-
-If you are not using any of the frameworks above, you can also use the `track` function decorator to [log traces](https://www.comet.com/docs/opik/v1/tracing/log_traces/?from=llm&utm_source=opik&utm_medium=github&utm_content=traces_link&utm_campaign=opik):
+也可以直接在代码中配置并记录函数调用：
 
 ```python
 import opik
 
-opik.configure(use_local=True) # Run locally
+opik.configure(use_local=True)
+
 
 @opik.track
-def my_llm_function(user_question: str) -> str:
-    # Your LLM code here
-
-    return "Hello"
+def answer_question(question: str) -> str:
+    return "在这里调用你的模型或 Agent"
 ```
 
-> [!TIP]
-> The track decorator can be used in conjunction with any of our integrations and can also be used to track nested function calls.
+更多 SDK、评估指标与集成用法请参考 [Opik 官方文档](https://www.comet.com/docs/opik/)。TypeScript SDK 与其他配置方式见[快速入门指南](https://www.comet.com/docs/opik/quickstart)。
 
-<a id="-llm-as-a-judge-metrics"></a>
-### 🧑‍⚖️ LLM as a Judge metrics
+## 中文化开发
 
-The Python Opik SDK includes a number of LLM as a judge metrics to help you evaluate your LLM application. Learn more about it in the [metrics documentation](https://www.comet.com/docs/opik/evaluation/metrics/overview/?from=llm&utm_source=opik&utm_medium=github&utm_content=metrics_2_link&utm_campaign=opik).
+前端国际化相关文件位于：
 
-To use them, simply import the relevant metric and use the `score` function:
-
-```python
-from opik.evaluation.metrics import Hallucination
-
-metric = Hallucination()
-score = metric.score(
-    input="What is the capital of France?",
-    output="Paris",
-    context=["France is a country in Europe."]
-)
-print(score)
+```text
+apps/opik-frontend/src/i18n/
+├── config.ts              # 支持语言、默认语言和回退语言
+├── index.ts               # i18next 初始化与命名空间配置
+├── locales/en/            # 英文资源
+└── locales/zh/            # 简体中文资源
 ```
 
-Opik also includes a number of pre-built heuristic metrics as well as the ability to create your own. Learn more about it in the [metrics documentation](https://www.comet.com/docs/opik/evaluation/metrics/overview?from=llm&utm_source=opik&utm_medium=github&utm_content=metrics_3_link&utm_campaign=opik).
+提交中文化改动时，请同时检查英文与中文资源结构，并至少运行：
 
-<a id="-evaluating-your-llm-application"></a>
-### 🔍 Evaluating your LLM Applications
+```bash
+cd apps/opik-frontend
+npm run typecheck
+npx vitest src/i18n/parseTranslationResource.test.ts --run
+npm run build
+```
 
-Opik allows you to evaluate your LLM application during development through [Datasets](https://www.comet.com/docs/opik/v1/evaluation/manage_datasets/?from=llm&utm_source=opik&utm_medium=github&utm_content=datasets_2_link&utm_campaign=opik) and [Experiments](https://www.comet.com/docs/opik/v1/evaluation/evaluate_your_llm/?from=llm&utm_source=opik&utm_medium=github&utm_content=experiments_link&utm_campaign=opik). The Opik Dashboard offers enhanced charts for experiments and better handling of large traces. You can also run evaluations as part of your CI/CD pipeline using our [PyTest integration](https://www.comet.com/docs/opik/v1/testing/pytest_integration/?from=llm&utm_source=opik&utm_medium=github&utm_content=pytest_2_link&utm_campaign=opik).
+完整的本地开发、后端、SDK 和端到端测试说明见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-<a id="-star-us-on-github"></a>
-## ⭐ Star Us on GitHub
+## 仓库结构
 
-If you find Opik useful, please consider giving us a star! Your support helps us grow our community and continue improving the product.
+| 路径 | 说明 |
+| --- | --- |
+| `apps/opik-frontend` | React / TypeScript 前端与中英文资源 |
+| `apps/opik-backend` | Java 后端服务 |
+| `apps/opik-python-backend` | Python 后端能力 |
+| `sdks/python` | Python SDK |
+| `sdks/typescript` | TypeScript SDK |
+| `sdks/opik_optimizer` | Agent 与提示词优化 SDK |
+| `deployment` | Docker Compose 与 Helm 部署配置 |
+| `tests_end_to_end` | 跨服务端到端测试 |
 
-[![Star History Chart](https://api.star-history.com/svg?repos=comet-ml/opik&type=Date)](https://github.com/comet-ml/opik)
+## 常见问题
 
-<a id="-contributing"></a>
-## 🤝 Contributing
+#### Opik 是开源的吗？
 
-There are many ways to contribute to Opik:
+Opik 采用 Apache 2.0 许可。其服务端、Web 应用以及核心可观测与评估能力均可在无商业许可的情况下自托管。
 
-- Submit [bug reports](https://github.com/comet-ml/opik/issues) and [feature requests](https://github.com/comet-ml/opik/issues)
-- Review the documentation and submit [Pull Requests](https://github.com/comet-ml/opik/pulls) to improve it
-- Speaking or writing about Opik and [letting us know](https://chat.comet.com)
-- Upvoting [popular feature requests](https://github.com/comet-ml/opik/issues?q=is%3Aissue+is%3Aopen+label%3A%22enhancement%22) to show your support
+#### 我可以自托管 Opik 吗？
 
-To learn more about how to contribute to Opik, please see our [contributing guidelines](CONTRIBUTING.md).
+可以。Opik 可通过官方文档中的自托管方案部署在本地或你自己的基础设施中。
+
+#### Opik 支持 AI Agent 链路追踪吗？
+
+支持。Opik 会捕获包含 LLM 调用、工具执行、检索步骤和其他 Agent 活动在内的多步 Trace。
+
+#### Opik 支持 LLM 评估吗？
+
+支持。Opik 提供数据集、实验、基于代码的指标、LLM-as-a-Judge 评估以及在线评估。
+
+#### Opik 是否绑定特定 Agent 框架？
+
+不绑定。Opik 框架无关，同时支持自有 SDK、OpenTelemetry 以及各框架专用集成。
+
+## 参与贡献
+
+欢迎提交中文翻译修正、术语统一、遗漏文案、界面适配、测试和上游兼容性改进。
+
+1. Fork 本仓库并创建功能分支。
+2. 保持改动聚焦，避免无关格式化。
+3. 为改动运行对应的类型检查、测试或构建。
+4. 提交 Pull Request，并说明改动范围和验证方式。
+
+问题反馈与功能建议请提交到 [Issues](https://github.com/wanggebi19970203-cyber/opik-cn/issues)。贡献前请同时阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 和 [CLA.md](CLA.md)。
+
+## 上游与更新策略
+
+本仓库持续跟踪 [comet-ml/opik](https://github.com/comet-ml/opik)。上游合并后会重点检查：
+
+- 新增页面和交互文案是否进入国际化资源；
+- 中英文资源的键和值结构是否一致；
+- 中文布局、表格、弹窗和提示信息是否正常；
+- Docker 构建、前端类型检查和国际化资源测试是否通过。
+
+如需查看 Opik 的完整产品文档、API 参考和集成列表，请访问 [官方文档](https://www.comet.com/docs/opik/)。
+
+## 许可证与致谢
+
+本项目沿用上游 Opik 的 [Apache License 2.0](LICENSE)。
+
+感谢 [Comet](https://github.com/comet-ml) 和所有 Opik 贡献者提供并持续维护开源基础能力。本中文化分支中的原项目代码、品牌与相关权利归其各自权利人所有。

@@ -18,7 +18,7 @@ export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
   [BREAKDOWN_FIELD.MODEL]: t("breakdown.fields.model"),
   [BREAKDOWN_FIELD.PROVIDER]: t("breakdown.fields.provider"),
   [BREAKDOWN_FIELD.TYPE]: t("breakdown.fields.spanType"),
-  [BREAKDOWN_FIELD.GUARDRAIL_NAME]: "Guardrail name",
+  [BREAKDOWN_FIELD.GUARDRAIL_NAME]: t("breakdown.fields.guardrailName"),
 };
 
 /**

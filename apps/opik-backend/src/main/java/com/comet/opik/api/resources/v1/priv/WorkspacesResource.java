@@ -69,12 +69,12 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieve workspace metrics summary for projectIds '{}', on workspace_id '{}'", request.projectIds(),
+        log.info("获取工作空间指标摘要，项目ID '{}'，工作空间 '{}'", request.projectIds(),
                 workspaceId);
         WorkspaceMetricsSummaryResponse response = workspaceMetricsService.getWorkspaceFeedbackScoresSummary(request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Retrieved workspace metrics summary for projectIds '{}', on workspace_id '{}'", request.projectIds(),
+        log.info("已获取工作空间指标摘要，项目ID '{}'，工作空间 '{}'", request.projectIds(),
                 workspaceId);
 
         return Response.ok().entity(response).build();
@@ -92,13 +92,13 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieve workspace metric data by days for projectIds '{}', on workspace_id '{}'",
+        log.info("按天获取工作空间指标数据，项目ID '{}'，工作空间 '{}'",
                 request.projectIds(),
                 workspaceId);
         WorkspaceMetricResponse response = workspaceMetricsService.getWorkspaceFeedbackScores(request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Retrieved workspace metric data by days for projectIds '{}', on workspace_id '{}'",
+        log.info("已按天获取工作空间指标数据，项目ID '{}'，工作空间 '{}'",
                 request.projectIds(),
                 workspaceId);
 
@@ -116,12 +116,12 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieve workspace costs summary for projectIds '{}', on workspace_id '{}'", request.projectIds(),
+        log.info("获取工作空间成本摘要，项目ID '{}'，工作空间 '{}'", request.projectIds(),
                 workspaceId);
         var response = workspaceMetricsService.getWorkspaceCostsSummary(request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Retrieved workspace costs summary for projectIds '{}', on workspace_id '{}'", request.projectIds(),
+        log.info("已获取工作空间成本摘要，项目ID '{}'，工作空间 '{}'", request.projectIds(),
                 workspaceId);
 
         return Response.ok().entity(response).build();
@@ -138,14 +138,14 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieve workspace cost data by days for projectIds '{}', on workspace_id '{}'",
+        log.info("按天获取工作空间成本数据，项目ID '{}'，工作空间 '{}'",
                 request.projectIds(),
                 workspaceId);
         request = request.toBuilder().name("cost").build();
         WorkspaceMetricResponse response = workspaceMetricsService.getWorkspaceCosts(request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Retrieved workspace cost data by days for projectIds '{}', on workspace_id '{}'",
+        log.info("已按天获取工作空间成本数据，项目ID '{}'，工作空间 '{}'",
                 request.projectIds(),
                 workspaceId);
 
@@ -154,9 +154,9 @@ public class WorkspacesResource {
 
     @POST
     @Path("/metrics/spans")
-    @Operation(operationId = "getWorkspaceSpanMetric", summary = "Get workspace span metric", description = "Gets a span metric time series aggregated across the workspace. When project_ids is empty, all projects in the workspace are included; otherwise only the given projects.", responses = {
-            @ApiResponse(responseCode = "200", description = "Workspace span metric", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getWorkspaceSpanMetric", summary = "获取工作空间 span 指标", description = "获取跨工作空间聚合的 span 指标时间序列。当 project_ids 为空时，包含工作空间内的所有项目；否则仅包含给定的项目。", responses = {
+            @ApiResponse(responseCode = "200", description = "工作空间 span 指标", content = @Content(schema = @Schema(implementation = WorkspaceMetricResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getWorkspaceSpanMetric(
@@ -164,12 +164,12 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieve workspace span metric '{}' for projectIds '{}', on workspace_id '{}'", request.metricType(),
+        log.info("获取工作空间 span 指标 '{}'，项目ID '{}'，工作空间 '{}'", request.metricType(),
                 request.projectIds(), workspaceId);
         WorkspaceMetricResponse response = workspaceMetricsService.getWorkspaceSpanMetric(request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Retrieved workspace span metric '{}' for projectIds '{}', on workspace_id '{}'", request.metricType(),
+        log.info("已获取工作空间 span 指标 '{}'，项目ID '{}'，工作空间 '{}'", request.metricType(),
                 request.projectIds(), workspaceId);
 
         return Response.ok().entity(response).build();
@@ -177,9 +177,9 @@ public class WorkspacesResource {
 
     @POST
     @Path("/token-usage/names")
-    @Operation(operationId = "getWorkspaceTokenUsageNames", summary = "Get workspace token usage names", description = "Gets the distinct span token usage key names aggregated across the workspace. When project_ids is empty, all projects in the workspace are included; otherwise only the given projects.", responses = {
-            @ApiResponse(responseCode = "200", description = "Token Usage names resource", content = @Content(schema = @Schema(implementation = TokenUsageNames.class))),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    @Operation(operationId = "getWorkspaceTokenUsageNames", summary = "获取工作空间 token 用量名称", description = "获取跨工作空间聚合的不同 span token 用量键名称。当 project_ids 为空时，包含工作空间内的所有项目；否则仅包含给定的项目。", responses = {
+            @ApiResponse(responseCode = "200", description = "Token 用量名称资源", content = @Content(schema = @Schema(implementation = TokenUsageNames.class))),
+            @ApiResponse(responseCode = "400", description = "请求错误", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     @RequiredPermissions(WorkspaceUserPermission.PROJECT_DATA_VIEW)
     public Response getWorkspaceTokenUsageNames(
@@ -187,12 +187,12 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Retrieve workspace token usage names for projectIds '{}', on workspace_id '{}'", request.projectIds(),
+        log.info("获取工作空间 token 用量名称，项目ID '{}'，工作空间 '{}'", request.projectIds(),
                 workspaceId);
         List<String> tokenUsageNames = workspaceMetricsService.getWorkspaceTokenUsageNames(request.projectIds())
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Retrieved workspace token usage names '{}' for projectIds '{}', on workspace_id '{}'",
+        log.info("已获取工作空间 token 用量名称 '{}'，项目ID '{}'，工作空间 '{}'",
                 tokenUsageNames.size(), request.projectIds(), workspaceId);
 
         return Response.ok(TokenUsageNames.builder().names(tokenUsageNames).build()).build();
@@ -207,17 +207,17 @@ public class WorkspacesResource {
     public Response getWorkspaceConfiguration() {
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Getting workspace configuration for workspace_id '{}'", workspaceId);
+        log.info("获取工作空间配置，工作空间 '{}'", workspaceId);
 
         var configuration = workspaceConfigurationService.getConfiguration()
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.info("No workspace configuration found for workspace '{}'", workspaceId);
+                    log.info("未找到工作空间 '{}' 的配置", workspaceId);
                     return Mono.error(new NotFoundException("No workspace configuration found for workspace"));
                 }))
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found workspace configuration for workspace_id '{}'", workspaceId);
+        log.info("已找到工作空间 '{}' 的配置", workspaceId);
 
         return Response.ok().entity(configuration).build();
     }
@@ -235,13 +235,13 @@ public class WorkspacesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Upserting workspace configuration for workspace_id '{}'", workspaceId);
+        log.info("更新或插入工作空间配置，工作空间 '{}'", workspaceId);
 
         workspaceConfigurationService.upsertConfiguration(configuration)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Upserted workspace configuration for workspace_id '{}'", workspaceId);
+        log.info("已更新或插入工作空间配置，工作空间 '{}'", workspaceId);
 
         return Response.noContent().build();
     }
@@ -256,13 +256,13 @@ public class WorkspacesResource {
     public Response deleteWorkspaceConfiguration() {
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Deleting workspace configuration for workspace_id '{}'", workspaceId);
+        log.info("删除工作空间配置，工作空间 '{}'", workspaceId);
 
         workspaceConfigurationService.deleteConfiguration()
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Deleted workspace configuration for workspace_id '{}'", workspaceId);
+        log.info("已删除工作空间配置，工作空间 '{}'", workspaceId);
 
         return Response.noContent().build();
     }

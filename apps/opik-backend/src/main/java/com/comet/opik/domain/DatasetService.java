@@ -190,7 +190,7 @@ class DatasetServiceImpl implements DatasetService {
         if (dataset.isEmpty()) {
 
             UUID id = idGenerator.generateId();
-            log.info("Creating dataset with id '{}', name '{}', workspaceId '{}'", id, name, workspaceId);
+            log.info("创建数据集，ID '{}'，名称 '{}'，工作区 '{}'", id, name, workspaceId);
             template.inTransaction(WRITE, handle -> {
                 handle.attach(DatasetDAO.class)
                         .save(
@@ -205,12 +205,12 @@ class DatasetServiceImpl implements DatasetService {
                                 workspaceId);
                 return null;
             });
-            log.info("Created dataset with id '{}', name '{}', workspaceId '{}'", id, name, workspaceId);
+            log.info("已创建数据集，ID '{}'，名称 '{}'，工作区 '{}'", id, name, workspaceId);
             return id;
         }
 
         UUID id = dataset.get().id();
-        log.info("Got dataset with id '{}', name '{}', workspaceId '{}'", id, name, workspaceId);
+        log.info("已获取数据集，ID '{}'，名称 '{}'，工作区 '{}'", id, name, workspaceId);
         return id;
     }
 
@@ -229,11 +229,11 @@ class DatasetServiceImpl implements DatasetService {
 
     @Override
     public Optional<Dataset> getById(@NonNull UUID id, @NonNull String workspaceId) {
-        log.info("Getting dataset with id '{}', workspaceId '{}'", id, workspaceId);
+        log.info("获取数据集，ID '{}'，工作区 '{}'", id, workspaceId);
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetDAO.class);
             var dataset = dao.findById(id, workspaceId);
-            log.info("Got dataset with id '{}', workspaceId '{}'", id, workspaceId);
+            log.info("已获取数据集，ID '{}'，工作区 '{}'", id, workspaceId);
             return dataset;
         });
     }
@@ -276,11 +276,11 @@ class DatasetServiceImpl implements DatasetService {
 
     @Override
     public String findWorkspaceIdByDatasetId(@NonNull UUID id) {
-        log.info("Finding workspaceId by dataset id '{}'", id);
+        log.info("根据数据集ID '{}' 查找工作区", id);
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetDAO.class);
             var workspaceId = dao.findWorkspaceIdByDatasetId(id).orElseThrow(this::newNotFoundException);
-            log.info("Found workspaceId by dataset id '{}'", id);
+            log.info("已根据数据集ID '{}' 找到工作区", id);
             return workspaceId;
         });
     }
@@ -293,7 +293,7 @@ class DatasetServiceImpl implements DatasetService {
                     dataset -> verifyVisibility(dataset, visibility),
                     // 数据集未找到（例如已删除的测试套件）— 故意不抛出异常，
                     // 以便调用方在数据集删除后仍可检索实验条目。
-                    () -> log.debug("Dataset '{}' not found in workspace '{}'; skipping visibility check", id,
+                    () -> log.debug("数据集 '{}' 在工作区 '{}' 中未找到；跳过可见性检查", id,
                             workspaceId));
             return null;
         });
@@ -301,11 +301,11 @@ class DatasetServiceImpl implements DatasetService {
 
     @Override
     public Dataset findById(@NonNull UUID id, @NonNull String workspaceId, Visibility visibility) {
-        log.info("Finding dataset with id '{}', workspaceId '{}'", id, workspaceId);
+        log.info("查找数据集，ID '{}'，工作区 '{}'", id, workspaceId);
         Dataset dataset = template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetDAO.class);
             var d = dao.findById(id, workspaceId).orElseThrow(this::newNotFoundException);
-            log.info("Found dataset with id '{}', workspaceId '{}'", id, workspaceId);
+            log.info("已找到数据集，ID '{}'，工作区 '{}'", id, workspaceId);
             return d;
         });
 
@@ -315,14 +315,14 @@ class DatasetServiceImpl implements DatasetService {
     @Override
     public List<Dataset> findByIds(@NonNull Set<UUID> ids, @NonNull String workspaceId) {
         if (ids.isEmpty()) {
-            log.info("Returning empty datasets for empty ids, workspaceId '{}'", workspaceId);
+            log.info("ID 为空，返回空数据集，工作区 '{}'", workspaceId);
             return List.of();
         }
-        log.info("Finding datasets with ids '{}', workspaceId '{}'", ids, workspaceId);
+        log.info("按ID '{}' 查找数据集，工作区 '{}'", ids, workspaceId);
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetDAO.class);
             var datasets = dao.findByIds(ids, workspaceId);
-            log.info("Found datasets with ids '{}', workspaceId '{}'", ids, workspaceId);
+            log.info("已按ID '{}' 找到数据集，工作区 '{}'", ids, workspaceId);
             return datasets;
         });
     }
@@ -335,7 +335,7 @@ class DatasetServiceImpl implements DatasetService {
                     .or(() -> dao.findByName(workspaceId, name, null))
                     .orElseThrow(this::newNotFoundException);
 
-            log.info("Found dataset with name '{}', id '{}', workspaceId '{}'", name, d.id(), workspaceId);
+            log.info("已按名称 '{}' 找到数据集，ID '{}'，工作区 '{}'", name, d.id(), workspaceId);
             return d;
         });
 
@@ -359,7 +359,7 @@ class DatasetServiceImpl implements DatasetService {
                     .orElseThrow(this::newNotFoundException);
         });
 
-        log.info("Found dataset with name '{}', id '{}', workspaceId '{}', projectId '{}'",
+        log.info("已按名称 '{}' 找到数据集，ID '{}'，工作区 '{}'，项目ID '{}'",
                 name, dataset.id(), workspaceId, projectId);
 
         return verifyVisibility(dataset, visibility);
@@ -466,7 +466,7 @@ class DatasetServiceImpl implements DatasetService {
     @Override
     public void delete(Set<UUID> ids) {
         if (ids.isEmpty()) {
-            log.info("ids list is empty, returning");
+            log.info("ID 列表为空，直接返回");
             return;
         }
 
@@ -637,7 +637,7 @@ class DatasetServiceImpl implements DatasetService {
 
     @Override
     public BiInformationResponse getDatasetBIInformation() {
-        log.info("Getting dataset BI events daily data");
+        log.info("获取数据集 BI 事件每日数据");
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetDAO.class);
             var biInformation = dao.getDatasetsBIInformation(DemoData.DATASETS);
@@ -658,7 +658,7 @@ class DatasetServiceImpl implements DatasetService {
 
         if (datasetIds.size() > maxExperimentInClauseSize) {
 
-            log.info("Checking dataset existence using temporary table");
+            log.info("使用临时表检查数据集是否存在");
 
             String tableName = idGenerator.generateId().toString().replace("-", "_");
 
@@ -689,7 +689,7 @@ class DatasetServiceImpl implements DatasetService {
             }
         }
 
-        log.info("Checking dataset existence using memory");
+        log.info("使用内存检查数据集是否存在");
 
         return template.inTransaction(READ_ONLY, handle -> {
             var dao = handle.attach(DatasetDAO.class);
@@ -787,7 +787,7 @@ class DatasetServiceImpl implements DatasetService {
 
                 int[] results = dao.recordExperiments(workspaceId, datasetsLastExperimentCreated);
 
-                log.info("Updated '{}' datasets with last experiment created time", results.length);
+                log.info("已用最近实验创建时间更新 '{}' 个数据集", results.length);
 
                 return Mono.empty();
             }));
@@ -810,7 +810,7 @@ class DatasetServiceImpl implements DatasetService {
 
                 int[] results = dao.recordOptimizations(workspaceId, datasetsLastOptimizationCreated);
 
-                log.info("Updated '{}' datasets with last optimization created time", results.length);
+                log.info("已用最近优化创建时间更新 '{}' 个数据集", results.length);
 
                 return Mono.empty();
             }));
@@ -834,17 +834,17 @@ class DatasetServiceImpl implements DatasetService {
     @WithSpan
     public void updateStatus(@NonNull UUID id, @NonNull String workspaceId,
             @NonNull DatasetStatus status) {
-        log.info("Updating status for dataset '{}' on workspaceId '{}' to '{}'", id, workspaceId, status);
+        log.info("更新数据集 '{}' 在工作区 '{}' 的状态为 '{}'", id, workspaceId, status);
         template.inTransaction(WRITE, handle -> {
             var dao = handle.attach(DatasetDAO.class);
             int result = dao.updateStatus(workspaceId, id, status);
 
             if (result == 0) {
-                log.warn("Dataset '{}' not found on workspaceId '{}' - status update skipped", id, workspaceId);
+                log.warn("数据集 '{}' 在工作区 '{}' 中未找到 - 跳过状态更新", id, workspaceId);
                 return null;
             }
 
-            log.info("Successfully updated status for dataset '{}' on workspaceId '{}' to '{}'", id,
+            log.info("已成功更新数据集 '{}' 在工作区 '{}' 的状态为 '{}'", id,
                     workspaceId, status);
             return null;
         });

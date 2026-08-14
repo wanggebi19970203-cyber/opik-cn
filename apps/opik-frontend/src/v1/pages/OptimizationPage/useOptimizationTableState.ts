@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { ColumnSort } from "@tanstack/react-table";
 import useLocalStorageState from "use-local-storage-state";
@@ -50,6 +51,7 @@ export const useOptimizationTableState = ({
   workspaceName,
   optimizationId,
 }: UseOptimizationTableStateParams) => {
+  const { t } = useTranslation("pages/optimization");
   const navigate = useNavigate();
 
   const [search = "", setSearch] = useQueryParam("search", StringParam, {
@@ -88,7 +90,9 @@ export const useOptimizationTableState = ({
   });
 
   const noData = !search;
-  const noDataText = noData ? "There are no trials yet" : "No search results";
+  const noDataText = noData
+    ? t("optimization.trials.noTrials")
+    : t("optimization.trials.noSearchResults");
 
   const rows = useMemo(() => {
     const filtered = candidates.filter(({ name }) =>

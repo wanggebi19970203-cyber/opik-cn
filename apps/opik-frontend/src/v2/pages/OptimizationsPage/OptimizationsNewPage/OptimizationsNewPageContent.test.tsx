@@ -115,7 +115,7 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
     });
 
     expect(
-      screen.queryByText(/Add or check the API key for this provider/),
+      screen.queryByText("optimizations.newPage.providerKeyWarning"),
     ).not.toBeInTheDocument();
   });
 
@@ -128,7 +128,7 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
     });
 
     expect(
-      screen.getByText(/Add or check the API key for this provider/),
+      screen.getByText("optimizations.newPage.providerKeyWarning"),
     ).toBeInTheDocument();
   });
 
@@ -139,7 +139,7 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
       providerKeysReady: true,
     });
 
-    const submitBtn = screen.getByRole("button", { name: /Optimize prompt/i });
+    const submitBtn = screen.getByRole("button", { name: "newRun.optimizePrompt" });
     expect(submitBtn).toBeDisabled();
   });
 
@@ -151,7 +151,7 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
     });
 
     expect(
-      screen.queryByText(/Add or check the API key for this provider/),
+      screen.queryByText("optimizations.newPage.providerKeyWarning"),
     ).not.toBeInTheDocument();
   });
 
@@ -163,7 +163,7 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
     });
 
     expect(
-      screen.queryByText(/Add or check the API key for this provider/),
+      screen.queryByText("optimizations.newPage.providerKeyWarning"),
     ).not.toBeInTheDocument();
   });
 
@@ -178,10 +178,10 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
     });
 
     expect(
-      screen.getByText(/Add or check the API key for this provider/),
+      screen.getByText("optimizations.newPage.providerKeyWarning"),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Optimize prompt/i }),
+      screen.getByRole("button", { name: "newRun.optimizePrompt" }),
     ).toBeDisabled();
   });
 
@@ -192,7 +192,7 @@ describe("OptimizationsNewPageContent — missing provider key (F1)", () => {
       providerKeysReady: true,
     });
 
-    const submitBtn = screen.getByRole("button", { name: /Optimize prompt/i });
+    const submitBtn = screen.getByRole("button", { name: "newRun.optimizePrompt" });
     expect(submitBtn).not.toBeDisabled();
   });
 });

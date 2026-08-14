@@ -56,7 +56,7 @@ export const getParentTargetLabel = (): string => i18next.t("codeDiff.parent");
  * picker would list two identical "Parent" options.
  */
 export const buildTrialTag = (trialNumber: number): string =>
-  `Trial #${trialNumber}`;
+  i18next.t("codeDiff.trialNumber", { trialNumber });
 
 type BuildTargetsParams<T extends ComparisonCandidate> = {
   /** The candidate whose prompt is being compared. */

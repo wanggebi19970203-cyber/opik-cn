@@ -32,9 +32,9 @@ def track_openai(
 
     为 OpenAI 客户端添加 Opik 追踪包装器。
 
-    Tracks calls to:
+    追踪以下调用：
 
-    * `openai_client.chat.completions.create()`, including support for stream=True mode.
+    * `openai_client.chat.completions.create()`，包括对 stream=True 模式的支持。
     * `openai_client.beta.chat.completions.parse()`
     * `openai_client.beta.chat.completions.stream()`
     * `openai_client.responses.create()`

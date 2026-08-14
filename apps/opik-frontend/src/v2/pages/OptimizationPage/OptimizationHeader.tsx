@@ -18,6 +18,14 @@ import {
 import OptimizationConfigPill, {
   CONFIG_PILL_ICON_CLASS,
 } from "@/v2/pages-shared/optimizations/OptimizationConfigPill";
+
+const RUN_STATUS_I18N_KEY: Record<OPTIMIZATION_STATUS, string> = {
+  [OPTIMIZATION_STATUS.RUNNING]: "optimization.runStatus.running",
+  [OPTIMIZATION_STATUS.COMPLETED]: "optimization.runStatus.completed",
+  [OPTIMIZATION_STATUS.CANCELLED]: "optimization.runStatus.cancelled",
+  [OPTIMIZATION_STATUS.INITIALIZED]: "optimization.runStatus.initialized",
+  [OPTIMIZATION_STATUS.ERROR]: "optimization.runStatus.error",
+};
 import OptimizationModelPill from "./OptimizationModelPill";
 import OptimizationMetricPill from "./OptimizationMetricPill";
 
@@ -71,7 +79,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
         <div className="flex items-center">
           <BackButton
             to="/$workspaceName/projects/$projectId/optimizations"
-            tooltip="Back to optimization runs"
+            tooltip={t("optimization.header.backToOptimizationRuns")}
             iconClassName="size-3.5"
             className="-ml-1"
           />
@@ -90,7 +98,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
                 </span>
               }
             >
-              {status}
+              {t(RUN_STATUS_I18N_KEY[status])}
             </OptimizationConfigPill>
           )}
         </div>

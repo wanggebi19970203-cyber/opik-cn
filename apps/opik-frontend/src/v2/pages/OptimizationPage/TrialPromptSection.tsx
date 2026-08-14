@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { AggregatedCandidate } from "@/types/optimizations";
 import { Experiment } from "@/types/datasets";
@@ -28,6 +29,7 @@ const TrialPromptSection: React.FC<TrialPromptSectionProps> = ({
   experiments,
   defaultDiff = false,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const { current, targets } = usePromptComparisonTargets(
     candidate,
     candidates,
@@ -37,17 +39,17 @@ const TrialPromptSection: React.FC<TrialPromptSectionProps> = ({
   if (current == null) {
     return (
       <p className="comet-body-s py-8 text-center text-muted-slate">
-        No prompt available.
+        {t("optimization.trialPrompt.noPromptAvailable")}
       </p>
     );
   }
 
   return (
     <PromptComparison
-      title="Trial prompt"
+      title={t("optimization.trialPrompt.title")}
       current={current}
       targets={targets}
-      currentLabel="Trial"
+      currentLabel={t("optimization.trialPrompt.trial")}
       defaultDiff={defaultDiff}
     />
   );

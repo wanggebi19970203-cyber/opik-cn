@@ -11,6 +11,10 @@ vi.mock("@/lib/analytics/tracking", async (importOriginal) => {
   return { ...actual, trackEvent: vi.fn() };
 });
 
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
+
 const target: ExplainTarget = {
   kind: "trace.error",
   entityId: "e1",
@@ -46,7 +50,7 @@ describe("ExplainButton", () => {
   it("renders the trigger when explain is available", () => {
     render(<ExplainButton target={target} />);
     expect(
-      screen.getByRole("button", { name: "Explain error" }),
+      screen.getByRole("button", { name: "common:comet.explain.explainError" }),
     ).toBeInTheDocument();
   });
 
@@ -55,7 +59,7 @@ describe("ExplainButton", () => {
     enable(emit);
     render(<ExplainButton target={target} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Explain error" }));
+    fireEvent.click(screen.getByRole("button", { name: "common:comet.explain.explainError" }));
 
     expect(emit).toHaveBeenCalledWith(
       "explain:run",
@@ -84,7 +88,7 @@ describe("ExplainButton", () => {
     });
     render(<ExplainButton target={target} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Explain error" }));
+    fireEvent.click(screen.getByRole("button", { name: "common:comet.explain.explainError" }));
 
     // Cache hit: no new stream and no fresh-explain BI event.
     expect(emit).not.toHaveBeenCalledWith("explain:run", expect.anything());
@@ -98,7 +102,7 @@ describe("ExplainButton", () => {
     const emit = vi.fn();
     enable(emit);
     render(<ExplainButton target={target} />);
-    const trigger = screen.getByRole("button", { name: "Explain error" });
+    const trigger = screen.getByRole("button", { name: "common:comet.explain.explainError" });
 
     fireEvent.click(trigger); // open → dispatch
     fireEvent.click(trigger); // close → cancel

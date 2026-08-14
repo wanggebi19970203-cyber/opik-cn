@@ -532,7 +532,11 @@
       "previewPlaceholder": "<preview>",
       "widgetType": "Widget type",
       "newSection": "New section",
-      "overview": "Overview"
+      "overview": "Overview",
+      "workspaceMetrics": {
+        "spanTokenUsage": "Span token usage",
+        "totalSpanTokenUsage": "Total span token usage"
+      }
     },
     "hooks": {
       "useAudioPlayer": {
@@ -582,6 +586,10 @@
         "light": "Light",
         "dark": "Dark",
         "system": "System"
+      },
+      "useSendOnboardingEmailMutation": {
+        "failedToSendEmail": "Failed to send email",
+        "tryAgain": "Please try again."
       }
     },
     "feedbackScoreEdit": {
@@ -775,7 +783,9 @@
       "trial": "Trial",
       "baseline": "Baseline",
       "parent": "Parent",
-      "parentTrial": "Parent (Trial #{{trialNumber}})"
+      "parentTrial": "Parent (Trial #{{trialNumber}})",
+      "trialNumber": "Trial #{{trialNumber}}",
+      "compareAgainst": "Compare against"
     },
     "codeSnippet": {
       "copy": "Copy",
@@ -879,7 +889,7 @@
         "explainThisError": "Explain this error",
         "explainThisCost": "Explain this cost",
         "explainThisDuration": "Explain this duration",
-        "ollieWaking": "Ollie is waking up \u2014 give it a moment and retry.",
+        "ollieWaking": "Ollie is waking up — give it a moment and retry.",
         "ollieTimeout": "Ollie took too long to respond. Try again.",
         "ollieUnavailable": "Ollie is unavailable right now. Try again shortly.",
         "rateLimited": "Too many requests right now. Try again in a moment.",
@@ -1455,6 +1465,10 @@
           "hierarchicalReflective": {
             "label": "Hierarchical Reflective",
             "description": "Analyzes failures and rewrites prompts to fix issues."
+          },
+          "evolutionary": {
+            "label": "Evolutionary",
+            "description": "Iteratively refines prompts using an evolutionary algorithm."
           }
         },
         "metricOptions": {
@@ -1477,6 +1491,10 @@
           "numericalSimilarity": {
             "label": "Numerical Similarity",
             "description": "Compares numeric output against a reference value. Closer values score higher."
+          },
+          "code": {
+            "label": "Custom code",
+            "description": "Score outputs with a custom Python metric."
           }
         },
         "demoTemplate": {
@@ -1526,7 +1544,10 @@
         },
         "names": {
           "topic": "Topic guardrail",
-          "pii": "PII guardrail"
+          "pii": "PII guardrail",
+          "llmJudge": "LLM judge guardrail",
+          "promptInjection": "Prompt injection guardrail",
+          "customClassifier": "Custom guardrail"
         }
       },
       "integrations": {

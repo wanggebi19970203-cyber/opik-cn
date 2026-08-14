@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Logo from "@/shared/Logo/Logo";
 import { Button } from "@/ui/button";
 import { useSwipeableSteps } from "./useSwipeableSteps";
@@ -27,6 +28,7 @@ const MobileOnboardingShell: React.FC<MobileOnboardingShellProps> = ({
   nextVariant = "default",
   children,
 }) => {
+  const { t } = useTranslation("pages/get-started");
   const { scrollerProps, getPanelProps, getContentProps } = useSwipeableSteps({
     step,
     totalSteps,
@@ -39,7 +41,10 @@ const MobileOnboardingShell: React.FC<MobileOnboardingShellProps> = ({
         <div className="flex items-center justify-between px-px">
           <Logo expanded />
           <span className="text-xs text-light-slate">
-            Step {step} of {totalSteps}
+            {t("getStarted.mobileOnboarding.shell.stepCounter", {
+              step,
+              totalSteps,
+            })}
           </span>
         </div>
 
@@ -92,7 +97,7 @@ const MobileOnboardingShell: React.FC<MobileOnboardingShellProps> = ({
             className="w-24 gap-1.5"
           >
             <ArrowLeft className="size-4" />
-            Back
+            {t("getStarted.mobileOnboarding.shell.back")}
           </Button>
         )}
         <Button

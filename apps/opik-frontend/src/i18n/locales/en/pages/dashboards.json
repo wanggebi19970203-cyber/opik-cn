@@ -197,6 +197,9 @@
     "metricTypeLabel": "Metric type",
     "loadingMetrics": "Loading available metrics...",
     "selectMetric": "Select a metric",
+    "allProjectsInWorkspace": "All projects in the workspace",
+    "usageMetricLabel": "Usage metric",
+    "selectUsageMetric": "Select a usage metric",
     "metrics": {
       "p50Duration": "P50 duration",
       "p90Duration": "P90 duration",
@@ -275,7 +278,9 @@
     "learnHowToTrackThreads": "Learn how to track threads",
     "viewFilteredSpans": "View filtered spans",
     "viewFilteredThreads": "View filtered threads",
-    "viewFilteredTraces": "View filtered traces"
+    "viewFilteredTraces": "View filtered traces",
+    "notAvailableAcrossProjects": "Not available across projects",
+    "notAvailableAcrossProjectsMessage": "This metric can only be shown for a single project. Select one project, or choose a span metric to aggregate across projects."
   },
   "breakdown": {
     "groupBy": "Group by",
@@ -295,7 +300,8 @@
       "errorType": "Error type",
       "model": "Model",
       "provider": "Provider",
-      "spanType": "Span type"
+      "spanType": "Span type",
+      "guardrailName": "Guardrail name"
     }
   },
   "visualization": {

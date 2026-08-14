@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Database } from "lucide-react";
 
 import ResizableSidePanel from "@/shared/ResizableSidePanel/ResizableSidePanel";
@@ -40,13 +41,14 @@ const TrialSidebar: React.FC<TrialSidebarProps> = ({
   const {
     permissions: { canViewDatasets },
   } = usePermissions();
+  const { t } = useTranslation("pages/optimization");
 
   const experiment = trialExperiments[0];
   const title = isBaseline
-    ? "Baseline"
+    ? t("optimization.trialSidebar.baseline")
     : trialNumber
-      ? `Trial #${trialNumber}`
-      : "Trial";
+      ? t("optimization.trialSidebar.trialNumber", { number: trialNumber })
+      : t("optimization.trialSidebar.trial");
 
   return (
     <ResizableSidePanel
@@ -81,9 +83,9 @@ const TrialSidebar: React.FC<TrialSidebarProps> = ({
                 trialExperiments.map((e) => e.id),
               )}
               variant="nav"
-              label="Logs"
+              label={t("optimization.trialSidebar.logs")}
               textSize="xs"
-              title="Optimization logs"
+              title={t("optimization.trialSidebar.optimizationLogs")}
             />
           )}
         </ResizableSidePanelTopBar>

@@ -294,7 +294,7 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                     htmlFor="stats-all-projects"
                     className="comet-body-s cursor-pointer font-normal"
                   >
-                    All projects in the workspace
+                    {t("statsCard.allProjectsInWorkspace")}
                   </Label>
                 </div>
                 <FormControl>
@@ -391,7 +391,7 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
             name="usageMetric"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Usage metric</FormLabel>
+                <FormLabel>{t("statsCard.usageMetricLabel")}</FormLabel>
                 <FormControl>
                   <LoadableSelectBox
                     value={field.value || ""}
@@ -400,7 +400,7 @@ const ProjectStatsCardEditor = forwardRef<WidgetEditorHandle>((_, ref) => {
                       handleUsageMetricChange(value);
                     }}
                     options={usageKeyOptions}
-                    placeholder="Select a usage metric"
+                    placeholder={t("statsCard.selectUsageMetric")}
                   />
                 </FormControl>
                 <FormMessage />

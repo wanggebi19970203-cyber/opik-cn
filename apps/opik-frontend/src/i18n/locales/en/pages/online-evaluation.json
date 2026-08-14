@@ -81,7 +81,12 @@
       "copySuffix": " (Copy)",
       "scopeTrace": "Trace",
       "scopeThread": "Thread",
-      "scopeSpan": "Span"
+      "scopeSpan": "Span",
+      "triggerScopeLabel": "Trigger scope",
+      "triggerScopeTooltip": "Choose whether this rule fires on production traces, experiment traces, or both.",
+      "triggerScopeProduction": "Production traces",
+      "triggerScopeExperiment": "Experiment traces",
+      "triggerScopeBoth": "Both"
     },
     "pythonCodeRule": {
       "pythonCodeLabel": "Python code",

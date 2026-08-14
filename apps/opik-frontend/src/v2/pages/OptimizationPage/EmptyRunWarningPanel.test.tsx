@@ -16,6 +16,12 @@ vi.mock("@/api/optimizations/useOptimizationStudioLogs", () => ({
   }),
 }));
 
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
+
 const optimization = {
   id: "opt-1",
   status: "completed",
@@ -30,12 +36,18 @@ describe("EmptyRunWarningPanel", () => {
       />,
     );
 
-    expect(screen.getByText("No candidates generated")).toBeInTheDocument();
-    expect(screen.queryByText("No usable scores")).not.toBeInTheDocument();
     expect(
-      screen.getByText(/produced no prompt variants to score/),
+      screen.getByText("optimization:emptyRun.noCandidatesGenerated"),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/run it again/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("optimization:emptyRun.noUsableScores"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("optimization:emptyRun.noCandidatesMessage"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("optimization:emptyRun.heuristicFallback"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the scoring-failure copy and CTA when nothing scored", () => {
@@ -46,8 +58,12 @@ describe("EmptyRunWarningPanel", () => {
       />,
     );
 
-    expect(screen.getByText("No usable scores")).toBeInTheDocument();
-    expect(screen.getByText(/run it again/)).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization:emptyRun.noUsableScores"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization:emptyRun.heuristicFallback"),
+    ).toBeInTheDocument();
   });
 
   it("shows exact scoring-health counts when the backend provided them", () => {
@@ -59,7 +75,9 @@ describe("EmptyRunWarningPanel", () => {
       />,
     );
 
-    expect(screen.getByText(/All 5 items failed to score/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/optimization:emptyRun\.allItemsFailedToScore/),
+    ).toBeInTheDocument();
   });
 
   it("renders nothing when the backend says no item failed", () => {
@@ -82,7 +100,9 @@ describe("EmptyRunWarningPanel", () => {
         cause={EMPTY_RUN_CAUSE.NO_CANDIDATES}
       />,
     );
-    expect(screen.getByText("View logs")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.emptyRun.viewLogs"),
+    ).toBeInTheDocument();
     unmount();
 
     render(
@@ -91,6 +111,8 @@ describe("EmptyRunWarningPanel", () => {
         cause={EMPTY_RUN_CAUSE.SCORING_FAILED}
       />,
     );
-    expect(screen.getByText("View logs")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.emptyRun.viewLogs"),
+    ).toBeInTheDocument();
   });
 });

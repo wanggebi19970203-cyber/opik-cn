@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import get from "lodash/get";
 import sortBy from "lodash/sortBy";
 import uniq from "lodash/uniq";
@@ -93,7 +95,7 @@ export const DEFAULT_SELECTED_COLUMNS: string[] = [];
 const DEFAULT_COLUMNS: ColumnData<FlattenedTrialItem>[] = [
   {
     id: COLUMN_ID_ID,
-    label: "Test suite item ID",
+    label: i18next.t("optimization:trialItems.testSuiteItemId"),
     type: COLUMN_TYPE.string,
     accessorFn: (row) => row.dataset_item_id,
     cell: IdCell as never,
@@ -116,6 +118,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
   experiments,
   isTestSuite = false,
 }) => {
+  const { t } = useTranslation("pages/optimization");
   const workspaceName = useAppStore((state) => state.activeWorkspaceName);
   const [traceId = "", setTraceId] = useQueryParam("trace", StringParam, {
     updateType: "replaceIn",
@@ -220,7 +223,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     );
 
   const apiTotal = data?.total ?? 0;
-  const noDataText = "There is no data for the selected trials";
+  const noDataText = t("optimization.trialItems.noData");
 
   const rows = useMemo(() => {
     const apiRows: ExperimentsCompare[] = data?.content ?? [];
@@ -315,7 +318,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
       ({ id, label, columnType }): ChipDefinition => ({
         id,
         field: id,
-        label: `${label} (Test suite)`,
+        label: t("optimization.trialItems.testSuiteSuffix", { label }),
         kind: "query-builder",
         columnType,
         operators: OPERATORS_MAP[columnType].map((o) => o.value),
@@ -326,7 +329,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     definitions.push({
       id: "output",
       field: "output",
-      label: "Evaluation task",
+      label: t("optimization.trialItems.evaluationTask"),
       kind: "query-builder",
       columnType: COLUMN_TYPE.string,
       operators: OPERATORS_MAP[COLUMN_TYPE.string].map((o) => o.value),
@@ -336,20 +339,20 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     definitions.push({
       id: COLUMN_FEEDBACK_SCORES_ID,
       field: COLUMN_FEEDBACK_SCORES_ID,
-      label: "Optimizations scores",
+      label: t("optimization.trialItems.optimizationsScores"),
       kind: "query-builder",
       columnType: COLUMN_TYPE.numberDictionary,
       operators: FEEDBACK_SCORE_OPERATORS,
       defaultOperator: ">=",
       key: {
-        placeholder: "Select score",
+        placeholder: t("optimization.trialItems.selectScore"),
         options: chipOptionsValue(scoreNameOptions),
       },
       value: { type: "numeric", decimals: 2, placeholder: "0" },
     });
 
     return definitions;
-  }, [dynamicDatasetColumns, scoreNameOptions]);
+  }, [dynamicDatasetColumns, scoreNameOptions, t]);
 
   const {
     chipsPinned,
@@ -411,7 +414,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
       return [
         {
           id: "score_passed",
-          label: "passed",
+          label: t("optimization.trialItems.passed"),
           type: COLUMN_TYPE.string,
           cell: TrialPassedCell as never,
           customMeta: {
@@ -462,7 +465,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         colorMap,
       },
     })) as ColumnData<FlattenedTrialItem>[];
-  }, [experiments, experimentsIds, objectiveName, isTestSuite]);
+  }, [experiments, experimentsIds, objectiveName, isTestSuite, t]);
 
   useEffect(() => {
     const scoreColumnIds = scoresColumnsData.map((col) => col.id);
@@ -493,7 +496,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         columnHelper.group({
           id: "dataset",
           meta: {
-            header: "Test suite",
+            header: t("optimization.trialItems.testSuite"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -512,7 +515,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         columnHelper.group({
           id: "evaluation",
           meta: {
-            header: "Evaluation task",
+            header: t("optimization.trialItems.evaluationTask"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -531,7 +534,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         columnHelper.group({
           id: "scores",
           meta: {
-            header: "Optimizations scores",
+            header: t("optimization.trialItems.optimizationsScores"),
           },
           header: SectionHeader,
           columns: convertColumnDataToColumn<
@@ -555,6 +558,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     columnsOrder,
     outputColumnsOrder,
     scoresColumnsOrder,
+    t,
   ]);
 
   const resizeConfig = useMemo(
@@ -574,13 +578,13 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
   const columnSections = useMemo(() => {
     return [
       {
-        title: "Evaluation task",
+        title: t("optimization.trialItems.evaluationTask"),
         columns: outputColumnsData,
         order: outputColumnsOrder,
         onOrderChange: setOutputColumnsOrder,
       },
       {
-        title: "Optimizations scores",
+        title: t("optimization.trialItems.optimizationsScores"),
         columns: scoresColumnsData,
         order: scoresColumnsOrder,
         onOrderChange: setScoresColumnsOrder,
@@ -593,6 +597,7 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
     scoresColumnsData,
     scoresColumnsOrder,
     setScoresColumnsOrder,
+    t,
   ]);
 
   const isTableLoading =
@@ -611,7 +616,9 @@ const TrialItemsTab: React.FC<TrialItemsTabProps> = ({
         limitWidth
       >
         <h2 className="comet-title-xs shrink-0">
-          {isTestSuite ? "Test items" : "Evaluation results"}
+          {isTestSuite
+            ? t("optimization.trialItems.testItems")
+            : t("optimization.trialItems.evaluationResults")}
         </h2>
         <div className="flex shrink-0 items-center gap-2">
           <DataTableRowHeightSelector

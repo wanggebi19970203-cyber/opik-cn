@@ -481,11 +481,11 @@ class OpikQueryLanguage:
 
     def _is_valid_escaped_key_char(self, quote_type: str, start: int) -> bool:
         if self.query_string[self._cursor] != quote_type:
-            # Need at least the closing quote still ahead; otherwise unclosed.
-            # Use +1 (not +2) so quoted values at end-of-string work too.
+            # 前方至少还需要一个闭合引号；否则就是未闭合。
+            # 使用 +1（而非 +2），以便位于字符串末尾的带引号值也能正常工作。
             if self._cursor + 1 >= len(self.query_string):
                 raise ValueError(
-                    "Missing closing quote for: " + self.query_string[start - 1 :]
+                    "缺少闭合引号：" + self.query_string[start - 1 :]
                 )
 
             return True
@@ -502,16 +502,15 @@ class OpikQueryLanguage:
         return False
 
     def _parse_quoted_string(self, *, kind: str = "value") -> str:
-        """Parse a double-quoted string at the current cursor (opening quote consumed).
+        """在游标当前位置解析双引号字符串（开引号已被消费）。
 
-        Reuses ``_is_valid_escaped_key_char`` so value and key quote handling stay
-        in sync (doubled-quote escapes, missing-close errors). Advances past the
-        closing quote.
+        复用 ``_is_valid_escaped_key_char``，使值和键的引号处理保持一致
+        （双引号转义、缺失闭合引号错误）。解析后越过闭合引号。
         """
         quote_type = '"'
         start = self._cursor
         while self._cursor < len(self.query_string):
-            # False when current char is the closing quote (not an escaped pair).
+            # 当前字符为闭合引号（而非转义对）时返回 False。
             if not self._is_valid_escaped_key_char(quote_type, start):
                 break
             self._cursor += 1
@@ -522,12 +521,12 @@ class OpikQueryLanguage:
         ):
             label = "value" if kind == "value" else "key"
             raise ValueError(
-                f'Missing closing quote for {label}: "{self.query_string[start:]}"'
+                f'缺少 {label} 的闭合引号："{self.query_string[start:]}"'
             )
 
         value = self.query_string[start : self._cursor]
         value = value.replace(quote_type * 2, quote_type)
-        self._cursor += 1  # skip closing quote
+        self._cursor += 1  # 跳过闭合引号
         return value
 
     def _parse_connector(self) -> str:
@@ -578,15 +577,14 @@ class OpikQueryLanguage:
 
             # 如果是转义键，跳过关闭引号
             if is_quoted_key:
-                # An alnum char at the very end of the string can satisfy the
-                # loop's field-char branch without ever reaching the closing
-                # quote check, so verify it explicitly here.
+                # 字符串最末尾的字母数字字符可能满足循环的字段字符分支，
+                # 而永远不会到达闭合引号检查，因此在此显式验证。
                 if (
                     self._cursor >= len(self.query_string)
                     or self.query_string[self._cursor] != quote_type
                 ):
                     raise ValueError(
-                        "Missing closing quote for: " + self.query_string[start - 1 :]
+                        "缺少闭合引号：" + self.query_string[start - 1 :]
                     )
                 key = key.replace(
                     quote_type * 2, quote_type
@@ -605,13 +603,13 @@ class OpikQueryLanguage:
                     }
                 else:
                     raise ValueError(
-                        f"When querying usage, {key} is not supported, only usage.total_tokens, usage.prompt_tokens and usage.completion_tokens are supported."
+                        f"查询 usage 时，不支持 {key}，仅支持 usage.total_tokens、usage.prompt_tokens 和 usage.completion_tokens。"
                     )
 
             # 键仅支持字典字段
             if field not in dictionary_fields:
                 raise ValueError(
-                    f"Field {field}.{key} is not supported, only the fields {list(columns.keys())} are supported."
+                    f"不支持字段 {field}.{key}，仅支持字段 {list(columns.keys())}。"
                 )
             elif field in columns:
                 return {"field": field, "key": key, "type": columns[field]}
@@ -635,15 +633,15 @@ class OpikQueryLanguage:
             parsed_field = "default"
 
         if self._cursor >= len(self.query_string):
-            raise ValueError("Incomplete filter string: unexpected end of input")
+            raise ValueError("过滤器字符串不完整：输入意外结束")
 
-        # Parse the operator
+        # 解析运算符
         if self.query_string[self._cursor] == "=":
             operator = "="
             self._cursor += 1
             if operator not in supported_operators[parsed_field]:
                 raise ValueError(
-                    f"Operator {operator} is not supported for field {parsed_field}, only the operators {supported_operators[parsed_field]} are supported."
+                    f"字段 {parsed_field} 不支持运算符 {operator}，仅支持运算符 {supported_operators[parsed_field]}。"
                 )
             return {"operator": operator}
 
@@ -660,7 +658,7 @@ class OpikQueryLanguage:
 
             if operator not in supported_operators[parsed_field]:
                 raise ValueError(
-                    f"Operator {operator} is not supported for field {parsed_field}, only the operators {supported_operators[parsed_field]} are supported."
+                    f"字段 {parsed_field} 不支持运算符 {operator}，仅支持运算符 {supported_operators[parsed_field]}。"
                 )
             return {"operator": operator}
         else:
@@ -674,7 +672,7 @@ class OpikQueryLanguage:
             operator = self.query_string[start : self._cursor]
             if operator not in supported_operators[parsed_field]:
                 raise ValueError(
-                    f"Operator {operator} is not supported for field {parsed_field}, only the operators {supported_operators[parsed_field]} are supported."
+                    f"字段 {parsed_field} 不支持运算符 {operator}，仅支持运算符 {supported_operators[parsed_field]}。"
                 )
             return {"operator": operator}
 
@@ -691,11 +689,11 @@ class OpikQueryLanguage:
         self._skip_whitespace()
 
         if self._cursor >= len(self.query_string):
-            raise ValueError("Incomplete filter string: unexpected end of input")
+            raise ValueError("过滤器字符串不完整：输入意外结束")
 
         start = self._cursor
         if self.query_string[self._cursor] == '"':
-            self._cursor += 1  # skip opening quote
+            self._cursor += 1  # 跳过开引号
             value = self._parse_quoted_string(kind="value")
             return {"value": value}
         elif (
@@ -709,9 +707,9 @@ class OpikQueryLanguage:
             value = sign + self._get_number()
             if value in ("", "-"):
                 raise ValueError(
-                    "Expected a number after '-' in filter value"
+                    "过滤器值中 '-' 之后预期一个数字"
                     if sign
-                    else "Expected a number in filter value"
+                    else "过滤器值中预期一个数字"
                 )
             if (
                 self._cursor < len(self.query_string)
@@ -721,14 +719,14 @@ class OpikQueryLanguage:
                 frac = self._get_number()
                 if not frac:
                     raise ValueError(
-                        "Expected digits after decimal point in filter value"
+                        "过滤器值中小数点之后预期为数字"
                     )
                 value += "." + frac
 
             return {"value": value}
         else:
             raise ValueError(
-                f'Invalid value {self.query_string[start : self._cursor]}, expected an string in double quotes("value") or a number'
+                f'无效的值 {self.query_string[start : self._cursor]}，预期一个用双引号("value")括起来的字符串或数字'
             )
 
     def _parse_array_value(self) -> Dict[str, Any]:
@@ -739,7 +737,7 @@ class OpikQueryLanguage:
             or self.query_string[self._cursor] != "("
         ):
             raise ValueError(
-                f"Expected array value starting with '(' for in/not_in operator, got: {self.query_string[self._cursor :]!r}"
+                f"对于 in/not_in 运算符，预期以 '(' 开头的数组值，实际为：{self.query_string[self._cursor :]!r}"
             )
         self._cursor += 1  # 跳过 '('
 
@@ -747,18 +745,18 @@ class OpikQueryLanguage:
         while True:
             self._skip_whitespace()
             if self._cursor >= len(self.query_string):
-                raise ValueError("Unterminated array value, missing ')'")
+                raise ValueError("未终止的数组值，缺少 ')'")
             if self.query_string[self._cursor] == ")":
                 if not items:
                     raise ValueError(
-                        "Expected at least one item inside (...) for in/not_in operator"
+                        "对于 in/not_in 运算符，(...) 中预期至少有一个项目"
                     )
                 self._cursor += 1
                 break
             if items:
                 if self.query_string[self._cursor] != ",":
                     raise ValueError(
-                        f"Expected ',' between array elements, got: {self.query_string[self._cursor :]!r}"
+                        f"数组元素之间预期为 ','，实际为：{self.query_string[self._cursor :]!r}"
                     )
                 self._cursor += 1
                 self._skip_whitespace()
@@ -768,7 +766,7 @@ class OpikQueryLanguage:
                 or self.query_string[self._cursor] != '"'
             ):
                 raise ValueError(
-                    f"Array elements must be quoted strings, got: {self.query_string[self._cursor :]!r}"
+                    f"数组元素必须为带引号的字符串，实际为：{self.query_string[self._cursor :]!r}"
                 )
             parsed = self._parse_value()
             items.append(parsed["value"])
@@ -808,11 +806,11 @@ class OpikQueryLanguage:
                     continue
                 elif connector.lower() == "or":
                     raise ValueError(
-                        "Invalid filter string, OR is not currently supported"
+                        "无效的过滤器字符串，当前不支持 OR"
                     )
                 else:
                     raise ValueError(
-                        f"Invalid filter string, trailing characters {self.query_string[position:]}"
+                        f"无效的过滤器字符串，存在尾随字符 {self.query_string[position:]}"
                     )
             else:
                 break

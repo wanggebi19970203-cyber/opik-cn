@@ -461,8 +461,8 @@ const ProjectMetricsWidget: React.FunctionComponent<
     if (isWorkspaceMode && metricName && !isWorkspaceMetric(metricName)) {
       return (
         <DashboardWidget.EmptyState
-          title="Not available across projects"
-          message="This metric can only be shown for a single project. Select one project, or choose a span metric to aggregate across projects."
+          title={t("metrics.notAvailableAcrossProjects")}
+          message={t("metrics.notAvailableAcrossProjectsMessage")}
           action={editAction}
         />
       );

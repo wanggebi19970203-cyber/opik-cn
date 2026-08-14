@@ -24,11 +24,15 @@ describe("RunErrorPanel", () => {
   it("falls back to the failure reason from the logs plus a View logs action", () => {
     render(<RunErrorPanel optimization={optimization} />);
 
-    expect(screen.getByText("Optimization failed")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.errorPanel.title"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("ValueError: reference key not found"),
     ).toBeInTheDocument();
-    expect(screen.getByText("View logs")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.errorPanel.viewLogs"),
+    ).toBeInTheDocument();
   });
 
   it("prefers the structured error_info.message over the scraped logs", () => {

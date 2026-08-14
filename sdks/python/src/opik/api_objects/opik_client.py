@@ -197,23 +197,21 @@ class Opik:
         self._resources = self._lease.resources
         self._bind_resources()
 
-        # ``self._lease.release`` is a bound method of the lease, so the finalizer
-        # captures the lease (and through it the manager), never ``self``. A
-        # dropped handle therefore releases its reference on GC without the
-        # atexit strong-ref pin that caused OPIK-7127.
+        # ``self._lease.release`` 是租约的绑定方法，因此终结器捕获的是租约
+        # （并通过它捕获管理器），而不是 ``self``。被丢弃的句柄因此在 GC 时
+        # 释放其引用，而不会产生导致 OPIK-7127 的 atexit 强引用固定。
         #
-        # ``close_on_zero=False``: a finalizer must do nothing risky, so the GC
-        # path only decrements the bundle's refcount. It never closes (thread
-        # joins, network flush) — that is left to an explicit ``end()`` or to the
-        # atexit ``close_all``.
+        # ``close_on_zero=False``：终结器不得执行任何有风险的操作，因此 GC
+        # 路径仅递减 bundle 的引用计数。它从不关闭（线程 join、网络 flush）
+        # ——那留给显式的 ``end()`` 或 atexit 的 ``close_all`` 处理。
         self._finalizer = weakref.finalize(
             self, self._lease.release, self._flush_timeout, close_on_zero=False
         )
 
     def _bind_resources(self) -> None:
-        # Expose the bundle's objects as attributes so the rest of the client
-        # (and external callers of ``__internal_api__message_processor__``)
-        # delegate to the shared connection resources unchanged.
+        # 将 bundle 的对象暴露为属性，使客户端的其余部分
+        # （以及 ``__internal_api__message_processor__`` 的外部调用者）
+        # 原样委托给共享的连接资源。
         self._httpx_client = self._resources.httpx_client
         self._rest_client = self._resources.rest_client
         self.__internal_api__message_processor__ = self._resources.message_processor
@@ -231,7 +229,7 @@ class Opik:
             or self._project_name_most_recent_trace != project_name
         ):
             LOGGER.info(
-                f'Started logging traces to the "{project_name}" project at {project_url}.'
+                f'已开始将 trace 记录到项目 "{project_name}"，地址为 {project_url}。'
             )
             self._project_name_most_recent_trace = project_name
 
@@ -243,12 +241,11 @@ class Opik:
         project_name: str,
         build_url: Callable[[str, str], str],
     ) -> None:
-        """Log the direct, project-scoped URL of a just-created resource.
+        """记录刚创建的资源的直接、项目作用域 URL。
 
-        Best-effort: the resource is already persisted by the time this runs,
-        so a failure to resolve the project or workspace must not turn a
-        successful creation into an error. ``build_url`` receives the resolved
-        ``(workspace, project_id)``.
+        尽力而为：此方法运行时资源已经持久化，因此解析项目或工作区失败
+        不得将成功的创建变为错误。``build_url`` 接收解析后的
+        ``(workspace, project_id)``。
         """
         try:
             project_id = rest_helpers.resolve_project_id_by_name(
@@ -257,14 +254,14 @@ class Opik:
             url = build_url(self._dereferenced_workspace(), project_id)
         except Exception:
             LOGGER.debug(
-                "Could not resolve the URL for the created %s %r",
+                "无法解析已创建的 %s %r 的 URL",
                 kind,
                 name,
                 exc_info=True,
             )
             return
 
-        LOGGER.info(f'Created a "{name}" {kind} at {url}.')
+        LOGGER.info(f'已在 {url} 创建 {kind} "{name}"。')
 
     def auth_check(self) -> None:
         """
@@ -437,7 +434,7 @@ class Opik:
 
         if not self._use_batching:
             raise exceptions.OpikException(
-                "In order to use this method, you must enable batching using opik.Opik(batching=True)."
+                "要使用此方法，必须通过 opik.Opik(batching=True) 启用批处理。"
             )
 
         traces_public = self.search_traces(project_name=project_name)
@@ -502,31 +499,32 @@ class Opik:
         创建并记录一个新的span。
 
         Args:
-            trace_id: The unique identifier for the trace. If not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid7.com/) ID.
-            id: The unique identifier for the span. If not provided, a new ID will be generated. Must be a valid [UUIDv7](https://uuid7.com/) ID.
-            parent_span_id: The unique identifier for the parent span.
-            name: The name of the span.
-            type: The type of the span. Default is "general".
-            start_time: The start time of the span. If not provided, the current local time will be used.
-            end_time: The end time of the span.
-            metadata: Additional metadata for the span. This can be any valid JSON serializable object.
-            input: The input data for the span. This can be any valid JSON serializable object.
-            output: The output data for the span. This can be any valid JSON serializable object.
-            tags: Tags associated with the span.
-            feedback_scores: The list of feedback score dicts associated with the span. Dicts don't require having an `id` value.
-            project_name: The name of the project. If not provided, falls back to the active project context
-                (from @track or opik.project_context), then to the client's default.
-            usage: Usage data for the span. In order for input, output, and total tokens to be visible in the UI,
-                the usage must contain OpenAI-formatted keys (they can be passed additionally to the original usage on the top level of the dict): prompt_tokens, completion_tokens, and total_tokens.
-                If OpenAI-formatted keys were not found, Opik will try to calculate them automatically if the usage
-                format is recognized (you can see which provider's formats are recognized in opik.LLMProvider enum), but it is not guaranteed.
-            model: The name of LLM (in this case `type` parameter should be == `llm`)
-            provider: The provider of LLM. You can find providers officially supported by Opik for cost tracking
-                in `opik.LLMProvider` enum. If your provider is not here, please open an issue in our GitHub - https://github.com/comet-ml/opik.
-                If your provider is not in the list, you can still specify it, but the cost tracking will not be available
-            error_info: The dictionary with error information (typically used when the span function has failed).
-            total_cost: The cost of the span in USD. This value takes priority over the cost calculated by Opik from the usage.
-            attachments: The list of attachments to be uploaded to the span.
+            trace_id: trace 的唯一标识符。如果未提供，将生成新的 ID。必须是有效的 [UUIDv7](https://uuid7.com/) ID。
+            id: span 的唯一标识符。如果未提供，将生成新的 ID。必须是有效的 [UUIDv7](https://uuid7.com/) ID。
+            parent_span_id: 父 span 的唯一标识符。
+            name: span 的名称。
+            type: span 的类型。默认为 "general"。
+            start_time: span 的开始时间。如果未提供，将使用当前本地时间。
+            end_time: span 的结束时间。
+            metadata: span 的附加元数据。可以是任何有效的 JSON 可序列化对象。
+            input: span 的输入数据。可以是任何有效的 JSON 可序列化对象。
+            output: span 的输出数据。可以是任何有效的 JSON 可序列化对象。
+            tags: 与 span 关联的标签。
+            feedback_scores: 与 span 关联的反馈分数字典列表。字典不需要包含 `id` 值。
+            project_name: 项目名称。如果未提供，则回退到活动项目上下文
+                （来自@track或opik.project_context），然后使用客户端默认值。
+            usage: span 的使用数据。为了在 UI 中显示输入、输出和总 token 数，
+                usage 必须包含 OpenAI 格式的键（可以在字典顶层额外传递给原始使用数据）：
+                prompt_tokens、completion_tokens 和 total_tokens。
+                如果未找到 OpenAI 格式的键，Opik 将尝试在识别出使用数据格式时自动计算它们
+                （可以在 opik.LLMProvider 枚举中查看识别了哪些提供商的格式），但不保证成功。
+            model: LLM 的名称（此时 `type` 参数应为 == `llm`）
+            provider: LLM 的提供商。可以在 `opik.LLMProvider` 枚举中找到 Opik 官方支持的成本跟踪提供商。
+                如果您的提供商不在其中，请在我们的 GitHub 上提交 issue - https://github.com/comet-ml/opik。
+                如果您的提供商不在列表中，仍然可以指定它，但成本跟踪将不可用。
+            error_info: 包含错误信息的字典（通常在 span 函数失败时使用）。
+            total_cost: span 的成本（以美元为单位）。此值优先于 Opik 根据使用情况计算的成本。
+            attachments: 要上传到 span 的附件列表。
 
         Returns:
             span.Span: 创建的span对象。
@@ -783,7 +781,7 @@ class Opik:
 
         if not trace_id or not project_name:
             raise ValueError(
-                "trace_id and project_name must be provided and can not be None or empty, "
+                "trace_id 和 project_name 必须提供且不能为 None 或空，"
                 f"trace_id: {trace_id}, project_name: {project_name}"
             )
 
@@ -835,7 +833,7 @@ class Opik:
         )
         if score_messages is None:
             LOGGER.error(
-                f"No valid spans feedback scores to log from provided ones: {scores}"
+                f"在提供的反馈分数中没有有效的 span 反馈分数可记录：{scores}"
             )
             return
 
@@ -885,7 +883,7 @@ class Opik:
 
         if score_messages is None:
             LOGGER.error(
-                f"No valid traces feedback scores to log from provided ones: {scores}"
+                f"在提供的反馈分数中没有有效的 trace 反馈分数可记录：{scores}"
             )
             return
 
@@ -922,8 +920,8 @@ class Opik:
                 continue
             if item.get("status") not in ("passed", "failed"):
                 LOGGER.error(
-                    "Skipping assertion result with invalid status %r — "
-                    "must be 'passed' or 'failed': %s",
+                    "跳过状态无效 %r 的断言结果——"
+                    "必须为 'passed' 或 'failed'：%s",
                     item.get("status"),
                     item,
                 )
@@ -932,7 +930,7 @@ class Opik:
 
         if len(valid_items) == 0:
             LOGGER.error(
-                f"No valid assertion results to log from provided ones: {assertion_results}"
+                f"在提供的断言结果中没有有效的可记录结果：{assertion_results}"
             )
             return
 
@@ -1107,7 +1105,7 @@ class Opik:
             )
         except rest_api_errors.ConflictError:
             raise exceptions.EnvironmentAlreadyExists(
-                f"Environment {name!r} already exists in this workspace."
+                f"环境 {name!r} 已存在于该工作区中。"
             )
         return self._rest_client.environments.get_environment_by_id(new_id)
 
@@ -1135,12 +1133,12 @@ class Opik:
         """
         if color is not None and name in self._BUILTIN_ENVIRONMENT_NAMES:
             raise exceptions.EnvironmentConfigurationError(
-                f"Cannot change the colour of the built-in environment {name!r}. "
-                "Colour updates are not allowed for 'production', 'staging', or 'development'."
+                f"无法更改内置环境 {name!r} 的颜色。"
+                "不允许对 'production'、'staging' 或 'development' 进行颜色更新。"
             )
         existing = self._find_environment_by_name(name)
         if existing is None:
-            raise exceptions.OpikException(f"No environment found with name {name!r}.")
+            raise exceptions.OpikException(f"未找到名称为 {name!r} 的环境。")
         self._rest_client.environments.update_environment(
             existing.id,
             description=description,
@@ -1740,20 +1738,20 @@ class Opik:
         使用给定的数据集名称和可选参数创建新实验。
 
         Args:
-            dataset_name: The name of the dataset to associate with the experiment.
-            name: The optional name for the experiment. If None, a generated name will be used.
-            experiment_config: Optional experiment configuration parameters. Must be a dictionary if provided.
-            prompt: Prompt object to associate with the experiment. Deprecated, use `prompts` argument instead.
-            prompts: List of Prompt objects to associate with the experiment.
-            type: The type of the experiment. Can be "regular", "trial", or "mini-batch".
-                Defaults to "regular". "trial" and "mini-batch" are only relevant for prompt optimization experiments.
-            optimization_id: Optional ID of the optimization associated with the experiment.
-            tags: Optional list of tags to associate with the experiment.
-            dataset_version_id: Optional ID of the dataset version to associate with the experiment.
-            project_name: Optional name of the project to associate the experiment with.
-            experiment_id: Optional explicit id for the experiment. When None a fresh id is
-                generated. Callers that must know the id before creation (e.g. the migrate
-                cascade, which records it for crash-safe cleanup) can supply their own.
+            dataset_name: 要与实验关联的数据集名称。
+            name: 实验的可选名称。如果为 None，将使用生成的名称。
+            experiment_config: 可选的实验配置参数。如果提供，必须为字典。
+            prompt: 要与实验关联的 Prompt 对象。已弃用，请改用 `prompts` 参数。
+            prompts: 要与实验关联的 Prompt 对象列表。
+            type: 实验的类型。可以是 "regular"、"trial" 或 "mini-batch"。
+                默认为 "regular"。"trial" 和 "mini-batch" 仅与提示词优化实验相关。
+            optimization_id: 与实验关联的优化的可选 ID。
+            tags: 要与实验关联的可选标签列表。
+            dataset_version_id: 要与实验关联的数据集版本的可选 ID。
+            project_name: 要与实验关联的项目的可选名称。
+            experiment_id: 实验的可选显式 id。当为 None 时会生成新的 id。
+                必须在创建前知道 id 的调用者（例如迁移级联，它记录 id 用于崩溃安全的清理）
+                可以提供自己的 id。
 
         Returns:
             experiment.Experiment: 新创建的实验对象。
@@ -1819,12 +1817,12 @@ class Opik:
         """
         if not id:
             raise ValueError(
-                f"id must be provided and can not be None or empty, id: {id}"
+                f"必须提供 id 且不能为 None 或空，id: {id}"
             )
 
         if name is None and experiment_config is None:
             raise ValueError(
-                "At least one of 'name' or 'experiment_config' must be provided"
+                "必须提供 'name' 或 'experiment_config' 中的至少一个"
             )
 
         # 仅包含提供的参数以避免清除字段
@@ -1921,7 +1919,7 @@ class Opik:
         except ApiError as exception:
             if exception.status_code == 404:
                 raise exceptions.ExperimentNotFound(
-                    f"Experiment with the id {id} not found."
+                    f"未找到 id 为 {id} 的实验。"
                 ) from exception
             raise
 
@@ -1940,16 +1938,13 @@ class Opik:
         self, timeout: Optional[int] = None, *, flush: bool = True
     ) -> Optional[data_loss.FlushResult]:
         """
-        End the Opik session, releasing this client's connection reference. When
-        ``flush`` is True (the default), all pending messages are submitted
-        first; when ``flush`` is False, anything still queued is dropped.
+        结束 Opik 会话，释放此客户端的连接引用。当 ``flush`` 为 True（默认值）时，
+        首先提交所有待处理的消息；当 ``flush`` 为 False 时，仍排队中的任何内容都会被丢弃。
 
-        Connection resources are shared and ref-counted across clients with a
-        matching configuration: this releases the current client's reference.
-        The underlying streamer/threads are torn down only when the last client
-        sharing them is ended (or garbage-collected). When ``flush`` is True the
-        flush drains the *shared* queue, so pending data from other clients on
-        the same connection is delivered too.
+        连接资源在具有匹配配置的客户端之间共享并按引用计数：这会释放当前客户端的引用。
+        底层的流处理器/线程仅在最后一个共享它们的客户端被结束（或被垃圾回收）时才被拆除。
+        当 ``flush`` 为 True 时，flush 会排空*共享*队列，因此同一连接上其他客户端的
+        待处理数据也会被发送。
 
         Args:
             timeout (Optional[int]): 关闭流处理器的超时时间。一旦达到超时，
@@ -1960,36 +1955,33 @@ class Opik:
                 如果为False，则在发送停止信号后立即返回，丢弃仍在传输中的
                 任何内容——适用于测试内断言已在测试期间轮询后端的测试拆卸。
 
-        After ``end()`` the client must not be used again. Calling ``trace()``,
-        ``span()``, ``flush()``, etc. on an ended client is unsupported and its
-        behavior is undefined: it may silently no-op, or — because the transport
-        is shared — it may still succeed by riding another live client's
-        resources. Do not rely on either outcome; create a new client instead.
+        在 ``end()`` 之后，客户端不得再次使用。在已结束的客户端上调用 ``trace()``、
+        ``span()``、``flush()`` 等是不受支持的，其行为未定义：它可能静默地不做任何事，
+        或者——因为传输是共享的——它可能通过借用另一个仍存活的客户端的资源而成功。
+        不要依赖任何一种结果；应改为创建新客户端。
 
-        The outcome is also available afterwards via :attr:`last_flush_result`.
+        之后也可以通过 :attr:`last_flush_result` 获取结果。
 
         Returns:
-            The flush outcome (including any data-loss detail) when ``flush`` is
-            True; ``None`` when ``flush`` is False (nothing was flushed).
+            当 ``flush`` 为 True 时返回 flush 结果（包括任何数据丢失详情）；
+            当 ``flush`` 为 False 时返回 ``None``（未执行任何 flush）。
         """
         timeout = timeout if timeout is not None else self._flush_timeout
         marker = self._flush_reporter.marker()
-        # Explicit teardown on a user thread, so close on the last reference
-        # (close_on_zero=True). Releasing is idempotent, so the detached GC
-        # finalizer cannot double-decrement. release() returns the authoritative
-        # flush outcome computed inside the drain (streamer.flush) — the same
-        # source flush() uses — rather than the weaker queue_size()==0 proxy,
-        # which can read empty on the pop-vs-processed race and while file
-        # uploads are still in flight.
+        # 在用户线程上进行显式拆除，因此在最后一个引用时关闭
+        # (close_on_zero=True)。释放是幂等的，因此分离的 GC
+        # 终结器不会重复递减。release() 返回在排空（streamer.flush）内部计算的
+        # 权威 flush 结果——与 flush() 使用的相同来源——而不是较弱的
+        # queue_size()==0 代理，后者在弹出与处理的竞态以及文件上传仍在进行时
+        # 可能读取为空。
         flushed = self._lease.release(timeout, flush=flush, close_on_zero=True)
         self._finalizer.detach()
         if not flush:
             return None
         if flushed is None:
-            # No drain ran on this call — e.g. a repeated end() after the client
-            # was already released. Keep the outcome from the release that did
-            # the work rather than overwriting it with a spurious not-flushed
-            # result, so end() is idempotent.
+            # 此调用未运行排空——例如客户端已被释放后重复调用 end()。
+            # 保留实际完成工作的释放所产生的结果，而不是用虚假的“未 flush”
+            # 结果覆盖它，使 end() 保持幂等。
             return self._last_flush_result
         self._last_flush_result = self._flush_reporter.build_result(
             marker, flushed=flushed
@@ -2000,21 +1992,19 @@ class Opik:
         """
         刷新流处理器以确保所有消息已发送。
 
-        Attachment/file upload *failures* are not counted in the data-loss
-        detail (``dropped_*`` / ``failures``), but an incomplete upload still
-        makes the flush report as not fully flushed — so ``flushed`` (and hence
-        the returned bool) does reflect uploads. Never raises and never blocks
-        beyond ``timeout``: an observability SDK must not disrupt the app it
-        instruments. Detailed outcome — including any data that was dropped — is
-        available via :attr:`last_flush_result`.
+        附件/文件上传的*失败*不计入数据丢失详情（``dropped_*`` / ``failures``），
+        但不完整的上传仍会使 flush 报告为未完全 flush——因此 ``flushed``
+        （以及返回的布尔值）确实反映上传情况。从不引发异常，也从不阻塞超过
+        ``timeout``：可观测性 SDK 不得干扰它所埋点的应用。详细结果——
+        包括任何被丢弃的数据——可通过 :attr:`last_flush_result` 获取。
 
         Args:
             timeout (Optional[int]): 刷新流处理器的超时时间。一旦达到超时，
                 刷新方法将返回，无论所有消息是否已发送。
 
         Returns:
-            True if all messages were delivered within the timeout with no data
-            loss; False if the timeout was hit or any message was dropped.
+            如果所有消息都在超时时间内送达且没有数据丢失，则返回 True；
+            如果达到超时或任何消息被丢弃，则返回 False。
         """
         timeout = timeout if timeout is not None else self._flush_timeout
         try:
@@ -2025,12 +2015,12 @@ class Opik:
             )
             return self._last_flush_result.success
         except Exception:
-            # An observability SDK must not disrupt the app it instruments: a
-            # failure inside flush is reported as "not flushed", never raised.
-            # Record a failed outcome so last_flush_result reflects this attempt
-            # rather than keeping a stale prior success. Built directly (not via
-            # build_result, which may itself be what raised) so it cannot re-raise.
-            LOGGER.error("Opik flush failed unexpectedly", exc_info=True)
+            # 可观测性 SDK 不得干扰它所埋点的应用：flush 内部的失败
+            # 会被报告为“未 flush”，而从不引发异常。
+            # 记录失败结果，使 last_flush_result 反映本次尝试，
+            # 而不是保留过期的先前成功。直接构建（而非通过 build_result，
+            # 它本身可能就是引发异常的地方），因此不会再次引发。
+            LOGGER.error("Opik flush 意外失败", exc_info=True)
             self._last_flush_result = data_loss.FlushResult(
                 flushed=False,
                 remaining_queue_size=0,
@@ -2042,25 +2032,24 @@ class Opik:
 
     @property
     def last_flush_result(self) -> Optional[data_loss.FlushResult]:
-        """Outcome of the most recent ``flush()``/``end()`` on this client.
+        """此客户端最近一次 ``flush()``/``end()`` 的结果。
 
-        ``None`` until the first flush.
+        在首次 flush 之前为 ``None``。
         """
         return self._last_flush_result
 
     def get_errors_report(self) -> data_loss.ErrorsReport:
-        """Report of messages the background sender terminally dropped.
+        """后台发送器最终丢弃的消息报告。
 
-        Unlike :attr:`last_flush_result`, which is scoped to a single flush, this
-        reports the sender's retained data-loss history — including drops that
-        happened before or between flushes.
+        与仅针对单次 flush 的 :attr:`last_flush_result` 不同，它报告
+        发送器保留的数据丢失历史——包括在 flush 之前或两次 flush 之间发生的丢弃。
 
-        The report is **capped**: the total counts are exact, but the per-drop
-        ``failures`` list keeps only the most recent entries (bounded, drop-oldest)
-        so it never grows without bound — see :class:`~opik.ErrorsReport`.
+        该报告是**有上限的**：总计数是精确的，但每次丢弃的 ``failures``
+        列表只保留最近的条目（有界、丢弃最旧的），因此它不会无限增长——
+        参见 :class:`~opik.ErrorsReport`。
 
-        The sender is shared across clients with a matching configuration, so
-        the report may include drops from sibling clients on the same connection.
+        发送器在具有匹配配置的客户端之间共享，因此该报告可能包含
+        同一连接上同级客户端的丢弃。
         """
         return self._flush_reporter.build_errors_report()
 
@@ -2129,31 +2118,31 @@ class Opik:
                 - `tags`: contains（仅）
                 - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`, `duration`, `number_of_messages`, `total_estimated_cost`: =, !=, >, <, >=, <=
 
-                Examples:
-                - `start_time >= "2024-01-01T00:00:00Z"` - Filter by start date
-                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - Date range
-                - `input contains "question"` - Filter by input content
-                - `usage.total_tokens > 1000` - Filter by token usage
-                - `feedback_scores.accuracy > 0.8` - Filter by feedback score
-                - `feedback_scores.my_metric is_empty` - Filter traces with empty feedback score
-                - `feedback_scores.my_metric is_not_empty` - Filter traces with non-empty feedback score
-                - `tags contains "production"` - Filter by tag
-                - `metadata.model = "gpt-4"` - Filter by metadata field
-                - `thread_id = "thread_123"` - Filter by thread ID
-                - `environment = "production"` - Filter by environment
-                - `environment in ("production", "staging")` - Filter by multiple environments
+                示例：
+                - `start_time >= "2024-01-01T00:00:00Z"` - 按开始日期过滤
+                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - 日期范围
+                - `input contains "question"` - 按输入内容过滤
+                - `usage.total_tokens > 1000` - 按 token 使用量过滤
+                - `feedback_scores.accuracy > 0.8` - 按反馈分数过滤
+                - `feedback_scores.my_metric is_empty` - 过滤反馈分数为空的 trace
+                - `feedback_scores.my_metric is_not_empty` - 过滤反馈分数非空的 trace
+                - `tags contains "production"` - 按标签过滤
+                - `metadata.model = "gpt-4"` - 按元数据字段过滤
+                - `thread_id = "thread_123"` - 按线程 ID 过滤
+                - `environment = "production"` - 按环境过滤
+                - `environment in ("production", "staging")` - 按多个环境过滤
 
-                If not provided, all traces in the project will be returned up to the limit.
-            max_results: The maximum number of traces to return.
-            truncate: Whether to truncate image data stored in input, output, or metadata
-            exclude: Fields to exclude from the response. For example, ["feedback_scores"]
-            wait_for_at_least: The minimum number of traces to wait for before returning.
-            wait_for_timeout: The timeout for waiting for traces.
-            max_batch_size: The maximum number of traces requested per page from the backend
-                (default 2000). The backend buffers a page in memory before streaming it, so a
-                large page of heavy traces (e.g. with inline attachments) can spike server memory;
-                lower this to bound per-request memory. On a connection/timeout error the page size
-                is automatically halved and the page retried.
+                如果未提供，将返回项目中所有 trace，最多返回限制数量。
+            max_results: 要返回的最大 trace 数量。
+            truncate: 是否截取存储在输入、输出或元数据中的图像数据
+            exclude: 要从响应中排除的字段。例如，["feedback_scores"]
+            wait_for_at_least: 返回前至少等待的 trace 数量。
+            wait_for_timeout: 等待 trace 的超时时间。
+            max_batch_size: 每次从后端请求的每页最大 trace 数量
+                （默认 2000）。后端在流式传输前会在内存中缓冲一页，因此
+                一页包含大量 trace（例如带内联附件）可能会使服务器内存激增；
+                降低此值以限制单次请求的内存占用。在连接/超时错误时，页面大小
+                会自动减半并重试该页。
 
         Raises:
             如果在指定超时内未找到wait_for_at_least数量的traces，引发exceptions.SearchTimeoutError。
@@ -2189,7 +2178,7 @@ class Opik:
         )
         if len(result) < wait_for_at_least:
             raise exceptions.SearchTimeoutError(
-                f"Timeout after {wait_for_timeout} seconds: expected {wait_for_at_least} traces, but only {len(result)} were found."
+                f"在 {wait_for_timeout} 秒后超时：预期 {wait_for_at_least} 条 trace，但仅找到 {len(result)} 条。"
             )
 
         return result
@@ -2242,31 +2231,31 @@ class Opik:
                 - `tags`: contains（仅）
                 - `usage.total_tokens`, `usage.prompt_tokens`, `usage.completion_tokens`, `duration`, `number_of_messages`, `total_estimated_cost`: =, !=, >, <, >=, <=
 
-                Examples:
-                - `start_time >= "2024-01-01T00:00:00Z"` - Filter by start date
-                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - Date range
-                - `input contains "question"` - Filter by input content
-                - `usage.total_tokens > 1000` - Filter by token usage
-                - `feedback_scores.accuracy > 0.8` - Filter by feedback score
-                - `feedback_scores.my_metric is_empty` - Filter spans with empty feedback score
-                - `feedback_scores.my_metric is_not_empty` - Filter spans with non-empty feedback score
-                - `tags contains "production"` - Filter by tag
-                - `metadata.model = "gpt-4"` - Filter by metadata field
-                - `thread_id = "thread_123"` - Filter by thread ID
-                - `environment = "production"` - Filter by environment
-                - `environment in ("production", "staging")` - Filter by multiple environments
+                示例：
+                - `start_time >= "2024-01-01T00:00:00Z"` - 按开始日期过滤
+                - `start_time > "2024-01-01T00:00:00Z" AND start_time < "2024-02-01T00:00:00Z"` - 日期范围
+                - `input contains "question"` - 按输入内容过滤
+                - `usage.total_tokens > 1000` - 按 token 使用量过滤
+                - `feedback_scores.accuracy > 0.8` - 按反馈分数过滤
+                - `feedback_scores.my_metric is_empty` - 过滤反馈分数为空的 span
+                - `feedback_scores.my_metric is_not_empty` - 过滤反馈分数非空的 span
+                - `tags contains "production"` - 按标签过滤
+                - `metadata.model = "gpt-4"` - 按元数据字段过滤
+                - `thread_id = "thread_123"` - 按线程 ID 过滤
+                - `environment = "production"` - 按环境过滤
+                - `environment in ("production", "staging")` - 按多个环境过滤
 
-                If not provided, all spans in the project/trace will be returned up to the limit.
-            max_results: The maximum number of spans to return.
-            truncate: Whether to truncate image data stored in input, output, or metadata
-            exclude: List of fields to exclude from the response (e.g., ["feedback_scores", "input", "output"])
-            wait_for_at_least: The minimum number of spans to wait for before returning.
-            wait_for_timeout: The timeout for waiting for spans.
-            max_batch_size: The maximum number of spans requested per page from the backend
-                (default 2000). The backend buffers a page in memory before streaming it, so a
-                large page of heavy spans (e.g. with inline attachments) can spike server memory;
-                lower this to bound per-request memory. On a connection/timeout error the page size
-                is automatically halved and the page retried.
+                如果未提供，将返回项目/trace 中所有 span，最多返回限制数量。
+            max_results: 要返回的最大 span 数量。
+            truncate: 是否截取存储在输入、输出或元数据中的图像数据
+            exclude: 要从响应中排除的字段列表（例如，["feedback_scores", "input", "output"]）
+            wait_for_at_least: 返回前至少等待的 span 数量。
+            wait_for_timeout: 等待 span 的超时时间。
+            max_batch_size: 每次从后端请求的每页最大 span 数量
+                （默认 2000）。后端在流式传输前会在内存中缓冲一页，因此
+                一页包含大量 span（例如带内联附件）可能会使服务器内存激增；
+                降低此值以限制单次请求的内存占用。在连接/超时错误时，页面大小
+                会自动减半并重试该页。
 
         Raises:
             如果在指定超时内未找到wait_for_at_least数量的spans，引发exceptions.SearchTimeoutError。
@@ -2302,7 +2291,7 @@ class Opik:
         )
         if len(result) < wait_for_at_least:
             raise exceptions.SearchTimeoutError(
-                f"Timeout after {wait_for_timeout} seconds: expected {wait_for_at_least} spans, but only {len(result)} were found."
+                f"在 {wait_for_timeout} 秒后超时：预期 {wait_for_at_least} 条 span，但仅找到 {len(result)} 条。"
             )
 
         return result
@@ -2310,7 +2299,7 @@ class Opik:
     def get_trace_content(self, id: str) -> trace_public.TracePublic:
         """
         Args:
-            id (str): trace id
+            id (str): trace 的 id
         Returns:
             trace_public.TracePublic: 包含找到的trace所有数据的pydantic模型对象。
             如果未找到trace则引发错误。
@@ -2320,7 +2309,7 @@ class Opik:
     def get_span_content(self, id: str) -> span_public.SpanPublic:
         """
         Args:
-            id (str): span id
+            id (str): span 的 id
         Returns:
             span_public.SpanPublic: 包含找到的span所有数据的pydantic模型对象。
             如果未找到span则引发错误。
@@ -2361,10 +2350,10 @@ class Opik:
         )
 
     def _dereferenced_workspace(self) -> str:
-        """Resolve the configured workspace to the concrete workspace name.
+        """将配置的工作区解析为具体的工作区名称。
 
-        The self-hosted default ``"default"`` placeholder is looked up against
-        the backend so URLs point at the actual workspace.
+        自托管默认的 ``"default"`` 占位符会向后台查询，
+        以便 URL 指向实际的工作区。
         """
         if self._workspace == opik_config.OPIK_WORKSPACE_DEFAULT_NAME:
             return self._rest_client.check.get_workspace_name().workspace_name
@@ -2675,10 +2664,10 @@ class Opik:
             if e.status_code == 404:
                 if version is not None:
                     raise exceptions.PromptNotFoundError(
-                        f"No version {version!r} found for prompt {prompt_name!r}."
+                        f"未找到提示词 {prompt_name!r} 的版本 {version!r}。"
                     ) from e
                 raise exceptions.PromptNotFoundError(
-                    f"No prompt found with name {prompt_name!r}."
+                    f"未找到名称为 {prompt_name!r} 的提示词。"
                 ) from e
             raise
 
@@ -2693,7 +2682,7 @@ class Opik:
             # （冲突，当名称与工作区注册表检查冲突时）。
             if e.status_code in (404, 409):
                 raise exceptions.EnvironmentNotFoundError(
-                    f"One or more environments in {target!r} are not registered in this workspace."
+                    f"{target!r} 中的一个或多个环境未在该工作区中注册。"
                 ) from e
             raise
 
@@ -3024,7 +3013,7 @@ class Opik:
             )
         except Exception as e:
             LOGGER.warning(
-                f"Failed to get project for optimization with ID: {id}, reason: {e}"
+                f"获取 ID 为 {id} 的优化对应项目失败，原因：{e}"
             )
 
         return optimization.Optimization(id=id, rest_client=self._rest_client)
@@ -3339,14 +3328,14 @@ class Opik:
             not isinstance(fallback, Config) or type(fallback) is Config
         ):
             raise TypeError(
-                "fallback must be an instance of a Config subclass, "
-                f"got {type(fallback).__name__}"
+                "fallback 必须是 Config 子类的实例，"
+                f"实际为 {type(fallback).__name__}"
             )
 
         if env is not None and version is not None:
             raise ValueError(
-                "Specify at most one of 'env' (fetch by environment tag) "
-                "or 'version' (fetch by version name)."
+                "最多只能指定 'env'（按环境标签获取）"
+                "或 'version'（按版本名称获取）中的一个。"
             )
 
         # 解析选择器：
@@ -3402,8 +3391,8 @@ class Opik:
         """
         if not isinstance(config, Config) or type(config) is Config:
             raise TypeError(
-                "config must be an instance of a Config subclass, "
-                f"got {type(config).__name__}"
+                "config 必须是 Config 子类的实例，"
+                f"实际为 {type(config).__name__}"
             )
 
         manager = ConfigManager(
@@ -3449,8 +3438,8 @@ _context_client_var: contextvars.ContextVar[Optional[Opik]] = contextvars.Contex
     "_context_client_var", default=None
 )
 _global_singleton: Optional[Opik] = None
-# Serializes lazy creation of the global singleton so concurrent cold-start
-# callers share one client instead of racing to build several.
+# 序列化全局单例的懒创建，使并发的冷启动调用者共享一个客户端，
+# 而不是竞相构建多个。
 _global_singleton_lock = threading.Lock()
 
 
@@ -3484,10 +3473,9 @@ def get_global_client() -> Opik:
         return client
 
     global _global_singleton
-    # Re-check under the lock: without it, concurrent cold-start callers (e.g. one
-    # tracer shared by parallel pipelines) each build a client and its full
-    # transport stack, and all but one are immediately discarded — wasteful, and
-    # it races the shared connection-resource manager's build path.
+    # 在锁下再次检查：没有它，并发的冷启动调用者（例如一个由并行管道
+    # 共享的 tracer）会各自构建一个客户端及其完整传输栈，并且除一个外
+    # 全部立即被丢弃——既浪费，又与共享连接资源管理器的构建路径发生竞态。
     with _global_singleton_lock:
         client = get_current_client_raw()
         if client is not None:

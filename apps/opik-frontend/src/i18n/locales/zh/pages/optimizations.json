@@ -60,7 +60,8 @@
       "optCost": "优化成本"
     },
     "filters": {
-      "testSuite": "测试套件"
+      "testSuite": "测试套件",
+      "status": "状态"
     },
     "actions": {
       "view": "查看运行",
@@ -105,6 +106,7 @@
       "variableNotInSource": "{{variables}} 不在所选条目来源中",
       "availableVariables": "可用：{{variables}}",
       "updatePromptOrMetric": "请更新提示词/指标或选择匹配的条目来源。",
+      "providerKeyWarning": "启动前请为此提供商添加或检查 API 密钥——否则运行将失败。",
       "collapseDatasetItemSample": "收起数据集项目示例",
       "viewDatasetItemSample": "查看数据集项目示例",
       "payload": "载荷"
@@ -192,8 +194,15 @@
       "referenceKeyAdvancedPlaceholder": "例如：answer 或 $.scores[?(@.name=='Useful')].value",
       "referenceKeyScorePlaceholder": "例如：score 或 $.feedback_scores[?(@.name=='Useful')].value",
       "caseSensitiveComparison": "区分大小写比较",
+      "caseSensitive": "区分大小写",
       "pythonCode": "Python 代码",
-      "pythonCodeDescription": "定义一个继承 BaseMetric 的类，包含一个 score 方法，该方法接受 output（LLM 响应）和 **kwargs（数据集字段），返回 ScoreResult。",
+      "code": "代码",
+      "pythonCodeDescription": "定义一个继承 BaseMetric 的类，包含一个 score 方法，该方法接受 output（LLM 响应）和 **kwargs（数据集字段）。使用 kwargs.get(\"field_name\") 读取字段，这样缺少字段时不会抛出异常，最后返回 ScoreResult。",
+      "pythonCodeSyntaxError": "Python 代码存在语法错误",
+      "argumentMapping": "参数映射（{{count}}）",
+      "argumentMappingDescription": "将每个 score() 参数映射到数据集列。留空则使用同名列。",
+      "selectDatasetColumn": "选择数据集列",
+      "noDatasetColumns": "无数据集列",
       "taskIntroduction": "任务介绍",
       "taskIntroductionPlaceholder": "描述任务上下文和您正在评估的内容...",
       "evaluationCriteria": "评估标准",

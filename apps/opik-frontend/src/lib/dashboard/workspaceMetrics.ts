@@ -1,3 +1,5 @@
+import i18next from "i18next";
+
 import { METRIC_NAME_TYPE } from "@/api/projects/useProjectMetric";
 
 // Metric supported when aggregating across projects via the workspace endpoint
@@ -13,7 +15,7 @@ export const isWorkspaceMetric = (metric?: string): boolean =>
 export const WORKSPACE_TIME_SERIES_METRIC_OPTIONS = [
   {
     value: METRIC_NAME_TYPE.SPAN_TOKEN_USAGE,
-    label: "Span token usage",
+    label: i18next.t("common:dashboard.workspaceMetrics.spanTokenUsage"),
     filterType: "span" as const,
   },
 ];
@@ -32,7 +34,7 @@ export type WorkspaceStatMetricDefinition = {
 export const WORKSPACE_STAT_METRICS: WorkspaceStatMetricDefinition[] = [
   {
     value: METRIC_NAME_TYPE.SPAN_TOKEN_USAGE,
-    label: "Total span token usage",
+    label: i18next.t("common:dashboard.workspaceMetrics.totalSpanTokenUsage"),
     formatter: (value: number) => value.toLocaleString(),
     requiresUsageKey: true,
   },

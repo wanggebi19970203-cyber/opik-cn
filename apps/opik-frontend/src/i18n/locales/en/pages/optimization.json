@@ -12,7 +12,8 @@
       "rerun": "Duplicate run",
       "stopExecution": "Stop Execution",
       "dataset": "Dataset",
-      "goToDataset": "Go to {{name}}"
+      "goToDataset": "Go to {{name}}",
+      "backToOptimizationRuns": "Back to optimization runs"
     },
     "kpi": {
       "optimizationCost": "Optimization cost",
@@ -49,11 +50,92 @@
       "running": "Running"
     },
     "prompt": {
-      "diffVsBaseline": "Diff vs baseline"
+      "diffVsBaseline": "Diff vs baseline",
+      "viewDiffVsBaseline": "View diff vs baseline"
     },
     "view": {
       "logs": "Logs",
       "configuration": "Configuration"
+    },
+    "runStatus": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "initialized": "Initialized",
+      "error": "Error"
+    },
+    "trialSidebar": {
+      "results": "Results",
+      "prompt": "Prompt",
+      "logs": "Logs",
+      "optimizationLogs": "Optimization logs",
+      "baseline": "Baseline",
+      "trialNumber": "Trial #{{number}}",
+      "trial": "Trial"
+    },
+    "trialStatus": {
+      "details": "Details",
+      "best": "Best",
+      "baseline": "Baseline",
+      "step": "Step {{stepIndex}}"
+    },
+    "trialPrompt": {
+      "title": "Trial prompt",
+      "noPromptAvailable": "No prompt available.",
+      "trial": "Trial"
+    },
+    "trialItems": {
+      "testSuiteItemId": "Test suite item ID",
+      "noData": "There is no data for the selected trials",
+      "testSuite": "Test suite",
+      "testSuiteSuffix": "{{label}} (Test suite)",
+      "evaluationTask": "Evaluation task",
+      "optimizationsScores": "Optimizations scores",
+      "selectScore": "Select score",
+      "passed": "passed",
+      "testItems": "Test items",
+      "evaluationResults": "Evaluation results"
+    },
+    "errorPanel": {
+      "title": "Optimization failed",
+      "logsCouldNotBeLoaded": "The run ended with an error, but the logs could not be loaded.",
+      "openLogsForDetails": "The run ended with an error. Open the logs for details.",
+      "retry": "Retry",
+      "viewLogs": "View logs"
+    },
+    "emptyRun": {
+      "viewLogs": "View logs",
+      "noCandidatesGenerated": "No candidates generated",
+      "noUsableScores": "No usable scores",
+      "noCandidatesMessage": "The optimizer produced no prompt variants to score, so the baseline prompt was kept. This is common when the original prompt already scores well.",
+      "itemFailedToScore": "The item failed to score",
+      "allItemsFailedToScore": "All {{count}} items failed to score",
+      "itemsFailedToScore": "{{failed}} of {{total}} items failed to score",
+      "allFailedTail": "The metric may have errored on every evaluation. Open the logs, check the metric and model, then run it again.",
+      "partialTail": "Some evaluations did not produce a usable result. Open the logs to see which items failed, then run it again.",
+      "heuristicFallback": "This run finished but produced no usable scores — the metric may have failed on every item. Open the logs, check the metric and model, then run it again.",
+      "noCandidatesCaption": "No candidates generated. Baseline prompt kept.",
+      "noUsableScoresCaption": "No usable scores — check the logs.",
+      "checkLogsSuffix": "check the logs."
+    },
+    "bestTrial": {
+      "title": "Best trial prompt",
+      "viewTrial": "View trial",
+      "hideDiff": "Hide diff",
+      "bestTrial": "Best trial",
+      "noImprovement": "No improvement over baseline — the original prompt was kept."
+    },
+    "metricPopover": {
+      "noAdditionalConfiguration": "No additional configuration"
+    },
+    "metricParameters": {
+      "referenceKey": "Reference key",
+      "caseSensitive": "Case sensitive",
+      "taskIntroduction": "Task introduction",
+      "evaluationCriteria": "Evaluation criteria",
+      "normalize": "Normalize",
+      "code": "Code",
+      "arguments": "Arguments"
     }
   }
 }

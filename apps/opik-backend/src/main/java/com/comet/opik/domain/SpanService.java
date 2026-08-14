@@ -82,12 +82,12 @@ public class SpanService {
 
     @WithSpan
     public Mono<Span.SpanPage> find(int page, int size, @NonNull SpanSearchCriteria searchCriteria) {
-        log.info("Finding span by '{}'", searchCriteria);
+        log.info("按 '{}' 查找 span", searchCriteria);
 
         return findProjectAndVerifyVisibility(searchCriteria)
                 .flatMap(resolvedCriteria -> spanDAO.find(page, size, resolvedCriteria)
                         .flatMap(spanPage -> {
-                            // If stripAttachments=false, reinject attachments into all spans
+                            // 如果 stripAttachments=false，则将附件重新注入所有 span
                             if (!resolvedCriteria.stripAttachments()) {
                                 return Flux.fromIterable(spanPage.content())
                                         .concatMap(span -> attachmentReinjectorService.reinjectAttachments(span,
@@ -138,17 +138,17 @@ public class SpanService {
             return Flux.empty();
         }
 
-        log.info("Getting spans for '{}' traces", traceIds.size());
+        log.info("获取 '{}' 条 trace 的 span", traceIds.size());
 
         return spanDAO.getByTraceIds(traceIds)
                 .flatMap(span -> attachmentReinjectorService.reinjectAttachments(span, true));
     }
 
     /**
-     * Cheap approximate serialized size (bytes) of all spans across the given trace ids. Used by the
-     * trace-thread online scorers to size the inline-vs-agentic-tools routing decision without fetching
-     * the spans into heap (OPIK-7454). No attachment reinjection — it's a pure aggregate, so it also
-     * skips the per-span attachment resolution that the full fetch pays. Returns 0 for empty input.
+     * 跨给定 trace ID 的所有 span 的近似序列化大小（字节）。供 trace 线程在线评分器使用，
+     * 以在不将 span 加载到堆内存的情况下，确定内联与 agentic 工具路由决策的规模
+     * （OPIK-7454）。不做附件重新注入——它是纯聚合，因此也跳过了完整获取所支付的
+     * 每个 span 的附件解析开销。输入为空时返回 0。
      */
     @WithSpan
     public Mono<Long> getSpansSizeByTraceIds(Set<UUID> traceIds) {
@@ -156,7 +156,7 @@ public class SpanService {
             return Mono.just(0L);
         }
 
-        log.info("Estimating spans size for '{}' traces", traceIds.size());
+        log.info("估算 '{}' 条 trace 的 span 大小", traceIds.size());
 
         return spanDAO.getSpansSizeByTraceIds(traceIds);
     }
@@ -167,7 +167,7 @@ public class SpanService {
             return Flux.empty();
         }
 
-        log.info("Getting '{}' spans by IDs", ids.size());
+        log.info("按ID获取 '{}' 个 span", ids.size());
 
         return spanDAO.getByIds(ids)
                 .flatMap(span -> attachmentReinjectorService.reinjectAttachments(span, true));
@@ -215,7 +215,7 @@ public class SpanService {
             Span spanWithId = span.toBuilder().id(id).projectId(project.id()).build();
             return attachmentStripperService.stripAttachments(spanWithId, workspaceId, userName, projectName)
                     .flatMap(processedSpan -> {
-                        log.info("Inserting span with id '{}' , projectId '{}' , traceId '{}' , parentSpanId '{}'",
+                        log.info("插入 span，ID '{}'，项目ID '{}'，traceID '{}'，父spanID '{}'",
                                 processedSpan.id(), processedSpan.projectId(), processedSpan.traceId(),
                                 processedSpan.parentSpanId());
                         var savedSpan = processedSpan.toBuilder()
@@ -232,7 +232,7 @@ public class SpanService {
 
     @WithSpan
     public Mono<Void> update(@NonNull UUID id, @NonNull SpanUpdate spanUpdate) {
-        log.info("Updating span with id '{}'", id);
+        log.info("更新 span，ID '{}'", id);
 
         String projectName = WorkspaceUtils.getProjectName(spanUpdate.projectName());
 
@@ -247,7 +247,7 @@ public class SpanService {
                     .then(Mono.defer(() -> getProjectById(spanUpdate)
                             .switchIfEmpty(Mono.defer(() -> projectService.getOrCreate(projectName)))
                             .subscribeOn(Schedulers.boundedElastic()))
-                            //TODO: refactor to implement proper conflict resolution
+                            //TODO: 重构以实现正确的冲突解决
                             .flatMap(project -> lockService.executeWithLock(
                                     new LockService.Lock(id, SPAN_KEY),
                                     Mono.defer(() -> spanDAO.getOnlySpanDataById(id, project.id())
@@ -263,7 +263,7 @@ public class SpanService {
 
     @WithSpan
     public Mono<Void> batchUpdate(@NonNull SpanBatchUpdate batchUpdate) {
-        log.info("Batch updating '{}' spans", batchUpdate.ids().size());
+        log.info("批量更新 '{}' 个 span", batchUpdate.ids().size());
 
         boolean mergeTags = Boolean.TRUE.equals(batchUpdate.mergeTags());
         return Mono.deferContextual(ctx -> {
@@ -276,7 +276,7 @@ public class SpanService {
                     .then(spanDAO.bulkUpdate(batchUpdate.ids(), batchUpdate.update(), mergeTags))
                     .onErrorResume(TagOperations::mapTagLimitError)
                     .doOnSuccess(__ -> {
-                        log.info("Completed batch update for '{}' spans", batchUpdate.ids().size());
+                        log.info("完成 '{}' 个 span 的批量更新", batchUpdate.ids().size());
                         eventBus.post(new SpansUpdated(Set.of(batchUpdate.update().traceId()), workspaceId, userName));
                     });
         });
@@ -400,7 +400,7 @@ public class SpanService {
                 .distinct()
                 .toList();
 
-        log.info("Creating batch of spans for projects '{}'", projectNames);
+        log.info("为项目 '{}' 创建 span 批次", projectNames);
 
         // 在处理前删除批次中所有跨度的自动剥离附件
         // 这可以防止SDK多次发送相同跨度数据时产生重复的自动剥离附件
@@ -410,9 +410,9 @@ public class SpanService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // Fail fast on invalid ids BEFORE any side effect below (auto-stripped attachment deletion, project
-        // creation), so a rejected batch never mutates state. Runs inside deferContextual so the audit
-        // metric can attribute the batch's own ids to the request workspace.
+        // 在任何副作用（自动剥离附件删除、项目创建）之前快速失败于无效ID，
+        // 这样被拒绝的批次永远不会改变状态。运行在 deferContextual 内部，以便审计
+        // 指标能将批次自身的ID归属到请求的工作区。
         return Mono.deferContextual(validationCtx -> {
             String validationWorkspaceId = validationCtx.get(RequestContext.WORKSPACE_ID);
             dedupedSpans.forEach(span -> {
@@ -476,8 +476,8 @@ public class SpanService {
         return result;
     }
 
-    // Shared span reference-id policy: the trace (required) and parent (optional) must be time-ordered
-    // UUIDv7, past allowed. Used by every span write path so the rules can't drift between them.
+    // 共享的 span 引用ID策略：trace（必需）和 parent（可选）必须是时间有序的
+    // UUIDv7，允许是过去的时间。被每个 span 写入路径使用，以便规则不会在它们之间漂移。
     private void validateSpanReferences(UUID traceId, UUID parentSpanId) {
         idGenerator.validateIdNotInFuture(traceId, SPAN_TRACE_KEY);
         idGenerator.validateIdNotInFutureIfPresent(parentSpanId, SPAN_PARENT_KEY);
@@ -498,12 +498,12 @@ public class SpanService {
                     Project project = projectPerName.get(projectName);
 
                     if (project == null) {
-                        log.warn("Project not found for span project '{}' and default '{}'", span.projectName(),
+                        log.warn("未找到 span 项目 '{}' 和默认 '{}' 对应的项目", span.projectName(),
                                 projectName);
                         throw new IllegalStateException("Project not found: %s".formatted(span.projectName()));
                     }
 
-                    // Ids are already validated up-front in create(SpanBatch); generated ids are inherently valid.
+                    // ID 已在 create(SpanBatch) 中提前验证；生成的 ID 本身就是有效的。
                     UUID id = span.id() == null ? idGenerator.generateId() : span.id();
 
                     return span.toBuilder().id(id).projectId(project.id()).build();
@@ -562,11 +562,11 @@ public class SpanService {
     }
 
     /**
-     * Records the span ids removed by the trace-delete cascade in the {@code deletion_events_local} bridge so they
-     * survive the {@code spans} table copy during the Slice 3 migration window. Best-effort and deferred: gated by
-     * {@code spanDeletionEventsCaptureEnabled} and run only after the delete succeeds, and any capture failure is
-     * logged and swallowed so it can never disrupt the delete. Spans have no standalone delete, so this cascade is the
-     * only capture path. Mirrors {@code TraceService.captureDeletions}.
+     * 将被 trace 删除级联移除的 span ID 记录到 {@code deletion_events_local} 桥接表中，以便它们
+     * 在 Slice 3 迁移窗口期间的 {@code spans} 表复制中得以保留。尽力而为且延迟执行：受
+     * {@code spanDeletionEventsCaptureEnabled} 控制，仅在删除成功后运行，并且任何捕获失败都会被
+     * 记录并吞掉，因此永远不会干扰删除。span 没有独立的删除入口，因此此级联是唯一的捕获路径。
+     * 与 {@code TraceService.captureDeletions} 对称。
      */
     private Mono<Void> captureDeletions(Set<UUID> ids, UUID projectId, String workspaceId, String userName) {
         return Mono.defer(() -> {
@@ -584,11 +584,11 @@ public class SpanService {
                     .collect(Collectors.toUnmodifiableSet());
             return deletionEventDAO.insert(events, userName)
                     .doOnSuccess(_ -> log.info(
-                            "Captured span deletion events, count '{}' for projectId '{}' on workspaceId '{}'",
+                            "已捕获 span 删除事件，数量 '{}'，项目ID '{}'，工作区 '{}'",
                             ids.size(), projectId, workspaceId))
                     .onErrorResume(throwable -> {
                         log.warn(
-                                "Failed to capture span deletion events, count '{}' for projectId '{}' on workspaceId '{}'",
+                                "捕获 span 删除事件失败，数量 '{}'，项目ID '{}'，工作区 '{}'",
                                 ids.size(), projectId, workspaceId, throwable);
                         return Mono.empty();
                     });
@@ -610,7 +610,7 @@ public class SpanService {
 
     @WithSpan
     public Mono<BiInformationResponse> getSpanBIInformation() {
-        log.info("Getting span BI events daily data");
+        log.info("获取 span BI 事件每日数据");
         return projectService.getDemoProjectIdsWithTimestamps()
                 .switchIfEmpty(Mono.just(Map.of()))
                 .flatMapMany(spanDAO::getSpanBIInformation)
@@ -623,7 +623,7 @@ public class SpanService {
 
     @WithSpan
     public Mono<UsageByWorkspaceProjectUserResponse> getSpanBreakdownPerWorkspace() {
-        log.info("Getting span usage breakdown by workspace, project and user");
+        log.info("按工作区、项目和用户获取 span 用量明细");
         return projectService.getDemoProjectIdsWithTimestamps()
                 .switchIfEmpty(Mono.just(Map.of()))
                 .flatMapMany(spanDAO::countSpansBreakdownPerWorkspace)

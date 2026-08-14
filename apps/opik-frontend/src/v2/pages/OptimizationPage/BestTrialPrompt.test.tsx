@@ -5,6 +5,12 @@ import BestTrialPrompt from "./BestTrialPrompt";
 import { AggregatedCandidate } from "@/types/optimizations";
 import { Experiment } from "@/types/datasets";
 
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
+
 const makeExperiment = (id: string, prompt: unknown): Experiment =>
   ({ id, metadata: { configuration: { prompt } } }) as unknown as Experiment;
 
@@ -42,10 +48,14 @@ describe("BestTrialPrompt", () => {
       />,
     );
 
-    expect(screen.getByText("Best trial prompt")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.bestTrial.title"),
+    ).toBeInTheDocument();
     expect(container.textContent).toContain("improved prompt");
     // default view is the plain prompt; the diff is opt-in from the header
-    expect(screen.getByText("Diff vs baseline")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.prompt.diffVsBaseline"),
+    ).toBeInTheDocument();
     expect(container.textContent).not.toContain("baseline prompt");
   });
 
@@ -58,10 +68,12 @@ describe("BestTrialPrompt", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Diff vs baseline"));
+    fireEvent.click(screen.getByText("optimization.prompt.diffVsBaseline"));
 
     // diff mode now surfaces the removed baseline content alongside the current
-    expect(screen.getByText("Hide diff")).toBeInTheDocument();
+    expect(
+      screen.getByText("optimization.bestTrial.hideDiff"),
+    ).toBeInTheDocument();
     expect(container.textContent).toContain("baseline prompt");
   });
 
@@ -76,12 +88,12 @@ describe("BestTrialPrompt", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("View trial"));
+    fireEvent.click(screen.getByText("optimization.bestTrial.viewTrial"));
     expect(onViewTrial).toHaveBeenCalledTimes(1);
   });
 
   it("shows the no-improvement callout only when noImprovement is set", () => {
-    const message = /No improvement over baseline/i;
+    const message = "optimization.bestTrial.noImprovement";
 
     const { rerender } = render(
       <BestTrialPrompt

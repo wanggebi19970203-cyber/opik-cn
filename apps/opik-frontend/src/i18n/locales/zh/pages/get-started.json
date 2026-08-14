@@ -76,6 +76,69 @@
       "hasAgentDescription": "连接它并精确追踪您的 Agent 每次运行的行为。",
       "noAgent": "我还没有 AI Agent",
       "altText": "引导插图"
+    },
+    "mobileOnboarding": {
+      "nextLabels": {
+        "seeOpikInAction": "查看 Opik 的实际效果",
+        "recommendFixes": "让 Opik 推荐修复方案",
+        "startSendingTraces": "开始发送追踪",
+        "explorePlatform": "探索平台"
+      },
+      "shell": {
+        "stepCounter": "第 {{step}} 步，共 {{totalSteps}} 步",
+        "back": "返回"
+      },
+      "welcome": {
+        "title": "欢迎使用 Opik",
+        "description": "每当用户与您的 AI Agent 或应用交互时，看看背后发生了什么。追踪提示词、工具调用、延迟、成本和失败，全部集中在一个地方。",
+        "chatPrompt": "我能帮您做什么？",
+        "exampleCaption": "这是一个示例用户交互。我们将使用 Opik 来评估和改进底层的 Agent。"
+      },
+      "trace": {
+        "title": "每一次 AI 请求都会生成一条追踪",
+        "description": "追踪记录了您的 AI 为生成答案所执行的每一步。这是您刚刚发送的那条。",
+        "demoTrace": "演示追踪",
+        "spansCount": "{{count}} 个跨度",
+        "slow": "较慢"
+      },
+      "issues": {
+        "title": "我们发现并建议修复问题",
+        "description": "Opik 会检测重试、缓存未命中等各类问题，并推荐具体的修复方案。",
+        "impactHigh": "高影响",
+        "impactMedium": "中影响",
+        "impactLow": "低影响",
+        "opikSuggests": "Opik 建议",
+        "slowKnowledgeSearch": "知识搜索缓慢",
+        "cachingCommonSearches": "缓存常用搜索",
+        "largeAnswerGeneration": "答案生成规模过大",
+        "cachingTheSystemPrompt": "缓存系统提示词",
+        "tooManyDocsRetrieved": "检索的文档过多",
+        "limitingRetrievedPages": "限制检索页面数量"
+      },
+      "connect": {
+        "title": "准备好连接您的应用了吗？",
+        "descriptionPrefix": "在桌面端继续操作，开始向 Opik 发送追踪。",
+        "descriptionEmailAvailable": "我们会将入门所需的全部内容发送到您的邮箱。",
+        "descriptionEmailUnavailable": "请查看我们的快速入门指南，获取入门所需的全部内容。",
+        "getInstructions": "获取说明",
+        "emailPlaceholder": "your@email.com",
+        "sending": "发送中...",
+        "instructionsSent": "说明已发送！",
+        "emailInstructions": "通过邮件发送设置说明",
+        "or": "或",
+        "openDocs": "打开文档",
+        "quickstartGuide": "快速入门指南",
+        "whyDesktop": "为什么要在桌面端继续",
+        "benefitFirstTrace": "5 分钟内发送您的第一条追踪",
+        "benefitWorksWith": "兼容 Claude Code、Cursor、Codex 等工具",
+        "benefitIntegrations": "使用我们 60 多个集成之一"
+      },
+      "illustrations": {
+        "welcomeAlt": "欢迎",
+        "traceAlt": "追踪",
+        "issuesAlt": "问题",
+        "connectAlt": "连接"
+      }
     }
   }
 }

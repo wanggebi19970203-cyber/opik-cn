@@ -269,7 +269,7 @@ describe("NewQuickstart — manual variant", () => {
     fireEvent.click(screen.getByTestId("skip-btn"));
     expect(screen.getByTestId("demo-loading-content")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Back to setup"));
+    fireEvent.click(screen.getByText("getStarted.demoLoading.backToSetup"));
 
     expect(
       screen.getByTestId("onboarding-integrations-page"),

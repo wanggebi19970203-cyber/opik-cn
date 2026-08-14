@@ -352,7 +352,7 @@ public class TracesResource {
      * 批量创建追踪
      *
      * @param traces 追踪批量对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/batch")
@@ -376,7 +376,7 @@ public class TracesResource {
      * 批量更新追踪
      *
      * @param batchUpdate 批量更新请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PATCH
     @Path("/batch")
@@ -406,7 +406,7 @@ public class TracesResource {
      *
      * @param id 追踪ID
      * @param trace 追踪更新对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PATCH
     @Path("{id}")
@@ -435,7 +435,7 @@ public class TracesResource {
      * 根据ID删除追踪
      *
      * @param id 追踪ID
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @DELETE
     @Path("{id}")
@@ -459,13 +459,13 @@ public class TracesResource {
      * 批量删除追踪
      *
      * @param request 批量删除请求（包含项目ID）
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/delete")
     @Operation(operationId = "deleteTraces", summary = "Delete traces / 批量删除追踪", description = "Delete traces / 批量删除追踪", responses = {
             @ApiResponse(responseCode = "204", description = "No Content / 无内容"),
-            @ApiResponse(responseCode = "422", description = "Unprocessable Content", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
+            @ApiResponse(responseCode = "422", description = "Unprocessable Content / 无法处理的内容", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))})
     @RequiredPermissions(WorkspaceUserPermission.TRACE_DELETE)
     public Response deleteTraces(
             @RequestBody(content = @Content(schema = @Schema(implementation = BatchDeleteByProject.class))) @NotNull @Valid BatchDeleteByProject request) {
@@ -531,14 +531,14 @@ public class TracesResource {
 
     @GET
     @Path("/exists")
-    @Operation(operationId = "tracesExist", summary = "Check whether a project has traces", description = "Returns whether the project has at least one trace matching the given scope. Cheap existence probe (LIMIT 1) used to drive empty-state decisions without scanning or aggregating the whole project.", responses = {
-            @ApiResponse(responseCode = "200", description = "Trace existence", content = @Content(schema = @Schema(implementation = ExistenceResponse.class)))
+    @Operation(operationId = "tracesExist", summary = "Check whether a project has traces / 检查项目是否存在追踪", description = "Returns whether the project has at least one trace matching the given scope. Cheap existence probe (LIMIT 1) used to drive empty-state decisions without scanning or aggregating the whole project. / 返回项目是否至少有一条符合给定范围的追踪。轻量级存在性探测（LIMIT 1），用于驱动空状态决策，而无需扫描或聚合整个项目。", responses = {
+            @ApiResponse(responseCode = "200", description = "Trace existence / 追踪存在性", content = @Content(schema = @Schema(implementation = ExistenceResponse.class)))
     })
     @RateLimited(value = "tracesExist:{workspaceId}", shouldAffectWorkspaceLimit = false, shouldAffectUserGeneralLimit = false)
     public Response tracesExist(@QueryParam("project_id") UUID projectId,
             @QueryParam("project_name") String projectName,
-            @QueryParam("source") @Schema(description = "Restrict the probe to a single ingestion source (e.g. 'sdk' for the Logs empty state), matching the rendered list's logs-source scope. Omit to probe any source.") String source,
-            @QueryParam("thread_only") @DefaultValue("false") @Schema(description = "When true, only considers traces that belong to a thread (thread_id is set) — used by the Threads empty state.") boolean threadOnly) {
+            @QueryParam("source") @Schema(description = "Restrict the probe to a single ingestion source (e.g. 'sdk' for the Logs empty state), matching the rendered list's logs-source scope. Omit to probe any source. / 将探测限制在单个摄取来源（例如 'sdk' 用于日志空状态），与渲染列表的日志来源范围保持一致。省略则探测任何来源。") String source,
+            @QueryParam("thread_only") @DefaultValue("false") @Schema(description = "When true, only considers traces that belong to a thread (thread_id is set) — used by the Threads empty state. / 为 true 时，仅考虑属于某线程的追踪（已设置 thread_id）——用于线程空状态。") boolean threadOnly) {
 
         validateProjectNameAndProjectId(projectName, projectId);
 
@@ -550,20 +550,20 @@ public class TracesResource {
 
         String workspaceId = requestContext.get().getWorkspaceId();
 
-        log.info("Check traces existence by '{}' (threadOnly={}) on workspaceId '{}'", searchCriteria, threadOnly,
+        log.info("根据 '{}' 检查追踪是否存在（threadOnly={}），工作区 '{}'", searchCriteria, threadOnly,
                 workspaceId);
 
         boolean exists = service.existsByProjectId(searchCriteria, threadOnly)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Checked traces existence by '{}', exists '{}' on workspaceId '{}'", searchCriteria, exists,
+        log.info("已根据 '{}' 检查追踪是否存在，结果 '{}'，工作区 '{}'", searchCriteria, exists,
                 workspaceId);
 
         return Response.ok(ExistenceResponse.builder().exists(exists).build()).build();
     }
 
-    // Feedback scores
+    // 反馈评分
     @PUT
     @Path("/{id}/feedback-scores")
     @Operation(operationId = "addTraceFeedbackScore", summary = "Add trace feedback score / 添加追踪反馈评分", description = "Add trace feedback score / 为追踪添加反馈评分", responses = {
@@ -591,7 +591,7 @@ public class TracesResource {
      *
      * @param id 追踪ID
      * @param score 删除反馈评分请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/{id}/feedback-scores/delete")
@@ -615,7 +615,7 @@ public class TracesResource {
      * 批量为追踪添加反馈评分
      *
      * @param feedbackScoreBatch 批量反馈评分对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PUT
     @Path("/feedback-scores")
@@ -738,7 +738,7 @@ public class TracesResource {
      *
      * @param commentId 评论ID
      * @param comment 评论更新对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PATCH
     @Path("/comments/{commentId}")
@@ -766,7 +766,7 @@ public class TracesResource {
      * 批量删除追踪评论
      *
      * @param batchDelete 批量删除请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/comments/delete")
@@ -962,7 +962,7 @@ public class TracesResource {
      * 删除追踪线程
      *
      * @param traceThreads 删除线程请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/threads/delete")
@@ -989,7 +989,7 @@ public class TracesResource {
      * 打开追踪线程
      *
      * @param identifier 线程标识符
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PUT
     @Path("/threads/open")
@@ -1017,7 +1017,7 @@ public class TracesResource {
      * 关闭追踪线程（支持单个或批量操作）
      *
      * @param identifier 线程批量标识符
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PUT
     @Path("/threads/close")
@@ -1052,7 +1052,7 @@ public class TracesResource {
      * 批量更新线程
      *
      * @param batchUpdate 批量更新请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PATCH
     @Path("/threads/batch")
@@ -1082,7 +1082,7 @@ public class TracesResource {
      *
      * @param threadModelId 线程模型ID
      * @param threadUpdate 线程更新对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PATCH
     @Path("/threads/{threadModelId}")
@@ -1161,7 +1161,7 @@ public class TracesResource {
      * 批量为线程添加反馈评分
      *
      * @param batch 批量反馈评分对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PUT
     @Path("/threads/feedback-scores")
@@ -1192,7 +1192,7 @@ public class TracesResource {
      * 删除线程反馈评分
      *
      * @param scores 删除线程反馈评分请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/threads/feedback-scores/delete")
@@ -1317,7 +1317,7 @@ public class TracesResource {
      *
      * @param commentId 评论ID
      * @param comment 评论更新对象
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @PATCH
     @Path("/threads/comments/{commentId}")
@@ -1345,7 +1345,7 @@ public class TracesResource {
      * 批量删除线程评论
      *
      * @param batchDelete 批量删除请求
-     * @return 204 No Content
+     * @return 204 无内容
      */
     @POST
     @Path("/threads/comments/delete")

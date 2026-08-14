@@ -104,6 +104,10 @@
       "trace_latency": "Average latency exceeds (seconds)",
       "default": "Threshold exceeds"
     },
+    "guardrailTypes": {
+      "label": "Guardrail types",
+      "description": "Alert only on the selected guardrail types. Leave empty to alert on any guardrail failure."
+    },
     "feedbackConditions": {
       "whenAverage": "When average",
       "orWhenAverage": "Or when average",

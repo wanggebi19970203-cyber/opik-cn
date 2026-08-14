@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { CellContext } from "@tanstack/react-table";
 
 import CellWrapper from "@/shared/DataTableCells/CellWrapper";
@@ -20,6 +21,7 @@ interface TrialStatusCustomMeta {
 }
 
 const TrialStatusCell = (context: CellContext<unknown, unknown>) => {
+  const { t } = useTranslation("pages/optimization");
   const row = context.row.original as AggregatedCandidate;
   const { custom } = context.column.columnDef.meta ?? {};
   const {
@@ -44,7 +46,9 @@ const TrialStatusCell = (context: CellContext<unknown, unknown>) => {
   const isBest = bestCandidateId === row.candidateId;
   const status = statusMap.get(row.candidateId) ?? "pruned";
   const variant = isBest ? "green" : STATUS_VARIANT_MAP[status];
-  const label = isBest ? "Best" : status;
+  const label = isBest
+    ? t("optimization.trials.best")
+    : t(`optimization.status.${status}`);
   const tagSize = getCellTagSize(context, TAG_SIZE_MAP);
 
   return (

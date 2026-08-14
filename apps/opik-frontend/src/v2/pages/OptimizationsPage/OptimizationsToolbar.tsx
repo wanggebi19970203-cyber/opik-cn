@@ -56,7 +56,6 @@ const OptimizationsToolbar: React.FC<OptimizationsToolbarProps> = ({
             <SearchInput
               searchText={search}
               setSearchText={onSearchChange}
-              placeholder="Search"
               className="w-[200px] shrink-0"
               dimension="xs"
             />

@@ -218,11 +218,10 @@ const EventTriggers: React.FunctionComponent<EventTriggersProps> = ({
           };
           return (
             <FormItem>
-              <Label className="comet-body-s">Guardrail types</Label>
-              <Description>
-                Alert only on the selected guardrail types. Leave empty to alert
-                on any guardrail failure.
-              </Description>
+              <Label className="comet-body-s">
+                {t("alerts.guardrailTypes.label")}
+              </Label>
+              <Description>{t("alerts.guardrailTypes.description")}</Description>
               <div className="flex flex-col gap-2 pt-1">
                 {Object.values(GuardrailTypes).map((type) => (
                   <label

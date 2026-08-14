@@ -35,13 +35,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletionException;
 
 /**
- * Internal, authenticated endpoint that runs Ollie-generated read-only SQL against ClickHouse, bounded to the
- * caller's workspace and the requested project. Authentication is required only to derive the bounding
- * {@code workspace_id} ({@code project_id} comes from the body). Gated behind the {@code ollieEnabled}
- * toggle: when off it returns {@code 501 Not Implemented} and performs no ClickHouse access.
+ * 内部且经过身份验证的端点，在 ClickHouse 上运行 Ollie 生成的只读 SQL，并限定在调用者的工作区和请求的项目范围内。
+ * 身份验证仅用于推导出边界 {@code workspace_id}（{@code project_id} 来自请求体）。受 {@code ollieEnabled}
+ * 开关控制：关闭时返回 {@code 501 Not Implemented} 且不访问 ClickHouse。
  *
- * <p>The caller's final query must return exactly one column named {@code result}, produced via
- * {@code toJSONString(...)}.
+ * <p>调用者最终的查询必须恰好返回一列，命名为 {@code result}，通过 {@code toJSONString(...)} 生成。
  */
 @Path("/v1/internal/analytics-queries")
 @Produces(MediaType.APPLICATION_JSON)

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Info, LucideIcon, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/ui/button";
@@ -69,6 +70,7 @@ const EmptyRunWarningPanel: React.FC<EmptyRunWarningPanelProps> = ({
 }) => {
   // Null when the backend reports no failed item: it wins over the client
   // classifier, so the panel stays silent rather than contradicting it.
+  const { t } = useTranslation("pages/optimization");
   const message = getEmptyRunMessage(cause, scoringHealth);
   const [open, setOpen] = useState(false);
   const { data, dataUpdatedAt } = useOptimizationStudioLogs(
@@ -107,7 +109,7 @@ const EmptyRunWarningPanel: React.FC<EmptyRunWarningPanelProps> = ({
             className="mt-3"
             onClick={() => setOpen(true)}
           >
-            View logs
+            {t("optimization.emptyRun.viewLogs")}
           </Button>
         )}
       </div>

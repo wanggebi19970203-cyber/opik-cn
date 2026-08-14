@@ -186,10 +186,11 @@ type InstructionsProps = {
 const Instructions: React.FC<InstructionsProps> = ({
   id,
   value,
-  label = "Instructions",
-  placeholder = "Describe the policy the text must comply with...",
+  label,
+  placeholder,
   onChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -203,11 +204,11 @@ const Instructions: React.FC<InstructionsProps> = ({
 
   return (
     <div className="grid w-full gap-1">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>{label ?? t("guardrail.instructions")}</Label>
       <Textarea
         id={id}
         ref={callbackTextareaRef}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("guardrail.instructionsPlaceholder")}
         onChange={(e) => onChange(e.target.value)}
         value={value}
         className="min-h-[70px] resize-none overflow-hidden"
@@ -226,6 +227,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   workspaceName,
   onChange,
 }) => {
+  const { t } = useTranslation("tracing");
   const { calculateModelProvider, calculateDefaultModel } =
     useLLMProviderModelsData();
   const model = value as PROVIDER_MODEL_TYPE | "";
@@ -251,7 +253,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
 
   return (
     <div className="grid w-full gap-1">
-      <Label>Model</Label>
+      <Label>{t("guardrail.model")}</Label>
       <PromptModelSelect
         value={model}
         provider={provider}

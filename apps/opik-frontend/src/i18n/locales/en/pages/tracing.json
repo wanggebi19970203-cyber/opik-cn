@@ -120,7 +120,9 @@
       "addToEntity": "Add to {{entity}}",
       "items": "Items",
       "traces": "Traces",
-      "spans": "Spans"
+      "spans": "Spans",
+      "entityTestSuite": "test suite",
+      "entityDataset": "dataset"
     },
     "addToQueue": {
       "title": "Add to annotation queue",
@@ -315,7 +317,18 @@
       "topicTitle": "Topic guardrail",
       "topicHintText": "The topic guardrail is designed to prevent the model from generating responses on certain topics that might be inappropriate, unsafe, unethical, or outside its intended scope.",
       "piiTitle": "PII guardrail",
-      "piiHintText": "The PII (Personally Identifiable Information) guardrail is designed to prevent the model from generating, storing, or processing sensitive personal data that could identify individuals."
+      "piiHintText": "The PII (Personally Identifiable Information) guardrail is designed to prevent the model from generating, storing, or processing sensitive personal data that could identify individuals.",
+      "promptInjectionTitle": "Prompt injection guardrail",
+      "promptInjectionHintText": "The prompt injection guardrail runs a fine-tuned classifier on the guardrails server to detect prompt injection and jailbreak attempts.",
+      "customClassifierTitle": "Custom guardrail",
+      "customClassifierHintText": "The custom guardrail runs a binary classifier you trained on your own labeled examples. The guardrails server loads the model by name from its local adapters directory.",
+      "llmJudgeTitle": "LLM judge guardrail",
+      "llmJudgeHintText": "The LLM judge guardrail validates text against a natural-language policy using an LLM. It runs in the SDK against the provider configured in your Opik workspace and does not require the guardrails server.",
+      "modelName": "Model name",
+      "checkName": "Check name",
+      "instructions": "Instructions",
+      "instructionsPlaceholder": "Describe the policy the text must comply with...",
+      "model": "Model"
     },
     "traceLogs": {
       "logs": "Logs",

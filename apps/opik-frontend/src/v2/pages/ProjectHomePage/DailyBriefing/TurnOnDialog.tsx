@@ -24,7 +24,7 @@ export default function TurnOnDialog({
   onConfirm,
   scheduleTimeLocal,
 }: TurnOnDialogProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation("pages/project-home");
   const [runImmediately, setRunImmediately] = useState(true);
 
   return (

@@ -153,6 +153,7 @@
     "optimizationInitialized": "优化过程已初始化...",
     "calculatingBaseline": "正在计算基线...",
     "noDataToShow": "暂无数据可显示",
+    "thisRunWasCancelled": "此运行已取消",
     "optimizationProgress": "优化进度",
     "evaluatingNewCandidate": "正在评估新候选...",
     "lookingForFailingExamples": "正在查找失败示例以进行反思...",
@@ -230,12 +231,23 @@
     "optimizationChart": {
       "score": "评分",
       "bestCandidate": "最佳候选",
+      "best": "最佳",
       "trialStatus": {
         "baseline": "基线",
         "passed": "通过",
         "evaluating": "评估中",
         "discarded": "已丢弃",
-        "running": "运行中"
+        "running": "运行中",
+        "failed": "失败"
+      },
+      "legend": {
+        "passedTrial": "通过的试验",
+        "discardedTrial": "已丢弃的试验",
+        "statusTrial": "{{status}}的试验"
+      },
+      "tick": {
+        "trial": "试验 {{number}}",
+        "trialsRange": "试验 {{min}}–{{max}}"
       }
     }
   }

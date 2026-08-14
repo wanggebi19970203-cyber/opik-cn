@@ -75,13 +75,13 @@ public class OptimizationsResource {
             @RequestBody(content = @Content(schema = @Schema(implementation = Optimization.class))) @JsonView(Optimization.View.Write.class) @NotNull @Valid Optimization optimization,
             @Context UriInfo uriInfo) {
         var workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Upserting optimization with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
+        log.info("创建或更新优化，ID '{}'，名称 '{}'，数据集名称 '{}'，工作区 '{}'",
                 optimization.id(), optimization.name(), optimization.datasetName(), workspaceId);
         var id = optimizationService.upsert(optimization)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
         var uri = uriInfo.getAbsolutePathBuilder().path("/%s".formatted(id)).build();
-        log.info("Upserted optimization with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
+        log.info("已创建或更新优化，ID '{}'，名称 '{}'，数据集名称 '{}'，工作区 '{}'",
                 id, optimization.name(), optimization.datasetName(), workspaceId);
 
         return Response.created(uri).build();
@@ -117,12 +117,12 @@ public class OptimizationsResource {
                 .projectId(projectId)
                 .build();
 
-        log.info("Finding optimizations by '{}', page '{}', size '{}'", searchCriteria, page, size);
+        log.info("按 '{}' 查询优化，页码 '{}'，每页大小 '{}'", searchCriteria, page, size);
         var optimizations = optimizationService.find(page, size, searchCriteria)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Found optimizations by '{}', count '{}', page '{}', size '{}'",
+        log.info("按 '{}' 查询到优化，数量 '{}'，页码 '{}'，每页大小 '{}'",
                 searchCriteria, optimizations.size(), page, size);
         return Response.ok().entity(optimizations).build();
     }
@@ -135,11 +135,11 @@ public class OptimizationsResource {
     @JsonView(Optimization.View.Public.class)
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_VIEW)
     public Response get(@PathParam("id") UUID id) {
-        log.info("Getting optimization by id '{}'", id);
+        log.info("根据ID '{}' 获取优化", id);
         var optimization = optimizationService.getById(id)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Got optimization by id '{}', datasetId '{}'", optimization.id(), optimization.datasetId());
+        log.info("已根据ID '{}' 获取优化，数据集ID '{}'", optimization.id(), optimization.datasetId());
         return Response.ok().entity(optimization).build();
     }
 
@@ -153,7 +153,7 @@ public class OptimizationsResource {
             @RequestBody(content = @Content(schema = @Schema(implementation = Optimization.class))) @JsonView(Optimization.View.Write.class) @NotNull @Valid Optimization optimization,
             @Context UriInfo uriInfo) {
         var workspaceId = requestContext.get().getWorkspaceId();
-        log.info("Creating optimization with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
+        log.info("创建优化，ID '{}'，名称 '{}'，数据集名称 '{}'，工作区 '{}'",
                 optimization.id(), optimization.name(), optimization.datasetName(), workspaceId);
 
         // 对于 Studio 优化，从请求头注入 API 密钥
@@ -172,7 +172,7 @@ public class OptimizationsResource {
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
         var uri = uriInfo.getAbsolutePathBuilder().path("/%s".formatted(id)).build();
-        log.info("Created optimization with id '{}', name '{}', datasetName '{}', workspaceId '{}'",
+        log.info("已创建优化，ID '{}'，名称 '{}'，数据集名称 '{}'，工作区 '{}'",
                 id, optimization.name(), optimization.datasetName(), workspaceId);
 
         return Response.created(uri).build();
@@ -185,11 +185,11 @@ public class OptimizationsResource {
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_DELETE)
     public Response deleteOptimizationsById(
             @RequestBody(content = @Content(schema = @Schema(implementation = DeleteIdsHolder.class))) @NotNull @Valid DeleteIdsHolder request) {
-        log.info("Deleting optimizations, count '{}'", request.ids().size());
+        log.info("删除优化，数量 '{}'", request.ids().size());
         optimizationService.delete(request.ids())
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
-        log.info("Deleted optimizations, count '{}'", request.ids().size());
+        log.info("已删除优化，数量 '{}'", request.ids().size());
         return Response.noContent().build();
     }
 
@@ -200,13 +200,13 @@ public class OptimizationsResource {
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_STUDIO_USE)
     public Response updateOptimizationsById(@PathParam("id") UUID id,
             @RequestBody(content = @Content(schema = @Schema(implementation = OptimizationUpdate.class))) @NotNull @Valid OptimizationUpdate request) {
-        log.info("Update optimization with id '{}', with request '{}'", id, request);
+        log.info("更新优化，ID '{}'，请求 '{}'", id, request);
 
         optimizationService.update(id, request)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Updates optimization with id '{}'", id);
+        log.info("已更新优化，ID '{}'", id);
 
         return Response.noContent().build();
     }
@@ -221,13 +221,13 @@ public class OptimizationsResource {
     })
     @RequiredPermissions(WorkspaceUserPermission.OPTIMIZATION_RUN_VIEW)
     public Response studioGetLogs(@PathParam("id") UUID id) {
-        log.info("Getting logs for Studio optimization id: '{}'", id);
+        log.info("获取 Studio 优化 ID '{}' 的日志", id);
 
         var logs = optimizationService.generateStudioLogsResponse(id)
                 .contextWrite(ctx -> setRequestContext(ctx, requestContext))
                 .block();
 
-        log.info("Generated logs URL for Studio optimization id: '{}'", id);
+        log.info("已生成 Studio 优化 ID '{}' 的日志URL", id);
         return Response.ok(logs).build();
     }
 }

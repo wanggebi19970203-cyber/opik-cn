@@ -60,7 +60,8 @@
       "optCost": "Opt. cost"
     },
     "filters": {
-      "testSuite": "Test suite"
+      "testSuite": "Test suite",
+      "status": "Status"
     },
     "actions": {
       "view": "View run",
@@ -105,6 +106,7 @@
       "variableNotInSource": "{{variables}} not in the selected item source",
       "availableVariables": "available: {{variables}}",
       "updatePromptOrMetric": "Update the prompt/metric or pick a matching item source.",
+      "providerKeyWarning": "Add or check the API key for this provider before starting — the run will fail without it.",
       "collapseDatasetItemSample": "Collapse dataset item sample",
       "viewDatasetItemSample": "View dataset item sample",
       "payload": "Payload"
@@ -192,8 +194,15 @@
       "referenceKeyAdvancedPlaceholder": "e.g., answer or $.scores[?(@.name=='Useful')].value",
       "referenceKeyScorePlaceholder": "e.g., score or $.feedback_scores[?(@.name=='Useful')].value",
       "caseSensitiveComparison": "Case sensitive comparison",
+      "caseSensitive": "Case sensitive",
       "pythonCode": "Python code",
-      "pythonCodeDescription": "Define a class that extends BaseMetric with a score method that takes output (the LLM response) and **kwargs (dataset fields), returning a ScoreResult.",
+      "code": "Code",
+      "pythonCodeDescription": "Define a class that extends BaseMetric with a score method that takes output (the LLM response) and **kwargs (dataset fields). Read fields with kwargs.get(\"field_name\") so a missing field doesn't raise, returning a ScoreResult.",
+      "pythonCodeSyntaxError": "Python code has a syntax error",
+      "argumentMapping": "Argument mapping ({{count}})",
+      "argumentMappingDescription": "Map each score() argument to a dataset column. Leave blank to use a column with the same name.",
+      "selectDatasetColumn": "Select a dataset column",
+      "noDatasetColumns": "No dataset columns",
       "taskIntroduction": "Task introduction",
       "taskIntroductionPlaceholder": "Describe the task context and what you're evaluating...",
       "evaluationCriteria": "Evaluation criteria",

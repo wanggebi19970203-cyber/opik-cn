@@ -13,6 +13,14 @@ import NavigationTag from "@/shared/NavigationTag/NavigationTag";
 import { RESOURCE_TYPE } from "@/shared/ResourceLink/ResourceLink";
 import { formatDate } from "@/lib/date";
 
+const RUN_STATUS_I18N_KEY: Record<OPTIMIZATION_STATUS, string> = {
+  [OPTIMIZATION_STATUS.RUNNING]: "optimization.runStatus.running",
+  [OPTIMIZATION_STATUS.COMPLETED]: "optimization.runStatus.completed",
+  [OPTIMIZATION_STATUS.CANCELLED]: "optimization.runStatus.cancelled",
+  [OPTIMIZATION_STATUS.INITIALIZED]: "optimization.runStatus.initialized",
+  [OPTIMIZATION_STATUS.ERROR]: "optimization.runStatus.error",
+};
+
 type OptimizationHeaderProps = {
   optimization?: Optimization;
   status?: OPTIMIZATION_STATUS;
@@ -71,7 +79,7 @@ const OptimizationHeader: React.FC<OptimizationHeaderProps> = ({
               size="md"
               className="capitalize"
             >
-              {status}
+              {t(RUN_STATUS_I18N_KEY[status])}
             </Tag>
           )}
         </div>

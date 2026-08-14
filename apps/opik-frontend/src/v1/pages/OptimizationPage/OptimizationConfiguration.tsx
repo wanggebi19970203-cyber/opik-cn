@@ -21,6 +21,16 @@ const formatParamName = (key: string): string => {
   return key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const METRIC_PARAMETER_LABEL_KEYS: Record<string, string> = {
+  reference_key: "optimization.metricParameters.referenceKey",
+  case_sensitive: "optimization.metricParameters.caseSensitive",
+  task_introduction: "optimization.metricParameters.taskIntroduction",
+  evaluation_criteria: "optimization.metricParameters.evaluationCriteria",
+  normalize: "optimization.metricParameters.normalize",
+  code: "optimization.metricParameters.code",
+  arguments: "optimization.metricParameters.arguments",
+};
+
 const ConfigItem: React.FC<{ label: string; value: React.ReactNode }> = ({
   label,
   value,
@@ -90,7 +100,11 @@ const OptimizationConfiguration: React.FC<OptimizationConfigurationProps> = ({
                   {Object.entries(metric.parameters).map(([key, value]) => (
                     <ConfigItem
                       key={key}
-                      label={formatParamName(key)}
+                      label={
+                        METRIC_PARAMETER_LABEL_KEYS[key]
+                          ? t(METRIC_PARAMETER_LABEL_KEYS[key])
+                          : formatParamName(key)
+                      }
                       value={String(value)}
                     />
                   ))}

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -58,6 +59,7 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
   onClose,
   onRequestCreateProject,
 }) => {
+  const { t } = useTranslation("navigation");
   const [search, setSearch] = useState("");
   const [editTarget, setEditTarget] = useState<Project | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
@@ -188,7 +190,7 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
         {pinnedProjects.length > 0 && (
           <>
             <MenuSectionLabel className="text-light-slate">
-              Pinned
+              {t("projectSelector.pinned")}
             </MenuSectionLabel>
             {pinnedProjects.map((pinned) => {
               const full = projectsById.get(pinned.id);
@@ -201,7 +203,7 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
           </>
         )}
         <MenuSectionLabel className="text-light-slate">
-          Recently updated
+          {t("projectSelector.recentlyUpdated")}
         </MenuSectionLabel>
         {recentlyUpdated.map((project) => renderItem(project, true))}
       </div>
@@ -211,11 +213,13 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
   return (
     <>
       <div className="flex items-center justify-between pl-2 pr-1">
-        <MenuSectionLabel className="px-0">Projects</MenuSectionLabel>
+        <MenuSectionLabel className="px-0">
+          {t("projectSelector.projects")}
+        </MenuSectionLabel>
         {canCreateProjects && (
           <Button variant="ghost" size="2xs" onClick={onRequestCreateProject}>
             <Plus className="mr-1 size-3.5" />
-            New
+            {t("projectSelector.new")}
           </Button>
         )}
       </div>
@@ -224,7 +228,7 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
         <SearchInput
           searchText={search}
           setSearchText={setSearch}
-          placeholder="Search project"
+          placeholder={t("projectSelector.searchProject")}
           variant="ghost"
           dimension="sm"
         />
@@ -233,7 +237,7 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
       {renderSections()}
       <Separator className="-mx-px my-1 bg-muted" />
       <ListAction variant="default" size="sm" onClick={handleViewAll}>
-        <span>View all projects</span>
+        <span>{t("projectSelector.viewAllProjects")}</span>
         <ArrowUpRight className="size-3.5 shrink-0 text-light-slate" />
       </ListAction>
       {editTarget && (
@@ -252,9 +256,9 @@ const ProjectMenuContent: React.FC<ProjectMenuContentProps> = ({
           if (!open) setDeleteTarget(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Delete project"
-        description="Deleting a project will also remove all the traces and their data. This action can't be undone. Are you sure you want to continue?"
-        confirmText="Delete project"
+        title={t("projectSelector.deleteProject")}
+        description={t("projectSelector.deleteProjectDescription")}
+        confirmText={t("projectSelector.deleteProject")}
         confirmButtonVariant="destructive"
       />
     </>

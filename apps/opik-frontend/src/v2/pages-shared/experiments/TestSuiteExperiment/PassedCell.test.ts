@@ -40,7 +40,7 @@ describe("getStatusFromExperimentItems", () => {
     it("returns SKIPPED with 'no experiment item' reason when experiment_items is empty", () => {
       const result = getStatusFromExperimentItems(makeRow());
       expect(result.status).toBe(RunStatus.SKIPPED);
-      expect(result.reason).toBe("No experiment item defined");
+      expect(result.reason).toBe("noExperimentItemDefined");
     });
   });
 
@@ -51,7 +51,7 @@ describe("getStatusFromExperimentItems", () => {
       });
       const result = getStatusFromExperimentItems(row);
       expect(result.status).toBe(RunStatus.SKIPPED);
-      expect(result.reason).toBe("No assertions defined");
+      expect(result.reason).toBe("noAssertionsDefined");
     });
   });
 
@@ -216,7 +216,7 @@ describe("getStatusInfoForExperiment", () => {
     it("returns SKIPPED with 'no experiment item' reason when item is undefined", () => {
       const result = getStatusInfoForExperiment(makeRow(), "exp-1", undefined);
       expect(result.status).toBe(RunStatus.SKIPPED);
-      expect(result.reason).toBe("No experiment item defined");
+      expect(result.reason).toBe("noExperimentItemDefined");
     });
   });
 
@@ -225,7 +225,7 @@ describe("getStatusInfoForExperiment", () => {
       const item = makeItem({ id: "i1" });
       const result = getStatusInfoForExperiment(makeRow(), "exp-1", item);
       expect(result.status).toBe(RunStatus.SKIPPED);
-      expect(result.reason).toBe("No assertions defined");
+      expect(result.reason).toBe("noAssertionsDefined");
     });
   });
 

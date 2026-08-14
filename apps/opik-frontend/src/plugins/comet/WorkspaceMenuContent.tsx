@@ -79,6 +79,7 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
   setSearch,
 }) => {
   const { t } = useTranslation("common");
+  const { t: tNav } = useTranslation("navigation");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -157,11 +158,21 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
             {wsDisplayName}
           </span>
         </TooltipWrapper>
-        <TooltipWrapper content={pinned ? "Unpin workspace" : "Pin workspace"}>
+        <TooltipWrapper
+          content={
+            pinned
+              ? tNav("workspaceMenu.unpinWorkspace")
+              : tNav("workspaceMenu.pinWorkspace")
+          }
+        >
           <Button
             variant="minimal"
             size="icon-2xs"
-            aria-label={pinned ? "Unpin workspace" : "Pin workspace"}
+            aria-label={
+              pinned
+                ? tNav("workspaceMenu.unpinWorkspace")
+                : tNav("workspaceMenu.pinWorkspace")
+            }
             className={cn(
               "group/pin shrink-0 rounded text-light-slate hover:text-foreground",
               pinned ? "inline-flex" : "hidden group-hover:inline-flex",
@@ -349,7 +360,9 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
           <>
             {pinnedWorkspaces.length > 0 && (
               <>
-                <MenuSectionLabel>Pinned</MenuSectionLabel>
+                <MenuSectionLabel>
+                  {tNav("workspaceMenu.pinned")}
+                </MenuSectionLabel>
                 {pinnedWorkspaces.map(renderWorkspaceItem)}
               </>
             )}
@@ -358,7 +371,9 @@ const WorkspaceMenuContent: React.FC<WorkspaceMenuContentProps> = ({
                 {pinnedWorkspaces.length > 0 && (
                   <DropdownMenuSeparator className="my-1" />
                 )}
-                <MenuSectionLabel>Recently visited</MenuSectionLabel>
+                <MenuSectionLabel>
+                  {tNav("workspaceMenu.recentlyVisited")}
+                </MenuSectionLabel>
                 {recentlyVisitedWorkspaces.map(renderWorkspaceItem)}
               </>
             )}

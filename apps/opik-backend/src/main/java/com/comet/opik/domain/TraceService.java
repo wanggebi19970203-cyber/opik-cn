@@ -190,9 +190,9 @@ class TraceServiceImpl implements TraceService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // Fail fast on invalid ids BEFORE any side effect below (auto-stripped attachment deletion, project
-        // creation), so a rejected batch never mutates state. Runs inside deferContextual so the audit
-        // metric can attribute the batch's own ids to the request workspace.
+        // 在下方任何副作用（自动剥离附件删除、项目创建）之前，对无效 id 快速失败，
+        // 这样被拒绝的批次永远不会修改状态。在 deferContextual 中运行，以便
+        // audit metric 可以将批次自身的 id 归属到请求工作区。
         return Mono.deferContextual(validationCtx -> {
             String validationWorkspaceId = validationCtx.get(RequestContext.WORKSPACE_ID);
             dedupedTraces.forEach(trace -> {
@@ -261,7 +261,7 @@ class TraceServiceImpl implements TraceService {
                     String projectName = WorkspaceUtils.getProjectName(trace.projectName());
                     Project project = projectPerName.get(projectName);
 
-                    // Ids are already validated up-front in create(TraceBatch); generated ids are inherently valid.
+                    // id 已在 create(TraceBatch) 中预先校验；生成的 id 天然有效。
                     UUID id = trace.id() == null ? idGenerator.generateId() : trace.id();
 
                     return trace.toBuilder().id(id).projectId(project.id()).projectName(project.name()).build();
@@ -484,42 +484,42 @@ class TraceServiceImpl implements TraceService {
     }
 
     /**
-     * Deletes the given trace ids. With an explicit {@code projectId}, deletes only within that project. Without one
-     * (delete-by-id, or a batch spanning projects), resolves every owning project for each id and deletes it under the
-     * full {@code (workspace_id, project_id, id)} key, once per project group - so an id reused across projects is
-     * removed from all of them and no delete is ever project-less (OPIK-7483). Ids that resolve to no owning project
-     * have no live trace anywhere and are skipped: no {@code TracesDeleted} is emitted for them, because a project-less
-     * cascade would be an unscoped, workspace-wide child delete that could over-delete a concurrently-ingested trace's
-     * children; genuine orphan child rows are cleaned via the child entities' own delete endpoints.
+     * 删除给定的 trace id。若显式传入 {@code projectId}，则仅删除该项目内的追踪记录。若未传入
+     * （按 id 删除，或跨项目的批次），则为每个 id 解析其所属项目，并按完整的
+     * {@code (workspace_id, project_id, id)} 键在每个项目分组下各删除一次 —— 因此一个在多个项目中复用的 id
+     * 会从所有这些项目中移除，且不会有任何删除是无项目的（OPIK-7483）。解析不到所属项目的 id
+     * 在任何地方都没有存活的 trace，会被跳过：不会为它们发出 {@code TracesDeleted}，因为无项目的
+     * 级联删除将是一次无作用域、跨工作区的子记录删除，可能会过度删除一个正在并发写入的 trace 的
+     * 子记录；真正的孤儿子行则通过子实体自身的删除端点来清理。
      */
     @Override
     @WithSpan
     public Mono<Void> delete(@NonNull Set<UUID> ids, UUID projectId) {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(ids), "Argument 'ids' must not be empty");
-        log.info("Deleting traces, count '{}'", ids.size());
+        log.info("删除追踪记录，数量 '{}'", ids.size());
 
         if (projectId != null) {
             var pairs = ids.stream().map(id -> Pair.of(projectId, id)).collect(Collectors.toUnmodifiableSet());
             return template.nonTransaction(connection -> delete(pairs, connection));
         }
 
-        log.info("Resolving owning projects to delete traces, count '{}'", ids.size());
+        log.info("解析所属项目以删除追踪记录，数量 '{}'", ids.size());
         return resolveOwningProjects(ids)
                 .flatMap(projectsByTrace -> {
-                    // Flatten to (project_id, trace_id) pairs so a reused id maps to one pair per owning project.
+                    // 展平为 (project_id, trace_id) 键值对，使一个复用的 id 对应到每个所属项目的一组键值对。
                     var pairs = projectsByTrace.entrySet().stream()
                             .flatMap(entry -> entry.getValue().stream()
                                     .map(project -> Pair.of(project, entry.getKey())))
                             .collect(Collectors.toUnmodifiableSet());
 
-                    // Resolution only returns queried ids, so its key set is a subset of ids.
+                    // 解析只返回被查询的 id，因此其键集是 ids 的子集。
                     var unresolvedIds = ids.stream()
                             .filter(id -> !projectsByTrace.containsKey(id))
                             .collect(Collectors.toUnmodifiableSet());
                     if (!unresolvedIds.isEmpty()) {
-                        // No live trace in any project: skip, emitting no project-less cascade (see delete() javadoc).
+                        // 任何项目中都没有存活的 trace：跳过，且不发出无项目的级联删除（见 delete() 的 javadoc）。
                         log.info(
-                                "Trace ids with no live row (already absent), skipped from trace delete '{}', total '{}'",
+                                "无存活行的 trace id（已不存在），从追踪删除中跳过 '{}'，总数 '{}'",
                                 unresolvedIds.size(), ids.size());
                     }
 
@@ -530,12 +530,12 @@ class TraceServiceImpl implements TraceService {
     }
 
     /**
-     * Resolves every owning project for each id: a bounded fast pass, then an unbounded pass over only the ids the
-     * bounded one leaves unresolved. Returns id -> owning projects; ids absent from the result have no live row.
+     * 为每个 id 解析其所属项目：先进行有界的快速遍历，再仅对有界遍历未解析到的 id 进行无界遍历。
+     * 返回 id -> 所属项目；结果中缺失的 id 表示没有存活的行。
      * <p>
-     * The bounded pass's {@code toMonday(id_at)} window can miss a row whose {@code id_at} is not monotonic in its id
-     * (e.g. a wrapped timestamp, OPIK-7456), so the unbounded pass re-resolves the miss set - the bounded query is
-     * never a delete's sole resolver. The resolver-query javadocs cover how each pass prunes.
+     * 有界遍历的 {@code toMonday(id_at)} 窗口可能漏掉 {@code id_at} 与其 id 不单调对应的行
+     * （例如时间戳回绕，OPIK-7456），因此无界遍历会重新解析未命中的集合 —— 有界查询
+     * 永远不是一次删除的唯一解析器。解析器查询的 javadoc 描述了每次遍历如何进行剪枝。
      */
     private Mono<Map<UUID, Set<UUID>>> resolveOwningProjects(Set<UUID> ids) {
         return dao.getAllProjectIdsByTraceIdsBounded(ids)
@@ -547,11 +547,11 @@ class TraceServiceImpl implements TraceService {
                         return Mono.just(bounded);
                     }
                     log.info(
-                            "Bounded project resolution incomplete, re-resolving miss set unbounded, missed '{}', total '{}'",
+                            "有界项目解析不完整，无界重新解析未命中集合，未命中 '{}'，总数 '{}'",
                             missSet.size(), ids.size());
                     return dao.getAllProjectIdsByTraceIds(missSet)
                             .map(unbounded -> {
-                                // Keys are disjoint: unbounded only carries the miss set, none of which is in bounded.
+                                // 键集互不相交：无界遍历只携带未命中集合，其中没有任何一个存在于有界结果中。
                                 var merged = new HashMap<>(bounded);
                                 merged.putAll(unbounded);
                                 return merged;
@@ -575,7 +575,7 @@ class TraceServiceImpl implements TraceService {
                                         .userName(userName)
                                         .build());
                                 log.info(
-                                        "Published TracesDeleted event, trace ids count '{}', project id '{}', workspace '{}'",
+                                        "已发布 TracesDeleted 事件，trace id 数量 '{}'，项目 id '{}'，工作区 '{}'",
                                         traceIds.size(), projectId, workspaceId);
                             }))
                     .then(captureDeletions(projectIdTraceIdPairs, workspaceId, userName));
@@ -583,11 +583,11 @@ class TraceServiceImpl implements TraceService {
     }
 
     /**
-     * Records the deleted (project_id, trace_id) pairs in the deletion-events bridge so deletes issued while the table
-     * is being migrated survive the copy. Runs after the delete and is best-effort: capture is auxiliary and must never
-     * disrupt the delete, so failures are logged and swallowed. Running after the delete also avoids recording a delete
-     * that did not happen. No-op unless capture is enabled. Deferred so that nothing is built or run until subscribed,
-     * i.e. only after the delete succeeds.
+     * 在 deletion-events bridge 中记录已删除的 (project_id, trace_id) 键值对，使表迁移期间发起的删除
+     * 在复制后仍能存活。在删除之后运行，且为尽力而为：捕获是辅助性的，绝不能
+     * 干扰删除，因此失败会被记录并吞掉。在删除之后运行也避免了记录一个
+     * 实际并未发生的删除。除非启用捕获，否则为无操作。使用延迟执行，使订阅前（即仅在删除成功后）
+     * 不会构建或运行任何内容。
      */
     private Mono<Void> captureDeletions(Set<Pair<UUID, UUID>> projectIdTraceIdPairs, String workspaceId,
             String userName) {
@@ -605,10 +605,10 @@ class TraceServiceImpl implements TraceService {
                             .build())
                     .collect(Collectors.toUnmodifiableSet());
             return deletionEventDAO.insert(events, userName)
-                    .doOnSuccess(_ -> log.info("Captured trace deletion events, count '{}' on workspace '{}'",
+                    .doOnSuccess(_ -> log.info("已捕获 trace 删除事件，数量 '{}'，工作区 '{}'",
                             events.size(), workspaceId))
                     .onErrorResume(throwable -> {
-                        log.warn("Failed to capture trace deletion events, count '{}' on workspace '{}'",
+                        log.warn("捕获 trace 删除事件失败，数量 '{}'，工作区 '{}'",
                                 projectIdTraceIdPairs.size(), workspaceId, throwable);
                         return Mono.empty();
                     });

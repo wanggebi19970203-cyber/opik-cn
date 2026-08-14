@@ -101,7 +101,7 @@ export const CodeMetricParamsSchema = z
         // Anchor to the `code` field so the message flows through
         // `errors?.code?.message` into CodeMetricConfigs' FormErrorSkeleton.
         path: ["code"],
-        message: "Python code has a syntax error",
+        message: i18next.t("optimizations:metricConfigs.pythonCodeSyntaxError"),
       });
     }
   });

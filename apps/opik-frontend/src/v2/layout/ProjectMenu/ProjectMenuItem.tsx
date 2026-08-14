@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MoreHorizontal, Pencil, Pin, PinOff, Trash } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -41,6 +42,7 @@ const ProjectMenuItem: React.FC<ProjectMenuItemProps> = ({
   onRequestDelete,
 }) => {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const { t } = useTranslation("navigation");
 
   const {
     permissions: { canCreateProjects, canDeleteProjects },
@@ -83,12 +85,12 @@ const ProjectMenuItem: React.FC<ProjectMenuItemProps> = ({
       <div className="flex shrink-0 items-center gap-0.5">
         {showActions && (
           <DropdownMenu open={isMoreMenuOpen} onOpenChange={setIsMoreMenuOpen}>
-            <TooltipWrapper content="More options">
+            <TooltipWrapper content={t("projectSelector.moreOptions")}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="minimal"
                   size="icon-2xs"
-                  aria-label="More options"
+                  aria-label={t("projectSelector.moreOptions")}
                   className={cn(
                     "rounded text-light-slate hover:text-foreground",
                     isMoreMenuOpen
@@ -110,7 +112,7 @@ const ProjectMenuItem: React.FC<ProjectMenuItemProps> = ({
                   }}
                 >
                   <Pencil className="mr-1.5 size-3.5 text-light-slate" />
-                  Edit
+                  {t("projectSelector.edit")}
                 </DropdownMenuItem>
               )}
               {canCreateProjects && canDelete && <DropdownMenuSeparator />}
@@ -124,17 +126,27 @@ const ProjectMenuItem: React.FC<ProjectMenuItemProps> = ({
                   }}
                 >
                   <Trash className="mr-1.5 size-3.5" />
-                  Delete
+                  {t("projectSelector.delete")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        <TooltipWrapper content={isPinned ? "Unpin project" : "Pin project"}>
+        <TooltipWrapper
+          content={
+            isPinned
+              ? t("projectSelector.unpinProject")
+              : t("projectSelector.pinProject")
+          }
+        >
           <Button
             variant="minimal"
             size="icon-2xs"
-            aria-label={isPinned ? "Unpin project" : "Pin project"}
+            aria-label={
+              isPinned
+                ? t("projectSelector.unpinProject")
+                : t("projectSelector.pinProject")
+            }
             className={cn(
               "group/pin rounded text-light-slate",
               isPinned ? "inline-flex" : "hidden group-hover:inline-flex",

@@ -104,6 +104,10 @@
       "trace_latency": "平均延迟超过（秒）",
       "default": "阈值超过"
     },
+    "guardrailTypes": {
+      "label": "护栏类型",
+      "description": "仅在选定的护栏类型上告警。留空则对任何护栏失败告警。"
+    },
     "feedbackConditions": {
       "whenAverage": "当平均",
       "orWhenAverage": "或当平均",

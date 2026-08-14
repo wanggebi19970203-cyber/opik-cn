@@ -146,7 +146,7 @@ const SetGuardrailDialog: React.FC<SetGuardrailDialogProps> = ({
             >
               <GuardrailConfig.TextInput
                 id={`${CUSTOM_CLASSIFIER_CONFIG.id}-model-name`}
-                label="Model name"
+                label={t("guardrail.modelName")}
                 placeholder="my-trained-model"
                 value={CUSTOM_CLASSIFIER_STATE.modelName}
                 onChange={(v) =>
@@ -170,7 +170,7 @@ const SetGuardrailDialog: React.FC<SetGuardrailDialogProps> = ({
             >
               <GuardrailConfig.TextInput
                 id={`${LLM_JUDGE_CONFIG.id}-name`}
-                label="Check name"
+                label={t("guardrail.checkName")}
                 placeholder="my-policy-check"
                 value={LLM_JUDGE_STATE.name}
                 onChange={(v) =>

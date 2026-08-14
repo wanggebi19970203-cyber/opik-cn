@@ -44,7 +44,7 @@ describe("OptimizationKPICards", () => {
     // reflection) that belongs to no trial, so it must win over the trial sum.
     renderCards({ experiments, totalOptimizationCost: 0.22 });
 
-    expect(screen.getByText("Optimization cost")).toBeInTheDocument();
+    expect(screen.getByText("optimization.kpi.optimizationCost")).toBeInTheDocument();
     expect(screen.getByText("$0.220")).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe("OptimizationKPICards", () => {
   it("renders a dash when no cost is known", () => {
     renderCards({ experiments: [] });
 
-    expect(screen.getByText("Optimization cost")).toBeInTheDocument();
+    expect(screen.getByText("optimization.kpi.optimizationCost")).toBeInTheDocument();
     expect(screen.getAllByText("-").length).toBeGreaterThan(0);
     expect(screen.queryByText(/^\$/)).not.toBeInTheDocument();
   });

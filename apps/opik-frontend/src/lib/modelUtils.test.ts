@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   getRoutableProviderModelValue,
   getOpenAIReasoningEffortOptions,
@@ -14,6 +14,10 @@ import {
   PROVIDER_MODEL_TYPE,
   PROVIDER_TYPE,
 } from "@/types/providers";
+
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key },
+}));
 
 const ANTHROPIC = PROVIDER_TYPE.ANTHROPIC as COMPOSED_PROVIDER_TYPE;
 const OPEN_AI = PROVIDER_TYPE.OPEN_AI as COMPOSED_PROVIDER_TYPE;
@@ -221,7 +225,7 @@ describe("getOpenAIReasoningEffortOptions", () => {
   it("labels the default value as 'High (Default)'", () => {
     const opts = getOpenAIReasoningEffortOptions(PROVIDER_MODEL_TYPE.GPT_5);
     const high = opts.find((o) => o.value === "high");
-    expect(high?.label).toBe("High (Default)");
+    expect(high?.label).toBe("common:modelUtils.highDefault");
   });
 
   it("returns empty array for o1-mini and non-reasoning models", () => {

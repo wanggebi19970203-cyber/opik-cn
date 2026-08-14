@@ -1,9 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import {
   buildPromptComparisonTargets,
   ComparisonCandidate,
 } from "./promptComparisonTargets";
+
+// i18next.t() returns the raw key in tests (mirrors the react-i18next mock).
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
 
 const createCandidate = (
   overrides: Partial<ComparisonCandidate> = {},
@@ -36,7 +43,7 @@ describe("buildPromptComparisonTargets", () => {
       });
 
       expect(targets).toEqual([
-        { id: "base", label: "Baseline", prompt: "baseline prompt" },
+        { id: "base", label: "codeDiff.baseline", prompt: "baseline prompt" },
       ]);
     });
 
@@ -91,11 +98,11 @@ describe("buildPromptComparisonTargets", () => {
       });
 
       expect(targets).toEqual([
-        { id: "base", label: "Baseline", prompt: "baseline prompt" },
+        { id: "base", label: "codeDiff.baseline", prompt: "baseline prompt" },
         {
           id: "p-1",
-          label: "Parent",
-          caption: "Trial #4",
+          label: "codeDiff.parent",
+          caption: "codeDiff.trialNumber",
           prompt: "parent prompt",
         },
       ]);
@@ -122,8 +129,14 @@ describe("buildPromptComparisonTargets", () => {
 
       expect(targets.map((t) => t.id)).toEqual(["p-b", "p-a"]);
       // Both keep the plain "Parent" label; the trial tag distinguishes them.
-      expect(targets.map((t) => t.label)).toEqual(["Parent", "Parent"]);
-      expect(targets.map((t) => t.caption)).toEqual(["Trial #3", "Trial #2"]);
+      expect(targets.map((t) => t.label)).toEqual([
+        "codeDiff.parent",
+        "codeDiff.parent",
+      ]);
+      expect(targets.map((t) => t.caption)).toEqual([
+        "codeDiff.trialNumber",
+        "codeDiff.trialNumber",
+      ]);
     });
 
     it("gives an unnumbered (baseline) parent no trial tag", () => {
@@ -147,7 +160,12 @@ describe("buildPromptComparisonTargets", () => {
       });
 
       expect(targets).toEqual([
-        { id: "p-base", label: "Parent", caption: undefined, prompt: "parent" },
+        {
+          id: "p-base",
+          label: "codeDiff.parent",
+          caption: undefined,
+          prompt: "parent",
+        },
       ]);
     });
 
@@ -185,7 +203,7 @@ describe("buildPromptComparisonTargets", () => {
       });
 
       expect(targets).toEqual([
-        { id: "base", label: "Baseline", prompt: "baseline prompt" },
+        { id: "base", label: "codeDiff.baseline", prompt: "baseline prompt" },
       ]);
     });
 
@@ -223,8 +241,8 @@ describe("buildPromptComparisonTargets", () => {
       expect(targets).toEqual([
         {
           id: "p-1",
-          label: "Parent",
-          caption: "Trial #3",
+          label: "codeDiff.parent",
+          caption: "codeDiff.trialNumber",
           prompt: "parent prompt",
         },
       ]);

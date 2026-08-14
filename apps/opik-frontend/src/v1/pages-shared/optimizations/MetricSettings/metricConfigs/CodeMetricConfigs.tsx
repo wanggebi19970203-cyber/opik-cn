@@ -58,11 +58,7 @@ const CodeMetricConfigs = ({ configs, onChange }: CodeMetricConfigsProps) => {
           />
         </div>
         <p className="text-xs text-muted-slate">
-          Define a class that extends <code>BaseMetric</code> with a{" "}
-          <code>score</code> method that takes <code>output</code> (the LLM
-          response) and <code>**kwargs</code> (dataset fields). Read fields with{" "}
-          <code>kwargs.get(&quot;field_name&quot;)</code> so a missing field
-          doesn&apos;t raise, returning a <code>ScoreResult</code>.
+          {t("optimizations.metricConfigs.pythonCodeDescription")}
         </p>
       </div>
     </div>

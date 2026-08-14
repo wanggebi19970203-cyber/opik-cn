@@ -98,11 +98,10 @@ describe("ReturnToAnnotationQueueButton", () => {
 
     expect(mockUseNavigationBlocker).toHaveBeenCalledWith({
       condition: false,
-      title: "Unsaved changes",
-      description:
-        "You have unsaved changes to your annotations. If you leave now, your changes will be lost.",
-      confirmText: "Leave without saving",
-      cancelText: "Stay on page",
+      title: "returnToAnnotationQueue.unsavedChanges",
+      description: "returnToAnnotationQueue.unsavedChangesDescription",
+      confirmText: "returnToAnnotationQueue.leaveWithoutSaving",
+      cancelText: "returnToAnnotationQueue.stayOnPage",
     });
 
     // Test with unsaved changes
@@ -115,11 +114,10 @@ describe("ReturnToAnnotationQueueButton", () => {
 
     expect(mockUseNavigationBlocker).toHaveBeenCalledWith({
       condition: true,
-      title: "Unsaved changes",
-      description:
-        "You have unsaved changes to your annotations. If you leave now, your changes will be lost.",
-      confirmText: "Leave without saving",
-      cancelText: "Stay on page",
+      title: "returnToAnnotationQueue.unsavedChanges",
+      description: "returnToAnnotationQueue.unsavedChangesDescription",
+      confirmText: "returnToAnnotationQueue.leaveWithoutSaving",
+      cancelText: "returnToAnnotationQueue.stayOnPage",
     });
   });
 });

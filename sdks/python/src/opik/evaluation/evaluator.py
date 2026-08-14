@@ -76,9 +76,8 @@ def _try_notifying_about_experiment_completion(
 def _get_experiment_url(
     client: opik_client.Opik, experiment_id: str, dataset_id: str
 ) -> Optional[str]:
-    """Best-effort direct experiment URL; the experiment is already created by
-    the time this runs, so a failure to resolve the workspace or build the URL
-    must not turn a successful evaluation into an error.
+    """尽力而为的直接实验 URL；此方法运行时实验已经创建，
+    因此解析工作区或构建 URL 失败不得将成功的评估变为错误。
     """
     try:
         return url_helpers.get_experiment_url_by_id(
@@ -89,7 +88,7 @@ def _get_experiment_url(
         )
     except Exception:
         LOGGER.debug(
-            "Could not resolve the experiment URL. Experiment ID: %s",
+            "无法解析实验 URL。实验 ID：%s",
             experiment_id,
             exc_info=True,
         )
@@ -181,13 +180,13 @@ def evaluate(
             检查所需指标的 `score` 方法签名以了解 `task` 返回字典中哪些键是必需的。
             如果未提供值，实验将没有任何评分指标。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数都包含一个评分方法，该方法接受评估引擎提供的
+            预定义参数：
 
-            - dataset_item — a dictionary containing the dataset item content,
-            - task_outputs — a dictionary containing the LLM task output.
-            - task_span - the data collected during the LLM task execution [optional].
+            - dataset_item — 包含数据集项目内容的字典，
+            - task_outputs — 包含 LLM 任务输出的字典。
+            - task_span - LLM 任务执行期间收集的数据[可选]。
 
         verbose: 控制评估输出日志（如摘要和 tqdm 进度条）的整数值。
             0 - 无输出，1 - 启用输出（默认），2 - 启用输出并显示详细统计信息。
@@ -236,38 +235,36 @@ def evaluate(
             - `data.category = "test"` - 具有特定数据字段值的项目
             - `created_at >= "2024-01-01T00:00:00Z"` - 在日期之后创建的项目
 
-        error_tolerance: How much failure the run absorbs before it gives up.
-            Accepts an ``opik.ErrorTolerance`` member or the equivalent int.
+        error_tolerance: 运行在放弃前能够容忍多少失败。
+            接受 ``opik.ErrorTolerance`` 成员或等价的整数。
 
-            - ``ErrorTolerance.METRIC_ERRORS`` (10, default): errors raised *inside*
-              ``score`` are recorded as failed score results and the run continues.
-              Anything else aborts. This is the long-standing behaviour.
-            - ``ErrorTolerance.ALL_SCORING_ERRORS`` (20): additionally tolerate errors
-              that stop a metric from being scored at all — a required score argument
-              the dataset does not provide, or an item-level evaluator that cannot be
-              built. Note that neither level stops early — the evaluation task runs
-              for every dataset item before the first failure is re-raised, so a
-              misconfiguration affecting every item costs a full pass either way.
-              What the higher level changes is that you get an ``EvaluationResult``
-              back instead of an exception.
+            - ``ErrorTolerance.METRIC_ERRORS``（10，默认值）：在 ``score`` *内部*
+              抛出的错误被记录为失败的评分结果，运行继续。
+              其他任何情况都会中止。这是长期以来的行为。
+            - ``ErrorTolerance.ALL_SCORING_ERRORS``（20）：额外容忍那些
+              导致某个指标完全无法评分的错误——数据集未提供必需的评分参数，
+              或无法构建项目级评估器。请注意，两个级别都不会提前停止——
+              在第一个失败被重新抛出之前，评估任务会对每个数据集项目运行，
+              因此影响每个项目的配置错误在两种情况下都会付出一次完整遍历的代价。
+              更高级别改变的只是你会得到一个 ``EvaluationResult``
+              而不是异常。
 
-            Two failures always abort, at every level: a failure of the evaluation
-            task itself, and a ``scoring_key_mapping`` callable that raises — neither
-            belongs to a single metric, so neither can be reported as one metric's
-            failed score.
+              在任何级别下，有两种失败始终会中止：评估任务本身的失败，
+              以及会抛出异常的 ``scoring_key_mapping`` 可调用对象——两者
+              都不属于单个指标，因此都无法报告为某个指标的失败分数。
 
-            A tolerated failure of a metric is also recorded on a span named after
-            it, carrying the same ``error_info``, so it is visible in the trace even
-            though a failed score is never persisted as a feedback score. Failures
-            building an item-level evaluator happen before any metric span exists,
-            so those carry the payload on the score result only.
+              被容忍的指标失败也会记录在一个以该指标命名的 span 上，
+              携带相同的 ``error_info``，因此即使失败的分数永远不会
+              作为反馈分数持久化，它仍然在 trace 中可见。构建项目级评估器的
+              失败发生在任何指标 span 存在之前，因此这些失败仅在评分结果上
+              携带载荷。
 
-            Tolerated failures are accumulated in the returned ``EvaluationResult``:
-            every one is a ``ScoreResult`` with ``scoring_failed=True``, ``reason``
-            set to the error message and ``metadata["error_info"]`` holding the
-            structured payload (``exception_type``, ``message``, ``traceback``).
-            They are excluded from the aggregated statistics and are never sent to
-            the backend, so the score cell stays empty rather than showing a zero.
+              被容忍的失败会累积在返回的 ``EvaluationResult`` 中：
+              每一个都是一个 ``ScoreResult``，其 ``scoring_failed=True``，
+              ``reason`` 设置为错误消息，``metadata["error_info"]`` 保存
+              结构化载荷（``exception_type``、``message``、``traceback``）。
+              它们被排除在聚合统计之外，并且永远不会发送到后端，
+              因此评分单元格保持为空，而不是显示为零。
     """
     error_tolerance = ErrorTolerance(error_tolerance)
 
@@ -496,7 +493,7 @@ def __internal_api__run_test_suite__(
             )
         except Exception:
             logging.getLogger(__name__).warning(
-                "Failed to save test suite report file.",
+                "保存测试套件报告文件失败。",
                 exc_info=True,
             )
 
@@ -722,17 +719,16 @@ def _evaluate_test_suite_task(
 
     start_time = time.time()
 
-    # Activate the local emulator so suite-level LLMJudge assertions get
-    # access to the full trace tree via the agentic tool loop. The emulator
-    # caches every trace/span logged in-process; it stays inactive at idle.
-    # Activation is ref-counted (acquire here, release in `finally`), so when
-    # this connection's processing chain is shared by several concurrent
-    # evaluate() runs the emulator stays active until the last one finishes.
-    # `getattr` with a default keeps this MagicMock-friendly:
-    # MagicMock auto-rejects attribute names that look like dunders
-    # (start and end with `__`), so plain attribute access raises
-    # AttributeError on mocked clients used by unit tests. Production
-    # clients always have this attribute, so the default never fires.
+    # 激活本地模拟器，使套件级 LLMJudge 断言能够通过代理工具循环
+    # 访问完整的 trace 树。模拟器会缓存进程内记录的每个 trace/span；
+    # 空闲时保持非活动状态。激活是引用计数的（在此获取，在 `finally` 中释放），
+    # 因此当此连接的处理器链被多个并发的 evaluate() 运行共享时，
+    # 模拟器会保持活动直到最后一个运行结束。
+    # 带默认值的 `getattr` 使其对 MagicMock 友好：
+    # MagicMock 会自动拒绝看起来像双下划线方法的属性名
+    # （以 `__` 开头和结尾），因此对单元测试使用的模拟客户端进行
+    # 普通属性访问会引发 AttributeError。生产客户端始终具有此属性，
+    # 因此默认值永远不会触发。
     chain = getattr(client, "__internal_api__message_processor__", None)
     emulator = (
         message_processors_chain.get_local_emulator_message_processor(chain)
@@ -740,10 +736,9 @@ def _evaluate_test_suite_task(
         else None
     )
     if chain is not None and emulator is not None:
-        # Ref-counted activation: concurrent evaluate() runs that share this
-        # connection's processing chain each acquire/release, so the emulator
-        # stays active until the last run finishes (instead of the first to
-        # exit deactivating it and starving the others' agentic judges).
+        # 引用计数激活：共享此连接的处理器链的并发 evaluate() 运行
+        # 各自获取/释放，因此模拟器保持活动直到最后一个运行结束
+        # （而不是第一个退出的运行将其停用，导致其他运行的代理判断器饿死）。
         message_processors_chain.toggle_local_emulator_message_processor(
             active=True, chain=chain, reset=True
         )
@@ -763,7 +758,7 @@ def _evaluate_test_suite_task(
                 workers=task_threads,
                 verbose=verbose,
                 source=source,
-                # This entrypoint does not expose the setting; it runs strict.
+                # 此入口点不暴露该设置；它以严格模式运行。
                 error_tolerance=ErrorTolerance.METRIC_ERRORS,
             )
             test_results = evaluation_engine.run_and_score(
@@ -828,13 +823,13 @@ def evaluate_experiment(
             每个指标都有 `score(...)` 方法，该方法的参数取自 `task` 输出，
             检查所需指标的 `score` 方法签名以了解 `task` 返回字典中哪些键是必需的。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数都包含一个评分方法，该方法接受评估引擎提供的
+            预定义参数：
 
-            - dataset_item — a dictionary containing the dataset item content,
-            - task_outputs — a dictionary containing the LLM task output.
-            - task_span - the data collected during the LLM task execution [optional].
+            - dataset_item — 包含数据集项目内容的字典，
+            - task_outputs — 包含 LLM 任务输出的字典。
+            - task_span - LLM 任务执行期间收集的数据[可选]。
 
         scoring_threads: 运行评分指标的线程工作者数量。
 
@@ -862,7 +857,7 @@ def evaluate_experiment(
     client = opik_client.get_global_client()
 
     if experiment_id:
-        LOGGER.info("Getting experiment by id. Experiment name is ignored.")
+        LOGGER.info("按 id 获取实验。实验名称将被忽略。")
         experiment = client.get_experiment_by_id(id=experiment_id)
     else:
         experiment = rest_operations.get_experiment_with_unique_name(
@@ -880,7 +875,7 @@ def evaluate_experiment(
     )
     if not test_cases:
         raise exceptions.EmptyExperiment(
-            f"Experiment {experiment.id} does not have any test traces to run an evaluation"
+            f"实验 {experiment.id} 没有任何测试 trace 可用于运行评估"
         )
 
     first_trace_id = test_cases[0].trace_id
@@ -902,7 +897,7 @@ def evaluate_experiment(
             workers=scoring_threads,
             verbose=verbose,
             source="experiment",
-            # This entrypoint does not expose the setting; it runs strict.
+            # 此入口点不暴露该设置；它以严格模式运行。
             error_tolerance=ErrorTolerance.METRIC_ERRORS,
         )
         test_results = evaluation_engine.score_test_cases(
@@ -989,8 +984,8 @@ def _build_prompt_evaluation_task(
     if unsupported_modalities:
         modalities_list = ", ".join(sorted(unsupported_modalities))
         LOGGER.warning(
-            "Model '%s' does not support %s content. Multimedia parts will be flattened "
-            "to text placeholders. See %s for supported models and customization options.",
+            "模型 '%s' 不支持 %s 内容。多媒体部分将被展平为文本占位符。"
+            "有关支持的模型和自定义选项，请参见 %s。",
             getattr(model, "model_name", "unknown"),
             modalities_list,
             MODALITY_SUPPORT_DOC_URL,
@@ -1049,13 +1044,13 @@ def evaluate_prompt(
         scoring_metrics: 评估期间要计算的指标列表。
             LLM 输入和输出将作为参数传递给每个指标的 `score(...)` 方法。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数都包含一个评分方法，该方法接受评估引擎提供的
+            预定义参数：
 
-            - dataset_item — a dictionary containing the dataset item content,
-            - task_outputs — a dictionary containing the LLM task output.
-            - task_span - the data collected during the LLM task execution [optional].
+            - dataset_item — 包含数据集项目内容的字典，
+            - task_outputs — 包含 LLM 任务输出的字典。
+            - task_span - LLM 任务执行期间收集的数据[可选]。
 
         experiment_name_prefix: 添加到自动生成的实验名称前的前缀，使其唯一
             但分组在同一前缀下。例如，如果设置 `experiment_name_prefix="my-experiment"`，
@@ -1115,7 +1110,7 @@ def evaluate_prompt(
     if isinstance(model, str):
         opik_model = models_factory.get(model_name=model)
     elif not isinstance(model, base_model.OpikBaseModel):
-        raise ValueError("`model` must be either a string or an OpikBaseModel instance")
+        raise ValueError("`model` 必须为字符串或 OpikBaseModel 实例")
     else:
         opik_model = model
 
@@ -1206,7 +1201,7 @@ def evaluate_prompt(
             workers=task_threads,
             verbose=verbose,
             source="experiment",
-            # This entrypoint does not expose the setting; it runs strict.
+            # 此入口点不暴露该设置；它以严格模式运行。
             error_tolerance=ErrorTolerance.METRIC_ERRORS,
         )
         test_results = evaluation_engine.run_and_score(
@@ -1296,23 +1291,22 @@ def evaluate_optimization_trial(
     Args:
         optimization_id: 与实验关联的优化 ID。
 
-        experiment_type: The experiment type recorded for this trial. Optimizers use
-            "mini-batch" for small-sample candidate screening evaluations and "trial"
-            (default) for full evaluations, so that mini-batch scores are excluded
-            from best-score aggregations.
+        experiment_type: 为此试验记录的实验类型。优化器使用
+            "mini-batch" 进行小样本候选筛选评估，使用 "trial"
+            （默认值）进行完整评估，以便将 mini-batch 分数排除在最佳分数聚合之外。
 
         dataset: Opik Dataset 或 DatasetVersion 实例
 
         task: 可调用对象，接受包含数据集项目内容的字典作为输入，
             返回稍后用于评分的字典。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function includes a scoring method that accepts predefined
-            arguments supplied by the evaluation engine:
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数都包含一个评分方法，该方法接受评估引擎提供的
+            预定义参数：
 
-            - dataset_item — a dictionary containing the dataset item content,
-            - task_outputs — a dictionary containing the LLM task output.
-            - task_span - the data collected during the LLM task execution [optional].
+            - dataset_item — 包含数据集项目内容的字典，
+            - task_outputs — 包含 LLM 任务输出的字典。
+            - task_span - LLM 任务执行期间收集的数据[可选]。
 
         experiment_name_prefix: 添加到自动生成的实验名称前的前缀，使其唯一
                     但分组在同一前缀下。例如，如果设置 `experiment_name_prefix="my-experiment"`，
@@ -1471,8 +1465,8 @@ def evaluate_optimization_trial(
         trial_count=trial_count,
         experiment_scoring_functions=experiment_scoring_functions,
         source="optimization",
-        # Resuming or replaying a trial does not carry the original
-        # caller's tolerance, so it runs at the default.
+        # 恢复或重放试验不会携带原始调用者的容错级别，
+        # 因此以默认级别运行。
         error_tolerance=ErrorTolerance.METRIC_ERRORS,
     )
 
@@ -1543,7 +1537,7 @@ def evaluate_resume(
 
     if not pending:
         LOGGER.info(
-            "Experiment %s is already fully evaluated; nothing to do.",
+            "实验 %s 已完全评估；无需处理。",
             experiment_id,
         )
 
@@ -1576,9 +1570,8 @@ def evaluate_resume(
         trial_count=context.default_runs_per_item,
         experiment_scoring_functions=experiment_scoring_functions,
         source="experiment",
-        # The tolerance the original evaluation call ran with, read back from the
-        # resume state, so a resumed run does not silently become stricter than
-        # the run it continues.
+        # 从恢复状态读回原始评估调用运行时所使用的容错级别，
+        # 使恢复的运行不会静默地比它所延续的运行更严格。
         error_tolerance=context.error_tolerance,
     )
 
@@ -1658,11 +1651,11 @@ def evaluate_on_dict_items(
         scoring_metrics: 评估期间要计算的指标列表。
             每个指标的 `score(...)` 方法将使用从数据集项目和任务输出中获取的参数调用。
 
-        scoring_functions: List of scorer functions to be executed during evaluation.
-            Each scorer function accepts predefined arguments:
+        scoring_functions: 评估期间要执行的评分函数列表。
+            每个评分函数接受预定义参数：
 
-            - dataset_item — a dictionary containing the dataset item content,
-            - task_outputs — a dictionary containing the LLM task output.
+            - dataset_item — 包含数据集项目内容的字典，
+            - task_outputs — 包含 LLM 任务输出的字典。
 
         project_name: 用于记录跟踪的项目名称。
 
@@ -1738,7 +1731,7 @@ def evaluate_on_dict_items(
             workers=scoring_threads,
             verbose=verbose,
             source="experiment",
-            # This entrypoint does not expose the setting; it runs strict.
+            # 此入口点不暴露该设置；它以严格模式运行。
             error_tolerance=ErrorTolerance.METRIC_ERRORS,
         )
         test_results = evaluation_engine.run_and_score(

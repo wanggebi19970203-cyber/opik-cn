@@ -10,6 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { buildDocsUrl } from "@/lib/utils";
@@ -55,6 +56,7 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
   emailSent,
   onEmailSentChange,
 }) => {
+  const { t } = useTranslation("pages/get-started");
   const { mutate, isPending, isAvailable } = useSendOnboardingEmailMutation();
   const [flyRect, setFlyRect] = useState<{
     top: number;
@@ -117,13 +119,15 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
 
       <div className="flex flex-col gap-1.5 px-0.5">
         <h1 className="slide-fade-right text-lg font-medium text-foreground [animation-delay:75ms]">
-          Ready to connect your app?
+          {t("getStarted.mobileOnboarding.connect.title")}
         </h1>
         <p className="slide-fade-right pb-2 text-sm text-muted-slate [animation-delay:150ms]">
-          Continue on desktop to start sending traces to Opik.{" "}
+          {t("getStarted.mobileOnboarding.connect.descriptionPrefix")}{" "}
           {isAvailable
-            ? "We'll email you everything you need to get started."
-            : "Check out our quickstart guide for everything you need to get started."}
+            ? t("getStarted.mobileOnboarding.connect.descriptionEmailAvailable")
+            : t(
+                "getStarted.mobileOnboarding.connect.descriptionEmailUnavailable",
+              )}
         </p>
       </div>
 
@@ -131,7 +135,7 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
         <div className="slide-fade-right flex flex-col gap-2 rounded-md border border-dashed border-primary/60 bg-primary-100/60 p-3 [animation-delay:200ms] dark:bg-primary/10">
           <div className="px-0.5">
             <p className="text-sm font-medium text-foreground">
-              Get the instructions
+              {t("getStarted.mobileOnboarding.connect.getInstructions")}
             </p>
           </div>
 
@@ -144,7 +148,9 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
           >
             <Input
               type="email"
-              placeholder="your@email.com"
+              placeholder={t(
+                "getStarted.mobileOnboarding.connect.emailPlaceholder",
+              )}
               value={email}
               onChange={(e) => {
                 onEmailChange(e.target.value);
@@ -178,10 +184,12 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
                   translatable (unlike translate="no"). See facebook/react#11538. */}
               <span>
                 {isPending
-                  ? "Sending..."
+                  ? t("getStarted.mobileOnboarding.connect.sending")
                   : emailSent
-                    ? "Instructions sent!"
-                    : "Email setup instructions"}
+                    ? t("getStarted.mobileOnboarding.connect.instructionsSent")
+                    : t(
+                        "getStarted.mobileOnboarding.connect.emailInstructions",
+                      )}
               </span>
             </Button>
           </form>
@@ -189,7 +197,7 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
           <div className="flex items-center gap-1.5 py-0.5 opacity-60">
             <div className="h-px flex-1 bg-border" />
             <span className="text-[8px] leading-[10px] text-muted-slate">
-              OR
+              {t("getStarted.mobileOnboarding.connect.or")}
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
@@ -201,7 +209,7 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
               rel="noopener noreferrer"
               className="gap-1.5"
             >
-              Open docs
+              {t("getStarted.mobileOnboarding.connect.openDocs")}
               <ArrowUpRight className="size-4" />
             </a>
           </Button>
@@ -217,7 +225,7 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
             target="_blank"
             rel="noopener noreferrer"
           >
-            Quickstart guide
+            {t("getStarted.mobileOnboarding.connect.quickstartGuide")}
             <ArrowUpRight className="size-4" />
           </a>
         </Button>
@@ -225,7 +233,7 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
 
       <div className="flex flex-col gap-1.5 pt-4">
         <p className="slide-fade-right text-sm font-medium leading-[18px] text-foreground [animation-delay:300ms]">
-          Why continue on desktop
+          {t("getStarted.mobileOnboarding.connect.whyDesktop")}
         </p>
 
         <div className="flex flex-col gap-2">
@@ -233,21 +241,21 @@ const ConnectStep: React.FC<ConnectStepProps> = ({
             icon={Zap}
             iconClass="size-2.5 dark:text-slate-900"
             bgClass="bg-accent-green"
-            label="Send your first trace in under 5 minutes"
+            label={t("getStarted.mobileOnboarding.connect.benefitFirstTrace")}
             delayMs={375}
           />
           <BenefitCard
             icon={Bot}
             iconClass="size-3 dark:text-slate-900"
             bgClass="bg-accent-blue"
-            label="Works with Claude Code, Cursor, Codex, and more"
+            label={t("getStarted.mobileOnboarding.connect.benefitWorksWith")}
             delayMs={450}
           />
           <BenefitCard
             icon={Puzzle}
             iconClass="size-2.5 text-white"
             bgClass="bg-accent-magenta"
-            label="Use one of our 60+ integrations"
+            label={t("getStarted.mobileOnboarding.connect.benefitIntegrations")}
             delayMs={525}
           />
         </div>

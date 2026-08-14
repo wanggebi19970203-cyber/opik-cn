@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import i18next from "i18next";
 
 import {
   AggregatedCandidate,
@@ -111,13 +112,8 @@ export const computeEmptyRunCause = (
 
 export const getEmptyRunTitle = (cause: EmptyRunCause): string =>
   cause === EMPTY_RUN_CAUSE.NO_CANDIDATES
-    ? "No candidates generated"
-    : "No usable scores";
-
-/** No call to action on purpose: nothing is broken, so there is nothing to retry. */
-const NO_CANDIDATES_MESSAGE =
-  "The optimizer produced no prompt variants to score, so the baseline prompt was kept. " +
-  "This is common when the original prompt already scores well.";
+    ? i18next.t("optimization:emptyRun.noCandidatesGenerated")
+    : i18next.t("optimization:emptyRun.noUsableScores");
 
 /**
  * Single-sourced lead sentence for a scoring failure (OPIK-7159 Wave 2), so the
@@ -145,15 +141,20 @@ const summarizeScoringFailure = (
       kind: "all-failed",
       lead:
         total_count === 1
-          ? "The item failed to score"
-          : `All ${total_count} items failed to score`,
+          ? i18next.t("optimization:emptyRun.itemFailedToScore")
+          : i18next.t("optimization:emptyRun.allItemsFailedToScore", {
+              count: total_count,
+            }),
     };
   }
 
   // total_count >= 2 always holds here, so the noun is always plural.
   return {
     kind: "partial",
-    lead: `${failed_count} of ${total_count} items failed to score`,
+    lead: i18next.t("optimization:emptyRun.itemsFailedToScore", {
+      failed: failed_count,
+      total: total_count,
+    }),
   };
 };
 
@@ -167,7 +168,8 @@ export const getEmptyRunMessage = (
 ): string | null => {
   if (cause === EMPTY_RUN_CAUSE.NONE) return null;
 
-  if (cause === EMPTY_RUN_CAUSE.NO_CANDIDATES) return NO_CANDIDATES_MESSAGE;
+  if (cause === EMPTY_RUN_CAUSE.NO_CANDIDATES)
+    return i18next.t("optimization:emptyRun.noCandidatesMessage");
 
   const failure = summarizeScoringFailure(scoringHealth);
 
@@ -175,20 +177,12 @@ export const getEmptyRunMessage = (
     case "suppressed":
       return null;
     case "all-failed":
-      return (
-        `${failure.lead}. ` +
-        "The metric may have errored on every evaluation. " +
-        "Open the logs, check the metric and model, then run it again."
-      );
+      return `${failure.lead}. ${i18next.t("optimization:emptyRun.allFailedTail")}`;
     case "partial":
-      return (
-        `${failure.lead}. ` +
-        "Some evaluations did not produce a usable result. " +
-        "Open the logs to see which items failed, then run it again."
-      );
+      return `${failure.lead}. ${i18next.t("optimization:emptyRun.partialTail")}`;
     case "unknown":
       // Heuristic fallback (Wave 1, no backend data).
-      return "This run finished but produced no usable scores — the metric may have failed on every item. Open the logs, check the metric and model, then run it again.";
+      return i18next.t("optimization:emptyRun.heuristicFallback");
   }
 };
 
@@ -204,7 +198,7 @@ export const getEmptyRunKPICaption = (
   if (cause === EMPTY_RUN_CAUSE.NONE) return null;
 
   if (cause === EMPTY_RUN_CAUSE.NO_CANDIDATES) {
-    return "No candidates generated. Baseline prompt kept.";
+    return i18next.t("optimization:emptyRun.noCandidatesCaption");
   }
 
   const failure = summarizeScoringFailure(scoringHealth);
@@ -214,10 +208,10 @@ export const getEmptyRunKPICaption = (
       return null;
     case "all-failed":
     case "partial":
-      return `${failure.lead} — check the logs.`;
+      return `${failure.lead} — ${i18next.t("optimization:emptyRun.checkLogsSuffix")}`;
     case "unknown":
       // Heuristic fallback (Wave 1).
-      return "No usable scores — check the logs.";
+      return i18next.t("optimization:emptyRun.noUsableScoresCaption");
   }
 };
 

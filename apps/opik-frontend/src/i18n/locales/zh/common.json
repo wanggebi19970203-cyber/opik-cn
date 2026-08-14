@@ -532,7 +532,11 @@
       "previewPlaceholder": "<预览>",
       "widgetType": "组件类型",
       "newSection": "新分区",
-      "overview": "概览"
+      "overview": "概览",
+      "workspaceMetrics": {
+        "spanTokenUsage": "Span 令牌用量",
+        "totalSpanTokenUsage": "总 Span 令牌用量"
+      }
     },
     "hooks": {
       "useAudioPlayer": {
@@ -582,6 +586,10 @@
         "light": "浅色",
         "dark": "深色",
         "system": "跟随系统"
+      },
+      "useSendOnboardingEmailMutation": {
+        "failedToSendEmail": "邮件发送失败",
+        "tryAgain": "请重试。"
       }
     },
     "feedbackScoreEdit": {
@@ -754,7 +762,9 @@
       "trial": "试验",
       "baseline": "基线",
       "parent": "父级",
-      "parentTrial": "父级 (试验 #{{trialNumber}})"
+      "parentTrial": "父级 (试验 #{{trialNumber}})",
+      "trialNumber": "试验 #{{trialNumber}}",
+      "compareAgainst": "对比对象"
     },
     "codeSnippet": {
       "copy": "复制",
@@ -1205,13 +1215,13 @@
       "invalidFilterKeyError": "键无效，应为 \"input\" 或 \"output\"，并遵循此格式：\"input.[PATH]\"。例如：\"input.message\" 或仅 \"input\" 表示整个对象",
       "filterErrorLabel": "筛选器 {{index}}：{{errors}}"
     },
-"alerts": {
-  "typeGeneral": "通用",
-  "typeLabels": {
-    "general": "通用",
-    "slack": "Slack",
-    "pagerduty": "PagerDuty"
-  },
+    "alerts": {
+      "typeGeneral": "通用",
+      "typeLabels": {
+        "general": "通用",
+        "slack": "Slack",
+        "pagerduty": "PagerDuty"
+      },
       "trigger": {
         "traceErrorsTitle": "追踪错误阈值",
         "traceErrorsDescription": "当所选项目中追踪错误数量超过指定阈值时触发。",
@@ -1455,6 +1465,10 @@
           "hierarchicalReflective": {
             "label": "分层反思",
             "description": "分析失败并重写提示词以修复问题。"
+          },
+          "evolutionary": {
+            "label": "进化式",
+            "description": "使用进化算法迭代改进提示词。"
           }
         },
         "metricOptions": {
@@ -1477,6 +1491,10 @@
           "numericalSimilarity": {
             "label": "数值相似度",
             "description": "将数值输出与参考值进行比较。越接近的值得分越高。"
+          },
+          "code": {
+            "label": "自定义代码",
+            "description": "使用自定义 Python 指标对输出评分。"
           }
         },
         "demoTemplate": {
@@ -1526,7 +1544,10 @@
         },
         "names": {
           "topic": "主题护栏",
-          "pii": "PII 护栏"
+          "pii": "PII 护栏",
+          "llmJudge": "LLM judge 护栏",
+          "promptInjection": "提示词注入护栏",
+          "customClassifier": "自定义护栏"
         }
       },
       "integrations": {

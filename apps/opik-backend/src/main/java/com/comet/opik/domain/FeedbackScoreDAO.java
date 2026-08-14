@@ -424,7 +424,7 @@ class FeedbackScoreDAOImpl implements FeedbackScoreDAO {
             @NonNull EntityType entityType, Set<UUID> entityIds, UUID projectId) {
         Preconditions.checkArgument(
                 CollectionUtils.isNotEmpty(entityIds), "Argument 'entityIds' must not be empty");
-        log.info("Deleting feedback scores for entityType '{}', entityIds count '{}'", entityType, entityIds.size());
+        log.info("删除实体类型 '{}' 的反馈评分，实体ID数量 '{}'", entityType, entityIds.size());
         return asyncTemplate
                 .nonTransaction(connection -> deleteScoresByEntityIds(entityType, entityIds, projectId, connection))
                 .then();
@@ -635,7 +635,7 @@ class FeedbackScoreDAOImpl implements FeedbackScoreDAO {
 
     private Mono<Long> deleteScoresByEntityIds(EntityType entityType, Set<UUID> entityIds, UUID projectId,
             Connection connection) {
-        log.info("Deleting feedback scores by entityType '{}', entityIds count '{}'", entityType, entityIds.size());
+        log.info("按实体类型 '{}' 删除反馈评分，实体ID数量 '{}'", entityType, entityIds.size());
 
         return makeMonoContextAware((userName, workspaceId) -> {
             // 从feedback_scores表中删除

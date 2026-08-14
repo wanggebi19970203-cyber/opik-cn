@@ -19,10 +19,14 @@ import {
   WidgetResolver,
 } from "@/types/dashboard";
 
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
+
 describe("generateEmptySection", () => {
   it("should create section with default title", () => {
     const section = generateEmptySection();
-    expect(section.title).toBe("New section");
+    expect(section.title).toBe("common:dashboard.newSection");
     expect(section.widgets).toEqual([]);
     expect(section.layout).toEqual([]);
     expect(section.id).toBeTruthy();
@@ -49,7 +53,7 @@ describe("generateEmptyDashboard", () => {
   it("should create dashboard with one section", () => {
     const dashboard = generateEmptyDashboard();
     expect(dashboard.sections).toHaveLength(1);
-    expect(dashboard.sections[0].title).toBe("Overview");
+    expect(dashboard.sections[0].title).toBe("common:dashboard.overview");
   });
 
   it("should create dashboard with timestamp", () => {

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { Separator } from "@/ui/separator";
@@ -60,6 +61,7 @@ const TrialSidebarContent: React.FC<TrialSidebarContentProps> = ({
   const {
     permissions: { canViewDatasets },
   } = usePermissions();
+  const { t } = useTranslation("pages/optimization");
 
   const trialExperiment = trialExperiments[0];
 
@@ -73,10 +75,10 @@ const TrialSidebarContent: React.FC<TrialSidebarContentProps> = ({
         >
           <TabsList variant="segmented-primary">
             <TabsTrigger variant="segmented-primary" size="sm" value="results">
-              Results
+              {t("optimization.trialSidebar.results")}
             </TabsTrigger>
             <TabsTrigger variant="segmented-primary" size="sm" value="prompt">
-              Prompt
+              {t("optimization.trialSidebar.prompt")}
             </TabsTrigger>
           </TabsList>
         </PageBodyStickyContainer>

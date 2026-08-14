@@ -135,7 +135,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
       definitions.push({
         id: COLUMN_DATASET_ID,
         field: COLUMN_DATASET_ID,
-        label: "Test suite",
+        label: t("optimizations.filters.testSuite"),
         kind: "single-select",
         columnType: COLUMN_TYPE.string,
         operator: "=",
@@ -145,14 +145,14 @@ const OptimizationsPage: React.FunctionComponent = () => {
     definitions.push({
       id: "status",
       field: "status",
-      label: "Status",
+      label: t("optimizations.filters.status"),
       kind: "single-select",
       columnType: COLUMN_TYPE.string,
       operator: "=",
       options: OPTIMIZATION_STATUS_OPTIONS,
     });
     return definitions;
-  }, [canViewDatasets, datasetOptions]);
+  }, [canViewDatasets, datasetOptions, t]);
 
   const {
     chipsPinned,
@@ -294,7 +294,7 @@ const OptimizationsPage: React.FunctionComponent = () => {
     <div className="flex min-h-full flex-col pt-4">
       <div className="mb-4 flex min-h-7 items-center justify-between">
         <h1 className="comet-body-accented truncate break-words">
-          Optimization runs
+          {t("optimizations.optimizationRuns")}
         </h1>
       </div>
       {isEmpty ? (

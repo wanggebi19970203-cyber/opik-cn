@@ -170,11 +170,10 @@ describe("AgentRunnerContent", () => {
 
     expect(mockUseNavigationBlocker).toHaveBeenCalledWith({
       condition: false,
-      title: "Agent execution in progress",
-      description:
-        "Your agent is currently running. Leaving now will interrupt the execution and may result in an incomplete trace. Are you sure you want to leave?",
-      confirmText: "Leave anyway",
-      cancelText: "Stay and wait",
+      title: "content.executionInProgress",
+      description: "content.executionInProgressDescription",
+      confirmText: "content.leaveAnyway",
+      cancelText: "content.stayAndWait",
     });
   });
 

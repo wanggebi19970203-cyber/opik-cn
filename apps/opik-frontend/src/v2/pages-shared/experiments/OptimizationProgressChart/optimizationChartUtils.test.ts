@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   computeCandidateStatuses,
   buildCandidateChartData,
@@ -20,6 +20,12 @@ import {
   CandidateDataPoint,
 } from "./optimizationChartUtils";
 import { AggregatedCandidate } from "@/types/optimizations";
+
+vi.mock("i18next", () => ({
+  default: {
+    t: (key: string) => key,
+  },
+}));
 
 const makePoint = (
   overrides: Partial<CandidateDataPoint> & {
@@ -737,16 +743,20 @@ describe("buildStepTickLabels", () => {
       makePoint({ candidateId: "t1", stepIndex: 1, trialNumber: 1 }),
       makePoint({ candidateId: "t2", stepIndex: 2, trialNumber: 2 }),
     ]);
-    expect(labels.get(0)).toBe("Baseline");
-    expect(labels.get(1)).toBe("Trial 1");
-    expect(labels.get(2)).toBe("Trial 2");
+    expect(labels.get(0)).toBe(
+      "experiments:optimizationChart.trialStatus.baseline",
+    );
+    expect(labels.get(1)).toBe("experiments:optimizationChart.tick.trial");
+    expect(labels.get(2)).toBe("experiments:optimizationChart.tick.trial");
   });
 
   it("labels the unnumbered baseline's step even when it is the only dot", () => {
     const labels = buildStepTickLabels([
       makePoint({ candidateId: "base", stepIndex: 0, trialNumber: null }),
     ]);
-    expect(labels.get(0)).toBe("Baseline");
+    expect(labels.get(0)).toBe(
+      "experiments:optimizationChart.trialStatus.baseline",
+    );
   });
 
   it("labels the third candidate Trial 3, agreeing with its card", () => {
@@ -765,10 +775,10 @@ describe("buildStepTickLabels", () => {
       makePoint({ candidateId: "t2", stepIndex: 2, trialNumber: 2 }),
       makePoint({ candidateId: "t3", stepIndex: 3, trialNumber: 3 }),
     ]);
-    expect(labels.get(3)).toBe("Trial 3");
+    expect(labels.get(3)).toBe("experiments:optimizationChart.tick.trial");
     expect(
       buildTrialCardModel({ candidate: third, status: "passed" }).title,
-    ).toBe("Trial #3");
+    ).toBe("experiments:trialNumber");
   });
 
   it("labels a fan-out step with the range of its trials", () => {
@@ -778,7 +788,7 @@ describe("buildStepTickLabels", () => {
       makePoint({ candidateId: "t2", stepIndex: 1, trialNumber: 2 }),
       makePoint({ candidateId: "t3", stepIndex: 1, trialNumber: 3 }),
     ]);
-    expect(labels.get(1)).toBe("Trials 1–3");
+    expect(labels.get(1)).toBe("experiments:optimizationChart.tick.trialsRange");
   });
 
   // The real caller always plots the evaluating candidate: buildCandidateChartData
@@ -801,7 +811,7 @@ describe("buildStepTickLabels", () => {
       ],
       3,
     );
-    expect(labels.get(3)).toBe("Trial 3");
+    expect(labels.get(3)).toBe("experiments:optimizationChart.tick.trial");
   });
 
   it("keeps a fan-out step's range exact while one of its trials evaluates", () => {
@@ -819,7 +829,7 @@ describe("buildStepTickLabels", () => {
       ],
       1,
     );
-    expect(labels.get(1)).toBe("Trials 1–3");
+    expect(labels.get(1)).toBe("experiments:optimizationChart.tick.trialsRange");
   });
 
   it("synthesises a number only for a ghost step with no numbered trial", () => {
@@ -830,7 +840,7 @@ describe("buildStepTickLabels", () => {
       ],
       2,
     );
-    expect(labels.get(2)).toBe("Trial 2");
+    expect(labels.get(2)).toBe("experiments:optimizationChart.tick.trial");
   });
 
   it("numbers a ghost evaluating right after the baseline Trial 1", () => {
@@ -838,11 +848,13 @@ describe("buildStepTickLabels", () => {
       [makePoint({ candidateId: "base", stepIndex: 0, trialNumber: null })],
       1,
     );
-    expect(labels.get(1)).toBe("Trial 1");
+    expect(labels.get(1)).toBe("experiments:optimizationChart.tick.trial");
   });
 
   it("labels a ghost-only chart Trial 1", () => {
-    expect(buildStepTickLabels([], 1).get(1)).toBe("Trial 1");
+    expect(buildStepTickLabels([], 1).get(1)).toBe(
+      "experiments:optimizationChart.tick.trial",
+    );
   });
 });
 
@@ -930,7 +942,9 @@ describe("getTrialDotColor", () => {
 
 describe("failed trial-status maps", () => {
   it("labels and colours the failed status with a red tag variant", () => {
-    expect(TRIAL_STATUS_LABELS.failed).toBe("Failed");
+    expect(TRIAL_STATUS_LABELS.failed).toBe(
+      "experiments:optimizationChart.trialStatus.failed",
+    );
     expect(STATUS_VARIANT_MAP.failed).toBe("red");
     expect(TRIAL_STATUS_COLORS.failed).toBe("var(--color-red)");
     expect(TRIAL_STATUS_ORDER).toContain("failed");
@@ -1045,16 +1059,18 @@ describe("buildTrialCardModel", () => {
       status: "passed",
     });
 
-    expect(model.title).toBe("Trial #20");
+    expect(model.title).toBe("experiments:trialNumber");
     // No step reference — trial numbers are the chart's one user-facing
     // numbering (OPIK-7589).
-    expect(model.statusLabel).toBe("Passed");
+    expect(model.statusLabel).toBe(
+      "experiments:optimizationChart.trialStatus.passed",
+    );
     expect(model.dotColor).toBe(TRIAL_STATUS_COLORS.passed);
     expect(model.dotRingColor).toBeUndefined();
     expect(model.rows.map((r) => r.label)).toEqual([
-      "Score",
-      "Latency",
-      "Runtime cost",
+      "experiments:score",
+      "experiments:latency",
+      "experiments:runtimeCost",
     ]);
   });
 
@@ -1071,8 +1087,12 @@ describe("buildTrialCardModel", () => {
       status: "baseline",
     });
 
-    expect(model.title).toBe("Baseline");
-    expect(model.statusLabel).toBe("Baseline");
+    expect(model.title).toBe(
+      "experiments:optimizationChart.trialStatus.baseline",
+    );
+    expect(model.statusLabel).toBe(
+      "experiments:optimizationChart.trialStatus.baseline",
+    );
   });
 
   it("labels and colours the best trial, with a ring around the dot", () => {
@@ -1088,7 +1108,7 @@ describe("buildTrialCardModel", () => {
       isBest: true,
     });
 
-    expect(model.statusLabel).toBe("Best trial");
+    expect(model.statusLabel).toBe("experiments:bestCandidate");
     expect(model.dotColor).toBe(TRIAL_BEST_COLOR);
     expect(model.dotRingColor).toBe(TRIAL_BEST_RING_COLOR);
   });
@@ -1109,7 +1129,7 @@ describe("buildTrialCardModel", () => {
     });
 
     const scoreRow = model.rows[0];
-    expect(scoreRow.label).toBe("Pass rate");
+    expect(scoreRow.label).toBe("experiments:passRate");
     expect(scoreRow.value).toContain("(9/10)");
   });
 
@@ -1128,8 +1148,10 @@ describe("buildTrialCardModel", () => {
     });
 
     expect(model.rows).toHaveLength(1);
-    expect(model.rows[0]).toEqual({ label: "Score", value: "-" });
-    expect(model.statusLabel).toBe("Discarded");
+    expect(model.rows[0]).toEqual({ label: "experiments:score", value: "-" });
+    expect(model.statusLabel).toBe(
+      "experiments:optimizationChart.trialStatus.discarded",
+    );
   });
 });
 
@@ -1174,33 +1196,44 @@ describe("buildTrialLegendItems", () => {
 
   it("mirrors the status order for test-suite runs, listing only what is plotted", () => {
     const items = buildTrialLegendItems(points("baseline", "pruned"), true);
-    expect(items.map((i) => i.label)).toEqual(["Baseline", "Discarded"]);
+    expect(items.map((i) => i.label)).toEqual([
+      "experiments:optimizationChart.trialStatus.baseline",
+      "experiments:optimizationChart.trialStatus.discarded",
+    ]);
   });
 
   it("always lists both outcomes on a dataset run", () => {
     const items = buildTrialLegendItems(points("passed", "pruned"), false);
     expect(items.map((i) => i.label)).toEqual([
-      "Passed trial",
-      "Discarded trial",
+      "experiments:optimizationChart.legend.passedTrial",
+      "experiments:optimizationChart.legend.discardedTrial",
     ]);
   });
 
   it("adds an Evaluating entry once such a trial is on the chart", () => {
     const items = buildTrialLegendItems(points("passed", "evaluating"), false);
-    expect(items.map((i) => i.label)).toContain("Evaluating trial");
-    expect(items.find((i) => i.label === "Evaluating trial")?.color).toBe(
-      TRIAL_STATUS_COLORS.evaluating,
+    expect(items.map((i) => i.label)).toContain(
+      "experiments:optimizationChart.legend.statusTrial",
     );
+    expect(
+      items.find(
+        (i) => i.label === "experiments:optimizationChart.legend.statusTrial",
+      )?.color,
+    ).toBe(TRIAL_STATUS_COLORS.evaluating);
   });
 
   // getTrialDotColor keeps a failed trial red on dataset runs, so the legend
   // has to explain that colour too — it did not before (OPIK-7460).
   it("adds a Failed entry so the red dot is not unlabelled", () => {
     const items = buildTrialLegendItems(points("passed", "failed"), false);
-    expect(items.map((i) => i.label)).toContain("Failed trial");
-    expect(items.find((i) => i.label === "Failed trial")?.color).toBe(
-      TRIAL_STATUS_COLORS.failed,
+    expect(items.map((i) => i.label)).toContain(
+      "experiments:optimizationChart.legend.statusTrial",
     );
+    expect(
+      items.find(
+        (i) => i.label === "experiments:optimizationChart.legend.statusTrial",
+      )?.color,
+    ).toBe(TRIAL_STATUS_COLORS.failed);
   });
 
   it("every dataset-run colour the chart can paint has a legend entry", () => {

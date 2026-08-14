@@ -61,9 +61,9 @@ public interface OptimizationDAO {
     }
 
     /**
-     * A studio optimization whose latest status is non-terminal and older than the reaper threshold,
-     * i.e. stuck because the worker never advanced it. Carries {@code workspaceId} so the reconciler
-     * can seed the workspace context required to update the row and finalize its logs (OPIK-7159).
+     * 一个 Studio 优化，其最新状态为非终态且早于 reaper 阈值，
+     * 即因为 worker 从未推进它而卡住。携带 {@code workspaceId}，以便 reconciler
+     * 能够初始化更新该行并终结其日志所需的工作区上下文（OPIK-7159）。
      */
     @Builder(toBuilder = true)
     record StalledOptimization(@NonNull UUID id, @NonNull String workspaceId, @NonNull OptimizationStatus status) {
@@ -80,12 +80,10 @@ public interface OptimizationDAO {
     Flux<DatasetLastOptimizationCreated> getMostRecentCreatedExperimentFromDatasets(Set<UUID> datasetIds);
 
     /**
-     * @param clearErrorInfo blanks the {@code error_info} column instead of carrying it forward. True only
-     *                       when a worker report supersedes a failure the platform detected rather than the
-     *                       worker reporting it: the recorded reason described a run that turned out to be
-     *                       alive, and nothing else ever clears that column. Deliberately not an overload —
-     *                       a two-argument convenience form would let a caller (or a test stub) miss this
-     *                       decision silently.
+     * @param clearErrorInfo 置空 {@code error_info} 列，而不是将其向前携带。仅当
+     *                       worker 报告取代了平台检测到的失败（而非 worker 报告该失败）时才为 true：
+     *                       记录的原因描述的是一个实际上仍存活的运行，而且没有别的东西会清除该列。
+     *                       有意不设计为重载——双参数便捷形式会让调用方（或测试桩）静默地漏掉这个决定。
      */
     Mono<Long> update(UUID id, OptimizationUpdate update, boolean clearErrorInfo);
 
@@ -101,15 +99,13 @@ public interface OptimizationDAO {
     Mono<Boolean> hasRecentStudioActivity(UUID optimizationId, Duration window);
 
     /**
-     * Latest status + row timestamp of a run, straight off the {@code optimizations} table. The reaper's
-     * pre-update re-read MUST use this instead of {@link #getById} (the full {@code FIND} with its
-     * experiment/trace/score joins): the reaper only needs these two fields, and its liveness decision
-     * must stay decoupled from {@code FIND}'s mapping of related data — {@code FIND} used to silently
-     * drop a run whose trial item referenced a still-unfinished trace (exactly the state a worker killed
-     * mid-trial leaves behind; found by OPIK-7459 e2e, fixed in {@code FIND}'s NaN guards), and an empty
-     * re-read made the reaper skip that run on every cycle, resurrecting the eternal spinner this job
-     * exists to prevent. The bare read keeps any future {@code FIND} regression from ever re-breaking
-     * the reaper.
+     * 某个运行的最新状态 + 行时间戳，直接取自 {@code optimizations} 表。reaper 的
+     * 更新前重读必须使用它而非 {@link #getById}（带实验/trace/评分 join 的完整 {@code FIND}）：
+     * reaper 只需要这两个字段，而且它的存活判定必须与 {@code FIND} 对相关数据的映射解耦——
+     * {@code FIND} 曾经会静默地丢弃某个运行，其试验项引用了一个仍未完成的 trace
+     * （正是 worker 在试验中途被杀掉后留下的状态；由 OPIK-7459 e2e 发现，在 {@code FIND} 的 NaN 防护中修复），
+     * 而空的重读会让 reaper 在每个周期都跳过该运行，复活这个作业存在的目的就是要防止的永恒转圈。
+     * 这个裸读使得未来任何 {@code FIND} 回归都无法再次破坏 reaper。
      */
     @Builder(toBuilder = true)
     record OptimizationStatusSnapshot(@NonNull OptimizationStatus status, @NonNull Instant lastUpdatedAt,
@@ -119,10 +115,10 @@ public interface OptimizationDAO {
     Mono<OptimizationStatusSnapshot> getStatusSnapshotById(UUID id);
 
     /**
-     * The optimization row alone — no experiment/trace/score joins, so the aggregate fields
-     * ({@code numTrials}, scores, durations, costs) are left null. Fallback for write paths in case
-     * {@link #getById}'s full {@code FIND} ever fails to map the run again (see
-     * {@link #getStatusSnapshotById}): a status update must never be blocked by related data.
+     * 仅优化行本身——不做实验/trace/评分 join，因此聚合字段
+     * （{@code numTrials}、评分、时长、成本）保持为 null。当 {@link #getById} 的完整 {@code FIND}
+     * 再次无法映射该运行时的写路径回退（参见 {@link #getStatusSnapshotById}）：
+     * 状态更新绝不能因相关数据而被阻塞。
      */
     Mono<Optimization> getRowById(UUID id);
 }
@@ -133,75 +129,70 @@ public interface OptimizationDAO {
 class OptimizationDAOImpl implements OptimizationDAO {
 
     /**
-     * Studio runs whose latest row version is stuck in a non-terminal status past the reaper threshold
-     * (OPIK-7159 / OPIK-7459). Selects on either "no liveness" or "past the hard ceiling"; see
-     * {@code OptimizationStalledReaperJob} for what those two mean and why both exist.
+     * 最新行版本卡在非终态、且超过 reaper 阈值的 Studio 运行
+     * （OPIK-7159 / OPIK-7459）。按“无存活”或“超过硬上限”两种条件之一进行选择；
+     * 这两个条件各自的含义以及为何两者都要存在，参见 {@code OptimizationStalledReaperJob}。
      *
-     * <p>Liveness is the newest of the row's {@code last_updated_at}, the latest trial experiment's
-     * {@code created_at} and the latest experiment item's {@code created_at}. {@code last_updated_at}
-     * advances only on a status change, so the other two are what keep a healthy long run alive: one trial
-     * evaluates up to {@code OPTSTUDIO_DATASET_SAMPLES} items and can run for hours, so trial-creation
-     * alone would false-positive mid-trial. Because the {@code HAVING} already requires the row timestamp
-     * to be past the threshold, liveness reduces to the {@code active_optimizations} anti-join.
+     * <p>存活度取行的 {@code last_updated_at}、最新试验实验的
+     * {@code created_at} 和最新实验项的 {@code created_at} 三者中的最新值。{@code last_updated_at}
+     * 仅在状态变化时推进，因此另外两者才是让健康的长期运行保持存活的关键：一次试验
+     * 最多评估 {@code OPTSTUDIO_DATASET_SAMPLES} 个项，并且可持续数小时，所以仅凭试验创建
+     * 会在试验中途产生误报。因为 {@code HAVING} 已经要求行时间戳超过阈值，
+     * 存活度就归结为 {@code active_optimizations} 反连接。
      *
-     * <p>Things the SQL will not tell you, and that break the query if changed:
+     * <p>SQL 不会告诉你、且一旦改动就会破坏查询的事情：
      * <ul>
-     * <li>The status/timeout predicates must stay in {@code HAVING} — above the dedup, out of the
-     * {@code WHERE}. In the {@code WHERE} they reference an aggregate and ClickHouse raises
-     * {@code ILLEGAL_AGGREGATION}; above the dedup is also what stops a run being selected off a stale
-     * version after it reached a terminal status.</li>
-     * <li>The nested {@code (workspace_id, experiment_id) IN (SELECT ... FROM candidate_trials)} is
-     * load-bearing. The outer {@code IN} already makes it redundant for correctness, but it is the only
-     * thing keeping the item probe from scanning every recent {@code experiment_items} row in the
-     * deployment. Do not simplify it away.</li>
-     * <li>ClickHouse inlines {@code WITH} subqueries rather than materialising them, so a CTE referenced
-     * N times is evaluated N times. One tick aggregates {@code optimizations} 3x, scans
-     * {@code experiments} 2x and {@code experiment_items} 1x. Kept deliberately: bounded by the id sets
-     * below, the duplicated work is a rounding error against a 5-minute cadence.</li>
-     * <li>Both probes are scoped by <em>id sets</em>, not by a time floor: {@code experiments} by
-     * {@code (workspace_id, optimization_id) IN candidates} (resolved through
-     * {@code idx_experiments_optimization_id}, migration 000069) and {@code experiment_items} by
-     * {@code (workspace_id, experiment_id) IN candidate_trials}, which is the primary-key prefix. The
-     * {@code created_at} comparisons are residual predicates — they are the liveness semantics, and cost
-     * nothing once the read is bounded by the key. The tuple form is also what keeps both probes
-     * workspace-precise.</li>
-     * <li>No {@code experiments.type} filter, unlike {@link #FIND}'s {@code experiment_candidates}, which
-     * excludes {@code 'mini-batch'} / {@code 'mutation'}. That exclusion is presentational; here the only
-     * question is whether the worker is still writing anything. GEPA spends much of a run recording
-     * {@code 'mini-batch'} evaluations, so filtering them would make a healthy run look silent — and drop
-     * the item-level signal with them, since items are reached through this scan's ids.</li>
-     * <li>The ceiling reads {@code created_at}, not {@code last_updated_at}: every write to the row
-     * refreshes the latter, so a metadata PATCH or an SDK re-upsert would postpone the backstop forever.
-     * It is {@code argMax(created_at, last_updated_at)} rather than {@code min(created_at)} because old
-     * versions live on in a {@code ReplacingMergeTree} — {@code min} would keep returning the first
-     * attempt's start forever, so a run restarted under an existing id would be born past the ceiling.
-     * See the upsert path in {@code OptimizationService} for the restart reset this enables. Residual
-     * exposure, accepted: for a run created before this branch shipped, the winning version carries a
-     * {@code created_at} that an earlier re-upsert re-stamped forward, so its ceiling starts later than
-     * the real start. That only ever postpones a reap, and it cannot recur once re-upserts preserve the
-     * column.</li>
-     * <li>{@code dataset_id} is out of the {@code GROUP BY} even though it is in the sorting key:
-     * {@code getOrCreateDataset} resolves by dataset <em>name</em>, so a re-upsert naming a different
-     * dataset writes a row the dedup never merges, and grouping by the full key would emit the run twice
-     * with independent statuses — letting the reaper ERROR a live run off a stale half.</li>
-     * <li>The hard-ceiling branch is guarded by {@code latest_status IN ('initialized', 'running')} and
-     * not hoisted to a bare top-level {@code OR}: without the guard every run that merely finished longer
-     * ago than the ceiling becomes a candidate and crowds genuine stalls out of the {@code LIMIT}.</li>
-     * <li>{@code latest_status} and {@code started_at} come out of ONE {@code argMax} over a tuple, not two
-     * over separate columns. {@code last_updated_at} is {@code DateTime64(6)}, so two versions can tie on
-     * it, and two independent {@code argMax} calls are then each free to pick a different physical row —
-     * combining a status from one version with a start instant from another. One aggregate cannot
-     * disagree with itself.</li>
-     * <li>Both {@code ORDER BY}s end in {@code id ASC}. Without a unique final key the sort is
-     * unstable across ties, so the bounded prefix can differ between passes — and a set of tied healthy
-     * rows can keep filling it, get dropped by the activity veto, and starve the stalled runs behind
-     * them indefinitely.</li>
-     * <li>Both {@code ORDER BY}s put hard-capped runs first and only then sort by {@code latest_updated_at}.
-     * Ordering by the timestamp alone looks natural but inverts the priority for exactly the branch that
-     * carries the never-stuck-indefinitely guarantee: a metadata PATCH or an SDK re-upsert refreshes
-     * {@code last_updated_at}, so a zombie run still receiving writes sorts LAST and — unlike a
-     * soft-timeout candidate, which ages into position — never advances. It could then be truncated out
-     * of every pass by the bounds below.</li>
+     * <li>状态/超时谓词必须留在 {@code HAVING} 中——在去重之上、位于
+     * {@code WHERE} 之外。放在 {@code WHERE} 中时它们引用聚合函数，ClickHouse 会抛出
+     * {@code ILLEGAL_AGGREGATION}；在去重之上也正是阻止运行在达到终态后，
+     * 再从陈旧版本中被选中的原因。</li>
+     * <li>嵌套的 {@code (workspace_id, experiment_id) IN (SELECT ... FROM candidate_trials)} 是
+     * 承重结构。外层 {@code IN} 已使其在正确性上冗余，但它是唯一能
+     * 防止项探测扫描部署中每一行近期 {@code experiment_items} 的东西。不要将它简化掉。</li>
+     * <li>ClickHouse 内联 {@code WITH} 子查询而不是物化它们，因此被引用
+     * N 次的 CTE 会被求值 N 次。一个 tick 会聚合 {@code optimizations} 3 次、扫描
+     * {@code experiments} 2 次、{@code experiment_items} 1 次。这是有意保留的：受下方 id 集合限制，
+     * 重复的工作量相对 5 分钟节奏而言可以忽略不计。</li>
+     * <li>两个探测都按 <em>id 集合</em>限定范围，而不是按时间下限：{@code experiments} 按
+     * {@code (workspace_id, optimization_id) IN candidates}（通过
+     * {@code idx_experiments_optimization_id}，migration 000069 解析）限定，{@code experiment_items} 按
+     * {@code (workspace_id, experiment_id) IN candidate_trials} 限定，后者即主键前缀。
+     * {@code created_at} 比较是残余谓词——它们是存活度语义，一旦读取受键限定后就不产生成本。
+     * 元组形式也正是让两个探测保持工作区精确的原因。</li>
+     * <li>没有 {@code experiments.type} 过滤，不像 {@link #FIND} 的 {@code experiment_candidates}，
+     * 后者排除了 {@code 'mini-batch'} / {@code 'mutation'}。那种排除是展示性的；这里唯一的问题
+     * 是 worker 是否还在写任何东西。GEPA 在运行的大部分时间里都在记录
+     * {@code 'mini-batch'} 评估，所以过滤它们会让健康的运行看起来像是静默的——并连同丢掉
+     * 项级别的信号，因为项是通过此扫描的 id 触达的。</li>
+     * <li>上限读取 {@code created_at}，而不是 {@code last_updated_at}：对行的每次写入
+     * 都会刷新后者，因此 metadata PATCH 或 SDK 重新 upsert 会永远推迟兜底。
+     * 它用 {@code argMax(created_at, last_updated_at)} 而非 {@code min(created_at)}，因为旧
+     * 版本会一直留在 {@code ReplacingMergeTree} 中——{@code min} 会永远返回第一次
+     * 尝试的开始时间，因此在已有 id 下重启的运行会一出生就超过上限。
+     * 它启用的重启重置参见 {@code OptimizationService} 中的 upsert 路径。残余的
+     * 暴露，已接受：对于在此分支发布前创建的运行，获胜版本携带的
+     * {@code created_at} 已被更早的重新 upsert 向前重盖，因此其上限晚于
+     * 真实开始时间开始。那只会推迟一次回收，并且一旦重新 upsert 保留该列后就不会再发生。</li>
+     * <li>{@code dataset_id} 不在 {@code GROUP BY} 中，尽管它在排序键中：
+     * {@code getOrCreateDataset} 按数据集 <em>名称</em> 解析，因此命名了不同数据集的重新 upsert
+     * 会写入去重永远不会合并的行，而按完整键分组会把该运行以
+     * 相互独立的状态输出两次——让 reaper 基于陈旧的半边将存活的运行置为 ERROR。</li>
+     * <li>硬上限分支由 {@code latest_status IN ('initialized', 'running')} 守卫，
+     * 而不是提升为裸的顶层 {@code OR}：没有守卫时，每个仅仅完成时间早于上限的
+     * 运行都会成为候选，并把真正的卡住挤到 {@code LIMIT} 之外。</li>
+     * <li>{@code latest_status} 和 {@code started_at} 来自对元组的一次 {@code argMax}，
+     * 而不是对单独列做两次。{@code last_updated_at} 是 {@code DateTime64(6)}，所以两个版本可能在其上并列，
+     * 而两个独立的 {@code argMax} 调用各自可以自由选择不同的物理行——
+     * 把某个版本的状态和另一个版本的开始时刻组合在一起。一个聚合不会自相矛盾。</li>
+     * <li>两个 {@code ORDER BY} 都以 {@code id ASC} 结尾。没有唯一的最终键时，排序在
+     * 并列情况下是不稳定的，因此有界前缀在两次遍历之间可能不同——一组并列的健康
+     * 行可能不断填满它、被存活度否决丢弃，并无限期地饿死其后的卡住运行。</li>
+     * <li>两个 {@code ORDER BY} 都先把硬上限的运行放在前面，然后才按 {@code latest_updated_at} 排序。
+     * 仅按时间戳排序看起来自然，却恰恰颠倒了那个承载
+     * “永不死锁”保证的分支的优先级：metadata PATCH 或 SDK 重新 upsert 会刷新
+     * {@code last_updated_at}，因此仍在接收写入的僵尸运行会排在最后——不像
+     * 软超时候选会随时间进入正确位置——永不前进。那样它就可能被下方
+     * 的边界从每次遍历中截断掉。</li>
      * </ul>
      */
     private static final String FIND_STALLED_STUDIO_OPTIMIZATIONS = """
@@ -264,8 +255,8 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Latest row version by id, no joins — see {@link #getRowById}. Columns are exactly the set
-     * {@link #mapRowColumns} reads, so a future heavyweight column cannot silently widen this read.
+     * 按 id 取最新行版本，无 join——参见 {@link #getRowById}。列集合与
+     * {@link #mapRowColumns} 读取的完全一致，因此未来加入重量级列也无法静默地扩大这次读取。
      */
     private static final String GET_RAW_BY_ID = """
             SELECT
@@ -291,26 +282,26 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Bare status/timestamp re-read for the reaper — see {@link #getStatusSnapshotById}. The aliases
-     * deliberately differ from the source column names: {@code max(last_updated_at) AS last_updated_at}
-     * would make the CH 26.3 analyzer resolve the {@code argMax} ordering argument to the alias (an
-     * aggregate inside an aggregate, ILLEGAL_AGGREGATION).
+     * 供 reaper 使用的裸状态/时间戳重读——参见 {@link #getStatusSnapshotById}。别名
+     * 有意与源列名不同：{@code max(last_updated_at) AS last_updated_at}
+     * 会让 CH 26.3 分析器把 {@code argMax} 的排序参数解析为该别名（聚合中套聚合，
+     * ILLEGAL_AGGREGATION）。
      *
-     * <p>{@code latest_status} and {@code started_at} must resolve to the same values here as in
-     * {@link #FIND_STALLED_STUDIO_OPTIMIZATIONS}, or {@code isPastHardCap} could fire on a run the fleet
-     * query selected on a soft timeout — short-circuiting the activity veto and reporting "exceeded the
-     * maximum running time" for a run that had not. Two things make that hold, and both are load-bearing:
+     * <p>{@code latest_status} 和 {@code started_at} 在这里必须解析出与
+     * {@link #FIND_STALLED_STUDIO_OPTIMIZATIONS} 相同的值，否则 {@code isPastHardCap} 可能会对
+     * 集群查询按软超时选中的某个运行触发——绕过存活度否决，并对一个并未超时的
+     * 运行报告“超过了最长运行时间”。有两件事保证这一点，且两者都是承重的：
      * <ul>
-     * <li>Reading off the winning version. The fleet query aggregates over versions inside its lookback
-     * floor and this one over all of them, but a {@code >=} floor cannot drop the version carrying the
-     * maximum {@code last_updated_at}, so both {@code argMax} calls pick the same one. No floor here
-     * deliberately — it would buy nothing and could return an empty result for a run whose row aged past
-     * the window, which the caller cannot distinguish from "no longer stalled".</li>
-     * <li>The same {@code studio_config != ''} predicate. Without it the two aggregate over different
-     * version SETS, not just different windows: prod ClickHouse has no read-your-own-writes, so an SDK
-     * re-upsert that saw an empty {@code existing} writes a newest version with an empty
-     * {@code studio_config}. The fleet query excludes that version and picks an older one; an unfiltered
-     * snapshot would pick it, disagreeing on both fields.</li>
+     * <li>从获胜版本读取。集群查询在其回溯下限内的版本上聚合，
+     * 而这里在所有版本上聚合，但 {@code >=} 下限不可能丢掉携带最大
+     * {@code last_updated_at} 的版本，因此两次 {@code argMax} 调用选中的是同一个。这里有意不设下限——
+     * 它毫无收益，还可能对某行已老化出窗口的运行返回空结果，
+     * 而调用方无法将其与“不再卡住”区分开。</li>
+     * <li>相同的 {@code studio_config != ''} 谓词。没有它，两者会在不同的
+     * 版本集合上聚合，而不仅是不同的窗口：生产 ClickHouse 没有 read-your-own-writes，所以
+     * 看到空 {@code existing} 的 SDK 重新 upsert 会写入一个 {@code studio_config} 为空的
+     * 最新版本。集群查询排除该版本并选择更旧的一个；未过滤的
+     * 快照会选中它，导致两个字段都不一致。</li>
      * </ul>
      */
     private static final String GET_STATUS_SNAPSHOT = """
@@ -327,19 +318,19 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Single-run, workspace-scoped mirror of the reaper query's liveness probe: did this optimization
-     * write a trial experiment or an experiment item within the window? Used as the pre-update re-read
-     * guard (OPIK-7459) — the fleet-wide reaper query and the ERROR update are not atomic, so a trial or
-     * item landing in between must veto the transition, exactly like the status re-read vetoes a
-     * terminal-status race. Same id-set scoping as the fleet query, one run wide: the {@code trials} CTE
-     * sits behind {@code (workspace_id, optimization_id)} — the workspace prefix of the primary key plus
-     * the {@code minmax} index on {@code optimization_id} (migration 000069) — and the item probe behind
-     * {@code (workspace_id, experiment_id) IN trials}, which is the {@code experiment_items} primary-key
-     * prefix. Neither needs a {@code created_at} index; the timestamps are residual predicates. Scoping
-     * the items by this run's trials, rather than by the workspace alone, is what keeps a busy workspace's
-     * unrelated item traffic out of the scan. As in the fleet query, {@code trials} is inlined twice (its
-     * own {@code FROM} plus the nested item {@code IN}), so {@code experiments} is scanned twice per call;
-     * the call only happens for candidates that are not already past the hard ceiling.
+     * reaper 查询存活度探测的单运行、工作区范围镜像：该优化在窗口内
+     * 是否写入了试验实验或实验项？用作更新前重读守卫（OPIK-7459）——集群范围的
+     * reaper 查询与 ERROR 更新并非原子操作，因此在此期间落地的试验或
+     * 项必须否决该状态转换，正如状态重读否决终态竞争一样。与集群查询相同的 id 集合限定、
+     * 但宽度仅为一个运行：{@code trials} CTE 位于
+     * {@code (workspace_id, optimization_id)} 之后——主键的工作区前缀加上
+     * {@code optimization_id} 上的 {@code minmax} 索引（migration 000069）——而项探测位于
+     * {@code (workspace_id, experiment_id) IN trials} 之后，后者是 {@code experiment_items} 主键
+     * 前缀。两者都不需要 {@code created_at} 索引；时间戳是残余谓词。按此运行的试验
+     * （而非仅按工作区）限定项的范围，正是让繁忙工作区中无关的
+     * 项流量不进扫描的原因。与集群查询一样，{@code trials} 被内联两次（它自身的
+     * {@code FROM} 加上嵌套的项 {@code IN}），因此每次调用会扫描 {@code experiments} 两次；
+     * 该调用只对尚未超过硬上限的候选发生。
      */
     private static final String HAS_RECENT_STUDIO_ACTIVITY = """
             WITH trials AS (
@@ -365,14 +356,14 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Every cell must stay a plain bound placeholder: this is a {@code FORMAT Values} insert, and any
-     * function expression in a tuple cell ({@code COALESCE}, {@code parseDateTime64BestEffortOrNull},
-     * {@code now64}) trips ClickHouse's fast-path parser — the insert still succeeds, but every row
-     * silently increments {@code system.errors} codes 26 / 27 / 43 / 70 and writes to pod stderr
-     * (OPIK-5694, see {@link ClickHouseDateTimeFormat}). Both {@code DateTime64(9, 'UTC')} timestamps are
-     * therefore formatted in Java via {@link ClickHouseDateTimeFormat#formatNanos}, and the column
-     * DEFAULT that {@code now64()} used to supply is substituted in Java too — {@code Instant.toString()}
-     * would not do, since its {@code T}/{@code Z} form is exactly what the fast path rejects.
+     * 每个单元格都必须保持为普通绑定占位符：这是 {@code FORMAT Values} 插入，元组单元格中的任何
+     * 函数表达式（{@code COALESCE}、{@code parseDateTime64BestEffortOrNull}、
+     * {@code now64}）都会触发 ClickHouse 的快路径解析器——插入仍会成功，但每一行
+     * 都会静默地使 {@code system.errors} 代码 26 / 27 / 43 / 70 递增并写入 pod stderr
+     * （OPIK-5694，参见 {@link ClickHouseDateTimeFormat}）。因此两个 {@code DateTime64(9, 'UTC')} 时间戳
+     * 都在 Java 中通过 {@link ClickHouseDateTimeFormat#formatNanos} 格式化，而原先由
+     * {@code now64()} 提供的列 DEFAULT 也在 Java 中替换——{@code Instant.toString()}
+     * 不行，因为它的 {@code T}/{@code Z} 形式正是快路径所拒绝的。
      */
     private static final String UPSERT = """
             INSERT INTO optimizations (
@@ -411,116 +402,113 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * The queries in this file carry no SQL comments; the reasoning lives here, keyed by CTE name, as it
-     * does in the other DAOs. Keep it that way, and not only for consistency: a line containing only
-     * {@code --} inside a query breaks the r2dbc driver's placeholder scanner
-     * ({@code ClickHouseParameterizedQuery}), which from that line on stops recognising {@code :params}, so
-     * every later one reaches ClickHouse literally and the statement fails with
-     * {@code Code: 62 Syntax error ... :workspace_id} - a 500 on every request, from a comment-only edit.
-     * {@code -- } with any character after the dashes is safe, but a trailing space is one formatter away
-     * from vanishing. Documenting outside the query removes the hazard rather than tiptoeing around it.
+     * 本文件中的查询不携带任何 SQL 注释；推理都写在这里，按 CTE 名称索引，
+     * 与其他 DAO 一样。保持这种方式，不仅是为了风格一致：查询中仅含
+     * {@code --} 的一行会破坏 r2dbc 驱动的占位符扫描器
+     * （{@code ClickHouseParameterizedQuery}），从该行起它将停止识别 {@code :params}，因此
+     * 其后每个占位符都会原样到达 ClickHouse，语句因
+     * {@code Code: 62 Syntax error ... :workspace_id} 而失败——仅一次纯注释的改动就能让每个请求都 500。
+     * {@code -- } 后跟任意字符是安全的，但尾随空格离被格式化器抹掉只有一步之遥。
+     * 在查询之外写文档可以消除这一隐患，而不是绕着它小心翼翼地走。
      * <p>
-     * The tagged-cost CTEs ({@code optimization_tagged_trace_ids} onwards) are deliberately duplicated in
-     * {@link #FIND_WITHOUT_EXPERIMENTS} rather than shared through one templated constant: sharing would need a
-     * flag every call site must remember to set, and forgetting it silently double-counts trial spend. The two
-     * copies are held in step by the {@code findAndGetById__*} tests in
-     * {@code OptimizationsResourceTest.GetOptimizerById}, each of which asserts the list and {@code getById}
-     * report the same figure - change one copy and they fail.
+     * 带标签的成本 CTE（从 {@code optimization_tagged_trace_ids} 起）有意在
+     * {@link #FIND_WITHOUT_EXPERIMENTS} 中重复一份，而不是通过一个模板化常量共享：共享需要一个
+     * 每个调用点都必须记得设置的标志，而忘记设置会静默地重复计算试验支出。两份
+     * 副本由 {@code OptimizationsResourceTest.GetOptimizerById} 中的
+     * {@code findAndGetById__*} 测试保持同步，这些测试各自断言列表和 {@code getById}
+     * 报告相同的数字——改动其中一份它们就会失败。
      * <p>
-     * The spans read inside those CTEs dedup on the logical span key {@code (workspace_id, project_id, id)},
-     * reading rows in storage sort-key order so the newest write per key wins. {@code parent_span_id} is
-     * deliberately excluded from both the sort tuple and the {@code LIMIT 1 BY}, matching every other spans
-     * read since OPIK-7750 (#7764). That column is mutable across writes, so ahead of
-     * {@code last_updated_at} in the sort it picks the winner by largest parent rather than newest write, and
-     * inside the grouping a span re-ingested under a different parent survives as two rows and its cost
-     * enters this sum twice. Both halves are pinned by
-     * {@code findAndGetById__whenTaggedSpanIsRewrittenUnderAnotherParent__spendIsChargedOnce}.
+     * 这些 CTE 内读取的 spans 按逻辑 span 键 {@code (workspace_id, project_id, id)} 去重，
+     * 按存储排序键顺序读取行，因此每个键的最新写入获胜。{@code parent_span_id} 被
+     * 有意同时排除在排序元组和 {@code LIMIT 1 BY} 之外，与自 OPIK-7750（#7764）以来的每次 spans
+     * 读取保持一致。该列在多次写入之间可变，因此若排在
+     * {@code last_updated_at} 之前，它会按最大 parent 而非最新写入来挑选获胜者，并且
+     * 在分组内，一个以不同 parent 重新摄取的 span 会保留为两行，其成本
+     * 会两次进入这个求和。这两半都由
+     * {@code findAndGetById__whenTaggedSpanIsRewrittenUnderAnotherParent__spendIsChargedOnce} 固定住。
      * <p>
-     * Note the scope in that key: because {@code project_id} is part of it while the aggregation above keys on
-     * {@code trace_id} alone, one span id written under two projects survives the dedup twice and is summed
-     * twice. That exposure is pre-existing and shared with {@code experiment_durations} here and with
-     * {@code ExperimentDAO}; it is deliberately not fixed in this query alone, because deduping only the
-     * tagged half would leave the trial half double-charging and make the two halves of one figure disagree
-     * about what a canonical per-trace cost is. OPIK-7691 covers it across all sites.
+     * 注意该键中的作用域：因为 {@code project_id} 是它的一部分，而上方的聚合仅按
+     * {@code trace_id} 键控，所以一个写在两个项目下的 span id 会两次通过去重并被求和
+     * 两次。这一暴露是既有的，与此处的 {@code experiment_durations} 以及
+     * {@code ExperimentDAO} 共享；它有意不在本查询中单独修复，因为只对带标签的
+     * 一半去重会让试验那一半重复计费，使同一数字的两半对“规范的每 trace 成本
+     * 是什么”产生分歧。OPIK-7691 在所有站点统一覆盖它。
      * <p>
-     * No numeric column this query returns may ever be NaN/Inf: the row mapper reads them as
-     * {@code BigDecimal}, {@code BigDecimal.valueOf(NaN)} throws, and the clickhouse-r2dbc driver
-     * swallows mapper exceptions and silently drops the row — the run then 404s in getById and
-     * vanishes from find. The two float sources are guarded where non-finite values can enter:
-     * {@code duration_p50} (quantiles over zero finished traces yields NaN — the state a worker
-     * killed mid-trial leaves behind, OPIK-7459) and {@code experiment_scores_parsed.value}
-     * (JSON-parsed, so unbounded input). Costs are Decimal and cannot be non-finite.
+     * 此查询返回的任何数值列都绝不能是 NaN/Inf：行映射器将它们读取为
+     * {@code BigDecimal}，{@code BigDecimal.valueOf(NaN)} 会抛出异常，而 clickhouse-r2dbc 驱动
+     * 会吞掉映射器异常并静默丢弃该行——该运行随后在 getById 中 404，
+     * 并从 find 中消失。两个 float 来源在非有限值可能进入的地方都做了防护：
+     * {@code duration_p50}（对零个已完成 trace 的分位数会产生 NaN——worker 在
+     * 试验中途被杀掉后留下的状态，OPIK-7459）和 {@code experiment_scores_parsed.value}
+     * （JSON 解析，因此输入不受限）。成本是 Decimal，不可能非有限。
      *
-     * <p>The score value is parsed with {@code toFloat64OrNull} rather than {@code CAST(... AS Float64)}:
-     * the column holds raw JSON that older or foreign writers may have shaped differently, and a
-     * non-numeric value in a <em>named</em> entry made {@code CAST} throw {@code CANNOT_PARSE_TEXT},
-     * 500-ing the whole endpoint. {@code toFloat64OrNull} never throws, and
-     * {@code isFinite(NULL)} is NULL — falsy in the {@code WHERE} — so unparseable and non-finite entries
-     * are dropped alike. The result is re-wrapped in {@code assumeNotNull} so the aggregated map stays
-     * {@code Map(String, Float64)}: {@code getScoresAggregation} calls {@code doubleValue()} on each
-     * value, and a nullable map value would reintroduce exactly the swallowed-mapper-exception row loss
-     * this javadoc is about. The {@code WHERE} already guarantees the value is non-null.
+     * <p>评分值用 {@code toFloat64OrNull} 解析，而不是 {@code CAST(... AS Float64)}：
+     * 该列保存原始 JSON，旧的或外部的写入方可能塑形不同，而
+     * <em>具名</em>条目中的非数值会使 {@code CAST} 抛出 {@code CANNOT_PARSE_TEXT}，
+     * 让整个端点 500。{@code toFloat64OrNull} 从不抛出，并且
+     * {@code isFinite(NULL)} 是 NULL——在 {@code WHERE} 中为假——因此无法解析和非有限的条目
+     * 都同样被丢弃。结果再被 {@code assumeNotNull} 包裹，使聚合后的 map 保持为
+     * {@code Map(String, Float64)}：{@code getScoresAggregation} 会对每个值调用
+     * {@code doubleValue()}，而可空的 map 值会重新引入这篇 javadoc 所说的
+     * “吞掉映射器异常导致的行丢失”。{@code WHERE} 已保证该值非空。
      *
-     * <p><b>{@code optimization_tagged_trace_ids}</b> is the candidate scan: every trace that has ever
-     * carried one of these optimization ids as a tag. Deliberately a superset, because the authoritative
-     * check runs in {@code optimization_tagged_traces} on the latest version of each trace, so a tag
-     * removed by a later update stops counting. There is deliberately no {@code created_at} bound: that
-     * column is not stable across re-writes of an optimization row, and a reset would silently drop
-     * optimizer-internal traces from the total. An optimization with no {@code project_id} predates that
-     * column, so its cost stays trial-only.
+     * <p><b>{@code optimization_tagged_trace_ids}</b> 是候选扫描：曾将其中一个优化 id
+     * 作为标签携带过的每个 trace。有意做成超集，因为权威
+     * 检查在 {@code optimization_tagged_traces} 中对每个 trace 的最新版本运行，所以被后续更新移除的
+     * 标签会停止计数。有意不设 {@code created_at} 边界：该列在优化行的重写之间
+     * 不稳定，重置会静默地从总数中丢掉优化器内部 trace。没有 {@code project_id} 的
+     * 优化早于该列存在，因此其成本仅计试验。
      *
-     * <p>Two things it deliberately does <em>not</em> do, both measured on production rather than reasoned
-     * about. It does not {@code DISTINCT}: the CTE is consumed only as an {@code IN} set, which dedups on
-     * its own, so the distinct pass was pure overhead (list p50 1338 -> 1145 ms, CPU 2198 -> 1910 ms, peak
-     * memory flat). And it no longer bounds {@code project_id} to the optimizations in scope: at
-     * production shape that prune is free either way (534 vs 539 ms, same peak memory), so the
-     * {@code arrayExists} tag test is left as the single condition. Do not replace that test with
-     * {@code hasAny} against a {@code groupArray} of the ids, which measured 22x the latency and 38x the
-     * CPU.
+     * <p>它有意 <em>不</em>做的两件事，两者都是在生产上实测而非推测。它不做
+     * {@code DISTINCT}：该 CTE 只作为 {@code IN} 集合消费，其自身会去重，
+     * 因此 distinct 遍是纯开销（列表 p50 1338 -> 1145 ms，CPU 2198 -> 1910 ms，峰值
+     * 内存持平）。并且它不再把 {@code project_id} 限制在范围内的优化上：在
+     * 生产规模下该裁剪无论做不做都免费（534 vs 539 ms，峰值内存相同），因此
+     * {@code arrayExists} 标签测试被保留为唯一条件。不要用针对 id 的
+     * {@code groupArray} 的 {@code hasAny} 替换该测试，实测其延迟为 22 倍、CPU 为 38 倍。
      *
-     * <p>Note for anyone reasoning about the cost of naming a CTE more than once: ClickHouse evaluates it
-     * <em>per reference</em>, and {@code EXPLAIN} cannot show that, because an {@code IN (SELECT ... FROM
-     * cte)} set is built eagerly and appears only as {@code trace_id in N-element set}. Counting plan
-     * nodes therefore understates the repeats. An isolated probe differing only in reference count went
-     * 2.45 M -> 4.90 M rows and 214 -> 398 MiB.
+     * <p>对任何推演“多次命名同一个 CTE 的成本”的人的提示：ClickHouse 对每个引用
+     * <em>逐个</em>求值，而 {@code EXPLAIN} 无法显示这一点，因为 {@code IN (SELECT ... FROM
+     * cte)} 集合是急切构建的，只显示为 {@code trace_id in N-element set}。因此数计划
+     * 节点会低估重复次数。一个仅引用次数不同的孤立探测从
+     * 2.45 M -> 4.90 M 行、214 -> 398 MiB。
      *
-     * <p><b>{@code optimization_tagged_traces}</b> selects traces tagged with the optimization id but
-     * linked to no experiment item: the optimizer-internal LLM calls (GEPA reflection, candidate
-     * generation) whose spend belongs to the run's total even though it belongs to no trial (OPIK-7521).
-     * A trial trace whose {@code experiment_item} row is not visible yet is counted through this branch
-     * rather than through {@code experiment_durations}, and moves over once the link lands; either way it
-     * is counted exactly once, so the ingestion race cannot double-charge a run.
+     * <p><b>{@code optimization_tagged_traces}</b> 选择带优化 id 标签但
+     * 未关联任何实验项的 trace：优化器内部的 LLM 调用（GEPA 反思、候选
+     * 生成），其支出属于运行的总成本，尽管它不属于任何试验（OPIK-7521）。
+     * {@code experiment_item} 行尚未可见的试验 trace 会通过此分支
+     * 而非 {@code experiment_durations} 计数，并在关联落地后转移过去；无论哪种方式
+     * 它都恰好计数一次，因此摄取竞争无法对运行重复计费。
      *
-     * <p>Its experiment-item exclusion is keyed on {@code (trace, owning optimization)}, not on the trace
-     * alone. It exists to stop a trial trace that also carries its run's id as a tag from being charged
-     * twice, once through {@code experiment_durations} and once here, so it must only fire for the run
-     * that owns the trial. Excluding on {@code trace_id} alone would drop a trace tagged with run X
-     * because it happens to be a trial of run Y, and since the set of experiments in scope differs
-     * between the list (every optimization matching the filters) and {@code getById} (one), the two would
-     * report different totals for the same run. That is why the tuple test sits after the
-     * {@code ARRAY JOIN}, where {@code tag} is available, rather than as a cheaper {@code trace_id}
-     * prefilter in the subquery.
+     * <p>它的实验项排除按 {@code (trace, owning optimization)} 键控，而不是仅按 trace。
+     * 它的存在是为了阻止一个同时把其运行 id 作为标签携带的试验 trace 被
+     * 计费两次——一次通过 {@code experiment_durations}、一次在这里——因此它只能对拥有该试验的
+     * 运行触发。仅按 {@code trace_id} 排除会丢掉一个带运行 X 标签的 trace，
+     * 只因为它碰巧是运行 Y 的试验，而由于范围内实验的集合在
+     * 列表（每个匹配过滤器的优化）与 {@code getById}（一个）之间不同，两者会对
+     * 同一运行报告不同的总数。这就是为什么元组测试放在 {@code ARRAY JOIN} 之后、
+     * 即 {@code tag} 可用之处，而不是作为子查询中更廉价的 {@code trace_id} 预过滤。
      *
-     * <p>{@code project_id} is deliberately not projected out of that CTE: it would split one trace into
-     * one row per project it was ever written to, and the cost join keys on {@code trace_id} alone, so
-     * that would charge the same spend twice. One scope-dependence is left in the candidate CTE as a
-     * result: it prunes to the projects of the optimizations in scope, so a trace tagged with run X but
-     * stored in another run's project is found by the list and not by {@code getById}. The optimizer does
-     * not produce that shape, and dropping the project bound would turn the candidate scan
-     * workspace-wide. A dedicated attribution column (OPIK-7691) is what settles it.
+     * <p>{@code project_id} 有意不从该 CTE 中投影出去：那会把一个 trace 拆成
+     * 每个曾写入它的项目一行，而成本 join 仅按 {@code trace_id} 键控，
+     * 从而把同一支出计费两次。结果是在候选 CTE 中留下了一处作用域依赖：
+     * 它裁剪到范围内优化的项目，因此带运行 X 标签但存储在另一个运行项目中的
+     * trace 会被列表找到、而不会被 {@code getById} 找到。优化器不会产生
+     * 这种形状，而去掉项目边界会把候选扫描变成工作区范围。一个专门的
+     * 归属列（OPIK-7691）才是最终解决之道。
      *
-     * <p><b>{@code optimization_tagged_costs}</b> prunes the spans scan on {@code project_id} because
-     * {@code trace_id} is only the third primary-key column. That project set comes from
-     * {@code optimization_final} rather than from either trace CTE: ClickHouse substitutes CTEs
-     * textually, so naming a trace CTE there would re-run its tags scan. Reading {@code optimizations} is
-     * cheap by comparison, and a superset of the candidate projects is all a prefix prune needs; the
-     * authoritative filter is the {@code trace_id IN} beside it.
+     * <p><b>{@code optimization_tagged_costs}</b> 在 {@code project_id} 上裁剪 spans 扫描，因为
+     * {@code trace_id} 只是第三主键列。该项目集合来自
+     * {@code optimization_final} 而非任一 trace CTE：ClickHouse 按文本替换 CTE，
+     * 因此在那里命名一个 trace CTE 会重新运行其标签扫描。相比之下读取
+     * {@code optimizations} 很便宜，而候选项目的超集正是前缀裁剪所需的全部；
+     * 权威过滤是旁边的 {@code trace_id IN}。
      *
-     * <p>In {@link #FIND_WITHOUT_EXPERIMENTS} the same two trace CTEs appear without the experiment-item
-     * exclusion, which is unnecessary there because that projection is only chosen when nothing in scope
-     * has an experiment, and its final {@code ifNull} yields a non-nullable zero when nothing is
-     * attributed, matching {@code FIND}, where {@code sum()} over an empty group returns 0 rather than
-     * NULL. The {@code ifNull} covers both {@code join_use_nulls} modes.
+     * <p>在 {@link #FIND_WITHOUT_EXPERIMENTS} 中，同样的两个 trace CTE 出现时没有实验项
+     * 排除，在那里没必要，因为该投影仅在范围内没有任何实验时才会被选中，
+     * 并且它末尾的 {@code ifNull} 在无任何归属时产生非空零，
+     * 与 {@code FIND} 一致——后者对空组的 {@code sum()} 返回 0 而非
+     * NULL。该 {@code ifNull} 同时覆盖 {@code join_use_nulls} 的两种模式。
      */
     private static final String FIND = """
             WITH optimization_final AS (
@@ -829,10 +817,10 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * Does any optimization in scope have an experiment? Deliberately applies only the direct column filters
-     * and omits the narrowing ones ({@code name}, {@code dataset_deleted}, {@code studio_only}, {@code filters}),
-     * so the optimization set considered here is a superset of {@code optimization_final}. That makes a negative
-     * answer conservative: if this finds nothing, the narrowed set has nothing either.
+     * 范围内的任何优化是否有实验？有意只应用直接的列过滤器，
+     * 而省略收窄性的那些（{@code name}、{@code dataset_deleted}、{@code studio_only}、{@code filters}），
+     * 因此这里考虑的优化集合是 {@code optimization_final} 的超集。这使否定
+     * 答案变得保守：如果这里什么都找不到，收窄后的集合也什么都找不到。
      */
     private static final String HAS_EXPERIMENTS_FOR_DIRECT_FILTERS = """
             SELECT 1 AS has_experiments
@@ -852,27 +840,25 @@ class OptimizationDAOImpl implements OptimizationDAO {
             """;
 
     /**
-     * The check that selects this projection runs as its own statement, so an experiment inserted between the
-     * two reads leaves the aggregates at these empty-input values for that one response. Reads in this system are
-     * already eventually consistent through replica lag, so this sits inside existing behaviour and self-corrects
-     * on the next request rather than needing a shared read boundary.
+     * 选择该投影的检查作为独立语句运行，因此在两次读取之间插入的实验
+     * 会让聚合在这一单次响应中保持这些空输入值。本系统中的读取通过副本滞后
+     * 已经是最终一致的，因此这落在既有行为之内，并在下一次请求时自我纠正，
+     * 而无需共享的读取边界。
      * <p>
-     * The {@link #FIND} projection for the case where no optimization in scope has an experiment. Every
-     * aggregate in {@link #FIND} except {@code total_optimization_cost} is derived from
-     * {@code experiments_final}, so with no experiments they all collapse to their empty-input values and the
-     * fifteen-CTE pipeline reads nothing useful. The literals below reproduce those values and their exact
-     * declared types.
+     * 当范围内没有优化有实验时所用的 {@link #FIND} 投影。{@link #FIND} 中除
+     * {@code total_optimization_cost} 之外的每个聚合都派生自
+     * {@code experiments_final}，因此在没有实验时它们都塌缩为各自的空输入值，十五个 CTE 的
+     * 管道读不到任何有用的东西。下面的字面量重现这些值及其确切的声明类型。
      * <p>
-     * {@code total_optimization_cost} is the exception and must be computed for real (OPIK-7521): it also sums
-     * optimizer-internal traces attributed by tag, which exist without any experiment. A run that died during
-     * candidate generation has zero experiments and non-zero spend, and hardcoding a zero here would make the
-     * runs list disagree with the run page - {@link #getById(UUID)} always takes the {@link #FIND} path. The
-     * three CTEs below are {@link #FIND}'s tagged-cost pipeline minus the experiment-item exclusion, which is
-     * unnecessary here because this projection is only chosen when no experiment exists to link a trace to.
-     * Keep them in step with {@link #FIND} - see that field's note on why they are duplicated and which test
-     * fails when they drift.
-     * They read nothing when no optimization in scope carries a {@code project_id}, which is every row written
-     * before that column existed.
+     * {@code total_optimization_cost} 是例外，必须真正计算（OPIK-7521）：它还要对
+     * 按标签归属的优化器内部 trace 求和，这些 trace 无需任何实验即存在。在候选生成
+     * 期间死掉的运行有零个实验和非零支出，而在这里硬编码零会让
+     * 运行列表与运行页面不一致——{@link #getById(UUID)} 总是走 {@link #FIND} 路径。下面的
+     * 三个 CTE 是 {@link #FIND} 的带标签成本管道减去实验项排除，后者
+     * 在这里没必要，因为该投影仅在不存在可关联 trace 的实验时才会被选中。
+     * 让它们与 {@link #FIND} 保持同步——关于它们为何重复、漂移时哪个测试会失败，
+     * 参见该字段的注释。
+     * 当范围内没有优化携带 {@code project_id}（即该列存在之前写入的每一行）时，它们什么都读不到。
      */
     private static final String FIND_WITHOUT_EXPERIMENTS = """
             WITH optimization_final AS (
@@ -1133,7 +1119,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
     @Override
     public Mono<Long> delete(Set<UUID> ids) {
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(ids), "Argument 'ids' must not be empty");
-        log.info("Deleting optimizations by ids, size '{}'", ids.size());
+        log.info("正在按 ids 删除优化，数量 '{}'", ids.size());
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> delete(ids, connection))
@@ -1141,7 +1127,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .reduce(Long::sum)
                 .doFinally(signalType -> {
                     if (signalType == SignalType.ON_COMPLETE) {
-                        log.info("Deleted optimizations by ids, size '{}'", ids.size());
+                        log.info("已按 ids 删除优化，数量 '{}'", ids.size());
                     }
                 });
     }
@@ -1163,7 +1149,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
 
     @Override
     public Mono<Long> update(@NonNull UUID id, @NonNull OptimizationUpdate update, boolean clearErrorInfo) {
-        log.info("Update optimization by id '{}'", id);
+        log.info("按 id '{}' 更新优化", id);
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> update(id, update, clearErrorInfo, connection))
@@ -1171,14 +1157,14 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .reduce(Long::sum)
                 .doFinally(signalType -> {
                     if (signalType == SignalType.ON_COMPLETE) {
-                        log.info("Updated optimization by id '{}'", id);
+                        log.info("已按 id '{}' 更新优化", id);
                     }
                 });
     }
 
     @Override
     public Mono<Long> updateDatasetDeleted(@NonNull Set<UUID> datasetIds) {
-        log.info("Set to true optimization dataset_deleted for datasetIds '{}'", datasetIds);
+        log.info("将 datasetIds '{}' 的优化 dataset_deleted 设为 true", datasetIds);
 
         return Mono.from(connectionFactory.create())
                 .flatMapMany(connection -> updateDatasetDeleted(datasetIds, connection))
@@ -1186,7 +1172,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
                 .reduce(Long::sum)
                 .doFinally(signalType -> {
                     if (signalType == SignalType.ON_COMPLETE) {
-                        log.info("Set to true optimization dataset_deleted is done for datasetIds '{}'", datasetIds);
+                        log.info("将 datasetIds '{}' 的优化 dataset_deleted 设为 true 已完成", datasetIds);
                     }
                 });
     }
@@ -1278,8 +1264,8 @@ class OptimizationDAOImpl implements OptimizationDAO {
                             .bind("limit", size)
                             .bind("offset", offset);
 
-                    // entity_type is only declared by FIND; the fast path omits the feedback-score CTEs that use it,
-                    // and binding a parameter the rendered query does not contain fails the statement.
+                    // entity_type 仅由 FIND 声明；快速路径省略了使用它的反馈评分 CTE，
+                    // 而绑定一个渲染后查询不包含的参数会使语句失败。
                     bindQueryParams(searchCriteria, statement, hasExperiments);
 
                     return Flux.from(statement.execute());
@@ -1291,9 +1277,9 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     /**
-     * The subset of criteria that select which optimizations are in scope by identity rather than by attribute.
-     * Shared with {@link #HAS_EXPERIMENTS_FOR_DIRECT_FILTERS}, which declares only these placeholders - binding a
-     * parameter the rendered query does not contain fails the statement, so the two must stay in step.
+     * 按身份而非属性选择哪些优化在范围内的条件子集。
+     * 与 {@link #HAS_EXPERIMENTS_FOR_DIRECT_FILTERS} 共享，后者只声明这些占位符——绑定一个
+     * 渲染后查询不包含的参数会使语句失败，因此两者必须保持同步。
      */
     private void bindScopeTemplateParams(ST template, OptimizationSearchCriteria searchCriteria) {
 
@@ -1387,26 +1373,26 @@ class OptimizationDAOImpl implements OptimizationDAO {
             statement.bindNull("studio_config", String.class);
         }
 
-        // Both timestamps are bound as canonical ClickHouse literals, with the column DEFAULT that
-        // now64() used to supply substituted here — see the UPSERT javadoc (OPIK-5694). The two columns
-        // have DIFFERENT precision and must be formatted accordingly: migration 000026 narrowed
-        // last_updated_at to DateTime64(6) while created_at stayed at (9). Writing a 9-digit literal into
-        // the (6) column re-trips the FORMAT Values parse path that javadoc exists to avoid; SpanDAO's
-        // last_updated_at binding is the precedent for the micros form.
+        // 两个时间戳都绑定为规范的 ClickHouse 字面量，原先由 now64() 提供的列 DEFAULT
+        // 在这里替换——参见 UPSERT 的 javadoc（OPIK-5694）。这两列
+        // 精度不同，必须相应格式化：migration 000026 把
+        // last_updated_at 收窄为 DateTime64(6)，而 created_at 保持为 (9)。把 9 位字面量写入
+        // (6) 列会重新触发那篇 javadoc 存在的目的就是要避免的 FORMAT Values 解析路径；SpanDAO 的
+        // last_updated_at 绑定是微秒形式的先例。
         statement.bind("last_updated_at",
                 ClickHouseDateTimeFormat.formatMicros(
                         optimization.lastUpdatedAt() != null ? optimization.lastUpdatedAt() : Instant.now()));
 
-        // created_at used to be absent from the INSERT, so the column DEFAULT re-stamped it on every
-        // re-upsert: a run's creation time drifted forward, and the stalled-run reaper's hard ceiling
-        // (which is measured from it) could be postponed indefinitely by writes that are not status
-        // changes. The service carries the existing row's value in on re-upsert (OPIK-7459).
+        // created_at 过去不在 INSERT 中，因此列 DEFAULT 会在每次
+        // 重新 upsert 时重新盖章：运行的创建时间不断前漂，卡住运行 reaper 的硬上限
+        // （以它为基准测量）就可能被非状态变更的写入无限期推迟。
+        // 服务在重新 upsert 时带入现有行的值（OPIK-7459）。
         statement.bind("created_at",
                 ClickHouseDateTimeFormat.formatNanos(
                         optimization.createdAt() != null ? optimization.createdAt() : Instant.now()));
 
         return makeFluxContextAware((userName, workspaceId) -> {
-            log.info("Inserting optimization with id '{}', datasetId '{}', datasetName '{}', workspaceId '{}'",
+            log.info("正在插入优化，id '{}'，datasetId '{}'，datasetName '{}'，workspaceId '{}'",
                     optimization.id(), optimization.datasetId(), optimization.datasetName(), workspaceId);
             statement.bind("created_by", userName)
                     .bind("last_updated_by", userName)
@@ -1437,25 +1423,25 @@ class OptimizationDAOImpl implements OptimizationDAO {
     }
 
     /**
-     * Reads a {@code Nullable(Float64)} aggregate as a {@code BigDecimal}, mapping any non-finite value to
-     * {@code null} rather than letting it reach the driver's {@code BigDecimal} conversion.
+     * 将 {@code Nullable(Float64)} 聚合读取为 {@code BigDecimal}，把任何非有限值映射为
+     * {@code null}，而不是让它进入驱动的 {@code BigDecimal} 转换。
      *
-     * <p>This is the mapper-side half of the same defence {@link #FIND} applies in SQL, and it is here
-     * because the mapper is where the failure actually happens and how badly it fails is out of all
-     * proportion to the cause: {@code BigDecimal.valueOf(NaN)} throws {@code NumberFormatException},
-     * clickhouse-r2dbc rethrows it as a misleading {@code NoSuchElementException}, and
-     * {@code ClickHouseResult.map} catches every mapper exception, logs it, and <em>silently drops the
-     * row</em> — so one non-finite cell 404s a whole run and erases it from the paginated list
-     * (OPIK-7459). {@code FIND} guards the two places non-finite values can <em>enter</em>
-     * ({@code duration_p50}, the JSON-parsed score), but the columns read here are <em>derived</em> from
-     * those by the divisions and sums in {@code candidate_metrics}, so any future arithmetic added there
-     * that can overflow to +/-Inf would reopen the same class of bug in the same invisible way. Guarding at
-     * the boundary makes the row-loss mode unreachable regardless of what the query does upstream.
+     * <p>这是 {@link #FIND} 在 SQL 中所做同一防御的映射器侧一半，它放在这里
+     * 是因为失败实际发生在映射器处，而且失败之严重与原因完全不成比例：
+     * {@code BigDecimal.valueOf(NaN)} 抛出 {@code NumberFormatException}，
+     * clickhouse-r2dbc 将其重新抛出为误导性的 {@code NoSuchElementException}，而
+     * {@code ClickHouseResult.map} 会捕获每个映射器异常、记录它，并<em>静默丢弃该
+     * 行</em>——因此一个非有限单元格会让整个运行 404，并将其从分页列表中抹去
+     * （OPIK-7459）。{@code FIND} 防护了非有限值可能 <em>进入</em> 的两处
+     * （{@code duration_p50}、JSON 解析的评分），但这里读取的列是由
+     * {@code candidate_metrics} 中的除法和求和从那些值 <em>派生</em> 出来的，因此将来在那里加入的
+     * 任何可能溢出到 +/-Inf 的运算都会以同样不可见的方式重开同一类 bug。在
+     * 边界处防护，使行丢失模式无论查询在上游做什么都不可达。
      *
-     * <p>The finite path deliberately re-reads through {@code BigDecimal.class} instead of converting the
-     * {@code Double} itself, so the value's scale and representation stay byte-identical to what the driver
-     * produced before this guard existed. Both reads hit an already-decoded in-memory cell. Costs are
-     * {@code Decimal} and cannot be non-finite, so they keep the direct read.
+     * <p>有限路径有意通过 {@code BigDecimal.class} 重新读取，而不是转换
+     * {@code Double} 本身，因此值的标度和表示与该防护存在之前驱动
+     * 产生的逐字节一致。两次读取都命中一个已解码的内存单元格。成本是
+     * {@code Decimal} 且不可能非有限，因此它们保留直接读取。
      */
     private static BigDecimal getFiniteBigDecimal(Row row, String column) {
         Double value = row.get(column, Double.class);
@@ -1465,7 +1451,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
         return row.get(column, BigDecimal.class);
     }
 
-    /** Maps the plain {@code optimizations} table columns — everything except FIND's computed aggregates. */
+    /** 映射 {@code optimizations} 表的普通列——除 FIND 的计算聚合之外的一切。 */
     private Optimization mapRowColumns(Row row) {
         OptimizationStudioConfig studioConfig = null;
         String studioConfigJson = row.get("studio_config", String.class);
@@ -1473,7 +1459,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
             try {
                 studioConfig = JsonUtils.readValue(studioConfigJson, OptimizationStudioConfig.class);
             } catch (UncheckedIOException e) {
-                log.error("Failed to deserialize studio_config for optimization: '{}'",
+                log.error("反序列化优化的 studio_config 失败：'{}'",
                         row.get("id", UUID.class), e);
             }
         }
@@ -1484,7 +1470,7 @@ class OptimizationDAOImpl implements OptimizationDAO {
             try {
                 errorInfo = JsonUtils.readValue(errorInfoJson, ERROR_INFO_TYPE);
             } catch (UncheckedIOException e) {
-                log.error("Failed to deserialize error_info for optimization: '{}'",
+                log.error("反序列化优化的 error_info 失败：'{}'",
                         row.get("id", UUID.class), e);
             }
         }
@@ -1553,9 +1539,9 @@ class OptimizationDAOImpl implements OptimizationDAO {
                     .ifPresent(errorInfo -> template.add("error_info", errorInfo));
         }
 
-        // When absent, the SELECT carries the existing metadata column forward untouched. When present,
-        // the update.metadata() is already the FULL merged object (see OptimizationService.update) — a
-        // new ReplacingMergeTree version must carry the complete metadata, never a delta.
+        // 缺席时，SELECT 将现有 metadata 列原样向前携带。存在时，
+        // update.metadata() 已经是完整的合并对象（参见 OptimizationService.update）——新的
+        // ReplacingMergeTree 版本必须携带完整 metadata，绝不能是增量。
         Optional.ofNullable(update.metadata())
                 .ifPresent(metadata -> template.add("metadata", true));
 
@@ -1589,25 +1575,24 @@ class OptimizationDAOImpl implements OptimizationDAO {
     public Flux<StalledOptimization> findStalledStudioOptimizations(@NonNull Duration initializedTimeout,
             @NonNull Duration runningTimeout, @NonNull Duration runningHardTimeout, @NonNull Duration lookbackMargin,
             int limit, int candidateScanFactor) {
-        // How far back the query scans (the last_updated_at FLOOR that lets the minmax skip index prune
-        // granules): the largest timeout plus the configured reaper-downtime margin, so in normal operation
-        // the floor is purely a scan bound and never a coverage gap — a run's last status change is only
-        // older than this if the reaper was down longer than the margin, in which case that run is not
-        // reaped (documented tradeoff, review: thiagohora).
+        // 查询扫描回退多远（让 minmax 跳数索引裁剪颗粒的 last_updated_at FLOOR）：
+        // 最大超时加上配置的 reaper 停机余量，因此在正常运行中
+        // 该下限纯粹是扫描边界、绝不是覆盖缺口——仅当 reaper 停机时间长于该余量时，
+        // 某运行的最后一次状态变更才会早于此值，此时该运行不会被回收
+        // （已记录的取舍，review: thiagohora）。
         long lookbackSeconds = Math.max(Math.max(initializedTimeout.toSeconds(), runningTimeout.toSeconds()),
                 runningHardTimeout.toSeconds()) + lookbackMargin.toSeconds();
-        // Bound on the CTE the two liveness probes fan out from. Without it `candidates` is "every
-        // non-terminal studio run whose row has not changed in runningTimeout" — and because
-        // last_updated_at only advances on a status change, that includes every HEALTHY in-flight run
-        // older than the timeout, so the probes' cost would scale with fleet size rather than with
-        // configuration. Deliberately a multiple of the batch size rather than the batch size itself:
-        // the ordering puts the stalest first, and a healthy long run sorts alongside a dead one (that
-        // is the premise of this whole feature), so a bound of exactly `limit` could let live runs
-        // crowd dead ones out of every pass. With the multiplier, starving a dead run needs that many
-        // simultaneously-alive stale runs ahead of it, and alive runs eventually turn terminal and drop
-        // out of the CTE entirely. The multiplier is operator-tunable
-        // (OPTIMIZATION_STALLED_REAPER_CANDIDATE_SCAN_FACTOR) so a deployment can trade probe cost against
-        // the query's reach without a release (review: thiagohora).
+        // 两个存活度探测所扇出的 CTE 的上限。没有它，`candidates` 就是“每一行
+        // 在 runningTimeout 内未变化的非终态 studio 运行”——而因为
+        // last_updated_at 仅在状态变化时推进，这包括了每一个早于超时的健康在途
+        // 运行，因此探测的成本会随集群规模而非配置缩放。有意做成批大小的倍数
+        // 而非批大小本身：排序把最陈旧的放在最前，而健康的长期运行会与死掉的运行排在一起
+        // （这正是整个功能的前提），因此恰好为 `limit` 的上限可能让存活运行
+        // 在每次遍历中把死掉的挤出去。有了乘数，饿死一个死运行需要其前面有同样多
+        // 同时存活的陈旧运行，而存活运行最终会转为终态并完全退出
+        // CTE。该乘数可由运营调优
+        // （OPTIMIZATION_STALLED_REAPER_CANDIDATE_SCAN_FACTOR），因此部署可以在不发布的情况下
+        // 权衡探测成本与查询的覆盖范围（review: thiagohora）。
         int candidateLimit = limit * candidateScanFactor;
         var details = "initializedTimeoutSeconds=%d, runningTimeoutSeconds=%d, runningHardTimeoutSeconds=%d, lookbackSeconds=%d, limit=%d, candidateLimit=%d"
                 .formatted(initializedTimeout.toSeconds(), runningTimeout.toSeconds(),

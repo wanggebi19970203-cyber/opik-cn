@@ -1237,9 +1237,9 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                 "Either ids or datasetId must be provided, but not both");
 
         if (hasIds) {
-            log.info("Deleting '{}' dataset items by IDs", ids.size());
+            log.info("按ID删除 '{}' 条数据集条目", ids.size());
         } else {
-            log.info("Deleting dataset items from dataset '{}' with filters", datasetId);
+            log.info("按过滤器删除数据集 '{}' 中的条目", datasetId);
         }
 
         return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
@@ -1345,7 +1345,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
 
         boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
 
-        // Choose the appropriate query and segment names based on experiment IDs
+        // 根据实验ID选择合适的查询和分段名称
         String query = hasExperimentIds ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS : SELECT_DATASET_ITEMS;
         String summarySegmentName = hasExperimentIds
                 ? "select_dataset_items_experiments_filters_summary"
@@ -1373,7 +1373,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                             selectTemplate = selectTemplate.add("truncationSize",
                                     configuration.getResponseFormatting().getTruncationSize());
 
-                            // Add sorting if present
+                            // 如果存在排序则添加
                             var finalTemplate = selectTemplate;
                             var itemFieldMapping = datasetItemSearchCriteria.sortingFields() != null
                                     ? filterQueryBuilder
@@ -1400,14 +1400,14 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                                     .bind("offset", (page - 1) * size)
                                     .bind("workspace_id", workspaceId);
 
-                            // Only bind experimentIds and entityType if we have experiment IDs
+                            // 仅当有实验ID时才绑定 experimentIds 和 entityType
                             if (hasExperimentIds) {
                                 selectStatement = selectStatement.bind("experimentIds",
                                         datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new))
                                         .bind("entityType", datasetItemSearchCriteria.entityType().getType());
                             }
 
-                            // Bind dynamic sorting keys if present
+                            // 如果存在动态排序键则绑定
                             if (hasDynamicKeys) {
                                 selectStatement = sortingQueryBuilder.bindDynamicKeys(selectStatement,
                                         datasetItemSearchCriteria.sortingFields(), itemFieldMapping);
@@ -1431,7 +1431,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
     }
 
     private Mono<Long> getCount(DatasetItemSearchCriteria datasetItemSearchCriteria) {
-        // Choose the appropriate count query based on whether we have experiment IDs
+        // 根据是否有实验ID选择合适的计数查询
         boolean hasExperimentIds = CollectionUtils.isNotEmpty(datasetItemSearchCriteria.experimentIds());
         String countQuery = hasExperimentIds
                 ? SELECT_DATASET_ITEMS_WITH_EXPERIMENT_ITEMS_COUNT
@@ -1447,7 +1447,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                     .bind("datasetId", datasetItemSearchCriteria.datasetId())
                     .bind("workspace_id", workspaceId);
 
-            // Only bind experimentIds if we have them
+            // 仅当有实验ID时才绑定 experimentIds
             if (hasExperimentIds) {
                 statement = statement.bind("experimentIds",
                         datasetItemSearchCriteria.experimentIds().toArray(UUID[]::new));
@@ -1483,7 +1483,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             @NonNull UUID datasetId,
             @NonNull Set<UUID> experimentIds,
             List<ExperimentsComparisonFilter> filters) {
-        log.info("Getting experiment items stats for dataset '{}' and experiments '{}' with filters '{}'", datasetId,
+        log.info("获取数据集 '{}' 和实验 '{}'（过滤器 '{}'）的实验条目统计", datasetId,
                 experimentIds, filters);
 
         return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
@@ -1497,7 +1497,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             applyFiltersToTemplate(template, filters);
 
             String sql = template.render();
-            log.debug("Experiment items stats query: '{}'", sql);
+            log.debug("实验条目统计查询：'{}'", sql);
 
             Statement statement = connection.createStatement(sql)
                     .bind("workspace_id", workspaceId);
@@ -1509,7 +1509,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
                                     .mapExperimentItemsStats(row))))
                     .singleOrEmpty();
         }))
-                .doOnError(error -> log.error("Failed to get experiment items stats", error));
+                .doOnError(error -> log.error("获取实验条目统计失败", error));
     }
 
     private void applyFiltersToTemplate(ST template, List<ExperimentsComparisonFilter> filters) {
@@ -1546,7 +1546,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
 
         Optional.ofNullable(filters)
                 .ifPresent(filtersParam -> {
-                    // Bind all filters - the builder will handle both regular and aggregated filters
+                    // 绑定所有过滤器 - 构建器将处理普通过滤器和聚合过滤器
                     filterQueryBuilder.bind(statement, filtersParam,
                             com.comet.opik.domain.filter.FilterStrategy.EXPERIMENT_ITEM);
                     filterQueryBuilder.bind(statement, filtersParam,
@@ -1569,9 +1569,9 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
         Preconditions.checkArgument(hasIds || hasFilters, "Either ids or filters must be provided");
 
         if (hasIds) {
-            log.info("Bulk updating '{}' dataset items by IDs", ids.size());
+            log.info("按ID批量更新 '{}' 条数据集条目", ids.size());
         } else {
-            log.info("Bulk updating dataset items by filters for dataset '{}'", datasetId);
+            log.info("按过滤器批量更新数据集 '{}' 的条目", datasetId);
         }
 
         return asyncTemplate.nonTransaction(connection -> makeMonoContextAware((userName, workspaceId) -> {
@@ -1611,8 +1611,8 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
             Segment segment = startSegment("dataset_items", "Clickhouse", segmentOperation);
 
             String successMessage = hasIds
-                    ? "Completed bulk update for '%s' dataset items".formatted(ids.size())
-                    : "Completed bulk update for dataset items matching filters in dataset '%s'".formatted(datasetId);
+                    ? "已完成 '%s' 条数据集条目的批量更新".formatted(ids.size())
+                    : "已完成对数据集 '%s' 中匹配过滤器的数据集条目的批量更新".formatted(datasetId);
 
             return Flux.from(statement.execute())
                     .doFinally(signalType -> endSegment(segment))
@@ -1655,7 +1655,7 @@ class DatasetItemDAOImpl implements DatasetItemDAO {
     @Override
     @WithSpan
     public Mono<Map<String, List<String>>> getColumns(@NonNull UUID datasetId) {
-        log.debug("Getting columns for dataset '{}'", datasetId);
+        log.debug("获取数据集 '{}' 的列", datasetId);
 
         Segment segment = startSegment(DATASET_ITEMS, CLICKHOUSE, "select_dataset_items_columns");
 

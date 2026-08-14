@@ -6,6 +6,10 @@ vi.mock("json-2-csv", () => ({
   csv2json: vi.fn(),
 }));
 
+vi.mock("i18next", () => ({
+  default: { t: (key: string) => key, getFixedT: () => (key: string) => key },
+}));
+
 describe("validateCsvFile", () => {
   const maxSize = 1; // MB
   const maxItems = 1000;
@@ -21,7 +25,7 @@ describe("validateCsvFile", () => {
     });
     const result = await validateCsvFile(mockFile, maxSize, maxItems);
     expect(result).toEqual({
-      error: `File exceeds maximum size (${maxSize}MB).`,
+      error: "common:fileValidation.fileExceedsMaxSize",
     });
   });
 
@@ -29,7 +33,7 @@ describe("validateCsvFile", () => {
     const mockFile = new File(["content"], "test.txt", { type: "text/plain" });
     const result = await validateCsvFile(mockFile, maxSize, maxItems);
     expect(result).toEqual({
-      error: "File must be in .csv format",
+      error: "common:fileValidation.fileMustBeCsvFormat",
     });
   });
 
@@ -48,21 +52,21 @@ describe("validateCsvFile", () => {
     const mockFile = new File(["content"], "test.csv", { type: "text/csv" });
     vi.mocked(csv2json).mockRejectedValue(new Error("Parsing error"));
     const result = await validateCsvFile(mockFile, maxSize, maxItems);
-    expect(result).toEqual({ error: "Failed to process CSV file." });
+    expect(result).toEqual({ error: "common:fileValidation.failedToProcessCsv" });
   });
 
   it("should return an error if parsed CSV is not an array", async () => {
     const mockFile = new File(["content"], "test.csv", { type: "text/csv" });
     vi.mocked(csv2json).mockResolvedValue({} as never[]);
     const result = await validateCsvFile(mockFile, maxSize, maxItems);
-    expect(result).toEqual({ error: "Invalid CSV format." });
+    expect(result).toEqual({ error: "common:fileValidation.invalidCsvFormat" });
   });
 
   it("should return an error if the CSV is empty", async () => {
     const mockFile = new File(["content"], "test.csv", { type: "text/csv" });
     vi.mocked(csv2json).mockResolvedValue([]);
     const result = await validateCsvFile(mockFile, maxSize, maxItems);
-    expect(result).toEqual({ error: "CSV file is empty." });
+    expect(result).toEqual({ error: "common:fileValidation.csvFileIsEmpty" });
   });
 
   it("should return an error if the number of rows exceeds the limit", async () => {
@@ -74,7 +78,7 @@ describe("validateCsvFile", () => {
     vi.mocked(csv2json).mockResolvedValue(mockData);
     const result = await validateCsvFile(mockFile, maxSize, maxItems);
     expect(result).toEqual({
-      error: `File is too large (max. ${maxItems.toLocaleString()} rows)`,
+      error: "common:fileValidation.fileTooLarge",
     });
   });
 });

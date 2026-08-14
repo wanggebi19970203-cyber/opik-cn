@@ -178,7 +178,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
         Map<String, List<FeedbackScoreItem>> scoresPerProject = scores
                 .stream()
                 .map(score -> {
-                    idGenerator.validateIdNotInFuture(score.id(), entityType.getType()); // validate span/trace id
+                    idGenerator.validateIdNotInFuture(score.id(), entityType.getType()); // 验证 span/trace ID
                     idGenerator.validateIdNotInFutureIfPresent(score.sourceQueueId(), "annotation queue");
 
                     return score.toBuilder()
@@ -255,10 +255,9 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
     }
 
     /**
-     * Deletes the score and emits {@link FeedbackScoresDeleted} carrying the entity's project (for per-project
-     * pruning downstream). The project is resolved lazily at subscription time and best-effort: if it is empty or
-     * the lookup fails, the delete still runs with a {@code null} projectId (the listener then falls back to the
-     * {@code trace_id}/{@code id} skip index).
+     * 删除评分并发送携带实体所属项目的 {@link FeedbackScoresDeleted}（用于下游按项目裁剪）。
+     * 项目在订阅时惰性解析且尽力而为：如果为空或查找失败，删除仍会以 {@code null} projectId 执行
+     * （监听器随后回退到 {@code trace_id}/{@code id} 跳数索引）。
      */
     private Mono<Void> deleteScoreAndNotify(EntityType entityType, UUID entityId, DeleteFeedbackScore score) {
         return Mono.deferContextual(ctx -> {
@@ -269,8 +268,8 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                     .map(Optional::of)
                     .defaultIfEmpty(Optional.empty())
                     .onErrorResume(e -> {
-                        log.warn("Failed to resolve projectId for '{}' '{}' before score delete; "
-                                + "continuing without project scope", entityType, entityId, e);
+                        log.warn("删除评分前解析 '{}' '{}' 的 projectId 失败；"
+                                + "继续执行但无项目范围", entityType, entityId, e);
                         return Mono.just(Optional.empty());
                     })
                     .flatMap(projectId -> dao.deleteScoreFrom(entityType, entityId, score)
@@ -355,7 +354,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
         Preconditions.checkArgument(!StringUtils.isBlank(threadId), "Thread ID cannot be blank");
 
         if (names.isEmpty()) {
-            log.info("No names provided for deletion of scores for threadId '{}' in projectName '{}'", threadId,
+            log.info("未提供要删除评分的名称，线程ID '{}'，项目名称 '{}'", threadId,
                     projectName);
             return Mono.empty();
         }
@@ -365,11 +364,11 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                         .flatMap(threadModelId -> dao.deleteByEntityIdAndNames(EntityType.THREAD, threadModelId, names,
                                 author, sourceQueueId))
                         .switchIfEmpty(Mono.defer(() -> {
-                            log.info("ThreadId '{}' not found in project '{}'. No scores deleted.", threadId,
+                            log.info("线程ID '{}' 在项目 '{}' 中未找到，未删除评分。", threadId,
                                     projectId);
                             return Mono.empty();
                         }))
-                        .doOnNext(count -> log.info("Deleted '{}' scores for threadId '{}' in projectId '{}'", count,
+                        .doOnNext(count -> log.info("已删除 '{}' 条评分，线程ID '{}'，项目ID '{}'", count,
                                 threadId,
                                 projectId)))
                 .then();
@@ -418,7 +417,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                 String userName = context.get(RequestContext.USER_NAME);
                 return Mono.just(Optional.of(userName));
             } catch (NoSuchElementException e) {
-                log.info("Could not retrieve author from context", e);
+                log.info("无法从上下文获取作者", e);
                 return Mono.just(Optional.empty());
             }
         });
@@ -431,7 +430,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
             return projectService.findByNames(workspaceId, List.of(projectName)).stream().findFirst();
         }).flatMap(project -> {
             if (project.isEmpty()) {
-                log.info("Project '{}' not found in workspace '{}'", projectName,
+                log.info("未找到项目 '{}'（工作区 '{}'）", projectName,
                         context.get(RequestContext.WORKSPACE_ID));
                 return Mono.empty();
             }
@@ -443,7 +442,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
     private Mono<Void> processThreadsScoreBatch(List<FeedbackScoreBatchItemThread> scores) {
 
         if (scores.isEmpty()) {
-            log.info("No scores provided for batch processing of threads");
+            log.info("未提供用于线程批量处理的评分");
             return Mono.empty();
         }
 
@@ -459,7 +458,7 @@ class FeedbackScoreServiceImpl implements FeedbackScoreService {
                 .map(ProjectService::groupByName)
                 .map(projectMap -> mergeProjectsAndScores(projectMap, scoresPerProject))
                 .flatMap(this::saveThreadScoreBatch) // 保存所有分数
-                .doOnSuccess(count -> log.info("Saved '{}' thread scores in batch", count))
+                .doOnSuccess(count -> log.info("批量保存了 '{}' 条线程评分", count))
                 .then();
     }
 

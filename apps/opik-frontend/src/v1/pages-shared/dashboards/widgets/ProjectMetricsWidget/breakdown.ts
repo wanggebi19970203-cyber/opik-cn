@@ -20,7 +20,9 @@ export const BREAKDOWN_FIELD_LABELS: Record<BREAKDOWN_FIELD, string> = {
   [BREAKDOWN_FIELD.MODEL]: i18next.t("dashboards.breakdown.fields.model"),
   [BREAKDOWN_FIELD.PROVIDER]: i18next.t("dashboards.breakdown.fields.provider"),
   [BREAKDOWN_FIELD.TYPE]: i18next.t("dashboards.breakdown.fields.spanType"),
-  [BREAKDOWN_FIELD.GUARDRAIL_NAME]: "Guardrail name",
+  [BREAKDOWN_FIELD.GUARDRAIL_NAME]: i18next.t(
+    "dashboards.breakdown.fields.guardrailName",
+  ),
 };
 
 /**
